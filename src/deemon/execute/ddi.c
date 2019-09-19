@@ -689,8 +689,8 @@ ddi_ne(DeeDDIObject *__restrict self,
 
 PRIVATE struct type_cmp ddi_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&ddi_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ddi_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ddi_ne
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ddi_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ddi_ne
 };
 
 PUBLIC DeeTypeObject DeeDDI_Type = {

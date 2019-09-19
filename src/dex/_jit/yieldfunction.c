@@ -251,23 +251,23 @@ jy_gettext(JITYieldFunction *__restrict self) {
 
 PRIVATE struct type_getset jy_getsets[] = {
 	{ "__name__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&jy_getname, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Alias for :Function.__name__ though #__func__") },
 	{ "__doc__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&jy_getdoc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getdoc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Alias for :Function.__doc__ though #__func__") },
 	{ "__kwds__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&jy_getkwds, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
 	      "Alias for :Function.__kwds__ though #__func__") },
 	{ "__text__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&jy_gettext, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_gettext, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Alias for :Function.__text__ though #__func__") },
 	{ "__args__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&jy_getargs, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getargs, NULL, NULL,
 	  DOC("->?S?O\n"
 	      "Returns a sequence representing the positional arguments passed to the function") },
 	/* TODO: __refs__ */
@@ -1905,27 +1905,27 @@ ji_gettext(JITYieldFunctionIterator *__restrict self) {
 
 PRIVATE struct type_getset ji_getsets[] = {
 	{ "__func__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ji_getfunc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getfunc, NULL, NULL,
 	  DOC("->?GFunction\n"
 	      "The JIT function that is being executed") },
 	{ "__args__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ji_getargs, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getargs, NULL, NULL,
 	  DOC("->?S?O\n"
 	      "Returns a sequence representing the positional arguments passed to the function") },
 	{ "__name__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ji_getname, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Alias for :Function.__name__ though #__func__") },
 	{ "__doc__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ji_getdoc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getdoc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Alias for :Function.__doc__ though #__func__") },
 	{ "__kwds__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ji_getkwds, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
 	      "Alias for :Function.__kwds__ though #__func__") },
 	{ "__text__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&ji_gettext, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_gettext, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Alias for :Function.__text__ though #__func__") },
 	/* TODO: __refs__ */

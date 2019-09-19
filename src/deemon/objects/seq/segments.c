@@ -167,7 +167,7 @@ err:
 
 PRIVATE struct type_getset segiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&segiter_getseq,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&segiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:SeqSegments") },
@@ -200,12 +200,12 @@ DEFINE_SEGITER_COMPARE(segiter_ge, DeeObject_CompareGeObject)
 
 PRIVATE struct type_cmp segiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&segiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&segiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&segiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&segiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&segiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&segiter_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&segiter_ge
 };
 
 
@@ -431,7 +431,7 @@ PRIVATE struct type_seq seg_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_getsize,
 	/* .tp_contains  = */ NULL, /* TODO */
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seg_getitem,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seg_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,

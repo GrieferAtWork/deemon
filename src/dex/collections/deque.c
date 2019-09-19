@@ -1259,15 +1259,15 @@ PRIVATE struct type_nsi deq_nsi = {
 PRIVATE struct type_seq deq_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_get,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_del,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&deq_set,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&deq_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&deq_get,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_del,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&deq_set,
 	/* XXX: range operators? (Also: Add a fallback delrange / setrange in `sequence' that calls
 	 *                              forward to member functions `insert(index:?Dint, ob)',
 	 *                             `erase(index:?Dint, count:?Dint = 1)') */
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
 	/* .tp_nsi       = */ &deq_nsi
 };
@@ -1426,38 +1426,38 @@ err:
 
 
 PRIVATE struct type_method deq_methods[] = {
-	{ "insert", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_insert,
+	{ "insert", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_insert,
 	  DOC("(index:?Dint,ob)\n"
 	      "@throw IntegerOverflow @index is negative or too large\n"
 	      "Insert the given object @ob at @index"),
 	  TYPE_METHOD_FKWDS },
-	{ "erase", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_erase,
+	{ "erase", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_erase,
 	  DOC("(index:?Dint,num_items=!1)->?Dint\n"
 	      "@throw IntegerOverflow @index is negative or too large\n"
 	      "@return The actual number of erased items\n"
 	      "Erase up to @num_items objects from @this deque, starting at @index"),
 	  TYPE_METHOD_FKWDS },
-	{ "pop", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_pop,
+	{ "pop", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_pop,
 	  DOC("(index=!-1)->\n"
 	      "@throw IntegerOverflow @index is negative or too large\n"
 	      "@return The item that got removed\n"
 	      "Pop (erase) the item located at @index and return it"),
 	  TYPE_METHOD_FKWDS },
-	{ "pushfront", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_pushfront,
+	{ "pushfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_pushfront,
 	  DOC("(ob)\n"
 	      "Insert the given object @ob at the front of @this deque") },
-	{ "pushback", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_pushback,
+	{ "pushback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_pushback,
 	  DOC("(ob)\n"
 	      "Insert the given object @ob at the back of @this deque") },
-	{ "popfront", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_popfront,
+	{ "popfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_popfront,
 	  DOC("->\n"
 	      "@throw ValueError @this deque is empty\n"
 	      "Pop and return an item from the front of @this deque") },
-	{ "popback", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_popback,
+	{ "popback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_popback,
 	  DOC("->\n"
 	      "@throw ValueError @this deque is empty\n"
 	      "Pop and return an item from the back of @this deque") },
-	{ "llrot", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_llrot,
+	{ "llrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_llrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the first @num_items items left by 1:\n"
@@ -1465,7 +1465,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
 	      ">x.llrot(3);\n"
 	      ">print repr x; /* { 20, 30, 10, 40, 50 } */") },
-	{ "lrrot", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_lrrot,
+	{ "lrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_lrrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the first @num_items items right by 1:\n"
@@ -1473,7 +1473,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
 	      ">x.lrrot(3);\n"
 	      ">print repr x; /* { 30, 10, 20, 40, 50 } */") },
-	{ "rlrot", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_rlrot,
+	{ "rlrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_rlrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the last @num_items items left by 1:\n"
@@ -1481,7 +1481,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
 	      ">x.rlrot(3);\n"
 	      ">print repr x; /* { 10, 20, 40, 50, 30 } */") },
-	{ "rrrot", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_rrrot,
+	{ "rrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_rrrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the last @num_items items right by 1:\n"
@@ -1490,7 +1490,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">x.rrrot(3);\n"
 	      ">print repr x; /* { 10, 20, 50, 30, 40 } */") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&deq_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&deq_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -1577,8 +1577,8 @@ INTERN DeeTypeObject Deque_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&deq_fini,
-		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_assign,
-		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deq_moveassign,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_moveassign,
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&deq_deepload
 	},
 	/* .tp_cast = */ {
@@ -1775,9 +1775,9 @@ err:
 
 PRIVATE struct type_getset deqiter_getsets[] = {
 	{ "index",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&deqiter_getindex_ob,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deqiter_getindex_ob,
 	  NULL,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&deqiter_setindex_ob,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&deqiter_setindex_ob,
 	  DOC("->?X2?Dint?N\n"
 	      "Get/set the index of @this iterator within its associated :Deque\n"
 	      "When :none, the iterator has been invalidated, possibly due to the "

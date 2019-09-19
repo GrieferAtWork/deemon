@@ -1201,12 +1201,12 @@ PRIVATE struct type_nii stringiter_nii = {
 
 PRIVATE struct type_cmp stringiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringiter_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ge,
 	/* .tp_nii  = */ &stringiter_nii
 };
 
@@ -1346,12 +1346,12 @@ err:
 
 PRIVATE struct type_cmp string_cmp = {
 	/* .tp_hash = */ &DeeString_Hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ge,
 };
 
 PRIVATE size_t DCALL
@@ -1404,11 +1404,11 @@ PRIVATE struct type_nsi string_nsi = {
 PRIVATE struct type_seq string_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&string_get,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_get,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&string_range_get,
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&string_range_get,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
 	/* .tp_nsi       = */ &string_nsi
@@ -1524,16 +1524,16 @@ PRIVATE struct type_getset string_getsets[] = {
 	      "Returns a proxy view for the characters of @this string as a sequence of "
 	      "integers referring to the ordinal values of each character (s.a. #ord)") },
 	{ "__hashed__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&string_hashed, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this string has been hashed") },
 	{ DeeString_STR(&str_first),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&string_getfirst, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
 	  DOC("->?.\n"
 	      "@throw ValueError @this string is empty\n"
 	      "Returns the first character of @this string") },
 	{ DeeString_STR(&str_last),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&string_getlast, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getlast, NULL, NULL,
 	  DOC("->?.\n"
 	      "@throw ValueError @this string is empty\n"
 	      "Returns the last character of @this string") },

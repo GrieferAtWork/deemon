@@ -1174,6 +1174,7 @@
     <None Include="..\.clang-format">
       <Filter>src</Filter>
     </None>
+    <None Include="..\cpp.hint" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

@@ -391,17 +391,17 @@ PRIVATE struct type_math se_math = {
 	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_inv,
 	/* .tp_pos         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_pos,
 	/* .tp_neg         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_neg,
-	/* .tp_add         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_add,
-	/* .tp_sub         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_sub,
-	/* .tp_mul         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_mul,
-	/* .tp_div         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_div,
-	/* .tp_mod         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_mod,
-	/* .tp_shl         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_shl,
-	/* .tp_shr         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_shr,
-	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_and,
-	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_or,
-	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_xor,
-	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_pow,
+	/* .tp_add         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_add,
+	/* .tp_sub         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_sub,
+	/* .tp_mul         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_mul,
+	/* .tp_div         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_div,
+	/* .tp_mod         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_mod,
+	/* .tp_shl         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_shl,
+	/* .tp_shr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_shr,
+	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_and,
+	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_or,
+	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_xor,
+	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_pow,
 	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&se_inc,
 	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&se_dec,
 	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&se_inplace_add,
@@ -419,23 +419,23 @@ PRIVATE struct type_math se_math = {
 
 PRIVATE struct type_cmp se_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_ge
 };
 
 PRIVATE struct type_seq se_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_setitem,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_delrange,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_getitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_setitem,
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_getrange,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&se_setrange
 };
 
@@ -577,15 +577,15 @@ INTERN DeeTypeObject SeqEach_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&se_fini,
-		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_assign,
-		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&se_moveassign
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_moveassign
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_str,
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_repr,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&se_bool
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&se_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&se_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&se_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &se_math,
@@ -601,7 +601,7 @@ INTERN DeeTypeObject SeqEach_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict, DeeObject *))&se_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&se_call_kw,
 };
 
 #undef DEFINE_SEQ_EACH_TRINARY
@@ -989,17 +989,17 @@ PRIVATE struct type_math seo_math = {
 	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_inv,
 	/* .tp_pos         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_pos,
 	/* .tp_neg         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_neg,
-	/* .tp_add         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_add,
-	/* .tp_sub         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_sub,
-	/* .tp_mul         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_mul,
-	/* .tp_div         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_div,
-	/* .tp_mod         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_mod,
-	/* .tp_shl         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_shl,
-	/* .tp_shr         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_shr,
-	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_and,
-	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_or,
-	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_xor,
-	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_pow,
+	/* .tp_add         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_add,
+	/* .tp_sub         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_sub,
+	/* .tp_mul         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_mul,
+	/* .tp_div         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_div,
+	/* .tp_mod         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_mod,
+	/* .tp_shl         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_shl,
+	/* .tp_shr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_shr,
+	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_and,
+	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_or,
+	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_xor,
+	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_pow,
 	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&seo_inc,
 	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&seo_dec,
 	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))seo_inplace_add,
@@ -1017,12 +1017,12 @@ PRIVATE struct type_math seo_math = {
 
 PRIVATE struct type_cmp sew_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sew_ge
 };
 
 
@@ -1215,7 +1215,7 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_size,
 	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seo_getitem,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
@@ -1254,15 +1254,15 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
-		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_assign,
-		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sew_moveassign
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_moveassign
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ NULL,
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&sew_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&sew_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &seo_math,
@@ -1278,7 +1278,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ seo_class_members,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict, DeeObject *))&sew_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&sew_call_kw,
 };
 
 
@@ -1463,12 +1463,12 @@ PRIVATE struct type_nii sewi_nii = {
 
 PRIVATE struct type_cmp sewi_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sewi_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sewi_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sewi_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sewi_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sewi_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sewi_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_ge,
 	/* .tp_nii  = */ &sewi_nii
 };
 

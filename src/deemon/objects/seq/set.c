@@ -466,12 +466,12 @@ err:
 
 PRIVATE struct type_cmp suiter_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&suiter_ge
 };
 
 PRIVATE struct type_member suiter_members[] = {
@@ -481,12 +481,12 @@ PRIVATE struct type_member suiter_members[] = {
 
 PRIVATE struct type_getset suiter_getsets[] = {
 	{ "__iter__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&suiter_get_iter, NULL,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_iter,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&suiter_get_iter, NULL,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&suiter_set_iter,
 	  DOC("->?DIterator") },
 	{ "__in2nd__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&suiter_get_in2nd, NULL,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&suiter_set_in2nd,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&suiter_get_in2nd, NULL,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&suiter_set_in2nd,
 	  DOC("->?Dbool") },
 	{ NULL }
 };
@@ -631,7 +631,7 @@ err_r:
 PRIVATE struct type_seq su_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&su_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&su_contains,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&su_contains,
 };
 
 PRIVATE struct type_member su_class_members[] = {
@@ -883,7 +883,7 @@ err:
 PRIVATE struct type_seq ssd_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssd_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&ssd_contains,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
 };
 
 PRIVATE struct type_member ssd_class_members[] = {
@@ -1071,12 +1071,12 @@ DEFINE_SIITER_COMPARE(siiter_ge, DeeObject_CompareGeObject)
 
 PRIVATE struct type_cmp siiter_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&siiter_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&siiter_ge
 };
 
 PRIVATE struct type_member siiter_members[] = {
@@ -1194,7 +1194,7 @@ err_r:
 PRIVATE struct type_seq si_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&si_contains,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
 };
 
 PRIVATE struct type_member si_class_members[] = {
@@ -1398,7 +1398,7 @@ err:
 PRIVATE struct type_seq sd_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sd_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sd_contains,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
 };
 
 PRIVATE struct type_member sd_class_members[] = {

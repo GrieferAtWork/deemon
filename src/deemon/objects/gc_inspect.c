@@ -133,7 +133,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&gcsetiterator_ctor,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&gcsetiterator_copy,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&gcsetiterator_copy,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR(GCSetIterator)
@@ -255,7 +255,7 @@ gcset_contains(GCSet *__restrict self, DeeObject *__restrict other) {
 PRIVATE struct type_seq gcset_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcset_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcset_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&gcset_contains
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcset_contains
 };
 
 PRIVATE struct type_member gcset_class_members[] = {

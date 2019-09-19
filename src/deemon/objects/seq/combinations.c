@@ -317,12 +317,12 @@ DEFINE_COMITER_COMPARE(comiter_ge, return_bool(self->ci_combi > other->ci_combi)
 
 PRIVATE struct type_cmp comiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&comiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&comiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&comiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&comiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&comiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&comiter_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_ge,
 };
 
 INTERN DeeTypeObject SeqCombinationsIterator_Type = {
@@ -798,7 +798,7 @@ err_r:
 }
 
 PRIVATE struct type_seq rcom_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&rcom_iter
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcom_iter
 };
 
 PRIVATE struct type_member rcom_class_members[] = {
@@ -1042,7 +1042,7 @@ err_r:
 }
 
 PRIVATE struct type_seq pmut_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&pmut_iter
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmut_iter
 };
 
 PRIVATE struct type_member pmut_class_members[] = {

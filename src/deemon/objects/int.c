@@ -2543,17 +2543,17 @@ PRIVATE struct type_math int_math = {
 	/* .tp_inv         = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&int_inv,
 	/* .tp_pos         = */ &DeeObject_NewRef,
 	/* .tp_neg         = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&int_neg,
-	/* .tp_add         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_add,
-	/* .tp_sub         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_sub,
-	/* .tp_mul         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_mul,
-	/* .tp_div         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_div,
-	/* .tp_mod         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_mod,
-	/* .tp_shl         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_shl,
-	/* .tp_shr         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_shr,
-	/* .tp_and         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_and,
-	/* .tp_or          = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_or,
-	/* .tp_xor         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_xor,
-	/* .tp_pow         = */ (DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&int_pow,
+	/* .tp_add         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_add,
+	/* .tp_sub         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_sub,
+	/* .tp_mul         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_mul,
+	/* .tp_div         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_div,
+	/* .tp_mod         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_mod,
+	/* .tp_shl         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_shl,
+	/* .tp_shr         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_shr,
+	/* .tp_and         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_and,
+	/* .tp_or          = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_or,
+	/* .tp_xor         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_xor,
+	/* .tp_pow         = */ (DeeObject *(DCALL *)(DeeObject *, DeeObject *))&int_pow,
 	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&int_inc,
 	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&int_dec,
 	/* .tp_inplace_add = */ NULL,
@@ -2945,7 +2945,7 @@ err:
 
 PRIVATE struct type_method int_methods[] = {
 	{ "tostr",
-	  (DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_tostr,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&int_tostr,
 	  DOC("(radix=!10,mode=!P{})->?Dstring\n"
 	      "@throw ValueError The given @mode was not recognized\n"
 	      "@throw NotImplemented The given @radix cannot be represented\n"
@@ -2958,19 +2958,19 @@ PRIVATE struct type_method int_methods[] = {
 	      "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hex",
-	  (DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_hex,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&int_hex,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(16,\"n\")} (s.a. #tostr)") },
 	{ "bin",
-	  (DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_bin,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&int_bin,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(2,\"n\")} (s.a. #tostr)") },
 	{ "oct",
-	  (DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_oct,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&int_oct,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. #tostr)") },
 	{ "tobytes",
-	  (DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_tobytes,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&int_tobytes,
 	  DOC("(length:?Dint,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
@@ -2984,7 +2984,7 @@ PRIVATE struct type_method int_methods[] = {
 	      "negative integers"),
 	  TYPE_METHOD_FKWDS },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&int_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&int_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -3046,14 +3046,14 @@ err:
 
 PRIVATE struct type_getset int_getsets[] = {
 	{ "bitcount",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&int_get_bitcount,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_bitcount,
 	  NULL,
 	  NULL,
 	  DOC("->?Dint\n"
 	      "Returns the minimum number of bits that are required "
 	      "in order to encode @this integer in unsigned two's complement") },
 	{ "bytecount",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&int_get_bytecount,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&int_get_bytecount,
 	  NULL,
 	  NULL,
 	  DOC("->?Dint\n"

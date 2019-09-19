@@ -281,7 +281,7 @@ ast_decwriteonly(struct ast *__restrict self) {
 
 
 DEFINE_AST_GENERATOR(ast_constexpr,
-                     (DeeObject * __restrict constant_expression)) {
+                     (DeeObject *__restrict constant_expression)) {
 	DREF struct ast *result = ast_new();
 	ASSERT_OBJECT(constant_expression);
 	if likely(result) {

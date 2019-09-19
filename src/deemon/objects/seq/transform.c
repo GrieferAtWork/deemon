@@ -89,7 +89,7 @@ err:
 
 PRIVATE struct type_getset transiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&transiter_seq_get, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&transiter_seq_get, NULL, NULL,
 	  DOC("->?Ert:SeqTransformation") },
 	{ NULL }
 };
@@ -128,12 +128,12 @@ DEFINE_COMPARE(transiter_ge, DeeObject_CompareGeObject, OPERATOR_GE)
 
 PRIVATE struct type_cmp transiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&transiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&transiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&transiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&transiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&transiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&transiter_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_ge
 };
 
 PRIVATE int DCALL
@@ -377,10 +377,10 @@ PRIVATE struct type_seq trans_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&trans_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&trans_size,
 	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&trans_getitem,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&trans_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&trans_getrange,
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&trans_getrange,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
 	/* .tp_nsi       = */ &trans_nsi

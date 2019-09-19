@@ -925,7 +925,7 @@ again:
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_VNewf(char const *__restrict format, va_list args) {
 	struct va_list_struct *pargs;
 	DREF DeeObject *result, **iter;
@@ -1287,7 +1287,7 @@ Dee_Packf(char const *__restrict format, ...) {
 	return result;
 }
 
-PUBLIC DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 DeeTuple_Newf(char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;

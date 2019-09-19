@@ -155,7 +155,7 @@ stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 
 PRIVATE struct type_getset stringordinalsiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stringordinalsiter_seq,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_seq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:StringOrdinals") },
@@ -288,8 +288,8 @@ err:
 PRIVATE struct type_seq stringordinals_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinals_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinals_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringordinals_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&stringordinals_get,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_get,
 };
 
 PRIVATE struct type_member stringordinals_members[] = {

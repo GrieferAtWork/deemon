@@ -34,12 +34,10 @@
 
 DECL_BEGIN
 
-INTDEF DREF DeeObject *DCALL
-get_generic_attribute(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      DeeObject *__restrict name);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name);
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 object_format_generic(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
                       /*utf-8*/ char const *__restrict format_str,
@@ -239,7 +237,7 @@ err_bad_format_str:
 
 
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 object_format_impl(DeeObject *__restrict self,
                    dformatprinter printer, void *arg,
                    /*utf-8*/ char const *__restrict format_str,
@@ -299,7 +297,7 @@ call_format_function:
 	return object_format_generic(self, printer, arg, format_str, format_len);
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 DeeObject_PrintFormatString(DeeObject *__restrict self,
                             dformatprinter printer, void *arg,
                             /*utf-8*/ char const *__restrict format_str,
@@ -307,7 +305,7 @@ DeeObject_PrintFormatString(DeeObject *__restrict self,
 	return object_format_impl(self, printer, arg, format_str, format_len, NULL);
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 DeeObject_PrintFormat(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
                       DeeObject *__restrict format_str) {

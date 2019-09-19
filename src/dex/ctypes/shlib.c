@@ -330,14 +330,14 @@ err:
 PRIVATE struct type_seq shlib_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL, /* TODO */
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL, /* TODO */
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&shlib_getitem
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, /* TODO */
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_getitem
 };
 
 PRIVATE struct type_attr shlib_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&shlib_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
+	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_getattr,
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))NULL /* TODO */
 };
 
@@ -389,7 +389,7 @@ err:
 
 
 PRIVATE struct type_method shlib_methods[] = {
-	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&shlib_base,
+	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&shlib_base,
 	  DOC("->?Aptr?Gvoid\nReturns the base address of the shared library") },
 	{ NULL }
 };

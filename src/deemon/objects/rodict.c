@@ -248,12 +248,12 @@ DEFINE_ITERATOR_COMPARE(rodictiterator_ge, >=)
 
 PRIVATE struct type_cmp rodictiterator_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodictiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodictiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodictiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodictiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodictiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodictiterator_ge
 };
 
 
@@ -275,7 +275,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&rodictiterator_ctor,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodictiterator_copy,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&rodictiterator_copy,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ (int (DCALL *)(size_t, DeeObject **__restrict))&rodictiterator_init,
 				TYPE_FIXED_ALLOCATOR(DictIterator)
@@ -868,8 +868,8 @@ PRIVATE struct type_nsi rodict_nsi = {
 PRIVATE struct type_seq rodict_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rodict_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodict_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rodict_getitem,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rodict_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
@@ -903,11 +903,11 @@ err:
 
 PRIVATE struct type_method rodict_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&rodict_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&rodict_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&rodict_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&rodict_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

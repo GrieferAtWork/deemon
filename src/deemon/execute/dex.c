@@ -413,7 +413,7 @@ again:
 
 INTERN int DCALL
 dex_initialize(DeeDexObject *__restrict self) {
-	int (DCALL * func)(DeeDexObject * __restrict self);
+	int (DCALL *func)(DeeDexObject * __restrict self);
 	ASSERT(self->d_dex);
 	func = self->d_dex->d_init;
 	if (func && (*func)(self))

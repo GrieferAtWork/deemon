@@ -126,12 +126,12 @@ DEFINE_MEI_COMPARE(mei_ge, >=)
 
 PRIVATE struct type_cmp mei_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mei_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mei_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mei_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mei_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mei_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mei_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mei_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mei_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mei_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mei_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mei_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mei_ge,
 };
 
 LOCAL DREF DeeObject *DCALL
@@ -230,7 +230,7 @@ mei_getseq(ModuleExportsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset mei_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&mei_getseq },
+	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mei_getseq },
 	{ NULL }
 };
 
@@ -502,17 +502,17 @@ unknown_key:
 PRIVATE struct type_seq me_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&me_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&me_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&me_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&me_get,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&me_del,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&me_set
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&me_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&me_get,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&me_del,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&me_set
 };
 
 
 
 PRIVATE struct type_method me_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&me_get_f,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&me_get_f,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }
@@ -694,7 +694,7 @@ mgi_getseq(ModuleGlobalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset mgi_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&mgi_getseq },
+	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mgi_getseq },
 	{ NULL }
 };
 #undef READ_INDEX
@@ -855,9 +855,9 @@ PRIVATE struct type_seq mg_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mg_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mg_size,
 	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mg_get,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&mg_del,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&mg_set
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mg_get,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&mg_del,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&mg_set
 };
 
 PRIVATE struct type_member mg_class_members[] = {

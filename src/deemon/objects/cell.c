@@ -40,7 +40,7 @@ DECL_BEGIN
 
 typedef DeeCellObject Cell;
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_New(DeeObject *__restrict item) {
 	DREF Cell *result;
 	ASSERT_OBJECT(item);
@@ -51,9 +51,7 @@ DeeCell_New(DeeObject *__restrict item) {
 	DeeObject_Init(result, &DeeCell_Type);
 	Dee_Incref(item);
 	result->c_item = item;
-#ifndef CONFIG_NO_THREADS
 	rwlock_init(&result->c_lock);
-#endif /* !CONFIG_NO_THREADS */
 	DeeGC_Track((DeeObject *)result);
 done:
 	return (DREF DeeObject *)result;
@@ -62,9 +60,7 @@ done:
 PRIVATE int DCALL
 cell_ctor(Cell *__restrict self) {
 	self->c_item = NULL;
-#ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
 
@@ -75,9 +71,7 @@ cell_copy(Cell *__restrict self,
 	self->c_item = other->c_item;
 	Dee_XIncref(self->c_item);
 	DeeCell_LockEndRead(other);
-#ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
 
@@ -87,9 +81,7 @@ cell_init(Cell *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:Cell", &self->c_item))
 		return -1;
 	Dee_Incref(self->c_item);
-#ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->c_lock);
-#endif /* !CONFIG_NO_THREADS */
 	return 0;
 }
 
@@ -122,7 +114,7 @@ cell_deepload(Cell *__restrict self) {
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_TryGet(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
@@ -140,7 +132,7 @@ PRIVATE void DCALL err_empty_cell(void) {
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
 DeeCell_Get(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeCell_TryGet(self);
@@ -152,8 +144,8 @@ DeeCell_Get(DeeObject *__restrict self) {
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeCell_Xch(DeeObject *__restrict self,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeCell_Xch(DeeObject *self,
             DeeObject *value) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
@@ -167,8 +159,8 @@ DeeCell_Xch(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeCell_XchNonNull(DeeObject *__restrict self,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeCell_XchNonNull(DeeObject *self,
                    DeeObject *value) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
@@ -187,8 +179,8 @@ DeeCell_XchNonNull(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeCell_CmpXch(DeeObject *__restrict self,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeCell_CmpXch(DeeObject *self,
                DeeObject *old_value,
                DeeObject *new_value) {
 	DREF DeeObject *result;
@@ -208,7 +200,7 @@ DeeCell_CmpXch(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC int DCALL
+PUBLIC NONNULL((1)) int DCALL
 DeeCell_Del(DeeObject *__restrict self) {
 	DREF DeeObject *old_value;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
@@ -222,9 +214,8 @@ DeeCell_Del(DeeObject *__restrict self) {
 	return 0;
 }
 
-PUBLIC int DCALL
-DeeCell_Set(DeeObject *__restrict self,
-            DeeObject *__restrict value) {
+PUBLIC NONNULL((1)) int DCALL
+DeeCell_Set(DeeObject *self, DeeObject *value) {
 	DREF DeeObject *old_value;
 	ASSERT_OBJECT_TYPE(self, &DeeCell_Type);
 	ASSERT_OBJECT(value);
@@ -262,20 +253,24 @@ cell_repr(Cell *__restrict self) {
 
 #ifdef CONFIG_NO_THREADS
 #define CELL_READITEM(x) DeeCell_Item(x)
-#else
+#else /* CONFIG_NO_THREADS */
 #define CELL_READITEM(x) ATOMIC_READ((x)->c_item)
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE int DCALL
 cell_bool(Cell *__restrict self) {
 	return CELL_READITEM(self) != NULL;
 }
 
+PRIVATE dhash_t DCALL
+cell_hash(Cell *__restrict self) {
+	return DeeObject_HashGeneric(CELL_READITEM(self));
+}
+
 
 #define DEFINE_CELL_COMPARE(name, op)                                \
 	PRIVATE DREF DeeObject *DCALL                                    \
-	name(Cell *__restrict self,                                      \
-	     Cell *__restrict other) {                                   \
+	name(Cell *self, Cell *other) {                                  \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeCell_Type)) \
 			return NULL;                                             \
 		return_bool(DeeObject_Id(CELL_READITEM(self)) op             \
@@ -290,13 +285,13 @@ DEFINE_CELL_COMPARE(cell_ge, >=)
 #undef DEFINE_CELL_COMPARE
 
 PRIVATE struct type_cmp cell_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject * __restrict)) NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cell_ge
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&cell_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cell_ge
 };
 
 
@@ -308,8 +303,7 @@ PRIVATE struct type_getset cell_getsets[] = {
 };
 
 PRIVATE DREF DeeObject *DCALL
-cell_get(Cell *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+cell_get(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "|o:get", &def))
 		goto err;
@@ -327,8 +321,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_delete(Cell *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+cell_delete(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *oldval;
 	if (DeeArg_Unpack(argc, argv, ":delete"))
 		goto err;
@@ -342,8 +335,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_pop(Cell *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+cell_pop(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *oldval, *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:pop", &def))
 		goto err;
@@ -361,8 +353,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_set(Cell *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+cell_set(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *newval;
 	if (DeeArg_Unpack(argc, argv, "o:set", &newval))
 		goto err;
@@ -376,8 +367,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_xch(Cell *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+cell_xch(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *value, *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:xch", &value, &def))
 		goto err;
@@ -398,8 +388,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_cmpdel(Cell *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+cell_cmpdel(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *oldval, *result;
 	if (DeeArg_Unpack(argc, argv, "o:cmpdel", &oldval))
 		goto err;
@@ -411,8 +400,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_cmpxch(Cell *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+cell_cmpxch(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *oldval, *newval = NULL, *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|oo:cmpxch", &oldval, &newval, &def))
 		goto err;
@@ -440,8 +428,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_cmpset(Cell *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+cell_cmpset(Cell *self, size_t argc, DeeObject **__restrict argv) {
 	DeeObject *oldval, *newval = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:cmpset", &oldval, &newval))
 		goto err;
@@ -455,7 +442,7 @@ err:
 
 PRIVATE struct type_method cell_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_get,
 	  DOC("->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "Returns the contained value of the Cell\n"
@@ -463,24 +450,24 @@ PRIVATE struct type_method cell_methods[] = {
 	      "(def)->\n"
 	      "Returns the contained value of the Cell or @def when it is empty") },
 	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_delete,
 	  DOC("->?Dbool\n"
 	      "Delete the value stored in @this Cell, returning :true if "
 	      "the Cell wasn't empty before, or :false if it already was") },
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_pop,
 	  DOC("->\n"
 	      "@throw ValueError The Cell was empty\n"
 	      "\n"
 	      "(def)->\n"
 	      "Pop and return the previously contained object, @def, or throw a ValueError") },
 	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_set,
 	  DOC("(value)->?Dbool\n"
 	      "Set (override) @this Cell's value, returning :true if a previous value "
 	      "has been overwritten, or :falue if no value had been set before") },
 	{ DeeString_STR(&str_xch),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_xch,
 	  DOC("(value)->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
@@ -488,12 +475,12 @@ PRIVATE struct type_method cell_methods[] = {
 	      "(value,def)->\n"
 	      "Returns the contained value of the Cell or @def when it is empty") },
 	{ "cmpdel",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_cmpdel,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_cmpdel,
 	  DOC("(old_value)->?Dbool\n"
 	      "Atomically check if the stored object's id matches @{old_value}. If this is "
 	      "the case, delete the stored object and return :{true}. Otherwise, return :false") },
 	{ "cmpxch",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_cmpxch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_cmpxch,
 	  DOC("(old_value,new_value)->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "\n"
@@ -511,7 +498,7 @@ PRIVATE struct type_method cell_methods[] = {
 	      "Return :true and atomically set @new_value as stored object only "
 	      "if no object had been set before. Otherwise, return :false") },
 	{ "cmpset",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_cmpset,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_cmpset,
 	  DOC("(old_value)->?Dbool\n"
 	      "(old_value,new_value)->?Dbool\n"
 	      "Atomically check if the stored value equals @old_value and return :true "
@@ -519,11 +506,11 @@ PRIVATE struct type_method cell_methods[] = {
 	      "When @new_value is omit, the function behaves identical to #cmpdel") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "del",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_delete,
 	  DOC("->?Dbool\n"
 	      "Deprecated alias for #delete") },
 	{ "exchange",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&cell_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_xch,
 	  DOC("(value)->\n"
 	      "(value,def)->\n"
 	      "Deprecated alias for #xch") },

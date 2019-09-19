@@ -180,8 +180,8 @@ im_ne(InstanceMethod *__restrict self,
 
 PRIVATE struct type_cmp im_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&im_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&im_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&im_ne,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&im_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&im_ne,
 };
 
 
@@ -312,24 +312,24 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 
 PRIVATE struct type_getset im_getsets[] = {
 	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemethod_get_name, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "The name of the function being bound, or :none if unknown") },
 	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemethod_get_doc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "The documentation string of the function being bound, or :none if unknown") },
 	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemethod_get_kwds, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_kwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
 	      "Returns a sequence of keyword argument names accepted by @this function\n"
 	      "If @this function doesn't accept keyword arguments, an empty sequence is returned") },
 	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemethod_get_type, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
 	      "The type implementing the function that is being bound, or :none if unknown") },
 	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&instancemethod_get_module, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&instancemethod_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "The type within which the bound function was defined "
 	      "(alias for :Function.__module__ though ${__func__.__module__})\n"
@@ -383,7 +383,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&im_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&im_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&im_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

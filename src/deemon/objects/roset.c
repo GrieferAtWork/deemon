@@ -170,12 +170,12 @@ DEFINE_ITERATOR_COMPARE(rosetiterator_ge, >=)
 
 PRIVATE struct type_cmp rosetiterator_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rosetiterator_ge
 };
 
 
@@ -196,7 +196,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&rosetiterator_ctor,
-				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&rosetiterator_copy,
+				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&rosetiterator_copy,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ (int (DCALL *)(size_t, DeeObject **__restrict))&rosetiterator_init,
 				TYPE_FIXED_ALLOCATOR(SetIterator)
@@ -600,7 +600,7 @@ err:
 PRIVATE struct type_seq roset_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&roset_contains
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&roset_contains
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -617,7 +617,7 @@ err:
 
 PRIVATE struct type_method roset_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&roset_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&roset_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

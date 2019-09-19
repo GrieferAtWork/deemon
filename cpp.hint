@@ -1,0 +1,166 @@
+#define __extension__
+#define attribute(x)
+#define __attribute(x)
+#define __attribute__(x)
+#define __volatile volatile
+#define __volatile__ volatile
+#define __const const
+#define __const__ const
+#define __label__
+#define typeof decltype
+#define __typeof decltype
+#define __typeof__ decltype
+#define _Atomic
+#define __thread
+#define __auto_type auto
+#define inline
+#define __inline
+#define __inline__
+#define _Noreturn
+#define _Thread_local
+#define __flash
+#define __flash1
+#define __flash2
+#define __flash3
+#define __flash4
+#define __flash5
+#define __memx
+#define __far
+#define __ea
+#define __seg_fs
+#define __seg_gs
+#define __signed signed
+#define __signed__ signed
+#define __unsigned unsigned
+#define __unsigned__ unsigned
+#define __restrict restrict
+#define __restrict__ restrict
+
+#define DREF
+#define ATOMIC_DATA
+#define __LIBCCALL
+#define DCALL
+#define DECL_BEGIN
+#define DECL_END
+#define __NULLPTR 0
+#define NULL 0
+
+#define ATTR_NOINLINE
+#define ATTR_NORETURN
+#define ATTR_FASTCALL
+#define ATTR_STDCALL
+#define ATTR_CDECL
+#define ATTR_SYSVABI
+#define ATTR_MSABI
+#define ATTR_PURE
+#define ATTR_CONST
+#define ATTR_LEAF
+#define ATTR_FLATTEN
+#define ATTR_MALLOC
+#define ATTR_HOT
+#define ATTR_COLD
+#define ATTR_WEAK
+#define ATTR_ALLOC_SIZE(x)
+#define ATTR_ASSUME_ALIGNED
+#define ATTR_ALLOC_ALIGN(x)
+#define ATTR_NOTHROW
+#define ATTR_DLLIMPORT
+#define ATTR_DLLEXPORT
+#define ATTR_NOCLONE
+#define ATTR_USED
+#define ATTR_UNUSED
+#define ATTR_SENTINEL
+#define ATTR_SENTINEL_O(x)
+#define ATTR_THREAD
+#define ATTR_DEPRECATED(x)
+#define ATTR_DEPRECATED_
+#define ATTR_WARNING(x)
+#define ATTR_ERROR(x)
+#define ATTR_SECTION(x)
+#define ATTR_RETNONNULL
+#define ATTR_ALIGNED(x)
+#define ATTR_ALIAS(x)
+#define ATTR_INLINE
+#define ATTR_FORCEINLINE
+#define ATTR_PACKED
+#define ATTR_RETURNS_TWICE
+#define ATTR_EXTERNALLY_VISIBLE
+
+#define NONNULL(x)
+#define WUNUSED
+#define UNUSED(x) x
+#define IMPDEF extern
+#define EXPDEF extern
+#define FUNDEF extern
+#define DATDEF extern
+#define PUBLIC
+#define INTERN
+#define PUBLIC_CONST
+#define INTERN_CONST
+#define INTDEF extern
+#define PRIVATE
+#define FORCELOCAL
+#define LOCAL
+#define DFL(x) = x
+#define COMPILER_FLEXIBLE_ARRAY(T,n) T n[]
+
+#define DEFINE_PRIVATE_ALIAS(new,old) int new() {}
+#define DEFINE_PUBLIC_ALIAS(new,old) int new() {}
+#define DEFINE_INTERN_ALIAS(new,old) int new() {}
+#define DEFINE_PRIVATE_WEAK_ALIAS(new,old) int new() {}
+#define DEFINE_PUBLIC_WEAK_ALIAS(new,old) int new() {}
+#define DEFINE_INTERN_WEAK_ALIAS(new,old) int new() {}
+
+#define LLIST(T)                  T *
+#define LLIST_NODE(T)             struct { T *ln_next, **ln_pself;  }
+#define DLIST(T)                  struct { T *dl_head, *dl_tail; }
+#define DLIST_NODE(T)             struct { T **dn_pnext, **dn_pprev, *dn_next, *dn_prev; }
+#define SLIST(T)                  T *
+#define SLIST_NODE(T)             struct { T *sn_next; }
+#define ATREE_HEAD(T)             T *
+#define ATREE_NODE(T,Tkey)        struct { T *a_min, *a_max; Tkey a_vmin, a_vmax; }
+#define ATREE_NODE_SINGLE(T,Tkey) struct { T *a_min, *a_max; Tkey a_vaddr; }
+#define ATREE_XNODE(T)            struct { T *a_min, *a_max; }
+#define DEFINE_ATOMIC_RWLOCK(name) struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
+#define DEFINE_RWLOCK(name)        struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
+#define Dee_DEFINE_RWLOCK(name)    struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
+
+#define likely
+#define unlikely
+#define __likely
+#define __unlikely
+#define likely_untraced
+#define unlikely_untraced
+#define __likely_untraced
+#define __unlikely_untraced
+#define untraced
+#define __untraced
+
+#define TRY
+#define EXCEPT
+
+#define CASE(x) case x:
+
+#define DeeSlab_ENUMERATE(func) func(0, 4) func(1, 5) func(2, 6) func(3, 8) func(4, 10)
+#define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index, size) \
+	void *DeeSlab_Malloc##size(void); \
+	void *DeeSlab_Calloc##size(void); \
+	void *DeeSlab_TryMalloc##size(void); \
+	void *DeeSlab_TryCalloc##size(void); \
+	void *DeeDbgSlab_Malloc##size(char const *file, int line); \
+	void *DeeDbgSlab_Calloc##size(char const *file, int line); \
+	void *DeeDbgSlab_TryMalloc##size(char const *file, int line); \
+	void *DeeDbgSlab_TryCalloc##size(char const *file, int line); \
+	void *DeeGCObject_SlabMalloc##size(void); \
+	void *DeeGCObject_SlabCalloc##size(void); \
+	void *DeeGCObject_SlabTryMalloc##size(void); \
+	void *DeeGCObject_SlabTryCalloc##size(void); \
+	void DeeSlab_Free##size(void *restrict ptr); \
+	void DeeDbgSlab_Free##size(void *restrict ptr, char const *file, int line); \
+	void DeeGCObject_SlabFree##size(void *restrict ptr);
+
+#define Dee_OBJECT_HEAD           Dee_ref_t ob_refcnt; DeeTypeObject *ob_type;
+#define Dee_OBJECT_HEAD_EX(Ttype) Dee_ref_t ob_refcnt; Ttype *ob_type;
+#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
+#define Dee_WEAKREF_SUPPORT       struct Dee_weakref_list ob_weakrefs;
+

@@ -197,7 +197,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 	{ "st_uid", &stat_getxxx, NULL, NULL, DeeStat_st_uid_doc },
 	{ "st_gid", &stat_getxxx, NULL, NULL, DeeStat_st_gid_doc },
 	{ "st_rdev", &stat_getxxx, NULL, NULL, DeeStat_st_rdev_doc },
-	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
+	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
 	{ "st_atime", &stat_getxxx, NULL, NULL, DeeStat_st_atime_doc },
 	{ "st_mtime", &stat_getxxx, NULL, NULL, DeeStat_st_mtime_doc },
 	{ "st_ctime", &stat_getxxx, NULL, NULL, DeeStat_st_ctime_doc },

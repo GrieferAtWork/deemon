@@ -575,8 +575,8 @@ PRIVATE struct type_nsi smap_nsi = {
 PRIVATE struct type_seq smap_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&smap_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&smap_getitem,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
@@ -592,7 +592,7 @@ PRIVATE struct type_member smap_class_members[] = {
 
 PRIVATE struct type_method smap_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&smap_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&smap_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }

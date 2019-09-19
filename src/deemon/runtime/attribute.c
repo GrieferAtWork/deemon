@@ -65,9 +65,9 @@ INTDEF int DCALL type_setattr(DeeObject *__restrict self, DeeObject *__restrict 
 //#define CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC 1
 //#define CONFIG_TYPE_ATTRIBUTE_ENUM_PREVENT_DUPLICATES 1
 
-PUBLIC dssize_t DCALL
-DeeObject_EnumAttr(DeeTypeObject *__restrict tp_self,
-                   DeeObject *__restrict self, denum_t proc, void *arg) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+DeeObject_EnumAttr(DeeTypeObject *tp_self,
+                   DeeObject *self, denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	DeeTypeObject *iter = tp_self;
 	do {
@@ -317,9 +317,8 @@ err:
 	goto done;
 }
 
-PUBLIC dssize_t DCALL
-DeeObject_GenericEnumAttr(DeeTypeObject *__restrict tp_self,
-                          denum_t proc, void *arg) {
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeObject_GenericEnumAttr(DeeTypeObject *tp_self, denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
 	ASSERT_OBJECT(tp_self);
 	ASSERT(DeeType_Check(tp_self));
@@ -354,11 +353,9 @@ err:
 
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_TGenericGetAttrString(DeeTypeObject *__restrict tp_self,
-                                DeeObject *__restrict self,
-                                char const *__restrict name,
-                                dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_TGenericGetAttrString(DeeTypeObject *tp_self, DeeObject *self,
+                                char const *__restrict name, dhash_t hash) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
@@ -382,11 +379,9 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_TGenericGetAttrStringLen(DeeTypeObject *__restrict tp_self,
-                                   DeeObject *__restrict self,
-                                   char const *__restrict name,
-                                   size_t namesize,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_TGenericGetAttrStringLen(DeeTypeObject *tp_self, DeeObject *self,
+                                   char const *__restrict name, size_t namesize,
                                    dhash_t hash) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(tp_self);
@@ -411,7 +406,7 @@ done:
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TGenericBoundAttrString(DeeTypeObject *__restrict tp_self,
                                   DeeObject *__restrict self,
                                   char const *__restrict name, dhash_t hash) {
@@ -440,7 +435,7 @@ is_bound:
 	return 1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TGenericBoundAttrStringLen(DeeTypeObject *__restrict tp_self,
                                      DeeObject *__restrict self,
                                      char const *__restrict name,
@@ -470,11 +465,10 @@ is_bound:
 	return 1;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_TGenericCallAttrString(DeeTypeObject *__restrict tp_self,
-                                 DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_TGenericCallAttrString(DeeTypeObject *tp_self, DeeObject *self,
                                  char const *__restrict name, dhash_t hash,
-                                 size_t argc, DeeObject **__restrict argv) {
+                                 size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
@@ -506,12 +500,10 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_TGenericCallAttrStringLen(DeeTypeObject *__restrict tp_self,
-                                    DeeObject *__restrict self,
-                                    char const *__restrict name,
-                                    size_t namelen, dhash_t hash,
-                                    size_t argc, DeeObject **__restrict argv) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_TGenericCallAttrStringLen(DeeTypeObject *tp_self, DeeObject *self,
+                                    char const *__restrict name, size_t namelen,
+                                    dhash_t hash, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
@@ -543,11 +535,10 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_TGenericCallAttrStringKw(DeeTypeObject *__restrict tp_self,
-                                   DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_TGenericCallAttrStringKw(DeeTypeObject *tp_self, DeeObject *self,
                                    char const *__restrict name, dhash_t hash,
-                                   size_t argc, DeeObject **__restrict argv,
+                                   size_t argc, DeeObject **argv,
                                    DeeObject *kw) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(tp_self);
@@ -580,12 +571,10 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *__restrict tp_self,
-                                      DeeObject *__restrict self,
-                                      char const *__restrict name,
-                                      size_t namelen, dhash_t hash,
-                                      size_t argc, DeeObject **__restrict argv,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_TGenericCallAttrStringLenKw(DeeTypeObject *tp_self, DeeObject *self,
+                                      char const *__restrict name, size_t namelen,
+                                      dhash_t hash, size_t argc, DeeObject **argv,
                                       DeeObject *kw) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(tp_self);
@@ -618,7 +607,7 @@ done:
 	return result;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeObject_TGenericHasAttrString(DeeTypeObject *__restrict tp_self,
                                 char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
@@ -643,7 +632,7 @@ yes:
 	return true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeObject_TGenericHasAttrStringLen(DeeTypeObject *__restrict tp_self,
                                    char const *__restrict name,
                                    size_t namelen, dhash_t hash) {
@@ -669,9 +658,8 @@ yes:
 	return true;
 }
 
-PUBLIC int DCALL
-DeeObject_TGenericDelAttrString(DeeTypeObject *__restrict tp_self,
-                                DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_TGenericDelAttrString(DeeTypeObject *tp_self, DeeObject *self,
                                 char const *__restrict name, dhash_t hash) {
 	int result;
 	ASSERT_OBJECT(tp_self);
@@ -699,11 +687,10 @@ err_cant_access:
 	return err_cant_access_attribute(tp_self, name, ATTR_ACCESS_DEL);
 }
 
-PUBLIC int DCALL
-DeeObject_TGenericDelAttrStringLen(DeeTypeObject *__restrict tp_self,
-                                   DeeObject *__restrict self,
-                                   char const *__restrict name,
-                                   size_t namelen, dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeObject_TGenericDelAttrStringLen(DeeTypeObject *tp_self, DeeObject *self,
+                                   char const *__restrict name, size_t namelen,
+                                   dhash_t hash) {
 	int result;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
@@ -730,9 +717,8 @@ err_cant_access:
 	return err_cant_access_attribute_len(tp_self, name, namelen, ATTR_ACCESS_DEL);
 }
 
-PUBLIC int DCALL
-DeeObject_TGenericSetAttrString(DeeTypeObject *__restrict tp_self,
-                                DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
+DeeObject_TGenericSetAttrString(DeeTypeObject *tp_self, DeeObject *self,
                                 char const *__restrict name, dhash_t hash,
                                 DeeObject *__restrict value) {
 	int result;
@@ -761,12 +747,10 @@ err_cant_access:
 	return err_cant_access_attribute(tp_self, name, ATTR_ACCESS_SET);
 }
 
-PUBLIC int DCALL
-DeeObject_TGenericSetAttrStringLen(DeeTypeObject *__restrict tp_self,
-                                   DeeObject *__restrict self,
-                                   char const *__restrict name,
-                                   size_t namelen, dhash_t hash,
-                                   DeeObject *__restrict value) {
+PUBLIC WUNUSED NONNULL((1, 2, 3, 6)) int DCALL
+DeeObject_TGenericSetAttrStringLen(DeeTypeObject *tp_self, DeeObject *self,
+                                   char const *__restrict name, size_t namelen,
+                                   dhash_t hash, DeeObject *value) {
 	int result;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
@@ -793,9 +777,8 @@ err_cant_access:
 	return err_cant_access_attribute_len(tp_self, name, namelen, ATTR_ACCESS_SET);
 }
 
-INTERN int DCALL
-DeeObject_GenericFindAttrString(DeeTypeObject *__restrict tp_self,
-                                DeeObject *instance,
+INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
+DeeObject_GenericFindAttrString(DeeTypeObject *tp_self, DeeObject *instance,
                                 struct attribute_info *__restrict result,
                                 struct attribute_lookup_rules const *__restrict rules) {
 	int error;
@@ -1169,10 +1152,10 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeType_CallAttrString(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeType_CallAttrString(DeeTypeObject *self,
                        char const *__restrict name, dhash_t hash,
-                       size_t argc, DeeObject **__restrict argv) {
+                       size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter;
 	if ((result = DeeType_CallCachedClassAttr(self, name, hash, argc, argv)) != ITER_DONE)
@@ -1243,11 +1226,11 @@ done:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeType_CallAttrStringLen(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeType_CallAttrStringLen(DeeTypeObject *self,
                           char const *__restrict name,
                           size_t namelen, dhash_t hash,
-                          size_t argc, DeeObject **__restrict argv) {
+                          size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter;
 	if ((result = DeeType_CallCachedClassAttrLen(self, name, namelen, hash, argc, argv)) != ITER_DONE)
@@ -1321,10 +1304,10 @@ done:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeType_CallAttrStringKw(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeType_CallAttrStringKw(DeeTypeObject *self,
                          char const *__restrict name, dhash_t hash,
-                         size_t argc, DeeObject **__restrict argv,
+                         size_t argc, DeeObject **argv,
                          DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter;
@@ -1396,12 +1379,10 @@ done:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeType_CallAttrStringLenKw(DeeTypeObject *__restrict self,
-                            char const *__restrict name,
-                            size_t namelen,
-                            dhash_t hash,
-                            size_t argc, DeeObject **__restrict argv,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeType_CallAttrStringLenKw(DeeTypeObject *self,
+                            char const *__restrict name, size_t namelen,
+                            dhash_t hash, size_t argc, DeeObject **argv,
                             DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter;
@@ -1476,7 +1457,7 @@ done:
 	return result;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_HasAttrString(DeeTypeObject *__restrict self,
                       char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
@@ -1528,8 +1509,8 @@ yes:
 	return true;
 }
 
-INTERN bool DCALL
-DeeType_HasAttrStringLen(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_HasAttrStringLen(DeeTypeObject *self,
                          char const *__restrict name,
                          size_t namelen, dhash_t hash) {
 	DeeTypeObject *iter;
@@ -1581,8 +1562,9 @@ yes:
 	return true;
 }
 
-INTERN int (DCALL DeeType_DelAttrString)(DeeTypeObject *__restrict self,
-                                         char const *__restrict name, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeType_DelAttrString)(DeeTypeObject *__restrict self,
+                              char const *__restrict name, dhash_t hash) {
 	int result;
 	DeeTypeObject *iter;
 	if ((result = DeeType_DelCachedClassAttr(self, name, hash)) <= 0)
@@ -1649,10 +1631,10 @@ done:
 	return result;
 }
 
-INTERN int (DCALL DeeType_DelAttrStringLen)(DeeTypeObject *__restrict self,
-                                            char const *__restrict name,
-                                            size_t namelen,
-                                            dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeType_DelAttrStringLen)(DeeTypeObject *__restrict self,
+                                 char const *__restrict name,
+                                 size_t namelen, dhash_t hash) {
 	int result;
 	DeeTypeObject *iter;
 	if ((result = DeeType_DelCachedClassAttrLen(self, name, namelen, hash)) <= 0)
@@ -1725,9 +1707,10 @@ done:
 	return result;
 }
 
-INTERN int (DCALL DeeType_SetAttrString)(DeeTypeObject *__restrict self,
-                                         char const *__restrict name, dhash_t hash,
-                                         DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeType_SetAttrString)(DeeTypeObject *self,
+                              char const *__restrict name,
+                              dhash_t hash, DeeObject *value) {
 	int result;
 	DeeTypeObject *iter;
 	if ((result = DeeType_SetCachedClassAttr(self, name, hash, value)) <= 0)
@@ -1794,11 +1777,9 @@ done:
 	return result;
 }
 
-INTERN int (DCALL DeeType_SetAttrStringLen)(DeeTypeObject *__restrict self,
-                                            char const *__restrict name,
-                                            size_t namelen,
-                                            dhash_t hash,
-                                            DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 2, 5)) int
+(DCALL DeeType_SetAttrStringLen)(DeeTypeObject *self, char const *name,
+                                 size_t namelen, dhash_t hash, DeeObject *value) {
 	int result;
 	DeeTypeObject *iter;
 	if ((result = DeeType_SetCachedClassAttrLen(self, name, namelen, hash, value)) <= 0)
@@ -1872,8 +1853,8 @@ done:
 }
 
 
-INTERN DREF DeeObject *DCALL
-DeeType_GetInstanceAttrString(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeType_GetInstanceAttrString(DeeTypeObject *self,
                               char const *__restrict name, dhash_t hash) {
 	/* Use `tp_cache' and search for regular attributes, loading
 	 * them as though they were the equivalent typing in INSTANCE-mode.
@@ -1930,8 +1911,8 @@ done:
 	return result;
 }
 
-INTERN int DCALL
-DeeType_BoundInstanceAttrString(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeType_BoundInstanceAttrString(DeeTypeObject *self,
                                 char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
 	int result;
@@ -1969,10 +1950,10 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeType_CallInstanceAttrStringKw(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeType_CallInstanceAttrStringKw(DeeTypeObject *self,
                                  char const *__restrict name, dhash_t hash,
-                                 size_t argc, DeeObject **__restrict argv,
+                                 size_t argc, DeeObject **argv,
                                  DeeObject *kw) {
 	DeeTypeObject *iter;
 	DREF DeeObject *result;
@@ -2015,8 +1996,8 @@ done:
 	return result;
 }
 
-INTERN bool DCALL
-DeeType_HasInstanceAttrString(DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_HasInstanceAttrString(DeeTypeObject *self,
                               char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
 	if (DeeType_HasCachedInstanceAttr(self, name, hash))
@@ -2043,8 +2024,9 @@ yes:
 	return true;
 }
 
-INTERN int (DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *__restrict self,
-                                                 char const *__restrict name, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeType_DelInstanceAttrString)(DeeTypeObject *self,
+                                      char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
 	int result;
 	if ((result = DeeType_DelCachedInstanceAttr(self, name, hash)) <= 0)
@@ -2082,9 +2064,10 @@ done:
 	return result;
 }
 
-INTERN int (DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *__restrict self,
-                                                 char const *__restrict name, dhash_t hash,
-                                                 DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeType_SetInstanceAttrString)(DeeTypeObject *self,
+                                      char const *__restrict name,
+                                      dhash_t hash, DeeObject *value) {
 	DeeTypeObject *iter;
 	int result;
 	if ((result = DeeType_SetCachedInstanceAttr(self, name, hash, value)) <= 0)
@@ -2123,17 +2106,16 @@ done:
 }
 
 
-INTDEF DREF DeeObject *DCALL module_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF int DCALL module_delattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF int DCALL module_setattr(DeeObject *__restrict self, DeeObject *__restrict name, DeeObject *__restrict value);
-INTDEF DREF DeeObject *DCALL super_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF int DCALL super_delattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF int DCALL super_setattr(DeeObject *__restrict self, DeeObject *__restrict name, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL module_getattr(DeeObject *self, DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL module_delattr(DeeObject *self, DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL module_setattr(DeeObject *self, DeeObject *name, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_getattr(DeeObject *self, DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_delattr(DeeObject *self, DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL super_setattr(DeeObject *self, DeeObject *name, DeeObject *value);
 
 
-PUBLIC int
-(DCALL DeeObject_HasAttr)(DeeObject *__restrict self,
-                          /*String*/ DeeObject *__restrict attr_name) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_HasAttr)(DeeObject *self, /*String*/ DeeObject *attr_name) {
 	DeeTypeObject *iter, *tp_self;
 	dhash_t hash;
 	ASSERT_OBJECT(self);
@@ -2168,7 +2150,7 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object;
 				getattr = iter->tp_attr->tp_getattr;
 				if (getattr == &module_getattr)
@@ -2205,7 +2187,7 @@ err:
 	return -1;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrStringHash)(DeeObject *__restrict self,
                                     char const *__restrict attr_name,
                                     dhash_t hash) {
@@ -2240,7 +2222,7 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
 				getattr = iter->tp_attr->tp_getattr;
 				if (getattr == &module_getattr)
@@ -2281,7 +2263,7 @@ err:
 	return -1;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrStringLenHash)(DeeObject *__restrict self,
                                        char const *__restrict attr_name,
                                        size_t attrlen,
@@ -2317,7 +2299,7 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
 				getattr = iter->tp_attr->tp_getattr;
 				if (getattr == &module_getattr)
@@ -2359,9 +2341,8 @@ err:
 }
 
 
-PUBLIC int
-(DCALL DeeObject_BoundAttr)(DeeObject *__restrict self,
-                            /*String*/ DeeObject *__restrict attr_name) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_BoundAttr)(DeeObject *self, /*String*/ DeeObject *attr_name) {
 	int result;
 	dhash_t hash;
 	DeeTypeObject *iter;
@@ -2410,7 +2391,7 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object;
 				getattr = iter->tp_attr->tp_getattr;
 				if (getattr == &module_getattr)
@@ -2451,7 +2432,7 @@ err:
 	return -1;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_BoundAttrStringHash)(DeeObject *__restrict self,
                                       char const *__restrict attr_name,
                                       dhash_t hash) {
@@ -2500,7 +2481,7 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
 				getattr = iter->tp_attr->tp_getattr;
 				if (getattr == &module_getattr)
@@ -2545,7 +2526,7 @@ err:
 	return -1;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_BoundAttrStringLenHash)(DeeObject *__restrict self,
                                          char const *__restrict attr_name,
                                          size_t attrlen,
@@ -2595,7 +2576,7 @@ again:
 		if (iter->tp_attr) {
 do_iter_attr:
 			if likely(iter->tp_attr->tp_getattr) {
-				DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+				DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 				DREF DeeObject *found_object, *attr_name_ob;
 				getattr = iter->tp_attr->tp_getattr;
 				if (getattr == &module_getattr)
@@ -2641,11 +2622,9 @@ err:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_CallAttrKw(DeeObject *__restrict self,
-                     /*String*/ DeeObject *__restrict attr_name,
-                     size_t argc, DeeObject **__restrict argv,
-                     DeeObject *kw) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_CallAttrKw(DeeObject *self, /*String*/ DeeObject *attr_name,
+                     size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	dhash_t hash;
 	DeeTypeObject *iter, *tp_self;
@@ -2691,7 +2670,7 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -2703,9 +2682,9 @@ do_iter_attr:
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrKw(((SeqEachBase *)self)->se_seq, attr_name, argc, argv, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrKw(self, attr_name, argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -2730,11 +2709,10 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_CallAttrStringHashKw(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_CallAttrStringHashKw(DeeObject *self,
                                char const *__restrict attr_name, dhash_t hash,
-                               size_t argc, DeeObject **__restrict argv,
-                               DeeObject *kw) {
+                               size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
@@ -2775,7 +2753,7 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 			DREF DeeObject *attr_name_ob;
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
@@ -2794,9 +2772,9 @@ do_iter_attr:
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrStringKw(((SeqEachBase *)self)->se_seq, attr_name, hash, argc, argv, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrStringKw(self, attr_name, hash, argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -2825,11 +2803,11 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_CallAttrStringLenHashKw(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_CallAttrStringLenHashKw(DeeObject *self,
                                   char const *__restrict attr_name,
                                   size_t attrlen, dhash_t hash,
-                                  size_t argc, DeeObject **__restrict argv,
+                                  size_t argc, DeeObject **argv,
                                   DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
@@ -2871,7 +2849,7 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 			DREF DeeObject *attr_name_ob;
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
@@ -2891,9 +2869,9 @@ do_iter_attr:
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrStringLenKw(((SeqEachBase *)self)->se_seq, attr_name, attrlen, hash, argc, argv, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrStringLenKw(self, attr_name, attrlen, hash, argc, argv, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -2924,10 +2902,10 @@ done:
 }
 
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self,
-                                /*String*/ DeeObject *__restrict attr_name,
-                                DeeObject *__restrict args) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_CallAttrTuple)(DeeObject *self,
+                                /*String*/ DeeObject *attr_name,
+                                DeeObject *args) {
 	DREF DeeObject *result;
 	dhash_t hash;
 	DeeTypeObject *iter, *tp_self;
@@ -2971,7 +2949,7 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -2983,9 +2961,9 @@ do_iter_attr:
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrTuple(((SeqEachBase *)self)->se_seq, attr_name, args);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrTuple(self, attr_name, args);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -3010,11 +2988,9 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self,
-                                  /*String*/ DeeObject *__restrict attr_name,
-                                  DeeObject *__restrict args,
-                                  DeeObject *kw) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_CallAttrTupleKw)(DeeObject *self, /*String*/ DeeObject *attr_name,
+                                  DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result;
 	dhash_t hash;
 	DeeTypeObject *iter, *tp_self;
@@ -3058,7 +3034,7 @@ again:
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -3070,9 +3046,9 @@ do_iter_attr:
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrTupleKw(((SeqEachBase *)self)->se_seq, attr_name, args, kw);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrTupleKw(self, attr_name, args, kw);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -3099,21 +3075,20 @@ done:
 
 #else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_CallAttrTuple)(DeeObject *__restrict self,
-                                /*String*/ DeeObject *__restrict attr_name,
-                                DeeObject *__restrict args) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_CallAttrTuple)(DeeObject *self,
+                                /*String*/ DeeObject *attr_name,
+                                DeeObject *args) {
 	return DeeObject_CallAttr(self,
 	                          attr_name,
 	                          DeeTuple_SIZE(args),
 	                          DeeTuple_ELEM(args));
 }
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_CallAttrTupleKw)(DeeObject *__restrict self,
-                                  /*String*/ DeeObject *__restrict attr_name,
-                                  DeeObject *__restrict args,
-                                  DeeObject *kw) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_CallAttrTupleKw)(DeeObject *self,
+                                  /*String*/ DeeObject *attr_name,
+                                  DeeObject *args, DeeObject *kw) {
 	return DeeObject_CallAttrKw(self,
 	                            attr_name,
 	                            DeeTuple_SIZE(args),
@@ -3123,7 +3098,7 @@ PUBLIC DREF DeeObject *
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_GetAttrStringHash(DeeObject *__restrict self,
                             char const *__restrict attr_name,
                             dhash_t hash) {
@@ -3168,7 +3143,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -3200,11 +3175,10 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_GetAttrStringLenHash(DeeObject *__restrict self,
                                char const *__restrict attr_name,
-                               size_t attrlen,
-                               dhash_t hash) {
+                               size_t attrlen, dhash_t hash) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
@@ -3246,7 +3220,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -3279,7 +3253,7 @@ done:
 	return result;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_DelAttrStringHash)(DeeObject *__restrict self,
                                     char const *__restrict attr_name,
                                     dhash_t hash) {
@@ -3324,7 +3298,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL * delattr)(DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL *delattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			delattr = iter->tp_attr->tp_delattr;
 			if (delattr == &type_delattr)
@@ -3361,11 +3335,10 @@ err_noaccess:
 	goto err;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_DelAttrStringLenHash)(DeeObject *__restrict self,
                                        char const *__restrict attr_name,
-                                       size_t attrlen,
-                                       dhash_t hash) {
+                                       size_t attrlen, dhash_t hash) {
 	int result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
@@ -3407,7 +3380,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL * delattr)(DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL *delattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			delattr = iter->tp_attr->tp_delattr;
 			if (delattr == &type_delattr)
@@ -3446,11 +3419,10 @@ err_noaccess:
 	goto err;
 }
 
-PUBLIC int
-(DCALL DeeObject_SetAttrStringHash)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeObject_SetAttrStringHash)(DeeObject *self,
                                     char const *__restrict attr_name,
-                                    dhash_t hash,
-                                    DeeObject *__restrict value) {
+                                    dhash_t hash, DeeObject *value) {
 	int result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
@@ -3492,7 +3464,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL * setattr)(DeeObject * __restrict, DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL *setattr)(DeeObject *, DeeObject *, DeeObject *);
 do_iter_attr:
 			setattr = iter->tp_attr->tp_setattr;
 			if (setattr == &type_setattr)
@@ -3529,12 +3501,11 @@ err_noaccess:
 	goto err;
 }
 
-PUBLIC int
-(DCALL DeeObject_SetAttrStringLenHash)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 5)) int
+(DCALL DeeObject_SetAttrStringLenHash)(DeeObject *self,
                                        char const *__restrict attr_name,
-                                       size_t attrlen,
-                                       dhash_t hash,
-                                       DeeObject *__restrict value) {
+                                       size_t attrlen, dhash_t hash,
+                                       DeeObject *value) {
 	int result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
@@ -3576,7 +3547,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			int (DCALL * setattr)(DeeObject * __restrict, DeeObject * __restrict, DeeObject * __restrict);
+			int (DCALL *setattr)(DeeObject *, DeeObject *, DeeObject *);
 do_iter_attr:
 			setattr = iter->tp_attr->tp_setattr;
 			if (setattr == &type_setattr)
@@ -3616,10 +3587,10 @@ err_noaccess:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_CallAttrStringHash(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_CallAttrStringHash(DeeObject *self,
                              char const *__restrict attr_name, dhash_t hash,
-                             size_t argc, DeeObject **__restrict argv) {
+                             size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
@@ -3661,7 +3632,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -3677,9 +3648,9 @@ do_iter_attr:
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrString(((SeqEachBase *)self)->se_seq, attr_name, hash, argc, argv);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrString(self, attr_name, hash, argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -3708,11 +3679,11 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_CallAttrStringLenHash(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_CallAttrStringLenHash(DeeObject *self,
                                 char const *__restrict attr_name,
                                 size_t attrlen, dhash_t hash,
-                                size_t argc, DeeObject **__restrict argv) {
+                                size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter, *tp_self;
 	ASSERT_OBJECT(self);
@@ -3754,7 +3725,7 @@ again:
 			break;
 		if (iter->tp_attr) {
 			DREF DeeObject *attr_name_ob;
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -3770,9 +3741,9 @@ do_iter_attr:
 				goto again;
 			}
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttrStringLen(((SeqEachBase *)self)->se_seq, attr_name, attrlen, hash, argc, argv);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttrStringLen(self, attr_name, attrlen, hash, argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -3803,57 +3774,55 @@ done:
 }
 
 
-PUBLIC DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_GetAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr_name) {
 	return DeeObject_GetAttrStringHash(self, attr_name, Dee_HashStr(attr_name));
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr_name) {
 	return DeeObject_HasAttrStringHash(self, attr_name, Dee_HashStr(attr_name));
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_BoundAttrString)(DeeObject *__restrict self,
                                   char const *__restrict attr_name) {
 	return DeeObject_BoundAttrStringHash(self, attr_name, Dee_HashStr(attr_name));
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_DelAttrString)(DeeObject *__restrict self,
                                 char const *__restrict attr_name) {
 	return DeeObject_DelAttrStringHash(self, attr_name, Dee_HashStr(attr_name));
 }
 
-PUBLIC int
-(DCALL DeeObject_SetAttrString)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
+(DCALL DeeObject_SetAttrString)(DeeObject *self,
                                 char const *__restrict attr_name,
-                                DeeObject *__restrict value) {
+                                DeeObject *value) {
 	return DeeObject_SetAttrStringHash(self, attr_name, Dee_HashStr(attr_name), value);
 }
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_CallAttrString)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallAttrString)(DeeObject *self,
                                  char const *__restrict attr_name,
-                                 size_t argc, DeeObject **__restrict argv) {
+                                 size_t argc, DeeObject **argv) {
 	return DeeObject_CallAttrStringHash(self, attr_name, Dee_HashStr(attr_name), argc, argv);
 }
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_CallAttrStringKw)(DeeObject *__restrict self,
-                                   char const *__restrict attr_name,
-                                   size_t argc, DeeObject **__restrict argv,
-                                   DeeObject *kw) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_CallAttrStringKw)(DeeObject *self, char const *__restrict attr_name,
+                                   size_t argc, DeeObject **argv, DeeObject *kw) {
 	return DeeObject_CallAttrStringHashKw(self, attr_name, Dee_HashStr(attr_name), argc, argv, kw);
 }
 
 
 
-PUBLIC ATTR_SENTINEL DREF DeeObject *
-DeeObject_CallAttrPack(DeeObject *__restrict self,
-                       /*String*/ DeeObject *__restrict attr_name,
+PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeObject_CallAttrPack(DeeObject *self,
+                       /*String*/ DeeObject *attr_name,
                        size_t argc, ...) {
 	DREF DeeObject *result;
 	va_list args;
@@ -3863,9 +3832,8 @@ DeeObject_CallAttrPack(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VCallAttrf(DeeObject *__restrict self,
-                     /*String*/ DeeObject *__restrict attr_name,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_VCallAttrf(DeeObject *self, /*String*/ DeeObject *attr_name,
                      char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
@@ -3878,9 +3846,9 @@ DeeObject_VCallAttrf(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *
-DeeObject_CallAttrf(DeeObject *__restrict self,
-                    /*String*/ DeeObject *__restrict attr_name,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+DeeObject_CallAttrf(DeeObject *self,
+                    /*String*/ DeeObject *attr_name,
                     char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
@@ -3897,23 +3865,23 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallAttrStringPack, 16),
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallAttrStringHashPack, 20),
                     ASSEMBLY_NAME(DeeObject_CallAttrStringHash, 20));
 #else /* !__NO_DEFINE_ALIAS */
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_VCallAttrStringPack)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_VCallAttrStringPack)(DeeObject *self,
                                       char const *__restrict attr_name,
                                       size_t argc, va_list args) {
 	return DeeObject_CallAttrString(self, attr_name, argc, (DeeObject **)args);
 }
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *self,
                                           char const *__restrict attr_name,
                                           dhash_t hash, size_t argc, va_list args) {
 	return DeeObject_CallAttrStringHash(self, attr_name, hash, argc, (DeeObject **)args);
 }
 #endif /* __NO_DEFINE_ALIAS */
 #else /* CONFIG_VA_LIST_IS_STACK_POINTER */
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_VCallAttrStringHashPack)(DeeObject *self,
                                           char const *__restrict attr_name,
                                           dhash_t hash, size_t argc, va_list args) {
 	DREF DeeObject *result, *args_tuple;
@@ -3926,16 +3894,16 @@ PUBLIC DREF DeeObject *
 	return result;
 }
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_VCallAttrStringPack)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_VCallAttrStringPack)(DeeObject *self,
                                       char const *__restrict attr_name,
                                       size_t argc, va_list args) {
 	return DeeObject_VCallAttrStringHashPack(self, attr_name, Dee_HashStr(attr_name), argc, args);
 }
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
-PUBLIC ATTR_SENTINEL DREF DeeObject *
-(DeeObject_CallAttrStringPack)(DeeObject *__restrict self,
+PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DeeObject_CallAttrStringPack)(DeeObject *self,
                                char const *__restrict attr_name,
                                size_t argc, ...) {
 	DREF DeeObject *result;
@@ -3946,8 +3914,8 @@ PUBLIC ATTR_SENTINEL DREF DeeObject *
 	return result;
 }
 
-PUBLIC ATTR_SENTINEL DREF DeeObject *
-DeeObject_CallAttrStringHashPack(DeeObject *__restrict self,
+PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeObject_CallAttrStringHashPack(DeeObject *self,
                                  char const *__restrict attr_name,
                                  dhash_t hash, size_t argc, ...) {
 	DREF DeeObject *result;
@@ -3958,8 +3926,8 @@ DeeObject_CallAttrStringHashPack(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VCallAttrStringHashf(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeObject_VCallAttrStringHashf(DeeObject *self,
                                char const *__restrict attr_name, dhash_t hash,
                                char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
@@ -3973,15 +3941,15 @@ DeeObject_VCallAttrStringHashf(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *
-(DCALL DeeObject_VCallAttrStringf)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DCALL DeeObject_VCallAttrStringf)(DeeObject *self,
                                    char const *__restrict attr_name,
                                    char const *__restrict format, va_list args) {
 	return DeeObject_VCallAttrStringHashf(self, attr_name, Dee_HashStr(attr_name), format, args);
 }
 
-PUBLIC DREF DeeObject *
-DeeObject_CallAttrStringHashf(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
+DeeObject_CallAttrStringHashf(DeeObject *self,
                               char const *__restrict attr_name, dhash_t hash,
                               char const *__restrict format, ...) {
 	DREF DeeObject *result;
@@ -3992,8 +3960,8 @@ DeeObject_CallAttrStringHashf(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *
-(DeeObject_CallAttrStringf)(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+(DeeObject_CallAttrStringf)(DeeObject *self,
                             char const *__restrict attr_name,
                             char const *__restrict format, ...) {
 	DREF DeeObject *result;

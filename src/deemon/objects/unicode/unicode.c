@@ -191,7 +191,7 @@ again:
 				goto done;
 #ifndef CONFIG_NO_THREADS
 			goto again;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 		}
 	}
 	rwlock_endwrite(&latin1_chars_lock);

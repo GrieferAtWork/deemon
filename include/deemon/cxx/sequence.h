@@ -67,17 +67,17 @@ public:
 		return Object(inherit(DeeObject_CallAttrString(*this, "parity", 0, NULL))).bool_();
 	}
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)    \
-	Treturn(name)(DeeObject * __restrict elem) const; \
-	Treturn(name)(DeeObject * __restrict elem, DeeObject * __restrict key) const;
+	Treturn(name)(DeeObject *__restrict elem) const; \
+	Treturn(name)(DeeObject *__restrict elem, DeeObject *__restrict key) const;
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, count)
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, locate)
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, rlocate)
 #undef DEFINE_ELEM_SEARCH_FUNCTION
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                 \
-	Treturn(name)(DeeObject * __restrict elem) const {                             \
+	Treturn(name)(DeeObject *__restrict elem) const {                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));        \
 	}                                                                              \
-	Treturn(name)(DeeObject * __restrict elem, DeeObject * __restrict key) const { \
+	Treturn(name)(DeeObject *__restrict elem, DeeObject *__restrict key) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));  \
 	}
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::bool_, contains)
@@ -85,12 +85,12 @@ public:
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::bool_, endswith)
 #undef DEFINE_ELEM_SEARCH_FUNCTION
 #define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                \
-	Treturn(name)(DeeObject * __restrict elem) const;                                           \
-	Treturn(name)(DeeObject * __restrict elem, DeeObject * __restrict key) const;               \
-	Treturn(name)(DeeObject * __restrict elem, size_t start) const;                             \
-	Treturn(name)(DeeObject * __restrict elem, size_t start, DeeObject * __restrict key) const; \
-	Treturn(name)(DeeObject * __restrict elem, size_t start, size_t end) const;                 \
-	Treturn(name)(DeeObject * __restrict elem, size_t start, size_t end, DeeObject * __restrict key) const;
+	Treturn(name)(DeeObject *__restrict elem) const;                                           \
+	Treturn(name)(DeeObject *__restrict elem, DeeObject *__restrict key) const;               \
+	Treturn(name)(DeeObject *__restrict elem, size_t start) const;                             \
+	Treturn(name)(DeeObject *__restrict elem, size_t start, DeeObject *__restrict key) const; \
+	Treturn(name)(DeeObject *__restrict elem, size_t start, size_t end) const;                 \
+	Treturn(name)(DeeObject *__restrict elem, size_t start, size_t end, DeeObject *__restrict key) const;
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, find)
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, rfind)
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, index)
@@ -98,22 +98,22 @@ public:
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, removeall)
 #undef DEFINE_ELEM_FIND_FUNCTION
 #define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                             \
-	Treturn(name)(DeeObject * __restrict elem) const {                                                       \
+	Treturn(name)(DeeObject *__restrict elem) const {                                                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                                  \
 	}                                                                                                        \
-	Treturn(name)(DeeObject * __restrict elem, DeeObject * __restrict key) const {                           \
+	Treturn(name)(DeeObject *__restrict elem, DeeObject *__restrict key) const {                           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                            \
 	}                                                                                                        \
-	Treturn(name)(DeeObject * __restrict elem, size_t start) const {                                         \
+	Treturn(name)(DeeObject *__restrict elem, size_t start) const {                                         \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", elem, start));                         \
 	}                                                                                                        \
-	Treturn(name)(DeeObject * __restrict elem, size_t start, DeeObject * __restrict key) const {             \
+	Treturn(name)(DeeObject *__restrict elem, size_t start, DeeObject *__restrict key) const {             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", elem, start, key));                   \
 	}                                                                                                        \
-	Treturn(name)(DeeObject * __restrict elem, size_t start, size_t end) const {                             \
+	Treturn(name)(DeeObject *__restrict elem, size_t start, size_t end) const {                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", elem, start, end));                  \
 	}                                                                                                        \
-	Treturn(name)(DeeObject * __restrict elem, size_t start, size_t end, DeeObject * __restrict key) const { \
+	Treturn(name)(DeeObject *__restrict elem, size_t start, size_t end, DeeObject *__restrict key) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", elem, start, end, key));            \
 	}
 	DEFINE_ELEM_FIND_FUNCTION(deemon::bool_, remove)
@@ -862,10 +862,10 @@ public: /* sequence from deemon */
 		return inherit(DeeObject_CallAttrStringf(*this, "max", "o", key));
 	}
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict elem) const {                             \
+	WUNUSED Treturn(name)(DeeObject *__restrict elem) const {                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                \
 	}                                                                                      \
-	WUNUSED Treturn(name)(DeeObject * __restrict elem, DeeObject * __restrict key) const { \
+	WUNUSED Treturn(name)(DeeObject *__restrict elem, DeeObject *__restrict key) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));          \
 	}
 	DEFINE_ELEM_SEARCH_FUNCTION(Sequence, locateall)
@@ -1197,10 +1197,10 @@ Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *__restrict st
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "ooId", start, end, step));
 }
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                                        \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem) const {                             \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem) const {                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                               \
 	}                                                                                                     \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem, DeeObject * __restrict key) const { \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem, DeeObject *__restrict key) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                         \
 	}
 DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, count)
@@ -1208,22 +1208,22 @@ DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, locate)
 DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, rlocate)
 #undef DEFINE_ELEM_SEARCH_FUNCTION
 #define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                                                    \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem) const {                                                       \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem) const {                                                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                                                         \
 	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem, DeeObject * __restrict key) const {                           \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem, DeeObject *__restrict key) const {                           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                                                   \
 	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem, size_t start) const {                                         \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem, size_t start) const {                                         \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", elem, start));                                                \
 	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem, size_t start, DeeObject * __restrict key) const {             \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem, size_t start, DeeObject *__restrict key) const {             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", elem, start, key));                                          \
 	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem, size_t start, size_t end) const {                             \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem, size_t start, size_t end) const {                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", elem, start, end));                                         \
 	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject * __restrict elem, size_t start, size_t end, DeeObject * __restrict key) const { \
+	Treturn(detail::sequence_base::name)(DeeObject *__restrict elem, size_t start, size_t end, DeeObject *__restrict key) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", elem, start, end, key));                                   \
 	}
 DEFINE_ELEM_FIND_FUNCTION(deemon::int_, find)

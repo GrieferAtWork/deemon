@@ -2007,7 +2007,7 @@ do_push_module:
 				DeeTypeObject *tp_temp = Dee_TYPE(SECOND);
 				for (;;) {
 					DREF DeeObject *other;
-					DREF DeeObject *(DCALL * tp_shl)(DeeObject * __restrict, DeeObject * __restrict);
+					DREF DeeObject *(DCALL *tp_shl)(DeeObject *, DeeObject *);
 					if (!tp_temp->tp_math ||
 					    (tp_shl = tp_temp->tp_math->tp_shl) == NULL) {
 						tp_temp = tp_temp->tp_base;

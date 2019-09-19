@@ -280,8 +280,8 @@ objmethod_ne(DeeObjMethodObject *__restrict self,
 
 PRIVATE struct type_cmp objmethod_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&objmethod_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&objmethod_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&objmethod_ne
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_ne
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -422,7 +422,7 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&objmethod_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&objmethod_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&objmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&objmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -583,12 +583,12 @@ DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_ge, >=)
 
 PRIVATE struct type_cmp dockwdsiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dockwdsiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dockwdsiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dockwdsiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dockwdsiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dockwdsiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dockwdsiter_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dockwdsiter_ge,
 };
 
 
@@ -606,7 +606,7 @@ done:
 
 PRIVATE struct type_getset dockwdsiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&dockwdsiter_getseq, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dockwdsiter_getseq, NULL, NULL,
 	  DOC("->?U_DocKwds") },
 	{ NULL }
 };
@@ -862,7 +862,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwobjmethod_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&kwobjmethod_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&kwobjmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwobjmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1026,12 +1026,12 @@ clsmethod_ge(DeeClsMethodObject *__restrict self,
 
 PRIVATE struct type_cmp clsmethod_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsmethod_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmethod_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_ge
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -1069,7 +1069,7 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 #define clsmethod_getsets (kwclsmethod_getsets + 1)
 PRIVATE struct type_getset kwclsmethod_getsets[] = {
 	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&kwclsmethod_get_kwds, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwclsmethod_get_kwds, NULL, NULL,
 	  DOC_GET(objmethod_get_kwds_doc) },
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_name, NULL, NULL,
@@ -1125,7 +1125,7 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmethod_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&clsmethod_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1216,7 +1216,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwclsmethod_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&kwclsmethod_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&kwclsmethod_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwclsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1319,8 +1319,8 @@ clsproperty_ne(DeeClsPropertyObject *__restrict self,
 
 PRIVATE struct type_cmp clsproperty_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsproperty_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsproperty_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsproperty_ne
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_ne
 };
 
 INTERN struct keyword getter_kwlist[] = { K(thisarg), KEND };
@@ -1414,24 +1414,24 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 
 PRIVATE struct type_method clsproperty_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsproperty_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsproperty_get,
 	  DOC("(thisarg)->"),
 	  TYPE_METHOD_FKWDS },
 	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsproperty_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsproperty_delete,
 	  DOC("(thisarg)"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsproperty_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsproperty_set,
 	  DOC("(thisarg,value)"),
 	  TYPE_METHOD_FKWDS },
 	{ "getter",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsproperty_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsproperty_get,
 	  DOC("(thisarg)->\n"
 	      "Alias for #get"),
 	  TYPE_METHOD_FKWDS },
 	{ "setter",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsproperty_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsproperty_set,
 	  DOC("(thisarg,value)\n"
 	      "Alias for #set"),
 	  TYPE_METHOD_FKWDS },
@@ -1504,15 +1504,15 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 
 PRIVATE struct type_getset clsproperty_getsets[] = {
 	{ "canget",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&clsproperty_canget, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canget, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this property has a getter callback") },
 	{ "candel",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&clsproperty_candel, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_candel, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this property has a delete callback") },
 	{ "canset",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&clsproperty_canset, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this property has a setter callback") },
 	{ DeeString_STR(&str___name__),
@@ -1568,7 +1568,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&clsproperty_get_nokw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsproperty_get_nokw,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1584,7 +1584,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict, DeeObject *))&clsproperty_get,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&clsproperty_get,
 };
 
 
@@ -1671,15 +1671,15 @@ clsmember_set(DeeClsMemberObject *__restrict self,
 
 PRIVATE struct type_method clsmember_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsmember_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsmember_get,
 	  DOC("(thisarg)->"),
 	  TYPE_METHOD_FKWDS },
 	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsmember_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsmember_delete,
 	  DOC("(thisarg)"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&clsmember_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsmember_set,
 	  DOC("(thisarg,value)"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
@@ -1715,12 +1715,12 @@ DEFINE_CLSMEMBER_CMP(clsmember_ge, >=)
 
 PRIVATE struct type_cmp clsmember_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsmember_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&clsmember_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmember_ge
 };
 
 PRIVATE struct type_member clsmember_members[] = {
@@ -1753,10 +1753,10 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 }
 
 PRIVATE struct type_getset clsmember_getsets[] = {
-	{ "candel", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&clsmember_canset, NULL, NULL,
+	{ "candel", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Alias for #canset") },
-	{ "canset", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&clsmember_canset, NULL, NULL,
+	{ "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this member can be modified") },
 	{ DeeString_STR(&str___module__),
@@ -1793,7 +1793,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&clsmember_get,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&clsmember_get,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmember_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2053,24 +2053,24 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 #define cmethod_getsets (kwcmethod_getsets + 1)
 PRIVATE struct type_getset kwcmethod_getsets[] = {
 	{ DeeString_STR(&str___kwds__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&kwcmethod_get_kwds, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwcmethod_get_kwds, NULL, NULL,
 	  DOC_GET(objmethod_get_kwds_doc) },
 	{ DeeString_STR(&str___module__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&cmethod_get_module, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "Returns the module defining @this method, or :none if that module could not be determined") },
 	{ DeeString_STR(&str___type__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&cmethod_get_type, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
 	      "Returns the type as part of which @this method was declared, or :none "
 	      "if @this method was declared as part of a module, or if the type could "
 	      "not be located") },
 	{ DeeString_STR(&str___name__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&cmethod_get_name, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Returns the name of @this method, or :none if unknown") },
 	{ DeeString_STR(&str___doc__),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&cmethod_get_doc, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "Returns the documentation string of @this method, or :none if unknown") },
 	{ NULL }
@@ -2162,7 +2162,7 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&cmethod_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cmethod_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -2229,7 +2229,7 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&kwcmethod_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&kwcmethod_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&kwcmethod_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

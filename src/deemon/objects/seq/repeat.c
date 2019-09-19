@@ -217,12 +217,12 @@ Dee_True, DeeObject_CompareGeObject)
 
 PRIVATE struct type_cmp repeatiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_ge
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -315,12 +315,12 @@ err:
 
 PRIVATE struct type_getset repeatiter_getsets[] = {
 	{ "__iter__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&repeatiter_get_iter, NULL,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_iter,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatiter_get_iter, NULL,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&repeatiter_set_iter,
 	  DOC("->?DIterator") },
 	{ "__num__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&repeatiter_get_num, NULL,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatiter_set_num,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatiter_get_num, NULL,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&repeatiter_set_num,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -599,8 +599,8 @@ PRIVATE struct type_nsi repeat_nsi = {
 PRIVATE struct type_seq repeat_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeat_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeat_get,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_get,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_getrange  = */ NULL,
@@ -830,12 +830,12 @@ err:
 
 PRIVATE struct type_cmp repeatitemiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitemiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitemiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitemiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitemiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitemiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitemiter_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_ge
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -1150,11 +1150,11 @@ PRIVATE struct type_nsi repeatitem_nsi = {
 PRIVATE struct type_seq repeatitem_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitem_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&repeatitem_get,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_get,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
-	/* .tp_getrange  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&repeatitem_getrange,
+	/* .tp_getrange  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&repeatitem_getrange,
 	/* .tp_delrange  = */ NULL,
 	/* .tp_setrange  = */ NULL,
 	/* .tp_nsi       = */ &repeatitem_nsi

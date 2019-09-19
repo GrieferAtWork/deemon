@@ -29,7 +29,7 @@
 
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 

@@ -178,12 +178,12 @@ bytesiter_ge(BytesIterator *__restrict self,
 PRIVATE struct type_cmp bytesiter_cmp = {
     /* Compare operators. */
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytesiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytesiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytesiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytesiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytesiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytesiter_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytesiter_ge,
 };
 
 PRIVATE struct type_member bytesiter_members[] = {
@@ -1224,11 +1224,11 @@ PRIVATE struct type_math bytes_math = {
 	/* .tp_inv    = */ NULL,
 	/* .tp_pos    = */ NULL,
 	/* .tp_neg    = */ NULL,
-	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_add,
+	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_add,
 	/* .tp_sub    = */ NULL,
-	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_mul,
+	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_mul,
 	/* .tp_div    = */ NULL,
-	/* .tp_mod    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_mod,
+	/* .tp_mod    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_mod,
 	/* .tp_shl    = */ NULL,
 	/* .tp_shr    = */ NULL,
 	/* .tp_and    = */ NULL,
@@ -1239,12 +1239,12 @@ PRIVATE struct type_math bytes_math = {
 
 PRIVATE struct type_cmp bytes_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&bytes_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_ge
 };
 
 
@@ -1445,12 +1445,12 @@ PRIVATE struct type_nsi bytes_nsi = {
 PRIVATE struct type_seq bytes_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_setitem,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_delrange,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_getitem,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_setitem,
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_getrange,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_setrange,
 	/* .tp_nsi       = */ &bytes_nsi
 };
@@ -1539,29 +1539,29 @@ bytes_dellast(Bytes *__restrict self) {
 
 PRIVATE struct type_getset bytes_getsets[] = {
 	{ "isreadonly",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_isreadonly, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this Bytes object cannot be written to") },
 	{ "iswritable",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_iswritable, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this Bytes object not be written to (the inverse of #isreadonly)") },
 	{ "ismutable",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_iswritable, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Alias for #iswritable, overriding :Sequence.ismutable") },
 	{ DeeString_STR(&str_first),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_getfirst,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getfirst,
 	  (int (DCALL *)(DeeObject *__restrict))&bytes_delfirst,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setfirst,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&bytes_setfirst,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this Bytes object is empty\n"
 	      "@throw BufferError Attempted to modify the byte when @this Bytes object is not writable\n"
 	      "Access the first byte of @this Bytes object") },
 	{ DeeString_STR(&str_last),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bytes_getlast,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_getlast,
 	  (int (DCALL *)(DeeObject *__restrict))&bytes_dellast,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_setlast,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&bytes_setlast,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this Bytes object is empty\n"
 	      "@throw BufferError Attempted to modify the byte when @this Bytes object is not writable\n"
@@ -1808,7 +1808,7 @@ err:
 
 
 PRIVATE struct type_method bytes_class_methods[] = {
-	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&bytes_fromseq,
+	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&bytes_fromseq,
 	  DOC("(seq:?S?Dint)->?.\n"
 	      "@throw NotImplemented The given @seq cannot be iterated, or contains at "
 	      "least one item that cannot be converted into an integer\n"
@@ -1817,7 +1817,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
 	      "Convert the items of the given sequence @seq into integers, "
 	      "and construct a writable Bytes object from their values\n"
 	      "Passing :none for @seq will return an empty Bytes object") },
-	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&bytes_fromhex,
+	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&bytes_fromhex,
 	  DOC("(hex_string:?Dstring)->?.\n"
 	      "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
 	      "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"
@@ -2011,7 +2011,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bytes_fini,
-		/* .tp_assign      = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bytes_assign,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_assign,
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {

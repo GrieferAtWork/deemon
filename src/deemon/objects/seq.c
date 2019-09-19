@@ -433,9 +433,9 @@ err:
 
 PRIVATE struct type_getset seqiterator_getsets[] = {
 	{ "__index__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&seqiterator_index_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seqiterator_index_get,
 	  (int (DCALL *)(DeeObject *__restrict))&seqiterator_index_del,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_index_set,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&seqiterator_index_set,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -448,12 +448,12 @@ PRIVATE struct type_member seqiterator_members[] = {
 
 PRIVATE struct type_cmp seqiterator_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&seqiterator_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_ge
 };
 
 INTERN DeeTypeObject DeeGenericIterator_Type = {
@@ -1057,14 +1057,14 @@ err:
 
 PRIVATE struct type_getset seq_class_getsets[] = {
 	{ DeeString_STR(&str_Iterator),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&seq_iterator_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_iterator_get,
 	  NULL,
 	  NULL,
 	  DOC("->?DType\n"
 	      "Returns the Iterator class used by instances of @this Sequence type\n"
 	      "Should a sub-class implement its own Iterator, this attribute should be overwritten") },
 	{ "Frozen",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&seq_frozen_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_frozen_get,
 	  NULL,
 	  NULL,
 	  DOC("->?DType\n"
@@ -2082,7 +2082,7 @@ INTERN struct type_method seq_methods[] = {
 	      "> return result;\n"
 	      ">}") },
 	{ "min",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_min,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_min,
 	  DOC("(key:?DCallable=!N)->\n"
 	      "@param key A key function for transforming Sequence elements\n"
 	      "Returns the smallest element of @this Sequence\n"
@@ -2112,7 +2112,7 @@ INTERN struct type_method seq_methods[] = {
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
 	{ "max",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_max,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_max,
 	  DOC("(key:?DCallable=!N)->\n"
 	      "@param key A key function for transforming Sequence elements\n"
 	      "Returns the greatest element of @this Sequence\n"
@@ -2473,7 +2473,7 @@ INTERN struct type_method seq_methods[] = {
 	      "Return a Sequence that contains the elements of @this Sequence in reverse order\n"
 	      "The point at which @this Sequence is enumerated is implementation-defined") },
 	{ "sorted",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_sorted,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_sorted,
 	  DOC("(key:?DCallable=!N)->?DSequence\n"
 	      "Return a Sequence that contains all elements from @this Sequence, "
 	      "but sorted in ascending order, or in accordance to @key\n"
@@ -2582,7 +2582,7 @@ INTERN struct type_method seq_methods[] = {
 
 	/* Functions for mutable sequences. */
 	{ DeeString_STR(&str_insert),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_insert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_insert,
 	  DOC("(index:?Dint,item)\n"
 	      "@throw IntegerOverflow The given @index is negative, or too large\n"
 	      "@throw SequenceError @this Sequence cannot be resized\n"
@@ -2625,7 +2625,7 @@ INTERN struct type_method seq_methods[] = {
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_insertall),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_insertall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_insertall,
 	  DOC("(index:?Dint,items:?DSequence)\n"
 	      "@throw IntegerOverflow The given @index is negative, or too large\n"
 	      "@throw SequenceError @this Sequence cannot be resized\n"
@@ -2742,7 +2742,7 @@ INTERN struct type_method seq_methods[] = {
 	      "> throw Error.ValueError.SequenceError(\"Sequence not resizable\");\n"
 	      ">}") },
 	{ DeeString_STR(&str_erase),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_erase,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_erase,
 	  DOC("(index:?Dint,count=!1)\n"
 	      "@throw IntegerOverflow The given @index is negative, or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
@@ -2785,7 +2785,7 @@ INTERN struct type_method seq_methods[] = {
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_xch),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_xch,
 	  DOC("(index:?Dint,value)->\n"
 	      "@throw IntegerOverflow The given @index is negative, or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
@@ -2813,7 +2813,7 @@ INTERN struct type_method seq_methods[] = {
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_pop,
 	  DOC("(index=!-1)->\n"
 	      "@throw IntegerOverflow The given @index is too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
@@ -3203,7 +3203,7 @@ INTERN struct type_method seq_methods[] = {
 	      "> return count;\n"
 	      ">}") },
 	{ DeeString_STR(&str_removeif),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_removeif,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_removeif,
 	  DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
 	      "@param key A key function for transforming Sequence elements\n"
 	      "@throw SequenceError @this Sequence is immutable\n"
@@ -3305,7 +3305,7 @@ INTERN struct type_method seq_methods[] = {
 	      "> this[:] = none;\n"
 	      ">}") },
 	{ DeeString_STR(&str_resize),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_resize,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_resize,
 	  DOC("(int newsize,filler=!N)\n"
 	      "@throw SequenceError @this Sequence isn't resizable\n"
 	      "Resize @this Sequence to have a new length of @newsize "
@@ -3328,7 +3328,7 @@ INTERN struct type_method seq_methods[] = {
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
 	{ "fill",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_fill,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_fill,
 	  DOC("(start=!0,end=!-1,filler=!N)->?Dint\n"
 	      "@throw SequenceError @this Sequence is immutable\n"
 	      "For mutable sequences only: Assign @filler to all elements within "
@@ -3369,7 +3369,7 @@ INTERN struct type_method seq_methods[] = {
 	      "> this := (this as Sequence from deemon).reversed();\n"
 	      ">}") },
 	{ "sort",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&seq_sort,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&seq_sort,
 	  DOC("(key:?DCallable=!N)\n"
 	      "@param key A key function for transforming Sequence elements\n"
 	      "@throw SequenceError @this Sequence is immutable\n"

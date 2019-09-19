@@ -1730,19 +1730,19 @@ sockaddr_inet6_scope_id(DeeSockAddrObject *__restrict self) {
 
 PRIVATE struct type_getset sockaddr_getsets[] = {
 #ifdef AF_INET
-	{ "inet_host", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&sockaddr_inet_host, NULL, NULL,
+	{ "inet_host", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet_host, NULL, NULL,
 	  DOC("->?Dint\nFor $\"AF_INET\": The host address in host endian") },
-	{ "inet_port", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&sockaddr_inet_port, NULL, NULL,
+	{ "inet_port", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet_port, NULL, NULL,
 	  DOC("->?Dint\nFor $\"AF_INET\": The port number in host endian") },
 #endif /* AF_INET */
 #ifdef AF_INET6
-	{ "inet6_port", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&sockaddr_inet6_port, NULL, NULL,
+	{ "inet6_port", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_port, NULL, NULL,
 	  DOC("->?Dint\nFor $\"AF_INET6\": The port number in host endian") },
-	{ "inet6_host", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&sockaddr_inet6_host, NULL, NULL,
+	{ "inet6_host", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_host, NULL, NULL,
 	  DOC("->?Dint\nFor $\"AF_INET6\": The host address") },
-	{ "inet6_flowinfo", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&sockaddr_inet6_flowinfo, NULL, NULL,
+	{ "inet6_flowinfo", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_flowinfo, NULL, NULL,
 	  DOC("->?Dint\nFor $\"AF_INET6\": The IPv6 flow identifier") },
-	{ "inet6_scope_id", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&sockaddr_inet6_scope_id, NULL, NULL,
+	{ "inet6_scope_id", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sockaddr_inet6_scope_id, NULL, NULL,
 	  DOC("->?Dint\nFor $\"AF_INET6\": The IPv6 scope id") },
 #endif /* AF_INET6 */
 	{ NULL }
@@ -1773,8 +1773,8 @@ sockaddr_ne(DeeSockAddrObject *__restrict self,
 
 PRIVATE struct type_cmp sockaddr_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&sockaddr_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sockaddr_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&sockaddr_ne
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sockaddr_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sockaddr_ne
 };
 
 INTERN DeeTypeObject DeeSockAddr_Type = {

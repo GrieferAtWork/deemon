@@ -184,17 +184,17 @@ PRIVATE struct type_math float_math = {
 	/* .tp_inv    = */ NULL,
 	/* .tp_pos    = */ &DeeObject_NewRef,
 	/* .tp_neg    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_neg,
-	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_add,
-	/* .tp_sub    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_sub,
-	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_mul,
-	/* .tp_div    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_div,
-	/* .tp_mod    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_shl    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_shr    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_and    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_or     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_xor    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL,
-	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))NULL
+	/* .tp_add    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_add,
+	/* .tp_sub    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_sub,
+	/* .tp_mul    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_mul,
+	/* .tp_div    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_div,
+	/* .tp_mod    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_shl    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_shr    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_and    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_or     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_xor    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL
 };
 
 #ifdef _MSC_VER
@@ -244,12 +244,12 @@ DEFINE_FLOAT_CMP(float_ge, >=)
 
 PRIVATE struct type_cmp float_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&float_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&float_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&float_ge,
 };
 
 

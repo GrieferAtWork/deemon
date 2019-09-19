@@ -1219,7 +1219,7 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 PRIVATE struct type_seq gcenum_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&gcenum_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&gcenum_contains
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&gcenum_contains
 };
 
 PRIVATE struct type_member gcenum_class_members[] = {

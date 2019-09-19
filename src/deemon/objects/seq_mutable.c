@@ -48,10 +48,8 @@
 DECL_BEGIN
 
 
-INTERN int DCALL
-has_generic_attribute(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      DeeObject *__restrict attr) {
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+has_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *attr) {
 	if (tp_self->tp_attr) {
 		if (tp_self->tp_attr->tp_getattr) {
 			DREF DeeObject *obj;
@@ -94,12 +92,10 @@ yes:
 /* @return:  0: Call was OK.
  * @return:  1: No such attribute.
  * @return: -1: Error. */
-PRIVATE DREF DeeObject *DCALL
-vcall_generic_attribute(DeeTypeObject *__restrict tp_self,
-                        DeeObject *__restrict self,
-                        char const *__restrict name, dhash_t hash,
-                        char const *__restrict format,
-                        va_list args) {
+PRIVATE WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
+vcall_generic_attribute(DeeTypeObject *tp_self, DeeObject *self,
+                        char const *name, dhash_t hash,
+                        char const *format, va_list args) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(tp_self);
 	ASSERT_OBJECT(self);
@@ -141,10 +137,8 @@ done_call:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
-get_generic_attribute(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      DeeObject *__restrict name) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+get_generic_attribute(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name) {
 	DREF DeeObject *result;
 	dhash_t hash;
 	ASSERT_OBJECT(tp_self);
@@ -183,11 +177,10 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *
-call_generic_attribute(DeeTypeObject *__restrict tp_self,
-                       DeeObject *__restrict self,
-                       char const *__restrict name, dhash_t hash,
-                       char const *__restrict format, ...) {
+PRIVATE WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *
+call_generic_attribute(DeeTypeObject *tp_self, DeeObject *self,
+                       char const *name, dhash_t hash,
+                       char const *format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);
@@ -196,11 +189,9 @@ call_generic_attribute(DeeTypeObject *__restrict tp_self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *
-call_generic_attribute_in_range(DeeTypeObject *__restrict tp_limit,
-                                DeeObject *__restrict self,
-                                DeeObject *__restrict name,
-                                char const *__restrict format,
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
+call_generic_attribute_in_range(DeeTypeObject *tp_limit, DeeObject *self,
+                                DeeObject *name, char const *format,
                                 ...) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter = Dee_TYPE(self);
@@ -246,11 +237,9 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *
-call_generic_attribute_anywhere(DeeObject *__restrict self,
-                                DeeObject *__restrict name,
-                                char const *__restrict format,
-                                ...) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+call_generic_attribute_anywhere(DeeObject *self, DeeObject *name,
+                                char const *format, ...) {
 	DREF DeeObject *result;
 	DeeTypeObject *iter = Dee_TYPE(self);
 	va_list args;
@@ -296,7 +285,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DelItem(DeeObject *__restrict self, size_t index) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -435,9 +424,8 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_SetItem(DeeObject *__restrict self, size_t index,
-               DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_SetItem(DeeObject *self, size_t index, DeeObject *value) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeSeq_Type) {
@@ -523,9 +511,8 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeSeq_XchItem(DeeObject *__restrict self, size_t index,
-               DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	int error;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -672,9 +659,8 @@ err_r:
 	goto err;
 }
 
-INTERN int DCALL
-DeeSeq_DelRange(DeeObject *__restrict self,
-                size_t start, size_t end) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeSeq_Type) {
@@ -806,7 +792,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -951,14 +937,14 @@ err:
 	 (x)->nsi_seqlike.nsi_insertall || \
 	 (x)->nsi_seqlike.nsi_insertvec)
 
-INTDEF DREF DeeObject *DCALL IteratorFuture_For(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorFuture_For(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 nsi_insert_iterator(struct type_nsi *__restrict nsi,
-                    DeeObject *__restrict self, size_t index,
-                    DeeObject *__restrict iterator) {
+                    DeeObject *self, size_t index,
+                    DeeObject *iterator) {
 	if (nsi->nsi_seqlike.nsi_insert) {
 		DeeObject *elem;
 		int error;
@@ -1003,10 +989,10 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 nsi_insert_sequence_as_single(struct type_nsi *__restrict nsi,
-                              DeeObject *__restrict self, size_t index,
-                              DeeObject *__restrict values) {
+                              DeeObject *self, size_t index,
+                              DeeObject *values) {
 	DREF DeeObject *iterator, *elem;
 	int temp;
 	size_t i, fast_size;
@@ -1051,10 +1037,9 @@ err:
 }
 
 
-INTERN int DCALL
-DeeSeq_SetRange(DeeObject *__restrict self,
-                size_t start, size_t end,
-                DeeObject *__restrict values) {
+INTERN WUNUSED NONNULL((1, 4)) int DCALL
+DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
+                DeeObject *values) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	DREF DeeObject *values_iterator;
@@ -1331,9 +1316,9 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_SetRangeN(DeeObject *__restrict self, size_t start,
-                 DeeObject *__restrict values) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_SetRangeN(DeeObject *self, size_t start,
+                 DeeObject *values) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	DREF DeeObject *values_iterator;
@@ -1514,9 +1499,9 @@ err:
 
 
 
-INTERN int DCALL
-DeeSeq_Insert(DeeObject *__restrict self, size_t index,
-              DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_Insert(DeeObject *self, size_t index,
+              DeeObject *value) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeSeq_Type) {
@@ -1635,9 +1620,9 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_InsertAll(DeeObject *__restrict self, size_t index,
-                 DeeObject *__restrict values) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeSeq_InsertAll(DeeObject *self, size_t index,
+                 DeeObject *values) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeSeq_Type) {
@@ -1834,9 +1819,8 @@ err:
 }
 
 
-INTERN int DCALL
-DeeSeq_Append(DeeObject *__restrict self,
-              DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_Append(DeeObject *self, DeeObject *value) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeSeq_Type) {
@@ -1945,9 +1929,8 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_Extend(DeeObject *__restrict self,
-              DeeObject *__restrict values) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_Extend(DeeObject *self, DeeObject *values) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeSeq_Type) {
@@ -2136,9 +2119,8 @@ err:
 }
 
 
-INTERN int DCALL
-DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself,
-                     DeeObject *__restrict values) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself, DeeObject *values) {
 	DeeObject *self = *pself;
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -2353,9 +2335,8 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself,
-                     DeeObject *__restrict count) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *count) {
 	DeeObject *self = *pself;
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -2412,7 +2393,7 @@ err:
 
 
 
-INTERN size_t DCALL
+INTERN WUNUSED NONNULL((1)) size_t DCALL
 DeeSeq_Erase(DeeObject *__restrict self,
              size_t index, size_t count) {
 	int error;
@@ -2517,9 +2498,8 @@ err:
 	return (size_t)-1;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeSeq_PopItem(DeeObject *__restrict self,
-               dssize_t index) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 	DREF DeeObject *result;
 	int error;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -2703,11 +2683,9 @@ err_r:
 	goto err;
 }
 
-INTERN int DCALL
-DeeSeq_Remove(DeeObject *__restrict self,
-              size_t start, size_t end,
-              DeeObject *__restrict elem,
-              DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 4)) int DCALL
+DeeSeq_Remove(DeeObject *self, size_t start, size_t end,
+              DeeObject *elem, DeeObject *key) {
 	DREF DeeObject *keyed_search_item, *index_ob;
 	DREF DeeObject *item, *callback_result, *erase_func;
 	int result;
@@ -2989,11 +2967,9 @@ err_erase_func:
 	goto err;
 }
 
-INTERN int DCALL
-DeeSeq_RRemove(DeeObject *__restrict self,
-               size_t start, size_t end,
-               DeeObject *__restrict elem,
-               DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 4)) int DCALL
+DeeSeq_RRemove(DeeObject *self, size_t start, size_t end,
+               DeeObject *elem, DeeObject *key) {
 	DREF DeeObject *keyed_search_item, *index_ob;
 	DREF DeeObject *item, *callback_result, *erase_func;
 	int result;
@@ -3297,20 +3273,20 @@ typedef struct {
 	DREF DeeObject *ria_pred; /* [0..1][const] The optional key function. */
 } RemoveIfAllWrapper;
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ria_fini(RemoveIfAllWrapper *__restrict self) {
 	Dee_Decref(self->ria_elem);
 	Dee_XDecref(self->ria_pred);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 ria_visit(RemoveIfAllWrapper *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ria_elem);
 	Dee_XVisit(self->ria_pred);
 }
 
-PRIVATE DREF DeeObject *DCALL
-ria_call(RemoveIfAllWrapper *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+ria_call(RemoveIfAllWrapper *self, size_t argc, DeeObject **__restrict argv) {
 	DREF DeeObject *result, *key_elem;
 	if unlikely(argc != 1) {
 		err_invalid_argc("_SeqRemoveIfAllWrapper", argc, 1, 1);
@@ -3336,17 +3312,25 @@ PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCallable_Type,
-	/* .tp_init = */ { { /* .tp_alloc = */ { /* .tp_ctor      = */ NULL,
-	                                         /* .tp_copy_ctor = */ NULL,
-	                                         /* .tp_deep_ctor = */ NULL,
-	                                         /* .tp_any_ctor  = */ NULL, TYPE_FIXED_ALLOCATOR(RemoveIfAllWrapper) } },
-	                   /* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ria_fini,
-	                   /* .tp_assign      = */ NULL,
-	                   /* .tp_move_assign = */ NULL },
-	/* .tp_cast = */ { /* .tp_str  = */ NULL,
-	                   /* .tp_repr = */ NULL,
-	                   /* .tp_bool = */ NULL },
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict))&ria_call,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL, TYPE_FIXED_ALLOCATOR(RemoveIfAllWrapper)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ria_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&ria_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ria_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -3364,8 +3348,8 @@ PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
-make_removeif_all_wrapper(DeeObject *__restrict elem, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+make_removeif_all_wrapper(DeeObject *elem, DeeObject *key) {
 	/* >> return [](x) -> keyed_search_item == (key is none ? x : key(x));
 	 * So simple, yet sooo complex to implement in C... */
 	DREF RemoveIfAllWrapper *result;
@@ -3393,11 +3377,9 @@ err_r:
 
 
 
-INTERN size_t DCALL
-DeeSeq_RemoveAll(DeeObject *__restrict self,
-                 size_t start, size_t end,
-                 DeeObject *__restrict elem,
-                 DeeObject *key) {
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
+                 DeeObject *elem, DeeObject *key) {
 	DREF DeeObject *keyed_search_item, *index_ob;
 	DREF DeeObject *item, *callback_result, *erase_func;
 	int error;
@@ -3923,9 +3905,8 @@ err_overflow:
 }
 
 
-INTERN size_t DCALL
-DeeSeq_RemoveIf(DeeObject *__restrict self,
-                DeeObject *__restrict should,
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_RemoveIf(DeeObject *self, DeeObject *should,
                 size_t start, size_t end) {
 	DREF DeeObject *item, *callback_result, *erase_func;
 	int error;
@@ -4251,10 +4232,9 @@ err_overflow:
 	goto err;
 }
 
-INTERN size_t DCALL
-DeeSeq_Fill(DeeObject *__restrict self,
-            size_t start, size_t end,
-            DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeSeq_Fill(DeeObject *self, size_t start, size_t end,
+            DeeObject *value) {
 	DREF DeeObject *temp;
 	size_t mylen, result;
 	int error;
@@ -4345,7 +4325,7 @@ err_overflow:
 	return (size_t)-1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_Reverse(DeeObject *__restrict self) {
 	DREF DeeObject *reversed;
 	int result;
@@ -4360,8 +4340,8 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_Sort(DeeObject *__restrict self, DeeObject *key) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_Sort(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *sorted;
 	int result;
 	/* TODO: This breaks when `sorted' is an index-based proxy! */
@@ -4403,7 +4383,7 @@ PRIVATE DeeObject *mutable_sequence_attributes[] = {
 };
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_IsMutable(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	tp_self = Dee_TYPE(self);
@@ -4432,7 +4412,7 @@ DeeSeq_IsMutable(DeeObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_IsResizable(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	tp_self = Dee_TYPE(self);

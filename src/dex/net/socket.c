@@ -2451,7 +2451,7 @@ socket_fileno(Socket *__restrict self,
 
 PRIVATE struct type_method socket_methods[] = {
 	{ "close",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_close,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_close,
 	  DOC("(shutdown_mode:?Dint)\n"
 	      "(shutdown_mode=!Prw)\n"
 	      "@interrupt\n"
@@ -2462,7 +2462,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "#shutdown will automatically be invoked on @this socket if it hasn't before\n"
 	      "Note that in the event that #shutdown has already been called, ") },
 	{ "shutdown",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_shutdown,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_shutdown,
 	  DOC("(how:?Dint)\n"
 	      "(how=!Prw)\n"
 	      "@interrupt\n"
@@ -2471,7 +2471,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw FileClosed @this socket has already been closed\n"
 	      "Shuts down @this socket either for reading, for writing or for both") },
 	{ "bind",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_bind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_bind,
 	  DOC("(args!)\n"
 	      "@interrupt\n"
 	      "@throw NetError.AddrInUse The address specified for binding is already in use\n"
@@ -2484,7 +2484,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Binds @this socket to a given address.\n"
 	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
 	{ "connect",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_connect,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_connect,
 	  DOC("(args!)\n"
 	      "@interrupt\n"
 	      "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
@@ -2502,7 +2502,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Connect @this socket with a given address.\n"
 	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
 	{ "listen",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_listen,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_listen,
 	  DOC("(max_backlog=!-1)\n"
 	      "@interrupt\n"
 	      "@throw NetError.NotBound @this socket has not been bound and the protocol does not allow listening on an unbound address\n"
@@ -2516,7 +2516,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Start listening for incoming connections on @this socket, preferrable after it has been #bound\n"
 	      "Note that calling this function may require the user to whitelist deemon in their firewall") },
 	{ "accept",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_accept,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_accept,
 	  DOC("(timeout_microseconds=!-1)->?Gsocket\n"
 	      "(timeout_microseconds=!-1)->?N\n"
 	      "@interrupt\n"
@@ -2529,7 +2529,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@return A new socket object describing the connection to the new client, or :none when @timeout_microseconds has passed\n"
 	      "Accept new incoming connections on a listening socket") },
 	{ "tryaccept",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_tryaccept,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_tryaccept,
 	  DOC("->?Gsocket\n"
 	      "->?N\n"
 	      "@interrupt\n"
@@ -2539,7 +2539,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
 	      "Same as calling #accept with a timeout_microseconds argument of ${0}") },
 	{ "recv",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_recv,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_recv,
 	  DOC("(flags:?Dstring)->?DBytes\n"
 	      "(max_size=!-1,flags=!P{})->?DBytes\n"
 	      "(max_size=!-1,timeout_microseconds=!-1)->?DBytes\n"
@@ -2565,7 +2565,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Some protocols may also cause this function to return an empty string to indicate a graceful "
 	      "termination of the connection") },
 	{ "recvinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_recvinto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_recvinto,
 	  DOC("(dst:?DBytes,flags=!P{})->?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1)->?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
@@ -2580,7 +2580,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
 	      "Same as #recv, but received data is written into the given buffer @dst") },
 	{ "recvfrom",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_recvfrom,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_recvfrom,
 	  DOC("(flags:?Dstring)->?T2?Gsockaddr?DBytes\n"
 	      "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
 	      "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?DBytes\n"
@@ -2600,7 +2600,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is #{close}ed, or "
 	      "as any other integer value to specify how long to wait before returning ${(none,\"\")}") },
 	{ "recvfrominto",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_recvfrominto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_recvfrominto,
 	  DOC("(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
@@ -2614,7 +2614,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
 	      "Same as #recvfrom, buf read received data into the given buffer @dst") },
 	{ "send",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_send,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_send,
 	  DOC("(data:?DBytes,flags=!P{})->?Dint\n"
 	      "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
 	      "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
@@ -2632,7 +2632,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@return The total number of bytes that was sent\n"
 	      "Send @data over the network to the peer of a connected socket") },
 	{ "sendto",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_sendto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_sendto,
 	  DOC("(target:?DBytes,data:?DBytes,flags=!P{})->?Dint\n"
 	      "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
 	      "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
@@ -2654,29 +2654,29 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@return The total number of bytes that was sent\n"
 	      "Same as #send, but used to transmit data to a specific network target, rather than one that is already connected.") },
 	{ "isbound",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_isbound,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_isbound,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket has been bound (s.a. #bind)") },
 	{ "isconnected",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_isconnected,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_isconnected,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket has been #{connect}ed") },
 	{ "islistening",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_islistening,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_islistening,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket is #{listen}ing for incoming connections") },
 	{ "wasshutdown",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_wasshutdown,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_wasshutdown,
 	  DOC("(how:?Dint)->?Dbool\n"
 	      "(how=!?rw)->?Dbool\n"
 	      "Returns :true if @this socket has been #shutdown according to @how (inclusive when multiple modes are specified)\n"
 	      "See #shutdown for possible values that may be passed to @how") },
 	{ "wasclosed",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_wasclosed,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_wasclosed,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket has been #{close}ed") },
 	{ "fileno",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&socket_fileno,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&socket_fileno,
 	  DOC("->?Dint\n"
 	      "Returns the underlying file descriptor/handle associated @this socket") },
 	{ NULL }
@@ -2684,13 +2684,13 @@ PRIVATE struct type_method socket_methods[] = {
 
 PRIVATE struct type_getset socket_getsets[] = {
 	{ "sockname",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&socket_sockname_get, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_sockname_get, NULL, NULL,
 	  DOC("->?Gsockaddr\n"
 	      "@throw FileClosed @this socket has been closed\n"
 	      "@throw NetError.NotConnected @this socket is neither connected, nor bound\n"
 	      "Returns the socket name (local address) of @this socket") },
 	{ "peeraddr",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&socket_peeraddr_get, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_peeraddr_get, NULL, NULL,
 	  DOC("->?Gsockaddr\n"
 	      "@interrupt\n"
 	      "@throw FileClosed @this socket has been closed\n"

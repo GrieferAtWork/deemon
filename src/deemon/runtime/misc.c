@@ -1681,7 +1681,7 @@ PRIVATE pcacheclr caches[] = {
 	&membercache_clear,
 #ifndef CONFIG_NO_DEC
 	&DecTime_ClearCache,
-#endif
+#endif /* !CONFIG_NO_DEC */
 	NULL
 };
 
@@ -1872,10 +1872,16 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 
 
 #ifdef NDEBUG
-PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line), char const *UNUSED(format), ...) {}
-
-PUBLIC void (DCALL _DeeAssert_Fail)(char const *UNUSED(expr), char const *UNUSED(file), int UNUSED(line)) {}
-#else
+PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr),
+                               char const *UNUSED(file),
+                               int UNUSED(line),
+                               char const *UNUSED(format), ...) {
+}
+PUBLIC void (DCALL _DeeAssert_Fail)(char const *UNUSED(expr),
+                                    char const *UNUSED(file),
+                                    int UNUSED(line)) {
+}
+#else /* NDEBUG */
 PRIVATE void assert_vprintf(char const *format, va_list args) {
 	dssize_t error;
 	error = DeeFile_VPrintf(DeeFile_DefaultStddbg, format, args);
@@ -1909,12 +1915,12 @@ PUBLIC void
 (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int line) {
 	_DeeAssert_Failf(expr, file, line, NULL);
 }
-#endif
+#endif /* !NDEBUG */
 
 DECL_END
 
 #ifndef __INTELLISENSE__
 #include "slab.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_RUNTIME_MISC_C */

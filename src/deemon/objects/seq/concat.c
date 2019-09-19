@@ -235,12 +235,12 @@ DEFINE_CATITERATOR_COMPARE(catiterator_ge, return_true, return_bool_(my_pseq > o
 
 PRIVATE struct type_cmp catiterator_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ge
 };
 
 
@@ -342,11 +342,11 @@ catiterator_curr_set(CatIterator *__restrict self,
 
 PRIVATE struct type_getset catiterator_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&catiterator_seq_get, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_seq_get, NULL, NULL,
 	  DOC("->?Ert:SeqConcat") },
 	{ "__curr__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&catiterator_curr_get, NULL,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&catiterator_curr_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&catiterator_curr_get, NULL,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&catiterator_curr_set,
 	  DOC("->?DIterator") },
 	{ NULL }
 };
@@ -441,7 +441,7 @@ cat_getsequences(Cat *__restrict self) {
 
 PRIVATE struct type_getset cat_getsets[] = {
 	{ "__sequences__",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&cat_getsequences,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_getsequences,
 	  NULL,
 	  NULL,
 	  DOC("->?S?DSequence") },
@@ -706,8 +706,8 @@ PRIVATE struct type_nsi cat_nsi = {
 PRIVATE struct type_seq cat_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cat_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&cat_getitem,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,

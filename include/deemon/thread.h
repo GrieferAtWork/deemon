@@ -112,7 +112,7 @@ struct Dee_except_frame {
  * `NULL' if no traceback exists for the exception. */
 INTDEF struct Dee_traceback_object *DCALL
 except_frame_gettb(struct Dee_except_frame *__restrict self);
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 struct Dee_repr_frame {
 	struct Dee_repr_frame *rf_prev; /* [0..1][lock(PRIVATE(DeeThread_Self()))] Previous frame. */
@@ -125,7 +125,7 @@ struct Dee_repr_frame {
 	                                 *        it. Additionally, when we do actually track it, it doesn't matter
 	                                 *        when this field contains undefined contents as we only read it
 	                                 *        for a comparison check, but don't actually dereference the pointer. */
-#endif
+#endif /* !__i386__ && !__x86_64__ && !__arm__ */
 };
 
 #ifndef CONFIG_NO_THREADS
@@ -350,7 +350,7 @@ struct Dee_thread_object {
 #else
 	unsigned int              t_join;
 #endif
-#endif
+#endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
 #endif /* !CONFIG_NO_THREADS */
 };
 

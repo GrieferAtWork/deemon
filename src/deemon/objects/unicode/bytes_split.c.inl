@@ -146,12 +146,12 @@ DEFINE_BSI_COMPARE(bsi_ge, >=)
 
 PRIVATE struct type_cmp bsi_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bsi_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bsi_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bsi_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bsi_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bsi_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bsi_ge,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsi_ge,
 };
 
 
@@ -478,7 +478,7 @@ bs_getsep(BytesSplit *__restrict self) {
 }
 
 PRIVATE struct type_getset bs_getsets[] = {
-	{ "__sep__", (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bs_getsep, NULL, NULL,
+	{ "__sep__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_getsep, NULL, NULL,
 	  DOC("->?DBytes") },
 	{ NULL }
 };
@@ -834,7 +834,7 @@ blsi_getseq(BytesLineSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset blsi_getsets[] = {
-	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&blsi_getseq },
+	{ DeeString_STR(&str_seq), (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blsi_getseq },
 	{ NULL }
 };
 

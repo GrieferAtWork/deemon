@@ -1917,8 +1917,8 @@ relint_ne(DeeRelIntObject *__restrict self,
 
 PRIVATE struct type_cmp relint_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&relint_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&relint_ne,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&relint_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&relint_ne,
 };
 
 INTERN DeeTypeObject DeeRelInt_Type = {

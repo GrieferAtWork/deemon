@@ -149,7 +149,7 @@ bsegiter_getseq(BytesSegmentsIterator *__restrict self) {
 
 PRIVATE struct type_getset bsegiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&bsegiter_getseq,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bsegiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:BytesSegments") },
@@ -334,8 +334,8 @@ err:
 PRIVATE struct type_seq bseg_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bseg_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bseg_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bseg_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&bseg_get
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bseg_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bseg_get
 };
 
 

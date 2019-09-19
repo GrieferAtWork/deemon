@@ -246,18 +246,18 @@ DEFINE_REFA_COMPARE(refa_ge, >=)
 
 PRIVATE struct type_cmp refaiter_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&refa_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&refa_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&refa_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&refa_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&refa_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&refa_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&refa_ge
 };
 
 
 PRIVATE struct type_getset refaiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&refaiter_getseq,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refaiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:ReFindAll") },
@@ -355,7 +355,7 @@ relaiter_getseq(ReSequenceIterator *__restrict self) {
 
 PRIVATE struct type_getset relaiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&relaiter_getseq,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&relaiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:ReLocateAll") },
@@ -493,7 +493,7 @@ respiter_getseq(ReSequenceIterator *__restrict self) {
 
 PRIVATE struct type_getset respiter_getsets[] = {
 	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&respiter_getseq,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&respiter_getseq,
 	  NULL,
 	  NULL,
 	  DOC("->?Ert:ReSplit") },

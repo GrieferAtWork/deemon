@@ -2965,11 +2965,11 @@ PRIVATE struct type_method thread_methods[] = {
 	{ "timed_join", &thread_timedjoin,
 	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
 	      "Old, deprecated name for #timedjoin") },
-	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&thread_crash_error,
+	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&thread_crash_error,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
-	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject * __restrict, size_t, DeeObject **__restrict))&thread_crash_traceback,
+	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&thread_crash_traceback,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
@@ -3063,7 +3063,7 @@ err:
 
 PRIVATE struct type_getset thread_class_getsets[] = {
 	{ "current",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&thread_current_get, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_current_get, NULL, NULL,
 	  DOC("->?.\n"
 	      "Returns a thread descriptor for the calling thread") },
 	/* TODO: enumerate -> {thread...} 
@@ -3392,9 +3392,9 @@ err:
 
 PRIVATE struct type_getset thread_getsets[] = {
 	{ "callback",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&thread_callback_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callback_get,
 	  (int (DCALL *)(DeeObject *__restrict))&thread_callback_del,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callback_set,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&thread_callback_set,
 	  DOC("->?DCallable\n"
 	      "@throw AttributeError Attempted to overwrite the callback of a sub-class of :thread, rather than an exact instance. "
 	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3406,9 +3406,9 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "the getter will attempt to return the instance attribute $run which can be "
 	      "overwritten by sub-classes to provide an automatic and implicit thread-callback") },
 	{ "callargs",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&thread_callargs_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_callargs_get,
 	  (int (DCALL *)(DeeObject *__restrict))&thread_callargs_del,
-	  (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&thread_callargs_set,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&thread_callargs_set,
 	  DOC("->?DTuple\n"
 	      "@throw AttributeError Attempted to overwrite the callback arguments of a sub-class of :thread, rather than an exact instance. "
 	      "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -3418,14 +3418,14 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "The callback arguments that are passed to #callback when the thread is started\n"
 	      "Deleting this member or setting :none is the same as setting an empty tuple") },
 	{ "result",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&thread_result_get, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_result_get, NULL, NULL,
 	  DOC("@throw ValueError @this thread has not terminated yet\n"
 	      "Return the result value of @this thread once it has terminated\n"
 	      "This is similar to what is returned by #join, but in the event that "
 	      "the thread terminated because it crashed, :none is returned rather "
 	      "than all the errors that caused the thread to crash being encapsulated and propagated") },
 	{ "crashinfo",
-	  (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&thread_crashinfo, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_crashinfo, NULL, NULL,
 	  DOC("->?S?T2?O?DTraceback\n"
 	      "@throw ValueEror @this thread hasn't terminated yet\n"
 	      "Returns a sequence of 2-element tuples describing the errors that were "

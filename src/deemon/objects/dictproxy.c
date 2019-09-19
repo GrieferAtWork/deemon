@@ -314,12 +314,12 @@ DEFINE_ITERATOR_COMPARE(dictiterator_ge, >=)
 
 PRIVATE struct type_cmp dictiterator_cmp = {
 	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dictiterator_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dictiterator_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dictiterator_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dictiterator_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dictiterator_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&dictiterator_ge
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dictiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dictiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dictiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dictiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dictiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dictiterator_ge
 };
 
 
@@ -742,9 +742,9 @@ dict_values_iter(DictProxy *__restrict self) {
 }
 
 PRIVATE struct type_seq dict_keys_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&dict_keys_iter,
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys_iter,
 	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&proxy_contains_key,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_contains_key,
 	/* .tp_get       = */ NULL,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
@@ -754,7 +754,7 @@ PRIVATE struct type_seq dict_keys_seq = {
 };
 
 PRIVATE struct type_seq dict_items_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&dict_items_iter,
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items_iter,
 	/* .tp_size      = */ NULL,
 	/* .tp_contains  = */ NULL,
 	/* .tp_get       = */ NULL,
@@ -766,7 +766,7 @@ PRIVATE struct type_seq dict_items_seq = {
 };
 
 PRIVATE struct type_seq dict_values_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject * __restrict))&dict_values_iter,
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values_iter,
 	/* .tp_size      = */ NULL,
 	/* .tp_contains  = */ NULL,
 	/* .tp_get       = */ NULL,

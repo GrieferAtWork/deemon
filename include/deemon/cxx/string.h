@@ -300,16 +300,16 @@ public: /* string from deemon */
 		return inherit(DeeObject_CallAttrStringf(*this, "asdecimal", "oo", index, defl));
 	}
 #define DEFINE_REPLACE_FUNCTION(name)                                                                                           \
-	WUNUSED string(name)(DeeObject * __restrict find, DeeObject * __restrict repl) const {                                      \
+	WUNUSED string(name)(DeeObject *__restrict find, DeeObject *__restrict repl) const {                                      \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", find, repl));                                              \
 	}                                                                                                                           \
-	WUNUSED string(name)(DeeObject * __restrict find, DeeObject * __restrict repl, size_t maxcount) const {                     \
+	WUNUSED string(name)(DeeObject *__restrict find, DeeObject *__restrict repl, size_t maxcount) const {                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIu", find, repl, maxcount));                                  \
 	}                                                                                                                           \
-	WUNUSED string(name)(DeeObject * __restrict find, /*utf-8*/ char const *__restrict repl) const {                            \
+	WUNUSED string(name)(DeeObject *__restrict find, /*utf-8*/ char const *__restrict repl) const {                            \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", find, repl));                                              \
 	}                                                                                                                           \
-	WUNUSED string(name)(DeeObject * __restrict find, /*utf-8*/ char const *__restrict repl, size_t maxcount) const {           \
+	WUNUSED string(name)(DeeObject *__restrict find, /*utf-8*/ char const *__restrict repl, size_t maxcount) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIu", find, repl, maxcount));                                  \
 	}                                                                                                                           \
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict find, DeeObject *__restrict repl) const {                             \
@@ -331,9 +331,9 @@ public: /* string from deemon */
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle) const;                           \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle, size_t start) const;             \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle, size_t start, size_t end) const; \
-	WUNUSED Treturn(name)(DeeObject * __restrict needle) const;                                     \
-	WUNUSED Treturn(name)(DeeObject * __restrict needle, size_t start) const;                       \
-	WUNUSED Treturn(name)(DeeObject * __restrict needle, size_t start, size_t end) const;
+	WUNUSED Treturn(name)(DeeObject *__restrict needle) const;                                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict needle, size_t start) const;                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict needle, size_t start, size_t end) const;
 	DEFINE_FIND_FUNCTION(deemon::int_, find, needle)
 	DEFINE_FIND_FUNCTION(deemon::int_, rfind, needle)
 	DEFINE_FIND_FUNCTION(Sequence<deemon::int_>, findall, needle)
@@ -357,13 +357,13 @@ public: /* string from deemon */
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict needle, size_t start, size_t end) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "sIuIu", needle, start, end));        \
 	}                                                                                                \
-	WUNUSED Treturn(name)(DeeObject * __restrict needle) const {                                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict needle) const {                                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", needle));                        \
 	}                                                                                                \
-	WUNUSED Treturn(name)(DeeObject * __restrict needle, size_t start) const {                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict needle, size_t start) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", needle, start));               \
 	}                                                                                                \
-	WUNUSED Treturn(name)(DeeObject * __restrict needle, size_t start, size_t end) const {           \
+	WUNUSED Treturn(name)(DeeObject *__restrict needle, size_t start, size_t end) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", needle, start, end));        \
 	}
 	DEFINE_FIND_FUNCTION(deemon::bool_, contains, needle)
@@ -393,7 +393,7 @@ public: /* string from deemon */
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict mask, size_t mask_size) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "$s", mask_size, mask));   \
 	}                                                                                     \
-	WUNUSED string(name)(DeeObject * __restrict mask) const {                             \
+	WUNUSED string(name)(DeeObject *__restrict mask) const {                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", mask));               \
 	}
 	DEFINE_STRIP_FUNCTION(strip)
@@ -416,15 +416,15 @@ public: /* string from deemon */
 	WUNUSED Treturn(name)(size_t my_start, /*utf-8*/ char const *__restrict other, size_t other_size) const;                \
 	WUNUSED Treturn(name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other) const;                    \
 	WUNUSED Treturn(name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other, size_t other_size) const; \
-	WUNUSED Treturn(name)(DeeObject * __restrict other) const;                                                              \
-	WUNUSED Treturn(name)(DeeObject * __restrict other, size_t other_start) const;                                          \
-	WUNUSED Treturn(name)(DeeObject * __restrict other, size_t other_start, size_t other_end) const;                        \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject * __restrict other) const;                                             \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject * __restrict other, size_t other_start) const;                         \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject * __restrict other, size_t other_start, size_t other_end) const;       \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject * __restrict other) const;                              \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject * __restrict other, size_t other_start) const;          \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject * __restrict other, size_t other_start, size_t other_end) const;
+	WUNUSED Treturn(name)(DeeObject *__restrict other) const;                                                              \
+	WUNUSED Treturn(name)(DeeObject *__restrict other, size_t other_start) const;                                          \
+	WUNUSED Treturn(name)(DeeObject *__restrict other, size_t other_start, size_t other_end) const;                        \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *__restrict other) const;                                             \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *__restrict other, size_t other_start) const;                         \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *__restrict other, size_t other_start, size_t other_end) const;       \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *__restrict other) const;                              \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start) const;          \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start, size_t other_end) const;
 	DEFINE_COMPARE_FUNCTION(deemon::int_, compare)
 	DEFINE_COMPARE_FUNCTION(deemon::int_, vercompare)
 	DEFINE_COMPARE_FUNCTION(deemon::int_, wildcompare)
@@ -457,31 +457,31 @@ public: /* string from deemon */
 	WUNUSED Treturn(name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other, size_t other_size) const {          \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIu$s", my_start, my_end, other_size, other));                       \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(DeeObject * __restrict other) const {                                                                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict other) const {                                                                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", other));                                                          \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(DeeObject * __restrict other, size_t other_start) const {                                                   \
+	WUNUSED Treturn(name)(DeeObject *__restrict other, size_t other_start) const {                                                   \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", other, other_start));                                           \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(DeeObject * __restrict other, size_t other_start, size_t other_end) const {                                 \
+	WUNUSED Treturn(name)(DeeObject *__restrict other, size_t other_start, size_t other_end) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", other, other_start, other_end));                              \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject * __restrict other) const {                                                      \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *__restrict other) const {                                                      \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "Iuo", my_start, other));                                              \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject * __restrict other, size_t other_start) const {                                  \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *__restrict other, size_t other_start) const {                                  \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuoIu", my_start, other, other_start));                               \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(size_t my_start, DeeObject * __restrict other, size_t other_start, size_t other_end) const {                \
+	WUNUSED Treturn(name)(size_t my_start, DeeObject *__restrict other, size_t other_start, size_t other_end) const {                \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuoIuIu", my_start, other, other_start, other_end));                  \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject * __restrict other) const {                                       \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *__restrict other) const {                                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIuo", my_start, my_end, other));                                    \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject * __restrict other, size_t other_start) const {                   \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start) const {                   \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIuoIu", my_start, my_end, other, other_start));                     \
 	}                                                                                                                                 \
-	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject * __restrict other, size_t other_start, size_t other_end) const { \
+	WUNUSED Treturn(name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start, size_t other_end) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIuoIuIu", my_start, my_end, other, other_start, other_end));        \
 	}
 	DEFINE_COMPARE_FUNCTION(deemon::bool_, wmatch)
@@ -491,7 +491,7 @@ public: /* string from deemon */
 	WUNUSED string(name)(size_t width) const {                                                              \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "Iu", width));                               \
 	}                                                                                                       \
-	WUNUSED string(name)(size_t width, DeeObject * __restrict filler) const {                               \
+	WUNUSED string(name)(size_t width, DeeObject *__restrict filler) const {                               \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "Iuo", width, filler));                      \
 	}                                                                                                       \
 	WUNUSED string(name)(size_t width, /*utf-8*/ char const *__restrict filler) const {                     \
@@ -515,7 +515,7 @@ public: /* string from deemon */
 	WUNUSED string(name)() const {                                                                      \
 		return inherit(DeeObject_CallAttrString(*this, #name, 0, NULL));                                \
 	}                                                                                                   \
-	WUNUSED string(name)(DeeObject * __restrict replacement) const {                                    \
+	WUNUSED string(name)(DeeObject *__restrict replacement) const {                                    \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", replacement));                      \
 	}                                                                                                   \
 	WUNUSED string(name)(/*utf-8*/ char const *__restrict replacement) const {                          \
@@ -535,7 +535,7 @@ public: /* string from deemon */
 		return inherit(DeeObject_CallAttrStringf(*this, "join", "o", seq_obj.ptr()));
 	}
 #define DEFINE_SPLIT_FUNCTION(name)                                                               \
-	WUNUSED Sequence<string>(name)(DeeObject * __restrict sep) const {                            \
+	WUNUSED Sequence<string>(name)(DeeObject *__restrict sep) const {                            \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", sep));                        \
 	}                                                                                             \
 	WUNUSED Sequence<string>(name)(/*utf-8*/ char const *__restrict sep) const {                  \
@@ -569,12 +569,12 @@ public: /* string from deemon */
 		return inherit(DeeObject_CallAttrStringf(*this, "dedent", "Iu$s", max_chars, mask_size, mask));
 	}
 #define DEFINE_FINDMATCH_FUNCTION(Treturn, name)                                                                                \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, DeeObject * __restrict close) const;                                     \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, DeeObject * __restrict close, size_t start) const;                       \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, DeeObject * __restrict close, size_t start, size_t end) const;           \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close) const;                           \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close, size_t start) const;             \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const; \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, DeeObject *__restrict close) const;                                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start) const;                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start, size_t end) const;           \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close) const;                           \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start) const;             \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const; \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close) const;                            \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close, size_t start) const;              \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close, size_t start, size_t end) const;  \
@@ -591,22 +591,22 @@ public: /* string from deemon */
 	DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>, caserindexmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
 #define DEFINE_FINDMATCH_FUNCTION(Treturn, name)                                                                                           \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, DeeObject * __restrict close) const {                                               \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, DeeObject *__restrict close) const {                                               \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", open, close));                                                        \
 	}                                                                                                                                      \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, DeeObject * __restrict close, size_t start) const {                                 \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIu", open, close, start));                                               \
 	}                                                                                                                                      \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, DeeObject * __restrict close, size_t start, size_t end) const {                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start, size_t end) const {                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIuIu", open, close, start, end));                                        \
 	}                                                                                                                                      \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close) const {                                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close) const {                                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", open, close));                                                        \
 	}                                                                                                                                      \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close, size_t start) const {                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIu", open, close, start));                                               \
 	}                                                                                                                                      \
-	WUNUSED Treturn(name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const {           \
+	WUNUSED Treturn(name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIuIu", open, close, start, end));                                        \
 	}                                                                                                                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close) const {                                      \
@@ -645,19 +645,19 @@ public: /* string from deemon */
 		return inherit(DeeObject_CallAttrStringf(*this, "distribute", "o", substring_count));
 	}
 #define DEFINE_RE_FUNCTION(Treturn, name)                                                                                                    \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern) const;                                                                             \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, DeeObject * __restrict rules) const;                                               \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules) const;                                     \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start) const;                                                               \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, DeeObject * __restrict rules, size_t start) const;                                 \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const;                       \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, size_t end) const;                                                   \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, DeeObject * __restrict rules, size_t start, size_t end) const;                     \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const;           \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, DeeObject * __restrict rules) const;                                 \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, size_t end, DeeObject * __restrict rules) const;                     \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const;                       \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const;           \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern) const;                                                                             \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, DeeObject *__restrict rules) const;                                               \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules) const;                                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start) const;                                                               \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start) const;                                 \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const;                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, size_t end) const;                                                   \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start, size_t end) const;                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const;           \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, DeeObject *__restrict rules) const;                                 \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, size_t end, DeeObject *__restrict rules) const;                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const;                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const;           \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern) const;                                                                   \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, DeeObject *__restrict rules) const;                                      \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern, /*utf-8*/ char const *__restrict rules) const;                           \
@@ -680,43 +680,43 @@ public: /* string from deemon */
 	DEFINE_RE_FUNCTION(deemon::int_, recount)
 #undef DEFINE_RE_FUNCTION
 #define DEFINE_RE_FUNCTION(Treturn, name)                                                                                                     \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern) const {                                                                             \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern) const {                                                                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", pattern));                                                                \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, DeeObject * __restrict rules) const {                                               \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, DeeObject *__restrict rules) const {                                               \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", pattern, rules));                                                        \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules) const {                                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules) const {                                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", pattern, rules));                                                        \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start) const {                                                               \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start) const {                                                               \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", pattern, start));                                                       \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, DeeObject * __restrict rules, size_t start) const {                                 \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIu", pattern, rules, start));                                               \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIu", pattern, rules, start));                                               \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, size_t end) const {                                                   \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, size_t end) const {                                                   \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", pattern, start, end));                                                \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, DeeObject * __restrict rules, size_t start, size_t end) const {                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start, size_t end) const {                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIuIu", pattern, rules, start, end));                                        \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const {           \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIuIu", pattern, rules, start, end));                                        \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, DeeObject * __restrict rules) const {                                 \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, DeeObject *__restrict rules) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", pattern, start, rules));                                               \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, size_t end, DeeObject * __restrict rules) const {                     \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, size_t end, DeeObject *__restrict rules) const {                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", pattern, start, end, rules));                                        \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {                       \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIus", pattern, start, rules));                                               \
 	}                                                                                                                                         \
-	WUNUSED Treturn(name)(DeeObject * __restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const {           \
+	WUNUSED Treturn(name)(DeeObject *__restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIus", pattern, start, end, rules));                                        \
 	}                                                                                                                                         \
 	WUNUSED Treturn(name)(/*utf-8*/ char const *__restrict pattern) const {                                                                   \
@@ -984,13 +984,13 @@ WUNUSED deemon::int_ string::asdecimal(DeeObject *__restrict index, int defl) co
 	WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict needle, size_t start, size_t end) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "sIuIu", needle, start, end));                \
 	}                                                                                                        \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict needle) const {                                     \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict needle) const {                                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", needle));                                \
 	}                                                                                                        \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict needle, size_t start) const {                       \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict needle, size_t start) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", needle, start));                       \
 	}                                                                                                        \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict needle, size_t start, size_t end) const {           \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict needle, size_t start, size_t end) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", needle, start, end));                \
 	}
 DEFINE_FIND_FUNCTION(deemon::int_, find, needle)
@@ -1025,31 +1025,31 @@ DEFINE_FIND_FUNCTION(deemon::int_, casecount, needle)
 	WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, /*utf-8*/ char const *__restrict other, size_t other_size) const {          \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIu$s", my_start, my_end, other_size, other));                               \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict other) const {                                                                       \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict other) const {                                                                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", other));                                                                  \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict other, size_t other_start) const {                                                   \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict other, size_t other_start) const {                                                   \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", other, other_start));                                                   \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict other, size_t other_start, size_t other_end) const {                                 \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict other, size_t other_start, size_t other_end) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", other, other_start, other_end));                                      \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(size_t my_start, DeeObject * __restrict other) const {                                                      \
+	WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other) const {                                                      \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "Iuo", my_start, other));                                                      \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(size_t my_start, DeeObject * __restrict other, size_t other_start) const {                                  \
+	WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other, size_t other_start) const {                                  \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuoIu", my_start, other, other_start));                                       \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(size_t my_start, DeeObject * __restrict other, size_t other_start, size_t other_end) const {                \
+	WUNUSED Treturn(string::name)(size_t my_start, DeeObject *__restrict other, size_t other_start, size_t other_end) const {                \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuoIuIu", my_start, other, other_start, other_end));                          \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject * __restrict other) const {                                       \
+	WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other) const {                                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIuo", my_start, my_end, other));                                            \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject * __restrict other, size_t other_start) const {                   \
+	WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start) const {                   \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIuoIu", my_start, my_end, other, other_start));                             \
 	}                                                                                                                                         \
-	WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject * __restrict other, size_t other_start, size_t other_end) const { \
+	WUNUSED Treturn(string::name)(size_t my_start, size_t my_end, DeeObject *__restrict other, size_t other_start, size_t other_end) const { \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "IuIuoIuIu", my_start, my_end, other, other_start, other_end));                \
 	}
 DEFINE_COMPARE_FUNCTION(deemon::int_, compare)
@@ -1066,22 +1066,22 @@ DEFINE_COMPARE_FUNCTION(deemon::int_, casecommon)
 DEFINE_COMPARE_FUNCTION(deemon::int_, casercommon)
 #undef DEFINE_COMPARE_FUNCTION
 #define DEFINE_FINDMATCH_FUNCTION(Treturn, name)                                                                                                   \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict open, DeeObject * __restrict close) const {                                               \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict open, DeeObject *__restrict close) const {                                               \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", open, close));                                                                \
 	}                                                                                                                                              \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict open, DeeObject * __restrict close, size_t start) const {                                 \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIu", open, close, start));                                                       \
 	}                                                                                                                                              \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict open, DeeObject * __restrict close, size_t start, size_t end) const {                     \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict open, DeeObject *__restrict close, size_t start, size_t end) const {                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIuIu", open, close, start, end));                                                \
 	}                                                                                                                                              \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close) const {                                     \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close) const {                                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", open, close));                                                                \
 	}                                                                                                                                              \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close, size_t start) const {                       \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIu", open, close, start));                                                       \
 	}                                                                                                                                              \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const {           \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict open, /*utf-8*/ char const *__restrict close, size_t start, size_t end) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIuIu", open, close, start, end));                                                \
 	}                                                                                                                                              \
 	WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict open, DeeObject *__restrict close) const {                                      \
@@ -1112,43 +1112,43 @@ DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>, caserfindmatch)
 DEFINE_FINDMATCH_FUNCTION(Sequence<deemon::int_>, caserindexmatch)
 #undef DEFINE_FINDMATCH_FUNCTION
 #define DEFINE_RE_FUNCTION(Treturn, name)                                                                                                             \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern) const {                                                                             \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern) const {                                                                             \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", pattern));                                                                        \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, DeeObject * __restrict rules) const {                                               \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, DeeObject *__restrict rules) const {                                               \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", pattern, rules));                                                                \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules) const {                                     \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules) const {                                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "os", pattern, rules));                                                                \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, size_t start) const {                                                               \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start) const {                                                               \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", pattern, start));                                                               \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, DeeObject * __restrict rules, size_t start) const {                                 \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIu", pattern, rules, start));                                                       \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {                       \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIu", pattern, rules, start));                                                       \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, size_t start, size_t end) const {                                                   \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, size_t end) const {                                                   \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", pattern, start, end));                                                        \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, DeeObject * __restrict rules, size_t start, size_t end) const {                     \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, DeeObject *__restrict rules, size_t start, size_t end) const {                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "ooIuIu", pattern, rules, start, end));                                                \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const {           \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, /*utf-8*/ char const *__restrict rules, size_t start, size_t end) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "osIuIu", pattern, rules, start, end));                                                \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, size_t start, DeeObject * __restrict rules) const {                                 \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, DeeObject *__restrict rules) const {                                 \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", pattern, start, rules));                                                       \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, size_t start, size_t end, DeeObject * __restrict rules) const {                     \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, size_t end, DeeObject *__restrict rules) const {                     \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", pattern, start, end, rules));                                                \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {                       \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, /*utf-8*/ char const *__restrict rules) const {                       \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIus", pattern, start, rules));                                                       \
 	}                                                                                                                                                 \
-	WUNUSED Treturn(string::name)(DeeObject * __restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const {           \
+	WUNUSED Treturn(string::name)(DeeObject *__restrict pattern, size_t start, size_t end, /*utf-8*/ char const *__restrict rules) const {           \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIus", pattern, start, end, rules));                                                \
 	}                                                                                                                                                 \
 	WUNUSED Treturn(string::name)(/*utf-8*/ char const *__restrict pattern) const {                                                                   \

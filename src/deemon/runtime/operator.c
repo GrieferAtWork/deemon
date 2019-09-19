@@ -70,6 +70,12 @@ DECL_BEGIN
 	INTERN return (DCALL DeeObject_##name)args
 #endif
 
+#ifdef DEFINE_TYPE_OPERATORS
+#define RESTRICT_IF_NOTYPE /* nothing */
+#else /* DEFINE_TYPE_OPERATORS */
+#define RESTRICT_IF_NOTYPE __restrict
+#endif /* !DEFINE_TYPE_OPERATORS */
+
 
 /* Setup how operator callbacks are invoked.
  * NOTE: When executing operators in a super-context, we must be
@@ -280,7 +286,7 @@ DECL_BEGIN
 #define CONFIG_ALLOW_INHERIT_TYPE_GC_ALLOCATORS 1
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 type_inherit_constructors(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
 	if (!(self->tp_flags & TP_FINHERITCTOR) ||
@@ -323,7 +329,7 @@ type_inherit_constructors(DeeTypeObject *__restrict self) {
 	return true;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_NewDefault(DeeTypeObject *__restrict object_type) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
@@ -427,9 +433,8 @@ err_object_type:
 	goto err;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_New(DeeTypeObject *__restrict object_type,
-              size_t argc, DeeObject **__restrict argv) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
@@ -547,10 +552,9 @@ err_object_type:
 	goto err;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_NewKw(DeeTypeObject *__restrict object_type,
-                size_t argc, DeeObject **__restrict argv,
-                DeeObject *kw) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_NewKw(DeeTypeObject *object_type,
+                size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
@@ -751,16 +755,16 @@ err_no_keywords:
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VNewPack, 12),
                     ASSEMBLY_NAME(DeeObject_New, 12));
-#else
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VNewPack(DeeTypeObject *__restrict object_type,
+#else /* !__NO_DEFINE_ALIAS */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_VNewPack(DeeTypeObject *object_type,
                    size_t argc, va_list args) {
 	return DeeObject_New(object_type, argc, (DeeObject **)args);
 }
-#endif
+#endif /* __NO_DEFINE_ALIAS */
 #else /* CONFIG_VA_LIST_IS_STACK_POINTER */
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VNewPack(DeeTypeObject *__restrict object_type,
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_VNewPack(DeeTypeObject *object_type,
                    size_t argc, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
@@ -772,8 +776,8 @@ DeeObject_VNewPack(DeeTypeObject *__restrict object_type,
 }
 #endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VNewf(DeeTypeObject *__restrict object_type,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_VNewf(DeeTypeObject *object_type,
                 char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
@@ -786,9 +790,8 @@ DeeObject_VNewf(DeeTypeObject *__restrict object_type,
 	return result;
 }
 
-PUBLIC ATTR_SENTINEL DREF DeeObject *
-DeeObject_NewPack(DeeTypeObject *__restrict object_type,
-                  size_t argc, ...) {
+PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *
+DeeObject_NewPack(DeeTypeObject *object_type, size_t argc, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, argc);
@@ -797,8 +800,8 @@ DeeObject_NewPack(DeeTypeObject *__restrict object_type,
 	return result;
 }
 
-PUBLIC DREF DeeObject *
-DeeObject_Newf(DeeTypeObject *__restrict object_type,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeObject_Newf(DeeTypeObject *object_type,
                char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
@@ -816,31 +819,31 @@ DeeObject_Newf(DeeTypeObject *__restrict object_type,
 #define LOAD_ITERP     DeeTypeObject *iter = tp_self
 #define GET_TP_SELF()  tp_self
 #define GET_TP_PSELF() tp_self
-#else
+#else /* DEFINE_TYPE_OPERATORS */
 #define LOAD_TP_SELF   DeeTypeObject *tp_self; \
-                       ASSERT_OBJECT(self); \
+                       ASSERT_OBJECT(self);    \
                        tp_self = Dee_TYPE(self)
 #define LOAD_TP_SELFP  DeeTypeObject *tp_self; \
-                       ASSERT(pself); \
-                       ASSERT_OBJECT(*pself); \
+                       ASSERT(pself);          \
+                       ASSERT_OBJECT(*pself);  \
                        tp_self = Dee_TYPE(*pself)
 #define LOAD_ITER      DeeTypeObject *iter; \
                        ASSERT_OBJECT(self); \
                        iter = Dee_TYPE(self)
-#define LOAD_ITERP     DeeTypeObject *iter; \
-                       ASSERT(pself); \
+#define LOAD_ITERP     DeeTypeObject *iter;   \
+                       ASSERT(pself);         \
                        ASSERT_OBJECT(*pself); \
                        iter = Dee_TYPE(*pself)
 #define GET_TP_SELF()  Dee_TYPE(self)
 #define GET_TP_PSELF() Dee_TYPE(*pself)
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
  
 
 
-STATIC_ASSERT(COMPILER_OFFSETOF(DeeTypeObject,tp_init.tp_alloc.tp_deep_ctor) ==
-              COMPILER_OFFSETOF(DeeTypeObject,tp_init.tp_var.tp_deep_ctor));
+STATIC_ASSERT(COMPILER_OFFSETOF(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor) ==
+              COMPILER_OFFSETOF(DeeTypeObject, tp_init.tp_var.tp_deep_ctor));
 
-DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	DeeThreadObject *thread_self = DeeThread_Self();
 	LOAD_TP_SELF;
@@ -963,7 +966,7 @@ err_result:
 	goto done;
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(DREF DeeObject *, Copy, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
 	if (tp_self->tp_flags & TP_FVARIABLE) {
@@ -1102,7 +1105,8 @@ err_object_type:
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-PUBLIC int (DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict pself) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict pself) {
 	DeeObject *objcopy, *old_object;
 	ASSERT(pself);
 	old_object = *pself;
@@ -1116,7 +1120,7 @@ PUBLIC int (DCALL DeeObject_InplaceDeepCopy)(DREF DeeObject **__restrict pself) 
 }
 
 #ifndef CONFIG_NO_THREADS
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_InplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
                                   rwlock_t *__restrict plock) {
 	DREF DeeObject *temp, *copy;
@@ -1141,7 +1145,7 @@ err:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_XInplaceDeepCopyWithLock(DREF DeeObject **__restrict pself,
                                    rwlock_t *__restrict plock) {
 	DREF DeeObject *temp, *copy;
@@ -1173,7 +1177,7 @@ err:
 #endif
 #endif /* !DEFINE_TYPE_OPERATORS */
 
-DEFINE_OPERATOR(int, Assign, (DeeObject * __restrict self, DeeObject *__restrict some_object)) {
+DEFINE_OPERATOR(int, Assign, (DeeObject *self, DeeObject *some_object)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(some_object);
 	if (tp_self->tp_init.tp_assign) {
@@ -1187,7 +1191,7 @@ do_assign:
 	return err_unimplemented_operator(GET_TP_SELF(), OPERATOR_ASSIGN);
 }
 
-DEFINE_OPERATOR(int, MoveAssign, (DeeObject * __restrict self, DeeObject *__restrict other)) {
+DEFINE_OPERATOR(int, MoveAssign, (DeeObject *self, DeeObject *other)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(other);
 	if (!(tp_self->tp_flags & TP_FMOVEANY) &&
@@ -1215,14 +1219,11 @@ err:
 
 #ifdef DEFINE_TYPE_OPERATORS
 LOCAL bool DCALL
-repr_contains(struct trepr_frame *chain,
-              DeeTypeObject *__restrict tp,
-              DeeObject *__restrict ob)
-#else
+repr_contains(struct trepr_frame *chain, DeeTypeObject *tp, DeeObject *ob)
+#else /* DEFINE_TYPE_OPERATORS */
 LOCAL bool DCALL
-repr_contains(struct repr_frame *chain,
-              DeeObject *__restrict ob)
-#endif
+repr_contains(struct repr_frame *chain, DeeObject *__restrict ob)
+#endif /* !DEFINE_TYPE_OPERATORS */
 {
 	for (; chain; chain = chain->rf_prev) {
 #ifdef DEFINE_TYPE_OPERATORS
@@ -1238,10 +1239,10 @@ repr_contains(struct repr_frame *chain,
 }
 
 /* Make sure the repr-frame offsets match. */
-STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame,rf_prev) ==
-              COMPILER_OFFSETOF(struct repr_frame,rf_prev));
-STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame,rf_obj) ==
-              COMPILER_OFFSETOF(struct repr_frame,rf_obj));
+STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame, rf_prev) ==
+              COMPILER_OFFSETOF(struct repr_frame, rf_prev));
+STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame, rf_obj) ==
+              COMPILER_OFFSETOF(struct repr_frame, rf_obj));
 
 #ifdef DEFINE_TYPE_OPERATORS
 #define Xrepr_frame trepr_frame
@@ -1251,7 +1252,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame,rf_obj) ==
 
 #ifndef DEFINE_TYPE_OPERATORS
 #define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)          \
-	INTERN bool DCALL                                              \
+	INTERN NONNULL((1)) bool DCALL                                 \
 	name(DeeTypeObject *__restrict self) {                         \
 		DeeTypeObject *base = DeeType_Base(self);                  \
 		if (!base ||                                               \
@@ -1263,7 +1264,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(struct trepr_frame,rf_obj) ==
 		return true;                                               \
 	}
 #define DEFINE_TYPE_INHERIT_FUNCTION2(name, opname, field, field2) \
-	INTERN bool DCALL                                              \
+	INTERN NONNULL((1)) bool DCALL                                 \
 	name(DeeTypeObject *__restrict self) {                         \
 		DeeTypeObject *base = DeeType_Base(self);                  \
 		if (!base ||                                               \
@@ -1281,10 +1282,10 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_bool, "operator bool", tp_cast.tp_bool
 DEFINE_TYPE_INHERIT_FUNCTION2(type_inherit_call, "operator call", tp_call, tp_call_kw)
 #undef DEFINE_TYPE_INHERIT_FUNCTION2
 #undef DEFINE_TYPE_INHERIT_FUNCTION
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 
 
-DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_str &&
@@ -1323,7 +1324,7 @@ recursion:
 	return_reference_(&str_dots);
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_repr &&
@@ -1364,7 +1365,7 @@ recursion:
 
 #undef Xrepr_frame
 
-DEFINE_OPERATOR(int, Bool, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(int, Bool, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	/* _very_ likely case: `self' is one of the boolean constants
 	 *  -> In this case, we return the result immediately! */
 	if (self == Dee_True)
@@ -1379,8 +1380,7 @@ DEFINE_OPERATOR(int, Bool, (DeeObject * __restrict self)) {
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, Call,
-               (DeeObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv)) {
+               (DeeObject *self, size_t argc, DeeObject **argv)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_call)
@@ -1395,8 +1395,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Call,
 #ifndef DEFINE_TYPE_OPERATORS
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
-               (DeeObject *__restrict self,
-                DeeObject *__restrict args)) {
+               (DeeObject *self, DeeObject *args)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
 	if (tp_self == &DeeFunction_Type)
@@ -1417,9 +1416,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
-               (DeeObject *__restrict self,
-                DeeObject *__restrict args,
-                DeeObject *kw)) {
+               (DeeObject *self, DeeObject *args, DeeObject *kw)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
 	if (tp_self == &DeeFunction_Type)
@@ -1459,22 +1456,19 @@ err_no_keywords:
 
 #else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict args)) {
+                (DeeObject *self, DeeObject *args)) {
 	return DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
 }
 DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict args,
-                 DeeObject *kw)) {
+                (DeeObject *self, DeeObject *args, DeeObject *kw)) {
 	return DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 }
 #endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, CallKw,
-                (DeeObject * __restrict self, size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw)) {
+                (DeeObject *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_call_kw)
@@ -1506,22 +1500,19 @@ err_no_keywords:
 
 #ifndef DEFINE_TYPE_OPERATORS
 INTERN DREF DeeObject *DCALL
-DeeObject_TThisCall(DeeTypeObject *__restrict tp_self,
-                    DeeObject *__restrict self,
-                    DeeObject *__restrict this_arg,
+DeeObject_TThisCall(DeeTypeObject *tp_self,
+                    DeeObject *self, DeeObject *this_arg,
                     size_t argc, DeeObject **__restrict argv);
 INTERN DREF DeeObject *DCALL
-DeeObject_TThisCallKw(DeeTypeObject *__restrict tp_self,
-                      DeeObject *__restrict self,
-                      DeeObject *__restrict this_arg,
+DeeObject_TThisCallKw(DeeTypeObject *tp_self,
+                      DeeObject *self, DeeObject *this_arg,
                       size_t argc, DeeObject **__restrict argv,
                       DeeObject *kw);
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict this_arg,
-                 size_t argc, DeeObject **__restrict argv)) {
+                (DeeObject *self, DeeObject *this_arg,
+                 size_t argc, DeeObject **argv)) {
 	DREF DeeObject *full_args, *result;
 	ASSERT_OBJECT(self);
 #ifndef DEFINE_TYPE_OPERATORS
@@ -1530,7 +1521,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 		                           DeeSuper_SELF(self),
 		                           this_arg, argc, argv);
 	}
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 
 	/* Check for special callback optimizations. */
 	if (GET_TP_SELF() == &DeeFunction_Type)
@@ -1558,19 +1549,18 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 	result = DeeObject_TCall(tp_self, self,
 	                         DeeTuple_SIZE(full_args),
 	                         DeeTuple_ELEM(full_args));
-#else
+#else /* DEFINE_TYPE_OPERATORS */
 	result = DeeObject_Call(self,
 	                        DeeTuple_SIZE(full_args),
 	                        DeeTuple_ELEM(full_args));
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 	DeeTuple_DecrefSymbolic(full_args);
 	return result;
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict this_arg,
-                 size_t argc, DeeObject **__restrict argv,
+                (DeeObject *self, DeeObject *this_arg,
+                 size_t argc, DeeObject **argv,
                  DeeObject *kw)) {
 	DREF DeeObject *full_args, *result;
 	ASSERT_OBJECT(self);
@@ -1580,7 +1570,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 		                             DeeSuper_SELF(self),
 		                             this_arg, argc, argv, kw);
 	}
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 
 	/* Check for special callback optimizations. */
 	if (GET_TP_SELF() == &DeeFunction_Type)
@@ -1622,12 +1612,12 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 	                           DeeTuple_SIZE(full_args),
 	                           DeeTuple_ELEM(full_args),
 	                           kw);
-#else
+#else /* DEFINE_TYPE_OPERATORS */
 	result = DeeObject_CallKw(self,
 	                          DeeTuple_SIZE(full_args),
 	                          DeeTuple_ELEM(full_args),
 	                          kw);
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 	DeeTuple_DecrefSymbolic(full_args);
 	return result;
 err_no_keywords:
@@ -1638,9 +1628,7 @@ err_no_keywords:
 
 #ifndef DEFINE_TYPE_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, ThisCallTuple,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict this_arg,
-                 DeeObject *__restrict args)) {
+                (DeeObject *self, DeeObject *this_arg, DeeObject *args)) {
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 	/* Check for special callback optimizations. */
 	if (GET_TP_SELF() == &DeeFunction_Type)
@@ -1653,10 +1641,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallTuple,
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, ThisCallTupleKw,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict this_arg,
-                 DeeObject *__restrict args,
-                 DeeObject *kw)) {
+                (DeeObject *self, DeeObject *this_arg, DeeObject *args, DeeObject *kw)) {
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 	/* Check for special callback optimizations. */
 	if (GET_TP_SELF() == &DeeFunction_Type)
@@ -1676,17 +1661,15 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallTupleKw,
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallPack, 12),
                     ASSEMBLY_NAME(DeeObject_Call, 12));
-#else
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VCallPack(DeeObject *__restrict self,
-                    size_t argc, va_list args) {
+#else /* !__NO_DEFINE_ALIAS */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
 	return DeeObject_Call(self, argc, (DeeObject **)args);
 }
-#endif
-#else
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VCallPack(DeeObject *__restrict self,
-                    size_t argc, va_list args) {
+#endif /* __NO_DEFINE_ALIAS */
+#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_VCallPack(DeeObject *self, size_t argc, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
 	if unlikely(!args_tuple)
@@ -1695,10 +1678,10 @@ DeeObject_VCallPack(DeeObject *__restrict self,
 	DeeTuple_DecrefSymbolic(args_tuple);
 	return result;
 }
-#endif
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VCallf(DeeObject *__restrict self,
-                 char const *__restrict format, va_list args) {
+#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_VCallf(DeeObject *self, char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)
@@ -1710,9 +1693,8 @@ DeeObject_VCallf(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VThisCallf(DeeObject *__restrict self,
-                     DeeObject *__restrict this_arg,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_VThisCallf(DeeObject *self, DeeObject *this_arg,
                      char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
@@ -1725,8 +1707,8 @@ DeeObject_VThisCallf(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC ATTR_SENTINEL DREF DeeObject *
-DeeObject_CallPack(DeeObject *__restrict self, size_t argc, ...) {
+PUBLIC ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *
+DeeObject_CallPack(DeeObject *self, size_t argc, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, argc);
@@ -1735,7 +1717,7 @@ DeeObject_CallPack(DeeObject *__restrict self, size_t argc, ...) {
 	return result;
 }
 
-PUBLIC DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 DeeObject_Callf(DeeObject *__restrict self,
                 char const *__restrict format, ...) {
 	DREF DeeObject *result;
@@ -1746,9 +1728,8 @@ DeeObject_Callf(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *
-DeeObject_ThisCallf(DeeObject *__restrict self,
-                    DeeObject *__restrict this_arg,
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
+DeeObject_ThisCallf(DeeObject *self, DeeObject *this_arg,
                     char const *__restrict format, ...) {
 	DREF DeeObject *result;
 	va_list args;
@@ -1760,7 +1741,8 @@ DeeObject_ThisCallf(DeeObject *__restrict self,
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN bool DCALL type_inherit_hash(DeeTypeObject *__restrict self) {
+INTERN NONNULL((1)) bool DCALL
+type_inherit_hash(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_cmp *base_cmp;
 	if (!base ||
@@ -1779,8 +1761,8 @@ INTERN bool DCALL type_inherit_hash(DeeTypeObject *__restrict self) {
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 
-WUNUSED ATTR_PURE
-DEFINE_OPERATOR(dhash_t, Hash, (DeeObject * __restrict self)) {
+WUNUSED /*ATTR_PURE*/
+DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_cmp && tp_self->tp_cmp->tp_hash)
@@ -1859,7 +1841,8 @@ DeeObject_PClear(DeeObject *__restrict self,
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN bool DCALL type_inherit_int(DeeTypeObject *__restrict self) {
+INTERN NONNULL((1)) bool DCALL
+type_inherit_int(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_math *base_math;
 	if (!base ||
@@ -1886,7 +1869,7 @@ INTERN bool DCALL type_inherit_int(DeeTypeObject *__restrict self) {
 
 
 DEFINE_OPERATOR(int, GetInt32,
-                (DeeObject * __restrict self,
+                (DeeObject *RESTRICT_IF_NOTYPE self,
                  int32_t *__restrict result)) {
 	int error;
 	LOAD_TP_SELF;
@@ -1963,7 +1946,7 @@ DEFINE_OPERATOR(int, GetInt32,
 }
 
 DEFINE_OPERATOR(int, GetInt64,
-                (DeeObject * __restrict self,
+                (DeeObject *RESTRICT_IF_NOTYPE self,
                  int64_t *__restrict result)) {
 	int error;
 	LOAD_TP_SELF;
@@ -2024,7 +2007,7 @@ DEFINE_OPERATOR(int, GetInt64,
 
 #ifndef DEFINE_TYPE_OPERATORS
 DEFINE_OPERATOR(int, GetInt128,
-                (DeeObject * __restrict self,
+                (DeeObject *RESTRICT_IF_NOTYPE self,
                  dint128_t *__restrict result)) {
 	int error;
 	LOAD_TP_SELF;
@@ -2390,7 +2373,7 @@ PUBLIC int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self,
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(int, AsDouble,
-                (DeeObject * __restrict self,
+                (DeeObject *RESTRICT_IF_NOTYPE self,
                  double *__restrict result)) {
 	union {
 		int32_t res32;
@@ -2573,7 +2556,7 @@ return_value:
 }
 #endif /* !DEFINE_TYPE_OPERATORS */
 
-DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_math) {
@@ -2624,7 +2607,7 @@ err:
 
 #ifndef DEFINE_TYPE_OPERATORS
 #define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)                      \
-	INTERN bool DCALL                                                          \
+	INTERN NONNULL((1)) bool DCALL                                             \
 	name(DeeTypeObject *__restrict self) {                                     \
 		struct type_math *base_math;                                           \
 		DeeTypeObject *base = DeeType_Base(self);                              \
@@ -2645,7 +2628,7 @@ err:
 		return true;                                                           \
 	}
 #define DEFINE_TYPE_INHERIT_FUNCTION1(name, opname, field)         \
-	INTERN bool DCALL                                              \
+	INTERN NONNULL((1)) bool DCALL                                 \
 	name(DeeTypeObject *__restrict self) {                         \
 		struct type_math *base_math;                               \
 		DeeTypeObject *base = DeeType_Base(self);                  \
@@ -2678,7 +2661,7 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_xor, "operator xor", xor)
 DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_pow, "operator pow", pow)
 
 /* inc,dec,add,sub,iadd & isub are all apart of the same operator group. */
-INTERN bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
+INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
 	struct type_math *base_math;
 	DeeTypeObject *base = DeeType_Base(self);
 	if (!base ||
@@ -2705,29 +2688,28 @@ INTERN bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
 }
 #undef DEFINE_TYPE_INHERIT_FUNCTION1
 #undef DEFINE_TYPE_INHERIT_FUNCTION
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 
 
 #ifdef DEFINE_TYPE_OPERATORS
 #define COPY_SELF() DeeObject_TCopy(tp_self, self)
-#else
+#else /* DEFINE_TYPE_OPERATORS */
 #define COPY_SELF() DeeObject_Copy(self)
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 
-#define DEFINE_MATH_OPERATOR1(name, xxx, operator_name, invoke)              \
-	DEFINE_OPERATOR(DREF DeeObject *, name, (DeeObject * __restrict self)) { \
-		LOAD_TP_SELF;                                                        \
-		do {                                                                 \
-			if (tp_self->tp_math && tp_self->tp_math->tp_##xxx)              \
-				return invoke(tp_self, self);                                \
-		} while (type_inherit_##xxx(tp_self));                               \
-		err_unimplemented_operator(tp_self, operator_name);                  \
-		return NULL;                                                         \
+#define DEFINE_MATH_OPERATOR1(name, xxx, operator_name, invoke)                     \
+	DEFINE_OPERATOR(DREF DeeObject *, name, (DeeObject *RESTRICT_IF_NOTYPE self)) { \
+		LOAD_TP_SELF;                                                               \
+		do {                                                                        \
+			if (tp_self->tp_math && tp_self->tp_math->tp_##xxx)                     \
+				return invoke(tp_self, self);                                       \
+		} while (type_inherit_##xxx(tp_self));                                      \
+		err_unimplemented_operator(tp_self, operator_name);                         \
+		return NULL;                                                                \
 	}
 #define DEFINE_MATH_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace)        \
 	DEFINE_OPERATOR(DREF DeeObject *, name,                                            \
-	                (DeeObject * __restrict self,                                      \
-	                 DeeObject * __restrict some_object)) {                            \
+	                (DeeObject *self, DeeObject *some_object)) {                       \
 		LOAD_TP_SELF;                                                                  \
 		ASSERT_OBJECT(some_object);                                                    \
 		do {                                                                           \
@@ -2764,8 +2746,7 @@ DEFINE_MATH_OPERATOR2(Xor, xor, OPERATOR_XOR, DeeType_INVOKE_XOR, DeeType_INVOKE
 DEFINE_MATH_OPERATOR2(Pow, pow, OPERATOR_POW, DeeType_INVOKE_POW, DeeType_INVOKE_IPOW)
 
 DEFINE_OPERATOR(DREF DeeObject *, Add,
-               (DeeObject *__restrict self,
-                DeeObject *__restrict some_object)) {
+               (DeeObject *self, DeeObject *some_object)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(some_object);
 	do {
@@ -2799,8 +2780,7 @@ err_self:
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, Sub,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict some_object)) {
+                (DeeObject *self, DeeObject *some_object)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(some_object);
 	do {
@@ -3016,7 +2996,7 @@ err:
 #undef COPY_SELF
 
 
-DEFINE_OPERATOR(int, Inc, (DeeObject * *__restrict pself)) {
+DEFINE_OPERATOR(int, Inc, (DeeObject **__restrict pself)) {
 	LOAD_TP_SELFP;
 	do {
 		struct type_math *math;
@@ -3054,7 +3034,7 @@ err:
 	return -1;
 }
 
-DEFINE_OPERATOR(int, Dec, (DeeObject * *__restrict pself)) {
+DEFINE_OPERATOR(int, Dec, (DeeObject **__restrict pself)) {
 	LOAD_TP_SELFP;
 	do {
 		struct type_math *math;
@@ -3092,29 +3072,29 @@ err:
 	return -1;
 }
 
-#define DEFINE_MATH_INPLACE_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace)               \
-	DEFINE_OPERATOR(int, name, (DeeObject * *__restrict pself, DeeObject * __restrict some_object)) { \
-		LOAD_TP_SELFP;                                                                                \
-		ASSERT_OBJECT(some_object);                                                                   \
-		do {                                                                                          \
-			if (tp_self->tp_math) {                                                                   \
-				if (tp_self->tp_math->tp_inplace_##xxx) {                                             \
-					return invoke_inplace(tp_self, pself, some_object);                               \
-				}                                                                                     \
-				if (tp_self->tp_math->tp_##xxx) {                                                     \
-					DREF DeeObject *temp;                                                             \
-					temp = invoke(tp_self, *pself, some_object);                                      \
-					if unlikely(!temp)                                                                \
-						goto err;                                                                     \
-					Dee_Decref(*pself);                                                               \
-					*pself = temp;                                                                    \
-					return 0;                                                                         \
-				}                                                                                     \
-			}                                                                                         \
-		} while (type_inherit_##xxx(tp_self));                                                        \
-		err_unimplemented_operator(tp_self, operator_name);                                           \
-	err:                                                                                              \
-		return -1;                                                                                    \
+#define DEFINE_MATH_INPLACE_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace)  \
+	DEFINE_OPERATOR(int, name, (DeeObject **__restrict pself, DeeObject *some_object)) { \
+		LOAD_TP_SELFP;                                                                   \
+		ASSERT_OBJECT(some_object);                                                      \
+		do {                                                                             \
+			if (tp_self->tp_math) {                                                      \
+				if (tp_self->tp_math->tp_inplace_##xxx) {                                \
+					return invoke_inplace(tp_self, pself, some_object);                  \
+				}                                                                        \
+				if (tp_self->tp_math->tp_##xxx) {                                        \
+					DREF DeeObject *temp;                                                \
+					temp = invoke(tp_self, *pself, some_object);                         \
+					if unlikely(!temp)                                                   \
+						goto err;                                                        \
+					Dee_Decref(*pself);                                                  \
+					*pself = temp;                                                       \
+					return 0;                                                            \
+				}                                                                        \
+			}                                                                            \
+		} while (type_inherit_##xxx(tp_self));                                           \
+		err_unimplemented_operator(tp_self, operator_name);                              \
+	err:                                                                                 \
+		return -1;                                                                       \
 	}
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceMul, mul, OPERATOR_INPLACE_MUL, DeeType_INVOKE_MUL, DeeType_INVOKE_IMUL)
 DEFINE_MATH_INPLACE_OPERATOR2(InplaceDiv, div, OPERATOR_INPLACE_DIV, DeeType_INVOKE_DIV, DeeType_INVOKE_IDIV)
@@ -3127,8 +3107,7 @@ DEFINE_MATH_INPLACE_OPERATOR2(InplaceXor, xor, OPERATOR_INPLACE_XOR, DeeType_INV
 DEFINE_MATH_INPLACE_OPERATOR2(InplacePow, pow, OPERATOR_INPLACE_POW, DeeType_INVOKE_POW, DeeType_INVOKE_IPOW)
 
 DEFINE_OPERATOR(int, InplaceAdd,
-                (DeeObject * *__restrict pself,
-                 DeeObject *__restrict some_object)) {
+                (DeeObject **__restrict pself, DeeObject *some_object)) {
 	LOAD_TP_SELFP;
 	ASSERT_OBJECT(some_object);
 	do {
@@ -3160,8 +3139,7 @@ err:
 	return -1;
 }
 DEFINE_OPERATOR(int, InplaceSub,
-                (DeeObject * *__restrict pself,
-                 DeeObject *__restrict some_object)) {
+                (DeeObject **__restrict pself, DeeObject *some_object)) {
 	LOAD_TP_SELFP;
 	ASSERT_OBJECT(some_object);
 	do {
@@ -3245,7 +3223,8 @@ invoke_not(DREF DeeObject *ob) {
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN bool DCALL type_inherit_compare(DeeTypeObject *__restrict self) {
+INTERN NONNULL((1)) bool DCALL
+type_inherit_compare(DeeTypeObject *__restrict self) {
 	struct type_cmp *base_cmp;
 	DeeTypeObject *base = DeeType_Base(self);
 	if (!base ||
@@ -3274,8 +3253,7 @@ INTERN bool DCALL type_inherit_compare(DeeTypeObject *__restrict self) {
 
 #define DEFINE_COMPARE_OPERATOR(name, fwd, bck, operator_name, invoke_fwd, invoke_bck) \
 	DEFINE_OPERATOR(DREF DeeObject *, name,                                            \
-	                (DeeObject * __restrict self,                                      \
-	                 DeeObject * __restrict some_object)) {                            \
+	                (DeeObject *self, DeeObject *some_object)) {                       \
 		LOAD_TP_SELF;                                                                  \
 		ASSERT_OBJECT(some_object);                                                    \
 		do {                                                                           \
@@ -3300,9 +3278,8 @@ DEFINE_COMPARE_OPERATOR(CompareGeObject, ge, le, OPERATOR_GE, DeeType_INVOKE_GE,
 
 #ifndef DEFINE_TYPE_OPERATORS
 #define DEFINE_COMPARE_OPERATOR(name, fwd, bck, error) \
-	PUBLIC int DCALL                                   \
-	name(DeeObject *__restrict self,                   \
-	     DeeObject *__restrict some_object) {          \
+	PUBLIC WUNUSED NONNULL((1, 2)) int DCALL           \
+	name(DeeObject *self, DeeObject *some_object) {    \
 		DeeObject *val;                                \
 		int result;                                    \
 		val = name##Object(self, some_object);         \
@@ -3318,9 +3295,8 @@ DEFINE_COMPARE_OPERATOR(DeeObject_CompareGr, gr, lo, OPERATOR_GR)
 DEFINE_COMPARE_OPERATOR(DeeObject_CompareGe, ge, le, OPERATOR_GE)
 #undef DEFINE_COMPARE_OPERATOR
 
-PUBLIC int DCALL
-DeeObject_CompareEq(DeeObject *__restrict self,
-                    DeeObject *__restrict some_object) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeObject_CompareEq(DeeObject *self, DeeObject *some_object) {
 	DeeObject *val;
 	int result;
 	val = DeeObject_CompareEqObject(self, some_object);
@@ -3336,9 +3312,8 @@ DeeObject_CompareEq(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC int DCALL
-DeeObject_CompareNe(DeeObject *__restrict self,
-                    DeeObject *__restrict some_object) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeObject_CompareNe(DeeObject *self, DeeObject *some_object) {
 	DeeObject *val;
 	int result;
 	val = DeeObject_CompareNeObject(self, some_object);
@@ -3357,7 +3332,7 @@ DeeObject_CompareNe(DeeObject *__restrict self,
 
 #ifndef DEFINE_TYPE_OPERATORS
 #define DEFINE_TYPE_INHERIT_FUNCTION(name, field)  \
-	INTERN bool DCALL                              \
+	INTERN NONNULL((1)) bool DCALL                 \
 	name(DeeTypeObject *__restrict self) {         \
 		DeeTypeObject *base = DeeType_Base(self);  \
 		struct type_seq *base_seq;                 \
@@ -3375,7 +3350,7 @@ DeeObject_CompareNe(DeeObject *__restrict self,
 		return true;                               \
 	}
 
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 type_inherit_iternext(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	if (!base ||
@@ -3397,7 +3372,7 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setrange, tp_range_set)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 #endif /* !DEFINE_TYPE_OPERATORS */
 
-DEFINE_OPERATOR(DREF DeeObject *, IterSelf, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(DREF DeeObject *, IterSelf, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		struct type_seq *seq = tp_self->tp_seq;
@@ -3407,7 +3382,8 @@ DEFINE_OPERATOR(DREF DeeObject *, IterSelf, (DeeObject * __restrict self)) {
 	err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
 	return NULL;
 }
-DEFINE_OPERATOR(DREF DeeObject *, IterNext, (DeeObject * __restrict self)) {
+
+DEFINE_OPERATOR(DREF DeeObject *, IterNext, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_iter_next)
@@ -3422,7 +3398,7 @@ DEFINE_OPERATOR(DREF DeeObject *, IterNext, (DeeObject * __restrict self)) {
 
 #ifndef DEFINE_TYPE_OPERATORS
 
-DEFINE_OPERATOR(size_t, Size, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *sizeob;
 	size_t result;
 	LOAD_TP_SELF;
@@ -3456,8 +3432,7 @@ err:
 }
 
 DEFINE_OPERATOR(int, Contains,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict some_object)) {
+                (DeeObject *self, DeeObject *some_object)) {
 	DREF DeeObject *resultob;
 	int result;
 	resultob = DeeObject_ContainsObject(self, some_object);
@@ -3471,7 +3446,7 @@ err:
 }
 #endif /* !DEFINE_TYPE_OPERATORS */
 
-DEFINE_OPERATOR(DREF DeeObject *, SizeObject, (DeeObject * __restrict self)) {
+DEFINE_OPERATOR(DREF DeeObject *, SizeObject, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_size)
@@ -3482,8 +3457,7 @@ DEFINE_OPERATOR(DREF DeeObject *, SizeObject, (DeeObject * __restrict self)) {
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, ContainsObject,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict some_object)) {
+                (DeeObject *self, DeeObject *some_object)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_contains)
@@ -3494,8 +3468,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ContainsObject,
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, GetItem,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict index)) {
+                (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get)
@@ -3506,8 +3479,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItem,
 }
 
 DEFINE_OPERATOR(int, DelItem,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict index)) {
+                (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_del)
@@ -3516,7 +3488,8 @@ DEFINE_OPERATOR(int, DelItem,
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 }
 
-DEFINE_OPERATOR(int, SetItem, (DeeObject * __restrict self, DeeObject *__restrict index, DeeObject *__restrict value)) {
+DEFINE_OPERATOR(int, SetItem,
+                (DeeObject *self, DeeObject *index, DeeObject *value)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_set)
@@ -3526,9 +3499,7 @@ DEFINE_OPERATOR(int, SetItem, (DeeObject * __restrict self, DeeObject *__restric
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, GetRange,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict begin,
-                 DeeObject *__restrict end)) {
+                (DeeObject *self, DeeObject *begin, DeeObject *end)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get)
@@ -3539,9 +3510,8 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRange,
 }
 
 #ifndef DEFINE_TYPE_OPERATORS
-PUBLIC DREF DeeObject *DCALL
-DeeObject_ConcatInherited(DREF DeeObject *__restrict self,
-                          DeeObject *__restrict other) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_ConcatInherited(DREF DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	if (DeeTuple_CheckExact(other)) {
 		size_t i, count = DeeTuple_SIZE(other);
@@ -3564,7 +3534,7 @@ DeeObject_ConcatInherited(DREF DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeObject_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
                           /*inherit(on_success)*/ DREF DeeObject **__restrict argv) {
 	DREF DeeObject *result;
@@ -3586,9 +3556,8 @@ err:
 }
 
 
-PUBLIC DREF DeeObject *(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *__restrict self,
-                                                            dssize_t begin,
-                                                            DeeObject *__restrict end) {
+PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *
+(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *self, dssize_t begin, DeeObject *end) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
 	do {
@@ -3622,8 +3591,8 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *__restrict self,
-                                                          DeeObject *__restrict begin, dssize_t end) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *begin, dssize_t end) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	do {
@@ -3653,8 +3622,9 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self,
-                                                       dssize_t begin, dssize_t end) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self,
+                                dssize_t begin, dssize_t end) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
@@ -3685,9 +3655,10 @@ err:
 	return NULL;
 }
 
-PUBLIC int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *__restrict self,
-                                               dssize_t begin, DeeObject *__restrict end,
-                                               DeeObject *__restrict value) {
+PUBLIC WUNUSED NONNULL((1, 3, 4)) int
+(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self,
+                                     dssize_t begin, DeeObject *end,
+                                     DeeObject *value) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
 	ASSERT_OBJECT(value);
@@ -3722,9 +3693,10 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *__restrict self,
-                                             DeeObject *__restrict begin, dssize_t end,
-                                             DeeObject *__restrict value) {
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeObject_SetRangeEndIndex)(DeeObject *self,
+                                   DeeObject *begin, dssize_t end,
+                                   DeeObject *value) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(value);
@@ -3756,9 +3728,10 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_SetRangeIndex)(DeeObject *__restrict self,
-                                          dssize_t begin, dssize_t end,
-                                          DeeObject *__restrict value) {
+PUBLIC WUNUSED NONNULL((1, 4)) int
+(DCALL DeeObject_SetRangeIndex)(DeeObject *self,
+                                dssize_t begin, dssize_t end,
+                                DeeObject *value) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(value);
 	do {
@@ -3793,9 +3766,7 @@ err:
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(int, DelRange,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict begin,
-                 DeeObject *__restrict end)) {
+                (DeeObject *self, DeeObject *begin, DeeObject *end)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(end);
@@ -3807,10 +3778,8 @@ DEFINE_OPERATOR(int, DelRange,
 }
 
 DEFINE_OPERATOR(int, SetRange,
-                (DeeObject * __restrict self,
-                 DeeObject *__restrict begin,
-                 DeeObject *__restrict end,
-                 DeeObject *__restrict value)) {
+                (DeeObject *self, DeeObject *begin,
+                 DeeObject *end, DeeObject *value)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(end);
@@ -3825,9 +3794,10 @@ DEFINE_OPERATOR(int, SetRange,
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-PUBLIC int (DCALL DeeObject_BoundItem)(DeeObject *__restrict self,
-                                       DeeObject *__restrict index,
-                                       bool allow_missing) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_BoundItem)(DeeObject *self,
+                            DeeObject *index,
+                            bool allow_missing) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self;
 	size_t i;
@@ -3904,8 +3874,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self,
-                                            size_t index, bool allow_missing) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self,
+                                 size_t index, bool allow_missing) {
 	DREF DeeObject *result, *index_ob;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -3988,10 +3959,11 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_BoundItemString)(DeeObject *__restrict self,
-                                             char const *__restrict key,
-                                             dhash_t hash,
-                                             bool allow_missing) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_BoundItemString)(DeeObject *__restrict self,
+                                  char const *__restrict key,
+                                  dhash_t hash,
+                                  bool allow_missing) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4034,11 +4006,11 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_BoundItemStringLen)(DeeObject *__restrict self,
-                                                char const *__restrict key,
-                                                size_t keylen,
-                                                dhash_t hash,
-                                                bool allow_missing) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_BoundItemStringLen)(DeeObject *__restrict self,
+                                     char const *__restrict key,
+                                     size_t keylen, dhash_t hash,
+                                     bool allow_missing) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4082,8 +4054,8 @@ err:
 }
 
 
-PUBLIC int (DCALL DeeObject_HasItem)(DeeObject *__restrict self,
-                                     DeeObject *__restrict index) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_HasItem)(DeeObject *self, DeeObject *index) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self;
 	size_t i;
@@ -4137,8 +4109,8 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self,
-                                          size_t index) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self, size_t index) {
 	DREF DeeObject *result, *index_ob;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -4197,9 +4169,10 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_HasItemString)(DeeObject *__restrict self,
-                                           char const *__restrict key,
-                                           dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_HasItemString)(DeeObject *__restrict self,
+                                char const *__restrict key,
+                                dhash_t hash) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4220,9 +4193,10 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self,
-                                              char const *__restrict key,
-                                              size_t keylen, dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_HasItemStringLen)(DeeObject *__restrict self,
+                                   char const *__restrict key,
+                                   size_t keylen, dhash_t hash) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4244,10 +4218,8 @@ err:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_GetItemDef(DeeObject *__restrict self,
-                     DeeObject *__restrict key,
-                     DeeObject *__restrict def) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -4276,9 +4248,8 @@ DeeObject_GetItemDef(DeeObject *__restrict self,
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_GetItemIndex(DeeObject *__restrict self,
-                       size_t index) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_GetItemIndex(DeeObject *__restrict self, size_t index) {
 	DREF DeeObject *index_ob, *result;
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -4305,8 +4276,8 @@ err:
 	return NULL;
 }
 
-PUBLIC int (DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self,
-                                          size_t index) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self, size_t index) {
 	DREF DeeObject *index_ob;
 	int result;
 	DeeTypeObject *tp_self;
@@ -4334,9 +4305,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_SetItemIndex)(DeeObject *__restrict self,
-                                          size_t index,
-                                          DeeObject *__restrict value) {
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeObject_SetItemIndex)(DeeObject *self, size_t index,
+                               DeeObject *value) {
 	DREF DeeObject *index_ob;
 	int result;
 	DeeTypeObject *tp_self;
@@ -4364,7 +4335,7 @@ err:
 	return -1;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_GetItemString(DeeObject *__restrict self,
                         char const *__restrict key,
                         dhash_t hash) {
@@ -4391,7 +4362,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_GetItemStringLen(DeeObject *__restrict self,
                            char const *__restrict key,
                            size_t keylen,
@@ -4419,11 +4390,11 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_GetItemStringDef(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeObject_GetItemStringDef(DeeObject *self,
                            char const *__restrict key,
                            dhash_t hash,
-                           DeeObject *__restrict def) {
+                           DeeObject *def) {
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
@@ -4447,12 +4418,11 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeObject_GetItemStringLenDef(DeeObject *__restrict self,
+PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeObject_GetItemStringLenDef(DeeObject *self,
                               char const *__restrict key,
-                              size_t keylen,
-                              dhash_t hash,
-                              DeeObject *__restrict def) {
+                              size_t keylen, dhash_t hash,
+                              DeeObject *def) {
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
@@ -4476,9 +4446,10 @@ err:
 	return NULL;
 }
 
-PUBLIC int (DCALL DeeObject_DelItemString)(DeeObject *__restrict self,
-                                           char const *__restrict key,
-                                           dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_DelItemString)(DeeObject *__restrict self,
+                                char const *__restrict key,
+                                dhash_t hash) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -4495,10 +4466,10 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_DelItemStringLen)(DeeObject *__restrict self,
-                                              char const *__restrict key,
-                                              size_t keylen,
-                                              dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_DelItemStringLen)(DeeObject *__restrict self,
+                                   char const *__restrict key,
+                                   size_t keylen, dhash_t hash) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -4515,10 +4486,10 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_SetItemString)(DeeObject *__restrict self,
-                                           char const *__restrict key,
-                                           dhash_t hash,
-                                           DeeObject *__restrict value) {
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeObject_SetItemString)(DeeObject *self,
+                                char const *__restrict key,
+                                dhash_t hash, DeeObject *value) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -4536,11 +4507,11 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_SetItemStringLen)(DeeObject *__restrict self,
-                                              char const *__restrict key,
-                                              size_t keylen,
-                                              dhash_t hash,
-                                              DeeObject *__restrict value) {
+PUBLIC WUNUSED NONNULL((1, 2, 5)) int
+(DCALL DeeObject_SetItemStringLen)(DeeObject *self,
+                                   char const *__restrict key,
+                                   size_t keylen, dhash_t hash,
+                                   DeeObject *value) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -4558,11 +4529,11 @@ err:
 	return -1;
 }
 
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
              dformatprinter printer, void *arg);
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_Print(DeeObject *__restrict self,
                 dformatprinter printer, void *arg) {
 	DREF DeeObject *ob_str;
@@ -4588,10 +4559,10 @@ err:
 	return -1;
 }
 
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
 bytes_print_repr(DeeObject *__restrict self, dformatprinter printer, void *arg);
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_PrintRepr(DeeObject *__restrict self,
                     dformatprinter printer, void *arg) {
 	DREF DeeObject *ob_repr;
@@ -4616,8 +4587,7 @@ DeeObject_PrintRepr(DeeObject *__restrict self,
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, GetAttr,
-                (DeeObject * __restrict self,
-                 /*String*/ DeeObject *__restrict attr_name)) {
+                (DeeObject *self, /*String*/ DeeObject *attr_name)) {
 	DREF DeeObject *result;
 	dhash_t hash;
 	DeeTypeObject *iter;
@@ -4674,8 +4644,7 @@ done:
 }
 
 DEFINE_OPERATOR(int, DelAttr,
-                (DeeObject * __restrict self,
-                 /*String*/ DeeObject *__restrict attr_name)) {
+                (DeeObject *self, /*String*/ DeeObject *attr_name)) {
 	int temp;
 	dhash_t hash;
 	DeeTypeObject *iter;
@@ -4738,9 +4707,7 @@ done:
 }
 
 DEFINE_OPERATOR(int, SetAttr,
-                (DeeObject * __restrict self,
-                 /*String*/ DeeObject *__restrict attr_name,
-                 DeeObject *__restrict value)) {
+                (DeeObject *self, /*String*/ DeeObject *attr_name, DeeObject *value)) {
 	int temp;
 	dhash_t hash;
 	DeeTypeObject *iter;
@@ -4803,18 +4770,18 @@ done:
 	return temp;
 }
 
-INTDEF DREF DeeObject *DCALL type_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject **__restrict argv);
 #ifndef DEFINE_TYPE_OPERATORS
-INTDEF DREF DeeObject *DCALL super_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF DREF DeeObject *DCALL DeeObject_TCallAttr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
-#endif
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_getattr(DeeObject *self, DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
+DeeObject_TCallAttr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name, size_t argc, DeeObject **__restrict argv);
+#endif /* !DEFINE_TYPE_OPERATORS */
 
 
 DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
-                (DeeObject * __restrict self,
-                 /*String*/ DeeObject *__restrict attr_name,
-                 size_t argc, DeeObject **__restrict argv)) {
+                (DeeObject *self, /*String*/ DeeObject *attr_name,
+                 size_t argc, DeeObject **argv)) {
 	DREF DeeObject *result;
 	dhash_t hash;
 	DeeTypeObject *iter;
@@ -4858,7 +4825,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
 		if (!iter)
 			break;
 		if (iter->tp_attr) {
-			DREF DeeObject *(DCALL * getattr)(DeeObject * __restrict, /*String*/ DeeObject * __restrict);
+			DREF DeeObject *(DCALL *getattr)(DeeObject *, /*String*/ DeeObject *);
 do_iter_attr:
 			getattr = iter->tp_attr->tp_getattr;
 			if (getattr == &type_getattr)
@@ -4868,9 +4835,9 @@ do_iter_attr:
 				return DeeObject_TCallAttr(DeeSuper_TYPE(self), DeeSuper_SELF(self), attr_name, argc, argv);
 #endif /* !DEFINE_TYPE_OPERATORS */
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeach_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeach_getattr)
 				return DeeSeqEach_CallAttr(((SeqEachBase *)self)->se_seq, attr_name, argc, argv);
-			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject * __restrict, /*String*/ DeeObject * __restrict))&seqeachw_getattr)
+			if (getattr == (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&seqeachw_getattr)
 				return DeeSeqEach_CallAttr(self, attr_name, argc, argv);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 			if (!getattr)
@@ -4900,18 +4867,18 @@ done:
 #ifndef __NO_DEFINE_ALIAS
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeObject_VCallAttrPack, 16),
                     ASSEMBLY_NAME(DeeObject_CallAttr, 16));
-#else
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VCallAttrPack(DeeObject *__restrict self,
-                        /*String*/ DeeObject *__restrict attr_name,
+#else /* !__NO_DEFINE_ALIAS */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_VCallAttrPack(DeeObject *self,
+                        /*String*/ DeeObject *attr_name,
                         size_t argc, va_list args) {
 	return DeeObject_CallAttr(self, attr_name, argc, (DeeObject **)args);
 }
-#endif
-#else
-PUBLIC DREF DeeObject *DCALL
-DeeObject_VCallAttrPack(DeeObject *__restrict self,
-                        /*String*/ DeeObject *__restrict attr_name,
+#endif /* __NO_DEFINE_ALIAS */
+#else /* CONFIG_VA_LIST_IS_STACK_POINTER */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_VCallAttrPack(DeeObject *self,
+                        /*String*/ DeeObject *attr_name,
                         size_t argc, va_list args) {
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VPackSymbolic(argc, args);
@@ -4922,12 +4889,12 @@ DeeObject_VCallAttrPack(DeeObject *__restrict self,
 	DeeTuple_DecrefSymbolic(args_tuple);
 	return result;
 }
-#endif
+#endif /* !CONFIG_VA_LIST_IS_STACK_POINTER */
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 type_inherit_with(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_with *base_with;
@@ -4948,7 +4915,7 @@ type_inherit_with(DeeTypeObject *__restrict self) {
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(int,Enter,
-               (DeeObject *__restrict self)) {
+               (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_with) {
@@ -4964,7 +4931,7 @@ DEFINE_OPERATOR(int,Enter,
 }
 
 DEFINE_OPERATOR(int,Leave,
-               (DeeObject *__restrict self)) {
+               (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_with) {
@@ -4981,7 +4948,7 @@ DEFINE_OPERATOR(int,Leave,
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 type_inherit_buffer(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_buffer *base_buffer;
@@ -5003,7 +4970,7 @@ type_inherit_buffer(DeeTypeObject *__restrict self) {
 
 
 DEFINE_OPERATOR(int, GetBuf,
-               (DeeObject *__restrict self,
+               (DeeObject *RESTRICT_IF_NOTYPE self,
                 DeeBuffer *__restrict info,
                 unsigned int flags)) {
 	ASSERTF(!(flags & ~(Dee_BUFFER_FWRITABLE)),
@@ -5021,7 +4988,7 @@ DEFINE_OPERATOR(int, GetBuf,
 			}
 #ifndef __INTELLISENSE__
 			info->bb_put = buf->tp_putbuf;
-#endif
+#endif /* !__INTELLISENSE__ */
 			return (*buf->tp_getbuf)(self, info, flags);
 		}
 	} while (type_inherit_buffer(tp_self));
@@ -5031,7 +4998,7 @@ err:
 }
 
 DEFINE_OPERATOR(void, PutBuf,
-                (DeeObject * __restrict self,
+                (DeeObject *RESTRICT_IF_NOTYPE self,
                  DeeBuffer *__restrict info,
                  unsigned int flags)) {
 	ASSERTF(!(flags & ~(Dee_BUFFER_FWRITABLE)),
@@ -5069,9 +5036,9 @@ DEFINE_OPERATOR(void, PutBuf,
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-PUBLIC int (DCALL DeeObject_Unpack)(DeeObject *__restrict self,
-                                    size_t objc,
-                                    DREF DeeObject **__restrict objv) {
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc,
+                         /*out*/DREF DeeObject **__restrict objv) {
 	DREF DeeObject *iterator, *elem;
 	size_t fast_size, i = 0;
 	/* Try to make use of the fast-sequence API. */
@@ -5123,7 +5090,7 @@ err:
 }
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_Foreach(DeeObject *__restrict self,
                   dforeach_t proc, void *arg) {
 	dssize_t temp, result = 0;
@@ -5172,9 +5139,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeObject_CompareKeyEq)(DeeObject *__restrict keyed_search_item,
-                                          DeeObject *__restrict elem,
-                                          DeeObject *key) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
+                               DeeObject *elem, /*nullable*/DeeObject *key) {
 	int result;
 	if (!key)
 		return DeeObject_CompareEq(keyed_search_item, elem);
@@ -5193,7 +5160,7 @@ err:
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 type_inherit_nsi(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base = DeeType_Base(self);
 	struct type_seq *base_seq;
@@ -5207,8 +5174,9 @@ type_inherit_nsi(DeeTypeObject *__restrict self) {
 	self->tp_seq = base->tp_seq;
 	return true;
 }
-#endif
+#endif /* !DEFINE_TYPE_OPERATORS */
 
+#undef RESTRICT_IF_NOTYPE
 
 DECL_END
 

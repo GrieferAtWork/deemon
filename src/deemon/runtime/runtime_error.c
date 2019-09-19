@@ -78,7 +78,7 @@ err_subclass_final_type(DeeTypeObject *__restrict tp) {
 	                       "Cannot create sub-class of final type `%k'", tp);
 }
 
-PUBLIC ATTR_COLD int
+PUBLIC ATTR_COLD NONNULL((1, 2)) int
 (DCALL DeeObject_TypeAssertFailed)(DeeObject *__restrict self,
                                    DeeTypeObject *__restrict wanted_type) {
 	ASSERT_OBJECT(self);
@@ -89,9 +89,8 @@ PUBLIC ATTR_COLD int
 	                       wanted_type, Dee_TYPE(self), self);
 }
 
-INTERN ATTR_COLD int DCALL
-err_unimplemented_constructor_kw(DeeTypeObject *__restrict tp,
-                                 size_t argc,
+INTERN ATTR_COLD NONNULL((1, 3)) int DCALL
+err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc,
                                  DeeObject **__restrict argv,
                                  DeeObject *kw) {
 	int result;

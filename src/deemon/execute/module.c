@@ -1264,9 +1264,9 @@ err:
 }
 
 PRIVATE struct type_attr module_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_delattr,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&module_setattr,
+	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&module_getattr,
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_delattr,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&module_setattr,
 	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&module_enumattr
 };
 
@@ -1347,7 +1347,7 @@ PRIVATE struct type_getset module_getsets[] = {
 	      ">assert \"min\" !in util.__exports__;\n"
 	      ">util.__exports__[\"min\"] = 42;\n"
 	      ">print util.min;                // 42") },
-	{ "__imports__", (DREF DeeObject *(DCALL *)(DREF DeeObject * __restrict))&module_get_imports, NULL, NULL,
+	{ "__imports__", (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_imports, NULL, NULL,
 	  DOC("->?S?DModule\n"
 	      "Returns an immutable sequence of all other modules imported by this one") },
 	{ "__globals__", &DeeModule_ViewGlobals, NULL, NULL,
@@ -1356,22 +1356,22 @@ PRIVATE struct type_getset module_getsets[] = {
 	      "internal index. Using this, anonymous global variables (such as property callbacks) "
 	      "can be accessed and modified") },
 	{ "__code__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject * __restrict))&module_get_code, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_code, NULL, NULL,
 	  DOC("->?Ert:Code\n"
 	      "@throw ValueError The Module hasn't been fully loaded\n"
 	      "Returns the code object for the Module's root initializer") },
 	{ "__path__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject * __restrict))&module_get_path, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_path, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "@throw ValueError The Module hasn't been fully loaded\n"
 	      "Returns the absolute filesystem path of the Module's source file, or :none "
 	      "if the Module wasn't created from a file accessible via the filesystem") },
 	{ "__isglobal__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject * __restrict))&module_get_isglobal, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_isglobal, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this Module is global (i.e. can be accessed as ${import(this.__name__)})") },
 	{ "__haspath__",
-	  (DREF DeeObject *(DCALL *)(DREF DeeObject * __restrict))&module_get_haspath, NULL, NULL,
+	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_haspath, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this Module has a path found within the filesystem") },
 	{ NULL }
@@ -1573,8 +1573,8 @@ module_ne(DeeModuleObject *__restrict self,
 
 PRIVATE struct type_cmp module_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&module_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, DeeObject *__restrict))&module_ne
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&module_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&module_ne
 };
 
 PUBLIC DeeTypeObject DeeModule_Type = {

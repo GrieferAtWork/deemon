@@ -336,6 +336,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.clang-format" />
+    <None Include="..\cpp.hint" />
     <None Include="..\include\deemon\compiler\lexer.def" />
     <None Include="..\src\.sources" />
     <None Include="..\src\deemon\compiler\asm\genstore-setup.c.inl" />
