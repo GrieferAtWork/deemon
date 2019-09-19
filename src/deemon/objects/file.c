@@ -1298,7 +1298,7 @@ err:
 
 PRIVATE struct type_method file_class_methods[] = {
 	{ "open",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_class_open,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_class_open,
 	  DOC("(path:?Dstring,oflags=!Pr,mode=!0644)->?.\n"
 	      "(path:?Dstring,oflags:?Dint,mode=!0644)->?.\n"
 	      "@interrupt\n"
@@ -2101,7 +2101,7 @@ err:
 
 PRIVATE struct type_method file_methods[] = {
 	{ "read",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_read,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_read,
 	  DOC("(maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Read and return at most @maxbytes of data from the file stream. "
 	      "When @readall is :true, keep on reading data until the buffer is full, or the "
@@ -2109,7 +2109,7 @@ PRIVATE struct type_method file_methods[] = {
 	      "internal buffer size used when reading data."),
 	  TYPE_METHOD_FKWDS },
 	{ "readinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_readinto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_readinto,
 	  DOC("(dst:?DBytes,readall=!f)->?Dint\n"
 	      "Read data into the given buffer @dst and return the number of bytes read. "
 	      "When @readall is :true, keep on reading data until the buffer is full, or the "
@@ -2117,7 +2117,7 @@ PRIVATE struct type_method file_methods[] = {
 	      "requested read size."),
 	  TYPE_METHOD_FKWDS },
 	{ "write",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_write,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_write,
 	  DOC("(data:?DBytes,writeall=!t)->?Dint\n"
 	      "Write @data to the file stream and return the actual number of bytes written. "
 	      "When @writeall is :true, keep writing data until the write-callback "
@@ -2125,25 +2125,25 @@ PRIVATE struct type_method file_methods[] = {
 	      "the write-callback only a single time."),
 	  TYPE_METHOD_FKWDS },
 	{ "pread",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_pread,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Similar to #read, but read data from a given file-offset "
 	      "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "preadinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_preadinto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_preadinto,
 	  DOC("(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
 	      "Similar to #readinto, but read data from a given file-offset "
 	      "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "pwrite",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_pwrite,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pwrite,
 	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
 	      "Similar to #write, but write data to a given file-offset "
 	      "@pos, rather than at the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "seek",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_seek,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_seek,
 	  DOC("(off:?Dint,whence=!PSET)->?Dint\n"
 	      "(off:?Dint,whence:?Dint)->?Dint\n"
 	      "@throw ValueError The given string passed as seek mode @whence was not recognized\n"
@@ -2157,41 +2157,41 @@ PRIVATE struct type_method file_methods[] = {
 	      "$\"END\"|Set the file pointer relative to the end of the stream}"),
 	  TYPE_METHOD_FKWDS },
 	{ "tell",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_tell,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_tell,
 	  DOC("->?Dint\n"
 	      "Same as calling #seek as ${this.seek(0,\"CUR\")}") },
 	{ "rewind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_rewind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_rewind,
 	  DOC("()\n"
 	      "Same as calling #seek as ${this.seek(0,\"SET\")}") },
 	{ "trunc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_trunc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_trunc,
 	  DOC("->?Dint\n"
 	      "(size:?Dint)->?Dint\n"
 	      "Truncate the file to a new length of @size bytes. "
 	      "When no argument is given, the file's length is truncated "
 	      "to its current position (#tell), rather than the one given") },
 	{ "sync",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_sync,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_sync,
 	  DOC("()\n"
 	      "Flush buffers and synchronize disk activity of the file") },
 	{ "close",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_close,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_close,
 	  DOC("()\n"
 	      "Close the file") },
 	{ "getc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_getc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_getc,
 	  DOC("->?Dint\n"
 	      "Read and return a single character (byte) from then file, "
 	      "or return ${-1} if the file's end has been reached") },
 	{ "ungetc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_ungetc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_ungetc,
 	  DOC("(ch:?Dint)->?Dbool\n"
 	      "Unget a given character @ch to be re-read the next time #getc or #read is called. "
 	      "If the file's start has already been reached, :false is returned and the character "
 	      "will not be re-read from this file") },
 	{ "putc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_putc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_putc,
 	  DOC("(byte:?Dint)->?Dbool\n"
 	      "Append a single @byte at the end of @this File, returning :true on "
 	      "success, or :false if the file has entered an end-of-file state") },
@@ -2199,7 +2199,7 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("->?Dint\n"
 	      "Returns the size (in bytes) of the file stream") },
 	{ "readline",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_readline,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_readline,
 	  DOC("(keeplf:?Dbool)->?DBytes\n"
 	      "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
 	      "Read one line from the file stream, but read at most @maxbytes bytes.\n"
@@ -2210,12 +2210,12 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("(maxbytes=!-1)->?DBytes\n"
 	      "Deprecated alias for ${this.read(maxbytes,true)}") },
 	{ "readat",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_pread,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Deprecated alias for #pread"),
 	  TYPE_METHOD_FKWDS },
 	{ "writeat",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_pwrite,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pwrite,
 	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
 	      "Deprecated alias for #pwrite"),
 	  TYPE_METHOD_FKWDS },
@@ -2223,7 +2223,7 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("(pos:?Dint,maxbytes=!-1)->?DBytes\n"
 	      "Deprecated alias for ${this.pread(pos,maxbytes,true)}") },
 	{ "setpos",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_seek,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_seek,
 	  DOC("(pos:?Dint)->?Dint\n"
 	      "Deprecated alias for #seek"),
 	  TYPE_METHOD_FKWDS },
@@ -2231,7 +2231,7 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("()\n"
 	      "Deprecated alias for #sync") },
 	{ "puts",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_write,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_write,
 	  DOC("(data:?DBytes)->?Dint\n"
 	      "Deprecated alias for #write"),
 	  TYPE_METHOD_FKWDS },

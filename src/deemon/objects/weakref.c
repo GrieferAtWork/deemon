@@ -326,16 +326,16 @@ ob_weakref_alive(WeakRef *__restrict self,
 }
 
 PRIVATE struct type_method ob_weakref_methods[] = {
-	{ "lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&ob_weakref_lock,
+	{ "lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_lock,
 	  DOC("->\n"
 	      "(def)->\n"
 	      "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
 	      "Lock the weak reference and return the pointed-to object") },
-	{ "alive", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&ob_weakref_alive,
+	{ "alive", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_alive,
 	  DOC("->?Dbool\n"
 	      "Alias for #op:bool") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&ob_weakref_try_lock,
+	{ "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_try_lock,
 	  DOC("()\n"
 	      "->\n"
 	      "Deprecated alias for #lock with passing :none (${this.lock(none)})") },

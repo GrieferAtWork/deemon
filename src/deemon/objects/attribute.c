@@ -624,7 +624,7 @@ err:
 }
 
 PRIVATE struct type_method attr_class_methods[] = {
-	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&attribute_exists,
+	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&attribute_exists,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Taking the same arguments as #op:constructor, check if the an attribute matching "
@@ -639,7 +639,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 	      "> return true;\n"
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
-	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&attribute_lookup,
+	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&attribute_lookup,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Same as #op:constructor, but return :none if the attribute doesn't exist\n"

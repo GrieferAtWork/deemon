@@ -401,7 +401,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&property_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&property_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&property_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

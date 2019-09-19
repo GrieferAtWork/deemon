@@ -1641,7 +1641,7 @@ err_empty:
 
 PRIVATE struct type_method tuple_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&tuple_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tuple_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

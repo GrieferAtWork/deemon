@@ -742,7 +742,7 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_setitem,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_nsi       = */ &fl_nsi
 };
 
@@ -770,10 +770,10 @@ err:
 
 PRIVATE struct type_method fl_methods[] = {
 	{ "clear",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&fl_clear_meth,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&fl_clear_meth,
 	  DOC("()") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&fl_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&fl_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

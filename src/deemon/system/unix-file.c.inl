@@ -690,10 +690,10 @@ err:
 
 PRIVATE struct type_method sysfile_methods[] = {
 	{ STR_FILENO,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&sysfile_fileno,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_fileno,
 	  DOC("->?Dint") },
 	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&sysfile_isatty,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_isatty,
 	  DOC("->?Dbool") },
 	/* TODO: dup_np() */
 	/* TODO: dup2_np() */

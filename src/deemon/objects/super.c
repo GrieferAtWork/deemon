@@ -50,9 +50,8 @@ DEFINE_OBJECT_CACHE(super,Super,128); /* TODO: Get rid of this (rely on slabs in
 #define super_alloc()  super_dbgalloc(__FILE__,__LINE__)
 #endif /* !NDEBUG */
 
-PUBLIC DREF DeeObject *DCALL
-DeeSuper_New(DeeTypeObject *__restrict tp_self,
-             DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	DREF Super *result;
 	if (tp_self == (DeeTypeObject *)Dee_None)
 		tp_self = &DeeNone_Type;
@@ -85,7 +84,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSuper_Of(DeeObject *__restrict self) {
 	DeeTypeObject *base;
 	ASSERT_OBJECT(self);
@@ -114,7 +113,7 @@ nosuper:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_ctor(Super *__restrict self) {
 	self->s_type = &DeeNone_Type;
 	self->s_self = Dee_None;
@@ -123,7 +122,7 @@ super_ctor(Super *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_copy(Super *__restrict self,
            Super *__restrict other) {
 	ASSERT_OBJECT(self);
@@ -135,7 +134,7 @@ super_copy(Super *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_deepcopy(Super *__restrict self,
                Super *__restrict other) {
 	ASSERT_OBJECT(self);
@@ -147,9 +146,8 @@ super_deepcopy(Super *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
-super_init(Super *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+super_init(Super *self, size_t argc, DeeObject **argv) {
 	DeeObject *ob;
 	DeeTypeObject *tp = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:Super", &ob, &tp))
@@ -198,151 +196,148 @@ nosuper:
 }
 
 
-INTERN void DCALL
+INTERN WUNUSED NONNULL((1)) void DCALL
 super_fini(Super *__restrict self) {
 	Dee_Decref(self->s_self);
 	Dee_Decref(self->s_type);
 }
 
-INTERN void DCALL
+INTERN WUNUSED NONNULL((1, 2)) void DCALL
 super_visit(Super *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->s_self);
 	Dee_Visit(self->s_type);
 }
 
-PRIVATE int DCALL
-super_assign(Super *__restrict self,
-             DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_assign(Super *self, DeeObject *some_object) {
 	return DeeObject_TAssign(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE int DCALL
-super_moveassign(Super *__restrict self,
-                 DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_moveassign(Super *self, DeeObject *some_object) {
 	return DeeObject_TMoveAssign(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_str(Super *__restrict self) {
 	return DeeObject_TStr(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_repr(Super *__restrict self) {
 	return DeeObject_TRepr(self->s_type, self->s_self);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_bool(Super *__restrict self) {
 	return DeeObject_TBool(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_call(Super *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_call(Super *self, size_t argc, DeeObject **argv) {
 	return DeeObject_TCall(self->s_type, self->s_self, argc, argv);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_call_kw(Super *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_call_kw(Super *self, size_t argc, DeeObject **argv, DeeObject *kw) {
 	return DeeObject_TCallKw(self->s_type, self->s_self, argc, argv, kw);
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 super_hash(Super *__restrict self) {
 	return DeeObject_THash(self->s_type, self->s_self);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_int32(Super *__restrict self,
             int32_t *__restrict result) {
 	return DeeObject_TGetInt32(self->s_type, self->s_self, result);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_int64(Super *__restrict self,
             int64_t *__restrict result) {
 	return DeeObject_TGetInt64(self->s_type, self->s_self, result);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_double(Super *__restrict self,
              double *__restrict result) {
 	return DeeObject_TAsDouble(self->s_type, self->s_self, result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_int(Super *__restrict self) {
 	return DeeObject_TInt(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_inv(Super *__restrict self) {
 	return DeeObject_TInv(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_pos(Super *__restrict self) {
 	return DeeObject_TPos(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_neg(Super *__restrict self) {
 	return DeeObject_TNeg(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_add(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_add(Super *self, DeeObject *some_object) {
 	return DeeObject_TAdd(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_sub(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_sub(Super *self, DeeObject *some_object) {
 	return DeeObject_TSub(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_mul(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_mul(Super *self, DeeObject *some_object) {
 	return DeeObject_TMul(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_div(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_div(Super *self, DeeObject *some_object) {
 	return DeeObject_TDiv(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_mod(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_mod(Super *self, DeeObject *some_object) {
 	return DeeObject_TMod(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_shl(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_shl(Super *self, DeeObject *some_object) {
 	return DeeObject_TShl(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_shr(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_shr(Super *self, DeeObject *some_object) {
 	return DeeObject_TShr(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_and(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_and(Super *self, DeeObject *some_object) {
 	return DeeObject_TAnd(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_or(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_or(Super *self, DeeObject *some_object) {
 	return DeeObject_TOr(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_xor(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_xor(Super *self, DeeObject *some_object) {
 	return DeeObject_TXor(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_pow(Super *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_pow(Super *self, DeeObject *some_object) {
 	return DeeObject_TPow(self->s_type, self->s_self, some_object);
 }
 
@@ -374,79 +369,79 @@ super_pow(Super *__restrict self, DeeObject *__restrict some_object) {
 	}                                                             \
 	return 0
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_inc(Super **__restrict pself) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInc(self->s_type, &value));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_dec(Super **__restrict pself) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TDec(self->s_type, &value));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_add(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceAdd(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_sub(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceSub(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_mul(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceMul(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_div(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceDiv(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_mod(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceMod(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_shl(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceShl(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_shr(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceShr(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_and(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceAnd(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_or(Super **__restrict pself,
-                 DeeObject *__restrict some_object) {
+                 DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceOr(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_xor(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplaceXor(self->s_type, &value, some_object));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_inplace_pow(Super **__restrict pself,
-                  DeeObject *__restrict some_object) {
+                  DeeObject *some_object) {
 	INVOKE_INPLACE_OPERATOR(DeeObject_TInplacePow(self->s_type, &value, some_object));
 }
 #undef INVOKE_INPLACE_OPERATOR
@@ -472,53 +467,47 @@ PRIVATE struct type_math super_math = {
 	/* .tp_pow         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_pow,
 	/* .tp_inc         = */ (int (DCALL *)(DeeObject **__restrict))&super_inc,
 	/* .tp_dec         = */ (int (DCALL *)(DeeObject **__restrict))&super_dec,
-	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_add,
-	/* .tp_inplace_sub = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_sub,
-	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_mul,
-	/* .tp_inplace_div = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_div,
-	/* .tp_inplace_mod = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_mod,
-	/* .tp_inplace_shl = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_shl,
-	/* .tp_inplace_shr = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_shr,
-	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_and,
-	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_or,
-	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_xor,
-	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))super_inplace_pow
+	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_add,
+	/* .tp_inplace_sub = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_sub,
+	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_mul,
+	/* .tp_inplace_div = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_div,
+	/* .tp_inplace_mod = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_mod,
+	/* .tp_inplace_shl = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_shl,
+	/* .tp_inplace_shr = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_shr,
+	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_and,
+	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_or,
+	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_xor,
+	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))super_inplace_pow
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-super_eq(Super *__restrict self,
-         DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_eq(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareEqObject(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_ne(Super *__restrict self,
-         DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_ne(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareNeObject(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_lo(Super *__restrict self,
-         DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_lo(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareLoObject(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_le(Super *__restrict self,
-         DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_le(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareLeObject(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_gr(Super *__restrict self,
-         DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_gr(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareGrObject(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_ge(Super *__restrict self,
-         DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_ge(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareGeObject(self->s_type, self->s_self, some_object);
 }
 
@@ -533,60 +522,48 @@ PRIVATE struct type_cmp super_cmp = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_iter_self(Super *__restrict self) {
 	return DeeObject_TIterSelf(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_size(Super *__restrict self) {
 	return DeeObject_TSizeObject(self->s_type, self->s_self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_contains(Super *__restrict self,
-               DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_contains(Super *self, DeeObject *some_object) {
 	return DeeObject_TContainsObject(self->s_type, self->s_self, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_get(Super *__restrict self,
-          DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_get(Super *self, DeeObject *index) {
 	return DeeObject_TGetItem(self->s_type, self->s_self, index);
 }
 
-PRIVATE int DCALL
-super_del(Super *__restrict self,
-          DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_del(Super *self, DeeObject *index) {
 	return DeeObject_TDelItem(self->s_type, self->s_self, index);
 }
 
-PRIVATE int DCALL
-super_set(Super *__restrict self,
-          DeeObject *__restrict index,
-          DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+super_set(Super *self, DeeObject *index, DeeObject *value) {
 	return DeeObject_TSetItem(self->s_type, self->s_self, index, value);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_range_get(Super *__restrict self,
-                DeeObject *__restrict begin,
-                DeeObject *__restrict end) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_range_get(Super *self, DeeObject *begin, DeeObject *end) {
 	return DeeObject_TGetRange(self->s_type, self->s_self, begin, end);
 }
 
-PRIVATE int DCALL
-super_range_del(Super *__restrict self,
-                DeeObject *__restrict begin,
-                DeeObject *__restrict end) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+super_range_del(Super *self, DeeObject *begin, DeeObject *end) {
 	return DeeObject_TDelRange(self->s_type, self->s_self, begin, end);
 }
 
-PRIVATE int DCALL
-super_range_set(Super *__restrict self,
-                DeeObject *__restrict begin,
-                DeeObject *__restrict end,
-                DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+super_range_set(Super *self, DeeObject *begin, DeeObject *end, DeeObject *value) {
 	return DeeObject_TSetRange(self->s_type, self->s_self, begin, end, value);
 }
 
@@ -600,51 +577,47 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_set,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_range_get,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_range_del,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&super_range_set
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_range_set
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_iternext(Super *__restrict self) {
 	return DeeObject_TIterNext(self->s_type, self->s_self);
 }
 
-INTERN DREF DeeObject *DCALL
-super_getattr(Super *__restrict self,
-              /*String*/ DeeObject *__restrict name) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_getattr(Super *self, /*String*/ DeeObject *name) {
 	return DeeObject_TGetAttr(self->s_type, self->s_self, name);
 }
 
-INTERN int DCALL
-super_delattr(Super *__restrict self,
-              /*String*/ DeeObject *__restrict name) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+super_delattr(Super *self, /*String*/ DeeObject *name) {
 	return DeeObject_TDelAttr(self->s_type, self->s_self, name);
 }
 
-INTERN int DCALL
-super_setattr(Super *__restrict self,
-              /*String*/ DeeObject *__restrict name,
-              DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+super_setattr(Super *self, /*String*/ DeeObject *name, DeeObject *value) {
 	return DeeObject_TSetAttr(self->s_type, self->s_self, name, value);
 }
 
-PRIVATE dssize_t DCALL
-super_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
-               Super *__restrict self, denum_t proc, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+super_enumattr(DeeTypeObject *UNUSED(tp_self),
+               Super *self, denum_t proc, void *arg) {
 	return DeeObject_EnumAttr(self->s_type, self->s_self, proc, arg);
 }
 
 PRIVATE struct type_attr super_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&super_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict))&super_delattr,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *__restrict,/*String*/ DeeObject *__restrict, DeeObject *__restrict))&super_setattr,
-	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, denum_t, void *))&super_enumattr
+	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_getattr,
+	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_delattr,
+	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&super_setattr,
+	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&super_enumattr
 };
 
-PRIVATE int DCALL super_enter(Super *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL super_enter(Super *__restrict self) {
 	return DeeObject_TEnter(self->s_type, self->s_self);
 }
 
-PRIVATE int DCALL super_leave(Super *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL super_leave(Super *__restrict self) {
 	return DeeObject_TLeave(self->s_type, self->s_self);
 }
 
@@ -653,14 +626,14 @@ PRIVATE struct type_with super_with = {
 	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&super_leave
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_getbuf(Super *__restrict self,
              DeeBuffer *__restrict info,
              unsigned int flags) {
 	return DeeObject_TGetBuf(self->s_type, self->s_self, info, flags);
 }
 
-PRIVATE void DCALL
+PRIVATE WUNUSED NONNULL((1)) void DCALL
 super_putbuf(Super *__restrict self,
              DeeBuffer *__restrict info,
              unsigned int flags) {
@@ -668,16 +641,16 @@ super_putbuf(Super *__restrict self,
 }
 
 PRIVATE struct type_buffer super_buffer = {
-	/* .tp_getbuf = */ (int (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&super_getbuf,
-	/* .tp_putbuf = */ (void (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&super_putbuf
+	/* .tp_getbuf = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&super_getbuf,
+	/* .tp_putbuf = */ (void (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&super_putbuf
 };
 
 
 /* Helper functions for extracting the type
  * and self fields of a super object. */
-PRIVATE DREF DeeObject *DCALL
-super_typeof(DeeObject *__restrict UNUSED(self),
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_typeof(DeeObject *UNUSED(self),
+             size_t argc, DeeObject **argv) {
 	Super *super_object;
 	if (DeeArg_Unpack(argc, argv, "o:typeof", &super_object) ||
 	    DeeObject_AssertTypeExact((DeeObject *)super_object, &DeeSuper_Type))
@@ -685,9 +658,9 @@ super_typeof(DeeObject *__restrict UNUSED(self),
 	return_reference_((DeeObject *)super_object->s_type);
 }
 
-PRIVATE DREF DeeObject *DCALL
-super_selfof(DeeObject *__restrict UNUSED(self),
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_selfof(DeeObject *UNUSED(self),
+             size_t argc, DeeObject **argv) {
 	Super *super_object;
 	if (DeeArg_Unpack(argc, argv, "o:selfof", &super_object) ||
 	    DeeObject_AssertTypeExact((DeeObject *)super_object, &DeeSuper_Type))
@@ -793,9 +766,8 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	                        "del.->\n"
 	                        ".=->\n"
 	                        "Invoke the same operator implemented by the first reachable "
-	                        "type, following regular method resolution order"
-	                        ),
-	/* .tp_flags    = */ TP_FNORMAL|TP_FMOVEANY|TP_FFINAL | TP_FNAMEOBJECT,
+	                        "type, following regular method resolution order"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FMOVEANY | TP_FFINAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,
@@ -818,7 +790,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_repr,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&super_bool
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&super_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&super_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&super_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &super_math,
@@ -831,10 +803,10 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */super_class_methods,
+	/* .tp_class_methods = */ super_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict, DeeObject*))&super_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **, DeeObject *))&super_call_kw,
 };
 
 

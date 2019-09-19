@@ -364,7 +364,7 @@ done:
 }
 
 PRIVATE struct type_method scope_methods[] = {
-	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&scope_newanon,
+	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&scope_newanon,
 	  DOC("->?ASymbol?Ert:Compiler\n"
 	      "Construct a new anonymous symbol, and add it as part of @this scope\n"
 	      "The symbol isn't given a name (when queried it will have an empty name), and "
@@ -373,7 +373,7 @@ PRIVATE struct type_method scope_methods[] = {
 	      "meaning that this is the type of symbol that should be used to hold hidden "
 	      "values, as used by $with-statements\n"
 	      "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
-	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&scope_newlocal,
+	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&scope_newlocal,
 	  DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
 	      "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
 	      "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"

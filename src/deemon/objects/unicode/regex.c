@@ -49,9 +49,8 @@ struct match_count {
 	bool   mc_greedy; /* Operate in greedy mode. */
 };
 
-PRIVATE char *DCALL
-parse_match_count(char *__restrict piter,
-                  char *__restrict pend,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) char *DCALL
+parse_match_count(char *piter, char *pend,
                   struct match_count *__restrict result) {
 	result->mc_min    = 1;
 	result->mc_max    = 1;
@@ -196,7 +195,7 @@ struct regex_data {
 
 
 
-LOCAL bool DCALL
+LOCAL WUNUSED NONNULL((1, 2, 4)) bool DCALL
 is_in_range(char *range_start, char *range_end,
             uint32_t data_ch, struct regex_data *__restrict data) {
 	char *iter = range_start;
@@ -379,7 +378,8 @@ ok:
 }
 
 
-PRIVATE char *DCALL find_rparen(char *piter, char *pend) {
+PRIVATE WUNUSED NONNULL((1, 2)) char *DCALL
+find_rparen(char *piter, char *pend) {
 	unsigned int paren_recursion = 0;
 	while (piter < pend) {
 		char ch = *piter++;
@@ -405,7 +405,8 @@ PRIVATE char *DCALL find_rparen(char *piter, char *pend) {
 	return piter;
 }
 
-PRIVATE char *DCALL find_pipe(char *piter, char *pend) {
+PRIVATE WUNUSED NONNULL((1, 2)) char *DCALL
+find_pipe(char *piter, char *pend) {
 	unsigned int paren_recursion = 0;
 	while (piter < pend) {
 		char ch = *piter++;
@@ -438,7 +439,7 @@ PRIVATE char *DCALL find_pipe(char *piter, char *pend) {
 #define REGEX_CONTEXT_FEMPTYOK  0x0002 /* Empty matches are OK */
 #define regex_match(pditer, dend, ppiter, pend, data) \
 	regex_match_impl(pditer, dend, ppiter, pend, data, REGEX_CONTEXT_FNORMAL)
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 regex_match_impl(char **pditer, char *dend,
                  char **ppiter, char *pend,
                  struct regex_data *__restrict data,
@@ -446,7 +447,7 @@ regex_match_impl(char **pditer, char *dend,
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 regex_match_or(char **pditer, char *dend,
                char *content_start,
                char *content_end,
@@ -468,7 +469,7 @@ regex_match_or(char **pditer, char *dend,
 	return error;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 parse_u8(char **ppiter, char *pend,
          uint8_t *__restrict result) {
 	bool is_first = true;
@@ -495,7 +496,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 parse_digit_range(char *piter, char *pend,
                   uint8_t *__restrict plow,
                   uint8_t *__restrict phigh) {
@@ -561,7 +562,7 @@ err:
 }
 
 
-LOCAL uniflag_t DCALL
+LOCAL WUNUSED uniflag_t DCALL
 get_regex_trait(/*utf-32*/ uint32_t name) {
 	uniflag_t result;
 	switch (name) {
@@ -593,7 +594,7 @@ get_regex_trait(/*utf-32*/ uint32_t name) {
  * @return:  0: No match was made (failure)
  * @return: -1: Error.
  */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 regex_match_impl(char **pditer, char *dend,
                  char **ppiter, char *pend,
                  struct regex_data *__restrict data,
@@ -1455,7 +1456,7 @@ forward_error:
 }
 
 
-PUBLIC size_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) size_t DCALL
 DeeRegex_Matches(/*utf-8*/ char const *__restrict data, size_t datalen,
                  /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                  uint16_t flags) {
@@ -1476,7 +1477,7 @@ DeeRegex_Matches(/*utf-8*/ char const *__restrict data, size_t datalen,
 }
 
 
-PUBLIC size_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3, 5)) size_t DCALL
 DeeRegex_MatchesPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
                     /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                     /*utf-8*/ char const **__restrict pdataend,
@@ -1500,7 +1501,7 @@ DeeRegex_MatchesPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
 
 
 
-LOCAL bool DCALL is_regex_special(char ch) {
+LOCAL WUNUSED bool DCALL is_regex_special(char ch) {
 	switch (ch) {
 
 	case '.':
@@ -1524,7 +1525,7 @@ LOCAL bool DCALL is_regex_special(char ch) {
 	return false;
 }
 
-LOCAL bool DCALL is_regex_suffix(char ch) {
+LOCAL WUNUSED bool DCALL is_regex_suffix(char ch) {
 	switch (ch) {
 
 	case '*':
@@ -1539,7 +1540,7 @@ LOCAL bool DCALL is_regex_suffix(char ch) {
 }
 
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 3, 5)) int DCALL
 DeeRegex_Find(/*utf-8*/ char const *__restrict data, size_t datalen,
               /*utf-8*/ char const *__restrict pattern, size_t patternlen,
               struct regex_range *__restrict presult, uint16_t flags) {
@@ -1610,7 +1611,7 @@ err:
 	return -1;
 }
 
-LOCAL size_t DCALL
+LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
 count_utf8_characters(char *start,
                       char *end) {
 	size_t result = 0;
@@ -1621,7 +1622,7 @@ count_utf8_characters(char *start,
 	return result;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 3, 5)) int DCALL
 DeeRegex_RFind(/*utf-8*/ char const *__restrict data, size_t datalen,
                /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                struct regex_range *__restrict presult, uint16_t flags) {
@@ -1693,7 +1694,7 @@ err:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 3, 5)) int DCALL
 DeeRegex_FindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
                 /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                 struct regex_range_ex *__restrict presult, uint16_t flags) {
@@ -1772,7 +1773,7 @@ err:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 3, 5)) int DCALL
 DeeRegex_RFindEx(/*utf-8*/ char const *__restrict data, size_t datalen,
                  /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                  struct regex_range_ex *__restrict presult, uint16_t flags) {
@@ -1849,7 +1850,7 @@ err:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 3, 5)) int DCALL
 DeeRegex_FindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
                  /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                  struct regex_range_ptr *__restrict presult, uint16_t flags) {
@@ -1921,7 +1922,7 @@ err:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 3, 5)) int DCALL
 DeeRegex_RFindPtr(/*utf-8*/ char const *__restrict data, size_t datalen,
                   /*utf-8*/ char const *__restrict pattern, size_t patternlen,
                   struct regex_range_ptr *__restrict presult, uint16_t flags) {

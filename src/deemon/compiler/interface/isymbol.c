@@ -363,17 +363,17 @@ symbol_setnone(DeeCompilerSymbolObject *__restrict self,
 
 
 PRIVATE struct type_method symbol_methods[] = {
-	{ "getalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&symbol_getalias,
+	{ "getalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&symbol_getalias,
 	  DOC("->?.\n"
 	      "Either re-returns @this symbol, or unwinds it to return "
 	      "the effective symbol that is being aliased by it") },
-	{ "setalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&symbol_setalias,
+	{ "setalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&symbol_setalias,
 	  DOC("(other:?.)->?.\n"
 	      "@throw ReferenceError Either @other is the same symbol as @this, or "
 	      "it is another alias eventually leading to @this\n"
 	      "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
 	      "Change @this symbol to be an alias for @other, and re-return @this") },
-	{ "setnone", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&symbol_setnone,
+	{ "setnone", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&symbol_setnone,
 	  DOC("->?.\n"
 	      "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
 	      "Change @this symbol to a none-symbol") },

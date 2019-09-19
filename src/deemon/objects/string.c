@@ -55,26 +55,26 @@
 
 DECL_BEGIN
 
-DEFINE_STRUCT_CACHE(utf,struct string_utf,256)
+DEFINE_STRUCT_CACHE(utf, struct string_utf, 256)
 typedef DeeStringObject String;
 
-PUBLIC struct string_utf *(DCALL Dee_string_utf_alloc)(void) {
+PUBLIC ATTR_MALLOC WUNUSED struct string_utf *(DCALL Dee_string_utf_alloc)(void) {
 	return utf_alloc();
 }
 
 #ifndef NDEBUG
-PUBLIC struct string_utf *
+PUBLIC ATTR_MALLOC WUNUSED struct string_utf *
 (DCALL Dee_string_utf_alloc_d)(char const *file, int line) {
 	return utf_dbgalloc(file, line);
 }
 #else /* !NDEBUG */
-PUBLIC struct string_utf *
+PUBLIC ATTR_MALLOC WUNUSED struct string_utf *
 (DCALL Dee_string_utf_alloc_d)(char const *UNUSED(file), int UNUSED(line)) {
 	return utf_alloc();
 }
 #endif /* NDEBUG */
 
-PUBLIC void
+PUBLIC NONNULL((1)) void
 (DCALL Dee_string_utf_free)(struct string_utf *__restrict self) {
 	utf_free(self);
 }
@@ -103,7 +103,7 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
 }
 #endif /* !__KOS__ || !__USE_GNU */
 
-PUBLIC void
+PUBLIC NONNULL((1)) void
 (DCALL Dee_ascii_printer_release)(struct ascii_printer *__restrict self, size_t datalen) {
 	ASSERT(self);
 	ASSERT(self->ap_length >= datalen);
@@ -112,7 +112,7 @@ PUBLIC void
 	self->ap_length -= datalen;
 }
 
-PUBLIC char *
+PUBLIC WUNUSED NONNULL((1)) char *
 (DCALL Dee_ascii_printer_alloc)(struct ascii_printer *__restrict self, size_t datalen) {
 	String *string;
 	size_t alloc_size;
@@ -175,7 +175,7 @@ realloc_again:
 	return result;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((1)) int
 (DCALL Dee_ascii_printer_putc)(struct ascii_printer *__restrict self, char ch) {
 	ASSERT(self);
 	/* Quick check: Can we print to an existing buffer. */
@@ -193,7 +193,7 @@ err:
 	return -1;
 }
 
-PUBLIC dssize_t
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t
 (DCALL Dee_ascii_printer_print)(void *__restrict self,
                                 char const *__restrict data,
                                 size_t datalen) {
@@ -264,7 +264,7 @@ done:
 	return (dssize_t)datalen;
 }
 
-PUBLIC DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_ascii_printer_pack)(struct ascii_printer *__restrict self) {
 	DREF String *result = self->ap_string;
 	if unlikely(!result)
@@ -291,7 +291,7 @@ PUBLIC DREF DeeObject *
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC char *
+PUBLIC WUNUSED NONNULL((1, 2)) char *
 (DCALL Dee_ascii_printer_allocstr)(struct ascii_printer *__restrict self,
                                    char const *__restrict str, size_t length) {
 	char *result;
@@ -313,7 +313,7 @@ PUBLIC char *
 
 STATIC_ASSERT(STRING_WIDTH_1BYTE < 1);
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	DREF String *result;
 	if unlikely(self == Dee_EmptyString)
@@ -344,7 +344,7 @@ DeeString_ResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	DREF String *result;
 	if unlikely(self == Dee_EmptyString)
@@ -375,7 +375,7 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_NewBuffer(size_t num_bytes) {
 	DREF String *result;
 	if unlikely(!num_bytes) {
@@ -394,7 +394,7 @@ DeeString_NewBuffer(size_t num_bytes) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeString_FreeWidth(DeeObject *__restrict self) {
 	struct string_utf *utf;
 	ASSERTF(DeeString_Check(self), "Not a string buffer");
@@ -407,7 +407,7 @@ DeeString_FreeWidth(DeeObject *__restrict self) {
 	Dee_string_utf_free(utf);
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_NewSized(char const *__restrict str, size_t length) {
 	DREF DeeObject *result;
 	/* Optimization: use pre-allocated latin1 strings
@@ -429,19 +429,19 @@ DeeString_NewSized(char const *__restrict str, size_t length) {
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_New(/*unsigned*/ char const *__restrict str) {
 	return DeeString_NewSized(str, strlen(str));
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 string_new_empty(void) {
 	return_empty_string;
 }
 
-PRIVATE DREF DeeObject *DCALL
-string_new(size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED DREF DeeObject *DCALL
+string_new(size_t argc, DeeObject **argv) {
 	DeeObject *ob;
 	if (DeeArg_Unpack(argc, argv, "o:string", &ob))
 		goto err;
@@ -450,7 +450,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_VNewf(/*utf-8*/ char const *__restrict format, va_list args) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if unlikely(unicode_printer_vprintf(&printer, format, args) < 0)
@@ -461,7 +461,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 DeeString_Newf(/*utf-8*/ char const *__restrict format, ...) {
 	va_list args;
 	DREF DeeObject *result;
@@ -472,12 +472,12 @@ DeeString_Newf(/*utf-8*/ char const *__restrict format, ...) {
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 string_bool(String *__restrict self) {
 	return !DeeString_IsEmpty(self);
 }
 
-INTERN WUNUSED ATTR_PURE dhash_t DCALL
+INTERN WUNUSED ATTR_PURE NONNULL((1)) dhash_t DCALL
 DeeString_Hash(DeeObject *__restrict self) {
 	dhash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -507,7 +507,7 @@ DeeString_Hash(DeeObject *__restrict self) {
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_PURE dhash_t DCALL
+PUBLIC WUNUSED ATTR_PURE NONNULL((1)) dhash_t DCALL
 DeeString_HashCase(DeeObject *__restrict self) {
 	dhash_t result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -1555,7 +1555,7 @@ err:
 }
 
 PRIVATE struct type_buffer string_buffer = {
-	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&string_getbuf,
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&string_getbuf,
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FREADONLY
 };

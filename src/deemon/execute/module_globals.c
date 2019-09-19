@@ -512,7 +512,7 @@ PRIVATE struct type_seq me_seq = {
 
 PRIVATE struct type_method me_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&me_get_f,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&me_get_f,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }

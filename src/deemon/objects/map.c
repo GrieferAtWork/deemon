@@ -214,7 +214,7 @@ PRIVATE DeeTypeObject DeeMappingKeysIterator_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_iterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&proxy_iterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -259,7 +259,7 @@ PRIVATE DeeTypeObject DeeMappingValuesIterator_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_iterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&proxy_iterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -304,7 +304,7 @@ PRIVATE DeeTypeObject DeeMappingItemsIterator_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_iterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&proxy_iterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -482,7 +482,7 @@ PRIVATE DeeTypeObject DeeMappingProxy_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -527,7 +527,7 @@ PRIVATE DeeTypeObject DeeMappingKeys_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -572,7 +572,7 @@ PRIVATE DeeTypeObject DeeMappingValues_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -617,7 +617,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -973,7 +973,7 @@ map_get(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv) {
 
 INTERN struct type_method map_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&map_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&map_get,
 	  DOC("(key,def:?O=!N)->\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }

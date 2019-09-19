@@ -903,11 +903,11 @@ err:
 
 PRIVATE struct type_method rodict_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&rodict_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&rodict_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&rodict_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&rodict_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

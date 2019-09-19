@@ -1306,7 +1306,7 @@ err:
 
 PRIVATE struct type_method cd_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cd_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cd_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -2577,17 +2577,17 @@ instancemember_visit(DeeInstanceMemberObject *__restrict self, dvisit_t proc, vo
 
 PRIVATE struct type_method instancemember_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&instancemember_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&instancemember_get,
 	  DOC("(thisarg)->\n"
 	      "Return the @thisarg's value of @this member"),
 	  TYPE_METHOD_FKWDS },
 	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&instancemember_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&instancemember_delete,
 	  DOC("(thisarg)\n"
 	      "Delete @thisarg's value of @this member"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&instancemember_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&instancemember_set,
 	  DOC("(thisarg,value)\n"
 	      "Set @thisarg's value of @this member to @value"),
 	  TYPE_METHOD_FKWDS },
@@ -2752,7 +2752,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict, DeeObject*))&instancemember_get
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **, DeeObject *))&instancemember_get
 };
 
 

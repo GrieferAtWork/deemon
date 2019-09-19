@@ -1339,17 +1339,17 @@ time_isdst(DeeTimeObject *__restrict self) {
 }
 
 PRIVATE struct type_method time_methods[] = {
-	{ "as", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&time_as,
+	{ "as", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&time_as,
 	  DOC("(string repr)->time\n"
 	      "@throw ValueError The given @repr is not a known string representation\n"
 	      "Re-return @this time object using a given representation\n"
 	      "Views of all available representation can also be generated "
 	      "using properties of the same names, meaning that this function "
 	      "could also be implemented using $__getattr__") },
-	{ "format", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&time_doformat,
+	{ "format", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&time_doformat,
 	  DOC("(format:?Dstring)->?Dstring\n"
 	      "Format @this time object using a given strftime-style @format string") },
-	{ "__format__", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&time_doformat,
+	{ "__format__", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&time_doformat,
 	  DOC("(format:?Dstring)->?Dstring\n"
 	      "Internal alias for #format") },
 	{ NULL }
@@ -2225,11 +2225,11 @@ PRIVATE struct type_method time_class_methods[] = {
 	{ "now", &time_class_now, DOC("->?GTime\nDeprecated. Use :time:now instead") },
 	{ "tick", &time_class_tick, DOC("->?GTime\nDeprecated. Use :time:tick instead") },
 	{ "freq", &time_class_freq, DOC("->?Dint\nDeprecated. Always returns ${1000000}") },
-	{ "time", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&time_class_maketime,
+	{ "time", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&time_class_maketime,
 	  DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?GTime\n"
 	      "Deprecated. Use :maketime instead"),
 	  TYPE_METHOD_FKWDS },
-	{ "date", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&time_class_makedate,
+	{ "date", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&time_class_makedate,
 	  DOC("(year=!0,month=!0,day=!0)->?GTime\n"
 	      "Deprecated. Use :makedate instead"),
 	  TYPE_METHOD_FKWDS },

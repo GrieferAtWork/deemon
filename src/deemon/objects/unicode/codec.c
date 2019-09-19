@@ -44,7 +44,7 @@ DECL_BEGIN
 #define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
 #endif /* !CONFIG_LITTLE_ENDIAN */
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCodec_NormalizeName(DeeObject *__restrict name) {
 	char *iter, *end, *str;
 	size_t length;
@@ -117,14 +117,14 @@ err:
 
 
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_unknown_codec(DeeObject *__restrict name) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Unknown codec %r",
 	                       name);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_expected_string_or_bytes(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Expected a string or Bytes object, but got an instance of %k",
@@ -138,7 +138,7 @@ PRIVATE ATTR_COLD int DCALL err_invalid_ascii(uint32_t ch, bool is_decode) {
 	                       "Invalid ASCII character U+%.4I32X", ch);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 convert_ascii(DeeObject *__restrict self, unsigned int error_mode, bool is_decode) {
 	DREF DeeObject *result;
 	size_t i, j, size;
@@ -264,7 +264,7 @@ return_self:
 	return_reference_(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 convert_latin1(DeeObject *__restrict self, unsigned int error_mode, bool is_decode) {
 	DREF DeeObject *result;
 	size_t i, j, size;
@@ -341,7 +341,7 @@ return_self:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 decode_c_escape(DeeObject *__restrict self, unsigned int error_mode) {
 	char const *text;
 	size_t size;
@@ -365,7 +365,7 @@ decode_c_escape(DeeObject *__restrict self, unsigned int error_mode) {
 	return DeeString_FromBackslashEscaped(text, size, error_mode);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_c_escape(DeeObject *__restrict self) {
 	if (DeeBytes_Check(self)) {
 		struct bytes_printer printer = BYTES_PRINTER_INIT;
@@ -420,7 +420,7 @@ err_ascii_printer:
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 decode_utf16(DeeObject *__restrict self,
              unsigned int error_mode,
              bool little_endian) {
@@ -454,7 +454,7 @@ err:
 	       : DeeString_NewUtf16Be((uint16_t *)data, size / 2, error_mode);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 decode_utf32(DeeObject *__restrict self,
              unsigned int error_mode,
              bool little_endian) {
@@ -488,7 +488,7 @@ err:
 	       : DeeString_NewUtf32Be((uint32_t *)data, size / 4, error_mode);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_utf16(DeeObject *__restrict self,
              unsigned int error_mode) {
 	if (DeeBytes_Check(self)) {
@@ -522,7 +522,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_utf32(DeeObject *__restrict self) {
 	if (DeeBytes_Check(self)) {
 		DREF DeeObject *result;
@@ -554,7 +554,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_utf16_alt(DeeObject *__restrict self,
                  unsigned int error_mode) {
 	if (DeeBytes_Check(self)) {
@@ -594,7 +594,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_utf32_alt(DeeObject *__restrict self) {
 	if (DeeBytes_Check(self)) {
 		DREF DeeObject *result;
@@ -634,7 +634,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 decode_utf8(DeeObject *__restrict self,
             unsigned int error_mode) {
 	uint8_t *data;
@@ -655,7 +655,7 @@ err:
 	return DeeString_NewUtf8((char *)data, size, error_mode);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 encode_utf8(DeeObject *__restrict self) {
 	if (DeeBytes_Check(self)) {
 		/* LATIN-1 to UTF-8 */
@@ -731,7 +731,7 @@ INTERN bool DCALL libcodecs_shutdown(void) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL libcodecs_get(void) {
+PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 	DREF DeeObject *result;
 	rwlock_read(&libcodecs_lock);
 	result = libcodecs;
@@ -773,7 +773,7 @@ PRIVATE struct codec_error const codec_error_db[] = {
 	{ "ignore",  STRING_ERROR_FIGNORE }
 };
 
-INTERN unsigned int DCALL
+INTERN WUNUSED NONNULL((1)) unsigned int DCALL
 DeeCodec_GetErrorMode(char const *__restrict errors) {
 	size_t i;
 	for (i = 0; i < COMPILER_LENOF(codec_error_db); ++i) {
@@ -790,9 +790,8 @@ DeeCodec_GetErrorMode(char const *__restrict errors) {
 
 
 /* @return: ITER_DONE: Not an internal codec. */
-INTERN DREF DeeObject *DCALL
-DeeCodec_DecodeIntern(DeeObject *__restrict self,
-                      DeeObject *__restrict name,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCodec_DecodeIntern(DeeObject *self, DeeObject *name,
                       unsigned int error_mode) {
 	char const *name_str;
 	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
@@ -811,9 +810,8 @@ DeeCodec_DecodeIntern(DeeObject *__restrict self,
 	return ITER_DONE;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeCodec_EncodeIntern(DeeObject *__restrict self,
-                      DeeObject *__restrict name,
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name,
                       unsigned int error_mode) {
 	char const *name_str;
 	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
@@ -833,9 +831,8 @@ DeeCodec_EncodeIntern(DeeObject *__restrict self,
 }
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeCodec_Decode(DeeObject *__restrict self,
-                DeeObject *__restrict name,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCodec_Decode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {
 	DREF DeeObject *result, *libcodecs;
 	ASSERT(error_mode <= COMPILER_LENOF(error_module_names));
@@ -878,9 +875,8 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeCodec_Encode(DeeObject *__restrict self,
-                DeeObject *__restrict name,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCodec_Encode(DeeObject *self, DeeObject *name,
                 unsigned int error_mode) {
 	DREF DeeObject *result, *libcodecs;
 	char const *name_str;

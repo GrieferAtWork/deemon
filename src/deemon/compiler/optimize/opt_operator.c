@@ -39,17 +39,17 @@
 
 DECL_BEGIN
 
-INTDEF DREF DeeObject *DCALL string_decode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL string_encode(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL string_decode(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL string_encode(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 
-INTDEF DREF DeeObject *DCALL DeeCodec_NormalizeName(DeeObject *__restrict name);
-INTDEF unsigned int DCALL DeeCodec_GetErrorMode(char const *__restrict errors);
-INTDEF DREF DeeObject *DCALL DeeCodec_DecodeIntern(DeeObject *__restrict self, DeeObject *__restrict name, unsigned int error_mode);
-INTDEF DREF DeeObject *DCALL DeeCodec_EncodeIntern(DeeObject *__restrict self, DeeObject *__restrict name, unsigned int error_mode);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCodec_NormalizeName(DeeObject *__restrict name);
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL DeeCodec_GetErrorMode(char const *__restrict errors);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeCodec_DecodeIntern(DeeObject *self, DeeObject *name, unsigned int error_mode);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name, unsigned int error_mode);
 
-PRIVATE DREF DeeObject *DCALL
-emulate_object_decode(DeeObject *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+emulate_object_decode(DeeObject *self,
+                      size_t argc, DeeObject **argv) {
 	/* Something like `"foo".encode("UTF-8")' can still be
 	 * optimized at compile-time, however `"foo".encode("hex")'
 	 * mustn't, because the codec is implemented externally */
@@ -69,9 +69,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-emulate_object_encode(DeeObject *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+emulate_object_encode(DeeObject *self,
+                      size_t argc, DeeObject **argv) {
 	DeeObject *name;
 	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
@@ -89,7 +89,7 @@ err:
 }
 
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_id_get(DeeObject *__restrict self);
 
 
@@ -100,9 +100,9 @@ object_id_get(DeeObject *__restrict self);
 	 (self) == (DeeObject *)&DeeModule_Type)
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
-PRIVATE DREF DeeObject *DCALL
-emulate_method_call(DeeObject *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+emulate_method_call(DeeObject *self,
+                    size_t argc, DeeObject **argv) {
 	if (DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self)) {
 		/* Must emulate encode() and decode() functions, so they don't
 		 * call into libcodecs, which should only be loaded at runtime!
@@ -130,10 +130,9 @@ emulate_method_call(DeeObject *__restrict self,
 }
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
-INTERN DREF DeeObject *DCALL
-emulate_member_call(DeeObject *__restrict base,
-                    DeeObject *__restrict name,
-                    size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+emulate_member_call(DeeObject *base, DeeObject *name,
+                    size_t argc, DeeObject **argv) {
 #define NAME_EQ(x)                                 \
 	(DeeString_SIZE(name) == COMPILER_STRLEN(x) && \
 	 memcmp(DeeString_STR(name), x, sizeof(x) - sizeof(char)) == 0)
@@ -154,8 +153,9 @@ emulate_member_call(DeeObject *__restrict base,
 }
 
 
-INTERN int (DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack,
-                                        struct ast *__restrict self, bool result_used) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL ast_optimize_operator)(struct ast_optimize_stack *__restrict stack,
+                              struct ast *__restrict self, bool result_used) {
 	unsigned int opcount;
 	int temp;
 	DREF DeeObject *operator_result;

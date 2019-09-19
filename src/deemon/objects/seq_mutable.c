@@ -3330,7 +3330,7 @@ PRIVATE DeeTypeObject SeqRemoveIfAllWrapper_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&ria_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ria_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ria_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

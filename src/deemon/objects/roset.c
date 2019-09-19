@@ -617,7 +617,7 @@ err:
 
 PRIVATE struct type_method roset_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&roset_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&roset_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

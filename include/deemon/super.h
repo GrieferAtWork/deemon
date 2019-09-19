@@ -55,7 +55,8 @@ DDATDEF DeeTypeObject DeeSuper_Type;
  *        - DeeType_Check(tp_self);
  *        - DeeObject_InstanceOf(self,tp_self);
  *       It also automatically unwraps `self' should it already be a super-object. */
-DFUNDEF DREF DeeObject *DCALL DeeSuper_New(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self);
 
 /* Taking some object, return the effective super-class of it.
  * HINT: When `self' is another super-object, this is identical to
@@ -63,7 +64,8 @@ DFUNDEF DREF DeeObject *DCALL DeeSuper_New(DeeTypeObject *__restrict tp_self, De
  * WARNING: This function may perform non-shared
  *          optimizations by re-using `self' when allowed.
  * @throws: Error.TypeError: The class of `self' has no super-class. */
-DFUNDEF DREF DeeObject *DCALL DeeSuper_Of(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSuper_Of(DeeObject *__restrict self);
 
 
 DECL_END

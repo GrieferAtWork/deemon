@@ -2256,7 +2256,7 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_setitem,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&list_setrange,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
 	/* .tp_nsi       = */ &list_nsi
 };
 
@@ -2951,44 +2951,44 @@ PRIVATE struct type_getset list_getsets[] = {
 
 PRIVATE struct type_method list_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_sizeof },
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_sizeof },
 	{ DeeString_STR(&str_append),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_append,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_append,
 	  DOC("(items!)\n"
 	      "Append all the given @items at the end of @this List") },
 	{ DeeString_STR(&str_extend),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_extend,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_extend,
 	  DOC("(items:?S?O)\n"
 	      "Append all elements from @items to the end of @this List") },
 	{ DeeString_STR(&str_resize),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_resize,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_resize,
 	  DOC("(newsize:?Dint,filler=!N)\n"
 	      "@throw IntegerOverflow The given @newsize is lower than $0\n"
 	      "Resize the size of @this List to match @newsize, using @filler to initialize new items"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_insert),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_insert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insert,
 	  DOC("(index:?Dint,item)\n"
 	      "@throw IntegerOverflow The given @index is too large\n"
 	      "Insert the given @item at the specified @index\n"
 	      "When @index is lower than $0, or greater thatn ${#this}, append items at the end"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_insertall),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_insertall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insertall,
 	  DOC("(index:?Dint,seq:?S?O)\n"
 	      "@throw IntegerOverflow The given @index is too large\n"
 	      "Insert all items from a sequence @seq at the specified @index\n"
 	      "When @index is lower than $0, or greater thatn ${#this}, append items at the end"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_erase),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_erase,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_erase,
 	  DOC("(index:?Dint,count=!1)->?Dint\n"
 	      "@throw IntegerOverflow The given @index or @count are lower than $0, or too large\n"
 	      "@return The number of erased items (Zero when @index is out of bounds)\n"
 	      "Erase up to @count items starting at the given @index"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pop,
 	  DOC("(index=!-1)->\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "@return Items that was removed\n"
@@ -2997,48 +2997,48 @@ PRIVATE struct type_method list_methods[] = {
 	      "negative numbers pop items relative to the end of the List"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_xch),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_xch,
 	  DOC("(index:?Dint,value)->\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Exchange the @index'th item of @this List with @value, returning the item's old value"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_clear),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_clear,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_clear,
 	  DOC("()\n"
 	      "Clear all items from @this List") },
 	{ DeeString_STR(&str_removeif),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_removeif,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_removeif,
 	  DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
 	      "@return The number of removed items"
 	      "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
 	  TYPE_METHOD_FKWDS },
 
 	{ DeeString_STR(&str_pushfront),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_pushfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushfront,
 	  DOC("(item)\nInserts @item at the fron of this @this List. Same as ${this.insert(0,item)}") },
 	{ DeeString_STR(&str_pushback),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_pushback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushback,
 	  DOC("(item)\nInserts @item at the end of this @this List. Same as #append") },
 	{ DeeString_STR(&str_popfront),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_popfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popfront,
 	  DOC("->\nSame as ${this.pop(0)}") },
 	{ DeeString_STR(&str_popback),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_popback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popback,
 	  DOC("->\nSame as ${this.pop(-1)}") },
 
 	/* List ordering functions. */
 	{ "reverse",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_reverse,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_reverse,
 	  DOC("()\n"
 	      "Reverse the order of all the elements of @this List") },
 	{ "sort",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_sort,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_sort,
 	  DOC("()\n"
 	      "(key:?DCallable)\n"
 	      "Sort the elements of @this List in ascending order, or in accordance to @key"),
 	  TYPE_METHOD_FKWDS },
 	{ "sorted",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_sorted,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_sorted,
 	  DOC("->?S?O\n"
 	      "(key:?DCallable)->?S?O\n"
 	      "Return a sequence that contains all elements from @this sequence, "
@@ -3047,48 +3047,48 @@ PRIVATE struct type_method list_methods[] = {
 	  TYPE_METHOD_FKWDS },
 
 	/* List buffer functions. */
-	{ "reserve", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_reserve,
+	{ "reserve", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_reserve,
 	  DOC("(size:?Dint)\n"
 	      "Reserve (preallocate) memory for @size items\n"
 	      "Failures to pre-allocate memory are silently ignored, in which case #allocated will remain unchanged\n"
 	      "If @size is lower than the currently #allocated size, the function becomes a no-op") },
-	{ "shrink", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_shrink,
+	{ "shrink", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_shrink,
 	  DOC("()\n"
 	      "Release any pre-allocated, but unused memory, setting #allocated to the length of @this List") },
 
 	/* Deprecated aliases / functions. */
 	{ "remove_if",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_removeif,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_removeif,
 	  DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
 	      "Deprecated alias for #removeif"),
 	  TYPE_METHOD_FKWDS },
 	{ "insert_list",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_insertall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insertall,
 	  DOC("(index:?Dint,items:?S?O)\n"
 	      "Deprecated alias for #insertall"),
 	  TYPE_METHOD_FKWDS },
 	{ "insert_iter",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_insertiter_deprecated,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insertiter_deprecated,
 	  DOC("(index:?Dint,iter:?DIterator)\n"
 	      "Deprecated alias for ${this.insertall(index,(iter as iterator from deemon).future)}") },
 	{ "push_front",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_pushfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushfront,
 	  DOC("(item)\n"
 	      "Deprecated alias for #pushfront") },
 	{ "push_back",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_pushback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushback,
 	  DOC("(item)\n"
 	      "Deprecated alias for #pushback") },
 	{ "pop_front",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_popfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popfront,
 	  DOC("(item)\n"
 	      "Deprecated alias for #popfront") },
 	{ "pop_back",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_popback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popback,
 	  DOC("(item)\n"
 	      "Deprecated alias for #popback") },
 	{ "shrink_to_fit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&list_shrink,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_shrink,
 	  DOC("()\n"
 	      "Deprecated alias for #shrink") },
 	/* TODO: DEE_METHODDEF_v100("sorted_insert",member(&_deelist_sorted_insert),DEE_DOC_AUTO),
@@ -3251,9 +3251,9 @@ PRIVATE struct type_math list_math = {
 	/* .tp_pow         = */ NULL,
 	/* .tp_inc         = */ NULL,
 	/* .tp_dec         = */ NULL,
-	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&list_inplace_add,
+	/* .tp_inplace_add = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&list_inplace_add,
 	/* .tp_inplace_sub = */ NULL,
-	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *__restrict))&list_inplace_mul,
+	/* .tp_inplace_mul = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&list_inplace_mul,
 	/* .tp_inplace_div = */ NULL,
 	/* .tp_inplace_mod = */ NULL,
 	/* .tp_inplace_shl = */ NULL,

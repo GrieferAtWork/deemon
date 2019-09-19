@@ -383,7 +383,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&im_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&im_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&im_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -399,7 +399,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t, DeeObject **__restrict, DeeObject*))&im_callkw
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **, DeeObject *))&im_callkw
 };
 
 DECL_END

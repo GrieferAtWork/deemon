@@ -2795,13 +2795,13 @@ stat_issock(DeeStatObject *__restrict self,
 }
 
 PRIVATE struct type_method stat_methods[] = {
-	{ "isdir", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stat_isdir, DeeStat_isdir_doc },
-	{ "ischr", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stat_ischr, DeeStat_ischr_doc },
-	{ "isblk", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stat_isblk, DeeStat_isblk_doc },
-	{ "isreg", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stat_isreg, DeeStat_isreg_doc },
-	{ "isfifo", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stat_isfifo, DeeStat_isfifo_doc },
-	{ "islnk", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stat_islnk, DeeStat_islnk_doc },
-	{ "issock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stat_issock, DeeStat_issock_doc },
+	{ "isdir", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isdir, DeeStat_isdir_doc },
+	{ "ischr", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_ischr, DeeStat_ischr_doc },
+	{ "isblk", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isblk, DeeStat_isblk_doc },
+	{ "isreg", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isreg, DeeStat_isreg_doc },
+	{ "isfifo", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isfifo, DeeStat_isfifo_doc },
+	{ "islnk", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_islnk, DeeStat_islnk_doc },
+	{ "issock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_issock, DeeStat_issock_doc },
 	{ NULL }
 };
 
@@ -4477,7 +4477,7 @@ PRIVATE struct type_seq dir_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL
 };
 
 PRIVATE struct type_member dir_class_members[] = {
@@ -4822,7 +4822,7 @@ PRIVATE struct type_seq query_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))NULL
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL
 };
 
 INTERN DeeTypeObject DeeQuery_Type = {

@@ -1451,7 +1451,7 @@ PRIVATE struct type_seq bytes_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_setitem,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&bytes_setrange,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bytes_setrange,
 	/* .tp_nsi       = */ &bytes_nsi
 };
 
@@ -1590,7 +1590,7 @@ err_readonly:
 }
 
 PRIVATE struct type_buffer bytes_buffer = {
-	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&bytes_getbuf,
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&bytes_getbuf,
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
@@ -1808,7 +1808,7 @@ err:
 
 
 PRIVATE struct type_method bytes_class_methods[] = {
-	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&bytes_fromseq,
+	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&bytes_fromseq,
 	  DOC("(seq:?S?Dint)->?.\n"
 	      "@throw NotImplemented The given @seq cannot be iterated, or contains at "
 	      "least one item that cannot be converted into an integer\n"
@@ -1817,7 +1817,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
 	      "Convert the items of the given sequence @seq into integers, "
 	      "and construct a writable Bytes object from their values\n"
 	      "Passing :none for @seq will return an empty Bytes object") },
-	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&bytes_fromhex,
+	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&bytes_fromhex,
 	  DOC("(hex_string:?Dstring)->?.\n"
 	      "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
 	      "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"

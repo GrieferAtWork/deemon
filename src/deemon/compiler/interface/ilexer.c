@@ -2273,7 +2273,7 @@ err:
 
 PRIVATE struct type_method lexer_methods[] = {
 	{ "include",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_include,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_include,
 	  DOC("(stream:?DFile,filename:?Dstring=!N)\n"
 	      "(filename:?Dstring,filename:?Dstring=!N)\n"
 	      "Include a new file, pushing its contents onto the ${#include}-stack\n"
@@ -2290,74 +2290,74 @@ PRIVATE struct type_method lexer_methods[] = {
 	      ">print ast;\n"
 	      "Hint: In order to tokenize source code from a string, use :File.Reader") },
 	{ "nextraw",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_nextraw,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_nextraw,
 	  DOC("->?Dint\n"
 	      "Load the next token and return its id (no macros, or preprocessor directives are processed)") },
 	{ "nextpp",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_nextpp,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_nextpp,
 	  DOC("->?Dint\n"
 	      "Load the next token and return its id (no macros are processed)") },
 	{ "next",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_next,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_next,
 	  DOC("->?Dint\n"
 	      "Load the next token and return its id") },
 	{ "nextraw_nb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_nextraw_nb,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_nextraw_nb,
 	  DOC("->?Dint\n"
 	      "Load the next token and return its id while trying not to block (s.a. #nonblocking) (no macros, or preprocessor directives are processed)") },
 	{ "nextpp_nb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_nextpp_nb,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_nextpp_nb,
 	  DOC("->?Dint\n"
 	      "Load the next token and return its id while trying not to block (s.a. #nonblocking) (no macros are processed)") },
 	{ "next_nb",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_next_nb,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_next_nb,
 	  DOC("->?Dint\n"
 	      "Load the next token and return its id while trying not to block (s.a. #nonblocking)") },
 	{ "seterr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_seterr,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_seterr,
 	  DOC("->?Dbool\n"
 	      "Switch the lexer into an error state") },
 	{ "unseterr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_unseterr,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_unseterr,
 	  DOC("->?Dbool\n"
 	      "Restore the lexer after it was set to an error state") },
 	{ "popfile",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_popfile,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_popfile,
 	  DOC("->?Dbool\n"
 	      "Pop the last-#{include}d file and switch back to the file before then (s.a. #File)") },
 	{ "getkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_getkwd,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_getkwd,
 	  DOC_GET(lexer_getkwd_doc),
 	  TYPE_METHOD_FKWDS },
 	{ "getxkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_getxkwd,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_getxkwd,
 	  DOC_GET(lexer_getxkwd_doc),
 	  TYPE_METHOD_FKWDS },
 	{ "getkwdid",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_getkwdid,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_getkwdid,
 	  DOC_GET(lexer_getkwdid_doc) },
 	{ "undef",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_undef,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_undef,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Delete a user-defined macro definition for a macro @name, returning :true "
 	      "if such a definition existed and got deleted, or :false if no such definition "
 	      "existed, and therefor didn't get deleted, either") },
 	{ "define",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_define,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_define,
 	  DOC("(name:?Dstring,value:?Dstring,builtin=!f)\n"
 	      "@param builtin When :true define the macro as builtin, meaning the "
 	      "definition set by @value is restored when resetting macros\n"
 	      "Define a new keyword-like macro @name to expand to @value"),
 	  TYPE_METHOD_FKWDS },
 	{ "addassert",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_addassert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_addassert,
 	  DOC("(predicate:?Dstring,answer:?Dstring)\n"
 	      "Define an assertion @answer for a given @predicate, such that "
 	      "${#if #predicate(answer)} evaluates to :true when encountered "
 	      "within a preprcessor expression"),
 	  TYPE_METHOD_FKWDS },
 	{ "delassert",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_delassert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_delassert,
 	  DOC("(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
 	      "@return Returns :true when at least 1 answer got deleted for the given @predicate\n"
 	      "Delete an assertion @answer, or all assertions made for a given "
@@ -2458,15 +2458,15 @@ PRIVATE struct type_seq lexer_keywords_seq = {
 
 PRIVATE struct type_method lexer_keywords_methods[] = {
 	{ "getkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_getkwd,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_getkwd,
 	  DOC_GET(lexer_getkwd_doc),
 	  TYPE_METHOD_FKWDS },
 	{ "getxkwd",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_getxkwd,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_getxkwd,
 	  DOC_GET(lexer_getxkwd_doc),
 	  TYPE_METHOD_FKWDS },
 	{ "getkwdid",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_getkwdid,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_getkwdid,
 	  DOC_GET(lexer_getkwdid_doc) },
 	{ NULL }
 };
@@ -2687,21 +2687,21 @@ err:
 
 PRIVATE struct type_method lexer_syspaths_methods[] = {
 	{ "push",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_syspaths_push,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_syspaths_push,
 	  DOC("()\n"
 	      "Push (remember) the current state of system include paths\n"
 	      "This is the same as using ${#pragma TPP include_path(push)}") },
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_syspaths_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_syspaths_pop,
 	  DOC("->?Dbool\n"
 	      "Pop (restore) a previously pushed system include path state\n"
 	      "This is the same as using ${#pragma TPP include_path(pop)}") },
 	{ DeeString_STR(&str_insert),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_syspaths_insert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_syspaths_insert,
 	  DOC("(path:?Dstring)->?Dbool\n"
 	      "Append the given @path at the end of the list of system include paths") },
 	{ DeeString_STR(&str_remove),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_syspaths_remove,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_syspaths_remove,
 	  DOC("(path:?Dstring)->?Dbool\n"
 	      "Remove the given @path from the list of system include paths") },
 	{ NULL }
@@ -3132,13 +3132,13 @@ done2:
 
 PRIVATE struct type_method lexer_token_methods[] = {
 	{ "decodestring",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_token_decodestring,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_token_decodestring,
 	  DOC("->?Dstring\n"
 	      "@throw ValueError The current token isn't a string\n"
 	      "@throw UnicodeDecodeError The string contains an invalid escape-character\n"
 	      "Decode the current token (which must be a string-token) as a string") },
 	{ "decodeinteger",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&lexer_token_decodeinteger,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&lexer_token_decodeinteger,
 	  DOC("(warnchar=!t)->?Dint\n"
 	      "@throw ValueError The current token isn't an integer, or character\n"
 	      "@throw ValueError The current token contains an invalid digit\n"
@@ -4642,7 +4642,7 @@ done:
 
 PRIVATE struct type_method file_methods[] = {
 	{ "nextchunk",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&file_nextchunk,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_nextchunk,
 	  DOC("(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"
 	      "@return Returns :true if data was read, or :false if the EOF of the input stream has been reached\n"
 	      "Try to load the next, or @extend the current chunk of loaded data, by reading a "

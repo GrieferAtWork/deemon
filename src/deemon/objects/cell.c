@@ -442,7 +442,7 @@ err:
 
 PRIVATE struct type_method cell_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_get,
 	  DOC("->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "Returns the contained value of the Cell\n"
@@ -450,24 +450,24 @@ PRIVATE struct type_method cell_methods[] = {
 	      "(def)->\n"
 	      "Returns the contained value of the Cell or @def when it is empty") },
 	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_delete,
 	  DOC("->?Dbool\n"
 	      "Delete the value stored in @this Cell, returning :true if "
 	      "the Cell wasn't empty before, or :false if it already was") },
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_pop,
 	  DOC("->\n"
 	      "@throw ValueError The Cell was empty\n"
 	      "\n"
 	      "(def)->\n"
 	      "Pop and return the previously contained object, @def, or throw a ValueError") },
 	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_set,
 	  DOC("(value)->?Dbool\n"
 	      "Set (override) @this Cell's value, returning :true if a previous value "
 	      "has been overwritten, or :falue if no value had been set before") },
 	{ DeeString_STR(&str_xch),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_xch,
 	  DOC("(value)->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
@@ -475,12 +475,12 @@ PRIVATE struct type_method cell_methods[] = {
 	      "(value,def)->\n"
 	      "Returns the contained value of the Cell or @def when it is empty") },
 	{ "cmpdel",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_cmpdel,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_cmpdel,
 	  DOC("(old_value)->?Dbool\n"
 	      "Atomically check if the stored object's id matches @{old_value}. If this is "
 	      "the case, delete the stored object and return :{true}. Otherwise, return :false") },
 	{ "cmpxch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_cmpxch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_cmpxch,
 	  DOC("(old_value,new_value)->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "\n"
@@ -498,7 +498,7 @@ PRIVATE struct type_method cell_methods[] = {
 	      "Return :true and atomically set @new_value as stored object only "
 	      "if no object had been set before. Otherwise, return :false") },
 	{ "cmpset",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_cmpset,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_cmpset,
 	  DOC("(old_value)->?Dbool\n"
 	      "(old_value,new_value)->?Dbool\n"
 	      "Atomically check if the stored value equals @old_value and return :true "
@@ -506,11 +506,11 @@ PRIVATE struct type_method cell_methods[] = {
 	      "When @new_value is omit, the function behaves identical to #cmpdel") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "del",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_delete,
 	  DOC("->?Dbool\n"
 	      "Deprecated alias for #delete") },
 	{ "exchange",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&cell_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cell_xch,
 	  DOC("(value)->\n"
 	      "(value,def)->\n"
 	      "Deprecated alias for #xch") },

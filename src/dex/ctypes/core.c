@@ -206,7 +206,7 @@ stype_vfunc(DeeSTypeObject *__restrict self,
 
 
 PRIVATE struct type_method stype_methods[] = {
-	{ "func", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stype_func,
+	{ "func", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stype_func,
 	  DOC("(types!:?DType)->?Gfunction_type\n"
 	      "(calling_convention:?Dstring,types!:?DType)->?Gfunction_type\n"
 	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
@@ -215,19 +215,19 @@ PRIVATE struct type_method stype_methods[] = {
 	      "as return type, and @calling_convention as calling convention\n"
 	      "Note that unlike #{operator ()}, certain types from the deemon core are "
 	      "also accepted as argument types, such as :deemon:bool inplace of :bool") },
-	{ "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stype_vfunc,
+	{ "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stype_vfunc,
 	  DOC("(types!:?DType)->function_type\n"
 	      "(calling_convention:?Dstring,types!:?DType)->function_type\n"
 	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
 	      "@param calling_convention The name of the calling convention\n"
 	      "Same as #func, but enable support for varrgs") },
 	{ NULL }
-	//{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_array", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_array", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
 };
 
 PRIVATE DREF DeeObject *DCALL
@@ -348,7 +348,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&stype_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stype_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

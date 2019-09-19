@@ -2965,11 +2965,11 @@ PRIVATE struct type_method thread_methods[] = {
 	{ "timed_join", &thread_timedjoin,
 	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
 	      "Old, deprecated name for #timedjoin") },
-	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&thread_crash_error,
+	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&thread_crash_error,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
-	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&thread_crash_traceback,
+	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&thread_crash_traceback,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },

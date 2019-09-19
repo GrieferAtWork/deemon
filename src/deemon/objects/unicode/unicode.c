@@ -3570,17 +3570,17 @@ Dee_unicode_printer_pack(/*inherit(always)*/ struct unicode_printer *__restrict 
 #ifdef NDEBUG
 	return DeeString_PackWidthBuffer(result_buffer,
 	                                 self->up_flags & UNICODE_PRINTER_FWIDTH);
-#else
+#else /* NDEBUG */
 	{
 		unsigned char flags = self->up_flags;
 		memset(self, 0xcc, sizeof(*self));
 		return DeeString_PackWidthBuffer(result_buffer,
 		                                 flags & UNICODE_PRINTER_FWIDTH);
 	}
-#endif
+#endif /* !NDEBUG */
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__restrict self) {
 	void *result_buffer = self->up_buffer;
 	if unlikely(!result_buffer)
@@ -3597,7 +3597,7 @@ Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__re
 #ifdef NDEBUG
 	return DeeString_TryPackWidthBuffer(result_buffer,
 	                                    self->up_flags & UNICODE_PRINTER_FWIDTH);
-#else
+#else /* NDEBUG */
 	{
 		DREF DeeObject *result;
 		result = DeeString_TryPackWidthBuffer(result_buffer,
@@ -3606,7 +3606,7 @@ Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct unicode_printer *__re
 			memset(self, 0xcc, sizeof(*self));
 		return result;
 	}
-#endif
+#endif /* !NDEBUG */
 }
 
 
@@ -3646,7 +3646,7 @@ allocate_initial_normally:
 			self->up_length  = 1;
 			goto done;
 		}
-#else
+#else /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		DeeStringObject *buffer;
 		ASSERT(!self->up_length);
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
@@ -3665,7 +3665,7 @@ allocate_initial_normally:
 		self->up_buffer = buffer->s_str;
 		self->up_length = 1;
 		goto done;
-#endif
+#endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 	}
 	size_avail = WSTR_LENGTH(string);
 	ASSERT(size_avail >= self->up_length);
@@ -3812,7 +3812,7 @@ allocate_initial_as_32:
 		self->up_length = 1;
 		self->up_buffer = string;
 		goto done;
-#else
+#else /* CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 		if (ch <= 0xffff) {
 			string = DeeString_TryNew2ByteBuffer(UNICODE_PRINTER_INITIAL_BUFSIZE);
@@ -3836,7 +3836,7 @@ allocate_initial_as_32:
 		self->up_length = 1;
 		self->up_buffer = string;
 		goto done;
-#endif
+#endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 	}
 	ASSERT(self->up_length <= WSTR_LENGTH(string));
 	SWITCH_SIZEOF_WIDTH(self->up_flags & UNICODE_PRINTER_FWIDTH) {
@@ -3851,7 +3851,7 @@ allocate_initial_as_32:
 			self->up_buffer = string;
 #if STRING_WIDTH_1BYTE != 0
 			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
-#endif
+#endif /* STRING_WIDTH_1BYTE != 0 */
 			self->up_flags |= STRING_WIDTH_2BYTE;
 			goto append_2byte;
 		} else {
@@ -3862,7 +3862,7 @@ allocate_initial_as_32:
 			self->up_buffer = string;
 #if STRING_WIDTH_1BYTE != 0
 			self->up_flags &= ~UNICODE_PRINTER_FWIDTH;
-#endif
+#endif /* STRING_WIDTH_1BYTE != 0 */
 			self->up_flags |= STRING_WIDTH_4BYTE;
 			goto append_4byte;
 		}
@@ -5802,7 +5802,7 @@ PUBLIC dssize_t (DCALL Dee_unicode_printer_confirm_utf32)(struct unicode_printer
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -5814,7 +5814,7 @@ err:
 	return NULL;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
                                  /*utf-8*/ char const *__restrict start,
                                  size_t length, unsigned int error_mode) {

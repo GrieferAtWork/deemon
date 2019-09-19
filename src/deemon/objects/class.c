@@ -751,7 +751,7 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
 		}
 	}
 	if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject **__restrict);
+		int (DCALL *func)(DeeObject *, size_t, DeeObject **);
 		func = tp_self->tp_init.tp_alloc.tp_any_ctor;
 		return DeeType_INVOKE_ANY_CTOR(func, tp_self, self, argc, argv);
 	}
@@ -798,7 +798,7 @@ instance_initsuper_as_copy(DeeTypeObject *__restrict tp_super,
 		func   = tp_super->tp_init.tp_alloc.tp_copy_ctor;
 		result = DeeType_INVOKE_COPY(func, tp_super, self, other);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject **__restrict);
+		int (DCALL *func)(DeeObject *, size_t, DeeObject **);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, 1, (DeeObject **)&other);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
@@ -1157,7 +1157,7 @@ instance_initsuper_as_ctor(DeeTypeObject *__restrict tp_super,
 		func   = tp_super->tp_init.tp_alloc.tp_ctor;
 		result = DeeType_INVOKE_CTOR(func, tp_super, self);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject **__restrict);
+		int (DCALL *func)(DeeObject *, size_t, DeeObject **);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, 0, NULL);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
@@ -1184,7 +1184,7 @@ instance_initsuper_as_init(DeeTypeObject *__restrict tp_super,
 	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
 	/* Initialize the super-type. */
 	if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject **__restrict);
+		int (DCALL *func)(DeeObject *, size_t, DeeObject **);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, argc, argv);
 	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor_kw) {
@@ -1233,7 +1233,7 @@ instance_initsuper_as_initkw(DeeTypeObject *__restrict tp_super,
 			}
 		}
 		if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
-			int (DCALL *func)(DeeObject *, size_t, DeeObject **__restrict);
+			int (DCALL *func)(DeeObject *, size_t, DeeObject **);
 			func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 			result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, argc, argv);
 		} else if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {

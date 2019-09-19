@@ -185,7 +185,7 @@ err:
 
 
 PRIVATE struct type_method process_methods[] = {
-	{ "start", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_start,
+	{ "start", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_start,
 	  DOC("->?Dbool\n"
 	      "@interrupt\n"
 	      "@throw FileNotFound The specified executable could not be found\n"
@@ -193,7 +193,7 @@ PRIVATE struct type_method process_methods[] = {
 	      "executable, or the executable is lacking execute permissions\n"
 	      "@throw SystemError Failed to start the process for some reason\n"
 	      "Begin execution of the process") },
-	{ "join", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_join,
+	{ "join", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_join,
 	  DOC("->?Dint\n"
 	      "@interrupt\n"
 	      "@throw ValueError @this process was never started\n"
@@ -201,19 +201,19 @@ PRIVATE struct type_method process_methods[] = {
 	      "@return The exit code of the process\n"
 	      "Joins @this process and returns the return value of its main function\n"
 	      "In the event") },
-	{ "tryjoin", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_tryjoin,
+	{ "tryjoin", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_tryjoin,
 	  DOC("->?Dint\n"
 	      "()\n"
 	      "@throw ValueError @this process was never started\n"
 	      "@throw SystemError Failed to join @this process for some reason\n"
 	      "Same as #join, but don't check for interrupts and fail immediately") },
-	{ "timedjoin", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_timedjoin,
+	{ "timedjoin", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_timedjoin,
 	  DOC("(timeout_in_microseconds:?Dint)->?Dint\n"
 	      "(timeout_in_microseconds:?Dint)\n"
 	      "@throw ValueError @this process was never started\n"
 	      "@throw SystemError Failed to join @this process for some reason\n"
 	      "Same as #join, but only attempt to join for a given @timeout_in_microseconds") },
-	{ "detach", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_detach,
+	{ "detach", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detach,
 	  DOC("->?Dbool\n"
 	      "@throw ValueError @this process was never started\n"
 	      "@throw ValueError @this process is not a child of the calling process\n"
@@ -221,26 +221,26 @@ PRIVATE struct type_method process_methods[] = {
 	      "@return true: The :process has been detached\n"
 	      "@return false: The :process was already detached\n"
 	      "Detaches @this process") },
-	{ "terminate", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_terminate,
+	{ "terminate", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminate,
 	  DOC("(exitcode=!0)->?Dbool\n"
 	      "@throw ValueError @this process was never started\n"
 	      "@throw SystemError Failed to terminate @this process for some reason\n"
 	      "@return true: The :process has been terminated\n"
 	      "@return false: The :process was already terminated\n"
 	      "Terminate @this process with the given @exitcode") },
-	{ "started", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_started,
+	{ "started", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_started,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this process was started") },
-	{ "detached", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_detached,
+	{ "detached", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detached,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this process has been detached") },
-	{ "terminated", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_terminated,
+	{ "terminated", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminated,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this process has terminated") },
-	{ "isachild", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_isachild,
+	{ "isachild", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_isachild,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this process is a child of the calling process") },
-	{ "id", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict))&process_id,
+	{ "id", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_id,
 	  DOC("->?Dint\n"
 	      "@throw ValueError The process hasn't been started yet\n"
 	      "@throw SystemError The system does not provide a way to query process ids\n"

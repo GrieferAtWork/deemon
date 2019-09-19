@@ -633,7 +633,7 @@ lvalue_getbuf(struct lvalue_object *__restrict self,
 }
 
 PRIVATE struct type_buffer lvalue_buffer = {
-	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict,DeeBuffer *__restrict, unsigned int))&lvalue_getbuf,
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&lvalue_getbuf,
 	/* .tp_putbuf       = */ NULL,
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };

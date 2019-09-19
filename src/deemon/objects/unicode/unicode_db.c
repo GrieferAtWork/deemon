@@ -33,14 +33,14 @@ DECL_BEGIN
 
 static struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
 
-PUBLIC ATTR_CONST struct unitraits *DCALL
+PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct unitraits *DCALL
 DeeUni_Descriptor(uint32_t ch) {
 	if likely(ch < UNICODE_COUNT_VALID)
 		return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);
 	return (struct unitraits *)&default_traits;
 }
 
-PUBLIC ATTR_PURE size_t
+PUBLIC WUNUSED ATTR_PURE size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
                         uint32_t buf[UNICODE_FOLDED_MAX]) {
 	struct unitraits *trt;
