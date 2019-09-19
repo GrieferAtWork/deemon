@@ -25,6 +25,7 @@
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 
 #include <deemon/alloc.h>
+#include <deemon/dex.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/none.h>
@@ -2104,6 +2105,8 @@ PUBLIC struct dex DEX = {
 DECL_END
 
 #else /* CONFIG_HOST_WINDOWS */
+#include <deemon/dex.h>
+
 DECL_BEGIN
 
 PRIVATE struct dex_symbol symbols[] = {

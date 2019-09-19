@@ -175,8 +175,8 @@
 #define wcreat    _wcreat
 #define open      _open
 #define wopen     _wopen
-#define read(fd,buf,size)     _read(fd,buf,(int)(size))
-#define write(fd,buf,size)    _write(fd,buf,(int)(size))
+#define read(fd, buf, size)  _read(fd, buf, (int)(size))
+#define write(fd, buf, size) _write(fd, buf, (int)(size))
 #define lseek     _lseek
 #define lseek64   _lseeki64
 #define close     _close

@@ -996,7 +996,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__res
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 	EINTR_LABEL(again)
-	if (DeeThwrite_CheckInterrupt())
+	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	result_value = (Dee_ssize_t)pwrite64(fd, buffer.bb_base, buffer.bb_size, offset);
@@ -1048,7 +1048,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__res
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 	EINTR_LABEL(again)
-	if (DeeThwrite_CheckInterrupt())
+	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	result_value = (Dee_ssize_t)pwrite(fd, buffer.bb_base, buffer.bb_size, offset);
@@ -1550,21 +1550,21 @@ FORCELOCAL DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int newfd, int 
 		                flags);
 		goto err;
 	}
-#endif
+#endif /* !HAVE_DUP3 */
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 #ifdef HAVE_DUP3
-	result = dup3(oldfd, newfd);
-#else
+	result = dup3(oldfd, newfd, flags);
+#else /* HAVE_DUP3 */
 	result = dup2(oldfd, newfd);
 	if (result >= 0) {
 		SetHandleInformation((HANDLE)(uintptr_t)_get_osfhandle(result),
 		                     HANDLE_FLAG_INHERIT,
 		                     (flags & O_CLOEXEC) ? 0 : HANDLE_FLAG_INHERIT);
 	}
-#endif
+#endif /* !HAVE_DUP3 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = errno;
@@ -1578,12 +1578,12 @@ FORCELOCAL DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int newfd, int 
 	}
 	return DeeInt_NewInt(result);
 err:
-#else
+#else /* HAVE_DUP3 || _MSC_VER */
 	(void)oldfd;
 	(void)newfd;
 	(void)flags;
 	err_unsupported("dup3");
-#endif
+#endif /* !HAVE_DUP3 && !_MSC_VER */
 	return NULL;
 }
 
@@ -2428,7 +2428,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ ch
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to %d:%s", dfd, filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
-		HANDLE_EBADF(error, err, "Invalid handle %d", dfd)
+		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
 		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to check access to %d:%s", dfd, filename);
 		goto err;
 #else
@@ -2627,7 +2627,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 	if (error < 0) {
 		error = errno;
 		HANDLE_EINTR(error, again)
-		HANDLE_ENOSYS(result, err, "pipe")
+		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
 		DeeError_SysThrowf(&DeeError_SystemError, error,
 		                   "Failed to create pipe");
@@ -2764,7 +2764,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ cha
 		if (DeeObject_AsUINT(owner, &owner_uid))
 			goto err;
 	} else {
-		owner = DeeObject_CallAttrString(FS_MODULE, "User", 1, &owner);
+		owner = DeeObject_CallAttrString(FS_MODULE, "User", 1, (DeeObject **)&owner);
 		if unlikely(!owner)
 			goto err;
 		result = DeeObject_AsUINT(owner, &owner_uid);
@@ -2776,7 +2776,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ cha
 		if (DeeObject_AsUINT(group, &group_gid))
 			goto err;
 	} else {
-		group = DeeObject_CallAttrString(FS_MODULE, "Group", 1, &group);
+		group = DeeObject_CallAttrString(FS_MODULE, "Group", 1, (DeeObject **)&group);
 		if unlikely(!group)
 			goto err;
 		result = DeeObject_AsUINT(group, &group_gid);
@@ -2798,7 +2798,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ cha
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change ownership of %d:%s", dfd, filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
-		HANDLE_EBADF(error, err, "Invalid handle %d", dfd)
+		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
 		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change ownership of %d:%s", dfd, filename);
 		goto err;
 	}
