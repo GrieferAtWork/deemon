@@ -702,8 +702,10 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 			if ((uintptr_t)&DeeObject_Type >= info.mi_segstart &&
 			    (uintptr_t)&DeeObject_Type < info.mi_segend) {
 				/* It is the deemon core. */
-				data.search_res = (DREF DeeObject *)DeeModule_GetDeemon();
-				Dee_Incref(data.search_res);
+				DREF DeeObject *result;
+				result = (DREF DeeObject *)DeeModule_GetDeemon();
+				Dee_Incref(result);
+				return result;
 			}
 		}
 	}
@@ -753,8 +755,10 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 #endif /* !PIC... */
 	{
 		/* It is the deemon core. */
-		data.search_res = (DREF DeeObject *)DeeModule_GetDeemon();
-		Dee_Incref(data.search_res);
+		DREF DeeObject *result;
+		result = (DREF DeeObject *)DeeModule_GetDeemon();
+		Dee_Incref(result);
+		return result;
 	}
 	return NULL;
 }

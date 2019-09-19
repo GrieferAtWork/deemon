@@ -1227,8 +1227,8 @@ err:
 /* Very similar to `DeeModule_OpenSourceMemory()', and used to implement it,
  * however source data is made available using a stream object derived
  * from `File from deemon' */
-PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenSourceStream(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeModule_OpenSourceStream(DeeObject *source_stream,
                            int start_line, int start_col,
                            struct compiler_options *options,
                            DeeObject *source_pathname,
@@ -1333,8 +1333,8 @@ err:
 	goto done;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenSourceStreamString(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeModule_OpenSourceStreamString(DeeObject *source_stream,
                                  int start_line, int start_col,
                                  struct compiler_options *options,
                                  /*utf-8*/ char const *source_pathname,
@@ -2875,8 +2875,8 @@ err:
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module or the module's root function used to describe the code
  * that is being executed. */
-PUBLIC /*Module*/ DREF DeeObject *DCALL
-DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *source_stream,
                             unsigned int mode,
                             int start_line, int start_col,
                             struct compiler_options *options,
@@ -3230,7 +3230,8 @@ PRIVATE DEFINE_STRING(default_deemon_home,CONFIG_DEEMON_HOME);
 #endif /* CONFIG_DEEMON_HOME */
 
 
-#if !defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX)
+#if !defined(CONFIG_DEEMON_HOME) && \
+   (!defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX))
 PRIVATE DREF DeeObject *DCALL
 unix_readlink(/*utf-8*/ char const *__restrict path) {
 	char *buffer, *new_buffer;
@@ -3292,7 +3293,7 @@ err:
 	unicode_printer_fini(&printer);
 	return NULL;
 }
-#endif /* !CONFIG_HOST_WINDOWS && CONFIG_HOST_UNIX */
+#endif /* !CONFIG_DEEMON_HOME && (!CONFIG_HOST_WINDOWS && CONFIG_HOST_UNIX) */
 
 PRIVATE DREF /*String*/DeeStringObject *
 DCALL get_default_home(void) {
@@ -3481,13 +3482,13 @@ PRIVATE void DCALL do_init_module_path(void) {
 #endif /* !CONFIG_NO_DEEMON_PATH_ENVIRON */
 	}
 #ifdef CONFIG_DEEMON_PATH
-#define APPEND_PATH(str)                                                 \
-	{                                                                    \
-		PRIVATE DEFINE_STRING(_libpath_string, str);                     \
-		error = DeeList_Append((DeeObject *)&DeeModule_Path, path_part); \
-		Dee_Decref(path_part);                                           \
-		if unlikely(error)                                               \
-			goto init_error;                                             \
+#define APPEND_PATH(str)                                       \
+	{                                                          \
+		PRIVATE DEFINE_STRING(_libpath_string, str);           \
+		error = DeeList_Append((DeeObject *)&DeeModule_Path,   \
+		                       (DeeObject *)&_libpath_string); \
+		if unlikely(error)                                     \
+			goto init_error;                                   \
 	}
 	CONFIG_DEEMON_PATH(APPEND_PATH)
 #undef APPEND_PATH

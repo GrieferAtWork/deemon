@@ -591,6 +591,9 @@ fi
 
 
 unlink "$BLD_ROOT/config.mak" > /dev/null 2>&1
+
+cmd mkdir -p "$BLD_ROOT/build"
+cmd mkdir -p "$BLD_ROOT/lib"
 cmd cat > "$BLD_ROOT/config.mak" <<EOF
 # Automatically generated file (by ./configure). - Do not edit!
 BLD_ROOT := $BLD_ROOT

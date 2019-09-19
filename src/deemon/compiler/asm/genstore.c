@@ -1267,8 +1267,8 @@ err:
 
 INTERN int (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
                                     struct symbol *__restrict src_sym,
-                                    struct ast *__restrict dst_ast,
-                                    struct ast *__restrict src_ast) {
+                                    struct ast *dst_ast,
+                                    struct ast *src_ast) {
 	int32_t symid;
 	ASSERT(asm_can_prefix_symbol(dst_sym));
 check_src_sym_class:
@@ -1432,8 +1432,8 @@ err:
 
 
 INTERN int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
-                                    struct ast *__restrict src,
-                                    struct ast *__restrict dst_ast) {
+                                    struct ast *src,
+                                    struct ast *dst_ast) {
 	ASSERT(asm_can_prefix_symbol(dst_sym));
 	switch (src->a_type) {
 
@@ -1495,9 +1495,9 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gmov_ast_sym)(struct ast *__restrict dst,
+INTERN int (DCALL asm_gmov_ast_sym)(struct ast *dst,
                                     struct symbol *__restrict src_sym,
-                                    struct ast *__restrict src_ast) {
+                                    struct ast *src_ast) {
 	switch (dst->a_type) {
 
 	case AST_SYM:

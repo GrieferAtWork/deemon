@@ -50,12 +50,10 @@ typedef struct {
 } BytesFindIterator;
 
 INTDEF DREF DeeObject *DCALL
-DeeBytes_FindAll(Bytes *__restrict self,
-                 DeeObject *__restrict other,
+DeeBytes_FindAll(Bytes *self, DeeObject *other,
                  size_t start, size_t end);
 INTDEF DREF DeeObject *DCALL
-DeeBytes_CaseFindAll(Bytes *__restrict self,
-                     DeeObject *__restrict other,
+DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
                      size_t start, size_t end);
 
 #ifdef CONFIG_NO_THREADS
@@ -554,8 +552,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 
 
 INTERN DREF DeeObject *DCALL
-DeeBytes_FindAll(Bytes *__restrict self,
-                 DeeObject *__restrict other,
+DeeBytes_FindAll(Bytes *self, DeeObject *other,
                  size_t start, size_t end) {
 	DREF BytesFind *result;
 	result = DeeObject_MALLOC(BytesFind);
@@ -582,8 +579,7 @@ err_r:
 }
 
 INTERN DREF DeeObject *DCALL
-DeeBytes_CaseFindAll(Bytes *__restrict self,
-                     DeeObject *__restrict other,
+DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
                      size_t start, size_t end) {
 	DREF BytesFind *result;
 	result = DeeObject_MALLOC(BytesFind);

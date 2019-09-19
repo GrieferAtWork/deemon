@@ -471,11 +471,11 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 	/* Match context flags (aka. flags set by a prefix such as `$' or `{...}') */
 	if ((iop->io_class & OPERAND_CLASS_FFLAGMASK) !=
 	    (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FFLAGMASK)) {
-		if (((UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_TOP ||
-		     (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_POP) &&
-		    (iop->io_class & OPERAND_CLASS_FFLAGMASK) == OPERAND_CLASS_POP_OR_TOP)
+		if (((UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_TOP ||
+		     (UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_POP) &&
+		    (iop->io_class & OPERAND_CLASS_FMASK) == OPERAND_CLASS_POP_OR_TOP)
 			;
-		else if (UNALIGNED_GET16(&oop->aoo_class) == OPERAND_CLASS_PREFIX)
+		else if ((UNALIGNED_GET16(&oop->aoo_class) & OPERAND_CLASS_FMASK) == OPERAND_CLASS_PREFIX)
 			;
 #if 0
 		else if (OPERAND_CLASS_ISDISP(UNALIGNED_GET16(&oop->aoo_class)) &&

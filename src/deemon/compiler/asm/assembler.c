@@ -2163,10 +2163,10 @@ err:
 
 #ifdef CONFIG_ASM_ENABLE_JCC_SYMBOLS
 PRIVATE int DCALL
-asm_do_gjcc(struct ast *__restrict cond,
+asm_do_gjcc(struct ast *cond,
             instruction_t instr,
             struct asm_sym *__restrict target,
-            struct ast *__restrict ddi_ast) {
+            struct ast *ddi_ast) {
 	instruction_t *data;
 	struct asm_rel *rel;
 	ASSERT(instr == ASM_JT || instr == ASM_JF);
@@ -2329,10 +2329,10 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gjcc)(struct ast *__restrict cond,
-                           instruction_t instr,
-                           struct asm_sym *__restrict target,
-                           struct ast *__restrict ddi_ast) {
+INTERN int (DCALL asm_gjcc)(struct ast *cond,
+                            instruction_t instr,
+                            struct asm_sym *__restrict target,
+                            struct ast *ddi_ast) {
 #ifdef CONFIG_ASM_ENABLE_JCC_SYMBOLS
 	struct asm_sym *temp;
 	ASSERT(instr == ASM_JT || instr == ASM_JF);

@@ -1109,9 +1109,9 @@ INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct a
  * The caller is required to ensure that the given `target' is defined at some point.
  * @param: instr: One of `ASM_JMP', `ASM_JT', `ASM_JF' or `ASM_FOREACH' */
 INTDEF int DCALL asm_gjmp(instruction_t instr, struct asm_sym *__restrict target);
-INTDEF int DCALL asm_gjcc(struct ast *__restrict cond, instruction_t instr,
+INTDEF int DCALL asm_gjcc(struct ast *cond, instruction_t instr,
                           struct asm_sym *__restrict target,
-                          struct ast *__restrict ddi_ast);
+                          struct ast *ddi_ast);
 /* Similar to `asm_gjmp(ASM_JMP)', but generate code to adjust adjust the stack beforehand, as well
  * as code to adjust for potential exception handlers, also creating a `R_DMN_DELHAND' relocation. */
 INTDEF int DCALL asm_gjmps(struct asm_sym *__restrict target);
@@ -1904,26 +1904,26 @@ INTDEF int DCALL module_compile(DREF struct module_object *__restrict module,
 
 INTDEF int DCALL asm_gpush_function(struct ast *__restrict function_ast);
 INTDEF int DCALL asm_gmov_function(struct symbol *__restrict dst,
-                                   struct ast *__restrict function_ast,
-                                   struct ast *__restrict dst_warn_ast);
+                                   struct ast *function_ast,
+                                   struct ast *dst_warn_ast);
 
 /* Move the given symbol `src_sym' into `dst_sym'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
                                     struct symbol *__restrict src_sym,
-                                    struct ast *__restrict dst_ast,
-                                    struct ast *__restrict src_ast);
+                                    struct ast *dst_ast,
+                                    struct ast *src_ast);
 
 /* Store the expression in `src' into `dst'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
 INTDEF int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
-                                    struct ast *__restrict src,
-                                    struct ast *__restrict dst_ast);
+                                    struct ast *src,
+                                    struct ast *dst_ast);
 
 /* Store the symbol `src_sym' into the expression `dst'. */
-INTDEF int (DCALL asm_gmov_ast_sym)(struct ast *__restrict dst,
+INTDEF int (DCALL asm_gmov_ast_sym)(struct ast *dst,
                                     struct symbol *__restrict src_sym,
-                                    struct ast *__restrict src_ast);
+                                    struct ast *src_ast);
 
 /* @param: loop_flags:   Set of `AST_FLOOP_*'
  * @param: elem_or_cond: The loop element target ([0..1] in a foreach loop),

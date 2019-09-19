@@ -120,8 +120,8 @@ err:
 
 INTERN int DCALL
 asm_gmov_function(struct symbol *__restrict dst,
-                  struct ast *__restrict function_ast,
-                  struct ast *__restrict dst_warn_ast) {
+                  struct ast *function_ast,
+                  struct ast *dst_warn_ast) {
 	DREF DeeCodeObject *code;
 	int32_t cid;
 	uint16_t i, refc;

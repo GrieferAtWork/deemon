@@ -1198,7 +1198,12 @@ PUBLIC void (DCALL Dee_Free)(void *ptr) {
 #ifdef __KOS_SYSTEM_HEADERS__
 #define HAVE_DEEDBG_MALLOC 1
 
-#if defined(__KERNEL__) && __KOS_VERSION__ < 400
+#if __KOS_VERSION__ >= 400 && !defined(___malloc_d_defined) && !defined(_malloc_d)
+#define DO_MALLOC_D(n_bytes, file, line)       malloc(n_bytes)
+#define DO_CALLOC_D(n_bytes, file, line)       calloc(1, n_bytes)
+#define DO_REALLOC_D(ptr, n_bytes, file, line) realloc(ptr, n_bytes)
+#define DO_FREE_D(ptr, file, line)             free(ptr)
+#elif defined(__KERNEL__) && __KOS_VERSION__ < 400
 #define DO_MALLOC_D(n_bytes, file, line)       _malloc_d(n_bytes, file, line, NULL, NULL)
 #define DO_CALLOC_D(n_bytes, file, line)       _calloc_d(1, n_bytes, file, line, NULL, NULL)
 #define DO_REALLOC_D(ptr, n_bytes, file, line) _realloc_d(ptr, n_bytes, file, line, NULL, NULL)
@@ -1556,6 +1561,7 @@ do_unhook(_CrtMemBlockHeader *__restrict hdr) {
 	hdr->lRequest                           = IGNORE_REQ;
 }
 
+#define DEEDBG_UNTRACKALLOC_DEFINED 1
 PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line) {
 	(void)file;
@@ -1594,15 +1600,7 @@ PUBLIC void *
 	}
 	return ptr;
 }
-
-#else /* _MSC_VER */
-
-PUBLIC void *
-(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
-	return ptr;
-}
-#endif /* !_MSC_VER */
-
+#endif /* _MSC_VER */
 #endif
 #endif /* !NDEBUG */
 
@@ -1643,12 +1641,14 @@ PUBLIC void
 (DCALL DeeDbg_Free)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
 	return (Dee_Free)(ptr);
 }
+#endif /* !HAVE_DEEDBG_MALLOC */
 
+#ifndef DEEDBG_UNTRACKALLOC_DEFINED
 PUBLIC void *
 (DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *UNUSED(file), int UNUSED(line)) {
 	return ptr;
 }
-#endif /* !HAVE_DEEDBG_MALLOC */
+#endif /* !DEEDBG_UNTRACKALLOC_DEFINED */
 
 
 

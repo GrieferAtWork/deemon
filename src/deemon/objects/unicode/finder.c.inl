@@ -49,12 +49,10 @@ typedef struct {
 } StringFindIterator;
 
 INTDEF DREF DeeObject *DCALL
-DeeString_FindAll(String *__restrict self,
-                  String *__restrict other,
+DeeString_FindAll(String *self, String *other,
                   size_t start, size_t end);
 INTDEF DREF DeeObject *DCALL
-DeeString_CaseFindAll(String *__restrict self,
-                      String *__restrict other,
+DeeString_CaseFindAll(String *self, String *other,
                       size_t start, size_t end);
 
 #ifdef CONFIG_NO_THREADS
@@ -681,8 +679,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 
 
 INTERN DREF DeeObject *DCALL
-DeeString_FindAll(String *__restrict self,
-                  String *__restrict other,
+DeeString_FindAll(String *self, String *other,
                   size_t start, size_t end) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);
@@ -700,8 +697,7 @@ done:
 }
 
 INTERN DREF DeeObject *DCALL
-DeeString_CaseFindAll(String *__restrict self,
-                      String *__restrict other,
+DeeString_CaseFindAll(String *self, String *other,
                       size_t start, size_t end) {
 	DREF StringFind *result;
 	result = DeeObject_MALLOC(StringFind);

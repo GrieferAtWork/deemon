@@ -81,8 +81,8 @@ DECL_BEGIN
  * @param: module_name:     The name of the internal module, or NULL to determine automatically.
  *                          Note that the internal module is never registered globally, and
  *                          only exists as an anonymous module. */
-PUBLIC DREF DeeObject *DCALL
-DeeExec_RunStream(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunStream(DeeObject *source_stream,
                   unsigned int mode,
                   size_t argc, DeeObject **argv,
                   int start_line, int start_col,
@@ -109,8 +109,8 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
-DeeExec_RunStreamString(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunStreamString(DeeObject *source_stream,
                         unsigned int mode,
                         size_t argc, DeeObject **argv,
                         int start_line, int start_col,
@@ -160,8 +160,8 @@ err:
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module or the module's root function used to describe the code
  * that is being executed. */
-PUBLIC /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               unsigned int mode,
                               int start_line, int start_col,
                               struct compiler_options *options,
@@ -187,8 +187,8 @@ err:
 	return NULL;
 }
 
-PUBLIC /*Module*/ DREF DeeObject *DCALL
-DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DeeExec_CompileModuleStreamString(DeeObject *source_stream,
                                   unsigned int mode,
                                   int start_line, int start_col,
                                   struct compiler_options *options,
@@ -231,8 +231,8 @@ err:
 	return NULL;
 }
 
-PUBLIC /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
                                     unsigned int mode,
                                     int start_line, int start_col,
                                     struct compiler_options *options,

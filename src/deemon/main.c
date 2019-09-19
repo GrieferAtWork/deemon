@@ -53,7 +53,15 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HOST_WINDOWS */
+#ifdef _MSC_VER
+#undef chdir
+#include <direct.h> /* chdir() */
+#define chdir _chdir
+#else /* _MSC_VER */
+#include <unistd.h> /* chdir() */
+#endif /* !_MSC_VER */
+#endif /* !CONFIG_HOST_WINDOWS */
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"

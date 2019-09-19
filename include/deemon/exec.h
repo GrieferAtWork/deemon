@@ -185,13 +185,13 @@ struct Dee_compiler_options;
  * @param: module_name:     The name of the internal module, or NULL to determine automatically.
  *                          Note that the internal module is never registered globally, and
  *                          only exists as an anonymous module. */
-DFUNDEF DREF DeeObject *DCALL
-DeeExec_RunStream(DeeObject *__restrict source_stream, unsigned int mode,
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunStream(DeeObject *source_stream, unsigned int mode,
                   size_t argc, DeeObject **argv, int start_line, int start_col,
                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                   DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF DREF DeeObject *DCALL
-DeeExec_RunStreamString(DeeObject *__restrict source_stream, unsigned int mode,
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL
+DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
                         size_t argc, DeeObject **argv, int start_line, int start_col,
                         struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname, size_t source_pathsize,
@@ -206,24 +206,24 @@ DeeExec_RunStreamString(DeeObject *__restrict source_stream, unsigned int mode,
  * generated, before that module's root is returned, or if the given user-code
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
-DFUNDEF /*Module*/ DREF DeeObject *DCALL
-DeeExec_CompileModuleStream(DeeObject *__restrict source_stream,
+DFUNDEF NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DeeExec_CompileModuleStream(DeeObject *source_stream,
                             unsigned int mode, int start_line, int start_col,
                             struct Dee_compiler_options *options, DeeObject *default_symbols,
                             DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionStream(DeeObject *__restrict source_stream,
+DFUNDEF NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               unsigned int mode, int start_line, int start_col,
                               struct Dee_compiler_options *options, DeeObject *default_symbols,
                               DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF /*Module*/ DREF DeeObject *DCALL
-DeeExec_CompileModuleStreamString(DeeObject *__restrict source_stream,
+DFUNDEF NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DeeExec_CompileModuleStreamString(DeeObject *source_stream,
                                   unsigned int mode, int start_line, int start_col,
                                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                                   /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                   /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF /*Callable*/ DREF DeeObject *DCALL
-DeeExec_CompileFunctionStreamString(DeeObject *__restrict source_stream,
+DFUNDEF NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
                                     unsigned int mode, int start_line, int start_col,
                                     struct Dee_compiler_options *options, DeeObject *default_symbols,
                                     /*utf-8*/ char const *source_pathname, size_t source_pathsize,

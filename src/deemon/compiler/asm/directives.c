@@ -214,10 +214,15 @@ uasm_parse_directive(void) {
 		if unlikely(yield() < 0)
 			goto err;
 		/* Cheat a bit... */
-		backup           = name->k_name[-1];
-		name->k_name[-1] = '.';
-		label_name       = TPPLexer_LookupKeyword(name->k_name - 1, name->k_size + 1, 1);
-		name->k_name[-1] = backup;
+#if 1 /* GCC doesn't like us writing outside of the array's bounds, so work around that warning */
+#define ONE_CHAR_BEFORE_NAME ((char *)&name->k_hash + (sizeof(name->k_hash) - sizeof(char)))
+#else
+#define ONE_CHAR_BEFORE_NAME (name->k_name - 1)
+#endif
+		backup                = *ONE_CHAR_BEFORE_NAME;
+		*ONE_CHAR_BEFORE_NAME = '.';
+		label_name            = TPPLexer_LookupKeyword(ONE_CHAR_BEFORE_NAME - 1, name->k_size + 1, 1);
+		*ONE_CHAR_BEFORE_NAME = backup;
 		if unlikely(!label_name)
 			goto err;
 		label = uasm_symbol(label_name);

@@ -2147,12 +2147,12 @@ do_pop_push_optimization2:
 						*(iter + 0) = (instruction_t)(opcode >> 8);
 						*(iter + 1) = (instruction_t)opcode;
 						UNALIGNED_SETLE16((uint16_t *)(iter + 2), pop_imma);
-						if ((opcode & 0xff) == ASM16_POP_EXTERN)
+						if ((opcode & 0xff) == (ASM16_POP_EXTERN & 0xff))
 							UNALIGNED_SETLE16((uint16_t *)(iter + 4), pop_immb);
 					} else {
 						*(iter + 0)            = (instruction_t)opcode;
 						*(uint8_t *)(iter + 1) = (uint8_t)pop_imma;
-						if ((opcode & 0xff) == ASM16_POP_EXTERN)
+						if ((opcode & 0xff) == (ASM16_POP_EXTERN & 0xff))
 							*(uint8_t *)(iter + 2) = (uint8_t)pop_immb;
 					}
 					SET_RESULTF(iter - 1, "Optimize `pop x; push x' into `dup; pop x'");

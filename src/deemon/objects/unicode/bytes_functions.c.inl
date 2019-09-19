@@ -1457,8 +1457,8 @@ INTDEF DREF DeeObject *DCALL DeeBytes_Split(Bytes *__restrict self, DeeObject *_
 INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplitByte(Bytes *__restrict self, uint8_t sep);
 INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplit(Bytes *__restrict self, DeeObject *__restrict sep);
 INTDEF DREF DeeObject *DCALL DeeBytes_SplitLines(Bytes *__restrict self, bool keepends);
-INTDEF DREF DeeObject *DCALL DeeBytes_FindAll(Bytes *__restrict self, DeeObject *__restrict other, size_t start, size_t end);
-INTDEF DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *__restrict self, DeeObject *__restrict other, size_t start, size_t end);
+INTDEF DREF DeeObject *DCALL DeeBytes_FindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
+INTDEF DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
 
 PRIVATE DREF DeeObject *DCALL
 bytes_findall(Bytes *__restrict self, size_t argc,

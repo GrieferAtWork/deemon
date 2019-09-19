@@ -652,7 +652,7 @@ DEFINE_AST_GENERATOR(ast_loop,(uint16_t flags, struct ast *elem_or_cond, struct 
 /* [AST_LOOPCTL] @parma: flags: Set of `AST_FLOOPCTL_**' */
 DEFINE_AST_GENERATOR(ast_loopctl,(uint16_t flags));
 /* [AST_CONDITIONAL] @parma: flags: Set of `AST_FCOND_**' */
-DEFINE_AST_GENERATOR(ast_conditional,(uint16_t flags, struct ast *__restrict cond,
+DEFINE_AST_GENERATOR(ast_conditional,(uint16_t flags, struct ast *cond,
                                       struct ast *tt_expr, struct ast *ff_expr));
 /* [AST_BOOL] @param: flags: Set of `AST_FBOOL_*' */
 DEFINE_AST_GENERATOR(ast_bool,(uint16_t flags, struct ast *__restrict expr));

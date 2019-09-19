@@ -842,8 +842,8 @@ enumattr_init(EnumAttr *__restrict self,
 		/* Truncate the collection vector. */
 		if (list.al_c != list.al_a) {
 			DREF Attr **new_vector;
-			new_vector = (DREF Attr **)Dee_TryRealloc(list.al_v, list.al_c *
-			                                                     sizeof(DREF Attr *));
+			new_vector = (DREF Attr **)Dee_TryRealloc(list.al_v,
+			                                          list.al_c * sizeof(DREF Attr *));
 			if likely(new_vector)
 				list.al_v = new_vector;
 		}

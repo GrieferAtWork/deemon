@@ -516,7 +516,7 @@ DEFINE_AST_GENERATOR(ast_loopctl, (uint16_t flags)) {
 
 DEFINE_AST_GENERATOR(ast_conditional,
                      (uint16_t flags,
-                      struct ast *__restrict cond,
+                      struct ast *cond,
                       struct ast *tt_expr,
                       struct ast *ff_expr)) {
 	DREF struct ast *result;

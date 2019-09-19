@@ -632,12 +632,12 @@ DeeModule_OpenSourceMemoryString(/*utf-8*/ char const *__restrict data, size_t d
  * @param: start_line:      The starting line number of the data blob (zero-based)
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
-DFUNDEF DREF /*Module*/ DeeObject *DCALL
-DeeModule_OpenSourceStream(/*File*/ DeeObject *__restrict source_stream,
+DFUNDEF NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceStream(/*File*/ DeeObject *source_stream,
                            int start_line, int start_col, struct Dee_compiler_options *options,
                            /*String*/ DeeObject *source_pathname, /*String*/ DeeObject *module_name);
-DFUNDEF DREF /*Module*/ DeeObject *DCALL
-DeeModule_OpenSourceStreamString(/*File*/ DeeObject *__restrict source_stream,
+DFUNDEF NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenSourceStreamString(/*File*/ DeeObject *source_stream,
                                  int start_line, int start_col, struct Dee_compiler_options *options,
                                  /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                  /*utf-8*/ char const *module_name, size_t module_namesize);
@@ -808,13 +808,13 @@ DeeModule_OpenSourceStreamString(/*File*/ DeeObject *__restrict source_stream,
  *                          will be bound prior to the initial launch of interactive assembly.
  *                          Thus, provided symbols are made available by name, left to-be used
  *                          by the module however it pleases. */
-DFUNDEF DREF /*Module*/ DeeObject *DCALL
-DeeModule_OpenInteractive(/*File*/ DeeObject *__restrict source_stream, unsigned int mode,
+DFUNDEF NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenInteractive(/*File*/ DeeObject *source_stream, unsigned int mode,
                           int start_line, int start_col, struct Dee_compiler_options *options,
                           /*String*/ DeeObject *source_pathname, /*String*/ DeeObject *module_name,
                           /*Tuple*/ DeeObject *argv, /*Mapping{(string,object)...}*/ DeeObject *default_symbols);
-DFUNDEF DREF /*Module*/ DeeObject *DCALL
-DeeModule_OpenInteractiveString(/*File*/ DeeObject *__restrict source_stream, unsigned int mode,
+DFUNDEF NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
+DeeModule_OpenInteractiveString(/*File*/ DeeObject *source_stream, unsigned int mode,
                                 int start_line, int start_col, struct Dee_compiler_options *options,
                                 /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                 /*utf-8*/ char const *module_name, size_t module_namesize,

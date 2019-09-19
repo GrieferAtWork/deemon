@@ -41,6 +41,7 @@
 
 #include <hybrid/atomic.h>
 
+#include <assert.h>
 #include <string.h>
 
 #include "../runtime/runtime_error.h"
@@ -832,8 +833,8 @@ copy_options_chain(struct compiler_options_mapping **proot,
 
 
 PRIVATE void DCALL
-free_options_chain(struct compiler_options *__restrict entry,
-                   struct compiler_options *__restrict base,
+free_options_chain(struct compiler_options *entry,
+                   struct compiler_options *base,
                    unsigned int depth) {
 	unsigned int i;
 	struct compiler_options *iter = base;
@@ -849,8 +850,8 @@ free_options_chain(struct compiler_options *__restrict entry,
 }
 
 PRIVATE void DCALL
-visit_options_chain(struct compiler_options *__restrict entry,
-                    struct compiler_options *__restrict base,
+visit_options_chain(struct compiler_options *entry,
+                    struct compiler_options *base,
                     unsigned int depth, dvisit_t proc, void *arg) {
 	unsigned int i;
 	struct compiler_options *iter = base;
@@ -900,9 +901,9 @@ err:
 }
 
 PRIVATE int DCALL
-module_import_symbol(DeeModuleObject *__restrict self,
-                     DeeStringObject *__restrict name,
-                     DeeObject *__restrict value) {
+module_import_symbol(DeeModuleObject *self,
+                     DeeStringObject *name,
+                     DeeObject *value) {
 	dhash_t i, perturb, hash;
 	DREF DeeObject **new_globalv;
 	/* Rehash the global symbol table is need be. */
@@ -942,8 +943,8 @@ err:
 }
 
 PRIVATE int DCALL
-module_import_symbol_pair(DeeModuleObject *__restrict self,
-                          DeeObject *__restrict symbol_pair) {
+module_import_symbol_pair(DeeModuleObject *self,
+                          DeeObject *symbol_pair) {
 	DREF DeeObject *key_and_value[2];
 	int result;
 	if (DeeObject_Unpack(symbol_pair, 2, key_and_value))
@@ -963,8 +964,8 @@ err:
 }
 
 PRIVATE int DCALL
-module_import_symbols(DeeModuleObject *__restrict self,
-                      DeeObject *__restrict default_symbols) {
+module_import_symbols(DeeModuleObject *self,
+                      DeeObject *default_symbols) {
 	DREF DeeObject *iterator, *elem;
 	int temp;
 	iterator = DeeObject_IterSelf(default_symbols);
@@ -1005,9 +1006,9 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
                                  int start_line, int start_col);
 
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1, 2)) int DCALL
 imod_init(InteractiveModule *__restrict self,
-          DeeObject *__restrict source_stream,
+          DeeObject *source_stream,
           unsigned int mode,
           int start_line, int start_col,
           struct compiler_options *options,
@@ -1523,8 +1524,8 @@ err:
 
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeModule_OpenInteractive(DeeObject *__restrict source_stream,
+PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+DeeModule_OpenInteractive(DeeObject *source_stream,
                           unsigned int mode,
                           int start_line, int start_col,
                           struct compiler_options *options,
@@ -1559,8 +1560,8 @@ err_r:
 	return NULL;
 }
 
-DFUNDEF DREF DeeObject *DCALL
-DeeModule_OpenInteractiveString(DeeObject *__restrict source_stream,
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL
+DeeModule_OpenInteractiveString(DeeObject *source_stream,
                                 unsigned int mode,
                                 int start_line, int start_col,
                                 struct compiler_options *options,

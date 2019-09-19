@@ -37,6 +37,7 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>

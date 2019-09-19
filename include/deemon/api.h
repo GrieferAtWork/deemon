@@ -29,7 +29,7 @@
  * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'. */
 #if !defined(DEE_SOURCE) && defined(CONFIG_BUILDING_DEEMON)
 #define DEE_SOURCE 1
-#endif
+#endif /* !DEE_SOURCE && CONFIG_BUILDING_DEEMON */
 
 /* Disable garbage */
 #define _CRT_SECURE_NO_DEPRECATE 1
@@ -38,12 +38,16 @@
 
 #if defined(_MSC_VER) && !defined(NDEBUG)
 #define _CRTDBG_MAP_ALLOC 1
-#endif
+#endif /* _MSC_VER && !NDEBUG */
 
 #define DEE_VERSION_API      200
 #define DEE_VERSION_COMPILER 200
 #define DEE_VERSION_REVISION 0
 
+/* TODO: There are _a_ _lot_ of invalid uses of __restrict (most
+ *       notably: in type operators such as the compare operators)
+ *       -> Go through all of them and remove __restrict here it's
+ *          use is wrong */
 
 #include <hybrid/compiler.h>
 
@@ -56,8 +60,7 @@
 #include <stdarg.h>
 #include <stddef.h>
 
-#if defined(_CRTDBG_MAP_ALLOC) && \
-!defined(__KOS_SYSTEM_HEADERS__)
+#if defined(_CRTDBG_MAP_ALLOC) && !defined(__KOS_SYSTEM_HEADERS__)
 #include <crtdbg.h>
 #endif
 #endif /* __CC__ */
@@ -65,7 +68,22 @@
 #ifdef _MSC_VER
 #pragma warning(disable: 4054) /* Cast from function pointer to `void *' */
 #pragma warning(disable: 4152) /* Literally the same thing as `4054', but emit for static initializers. */
-#endif
+#endif /* _MSC_VER */
+
+#ifdef __GNUC__
+#if __GNUC__ >= 8
+/* Disable warnings about casting incompatible function pointers (for now)
+ * While I really welcome these warnings, they pose one big problem with the
+ * way in which I've introduced support for keyword-enabled functions.
+ * When declared, the function pointer still has to be cast to the non-kwd-enabled
+ * variant, alongside setting the appropriate flag. However, this causes the GCC
+ * warning that is disabled here
+ * XXX: Somehow change how kwd-enabled functions are declared such that we don't
+ *      have to disable this warning */
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif /* __GNUC__ >= 8 */
+#endif /* __GNUC__ */
+
 
 DECL_BEGIN
 
