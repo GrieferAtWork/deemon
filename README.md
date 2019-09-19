@@ -15,6 +15,28 @@ Deemon is a universally applicable language that has learned much from its past 
 
 Code examples can be found in <b>/util/tut</b>
 
+
+
+## Building
+With visual studio  
+ - Open /.vs/deemon.sln
+ - Select one of the MSVC build configurations
+ - CTRL+SHIFT+B
+
+With configure  
+```sh
+./configure
+make
+```
+
+Cross-compiling deemon  
+```sh
+./configure --cross-prefix=/ops/kos/binutils/i386-kos/bin/i686-kos-
+make
+```
+
+
+
 ### Major improvements
   - Introduction of a module-based dependency system that allows code reuse without relying on preprocessor functionality that really didn't fit a scripting language all too well.
   - With more emphasis on documentation, deemon now comes shipped with a documentation server accessing via web-browser
@@ -116,22 +138,3 @@ Legacy code being detected by it #including any of the old headers
   - Removed the <code>weak</code> keyword
   - Various keywords that all start with 2 underscores (<code>__static_if</code>, <code>__if_true</code>, etc.)
   - The old notion of modules no longer exist (The <code>module</code> keyword was removed, and the <code>import</code> keyword's meaning has an entirely new meaning)
-
-
-
-## Building
-With visual studio  
- - Open /.vs/deemon.sln
- - Select one of the MSVC build configurations
- - CTRL+SHIFT+B
-
-Without deemon already installed  
-$ bash make.sh  
-With deemon already installed  
-$ deemon magic.dee  
-Cross-compiling deemon  
-$ export CROSS_PREFIX="/bin/i686-w64-mingw32-"  
-$ export TARGET_ARCH=i386  
-$ export TARGET_CPU=i686  
-$ bash make.sh
-
