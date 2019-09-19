@@ -8,28 +8,10 @@ MAKEFILE_PATH := $(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 BLD_ROOT := $(MAKEFILE_PATH)
 SRC_ROOT := $(MAKEFILE_PATH)
 
-# Placeholder makefile configuration (these get overwritten by `config.mak')
-CC := gcc
-CC_DEX := g++
-LDFLAGS :=
-DLL := .dll
-EXE := .exe
-CFLAGS += -I$(SRC_ROOT)/include
-CFLAGS += -I$(SRC_ROOT)/include/deemon/kos-headers
-CFLAGS += -D__PE__
-CORE_LDFLAGS += -Wl,--out-implib=$(BIN_PATH)/libdeemon.dll.a # windows-only
-#CORE_LDFLAGS += -Wl,--stack,4194304 # i386
-#CORE_LDFLAGS += -Wl,src/deemon/linker-scripts/link-deemon-gcc.def # i386
-CORE_LDFLAGS += -Wl,--stack,8388608 # x86_64
-CORE_LIBS +=
-DEX_CFLAGS += -shared
-DEX_LDFLAGS += -shared
-DEX_LIBS +=
-DEX_DEPENDENCIES +=
-
 # Pull in the config file that gets created by ./configure
--include $(MAKEFILE_PATH)/config.mak
+include $(MAKEFILE_PATH)/config.mak
 
+CFLAGS += -I$(SRC_ROOT)/include
 CORE_CFLAGS += -DCONFIG_BUILDING_DEEMON
 DEX_CFLAGS += -DCONFIG_BUILDING_DEX
 CFLAGS += -Wall -Wextra -Wno-address -Wno-unused-value -Wno-nonnull-compare -Wno-unused-parameter -Wno-comment -Wno-strict-aliasing -Wno-missing-field-initializers -Wno-type-limits -Wno-maybe-uninitialized
@@ -40,11 +22,11 @@ endif
 ifndef BLD_PATH
 BLD_PATH := $(BLD_ROOT)/build/deemon
 endif
-ifndef CC_DEX
-CC_DEX := $(CC)
+ifndef DEX_CC
+DEX_CC := $(CC)
 endif
-ifndef CC_CORE
-CC_CORE := $(CC)
+ifndef CORE_CC
+CORE_CC := $(CC)
 endif
 
 
@@ -85,20 +67,36 @@ endef
 
 # Include makfiles from the source folder
 include $(SRC_ROOT)/src/deemon/Makefile
+ifndef CONFIG_WITHOUT_DEX
 include $(SRC_ROOT)/src/dex/Makefile
+endif
 
 # Tell Make how to build *.o files from *.c
 $(BLD_PATH)/core/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
-	$(CC_CORE) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(CORE_CFLAGS) $<
+	$(CORE_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(CORE_CFLAGS) $<
+$(BLD_PATH)/core/%.o: $(SRC_ROOT)/%.S
+	@mkdir -p $(dir $@)
+	$(CORE_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(CORE_CFLAGS) $<
 
 $(BIN_PATH)/deemon$(EXE): $(DEEMON_CORE_OBJECTS)
-	$(CC_CORE) -o $@ $(LDFLAGS) $(CORE_LDFLAGS) $^ $(LIBS) $(CORE_LIBS)
+	$(CORE_CC) -o $@ $(LDFLAGS) $(CORE_LDFLAGS) $^ $(LIBS) $(CORE_LIBS) $(LIBDL) || \
+	$(CORE_CC) -o $@ $(LDFLAGS) $(CORE_LDFLAGS) $^ $(LIBS) $(CORE_LIBS) $(LIBDL) $(LIBM)
 
-.PHONY: all dex deemon
+.PHONY: all deemon
 deemon: $(BIN_PATH)/deemon$(EXE)
+
+ifndef CONFIG_WITHOUT_DEX
+.PHONY: dex
 dex: $(foreach F,$(DEX),$(BIN_PATH)/lib/$(F)$(DLL))
 all: deemon dex
+
+.PHONY: dex.%
+dex.%: $(BIN_PATH)/lib/%$(DLL)
+
+else
+all: deemon
+endif
 
 .DEFAULT_GOAL := all
 

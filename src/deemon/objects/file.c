@@ -764,7 +764,7 @@ got_read: {
 	while (max_length) {
 		uint8_t *buffer;
 		dssize_t read_size;
-		size_t bufsize = MIN(max_length, READTEXT_BUFSIZE);
+		size_t bufsize = MIN(max_length, (size_t)READTEXT_BUFSIZE);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
 		if unlikely(!buffer)
@@ -820,7 +820,7 @@ got_read: {
 	while (max_length) {
 		uint8_t *buffer;
 		dssize_t read_size;
-		size_t bufsize = MIN(max_length, READTEXT_BUFSIZE);
+		size_t bufsize = MIN(max_length, (size_t)READTEXT_BUFSIZE);
 		/* Allocate more buffer memory. */
 		buffer = bytes_printer_alloc(&printer, bufsize);
 		if unlikely(!buffer)

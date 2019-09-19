@@ -858,7 +858,7 @@ do_jmpf:
 			/* Don't perform dead code elimination after conditional jumps. */
 			if (is_conditional)
 				break;
-		}	ATTR_FALLTHROUGH
+		}	/*ATTR_FALLTHROUGH*/
 		__IF0 {
 		case ASM_RET:
 			if (current_basescope->bs_flags & CODE_FYIELDING)

@@ -31,6 +31,7 @@
 #include "api.h"
 
 #include <hybrid/typecore.h>
+#include <hybrid/limitcore.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -234,11 +235,12 @@ struct Dee_int_object {
 #define DeeInt_DIGIT(x) ((DeeIntObject *)Dee_REQUIRES_OBJECT(x))->ob_digit
 
 
-#define DEE_PRIVATE_ABS(value) \
-	((value) < 0 ? -(value) : (value))
-#define DEE_PRIVATE_REQ_DIGITS(value) \
-	(DEE_PRIVATE_ABS(value) > (1 << Dee_DIGIT_BITS) ? 2 : 1)
-
+#define DEE_PRIVATE_ABS(value)              \
+	((value) < 0                            \
+	 ? ((intmax_t)(value) == __INTMAX_MIN__ \
+	    ? __UINTMAX_MAX__                   \
+	    : (uintmax_t) - (intmax_t)(value))  \
+	 : (uintmax_t)(value))
 #define Dee_DEFINE_INT_1DIGIT(name, value)          \
 	struct {                                        \
 		Dee_OBJECT_HEAD                             \
@@ -260,29 +262,29 @@ struct Dee_int_object {
 		Dee_digit_t _digits[1];             \
 	} name = {                              \
 		Dee_OBJECT_HEAD_INIT(&DeeInt_Type), \
-		(value)                             \
-		? 1                                 \
-		: 0,                                \
+		(value) ? 1 : 0,                    \
 		{ (value)&Dee_DIGIT_MASK }          \
 	}
-#define Dee_DEFINE_INT_2DIGITS(name, value)                             \
-	struct {                                                            \
-		Dee_OBJECT_HEAD                                                 \
-		Dee_ssize_t _size;                                              \
-		Dee_digit_t _digits[2];                                         \
-	} name = {                                                          \
-		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                             \
-		((value) < 0                                                    \
-		 ? ((uintmax_t) - (value) > ((uintmax_t)1 << Dee_DIGIT_BITS)    \
-		    ? -2                                                        \
-		    : -1)                                                       \
-		 : (value) > 0                                                  \
-		   ? ((uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)     \
-		      ? 2                                                       \
-		      : 1)                                                      \
-		   : 0),                                                        \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                      \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK } \
+#define Dee_DEFINE_INT_2DIGITS(name, value)                                      \
+	struct {                                                                     \
+		Dee_OBJECT_HEAD                                                          \
+		Dee_ssize_t _size;                                                       \
+		Dee_digit_t _digits[2];                                                  \
+	} name = {                                                                   \
+		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                                      \
+		((value) < 0                                                             \
+		 ? ((intmax_t)(value) == __INTMAX_MIN__                                  \
+		    ? -2                                                                 \
+		    : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS) \
+		      ? -2                                                               \
+		      : -1)                                                              \
+		 : (value) > 0                                                           \
+		   ? ((uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)              \
+		      ? 2                                                                \
+		      : 1)                                                               \
+		   : 0),                                                                 \
+		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                               \
+		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK }          \
 	}
 #define Dee_DEFINE_UINT_2DIGITS(name, value)                                     \
 	struct {                                                                     \
@@ -298,92 +300,98 @@ struct Dee_int_object {
 		  : 0,                                                                   \
 		{ (value)&Dee_DIGIT_MASK, ((value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK } \
 	}
-#define Dee_DEFINE_INT_3DIGITS(name, value)                                 \
-	struct {                                                                \
-		Dee_OBJECT_HEAD                                                     \
-		Dee_ssize_t _size;                                                  \
-		Dee_digit_t _digits[3];                                             \
-	} name = {                                                              \
-		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                                 \
-		((value) < 0                                                        \
-		 ? ((uintmax_t) - (value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)    \
-		    ? -3                                                            \
-		    : (uintmax_t) - (value) > ((uintmax_t)1 << Dee_DIGIT_BITS)      \
-		      ? -2                                                          \
-		      : -1)                                                         \
-		 : (value) > 0                                                      \
-		   ? ((uintmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)     \
-		      ? 3                                                           \
-		      : (uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)       \
-		        ? 2                                                         \
-		        : 1)                                                        \
-		   : 0),                                                            \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                          \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,      \
-		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK } \
+#define Dee_DEFINE_INT_3DIGITS(name, value)                                          \
+	struct {                                                                         \
+		Dee_OBJECT_HEAD                                                              \
+		Dee_ssize_t _size;                                                           \
+		Dee_digit_t _digits[3];                                                      \
+	} name = {                                                                       \
+		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                                          \
+		((value) < 0                                                                 \
+		 ? ((intmax_t)(value) == __INTMAX_MIN__                                      \
+		    ? -3                                                                     \
+		    : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
+		      ? -3                                                                   \
+		      : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
+		        ? -2                                                                 \
+		        : -1)                                                                \
+		 : (value) > 0                                                               \
+		   ? ((uintmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)              \
+		      ? 3                                                                    \
+		      : (uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)                \
+		        ? 2                                                                  \
+		        : 1)                                                                 \
+		   : 0),                                                                     \
+		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                   \
+		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,               \
+		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }          \
 	}
-#define Dee_DEFINE_INT_4DIGITS(name, value)                                 \
-	struct {                                                                \
-		Dee_OBJECT_HEAD                                                     \
-		Dee_ssize_t _size;                                                  \
-		Dee_digit_t _digits[4];                                             \
-	} name = {                                                              \
-		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                                 \
-		(value) < 0                                                         \
-		? ((uintmax_t) - (value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)     \
-		   ? -4                                                             \
-		   : (uintmax_t) - (value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)   \
-		     ? -3                                                           \
-		     : (uintmax_t) - (value) > ((uintmax_t)1 << Dee_DIGIT_BITS)     \
-		       ? -2                                                         \
-		       : -1)                                                        \
-		: (value) > 0                                                       \
-		  ? ((uintmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)      \
-		     ? 4                                                            \
-		     : (uintmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)    \
-		       ? 3                                                          \
-		       : (uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)      \
-		         ? 2                                                        \
-		         : 1)                                                       \
-		  : 0,                                                              \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                          \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,      \
-		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,  \
-		  (DEE_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK } \
+#define Dee_DEFINE_INT_4DIGITS(name, value)                                           \
+	struct {                                                                          \
+		Dee_OBJECT_HEAD                                                               \
+		Dee_ssize_t _size;                                                            \
+		Dee_digit_t _digits[4];                                                       \
+	} name = {                                                                        \
+		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                                           \
+		(value) < 0                                                                   \
+		? ((intmax_t)(value) == __INTMAX_MIN__                                        \
+		   ? -4                                                                       \
+		   : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)   \
+		     ? -4                                                                     \
+		     : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
+		       ? -3                                                                   \
+		       : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
+		         ? -2                                                                 \
+		         : -1)                                                                \
+		: (value) > 0                                                                 \
+		  ? ((uintmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)                \
+		     ? 4                                                                      \
+		     : (uintmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)              \
+		       ? 3                                                                    \
+		       : (uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)                \
+		         ? 2                                                                  \
+		         : 1)                                                                 \
+		  : 0,                                                                        \
+		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                    \
+		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,                \
+		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,            \
+		  (DEE_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }           \
 	}
-#define Dee_DEFINE_INT_5DIGITS(name, value)                                 \
-	struct {                                                                \
-		Dee_OBJECT_HEAD                                                     \
-		Dee_ssize_t _size;                                                  \
-		Dee_digit_t _digits[5];                                             \
-	} name = {                                                              \
-		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                                 \
-		(value) < 0                                                         \
-		? ((uintmax_t) - (value) > ((uintmax_t)1 << 4 * Dee_DIGIT_BITS)     \
-		   ? -5                                                             \
-		   : (uintmax_t) - (value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)   \
-		     ? -4                                                           \
-		     : (uintmax_t) - (value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
-		       ? -3                                                         \
-		       : (uintmax_t) - (value) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
-		         ? -2                                                       \
-		         : -1)                                                      \
-		: (value) > 0                                                       \
-		  ? ((uintmax_t)(value) > ((uintmax_t)1 << 4 * Dee_DIGIT_BITS)      \
-		     ? 5                                                            \
-		     : (uintmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)    \
-		       ? 4                                                          \
-		       : (uintmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)  \
-		         ? 3                                                        \
-		         : (uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)    \
-		           ? 2                                                      \
-		           : 1)                                                     \
-		  : 0,                                                              \
-		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                          \
-		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,      \
-		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,  \
-		  (DEE_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,  \
-		  (DEE_PRIVATE_ABS(value) >> 4 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK } \
+#define Dee_DEFINE_INT_5DIGITS(name, value)                                             \
+	struct {                                                                            \
+		Dee_OBJECT_HEAD                                                                 \
+		Dee_ssize_t _size;                                                              \
+		Dee_digit_t _digits[5];                                                         \
+	} name = {                                                                          \
+		Dee_OBJECT_HEAD_INIT(&DeeInt_Type),                                             \
+		(value) < 0                                                                     \
+		? ((intmax_t)(value) == __INTMAX_MIN__                                          \
+		   ? -5                                                                         \
+		   : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 4 * Dee_DIGIT_BITS)     \
+		     ? -5                                                                       \
+		     : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)   \
+		       ? -4                                                                     \
+		       : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS) \
+		         ? -3                                                                   \
+		         : (uintmax_t) - (intmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)   \
+		           ? -2                                                                 \
+		           : -1)                                                                \
+		: (value) > 0                                                                   \
+		  ? ((uintmax_t)(value) > ((uintmax_t)1 << 4 * Dee_DIGIT_BITS)                  \
+		     ? 5                                                                        \
+		     : (uintmax_t)(value) > ((uintmax_t)1 << 3 * Dee_DIGIT_BITS)                \
+		       ? 4                                                                      \
+		       : (uintmax_t)(value) > ((uintmax_t)1 << 2 * Dee_DIGIT_BITS)              \
+		         ? 3                                                                    \
+		         : (uintmax_t)(value) > ((uintmax_t)1 << Dee_DIGIT_BITS)                \
+		           ? 2                                                                  \
+		           : 1)                                                                 \
+		  : 0,                                                                          \
+		{ DEE_PRIVATE_ABS(value) & Dee_DIGIT_MASK,                                      \
+		  (DEE_PRIVATE_ABS(value) >> Dee_DIGIT_BITS) & Dee_DIGIT_MASK,                  \
+		  (DEE_PRIVATE_ABS(value) >> 2 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,              \
+		  (DEE_PRIVATE_ABS(value) >> 3 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK,              \
+		  (DEE_PRIVATE_ABS(value) >> 4 * Dee_DIGIT_BITS) & Dee_DIGIT_MASK }             \
 	}
 #define Dee_DEFINE_UINT_3DIGITS(name, value)                 \
 	struct {                                                 \

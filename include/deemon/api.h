@@ -18,10 +18,12 @@
  */
 #ifndef GUARD_DEEMON_API_H
 #define GUARD_DEEMON_API_H 1
+#ifndef __KOS__
 #define __NO_KOS_SYSTEM_HEADERS__ 1
+#endif /* !__KOS__ */
 #ifndef _ATFILE_SOURCE
 #define _ATFILE_SOURCE 1
-#endif
+#endif /* !_ATFILE_SOURCE */
 
 /* Expose definitions that don't comply with the deemon C symbol namespace.
  * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'. */

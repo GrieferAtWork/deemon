@@ -772,7 +772,7 @@ return_single_dot:
 		goto err_pwd;
 	dst = DeeString_STR(result);
 	while (uprefs) {
-		size_t part = MIN(uprefs, MAX_UPREF_COPY);
+		size_t part = MIN(uprefs, (size_t)MAX_UPREF_COPY);
 		memcpy(dst, (void *)aligned_upref_buffer,
 		       part * COMPILER_LENOF(aligned_upref_buffer[0]) * sizeof(char));
 		dst += part * COMPILER_LENOF(aligned_upref_buffer[0]);

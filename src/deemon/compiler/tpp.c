@@ -126,6 +126,8 @@ DECL_END
 #define PRIVATE      INTERN
 
 #ifndef __INTELLISENSE__
+#undef SKIP_WRAPLF
+#undef SKIP_WRAPLF_REV
 #include "../../tpp/tpp.c"
 #endif /* !__INTELLISENSE__ */
 

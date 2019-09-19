@@ -933,7 +933,7 @@ prefix_except_prefix:
 				byte               = iter[i] >> 4;
 				bytes[(i * 3) + 0] = (char)(byte >= 10 ? 'A' + (byte - 10) : '0' + byte);
 			}
-			i = MIN(num_bytes, LINE_MAXBYTES);
+			i = MIN(num_bytes, (size_t)LINE_MAXBYTES);
 			print(bytes, i * 3);
 			num_bytes -= i;
 			i = LINE_MAXBYTES - i;

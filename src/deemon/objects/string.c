@@ -1081,7 +1081,7 @@ stringiter_nii_getseq(StringIterator *__restrict self) {
 
 PRIVATE int DCALL
 stringiter_nii_hasprev(StringIterator *__restrict self) {
-	return READ_ITER_PTR(self) > DeeString_WSTR(self->si_string);
+	return READ_ITER_PTR(self) > (void *)DeeString_WSTR(self->si_string);
 }
 
 PRIVATE size_t DCALL
@@ -1124,7 +1124,7 @@ stringiter_nii_prev(StringIterator *__restrict self) {
 	union dcharptr pos, new_pos;
 	do {
 		pos.ptr = self->si_iter.ptr;
-		if (pos.ptr <= DeeString_WSTR(self->si_string))
+		if (pos.ptr <= (void *)DeeString_WSTR(self->si_string))
 			return 1;
 		new_pos.cp8 = pos.cp8 - STRING_SIZEOF_WIDTH(self->si_width);
 	} while (!ATOMIC_CMPXCH(self->si_iter.ptr, pos.ptr, new_pos.ptr));

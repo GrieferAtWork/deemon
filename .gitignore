@@ -1,4 +1,6 @@
 /deemon
+/config.mak
+/include/deemon/config.h
 /asm.S
 /input.dee
 /bin/*

@@ -20,6 +20,9 @@
 #define GUARD_DEX_SOCKET_ERROR_C 1
 #define DEE_SOURCE 1
 
+#include "libnet.h"
+/**/
+
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/dex.h>
@@ -27,8 +30,6 @@
 #include <deemon/error_types.h>
 #include <deemon/file.h>
 #include <deemon/object.h>
-
-#include "libnet.h"
 
 DECL_BEGIN
 
