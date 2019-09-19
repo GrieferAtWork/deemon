@@ -59,9 +59,9 @@
  * >>     
  * >>     for (count = 0; count < 1000; ++count) {
  * >>         pthread_t thread;
- * >>         pthread_create(&thread,NULL,&thread_main);
+ * >>         pthread_create(&thread, NULL, &thread_main);
  * >>         for (pass = 0; pass < 50; ++pass) {
- * >>             int value,new_value;
+ * >>             int value, new_value;
  * >>             // Yield to the thread we're using for testing.
  * >>             for (i = 0; i < 10; ++i)
  * >>                 pthread_yield();
@@ -70,18 +70,18 @@
  * >>             // This is a requirement that deemon needs in order to take advantage
  * >>             // of pthread_suspend() without having to implement its own (synchronous)
  * >>             // suspension system using signals and `pthread_kill()'.
- * >>             value = __atomic_fetch_or(&test_atomic,0,__ATOMIC_SEQ_CST);
+ * >>             value = __atomic_fetch_or(&test_atomic, 0, __ATOMIC_SEQ_CST);
  * >>             pthread_yield(); // Wait till the end of our quantum.
- * >>             new_value = __atomic_fetch_or(&test_atomic,0,__ATOMIC_SEQ_CST);
+ * >>             new_value = __atomic_fetch_or(&test_atomic, 0, __ATOMIC_SEQ_CST);
  * >>             if (value != new_value) {
- * >>                 fprintf(stderr,"pthread_suspend() isn't synchronous\n");
+ * >>                 fprintf(stderr, "pthread_suspend() isn't synchronous\n");
  * >>                 exit(1);
  * >>             }
  * >>             pthread_resume(&thread);
  * >>         }
  * >>         pthread_cancel(thread);
  * >>     }
- * >>     fprintf(stderr,"Either your machine has only a single core, or pthread_suspend() is synchronous\n");
+ * >>     fprintf(stderr, "Either your machine has only a single core, or pthread_suspend() is synchronous\n");
  * >>     return 0;
  * >> }
  * >> 
@@ -116,15 +116,19 @@
 
 #ifndef CONFIG_NO_THREADS
 #include <string.h>
+
 #ifndef CONFIG_NO_STDIO
 #include <stdio.h>
 #endif /* !CONFIG_NO_STDIO */
+
 #ifndef CONFIG_NO_STDLIB
 #include <stdlib.h>
 #endif /* !CONFIG_NO_STDLIB */
+
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
+
 #ifdef CONFIG_HOST_UNIX
 #include <sys/types.h>
 
@@ -133,14 +137,15 @@
 #ifndef CONFIG_HOST_WINDOWS
 #if defined(__NO_has_include) || __has_include(<sys/syscall.h>)
 #include <sys/syscall.h>
-#endif
+#endif /* __NO_has_include || __has_include(<sys/syscall.h>) */
 #endif /* !CONFIG_HOST_WINDOWS */
-#endif
+#endif /* !CONFIG_HOST_UNIX */
+
 #ifdef CONFIG_THREADS_PTHREAD
 #include <pthread.h>
 #include <unistd.h>
 #if !defined(CONFIG_NO_PTHREAD_SUSPEND) && \
-(defined(__MISC_VISIBLE) || defined(CONFIG_HAVE_PTHREAD_SUSPEND))
+    (defined(__MISC_VISIBLE) || defined(CONFIG_HAVE_PTHREAD_SUSPEND))
 #undef CONFIG_HAVE_PTHREAD_SUSPEND
 #define CONFIG_HAVE_PTHREAD_SUSPEND 1
 #else
@@ -151,10 +156,10 @@
 #ifdef CONFIG_NEED_SUSPEND_SIGNALS
 #ifndef CONFIG_NO_SYS_SIGNALS_H
 #include <sys/signal.h>
-#endif
+#endif /* !CONFIG_NO_SYS_SIGNALS_H */
 #ifndef CONFIG_NO_SIGNALS_H
 #include <signal.h>
-#endif
+#endif /* !CONFIG_NO_SIGNALS_H */
 #endif /* CONFIG_NEED_SUSPEND_SIGNALS */
 #endif /* !CONFIG_NO_THREADS */
 
@@ -181,9 +186,9 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 	return hResult;
 }
 //#define os_getcurrenthread() GetCurrentThread()
-#else
+#else /* CONFIG_THREADS_WINDOWS */
 #define os_getcurrenthread() pthread_self()
-#endif
+#endif /* !CONFIG_THREADS_WINDOWS */
 
 #ifndef CONFIG_NO_THREADID
 #ifdef CONFIG_HOST_WINDOWS
@@ -202,7 +207,7 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 
 #ifndef os_gettid
 #define os_gettid() 0
-#endif
+#endif /* !os_gettid */
 
 
 
@@ -218,7 +223,7 @@ PUBLIC struct tls_callback_hooks _DeeThread_TlsCallbacks = {
 	/* .tc_fini  = */ &stub_tc_fini,
 	/* .tc_visit = */ &stub_tc_visit,
 };
-#endif
+#endif /* !CONFIG_NO_THREADID */
 
 
 STATIC_ASSERT(SIZEOF_DTHREADID_T == sizeof(dthreadid_t));
@@ -236,7 +241,7 @@ PRIVATE struct deep_assoc_entry empty_deep_assoc[] = {
 #pragma warning(push)
 #pragma warning(disable: 6320)
 #pragma warning(disable: 6322)
-#endif
+#endif /* _PREFAST_ */
 #pragma pack(push,8)
 PRIVATE void DCALL
 sys_setthreadname(char const *__restrict name) {
@@ -263,7 +268,7 @@ sys_setthreadname(char const *__restrict name) {
 #pragma pack(pop)
 #ifdef _PREFAST_
 #pragma warning(pop)
-#endif
+#endif /* _PREFAST_ */
 #elif !defined(CONFIG_NO_PTHREAD_SETNAME_NP) && \
       (defined(__USE_GNU) || defined(CONFIG_HAVE_PTHREAD_SETNAME_NP))
 #define sys_setthreadname(name) \
@@ -430,9 +435,9 @@ deepcopy_clear(DeeThreadObject *__restrict thread_self) {
 /* Controller for the initial/main thread object. */
 #ifndef CONFIG_NO_THREADS
 INTERN
-#else
+#else /* !CONFIG_NO_THREADS */
 PUBLIC
-#endif
+#endif /* CONFIG_NO_THREADS */
 DeeThreadObject DeeThread_Main = {
 	OBJECT_HEAD_INIT(&DeeThread_Type),
 	/* .t_exec       = */ NULL,
@@ -441,7 +446,7 @@ DeeThreadObject DeeThread_Main = {
 	/* .t_execsz     = */ 0,
 #if __SIZEOF_POINTER__ > 4
 	/* .t_padding    = */ { 0 },
-#endif
+#endif /* __SIZEOF_POINTER__ > 4 */
 	/* .t_str_curr   = */ NULL,
 	/* .t_repr_curr  = */ NULL,
 	/* .t_deepassoc  = */ {
@@ -481,7 +486,7 @@ PRIVATE uint64_t performance_1000000_div_freq = 0;
 PRIVATE WCHAR const kernel32[] = {'K','E','R','N','E','L','3','2',0};
 
 PRIVATE ULONGLONG (WINAPI *lp_GetTickCount64)(void) = NULL;
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 
 PUBLIC uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void) {
 #ifdef CONFIG_HOST_WINDOWS
@@ -539,7 +544,7 @@ do_tickcount:
 		result *= performance_1000000_div_freq;
 	}
 	return result;
-#else
+#else /* CONFIG_HOST_WINDOWS */
 	struct timespec now;
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(clock_gettime(CLOCK_MONOTONIC, &now)) {
@@ -548,7 +553,7 @@ do_tickcount:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return ((uint64_t)now.tv_sec * 1000000) + (now.tv_nsec / 1000);
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 }
 
 #ifndef CONFIG_NO_THREADS
@@ -592,7 +597,7 @@ PRIVATE void DCALL sys_threadshutdown(DeeThreadObject *__restrict self) {
 	/*printf("thread_shutdown\n");*/
 }
 #endif /* CONFIG_NEED_SUSPEND_SIGNALS */
-#endif
+#endif /* CONFIG_THREADS_PTHREAD || CONFIG_NEED_SUSPEND_SIGNALS */
 
 /* Define thread-startup as a no-op when it wasn't defined before. */
 #ifndef sys_threadstartup
@@ -634,7 +639,7 @@ do_suspend_thread(DeeThreadObject *__restrict self) {
 #else
 #ifndef CONFIG_NEED_SUSPEND_SIGNALS
 #error "Invalid configuration"
-#endif
+#endif /* !CONFIG_NEED_SUSPEND_SIGNALS */
 			unsigned int timeout;
 			int error;
 			ATOMIC_FETCHOR(self->t_state, THREAD_STATE_SUSPENDREQ);
@@ -678,7 +683,7 @@ do_resume_thread(DeeThreadObject *__restrict self) {
 #else
 #ifndef CONFIG_NEED_SUSPEND_SIGNALS
 #error "Invalid configuration"
-#endif
+#endif /* !CONFIG_NEED_SUSPEND_SIGNALS */
 			DBG_ALIGNMENT_DISABLE();
 			pthread_kill(self->t_thread, PTHREAD_INTERRUPT_SIGNAL);
 			DBG_ALIGNMENT_ENABLE();
@@ -1025,7 +1030,7 @@ PRIVATE void DCALL DeeThread_InitMain(void) {
 	DBG_ALIGNMENT_DISABLE();
 	DeeThread_Main.t_threadid = os_gettid();
 	DBG_ALIGNMENT_ENABLE();
-#endif
+#endif /* !CONFIG_NO_THREADID */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
 #ifdef CONFIG_HOST_WINDOWS
 	DBG_ALIGNMENT_DISABLE();
@@ -1046,17 +1051,17 @@ PRIVATE void DCALL DeeThread_FiniMain(void) {
 	CloseHandle(DeeThread_Main.t_thread);
 	DBG_ALIGNMENT_ENABLE();
 }
-#else
+#else /* CONFIG_HOST_WINDOWS */
 #define DeeThread_FiniMain() (void)0
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 
 /* Platform-dependent part: thread.self TLS management. */
 #ifdef THREAD_SELF_TLS_USE_TLS_ALLOC
 #ifdef NDEBUG
 PRIVATE DWORD thread_self_tls;
-#else
+#else /* NDEBUG */
 PRIVATE DWORD thread_self_tls = TLS_OUT_OF_INDEXES;
-#endif
+#endif /* !NDEBUG */
 
 #ifdef __i386__
 /* Considering how often we need to read this TLS, here's
@@ -1067,7 +1072,7 @@ PRIVATE DWORD thread_self_tls = TLS_OUT_OF_INDEXES;
  * work with whatever offsets they choose to go for them.
  * https://en.wikipedia.org/wiki/Win32_Thread_Information_Block */
 #ifdef _MSC_VER
-#define thread_tls_get()  thread_tls_get()
+#define thread_tls_get() thread_tls_get()
 FORCELOCAL void *(thread_tls_get)(void) {
 	void *result;
 	__asm {
@@ -1077,7 +1082,7 @@ FORCELOCAL void *(thread_tls_get)(void) {
 	}
 	return result;
 }
-#define thread_tls_set(value)  thread_tls_set(value)
+#define thread_tls_set(value) thread_tls_set(value)
 FORCELOCAL void(thread_tls_set)(void *value) {
 	__asm {
 		MOV ECX, value
@@ -1101,12 +1106,12 @@ FORCELOCAL void(thread_tls_set)(void *value) {
 	        : "r"(thread_self_tls), "r"(value));
 }
 #endif
-#endif
+#endif /* __i386__ */
 
 #ifndef thread_tls_get
 #define thread_tls_get()      TlsGetValue(thread_self_tls)
 #define thread_tls_set(value) TlsSetValue(thread_self_tls, (LPVOID)(value))
-#endif
+#endif /* !thread_tls_get */
 
 PUBLIC void DCALL DeeThread_Init(void) {
 	ASSERT(thread_self_tls == TLS_OUT_OF_INDEXES);
@@ -1129,14 +1134,14 @@ PUBLIC void DCALL DeeThread_Init(void) {
 PUBLIC void DCALL DeeThread_Fini(void) {
 #ifndef NDEBUG
 	ASSERT(thread_self_tls != TLS_OUT_OF_INDEXES);
-#endif
+#endif /* !NDEBUG */
 	DeeThread_FiniMain();
 	DBG_ALIGNMENT_DISABLE();
 	TlsFree(thread_self_tls);
 	DBG_ALIGNMENT_ENABLE();
 #ifndef NDEBUG
 	thread_self_tls = TLS_OUT_OF_INDEXES;
-#endif
+#endif /* !NDEBUG */
 	ASSERT(!DeeThread_Main.t_deepassoc.da_used);
 	if (DeeThread_Main.t_deepassoc.da_list != empty_deep_assoc) {
 		Dee_Free(DeeThread_Main.t_deepassoc.da_list);
@@ -1158,17 +1163,17 @@ PUBLIC void DCALL DeeThread_Shutdown(void) {
 	thread_tls_set(NULL);
 	DBG_ALIGNMENT_ENABLE();
 }
-#else
+#else /* THREAD_SELF_TLS_USE_TLS_ALLOC */
 
 #ifdef THREAD_SELF_TLS_USE_PTHREAD_KEY
 PRIVATE pthread_key_t thread_self_tls;
 #define thread_tls_set(v) pthread_setspecific(thread_self_tls, (void *)(v))
 #define thread_tls_get()  pthread_getspecific(thread_self_tls)
-#else
+#else /* THREAD_SELF_TLS_USE_PTHREAD_KEY */
 PRIVATE ATTR_THREAD DREF DeeThreadObject *thread_self_tls = NULL;
 #define thread_tls_set(v) (thread_self_tls = (v))
 #define thread_tls_get()  thread_self_tls
-#endif
+#endif /* !THREAD_SELF_TLS_USE_PTHREAD_KEY */
 
 
 PUBLIC void DCALL DeeThread_Init(void) {
@@ -1206,7 +1211,7 @@ PUBLIC void DCALL DeeThread_Fini(void) {
 	DBG_ALIGNMENT_ENABLE();
 #endif /* THREAD_SELF_TLS_USE_PTHREAD_KEY */
 }
-#endif
+#endif /* !THREAD_SELF_TLS_USE_TLS_ALLOC */
 
 PUBLIC void DCALL DeeThread_Shutdown(void) {
 	DREF DeeThreadObject *self;

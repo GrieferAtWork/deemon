@@ -351,7 +351,9 @@ if [[ "$WITH_ASSEMBLY_INTERPRETER" == "1" ]]; then
 else
 	WITH_ASSEMBLY_INTERPRETER=""
 fi
-
+if ! [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
+	add_feature "CONFIG_HAVE_EXEC_ASM"
+fi
 
 ########################################################################################
 ## Figure out if we need to provide KOS system headers

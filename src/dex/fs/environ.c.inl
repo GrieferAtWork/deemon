@@ -52,6 +52,8 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 
+#include <hybrid/atomic.h>
+
 #include <stdlib.h>
 #include <string.h>
 
