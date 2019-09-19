@@ -17,7 +17,7 @@ $(BLD_PATH)/dex/_jit/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/_jit$(DLL): $(DEX_OBJECTS__jit) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS__jit) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS__jit) $(LIBS) $(DEX_LIBS)
 
 
 ### collections
@@ -29,20 +29,23 @@ $(BLD_PATH)/dex/collections/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/collections$(DLL): $(DEX_OBJECTS_collections) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_collections) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_collections) $(LIBS) $(DEX_LIBS)
 
 
 ### ctypes
 ifndef CONFIG_WITHOUT_DEX_CTYPES
+ifndef DEX_CTYPES_CC
+DEX_CTYPES_CC := $(DEX_CC)
+endif
 DEX += ctypes
 DEX_SOURCES_ctypes += $(wildcard $(SRC_ROOT)/src/dex/ctypes/*.c)
 DEX_OBJECTS_ctypes = $(call dex_objects,ctypes,$(DEX_SOURCES_ctypes))
 -include $(foreach F,$(DEX_OBJECTS_ctypes),$(F:.o=.MF))
 $(BLD_PATH)/dex/ctypes/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
-	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $(DEX_CTYPES_CFLAGS) $<
+	$(DEX_CTYPES_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $(DEX_CTYPES_CFLAGS) $<
 $(BIN_PATH)/lib/ctypes$(DLL): $(DEX_OBJECTS_ctypes) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_CTYPES_LDFLAGS) $(DEX_OBJECTS_ctypes) $(LIBS) -ldeemon $(DEX_LIBS) $(DEX_CTYPES_LIBS)
+	$(DEX_CTYPES_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_CTYPES_LDFLAGS) $(DEX_OBJECTS_ctypes) $(LIBS) $(DEX_LIBS) $(DEX_CTYPES_LIBS)
 endif
 
 
@@ -55,7 +58,7 @@ $(BLD_PATH)/dex/disassembler/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/disassembler$(DLL): $(DEX_OBJECTS_disassembler) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_disassembler) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_disassembler) $(LIBS) $(DEX_LIBS)
 
 
 ### files
@@ -67,7 +70,7 @@ $(BLD_PATH)/dex/files/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/files$(DLL): $(DEX_OBJECTS_files) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_files) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_files) $(LIBS) $(DEX_LIBS)
 
 
 ### fs
@@ -80,7 +83,7 @@ $(BLD_PATH)/dex/fs/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/fs$(DLL): $(DEX_OBJECTS_fs) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_fs) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_fs) $(LIBS) $(DEX_LIBS)
 endif
 
 
@@ -94,7 +97,7 @@ $(BLD_PATH)/dex/ipc/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/ipc$(DLL): $(DEX_OBJECTS_ipc) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_ipc) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_ipc) $(LIBS) $(DEX_LIBS)
 endif
 
 
@@ -108,7 +111,7 @@ $(BLD_PATH)/dex/math/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/math$(DLL): $(DEX_OBJECTS_math) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_math) $(LIBS) -ldeemon $(DEX_LIBS) $(LIBM)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_math) $(LIBS) $(DEX_LIBS) $(LIBM)
 endif
 
 
@@ -122,7 +125,7 @@ $(BLD_PATH)/dex/net/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/net$(DLL): $(DEX_OBJECTS_net) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_net) $(LIBS) -ldeemon $(DEX_LIBS) $(LIBSOCKET)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_net) $(LIBS) $(DEX_LIBS) $(LIBSOCKET)
 endif
 
 
@@ -136,7 +139,7 @@ $(BLD_PATH)/dex/posix/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/posix$(DLL): $(DEX_OBJECTS_posix) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_posix) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_posix) $(LIBS) $(DEX_LIBS)
 endif
 
 
@@ -149,7 +152,7 @@ $(BLD_PATH)/dex/rt/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/rt$(DLL): $(DEX_OBJECTS_rt) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_rt) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_rt) $(LIBS) $(DEX_LIBS)
 
 
 ### threading
@@ -162,7 +165,7 @@ $(BLD_PATH)/dex/threading/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/threading$(DLL): $(DEX_OBJECTS_threading) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_threading) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_threading) $(LIBS) $(DEX_LIBS)
 endif
 
 
@@ -176,7 +179,7 @@ $(BLD_PATH)/dex/time/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/time$(DLL): $(DEX_OBJECTS_time) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_time) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_time) $(LIBS) $(DEX_LIBS)
 endif
 
 
@@ -190,7 +193,7 @@ $(BLD_PATH)/dex/win32/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/win32$(DLL): $(DEX_OBJECTS_win32) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_win32) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_win32) $(LIBS) $(DEX_LIBS)
 endif
 
 
@@ -203,7 +206,7 @@ $(BLD_PATH)/dex/xml/%.o: $(SRC_ROOT)/%.c
 	@mkdir -p $(dir $@)
 	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
 $(BIN_PATH)/lib/xml$(DLL): $(DEX_OBJECTS_xml) $(BIN_PATH)/deemon$(EXE)
-	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_xml) $(LIBS) -ldeemon $(DEX_LIBS)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_xml) $(LIBS) $(DEX_LIBS)
 
 
 

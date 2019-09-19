@@ -2,7 +2,7 @@
 # Deemon Configure file
 #
 
-BLD_ROOT="$(pwd)"
+BLD_ROOT="$(readlink -f $(pwd))"
 SRC_ROOT="$(dirname $(readlink -f "$0"))"
 BIN_PATH=""
 BLD_PATH=""
@@ -32,6 +32,7 @@ CONFIG_DEX_CC=""
 CONFIG_DEX_CFLAGS="-shared"
 CONFIG_DEX_LDFLAGS="-shared"
 CONFIG_DEX_LIBS=""
+CONFIG_DEX_CTYPES_CC=""
 CONFIG_DEX_CTYPES_CFLAGS=""
 CONFIG_DEX_CTYPES_LDFLAGS=""
 CONFIG_DEX_CTYPES_LIBS=""
@@ -398,62 +399,82 @@ fi
 ########################################################################################
 if [[ "$WITHOUT_DEX_SPECIFIC" == *"CTYPES"* ]]; then
 	# The ctypes dex is disabled, so we don't even need libffi
+	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
 	CONFIG_DEX_CTYPES_CFLAGS=""
 	CONFIG_DEX_CTYPES_LDFLAGS=""
 	CONFIG_DEX_CTYPES_LIBS=""
-elif [[ "$WITH_LIBFFI" == "1" ]]; then
-	if ! [ -f "$BLD_PATH/libffi/include/ffi.h" ]; then
-		echo "Configuring libffi (for dex.ctypes)..."
-		rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
-		cmd mkdir -p "$BLD_PATH/libffi"
-		cmd cd "$BLD_PATH/libffi"
-		if [ -z "$LIBFFI_TARGET" ]; then
-			case "$TARGET" in
-				*-kos | *-kos-*)
-					# libffi doesn't know KOS, but it's close
-					# enough to linux, so we just use that
-					LIBFFI_TARGET="$TARGET_CPU-linux-gnu"
-					;;
-				*)
-					LIBFFI_TARGET="$TARGET"
-					;;
-			esac
-		fi
-		(
-			export CROSS_PREFIX="$CONFIG_CROSS_PREFIX"
-			export CC="$CONFIG_CC"
-			export CXX="$CONFIG_CXX"
-			export CPP="${CONFIG_CROSS_PREFIX}cpp"
-			export AS="${CONFIG_CROSS_PREFIX}as"
-			export AR="${CONFIG_CROSS_PREFIX}ar"
-			export NM="${CONFIG_CROSS_PREFIX}nm"
-			export TARGET="$LIBFFI_TARGET"
-			if [[ "$TARGET" == "i686-w64-mingw32" ]]; then
-				# Workaround for a configure-detection-bug:
-				# https://bugzilla.mozilla.org/show_bug.cgi?id=1336569
-				export CFLAGS="$CFLAGS -DSYMBOL_UNDERSCORE";
-				export CXXFLAGS="$CXXFLAGS -DSYMBOL_UNDERSCORE";
-			fi
-			cmd bash "$SRC_ROOT/src/dex/ctypes/ffi/libffi/configure" \
-				--host="$LIBFFI_TARGET" \
-				--target="$LIBFFI_TARGET" \
-				--enable-static \
-				--prefix "$BLD_PATH/libffi"
-		)
-	fi
-	if ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
-		echo "Building libffi (for dex.ctypes)..."
-		cmd cd "$BLD_PATH/libffi"
-		cmd make -j $(grep -c ^processor /proc/cpuinfo)
-	fi
-	cmd cd "$BLD_PATH"
-	CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
-	CONFIG_DEX_CTYPES_LDFLAGS=""
-	CONFIG_DEX_CTYPES_LIBS="${BLD_PATH}/libffi/.libs/libffi.a"
 else
-	CONFIG_DEX_CTYPES_CFLAGS="-DCONFIG_NO_CFUNCTION"
-	CONFIG_DEX_CTYPES_LDFLAGS=""
-	CONFIG_DEX_CTYPES_LIBS=""
+	if [[ "$WITH_LIBFFI" == "1" ]]; then
+		if ! [ -f "$BLD_PATH/libffi/include/ffi.h" ]; then
+			echo "Configuring libffi (for dex.ctypes)..."
+			rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
+			cmd mkdir -p "$BLD_PATH/libffi"
+			cmd cd "$BLD_PATH/libffi"
+			if [ -z "$LIBFFI_TARGET" ]; then
+				case "$TARGET" in
+					*-kos | *-kos-*)
+						# libffi doesn't know KOS, but it's close
+						# enough to linux, so we just use that
+						LIBFFI_TARGET="$TARGET_CPU-linux-gnu"
+						;;
+					*)
+						LIBFFI_TARGET="$TARGET"
+						;;
+				esac
+			fi
+			(
+				export CROSS_PREFIX="$CONFIG_CROSS_PREFIX"
+				export CC="$CONFIG_CC"
+				export CXX="$CONFIG_CXX"
+				export CPP="${CONFIG_CROSS_PREFIX}cpp"
+				export AS="${CONFIG_CROSS_PREFIX}as"
+				export AR="${CONFIG_CROSS_PREFIX}ar"
+				export NM="${CONFIG_CROSS_PREFIX}nm"
+				export TARGET="$LIBFFI_TARGET"
+				if [[ "$TARGET" == "i686-w64-mingw32" ]]; then
+					# Workaround for a configure-detection-bug:
+					# https://bugzilla.mozilla.org/show_bug.cgi?id=1336569
+					export CFLAGS="$CFLAGS -DSYMBOL_UNDERSCORE";
+					export CXXFLAGS="$CXXFLAGS -DSYMBOL_UNDERSCORE";
+				fi
+				cmd bash "$SRC_ROOT/src/dex/ctypes/ffi/libffi/configure" \
+					--host="$LIBFFI_TARGET" \
+					--target="$LIBFFI_TARGET" \
+					--enable-static \
+					--prefix "$BLD_PATH/libffi"
+			)
+		fi
+		if ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
+			echo "Building libffi (for dex.ctypes)..."
+			cmd cd "$BLD_PATH/libffi"
+			cmd make -j $(grep -c ^processor /proc/cpuinfo)
+		fi
+		cmd cd "$BLD_PATH"
+		CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
+		CONFIG_DEX_CTYPES_LDFLAGS=""
+		CONFIG_DEX_CTYPES_LIBS="${BLD_PATH}/libffi/.libs/libffi.a"
+	else
+		CONFIG_DEX_CTYPES_CFLAGS="-DCONFIG_NO_CFUNCTION"
+		CONFIG_DEX_CTYPES_LDFLAGS=""
+		CONFIG_DEX_CTYPES_LIBS=""
+	fi
+	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
+	case "$TARGET" in
+		*-kos | *-kos-*)
+			# In order to allow the handling of exceptions with <kos/except.h>,
+			# we have to compile the ctypes dex in c++ (thus allowing the use of
+			# try...catch for the purpose of handling handling exceptions)
+			CONFIG_DEX_CTYPES_CC="$CONFIG_CXX"
+			CONFIG_DEX_CTYPES_CFLAGS="$CONFIG_DEX_CTYPES_CFLAGS -fnon-call-exceptions"
+			# Enable NOSTDLIB for ctypes to prevent libstdc++ from
+			# being linked in, when we don't actually make use of it.
+			CONFIG_DEX_CTYPES_LDFLAGS="-nostdlib"
+			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lc"
+			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -ldl"
+			;;
+		*)
+			;;
+	esac
 fi
 
 
@@ -508,10 +529,18 @@ case "$TARGET" in
 	*CYGWIN* | *Cygwin* | *cygwin*)
 		CONFIG_EXE=".exe"
 		CONFIG_DLL=".dll"
+		if [[ "$WITH_DEX" == "1" ]]; then
+			CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -L${BIN_PATH}"
+			CONFIG_DEX_LIBS="$CONFIG_DEX_LIBS -ldeemon"
+		fi
 		;;
 	*)
 		CONFIG_EXE=""
 		CONFIG_DLL=".so"
+		if [[ "$WITH_DEX" == "1" ]]; then
+			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--export-dynamic"
+			CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -Wl,--allow-shlib-undefined"
+		fi
 		;;
 esac
 if ! [ -z "$FEATURES" ]; then
@@ -551,6 +580,7 @@ echo "    CONFIG_CORE_LDFLAGS: '$CONFIG_CORE_LDFLAGS'"
 echo "    CONFIG_CORE_LIBS:    '$CONFIG_CORE_LIBS'"
 if [[ "$WITHOUT_DEX_SPECIFIC" != *"CTYPES"* ]]; then
 	echo "CTypes compiler flags:"
+	echo "    CONFIG_DEX_CTYPES_CC:      '$CONFIG_DEX_CTYPES_CC'"
 	echo "    CONFIG_DEX_CTYPES_CFLAGS:  '$CONFIG_DEX_CTYPES_CFLAGS'"
 	echo "    CONFIG_DEX_CTYPES_LDFLAGS: '$CONFIG_DEX_CTYPES_LDFLAGS'"
 	echo "    CONFIG_DEX_CTYPES_LIBS:    '$CONFIG_DEX_CTYPES_LIBS'"
@@ -563,11 +593,15 @@ echo "    WITH_KOS_SYSTEM_HEADERS:   '$WITH_KOS_SYSTEM_HEADERS'"
 
 
 
+cmd mkdir -p "$BLD_ROOT/build"
+cmd mkdir -p "$BLD_ROOT/lib"
+
 if [ "$BLD_ROOT" != "$SRC_ROOT" ]; then
+	unlink "$BLD_ROOT/Makefile" > /dev/null 2>&1
 	cmd cp "$SRC_ROOT/Makefile" "$BLD_ROOT/Makefile"
 fi
 
-unlink "$BLD_ROOT/include/deemon/config.h" > /dev/null 2>&1
+mv "$BLD_ROOT/include/deemon/config.h" "$BLD_ROOT/include/deemon/config.h.old" > /dev/null 2>&1
 if ! [ -z "$FEATURES" ]; then
 	mkdir -p "$BLD_ROOT/include/deemon"
 	cat > "$BLD_ROOT/include/deemon/config.h" <<EOF
@@ -588,12 +622,23 @@ EOF
 		fi
 	done
 fi
+if [ -f "$BLD_ROOT/include/deemon/config.h.old" ]; then
+	if [ -f "$BLD_ROOT/include/deemon/config.h" ]; then
+		if cmp --silent "$BLD_ROOT/include/deemon/config.h.old" "$BLD_ROOT/include/deemon/config.h"; then
+			# Unchanged
+			unlink "$BLD_ROOT/include/deemon/config.h"
+			mv "$BLD_ROOT/include/deemon/config.h.old" "$BLD_ROOT/include/deemon/config.h"
+		else
+			# Changed
+			unlink "$BLD_ROOT/include/deemon/config.h.old"
+		fi
+	else
+		unlink "$BLD_ROOT/include/deemon/config.h.old"
+	fi
+fi
 
 
 unlink "$BLD_ROOT/config.mak" > /dev/null 2>&1
-
-cmd mkdir -p "$BLD_ROOT/build"
-cmd mkdir -p "$BLD_ROOT/lib"
 cmd cat > "$BLD_ROOT/config.mak" <<EOF
 # Automatically generated file (by ./configure). - Do not edit!
 BLD_ROOT := $BLD_ROOT
@@ -635,6 +680,9 @@ if ! [ -z "$WITHOUT_DEX_SPECIFIC" ]; then
 	for name in $WITHOUT_DEX_SPECIFIC; do
 		cmd echo "CONFIG_WITHOUT_DEX_$name :=" >> "$BLD_ROOT/config.mak"
 	done
+fi
+if ! [ -z "$CONFIG_DEX_CTYPES_CC" ]; then
+	cmd echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$BLD_ROOT/config.mak"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CFLAGS" ]; then
 	cmd echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$BLD_ROOT/config.mak"

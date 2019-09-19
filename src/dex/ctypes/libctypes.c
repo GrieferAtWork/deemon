@@ -195,7 +195,7 @@ INTERN void ctypes_kos_guard(void) {
 #ifdef E_ILLEGAL_INSTRUCTION
 	case ERROR_CLASS(E_ILLEGAL_INSTRUCTION):
 #ifdef E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE
-		if (data->e_subclass == ERROR_SUBCLASS(E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE) {
+		if (data->e_subclass == ERROR_SUBCLASS(E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE)) {
 			DeeError_Throwf(&DeeError_IllegalInstruction, "Privileged instruction");
 			break;
 		}
@@ -207,19 +207,19 @@ INTERN void ctypes_kos_guard(void) {
 #ifdef E_STACK_OVERFLOW
 	case ERROR_CLASS(E_STACK_OVERFLOW):
 		DeeError_Throwf(&DeeError_StackOverflow, "Stack overflow");
-		goto did_handle;
+		break;
 #endif /* E_STACK_OVERFLOW */
 
 #ifdef E_INDEX_ERROR
 	case ERROR_CLASS(E_INDEX_ERROR):
 		DeeError_Throwf(&DeeError_IndexError, "Array bounds exceeded");
-		goto did_handle;
+		break;
 #endif /* E_INDEX_ERROR */
 
 #ifdef E_INVALID_ALIGNMENT
 	case ERROR_CLASS(E_INVALID_ALIGNMENT):
 		DeeError_Throwf(&DeeError_SegFault, "Data misalignment");
-		goto did_handle;
+		break;
 #endif /* E_INVALID_ALIGNMENT */
 
 	default:

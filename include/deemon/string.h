@@ -1882,7 +1882,7 @@ struct Dee_ascii_printer {
 	size_t           ap_length; /* Used string length. */
 	DeeStringObject *ap_string; /* [0..1][owned] Generated string object. */
 };
-#define Dee_ASCII_PRINTER_INIT  {0,NULL}
+#define Dee_ASCII_PRINTER_INIT  { 0, NULL }
 #define Dee_ASCII_PRINTER_STR(self) ((self)->ap_string->s_str)
 #define Dee_ASCII_PRINTER_LEN(self) ((self)->ap_length)
 

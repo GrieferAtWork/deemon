@@ -853,7 +853,7 @@ err:
 INTERN DREF DeeObject *DCALL
 fs_pathexpand(DeeObject *__restrict path, uint16_t options,
               DeeObject *__restrict environ_mapping) {
-	struct unicode_printer printer = ASCII_PRINTER_INIT;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	/*utf-8*/ char *iter, *begin, *end, *iter_next;
 	/*utf-8*/ char *flush_start, *flush_end;
 	uint32_t ch;

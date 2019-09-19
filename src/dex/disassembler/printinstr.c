@@ -1259,12 +1259,14 @@ libdisasm_printlabel(dformatprinter printer, void *arg,
 }
 
 
+#if 0
 PRIVATE char const class_flag_names[4][10] = {
 	/* [TP_FFINAL]     = */ "FINAL",
 	/* [TP_FTRUNCATE]  = */ "TRUNCATE",
 	/* [TP_FINTERRUPT] = */ "INTERRUPT",
 	/* [0x8]           = */ ""
 };
+#endif
 
 
 typedef union {

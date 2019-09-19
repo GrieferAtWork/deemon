@@ -67,6 +67,7 @@ INTDEF int ctypes_seh_guard(struct _EXCEPTION_POINTERS *info);
 #elif defined(__KOS__) && (__KOS_VERSION__ >= 400)
 DECL_END
 #include <kos/except.h>
+DECL_BEGIN
 
 /* XXX: Mark libctypes as exception-aware? */
 
@@ -90,7 +91,6 @@ INTDEF void ctypes_kos_guard(void);
 #endif /* TRY && EXCEPT */
 
 
-DECL_BEGIN
 #elif defined(__KOS__) && (__KOS_VERSION__ >= 300) && 0
 
 /* TODO: Make use of the new <except.h> system. */
@@ -113,10 +113,14 @@ DECL_BEGIN
  *       circumstances, requiring c++ exceptions, as well
  *       as -fnon-call-exceptions. */
 #define CTYPES_FAULTPROTECT(expr, error) expr
+
 #endif
-#else
+#endif /* 1 */
+
+#ifndef CTYPES_FAULTPROTECT
 #define CTYPES_FAULTPROTECT(expr, error) expr
-#endif
+#endif /* !CTYPES_FAULTPROTECT */
+
 
 #ifndef FAULTPROTECT_VAR
 #define FAULTPROTECT_VAR  /* nothing */

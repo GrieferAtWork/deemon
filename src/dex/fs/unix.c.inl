@@ -18,12 +18,24 @@
  */
 #ifndef GUARD_DEX_FS_UNIX_C_INL
 #define GUARD_DEX_FS_UNIX_C_INL 1
+#ifndef DEE_SOURCE
 #define DEE_SOURCE      1
+#endif /* !DEE_SOURCE */
+#ifndef _KOS_SOURCE
 #define _KOS_SOURCE     1
+#endif /* !_KOS_SOURCE */
+#ifndef _BSD_SOURCE
 #define _BSD_SOURCE     1
+#endif /* !_BSD_SOURCE */
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE     1
+#endif /* !_GNU_SOURCE */
+#ifndef _POSIX_C_SOURCE
 #define _POSIX_C_SOURCE 200809L
+#endif /* !_POSIX_C_SOURCE */
+#ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE   500
+#endif /* !_XOPEN_SOURCE */
 
 #include "libfs.h"
 /**/
@@ -216,7 +228,7 @@ DECL_END
 #else
 #   define PATH_MAX 260
 #endif
-#endif /+ !PATH_MAX 
+#endif /* !PATH_MAX */
 
 #ifndef S_ISDIR
 #define S_ISDIR(x) (((x)&STAT_IFMT) == STAT_IFDIR)

@@ -347,17 +347,6 @@ LOCAL void *dee_memrend(void const *p, int byte, size_t num_bytes) {
 	return haystack;
 }
 
-#define memxrend dee_memxrend
-LOCAL void *dee_memxrend(void const *p, int byte, size_t num_bytes) {
-	uint8_t *haystack = (uint8_t *)p;
-	haystack += num_bytes;
-	while (num_bytes--) {
-		if (*--haystack != (uint8_t)byte)
-			break;
-	}
-	return haystack;
-}
-
 #define memlen dee_memlen
 LOCAL size_t dee_memlen(void const *p, int byte, size_t num_bytes) {
 	return (size_t)((uintptr_t)memend(p, byte, num_bytes) - (uintptr_t)p);
@@ -371,11 +360,6 @@ LOCAL size_t dee_memxlen(void const *p, int byte, size_t num_bytes) {
 #define memrlen dee_memrlen
 LOCAL size_t dee_memrlen(void const *p, int byte, size_t num_bytes) {
 	return (size_t)((uintptr_t)memrend(p, byte, num_bytes) - (uintptr_t)p);
-}
-
-#define memxrlen dee_memxrlen
-LOCAL size_t dee_memxrlen(void const *p, int byte, size_t num_bytes) {
-	return (size_t)((uintptr_t)memxrend(p, byte, num_bytes) - (uintptr_t)p);
 }
 
 #define rawmemlen dee_rawmemlen
@@ -398,16 +382,6 @@ LOCAL void *dee_memxchr(void const *__restrict p, int c, size_t n) {
 	return NULL;
 }
 
-#define memxrchr dee_memxrchr
-LOCAL void *dee_memxrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *haystack = (uint8_t *)p + n;
-	while (n--) {
-		if (*--haystack != (uint8_t)c)
-			return haystack;
-	}
-	return NULL;
-}
-
 #define rawmemxchr dee_rawmemxchr
 LOCAL void *dee_rawmemxchr(void const *__restrict p, int c) {
 	uint8_t *haystack = (uint8_t *)p;
@@ -418,24 +392,9 @@ LOCAL void *dee_rawmemxchr(void const *__restrict p, int c) {
 	return haystack;
 }
 
-#define rawmemxrchr dee_rawmemxrchr
-LOCAL void *dee_rawmemxrchr(void const *__restrict p, int c) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (;;) {
-		if (*--haystack != (uint8_t)c)
-			break;
-	}
-	return haystack;
-}
-
 #define rawmemxlen dee_rawmemxlen
 LOCAL size_t dee_rawmemxlen(void const *p, int byte) {
 	return (size_t)((uintptr_t)rawmemxchr(p, byte) - (uintptr_t)p);
-}
-
-#define rawmemxrlen dee_rawmemxrlen
-LOCAL size_t dee_rawmemxrlen(void const *p, int byte) {
-	return (size_t)((uintptr_t)rawmemxrchr(p, byte) - (uintptr_t)p);
 }
 
 #if defined(_MSC_VER) || defined(__USE_DOS) || defined(__CRT_DOS)
@@ -475,6 +434,20 @@ LOCAL void *dee_memcasemem(void const *__restrict haystack, size_t haystack_len,
 	return NULL;
 }
 
+#define memrev dee_memrev
+LOCAL void *dee_memrev(void *__restrict buf, size_t n) {
+	uint8_t *iter, *end;
+	end = (iter = (uint8_t *)buf) + n;
+	while (iter < end) {
+		uint8_t temp = *iter;
+		*iter++      = *--end;
+		*end         = temp;
+	}
+	return buf;
+}
+
+#endif /* !__USE_KOS */
+
 #define memrmem dee_memrmem
 LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_len,
                         void const *__restrict needle, size_t needle_len) {
@@ -493,6 +466,46 @@ LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_len,
 	return NULL;
 }
 
+#define memxrchr dee_memxrchr
+LOCAL void *dee_memxrchr(void const *__restrict p, int c, size_t n) {
+	uint8_t *haystack = (uint8_t *)p + n;
+	while (n--) {
+		if (*--haystack != (uint8_t)c)
+			return haystack;
+	}
+	return NULL;
+}
+
+#define memxrend dee_memxrend
+LOCAL void *dee_memxrend(void const *p, int byte, size_t num_bytes) {
+	uint8_t *haystack = (uint8_t *)p;
+	haystack += num_bytes;
+	while (num_bytes--) {
+		if (*--haystack != (uint8_t)byte)
+			break;
+	}
+	return haystack;
+}
+
+#define memxrlen dee_memxrlen
+LOCAL size_t dee_memxrlen(void const *p, int byte, size_t num_bytes) {
+	return (size_t)((uintptr_t)memxrend(p, byte, num_bytes) - (uintptr_t)p);
+}
+
+#define rawmemxrchr dee_rawmemxrchr
+LOCAL void *dee_rawmemxrchr(void const *__restrict p, int c) {
+	uint8_t *haystack = (uint8_t *)p;
+	for (;;) {
+		if (*--haystack != (uint8_t)c)
+			break;
+	}
+	return haystack;
+}
+
+#define rawmemxrlen dee_rawmemxrlen
+LOCAL size_t dee_rawmemxrlen(void const *p, int byte) {
+	return (size_t)((uintptr_t)rawmemxrchr(p, byte) - (uintptr_t)p);
+}
 
 LOCAL void *dee_memlowerrchr(void const *__restrict p, uint8_t c, size_t n) {
 	uint8_t *iter = (uint8_t *)p + n;
@@ -527,19 +540,6 @@ LOCAL void *dee_memcasermem(void const *__restrict haystack, size_t haystack_len
 	return NULL;
 }
 
-#define memrev dee_memrev
-LOCAL void *dee_memrev(void *__restrict buf, size_t n) {
-	uint8_t *iter, *end;
-	end = (iter = (uint8_t *)buf) + n;
-	while (iter < end) {
-		uint8_t temp = *iter;
-		*iter++      = *--end;
-		*end         = temp;
-	}
-	return buf;
-}
-
-#endif /* !__USE_KOS */
 
 
 

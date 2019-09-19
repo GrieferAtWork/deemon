@@ -89,11 +89,11 @@ typedef struct deque {
 
 /* Returns l-values for the front, back or base-relative i'th item of the given deque. */
 #define DEQUE_HEAD(x) \
-	(ASSERT((x)->d_size), (x)->d_head->db_items[DEQUE_HEADFREE(x)])
-#define DEQUE_TAIL(x)                                                                    \
-	(ASSERT((x)->d_size), (x)->d_head == (x)->d_tail                                     \
-	                      ? (x)->d_tail->db_items[(x)->d_head_idx + (x)->d_head_use - 1] \
-	                      : (x)->d_tail->db_items[DEQUE_TAILUSED(x) - 1])
+	(*(ASSERT((x)->d_size), &(x)->d_head->db_items[DEQUE_HEADFREE(x)]))
+#define DEQUE_TAIL(x)                                                                       \
+	(*(ASSERT((x)->d_size), (x)->d_head == (x)->d_tail                                      \
+	                        ? &(x)->d_tail->db_items[(x)->d_head_idx + (x)->d_head_use - 1] \
+	                        : &(x)->d_tail->db_items[DEQUE_TAILUSED(x) - 1]))
 #define DEQUE_ITEM(x, i) (*Deque_ItemPointer(x, i))
 
 
