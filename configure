@@ -50,7 +50,7 @@ WITHOUT_DEX_SPECIFIC=""
 WITH_DEBUG=""
 WITH_THREADS=""
 WITH_LIBFFI=""
-CONFIG_OPTIMIZE=""
+WITH_OPTIMIZE=""
 CONFIG_PTHREAD=""
 WITH_KOS_SYSTEM_HEADERS=""
 
@@ -133,6 +133,7 @@ set_with_feature() {
 		dex-win32)               set_dex_specific "WIN32" "$2" ;;
 		kos-system-headers)      WITH_KOS_SYSTEM_HEADERS="$2" ;;
 		debug)                   WITH_DEBUG="$2" ;;
+		optimize=*)              WITH_OPTIMIZE="$(echo "$1" | cut -d '=' -f 2)" ;;
 		threads)                 WITH_THREADS="$2" ;;
 		libffi)                  WITH_LIBFFI="$2" ;;
 		trace-refchanges)        set_feature_pair "CONFIG_TRACE_REFCHANGES" "CONFIG_NO_TRACE_REFCHANGES" "$2" ;;
@@ -162,7 +163,13 @@ set_with_feature() {
 			;;
 		deemon-path=*)
 			del_feature_startswith "CONFIG_DEEMON_PATH="
-			add_feature "CONFIG_DEEMON_PATH=$(echo "$1" | cut -d '=' -f 2)"
+			local PATH_EXPR=""
+			# https://stackoverflow.com/questions/918886/how-do-i-split-a-string-on-a-delimiter-in-bash
+			IFS=';' read -ra PATH_LIST <<< "$(echo "$1" | cut -d '=' -f 2)"
+			for p in "${PATH_LIST[@]}"; do
+				PATH_EXPR="${PATH_EXPR}p(\"${p}\")"
+			done
+			add_feature "CONFIG_DEEMON_PATH=(p)$PATH_EXPR"
 			;;
 		*)
 			echo "Unknown with-feature $1"
@@ -210,7 +217,6 @@ while [[ $# -gt 0 ]]; do
 		--config-core-cflags=*)   CONFIG_CORE_CFLAGS="$CONFIG_CORE_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-core-ldflags=*)  CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-core-libs=*)     CONFIG_CORE_LIBS="$CONFIG_CORE_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-optimize=*)      CONFIG_OPTIMIZE="$(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-pthread=*)       CONFIG_PTHREAD="$(echo "$1" | cut -d '=' -f 2)" ;;
 		--conf=*)                 FEATURES="$FEATURES $(echo "$1" | cut -d '=' -f 2)" ;;
 		--with-*)    set_with_feature "${1:7}" "1" ;;
@@ -232,6 +238,7 @@ if [ -z "$BLD_PATH" ]; then BLD_PATH="$BLD_ROOT/build/deemon"; fi
 if [ -z "$CONFIG_CC" ]; then CONFIG_CC="${CONFIG_CROSS_PREFIX}gcc"; fi
 if [ -z "$CONFIG_CXX" ]; then CONFIG_CXX="${CONFIG_CROSS_PREFIX}g++"; fi
 if [ -z "$WITH_DEBUG" ]; then WITH_DEBUG="1"; fi
+if [ -z "$WITH_OPTIMIZE" ]; then WITH_OPTIMIZE="-O2"; fi
 if [ -z "$WITH_THREADS" ]; then WITH_THREADS="1"; fi
 if [ -z "$WITH_LIBFFI" ]; then WITH_LIBFFI="1"; fi
 
@@ -479,7 +486,7 @@ fi
 ## Apply configuration options
 if [[ "$WITH_DEBUG" == "1" ]]; then CONFIG_CFLAGS="$CONFIG_CFLAGS -g"; fi
 if [[ "$WITH_THREADS" == "0" ]]; then add_feature "CONFIG_NO_THREADS"; fi
-if ! [ -z "$CONFIG_OPTIMIZE" ]; then CONFIG_CFLAGS="$CONFIG_CFLAGS $CONFIG_OPTIMIZE"; fi
+if ! [ -z "$WITH_OPTIMIZE" ]; then CONFIG_CFLAGS="$CONFIG_CFLAGS $WITH_OPTIMIZE"; fi
 if ! [ -z "$CONFIG_PTHREAD" ]; then CONFIG_CFLAGS="$CONFIG_CFLAGS $CONFIG_PTHREAD"; fi
 case "$TARGET" in
 	*CYGWIN* | *Cygwin* | *cygwin*)
@@ -547,13 +554,20 @@ fi
 unlink "$BLD_ROOT/include/deemon/config.h" > /dev/null 2>&1
 if ! [ -z "$FEATURES" ]; then
 	mkdir -p "$BLD_ROOT/include/deemon"
-	cmd echo "/* Automatically generated file (by ./configure). - Do not edit! */" > "$BLD_ROOT/include/deemon/config.h"
+	cat > "$BLD_ROOT/include/deemon/config.h" <<EOF
+/* Automatically generated file (by ./configure). - Do not edit! */
+EOF
 	for feat in $FEATURES; do
+		feat="$(echo "${feat}" | sed -e 's/^[ \t]*//')"
 		if [[ "$feat" == *"="* ]]; then
-			local N="$(echo "$feat" | cut -d '=' -f 1)"
-			local V="$(echo "$feat" | cut -d '=' -f 2)"
-			echo "#define $N $V" >> "$BLD_ROOT/include/deemon/config.h"
-		else
+			N="$(echo "$feat" | cut -d '=' -f 1)"
+			V="$(echo "$feat" | cut -d '=' -f 2)"
+			if [[ "$V" == "("* ]]; then
+				echo "#define $N$V" >> "$BLD_ROOT/include/deemon/config.h"
+			else
+				echo "#define $N $V" >> "$BLD_ROOT/include/deemon/config.h"
+			fi
+		elif ! [ -z "$feat" ]; then
 			echo "#define $feat 1" >> "$BLD_ROOT/include/deemon/config.h"
 		fi
 	done
