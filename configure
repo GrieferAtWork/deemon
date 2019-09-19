@@ -40,6 +40,7 @@ CONFIG_CORE_CFLAGS=""
 CONFIG_CORE_LDFLAGS=""
 CONFIG_CORE_LIBS=""
 
+LIBFFI_TARGET=""
 TARGET=""
 TARGET_IS_AUTO=""
 TARGET_CPU=""
@@ -59,7 +60,7 @@ WITH_KOS_SYSTEM_HEADERS=""
 del_feature() {
 	FEATURES="$(for feat in $FEATURES; do
 		if [[ "$feat" != "$1" ]]; then
-			print " $feat"
+			printf " $feat"
 		fi
 	done)"
 	if ! [ -z "$FEATURES" ]; then
@@ -70,7 +71,7 @@ del_feature() {
 del_feature_startswith() {
 	FEATURES="$(for feat in $FEATURES; do
 		if [[ "$feat" != "$1"* ]]; then
-			print " $feat"
+			printf " $feat"
 		fi
 	done)"
 	if ! [ -z "$FEATURES" ]; then
@@ -97,7 +98,7 @@ set_feature_pair() {
 add_dex_specific() {
 	WITHOUT_DEX_SPECIFIC="$(for name in $WITHOUT_DEX_SPECIFIC; do
 		if [[ "$name" != "$1" ]]; then
-			print " $name"
+			printf " $name"
 		fi
 	done)"
 	if ! [ -z "$WITHOUT_DEX_SPECIFIC" ]; then
@@ -150,8 +151,8 @@ set_with_feature() {
 			add_feature "CONFIG_DEEMON_HOME_ENVIRON=$(echo "$1" | cut -d '=' -f 2)"
 			;;
 		deemon-home=*)
-			del_feature_startswith "CONFIG_DEEMON_PATH="
-			add_feature "CONFIG_DEEMON_PATH=$(echo "$1" | cut -d '=' -f 2)"
+			del_feature_startswith "CONFIG_DEEMON_HOME="
+			add_feature "CONFIG_DEEMON_HOME=\"$(echo "$1" | cut -d '=' -f 2)\""
 			;;
 		deemon-path-environ)
 			set_feature_pair "" "CONFIG_NO_DEEMON_PATH_ENVIRON" "$2"
@@ -195,6 +196,9 @@ while [[ $# -gt 0 ]]; do
 			## e.g. x86_64-pc-cygwin
 			TARGET="$(echo "$1" | cut -d '=' -f 2)"
 			;;
+		--libffi-target=*)
+			LIBFFI_TARGET="$(echo "$1" | cut -d '=' -f 2)"
+			;;
 		--build-root=*)           BLD_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
 		--source-root=*)          SRC_ROOT="$(echo "$1" | cut -d '=' -f 2)" ;;
 		--bin-path=*)             BIN_PATH="$(echo "$1" | cut -d '=' -f 2)" ;;
@@ -207,9 +211,9 @@ while [[ $# -gt 0 ]]; do
 		--config-cflags=*)        CONFIG_CFLAGS="$CONFIG_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-ldflags=*)       CONFIG_LDFLAGS="$CONFIG_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-libs=*)          CONFIG_LIBS="$CONFIG_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-libm=*)          CONFIG_LIBM="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-libdl=*)         CONFIG_LIBDL="$(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-libsocket=*)     CONFIG_LIBSOCKET="$(echo "$1" | cut -d '=' -f 2)" ;;
+		--config-libm=*)          CONFIG_LIBM="$CONFIG_LIBM $(echo "$1" | cut -d '=' -f 2)" ;;
+		--config-libdl=*)         CONFIG_LIBDL="$CONFIG_LIBDL $(echo "$1" | cut -d '=' -f 2)" ;;
+		--config-libsocket=*)     CONFIG_LIBSOCKET="$CONFIG_LIBSOCKET $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-dex-cc=*)        CONFIG_DEX_CC="$(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-dex-cflags=*)    CONFIG_DEX_CFLAGS="$CONFIG_DEX_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-dex-ldflags=*)   CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
@@ -217,7 +221,7 @@ while [[ $# -gt 0 ]]; do
 		--config-core-cflags=*)   CONFIG_CORE_CFLAGS="$CONFIG_CORE_CFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-core-ldflags=*)  CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS $(echo "$1" | cut -d '=' -f 2)" ;;
 		--config-core-libs=*)     CONFIG_CORE_LIBS="$CONFIG_CORE_LIBS $(echo "$1" | cut -d '=' -f 2)" ;;
-		--config-pthread=*)       CONFIG_PTHREAD="$(echo "$1" | cut -d '=' -f 2)" ;;
+		--config-pthread=*)       CONFIG_PTHREAD="$CONFIG_PTHREAD $(echo "$1" | cut -d '=' -f 2)" ;;
 		--conf=*)                 FEATURES="$FEATURES $(echo "$1" | cut -d '=' -f 2)" ;;
 		--with-*)    set_with_feature "${1:7}" "1" ;;
 		--without-*) set_with_feature "${1:10}" "0" ;;
@@ -403,6 +407,18 @@ elif [[ "$WITH_LIBFFI" == "1" ]]; then
 		rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
 		cmd mkdir -p "$BLD_PATH/libffi"
 		cmd cd "$BLD_PATH/libffi"
+		if [ -z "$LIBFFI_TARGET" ]; then
+			case "$TARGET" in
+				*-kos | *-kos-*)
+					# libffi doesn't know KOS, but it's close
+					# enough to linux, so we just use that
+					LIBFFI_TARGET="$TARGET_CPU-linux-gnu"
+					;;
+				*)
+					LIBFFI_TARGET="$TARGET"
+					;;
+			esac
+		fi
 		(
 			export CROSS_PREFIX="$CONFIG_CROSS_PREFIX"
 			export CC="$CONFIG_CC"
@@ -411,7 +427,7 @@ elif [[ "$WITH_LIBFFI" == "1" ]]; then
 			export AS="${CONFIG_CROSS_PREFIX}as"
 			export AR="${CONFIG_CROSS_PREFIX}ar"
 			export NM="${CONFIG_CROSS_PREFIX}nm"
-			export TARGET="$TARGET"
+			export TARGET="$LIBFFI_TARGET"
 			if [[ "$TARGET" == "i686-w64-mingw32" ]]; then
 				# Workaround for a configure-detection-bug:
 				# https://bugzilla.mozilla.org/show_bug.cgi?id=1336569
@@ -419,8 +435,8 @@ elif [[ "$WITH_LIBFFI" == "1" ]]; then
 				export CXXFLAGS="$CXXFLAGS -DSYMBOL_UNDERSCORE";
 			fi
 			cmd bash "$SRC_ROOT/src/dex/ctypes/ffi/libffi/configure" \
-				--host="$TARGET" \
-				--target="$TARGET" \
+				--host="$LIBFFI_TARGET" \
+				--target="$LIBFFI_TARGET" \
 				--enable-static \
 				--prefix "$BLD_PATH/libffi"
 		)
