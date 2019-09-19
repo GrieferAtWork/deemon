@@ -499,7 +499,9 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
 	DREF DeeIntObject *result;
 	int sign        = 1;
 	uint8_t abs_val = (uint8_t)val;
-	if (val < 0) {
+	if (val <= 0) {
+		if (!val)
+			return_reference_((DeeObject *)&DeeInt_Zero);
 		sign    = -1;
 		abs_val = (uint8_t)0 - (uint8_t)val;
 	}
@@ -513,6 +515,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
 
 PUBLIC DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val) {
 	DREF DeeIntObject *result;
+	if (!val)
+		return_reference_((DeeObject *)&DeeInt_Zero);
 	result = DeeInt_Alloc(1);
 	if likely(result) {
 		result->ob_size     = 1;
@@ -526,6 +530,8 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val) {
 PUBLIC DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
 	DREF DeeIntObject *result;
 #if DIGIT_BITS >= 16
+	if (!val)
+		return_reference_((DeeObject *)&DeeInt_Zero);
 	result = DeeInt_Alloc(1);
 	if likely(result) {
 		result->ob_size     = 1;
@@ -627,17 +633,23 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
 	DREF DeeIntObject *result;
 	int sign         = 1;
 	uint16_t abs_val = (uint16_t)val;
-	if (val < 0) {
+#if DIGIT_BITS >= 16
+	if (val <= 0) {
+		if (!val)
+			return_reference_((DeeObject *)&DeeInt_Zero);
 		sign    = -1;
 		abs_val = (uint16_t)0 - (uint16_t)val;
 	}
-#if DIGIT_BITS >= 16
 	result = DeeInt_Alloc(1);
 	if likely(result) {
 		result->ob_size     = sign;
 		result->ob_digit[0] = (digit)abs_val;
 	}
 #elif DIGIT_BITS >= 8
+	if (val < 0) {
+		sign    = -1;
+		abs_val = (uint16_t)0 - (uint16_t)val;
+	}
 	if (!(abs_val >> DIGIT_BITS)) {
 		if (!val)
 			return_reference_((DeeObject *)&DeeInt_Zero);
