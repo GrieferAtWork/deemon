@@ -1190,7 +1190,7 @@ INTDEF struct class_attribute empty_class_attributes[];
 /* @return: * :        A reference to the object that got loaded.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
                    uint8_t **__restrict preader) {
 	DREF DeeObject *result = ITER_DONE;
@@ -1959,7 +1959,7 @@ corrupt:
 /* @return: * :        Newly heap-allocated vector of objects (length is stored in `*pcount').
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN DREF DeeObject **DCALL
+INTERN WUNUSED DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
                          uint16_t *__restrict pcount,
                          uint8_t **__restrict preader,
@@ -2205,7 +2205,7 @@ handle_map_error:
 /* @return: * :        New reference to the code object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN DREF DeeCodeObject *DCALL
+INTERN WUNUSED DREF DeeCodeObject *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
                  uint8_t **__restrict preader) {
 	DREF DeeCodeObject *result;

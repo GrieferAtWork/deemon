@@ -42,8 +42,8 @@
 DECL_BEGIN
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
-INTDEF DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **argv);
-INTDEF DREF DeeObject *DCALL type_callattr_kw(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **argv);
+INTDEF WUNUSED DREF DeeObject *DCALL type_callattr_kw(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 #define type_callattr_tuple(self, name, args)        type_callattr(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define type_callattr_tuple_kw(self, name, args, kw) type_callattr_kw(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)

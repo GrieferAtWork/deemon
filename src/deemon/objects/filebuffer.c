@@ -1687,7 +1687,7 @@ PRIVATE struct type_getset buffer_getsets[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 buffer_class_sync(DeeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))

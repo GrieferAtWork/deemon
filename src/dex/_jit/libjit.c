@@ -40,7 +40,7 @@ DECL_BEGIN
  * starts with a leading underscore, indicative of this fact. */
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 libjit_exec_f(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeObject *globals;

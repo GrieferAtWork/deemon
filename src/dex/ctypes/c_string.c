@@ -46,7 +46,7 @@
 
 DECL_BEGIN
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memcpy(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
@@ -63,7 +63,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempcpy(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
@@ -80,7 +80,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memccpy(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
@@ -114,7 +114,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memset(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	int byte;
@@ -143,7 +143,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempset(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	int byte;
@@ -172,7 +172,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memmove(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
@@ -210,7 +210,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_mempmove(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
@@ -546,7 +546,7 @@ LOCAL void *dee_memcasermem(void const *__restrict haystack, size_t haystack_len
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -580,7 +580,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -615,7 +615,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memend(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -647,7 +647,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrend(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -680,7 +680,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -713,7 +713,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -747,7 +747,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -778,7 +778,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -809,7 +809,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -841,7 +841,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemrlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -874,7 +874,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -908,7 +908,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxrchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -943,7 +943,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxend(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -975,7 +975,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxrend(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -1008,7 +1008,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -1041,7 +1041,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memxrlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -1075,7 +1075,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -1106,7 +1106,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxrchr(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	void *result;
@@ -1129,7 +1129,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -1153,7 +1153,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_rawmemxrlen(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	size_t result;
@@ -1179,7 +1179,7 @@ err:
 
 
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcmp(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	int result;
@@ -1204,7 +1204,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasecmp(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	int result;
@@ -1232,7 +1232,7 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memmem(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	void *result;
@@ -1288,7 +1288,7 @@ err:
 }
 
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasemem(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	void *result;
@@ -1350,7 +1350,7 @@ err:
 
 
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memrmem(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	void *result;
@@ -1406,7 +1406,7 @@ err:
 
 
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 capi_memcasermem(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_a, *ob_b;
 	void *result;
@@ -1468,7 +1468,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_memrev(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst;
 	union pointer dst;
@@ -1501,7 +1501,7 @@ err:
 #endif /* !__USE_KOS */
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strlen(size_t argc, DeeObject **argv) {
 	DeeObject *ob_str;
 	union pointer str;
@@ -1516,7 +1516,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strend(size_t argc, DeeObject **argv) {
 	DeeObject *ob_str;
 	union pointer str;
@@ -1535,7 +1535,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnlen(size_t argc, DeeObject **argv) {
 	DeeObject *ob_str;
 	size_t maxlen;
@@ -1551,7 +1551,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnend(size_t argc, DeeObject **argv) {
 	DeeObject *ob_str;
 	union pointer str;
@@ -1573,7 +1573,7 @@ err:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strchr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1583,7 +1583,7 @@ capi_strchr(size_t argc, DeeObject **argv) {
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strrchr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1592,7 +1592,7 @@ capi_strrchr(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnchr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1601,7 +1601,7 @@ capi_strnchr(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnrchr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1610,7 +1610,7 @@ capi_strnrchr(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_stroff(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1619,7 +1619,7 @@ capi_stroff(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strroff(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1628,7 +1628,7 @@ capi_strroff(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnoff(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1637,7 +1637,7 @@ capi_strnoff(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnroff(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1646,7 +1646,7 @@ capi_strnroff(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strchrnul(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1655,7 +1655,7 @@ capi_strchrnul(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strrchrnul(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1664,7 +1664,7 @@ capi_strrchrnul(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnchrnul(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1673,7 +1673,7 @@ capi_strnchrnul(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnrchrnul(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1682,7 +1682,7 @@ capi_strnrchrnul(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcmp(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1691,7 +1691,7 @@ capi_strcmp(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncmp(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1700,7 +1700,7 @@ capi_strncmp(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcasecmp(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1709,7 +1709,7 @@ capi_strcasecmp(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncasecmp(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1718,7 +1718,7 @@ capi_strncasecmp(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcpy(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1727,7 +1727,7 @@ capi_strcpy(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcat(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1736,7 +1736,7 @@ capi_strcat(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncpy(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1745,7 +1745,7 @@ capi_strncpy(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncat(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1754,7 +1754,7 @@ capi_strncat(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_stpcpy(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1763,7 +1763,7 @@ capi_stpcpy(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_stpncpy(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1772,7 +1772,7 @@ capi_stpncpy(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strstr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1781,7 +1781,7 @@ capi_strstr(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcasestr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1790,7 +1790,7 @@ capi_strcasestr(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strverscmp(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1799,7 +1799,7 @@ capi_strverscmp(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strtok(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1808,7 +1808,7 @@ capi_strtok(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_index(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1817,7 +1817,7 @@ capi_index(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_rindex(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1826,7 +1826,7 @@ capi_rindex(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strspn(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1835,7 +1835,7 @@ capi_strspn(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcspn(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1844,7 +1844,7 @@ capi_strcspn(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strpbrk(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1853,7 +1853,7 @@ capi_strpbrk(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcoll(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1862,7 +1862,7 @@ capi_strcoll(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncoll(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1871,7 +1871,7 @@ capi_strncoll(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strcasecoll(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1880,7 +1880,7 @@ capi_strcasecoll(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strncasecoll(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1889,7 +1889,7 @@ capi_strncasecoll(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strxfrm(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1898,7 +1898,7 @@ capi_strxfrm(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strrev(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1907,7 +1907,7 @@ capi_strrev(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnrev(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1916,7 +1916,7 @@ capi_strnrev(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strlwr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1925,7 +1925,7 @@ capi_strlwr(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strupr(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1934,7 +1934,7 @@ capi_strupr(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strset(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1943,7 +1943,7 @@ capi_strset(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strnset(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1952,7 +1952,7 @@ capi_strnset(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strfry(size_t argc, DeeObject **argv) {
 	(void)argc;
 	(void)argv;
@@ -1961,8 +1961,8 @@ capi_strfry(size_t argc, DeeObject **argv) {
 	return NULL;
 }
 
-//INTERN DREF DeeObject *DCALL capi_strsep(size_t argc, DeeObject **argv);
-//INTERN DREF DeeObject *DCALL capi_strtok_r(size_t argc, DeeObject **argv);
+//INTERN WUNUSED DREF DeeObject *DCALL capi_strsep(size_t argc, DeeObject **argv);
+//INTERN WUNUSED DREF DeeObject *DCALL capi_strtok_r(size_t argc, DeeObject **argv);
 
 
 DECL_END

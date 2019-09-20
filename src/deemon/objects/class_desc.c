@@ -191,7 +191,7 @@ done:
 }
 
 #define DEFINE_COTI_COMPARE(name, op)                                                        \
-	PRIVATE DREF DeeObject *DCALL                                                            \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                            \
 	name(ClassOperatorTableIterator *__restrict self,                                        \
 	     ClassOperatorTableIterator *__restrict other) {                                     \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &ClassOperatorTableIterator_Type)) \
@@ -1773,7 +1773,7 @@ err:
 }
 
 
-PRIVATE DREF ClassDescriptor *DCALL
+PRIVATE WUNUSED DREF ClassDescriptor *DCALL
 cd_init_kw(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
 	DREF DeeObject *iterator, *elem, *data[2];
@@ -2183,7 +2183,7 @@ err_index:
 	return err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 ot_nsi_xchitem(ObjectTable *__restrict self, size_t index,
                DeeObject *__restrict newval) {
 	DREF DeeObject *oldval;

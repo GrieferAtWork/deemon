@@ -185,7 +185,7 @@ splititer_bool(StringSplitIterator *__restrict self) {
 }
 
 #define DEFINE_SPLITITER_CMP(name, op)                                     \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(StringSplitIterator *__restrict self,                             \
 	     StringSplitIterator *__restrict other) {                          \
 		uint8_t *x, *y;                                                    \

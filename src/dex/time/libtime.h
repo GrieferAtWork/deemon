@@ -167,13 +167,13 @@ INTDEF DeeTypeObject DeeTime_Type;
 #define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTime_Type)
 
 EXPDEF DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);
-INTDEF DREF DeeObject *DCALL DeeTime_New_(dtime_t microseconds, uint16_t kind);
-INTDEF DREF DeeObject *DCALL DeeTime_NewMonths_(dtime_half_t num_months, uint16_t kind);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_New_(dtime_t microseconds, uint16_t kind);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_NewMonths_(dtime_half_t num_months, uint16_t kind);
 #define DeeTime_New(microseconds, repr)     DeeTime_New_(microseconds, TIME_KIND(TIME_MICROSECONDS, repr))
 #define DeeTime_NewMonths(num_months, repr) DeeTime_NewMonths_(num_months, TIME_KIND(TIME_MONTHS, repr))
 INTDEF dtime_t DCALL DeeTime_Get(DeeTimeObject const *__restrict self);
 #ifdef HAVE_128BIT_TIME
-INTDEF DREF DeeObject *DCALL DeeTime_New64_(uint64_t microseconds, uint16_t kind);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_New64_(uint64_t microseconds, uint16_t kind);
 #define DeeTime_New64(microseconds, repr) DeeTime_New64_(microseconds, TIME_KIND(TIME_MICROSECONDS, repr))
 INTDEF WUNUSED NONNULL((1)) uint64_t DCALL DeeTime_Get64(DeeTimeObject const *__restrict self);
 #else /* HAVE_128BIT_TIME */

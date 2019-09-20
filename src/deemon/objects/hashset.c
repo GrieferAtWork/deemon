@@ -53,7 +53,7 @@ PRIVATE struct hashset_item empty_set_items[1] = {
 
 #define dummy      (&DeeDict_Dummy)
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeObject **__restrict items) {
 	DREF Set *result;
 	/* Allocate the set object. */
@@ -1250,7 +1250,7 @@ setiterator_bool(SetIterator *__restrict self) {
 }
 
 #define DEFINE_ITERATOR_COMPARE(name, op)                                    \
-	PRIVATE DREF DeeObject *DCALL                                            \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                            \
 	name(SetIterator *__restrict self,                                       \
 	     SetIterator *__restrict other) {                                    \
 		if (DeeObject_AssertType((DeeObject *)other, &HashSetIterator_Type)) \
@@ -1834,7 +1834,7 @@ PRIVATE struct type_method set_methods[] = {
 
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 set_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
 	return DeeFloat_New(1.0);
 }

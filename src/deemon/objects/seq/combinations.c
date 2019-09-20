@@ -264,7 +264,7 @@ PRIVATE struct type_member comiter_members[] = {
 
 #ifdef CONFIG_NO_THREADS
 #define DEFINE_COMITER_COMPARE(name, if_diff_combi, op)             \
-	PRIVATE DREF DeeObject *DCALL                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
 	name(CombinationsIterator *__restrict self,                     \
 	     CombinationsIterator *__restrict other) {                  \
 		int result;                                                 \
@@ -280,7 +280,7 @@ PRIVATE struct type_member comiter_members[] = {
 	}
 #else
 #define DEFINE_COMITER_COMPARE(name, if_diff_combi, op)             \
-	PRIVATE DREF DeeObject *DCALL                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
 	name(CombinationsIterator *__restrict self,                     \
 	     CombinationsIterator *__restrict other) {                  \
 		int result;                                                 \

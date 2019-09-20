@@ -269,7 +269,7 @@ cell_hash(Cell *__restrict self) {
 
 
 #define DEFINE_CELL_COMPARE(name, op)                                \
-	PRIVATE DREF DeeObject *DCALL                                    \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                    \
 	name(Cell *self, Cell *other) {                                  \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeCell_Type)) \
 			return NULL;                                             \
@@ -302,7 +302,7 @@ PRIVATE struct type_getset cell_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_get(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "|o:get", &def))
@@ -320,7 +320,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_delete(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval;
 	if (DeeArg_Unpack(argc, argv, ":delete"))
@@ -334,7 +334,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_pop(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:pop", &def))
@@ -352,7 +352,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_set(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *newval;
 	if (DeeArg_Unpack(argc, argv, "o:set", &newval))
@@ -366,7 +366,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_xch(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *value, *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:xch", &value, &def))
@@ -387,7 +387,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_cmpdel(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *result;
 	if (DeeArg_Unpack(argc, argv, "o:cmpdel", &oldval))
@@ -399,7 +399,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_cmpxch(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *newval = NULL, *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|oo:cmpxch", &oldval, &newval, &def))
@@ -427,7 +427,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 cell_cmpset(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *newval = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:cmpset", &oldval, &newval))

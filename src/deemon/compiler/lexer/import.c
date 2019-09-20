@@ -61,7 +61,7 @@ LOCAL unsigned int DCALL dot_count(tok_t tk) {
 	return 1;
 }
 
-PRIVATE DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 import_module_by_name(DeeStringObject *__restrict module_name,
                       struct ast_loc *loc) {
 	DREF DeeModuleObject *result;
@@ -236,7 +236,7 @@ err:
 }
 
 
-INTERN DREF DeeModuleObject *DCALL parse_module_byname(bool for_alias) {
+INTERN WUNUSED DREF DeeModuleObject *DCALL parse_module_byname(bool for_alias) {
 	DREF DeeModuleObject *result;
 	DREF DeeStringObject *module_name;
 	struct unicode_printer name = UNICODE_PRINTER_INIT;
@@ -297,7 +297,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_import_single(struct TPPKeyword *__restrict import_name) {
 	struct symbol *extern_symbol;
 	extern_symbol = ast_parse_import_single_sym(import_name);
@@ -823,7 +823,7 @@ err:
 }
 
 
-INTDEF DREF struct ast *FCALL ast_sym_import_from_deemon(void);
+INTDEF WUNUSED DREF struct ast *FCALL ast_sym_import_from_deemon(void);
 
 INTERN int FCALL ast_parse_post_import(void) {
 	/* - import deemon;
@@ -1043,7 +1043,7 @@ err:
 	return -1;
 }
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_import_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *result;
 	struct ast_loc import_loc;
@@ -1079,7 +1079,7 @@ err:
 }
 
 
-INTERN DREF struct ast *FCALL ast_parse_import(void) {
+INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 	DREF DeeModuleObject *module;
 	DREF struct ast *result;
 	struct ast_loc import_loc;

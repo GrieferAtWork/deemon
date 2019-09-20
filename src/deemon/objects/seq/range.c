@@ -354,7 +354,7 @@ PRIVATE struct type_member ri_members[] = {
 };
 
 #define DEFINE_RANGEITERATOR_COMPARE(name, compare_object)                         \
-	PRIVATE DREF DeeObject *DCALL                                                  \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                  \
 	name(RangeIterator *__restrict self,                                           \
 	     RangeIterator *__restrict other) {                                        \
 		DREF DeeObject *my_index, *ot_index, *result;                              \
@@ -376,7 +376,7 @@ PRIVATE struct type_member ri_members[] = {
 		return NULL;                                                               \
 	}
 #define DEFINE_RANGEITERATOR_COMPARE_R(name, compare_object)                       \
-	PRIVATE DREF DeeObject *DCALL                                                  \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                  \
 	name(RangeIterator *__restrict self,                                           \
 	     RangeIterator *__restrict other) {                                        \
 		DREF DeeObject *my_index, *ot_index, *result;                              \
@@ -1190,7 +1190,7 @@ PRIVATE struct type_member iri_members[] = {
 };
 
 #define DEFINE_IRI_COMPARE(name, op)                                     \
-	PRIVATE DREF DeeObject *DCALL                                        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                        \
 	name(IntRangeIterator *__restrict self,                              \
 	     IntRangeIterator *__restrict other) {                           \
 		if (DeeObject_AssertTypeExact(other, &SeqIntRangeIterator_Type)) \
@@ -1200,7 +1200,7 @@ PRIVATE struct type_member iri_members[] = {
 		return NULL;                                                     \
 	}
 #define DEFINE_IRI_COMPARE_R(name, op)                                   \
-	PRIVATE DREF DeeObject *DCALL                                        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                        \
 	name(IntRangeIterator *__restrict self,                              \
 	     IntRangeIterator *__restrict other) {                           \
 		if (DeeObject_AssertTypeExact(other, &SeqIntRangeIterator_Type)) \
@@ -1592,7 +1592,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 #undef ALWAYS_USE_OBJECT_RANGES
 /* #define ALWAYS_USE_OBJECT_RANGES 1 */
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeRange_NewInt(dssize_t begin,
                 dssize_t end,
                 dssize_t step) {

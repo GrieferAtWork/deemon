@@ -42,7 +42,7 @@ DECL_BEGIN
 #define BUILTIN_REUSE(name, object, flags) /* nothing */
 #include "builtins.def"
 
-enum{
+enum {
 #define BUILTIN(name, object, flags) _id_##name,
 #include "builtins.def"
 	num_builtins_sym

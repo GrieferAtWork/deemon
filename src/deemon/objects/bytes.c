@@ -439,7 +439,7 @@ err:
 
 
 /* Construct a bytes-buffer from `self', using the generic object-buffer interface. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeObject_Bytes(DeeObject *__restrict self,
                 unsigned int flags,
                 size_t start, size_t end) {
@@ -470,7 +470,7 @@ err_r:
 }
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, uint8_t init) {
 	DREF Bytes *result;
 	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) +
@@ -492,7 +492,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes) {
 	DREF Bytes *result;
 	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) +
@@ -534,7 +534,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self,
                       size_t num_bytes) {
 	DREF Bytes *result, *new_result;
@@ -565,7 +565,7 @@ again:
 	return (DREF DeeObject *)new_result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self,
                         size_t num_bytes) {
 	DREF Bytes *result;
@@ -593,7 +593,7 @@ DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self,
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
                  size_t num_bytes, unsigned int flags) {
 	DREF Bytes *result;
@@ -637,7 +637,7 @@ bytes_visit(Bytes *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->b_orig);
 }
 
-PRIVATE DREF Bytes *DCALL bytes_ctor(void) {
+PRIVATE WUNUSED DREF Bytes *DCALL bytes_ctor(void) {
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
 }
 
@@ -647,7 +647,7 @@ bytes_copy(Bytes *__restrict other) {
 	                                            DeeBytes_SIZE(other));
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_init(size_t argc, DeeObject **argv) {
 	DeeObject *ob;
 	unsigned int flags = Dee_BUFFER_FREADONLY;
@@ -1058,7 +1058,7 @@ dee_memxcmp(void const *a, size_t asiz,
 }
 
 #define DEFINE_BYTES_COMPARE(name, op)                                              \
-	PRIVATE DREF DeeObject *DCALL                                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                   \
 	name(Bytes *__restrict self,                                                    \
 	     DeeObject *__restrict other) {                                             \
 		uint8_t *other_data;                                                        \
@@ -1384,7 +1384,7 @@ err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 bytes_nsi_xch(Bytes *__restrict self,
               size_t index,
               DeeObject *__restrict value) {
@@ -1599,7 +1599,7 @@ PRIVATE struct type_buffer bytes_buffer = {
 INTDEF struct type_method bytes_methods[];
 
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject **argv) {
 	DeeObject *seq;
@@ -1610,7 +1610,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject **argv) {
 	DeeObject *hex_str;

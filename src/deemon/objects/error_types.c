@@ -787,7 +787,7 @@ PRIVATE struct type_member appexit_members[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 appexit_class_atexit(DeeObject *__restrict UNUSED(self),
                      size_t argc, DeeObject **argv) {
 	DeeObject *callback, *args = Dee_EmptyTuple;
@@ -843,7 +843,7 @@ err:
 #endif /* CONFIG_NO_STDLIB */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 appexit_class_exit(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	int exitcode    = EXIT_FAILURE;

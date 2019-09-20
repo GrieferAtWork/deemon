@@ -119,7 +119,7 @@ err:
 
 
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_statements_until(uint16_t flags, tok_t end_token) {
 	size_t exprc, expra;
 	DREF struct ast **exprv;
@@ -190,7 +190,7 @@ INTDEF void DCALL
 cleanup_switch_cases(struct text_label *switch_cases,
                      struct text_label *switch_default);
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_statement(bool allow_nonblock) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;

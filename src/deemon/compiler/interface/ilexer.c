@@ -313,7 +313,7 @@ STATIC_ASSERT(COMPILER_LENOF(largetok_names) ==
               (TOK_TWOCHAR_END - TOK_TWOCHAR_BEGIN));
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 get_token_name(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		switch (id) {
@@ -474,7 +474,7 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 }
 
 #define DEFINE_KEYWORD_FLAG_FUNCTIONS(name, flag)                                                                     \
-	PRIVATE DREF DeeObject *DCALL                                                                                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                                                     \
 	keyword_get_##name(DeeCompilerItemObject *__restrict self) {                                                      \
 		DREF DeeObject *result = NULL;                                                                                \
 		struct TPPKeyword *item;                                                                                      \
@@ -1062,7 +1062,7 @@ lexer_set_flags(DeeCompilerWrapperObject *__restrict self,
 }
 
 #define DEFINE_LEXER_FLAG_FUNCTIONS(name, flag)                        \
-	INTERN DREF DeeObject *DCALL                                       \
+	INTERN WUNUSED DREF DeeObject *DCALL                                       \
 	lexer_get_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		DREF DeeObject *result;                                        \
 		COMPILER_BEGIN(self->cw_compiler);                             \

@@ -41,7 +41,7 @@ INTDEF struct compiler_options *inner_compiler_options;
 
 
 /* Parse a string. */
-INTDEF DREF DeeObject *FCALL ast_parse_string(void);
+INTDEF WUNUSED DREF DeeObject *FCALL ast_parse_string(void);
 
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
 INTDEF WUNUSED NONNULL((1)) int DCALL ast_decode_unicode_string(struct unicode_printer *__restrict printer);
@@ -49,37 +49,37 @@ INTDEF WUNUSED NONNULL((1)) int DCALL ast_decode_unicode_string(struct unicode_p
 #define PARSE_UNARY_DISALLOW_CASTS 0x10000
 
 /* @param: lookup_mode: Set of `LOOKUP_SYM_*', optionally or'd with `PARSE_UNARY_DISALLOW_CASTS' */
-INTDEF DREF struct ast *FCALL ast_parse_unaryhead(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_unary(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_prod(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_sum(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_shift(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_cmp(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_cmpeq(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_and(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_xor(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_or(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_as(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_land(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_lor(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_cond(unsigned int lookup_mode);
-INTDEF DREF struct ast *FCALL ast_parse_assign(unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_unaryhead(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_unary(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_prod(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_sum(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_shift(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cmp(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cmpeq(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_and(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_xor(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_or(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_as(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_land(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_lor(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cond(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_assign(unsigned int lookup_mode); /* NOTE: Also handled inplace operators. */
 
 /* With the current token one of the unary operator symbols, consume
  * it and parse the second operand before returning the combination */
-INTDEF DREF struct ast *FCALL ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
-INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_prod_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_sum_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_shift_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cmp_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_and_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_xor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_or_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_as_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_land_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_lor_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs);
 
 /* Check if the given token qualifies for the associated operation parser function. */
 #define TOKEN_IS_PROD(tok)   ((tok) == '*' || (tok) == '/' || (tok) == '%' || (tok) == TOK_POW)
@@ -117,20 +117,20 @@ INTDEF DREF struct ast *FCALL ast_parse_assign_operand(/*inherit(always)*/ DREF 
 
 /* Given a basic unary expression `ast', parse its unary
  * suffix (including attribute, call, range & item operators). */
-INTDEF DREF struct ast *FCALL ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 /* Given a unary expression `ast', parse anything that may
  * follow it before it could be considered a full expression. */
-INTDEF DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_postexpr(/*inherit(always)*/ DREF struct ast *__restrict baseexpr);
 
 
 /* Given an `key'-expression in `{ key : foo }', parse the remainder
  * of a brace expression with the current token being the one after the `:' */
-INTDEF DREF struct ast *FCALL ast_parse_mapping(struct ast *__restrict initial_key);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_mapping(struct ast *__restrict initial_key);
 
 /* Given an `item'-expression in `{ item, foo }', parse the remainder
  * of a brace expression with the current token being a `,' */
-INTDEF DREF struct ast *FCALL ast_parse_brace_list(struct ast *__restrict initial_item);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_brace_list(struct ast *__restrict initial_item);
 
 
 
@@ -157,9 +157,9 @@ INTDEF DREF struct ast *FCALL ast_parse_brace_list(struct ast *__restrict initia
  * >> import <symbol-name> = <import-name> from <module-name>
  * >> import(<expression>)
  */
-INTDEF DREF struct ast *FCALL ast_parse_import(void);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_import(void);
 /* Parse a module name and generate an AST to reference a single symbol `import_name'. */
-INTDEF DREF struct ast *FCALL ast_parse_import_single(struct TPPKeyword *__restrict import_name);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_import_single(struct TPPKeyword *__restrict import_name);
 INTDEF struct symbol *FCALL ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name);
 
 /* Parse a comma-separated list of expressions,
@@ -174,7 +174,7 @@ INTDEF struct symbol *FCALL ast_parse_import_single_sym(struct TPPKeyword *__res
  * @param: flags:     Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
  * @param: pout_mode: When non-NULL, instead of parsing a `;' when required,
  *                    set to `AST_COMMA_OUT_FNEEDSEMI' indicative of this. */
-INTDEF DREF struct ast *DCALL
+INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags,
                 uint16_t *pout_mode);
 #define AST_COMMA_NORMAL        0x0000
@@ -200,7 +200,7 @@ ast_parse_comma(uint16_t mode, uint16_t flags,
  * constant ast and returned through `*pkeyword_labels'.
  * If no keyword labels are present, `*pkeyword_labels' is filled in as `NULL'
  * @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
-INTDEF DREF struct ast *DCALL
+INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_argument_list(uint16_t mode,
                         DREF struct ast **__restrict pkeyword_labels);
 
@@ -218,14 +218,14 @@ INTDEF bool DCALL maybe_expression_begin(void);
 INTDEF bool DCALL maybe_expression_begin_c(char peek);
 
 /* Parse a try-statement/expression. */
-INTDEF DREF struct ast *DCALL ast_parse_try(bool is_statement);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_try(bool is_statement);
 
 /* Parse a with-statement/expression.
  * NOTE: This function expects the current token to be `with' */
-INTDEF DREF struct ast *FCALL ast_parse_with(bool is_statement, bool allow_nonblock);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_with(bool is_statement, bool allow_nonblock);
 
 /* Parse a regular, old statement. */
-INTDEF DREF struct ast *DCALL ast_parse_statement(bool allow_nonblock);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_statement(bool allow_nonblock);
 /* Parse a sequence of statements until `end_token' is
  * encountered at the start of a statement, or until
  * the end of the current input-file-stack is reached.
@@ -237,7 +237,7 @@ INTDEF DREF struct ast *DCALL ast_parse_statement(bool allow_nonblock);
  *          returned instead.
  * NOTE: If desired, the caller is responsible to setup
  *       or teardown a new scope before/after this function. */
-INTDEF DREF struct ast *DCALL
+INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_statements_until(uint16_t flags, tok_t end_token);
 
 /* Parse and return an operator name.
@@ -267,12 +267,12 @@ INTDEF int32_t DCALL ast_parse_operator_name(uint16_t features);
  * @param: name:  One of `OPERATOR_*' or `AST_OPERATOR_*'
  * @param: flags: Set of `AST_OPERATOR_F*'
  *       WARNING: This flags set may not contain `AST_OPERATOR_FVARARGS'! */
-INTDEF DREF struct ast *DCALL
+INTDEF WUNUSED DREF struct ast *DCALL
 ast_build_bound_operator(uint16_t name, uint16_t flags,
                          struct ast *__restrict self,
                          struct ast *__restrict args);
 /* Same as `ast_build_bound_operator', but used to build free-standing operators. */
-INTDEF DREF struct ast *DCALL
+INTDEF WUNUSED DREF struct ast *DCALL
 ast_build_operator(uint16_t name, uint16_t flags,
                    struct ast *__restrict args);
 
@@ -281,7 +281,7 @@ ast_build_operator(uint16_t name, uint16_t flags,
  * `KWD_for', `KWD_foreach', `KWD_while' or `KWD_do'
  * The returned expression is usually a call-operator
  * on an anonymous lambda function. */
-INTDEF DREF struct ast *FCALL ast_parse_loopexpr(void);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_loopexpr(void);
 
 /* Parse a new function declaration, starting at either the argument
  * list, or when not present at the following `->' or `{' token.
@@ -291,13 +291,13 @@ INTDEF DREF struct ast *FCALL ast_parse_loopexpr(void);
  *       This parser function will merely return the `AST_FUNCTION',
  *       not some wrapper that assigns it to a symbol using `AST_STORE'. */
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-INTDEF DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *decl);
-INTDEF DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *__restrict decl);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *decl);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc, struct decl_ast *__restrict decl);
 #else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-INTDEF DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
-INTDEF DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_function(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_function_noscope(struct TPPKeyword *name, bool *pneed_semi, bool allow_missing_params, struct ast_loc *name_loc);
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-INTDEF DREF struct ast *DCALL ast_parse_function_noscope_noargs(bool *pneed_semi);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_function_noscope_noargs(bool *pneed_semi);
 
 /* Parse everything following a `del' keyword in a statement, or expression:
  * >> foo = 7;
@@ -315,10 +315,10 @@ INTDEF DREF struct ast *DCALL ast_parse_function_noscope_noargs(bool *pneed_semi
  *       unbind variables (deleting only referring to the
  *       compile-time symbol becoming unknown and being added to
  *       the current scope's chain of deleted/anonymous symbols) */
-INTDEF DREF struct ast *DCALL ast_parse_del(unsigned int lookup_mode);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_del(unsigned int lookup_mode);
 
 /* Parse a user-defined assembly block. */
-INTDEF DREF struct ast *DCALL ast_parse_asm(void);
+INTDEF WUNUSED DREF struct ast *DCALL ast_parse_asm(void);
 
 /* Parse the argument list of a function definition,
  * automatically creating new symbols for arguments,
@@ -327,7 +327,7 @@ INTDEF int DCALL parse_arglist(void);
 
 /* Parse the contents of a brace initializer,
  * starting after the '{' token and ending on '}'. */
-INTDEF DREF struct ast *FCALL ast_parse_brace_items(void);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_brace_items(void);
 
 /* Parse a class definition, starting at the `{' token (or at `:' when a base exists).
  * The returned AST is of type `AST_CLASS' (create_symbol == false) or `AST_STORE' (create_symbol == true).
@@ -335,7 +335,7 @@ INTDEF DREF struct ast *FCALL ast_parse_brace_items(void);
  * @param: create_symbol: When true, assign the class to its own symbol (also requiring that `name' != NULL).
  * @param: symbol_mode:   The mode with which to create the class symbol.
  */
-INTDEF DREF struct ast *DCALL
+INTDEF WUNUSED DREF struct ast *DCALL
 ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
                 bool create_symbol, unsigned int symbol_mode);
 
@@ -356,7 +356,7 @@ INTDEF int32_t DCALL ast_parse_for_head(DREF struct ast **__restrict pinit,
                                         DREF struct ast **__restrict piter_or_next);
 
 /* Parse an assertion statement. (must be started ontop of the `assert' keyword) */
-INTDEF DREF struct ast *FCALL ast_parse_assert(bool needs_parenthesis);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_assert(bool needs_parenthesis);
 
 /* Parse a cast expression suffix following parenthesis, or
  * re-return the given `typeexpr' if there is no cast operand
@@ -370,7 +370,7 @@ INTDEF DREF struct ast *FCALL ast_parse_assert(bool needs_parenthesis);
  *                           ^
  *                           exit
  */
-INTDEF DREF struct ast *FCALL ast_parse_cast(struct ast *__restrict typeexpr);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_cast(struct ast *__restrict typeexpr);
 
 
 
@@ -380,7 +380,7 @@ INTDEF DREF struct ast *FCALL ast_parse_cast(struct ast *__restrict typeexpr);
 #define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
 /* @param: pwas_expression: When non-NULL, set to one of `AST_PARSE_WASEXPR_*' */
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_statement_or_expression(unsigned int *pwas_expression);
 
 /* Parse a primary and second expression in hybrid mode. */
@@ -408,22 +408,22 @@ ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
 
 
 /* Parse a statement or a brace-expression, with the current token being a `{' */
-INTDEF DREF struct ast *FCALL
+INTDEF WUNUSED DREF struct ast *FCALL
 ast_parse_statement_or_braces(unsigned int *pwas_expression);
 
 /* With the current token being `try', parse the construct and
  * try to figure out if it's a statement or an expression. */
-INTERN DREF struct ast *FCALL ast_parse_try_hybrid(unsigned int *pwas_expression);
+INTERN WUNUSED DREF struct ast *FCALL ast_parse_try_hybrid(unsigned int *pwas_expression);
 /* Same as `ast_parse_try_hybrid' but for if statements / expressions. */
-INTERN DREF struct ast *FCALL ast_parse_if_hybrid(unsigned int *pwas_expression);
+INTERN WUNUSED DREF struct ast *FCALL ast_parse_if_hybrid(unsigned int *pwas_expression);
 /* Same as `ast_parse_try_hybrid' but for with statements / expressions. */
-INTERN DREF struct ast *FCALL ast_parse_with_hybrid(unsigned int *pwas_expression);
+INTERN WUNUSED DREF struct ast *FCALL ast_parse_with_hybrid(unsigned int *pwas_expression);
 /* Same as `ast_parse_try_hybrid' but for assert statements / expressions. */
-INTERN DREF struct ast *FCALL ast_parse_assert_hybrid(unsigned int *pwas_expression);
+INTERN WUNUSED DREF struct ast *FCALL ast_parse_assert_hybrid(unsigned int *pwas_expression);
 /* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
-INTERN DREF struct ast *FCALL ast_parse_import_hybrid(unsigned int *pwas_expression);
+INTERN WUNUSED DREF struct ast *FCALL ast_parse_import_hybrid(unsigned int *pwas_expression);
 /* Same as `ast_parse_try_hybrid' but for loopexpr statements / expressions. */
-INTDEF DREF struct ast *FCALL ast_parse_loopexpr_hybrid(unsigned int *pwas_expression);
+INTDEF WUNUSED DREF struct ast *FCALL ast_parse_loopexpr_hybrid(unsigned int *pwas_expression);
 
 
 
@@ -434,7 +434,7 @@ struct module_object;
  * @param: for_alias: Should be `true' if the name is used in `foo = <name>',
  *                    or if no alias can be used where the name appears,
  *                    else `false' */
-INTDEF DREF struct module_object *DCALL parse_module_byname(bool for_alias);
+INTDEF WUNUSED DREF struct module_object *DCALL parse_module_byname(bool for_alias);
 INTDEF struct module_symbol *DCALL
 import_module_symbol(struct module_object *__restrict module,
                      struct TPPKeyword *__restrict name);
@@ -539,9 +539,9 @@ INTDEF int (DCALL ast_tags_clear)(void);
 
 /* Pack together the current documentation string. */
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-INTDEF DREF DeeObject *DCALL ast_tags_doc(struct decl_ast const *decl);
+INTDEF WUNUSED DREF DeeObject *DCALL ast_tags_doc(struct decl_ast const *decl);
 #else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-INTDEF DREF DeeObject *DCALL ast_tags_doc(void);
+INTDEF WUNUSED DREF DeeObject *DCALL ast_tags_doc(void);
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 
 /* Add a new annotation to the current set of tags. */
@@ -554,7 +554,7 @@ INTDEF void (DCALL ast_annotations_free)(struct ast_annotations *__restrict self
 INTDEF int (DCALL ast_annotations_clear)(struct ast_annotations *__restrict self);
 
 /* Apply & free annotations to the given `input' ast. */
-INTDEF DREF struct ast *
+INTDEF WUNUSED DREF struct ast *
 (DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
                               /*inherit(always)*/ DREF struct ast *__restrict input);
 

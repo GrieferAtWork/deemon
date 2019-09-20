@@ -31,32 +31,32 @@
 DECL_BEGIN
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_0(void) {
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_1(void *UNUSED(a)) {
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_2(void *UNUSED(a), void *UNUSED(b)) {
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_3(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c)) {
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_call0(size_t UNUSED(b), void *UNUSED(c)) {
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_call(void *UNUSED(a), size_t UNUSED(b), void *UNUSED(c)) {
 	return_none;
 }
@@ -86,7 +86,7 @@ none_bool(DeeObject *__restrict UNUSED(a)) {
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_str(DeeObject *__restrict UNUSED(a)) {
 	return_reference_(&str_none);
 }
@@ -117,23 +117,23 @@ none_double(DeeObject *__restrict UNUSED(self),
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_iternext(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_int(DeeObject *__restrict UNUSED(self)) {
 	return_reference_(&DeeInt_Zero);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_eq(DeeObject *__restrict UNUSED(self),
         DeeObject *__restrict other) {
 	return_bool(DeeNone_Check(other));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 none_ne(DeeObject *__restrict UNUSED(self),
         DeeObject *__restrict other) {
 	return_bool(!DeeNone_Check(other));

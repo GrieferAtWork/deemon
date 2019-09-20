@@ -761,7 +761,7 @@ err_r_iter:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSeq_Min(DeeObject *__restrict self, DeeObject *key) {
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	int temp;
@@ -806,7 +806,7 @@ err_r_iter:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSeq_Max(DeeObject *__restrict self, DeeObject *key) {
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	int temp;
@@ -885,7 +885,7 @@ err:
 	return (size_t)-1;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeq_Locate(DeeObject *__restrict self,
               DeeObject *__restrict keyed_search_item,
               DeeObject *key) {
@@ -917,7 +917,7 @@ err_iter:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeq_RLocate(DeeObject *__restrict self,
                DeeObject *__restrict keyed_search_item,
                DeeObject *key) {
@@ -1536,10 +1536,10 @@ err_temp:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Join(DeeObject *self, DeeObject *items);
-INTERN DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *key);
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Reversed(DeeObject *__restrict self) {
@@ -1551,7 +1551,7 @@ DeeSeq_Reversed(DeeObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeq_Sorted(DeeObject *__restrict self,
               DeeObject *key) {
 	DREF DeeObject *result;
@@ -1566,18 +1566,18 @@ done:
 }
 
 
-INTERN DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
 INTERN int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
 INTERN int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
 INTERN size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
 INTERN size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
+INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *key);
 
 INTERN size_t DCALL
 DeeSeq_CountSeq(DeeObject *__restrict self,

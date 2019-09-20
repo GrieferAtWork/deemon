@@ -749,7 +749,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(SeqSimpleProxy, sp_seq) ==
 #define iter_visit proxy_visit
 
 #define DEFINE_ITER_COMPARE(name, func)                       \
-	PRIVATE DREF DeeObject *DCALL                             \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                             \
 	name(SeqSimpleProxyIterator *__restrict self,             \
 	     SeqSimpleProxyIterator *__restrict other) {          \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \

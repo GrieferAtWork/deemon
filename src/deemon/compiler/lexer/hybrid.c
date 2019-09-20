@@ -30,7 +30,7 @@
 
 DECL_BEGIN
 
-PRIVATE DREF struct ast *FCALL ast_do_parse_brace_items(void) {
+PRIVATE WUNUSED DREF struct ast *FCALL ast_do_parse_brace_items(void) {
 	DREF struct ast *result;
 	uint32_t old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -48,7 +48,7 @@ err_flags:
 
 
 /* @param: mode: Set of `AST_COMMA_*' - What is allowed and when should we pack values. */
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 	DREF struct ast *result;
 	unsigned int was_expression;
@@ -159,7 +159,7 @@ err:
 
 
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_if_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *tt_branch;
 	DREF struct ast *ff_branch;
@@ -226,7 +226,7 @@ err:
 
 
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 	DREF struct ast *result, **new_elemv;
 	DREF struct ast *remainder;

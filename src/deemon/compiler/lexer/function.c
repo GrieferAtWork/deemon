@@ -469,7 +469,7 @@ err:
 	return -1;
 }
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
                    bool allow_missing_params,
                    struct ast_loc *name_loc
@@ -499,7 +499,7 @@ err_anno:
 	return NULL;
 }
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope(struct TPPKeyword *name,
                            bool *pneed_semi,
                            bool allow_missing_params,
@@ -680,7 +680,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function_noscope_noargs(bool *pneed_semi) {
 	uint32_t old_flags;
 	DREF struct ast *result, *code;

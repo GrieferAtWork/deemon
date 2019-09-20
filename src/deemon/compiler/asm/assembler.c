@@ -1449,7 +1449,7 @@ INTERN struct except_handler *DCALL asm_pack_exceptv(void) {
 }
 
 
-INTERN DREF DeeCodeObject *DCALL asm_gencode(void) {
+INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	DREF DeeDDIObject *ddi;
 	DREF DeeCodeObject *result;
 	DREF DeeStringObject **kwds = NULL;
@@ -3401,7 +3401,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeCodeObject *DCALL
+INTERN WUNUSED DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
              bool first_function, uint16_t *__restrict prefc,
              /*out:inherit*/ struct asm_symbol_ref **__restrict prefv) {
@@ -3447,7 +3447,7 @@ err:
 	goto end;
 }
 
-INTERN DREF DeeCodeObject *DCALL
+INTERN WUNUSED DREF DeeCodeObject *DCALL
 code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
                      uint16_t *__restrict prefc,
                      /*out:inherit*/ struct asm_symbol_ref **__restrict prefv,

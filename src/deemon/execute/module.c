@@ -1377,7 +1377,7 @@ PRIVATE struct type_getset module_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 module_class_getpath(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeModule_GetPath());
 }
@@ -1399,7 +1399,7 @@ PRIVATE struct type_getset module_class_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 module_class_open(DeeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject **argv) {
 	/* This is pretty much the same as the builtin `import()' function.

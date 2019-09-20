@@ -128,7 +128,7 @@ ok:
 }
 
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_build_operator(uint16_t name, uint16_t flags,
                    struct ast *__restrict args) {
 	ASSERT(!(flags & AST_OPERATOR_FVARARGS));
@@ -238,7 +238,7 @@ err:
 	return ast_operator1(name, flags | AST_OPERATOR_FVARARGS, args);
 }
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_build_bound_operator(uint16_t name, uint16_t flags,
                          struct ast *__restrict self,
                          struct ast *__restrict args) {

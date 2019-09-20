@@ -466,7 +466,7 @@ bytes_getsubstr(Bytes *__restrict self,
 PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 #endif /* !PRIVATE_SUBSTR_KWLIST_DEFINED */
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_substr(Bytes *__restrict self, size_t argc,
              DeeObject **argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
@@ -477,7 +477,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_resized(Bytes *__restrict self,
               size_t argc, DeeObject **argv) {
 	DREF Bytes *result;
@@ -511,7 +511,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_reversed(Bytes *__restrict self, size_t argc,
                DeeObject **argv, DeeObject *kw) {
 	DREF Bytes *result;
@@ -537,7 +537,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_reverse(Bytes *__restrict self, size_t argc,
               DeeObject **argv, DeeObject *kw) {
 	uint8_t *data, *dst;
@@ -565,7 +565,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_makereadonly(Bytes *__restrict self,
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":makereadonly"))
@@ -579,7 +579,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_makewritable(Bytes *__restrict self,
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":makewritable"))
@@ -815,7 +815,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 }
 
 #define DEFINE_BYTES_TRAIT(name, function, test_ch)                     \
-	PRIVATE DREF DeeObject *DCALL                                       \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
 	bytes_##name(Bytes *__restrict self,                                \
 	             size_t argc, DeeObject **argv) {            \
 		size_t start = 0, end = (size_t)-1;                             \
@@ -840,7 +840,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 		return NULL;                                                    \
 	}
 #define DEFINE_ANY_BYTES_TRAIT(name, function)                                           \
-	PRIVATE DREF DeeObject *DCALL                                                        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                        \
 	bytes_##name(Bytes *__restrict self, size_t argc,                                    \
 	             DeeObject **argv, DeeObject *kw) {                           \
 		size_t start = 0, end = (size_t)-1;                                              \
@@ -994,7 +994,7 @@ err:
 }
 
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_lower(Bytes *__restrict self, size_t argc,
             DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
@@ -1015,7 +1015,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_upper(Bytes *__restrict self, size_t argc,
             DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
@@ -1036,7 +1036,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_title(Bytes *__restrict self, size_t argc,
             DeeObject **argv, DeeObject *kw) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
@@ -1063,7 +1063,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_capitalize(Bytes *__restrict self, size_t argc,
                  DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
@@ -1085,7 +1085,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_swapcase(Bytes *__restrict self, size_t argc,
                DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
@@ -1108,7 +1108,7 @@ done:
 
 
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_tolower(Bytes *__restrict self, size_t argc,
               DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
@@ -1127,7 +1127,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_toupper(Bytes *__restrict self, size_t argc,
               DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
@@ -1146,7 +1146,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_totitle(Bytes *__restrict self, size_t argc,
               DeeObject **argv, DeeObject *kw) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
@@ -1171,7 +1171,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_tocapitalize(Bytes *__restrict self, size_t argc,
                    DeeObject **argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
@@ -1195,7 +1195,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_toswapcase(Bytes *__restrict self, size_t argc,
                  DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
@@ -1219,7 +1219,7 @@ err:
 PRIVATE struct keyword replace_kwlist[] = { K(find), K(replace), K(max), KEND };
 #endif /* !PRIVATE_REPLACE_KWLIST_DEFINED */
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_replace(Bytes *__restrict self, size_t argc,
               DeeObject **argv, DeeObject *kw) {
 	DREF Bytes *result;
@@ -1278,7 +1278,7 @@ return_self:
 	return result;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_casereplace(Bytes *__restrict self, size_t argc,
                   DeeObject **argv, DeeObject *kw) {
 	DREF Bytes *result;
@@ -1338,7 +1338,7 @@ return_self:
 }
 
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_toreplace(Bytes *__restrict self, size_t argc,
                 DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob, *replace_ob;
@@ -1386,7 +1386,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_tocasereplace(Bytes *__restrict self, size_t argc,
                     DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob, *replace_ob;
@@ -1451,8 +1451,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeBytes_Split(Bytes *self,
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_CaseSplitByte(Bytes *__restrict self, uint8_t sep);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeBytes_CaseSplit(Bytes *self, DeeObject *sep);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_SplitLines(Bytes *__restrict self, bool keepends);
-INTDEF DREF DeeObject *DCALL DeeBytes_FindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
-INTDEF DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeBytes_FindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_findall(Bytes *self, size_t argc,
@@ -1655,7 +1655,7 @@ bytes_caseendswith(Bytes *self, size_t argc,
 	                               needle.n_data, needle.n_size));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 bytes_pack_partition(Bytes *__restrict self, uint8_t *find_ptr,
                      uint8_t *__restrict start_ptr, size_t search_size,
                      size_t needle_len) {

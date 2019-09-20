@@ -189,7 +189,7 @@ usetiterator_bool(USetIterator *__restrict self) {
 }
 
 #define DEFINE_ITERATOR_COMPARE(name, op)                             \
-	PRIVATE DREF DeeObject *DCALL                                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                     \
 	name(USetIterator *__restrict self,                               \
 	     USetIterator *__restrict other) {                            \
 		if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self))) \

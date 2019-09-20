@@ -69,7 +69,7 @@
 DECL_BEGIN
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL nt_GetEnvironmentVariableA(char const *__restrict name);
-INTDEF DREF DeeObject *DCALL nt_GetTempPath(void);
+INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
@@ -1107,7 +1107,7 @@ err:
 	return -1;
 }
 
-INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
+INTERN WUNUSED DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 	DWORD bufsize = MAX_COMPUTERNAME_LENGTH + 1;
 	LPWSTR buffer, new_buffer;
 	if (DeeThread_CheckInterrupt())
@@ -1160,7 +1160,7 @@ PRIVATE DeeObject *tmpdir_vars[] = {
 	(DeeObject *)&tmpdir_3
 };
 
-INTERN DREF DeeObject *DCALL fs_gettmp(void) {
+INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	DREF DeeObject *result;
 	size_t i;
 	if (DeeThread_CheckInterrupt())
@@ -1356,7 +1356,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL fs_getcwd(void) {
+INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
 	LPWSTR buffer, new_buffer;
 	DWORD bufsize = PATH_MAX, new_bufsize;
 	if (DeeThread_CheckInterrupt())
@@ -1866,7 +1866,7 @@ err:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_gethome(bool try_get) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (fs_printhome(&printer, try_get))
@@ -1877,7 +1877,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_getuser(bool try_get) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (fs_printuser(&printer, try_get))
@@ -1918,22 +1918,22 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 default_user_get_home(DeeObject *__restrict UNUSED(self)) {
 	return fs_gethome(false);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 default_user_get_domain(DeeObject *__restrict UNUSED(self)) {
 	return fs_gethostname();
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 default_user_get_name(DeeObject *__restrict UNUSED(self)) {
 	return fs_getuser(false);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 user_get_profiles_dir(DeeObject *__restrict UNUSED(self)) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (nt_print_GetProfilesDirectory(&printer, false))
@@ -1944,7 +1944,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 user_get_defaulthome(DeeObject *__restrict UNUSED(self)) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (nt_print_GetDefaultUserProfileDirectory(&printer, false))
@@ -1955,7 +1955,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 user_get_allusershome(DeeObject *__restrict UNUSED(self)) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (nt_print_GetAllUsersProfileDirectory(&printer, false))
@@ -2163,7 +2163,7 @@ INTERN DeeTypeObject DeeUser_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 nt_NewUserDescriptor(/*inherit(on_success)*/ PSID pSid,
                      /*inherit(on_success)*/ PSECURITY_DESCRIPTOR pSD) {
 	DREF struct user_object *result;
@@ -2177,7 +2177,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 nt_NewUserDescriptorFromHandleOwner(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
 	PSID pSidOwner;
 	DWORD dwError;
@@ -2204,7 +2204,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 nt_NewUserDescriptorFromHandleGroup(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
 	PSID pSidGroup;
 	DWORD dwError;
@@ -2647,7 +2647,7 @@ stat_get_gid(DeeStatObject *__restrict self) {
 	return nt_NewUserDescriptorFromHandleGroup(self->st_stat.s_hand, SE_FILE_OBJECT);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_get_rdev(DeeStatObject *__restrict UNUSED(self)) {
 	err_no_info("rdev");
 	return NULL;
@@ -2962,7 +2962,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_islnk(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	DeeObject *path;
@@ -3096,7 +3096,7 @@ is_exe_filename(DeeObject *__restrict path) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_isexe(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	DeeObject *path;

@@ -67,7 +67,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeStructTypeObject *DCALL
+PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
 struct_type_alloc_iterator(DeeObject *__restrict iter,
                            unsigned int flags) {
 	DREF DeeStructTypeObject *result;
@@ -161,7 +161,7 @@ err:
 }
 
 
-INTERN DREF DeeStructTypeObject *DCALL
+INTERN WUNUSED DREF DeeStructTypeObject *DCALL
 DeeStructType_FromSequence(DeeObject *name,
                            DeeObject *__restrict fields,
                            unsigned int flags) {
@@ -275,12 +275,12 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeStructTypeObject *DCALL struct_type_new_empty(void) {
+PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL struct_type_new_empty(void) {
 	Dee_Incref((DeeObject *)&DeeStruct_Type);
 	return &DeeStruct_Type;
 }
 
-PRIVATE DREF DeeStructTypeObject *DCALL
+PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
 struct_type_init(size_t argc, DeeObject **argv) {
 	DeeObject *fields_or_name, *fields = NULL;
 	unsigned int flags = STRUCT_TYPE_FNORMAL; /* TODO */
@@ -497,7 +497,7 @@ err_unknown_attribute(DeeTypeObject *__restrict tp,
 }
 
 
-PRIVATE DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED DREF struct lvalue_object *DCALL
 struct_getattr(DeeStructTypeObject *__restrict tp_self,
                void *self, DeeObject *__restrict name) {
 	DREF struct lvalue_object *result;
@@ -755,7 +755,7 @@ struct_init(DeeStructTypeObject *__restrict tp_self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 struct_repr(DeeStructTypeObject *__restrict tp_self, void *self) {
 	size_t i;
 	bool is_first                = true;

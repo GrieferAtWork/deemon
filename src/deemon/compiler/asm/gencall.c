@@ -68,7 +68,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__res
                                     struct ast *__restrict warn_ast);
 
 
-PRIVATE DREF DeeCodeObject *DCALL
+PRIVATE WUNUSED DREF DeeCodeObject *DCALL
 ast_assemble_function_refargs(struct ast *__restrict function_ast,
                               uint16_t *__restrict prefc,
                               struct asm_symbol_ref **__restrict prefv,

@@ -29,7 +29,7 @@
 #include <deemon/seq.h>
 #endif /* !__INTELLISENSE__ */
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 diriter_next(DeeObject *__restrict UNUSED(self)) {
 	fs_unsupported();
 	return NULL;

@@ -2065,7 +2065,7 @@ ast_setfunctioncode(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 get_operator_name(uint16_t opid) {
 	struct opinfo *info;
 	switch (opid) {

@@ -285,7 +285,7 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
 #define HOST_NAME_MAX 64
 #endif /* !HOST_NAME_MAX */
 
-INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
+INTERN WUNUSED DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	size_t buflen                  = HOST_NAME_MAX;
 	char *newbuf;
@@ -348,7 +348,7 @@ PRIVATE DeeObject *tmpdir_vars[] = {
 #endif /* !P_tmpdir */
 PRIVATE DEFINE_STRING(tmpdir_default, P_tmpdir);
 
-INTERN DREF DeeObject *DCALL fs_gettmp(void) {
+INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	DREF DeeObject *result;
 	size_t i;
 	if (DeeThread_CheckInterrupt())
@@ -527,7 +527,7 @@ err:
 #endif /* !_WDIRECT_DEFINED */
 }
 
-INTERN DREF DeeObject *DCALL fs_getcwd(void) {
+INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (fs_printcwd(&printer))
 		goto err;
@@ -634,13 +634,13 @@ struct user_object {
 	DREF DeeStringObject *u_home; /* [0..1][lock(WRITE_ONCE)] The home folder of the user. */
 };
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_gethome(bool try_get) {
 	(void)try_get; /* TODO */
 	return_empty_string;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_getuser(bool try_get) {
 	(void)try_get; /* TODO */
 	return_empty_string;
@@ -1162,7 +1162,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_ishidden(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject **argv) {
 	DeeObject *path;

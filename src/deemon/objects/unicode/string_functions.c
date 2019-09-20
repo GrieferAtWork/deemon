@@ -1736,7 +1736,7 @@ mask_containsl(DeeObject *__restrict self, uint32_t ch) {
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeString_Dedent(DeeObject *__restrict self,
                  size_t max_chars,
                  DeeObject *__restrict mask) {
@@ -2025,7 +2025,7 @@ DeeString_NewUtf32AltEndian(uint32_t const *__restrict str,
 PRIVATE struct keyword replace_kwlist[] = { K(find), K(replace), K(max), KEND };
 #endif /* !PRIVATE_REPLACE_KWLIST_DEFINED */
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED DREF String *DCALL
 string_replace(String *__restrict self, size_t argc,
                DeeObject **argv, DeeObject *Kw) {
 	String *find, *replace;
@@ -2146,7 +2146,7 @@ retself:
 	return_reference_(self);
 }
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED DREF String *DCALL
 string_casereplace(String *__restrict self, size_t argc,
                    DeeObject **argv, DeeObject *kw) {
 	String *find, *replace;
@@ -2291,7 +2291,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 string_bytes(String *__restrict self, size_t argc,
              DeeObject **argv) {
 	bool allow_invalid = false;
@@ -2329,7 +2329,7 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 
 
 #define DEFINE_STRING_TRAIT(name, function, test_ch)                    \
-	PRIVATE DREF DeeObject *DCALL                                       \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
 	string_##name(String *__restrict self,                              \
 	              size_t argc, DeeObject **argv) {           \
 		size_t start = 0, end = (size_t)-1;                             \
@@ -2354,7 +2354,7 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 		return NULL;                                                    \
 	}
 #define DEFINE_ANY_STRING_TRAIT(name, function)                                          \
-	PRIVATE DREF DeeObject *DCALL                                                        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                        \
 	string_##name(String *__restrict self, size_t argc,                                  \
 	              DeeObject **argv, DeeObject *kw) {                          \
 		size_t start = 0, end = (size_t)-1;                                              \
@@ -3017,10 +3017,10 @@ not_found:
 err:
 	return NULL;
 }
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeString_FindAll(String *self, String *other,
                   size_t start, size_t end);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeString_CaseFindAll(String *self, String *other,
                       size_t start, size_t end);
 
@@ -4806,7 +4806,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 partition_packb(String *__restrict other,
                 uint8_t *__restrict lhs, size_t lhs_length,
                 uint8_t *__restrict ptr, size_t ptr_length) {
@@ -4852,7 +4852,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 partition_packw(String *__restrict other,
                 uint16_t *__restrict lhs, size_t lhs_length,
                 uint16_t *__restrict ptr, size_t ptr_length) {
@@ -4898,7 +4898,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 partition_packl(String *__restrict other,
                 uint32_t *__restrict lhs, size_t lhs_length,
                 uint32_t *__restrict ptr, size_t ptr_length) {
@@ -4944,7 +4944,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 partition_packb_fold(uint8_t *__restrict lhs, size_t lhs_length,
                      uint8_t *__restrict mtc, size_t mtc_length,
                      uint8_t *__restrict rhs, size_t rhs_length) {
@@ -4976,7 +4976,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 partition_packw_fold(uint16_t *__restrict lhs, size_t lhs_length,
                      uint16_t *__restrict mtc, size_t mtc_length,
                      uint16_t *__restrict rhs, size_t rhs_length) {
@@ -5008,7 +5008,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 partition_packl_fold(uint32_t *__restrict lhs, size_t lhs_length,
                      uint32_t *__restrict mtc, size_t mtc_length,
                      uint32_t *__restrict rhs, size_t rhs_length) {
@@ -9473,7 +9473,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 regex_pack_range(size_t offset,
                  struct regex_range const *__restrict range) {
 	DREF DeeObject *result, *temp;
@@ -9589,7 +9589,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED DREF String *DCALL
 string_relocate(String *__restrict self,
                 size_t argc, DeeObject **argv) {
 	struct re_args args;
@@ -9614,7 +9614,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED DREF String *DCALL
 string_rerlocate(String *__restrict self,
                  size_t argc, DeeObject **argv) {
 	struct re_args args;
@@ -9639,7 +9639,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 regex_pack_partition(String *__restrict self, size_t offset,
                      struct regex_range const *__restrict range) {
 	DREF DeeObject *result;
@@ -9892,7 +9892,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED DREF String *DCALL
 string_relstrip(String *__restrict self,
                 size_t argc, DeeObject **argv) {
 	struct re_args args;
@@ -9920,7 +9920,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED DREF String *DCALL
 string_rerstrip(String *__restrict self,
                 size_t argc, DeeObject **argv) {
 	struct re_args_ex args;
@@ -9951,7 +9951,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED DREF String *DCALL
 string_restrip(String *__restrict self,
                size_t argc, DeeObject **argv) {
 	struct re_args_ex args;

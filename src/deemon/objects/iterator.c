@@ -128,7 +128,7 @@ err1:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 iterator_iternext(DeeObject *__restrict UNUSED(self)) {
 	/* A default-constructed, raw iterator object behaves as empty. */
 	return ITER_DONE;
@@ -159,7 +159,7 @@ err:
 
 
 #define DEFINE_ITERATOR_COMPARE(name, op, if_same)                  \
-	PRIVATE DREF DeeObject *DCALL                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
 	name(DeeObject *__restrict self, DeeObject *__restrict other) { \
 		dssize_t mylen, otlen;                                      \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))       \

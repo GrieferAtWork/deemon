@@ -709,7 +709,7 @@ PRIVATE struct type_cmp set_cmp = {
 		/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&set_ge,
 };
 
-INTDEF DREF DeeObject *DCALL new_empty_sequence_iterator(void);
+INTDEF WUNUSED DREF DeeObject *DCALL new_empty_sequence_iterator(void);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_iterself(DeeObject *self) {
 	if unlikely(Dee_TYPE(self) == &DeeSet_Type) {

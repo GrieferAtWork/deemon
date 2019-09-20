@@ -151,7 +151,7 @@ iter_exhausted:
 
 INTDEF DeeTypeObject RoSetIterator_Type;
 #define DEFINE_ITERATOR_COMPARE(name, op)                                  \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(SetIterator *__restrict self,                                     \
 	     SetIterator *__restrict other) {                                  \
 		if (DeeObject_AssertType((DeeObject *)other, &RoSetIterator_Type)) \
@@ -261,7 +261,7 @@ err:
 #define SIZEOF_ROSET(mask) (offsetof(Set, rs_elem) + (((mask) + 1) * sizeof(struct roset_item)))
 #define ROSET_INITIAL_MASK 0x03
 
-PRIVATE DREF Set *DCALL
+PRIVATE WUNUSED DREF Set *DCALL
 rehash(DREF Set *__restrict self, size_t old_mask, size_t new_mask) {
 	DREF Set *result;
 	size_t i;
@@ -319,7 +319,7 @@ err:
 	return -1;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeRoSet_New(void) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeRoSet_New(void) {
 	DREF Set *result;
 	result = ROSET_ALLOC(ROSET_INITIAL_MASK);
 	if unlikely(!result)
@@ -331,7 +331,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeRoSet_NewWithHint(size_t num_items) {
 	DREF Set *result;
 	size_t mask = ROSET_INITIAL_MASK;
@@ -638,7 +638,7 @@ PRIVATE struct type_member roset_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF Set *DCALL roset_ctor(void) {
+PRIVATE WUNUSED DREF Set *DCALL roset_ctor(void) {
 	DREF Set *result;
 	result = ROSET_ALLOC(1);
 	if unlikely(!result)
@@ -679,7 +679,7 @@ err:
 	goto done;
 }
 
-PRIVATE DREF Set *DCALL
+PRIVATE WUNUSED DREF Set *DCALL
 roset_init(size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoSet", &seq))

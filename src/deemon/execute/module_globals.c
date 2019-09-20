@@ -109,7 +109,7 @@ mei_visit(ModuleExportsIterator *__restrict self, dvisit_t proc, void *arg) {
 
 
 #define DEFINE_MEI_COMPARE(name, op)                                       \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(ModuleExportsIterator *__restrict self,                           \
 	     ModuleExportsIterator *__restrict other) {                        \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \

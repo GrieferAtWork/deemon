@@ -302,7 +302,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
  * an empty data set.
  * The main use of this functionality is to allow the use of `DeeModule_LoadSourceStream()'
  * with a stream backed by source code located in memory. */
-PUBLIC DREF /*File*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size) {
 	DREF MemoryFile *result;
 	result = DeeObject_MALLOC(MemoryFile);
@@ -739,7 +739,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
  * However, the end result of both mechanisms is the same, in that
  * the stream indirectly referenced a given data-block, rather than
  * having to keep its own copy of some potentially humongous memory block. */
-PUBLIC DREF /*File*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size) {
 	DREF Reader *result;
@@ -761,7 +761,7 @@ done:
 
 /* Similar to `DeeFile_OpenObjectMemory()', but used
  * to open a generic object using the buffer-interface. */
-PUBLIC DREF /*File*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          dssize_t begin, dssize_t end) {
 	DREF Reader *result;
@@ -1004,7 +1004,7 @@ PRIVATE struct type_getset writer_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED DREF DeeStringObject *DCALL
 writer_get(Writer *__restrict self,
            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
@@ -1724,7 +1724,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 };
 
 /* Open a new file stream that writes all written data into a string. */
-PUBLIC DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void) {
+PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void) {
 	DREF Writer *result;
 	result = DeeObject_MALLOC(Writer);
 	if unlikely(!result)

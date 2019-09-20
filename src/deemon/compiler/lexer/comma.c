@@ -220,7 +220,7 @@ err:
 }
 
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *pout_mode) {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 	struct decl_ast decl;

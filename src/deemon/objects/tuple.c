@@ -1036,7 +1036,7 @@ PRIVATE struct type_member tuple_iterator_members[] = {
 };
 
 #define DEFINE_TUPLE_ITERATOR_COMPARE(name, op)                       \
-	PRIVATE DREF DeeObject *DCALL                                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                     \
 	name(TupleIterator *__restrict self,                              \
 	     TupleIterator *__restrict other) {                           \
 		if (DeeObject_AssertTypeExact(other, &DeeTupleIterator_Type)) \
@@ -1257,7 +1257,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 
 /*  ====== `Tuple' type implementation ======  */
 
-PRIVATE DREF Tuple *DCALL tuple_ctor(void) {
+PRIVATE WUNUSED DREF Tuple *DCALL tuple_ctor(void) {
 	return_reference_((DREF Tuple *)Dee_EmptyTuple);
 }
 
@@ -1284,7 +1284,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Tuple *DCALL
+PRIVATE WUNUSED DREF Tuple *DCALL
 tuple_init(size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:Tuple", &seq))
@@ -1499,7 +1499,7 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_nsi       = */ &tuple_nsi
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 tuple_unpack(DeeObject *__restrict UNUSED(self),
              size_t argc, DeeObject **argv) {
 	size_t num_items;

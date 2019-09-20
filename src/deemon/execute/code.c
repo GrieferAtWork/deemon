@@ -284,7 +284,7 @@ trigger_breakpoint(struct code_frame *__restrict frame) {
 
 
 
-PUBLIC char *DCALL
+PUBLIC WUNUSED char *DCALL
 DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid) {
 	/* Argument */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
@@ -294,7 +294,7 @@ DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid) {
 	return NULL;
 }
 
-PUBLIC char *DCALL
+PUBLIC WUNUSED char *DCALL
 DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid) {
 	/* Static symbol name */
 	DeeDDIObject *ddi;
@@ -362,7 +362,7 @@ return_strtab_offset:
 	return DeeString_STR(ddi->d_strtab) + offset;
 }
 
-PUBLIC char *DCALL
+PUBLIC WUNUSED char *DCALL
 DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid) {
 	/* Reference symbol name */
 	DeeDDIObject *ddi;
@@ -430,7 +430,7 @@ return_strtab_offset:
 	return DeeString_STR(ddi->d_strtab) + offset;
 }
 
-PUBLIC char *DCALL
+PUBLIC WUNUSED char *DCALL
 DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id) {
 	/* DDI String */
 	DeeDDIObject *ddi;
@@ -451,7 +451,7 @@ DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id) {
 /* @return: 0: The code is not contained.
  * @return: 1: The code is contained.
  * @return: 2: The frame chain is incomplete, but code wasn't found thus far. */
-PRIVATE int DCALL
+PRIVATE WUNUSED int DCALL
 frame_chain_contains_code(struct code_frame *__restrict iter, uint16_t count,
                           DeeCodeObject *__restrict code) {
 	while (count--) {
@@ -1147,7 +1147,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL code_ctor(void) {
+PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
 	return_reference_((DeeObject *)&empty_code);
 }
 
@@ -1385,7 +1385,7 @@ err:
 
 
 
-PRIVATE DREF DeeCodeObject *DCALL
+PRIVATE WUNUSED DREF DeeCodeObject *DCALL
 code_init_kw(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeCodeObject *result;
 	DeeObject *flags        = Dee_None;

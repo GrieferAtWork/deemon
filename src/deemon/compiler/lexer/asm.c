@@ -516,7 +516,7 @@ ok:
 
 
 
-INTERN DREF struct ast *DCALL ast_parse_asm(void) {
+INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
 	struct ast_loc loc;
 	bool is_asm_goto   = false;
 	uint16_t ast_flags = AST_FASSEMBLY_NORMAL;

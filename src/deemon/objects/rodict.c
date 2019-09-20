@@ -229,7 +229,7 @@ iter_exhausted:
 
 INTDEF DeeTypeObject RoDictIterator_Type;
 #define DEFINE_ITERATOR_COMPARE(name, op)                                   \
-	PRIVATE DREF DeeObject *DCALL                                           \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                           \
 	name(DictIterator *__restrict self,                                     \
 	     DictIterator *__restrict other) {                                  \
 		if (DeeObject_AssertType((DeeObject *)other, &RoDictIterator_Type)) \
@@ -338,7 +338,7 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
 #define SIZEOF_RODICT(mask) (offsetof(Dict, rd_elem) + (((mask) + 1) * sizeof(struct rodict_item)))
 #define RODICT_INITIAL_MASK 0x03
 
-PRIVATE DREF Dict *DCALL
+PRIVATE WUNUSED DREF Dict *DCALL
 rehash(DREF Dict *__restrict self, size_t old_mask, size_t new_mask) {
 	DREF Dict *result;
 	size_t i;
@@ -406,7 +406,7 @@ err:
 	return -1;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeRoDict_New(void) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeRoDict_New(void) {
 	DREF Dict *result;
 	result = RODICT_ALLOC(RODICT_INITIAL_MASK);
 	if unlikely(!result)
@@ -418,7 +418,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeRoDict_NewWithHint(size_t num_items) {
 	DREF Dict *result;
 	size_t mask = RODICT_INITIAL_MASK;
@@ -686,7 +686,7 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeRoDict_GetItemStringDef(DeeObject *__restrict self,
                            char const *__restrict key,
                            dhash_t hash,
@@ -711,7 +711,7 @@ DeeRoDict_GetItemStringDef(DeeObject *__restrict self,
 	return_reference_(def);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self,
                               char const *__restrict key,
                               size_t keylen,
@@ -928,7 +928,7 @@ PRIVATE struct type_member rodict_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF Dict *DCALL rodict_ctor(void) {
+PRIVATE WUNUSED DREF Dict *DCALL rodict_ctor(void) {
 	DREF Dict *result;
 	result = RODICT_ALLOC(1);
 	if unlikely(!result)
@@ -975,7 +975,7 @@ err:
 	goto done;
 }
 
-PRIVATE DREF Dict *DCALL
+PRIVATE WUNUSED DREF Dict *DCALL
 rodict_init(size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoDict", &seq))

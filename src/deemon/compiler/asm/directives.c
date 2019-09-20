@@ -90,7 +90,7 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
 	 MEMCASEEQ(token.t_kwd->k_name, str, sizeof(str) - sizeof(char)))
 
 
-PRIVATE DREF DeeObject *FCALL do_parse_constant(void) {
+PRIVATE WUNUSED DREF DeeObject *FCALL do_parse_constant(void) {
 	DREF struct ast *const_ast;
 	DREF DeeObject *result;
 	if unlikely(scope_push())

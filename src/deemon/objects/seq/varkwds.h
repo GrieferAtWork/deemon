@@ -117,8 +117,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItem(Bl
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemString(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLen(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL BlackListVarkwds_GetItemDef(BlackListVarkwds *__restrict self, DeeObject *__restrict name, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
 
 
 /* Construct a new mapping for keywords that follows the black-listing scheme.
@@ -133,7 +133,7 @@ INTDEF DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenDef(BlackListVarkw
  *    >> // Prints `_BlackListVarkwds { "something_else" : "foobar" }'
  *    >> foo(x: 10, something_else: "foobar");
  */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
@@ -207,8 +207,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItem(Bl
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItemString(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItemStringLen(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL BlackListMapping_GetItemDef(BlackListMapping *__restrict self, DeeObject *__restrict name, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL BlackListMapping_GetItemStringDef(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
-INTDEF DREF DeeObject *DCALL BlackListMapping_GetItemStringLenDef(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL BlackListMapping_GetItemStringDef(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL BlackListMapping_GetItemStringLenDef(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
 
 
 /* Construct a new mapping for a general-purpose mapping that follows the black-listing scheme.
@@ -224,7 +224,7 @@ INTDEF DREF DeeObject *DCALL BlackListMapping_GetItemStringLenDef(BlackListMappi
  *    >> // Prints `_BlackListMapping { "something_else" : "foobar" }'
  *    >> foo(**{ "x" : 10, "something_else" : "foobar" });
  */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 BlackListMapping_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeObject *__restrict kw);

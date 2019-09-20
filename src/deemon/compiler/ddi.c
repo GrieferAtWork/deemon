@@ -286,7 +286,7 @@ err:
 
 
 
-INTERN DREF DeeDDIObject *DCALL ddi_compile(void) {
+INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	DeeDDIObject *result;
 	size_t result_size;
 	uint8_t *code_iter;

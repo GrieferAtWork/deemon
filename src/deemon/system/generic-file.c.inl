@@ -149,7 +149,7 @@ sysfile_putc(DeeFileObject *__restrict UNUSED(self), int UNUSED(ch),
 	return GETC_ERR;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_fileno(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **argv) {
 	if (!DeeArg_Unpack(argc, argv, ":fileno"))
@@ -162,7 +162,7 @@ PRIVATE struct type_method sysfile_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))

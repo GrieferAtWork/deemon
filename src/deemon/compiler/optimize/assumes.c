@@ -165,7 +165,7 @@ err:
 /* Lookup the assumed value of a given symbol `sym', and return a reference to it.
  * NOTE: When no such assumption is available, or the symbol is assumed to be
  *       unknown, `NULL' is returned, but no error is thrown. */
-INTERN DREF DeeObject *
+INTERN WUNUSED DREF DeeObject *
 (DCALL ast_assumes_getsymval)(struct ast_assumes *__restrict self,
                               struct symbol *__restrict sym) {
 	if (!SYMBOL_ALLOW_ASSUMPTIONS(sym))

@@ -42,7 +42,7 @@ DECL_BEGIN
  * @return: NULL: Failed to allocated the slot for the given index.
  * WARNING: Consecutive calls to this function may
  *          invalidate previously returned pointers. */
-PRIVATE DREF DeeObject **DCALL
+PRIVATE WUNUSED DREF DeeObject **DCALL
 thread_tls_get(size_t index) {
 	struct tls_descriptor *desc;
 	DeeThreadObject *caller = DeeThread_Self();
@@ -65,7 +65,7 @@ thread_tls_get(size_t index) {
 	return &desc->td_elem[index];
 }
 
-PRIVATE DREF DeeObject **DCALL
+PRIVATE WUNUSED DREF DeeObject **DCALL
 thread_tls_tryget(size_t index) {
 	struct tls_descriptor *desc;
 	DeeThreadObject *caller = DeeThread_Self();
@@ -366,7 +366,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 tls_xchitem(Tls *__restrict self, DeeObject *value) {
 	DREF DeeObject **pitem, *result;
 	ASSERT(value != NULL);
@@ -404,7 +404,7 @@ tls_hash(Tls *__restrict self) {
 }
 
 #define DEFINE_TLS_COMPARE(name, op)                                \
-	PRIVATE DREF DeeObject *DCALL                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
 	name(Tls *__restrict self,                                      \
 	     Tls *__restrict other) {                                   \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeTls_Type)) \
@@ -579,7 +579,7 @@ tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 tls_xchitem(Tls *__restrict self, DeeObject *value) {
 	DREF DeeObject *result;
 	ASSERT(value != NULL);
@@ -611,7 +611,7 @@ tls_hash(Tls *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
 #define DEFINE_TLS_COMPARE(name, op)                                \
-	PRIVATE DREF DeeObject *DCALL                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
 	name(Tls *__restrict self,                                      \
 	     Tls *__restrict other) {                                   \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeTls_Type)) \

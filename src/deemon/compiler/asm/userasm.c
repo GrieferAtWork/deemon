@@ -1326,7 +1326,7 @@ struct cleanup_mode {
 #endif /* !NDEBUG */
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 get_assembly_formatter_oprepr(struct ast *__restrict self,
                               char const *__restrict format, int mode,
                               struct cleanup_mode *__restrict cleanup,

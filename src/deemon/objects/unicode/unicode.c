@@ -199,7 +199,7 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch) {
+PUBLIC WUNUSED DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch) {
 	DREF String *result;
 	rwlock_read(&latin1_chars_lock);
 	result = latin1_chars[ch];
@@ -1627,7 +1627,7 @@ err:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_PackUtf16Buffer(/*inherit(always)*/ uint16_t *__restrict text,
                           unsigned int error_mode) {
 	size_t i, length, utf8_length;
@@ -1960,7 +1960,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
                           unsigned int error_mode) {
 	size_t i, length, utf8_length;
@@ -2107,7 +2107,7 @@ err:
 }
 
 #if 0 /* TODO: Expose as a codepage decoder function */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_PackWideBuffer(/*inherit(always)*/ dwchar_t *__restrict text,
                          unsigned int error_mode) {
 #ifdef CONFIG_HOST_WINDOWS
@@ -2300,7 +2300,7 @@ case STRING_ENCODING_-- - MBCS: {
 INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_NewUtf8(char const *__restrict str, size_t length,
                   unsigned int error_mode) {
 	DREF String *result;
@@ -2499,7 +2499,7 @@ err:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
                   unsigned int error_mode) {
 	DREF String *result;
@@ -2696,7 +2696,7 @@ err_r:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeString_TrySetUtf8(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 	DREF String *result;
 	uint8_t *iter, *end;
@@ -2861,7 +2861,7 @@ err_r:
 }
 
 
-PUBLIC DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch) {
+PUBLIC WUNUSED DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch) {
 	uint16_t *buffer;
 	if (ch <= 0xff)
 		return _DeeString_Chr8((uint8_t)ch);
@@ -2872,7 +2872,7 @@ PUBLIC DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch) {
 	return DeeString_Pack2ByteBuffer(buffer);
 }
 
-PUBLIC DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch) {
+PUBLIC WUNUSED DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch) {
 	if (ch <= 0xff)
 		return _DeeString_Chr8((uint8_t)ch);
 	if (ch <= 0xffff) {

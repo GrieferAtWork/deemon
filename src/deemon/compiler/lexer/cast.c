@@ -28,7 +28,7 @@
 
 DECL_BEGIN
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_cast(struct ast *__restrict typeexpr) {
 	uint32_t old_flags;
 	DREF struct ast *kw_labels;

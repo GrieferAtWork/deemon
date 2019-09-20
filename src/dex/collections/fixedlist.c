@@ -90,7 +90,7 @@
 
 DECL_BEGIN
 
-PRIVATE DREF FixedList *DCALL fl_ctor(void) {
+PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 	DREF FixedList *result;
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem));
 	if unlikely(!result)
@@ -210,7 +210,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF FixedList *DCALL
+PRIVATE WUNUSED DREF FixedList *DCALL
 fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
                                                  DeeObject *__restrict index),
                 DeeObject *__restrict sequence, size_t length) {
@@ -248,7 +248,7 @@ err:
 }
 
 
-PRIVATE DREF FixedList *DCALL
+PRIVATE WUNUSED DREF FixedList *DCALL
 fl_init(size_t argc, DeeObject **argv) {
 	DREF FixedList *result;
 	DeeObject *size_ob, *init = NULL;
@@ -606,7 +606,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 fl_nsi_xchitem(FixedList *__restrict self, size_t index,
                DeeObject *__restrict value) {
 	DREF DeeObject *result;
@@ -941,7 +941,7 @@ fli_visit(FixedListIterator *__restrict self, dvisit_t proc, void *arg) {
 }
 
 #define DEFINE_FLI_COMPARE(name, op)                                                \
-	PRIVATE DREF DeeObject *DCALL                                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                   \
 	name(FixedListIterator *__restrict self,                                        \
 	     FixedListIterator *__restrict other) {                                     \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &FixedListIterator_Type)) \

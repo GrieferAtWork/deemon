@@ -183,7 +183,7 @@ PRIVATE struct type_member segiter_members[] = {
 INTDEF DeeTypeObject SeqSegmentsIterator_Type;
 
 #define DEFINE_SEGITER_COMPARE(name, func)                               \
-	PRIVATE DREF DeeObject *DCALL                                        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                        \
 	name(SegmentsIterator *__restrict self,                              \
 	     SegmentsIterator *__restrict other) {                           \
 		if (DeeObject_AssertTypeExact(other, &SeqSegmentsIterator_Type)) \

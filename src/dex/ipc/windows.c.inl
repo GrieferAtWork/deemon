@@ -227,7 +227,7 @@ get_stdhandle_for_process(DeeObject *procfd, int stdnum) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 nt_GetEnvironmentVariable(LPCWSTR lpName) {
 	LPWSTR buffer;
 	DWORD bufsize = 256, error;
@@ -262,7 +262,7 @@ err:
 
 
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED DREF DeeStringObject *DCALL
 nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
                           LPWSTR lpPathVariable, BOOL bFixUnc, LPWSTR lpCommandLine,
                           LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -385,7 +385,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED DREF DeeStringObject *DCALL
 nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
                             LPWSTR lpPathExtVariable, LPWSTR lpCommandLine,
                             LPSECURITY_ATTRIBUTES lpProcessAttributes,
@@ -469,7 +469,7 @@ PRIVATE WCHAR const wPathExtStr[] = { 'P', 'A', 'T', 'H', 'E', 'X', 'T', 0 };
  * @return: * :        The application name that was eventually used to start the process.
  * @return: NULL:      An error occurred and was thrown.
  * @return: ITER_DONE: Failed to start the process (see GetLastError()) */
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED DREF DeeStringObject *DCALL
 nt_CreateProcessPath(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
                      LPWSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes,
                      LPSECURITY_ATTRIBUTES lpThreadAttributes,
@@ -582,7 +582,7 @@ err_nopath:
 
 
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED DREF DeeStringObject *DCALL
 nt_CreateProcessExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLength,
                     LPWSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes,
                     LPSECURITY_ATTRIBUTES lpThreadAttributes,
@@ -1156,7 +1156,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_join(Process *__restrict self, size_t argc,
              DeeObject **argv) {
 	int error;
@@ -1171,7 +1171,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_tryjoin(Process *__restrict self, size_t argc,
                 DeeObject **argv) {
 	int error;
@@ -1188,7 +1188,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_timedjoin(Process *__restrict self, size_t argc,
                   DeeObject **argv) {
 	int error;
@@ -1206,7 +1206,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_started(Process *__restrict self, size_t argc,
                 DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":started"))
@@ -1216,7 +1216,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_detached(Process *__restrict self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":detached"))
@@ -1226,7 +1226,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_isachild(Process *__restrict self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isachild"))
@@ -1236,7 +1236,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_terminated(Process *__restrict self, size_t argc,
                    DeeObject **argv) {
 	DWORD exitcode;
@@ -1347,7 +1347,7 @@ typedef struct {
 INTDEF DeeTypeObject ProcessThreadsIterator_Type;
 INTDEF DeeTypeObject ProcessThreads_Type;
 
-PRIVATE DREF ProcessThreads *DCALL pt_new(DWORD pid) {
+PRIVATE WUNUSED DREF ProcessThreads *DCALL pt_new(DWORD pid) {
 	DREF ProcessThreads *result;
 	result = DeeObject_MALLOC(ProcessThreads);
 	if unlikely(!result)
@@ -1682,7 +1682,7 @@ err:
 }
 
 #define DEFINE_PROCESS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)                          \
-	PRIVATE DREF DeeObject *DCALL                                                 \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                 \
 	process_get_##stdxxx(Process *__restrict self) {                              \
 		return process_get_std(self, DEE_STDXXX);                                 \
 	}                                                                             \
@@ -1699,7 +1699,7 @@ DEFINE_PROCESS_STD_FUNCTIONS(stdout, DEE_STDOUT)
 DEFINE_PROCESS_STD_FUNCTIONS(stderr, DEE_STDERR)
 #undef DEFINE_PROCESS_STD_FUNCTIONS
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 call_extern(DeeObject *__restrict module_name,
             DeeObject *__restrict global_name,
             size_t argc, DeeObject **argv) {
@@ -2091,7 +2091,7 @@ PRIVATE struct type_getset process_getsets[] = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_class_self(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))

@@ -174,7 +174,7 @@ err:
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                          \
-	PRIVATE DREF DeeObject *DCALL                                                    \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                    \
 	name(LocatorIterator *__restrict self,                                           \
 	     LocatorIterator *__restrict other) {                                        \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqLocatorIterator_Type)) \
@@ -451,7 +451,7 @@ INTERN DeeTypeObject SeqLocator_Type = {
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeq_LocateAll(DeeObject *__restrict self,
                  DeeObject *__restrict keyed_search_item,
                  DeeObject *key) {

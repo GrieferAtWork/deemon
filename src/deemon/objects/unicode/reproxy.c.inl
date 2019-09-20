@@ -219,7 +219,7 @@ refaiter_getseq(ReSequenceIterator *__restrict self) {
 #define REITER_GETDATAPTR(x) ATOMIC_READ((x)->re_args.re_dataptr)
 
 #define DEFINE_REFA_COMPARE(name, op)                                      \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(ReSequenceIterator *__restrict self,                              \
 	     ReSequenceIterator *__restrict other) {                           \
 		char *x, *y;                                                       \

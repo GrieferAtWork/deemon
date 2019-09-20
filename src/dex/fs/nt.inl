@@ -93,7 +93,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 nt_GetTempPath(void) {
 	LPWSTR buffer, new_buffer;
 	DWORD bufsize = 256, error;

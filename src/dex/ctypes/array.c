@@ -66,7 +66,7 @@ aiter_visit(ArrayIterator *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED DREF struct lvalue_object *DCALL
 aiter_next(ArrayIterator *__restrict self) {
 	DREF struct lvalue_object *result;
 	union pointer result_pointer;
@@ -106,7 +106,7 @@ aiter_bool(ArrayIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED DREF struct lvalue_object *DCALL
 aiter_getseq(ArrayIterator *__restrict self) {
 	DREF struct lvalue_object *result;
 	DREF DeeArrayTypeObject *atype;
@@ -189,7 +189,7 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 };
 
 
-PRIVATE DREF ArrayIterator *DCALL
+PRIVATE WUNUSED DREF ArrayIterator *DCALL
 array_iter(DeeArrayTypeObject *tp_self, void *base) {
 	DREF ArrayIterator *result;
 	/* Create a new array iterator. */
@@ -213,12 +213,12 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 array_size(DeeArrayTypeObject *tp_self, void *UNUSED(base)) {
 	return DeeInt_NewSize(tp_self->at_count);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 array_contains(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *__restrict other) {
 	DREF struct lvalue_object *temp = NULL;
@@ -263,7 +263,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 array_get(DeeArrayTypeObject *tp_self, void *base,
           DeeObject *__restrict index_ob) {
 	DREF struct lvalue_object *result;
@@ -315,7 +315,7 @@ array_del(DeeArrayTypeObject *tp_self, void *base,
 	return array_set(tp_self, base, index_ob, Dee_None);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 array_getrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *__restrict begin_ob, DeeObject *__restrict end_ob) {
 	DREF struct lvalue_object *result;
@@ -490,7 +490,7 @@ array_init(DeeArrayTypeObject *tp_self, void *base,
 	return array_assign(tp_self, base, arg);
 }
 
-PRIVATE DREF struct pointer_object *DCALL
+PRIVATE WUNUSED DREF struct pointer_object *DCALL
 array_adddiff(DeeArrayTypeObject *tp_self,
               void *base, ptrdiff_t diff) {
 	/* Follow C-conventions and return a pointer to the `diff's element. */
@@ -517,7 +517,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF struct pointer_object *DCALL
+PRIVATE WUNUSED DREF struct pointer_object *DCALL
 array_add(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
@@ -525,7 +525,7 @@ array_add(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	return array_adddiff(tp_self, base, diff);
 }
 
-PRIVATE DREF struct pointer_object *DCALL
+PRIVATE WUNUSED DREF struct pointer_object *DCALL
 array_sub(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
@@ -533,7 +533,7 @@ array_sub(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	return array_adddiff(tp_self, base, -diff);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 array_repr(DeeArrayTypeObject *tp_self, void *base) {
 	union pointer iter, end;
 	size_t item_size;
@@ -574,7 +574,7 @@ array_bool(DeeArrayTypeObject *tp_self, void *UNUSED(base)) {
 	return tp_self->at_count != 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 array_call(DeeArrayTypeObject *tp_self,
            void *base, size_t argc, DeeObject **argv) {
 	/* Because arrays must behave compatible to pointers,

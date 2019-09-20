@@ -35,7 +35,7 @@
 
 DECL_BEGIN
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_mapping(struct ast *__restrict initial_key) {
 	size_t elema, elemc;
 	DREF struct ast *result;
@@ -147,7 +147,7 @@ err:
 	goto done;
 }
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_brace_list(struct ast *__restrict initial_item) {
 	DREF struct ast *result;
 	DREF struct ast **elemv;
@@ -221,7 +221,7 @@ err:
 }
 
 
-INTERN DREF struct ast *FCALL ast_parse_brace_items(void) {
+INTERN WUNUSED DREF struct ast *FCALL ast_parse_brace_items(void) {
 	DREF struct ast *result, *new_result;
 	/* Parse the initial item. */
 	if (tok == '.') {

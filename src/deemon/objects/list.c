@@ -280,7 +280,7 @@ err:
 	return -1;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewHint(size_t n_prealloc) {
 	DREF List *result;
 	result = DeeGCObject_MALLOC(List);
@@ -304,7 +304,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewUninitialized(size_t n_elem) {
 	DREF List *result;
 	result = DeeGCObject_MALLOC(List);
@@ -379,7 +379,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *__restrict objv) {
 	DREF DeeObject *result;
 	result = DeeList_NewUninitialized(objc);
@@ -394,7 +394,7 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
                                /*inherit(on_success)*/ DREF DeeObject **__restrict objv) {
 	DREF List *result;
@@ -412,7 +412,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewVector(size_t objc, DeeObject *const *__restrict objv) {
 	DREF DeeObject *result;
 	size_t i;
@@ -428,7 +428,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeList_Copy(DREF DeeObject *__restrict self) {
 	DREF List *result;
 	ASSERT_OBJECT(self);
@@ -450,7 +450,7 @@ err_r:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                DeeObject *__restrict sequence) {
 	DREF DeeObject *result;
@@ -478,7 +478,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
                         /*inherit(on_success)*/ DREF DeeObject **argv) {
 	DREF List *result;
@@ -2196,7 +2196,7 @@ err:
 	return (size_t)-2;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 list_nsi_xch(List *__restrict self,
              size_t index,
              DeeObject *__restrict value) {
@@ -2324,7 +2324,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 list_insertiter_deprecated(List *__restrict self, size_t argc,
                            DeeObject **argv) {
 	size_t index;
@@ -2368,7 +2368,7 @@ list_pop(List *self, size_t argc,
 	return DeeList_Pop((DeeObject *)self, index);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 list_clear(List *__restrict self, size_t argc,
            DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
@@ -2735,7 +2735,7 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeList_Sorted(DeeObject *__restrict self, DeeObject *key) {
 	DeeObject **oldv;
 	size_t i, objc;

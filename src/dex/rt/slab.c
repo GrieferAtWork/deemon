@@ -40,7 +40,7 @@ DECL_BEGIN
 #endif /* !Dee_SLAB_COUNT */
 
 
-PRIVATE DREF SlabStatObject *DCALL ss_ctor(void) {
+PRIVATE WUNUSED DREF SlabStatObject *DCALL ss_ctor(void) {
 	size_t reqsize;
 	DREF SlabStatObject *result;
 	DREF SlabStatObject *new_result;
@@ -94,7 +94,7 @@ ss_hash(SlabStatObject *__restrict self) {
 }
 
 #define DEFINE_SS_COMPARE(name, op, return_diff_size)                                       \
-	PRIVATE DREF DeeObject *DCALL                                                           \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                           \
 	name(SlabStatObject *__restrict self,                                                   \
 	     SlabStatObject *__restrict other) {                                                \
 		if (DeeObject_AssertTypeExact(other, &SlabStat_Type))                               \
@@ -299,7 +299,7 @@ ssi_bool(SlabStatIteratorObject *__restrict self) {
 }
 
 #define DEFINE_SSI_COMPARE(name, op)                                  \
-	PRIVATE DREF DeeObject *DCALL                                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                     \
 	name(SlabStatIteratorObject *__restrict self,                     \
 	     SlabStatIteratorObject *__restrict other) {                  \
 		if (DeeObject_AssertTypeExact(other, &SlabStatIterator_Type)) \
@@ -437,7 +437,7 @@ si_get_slabsize(SlabInfoObject *__restrict self) {
 }
 
 #define DEFINE_FIELD_READER(field_name)                        \
-	PRIVATE DREF DeeObject *DCALL                              \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                              \
 	si_get_##field_name(SlabInfoObject *__restrict self) {     \
 		return DeeInt_NewSize(self->si_info->si_##field_name); \
 	}
@@ -491,7 +491,7 @@ PRIVATE struct type_getset si_getsets[] = {
 };
 
 #define DEFINE_SI_COMPARE(name, op)                                                   \
-	PRIVATE DREF DeeObject *DCALL                                                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                     \
 	name(SlabInfoObject *__restrict self,                                             \
 	     SlabInfoObject *__restrict other) {                                          \
 		if (DeeObject_AssertTypeExact(other, &SlabInfo_Type))                         \

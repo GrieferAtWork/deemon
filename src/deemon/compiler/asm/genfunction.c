@@ -30,7 +30,7 @@
 
 DECL_BEGIN
 
-PRIVATE DREF DeeCodeObject *DCALL
+PRIVATE WUNUSED DREF DeeCodeObject *DCALL
 ast_assemble_function(struct ast *__restrict function_ast,
                       uint16_t *__restrict prefc,
                       struct asm_symbol_ref **__restrict prefv) {

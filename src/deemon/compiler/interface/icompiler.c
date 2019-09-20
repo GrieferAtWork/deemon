@@ -245,11 +245,11 @@ INTERN struct type_getset compiler_getsets[] = {
 
 #ifndef NDEBUG
 #define ast_new(scope, loc) ast_dbgnew(scope, loc, __FILE__, __LINE__)
-PRIVATE DREF struct ast *DCALL
+PRIVATE WUNUSED DREF struct ast *DCALL
 ast_dbgnew(DeeScopeObject *__restrict scope,
            DeeObject *loc, char const *file, int line)
 #else /* !NDEBUG */
-PRIVATE DREF struct ast *DCALL
+PRIVATE WUNUSED DREF struct ast *DCALL
 ast_new(DeeScopeObject *__restrict scope, DeeObject *loc)
 #endif /* NDEBUG */
 {

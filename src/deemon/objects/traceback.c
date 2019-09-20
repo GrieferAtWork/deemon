@@ -396,7 +396,7 @@ PRIVATE struct type_nii traceiter_nii = {
 };
 
 #define DEFINE_TRACEITER_COMPARE(name, op)                                \
-	PRIVATE DREF DeeObject *DCALL                                         \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                         \
 	name(TraceIterator *__restrict self,                                  \
 	     TraceIterator *__restrict other) {                               \
 		if (DeeObject_AssertTypeExact(other, &DeeTracebackIterator_Type)) \
@@ -471,7 +471,7 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 };
 
 
-PRIVATE DREF DeeTracebackObject *DCALL traceback_new(void) {
+PRIVATE WUNUSED DREF DeeTracebackObject *DCALL traceback_new(void) {
 	return DeeTraceback_New(DeeThread_Self());
 }
 
@@ -694,7 +694,7 @@ PRIVATE struct type_seq traceback_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 traceback_current(DeeObject *__restrict UNUSED(self)) {
 	DREF DeeThreadObject *thread;
 	DREF DeeObject *result;

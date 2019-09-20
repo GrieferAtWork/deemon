@@ -63,7 +63,7 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFloat_New(double value) {
 	/* Allocate a new float object descriptor. */
 	DREF Float *result = float_alloc();
@@ -227,7 +227,7 @@ float_hash(Float *__restrict self) {
 
 
 #define DEFINE_FLOAT_CMP(name, op)                              \
-	PRIVATE DREF DeeObject *DCALL                               \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                               \
 	name(Float *__restrict self, DeeObject *__restrict other) { \
 		double other_val;                                       \
 		if (DeeObject_AsDouble(other, &other_val))              \

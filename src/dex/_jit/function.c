@@ -167,7 +167,7 @@ again:
 	return result_entry;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 JITLexer_ParseDefaultValue(JITLexer *__restrict self,
                            DeeModuleObject *impbase,
                            DeeObject *globals) {
@@ -227,7 +227,7 @@ JITLexer_ParseDefaultValue(JITLexer *__restrict self,
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 JITFunction_New(/*utf-8*/ char const *name_start,
                 /*utf-8*/ char const *name_end,
                 /*utf-8*/ char const *params_start,
@@ -974,7 +974,7 @@ jf_getname(JITFunction *__restrict self) {
 	                         STRING_ERROR_FIGNORE);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 jf_getdoc(JITFunction *__restrict UNUSED(self)) {
 	return_none;
 }

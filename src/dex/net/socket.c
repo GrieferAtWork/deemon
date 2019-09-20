@@ -314,7 +314,7 @@ err_shutdown_failed(Socket *__restrict self, int error) {
 	                          self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_close(Socket *__restrict self, size_t argc,
              DeeObject **argv) {
 	sock_t socket_handle;
@@ -383,7 +383,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_shutdown(Socket *__restrict self, size_t argc,
                 DeeObject **argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
@@ -1802,7 +1802,7 @@ PRIVATE size_t DCALL get_recv_burstsize(void) {
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    uint64_t timeout_microseconds,
                    size_t max_bufsize, int flags,
@@ -1874,7 +1874,7 @@ err:
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_bind(Socket *__restrict self, size_t argc,
             DeeObject **argv) {
 	SockAddr addr;
@@ -1894,7 +1894,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_connect(Socket *__restrict self, size_t argc,
                DeeObject **argv) {
 	SockAddr addr;
@@ -1914,7 +1914,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_listen(Socket *__restrict self, size_t argc,
               DeeObject **argv) {
 	int max_backlog = -1;
@@ -1957,7 +1957,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_accept(Socket *__restrict self, size_t argc,
               DeeObject **argv) {
 	uint64_t timeout = (uint64_t)-1;
@@ -1966,7 +1966,7 @@ socket_accept(Socket *__restrict self, size_t argc,
 	return socket_doaccept(self, timeout);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_tryaccept(Socket *__restrict self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryaccept"))
@@ -1974,7 +1974,7 @@ socket_tryaccept(Socket *__restrict self, size_t argc,
 	return socket_doaccept(self, 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_recv(Socket *__restrict self, size_t argc,
             DeeObject **argv) {
 	size_t max_size;
@@ -2033,7 +2033,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_recvinto(Socket *__restrict self, size_t argc,
                 DeeObject **argv) {
 	DeeBuffer buffer;
@@ -2083,7 +2083,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_recvfrom(Socket *__restrict self, size_t argc,
                 DeeObject **argv) {
 	DREF DeeSockAddrObject *result_addr;
@@ -2168,7 +2168,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_recvfrominto(Socket *__restrict self, size_t argc,
                     DeeObject **argv) {
 	DeeBuffer buffer;
@@ -2251,7 +2251,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_send(Socket *__restrict self, size_t argc,
             DeeObject **argv) {
 	DeeBuffer buffer;
@@ -2302,7 +2302,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 socket_sendto(Socket *__restrict self, size_t argc,
               DeeObject **argv) {
 	DeeBuffer buffer;

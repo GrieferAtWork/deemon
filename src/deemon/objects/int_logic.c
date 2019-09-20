@@ -80,7 +80,7 @@ int_copy(DeeIntObject const *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeIntObject *DCALL
+INTERN WUNUSED DREF DeeIntObject *DCALL
 int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v) {
 	dssize_t j = ABS(v->ob_size);
 	dssize_t i = j;
@@ -170,7 +170,7 @@ x_sub(DeeIntObject *__restrict a,
 	return int_normalize(z);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_add(DeeIntObject *__restrict a, DeeObject *b_ob) {
 	DeeIntObject *z, *b;
 	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
@@ -198,7 +198,7 @@ done:
 	return (DeeObject *)z;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_sub(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *z, *b;
 	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
@@ -316,7 +316,7 @@ x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
 #endif /* (DIGIT_BITS * 2) < 32 */
 
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED DREF DeeIntObject *DCALL
 x_sub_revint(digit a, DeeIntObject *__restrict b) {
 	dssize_t size_b = ABS(b->ob_size);
 	dssize_t i;
@@ -344,7 +344,7 @@ x_sub_revint(digit a, DeeIntObject *__restrict b) {
 #if (DIGIT_BITS * 2) < 32
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int3(DeeIntObject *__restrict a, uint32_t b);
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED DREF DeeIntObject *DCALL
 x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
 	dssize_t size_b = ABS(b->ob_size);
 	DeeIntObject *z;
@@ -587,7 +587,7 @@ x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 
 
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED DREF DeeIntObject *DCALL
 x_sub_revint2(twodigits a,
               DeeIntObject *__restrict b) {
 	dssize_t size_b = ABS(b->ob_size);
@@ -1222,7 +1222,7 @@ fail:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_mul(DeeIntObject *a, DeeObject *b_ob) {
 	DREF DeeIntObject *z, *b;
 	if ((b = (DeeIntObject *)DeeObject_Int(b_ob)) == NULL)
@@ -1462,7 +1462,7 @@ INTERN DeeObject *DCALL int_mod(DeeIntObject *a, DeeObject *b_ob) {
 	return (DeeObject *)mod;
 }
 
-INTERN DREF DeeObject *DCALL int_inv(DeeIntObject *v) {
+INTERN WUNUSED DREF DeeObject *DCALL int_inv(DeeIntObject *v) {
 	DeeIntObject *x;
 	if (ABS(v->ob_size) <= 1)
 		return DeeInt_NewMedian(-(MEDIUM_VALUE(v) + 1));
@@ -1473,7 +1473,7 @@ INTERN DREF DeeObject *DCALL int_inv(DeeIntObject *v) {
 	return (DeeObject *)maybe_small_int(x);
 }
 
-INTERN DREF DeeObject *DCALL int_neg(DeeIntObject *v) {
+INTERN WUNUSED DREF DeeObject *DCALL int_neg(DeeIntObject *v) {
 	DeeIntObject *z;
 	if (ABS(v->ob_size) <= 1)
 		return DeeInt_NewMedian(-MEDIUM_VALUE(v));
@@ -1483,7 +1483,7 @@ INTERN DREF DeeObject *DCALL int_neg(DeeIntObject *v) {
 	return (DeeObject *)z;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_shr(DeeIntObject *a, DeeObject *b) {
 	DeeIntObject *z = NULL;
 	digit lomask, himask;
@@ -1530,7 +1530,7 @@ rshift_error:
 	return (DeeObject *)maybe_small_int(z);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_shl(DeeIntObject *a, DeeObject *b) {
 	DeeIntObject *z = NULL;
 	twodigits accum;
@@ -1584,7 +1584,7 @@ v_complement(digit *z, digit const *a, dssize_t m) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 int_bitwise(DeeIntObject *__restrict a, char op,
             DeeIntObject *__restrict b) {
 	int nega, negb, negz;
@@ -1671,7 +1671,7 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 	return (DeeObject *)maybe_small_int(int_normalize(z));
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_and(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *b;
 	DREF DeeIntObject *c;
@@ -1682,7 +1682,7 @@ int_and(DeeIntObject *a, DeeObject *b_ob) {
 	return (DREF DeeObject *)c;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_xor(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *b;
 	DREF DeeIntObject *c;
@@ -1693,7 +1693,7 @@ int_xor(DeeIntObject *a, DeeObject *b_ob) {
 	return (DREF DeeObject *)c;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_or(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *b;
 	DREF DeeIntObject *c;
@@ -1705,7 +1705,7 @@ int_or(DeeIntObject *a, DeeObject *b_ob) {
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 int_pow(DeeIntObject *a, DeeObject *b_ob) {
 	DeeIntObject *z, *b;
 	dssize_t i, j, k;

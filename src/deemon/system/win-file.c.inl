@@ -317,12 +317,12 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL debugfile_get(void) {
+PRIVATE WUNUSED DREF DeeObject *DCALL debugfile_get(void) {
 	return_reference(DeeFile_DefaultStddbg);
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 debugfile_isatty(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isatty"))
@@ -1371,7 +1371,7 @@ sysfile_fini(SystemFile *__restrict self) {
 	Dee_XDecref(self->sf_filename);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))

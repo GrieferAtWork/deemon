@@ -481,7 +481,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
                  DeeObject **argv, DeeObject *kw) {
 	int lookup_error;
@@ -547,7 +547,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
                  DeeObject **argv, DeeObject *kw) {
 	DREF DeeAttributeObject *result;

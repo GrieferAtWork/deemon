@@ -864,7 +864,7 @@ handle_iter:
 
 
 
-PRIVATE DREF DeeThreadObject *DCALL
+PRIVATE WUNUSED DREF DeeThreadObject *DCALL
 allocate_thread_self(void) {
 	DREF DeeThreadObject *result;
 again:
@@ -2986,7 +2986,7 @@ PRIVATE struct type_method thread_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_self(DeeObject *__restrict UNUSED(self),
             size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))
@@ -2994,12 +2994,12 @@ thread_self(DeeObject *__restrict UNUSED(self),
 	return_reference(DeeThread_Self());
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_current_get(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeThread_Self());
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_selfid(DeeObject *__restrict UNUSED(self),
               size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":selfid"))
@@ -3024,7 +3024,7 @@ thread_selfid(DeeObject *__restrict UNUSED(self),
 #endif /* !CONFIG_NO_THREADID_INTERNAL */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_yield(DeeObject *__restrict UNUSED(self),
              size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":yield"))
@@ -3033,7 +3033,7 @@ thread_yield(DeeObject *__restrict UNUSED(self),
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_check_interrupt(DeeObject *__restrict UNUSED(self),
                        size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":check_interrupt") ||
@@ -3042,7 +3042,7 @@ thread_check_interrupt(DeeObject *__restrict UNUSED(self),
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_sleep(DeeObject *__restrict UNUSED(self),
              size_t argc, DeeObject **argv) {
 	uint64_t timeout;
@@ -3052,7 +3052,7 @@ thread_sleep(DeeObject *__restrict UNUSED(self),
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_exit(DeeObject *__restrict UNUSED(self),
             size_t argc, DeeObject **argv) {
 	DeeObject *result = Dee_None;

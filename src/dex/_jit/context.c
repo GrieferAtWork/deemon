@@ -229,7 +229,7 @@ err:
 
 
 
-INTERN DREF DeeObject *FCALL
+INTERN WUNUSED DREF DeeObject *FCALL
 JITLValue_GetValue(JITLValue *__restrict self,
                    JITContext *__restrict context) {
 	DREF DeeObject *result;

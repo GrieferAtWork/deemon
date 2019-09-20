@@ -187,7 +187,7 @@ done:
 
 
 #define DEFINE_CATITERATOR_COMPARE(name, if_equal, if_diffseq, compare_object)      \
-	PRIVATE DREF DeeObject *DCALL                                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                   \
 	name(CatIterator *__restrict self,                                              \
 	     CatIterator *__restrict other) {                                           \
 		DREF DeeObject *result;                                                     \

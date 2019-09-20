@@ -341,7 +341,7 @@ PRIVATE struct type_attr shlib_attr = {
 	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))NULL /* TODO */
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 shlib_base(Shlib *__restrict self, size_t argc,
            DeeObject **argv) {
 	DREF struct pointer_object *result;
@@ -376,7 +376,7 @@ INTERN bool DCALL clear_void_pointer(void) {
 	return false;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 shlib_base(Shlib *__restrict self, size_t argc,
            DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":base"))

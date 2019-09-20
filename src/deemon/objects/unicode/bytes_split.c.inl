@@ -120,7 +120,7 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 
 
 #define DEFINE_BSI_COMPARE(name, op)                                       \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(BytesSplitIterator *__restrict self,                              \
 	     BytesSplitIterator *__restrict other) {                           \
 		uint8_t *x, *y;                                                    \

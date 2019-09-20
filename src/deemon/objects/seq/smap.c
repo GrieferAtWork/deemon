@@ -651,7 +651,7 @@ INTERN DeeTypeObject SharedMap_Type = {
  * NOTE: This function implicitly inherits a reference to each item
  *       of the given vector, though does not actually inherit the
  *       vector itself! */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *__restrict vector) {
 	DREF SharedMap *result;
 	size_t mask = 0x03;

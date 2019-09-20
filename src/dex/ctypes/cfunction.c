@@ -219,7 +219,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 };
 
 #ifndef CONFIG_NO_CFUNCTION
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 generate_function_name(DeeSTypeObject *__restrict return_type,
                        cc_t calling_convention, size_t argc,
                        DeeSTypeObject **__restrict argv) {
@@ -287,7 +287,7 @@ union argument {
 #endif /* !__INTELLISENSE__ */
 
 
-PRIVATE DREF DeeCFunctionTypeObject *DCALL
+PRIVATE WUNUSED DREF DeeCFunctionTypeObject *DCALL
 cfunctiontype_new(DeeSTypeObject *__restrict return_type,
                   cc_t calling_convention, size_t argc,
                   DeeSTypeObject **__restrict argv,
@@ -483,7 +483,7 @@ nope:
 #endif /* !CONFIG_NO_CFUNCTION */
 
 
-INTERN DREF DeeCFunctionTypeObject *DCALL
+INTERN WUNUSED DREF DeeCFunctionTypeObject *DCALL
 DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
                    cc_t calling_convention, size_t argc,
                    DeeSTypeObject **__restrict argv,

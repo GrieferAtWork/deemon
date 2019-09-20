@@ -1499,11 +1499,11 @@ err_no_keywords:
 }
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeObject_TThisCall(DeeTypeObject *tp_self,
                     DeeObject *self, DeeObject *this_arg,
                     size_t argc, DeeObject **argv);
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeObject_TThisCallKw(DeeTypeObject *tp_self,
                       DeeObject *self, DeeObject *this_arg,
                       size_t argc, DeeObject **argv,

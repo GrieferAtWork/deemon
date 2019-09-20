@@ -642,7 +642,7 @@ DeeModule_OpenDec(struct module_object *__restrict module,
 /* @return: * :        A reference to the object that got loaded.
  * @return: NULL:      An error occurred. (NOTE: `DTYPE_NULL' is not allowed and indicates a corrupt file)
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
                    uint8_t **__restrict preader);
 /* @param: allow_dtype_null: When true, individual vector elements are allowed
@@ -650,7 +650,7 @@ DecFile_LoadObject(DecFile *__restrict self,
  * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
  * @return: NULL:            An error occurred.
  * @return: ITER_DONE:       The DEC file has been corrupted. */
-INTDEF DREF DeeObject **DCALL
+INTDEF WUNUSED DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
                          uint16_t *__restrict pcount,
                          uint8_t **__restrict preader,
@@ -659,13 +659,13 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 /* @return: * :        New reference to a code object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF DREF struct code_object *DCALL
+INTDEF WUNUSED DREF struct code_object *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
                  uint8_t **__restrict preader);
 /* @return: * :        New reference to a ddi object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF DREF struct ddi_object *DCALL
+INTDEF WUNUSED DREF struct ddi_object *DCALL
 DecFile_LoadDDI(DecFile *__restrict self,
                 uint8_t *__restrict reader,
                 bool is_8bit_ddi);

@@ -621,7 +621,7 @@ PRIVATE struct type_member ddi_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeDDIObject *DCALL ddi_ctor(void) {
+PRIVATE WUNUSED DREF DeeDDIObject *DCALL ddi_ctor(void) {
 	return_reference_((DREF DeeDDIObject *)&empty_ddi);
 }
 

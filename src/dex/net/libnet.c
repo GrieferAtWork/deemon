@@ -37,7 +37,7 @@
 DECL_BEGIN
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getafname_f(size_t argc, DeeObject **argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getafname", &af_id))
@@ -45,7 +45,7 @@ lib_getafname_f(size_t argc, DeeObject **argv) {
 	return sock_getafnameorid(af_id);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getafof_f(size_t argc, DeeObject **argv) {
 	DeeObject *afob;
 	int afid;
@@ -55,7 +55,7 @@ lib_getafof_f(size_t argc, DeeObject **argv) {
 	return DeeInt_NewInt(afid);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_gettypename_f(size_t argc, DeeObject **argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:gettypename", &af_id))
@@ -63,7 +63,7 @@ lib_gettypename_f(size_t argc, DeeObject **argv) {
 	return sock_gettypenameorid(af_id);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_gettypeof_f(size_t argc, DeeObject **argv) {
 	DeeObject *afob;
 	int afid;
@@ -73,7 +73,7 @@ lib_gettypeof_f(size_t argc, DeeObject **argv) {
 	return DeeInt_NewInt(afid);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getprotoname_f(size_t argc, DeeObject **argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getprotoname", &af_id))
@@ -81,7 +81,7 @@ lib_getprotoname_f(size_t argc, DeeObject **argv) {
 	return sock_getprotonameorid(af_id);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getprotoof_f(size_t argc, DeeObject **argv) {
 	DeeObject *afob;
 	int afid;
@@ -91,7 +91,7 @@ lib_getprotoof_f(size_t argc, DeeObject **argv) {
 	return DeeInt_NewInt(afid);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getmsgflagsname_f(size_t argc, DeeObject **argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getmsgflagsname", &af_id))
@@ -99,7 +99,7 @@ lib_getmsgflagsname_f(size_t argc, DeeObject **argv) {
 	return sock_getmsgflagsnameorid(af_id);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_getmsgflagsof_f(size_t argc, DeeObject **argv) {
 	DeeObject *afob;
 	int afid;
@@ -119,7 +119,7 @@ PRIVATE DEFINE_CMETHOD(lib_getmsgflagsname, &lib_getmsgflagsname_f);
 PRIVATE DEFINE_CMETHOD(lib_getmsgflagsof, &lib_getmsgflagsof_f);
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh16_f(size_t argc, DeeObject **argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:ntoh16", &i))
@@ -131,7 +131,7 @@ lib_ntoh16_f(size_t argc, DeeObject **argv) {
 #endif /* !CONFIG_LITTLE_ENDIAN */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh32_f(size_t argc, DeeObject **argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:ntoh32", &i))
@@ -143,7 +143,7 @@ lib_ntoh32_f(size_t argc, DeeObject **argv) {
 #endif /* !CONFIG_LITTLE_ENDIAN */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_ntoh64_f(size_t argc, DeeObject **argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:ntoh64", &i))
@@ -155,7 +155,7 @@ lib_ntoh64_f(size_t argc, DeeObject **argv) {
 #endif /* !CONFIG_LITTLE_ENDIAN */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton16_f(size_t argc, DeeObject **argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:hton16", &i))
@@ -167,7 +167,7 @@ lib_hton16_f(size_t argc, DeeObject **argv) {
 #endif /* !CONFIG_LITTLE_ENDIAN */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton32_f(size_t argc, DeeObject **argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:hton32", &i))
@@ -179,7 +179,7 @@ lib_hton32_f(size_t argc, DeeObject **argv) {
 #endif /* !CONFIG_LITTLE_ENDIAN */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 lib_hton64_f(size_t argc, DeeObject **argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:hton64", &i))

@@ -284,7 +284,7 @@ DECL_BEGIN
 
 PRIVATE DEFINE_STRING(str_void, "void");
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 void_str(DeeSTypeObject *__restrict UNUSED(tp_self), void *UNUSED(self)) {
 	return_reference_((DeeObject *)&str_void);
 }

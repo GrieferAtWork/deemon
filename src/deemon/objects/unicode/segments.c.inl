@@ -158,7 +158,7 @@ PRIVATE struct type_getset ssegiter_getsets[] = {
 
 
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(StringSegmentsIterator *__restrict self,                          \
 	     StringSegmentsIterator *__restrict other) {                       \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \

@@ -100,7 +100,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_join(Process *__restrict self, size_t argc,
              DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":join"))
@@ -110,7 +110,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_tryjoin(Process *__restrict self, size_t argc,
                 DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryjoin"))
@@ -120,7 +120,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_timedjoin(Process *__restrict self, size_t argc,
                   DeeObject **argv) {
 	uint64_t timeout;
@@ -131,7 +131,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_started(Process *__restrict self, size_t argc,
                 DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":started"))
@@ -143,7 +143,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_detached(Process *__restrict self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":detached"))
@@ -155,7 +155,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_isachild(Process *__restrict self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isachild"))
@@ -167,7 +167,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_terminated(Process *__restrict self, size_t argc,
                    DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":terminated"))
@@ -252,7 +252,7 @@ process_get_files(Process *__restrict self) {
 }
 
 #define DEFINE_PROCESS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)                          \
-	PRIVATE DREF DeeObject *DCALL                                                 \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                 \
 	process_get_##stdxxx(Process *__restrict self) {                              \
 		if (self == &this_process)                                                \
 			return DeeFile_GetStd(DEE_STDXXX);                                    \
@@ -286,7 +286,7 @@ DEFINE_PROCESS_STD_FUNCTIONS(stdout, DEE_STDOUT)
 DEFINE_PROCESS_STD_FUNCTIONS(stderr, DEE_STDERR)
 #undef DEFINE_PROCESS_STD_FUNCTIONS
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 call_extern(DeeObject *__restrict module_name,
             DeeObject *__restrict global_name,
             size_t argc, DeeObject **argv) {
@@ -398,7 +398,7 @@ process_del_pwd(Process *__restrict self) {
 	return process_set_pwd(self, NULL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_get_exe(Process *__restrict UNUSED(self)) {
 	ipc_unimplemented();
 	return NULL;
@@ -425,7 +425,7 @@ process_del_exe(Process *__restrict self) {
 	return process_set_exe(self, NULL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_get_cmdline(Process *__restrict UNUSED(self)) {
 	ipc_unimplemented();
 	return NULL;
@@ -452,7 +452,7 @@ process_del_cmdline(Process *__restrict self) {
 	return process_set_cmdline(self, NULL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_get_argv(Process *__restrict UNUSED(self)) {
 	ipc_unimplemented();
 	return NULL;
@@ -520,7 +520,7 @@ PRIVATE struct type_getset process_getsets[] = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 process_class_self(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))
@@ -709,7 +709,7 @@ INTERN DeeTypeObject DeeProcEnum_Type = {
 
 typedef DeeSystemFileObject SystemFile;
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **argv) {
 	uint32_t pipe_size;

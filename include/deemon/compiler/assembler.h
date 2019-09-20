@@ -908,7 +908,7 @@ INTDEF void (DCALL asm_defsym)(struct asm_sym *__restrict self);
 /* Generate a finalized code object from written assembly.
  * NOTE: The caller is required to ensure that the assembler is ready
  *       for this, as well as that `asm_mergetext()' has been called! */
-INTDEF DREF DeeCodeObject *(DCALL asm_gencode)(void);
+INTDEF WUNUSED DREF DeeCodeObject *(DCALL asm_gencode)(void);
 INTDEF struct except_handler *(DCALL asm_pack_exceptv)(void);
 
 
@@ -1842,7 +1842,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL ast_genasm_switch(struct ast *__restrict s
 INTDEF WUNUSED NONNULL((1)) int DCALL ast_genasm_userasm(struct ast *__restrict self);
 
 /* Compile a DDI object for use by generated code. */
-INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);
+INTDEF WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void);
 
 /* Compile a new function, using `current_basescope'
  * as scope, and the given expression as code.
@@ -1854,7 +1854,7 @@ INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);
  * @param: prefc: The amount of required references to create a function object.
  * @param: prefv: Upon success, a vector of symbols that must passed to the
  *                code object when a function is being created. */
-INTDEF DREF DeeCodeObject *DCALL
+INTDEF WUNUSED DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
              bool first_function, uint16_t *__restrict prefc,
              /*out:inherit*/struct asm_symbol_ref **__restrict prefv);
@@ -1879,7 +1879,7 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
  *                following the regular argument list.
  *                Upon success, the caller must `Dee_Free()' this vector.
  * @param: pargc: Same as `pargv', but filled with the number of reference-arguments. */
-INTDEF DREF DeeCodeObject *DCALL
+INTDEF WUNUSED DREF DeeCodeObject *DCALL
 code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
                      uint16_t *__restrict prefc,
                      /*out:inherit*/struct asm_symbol_ref **__restrict prefv,

@@ -63,9 +63,9 @@ DECL_BEGIN
 
 
 #ifdef NDEBUG
-INTDEF DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
+INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc(size_t n_digits);
 #else /* NDEBUG */
-INTDEF DREF DeeIntObject *DCALL DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line);
+INTDEF WUNUSED DREF DeeIntObject *DCALL DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line);
 #define DeeInt_Alloc(n_digits)  DeeInt_Alloc_dbg(n_digits,__FILE__,__LINE__)
 #endif /* !NDEBUG */
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
@@ -75,20 +75,20 @@ INTDEF NONNULL((1)) void DCALL DeeInt_Free(DeeIntObject *__restrict self);
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_copy(DeeIntObject const *__restrict self);
-INTDEF DREF DeeIntObject *DCALL int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v);
-INTDEF DREF DeeObject *DCALL int_add(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_sub(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_mul(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_div(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_mod(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_inv(DeeIntObject *v);
-INTDEF DREF DeeObject *DCALL int_neg(DeeIntObject *v);
-INTDEF DREF DeeObject *DCALL int_shl(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_shr(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_and(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_xor(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_or(DeeIntObject *a, DeeObject *b);
-INTDEF DREF DeeObject *DCALL int_pow(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeIntObject *DCALL int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v);
+INTDEF WUNUSED DREF DeeObject *DCALL int_add(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_sub(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_mul(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_div(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_mod(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_inv(DeeIntObject *v);
+INTDEF WUNUSED DREF DeeObject *DCALL int_neg(DeeIntObject *v);
+INTDEF WUNUSED DREF DeeObject *DCALL int_shl(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_shr(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_and(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_xor(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_or(DeeIntObject *a, DeeObject *b);
+INTDEF WUNUSED DREF DeeObject *DCALL int_pow(DeeIntObject *a, DeeObject *b);
 
 INTDEF int DCALL int_inc(DREF DeeIntObject **__restrict pself);
 INTDEF int DCALL int_dec(DREF DeeIntObject **__restrict pself);

@@ -160,7 +160,7 @@ do_free:
 	DeeObject_Free(self);
 }
 
-INTERN DREF DeeIntObject *DCALL
+INTERN WUNUSED DREF DeeIntObject *DCALL
 #ifdef NDEBUG
 DeeInt_Alloc(size_t n_digits)
 #else /* NDEBUG */
@@ -215,7 +215,7 @@ intcache_clear(size_t UNUSED(max_clear)) {
 }
 
 
-INTERN DREF DeeIntObject *DCALL
+INTERN WUNUSED DREF DeeIntObject *DCALL
 #ifdef NDEBUG
 DeeInt_Alloc(size_t n_digits)
 #else /* NDEBUG */
@@ -241,7 +241,7 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
 /* Create an integer from signed/unsigned LEB data. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeInt_NewSleb(uint8_t **__restrict preader) {
 	DREF DeeIntObject *result;
 	digit *dst;
@@ -305,7 +305,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeInt_NewUleb(uint8_t **__restrict preader) {
 	DREF DeeIntObject *result;
 	digit *dst;
@@ -495,7 +495,7 @@ DeeInt_GetUleb(DeeObject *__restrict self,
 
 
 #if DIGIT_BITS < 16
-PUBLIC DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
 	DREF DeeIntObject *result;
 	int sign        = 1;
 	uint8_t abs_val = (uint8_t)val;
@@ -513,7 +513,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS8(int8_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val) {
 	DREF DeeIntObject *result;
 	if (!val)
 		return_reference_((DeeObject *)&DeeInt_Zero);
@@ -527,7 +527,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val) {
 #endif /* DIGIT_BITS < 16 */
 
 
-PUBLIC DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
 	DREF DeeIntObject *result;
 #if DIGIT_BITS >= 16
 	if (!val)
@@ -561,7 +561,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
 	uint32_t iter;
@@ -590,7 +590,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
 	uint64_t iter;
@@ -629,7 +629,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
 	DREF DeeIntObject *result;
 	int sign         = 1;
 	uint16_t abs_val = (uint16_t)val;
@@ -673,7 +673,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS16(int16_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeInt_NewS32(int32_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS32(int32_t val) {
 	DREF DeeIntObject *result;
 	int sign = 1;
 	size_t req_digits;
@@ -707,7 +707,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS32(int32_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 	DREF DeeIntObject *result;
 	int sign;
 	size_t req_digits;
@@ -754,7 +754,7 @@ PUBLIC DREF DeeObject *DCALL DeeInt_NewS64(int64_t val) {
 
 
 /* 128-bit integer creation. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeInt_NewU128(duint128_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
@@ -783,7 +783,7 @@ DeeInt_NewU128(duint128_t val) {
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeInt_NewS128(dint128_t val) {
 	DREF DeeIntObject *result;
 	int sign;
@@ -2311,7 +2311,7 @@ err:
 	return -1;
 }
 
-PUBLIC DREF DeeObject *(DCALL DeeInt_FromBytes)(void const *__restrict buf, size_t length,
+PUBLIC WUNUSED DREF DeeObject *(DCALL DeeInt_FromBytes)(void const *__restrict buf, size_t length,
                                                 bool little_endian, bool as_signed) {
 	DREF DeeIntObject *result;
 	size_t total_bits;
@@ -2492,11 +2492,11 @@ return_zero:
 
 
 
-PRIVATE DREF DeeObject *DCALL int_return_zero(void) {
+PRIVATE WUNUSED DREF DeeObject *DCALL int_return_zero(void) {
 	return_reference_((DeeObject *)&DeeInt_Zero);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 int_new(size_t argc, DeeObject **argv) {
 	DeeObject *val;
 	uint16_t radix = 0;
@@ -2863,7 +2863,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 int_frombytes(DeeObject *__restrict UNUSED(self),
               size_t argc, DeeObject **argv,
               DeeObject *kw) {

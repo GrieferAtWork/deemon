@@ -66,7 +66,7 @@ DECLARE_STRUCT_CACHE(sym, struct symbol)
 #else /* CONFIG_NO_AST_DEBUG */
 #define ast_new() ast_dbgnew(file, line)
 #endif /* !CONFIG_NO_AST_DEBUG */
-PRIVATE DREF struct ast *DCALL
+PRIVATE WUNUSED DREF struct ast *DCALL
 ast_dbgnew(char const *file, int line) {
 	DREF struct ast *result = ast_dbgalloc(file, line);
 #ifndef CONFIG_NO_THREADS
@@ -85,7 +85,7 @@ ast_dbgnew(char const *file, int line) {
 	return result;
 }
 #else /* !NDEBUG */
-INTERN DREF struct ast *DCALL ast_new(void) {
+INTERN WUNUSED DREF struct ast *DCALL ast_new(void) {
 	DREF struct ast *result = ast_alloc();
 #ifndef CONFIG_NO_THREADS
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
@@ -273,10 +273,10 @@ ast_decwriteonly(struct ast *__restrict self) {
 
 #ifdef CONFIG_NO_AST_DEBUG
 #define DEFINE_AST_GENERATOR(name, args) \
-	INTERN DREF struct ast *(DCALL name)args
+	INTERN WUNUSED DREF struct ast *(DCALL name)args
 #else
 #define DEFINE_AST_GENERATOR(name, args) \
-	INTERN DREF struct ast *(DCALL name##_d)PRIVATE_AST_GENERATOR_UNPACK_ARGS args
+	INTERN WUNUSED DREF struct ast *(DCALL name##_d)PRIVATE_AST_GENERATOR_UNPACK_ARGS args
 #endif
 
 

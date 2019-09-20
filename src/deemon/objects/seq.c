@@ -3597,7 +3597,7 @@ PRIVATE struct type_getset seq_getsets[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 seq_class_range(DeeObject *__restrict UNUSED(self),
                 size_t argc, DeeObject **argv) {
 	/*  Offering the same functionality as the legacy `util::range()',
@@ -3620,7 +3620,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 seq_class_repeat(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	DeeObject *obj;
@@ -3632,7 +3632,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 seq_class_repeatseq(DeeObject *__restrict UNUSED(self),
                     size_t argc, DeeObject **argv) {
 	DeeObject *seq;
@@ -3646,7 +3646,7 @@ err:
 
 INTDEF DeeTypeObject SeqConcat_Type;
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 seq_class_concat(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;

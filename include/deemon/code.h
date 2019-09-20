@@ -366,10 +366,10 @@ DeeCode_FindDDI(DeeObject *__restrict self,
                 unsigned int flags);
 
 /* Return the name for a specific assembly symbol which may be found in code. */
-DFUNDEF char *DCALL DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid); /* Argument */
-DFUNDEF char *DCALL DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid); /* Static */
-DFUNDEF char *DCALL DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid); /* Reference */
-DFUNDEF char *DCALL DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
+DFUNDEF WUNUSED char *DCALL DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid); /* Argument */
+DFUNDEF WUNUSED char *DCALL DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid); /* Static */
+DFUNDEF WUNUSED char *DCALL DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid); /* Reference */
+DFUNDEF WUNUSED char *DCALL DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
 #define DeeCode_NAME(x)                                       \
 	DeeCode_GetDDIString((DeeObject *)Dee_REQUIRES_OBJECT(x), \
@@ -677,13 +677,15 @@ struct Dee_code_frame {
  * @return: NULL:       An error occurred that could not be handled by user-code.
  * @return: ITER_DONE: [CODE_FYIELDING] The iterator of the frame as finished.
  *                HINT: Attempting to execute the frame again will yield `ITER_DONE' once more. */
-DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameFast(struct Dee_code_frame *__restrict frame);
-DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DeeCode_ExecFrameFast(struct Dee_code_frame *__restrict frame);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
 
 
 #if defined(__i386__) || defined(__x86_64__)
 #define CONFIG_HAVE_EXEC_ALTSTACK 1
-#endif
+#endif /* __i386__ || __x86_64__ */
 
 #ifdef CONFIG_NO_EXEC_ALTSTACK
 #undef CONFIG_HAVE_EXEC_ALTSTACK
@@ -928,10 +930,14 @@ DeeFunction_ThisCallTupleKw(DeeFunctionObject *self,
                             DeeObject *args,
                             DeeObject *kw);
 #else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-#define DeeFunction_CallTuple(self, args)                     DeeFunction_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeFunction_CallTupleKw(self, args, kw)               DeeFunction_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#define DeeFunction_ThisCallTuple(self, this_arg, args)       DeeFunction_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw) DeeFunction_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeFunction_CallTuple(self, args) \
+	DeeFunction_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeFunction_CallTupleKw(self, args, kw) \
+	DeeFunction_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeFunction_ThisCallTuple(self, this_arg, args) \
+	DeeFunction_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw) \
+	DeeFunction_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 #endif /* CONFIG_BUILDING_DEEMON */
 

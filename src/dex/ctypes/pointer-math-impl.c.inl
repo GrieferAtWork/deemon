@@ -76,7 +76,7 @@ pointer_double(DeePointerTypeObject *__restrict UNUSED(tp_self),
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 pointer_int(DeePointerTypeObject *__restrict UNUSED(tp_self),
             union pointer *self) {
 	uintptr_t value;
@@ -86,7 +86,7 @@ pointer_int(DeePointerTypeObject *__restrict UNUSED(tp_self),
 #endif /* !GENERIC_POINTER_MATH_DEFINED */
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(pointer_add)(DeePointerTypeObject *__restrict tp_self,
                union pointer *self,
                DeeObject *__restrict some_object) {
@@ -105,7 +105,7 @@ F(pointer_add)(DeePointerTypeObject *__restrict tp_self,
 #endif
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(pointer_sub)(DeePointerTypeObject *__restrict tp_self,
                union pointer *self,
                DeeObject *__restrict some_object) {

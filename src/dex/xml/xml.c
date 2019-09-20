@@ -157,7 +157,7 @@ err:
  * @param: parent:     The parent node for `self'.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The requested node does not exist. */
-INTERN DREF XMLNode *DCALL
+INTERN WUNUSED DREF XMLNode *DCALL
 XMLNode_GetPrev(XMLNode *self,
                 XMLNode *__restrict parent) {
 	DREF XMLNode *result;
@@ -172,7 +172,7 @@ XMLNode_GetPrev(XMLNode *self,
 	return (DREF XMLNode *)ITER_DONE;
 }
 
-INTERN DREF XMLNode *DCALL
+INTERN WUNUSED DREF XMLNode *DCALL
 XMLNode_GetNext(XMLNode *self,
                 XMLNode *__restrict parent) {
 	DREF XMLNode *result;

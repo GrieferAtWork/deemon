@@ -63,7 +63,7 @@ PRIVATE struct dict_item const empty_dict_items[1] = {
 	{ NULL, NULL, 0 }
 };
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **__restrict key_items) {
 	DREF Dict *result;
 	/* Allocate the Dict object. */
@@ -634,7 +634,7 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeDict_GetItemStringDef(DeeObject *__restrict self,
                          char const *__restrict key,
                          dhash_t hash,
@@ -665,7 +665,7 @@ DeeDict_GetItemStringDef(DeeObject *__restrict self,
 	return def;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeDict_GetItemStringLenDef(DeeObject *__restrict self,
                             char const *__restrict key,
                             size_t keylen,
@@ -1193,7 +1193,7 @@ restart:
 	return def;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 dict_popitem(Dict *__restrict self,
              DeeObject *__restrict key,
              DeeObject *def) {

@@ -162,7 +162,7 @@ blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, op)                               \
-	PRIVATE DREF DeeObject *DCALL                                             \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                             \
 	name(BlackListVarkwdsIterator *__restrict self,                           \
 	     BlackListVarkwdsIterator *__restrict other) {                        \
 		if (DeeObject_AssertTypeExact(other, &BlackListVarkwdsIterator_Type)) \
@@ -613,7 +613,7 @@ missing:
 	return def;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self,
                                   char const *__restrict name, dhash_t hash,
                                   DeeObject *__restrict def) {
@@ -639,7 +639,7 @@ missing:
 	return def;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self,
                                      char const *__restrict name,
                                      size_t namesize, dhash_t hash,
@@ -950,7 +950,7 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
  * NOTE: If `kwds' is empty, return `Dee_EmptyMapping' instead.
  * NOTE: If `code' doesn't specify any keywords, return `DeeKwdsMapping_New()' instead.
  * Otherwise, the caller must decref the returned object using `BlackListVarkwds_Decref()' */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
@@ -1170,7 +1170,7 @@ err_r:
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, func)                             \
-	PRIVATE DREF DeeObject *DCALL                                             \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                             \
 	name(BlackListMappingIterator *__restrict self,                           \
 	     BlackListMappingIterator *__restrict other) {                        \
 		if (DeeObject_AssertTypeExact(other, &BlackListMappingIterator_Type)) \
@@ -1510,7 +1510,7 @@ missing:
 	return def;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 BlackListMapping_GetItemStringDef(BlackListMapping *__restrict self,
                                   char const *__restrict name, dhash_t hash,
                                   DeeObject *__restrict def) {
@@ -1523,7 +1523,7 @@ missing:
 	return def;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 BlackListMapping_GetItemStringLenDef(BlackListMapping *__restrict self,
                                      char const *__restrict name,
                                      size_t namesize, dhash_t hash,
@@ -1797,7 +1797,7 @@ INTERN DeeTypeObject BlackListMapping_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 BlackListMapping_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeObject *__restrict kw) {

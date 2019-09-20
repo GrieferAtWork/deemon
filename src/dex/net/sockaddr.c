@@ -146,7 +146,7 @@ next_part:
 	return DeeObject_AsInt(name, presult);
 }
 
-INTERN DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags) {
+INTERN WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags) {
 	struct msg_desc const *desc;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	int match_mask               = 0;
@@ -331,7 +331,7 @@ PRIVATE struct type_desc const sock_type_names[] = {
 #endif /* SOCK_SEQPACKET */
 };
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 sock_getafname(int value) {
 	struct af_desc const *iter = sock_af_names;
 	for (; iter != COMPILER_ENDOF(sock_af_names); ++iter) {
@@ -342,7 +342,7 @@ sock_getafname(int value) {
 	return ITER_DONE;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 sock_gettypename(int value) {
 	struct type_desc const *iter = sock_type_names;
 	for (; iter != COMPILER_ENDOF(sock_type_names); ++iter) {
@@ -390,7 +390,7 @@ sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
 /* Lock used to access the system's database functions. */
 PRIVATE DEFINE_RWLOCK(sysdb_lock);
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 sock_getprotoname(int value) {
 	struct protoent *ent;
 	DREF DeeStringObject *result;
@@ -508,7 +508,7 @@ sock_getprotoof(DeeObject *__restrict name, int *__restrict presult) {
 	return DeeObject_AsInt(name, presult);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 sock_getafnameorid(int value) {
 	DREF DeeObject *result;
 	result = sock_getafname(value);
@@ -517,7 +517,7 @@ sock_getafnameorid(int value) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 sock_gettypenameorid(int value) {
 	DREF DeeObject *result;
 	result = sock_gettypename(value);
@@ -526,7 +526,7 @@ sock_gettypenameorid(int value) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 sock_getprotonameorid(int value) {
 	DREF DeeObject *result;
 	result = sock_getprotoname(value);

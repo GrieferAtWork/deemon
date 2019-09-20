@@ -47,18 +47,18 @@ typedef struct user_object DeeUserObject;
 typedef struct stat_object DeeStatObject;
 
 /* Get/Set the current working directory. */
-INTDEF DREF /*String*/ DeeObject *DCALL fs_getcwd(void);
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL fs_getcwd(void);
 INTDEF WUNUSED NONNULL((1)) int DCALL fs_printcwd(struct unicode_printer *__restrict printer);
 INTDEF WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path);
 
 /* Return a temporary directory, such as `/tmp' */
-INTDEF DREF /*String*/ DeeObject *DCALL fs_gettmp(void);
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL fs_gettmp(void);
 
 /* Return a user-defined, global name for the hosting machine. */
-INTDEF DREF /*String*/ DeeObject *DCALL fs_gethostname(void);
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL fs_gethostname(void);
 
 /* System-specific environment variable implementation. */
-INTDEF DREF /*String*/ DeeObject *DCALL fs_getenv(/*String*/ DeeObject *__restrict name, bool try_get);
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL fs_getenv(/*String*/ DeeObject *__restrict name, bool try_get);
 INTDEF WUNUSED NONNULL((1)) bool DCALL fs_hasenv(/*String*/ DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1)) int DCALL fs_delenv(/*String*/ DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_setenv(/*String*/ DeeObject *__restrict name, /*String*/ DeeObject *__restrict value);
@@ -81,8 +81,8 @@ INTDEF DeeTypeObject  DeeGroup_Type;
 
 /* Lookup the home folder / name of the current user.
  * Same as `fs.user.home' / `fs.user.name' */
-INTDEF DREF DeeObject *DCALL fs_gethome(bool try_get);
-INTDEF DREF DeeObject *DCALL fs_getuser(bool try_get);
+INTDEF WUNUSED DREF DeeObject *DCALL fs_gethome(bool try_get);
+INTDEF WUNUSED DREF DeeObject *DCALL fs_getuser(bool try_get);
 
 /* @return:  1: Failed to retrieve the home path and `try_get' was true.
  * @return:  0: Successfully printed the home path.
@@ -284,13 +284,13 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathext(DeeObject *__restri
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathdrive(DeeObject *__restrict path);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathinctrail(DeeObject *__restrict path);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathexctrail(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathabs(DeeObject *__restrict path, DeeObject *pwd);
-INTDEF DREF DeeObject *DCALL fs_pathrel(DeeObject *__restrict path, DeeObject *pwd);
+INTDEF WUNUSED DREF DeeObject *DCALL fs_pathabs(DeeObject *__restrict path, DeeObject *pwd);
+INTDEF WUNUSED DREF DeeObject *DCALL fs_pathrel(DeeObject *__restrict path, DeeObject *pwd);
 INTDEF WUNUSED NONNULL((1)) bool DCALL fs_pathisabs(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathjoin(size_t pathc, DeeObject **__restrict pathv);
+INTDEF WUNUSED DREF DeeObject *DCALL fs_pathjoin(size_t pathc, DeeObject **__restrict pathv);
 
 /* @param: options: Set of `FS_EXPAND_F*' */
-INTDEF DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, uint16_t options,
+INTDEF WUNUSED DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, uint16_t options,
                                            DeeObject *__restrict environ_mapping);
 #define FS_EXPAND_FHOME   0x0001 /* `h': Expand a `~' prefix with `fs.user().home()' */
 #define FS_EXPAND_FVARS   0x0002 /* `v': Expand `$nam' and `${nam}' with `fs.env[nam]' */
@@ -318,7 +318,7 @@ INTDEF DeeTypeObject DeeError_NoLink;      /* extends FileNotFound */
 #define TIME_MODULE   DEX.d_imports[0]
 
 /* Construct a new time object from `microseconds' */
-INTDEF DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);
+INTDEF WUNUSED DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);
 
 DECL_END
 

@@ -229,7 +229,7 @@ nt_GetProcessAttribute(HANDLE *__restrict lphProcess,
 }
 
 
-INTERN DREF DeeObject *DCALL nt_GetModuleFileName(HMODULE hModule) {
+INTERN WUNUSED DREF DeeObject *DCALL nt_GetModuleFileName(HMODULE hModule) {
 	LPWSTR lpBuffer, lpNewBuffer;
 	DWORD dwBufSize = PATH_MAX, dwError;
 	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
@@ -280,7 +280,7 @@ typedef BOOL (WINAPI *LPQUERYFULLPROCESSIMAGENAMEW)(HANDLE hProcess, DWORD dwFla
 PRIVATE LPQUERYFULLPROCESSIMAGENAMEW pQueryFullProcessImageNameW = NULL;
 PRIVATE WCHAR const str_KERNEL32[] = {'K','E','R','N','E','L','3','2',0};
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 	LPWSTR buffer, new_buffer;
 	DWORD bufsize = 256;

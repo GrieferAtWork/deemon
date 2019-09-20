@@ -48,10 +48,10 @@ typedef struct {
 	unsigned int               sfi_width;      /* [const] The common width of the searched, and needle string. */
 } StringFindIterator;
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeString_FindAll(String *self, String *other,
                   size_t start, size_t end);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeString_CaseFindAll(String *self, String *other,
                       size_t start, size_t end);
 
@@ -372,7 +372,7 @@ PRIVATE struct type_member scfi_members[] = {
 
 
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(StringFindIterator *__restrict self,                              \
 	     StringFindIterator *__restrict other) {                           \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
@@ -678,7 +678,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeString_FindAll(String *self, String *other,
                   size_t start, size_t end) {
 	DREF StringFind *result;
@@ -696,7 +696,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeString_CaseFindAll(String *self, String *other,
                       size_t start, size_t end) {
 	DREF StringFind *result;

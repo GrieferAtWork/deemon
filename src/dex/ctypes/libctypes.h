@@ -383,10 +383,10 @@ DeeObject_TryAsPointer(DeeObject *__restrict self,
                        DeeSTypeObject *__restrict pointer_base,
                        union pointer *__restrict result);
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeePointer_New(DeePointerTypeObject *__restrict pointer_type,
                void *pointer_value);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeePointer_NewFor(DeeSTypeObject *__restrict pointer_type,
                   void *pointer_value);
 #define DeePointer_NewVoid(pointer_value) \
@@ -408,28 +408,28 @@ INTDEF struct stype_math pointer_mathn; /* Math functions for pointer types with
 
 /* Structured operator invocation functions */
 INTDEF int DCALL DeeStruct_Assign(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict value);
-INTDEF DREF DeeObject *DCALL DeeStruct_Str(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Repr(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Str(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Repr(DeeSTypeObject *__restrict tp_self, void *self);
 INTDEF int DCALL DeeStruct_Bool(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Call(DeeSTypeObject *__restrict tp_self, void *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Call(DeeSTypeObject *__restrict tp_self, void *self, size_t argc, DeeObject **argv);
 INTDEF int DCALL DeeStruct_Int32(DeeSTypeObject *__restrict tp_self, void *self, int32_t *__restrict result);
 INTDEF int DCALL DeeStruct_Int64(DeeSTypeObject *__restrict tp_self, void *self, int64_t *__restrict result);
 INTDEF int DCALL DeeStruct_Double(DeeSTypeObject *__restrict tp_self, void *self, double *__restrict result);
-INTDEF DREF DeeObject *DCALL DeeStruct_Int(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Inv(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Pos(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Neg(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Add(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Sub(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Mul(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Div(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Mod(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Shl(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Shr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_And(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Or(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Xor(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Pow(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Int(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Inv(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Pos(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Neg(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Add(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Sub(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Mul(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Div(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Mod(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Shl(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Shr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_And(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Or(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Xor(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Pow(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
 INTDEF int DCALL DeeStruct_Inc(DeeSTypeObject *__restrict tp_self, void *self);
 INTDEF int DCALL DeeStruct_Dec(DeeSTypeObject *__restrict tp_self, void *self);
 INTDEF int DCALL DeeStruct_InplaceAdd(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
@@ -444,22 +444,22 @@ INTDEF int DCALL DeeStruct_InplaceOr(DeeSTypeObject *__restrict tp_self, void *s
 INTDEF int DCALL DeeStruct_InplaceXor(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
 INTDEF int DCALL DeeStruct_InplacePow(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
 INTDEF dhash_t DCALL DeeStruct_Hash(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Eq(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Ne(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Lo(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Le(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Gr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_Ge(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_IterSelf(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_GetSize(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Contains(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
-INTDEF DREF DeeObject *DCALL DeeStruct_GetItem(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Eq(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Ne(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Lo(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Le(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Gr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Ge(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_IterSelf(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_GetSize(DeeSTypeObject *__restrict tp_self, void *self);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_Contains(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict some_object);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_GetItem(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index);
 INTDEF int DCALL DeeStruct_DelItem(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index);
 INTDEF int DCALL DeeStruct_SetItem(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict index, DeeObject *__restrict value);
-INTDEF DREF DeeObject *DCALL DeeStruct_GetRange(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_GetRange(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end);
 INTDEF int DCALL DeeStruct_DelRange(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end);
 INTDEF int DCALL DeeStruct_SetRange(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict begin, DeeObject *__restrict end, DeeObject *__restrict value);
-INTDEF DREF DeeObject *DCALL DeeStruct_GetAttr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict name);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeStruct_GetAttr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict name);
 INTDEF int DCALL DeeStruct_DelAttr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict name);
 INTDEF int DCALL DeeStruct_SetAttr(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict name, DeeObject *__restrict value);
 INTDEF dssize_t DCALL DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self, denum_t proc, void *arg);
@@ -835,7 +835,7 @@ INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
  * When `ctypes' has been built with `CONFIG_NO_CFUNCTION',
  * this function throws a NotImplemented error.
  */
-INTDEF DREF DeeCFunctionTypeObject *DCALL
+INTDEF WUNUSED DREF DeeCFunctionTypeObject *DCALL
 DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
                    cc_t calling_convention, size_t argc,
                    DeeSTypeObject **__restrict argv,
@@ -882,7 +882,7 @@ INTDEF DeeStructTypeObject DeeStruct_Type;
 
 /* Construct a new struct-type from `fields', which
  * is a `sequence<pair<string,structured_type>>' */
-INTDEF DREF DeeStructTypeObject *DCALL
+INTDEF WUNUSED DREF DeeStructTypeObject *DCALL
 DeeStructType_FromSequence(DeeObject *name,
                            DeeObject *__restrict fields,
                            unsigned int flags);
@@ -941,14 +941,14 @@ INTDEF DeeTypeObject DeeShlib_Type;
 #elif CONFIG_CTYPES_SIZEOF_INT == 8
 #define int_news64    int_newint
 #endif
-INTDEF DREF DeeObject *DCALL int_news8(int8_t val);
-INTDEF DREF DeeObject *DCALL int_news16(int16_t val);
-INTDEF DREF DeeObject *DCALL int_news32(int32_t val);
-INTDEF DREF DeeObject *DCALL int_news64(int64_t val);
-INTDEF DREF DeeObject *DCALL int_newu8(uint8_t val);
-INTDEF DREF DeeObject *DCALL int_newu16(uint16_t val);
-INTDEF DREF DeeObject *DCALL int_newu32(uint32_t val);
-INTDEF DREF DeeObject *DCALL int_newu64(uint64_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news8(int8_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news16(int16_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news32(int32_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_news64(int64_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu8(uint8_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu16(uint16_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu32(uint32_t val);
+INTDEF WUNUSED DREF DeeObject *DCALL int_newu64(uint64_t val);
 
 
 DECL_END

@@ -115,10 +115,10 @@
 #define CALL_PRIMARYF(name, flags)   JITLexer_Eval##name(self, flags)
 #define CALL_SECONDARY(name, result) JITLexer_Eval##name(self, result, JITLEXER_EVAL_FSECONDARY)
 #define DEFINE_PRIMARY(name)     \
-	INTERN DREF DeeObject *FCALL \
+	INTERN WUNUSED DREF DeeObject *FCALL \
 	JITLexer_Eval##name(JITLexer *__restrict self, unsigned int flags)
 #define DEFINE_SECONDARY(name)                     \
-	INTERN DREF DeeObject *FCALL                   \
+	INTERN WUNUSED DREF DeeObject *FCALL                   \
 	JITLexer_Eval##name(JITLexer *__restrict self, \
 	                    /*inherit(always)*/ DREF DeeObject *__restrict lhs, unsigned int flags)
 #endif

@@ -34,12 +34,12 @@
 DECL_BEGIN
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_return_false(void) {
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_new(size_t argc, DeeObject **argv) {
 	bool value;
 	if (DeeArg_Unpack(argc, argv, "b:bool", &value))
@@ -313,12 +313,12 @@ PRIVATE struct type_cmp bool_cmp = {
 	/* .tp_ge   = */ &bool_ge
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_gettrue(DeeObject *__restrict UNUSED(self)) {
 	return_true;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_getfalse(DeeObject *__restrict UNUSED(self)) {
 	return_false;
 }

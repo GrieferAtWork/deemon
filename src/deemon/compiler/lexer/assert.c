@@ -29,7 +29,7 @@ DECL_BEGIN
 #undef CONFIG_ASSERT_DDI_USES_EXPRESSION
 #define CONFIG_ASSERT_DDI_USES_EXPRESSION 1
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_assert(bool needs_parenthesis) {
 	DREF struct ast *result, *message, *merge;
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION
@@ -108,7 +108,7 @@ err:
 }
 
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_assert_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *result, *message, *merge;
 #ifndef CONFIG_ASSERT_DDI_USES_EXPRESSION

@@ -25,7 +25,7 @@
 DECL_BEGIN
 
 #ifdef JIT_EVAL
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 JITLexer_EvalComma(JITLexer *__restrict self, uint16_t mode,
                    DeeTypeObject *seq_type,
                    uint16_t *pout_mode)

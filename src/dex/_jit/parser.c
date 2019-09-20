@@ -74,7 +74,7 @@ JIT_MaybeExpressionBegin(unsigned int tok_id) {
 PRIVATE DEFINE_STRING(str_operators, "operators");
 
 
-INTERN DREF DeeObject *FCALL
+INTERN WUNUSED DREF DeeObject *FCALL
 JIT_GetOperatorFunction(uint16_t opname) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *operators_module;
@@ -726,7 +726,7 @@ use_printer:
 
 
 
-INTERN DREF /*Module*/ DeeObject *FCALL
+INTERN WUNUSED DREF /*Module*/ DeeObject *FCALL
 JITLexer_EvalModule(JITLexer *__restrict self) {
 	int error;
 	DREF /*Module*/ DeeObject *result;

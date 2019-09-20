@@ -749,7 +749,7 @@ class_maker_fini(struct class_maker *__restrict self) {
 }
 
 /* Pack together an AST to create the class described by `self'. */
-PRIVATE DREF struct ast *DCALL
+PRIVATE WUNUSED DREF struct ast *DCALL
 class_maker_pack(struct class_maker *__restrict self) {
 	DREF struct ast *result;
 	/* If required, create a class member initializer for the constructor. */
@@ -1289,7 +1289,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF struct ast *DCALL
+PRIVATE WUNUSED DREF struct ast *DCALL
 ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
                      bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;
@@ -2390,7 +2390,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_class(uint16_t class_flags, struct TPPKeyword *name,
                 bool create_symbol, unsigned int symbol_mode) {
 	DREF struct ast *result;

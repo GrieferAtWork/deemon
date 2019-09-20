@@ -1057,7 +1057,7 @@ PRIVATE struct type_member stringiter_members[] = {
 INTDEF DeeTypeObject StringIterator_Type;
 
 #define DEFINE_STRINGITER_COMPARE(name, op)                                      \
-	PRIVATE DREF DeeObject *DCALL                                                \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                \
 	name(StringIterator *__restrict self,                                        \
 	     StringIterator *__restrict other) {                                     \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &StringIterator_Type)) \
@@ -1419,7 +1419,7 @@ PRIVATE struct type_member string_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 string_class_chr(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	uint32_t ch;
@@ -1430,7 +1430,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *__restrict UNUSED(self),
                      size_t argc, DeeObject **argv) {
 	DeeObject *seq;

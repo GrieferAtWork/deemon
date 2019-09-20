@@ -535,7 +535,7 @@ rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 rvec_nsi_xchitem(RefVector *__restrict self, size_t index,
                  DeeObject *__restrict value) {
 	DREF DeeObject *result;
@@ -1075,7 +1075,7 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_class_members = */ rvec_class_members
 };
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeRefVector_New(DeeObject *__restrict owner, size_t length,
                  DeeObject **__restrict vector,
 #ifndef CONFIG_NO_THREADS
@@ -1705,7 +1705,7 @@ INTERN DeeTypeObject SharedVector_Type = {
  * NOTE: This function implicitly inherits a reference to each item
  *       of the given vector, though does not actually inherit the
  *       vector itself! */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeSharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector) {
 	DREF SharedVector *result;
 	result = DeeObject_MALLOC(SharedVector);

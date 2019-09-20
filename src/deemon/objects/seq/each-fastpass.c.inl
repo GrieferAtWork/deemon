@@ -51,7 +51,7 @@
 DECL_BEGIN
 
 #ifdef DEFINE_GETATTR
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(getitem_for_inplace)(STRUCT_TYPE *__restrict self,
                        DREF DeeObject **__restrict pbaseelem,
                        size_t index) {
@@ -236,7 +236,7 @@ PRIVATE struct type_math sew_math = {
 #endif /* !DEFINE_GETATTR */
 
 
-PRIVATE DREF SeqEachIterator *DCALL
+PRIVATE WUNUSED DREF SeqEachIterator *DCALL
 F(iter)(STRUCT_TYPE *__restrict self) {
 	DREF SeqEachIterator *result;
 	result = DeeObject_MALLOC(SeqEachIterator);
@@ -279,7 +279,7 @@ F(transform)(STRUCT_TYPE *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(nsi_getitem)(STRUCT_TYPE *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->se_seq, index);
@@ -288,7 +288,7 @@ F(nsi_getitem)(STRUCT_TYPE *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(getitem)(STRUCT_TYPE *__restrict self,
            DeeObject *__restrict index) {
 	DREF DeeObject *result;
@@ -441,7 +441,7 @@ err:
 
 #elif defined(DEFINE_CALLATTR) || defined(DEFINE_CALLATTRKW)
 
-PRIVATE DREF STRUCT_TYPE *DCALL F(ctor)(void) {
+PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL F(ctor)(void) {
 	DREF STRUCT_TYPE *result;
 	result = (DREF STRUCT_TYPE *)DeeObject_Malloc(COMPILER_OFFSETOF(STRUCT_TYPE, sg_argv));
 	if unlikely(!result)
@@ -460,7 +460,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF STRUCT_TYPE *DCALL
+PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL
 F(copy)(STRUCT_TYPE *__restrict other) {
 	DREF STRUCT_TYPE *result;
 	size_t i;
@@ -485,7 +485,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF STRUCT_TYPE *DCALL
+PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL
 F(deep)(STRUCT_TYPE *__restrict other) {
 	DREF STRUCT_TYPE *result;
 	size_t i;
@@ -526,7 +526,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF STRUCT_TYPE *DCALL
+PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL
 F(init)(size_t argc, DeeObject **argv) {
 	DREF STRUCT_TYPE *result;
 	DeeStringObject *attr;
@@ -574,7 +574,7 @@ err:
 #endif
 
 #ifdef DEFINE_GETATTR
-PRIVATE DREF SeqEachCallAttr *DCALL
+PRIVATE WUNUSED DREF SeqEachCallAttr *DCALL
 F(call)(STRUCT_TYPE *__restrict self,
         size_t argc, DeeObject **argv) {
 	return (DREF SeqEachCallAttr *)DeeSeqEach_CallAttr(self->se_seq,
@@ -582,7 +582,7 @@ F(call)(STRUCT_TYPE *__restrict self,
 	                                                   argc, argv);
 }
 
-PRIVATE DREF SeqEachCallAttrKw *DCALL
+PRIVATE WUNUSED DREF SeqEachCallAttrKw *DCALL
 F(call_kw)(STRUCT_TYPE *__restrict self, size_t argc,
            DeeObject **argv, DeeObject *kw) {
 	return (DREF SeqEachCallAttrKw *)DeeSeqEach_CallAttrKw(self->se_seq,
@@ -735,7 +735,7 @@ PRIVATE struct type_member Fi(members)[] = {
 };
 #endif /* !CONFIG_NO_DOC */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Fi(next)(SeqEachIterator *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_IterNext(self->ei_iter);

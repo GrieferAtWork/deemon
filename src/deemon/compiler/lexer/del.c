@@ -28,7 +28,7 @@
 
 DECL_BEGIN
 
-PRIVATE DREF struct ast *DCALL
+PRIVATE WUNUSED DREF struct ast *DCALL
 ast_parse_del_single(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	DREF struct ast *new_result;
@@ -118,7 +118,7 @@ err:
 }
 
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_del(unsigned int lookup_mode) {
 	DREF struct ast *result;
 	size_t delc, dela;

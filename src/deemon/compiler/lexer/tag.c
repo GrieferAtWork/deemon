@@ -36,7 +36,7 @@ DECL_BEGIN
 
 INTERN struct ast_tags current_tags;
 
-INTERN DREF struct ast *
+INTERN WUNUSED DREF struct ast *
 (DCALL ast_annotations_apply)(struct ast_annotations *__restrict self,
                               /*inherit(always)*/ DREF struct ast *__restrict input) {
 	DREF struct ast *merge, **expr_v, *args;
@@ -231,7 +231,7 @@ err:
 
 /* Pack together the current documentation string. */
 #ifndef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-INTERN DREF DeeObject *DCALL ast_tags_doc(void) {
+INTERN WUNUSED DREF DeeObject *DCALL ast_tags_doc(void) {
 	DREF DeeObject *result;
 	if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc)) {
 		result = unicode_printer_pack(&current_tags.at_doc);

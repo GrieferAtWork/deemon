@@ -97,7 +97,7 @@ typedef struct {
 	CONFIG_CTYPES_DOUBLE_TYPE f_value; /* The integer value. */
 } Float_double_object;
 
-PRIVATE DREF DeeObject *DCALL float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
+PRIVATE WUNUSED DREF DeeObject *DCALL float_newdouble(CONFIG_CTYPES_DOUBLE_TYPE val) {
 	Float_double_object *result;
 	result = DeeObject_MALLOC(Float_double_object);
 	if unlikely(!result)
@@ -112,7 +112,7 @@ done:
 #else
 
 #define NEW_FLOAT(val) F(fltnew)(val)
-PRIVATE DREF DeeObject *DCALL F(fltnew)(T val) {
+PRIVATE WUNUSED DREF DeeObject *DCALL F(fltnew)(T val) {
 	X(Float) * result;
 	result = DeeObject_MALLOC(X(Float));
 	if unlikely(!result)
@@ -157,7 +157,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(floatstr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	double value;
 	CTYPES_FAULTPROTECT(value = (double)*self, return NULL);
@@ -198,28 +198,28 @@ F(float_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return DeeInt_NewS64((int64_t)value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return NEW_FLOAT(+value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = *self, return NULL);
 	return NEW_FLOAT(-value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
@@ -230,7 +230,7 @@ F(float_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_FLOAT(value + other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
@@ -241,7 +241,7 @@ F(float_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_FLOAT(value - other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
@@ -259,7 +259,7 @@ F(float_divzero)(T value, DeeObject *__restrict some_object) {
 	                (double)value, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	T value;
@@ -322,7 +322,7 @@ F(float_inplace_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(float_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
              DeeObject *__restrict some_object) {
 	(void)self;
@@ -378,7 +378,7 @@ PRIVATE struct stype_math F(floatmath) = {
 };
 
 #define DEFINE_COMPARE_OPERATOR(name, op)                  \
-	PRIVATE DREF DeeObject *DCALL                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                          \
 	name(DeeSTypeObject *__restrict UNUSED(tp_self),       \
 	     T *self,                                          \
 	     DeeObject *__restrict some_object) {              \

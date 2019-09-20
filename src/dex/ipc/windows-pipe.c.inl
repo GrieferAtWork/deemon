@@ -56,7 +56,7 @@ done:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **argv) {
 	DWORD pipe_size = 0;

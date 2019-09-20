@@ -684,9 +684,9 @@ again:
  * @return: * :   A new reference to the pointed-to object.
  * @return: NULL: Failed to lock the weak reference. */
 #ifdef __INTELLISENSE__
-PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref const *__restrict self)
+PUBLIC WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref const *__restrict self)
 #else /* __INTELLISENSE__ */
-PUBLIC DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
+PUBLIC WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
 	DREF DeeObject *result;
@@ -757,7 +757,7 @@ PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
  * `NULL' when none was assigned, or `ITER_DONE' when `new_ob'
  * does not support weak referencing functionality.
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 Dee_weakref_cmpxch(struct weakref *__restrict self,
                    DeeObject *old_ob,
                    DeeObject *new_ob) {
@@ -883,7 +883,7 @@ again:
 
 
 
-PUBLIC DREF DeeObject *(DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
+PUBLIC WUNUSED DREF DeeObject *(DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
 	ASSERT_OBJECT(self);
 	Dee_Incref(self);
 	return self;
@@ -2099,7 +2099,7 @@ err:
 }
 
 #define DEFINE_DEPRECATED_INPLACE_BINARY(name, func)              \
-	PRIVATE DREF DeeObject *DCALL                                 \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                 \
 	object_##name(DeeObject *__restrict self,                     \
 	              size_t argc, DeeObject **argv) {     \
 		DREF DeeObject *selfref;                                  \
@@ -3263,7 +3263,7 @@ err:
 }
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_derivedfrom_not_same(DeeTypeObject *__restrict self, size_t argc,
                           DeeObject **argv) {
 	DeeTypeObject *other;
@@ -3272,7 +3272,7 @@ type_derivedfrom_not_same(DeeTypeObject *__restrict self, size_t argc,
 	return_bool(self != other && DeeType_IsInherited(self, other));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_vartype(DeeTypeObject *__restrict self, size_t argc,
                 DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_vartype"))
@@ -3280,7 +3280,7 @@ type_is_vartype(DeeTypeObject *__restrict self, size_t argc,
 	return_bool(DeeType_IsVariable(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_heaptype(DeeTypeObject *__restrict self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_heaptype"))
@@ -3288,7 +3288,7 @@ type_is_heaptype(DeeTypeObject *__restrict self, size_t argc,
 	return_bool(DeeType_IsCustom(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_gctype(DeeTypeObject *__restrict self, size_t argc,
                DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_gctype"))
@@ -3296,7 +3296,7 @@ type_is_gctype(DeeTypeObject *__restrict self, size_t argc,
 	return_bool(DeeType_IsGC(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_final(DeeTypeObject *__restrict self, size_t argc,
               DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_final"))
@@ -3304,7 +3304,7 @@ type_is_final(DeeTypeObject *__restrict self, size_t argc,
 	return_bool(DeeType_IsFinal(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_class(DeeTypeObject *__restrict self, size_t argc,
               DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_class"))
@@ -3312,7 +3312,7 @@ type_is_class(DeeTypeObject *__restrict self, size_t argc,
 	return_bool(DeeType_IsClass(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_complete(DeeTypeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_complete"))
@@ -3320,7 +3320,7 @@ type_is_complete(DeeTypeObject *__restrict UNUSED(self),
 	return_true;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_classtype(DeeTypeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_class_type"))
@@ -3399,7 +3399,7 @@ type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject **argv) {
 	return type_is_ctypes_class(self, "isfunction");
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_filetype(DeeTypeObject *__restrict self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_file"))
@@ -3407,7 +3407,7 @@ type_is_filetype(DeeTypeObject *__restrict self, size_t argc,
 	return_bool(Dee_TYPE(self) == &DeeFileType_Type);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_superbase(DeeTypeObject *__restrict self, size_t argc,
                   DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_super_base"))
@@ -3675,7 +3675,7 @@ for (local line: File.open("../../../include/deemon/object.h")) {
 	options.append(name);
 }
 for (local o: options) {
-	print "PRIVATE DREF DeeObject *DCALL";
+	print "PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL";
 	print "type_"+o.lower()+"(DeeObject *__restrict self) {";
 	print "\treturn_bool(DeeType_"+o+"(self));";
 	print "}";
@@ -4094,7 +4094,7 @@ type_setattr(DeeObject *__restrict self,
 	                             value);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 type_callattr(DeeObject *__restrict self,
               DeeObject *__restrict name,
               size_t argc, DeeObject **argv) {
@@ -4104,7 +4104,7 @@ type_callattr(DeeObject *__restrict self,
 	                              argc, argv);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 type_callattr_kw(DeeObject *__restrict self,
                  DeeObject *__restrict name,
                  size_t argc, DeeObject **argv,

@@ -717,18 +717,18 @@ typedef struct sockaddr_object DeeSockAddrObject;
 
 
 /* Address family / socket type / socket protocol database access. */
-INTDEF DREF DeeObject *DCALL sock_getafname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
-INTDEF DREF DeeObject *DCALL sock_gettypename(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
-INTDEF DREF DeeObject *DCALL sock_getprotoname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
+INTDEF WUNUSED DREF DeeObject *DCALL sock_getafname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
+INTDEF WUNUSED DREF DeeObject *DCALL sock_gettypename(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
+INTDEF WUNUSED DREF DeeObject *DCALL sock_getprotoname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_getafvalue(char const *__restrict name, int *__restrict presult);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_gettypevalue(char const *__restrict name, int *__restrict presult);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_getprotovalue(char const *__restrict name, int *__restrict presult);
 
 /* Same as the functions above, but return an int-object for
  * `value' when the database doesn't recognize the value. */
-INTDEF DREF DeeObject *DCALL sock_getafnameorid(int value);
-INTDEF DREF DeeObject *DCALL sock_gettypenameorid(int value);
-INTDEF DREF DeeObject *DCALL sock_getprotonameorid(int value);
+INTDEF WUNUSED DREF DeeObject *DCALL sock_getafnameorid(int value);
+INTDEF WUNUSED DREF DeeObject *DCALL sock_gettypenameorid(int value);
+INTDEF WUNUSED DREF DeeObject *DCALL sock_getprotonameorid(int value);
 
 /* Cast integer to direct numbers or search the database for strings.
  * When not found, throw an error and return -1.
@@ -743,7 +743,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getprotoof(DeeObject *__restrict n
 
 /* Translate the MSG_* flags used by send/recv functions. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getmsgflagsof(DeeObject *__restrict name, int *__restrict presult);
-INTDEF DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
+INTDEF WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
 
 #if 0
 #define SOCKET_HAVE_CONFIGURE_SENDRECV
@@ -838,7 +838,7 @@ INTDEF dssize_t DCALL DeeSocket_SendTo(DeeSocketObject *__restrict self,
 
 /* Receive data from the given source, or the bound peer (when `source' is NULL)
  * NOTE: When the given `timeout_microseconds' has expired, `ITER_DONE' is returned. */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    uint64_t timeout_microseconds,
                    size_t max_bufsize, int flags,
@@ -848,7 +848,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_getmsgflagsof(DeeObject *__restrict name,
                   int *__restrict presult);
-INTDEF DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
+INTDEF WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
 
 
 

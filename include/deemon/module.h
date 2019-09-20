@@ -248,8 +248,8 @@ struct Dee_module_symbol {
 #define Dee_MODULE_SYMBOL_GETDOCSTR(x)  ((x)->ss_doc)
 #define Dee_MODULE_SYMBOL_GETDOCLEN(x)  (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : strlen((x)->ss_doc))
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
-INTDEF DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
+INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
+INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
 #define Dee_module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_name,DeeStringObject,s_str)) : DeeString_NewWithHash((x)->ss_name,(x)->ss_hash)))
 #define Dee_module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : DeeString_NewUtf8((x)->ss_doc,strlen((x)->ss_doc),STRING_ERROR_FIGNORE)))
@@ -1060,7 +1060,7 @@ DeeModule_ImportRelString(/*Module*/ DeeObject *__restrict basemodule,
  * invoke `DeeModule_OpenRelative()' with its path and the given `module_name'.
  * @param: throw_error: When true, throw an error if the module couldn't be
  *                      found and return `NULL', otherwise return `ITER_DONE'. */
-INTDEF DREF /*Module*/ DeeObject *DCALL
+INTDEF WUNUSED DREF /*Module*/ DeeObject *DCALL
 DeeModule_Import(/*String*/ DeeObject *__restrict module_name,
                  struct Dee_compiler_options *options,
                  bool throw_error);

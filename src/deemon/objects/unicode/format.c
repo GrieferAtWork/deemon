@@ -55,7 +55,7 @@ error_unused_format_string(char *start, char *end) {
 	                       (size_t)(end - start), start);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetUnaryArg(struct formatter *__restrict self,
                       char **__restrict pfmt_start,
                       bool do_eval) {
@@ -171,7 +171,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetUnaryIndex(char **__restrict pfmt_start) {
 	char *fmt_start = *pfmt_start;
 	char ch         = *fmt_start;
@@ -210,7 +210,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetUnaryKey(char **__restrict pfmt_start) {
 	char *fmt_start = *pfmt_start;
 	char ch         = *fmt_start;
@@ -239,11 +239,11 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetOne(struct formatter *__restrict self,
                  char **__restrict pfmt_start,
                  bool do_eval);
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetValue(struct formatter *__restrict self,
                    char **__restrict pfmt_start,
                    bool do_eval) {
@@ -280,7 +280,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetExpr(struct formatter *__restrict self,
                   char **__restrict pfmt_start,
                   bool do_eval) {
@@ -356,7 +356,7 @@ object_vector_fini(struct object_vector *__restrict self) {
 #endif /* !CONFIG_NO_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 Formatter_GetOne(struct formatter *__restrict self,
                  char **__restrict pfmt_start,
                  bool do_eval) {

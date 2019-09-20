@@ -52,7 +52,7 @@ DECL_BEGIN
  * >>     // `fp.operator leave()' here will invoke `fp.close()'
  * >> }
  */
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_with(bool is_statement, bool allow_nonblock) {
 	struct ast_loc loc;
 	struct symbol *expression_sym;
@@ -176,7 +176,7 @@ err_scope_r:
 }
 
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_with_hybrid(unsigned int *pwas_expression) {
 	struct ast_loc loc;
 	struct symbol *expression_sym;

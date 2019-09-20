@@ -227,7 +227,7 @@ ob_weakref_hash(WeakRef *__restrict self) {
 }
 
 #define DEFINE_WEAKREF_CMP(name, op)                                         \
-	PRIVATE DREF DeeObject *DCALL                                            \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                            \
 	name(WeakRef *__restrict self,                                           \
 	     WeakRef *__restrict other) {                                        \
 		if (DeeNone_Check(other))                                            \

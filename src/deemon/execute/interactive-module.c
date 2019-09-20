@@ -255,7 +255,7 @@ PRIVATE bool DCALL is_statement(void) {
 }
 
 
-PRIVATE DREF struct ast *DCALL
+PRIVATE WUNUSED DREF struct ast *DCALL
 imod_parse_statement(InteractiveModule *__restrict self,
                      unsigned int mode) {
 	DREF struct ast *result, *merge;

@@ -135,7 +135,7 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 
 
 #define DEFINE_REPEATITER_CMP(name, check_diffnum, if_sameiter, compare_iter)       \
-	PRIVATE DREF DeeObject *DCALL                                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                   \
 	name(RepeatIterator *__restrict self,                                           \
 	     RepeatIterator *__restrict other) {                                        \
 		DREF DeeObject *my_iter, *ot_iter;                                          \
@@ -1049,7 +1049,7 @@ repeatitem_nsi_getitem(RepeatItem *__restrict self, size_t index) {
 	return_reference_(self->ri_obj);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 repeatitem_nsi_getitem_fast(RepeatItem *__restrict self, size_t UNUSED(index)) {
 	return_reference_(self->ri_obj);
 }

@@ -49,17 +49,17 @@ env_bool(DeeObject *__restrict UNUSED(self)) {
 	return fs_unsupported();
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 env_next(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 enviterator_next_key(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 enviterator_next_value(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
@@ -119,7 +119,7 @@ fs_hasenv(/*String*/ DeeObject *__restrict UNUSED(name)) {
 	return false;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_getenv(DeeObject *__restrict UNUSED(name), bool try_get) {
 	if (!try_get)
 		fs_unsupported();
@@ -146,11 +146,11 @@ fs_setenv(DeeObject *__restrict UNUSED(name),
 	return fs_unsupported();
 }
 
-INTERN DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
+INTERN WUNUSED DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 	return fs_getcwd();
 }
 
-INTERN DREF DeeObject *DCALL fs_gettmp(void) {
+INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	return fs_getcwd();
 }
 
@@ -159,7 +159,7 @@ fs_printcwd(struct unicode_printer *__restrict UNUSED(printer)) {
 	return fs_unsupported();
 }
 
-INTERN DREF DeeObject *DCALL fs_getcwd(void) {
+INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
 	fs_unsupported();
 	return NULL;
 }
@@ -180,7 +180,7 @@ stat_ctor(DeeObject *__restrict UNUSED(self),
 	return fs_unsupported();
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 	return fs_getcwd();
 }
@@ -200,7 +200,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_isxxx(DeeObject *__restrict UNUSED(self),
            size_t UNUSED(argc),
            DeeObject **__restrict UNUSED(argv)) {
@@ -219,7 +219,7 @@ PRIVATE struct type_method stat_methods[] = {
 };
 
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
-	PRIVATE DREF DeeObject *DCALL                        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                        \
 	funnam(DeeObject *__restrict UNUSED(self),           \
 	       size_t argc, DeeObject **argv) {   \
 		DeeObject *path;                                 \
@@ -407,7 +407,7 @@ fs_symlink(DeeObject *__restrict UNUSED(target_text),
 	return fs_unsupported();
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict UNUSED(path)) {
 	return fs_getcwd();
 }

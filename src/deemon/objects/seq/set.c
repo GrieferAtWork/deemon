@@ -1052,7 +1052,7 @@ done:
 }
 
 #define DEFINE_SIITER_COMPARE(name, func)                                  \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(SetIntersectionIterator *__restrict self,                         \
 	     SetIntersectionIterator *__restrict other) {                      \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \

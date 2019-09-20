@@ -49,10 +49,10 @@ typedef struct {
 	size_t               bfi_needle_len; /* [const] Length of the needle being searched. */
 } BytesFindIterator;
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeBytes_FindAll(Bytes *self, DeeObject *other,
                  size_t start, size_t end);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
                      size_t start, size_t end);
 
@@ -232,7 +232,7 @@ PRIVATE struct type_member bcfi_members[] = {
 
 
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
-	PRIVATE DREF DeeObject *DCALL                                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
 	name(BytesFindIterator *__restrict self,                               \
 	     BytesFindIterator *__restrict other) {                            \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
@@ -551,7 +551,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeBytes_FindAll(Bytes *self, DeeObject *other,
                  size_t start, size_t end) {
 	DREF BytesFind *result;
@@ -578,7 +578,7 @@ err_r:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeBytes_CaseFindAll(Bytes *self, DeeObject *other,
                      size_t start, size_t end) {
 	DREF BytesFind *result;

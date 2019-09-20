@@ -239,10 +239,10 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define DeeObjMethod_CallFunc(fun, self, argc, argv)       DeeObjMethod_CallFunc_d(fun, self, argc, argv)
 #define DeeKwCMethod_CallFunc(fun, argc, argv, kw)         DeeKwCMethod_CallFunc_d(fun, argc, argv, kw)
 #define DeeKwObjMethod_CallFunc(fun, self, argc, argv, kw) DeeKwObjMethod_CallFunc_d(fun, self, argc, argv, kw)
-INTDEF DREF DeeObject *DCALL DeeCMethod_CallFunc_d(Dee_cmethod_t fun, size_t argc, DeeObject **argv);
-INTDEF DREF DeeObject *DCALL DeeObjMethod_CallFunc_d(Dee_objmethod_t fun, DeeObject *__restrict self, size_t argc, DeeObject **argv);
-INTDEF DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(Dee_kwcmethod_t fun, size_t argc, DeeObject **argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(Dee_kwobjmethod_t fun, DeeObject *__restrict self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeCMethod_CallFunc_d(Dee_cmethod_t fun, size_t argc, DeeObject **argv);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeObjMethod_CallFunc_d(Dee_objmethod_t fun, DeeObject *__restrict self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(Dee_kwcmethod_t fun, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(Dee_kwobjmethod_t fun, DeeObject *__restrict self, size_t argc, DeeObject **argv, DeeObject *kw);
 #endif /* !NDEBUG */
 #endif /* CONFIG_BUILDING_DEEMON */
 

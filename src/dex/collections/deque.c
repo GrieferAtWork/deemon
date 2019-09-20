@@ -1202,7 +1202,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 deq_nsi_xchitem(Deque *__restrict self,
                 size_t index,
                 DeeObject *__restrict value) {

@@ -52,7 +52,7 @@ LOCAL size_t dee_strnlen(char const *__restrict str, size_t maxlen) {
 #endif /* !__USE_GNU */
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_free(size_t argc, DeeObject **argv) {
 	DREF DeeObject *uptr;
 	union pointer ptr;
@@ -65,7 +65,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_malloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
@@ -84,7 +84,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_realloc(size_t argc, DeeObject **argv) {
 	DREF DeeObject *uptr;
 	DREF DeeObject *result;
@@ -113,7 +113,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_calloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
@@ -142,7 +142,7 @@ err:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_trymalloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
@@ -159,7 +159,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_tryrealloc(size_t argc, DeeObject **argv) {
 	DREF DeeObject *uptr;
 	DREF DeeObject *result;
@@ -188,7 +188,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_trycalloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
@@ -216,7 +216,7 @@ err:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_strdup(size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t len, maxlen = (size_t)-1;
@@ -244,7 +244,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 capi_trystrdup(size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t len, maxlen = (size_t)-1;

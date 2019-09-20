@@ -137,7 +137,7 @@ INTDEF tok_t DCALL get_token_from_str(char const *__restrict name, bool create_m
 INTDEF tok_t DCALL get_token_from_obj(DeeObject *__restrict obj, bool create_missing);
 /* @return: NULL:      An error occurred (and was thrown)
  * @return: ITER_DONE: The given `id' does not refer to a valid token id. */
-INTDEF DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL get_token_name(tok_t id, struct TPPKeyword *kwd);
 INTDEF dhash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
 
 /* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'

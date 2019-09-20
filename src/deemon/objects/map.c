@@ -656,7 +656,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 
 
 
-INTDEF DREF DeeObject *DCALL new_empty_sequence_iterator(void);
+INTDEF WUNUSED DREF DeeObject *DCALL new_empty_sequence_iterator(void);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeMapping_Type) {
@@ -722,7 +722,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 map_getrange(DeeObject *__restrict self,
              DeeObject *__restrict UNUSED(begin),
              DeeObject *__restrict UNUSED(end)) {

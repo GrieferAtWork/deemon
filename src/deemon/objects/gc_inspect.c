@@ -167,7 +167,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 };
 
 
-PRIVATE DREF GCSet *DCALL gcset_ctor(void) {
+PRIVATE WUNUSED DREF GCSet *DCALL gcset_ctor(void) {
 	return_reference_(&DeeGCSet_Empty);
 }
 

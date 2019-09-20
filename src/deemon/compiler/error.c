@@ -141,7 +141,7 @@ _warnf_err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 get_warning_message(int wnum, va_list args) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if unlikely(print_warning_message(&printer, wnum, args) < 0)

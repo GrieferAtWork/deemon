@@ -91,7 +91,7 @@ subrangeiterator_next(SubRangeIterator *__restrict self) {
 INTDEF DeeTypeObject SeqSubRangeIterator_Type;
 
 #define DEFINE_COMPARE(name, op)                                                      \
-	PRIVATE DREF DeeObject *DCALL                                                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                     \
 	name(SubRangeIterator *__restrict self,                                           \
 	     SubRangeIterator *__restrict other) {                                        \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqSubRangeIterator_Type)) \

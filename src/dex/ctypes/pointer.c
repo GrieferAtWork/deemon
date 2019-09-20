@@ -37,7 +37,7 @@
 DECL_BEGIN
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 pointer_str(DeePointerTypeObject *__restrict UNUSED(tp_self),
             union pointer *self) {
 	union pointer value;
@@ -46,7 +46,7 @@ pointer_str(DeePointerTypeObject *__restrict UNUSED(tp_self),
 	return DeeString_Newf("%p", value.ptr);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 pointer_repr(DeePointerTypeObject *__restrict tp_self,
              union pointer *self) {
 	union pointer value;
@@ -65,7 +65,7 @@ pointer_bool(DeePointerTypeObject *__restrict UNUSED(tp_self),
 }
 
 #define DEFINE_POINTER_COMPARE(name, op)                          \
-	PRIVATE DREF DeeObject *DCALL                                 \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                 \
 	name(DeePointerTypeObject *__restrict tp_self,                \
 	     union pointer *self,                                     \
 	     DeeObject *__restrict other) {                           \
@@ -168,7 +168,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 pointer_call(DeePointerTypeObject *__restrict tp_self,
              union pointer *self, size_t argc,
              DeeObject **argv) {
@@ -177,7 +177,7 @@ pointer_call(DeePointerTypeObject *__restrict tp_self,
 	return DeeStruct_Call(tp_self->pt_orig, ptr.ptr, argc, argv);
 }
 
-PRIVATE DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED DREF struct lvalue_object *DCALL
 pointer_get_deref(struct pointer_object *__restrict self) {
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *type;
@@ -504,7 +504,7 @@ PRIVATE struct stype_attr lvalue_attr = {
 	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&lvalue_enumattr
 };
 
-PRIVATE DREF struct pointer_object *DCALL
+PRIVATE WUNUSED DREF struct pointer_object *DCALL
 lvalue_ref(struct lvalue_object *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *pointer_type;
@@ -551,7 +551,7 @@ INTDEF ATTR_COLD int DCALL
 err_unimplemented_operator(DeeSTypeObject *__restrict tp,
                            uint16_t operator_name);
 
-PRIVATE DREF struct lvalue_object *DCALL lvalue_ctor(void) {
+PRIVATE WUNUSED DREF struct lvalue_object *DCALL lvalue_ctor(void) {
 	err_unimplemented_operator((DeeSTypeObject *)&DeeLValue_Type,
 	                           OPERATOR_CONSTRUCTOR);
 	return NULL;

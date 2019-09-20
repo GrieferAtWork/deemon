@@ -315,7 +315,7 @@ done:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_pathabs(DeeObject *__restrict path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -466,7 +466,7 @@ PRIVATE char const aligned_upref_buffer[MAX_UPREF_COPY][3] = {
 	{ '.', '.', SEP }
 };
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 	DREF DeeObject *result;
 	size_t uprefs, pth_length;
@@ -790,7 +790,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
 	size_t i;
 	char nextsep = SEP;
@@ -850,7 +850,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_pathexpand(DeeObject *__restrict path, uint16_t options,
               DeeObject *__restrict environ_mapping) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;

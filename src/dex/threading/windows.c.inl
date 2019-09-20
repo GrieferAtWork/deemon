@@ -157,7 +157,7 @@ PRIVATE ATTR_COLD int DCALL err_post_failed(void) {
 	                       "Failed to post to semaphore");
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_post(Semaphore *__restrict self, size_t argc,
           DeeObject **argv) {
 	LONG count = 1;
@@ -175,7 +175,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_wait(Semaphore *__restrict self, size_t argc,
           DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":wait") ||
@@ -184,7 +184,7 @@ sema_wait(Semaphore *__restrict self, size_t argc,
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_trywait(Semaphore *__restrict self, size_t argc,
              DeeObject **argv) {
 	int error;
@@ -198,7 +198,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_timedwait(Semaphore *__restrict self, size_t argc,
                DeeObject **argv) {
 	int error;
@@ -213,7 +213,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_fileno(Semaphore *__restrict self, size_t argc,
             DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))

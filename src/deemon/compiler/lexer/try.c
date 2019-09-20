@@ -27,7 +27,7 @@
 
 DECL_BEGIN
 
-INTERN DREF struct ast *DCALL ast_parse_catchmask(void) {
+INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 	size_t exprc, expra;
 	DREF struct ast **exprv, *result;
 	result = ast_parse_unary(LOOKUP_SYM_NORMAL);
@@ -109,7 +109,7 @@ err_r:
 }
 
 
-INTERN DREF struct ast *DCALL
+INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_try(bool is_statement) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;
@@ -305,7 +305,7 @@ err:
 }
 
 
-INTERN DREF struct ast *FCALL
+INTERN WUNUSED DREF struct ast *FCALL
 ast_parse_try_hybrid(unsigned int *pwas_expression) {
 	DREF struct ast *result, *merge;
 	struct ast_loc loc;

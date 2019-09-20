@@ -50,7 +50,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF SeqEachOperator *DCALL
+PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 seqeach_makeop1(DeeObject *__restrict seq, uint16_t opname,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_0) {
 	DREF SeqEachOperator *result;
@@ -69,7 +69,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF SeqEachOperator *DCALL
+PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 seqeach_makeop2(DeeObject *__restrict seq, uint16_t opname,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_0,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_1) {
@@ -239,7 +239,7 @@ se_bool(SeqEachBase *__restrict self) {
 	return DeeObject_Bool(self->se_seq);
 }
 
-PRIVATE DREF SeqEachOperator *DCALL
+PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 se_call(SeqEachBase *__restrict self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
@@ -250,7 +250,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF SeqEachOperator *DCALL
+PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 se_call_kw(SeqEachBase *__restrict self, size_t argc,
            DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *tuple;
@@ -266,18 +266,18 @@ err:
 }
 
 #define DEFINE_SEQ_EACH_UNARY(name, op)           \
-	PRIVATE DREF SeqEachOperator *DCALL           \
+	PRIVATE WUNUSED DREF SeqEachOperator *DCALL           \
 	name(SeqEachBase *__restrict self) {          \
 		return seqeach_makeop0(self->se_seq, op); \
 	}
 #define DEFINE_SEQ_EACH_BINARY(name, op)                              \
-	PRIVATE DREF SeqEachOperator *DCALL                               \
+	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                               \
 	name(SeqEachBase *__restrict self, DeeObject *__restrict other) { \
 		Dee_Incref(other);                                            \
 		return seqeach_makeop1(self->se_seq, op, other);              \
 	}
 #define DEFINE_SEQ_EACH_TRINARY(name, op)                                                  \
-	PRIVATE DREF SeqEachOperator *DCALL                                                    \
+	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                                                    \
 	name(SeqEachBase *__restrict self, DeeObject *__restrict a, DeeObject *__restrict b) { \
 		Dee_Incref(a);                                                                     \
 		Dee_Incref(b);                                                                     \
@@ -768,7 +768,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF SeqEachOperator *DCALL
+PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 sew_call_kw(DeeObject *__restrict self, size_t argc,
             DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *tuple;
@@ -785,18 +785,18 @@ err:
 
 
 #define DEFINE_SEW_UNARY(name, op)        \
-	PRIVATE DREF SeqEachOperator *DCALL   \
+	PRIVATE WUNUSED DREF SeqEachOperator *DCALL   \
 	name(DeeObject *__restrict self) {    \
 		return seqeach_makeop0(self, op); \
 	}
 #define DEFINE_SEW_BINARY(name, op)                                 \
-	PRIVATE DREF SeqEachOperator *DCALL                             \
+	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                             \
 	name(DeeObject *__restrict self, DeeObject *__restrict other) { \
 		Dee_Incref(other);                                          \
 		return seqeach_makeop1(self, op, other);                    \
 	}
 #define DEFINE_SEW_TRINARY(name, op)                                                     \
-	PRIVATE DREF SeqEachOperator *DCALL                                                  \
+	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                                                  \
 	name(DeeObject *__restrict self, DeeObject *__restrict a, DeeObject *__restrict b) { \
 		Dee_Incref(a);                                                                   \
 		Dee_Incref(b);                                                                   \
@@ -825,7 +825,7 @@ DEFINE_SEW_BINARY(sew_gr, OPERATOR_GR)
 DEFINE_SEW_BINARY(sew_ge, OPERATOR_GE)
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 seo_getitem_for_inplace(SeqEachOperator *__restrict self,
                         DREF DeeObject **__restrict pbaseelem,
                         size_t index, uint16_t operator_name) {
@@ -1361,7 +1361,7 @@ sewi_bool(SeqEachIterator *__restrict self) {
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #define DEFINE_SEWI_COMPARE(name, func)                       \
-	PRIVATE DREF DeeObject *DCALL                             \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                             \
 	name(SeqEachIterator *__restrict self,                    \
 	     SeqEachIterator *__restrict other) {                 \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
@@ -1372,7 +1372,7 @@ sewi_bool(SeqEachIterator *__restrict self) {
 	}
 #else
 #define DEFINE_SEWI_COMPARE(name, func)                                      \
-	PRIVATE DREF DeeObject *DCALL                                            \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                            \
 	name(SeqEachIterator *__restrict self,                                   \
 	     SeqEachIterator *__restrict other) {                                \
 		if (DeeObject_AssertTypeExact(other, &SeqEachOperatorIterator_Type)) \
@@ -1535,7 +1535,7 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttr(DeeObject *__restrict self,
                     DeeObject *__restrict attr,
                     size_t argc,
@@ -1559,7 +1559,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
                       DeeObject *__restrict attr,
                       size_t argc,
@@ -1589,7 +1589,7 @@ done:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrString(DeeObject *__restrict self,
                           char const *__restrict attr, dhash_t hash,
                           size_t argc, DeeObject **argv) {
@@ -1608,7 +1608,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLen(DeeObject *__restrict self,
                              char const *__restrict attr, size_t attrlen, dhash_t hash,
                              size_t argc, DeeObject **argv) {
@@ -1627,7 +1627,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringKw(DeeObject *__restrict self,
                             char const *__restrict attr, dhash_t hash,
                             size_t argc, DeeObject **argv, DeeObject *kw) {
@@ -1647,7 +1647,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLenKw(DeeObject *__restrict self,
                                char const *__restrict attr, size_t attrlen, dhash_t hash,
                                size_t argc, DeeObject **argv, DeeObject *kw) {

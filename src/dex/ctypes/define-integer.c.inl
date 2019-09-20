@@ -348,7 +348,7 @@ typedef struct {
 	CTYPES_INT i_value; /* The integer value. */
 } Integer_int_object;
 
-INTERN DREF DeeObject *DCALL int_newint(CTYPES_INT val) {
+INTERN WUNUSED DREF DeeObject *DCALL int_newint(CTYPES_INT val) {
 	Integer_int_object *result;
 	result = DeeObject_MALLOC(Integer_int_object);
 	if unlikely(!result)
@@ -361,7 +361,7 @@ done:
 #endif /* !INT_NEWINT_DEFINED */
 
 #if !defined(SIGNED) || SIZEOF != CONFIG_CTYPES_SIZEOF_INT
-INTERN DREF DeeObject *DCALL F(int_new)(T val) {
+INTERN WUNUSED DREF DeeObject *DCALL F(int_new)(T val) {
 	X(Integer) * result;
 	result = DeeObject_MALLOC(X(Integer));
 	if unlikely(!result)
@@ -424,7 +424,7 @@ PRIVATE DEFINE_STRING(str_false,"false");
 #endif /* CONFIG_BOOL_STRING */
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(intstr)(DeeSTypeObject *__restrict UNUSED(tp_self),
           T *self) {
 	T value;
@@ -484,7 +484,7 @@ F(int_double)(DeeSTypeObject *__restrict UNUSED(tp_self),
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
@@ -495,14 +495,14 @@ F(int_int)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 #endif /* !SIGNED */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_inv)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
 	return NEW_INTEGER(~value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
@@ -510,7 +510,7 @@ F(int_pos)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 }
 
 #ifdef SIGNED
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 	T value;
 	CTYPES_FAULTPROTECT(value = GET(self), return NULL);
@@ -518,7 +518,7 @@ F(int_neg)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self) {
 }
 #endif /* SIGNED */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -528,7 +528,7 @@ F(int_add)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value + other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -538,7 +538,7 @@ F(int_sub)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value - other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_mul)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -555,7 +555,7 @@ F(int_divzero)(T value, DeeObject *__restrict some_object) {
 	                (FORMAT_TYP)value, some_object);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -570,7 +570,7 @@ F(int_div)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value / other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -585,7 +585,7 @@ F(int_mod)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value % other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value;
@@ -596,7 +596,7 @@ F(int_shl)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value << other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value;
@@ -607,7 +607,7 @@ F(int_shr)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value >> other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_and)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -617,7 +617,7 @@ F(int_and)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value & other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_or)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
           DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -627,7 +627,7 @@ F(int_or)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return NEW_INTEGER(value | other_value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_xor)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	T value, other_value;
@@ -763,7 +763,7 @@ F(int_inplace_xor)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 F(int_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
            DeeObject *__restrict some_object) {
 	(void)self;
@@ -823,7 +823,7 @@ PRIVATE struct stype_math F(intmath) = {
 };
 
 #define DEFINE_COMPARE_OPERATOR(name, op)                    \
-	PRIVATE DREF DeeObject *DCALL                            \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                            \
 	name(DeeSTypeObject *__restrict UNUSED(tp_self),         \
 	     T *self,                                            \
 	     DeeObject *__restrict some_object) {                \

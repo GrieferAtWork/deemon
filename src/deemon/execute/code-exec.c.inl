@@ -111,10 +111,10 @@ file_shl(DeeObject *self,
 
 #ifndef OBJECT_TATTR_DECLARED
 #define OBJECT_TATTR_DECLARED 1
-INTDEF DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name);
+INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name);
 INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name);
 INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, DeeObject *__restrict value);
-INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, size_t argc, DeeObject **argv);
+INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, size_t argc, DeeObject **argv);
 #endif /* !OBJECT_TATTR_DECLARED */
 
 
@@ -122,7 +122,7 @@ INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_
 	construct_varkwds_mapping_impl(code, frame)
 #ifndef CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED
 #define CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED 1
-PRIVATE DREF DeeObject *ATTR_FASTCALL
+PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
 construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
                                struct code_frame *__restrict frame) {
 	struct code_frame_kwds *kwds;
@@ -171,13 +171,13 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
  * @return: ITER_DONE: The used prefix does not support pointer addressing. */
 #ifdef EXEC_FAST
 #define get_prefix_object_ptr() get_prefix_object_ptr_fast(frame, code, sp)
-PRIVATE DREF DeeObject **ATTR_FASTCALL
+PRIVATE WUNUSED DREF DeeObject **ATTR_FASTCALL
 get_prefix_object_ptr_fast(struct code_frame *__restrict frame,
                            DeeCodeObject *__restrict code,
                            DeeObject **__restrict sp)
 #else
 #define get_prefix_object_ptr() get_prefix_object_ptr_safe(frame, code, sp)
-PRIVATE DREF DeeObject **ATTR_FASTCALL
+PRIVATE WUNUSED DREF DeeObject **ATTR_FASTCALL
 get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
                            DeeCodeObject *__restrict code,
                            DeeObject **__restrict sp)
@@ -245,13 +245,13 @@ do_get_local:
 
 #ifdef EXEC_FAST
 #define get_prefix_object() get_prefix_object_fast(frame, code, sp)
-PRIVATE DREF DeeObject *ATTR_FASTCALL
+PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
 get_prefix_object_fast(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp)
 #else /* EXEC_SAFE */
 #define get_prefix_object() get_prefix_object_safe(frame, code, sp)
-PRIVATE DREF DeeObject *ATTR_FASTCALL
+PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
 get_prefix_object_safe(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp)
@@ -426,14 +426,14 @@ ill_instr:
 /* NOTE: A reference to `value' is only inherited upon success (return != NULL) */
 #ifdef EXEC_FAST
 #define xch_prefix_object(v) xch_prefix_object_fast(frame, code, sp, v)
-PRIVATE DREF DeeObject *ATTR_FASTCALL
+PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
 xch_prefix_object_fast(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
                        DREF DeeObject *__restrict value)
 #else /* EXEC_FAST */
 #define xch_prefix_object(v) xch_prefix_object_safe(frame, code, sp, v)
-PRIVATE DREF DeeObject *ATTR_FASTCALL
+PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
 xch_prefix_object_safe(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
@@ -799,10 +799,10 @@ ill_instr:
 }
 
 #ifdef EXEC_FAST
-PUBLIC DREF DeeObject *ATTR_FASTCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFast(struct code_frame *__restrict frame)
 #else /* EXEC_FAST */
-PUBLIC DREF DeeObject *ATTR_FASTCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #endif /* !EXEC_FAST */
 {

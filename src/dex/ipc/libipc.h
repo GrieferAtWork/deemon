@@ -114,7 +114,7 @@ nt_GetProcessAttribute(HANDLE *__restrict lphProcess,
                        DWORD dwProcessId,
                        DWORD dwAttributeId);
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 nt_GetModuleFileName(HMODULE hModule);
 
 /* @return: * :              The full process image name.
@@ -122,7 +122,7 @@ nt_GetModuleFileName(HMODULE hModule);
  * @return: NULL:            An error occurred.
  * @return: ITER_DONE:       The host does not implement this functionality. Try
  *                           `nt_GetProcessAttribute()' with `PROCATTR_IMAGEPATHNAME' instead. */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags);
 
 /* Work around problems with windows permissions. */

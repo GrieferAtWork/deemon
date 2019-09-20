@@ -22,12 +22,12 @@
 #endif
 
 #ifdef VARARGS
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self,
                  void (*self)(void),
                  size_t argc, DeeObject **argv)
 #else /* VARARGS */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
                void (*self)(void),
                size_t argc, DeeObject **argv)

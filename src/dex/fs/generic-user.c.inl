@@ -23,14 +23,14 @@
 #include "generic.c.inl"
 #endif
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_gethome(bool try_get) {
 	if (!try_get)
 		fs_unsupported();
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED DREF DeeObject *DCALL
 fs_getuser(bool try_get) {
 	if (!try_get)
 		fs_unsupported();

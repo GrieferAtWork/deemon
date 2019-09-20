@@ -102,7 +102,7 @@ struct dee_kwds_object {
 	 * >> push  extern @operators:@__pooad
 	 * >> call  extern @...:@foo, #3, const @{ func: 0 }
 	 * foo (in C):
-	 * >> PRIVATE DREF DeeObject *DCALL
+	 * >> PRIVATE WUNUSED DREF DeeObject *DCALL
 	 * >> foo(size_t argc, DeeObject **argv, DeeObject *kw) {
 	 * >>     DeeObject *x,*y,*func = Dee_None;
 	 * >>     PRIVATE struct dee_keyword kwlist[] = { K(x), K(y), K(func), KEND };
@@ -151,7 +151,7 @@ DDATDEF DeeTypeObject DeeKwds_Type;
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF DREF DeeObject *DCALL DeeKwds_NewWithHint(size_t num_items);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeKwds_NewWithHint(size_t num_items);
 /* Append a new entry for `name'.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
@@ -260,9 +260,9 @@ DFUNDEF void DCALL DeeKwdsMapping_Decref(DREF DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeKwdsMapping_HasItemString(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemString(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
-INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
-INTDEF DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *__restrict def);
 #endif
 
 

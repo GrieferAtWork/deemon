@@ -607,7 +607,7 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 
 #elif defined(CONFIG_HAVE_LINK_H) /* linux + ELF */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 	DeeDexObject *iter;
 	rwlock_read(&dex_lock);
@@ -784,7 +784,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
  return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict UNUSED(ptr)) {
  Dee_Incref(&deemon_module);
  return (DREF DeeObject *)DeeModule_GetDeemon();

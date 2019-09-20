@@ -470,9 +470,10 @@ else
 			CONFIG_DEX_CTYPES_CFLAGS="$CONFIG_DEX_CTYPES_CFLAGS -fnon-call-exceptions"
 			# Enable NOSTDLIB for ctypes to prevent libstdc++ from
 			# being linked in, when we don't actually make use of it.
-			CONFIG_DEX_CTYPES_LDFLAGS="-nostdlib"
+			CONFIG_DEX_CTYPES_LDFLAGS="-nostdlib -static-libgcc"
 			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lc"
 			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -ldl"
+			CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lgcc"
 			;;
 		*)
 			;;
