@@ -64,7 +64,7 @@ rosetiterator_ctor(SetIterator *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 rosetiterator_init(SetIterator *__restrict self,
                    size_t argc, DeeObject **argv) {
 	Set *set;
@@ -348,13 +348,14 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeRoSet_Insert(DREF DeeObject **__restrict pself,
                 DeeObject *__restrict key) {
 	int error;
 	Set *me = (Set *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
 	ASSERT(!DeeObject_IsShared(me));
+	ASSERT(key != (DeeObject *)me);
 	if unlikely(me->rs_size * 2 > me->rs_mask) {
 		size_t old_size = me->rs_size;
 		size_t new_mask = (me->rs_mask << 1) | 1;
@@ -489,61 +490,6 @@ roset_contains(Set *self,
 	return_false;
 err:
 	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeRoSet_Contains(DeeObject *__restrict self,
-                  DeeObject *__restrict key) {
-	size_t i, perturb, hash;
-	struct roset_item *item;
-	Set *me = (Set *)self;
-	hash    = DeeObject_Hash(key);
-	perturb = i = hash & me->rs_mask;
-	for (;; i = ROSET_HASHNX(i, perturb), ROSET_HASHPT(perturb)) {
-		int error;
-		item = &me->rs_elem[i & me->rs_mask];
-		if (!item->si_key)
-			break;
-		if (item->si_hash != hash)
-			continue;
-		error = DeeObject_CompareEq(key, item->si_key);
-		if unlikely(error < 0)
-			goto err;
-		if (!error)
-			continue; /* Non-equal keys. */
-		/* Found it! */
-		return 1;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
-DeeRoSet_ContainsString(DeeObject *__restrict self,
-                        char const *__restrict key,
-                        size_t key_length) {
-	size_t i, perturb, hash;
-	struct roset_item *item;
-	Set *me = (Set *)self;
-	hash    = Dee_HashPtr(key, key_length);
-	perturb = i = hash & me->rs_mask;
-	for (;; i = ROSET_HASHNX(i, perturb), ROSET_HASHPT(perturb)) {
-		item = &me->rs_elem[i & me->rs_mask];
-		if (!item->si_key)
-			break;
-		if (item->si_hash != hash)
-			continue;
-		if (!DeeString_Check(item->si_key))
-			continue;
-		if (DeeString_SIZE(item->si_key) != key_length)
-			continue;
-		if (memcmp(key, DeeString_STR(item->si_key), key_length) != 0)
-			continue;
-		/* Found it! */
-		return true;
-	}
-	return false;
 }
 
 

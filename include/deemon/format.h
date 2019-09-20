@@ -66,8 +66,12 @@ DECL_BEGIN
  *       the format string is _always_ fully processed.
  * @return: * :  The sum of all return values from calls to `*printer'
  * @return: < 0: The first negative return value of a call to `*printer' */
-DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DeeFormat_Printf(Dee_formatprinter_t printer, void *arg, char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t
+DeeFormat_Printf(Dee_formatprinter_t printer, void *arg,
+                 char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DeeFormat_VPrintf(Dee_formatprinter_t printer, void *arg,
+                  char const *__restrict format, va_list args);
 
 
 #define DeeFormat_PRINT(printer, arg, str) \
@@ -184,10 +188,18 @@ struct va_list_struct { va_list vl_ap; };
  * >> Dee_Packf("(d<d>Os)",10,20,DeeInt_NewInt(42),"foobar");
  * >> // (10,<20>,42,"foobar")
  */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *Dee_Packf(char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Dee_VPackf(char const *__restrict format, va_list args);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_VPPackf(char const **__restrict pformat, struct va_list_struct *__restrict pargs);
-DFUNDEF NONNULL((1)) void DCALL Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
+Dee_Packf(char const *__restrict format, ...);
+
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+Dee_VPackf(char const *__restrict format, va_list args);
+
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_VPPackf(char const **__restrict pformat,
+            struct va_list_struct *__restrict pargs);
+
+DFUNDEF NONNULL((1)) void DCALL
+Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 
 /* Helper macros to select the most efficient
  * encoding which still produces the correct results. */
@@ -230,7 +242,7 @@ DFUNDEF NONNULL((1)) void DCALL Dee_VPPackf_Cleanup(char const *__restrict forma
 #undef DEE_FMT_SSIZE_T
 #define DEE_FMT_SIZE_T  "u"
 #define DEE_FMT_SSIZE_T "d"
-#endif
+#endif /* __SIZEOF_INT__ && __SIZEOF_SIZE_T__ <= __SIZEOF_INT__ */
 #endif /* __SIZEOF_SIZE_T__ */
 #ifdef __SIZEOF_LONG__
 #if __SIZEOF_LONG__ == 4
@@ -298,9 +310,14 @@ DFUNDEF NONNULL((1)) void DCALL Dee_VPPackf_Cleanup(char const *__restrict forma
  *     ;
  *     ref_bool   ::= 'b'; // `va_arg(bool)'
  */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (Dee_Unpackf)(DeeObject *__restrict self, char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL Dee_VUnpackf)(DeeObject *__restrict self, char const *__restrict format, va_list args);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL Dee_VPUnpackf)(DeeObject *__restrict self, char const **__restrict pformat, struct va_list_struct *__restrict pargs);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(Dee_Unpackf)(DeeObject *__restrict self, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_VUnpackf)(DeeObject *__restrict self, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
+(DCALL Dee_VPUnpackf)(DeeObject *__restrict self,
+                      char const **__restrict pformat,
+                      struct va_list_struct *__restrict pargs);
 
 
 /* Both of these functions return a pointer to the target address where
@@ -310,10 +327,18 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL Dee_VPUnpackf)(DeeObject *__restri
  * size can be determined by `((return - buffer)+1)*sizeof(char)'.
  * In the event of an error (only possible when `format' contains
  * something like `%k' or `%r'), `NULL' will be returned. */
-DFUNDEF NONNULL((1, 2)) char *Dee_sprintf(char *__restrict buffer, char const *__restrict format, ...);
-DFUNDEF NONNULL((1, 3)) char *Dee_snprintf(char *__restrict buffer, size_t bufsize, char const *__restrict format, ...);
-DFUNDEF NONNULL((1, 2)) char *DCALL Dee_vsprintf(char *__restrict buffer, char const *__restrict format, va_list args);
-DFUNDEF NONNULL((1, 3)) char *DCALL Dee_vsnprintf(char *__restrict buffer, size_t bufsize, char const *__restrict format, va_list args);
+DFUNDEF NONNULL((1, 2)) char *
+Dee_sprintf(char *__restrict buffer,
+            char const *__restrict format, ...);
+DFUNDEF NONNULL((1, 3)) char *
+Dee_snprintf(char *__restrict buffer, size_t bufsize,
+             char const *__restrict format, ...);
+DFUNDEF NONNULL((1, 2)) char *DCALL
+Dee_vsprintf(char *__restrict buffer,
+             char const *__restrict format, va_list args);
+DFUNDEF NONNULL((1, 3)) char *DCALL
+Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
+              char const *__restrict format, va_list args);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

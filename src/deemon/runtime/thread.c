@@ -2579,7 +2579,7 @@ err:
 	goto done;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 thread_ctor(DeeThreadObject *__restrict self,
             size_t argc, DeeObject **argv) {
 	if unlikely(argc > 3) {

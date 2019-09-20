@@ -799,10 +799,10 @@ ill_instr:
 }
 
 #ifdef EXEC_FAST
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFast(struct code_frame *__restrict frame)
 #else /* EXEC_FAST */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #endif /* !EXEC_FAST */
 {

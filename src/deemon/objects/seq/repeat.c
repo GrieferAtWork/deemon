@@ -106,7 +106,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
                 size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatIterator", &self->ri_rep) ||
@@ -405,7 +405,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_init(Repeat *__restrict self,
             size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqRepeat", &self->r_seq, &self->r_num))
@@ -718,7 +718,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
                     size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqItemRepeatIterator", &self->rii_rep))
@@ -936,7 +936,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_init(RepeatItem *__restrict self,
                 size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqItemRepeat", &self->ri_obj, &self->ri_num))

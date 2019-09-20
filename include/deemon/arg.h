@@ -247,7 +247,7 @@ DDATDEF DeeTypeObject DeeKwdsMapping_Type;
  * actual argument values passed to the function.
  * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
  *       to clean up the returned object. */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeKwdsMapping_New(/*Kwds*/ DeeObject *__restrict kwds,
                    DeeObject **argv);
 
@@ -269,22 +269,22 @@ INTDEF WUNUSED DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObjec
 /* Construct/access keyword arguments passed to a function as a
  * high-level {(string,object)...}-like mapping that is bound to
  * the actually mapped arguments. */
-DFUNDEF DREF DeeObject *DCALL DeeArg_GetKw(size_t *__restrict pargc, DeeObject **argv, DeeObject *kw);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeArg_GetKw(size_t *__restrict pargc, DeeObject **argv, DeeObject *kw);
 DFUNDEF void DCALL DeeArg_PutKw(size_t argc, DeeObject **argv, DeeObject *__restrict kw);
 
 /* In a keyword-enabled function, return the argument associated with a given
  * `name', or throw a TypeError exception or return `def' if not provided. */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeArg_GetKwString(size_t argc, DeeObject **argv, DeeObject *kw,
                    char const *__restrict name);
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeArg_GetKwStringLen(size_t argc, DeeObject **argv, DeeObject *kw,
                       char const *__restrict name, size_t namelen, Dee_hash_t hash);
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject **argv,
                       DeeObject *kw, char const *__restrict name,
                       DeeObject *__restrict def);
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeArg_GetKwStringLenDef(size_t argc, DeeObject **argv,
                          DeeObject *kw, char const *__restrict name,
                          size_t namelen, Dee_hash_t hash,

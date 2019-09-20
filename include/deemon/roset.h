@@ -69,11 +69,7 @@ DECL_BEGIN
 typedef struct Dee_roset_object DeeRoSetObject;
 
 struct Dee_roset_item {
-#ifdef __INTELLISENSE__
-	DeeObject      *si_key;   /* [0..1][const] Set item key. */
-#else
 	DREF DeeObject *si_key;   /* [0..1][const] Set item key. */
-#endif
 	Dee_hash_t      si_hash;  /* [valis_if(si_key)][const]
 	                           * Hash of `si_key' (with a starting value of `0'). */
 };
@@ -95,18 +91,15 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIterator(DeeObje
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
 
 /* Internal functions for constructing a read-only set object. */
-DFUNDEF DREF DeeObject *DCALL DeeRoSet_New(void);
-DFUNDEF DREF DeeObject *DCALL DeeRoSet_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoSet_New(void);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoSet_NewWithHint(size_t num_items);
+
 /* @return: 0:  Successfully inserted.
  * @return: 1:  Already exists.
  * @return: -1: An error occurred. */
-DFUNDEF int DCALL DeeRoSet_Insert(DeeObject **__restrict pself, DeeObject *__restrict key);
-
-/* @return:  1/true:  The object exists.
- * @return:  0/false: No such object exists.
- * @return: -1:       An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeRoSet_Contains(DeeObject *__restrict self, DeeObject *__restrict key);
-DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoSet_ContainsString(DeeObject *__restrict self, char const *__restrict key, size_t key_length);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeRoSet_Insert(DeeObject **__restrict pself,
+                DeeObject *__restrict key);
 
 /* Hash-iteration control. */
 #define Dee_ROSET_HASHST(self, ro)     ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)

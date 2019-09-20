@@ -83,7 +83,7 @@ mei_copy(ModuleExportsIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mei_init(ModuleExportsIterator *__restrict self,
          size_t argc, DeeObject **argv) {
 	ModuleExports *exports_map;
@@ -289,7 +289,7 @@ me_ctor(ModuleExports *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 me_init(ModuleExports *__restrict self,
         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleExports", &self->me_module) ||
@@ -623,7 +623,7 @@ INTDEF WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
 DeeModule_ViewGlobals(DeeModuleObject *__restrict self);
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mgi_init(ModuleGlobalsIterator *__restrict self,
          size_t argc, DeeObject **argv) {
 	ModuleGlobals *globals;
@@ -746,7 +746,7 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mg_init(ModuleGlobals *__restrict self,
         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->mg_module) ||

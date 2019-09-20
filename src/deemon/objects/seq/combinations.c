@@ -131,7 +131,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 comiter_init(CombinationsIterator *__restrict self,
              size_t argc, DeeObject **argv) {
 	size_t i, comlen;
@@ -709,7 +709,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rcomiter_init(CombinationsIterator *__restrict self,
               size_t argc, DeeObject **argv) {
 	size_t i, comlen;
@@ -948,7 +948,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 pmutiter_init(CombinationsIterator *__restrict self,
               size_t argc, DeeObject **argv) {
 	size_t i, comlen;

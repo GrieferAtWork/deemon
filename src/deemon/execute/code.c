@@ -241,7 +241,7 @@ again:
 #endif /* !Arch... */
 
 
-DFUNDEF DREF DeeObject *ATTR_FASTCALL
+DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
@@ -252,7 +252,7 @@ DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
 	return result;
 }
 
-DFUNDEF DREF DeeObject *ATTR_FASTCALL
+DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
@@ -284,7 +284,7 @@ trigger_breakpoint(struct code_frame *__restrict frame) {
 
 
 
-PUBLIC WUNUSED char *DCALL
+PUBLIC WUNUSED NONNULL((1)) char *DCALL
 DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid) {
 	/* Argument */
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeCode_Type);
@@ -294,7 +294,7 @@ DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid) {
 	return NULL;
 }
 
-PUBLIC WUNUSED char *DCALL
+PUBLIC WUNUSED NONNULL((1)) char *DCALL
 DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid) {
 	/* Static symbol name */
 	DeeDDIObject *ddi;
@@ -362,7 +362,7 @@ return_strtab_offset:
 	return DeeString_STR(ddi->d_strtab) + offset;
 }
 
-PUBLIC WUNUSED char *DCALL
+PUBLIC WUNUSED NONNULL((1)) char *DCALL
 DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid) {
 	/* Reference symbol name */
 	DeeDDIObject *ddi;
@@ -430,7 +430,7 @@ return_strtab_offset:
 	return DeeString_STR(ddi->d_strtab) + offset;
 }
 
-PUBLIC WUNUSED char *DCALL
+PUBLIC WUNUSED NONNULL((1)) char *DCALL
 DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id) {
 	/* DDI String */
 	DeeDDIObject *ddi;

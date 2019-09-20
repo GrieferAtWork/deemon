@@ -97,15 +97,15 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromIterator(DeeObjec
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeDict_GetItemStringDef(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeDict_GetItemStringLenDef(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF int DCALL DeeDict_SetItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict value);
-INTDEF int DCALL DeeDict_SetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeDict_SetItemString(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeDict_SetItemStringLen(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 #else /* CONFIG_BUILDING_DEEMON */
@@ -125,9 +125,9 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemStringLen(DeeObject *__
  *                       even ones being keys and odd ones being items.
  * @param: num_keyitems: The number of key-item pairs passed.
  * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeDict_NewKeyItemsInherited(size_t num_keyitems,
-                             DREF DeeObject **__restrict key_items);
+                             DREF DeeObject **key_items);
 
 /* The basic dictionary item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {

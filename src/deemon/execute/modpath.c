@@ -414,7 +414,7 @@ DeeModule_BeginLoading(DeeModuleObject *__restrict self) {
 	uint16_t flags;
 #ifndef CONFIG_NO_THREADS
 	DeeThreadObject *caller = DeeThread_Self();
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 begin_loading:
 	flags = ATOMIC_FETCHOR(self->mo_flags, MODULE_FLOADING);
@@ -488,7 +488,7 @@ TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
                              DeeObject *__restrict input_file,
                              int start_line, int start_col,
@@ -682,12 +682,31 @@ err:
 	return -1;
 }
 
-PUBLIC int DCALL
-DeeModule_LoadSourceStream(DeeObject *__restrict self,
-                           DeeObject *__restrict input_file,
+/* Load the given module from a filestream opened for a source file.
+ * @param: self:       The module that should be loaded.
+ * @param: input_file: A file object to be used as input stream.
+ * @param: start_line: The starting line number of the input stream (zero-based)
+ * @param: start_col:  The starting column offset of the input stream (zero-based)
+ * @return: -1:        An error occurred and was thrown.
+ * @return:  0:        Successfully loaded the given module.
+ * @return:  1:        The module has already been loaded/was loading but has finished now.
+ * @return:  2:        The module is already being loaded in the calling thread.
+ * This is the main interface for manually loading modules, as
+ * well as compiling & linking source code that may not be found
+ * as files within the real filesystem.
+ * NOTE: I highly encourage you to set `options->co_pathname'
+ *       to a file within the folder that should be used to
+ *       resolve relative imports and #include statements,
+ *       as without this information given, the process
+ *       working directory will be used instead. */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeModule_LoadSourceStream(/*Module*/ DeeObject *__restrict self,
+                           /*File*/ DeeObject *__restrict input_file,
                            int start_line, int start_col,
                            struct compiler_options *options) {
-	int result = DeeModule_BeginLoading((DeeModuleObject *)self);
+	int result;
+	ASSERT(self != input_file);
+	result = DeeModule_BeginLoading((DeeModuleObject *)self);
 	if (result == 0) {
 		result = DeeModule_LoadSourceStreamEx((DeeModuleObject *)self,
 		                                      input_file,
@@ -986,7 +1005,23 @@ module_unbind(DeeModuleObject *__restrict self) {
 	}
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+/* Given the filename of a module source file, load it
+ * and create a new module from the contained source code.
+ * NOTE: In case the module has been loaded before,
+ *       return the already-loaded instance instead.
+ * NOTE: In case the module is currently being loaded in the calling
+ *       thread, that same partially loaded module is returned, meaning
+ *       that the caller can easily check for `MODULE_FLOADING && !MODULE_FDIDLOAD'
+ * @param: module_global_name: When non-NULL, use this as the module's actual name.
+ *                             Also: register the module as a global module under this name when given.
+ *                             When not given, the module isn't registered globally, and the
+ *                             name of the module will be deduced from its `source_pathname'
+ * @param: source_pathname:    The filename of the source file that should be opened.
+ *                             When `NULL', simply use the absolute variant of `DeeString_AsUtf8(source_pathname)'
+ * @param: throw_error:        When true, throw an error if the module couldn't be
+ *                             found and return `NULL', otherwise return `ITER_DONE'.
+ * @return: ITER_DONE:        `throw_error' is `true' and `source_pathname' could not be found. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
                          DeeObject *module_global_name,
                          struct compiler_options *options,
@@ -1188,7 +1223,7 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_OpenSourceFileString(/*utf-8*/ char const *__restrict source_pathname,
                                size_t source_pathsize,
                                /*utf-8*/ char const *module_name,
@@ -1227,12 +1262,12 @@ err:
 /* Very similar to `DeeModule_OpenSourceMemory()', and used to implement it,
  * however source data is made available using a stream object derived
  * from `File from deemon' */
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_OpenSourceStream(DeeObject *source_stream,
                            int start_line, int start_col,
                            struct compiler_options *options,
-                           DeeObject *source_pathname,
-                           DeeObject *module_name) {
+                           /*String*/ DeeObject *source_pathname,
+                           /*String*/ DeeObject *module_name) {
 	DREF DeeModuleObject *result;
 	int load_error;
 	/* Create a new module. */
@@ -1333,7 +1368,7 @@ err:
 	goto done;
 }
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_OpenSourceStreamString(DeeObject *source_stream,
                                  int start_line, int start_col,
                                  struct compiler_options *options,
@@ -1392,12 +1427,12 @@ err:
  * @param: start_line:      The starting line number of the data blob (zero-based)
  * @param: start_col:       The starting column offset of the data blob (zero-based)
  * @param: options:         An optional set of extended compiler options. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                            int start_line, int start_col,
                            struct compiler_options *options,
-                           DeeObject *source_pathname,
-                           DeeObject *module_name) {
+                           /*String*/ DeeObject *source_pathname,
+                           /*String*/ DeeObject *module_name) {
 	DREF DeeObject *source_stream, *result;
 	source_stream = DeeFile_OpenRoMemory(data, data_size);
 	if unlikely(!source_stream)
@@ -1412,14 +1447,11 @@ DeeModule_OpenSourceMemory(/*utf-8*/ char const *__restrict data, size_t data_si
 	return result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_OpenSourceMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                                 int start_line, int start_col,
-                                 struct compiler_options *options,
-                                 /*utf-8*/ char const *source_pathname,
-                                 size_t source_pathsize,
-                                 /*utf-8*/ char const *module_name,
-                                 size_t module_namesize) {
+                                 int start_line, int start_col, struct compiler_options *options,
+                                 /*utf-8*/ char const *source_pathname, size_t source_pathsize,
+                                 /*utf-8*/ char const *module_name, size_t module_namesize) {
 	DREF DeeObject *result;
 	DREF DeeObject *module_name_ob     = NULL;
 	DREF DeeObject *source_pathname_ob = NULL;
@@ -1544,6 +1576,9 @@ done:
 	return (DREF DeeObject *)result;
 }
 
+/* Get a global module that has already been loaded, given its name.
+ * If the module hasn't been loaded yet, NULL is returned.
+ * NOTE: These functions never throw an error! */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_Get(DeeObject *__restrict module_name) {
 	/* TODO: Support for mixed LATIN-1/UTF-8 strings */
@@ -2375,7 +2410,7 @@ err:
  * @return: * :        The module that was imported.
  * @return: ITER_DONE: The module could not be found (only when `Dee_MODULE_OPENINPATH_FTHROWERROR' isn't set)
  * @return: NULL:      An error occurred. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
                      /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                      DeeObject *module_global_name,
@@ -2462,7 +2497,32 @@ err:
 }
 
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+/* Open a module, given its name in the global module namespace.
+ * Global modules use their own cache that differs from the cache
+ * used to unify modules through use of their filename.
+ * NOTES:
+ *   - Global module names are the raw filenames of modules,
+ *     excluding an absolute path prefix or extension suffix.
+ *   - When searching for global modules, each string from `DeeModule_GetPath()'
+ *     is prepended in ascending order until an existing file is found.
+ *   - Using this function, dex extensions and `.dec' (DEeemonCompiled) files
+ *     can also be opened in addition to `.dee' (source) files, as well
+ *     as the deemon's builtin module when `deemon' is passed as `module_name'.
+ *   - Rather than using '/' or '\\' to identify separators between folders, you must instead use `.'
+ *   - If `module_name' contains any whitespace or punctuation characters,
+ *     this function will fail with an `Error.ValueError'.
+ *   - If the host's filesystem is case-insensitive, then module
+ *     names may be case-insensitive as well. However if this is
+ *     the case, the following must always be true for any module:
+ *     >> import object from deemon;
+ *     >> import mymodule;
+ *     >> import MyModule;
+ *     >> assert mymodule === MyModule;
+ *     Note that this code example must only work when the module
+ *     system is case-insensitive as well.
+ * @param: throw_error: When true, throw an error if the module couldn't be
+ *                      found and return `NULL', otherwise return `ITER_DONE'. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_OpenGlobal(DeeObject *__restrict module_name,
                      struct compiler_options *options,
                      bool throw_error) {
@@ -2561,7 +2621,21 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
 
 
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+/* Open a module using a relative module name
+ * `module_name' that is based off of `module_pathname'
+ * NOTE: If the given `module_name' doesn't start with a `.'
+ *       character, the given `module_pathname' is ignored and the
+ *       call is identical to `DeeModule_OpenGlobal(module_name,options)'
+ * HINT: The given `module_pathname' is merely prepended
+ *       before the module's actual filename.
+ * Example:
+ * >> DeeModule_OpenRelative("..foo.bar","src/scripts");  // `src/foo/bar.dee'
+ * >> DeeModule_OpenRelative(".sys.types",".");           // `./sys/types.dee'
+ * >> DeeModule_OpenRelative("thread","foo/bar");         // `${LIBPATH}/thread.dee'
+ * NOTE: This function also tries to open DEX modules, as well as `.*.dec' files.
+ * @param: throw_error: When true, throw an error if the module couldn't be
+ *                      found and return `NULL', otherwise return `ITER_DONE'. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_OpenRelative(DeeObject *__restrict module_name,
                        /*utf-8*/ char const *__restrict module_pathname,
                        size_t module_pathsize,
@@ -2585,7 +2659,7 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                              /*utf-8*/ char const *__restrict module_pathname, size_t module_pathsize,
                              struct compiler_options *options, bool throw_error) {
@@ -2602,7 +2676,12 @@ DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_
 	                                                          : (Dee_MODULE_OPENINPATH_FRELMODULE));
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+/* Implementation of the builtin `import()' and `module.open()' functions.
+ * Using the module declaring the code of the current top execution frame (if it exists),
+ * invoke `DeeModule_OpenRelative()' with its path and the given `module_name'.
+ * @param: throw_error: When true, throw an error if the module couldn't be
+ *                      found and return `NULL', otherwise return `ITER_DONE'. */
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_Import(DeeObject *__restrict module_name,
                  struct compiler_options *options,
                  bool throw_error) {
@@ -2640,9 +2719,9 @@ err:
 
 /* Same as `DeeModule_Import', but relative module
  * paths are imported in relation to `basemodule' */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_ImportRel(DeeObject *__restrict basemodule,
-                    DeeObject *__restrict module_name,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_ImportRel(/*Module*/ DeeObject *__restrict basemodule,
+                    /*String*/ DeeObject *__restrict module_name,
                     struct compiler_options *options,
                     bool throw_error) {
 	DeeStringObject *path;
@@ -2669,8 +2748,8 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_ImportRelString(DeeObject *__restrict basemodule,
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_ImportRelString(/*Module*/ DeeObject *__restrict basemodule,
                           /*utf-8*/ char const *__restrict module_name,
                           size_t module_namesize,
                           struct compiler_options *options,
@@ -2701,8 +2780,7 @@ err:
 }
 
 
-PRIVATE int DCALL
-module_rehash_globals(void) {
+PRIVATE WUNUSED int DCALL module_rehash_globals(void) {
 	size_t i, new_mask = (current_rootscope->rs_bucketm << 1) | 1;
 	struct module_symbol *new_vec;
 	ASSERT(!(new_mask & (new_mask + 1)));

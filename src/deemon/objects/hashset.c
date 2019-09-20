@@ -54,7 +54,8 @@ PRIVATE struct hashset_item empty_set_items[1] = {
 #define dummy      (&DeeDict_Dummy)
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeHashSet_NewItemsInherited(size_t num_items, /*inherit(on_success)*/ DREF DeeObject **__restrict items) {
+DeeHashSet_NewItemsInherited(size_t num_items,
+                             /*inherit(on_success)*/ DREF DeeObject **items) {
 	DREF Set *result;
 	/* Allocate the set object. */
 	result = DeeGCObject_MALLOC(Set);
@@ -522,9 +523,10 @@ set_rehash(Set *__restrict self, int sizedir) {
 
 
 
+/* Unifies a given object, either inserting it into the set and re-returning
+ * it, or returning another, identical instance already apart of the set. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeHashSet_Unify(DeeObject *self,
-                 DeeObject *search_item) {
+DeeHashSet_Unify(DeeObject *self, DeeObject *search_item) {
 	Set *me = (Set *)self;
 	size_t mask;
 	struct hashset_item *vector;
@@ -618,7 +620,8 @@ again:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Insert(DeeObject *__restrict self, DeeObject *__restrict search_item) {
+DeeHashSet_Insert(DeeObject *self,
+                  DeeObject *search_item) {
 	Set *me = (Set *)self;
 	size_t mask;
 	struct hashset_item *vector;
@@ -702,7 +705,8 @@ again:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Remove(DeeObject *__restrict self, DeeObject *__restrict search_item) {
+DeeHashSet_Remove(DeeObject *self,
+                  DeeObject *search_item) {
 	Set *me = (Set *)self;
 	size_t mask;
 	struct hashset_item *vector;
@@ -763,7 +767,7 @@ restart:
 
 
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*String*/ DeeObject *DCALL
 DeeHashSet_UnifyString(DeeObject *__restrict self,
                        char const *__restrict search_item,
                        size_t search_item_length) {
@@ -1011,8 +1015,7 @@ again_lock:
 
 
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Contains(DeeObject *__restrict self,
-                    DeeObject *__restrict search_item) {
+DeeHashSet_Contains(DeeObject *self, DeeObject *search_item) {
 	Set *me = (Set *)self;
 	size_t mask;
 	struct hashset_item *vector;
@@ -1221,7 +1224,7 @@ setiterator_visit(SetIterator *__restrict self, dvisit_t proc, void *arg) {
 
 INTDEF DeeTypeObject HashSetIterator_Type;
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 setiterator_init(SetIterator *__restrict self,
                  size_t argc, DeeObject **argv) {
 	Set *set;
@@ -1645,7 +1648,7 @@ set_bool(Set *__restrict self) {
 #endif
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 set_init(Set *__restrict self,
          size_t argc, DeeObject **argv) {
 	DeeObject *seq;

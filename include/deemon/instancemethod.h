@@ -59,8 +59,8 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
  * an instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
  * as an object, rather than being called directly. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeInstanceMethod_New(DeeObject *func,
-                      DeeObject *this_arg);
+DeeInstanceMethod_New(DeeObject *func, DeeObject *this_arg);
+
 
 DECL_END
 

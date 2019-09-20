@@ -206,7 +206,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 suiter_init(SetUnionIterator *__restrict self,
             size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetUnionIterator", &self->sui_union))
@@ -571,7 +571,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 su_init(SetUnion *__restrict self,
         size_t argc, DeeObject **argv) {
 	self->su_a = Dee_EmptySet;
@@ -828,7 +828,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 #define ssd_ctor su_ctor
 #define ssd_copy su_copy
 #define ssd_deep su_deep
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssd_init(SetSymmetricDifference *__restrict self,
          size_t argc, DeeObject **argv) {
 	self->ssd_a = Dee_EmptySet;
@@ -1004,7 +1004,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 siiter_init(SetIntersectionIterator *__restrict self,
             size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetIntersectionIterator", &self->sii_intersect))
@@ -1134,7 +1134,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 #define si_ctor su_ctor
 #define si_copy su_copy
 #define si_deep su_deep
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 si_init(SetIntersection *__restrict self,
         size_t argc, DeeObject **argv) {
 	self->si_a = Dee_EmptySet;
@@ -1339,7 +1339,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 #define sd_ctor su_ctor
 #define sd_copy su_copy
 #define sd_deep su_deep
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sd_init(SetDifference *__restrict self,
         size_t argc, DeeObject **argv) {
 	self->sd_a = Dee_EmptySet;

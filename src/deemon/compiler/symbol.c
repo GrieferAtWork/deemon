@@ -809,7 +809,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 
 
 /* -------- DeeRootScopeObject Implementation -------- */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 root_scope_ctor(DeeRootScopeObject *__restrict self,
                 size_t argc, DeeObject **argv) {
 	DeeModuleObject *module;

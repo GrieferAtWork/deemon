@@ -45,7 +45,7 @@ typedef struct {
 	size_t sem_count; /* Number of available tickets. */
 } Semaphore;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_init(Semaphore *__restrict self,
           size_t argc, DeeObject **argv) {
 	self->sem_count = 0;
@@ -103,7 +103,7 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_post(Semaphore *__restrict self, size_t argc,
+sema_post(Semaphore *self, size_t argc,
           DeeObject **argv) {
 	size_t count = 1;
 	if (DeeArg_Unpack(argc, argv, "|Iu:post", &count) ||
@@ -113,7 +113,7 @@ sema_post(Semaphore *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_wait(Semaphore *__restrict self, size_t argc,
+sema_wait(Semaphore *self, size_t argc,
           DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":wait") ||
 	    sema_enter(self))
@@ -122,7 +122,7 @@ sema_wait(Semaphore *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_trywait(Semaphore *__restrict self, size_t argc,
+sema_trywait(Semaphore *self, size_t argc,
              DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":trywait"))
 		goto err;
@@ -147,7 +147,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_timedwait(Semaphore *__restrict self, size_t argc,
+sema_timedwait(Semaphore *self, size_t argc,
                DeeObject **argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))

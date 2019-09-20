@@ -125,7 +125,7 @@ typedef struct {
 	HANDLE sem_handle; /* The handle of the semaphore. */
 } Semaphore;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_init(Semaphore *__restrict self,
           size_t argc, DeeObject **argv) {
 	LONG init_value = 0;
@@ -158,7 +158,7 @@ PRIVATE ATTR_COLD int DCALL err_post_failed(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_post(Semaphore *__restrict self, size_t argc,
+sema_post(Semaphore *self, size_t argc,
           DeeObject **argv) {
 	LONG count = 1;
 	if (DeeArg_Unpack(argc, argv, "|I32u:post", &count))
@@ -176,7 +176,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_wait(Semaphore *__restrict self, size_t argc,
+sema_wait(Semaphore *self, size_t argc,
           DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":wait") ||
 	    nt_WaitForSemaphore(self->sem_handle, (uint64_t)-1))
@@ -185,7 +185,7 @@ sema_wait(Semaphore *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_trywait(Semaphore *__restrict self, size_t argc,
+sema_trywait(Semaphore *self, size_t argc,
              DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":trywait"))
@@ -199,7 +199,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_timedwait(Semaphore *__restrict self, size_t argc,
+sema_timedwait(Semaphore *self, size_t argc,
                DeeObject **argv) {
 	int error;
 	uint64_t timeout;
@@ -214,7 +214,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_fileno(Semaphore *__restrict self, size_t argc,
+sema_fileno(Semaphore *self, size_t argc,
             DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;

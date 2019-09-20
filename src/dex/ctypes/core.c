@@ -725,7 +725,7 @@ struct_copy(DeeObject *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 struct_init(DeeObject *__restrict self,
             size_t argc, DeeObject **argv) {
 	DeeSTypeObject *orig_type, *tp_self;

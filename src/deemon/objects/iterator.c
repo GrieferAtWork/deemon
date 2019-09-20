@@ -2565,7 +2565,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_init(IteratorFuture *__restrict self,
         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_IteratorFuture", &self->if_iter))
@@ -2694,7 +2694,7 @@ ip_copy(IteratorPending *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ip_init(IteratorPending *__restrict self,
         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_IteratorPending", &self->ip_iter))

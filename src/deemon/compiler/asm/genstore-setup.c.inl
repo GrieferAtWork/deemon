@@ -31,9 +31,12 @@
 DECL_BEGIN
 
 #ifdef ENTER
-INTERN int (DCALL asm_gpop_expr_enter)(struct ast *__restrict self)
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gpop_expr_enter)(struct ast *__restrict self)
 #else /* ENTER */
-INTERN int (DCALL asm_gpop_expr_leave)(struct ast *__restrict self, unsigned int gflags)
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gpop_expr_leave)(struct ast *__restrict self,
+                            unsigned int gflags)
 #define PUSH_RESULT  (gflags & ASM_G_FPUSHRES)
 #endif /* !ENTER */
 {

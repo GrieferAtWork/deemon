@@ -643,7 +643,7 @@ DEFINE_AST_GENERATOR(ast_yield,(struct ast *__restrict yield_expr));
 DEFINE_AST_GENERATOR(ast_throw,(struct ast *throw_expr));
 /* [AST_TRY] WARNING: Inherits a heap-allocated vector `catchv' upon success */
 DEFINE_AST_GENERATOR(ast_try,(struct ast *__restrict guarded_expression, size_t catchc,
-                              /*inherit*/struct catch_expr *__restrict catchv));
+                              /*inherit*/ struct catch_expr *__restrict catchv));
 /* [AST_TRY] Helper function to create a simple try-finally expression using `a_try' */
 DEFINE_AST_GENERATOR(ast_tryfinally,(struct ast *__restrict guarded_expression,
                                      struct ast *__restrict finally_expression));
@@ -688,9 +688,9 @@ DEFINE_AST_GENERATOR(ast_switch,(uint16_t flags, struct ast *__restrict expr, st
                                  struct text_label *cases, struct text_label *default_case));
 /* [AST_ASSEMBLY] WARNING: Inherits a heap-allocated vector `opv' upon success; @param: flags: Set of `AST_FASSEMBLY_*' */
 #ifdef CONFIG_LANGUAGE_NO_ASM
-DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/struct asm_operand *__restrict opv));
+DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
 #else /* !CONFIG_LANGUAGE_NO_ASM */
-DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/struct asm_operand *__restrict opv));
+DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 #undef DEFINE_AST_GENERATOR

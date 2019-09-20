@@ -101,7 +101,7 @@ ob_weakref_invoke_callback(struct weakref *__restrict self) {
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_init(WeakRef *__restrict self,
                 size_t argc, DeeObject **argv) {
 	DeeObject *obj;

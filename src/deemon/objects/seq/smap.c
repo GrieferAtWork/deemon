@@ -172,7 +172,7 @@ done:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 smapiter_ctor(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq) ||
@@ -652,7 +652,7 @@ INTERN DeeTypeObject SharedMap_Type = {
  *       of the given vector, though does not actually inherit the
  *       vector itself! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *__restrict vector) {
+DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *vector) {
 	DREF SharedMap *result;
 	size_t mask = 0x03;
 	while (length * 2 >= mask)
@@ -685,7 +685,8 @@ done:
  *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
-PUBLIC NONNULL((1)) void DCALL DeeSharedMap_Decref(DeeObject *__restrict self) {
+PUBLIC NONNULL((1)) void DCALL
+DeeSharedMap_Decref(DeeObject *__restrict self) {
 	DREF DeeObject **begin, **iter;
 	DREF DeeObject **vector_copy;
 	SharedMap *me = (SharedMap *)self;

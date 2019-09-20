@@ -58,7 +58,7 @@ proxy_iterator_ctor(MapProxyIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_iterator_init(MapProxyIterator *__restrict self,
                     size_t argc, DeeObject **argv) {
 	self->mpi_map = Dee_EmptyMapping;
@@ -352,7 +352,7 @@ proxy_ctor(MapProxy *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(MapProxy *__restrict self, size_t argc,
            DeeObject **argv) {
 	self->mp_map = Dee_EmptyMapping;

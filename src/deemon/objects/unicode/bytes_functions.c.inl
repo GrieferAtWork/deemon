@@ -478,7 +478,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF Bytes *DCALL
-bytes_resized(Bytes *__restrict self,
+bytes_resized(Bytes *self,
               size_t argc, DeeObject **argv) {
 	DREF Bytes *result;
 	size_t new_size;
@@ -566,7 +566,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF Bytes *DCALL
-bytes_makereadonly(Bytes *__restrict self,
+bytes_makereadonly(Bytes *self,
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":makereadonly"))
 		goto err;
@@ -580,7 +580,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF Bytes *DCALL
-bytes_makewritable(Bytes *__restrict self,
+bytes_makewritable(Bytes *self,
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":makewritable"))
 		goto err;

@@ -49,7 +49,7 @@ typedef struct {
 } SegmentsIterator;
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_init(SegmentsIterator *__restrict self,
              size_t argc, DeeObject **argv) {
 	self->si_len = 1;
@@ -280,7 +280,7 @@ seg_ctor(Segments *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seg_init(Segments *__restrict self,
          size_t argc, DeeObject **argv) {
 	self->s_len = 1;

@@ -52,7 +52,7 @@ rveciter_copy(RefVectorIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
               size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_RefVectorIterator", &self->rvi_vector) ||
@@ -1075,9 +1075,9 @@ INTERN DeeTypeObject RefVector_Type = {
 	/* .tp_class_members = */ rvec_class_members
 };
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeRefVector_New(DeeObject *__restrict owner, size_t length,
-                 DeeObject **__restrict vector,
+PUBLIC WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRefVector_New(DeeObject *owner, size_t length,
+                 DeeObject **vector,
 #ifndef CONFIG_NO_THREADS
                  rwlock_t *plock
 #else /* !CONFIG_NO_THREADS */
@@ -1118,7 +1118,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sveciter_init(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedVectorIterator", &self->si_seq))
@@ -1706,7 +1706,7 @@ INTERN DeeTypeObject SharedVector_Type = {
  *       of the given vector, though does not actually inherit the
  *       vector itself! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector) {
+DeeSharedVector_NewShared(size_t length, DREF DeeObject **vector) {
 	DREF SharedVector *result;
 	result = DeeObject_MALLOC(SharedVector);
 	if unlikely(!result)
@@ -1733,7 +1733,7 @@ done:
  * >> In the end, this behavior is required to implement a fast,
  *    general-purpose sequence type that can be used to implement
  *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers. */
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	DREF DeeObject **begin, **iter;
 	DREF DeeObject **vector_copy;

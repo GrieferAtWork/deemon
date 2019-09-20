@@ -144,7 +144,7 @@ ast_parse_try(bool is_statement) {
 			size_t new_catcha = (unlikely(catcha))
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
-		do_realloc_catchv:
+do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
 			if unlikely(!handler) {
@@ -339,7 +339,7 @@ ast_parse_try_hybrid(unsigned int *pwas_expression) {
 			size_t new_catcha = (unlikely(catcha))
 			                    ? catcha + ((catcha + 2) / 3)
 			                    : 1;
-		do_realloc_catchv:
+do_realloc_catchv:
 			handler = (struct catch_expr *)Dee_TryRealloc(catchv, new_catcha *
 			                                                      sizeof(struct catch_expr));
 			if unlikely(!handler) {

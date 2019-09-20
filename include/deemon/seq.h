@@ -445,40 +445,40 @@ DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi *DCALL DeeType_NSI(DeeTypeObjec
 
 /* Create new range sequence objects. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeRange_New(DeeObject *begin, DeeObject *end, DeeObject *step);
-DFUNDEF DREF DeeObject *DCALL DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
 
 /* Functions used to implement special sequence expressions,
  * such as `x + ...' (as `DeeSeq_Sum'), etc. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Sum(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Any(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeSeq_Min(DeeObject *__restrict self, DeeObject *key);
-DFUNDEF DREF DeeObject *DCALL DeeSeq_Max(DeeObject *__restrict self, DeeObject *key);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self, DeeObject *key);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self, DeeObject *key);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Mutable-sequence API */
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelItem(DeeObject *__restrict self, size_t index);
-INTDEF int DCALL DeeSeq_SetItem(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_XchItem(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetItem(DeeObject *self, size_t index, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end);
-INTDEF int DCALL DeeSeq_SetRange(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict values);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_SetRange(DeeObject *self, size_t start, size_t end, DeeObject *values);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start);
-INTDEF int DCALL DeeSeq_SetRangeN(DeeObject *__restrict self, size_t start, DeeObject *__restrict values);
-INTDEF int DCALL DeeSeq_Insert(DeeObject *__restrict self, size_t index, DeeObject *__restrict value);
-INTDEF int DCALL DeeSeq_InsertAll(DeeObject *__restrict self, size_t index, DeeObject *__restrict values);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Append(DeeObject *__restrict self, DeeObject *__restrict value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Extend(DeeObject *__restrict self, DeeObject *__restrict values);
-INTDEF int DCALL DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself, DeeObject *__restrict values);
-INTDEF int DCALL DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *__restrict count);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetRangeN(DeeObject *self, size_t start, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_Insert(DeeObject *self, size_t index, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_InsertAll(DeeObject *self, size_t index, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Append(DeeObject *self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Extend(DeeObject *self, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceExtend(DREF DeeObject **__restrict pself, DeeObject *values);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_InplaceRepeat(DREF DeeObject **__restrict pself, DeeObject *count);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Erase(DeeObject *__restrict self, size_t index, size_t count);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_PopItem(DeeObject *__restrict self, Dee_ssize_t index);
-INTDEF int DCALL DeeSeq_Remove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
-INTDEF int DCALL DeeSeq_RRemove(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
-INTDEF size_t DCALL DeeSeq_RemoveAll(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict elem, DeeObject *key);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_RemoveIf(DeeObject *__restrict self, DeeObject *__restrict should, size_t start, size_t end);
-INTDEF size_t DCALL DeeSeq_Fill(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_Remove(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_RRemove(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end, DeeObject *elem, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_RemoveIf(DeeObject *self, DeeObject *should, size_t start, size_t end);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_Fill(DeeObject *self, size_t start, size_t end, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Reverse(DeeObject *__restrict self);
-INTDEF int DCALL DeeSeq_Sort(DeeObject *__restrict self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Sort(DeeObject *self, DeeObject *key);
 
 /* Determine if a given sequence is mutable or resizable.
  * @return: 1:  The sequence is mutable or resizable.
@@ -502,32 +502,32 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRangeN(DeeObject *__
 /* General-purpose iterator/sequence compare functions.
  * NOTE: The iterator-compare functions compare the _ELEMENTS_
  *       they yield, not the abstract iterator positions. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Eq(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Lo(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Le(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Eq(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Lo(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Le(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Eq(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Lo(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Le(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Eq(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Lo(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Le(DeeObject *self, DeeObject *other);
 
-INTDEF int DCALL DeeSeq_EqVV(DeeObject **__restrict lhsv, DeeObject **__restrict rhsv, size_t elemc);             /* VECTOR == VECTOR */
-INTDEF int DCALL DeeSeq_EqVF(DeeObject **__restrict lhsv, DeeObject *__restrict rhs, size_t elemc);               /* VECTOR == DeeFastSeq */
-INTDEF int DCALL DeeSeq_EqVI(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict rhs);                /* VECTOR == ITERATOR */
-INTDEF int DCALL DeeSeq_EqVS(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict seq);                /* VECTOR == SEQUENCE */
-INTDEF int DCALL DeeSeq_LoVV(DeeObject **__restrict lhsv, size_t lhsc, DeeObject **__restrict rhsv, size_t rhsc); /* VECTOR < VECTOR */
-INTDEF int DCALL DeeSeq_LoVF(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict rhs, size_t rhsc);   /* VECTOR < DeeFastSeq */
-INTDEF int DCALL DeeSeq_LoVI(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict rhs);                /* VECTOR < ITERATOR */
-INTDEF int DCALL DeeSeq_LoVS(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict seq);                /* VECTOR < SEQUENCE */
-INTDEF int DCALL DeeSeq_LeVV(DeeObject **__restrict lhsv, size_t lhsc, DeeObject **__restrict rhsv, size_t rhsc); /* VECTOR <= VECTOR */
-INTDEF int DCALL DeeSeq_LeVF(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict rhs, size_t rhsc);   /* VECTOR <= DeeFastSeq */
-INTDEF int DCALL DeeSeq_LeVI(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict rhs);                /* VECTOR <= ITERATOR */
-INTDEF int DCALL DeeSeq_LeVS(DeeObject **__restrict lhsv, size_t lhsc, DeeObject *__restrict seq);                /* VECTOR <= SEQUENCE */
+INTDEF WUNUSED              int DCALL DeeSeq_EqVV(DeeObject **lhsv, DeeObject **rhsv, size_t elemc);             /* VECTOR == VECTOR */
+INTDEF WUNUSED NONNULL((2)) int DCALL DeeSeq_EqVF(DeeObject **lhsv, DeeObject *rhs, size_t elemc);               /* VECTOR == DeeFastSeq */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVI(DeeObject **lhsv, size_t lhsc, DeeObject *rhs);                /* VECTOR == ITERATOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVS(DeeObject **lhsv, size_t lhsc, DeeObject *seq);                /* VECTOR == SEQUENCE */
+INTDEF WUNUSED              int DCALL DeeSeq_LoVV(DeeObject **lhsv, size_t lhsc, DeeObject **rhsv, size_t rhsc); /* VECTOR < VECTOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVF(DeeObject **lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);   /* VECTOR < DeeFastSeq */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVI(DeeObject **lhsv, size_t lhsc, DeeObject *rhs);                /* VECTOR < ITERATOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVS(DeeObject **lhsv, size_t lhsc, DeeObject *seq);                /* VECTOR < SEQUENCE */
+INTDEF WUNUSED              int DCALL DeeSeq_LeVV(DeeObject **lhsv, size_t lhsc, DeeObject **rhsv, size_t rhsc); /* VECTOR <= VECTOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVF(DeeObject **lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);   /* VECTOR <= DeeFastSeq */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVI(DeeObject **lhsv, size_t lhsc, DeeObject *rhs);                /* VECTOR <= ITERATOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVS(DeeObject **lhsv, size_t lhsc, DeeObject *seq);                /* VECTOR <= SEQUENCE */
 
-INTDEF int DCALL DeeSeq_EqIV(DeeObject *__restrict lhs, DeeObject **__restrict rhsv, size_t rhsc);  /* ITERATOR == VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIF(DeeObject *__restrict lhs, DeeObject *__restrict rhs, size_t rhsc);    /* ITERATOR == DeeFastSeq */
-INTDEF int DCALL DeeSeq_LoIV(DeeObject *__restrict lhs, DeeObject **__restrict rhsv, size_t rhsc);  /* ITERATOR < VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LoIF(DeeObject *__restrict lhs, DeeObject *__restrict rhs, size_t rhsc);    /* ITERATOR < DeeFastSeq */
-INTDEF int DCALL DeeSeq_LeIV(DeeObject *__restrict lhs, DeeObject **__restrict rhsv, size_t rhsc);  /* ITERATOR <= VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LeIF(DeeObject *__restrict lhs, DeeObject *__restrict rhs, size_t rhsc);    /* ITERATOR <= DeeFastSeq */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqIV(DeeObject *lhs, DeeObject **rhsv, size_t rhsc);  /* ITERATOR == VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);    /* ITERATOR == DeeFastSeq */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LoIV(DeeObject *lhs, DeeObject **rhsv, size_t rhsc);  /* ITERATOR < VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LoIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);    /* ITERATOR < DeeFastSeq */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LeIV(DeeObject *lhs, DeeObject **rhsv, size_t rhsc);  /* ITERATOR <= VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LeIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);    /* ITERATOR <= DeeFastSeq */
 
 /* Construct new concat-proxy-sequence objects. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Concat(DeeObject *self, DeeObject *other);
@@ -540,26 +540,26 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_RepeatItemForever(DeeOb
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_NonEmpty(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Front(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Back(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_Reduce(DeeObject *__restrict self, DeeObject *__restrict combine, DeeObject *__restrict init);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_Reduce(DeeObject *self, DeeObject *combine, DeeObject *init);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_Parity(DeeObject *__restrict self);
-INTDEF size_t DCALL DeeSeq_Count(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_LocateAll(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_Count(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Locate(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RLocate(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_LocateAll(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Transform(DeeObject *self, DeeObject *transformation);
-INTDEF int DCALL DeeSeq_Contains(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF int DCALL DeeSeq_StartsWith(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF int DCALL DeeSeq_EndsWith(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF size_t DCALL DeeSeq_Find(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
-INTDEF size_t DCALL DeeSeq_RFind(DeeObject *__restrict self, size_t start, size_t end, DeeObject *__restrict keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Contains(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_StartsWith(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EndsWith(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_Find(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF WUNUSED NONNULL((1, 4)) size_t DCALL DeeSeq_RFind(DeeObject *self, size_t start, size_t end, DeeObject *keyed_search_item, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Join(DeeObject *self, DeeObject *items);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Split(DeeObject *self, DeeObject *sep, DeeObject *key);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Reversed(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Filter(DeeObject *self, DeeObject *pred_keep);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_Sorted(DeeObject *__restrict self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Sorted(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Segments(DeeObject *__restrict self, size_t segsize);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Combinations(DeeObject *__restrict self, size_t r);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r);
@@ -567,85 +567,105 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Permutations(DeeObject 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Permutations2(DeeObject *__restrict self, size_t r);
 
 /* Sequence functions. */
-INTDEF size_t DCALL DeeSeq_CountSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key); /* @return: -1: Error. */
-INTDEF int DCALL DeeSeq_ContainsSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict keyed_search_item, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
-INTDEF size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_CountSeq(DeeObject *self, DeeObject *seq, DeeObject *key); /* @return: -1: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_ContainsSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_StartsWithSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EndsWithSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_FindSeq(DeeObject *self, DeeObject *seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_RFindSeq(DeeObject *self, DeeObject *seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *self, DeeObject *sep_seq, DeeObject *key);
 
 /* Vector-sorting functions. */
-INTDEF int DCALL DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
-                                  DREF DeeObject *const *__restrict src,
-                                  size_t objc, DeeObject *key);
-INTDEF int DCALL DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
-                                      DREF DeeObject *const *__restrict src,
-                                      size_t objc, DeeObject *key);
+INTDEF WUNUSED int DCALL
+DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
+                 DREF DeeObject *const *__restrict src,
+                 size_t objc, DeeObject *key);
+INTDEF int DCALL
+DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
+                     DREF DeeObject *const *__restrict src,
+                     size_t objc, DeeObject *key);
 
 /* Mutable-set operators. */
 
 /* @return:  1: New item inserted.
  * @return:  0: Pre-existing item was not inserted.
  * @return: -1: Error. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_Insert(DeeObject *__restrict self, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_Insert(DeeObject *self, DeeObject *item);
 
 /* @return:  1: Pre-existing item was removed.
  * @return:  0: No pre-existing item found.
  * @return: -1: Error. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_Remove(DeeObject *__restrict self, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_Remove(DeeObject *self, DeeObject *item);
 
 /* @return: * : Number of inserted/removed items (that didn't already exist / weren't apart of @self)
  * @return: (size_t)-1: Error. */
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSet_InsertAll(DeeObject *__restrict self, DeeObject *__restrict items);
-INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSet_RemoveAll(DeeObject *__restrict self, DeeObject *__restrict items);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSet_InsertAll(DeeObject *self, DeeObject *items);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSet_RemoveAll(DeeObject *self, DeeObject *items);
 
 
 /* Return the sequence associated with the iterator, or NULL on error.
  * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeIterator_GetSeq(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeIterator_GetSeq(DeeObject *__restrict self);
+
 /* Get the iterator's position
  * @return: * :         The iterator's current position, where the a starting position is 0
  * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
  *                      from its sequence, as can happen in linked lists when the iterator's
  *                      link entry gets removed)
  * @return: (size_t)-1: Error */
-INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeIterator_GetIndex(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL
+DeeIterator_GetIndex(DeeObject *__restrict self);
+
 /* Set the iterator's position
  * If the given `new_index' is greater than the max allowed index,
  * the iterator is set to an exhausted state (i.e. points at the
  * end of the associated sequence)
  * @return:  0: Success
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index);
+
 /* Rewind the iterator to its starting position
  * @return:  0: Success
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_Rewind(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Rewind(DeeObject *__restrict self);
+
 /* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
  * @return:  0: Success (new relative position wasn't determined)
  * @return:  1: Success (the iterator has reached its starting position)
  * @return:  2: Success (the iterator hasn't reached its starting position)
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Revert(DeeObject *__restrict self, size_t step);
+
 /* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
  * @return:  0: Success (new relative position wasn't determined)
  * @return:  1: Success (the iterator has become exhausted)
  * @return:  2: Success (the iterator hasn't become exhausted)
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Advance(DeeObject *__restrict self, size_t step);
+
 /* Decrement the iterator by 1.
  * @return:  0: Success
  * @return:  1: The iterator was already at its starting location
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_Prev(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Prev(DeeObject *__restrict self);
+
 /* Increment the iterator, but don't generate a value
  * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entires,
  *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
@@ -653,15 +673,20 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_Prev(DeeObject *__restrict sel
  * @return:  0: Success
  * @return:  1: The iterator had already been exhausted
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_Next(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_Next(DeeObject *__restrict self);
+
 /* Check if the iterator is at its starting location
  * @return:  0: No, it isn't
  * @return:  1: Yes, it is
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeIterator_HasPrev(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeIterator_HasPrev(DeeObject *__restrict self);
+
 /* Peek the next iterator value, but don't actually advance the iterator.
  * @return: ITER_DONE: The iterator has already been exhausted. */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeIterator_Peek(DeeObject *__restrict self);
 
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -671,9 +696,9 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__
  * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',
  *       whereas when write-access is not possible, then the disposition of
  *       elements of `vector' doesn't matter and can either be `[0..1]' or `[1..1]'. */
-DFUNDEF DREF DeeObject *DCALL
-DeeRefVector_New(DeeObject *__restrict owner, size_t length,
-                 DeeObject **__restrict vector,
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRefVector_New(DeeObject *owner, size_t length,
+                 DeeObject **vector,
 #ifndef CONFIG_NO_THREADS
                  Dee_rwlock_t *plock
 #else /* !CONFIG_NO_THREADS */
@@ -682,14 +707,16 @@ DeeRefVector_New(DeeObject *__restrict owner, size_t length,
                  );
 
 #ifdef __INTELLISENSE__
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
                          DeeObject *const *__restrict vector);
 #elif defined(CONFIG_NO_THREADS)
-#define DeeRefVector_NewReadonly(owner, length, vector) DeeRefVector_New(owner, length, (DeeObject **)(vector), false)
-#else
-#define DeeRefVector_NewReadonly(owner, length, vector) DeeRefVector_New(owner, length, (DeeObject **)(vector), NULL)
-#endif
+#define DeeRefVector_NewReadonly(owner, length, vector) \
+	DeeRefVector_New(owner, length, (DeeObject **)(vector), false)
+#else /* CONFIG_NO_THREADS */
+#define DeeRefVector_NewReadonly(owner, length, vector) \
+	DeeRefVector_New(owner, length, (DeeObject **)(vector), NULL)
+#endif /* !CONFIG_NO_THREADS */
 
 
 
@@ -698,8 +725,8 @@ DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
  * NOTE: This function implicitly inherits a reference to each item
  *       of the given vector, though does not actually inherit the
  *       vector itself! */
-DFUNDEF DREF DeeObject *DCALL
-DeeSharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeSharedVector_NewShared(size_t length, DREF DeeObject **vector);
 
 /* Check if the reference counter of `self' is 1. When it is,
  * simply destroy the shared vector without freeing `sv_vector',
@@ -717,7 +744,8 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject **__restrict vector);
  *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
-DFUNDEF void DCALL DeeSharedVector_Decref(DREF DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL
+DeeSharedVector_Decref(DREF DeeObject *__restrict self);
 
 
 
@@ -731,8 +759,8 @@ typedef struct {
  * NOTE: This function implicitly inherits a reference to each item
  *       of the given vector, though does not actually inherit the
  *       vector itself! */
-DFUNDEF DREF DeeObject *DCALL
-DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *__restrict vector);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *vector);
 
 /* Check if the reference counter of `self' is 1. When it is,
  * simply destroy the shared vector without freeing `skv_vector',
@@ -750,7 +778,8 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *__restrict vector);
  *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
-DFUNDEF void DCALL DeeSharedMap_Decref(DREF DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL
+DeeSharedMap_Decref(DREF DeeObject *__restrict self);
 
 
 
@@ -772,7 +801,8 @@ DFUNDEF void DCALL DeeSharedMap_Decref(DREF DeeObject *__restrict self);
  *  - string
  *  - bytes
  * Sub-classes of these types are not fast-sequence-compatible. */
-DFUNDEF WUNUSED NONNULL((1)) size_t DCALL DeeFastSeq_GetSize(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
+DeeFastSeq_GetSize(DeeObject *__restrict self);
 #define DEE_FASTSEQ_NOTFAST  ((size_t)-1)
 
 /* Returns the `index'th item of `self'.
@@ -780,11 +810,13 @@ DFUNDEF WUNUSED NONNULL((1)) size_t DCALL DeeFastSeq_GetSize(DeeObject *__restri
  * `self' is an immutable sequence (anything other than `list' and `_sharedvector').
  * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize(self)'
  *          returned something other than `DEE_FASTSEQ_NOTFAST'. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index);
 
 /* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE if an error
  * occurred, and `NULL' if the item has been marked as unbound. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index);
 
 /* An alternative (and more restrictive) variant of the FastSeq-interface:
  *  - Semantically, these functions are used the same way as the regular interface
@@ -797,8 +829,10 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFastSeq_GetItemUnbound(Dee
  *  - tuple
  *  - _sharedvector   (If the sequence is cleared while being used here, `none' will be returned)
  *  - _subrange       (Only if the sub-ranged sequence is a fast-sequence-nb) */
-DFUNDEF WUNUSED NONNULL((1)) size_t DCALL DeeFastSeq_GetSizeNB(DeeObject *__restrict self);
-DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index);
+DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
+DeeFastSeq_GetSizeNB(DeeObject *__restrict self);
+DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL
+DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index);
 
 
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
@@ -808,11 +842,11 @@ DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeFastSeq_GetItemNB(DeeObject *__
  *                that must be freed using `Dee_Free', before inheriting
  *                a reference to each of its elements.
  * @return: NULL: An error occurred. */
-DFUNDEF /*owned(Dee_Free)*/ DREF DeeObject **DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict plength);
 
-DFUNDEF /*owned(Dee_Free)*/ DREF DeeObject **DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              size_t *__restrict plength,
                              size_t *__restrict pallocated);
@@ -835,7 +869,7 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
  * @return: (size_t)-1: An error occurred. Note that both `*pvector' and `*pallocated'
  *                      may have been modified since entry, with their original values
  *                      no longer being valid! */
-DFUNDEF size_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                   /*in-out*/size_t *__restrict pallocated);
@@ -846,7 +880,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
  * sequence element at `(*pvector)[offset]', rather than `(*pvector)[0]'
  * -> This function can be used to efficiently append elements to a
  *    vector which may already contain other objects upon entry. */
-DFUNDEF size_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
                                         /*in-out*/size_t *__restrict pallocated,

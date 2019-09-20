@@ -610,8 +610,6 @@ EXPORTS
 	DeeRoDict_Insert@12=_DeeRoDict_Insert@12
 	DeeRoDict_New@0=_DeeRoDict_New@0
 	DeeRoDict_NewWithHint@4=_DeeRoDict_NewWithHint@4
-	DeeRoSet_Contains@8=_DeeRoSet_Contains@8
-	DeeRoSet_ContainsString@12=_DeeRoSet_ContainsString@12
 	DeeRoSet_FromIterator@4=_DeeRoSet_FromIterator@4
 	DeeRoSet_FromIteratorWithHint@8=_DeeRoSet_FromIteratorWithHint@8
 	DeeRoSet_FromSequence@4=_DeeRoSet_FromSequence@4

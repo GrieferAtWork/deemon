@@ -28,7 +28,7 @@
 
 DECL_BEGIN
 
-PRIVATE int DCALL
+PRIVATE WUNUSED int DCALL
 mergesort_impl(DREF DeeObject **__restrict dst,
                DeeObject **__restrict temp,
                DREF DeeObject *const *__restrict src,
@@ -100,9 +100,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-compare_lo(DeeObject *__restrict lhs,
-           DeeObject *__restrict rhs,
-           DeeObject *__restrict key) {
+compare_lo(DeeObject *lhs, DeeObject *rhs, DeeObject *key) {
 	int result;
 	lhs = DeeObject_Call(key, 1, (DeeObject **)&lhs);
 	if unlikely(!lhs)
@@ -120,17 +118,21 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((5)) int DCALL
 mergesort_impl_p(DREF DeeObject **__restrict dst,
                  DeeObject **__restrict temp,
                  DREF DeeObject *const *__restrict src,
                  size_t objc,
-                 DeeObject *__restrict key) {
+                 DeeObject *key) {
 	int error;
 	switch (objc) {
 
-	case 0: break;
-	case 1: dst[0] = src[0]; break;
+	case 0:
+		break;
+
+	case 1:
+		dst[0] = src[0];
+		break;
 
 	case 2:
 		error = compare_lo(src[0], src[1], key);
@@ -189,7 +191,7 @@ err:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED int DCALL
 insertsort_impl(DREF DeeObject **__restrict dst,
                 DREF DeeObject *const *__restrict src,
                 size_t objc) {
@@ -215,11 +217,10 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((4)) int DCALL
 insertsort_impl_p(DREF DeeObject **__restrict dst,
                   DREF DeeObject *const *__restrict src,
-                  size_t objc,
-                  DeeObject *__restrict key) {
+                  size_t objc, DeeObject *key) {
 	int temp;
 	size_t i, j;
 	for (i = 0; i < objc; ++i) {
@@ -244,7 +245,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
                  DREF DeeObject *const *__restrict src,
                  size_t objc, DeeObject *key) {
@@ -302,7 +303,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
                      DREF DeeObject *const *__restrict src,
                      size_t objc, DeeObject *key) {

@@ -61,7 +61,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(SeqSimpleProxy *__restrict self,
            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv,
@@ -713,7 +713,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iter_init(SeqSimpleProxyIterator *__restrict self,
           size_t argc, DeeObject **argv) {
 	SeqSimpleProxy *seq;

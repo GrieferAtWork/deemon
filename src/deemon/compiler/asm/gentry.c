@@ -29,8 +29,9 @@
 
 DECL_BEGIN
 
-INTERN int (DCALL asm_gentry)(struct ast *__restrict try_ast,
-                              unsigned int gflags) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL asm_gentry)(struct ast *__restrict try_ast,
+                   unsigned int gflags) {
 	/* Guarding addresses of all sections. */
 	code_addr_t guard_begin[SECTION_TEXTCOUNT];
 	code_addr_t guard_end[SECTION_TEXTCOUNT];

@@ -72,7 +72,7 @@ mf_fini(MemoryFile *__restrict self) {
 	Dee_Free((void *)self->mf_begin);
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 mf_read(MemoryFile *__restrict self, void *__restrict buffer,
         size_t bufsize, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -92,7 +92,7 @@ mf_read(MemoryFile *__restrict self, void *__restrict buffer,
 	return (dssize_t)result;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
          size_t bufsize, dpos_t pos, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -112,7 +112,7 @@ mf_pread(MemoryFile *__restrict self, void *__restrict buffer,
 	return (dssize_t)result;
 }
 
-PRIVATE doff_t DCALL
+PRIVATE WUNUSED NONNULL((1)) doff_t DCALL
 mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 	doff_t result;
 	char *new_pointer;
@@ -126,7 +126,7 @@ mf_seek(MemoryFile *__restrict self, doff_t off, int whence) {
 #if __SIZEOF_POINTER__ < 8
 		if unlikely(off >= SIZE_MAX)
 			goto err_overflow;
-#endif
+#endif /* __SIZEOF_POINTER__ < 8 */
 		if unlikely(self->mf_ptr + (size_t)off < self->mf_ptr)
 			goto err_overflow;
 		self->mf_ptr = self->mf_begin + (size_t)off;
@@ -192,7 +192,7 @@ mf_close(MemoryFile *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mf_getc(MemoryFile *__restrict self, dioflag_t UNUSED(flags)) {
 	int result;
 	DeeFile_LockWrite(self);
@@ -302,7 +302,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
  * an empty data set.
  * The main use of this functionality is to allow the use of `DeeModule_LoadSourceStream()'
  * with a stream backed by source code located in memory. */
-PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size) {
 	DREF MemoryFile *result;
 	result = DeeObject_MALLOC(MemoryFile);
@@ -316,7 +316,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE_EXACT(self, (DeeTypeObject *)&DeeMemoryFile_Type);
 	if (!DeeObject_IsShared(self)) {
@@ -359,13 +359,13 @@ DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self) {
 
 
 
-PRIVATE int DCALL err_file_closed(void) {
+PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
 	return DeeError_Throwf(&DeeError_FileClosed,
 	                       "File was closed");
 }
 
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 reader_read(Reader *__restrict self, void *__restrict buffer,
             size_t bufsize, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -389,7 +389,7 @@ reader_read(Reader *__restrict self, void *__restrict buffer,
 	return (dssize_t)result;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 reader_pread(Reader *__restrict self, void *__restrict buffer,
              size_t bufsize, dpos_t pos, dioflag_t UNUSED(flags)) {
 	size_t result;
@@ -413,7 +413,7 @@ reader_pread(Reader *__restrict self, void *__restrict buffer,
 	return (dssize_t)result;
 }
 
-PRIVATE doff_t DCALL
+PRIVATE WUNUSED NONNULL((1)) doff_t DCALL
 reader_seek(Reader *__restrict self,
             doff_t off, int whence) {
 	doff_t result;
@@ -432,7 +432,7 @@ reader_seek(Reader *__restrict self,
 #if __SIZEOF_POINTER__ < 8
 		if unlikely(off >= SIZE_MAX)
 			goto err_overflow;
-#endif
+#endif /* __SIZEOF_POINTER__ < 8 */
 		if unlikely(self->r_ptr + (size_t)off < self->r_ptr)
 			goto err_overflow;
 		self->r_ptr = self->r_begin + (size_t)off;
@@ -443,7 +443,7 @@ reader_seek(Reader *__restrict self,
 #if __SIZEOF_POINTER__ < 8
 		if unlikely(off <= SSIZE_MIN || off >= SSIZE_MAX)
 			goto err_overflow;
-#endif
+#endif /* __SIZEOF_POINTER__ < 8 */
 		result = (size_t)(self->r_ptr - self->r_begin);
 		result += (dssize_t)off;
 		if unlikely(result < 0)
@@ -564,7 +564,7 @@ reader_setowner(Reader *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_getc(Reader *__restrict self, dioflag_t UNUSED(flags)) {
 	int result;
 	DeeFile_LockWrite(self);
@@ -635,7 +635,7 @@ reader_ctor(Reader *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_init(Reader *__restrict self,
             size_t argc, DeeObject **argv) {
 	size_t begin = 0, end = (size_t)-1;
@@ -710,7 +710,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
 		/* .tp_methods       = */ NULL,
-		/* .tp_getsets       = */reader_getsets,
+		/* .tp_getsets       = */ reader_getsets,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
@@ -739,7 +739,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
  * However, the end result of both mechanisms is the same, in that
  * the stream indirectly referenced a given data-block, rather than
  * having to keep its own copy of some potentially humongous memory block. */
-PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size) {
 	DREF Reader *result;
@@ -753,7 +753,7 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
 	result->r_ptr   = (char *)data;
 #ifndef __INTELLISENSE__
 	result->r_buffer.bb_put = NULL; /* Hide the buffer interface component. */
-#endif
+#endif /* !__INTELLISENSE__ */
 	DeeLFileObject_Init(result, &DeeFileReader_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -761,7 +761,7 @@ done:
 
 /* Similar to `DeeFile_OpenObjectMemory()', but used
  * to open a generic object using the buffer-interface. */
-PUBLIC WUNUSED DREF /*File*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          dssize_t begin, dssize_t end) {
 	DREF Reader *result;
@@ -803,7 +803,7 @@ writer_ctor(Writer *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(Writer *__restrict self, size_t argc, DeeObject **argv) {
 	DeeStringObject *init_string;
 	if (DeeArg_Unpack(argc, argv, "o:_FileWriter", &init_string) ||
@@ -1004,9 +1004,8 @@ PRIVATE struct type_getset writer_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE WUNUSED DREF DeeStringObject *DCALL
-writer_get(Writer *__restrict self,
-           size_t argc, DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+writer_get(Writer *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
 		return NULL;
 	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
@@ -1112,6 +1111,7 @@ writer_tryappend8(Writer *__restrict self,
 	written = self->w_printer.up_length;
 	ASSERT(avail >= written);
 	SWITCH_SIZEOF_WIDTH(self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) {
+
 	CASE_WIDTH_1BYTE:
 		if (written + bufsize > avail) {
 			/* Must allocate more memory. */
@@ -1143,6 +1143,7 @@ writer_tryappend8(Writer *__restrict self,
 		       buffer, bufsize);
 		self->w_printer.up_length += bufsize;
 		break;
+
 	CASE_WIDTH_2BYTE: {
 		uint16_t *dst;
 		if (written + bufsize > avail) {
@@ -1399,84 +1400,10 @@ err:
 	return false;
 }
 
-
-LOCAL uint32_t DCALL
-utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
-	uint32_t result;
-	switch (seqlen) {
-
-	case 0:
-		result = 0;
-		break;
-
-	case 1:
-		result = base[0];
-		break;
-
-	case 2:
-		result = (base[0] & 0x1f) << 6;
-		result |= (base[1] & 0x3f);
-		break;
-
-	case 3:
-		result = (base[0] & 0x0f) << 12;
-		result |= (base[1] & 0x3f) << 6;
-		result |= (base[2] & 0x3f);
-		break;
-
-	case 4:
-		result = (base[0] & 0x07) << 18;
-		result |= (base[1] & 0x3f) << 12;
-		result |= (base[2] & 0x3f) << 6;
-		result |= (base[3] & 0x3f);
-		break;
-
-	case 5:
-		result = (base[0] & 0x03) << 24;
-		result |= (base[1] & 0x3f) << 18;
-		result |= (base[2] & 0x3f) << 12;
-		result |= (base[3] & 0x3f) << 6;
-		result |= (base[4] & 0x3f);
-		break;
-
-	case 6:
-		result = (base[0] & 0x01) << 30;
-		result |= (base[1] & 0x3f) << 24;
-		result |= (base[2] & 0x3f) << 18;
-		result |= (base[3] & 0x3f) << 12;
-		result |= (base[4] & 0x3f) << 6;
-		result |= (base[5] & 0x3f);
-		break;
-
-	case 7:
-		result = (base[0] & 0x03 /*0x3f*/) << 30;
-		result |= (base[1] & 0x3f) << 24;
-		result |= (base[2] & 0x3f) << 18;
-		result |= (base[3] & 0x3f) << 12;
-		result |= (base[4] & 0x3f) << 6;
-		result |= (base[5] & 0x3f);
-		break;
-
-	case 8:
-		/*result = (base[0] & 0x3f) << 36;*/
-		result = (base[1] & 0x03 /*0x3f*/) << 30;
-		result |= (base[2] & 0x3f) << 24;
-		result |= (base[3] & 0x3f) << 18;
-		result |= (base[4] & 0x3f) << 12;
-		result |= (base[5] & 0x3f) << 6;
-		result |= (base[6] & 0x3f);
-		break;
-
-	default: __builtin_unreachable();
-	}
-	return result;
-}
-
 INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
-
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 writer_write(Writer *__restrict self,
              uint8_t const *__restrict buffer,
              size_t bufsize, dioflag_t UNUSED(flags)) {

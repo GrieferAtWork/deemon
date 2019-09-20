@@ -1,6 +1,6 @@
 
 # Find stuff that this format defines incorrectly:
-#  REPLACE:  "\n[ \t]+(?=(?!default|public|private|protected|CASE|Dee_CASE)[a-zA-Z0-9_]+:[ \t]*\n)"  --> "\n"
+#  REPLACE:  "(?<=\n)[\t ]+(?=(?!(public|private|protected|default|Dee_CASE|CASE))[a-zA-Z0-9_]+:\n)" --> ""
 #             - Lables that aren't aligned to the left-most column
 #  REPLACE:  "}\n[ \t]*else" --> "} else"
 #             - Else on a new line (happens after `if (un)likely')

@@ -411,7 +411,7 @@ return_self:
 }
 
 PRIVATE WUNUSED DREF DeeTimeObject *DCALL
-time_as(DeeTimeObject *__restrict self,
+time_as(DeeTimeObject *self,
         size_t argc, DeeObject **argv) {
 	struct repr_name const *iter;
 	DeeObject *name;

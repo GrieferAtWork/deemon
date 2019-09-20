@@ -45,7 +45,7 @@
 
 DECL_BEGIN
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangeiterator_init(SubRangeIterator *__restrict self,
                       size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o|IuIu:_SubRangeIterator",
@@ -468,7 +468,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrange_init(SubRange *__restrict self, size_t argc,
               DeeObject **argv) {
 	size_t end     = (size_t)-1;
@@ -794,7 +794,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangen_init(SubRangeN *__restrict self, size_t argc,
                DeeObject **argv) {
 	self->sr_start = 0;

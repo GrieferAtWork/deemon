@@ -43,10 +43,11 @@ INTDEF instruction_t const operator_instr_table[];
 #define OPCOUNT_PUSHNONE    0x80 /* You must re-return none. */
 INTDEF uint8_t const operator_opcount_table[OPERATOR_USERCOUNT];
 
-INTERN int (DCALL asm_genassert)(struct ast *__restrict expr,
-                                struct ast *message,
-                                struct ast *__restrict ddi_ast,
-                                unsigned int gflags) {
+INTERN WUNUSED NONNULL((1, 3)) int
+(DCALL asm_genassert)(struct ast *__restrict expr,
+                      struct ast *message,
+                      struct ast *ddi_ast,
+                      unsigned int gflags) {
 	struct asm_sym *assert_enter;
 	struct asm_sym *assert_leave;
 	struct asm_sec *old_section;

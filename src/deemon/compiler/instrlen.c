@@ -1190,7 +1190,7 @@ PRIVATE uint8_t const prefix_length_f0[8] = {
 };
 
 
-PUBLIC ATTR_RETNONNULL instruction_t *DCALL
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
 asm_nextinstr(instruction_t const *__restrict ip) {
 	uint8_t length;
 again:
@@ -1219,7 +1219,7 @@ again:
 
 
 
-PUBLIC bool DCALL
+PUBLIC WUNUSED bool DCALL
 asm_isnoreturn(uint16_t instr, uint16_t code_flags) {
 	bool result = false;
 	switch (instr) {
@@ -1245,14 +1245,14 @@ asm_isnoreturn(uint16_t instr, uint16_t code_flags) {
 	return result;
 }
 
-PUBLIC ATTR_RETNONNULL instruction_t *DCALL
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
 asm_nextinstr_sp(instruction_t const *__restrict ip,
                  uint16_t *__restrict pstacksz) {
 	uint16_t sp_add, sp_sub;
 	return asm_nextinstr_ef(ip, pstacksz, &sp_add, &sp_sub);
 }
 
-PUBLIC ATTR_RETNONNULL instruction_t *DCALL
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 asm_nextinstr_ef(instruction_t const *__restrict ip,
                  uint16_t *__restrict pstacksz,
                  uint16_t *__restrict psp_add,
@@ -1858,7 +1858,7 @@ prefix_symbol_usage(instruction_t const *__restrict ip) {
 }
 
 
-INTERN unsigned int DCALL
+INTERN WUNUSED NONNULL((1)) unsigned int DCALL
 asm_uses_local(instruction_t const *__restrict ip, uint16_t lid) {
 	unsigned int result = 0;
 	switch (ip[0]) {
@@ -1956,7 +1956,7 @@ check_prefix_core_usage:
 
 
 
-INTERN unsigned int DCALL
+INTERN WUNUSED NONNULL((1)) unsigned int DCALL
 asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
 	/* NOTE: This function also allows for tracking of constant variable usage. */
 	unsigned int result = 0;

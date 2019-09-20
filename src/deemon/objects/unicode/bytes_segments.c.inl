@@ -89,7 +89,7 @@ bsegiter_copy(BytesSegmentsIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsegiter_init(BytesSegmentsIterator *__restrict self,
               size_t argc, DeeObject **argv) {
 	BytesSegments *seg;
@@ -214,7 +214,7 @@ bseg_ctor(BytesSegments *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_init(BytesSegments *__restrict self,
           size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_BytesSegments", &self->b_str, &self->b_siz) ||

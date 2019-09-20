@@ -75,7 +75,7 @@ cell_copy(Cell *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_init(Cell *__restrict self,
           size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:Cell", &self->c_item))

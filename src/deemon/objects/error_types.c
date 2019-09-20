@@ -227,7 +227,7 @@ error_deep(DeeErrorObject *__restrict self,
 PRIVATE char const error_init_fmt[]        = "|oo:Error";
 PRIVATE struct keyword error_init_kwlist[] = { K(message), K(inner), KEND };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_init(DeeErrorObject *__restrict self,
            size_t argc, DeeObject **argv) {
 	size_t instance_size;
@@ -495,7 +495,7 @@ PRIVATE struct type_member nomemory_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 nomemory_ctor(DeeNoMemoryErrorObject *__restrict self,
               size_t argc, DeeObject **argv) {
 	if (error_try_init((DeeErrorObject *)self, argc, argv))

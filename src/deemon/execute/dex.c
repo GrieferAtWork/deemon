@@ -107,7 +107,7 @@ DECL_BEGIN
 
 INTDEF struct module_symbol empty_module_buckets[];
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 dex_load_handle(DeeDexObject *__restrict self,
                 void *handle,
                 DeeObject *__restrict input_file) {
@@ -272,7 +272,20 @@ err:
 	return -1;
 }
 
-PUBLIC void *DCALL
+/* Return the export address of a native symbol exported from a dex `self'.
+ * When `self' isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL'.
+ * NOTE: Because native symbols cannot appear in user-defined modules,
+ *       in the interest of keeping native functionality to its bare
+ *       minimum, any code making using of this function should contain
+ *       a fallback that calls a global symbol of the module, rather
+ *       than a native symbol:
+ * >> static int (*padd)(int x, int y) = NULL;
+ * >> if (!padd) *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE,"add");
+ * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
+ * >> if (!padd) return DeeObject_CallAttrStringf(IMPORTED_MODULE,"add","dd",x,y);
+ * >> // Invoke the native symbol.
+ * >> return DeeInt_New((*padd)(x,y)); */
+PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict self,
                           char const *__restrict name) {
 	void *result;
@@ -575,8 +588,21 @@ extern IMAGE_DOS_HEADER __ImageBase;
 
 #ifdef USE_LOADLIBRARY /* Windows */
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *__restrict ptr) {
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module.
+ * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
+ *                contains a static memory segment of which `ptr' is apart of.
+ * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
+ *                as a module, or points to a heap/stack segment.
+ *                No matter the case, no error is thrown for this, meaning that
+ *                the caller must decide on how to handle this. */
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *ptr) {
 	HMODULE hTypeModule;
 	DBG_ALIGNMENT_DISABLE();
 	if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
@@ -661,8 +687,21 @@ iter_modules_callback(struct dl_phdr_info *info,
 	return 0;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *__restrict ptr) {
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module.
+ * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
+ *                contains a static memory segment of which `ptr' is apart of.
+ * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
+ *                as a module, or points to a heap/stack segment.
+ *                No matter the case, no error is thrown for this, meaning that
+ *                the caller must decide on how to handle this. */
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *ptr) {
 	struct iter_modules_data data;
 	data.search_ptr = ptr;
 	data.search_res = NULL;
@@ -673,8 +712,21 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 
 #elif defined(CONFIG_HAVE_KOS_DL_H) /* KOS Mk3 + ELF */
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *__restrict ptr) {
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module.
+ * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
+ *                contains a static memory segment of which `ptr' is apart of.
+ * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
+ *                as a module, or points to a heap/stack segment.
+ *                No matter the case, no error is thrown for this, meaning that
+ *                the caller must decide on how to handle this. */
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *ptr) {
 	struct module_basic_info info;
 	DeeDexObject *iter;
 	rwlock_read(&dex_lock);
@@ -713,25 +765,39 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 }
 
 #elif defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
-/* KOS Mk4 changed up the dynlib API somewhat, such that we
- * need a different way of translating module pointers.
- * In Mk4, this is done by:
- * >> #define _KOS_SOURCE 1
- * >> #include <dlfcn.h>
- * >> 
- * >> static int obj = 0;
- * >> char const *getNameOfMyModule() {
- * >> 	void *h;
- * >> 	char const *name;
- * >> 	h    = dlgethandle(&obj, DLGETHANDLE_FNORMAL);
- * >> 	name = dlmodulename(h);
- * >> 	return name;
- * >> }
- * WARNING: When the given `ptr' is invalid, this function
- *          will clobber `dlerror()'!
- */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *__restrict ptr) {
+
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module.
+ * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
+ *                contains a static memory segment of which `ptr' is apart of.
+ * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
+ *                as a module, or points to a heap/stack segment.
+ *                No matter the case, no error is thrown for this, meaning that
+ *                the caller must decide on how to handle this. */
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *ptr) {
+	/* KOS Mk4 changed up the dynlib API somewhat, such that we
+	 * need a different way of translating module pointers.
+	 * In Mk4, this is done by:
+	 * >> #define _KOS_SOURCE 1
+	 * >> #include <dlfcn.h>
+	 * >> 
+	 * >> static int obj = 0;
+	 * >> char const *getNameOfMyModule() {
+	 * >> 	void *h;
+	 * >> 	char const *name;
+	 * >> 	h    = dlgethandle(&obj, DLGETHANDLE_FNORMAL);
+	 * >> 	name = dlmodulename(h);
+	 * >> 	return name;
+	 * >> }
+	 * WARNING: When the given `ptr' is invalid, this function
+	 *          will clobber `dlerror()'!
+	 */
 	DeeDexObject *iter;
 	void *module_handle;
 	module_handle = dlgethandle(ptr, DLGETHANDLE_FNORMAL);
@@ -765,8 +831,21 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 
 #else
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *__restrict ptr) {
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module.
+ * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
+ *                contains a static memory segment of which `ptr' is apart of.
+ * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
+ *                as a module, or points to a heap/stack segment.
+ *                No matter the case, no error is thrown for this, meaning that
+ *                the caller must decide on how to handle this. */
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeModule_FromStaticPointer(void const *ptr) {
 	/* XXX: Further support? */
 	(void)ptr;
 	return NULL;
@@ -778,16 +857,42 @@ DECL_END
 #else /* !CONFIG_NO_DEX */
 DECL_BEGIN
 
-PUBLIC void *DCALL
+/* Return the export address of a native symbol exported from a dex `self'.
+ * When `self' isn't a dex, but a regular module, or if the symbol wasn't found, return `NULL'.
+ * NOTE: Because native symbols cannot appear in user-defined modules,
+ *       in the interest of keeping native functionality to its bare
+ *       minimum, any code making using of this function should contain
+ *       a fallback that calls a global symbol of the module, rather
+ *       than a native symbol:
+ * >> static int (*padd)(int x, int y) = NULL;
+ * >> if (!padd) *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE,"add");
+ * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
+ * >> if (!padd) return DeeObject_CallAttrStringf(IMPORTED_MODULE,"add","dd",x,y);
+ * >> // Invoke the native symbol.
+ * >> return DeeInt_New((*padd)(x,y)); */
+PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
 DeeModule_GetNativeSymbol(DeeObject *__restrict UNUSED(self),
                           char const *__restrict UNUSED(name)) {
- return NULL;
+	return NULL;
 }
 
+/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
+ * try to determine which DEX module (if not the deemon core itself) was used to declare
+ * a structure located at that pointer, and return a reference to that module.
+ * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
+ * instead, but don't throw an error.
+ * When deemon has been built with `CONFIG_NO_DEX', this function will always return
+ * a reference to the builtin `deemon' module.
+ * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
+ *                contains a static memory segment of which `ptr' is apart of.
+ * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
+ *                as a module, or points to a heap/stack segment.
+ *                No matter the case, no error is thrown for this, meaning that
+ *                the caller must decide on how to handle this. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *__restrict UNUSED(ptr)) {
- Dee_Incref(&deemon_module);
- return (DREF DeeObject *)DeeModule_GetDeemon();
+DeeModule_FromStaticPointer(void const *UNUSED(ptr)) {
+	Dee_Incref(&deemon_module);
+	return (DREF DeeObject *)DeeModule_GetDeemon();
 }
 
 DECL_END

@@ -123,7 +123,7 @@ bfi_setup(BytesFindIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_init(BytesFindIterator *__restrict self,
          size_t argc, DeeObject **argv) {
 	BytesFind *find;
@@ -136,7 +136,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_init(BytesFindIterator *__restrict self,
           size_t argc, DeeObject **argv) {
 	BytesFind *find;
@@ -366,7 +366,7 @@ bf_ctor(BytesFind *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bf_init(BytesFind *__restrict self,
         size_t argc, DeeObject **argv) {
 	size_t start = 0, end = (size_t)-1;

@@ -300,10 +300,10 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 asm_gcall_expr(struct ast *__restrict func,
                struct ast *__restrict args,
-               struct ast *__restrict ddi_ast,
+               struct ast *ddi_ast,
                unsigned int gflags) {
 	/* Special instruction encoding for call operations. */
 	struct symbol *funsym;
@@ -1814,11 +1814,11 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 asm_gcall_kw_expr(struct ast *__restrict func,
                   struct ast *__restrict args,
                   struct ast *__restrict kwds,
-                  struct ast *__restrict ddi_ast,
+                  struct ast *ddi_ast,
                   unsigned int gflags) {
 	/* Optimizations for (highly likely) invocations, using the dedicated instruction. */
 	if (func->a_type == AST_CONSTEXPR &&

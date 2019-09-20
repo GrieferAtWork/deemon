@@ -118,7 +118,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 asm_gmov_function(struct symbol *__restrict dst,
                   struct ast *function_ast,
                   struct ast *dst_warn_ast) {

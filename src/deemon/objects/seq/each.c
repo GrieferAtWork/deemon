@@ -119,7 +119,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 se_init(SeqEachBase *__restrict self,
         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqEach", &self->se_seq))
@@ -240,7 +240,7 @@ se_bool(SeqEachBase *__restrict self) {
 }
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
-se_call(SeqEachBase *__restrict self, size_t argc, DeeObject **argv) {
+se_call(SeqEachBase *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
@@ -676,7 +676,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_init(SeqEachOperator *__restrict self,
          size_t argc, DeeObject **argv) {
 	size_t i;
@@ -1297,7 +1297,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seoi_init(SeqEachIterator *__restrict self,
           size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqEachOperatorIterator", &self->ei_each))

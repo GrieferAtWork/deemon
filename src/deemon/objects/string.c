@@ -1028,7 +1028,7 @@ stringiter_copy(StringIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_init(StringIterator *__restrict self,
                 size_t argc, DeeObject **argv) {
 	String *str;

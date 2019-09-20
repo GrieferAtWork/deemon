@@ -697,12 +697,12 @@ corrupt_heref(DecFile *__restrict self,
 
 
 
-INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              DeeObject *__restrict input_stream,
              DeeModuleObject *__restrict module,
              DeeStringObject *__restrict dec_pathname,
-             struct compiler_options *__restrict options) {
+             struct compiler_options *options) {
 	dpos_t total_size, old_pos;
 	Dec_Ehdr *hdr;
 	ASSERT_OBJECT(input_stream);
@@ -1190,7 +1190,7 @@ INTDEF struct class_attribute empty_class_attributes[];
 /* @return: * :        A reference to the object that got loaded.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
                    uint8_t **__restrict preader) {
 	DREF DeeObject *result = ITER_DONE;
@@ -1959,7 +1959,7 @@ corrupt:
 /* @return: * :        Newly heap-allocated vector of objects (length is stored in `*pcount').
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN WUNUSED DREF DeeObject **DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
                          uint16_t *__restrict pcount,
                          uint8_t **__restrict preader,
@@ -2205,7 +2205,7 @@ handle_map_error:
 /* @return: * :        New reference to the code object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTERN WUNUSED DREF DeeCodeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
                  uint8_t **__restrict preader) {
 	DREF DeeCodeObject *result;
@@ -2650,10 +2650,10 @@ err:
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_OpenDec(DeeModuleObject *__restrict module,
                   DeeObject *__restrict input_stream,
-                  struct compiler_options *__restrict options) {
+                  struct compiler_options *options) {
 	DecFile file;
 	int result;
 	ASSERT(module->mo_path);
@@ -3021,7 +3021,7 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 }
 
 
-INTERN uint64_t DCALL DecTime_Now(void) {
+INTERN WUNUSED uint64_t DCALL DecTime_Now(void) {
 #ifdef CONFIG_HOST_WINDOWS
 	uint64_t filetime;
 	DBG_ALIGNMENT_DISABLE();

@@ -38,11 +38,12 @@ DECL_BEGIN
  *                       after the loop, however after variables allocated by
  *                       the scope have been disposed of.
  */
-INTERN struct asm_sym *(DCALL asm_genloop)(uint16_t loop_flags,
-                                           struct ast *elem_or_cond,
-                                           struct ast *iter_or_next,
-                                           struct ast *block,
-                                           struct ast *__restrict ddi_ast) {
+INTERN WUNUSED NONNULL((5)) struct asm_sym *
+(DCALL asm_genloop)(uint16_t loop_flags,
+                    struct ast *elem_or_cond,
+                    struct ast *iter_or_next,
+                    struct ast *block,
+                    struct ast *ddi_ast) {
 	struct asm_sym *old_break;
 	struct asm_sym *old_continue;
 	struct asm_sym *loop_break, *loop_continue;

@@ -409,9 +409,7 @@ err_temp:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeSeq_Reduce(DeeObject *__restrict self,
-              DeeObject *__restrict combine,
-              DeeObject *__restrict init) {
+DeeSeq_Reduce(DeeObject *self, DeeObject *combine, DeeObject *init) {
 	DREF DeeObject *iterator, *elem, *merge;
 	DREF DeeObject *result = init;
 	if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
@@ -761,8 +759,8 @@ err_r_iter:
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSeq_Min(DeeObject *__restrict self, DeeObject *key) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Min(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	int temp;
 	if (key)
@@ -806,8 +804,8 @@ err_r_iter:
 	return NULL;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSeq_Max(DeeObject *__restrict self, DeeObject *key) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Max(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	int temp;
 	if (key)
@@ -852,9 +850,9 @@ err_r_iter:
 }
 
 
-INTERN size_t DCALL
-DeeSeq_Count(DeeObject *__restrict self,
-             DeeObject *__restrict keyed_search_item,
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_Count(DeeObject *self,
+             DeeObject *keyed_search_item,
              DeeObject *key) {
 	size_t result = 0;
 	int temp;
@@ -885,9 +883,9 @@ err:
 	return (size_t)-1;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeq_Locate(DeeObject *__restrict self,
-              DeeObject *__restrict keyed_search_item,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_Locate(DeeObject *self,
+              DeeObject *keyed_search_item,
               DeeObject *key) {
 	DREF DeeObject *elem, *iterator;
 	int temp;
@@ -917,9 +915,9 @@ err_iter:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeq_RLocate(DeeObject *__restrict self,
-               DeeObject *__restrict keyed_search_item,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_RLocate(DeeObject *self,
+               DeeObject *keyed_search_item,
                DeeObject *key) {
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	int temp;
@@ -954,9 +952,9 @@ err_iter:
 	return NULL;
 }
 
-INTERN int DCALL
-DeeSeq_Contains(DeeObject *__restrict self,
-                DeeObject *__restrict keyed_search_item,
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_Contains(DeeObject *self,
+                DeeObject *keyed_search_item,
                 DeeObject *key) {
 	DREF DeeObject *iter, *elem;
 	int temp;
@@ -978,9 +976,9 @@ DeeSeq_Contains(DeeObject *__restrict self,
 }
 
 
-INTERN int DCALL
-DeeSeq_StartsWith(DeeObject *__restrict self,
-                  DeeObject *__restrict keyed_search_item,
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_StartsWith(DeeObject *self,
+                  DeeObject *keyed_search_item,
                   DeeObject *key) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *result;
@@ -1041,9 +1039,9 @@ err_empty:
 	return 0;
 }
 
-INTERN int DCALL
-DeeSeq_EndsWith(DeeObject *__restrict self,
-                DeeObject *__restrict keyed_search_item,
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSeq_EndsWith(DeeObject *self,
+                DeeObject *keyed_search_item,
                 DeeObject *key) {
 	DeeTypeObject *tp_self;
 	size_t seq_length;
@@ -1246,10 +1244,10 @@ err:
 }
 
 
-INTERN size_t DCALL
-DeeSeq_Find(DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeSeq_Find(DeeObject *self,
             size_t start, size_t end,
-            DeeObject *__restrict keyed_search_item,
+            DeeObject *keyed_search_item,
             DeeObject *key) {
 	DREF DeeObject *iterator;
 	size_t result;
@@ -1389,10 +1387,10 @@ err_temp:
 	goto err;
 }
 
-INTERN size_t DCALL
-DeeSeq_RFind(DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeSeq_RFind(DeeObject *self,
              size_t start, size_t end,
-             DeeObject *__restrict keyed_search_item,
+             DeeObject *keyed_search_item,
              DeeObject *key) {
 	DREF DeeObject *iterator;
 	size_t result;
@@ -1536,10 +1534,10 @@ err_temp:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Join(DeeObject *self, DeeObject *items);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_Split(DeeObject *__restrict self, DeeObject *__restrict sep, DeeObject *key);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Strip(DeeObject *self, DeeObject *elem, DeeObject *key);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_LStrip(DeeObject *self, DeeObject *elem, DeeObject *key);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *self, DeeObject *elem, DeeObject *key);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Split(DeeObject *self, DeeObject *sep, DeeObject *key);
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Reversed(DeeObject *__restrict self) {
@@ -1551,9 +1549,8 @@ DeeSeq_Reversed(DeeObject *__restrict self) {
 	return result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeq_Sorted(DeeObject *__restrict self,
-              DeeObject *key) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeSeq_Sorted(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *result;
 	/* TODO: Using lists for this is less than optimal... */
 	result = DeeList_FromSequence(self);
@@ -1566,22 +1563,10 @@ done:
 }
 
 
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *__restrict self, DeeObject *__restrict elem, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN int DCALL DeeSeq_StartsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN int DCALL DeeSeq_EndsWithSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN size_t DCALL DeeSeq_FindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN size_t DCALL DeeSeq_RFindSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *__restrict self, DeeObject *__restrict seq, DeeObject *key);
-INTERN WUNUSED DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *__restrict self, DeeObject *__restrict sep_seq, DeeObject *key);
-
-INTERN size_t DCALL
-DeeSeq_CountSeq(DeeObject *__restrict self,
-                DeeObject *__restrict seq,
+/* Sequence functions. */
+INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeSeq_CountSeq(DeeObject *self,
+                DeeObject *seq,
                 DeeObject *key) {
 	(void)self;
 	(void)seq;
@@ -1635,6 +1620,21 @@ DeeSeq_CountSeq(DeeObject *__restrict self,
 	return (size_t)-1;
 }
 
+/* TODO: */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_CountSeq(DeeObject *self, DeeObject *seq, DeeObject *key); /* @return: -1: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_ContainsSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Partition(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RPartition(DeeObject *self, DeeObject *keyed_search_item, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_PartitionSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RPartitionSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_StartsWithSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EndsWithSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_FindSeq(DeeObject *self, DeeObject *seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_RFindSeq(DeeObject *self, DeeObject *seq, DeeObject *key); /* @return: -1: Not found. @return: -2: Error. */
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_StripSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_LStripSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject *self, DeeObject *seq, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *self, DeeObject *sep_seq, DeeObject *key);
 
 
 
@@ -1643,8 +1643,7 @@ DeeSeq_CountSeq(DeeObject *__restrict self,
  * NOTE: The iterator-compare functions compare the _ELEMENTS_
  *       they yield, not the abstract iterator positions. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeIter_Lo(DeeObject *__restrict lhs,
-           DeeObject *__restrict rhs) {
+DeeIter_Lo(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	int result;
 	/* TODO: Recursive sequence objects? */
@@ -1687,8 +1686,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeIter_Le(DeeObject *__restrict lhs,
-           DeeObject *__restrict rhs) {
+DeeIter_Le(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	int result;
 	/* TODO: Recursive sequence objects? */
@@ -1725,8 +1723,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeIter_Eq(DeeObject *__restrict lhs,
-           DeeObject *__restrict rhs) {
+DeeIter_Eq(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	int result;
 	/* TODO: Recursive sequence objects? */
@@ -1760,10 +1757,8 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_EqVV(DeeObject **__restrict lhsv,
-            DeeObject **__restrict rhsv,
-            size_t elemc) {
+INTERN WUNUSED int DCALL
+DeeSeq_EqVV(DeeObject **lhsv, DeeObject **rhsv, size_t elemc) {
 	size_t i;
 	int temp;
 	for (i = 0; i < elemc; ++i) {
@@ -1776,9 +1771,9 @@ err:
 	return temp;
 }
 
-INTERN int DCALL
-DeeSeq_EqVF(DeeObject **__restrict lhsv,
-            DeeObject *__restrict rhs,
+INTERN WUNUSED NONNULL((2)) int DCALL
+DeeSeq_EqVF(DeeObject **lhsv,
+            DeeObject *rhs,
             size_t elemc) {
 	size_t i;
 	int temp;
@@ -1797,9 +1792,9 @@ err:
 	return temp;
 }
 
-INTERN int DCALL
-DeeSeq_EqVI(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_EqVI(DeeObject **lhsv, size_t lhsc,
+            DeeObject *rhs) {
 	size_t i;
 	int temp;
 	DREF DeeObject *rhs_elem;
@@ -1824,9 +1819,9 @@ err:
 	return temp;
 }
 
-INTERN int DCALL
-DeeSeq_EqVS(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict seq) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_EqVS(DeeObject **lhsv, size_t lhsc,
+            DeeObject *seq) {
 	int result;
 	size_t fast_size;
 	if (DeeTuple_Check(seq)) {
@@ -1848,9 +1843,9 @@ DeeSeq_EqVS(DeeObject **__restrict lhsv, size_t lhsc,
 	return result;
 }
 
-INTERN int DCALL
-DeeSeq_LoVV(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject **__restrict rhsv, size_t rhsc) {
+INTERN WUNUSED int DCALL
+DeeSeq_LoVV(DeeObject **lhsv, size_t lhsc,
+            DeeObject **rhsv, size_t rhsc) {
 	size_t i, common = MIN(lhsc, rhsc);
 	for (i = 0; i < common; ++i) {
 		int temp = DeeObject_CompareLo(lhsv[i], rhsv[i]);
@@ -1868,9 +1863,9 @@ DeeSeq_LoVV(DeeObject **__restrict lhsv, size_t lhsc,
 	return lhsc < rhsc;
 }
 
-INTERN int DCALL
-DeeSeq_LoVF(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict rhs, size_t rhsc) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_LoVF(DeeObject **lhsv, size_t lhsc,
+            DeeObject *rhs, size_t rhsc) {
 	int temp;
 	DREF DeeObject *rhs_elem;
 	size_t i, common = MIN(lhsc, rhsc);
@@ -1898,9 +1893,9 @@ err_rhs_elem:
 	return temp;
 }
 
-INTERN int DCALL
-DeeSeq_LoVI(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_LoVI(DeeObject **lhsv, size_t lhsc,
+            DeeObject *rhs) {
 	DREF DeeObject *rhs_elem;
 	int result;
 	size_t i;
@@ -1929,9 +1924,9 @@ DeeSeq_LoVI(DeeObject **__restrict lhsv, size_t lhsc,
 	return 1; /* size:lower */
 }
 
-INTERN int DCALL
-DeeSeq_LoVS(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict seq) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_LoVS(DeeObject **lhsv, size_t lhsc,
+            DeeObject *seq) {
 	int result;
 	size_t fast_size;
 	if (DeeTuple_Check(seq))
@@ -1947,9 +1942,9 @@ DeeSeq_LoVS(DeeObject **__restrict lhsv, size_t lhsc,
 	return result;
 }
 
-INTERN int DCALL
-DeeSeq_LeVV(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject **__restrict rhsv, size_t rhsc) {
+INTERN WUNUSED int DCALL
+DeeSeq_LeVV(DeeObject **lhsv, size_t lhsc,
+            DeeObject **rhsv, size_t rhsc) {
 	size_t i, common = MIN(lhsc, rhsc);
 	for (i = 0; i < common; ++i) {
 		int temp = DeeObject_CompareLo(lhsv[i], rhsv[i]);
@@ -1967,9 +1962,9 @@ DeeSeq_LeVV(DeeObject **__restrict lhsv, size_t lhsc,
 	return lhsc <= rhsc;
 }
 
-INTERN int DCALL
-DeeSeq_LeVF(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict rhs, size_t rhsc) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_LeVF(DeeObject **lhsv, size_t lhsc,
+            DeeObject *rhs, size_t rhsc) {
 	int temp;
 	DREF DeeObject *rhs_elem;
 	size_t i, common = MIN(lhsc, rhsc);
@@ -1997,9 +1992,9 @@ err_rhs_elem:
 	return temp;
 }
 
-INTERN int DCALL
-DeeSeq_LeVI(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_LeVI(DeeObject **lhsv, size_t lhsc,
+            DeeObject *rhs) {
 	DREF DeeObject *rhs_elem;
 	int result;
 	size_t i;
@@ -2023,9 +2018,9 @@ DeeSeq_LeVI(DeeObject **__restrict lhsv, size_t lhsc,
 	return 1; /* size:equal_or_lower */
 }
 
-INTERN int DCALL
-DeeSeq_LeVS(DeeObject **__restrict lhsv, size_t lhsc,
-            DeeObject *__restrict seq) {
+INTERN WUNUSED NONNULL((3)) int DCALL
+DeeSeq_LeVS(DeeObject **lhsv, size_t lhsc,
+            DeeObject *seq) {
 	int result;
 	size_t fast_size;
 	if (DeeTuple_Check(seq))
@@ -2042,9 +2037,9 @@ DeeSeq_LeVS(DeeObject **__restrict lhsv, size_t lhsc,
 }
 
 
-INTERN int DCALL
-DeeSeq_EqIV(DeeObject *__restrict lhs,
-            DeeObject **__restrict rhsv,
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_EqIV(DeeObject *lhs,
+            DeeObject **rhsv,
             size_t rhsc) {
 	size_t i;
 	int temp;
@@ -2071,8 +2066,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_EqIF(DeeObject *__restrict lhs,
-            DeeObject *__restrict rhs,
+DeeSeq_EqIF(DeeObject *lhs,
+            DeeObject *rhs,
             size_t rhsc) {
 	size_t i;
 	int temp;
@@ -2108,9 +2103,9 @@ err:
 	return temp;
 }
 
-INTERN int DCALL
-DeeSeq_LoIV(DeeObject *__restrict lhs,
-            DeeObject **__restrict rhsv,
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_LoIV(DeeObject *lhs,
+            DeeObject **rhsv,
             size_t rhsc) {
 	DREF DeeObject *lhs_elem;
 	int result;
@@ -2138,8 +2133,8 @@ DeeSeq_LoIV(DeeObject *__restrict lhs,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_LoIF(DeeObject *__restrict lhs,
-            DeeObject *__restrict rhs,
+DeeSeq_LoIF(DeeObject *lhs,
+            DeeObject *rhs,
             size_t rhsc) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	int result;
@@ -2177,9 +2172,9 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSeq_LeIV(DeeObject *__restrict lhs,
-            DeeObject **__restrict rhsv,
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeSeq_LeIV(DeeObject *lhs,
+            DeeObject **rhsv,
             size_t rhsc) {
 	DREF DeeObject *lhs_elem;
 	int result;
@@ -2217,8 +2212,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_LeIF(DeeObject *__restrict lhs,
-            DeeObject *__restrict rhs,
+DeeSeq_LeIF(DeeObject *lhs,
+            DeeObject *rhs,
             size_t rhsc) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	int result;
@@ -2267,8 +2262,8 @@ err:
 
 /* Perform a generic sequence comparison. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_Eq(DeeObject *__restrict self,
-          DeeObject *__restrict some_object) {
+DeeSeq_Eq(DeeObject *self,
+          DeeObject *some_object) {
 	DeeObject *iter_self, *iter_rhs;
 	int result;
 	size_t other_size;
@@ -2296,8 +2291,8 @@ err1:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_Lo(DeeObject *__restrict self,
-          DeeObject *__restrict some_object) {
+DeeSeq_Lo(DeeObject *self,
+          DeeObject *some_object) {
 	DeeObject *iter_self, *iter_rhs;
 	int result;
 	size_t other_size;
@@ -2325,8 +2320,8 @@ err1:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeSeq_Le(DeeObject *__restrict self,
-          DeeObject *__restrict some_object) {
+DeeSeq_Le(DeeObject *self,
+          DeeObject *some_object) {
 	DeeObject *iter_self, *iter_rhs;
 	int result;
 	size_t other_size;

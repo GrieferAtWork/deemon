@@ -666,7 +666,7 @@ err:
 
 #define kmapiter_copy kwdsiter_copy
 #define kmapiter_deep kwdsiter_deep
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_KwdsMappingIterator", &self->ki_map))
 		goto err;

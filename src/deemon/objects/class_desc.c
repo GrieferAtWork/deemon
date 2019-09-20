@@ -2344,7 +2344,7 @@ PRIVATE struct type_member ot_members[] = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_init(ObjectTable *__restrict self,
         size_t argc, DeeObject **argv) {
 	DeeObject *ob;

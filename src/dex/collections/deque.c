@@ -784,7 +784,7 @@ deque_push_back(void *self, DeeObject *__restrict ob) {
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_init(Deque *__restrict self,
          size_t argc, DeeObject **argv) {
 	DeeObject *init   = Dee_EmptySeq;
@@ -827,7 +827,7 @@ deq_init(Deque *__restrict self,
 #define DEQUE_BUFFER_START d_head
 #endif /* !CONFIG_NO_THREADS */
 
-#if defined(__GNUC__) && __GNUC__ >= 9
+#if defined(__GNUC__) && __GNUC__ >= 7
 /* Get rid of:
  *   array subscript 0 is outside array bounds of 'DEQUE_BUFFER_TYPE' {aka 'unsigned char[40]'}
  * Either I'm not seeing the bug in my code, or the fact that GCC apparently claims that `0'
@@ -1679,7 +1679,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_init(DequeIteratorObject *__restrict self,
              size_t argc, DeeObject **argv) {
 	size_t index = 0;

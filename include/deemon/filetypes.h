@@ -223,9 +223,9 @@ DDATDEF DeeFileTypeObject DeeMemoryFile_Type;
  * an empty data set.
  * The main use of this functionality is to allow the use of `DeeModule_LoadSourceStream()'
  * with a stream backed by source code located in memory. */
-DFUNDEF DREF /*File*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenRoMemory(void const *data, size_t data_size);
-DFUNDEF void DCALL
+DFUNDEF NONNULL((1)) void DCALL
 DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self);
 
 
@@ -254,13 +254,13 @@ DDATDEF DeeFileTypeObject DeeFileReader_Type; /* File.Reader */
  * However, the end result of both mechanisms is the same, in that
  * the stream indirectly referenced a given data-block, rather than
  * having to keep its own copy of some potentially humongous memory block. */
-DFUNDEF DREF /*File*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
                          void const *data, size_t data_size);
 
 /* Similar to `DeeFile_OpenObjectMemory()', but used
  * to open a generic object using the buffer-interface. */
-DFUNDEF DREF /*File*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
                          Dee_ssize_t begin, Dee_ssize_t end);
 
@@ -275,10 +275,11 @@ struct Dee_file_writer_object {
 DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* File.Writer */
 
 /* Open a new file stream that writes all written data into a string. */
-DFUNDEF DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
+DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
 
 /* Returns the current string written by the writer. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFileWriter_GetString(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeFileWriter_GetString(DeeObject *__restrict self);
 
 
 DECL_END

@@ -150,7 +150,7 @@ rehash_realloc:
 	return true;
 }
 
-INTERN struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
 uasm_label_symbol(struct TPPKeyword *__restrict name) {
 	char const *text = name->k_name;
 	size_t size      = name->k_size;
@@ -185,7 +185,7 @@ not_a_label:
 }
 
 
-INTERN struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
 uasm_symbol(struct TPPKeyword *__restrict name) {
 	struct asm_sym *result, **presult;
 	if (symtab.st_alloc) {
@@ -214,7 +214,7 @@ err:
 }
 
 
-INTERN struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
 uasm_fbsymbol(struct TPPKeyword *__restrict name,
               bool return_back_symbol) {
 	struct asm_sym *result, **presult;
@@ -276,7 +276,7 @@ err:
 	return NULL;
 }
 
-INTERN struct asm_sym *FCALL
+INTERN WUNUSED NONNULL((1)) struct asm_sym *FCALL
 uasm_fbsymbol_def(struct TPPKeyword *__restrict name) {
 	struct asm_sym *result, **presult;
 	if (symtab.st_alloc) {
@@ -328,8 +328,7 @@ err:
 #define TOK_IS_SYMBOL_NAME(x) \
 	(TPP_ISKEYWORD(x) || TOK_IS_SYMBOL_NAME_CH(x))
 
-INTERN struct TPPKeyword *FCALL
-uasm_parse_symnam(void) {
+INTERN WUNUSED struct TPPKeyword *FCALL uasm_parse_symnam(void) {
 	struct TPPKeyword *result;
 	char *symbol_start;
 	char *symbol_end;
@@ -756,13 +755,13 @@ err:
 	return -1;
 }
 
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1)) int FCALL
 uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features) {
 	/* TODO: All the other expression levels. */
 	return uasm_parse_intexpr_sum(result, features);
 }
 
-INTERN int32_t FCALL
+INTERN WUNUSED int32_t FCALL
 uasm_parse_imm16(uint16_t features) {
 	struct asm_intexpr result;
 	if unlikely(uasm_parse_intexpr(&result, features))
@@ -1754,7 +1753,7 @@ err:
 	return -1;
 }
 
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1)) int FCALL
 uasm_parse_operand(struct asm_invoke_operand *__restrict result) {
 	ASSERT(!result->io_class);
 	/* Parse the actual operand. */
@@ -1775,7 +1774,7 @@ err:
 	return -1;
 }
 
-INTERN int FCALL
+INTERN WUNUSED int FCALL
 uasm_parse_instruction(void) {
 	struct TPPKeyword *name;
 	struct asm_mnemonic *mnemonic;
@@ -1986,7 +1985,7 @@ err:
 
 
 /* Parse and compile user-defined assembly until EOF is encountered. */
-INTERN int FCALL uasm_parse(void) {
+INTERN WUNUSED int FCALL uasm_parse(void) {
 	int error;
 continue_line:
 	while (tok > 0) {
@@ -2034,7 +2033,7 @@ err:
 }
 
 
-INTERN struct asm_mnemonic *DCALL
+INTERN WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
 asm_mnemonic_lookup_str(char const *__restrict name) {
 	struct asm_mnemonic *result;
 	ASM_MNEMONIC_FOREACH(result) {
@@ -2044,7 +2043,7 @@ asm_mnemonic_lookup_str(char const *__restrict name) {
 	return NULL;
 }
 
-INTERN struct asm_mnemonic *DCALL
+INTERN WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
 asm_mnemonic_lookup(struct TPPKeyword *__restrict name) {
 	struct asm_mnemonic *result;
 	if (name->k_rare) {

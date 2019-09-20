@@ -121,9 +121,24 @@
 #define ATREE_NODE(T,Tkey)        struct { T *a_min, *a_max; Tkey a_vmin, a_vmax; }
 #define ATREE_NODE_SINGLE(T,Tkey) struct { T *a_min, *a_max; Tkey a_vaddr; }
 #define ATREE_XNODE(T)            struct { T *a_min, *a_max; }
-#define DEFINE_ATOMIC_RWLOCK(name) struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
-#define DEFINE_RWLOCK(name)        struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
-#define Dee_DEFINE_RWLOCK(name)    struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
+#define DEFINE_ATOMIC_RWLOCK(name) struct atomic_rwlock name
+#define DEFINE_RWLOCK(name)        struct atomic_rwlock name
+#define Dee_DEFINE_RWLOCK(name)    struct atomic_rwlock name
+#define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name
+#define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name
+#define Dee_DEFINE_KWOBJMETHOD(name, func, self)          DeeKwObjMethodObject name
+#define DEFINE_KWOBJMETHOD(name, func, self)              DeeKwObjMethodObject name
+#define Dee_DEFINE_CLSMETHOD(name, func, type)            DeeClsMethodObject name
+#define DEFINE_CLSMETHOD(name, func, type)                DeeClsMethodObject name
+#define Dee_DEFINE_KWCLSMETHOD(name, func, type)          DeeKwClsMethodObject name
+#define DEFINE_KWCLSMETHOD(name, func, type)              DeeKwClsMethodObject name
+#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) DeeClsPropertyObject name
+#define DEFINE_CLSPROPERTY(name, type, get, del, set)     DeeClsPropertyObject name
+#define Dee_DEFINE_CMETHOD(name, func)                    DeeCMethodObject name
+#define DEFINE_CMETHOD(name, func)                        DeeCMethodObject name
+#define Dee_DEFINE_KWCMETHOD(name, func)                  DeeKwCMethodObject name
+#define DEFINE_KWCMETHOD(name, func)                      DeeKwCMethodObject name
+
 
 #define likely
 #define unlikely

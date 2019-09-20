@@ -27,15 +27,15 @@
 
 #ifdef PRINT_LONG_DOUBLE
 #define FLOAT_TYPE  long double
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
 DeeFloat_LPrint(long double value, dformatprinter printer, void *arg,
                 size_t width, size_t precision, unsigned int flags)
-#else
+#else /* PRINT_LONG_DOUBLE */
 #define FLOAT_TYPE  double
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((2)) dssize_t DCALL
 DeeFloat_Print(double value, dformatprinter printer, void *arg,
                size_t width, size_t precision, unsigned int flags)
-#endif
+#endif /* !PRINT_LONG_DOUBLE */
 {
 	dssize_t temp, result = 0;
 	PRIVATE FLOAT_TYPE const pow10[10] = {

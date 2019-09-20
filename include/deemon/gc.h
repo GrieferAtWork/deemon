@@ -62,8 +62,8 @@ struct Dee_gc_head {
  * to call this function on the passed object. - That call will
  * automatically be done when the function returns successfully.
  * @return: * : == ob */
-DFUNDEF ATTR_RETNONNULL DeeObject *DCALL DeeGC_Track(DeeObject *__restrict ob);
-DFUNDEF ATTR_RETNONNULL DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Track(DeeObject *__restrict ob);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL DeeGC_Untrack(DeeObject *__restrict ob);
 
 /* Try to collect at most `max_objects' GC-objects,
  * returning the actual amount collected. */
@@ -86,12 +86,12 @@ INTDEF bool DCALL DeeGC_IsEmptyWithoutDex(void);
  * All these do is allocate a block of memory of `n_bytes' that
  * includes some storage at negative offsets to hold a `struct gc_head',
  * as is required for objects that should later be tracked by the GC. */
-DFUNDEF ATTR_MALLOC void *(DCALL DeeGCObject_Malloc)(size_t n_bytes);
-DFUNDEF ATTR_MALLOC void *(DCALL DeeGCObject_Calloc)(size_t n_bytes);
-DFUNDEF void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes);
-DFUNDEF ATTR_MALLOC void *(DCALL DeeGCObject_TryMalloc)(size_t n_bytes);
-DFUNDEF ATTR_MALLOC void *(DCALL DeeGCObject_TryCalloc)(size_t n_bytes);
-DFUNDEF void *(DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_Malloc)(size_t n_bytes);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_Calloc)(size_t n_bytes);
+DFUNDEF WUNUSED void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_TryMalloc)(size_t n_bytes);
+DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_TryCalloc)(size_t n_bytes);
+DFUNDEF WUNUSED void *(DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes);
 DFUNDEF void (DCALL DeeGCObject_Free)(void *p);
 
 /* Allocate fixed-size, gc-object-purposed slab memory.

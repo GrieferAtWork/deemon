@@ -46,17 +46,19 @@ struct Dee_float_object {
 DDATDEF DeeTypeObject DeeFloat_Type;
 
 /* Create and return a new floating point object. */
-DFUNDEF DREF DeeObject *DCALL DeeFloat_New(double value);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeFloat_New(double value);
 
 
 
 /* Print a string representation of the given floating point value.
  * @param: flags: Set of `DEEFLOAT_PRINT_F*' */
-DFUNDEF Dee_ssize_t DCALL DeeFloat_Print(double value, Dee_formatprinter_t printer, void *arg,
-                                         size_t width, size_t precision, unsigned int flags);
+DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+DeeFloat_Print(double value, Dee_formatprinter_t printer, void *arg,
+               size_t width, size_t precision, unsigned int flags);
 #ifdef __COMPILER_HAVE_LONGDOUBLE
-DFUNDEF Dee_ssize_t DCALL DeeFloat_LPrint(long double value, Dee_formatprinter_t printer, void *arg,
-                                          size_t width, size_t precision, unsigned int flags);
+DFUNDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+DeeFloat_LPrint(long double value, Dee_formatprinter_t printer, void *arg,
+                size_t width, size_t precision, unsigned int flags);
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 #define DEEFLOAT_PRINT_FNORMAL    0x0000 /* Normal printing flags. */
 #define DEEFLOAT_PRINT_FLJUST     0x0002 /* Justify the written value to the left. */

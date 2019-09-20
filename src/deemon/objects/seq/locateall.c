@@ -112,7 +112,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 locatoriter_init(LocatorIterator *__restrict self,
                  size_t argc, DeeObject **argv) {
 	Locator *loc;
@@ -322,7 +322,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 locator_init(Locator *__restrict self,
              size_t argc, DeeObject **argv) {
 	self->l_pred = NULL;
@@ -451,9 +451,9 @@ INTERN DeeTypeObject SeqLocator_Type = {
 
 
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeSeq_LocateAll(DeeObject *__restrict self,
-                 DeeObject *__restrict keyed_search_item,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_LocateAll(DeeObject *self,
+                 DeeObject *keyed_search_item,
                  DeeObject *key) {
 	DREF Locator *result;
 	/* Create a new locator sequence. */

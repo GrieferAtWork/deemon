@@ -34,7 +34,7 @@ DECL_BEGIN
 
 #ifdef __COMPILER_HAVE_PRAGMA_PACK
 #pragma pack(push,1)
-#endif
+#endif /* __COMPILER_HAVE_PRAGMA_PACK */
 
 
 /* The max size of a DEC file.
@@ -449,7 +449,7 @@ typedef struct ATTR_PACKED {
 /* Decode a DEC pointer into an offset (usually into the string table)
  * HINT: The DEC pointer encoding format is
  *       identical to ULEB encoding used by DDI. */
-LOCAL uint32_t DCALL
+LOCAL NONNULL((1)) uint32_t DCALL
 Dec_DecodePointer(uint8_t **__restrict pptr) {
 	uint32_t result = 0;
 	uint8_t  byte, *ptr = *pptr, num_bits = 0;
@@ -529,7 +529,7 @@ Dec_DecodePointer(uint8_t **__restrict pptr) {
 
 #ifdef __COMPILER_HAVE_PRAGMA_PACK
 #pragma pack(pop)
-#endif
+#endif /* __COMPILER_HAVE_PRAGMA_PACK */
 
 
 
@@ -603,12 +603,12 @@ typedef struct {
  * @return:  0: Successfully initialized the DEC file.
  * @return: -1: An error occurred while attempting to read the DEC's data,
  *              or failed to allocate a sufficient buffer for the DEC. */
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              DeeObject *__restrict input_stream,
              struct module_object *__restrict module,
              struct string_object *__restrict dec_pathname,
-             struct compiler_options *__restrict options);
+             struct compiler_options *options);
 INTDEF NONNULL((1)) void DCALL DecFile_Fini(DecFile *__restrict self);
 
 /* Return a string for the entire strtab of a given DEC-file.
@@ -632,17 +632,17 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
 /* @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file was out of date or had been corrupted.
  * @return: -1: An error occurred. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_OpenDec(struct module_object *__restrict module,
                   DeeObject *__restrict input_stream,
-                  struct compiler_options *__restrict options);
+                  struct compiler_options *options);
 
 /* DEC loader implementation. */
 
 /* @return: * :        A reference to the object that got loaded.
  * @return: NULL:      An error occurred. (NOTE: `DTYPE_NULL' is not allowed and indicates a corrupt file)
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DecFile_LoadObject(DecFile *__restrict self,
                    uint8_t **__restrict preader);
 /* @param: allow_dtype_null: When true, individual vector elements are allowed
@@ -650,7 +650,7 @@ DecFile_LoadObject(DecFile *__restrict self,
  * @return: * :              Newly heap-allocated vector of objects (length is stored in `*pcount').
  * @return: NULL:            An error occurred.
  * @return: ITER_DONE:       The DEC file has been corrupted. */
-INTDEF WUNUSED DREF DeeObject **DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject **DCALL
 DecFile_LoadObjectVector(DecFile *__restrict self,
                          uint16_t *__restrict pcount,
                          uint8_t **__restrict preader,
@@ -659,13 +659,13 @@ DecFile_LoadObjectVector(DecFile *__restrict self,
 /* @return: * :        New reference to a code object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF WUNUSED DREF struct code_object *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct code_object *DCALL
 DecFile_LoadCode(DecFile *__restrict self,
                  uint8_t **__restrict preader);
 /* @return: * :        New reference to a ddi object.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The DEC file has been corrupted. */
-INTDEF WUNUSED DREF struct ddi_object *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF struct ddi_object *DCALL
 DecFile_LoadDDI(DecFile *__restrict self,
                 uint8_t *__restrict reader,
                 bool is_8bit_ddi);
@@ -678,10 +678,11 @@ DecFile_LoadDDI(DecFile *__restrict self,
  * @return: * :           Last-modified time (in microseconds since 01.01.1970).
  * @return: 0 :           The given file could not be found.
  * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
-INTDEF WUNUSED NONNULL((1)) uint64_t DCALL DecTime_Lookup(DeeObject *__restrict filename);
+INTDEF WUNUSED NONNULL((1)) uint64_t DCALL
+DecTime_Lookup(DeeObject *__restrict filename);
 
 /* Return the current time (in microseconds since 01.01.1970) (never fails). */
-INTDEF uint64_t DCALL DecTime_Now(void);
+INTDEF WUNUSED uint64_t DCALL DecTime_Now(void);
 
 /* Try to free up memory from the dec time-cache. */
 INTDEF size_t DCALL DecTime_ClearCache(size_t max_clear);

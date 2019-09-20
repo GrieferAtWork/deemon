@@ -64,7 +64,7 @@ rodictiterator_ctor(DictIterator *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 rodictiterator_init(DictIterator *__restrict self,
                     size_t argc, DeeObject **argv) {
 	Dict *Dict;
@@ -435,13 +435,14 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeRoDict_Insert(DREF DeeObject **__restrict pself,
-                 DeeObject *__restrict key,
-                 DeeObject *__restrict value) {
+                 DeeObject *key, DeeObject *value) {
 	Dict *me = (Dict *)*pself;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
 	ASSERT(!DeeObject_IsShared(me));
+	ASSERT(key != (DeeObject *)me);
+	ASSERT(value != (DeeObject *)me);
 	if unlikely(me->rd_size * 2 > me->rd_mask) {
 		size_t old_size = me->rd_size;
 		size_t new_mask = (me->rd_mask << 1) | 1;
@@ -603,9 +604,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeRoDict_GetItemDef(DeeObject *__restrict self,
-                     DeeObject *__restrict key,
-                     DeeObject *__restrict def) {
+DeeRoDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	size_t i, perturb, hash;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
@@ -686,11 +685,11 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeRoDict_GetItemStringDef(DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeRoDict_GetItemStringDef(DeeObject *self,
                            char const *__restrict key,
                            dhash_t hash,
-                           DeeObject *__restrict def) {
+                           DeeObject *def) {
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
@@ -711,12 +710,12 @@ DeeRoDict_GetItemStringDef(DeeObject *__restrict self,
 	return_reference_(def);
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeRoDict_GetItemStringLenDef(DeeObject *self,
                               char const *__restrict key,
                               size_t keylen,
                               dhash_t hash,
-                              DeeObject *__restrict def) {
+                              DeeObject *def) {
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;

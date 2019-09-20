@@ -235,10 +235,10 @@ get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name);
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_getattr(struct ast *__restrict base,
                 struct ast *__restrict name,
-                struct ast *__restrict ddi_ast,
+                struct ast *ddi_ast,
                 unsigned int gflags) {
 	/* Special optimizations when the attribute name is known at compile-time. */
 	if (name->a_type == AST_CONSTEXPR &&
@@ -414,10 +414,10 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_boundattr(struct ast *__restrict base,
                   struct ast *__restrict name,
-                  struct ast *__restrict ddi_ast,
+                  struct ast *ddi_ast,
                   unsigned int gflags) {
 	/* Special optimizations when the attribute name is known at compile-time. */
 	if (name->a_type == AST_CONSTEXPR &&
@@ -541,7 +541,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_delattr(struct ast *__restrict base,
                 struct ast *__restrict name,
-                struct ast *__restrict ddi_ast) {
+                struct ast *ddi_ast) {
 	/* Special optimizations when the attribute name is known at compile-time. */
 	if (name->a_type == AST_CONSTEXPR &&
 	    DeeString_Check(name->a_constexpr)) {
@@ -940,11 +940,11 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 ast_gen_setattr(struct ast *__restrict base,
                 struct ast *__restrict name,
                 struct ast *__restrict value,
-                struct ast *__restrict ddi_ast,
+                struct ast *ddi_ast,
                 unsigned int gflags) {
 	if (name->a_type == AST_CONSTEXPR &&
 	    DeeString_Check(name->a_constexpr)) {
@@ -1078,11 +1078,11 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 ast_gen_setitem(struct ast *__restrict sequence,
                 struct ast *__restrict index,
                 struct ast *__restrict value,
-                struct ast *__restrict ddi_ast,
+                struct ast *ddi_ast,
                 unsigned int gflags) {
 	if (index->a_type == AST_CONSTEXPR) {
 		int32_t int_index;
@@ -1117,12 +1117,12 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 ast_gen_setrange(struct ast *__restrict sequence,
                  struct ast *__restrict begin,
                  struct ast *__restrict end,
                  struct ast *__restrict value,
-                 struct ast *__restrict ddi_ast,
+                 struct ast *ddi_ast,
                  unsigned int gflags) {
 	int32_t index;
 	/* Special optimizations for certain ranges. */
@@ -1212,7 +1212,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
 asm_gunpack_expr(struct ast *__restrict src,
                  uint16_t num_targets,
                  struct ast *__restrict ddi_ast) {
@@ -1265,10 +1265,11 @@ err:
 }
 
 
-INTERN int (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
-                                    struct symbol *__restrict src_sym,
-                                    struct ast *dst_ast,
-                                    struct ast *src_ast) {
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
+(DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
+                         struct symbol *__restrict src_sym,
+                         struct ast *dst_ast,
+                         struct ast *src_ast) {
 	int32_t symid;
 	ASSERT(asm_can_prefix_symbol(dst_sym));
 check_src_sym_class:
@@ -1431,9 +1432,10 @@ err:
 }
 
 
-INTERN int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
-                                    struct ast *src,
-                                    struct ast *dst_ast) {
+INTERN WUNUSED NONNULL((1, 2, 3)) int
+(DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
+                         struct ast *src,
+                         struct ast *dst_ast) {
 	ASSERT(asm_can_prefix_symbol(dst_sym));
 	switch (src->a_type) {
 
@@ -1495,9 +1497,10 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL asm_gmov_ast_sym)(struct ast *dst,
-                                    struct symbol *__restrict src_sym,
-                                    struct ast *src_ast) {
+INTERN WUNUSED NONNULL((1, 2, 3)) int
+(DCALL asm_gmov_ast_sym)(struct ast *dst,
+                         struct symbol *__restrict src_sym,
+                         struct ast *src_ast) {
 	switch (dst->a_type) {
 
 	case AST_SYM:
@@ -1520,15 +1523,17 @@ err:
 	return -1;
 }
 
-INTDEF int (DCALL asm_gmov_ast_constexpr)(struct ast *__restrict dst,
-                                          DeeObject *__restrict src,
-                                          struct ast *__restrict src_ast);
+INTDEF WUNUSED NONNULL((1, 2, 3))
+int (DCALL asm_gmov_ast_constexpr)(struct ast *__restrict dst,
+                                   DeeObject *__restrict src,
+                                   struct ast *__restrict src_ast);
 
 
-INTERN int (DCALL asm_gstore)(struct ast *__restrict dst,
-                              struct ast *__restrict src,
-                              struct ast *__restrict ddi_ast,
-                              unsigned int gflags) {
+INTERN WUNUSED NONNULL((1, 2, 3))
+int (DCALL asm_gstore)(struct ast *__restrict dst,
+                       struct ast *__restrict src,
+                       struct ast *ddi_ast,
+                       unsigned int gflags) {
 again:
 	switch (dst->a_type) {
 
@@ -1831,8 +1836,8 @@ err:
 
 #undef PUSH_RESULT
 
-INTERN int DCALL
-asm_gpop_expr_multiple(size_t astc, struct ast **__restrict astv) {
+INTERN WUNUSED int DCALL
+asm_gpop_expr_multiple(size_t astc, struct ast **astv) {
 	size_t i, j;
 	/* Optimization: Trailing asts with no side-effects can be handled in reverse order */
 	while (astc && !ast_has_sideeffects(astv[astc - 1])) {

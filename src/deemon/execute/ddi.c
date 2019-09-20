@@ -33,7 +33,7 @@
 DECL_BEGIN
 
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) int DCALL
 get_sleb(uint8_t **__restrict pip) {
 	int result, is_neg;
 	uint8_t *ip      = *pip;
@@ -52,7 +52,7 @@ get_sleb(uint8_t **__restrict pip) {
 	return result;
 }
 
-PRIVATE unsigned int DCALL
+PRIVATE NONNULL((1)) unsigned int DCALL
 get_uleb(uint8_t **__restrict pip) {
 	unsigned int result = 0;
 	uint8_t *ip         = *pip;
@@ -66,7 +66,7 @@ get_uleb(uint8_t **__restrict pip) {
 	return result;
 }
 
-PUBLIC uint8_t *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_simple(uint8_t *__restrict ip,
                     code_addr_t *__restrict puip) {
 	code_addr_t uip = *puip;
@@ -114,7 +114,7 @@ Dee_ddi_next_simple(uint8_t *__restrict ip,
 	}
 }
 
-PUBLIC uint8_t *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_regs(uint8_t *__restrict ip,
                   struct ddi_regs *__restrict regs) {
 	/* This algorithm is heavily documented and explained in `<deemon/asm.h>' */
@@ -219,7 +219,7 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 
 
 
-LOCAL int DCALL
+LOCAL NONNULL((1)) int DCALL
 ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
                 uint16_t min_size, unsigned int flags) {
 	uint16_t new_alloc, *new_vec;
@@ -249,7 +249,7 @@ ddi_xrealloc_sp(struct ddi_xregs *__restrict regs,
 }
 
 
-PUBLIC uint8_t *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_next_state(uint8_t *__restrict ip,
                    struct ddi_state *__restrict self,
                    unsigned int flags) {
@@ -475,7 +475,7 @@ err:
 	return DDI_NEXT_ERR;
 }
 
-PUBLIC uint8_t *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 Dee_ddi_state_init(struct ddi_state *__restrict self,
                    DeeObject *__restrict code,
                    unsigned int flags) {
@@ -539,7 +539,7 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 	return ddi->d_ddi;
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 Dee_ddi_state_fini(struct ddi_state *__restrict self) {
 	struct ddi_saved *iter, *next;
 	iter = self->rs_save;
@@ -556,7 +556,7 @@ Dee_ddi_state_fini(struct ddi_state *__restrict self) {
 
 
 
-DFUNDEF uint8_t *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 DeeCode_FindDDI(DeeObject *__restrict self,
                 struct ddi_state *__restrict start_state,
                 code_addr_t *opt_endip, code_addr_t uip,

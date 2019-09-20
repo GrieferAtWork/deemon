@@ -194,7 +194,7 @@ get_reloc_by_name(char const *__restrict name) {
 /*  ================================  */
 /*  === User-assembly directives ===  */
 /*  ================================  */
-INTERN int FCALL
+INTERN WUNUSED int FCALL
 uasm_parse_directive(void) {
 #define NAMEISKWD(x)                       \
 	(name->k_size == COMPILER_STRLEN(x) && \

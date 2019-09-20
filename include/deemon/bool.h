@@ -34,7 +34,7 @@ DECL_BEGIN
 #define return_bool_  Dee_return_bool_
 #define return_true   Dee_return_true
 #define return_false  Dee_return_false
-#endif
+#endif /* DEE_SOURCE */
 
 typedef struct Dee_bool_object DeeBoolObject;
 

@@ -415,7 +415,7 @@ XMLNode_InitFromString(XMLNode *__restrict self,
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 node_init(XMLNodeObject *__restrict self,
           size_t argc, DeeObject **argv) {
 	(void)self;

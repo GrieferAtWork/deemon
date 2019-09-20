@@ -248,7 +248,7 @@ dictiterator_bool(DictIterator *__restrict self) {
 	        item < Dict->d_elem + (Dict->d_mask + 1));
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 dictiterator_init(DictIterator *__restrict self,
                   size_t argc, DeeObject **argv) {
 	DeeDictObject *Dict;
@@ -501,7 +501,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 dictproxyiterator_init(DictProxyIterator *__restrict self,
                        size_t argc, DeeObject **argv) {
 	DictProxy *proxy;
@@ -626,7 +626,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(DictProxy *__restrict self,
            size_t argc, DeeObject **argv) {
 	DeeObject *Dict;

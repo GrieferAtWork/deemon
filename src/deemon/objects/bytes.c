@@ -103,7 +103,7 @@ bytesiter_copy(BytesIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytesiter_init(BytesIterator *__restrict self,
                size_t argc, DeeObject **argv) {
 	Bytes *bytes;
@@ -2058,7 +2058,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
+Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self) {
 	DREF Bytes *result = self->bp_bytes;
 	if unlikely(!result)
 		return_empty_bytes;

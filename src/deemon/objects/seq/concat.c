@@ -125,7 +125,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_init(CatIterator *__restrict self,
                  size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqConcatIterator", &self->c_cat))
@@ -798,8 +798,7 @@ INTERN DeeTypeObject SeqConcat_Type = {
 };
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_Concat(DeeObject *self,
-              DeeObject *other) {
+DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 	DREF DeeObject **dst, **iter, **end;
 	DREF DeeTupleObject *result;
 	/* Special handling for recursive cats. */

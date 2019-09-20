@@ -804,7 +804,7 @@ err:
 #endif
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 enumattr_init(EnumAttr *__restrict self,
               size_t argc, DeeObject **argv) {
 	DeeObject *a, *b = NULL;
@@ -1017,7 +1017,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 #endif /* CONFIG_LONGJMP_ENUMATTR */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 enumattriter_init(EnumAttrIter *__restrict self,
                   size_t argc, DeeObject **argv) {
 	EnumAttr *seq;

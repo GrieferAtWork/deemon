@@ -48,7 +48,7 @@
 
 DECL_BEGIN
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObjMethod_New(dobjmethod_t func, DeeObject *__restrict self) {
 	DREF DeeObjMethodObject *result;
 	ASSERT_OBJECT(self);
@@ -63,7 +63,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwObjMethod_New(dkwobjmethod_t func, DeeObject *__restrict self) {
 	DREF DeeKwObjMethodObject *result;
 	ASSERT_OBJECT(self);
@@ -79,7 +79,7 @@ done:
 }
 
 
-PRIVATE char const *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) char const *DCALL
 typeobject_find_objmethod(DeeTypeObject *__restrict self,
                           dobjmethod_t meth) {
 	do {
@@ -94,7 +94,7 @@ typeobject_find_objmethod(DeeTypeObject *__restrict self,
 	return NULL;
 }
 
-PRIVATE char const *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) char const *DCALL
 typeobject_find_objmethod_doc(DeeTypeObject *__restrict self,
                               dobjmethod_t meth) {
 	do {
@@ -109,7 +109,7 @@ typeobject_find_objmethod_doc(DeeTypeObject *__restrict self,
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
 typeobject_find_objmethod_type(DeeTypeObject *__restrict self,
                                dobjmethod_t meth) {
 	do {
@@ -176,7 +176,7 @@ DeeObjMethod_GetDoc(DeeObject *__restrict self) {
 	return NULL;
 }
 
-PUBLIC ATTR_RETNONNULL DeeTypeObject *DCALL
+PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeObjMethod_GetType(DeeObject *__restrict self) {
 	dobjmethod_t func;
 	DeeTypeObject *tp_self;
@@ -202,7 +202,7 @@ DeeObjMethod_GetType(DeeObject *__restrict self) {
 	return Dee_TYPE(DeeObjMethod_SELF(self));
 }
 
-PUBLIC char const *DCALL
+PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsMethod_GetName(DeeObject *__restrict self) {
 	dobjmethod_t func;
 	struct type_method *iter;
@@ -218,7 +218,7 @@ DeeClsMethod_GetName(DeeObject *__restrict self) {
 	return NULL;
 }
 
-PUBLIC char const *DCALL
+PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsMethod_GetDoc(DeeObject *__restrict self) {
 	dobjmethod_t func;
 	struct type_method *iter;
@@ -432,8 +432,8 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */objmethod_getsets,
-	/* .tp_members       = */objmethod_members,
+	/* .tp_getsets       = */ objmethod_getsets,
+	/* .tp_members       = */ objmethod_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -563,9 +563,8 @@ dockwdsiter_copy(DocKwdsIterator *__restrict self,
 }
 
 #define DEFINE_DOCKWDSITER_COMPARE(name, op)                                      \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                 \
-	name(DocKwdsIterator *__restrict self,                                        \
-	     DocKwdsIterator *__restrict other) {                                     \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                         \
+	name(DocKwdsIterator *self, DocKwdsIterator *other) {                         \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &DocKwdsIterator_Type)) \
 			goto err;                                                             \
 		return_bool(DOCKWDSITER_RDITER(self) op DOCKWDSITER_RDITER(other));       \
@@ -736,10 +735,10 @@ INTERN DeeTypeObject DocKwds_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */dockwds_members,
+	/* .tp_members       = */ dockwds_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */dockwds_class_members
+	/* .tp_class_members = */ dockwds_class_members
 };
 
 
@@ -880,7 +879,7 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 };
 
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*ClsMethod*/ DeeObject *DCALL
 DeeClsMethod_New(DeeTypeObject *__restrict type,
                  dobjmethod_t func) {
 	DeeClsMethodObject *result;
@@ -896,7 +895,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*KwClsMethod*/ DeeObject *DCALL
 DeeKwClsMethod_New(DeeTypeObject *__restrict type,
                    dkwobjmethod_t func) {
 	DeeKwClsMethodObject *result;
@@ -1232,7 +1231,7 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 
 
 
-PUBLIC char const *DCALL
+PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsProperty_GetName(DeeObject *__restrict self) {
 	struct type_getset *iter;
 	ASSERT_OBJECT(self);
@@ -1248,7 +1247,7 @@ DeeClsProperty_GetName(DeeObject *__restrict self) {
 	return NULL;
 }
 
-PUBLIC char const *DCALL
+PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeClsProperty_GetDoc(DeeObject *__restrict self) {
 	struct type_getset *iter;
 	ASSERT_OBJECT(self);
@@ -1265,7 +1264,7 @@ DeeClsProperty_GetDoc(DeeObject *__restrict self) {
 }
 
 
-PUBLIC WUNUSED DREF /*ClsProperty*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*ClsProperty*/ DeeObject *DCALL
 DeeClsProperty_New(DeeTypeObject *__restrict type,
                    dgetmethod_t get,
                    ddelmethod_t del,
@@ -1585,9 +1584,9 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 
 
 /* Create a new unbound class property object. */
-PUBLIC WUNUSED DREF /*ClsMember*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF /*ClsMember*/ DeeObject *DCALL
 DeeClsMember_New(DeeTypeObject *__restrict type,
-                 struct type_member const *__restrict desc) {
+                 struct type_member const *desc) {
 	DREF DeeClsMemberObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	result = DeeObject_MALLOC(DeeClsMemberObject);
@@ -1689,9 +1688,8 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	       offsetof(DeeClsMemberObject, cm_memb))
 
 #define DEFINE_CLSMEMBER_CMP(name, op)                                    \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                         \
-	name(DeeClsMemberObject *__restrict self,                             \
-	     DeeClsMemberObject *__restrict other) {                          \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
+	name(DeeClsMemberObject *self, DeeClsMemberObject *other) {           \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeClsMember_Type)) \
 			return NULL;                                                  \
 		return_bool(CLSMEMBER_CMP(self, other) op 0);                     \
@@ -1795,9 +1793,9 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */clsmember_methods,
-	/* .tp_getsets       = */clsmember_getsets,
-	/* .tp_members       = */clsmember_members,
+	/* .tp_methods       = */ clsmember_methods,
+	/* .tp_getsets       = */ clsmember_getsets,
+	/* .tp_members       = */ clsmember_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1815,7 +1813,7 @@ cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject **argv) {
 	return DeeCMethod_CallFunc(self->cm_func, argc, argv);
 }
 
-PRIVATE struct module_symbol *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 cmethod_getmodsym(DeeModuleObject *__restrict module,
                   dcmethod_t func_ptr) {
 	uint16_t addr;
@@ -1840,8 +1838,8 @@ cmethod_getmodsym(DeeModuleObject *__restrict module,
 	return NULL;
 }
 
-PRIVATE struct type_member *DCALL
-type_member_search_cmethod(DeeTypeObject *__restrict type,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member *DCALL
+type_member_search_cmethod(DeeTypeObject *type,
                            struct type_member *chain,
                            DeeTypeObject **__restrict ptarget_type,
                            dcmethod_t func_ptr) {
@@ -1862,8 +1860,8 @@ gotit:
 	return chain;
 }
 
-PRIVATE struct type_member *DCALL
-type_seach_cmethod(DeeTypeObject *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member *DCALL
+type_seach_cmethod(DeeTypeObject *self,
                    dcmethod_t func_ptr,
                    DeeTypeObject **__restrict ptarget_type) {
 	struct type_member *result;
@@ -1880,8 +1878,8 @@ gotit:
 	return result;
 }
 
-PRIVATE struct type_member *DCALL
-cmethod_gettypefield(DeeModuleObject *__restrict module,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) struct type_member *DCALL
+cmethod_gettypefield(DeeModuleObject *module,
                      DREF DeeTypeObject **__restrict ptype,
                      dcmethod_t func_ptr) {
 	uint16_t addr;
@@ -2164,8 +2162,8 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */cmethod_getsets,
-	/* .tp_members       = */cmethod_members,
+	/* .tp_getsets       = */ cmethod_getsets,
+	/* .tp_members       = */ cmethod_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -2229,7 +2227,7 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */kwcmethod_getsets,
+	/* .tp_getsets       = */ kwcmethod_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
@@ -2249,11 +2247,12 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 	BREAKPOINT();
 #ifndef CONFIG_NO_STDIO
 #if !defined(CONFIG_NO__Exit) && \
-(defined(CONFIG_HAVE__Exit) ||   \
- defined(_Exit) || defined(__USE_ISOC99))
+    (defined(CONFIG_HAVE__Exit) || \
+     defined(__USE_ISOC99) || defined(_Exit) || defined(___Exit_defined))
 	_Exit(1);
 #elif !defined(CONFIG_NO__exit) && \
-(defined(_MSC_VER) || defined(CONFIG_HAVE__exit) || defined(_exit))
+      (defined(_MSC_VER) || defined(CONFIG_HAVE__exit) || \
+       defined(_exit) || defined(___exit_defined))
 	_exit(1);
 #else
 	ASSERT(0);
@@ -2263,7 +2262,7 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 	}
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCMethod_CallFunc_d(dcmethod_t fun, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeThreadObject *caller = DeeThread_Self();
@@ -2275,8 +2274,8 @@ DeeCMethod_CallFunc_d(dcmethod_t fun, size_t argc, DeeObject **argv) {
 	return result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject *self,
                         size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeThreadObject *caller = DeeThread_Self();
@@ -2288,7 +2287,7 @@ DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject *__restrict self,
 	return result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t argc,
                         DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
@@ -2301,8 +2300,8 @@ DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t argc,
 	return result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeKwObjMethod_CallFunc_d(dkwobjmethod_t fun, DeeObject *self,
                           size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeThreadObject *caller = DeeThread_Self();

@@ -243,6 +243,7 @@ struct Dee_ddi_saved {
 	struct Dee_ddi_xregs  s_save;    /* Saved register state. NOTE: `dr_uip' is undefined. */
 	struct Dee_ddi_saved *s_prev;    /* [0..1][owned] Previous, saved register state */
 };
+
 struct Dee_ddi_state {
 	union {
 		struct Dee_ddi_regs  rs_regs;   /* The current register state. */
@@ -292,10 +293,12 @@ struct Dee_ddi_state {
  * NOTE: Upon error (return == DDI_NEXT_DONE || return == DDI_NEXT_ERR),
  *       the given ddi-state `self' is initialized to a no-op state that
  *       can still be used in a call to `Dee_ddi_state_fini()'! */
-DFUNDEF uint8_t *DCALL Dee_ddi_state_init(struct Dee_ddi_state *__restrict self,
-                                          DeeObject *__restrict code,
-                                          unsigned int flags);
-DFUNDEF void DCALL Dee_ddi_state_fini(struct Dee_ddi_state *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+Dee_ddi_state_init(struct Dee_ddi_state *__restrict self,
+                   DeeObject *__restrict code,
+                   unsigned int flags);
+DFUNDEF NONNULL((1)) void DCALL
+Dee_ddi_state_fini(struct Dee_ddi_state *__restrict self);
 
 
 
@@ -317,9 +320,16 @@ DFUNDEF void DCALL Dee_ddi_state_fini(struct Dee_ddi_state *__restrict self);
  *                            enumerating/searching the data stream.
  * @return: DDI_NEXT_ERR:    [Dee_ddi_next_state && !DDI_STATE_FNOTHROW] An error occurred.
  * @return: DDI_NEXT_DONE:    The DDI information stream has ended after `DDI_STOP' was read. */
-DFUNDEF uint8_t *DCALL Dee_ddi_next_simple(uint8_t *__restrict ip, Dee_code_addr_t *__restrict puip);
-DFUNDEF uint8_t *DCALL Dee_ddi_next_regs(uint8_t *__restrict ip, struct Dee_ddi_regs *__restrict regs);
-DFUNDEF uint8_t *DCALL Dee_ddi_next_state(uint8_t *__restrict ip, struct Dee_ddi_state *__restrict regs, unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+Dee_ddi_next_simple(uint8_t *__restrict ip,
+                    Dee_code_addr_t *__restrict puip);
+DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+Dee_ddi_next_regs(uint8_t *__restrict ip,
+                  struct Dee_ddi_regs *__restrict regs);
+DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+Dee_ddi_next_state(uint8_t *__restrict ip,
+                   struct Dee_ddi_state *__restrict regs,
+                   unsigned int flags);
 
 
 /* DDI extended data opcode flags. */
@@ -359,17 +369,21 @@ struct Dee_ddi_object {
  * @return: * :             Successfully found the DDI state describing `uip'
  * @return: DDI_NEXT_ERR:   [!DDI_STATE_FNOTHROW] An error occurred.
  * @return: DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP' was read. */
-DFUNDEF uint8_t *DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 DeeCode_FindDDI(DeeObject *__restrict self,
                 struct Dee_ddi_state *__restrict start_state,
                 Dee_code_addr_t *opt_endip, Dee_code_addr_t uip,
                 unsigned int flags);
 
 /* Return the name for a specific assembly symbol which may be found in code. */
-DFUNDEF WUNUSED char *DCALL DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid); /* Argument */
-DFUNDEF WUNUSED char *DCALL DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid); /* Static */
-DFUNDEF WUNUSED char *DCALL DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid); /* Reference */
-DFUNDEF WUNUSED char *DCALL DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
+DFUNDEF WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetASymbolName(DeeObject *__restrict self, uint16_t aid); /* Argument */
+DFUNDEF WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetSSymbolName(DeeObject *__restrict self, uint16_t sid); /* Static */
+DFUNDEF WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetRSymbolName(DeeObject *__restrict self, uint16_t rid); /* Reference */
+DFUNDEF WUNUSED NONNULL((1)) char *DCALL
+DeeCode_GetDDIString(DeeObject *__restrict self, uint16_t id); /* DDI symbol/local/path/file */
 
 #define DeeCode_NAME(x)                                       \
 	DeeCode_GetDDIString((DeeObject *)Dee_REQUIRES_OBJECT(x), \
@@ -677,9 +691,9 @@ struct Dee_code_frame {
  * @return: NULL:       An error occurred that could not be handled by user-code.
  * @return: ITER_DONE: [CODE_FYIELDING] The iterator of the frame as finished.
  *                HINT: Attempting to execute the frame again will yield `ITER_DONE' once more. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFast(struct Dee_code_frame *__restrict frame);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
 
 
@@ -692,13 +706,14 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
 #endif /* CONFIG_NO_EXEC_ALTSTACK */
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
+
 #ifndef DEE_EXEC_ALTSTACK_PERIOD
 #if defined(__i386__)
 #define DEE_EXEC_ALTSTACK_PERIOD  1024 /* NOTE: Changes must be mirrored in `exec-386.S' */
 #elif defined(__x86_64__)
 #define DEE_EXEC_ALTSTACK_PERIOD  1024
 #endif
-#endif
+#endif /* !DEE_EXEC_ALTSTACK_PERIOD */
 
 /* Switch to an alternate stack every `DEE_EXEC_ALTSTACK_PERIOD' recursions. */
 #ifndef DEE_EXEC_ALTSTACK_PERIOD
@@ -716,8 +731,8 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
  * These functions are highly platform- and arch-specific, and are meant
  * to provide some way of preventing a true stack overflow when user-code
  * has increased `DeeExec_StackLimit' to unreasonable heights. */
-DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameFastAltStack(struct Dee_code_frame *__restrict frame);
-DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
+DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameFastAltStack(struct Dee_code_frame *__restrict frame);
+DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 
 

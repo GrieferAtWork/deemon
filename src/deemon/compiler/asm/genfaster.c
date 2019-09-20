@@ -54,7 +54,7 @@ yes:
 }
 
 
-INTERN struct ast *DCALL
+INTERN WUNUSED struct ast *DCALL
 ast_strip_seqcast(struct ast *__restrict self) {
 	for (;;) {
 		if (self->a_type == AST_MULTIPLE &&
@@ -92,9 +92,9 @@ ast_strip_seqcast(struct ast *__restrict self) {
 	return self;
 }
 
-INTERN int DCALL
-ast_genasm_asp(struct ast *__restrict self,
-               unsigned int gflags) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_genasm_asp)(struct ast *__restrict self,
+                       unsigned int gflags) {
 	/* Strip away unnecessary sequence casts. */
 	self = ast_strip_seqcast(self);
 	/* Generate the expression. */
@@ -102,9 +102,9 @@ ast_genasm_asp(struct ast *__restrict self,
 	return ast_genasm(self, gflags);
 }
 
-INTERN int DCALL
-ast_genasm_set(struct ast *__restrict self,
-               unsigned int gflags) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_genasm_set)(struct ast *__restrict self,
+                       unsigned int gflags) {
 	/* Strip away unnecessary sequence-style expression casts. */
 	self = ast_strip_seqcast(self);
 	if (self->a_type == AST_CONSTEXPR) {

@@ -60,13 +60,8 @@ DECL_BEGIN
 typedef struct Dee_rodict_object DeeRoDictObject;
 
 struct Dee_rodict_item {
-#ifdef __INTELLISENSE__
-	DeeObject      *di_key;   /* [0..1][const] Dictionary item key. */
-	DeeObject      *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
-#else
 	DREF DeeObject *di_key;   /* [0..1][const] Dictionary item key. */
 	DREF DeeObject *di_value; /* [1..1][valid_if(di_key)][const] Dictionary item value. */
-#endif
 	Dee_hash_t      di_hash;  /* [valid_if(di_key)][const] Hash of `di_key' (with a starting value of `0'). */
 };
 
@@ -86,17 +81,19 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIterator(DeeObj
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
 
 /* Internal functions for constructing a read-only Dict object. */
-DFUNDEF DREF DeeObject *DCALL DeeRoDict_New(void);
-DFUNDEF DREF DeeObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
-DFUNDEF int DCALL DeeRoDict_Insert(DREF DeeObject **__restrict pself, DeeObject *__restrict key, DeeObject *__restrict value);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_New(void);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_NewWithHint(size_t num_items);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeRoDict_Insert(DREF DeeObject **__restrict pself,
+                 DeeObject *key, DeeObject *value);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeRoDict_GetItemDef(DeeObject *__restrict self, DeeObject *__restrict key, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeRoDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeRoDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeRoDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_GetItemStringDef(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, DeeObject *__restrict def);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeRoDict_GetItemStringDef(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeRoDict_GetItemStringLenDef(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 #endif /* CONFIG_BUILDING_DEEMON */

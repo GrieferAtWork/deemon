@@ -190,7 +190,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
 	uint16_t num_stack_vars;
 	DeeScopeObject *scope;
@@ -381,8 +381,9 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL ast_genasm_one)(struct ast *__restrict self,
-                                  unsigned int gflags) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_genasm_one)(struct ast *__restrict self,
+                       unsigned int gflags) {
 	uint16_t old_sp = current_assembler.a_stackcur;
 	uint16_t wnt_sp;
 	int result = ast_genasm(self, gflags);
@@ -402,8 +403,9 @@ done:
 	return result;
 }
 
-INTERN int (DCALL ast_genasm_set_one)(struct ast *__restrict self,
-                                      unsigned int gflags) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_genasm_set_one)(struct ast *__restrict self,
+                           unsigned int gflags) {
 	uint16_t old_sp = current_assembler.a_stackcur;
 	uint16_t wnt_sp;
 	int result = ast_genasm_set(self, gflags);

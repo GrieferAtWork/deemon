@@ -57,7 +57,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_init(FilterIterator *__restrict self,
                     size_t argc, DeeObject **argv) {
 	Filter *filter;
@@ -329,7 +329,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 filter_init(Filter *__restrict self,
             size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_SeqFilter", &self->f_seq, &self->f_fun))
@@ -391,8 +391,7 @@ INTERN DeeTypeObject SeqFilter_Type = {
 };
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeSeq_Filter(DeeObject *self,
-              DeeObject *pred_keep) {
+DeeSeq_Filter(DeeObject *self, DeeObject *pred_keep) {
 	DREF Filter *result;
 	result = DeeObject_MALLOC(Filter);
 	if unlikely(!result)

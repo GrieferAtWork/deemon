@@ -70,10 +70,10 @@ DECL_BEGIN
 #define DEE_INT128_MS64      0
 #endif /* !CONFIG_LITTLE_ENDIAN */
 
-#define DEE_INT128_LS8  (15-DEE_INT128_MS8)
-#define DEE_INT128_LS16 (7-DEE_INT128_MS16)
-#define DEE_INT128_LS32 (3-DEE_INT128_MS32)
-#define DEE_INT128_LS64 (1-DEE_INT128_MS64)
+#define DEE_INT128_LS8  (15 - DEE_INT128_MS8)
+#define DEE_INT128_LS16 (7 - DEE_INT128_MS16)
+#define DEE_INT128_LS32 (3 - DEE_INT128_MS32)
+#define DEE_INT128_LS64 (1 - DEE_INT128_MS64)
 
 #ifdef DEE_SOURCE
 #define Dee_int_object             int_object
@@ -556,17 +556,17 @@ DDATDEF DeeObject     DeeInt_MinusOne;
 
 
 /* Integer object creation. */
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewS16(int16_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewS32(int32_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewS64(int64_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewS128(Dee_int128_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewU128(Dee_uint128_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS16(int16_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS32(int32_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS64(int64_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU16(uint16_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU32(uint32_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU64(uint64_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS128(Dee_int128_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU128(Dee_uint128_t val);
 #if DIGIT_BITS < 16
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewS8(int8_t val);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewS8(int8_t val);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 #else /* DIGIT_BITS < 16 */
 #define DeeInt_NewU8  DeeInt_NewU16
 #define DeeInt_NewS8  DeeInt_NewS16
@@ -590,13 +590,19 @@ DFUNDEF DREF DeeObject *DCALL DeeInt_NewU8(uint8_t val);
 
 
 /* Create an integer from signed/unsigned LEB data. */
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewSleb(uint8_t **__restrict preader);
-DFUNDEF DREF DeeObject *DCALL DeeInt_NewUleb(uint8_t **__restrict preader);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeInt_NewSleb(uint8_t **__restrict preader);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeInt_NewUleb(uint8_t **__restrict preader);
 
 /* Write the value of an integer as signed/unsigned LEB data.
  * NOTE: When writing ULEB data, the caller is responsible to ensure that `self' is positive. */
-DFUNDEF uint8_t *DCALL DeeInt_GetSleb(DeeObject *__restrict self, uint8_t *__restrict writer);
-DFUNDEF uint8_t *DCALL DeeInt_GetUleb(DeeObject *__restrict self, uint8_t *__restrict writer);
+DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+DeeInt_GetSleb(DeeObject *__restrict self,
+               uint8_t *__restrict writer);
+DFUNDEF WUNUSED NONNULL((1, 2)) uint8_t *DCALL
+DeeInt_GetUleb(DeeObject *__restrict self,
+               uint8_t *__restrict writer);
 
 /* Calculate the worst-case required memory for writing a given integer in LEB format. */
 #define DeeInt_GetSlebMaxSize(self)                                                     \
@@ -661,26 +667,27 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_As128(DeeObject *__restrict sel
 /* Read the signed/unsigned values from the given integer.
  * @return: 0:  Successfully read the value.
  * @return: -1: An error occurred (Integer overflow). */
-DFUNDEF int (DCALL DeeInt_AsS8)(DeeObject *__restrict self, int8_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsS16)(DeeObject *__restrict self, int16_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsS32)(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsS64)(DeeObject *__restrict self, int64_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsS128)(DeeObject *__restrict self, Dee_int128_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsU8)(DeeObject *__restrict self, uint8_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsU16)(DeeObject *__restrict self, uint16_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsU32)(DeeObject *__restrict self, uint32_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsU64)(DeeObject *__restrict self, uint64_t *__restrict value);
-DFUNDEF int (DCALL DeeInt_AsU128)(DeeObject *__restrict self, Dee_uint128_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsS8)(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsS16)(DeeObject *__restrict self, int16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsS32)(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsS64)(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsS128)(DeeObject *__restrict self, Dee_int128_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsU8)(DeeObject *__restrict self, uint8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsU16)(DeeObject *__restrict self, uint16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsU32)(DeeObject *__restrict self, uint32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsU64)(DeeObject *__restrict self, uint64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeInt_AsU128)(DeeObject *__restrict self, Dee_uint128_t *__restrict value);
 
 
 /* Convert an integer to a binary-encoded data array. */
-DFUNDEF int
+DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInt_AsBytes)(DeeObject *__restrict self,
                        void *__restrict dst, size_t length,
                        bool little_endian, bool as_signed);
+
 /* Convert a binary-encoded data array into an integer. */
-DFUNDEF DREF DeeObject *
-(DCALL DeeInt_FromBytes)(void const *__restrict buf, size_t length,
+DFUNDEF WUNUSED DREF DeeObject *
+(DCALL DeeInt_FromBytes)(void const *buf, size_t length,
                          bool little_endian, bool as_signed);
 
 #define DEE_PRIVATE_TRYGETSINT_1(self, val)  DeeInt_TryAsS8(self, (int8_t *)(val))
@@ -761,21 +768,21 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 /* @return:  0: Successfully parsed an integer.
  * @return: -1: An error occurred. (never returned when `DEEINT_STRING_FTRY' is set)
  * @return:  1: Failed to parse an integer. (returned when `DEEINT_STRING_FTRY' is set) */
-DFUNDEF int (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atoi16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atoi64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
 #define DEEATOI_STRING_FSIGNED 0x0004 /* The generated value is signed. */
 
 #ifdef __INTELLISENSE__
-DFUNDEF int (DCALL Dee_Atos8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atos16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atos32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atos64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atou8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint8_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atou16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint16_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atou32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint32_t *__restrict value);
-DFUNDEF int (DCALL Dee_Atou64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atos8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atos16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atos32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atos64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, int64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou8)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou16)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou32)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__restrict str, size_t len, uint32_t radix_and_flags, uint64_t *__restrict value);
 #else /* __INTELLISENSE__ */
 #define Dee_Atos8(str, len, radix_and_flags, value)  Dee_Atoi8(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
 #define Dee_Atos16(str, len, radix_and_flags, value) Dee_Atoi16(str, len, (radix_and_flags) | DEEATOI_STRING_FSIGNED, value)
@@ -810,7 +817,7 @@ DFUNDEF int (DCALL Dee_Atou64)(/*utf-8*/ char const *__restrict str, size_t len,
  * Radix must be one of `2', `4', `8', `10' or `16' and
  * if it isn't, a `NotImplemented' error is thrown.
  * This list of supported radices may be extended in the future. */
-DFUNDEF Dee_ssize_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
              Dee_formatprinter_t printer, void *arg);
 #define DEEINT_PRINT(radix,flags) ((radix) << DEEINT_PRINT_RSHIFT | (flags))
@@ -897,7 +904,7 @@ DeeInt_Print(DeeObject *__restrict self, uint32_t radix_and_flags,
 #define Dee_Atoi32(str, len, radix_and_flags, value) __builtin_expect(Dee_Atoi32(str, len, radix_and_flags, value), 0)
 #define Dee_Atoi64(str, len, radix_and_flags, value) __builtin_expect(Dee_Atoi64(str, len, radix_and_flags, value), 0)
 #endif /* !__NO_builtin_expect */
-#endif
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

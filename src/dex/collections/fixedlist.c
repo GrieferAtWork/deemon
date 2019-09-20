@@ -916,7 +916,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_init(FixedListIterator *__restrict self,
          size_t argc, DeeObject **argv) {
 	self->li_iter = 0;

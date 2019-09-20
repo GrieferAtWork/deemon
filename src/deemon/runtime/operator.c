@@ -4560,7 +4560,11 @@ err:
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-bytes_print_repr(DeeObject *__restrict self, dformatprinter printer, void *arg);
+bytes_print_repr(DeeObject *__restrict self,
+                 dformatprinter printer, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+list_printrepr(DeeListObject *__restrict self,
+               dformatprinter printer, void *arg);
 
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_PrintRepr(DeeObject *__restrict self,
@@ -4575,6 +4579,8 @@ DeeObject_PrintRepr(DeeObject *__restrict self,
 		return bytes_print_repr(self, printer, arg);
 	if (Dee_TYPE(self) == &DeeError_CompilerError)
 		return comerr_print((DeeCompilerErrorObject *)self, printer, arg);
+	if (Dee_TYPE(self) == &DeeList_Type)
+		return list_printrepr((DeeListObject *)self, printer, arg);
 
 	/* Fallback: print the object __repr__ operator result. */
 	ob_repr = DeeObject_Repr(self);

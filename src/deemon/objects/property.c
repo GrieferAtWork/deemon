@@ -154,8 +154,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-property_eq(Property *self,
-            Property *other) {
+property_eq(Property *self, Property *other) {
 	int temp;
 	if (DeeObject_AssertType((DeeObject *)other, &DeeProperty_Type))
 		return NULL;

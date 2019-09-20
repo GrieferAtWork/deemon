@@ -89,7 +89,7 @@ float_copy(Float *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_ctor(Float *__restrict self,
            size_t argc, DeeObject **argv) {
 	DeeObject *arg;

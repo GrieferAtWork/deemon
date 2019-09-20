@@ -144,7 +144,7 @@ typedef struct {
 	FILE *st_file; /* [1..1][const][owned] File file that is being stat-ed. */
 } Stat;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_ctor(Stat *__restrict self,
           size_t argc, DeeObject **argv) {
 	DeeObject *path;

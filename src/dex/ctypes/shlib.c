@@ -342,7 +342,7 @@ PRIVATE struct type_attr shlib_attr = {
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-shlib_base(Shlib *__restrict self, size_t argc,
+shlib_base(Shlib *self, size_t argc,
            DeeObject **argv) {
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
@@ -377,7 +377,7 @@ INTERN bool DCALL clear_void_pointer(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-shlib_base(Shlib *__restrict self, size_t argc,
+shlib_base(Shlib *self, size_t argc,
            DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":base"))
 		goto err;

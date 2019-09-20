@@ -418,7 +418,7 @@ switch_on_opcode:
 
 
 INTDEF bool DCALL asm_delunused_symbols(void);
-INTERN int DCALL asm_peephole(void) {
+INTERN WUNUSED int DCALL asm_peephole(void) {
 #ifdef CONFIG_LOG_PEEPHOLE_OPTS
 #ifdef CONFIG_LOG_PEEPHOLE_SOURCE
 #define SET_RESULT(addr_ptr)             (peephole_opt(addr_ptr), result = true)

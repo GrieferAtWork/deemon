@@ -3264,7 +3264,7 @@ err:
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_derivedfrom_not_same(DeeTypeObject *__restrict self, size_t argc,
+type_derivedfrom_not_same(DeeTypeObject *self, size_t argc,
                           DeeObject **argv) {
 	DeeTypeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:derived_from", &other))
@@ -3273,7 +3273,7 @@ type_derivedfrom_not_same(DeeTypeObject *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_is_vartype(DeeTypeObject *__restrict self, size_t argc,
+type_is_vartype(DeeTypeObject *self, size_t argc,
                 DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_vartype"))
 		return NULL;
@@ -3281,7 +3281,7 @@ type_is_vartype(DeeTypeObject *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_is_heaptype(DeeTypeObject *__restrict self, size_t argc,
+type_is_heaptype(DeeTypeObject *self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_heaptype"))
 		return NULL;
@@ -3289,7 +3289,7 @@ type_is_heaptype(DeeTypeObject *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_is_gctype(DeeTypeObject *__restrict self, size_t argc,
+type_is_gctype(DeeTypeObject *self, size_t argc,
                DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_gctype"))
 		return NULL;
@@ -3297,7 +3297,7 @@ type_is_gctype(DeeTypeObject *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_is_final(DeeTypeObject *__restrict self, size_t argc,
+type_is_final(DeeTypeObject *self, size_t argc,
               DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_final"))
 		return NULL;
@@ -3305,7 +3305,7 @@ type_is_final(DeeTypeObject *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_is_class(DeeTypeObject *__restrict self, size_t argc,
+type_is_class(DeeTypeObject *self, size_t argc,
               DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_class"))
 		return NULL;
@@ -3400,7 +3400,7 @@ type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_is_filetype(DeeTypeObject *__restrict self, size_t argc,
+type_is_filetype(DeeTypeObject *self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_file"))
 		return NULL;
@@ -3408,7 +3408,7 @@ type_is_filetype(DeeTypeObject *__restrict self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-type_is_superbase(DeeTypeObject *__restrict self, size_t argc,
+type_is_superbase(DeeTypeObject *self, size_t argc,
                   DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_super_base"))
 		return NULL;
@@ -3668,24 +3668,29 @@ import File from deemon;
 local options = [];
 for (local line: File.open("../../../include/deemon/object.h")) {
 	local name;
-	try name = "Is" + line.scanf(" # define DeeType_Is%[^(](")[0];
-	catch (...)
-	try name = "Has" + line.scanf(" # define DeeType_Has%[^(](")[0];
-	catch (...) continue;
+	try {
+		name = "Is" + line.scanf(" # define DeeType_Is%[^(](")[0];
+	} catch (...) {
+		try {
+			name = "Has" + line.scanf(" # define DeeType_Has%[^(](")[0];
+		} catch (...) {
+			continue;
+		}
+	}
 	options.append(name);
 }
 for (local o: options) {
 	print "PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL";
-	print "type_"+o.lower()+"(DeeObject *__restrict self) {";
-	print "\treturn_bool(DeeType_"+o+"(self));";
+	print "type_" + o.lower() + "(DeeObject *__restrict self) {";
+	print "\treturn_bool(DeeType_" + o + "(self));";
 	print "}";
 }
 print "#define TYPE_FEATURE_GETSETS \\";
 for (local o: options) {
 	local isname = o.lower();
-	if (isname !in ["isfinal","isabstract","isinterrupt"])
+	if (isname !in ["isfinal", "isabstract", "isinterrupt"])
 		isname = "__" + isname + "__";
-	print "\t{ "+repr(isname)+", &type_"+o.lower()+", NULL, NULL, DOC(\"->?Dbool\") }, \\";
+	print "\t{ " + repr(isname) + ", &type_" + o.lower() + ", NULL, NULL, DOC(\"->?Dbool\") }, \\";
 }
 print "/" "* ... *" "/";
 ]]]*/

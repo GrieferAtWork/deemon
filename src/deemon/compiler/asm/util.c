@@ -667,7 +667,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__res
 
 /* Generate a call to `function' that pops `num_args' arguments from the stack,
  * then pushes its return value back onto the stack. */
-INTERN int
+INTERN WUNUSED NONNULL((1, 3)) int
 (DCALL asm_gcall_symbol_n)(struct symbol *__restrict function, uint8_t argc,
                            struct ast *__restrict warn_ast) {
 	int32_t symid;
@@ -2265,7 +2265,7 @@ err:
 
 
 /* Generate code to throw RuntimeError when `lid' is bound at runtime. */
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_gcheck_final_local_bound(uint16_t lid) {
 	/* >>     push   bound local \lid
 	 * >>     jt     1f

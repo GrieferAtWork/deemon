@@ -387,49 +387,49 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
 asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
                          struct ascii_printer *__restrict printer);
 
-#define OPERAND_CLASS_POP_DOTS       (OPERAND_CLASS_FDOTSFLAG|OPERAND_CLASS_POP) /* `pop...' */
-#define OPERAND_CLASS_SPPOP          (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_POP) /* `#pop' */
-#define OPERAND_CLASS_SPADDIMM_EQ_N2 (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_DISP_EQ_N2) /* `#SP - 2' */
-#define OPERAND_CLASS_SPADDIMM_EQ_N1 (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_DISP_EQ_N1) /* `#SP - 1' */
-#define OPERAND_CLASS_SPADDIMM_EQ_0  (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_DISP_EQ_0) /* `#SP + 0' */
-#define OPERAND_CLASS_SPADDIMM_EQ_1  (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_DISP_EQ_1) /* `#SP + 1' */
-#define OPERAND_CLASS_SPADDIMM_EQ_2  (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_DISP_EQ_2) /* `#SP + 2' */
-#define OPERAND_CLASS_SPADDIMM8      (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_DISP8) /* `#SP + <io_intexpr>' */
-#define OPERAND_CLASS_SPADDSIMM8     (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_SDISP8) /* `#SP + <io_intexpr>' */
-#define OPERAND_CLASS_SPSUBIMM_EQ_N2 (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_DISP_EQ_N2) /* `#SP + 2' */
-#define OPERAND_CLASS_SPSUBIMM_EQ_N1 (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_DISP_EQ_N1) /* `#SP + 1' */
-#define OPERAND_CLASS_SPSUBIMM_EQ_0  (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_DISP_EQ_0) /* `#SP - 0' */
-#define OPERAND_CLASS_SPSUBIMM_EQ_1  (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_DISP_EQ_1) /* `#SP - 1' */
-#define OPERAND_CLASS_SPSUBIMM_EQ_2  (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_DISP_EQ_2) /* `#SP - 2' */
-#define OPERAND_CLASS_SPSUBIMM8      (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_DISP8) /* `#SP - <io_intexpr>' */
-#define OPERAND_CLASS_SPSUBSIMM8     (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_SDISP8) /* `#SP - <io_intexpr>' */
-#define OPERAND_CLASS_SPIMM8         (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_DISP8) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
-#define OPERAND_CLASS_SPSIMM8        (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_SDISP8) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
-#define OPERAND_CLASS_BRSPIMM8       (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACKETFLAG|OPERAND_CLASS_DISP8) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
-#define OPERAND_CLASS_BRSPSIMM8      (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACKETFLAG|OPERAND_CLASS_SDISP8) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
-#define OPERAND_CLASS_BCSPIMM8       (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACEFLAG|OPERAND_CLASS_DISP8) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
-#define OPERAND_CLASS_BCSPSIMM8      (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACEFLAG|OPERAND_CLASS_SDISP8) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
-#define OPERAND_CLASS_SPADDIMM16     (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_DISP16) /* `#SP + <io_intexpr>' */
-#define OPERAND_CLASS_SPADDSIMM16    (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPADD|OPERAND_CLASS_SDISP16) /* `#SP + <io_intexpr>' */
-#define OPERAND_CLASS_SPSUBIMM16     (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_DISP16) /* `#SP - <io_intexpr>' */
-#define OPERAND_CLASS_SPSUBSIMM16    (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FSPSUB|OPERAND_CLASS_SDISP16) /* `#SP - <io_intexpr>' */
-#define OPERAND_CLASS_SPIMM16        (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_DISP16) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
-#define OPERAND_CLASS_SPSIMM16       (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_SDISP16) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
-#define OPERAND_CLASS_BRSPIMM16      (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACKETFLAG|OPERAND_CLASS_DISP16) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
-#define OPERAND_CLASS_BRSPSIMM16     (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACKETFLAG|OPERAND_CLASS_SDISP16) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
-#define OPERAND_CLASS_BCSPIMM16      (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACEFLAG|OPERAND_CLASS_DISP16) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
-#define OPERAND_CLASS_BCSPSIMM16     (OPERAND_CLASS_FSTACKFLAG|OPERAND_CLASS_FBRACEFLAG|OPERAND_CLASS_SDISP16) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
-#define OPERAND_CLASS_SIMM8          (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_SDISP8)
-#define OPERAND_CLASS_SIMM16         (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_SDISP16)
-#define OPERAND_CLASS_SIMM32         (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_SDISP32)
-#define OPERAND_CLASS_IMM8           (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP8)
-#define OPERAND_CLASS_IMM16          (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP16)
-#define OPERAND_CLASS_IMM32          (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP32)
-#define OPERAND_CLASS_IMM_EQ_2       (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP_EQ_2)
-#define OPERAND_CLASS_IMM_EQ_1       (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP_EQ_1)
-#define OPERAND_CLASS_IMM_EQ_0       (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP_EQ_0)
-#define OPERAND_CLASS_IMM_EQ_N1      (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP_EQ_N1)
-#define OPERAND_CLASS_IMM_EQ_N2      (OPERAND_CLASS_FIMMVAL|OPERAND_CLASS_DISP_EQ_N2)
+#define OPERAND_CLASS_POP_DOTS       (OPERAND_CLASS_FDOTSFLAG | OPERAND_CLASS_POP) /* `pop...' */
+#define OPERAND_CLASS_SPPOP          (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_POP) /* `#pop' */
+#define OPERAND_CLASS_SPADDIMM_EQ_N2 (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_DISP_EQ_N2) /* `#SP - 2' */
+#define OPERAND_CLASS_SPADDIMM_EQ_N1 (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_DISP_EQ_N1) /* `#SP - 1' */
+#define OPERAND_CLASS_SPADDIMM_EQ_0  (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_DISP_EQ_0) /* `#SP + 0' */
+#define OPERAND_CLASS_SPADDIMM_EQ_1  (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_DISP_EQ_1) /* `#SP + 1' */
+#define OPERAND_CLASS_SPADDIMM_EQ_2  (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_DISP_EQ_2) /* `#SP + 2' */
+#define OPERAND_CLASS_SPADDIMM8      (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_DISP8) /* `#SP + <io_intexpr>' */
+#define OPERAND_CLASS_SPADDSIMM8     (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_SDISP8) /* `#SP + <io_intexpr>' */
+#define OPERAND_CLASS_SPSUBIMM_EQ_N2 (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_DISP_EQ_N2) /* `#SP + 2' */
+#define OPERAND_CLASS_SPSUBIMM_EQ_N1 (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_DISP_EQ_N1) /* `#SP + 1' */
+#define OPERAND_CLASS_SPSUBIMM_EQ_0  (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_DISP_EQ_0) /* `#SP - 0' */
+#define OPERAND_CLASS_SPSUBIMM_EQ_1  (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_DISP_EQ_1) /* `#SP - 1' */
+#define OPERAND_CLASS_SPSUBIMM_EQ_2  (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_DISP_EQ_2) /* `#SP - 2' */
+#define OPERAND_CLASS_SPSUBIMM8      (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_DISP8) /* `#SP - <io_intexpr>' */
+#define OPERAND_CLASS_SPSUBSIMM8     (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_SDISP8) /* `#SP - <io_intexpr>' */
+#define OPERAND_CLASS_SPIMM8         (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_DISP8) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
+#define OPERAND_CLASS_SPSIMM8        (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_SDISP8) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
+#define OPERAND_CLASS_BRSPIMM8       (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACKETFLAG | OPERAND_CLASS_DISP8) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
+#define OPERAND_CLASS_BRSPSIMM8      (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACKETFLAG | OPERAND_CLASS_SDISP8) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
+#define OPERAND_CLASS_BCSPIMM8       (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACEFLAG | OPERAND_CLASS_DISP8) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
+#define OPERAND_CLASS_BCSPSIMM8      (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACEFLAG | OPERAND_CLASS_SDISP8) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
+#define OPERAND_CLASS_SPADDIMM16     (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_DISP16) /* `#SP + <io_intexpr>' */
+#define OPERAND_CLASS_SPADDSIMM16    (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPADD | OPERAND_CLASS_SDISP16) /* `#SP + <io_intexpr>' */
+#define OPERAND_CLASS_SPSUBIMM16     (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_DISP16) /* `#SP - <io_intexpr>' */
+#define OPERAND_CLASS_SPSUBSIMM16    (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FSPSUB | OPERAND_CLASS_SDISP16) /* `#SP - <io_intexpr>' */
+#define OPERAND_CLASS_SPIMM16        (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_DISP16) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
+#define OPERAND_CLASS_SPSIMM16       (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_SDISP16) /* `#<io_intexpr>' (An absolute address on the stack, or a number of stack entries by which to adjust) */
+#define OPERAND_CLASS_BRSPIMM16      (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACKETFLAG | OPERAND_CLASS_DISP16) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
+#define OPERAND_CLASS_BRSPSIMM16     (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACKETFLAG | OPERAND_CLASS_SDISP16) /* `[#<io_intexpr>]' (Used by `ASM_CALL_SEQ') */
+#define OPERAND_CLASS_BCSPIMM16      (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACEFLAG | OPERAND_CLASS_DISP16) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
+#define OPERAND_CLASS_BCSPSIMM16     (OPERAND_CLASS_FSTACKFLAG | OPERAND_CLASS_FBRACEFLAG | OPERAND_CLASS_SDISP16) /* `{#<io_intexpr>}' (Used by `ASM_CALL_MAP') */
+#define OPERAND_CLASS_SIMM8          (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_SDISP8)
+#define OPERAND_CLASS_SIMM16         (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_SDISP16)
+#define OPERAND_CLASS_SIMM32         (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_SDISP32)
+#define OPERAND_CLASS_IMM8           (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP8)
+#define OPERAND_CLASS_IMM16          (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP16)
+#define OPERAND_CLASS_IMM32          (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP32)
+#define OPERAND_CLASS_IMM_EQ_2       (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP_EQ_2)
+#define OPERAND_CLASS_IMM_EQ_1       (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP_EQ_1)
+#define OPERAND_CLASS_IMM_EQ_0       (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP_EQ_0)
+#define OPERAND_CLASS_IMM_EQ_N1      (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP_EQ_N1)
+#define OPERAND_CLASS_IMM_EQ_N2      (OPERAND_CLASS_FIMMVAL | OPERAND_CLASS_DISP_EQ_N2)
 
 
 struct asm_invocation {
@@ -536,8 +536,10 @@ INTDEF size_t const asm_mnemonics_size;
  *       the keyword. However if this is not possible, or if
  *       the cache slot is already used by something different,
  *       it will always perform a string lookup on the mnemonic. */
-INTDEF struct asm_mnemonic *DCALL asm_mnemonic_lookup_str(char const *__restrict name);
-INTDEF struct asm_mnemonic *DCALL asm_mnemonic_lookup(struct TPPKeyword *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
+asm_mnemonic_lookup_str(char const *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
+asm_mnemonic_lookup(struct TPPKeyword *__restrict name);
 
 
 INTDEF int  DCALL userassembler_init(void);
@@ -553,27 +555,28 @@ INTDEF struct user_assembler current_userasm;
 #define uasm_defsym(sym) (asm_defsym(sym), current_userasm.ua_lasti = ASM_DELOP)
 
 /* Parse (process tokens from TPP) user-define assembly. */
-INTDEF int FCALL uasm_parse(void);
-INTDEF int FCALL uasm_parse_instruction(void);
-INTDEF int FCALL uasm_parse_directive(void);
-INTDEF struct TPPKeyword *FCALL uasm_parse_symnam(void);
+INTDEF WUNUSED int FCALL uasm_parse(void);
+INTDEF WUNUSED int FCALL uasm_parse_instruction(void);
+INTDEF WUNUSED int FCALL uasm_parse_directive(void);
+INTDEF WUNUSED struct TPPKeyword *FCALL uasm_parse_symnam(void);
 /* Parse an operand. NOTE: The caller is responsible for ZERO-initializing `result' beforehand. */
-INTDEF int FCALL uasm_parse_operand(struct asm_invoke_operand *__restrict result);
+INTDEF WUNUSED NONNULL((1)) int FCALL uasm_parse_operand(struct asm_invoke_operand *__restrict result);
 /* Parse an integer expression as found in operands, following a `$' token.
  * @param: features: Set of `UASM_INTEXPR_F*' */
-INTDEF int FCALL uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features);
+INTDEF WUNUSED NONNULL((1)) int FCALL uasm_parse_intexpr(struct asm_intexpr *result, uint16_t features);
 #define UASM_INTEXPR_FNORMAL 0x0000
 #define UASM_INTEXPR_FHASSP  0x0001 /* Recognize case-insensitive `SP' as expanding to `current_assembler.a_stackcur' */
 
 /* Parse and return a 16-bit unsigned integer.
  * @return: -1: An error was thrown.
  * @param: features: Set of `UASM_INTEXPR_F*' */
-INTDEF int32_t FCALL uasm_parse_imm16(uint16_t features);
+INTDEF WUNUSED int32_t FCALL uasm_parse_imm16(uint16_t features);
 
 /* Invoke a given `instr' using data from `invoc'.
  * NOTE: This function also sets the `CODE_FASSEMBLY' flag in the current base scope. */
-INTDEF int FCALL uasm_invoke(struct asm_mnemonic *__restrict instr,
-                             struct asm_invocation *__restrict invoc);
+INTDEF WUNUSED NONNULL((1, 2)) int FCALL
+uasm_invoke(struct asm_mnemonic *__restrict instr,
+            struct asm_invocation *__restrict invoc);
 
 /* Check if the given `name' refers to a
  * user-label that is active in the current context.
@@ -582,15 +585,21 @@ INTDEF int FCALL uasm_invoke(struct asm_mnemonic *__restrict instr,
  * If the given name does not start with `.L', or if the following
  * integer is greater than `current_userasm.ua_labelc', NULL is
  * returned, but no error is set. */
-INTDEF struct asm_sym *FCALL uasm_label_symbol(struct TPPKeyword *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+uasm_label_symbol(struct TPPKeyword *__restrict name);
 
 /* Lookup a user-assembly symbol, given its name.
  * If the symbol doesn't already exist, it is automatically created. */
-INTDEF struct asm_sym *FCALL uasm_symbol(struct TPPKeyword *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+uasm_symbol(struct TPPKeyword *__restrict name);
+
 /* Same as `uasm_symbol', but create/lookup symbols using forward/backward semantics. */
-INTDEF struct asm_sym *FCALL uasm_fbsymbol(struct TPPKeyword *__restrict name, bool return_back_symbol);
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+uasm_fbsymbol(struct TPPKeyword *__restrict name, bool return_back_symbol);
+
 /* Return an F/B symbol suitable to be defined at some specific address. */
-INTDEF struct asm_sym *FCALL uasm_fbsymbol_def(struct TPPKeyword *__restrict name);
+INTDEF WUNUSED NONNULL((1)) struct asm_sym *FCALL
+uasm_fbsymbol_def(struct TPPKeyword *__restrict name);
 
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
@@ -850,21 +859,22 @@ INTDEF bool DCALL asm_minjmp(void);
  * @return:  1: Optimizations have been performed.
  * @return:  0: Nothing was optimized.
  * @return: -1: An error occurred. */
-INTDEF int DCALL asm_peephole(void);
+INTDEF WUNUSED int DCALL asm_peephole(void);
+
 /* Delete unused symbols, thus improving future peephole optimizations. */
 INTDEF bool DCALL asm_delunusedsyms(void);
 
 /* Merge all of the assembler's section into the first
  * section, adjusting relocations in the process. */
-INTDEF int DCALL asm_mergetext(void);
+INTDEF WUNUSED int DCALL asm_mergetext(void);
 
 /* Merge constant and static variables into only
  * constants, resolving all `R_DMN_STATIC16' relocations.
  * NOTE: This function must be called after `asm_mergetext()' */
-INTDEF int DCALL asm_mergestatic(void);
+INTDEF WUNUSED int DCALL asm_mergestatic(void);
 
-INTDEF int DCALL asm_check_user_labels_defined(void);
-INTDEF int DCALL asm_applyconstrel(void);
+INTDEF WUNUSED int DCALL asm_check_user_labels_defined(void);
+INTDEF WUNUSED int DCALL asm_applyconstrel(void);
 
 /* Resolve jump relocations.
  * This function should be called as the last step before
@@ -875,9 +885,10 @@ INTDEF int DCALL asm_applyconstrel(void);
  *                 everything with the `ASM_FBIGCODE' flag set.
  * @return:  0: Text was successfully linked.
  * @return: -1: An error occurred. */
-INTDEF int DCALL asm_linktext(void);
+INTDEF WUNUSED int DCALL asm_linktext(void);
+
 /* A sub-set of `asm_linktext' that only links relocations concerning stack addresses. */
-INTDEF int DCALL asm_linkstack(void);
+INTDEF WUNUSED int DCALL asm_linkstack(void);
 
 /* Allocate and return a new assembly symbol. */
 #ifdef NDEBUG
@@ -891,7 +902,8 @@ INTDEF struct asm_sym *(DCALL asm_newsym_dbg)(char const *file, int line);
  * WARNING: The returned pointer only remains valid
  *          until the next time this function is called!
  * NOTE: The handler is created with max-priority. */
-INTDEF struct asm_exc *(DCALL asm_newexc)(void);
+INTDEF WUNUSED struct asm_exc *(DCALL asm_newexc)(void);
+
 /* Same as `asm_newexc()', but the handler is inserted
  * at index `priority' within the handler vector.
  * In other words: the greatest possible priority at any point
@@ -900,7 +912,7 @@ INTDEF struct asm_exc *(DCALL asm_newexc)(void);
  *                 And remember that every time a new handler
  *                 is allocated, `current_assembler.a_exceptc'
  *                 will increase by ONE(1). */
-INTDEF struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority);
+INTDEF WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority);
 
 /* Define the given symbol `self' at the current text address. */
 INTDEF void (DCALL asm_defsym)(struct asm_sym *__restrict self);
@@ -909,7 +921,7 @@ INTDEF void (DCALL asm_defsym)(struct asm_sym *__restrict self);
  * NOTE: The caller is required to ensure that the assembler is ready
  *       for this, as well as that `asm_mergetext()' has been called! */
 INTDEF WUNUSED DREF DeeCodeObject *(DCALL asm_gencode)(void);
-INTDEF struct except_handler *(DCALL asm_pack_exceptv)(void);
+INTDEF WUNUSED struct except_handler *(DCALL asm_pack_exceptv)(void);
 
 
 /* Set the current text section.
@@ -938,9 +950,10 @@ INTDEF struct except_handler *(DCALL asm_pack_exceptv)(void);
 #define asm_diicsp()   (Dee_ASSERT(current_assembler.a_stackcur >= 1), asm_incsp()) /* asm_decsp(), asm_incsp(), asm_incsp() */
 
 /* Allocate a new, uninitialized relocation within the current text section. */
-INTDEF struct asm_rel *FCALL asm_allocrel(void);
+INTDEF WUNUSED struct asm_rel *FCALL asm_allocrel(void);
+
 /* Place a new relocation at the current text position. */
-INTDEF int DCALL asm_putrel(uint16_t type, struct asm_sym *sym, uint16_t value);
+INTDEF WUNUSED int DCALL asm_putrel(uint16_t type, struct asm_sym *sym, uint16_t value);
 
 /* Return the current instruction pointer address. */
 #define asm_ip()                                       \
@@ -952,29 +965,29 @@ INTDEF int DCALL asm_putrel(uint16_t type, struct asm_sym *sym, uint16_t value);
 
 /* Write data to the current text section.
  * @return: -1|NULL: An error occurred. */
-INTDEF instruction_t *FCALL asm_alloc(size_t n_bytes);
-INTDEF int DCALL asm_put(instruction_t instr);
-INTDEF int DCALL asm_put16(uint16_t instr); /* 16-bit, big-endian encoded instruction, or 8-bit when top 8 bits are clear. */
-INTDEF int DCALL asm_putimm8(instruction_t instr, uint8_t imm8);
-INTDEF int DCALL asm_putimm8_8(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2);
-INTDEF int DCALL asm_putimm8_8_8(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2, uint8_t imm8_3);
-INTDEF int DCALL asm_putimm8_16(instruction_t instr, uint8_t imm8_1, uint16_t imm16_2);
-INTDEF int DCALL asm_putimm16(instruction_t instr, uint16_t imm16);
-INTDEF int DCALL asm_putimm16_8(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2);
-INTDEF int DCALL asm_putimm16_16(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2);
-INTDEF int DCALL asm_putimm16_16_8(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint8_t imm8_3);
-INTDEF int DCALL asm_putimm16_16_16(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint16_t imm16_3);
-INTDEF int DCALL asm_putimm16_8_16(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2, uint16_t imm16_3);
-INTDEF int DCALL asm_putimm32(instruction_t instr, uint32_t imm32);
+INTDEF WUNUSED instruction_t *FCALL asm_alloc(size_t n_bytes);
+INTDEF WUNUSED int DCALL asm_put(instruction_t instr);
+INTDEF WUNUSED int DCALL asm_put16(uint16_t instr); /* 16-bit, big-endian encoded instruction, or 8-bit when top 8 bits are clear. */
+INTDEF WUNUSED int DCALL asm_putimm8(instruction_t instr, uint8_t imm8);
+INTDEF WUNUSED int DCALL asm_putimm8_8(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2);
+INTDEF WUNUSED int DCALL asm_putimm8_8_8(instruction_t instr, uint8_t imm8_1, uint8_t imm8_2, uint8_t imm8_3);
+INTDEF WUNUSED int DCALL asm_putimm8_16(instruction_t instr, uint8_t imm8_1, uint16_t imm16_2);
+INTDEF WUNUSED int DCALL asm_putimm16(instruction_t instr, uint16_t imm16);
+INTDEF WUNUSED int DCALL asm_putimm16_8(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2);
+INTDEF WUNUSED int DCALL asm_putimm16_16(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2);
+INTDEF WUNUSED int DCALL asm_putimm16_16_8(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint8_t imm8_3);
+INTDEF WUNUSED int DCALL asm_putimm16_16_16(instruction_t instr, uint16_t imm16_1, uint16_t imm16_2, uint16_t imm16_3);
+INTDEF WUNUSED int DCALL asm_putimm16_8_16(instruction_t instr, uint16_t imm16_1, uint8_t imm8_2, uint16_t imm16_3);
+INTDEF WUNUSED int DCALL asm_putimm32(instruction_t instr, uint32_t imm32);
 /* Encode an instruction followed by a 16-bit static variable id (including the required relocation). */
-INTDEF int DCALL asm_putsid16(uint16_t instr, uint16_t sid);
+INTDEF WUNUSED int DCALL asm_putsid16(uint16_t instr, uint16_t sid);
 
 #ifdef __INTELLISENSE__
 /* Given a host-endian data word, encode it as little endian and write it to the current text position. */
-INTDEF int DCALL asm_put_data8(uint8_t data);
-INTDEF int DCALL asm_put_data16(uint16_t data);
-INTDEF int DCALL asm_put_data32(uint32_t data);
-INTDEF int DCALL asm_put_data64(uint64_t data);
+INTDEF WUNUSED int DCALL asm_put_data8(uint8_t data);
+INTDEF WUNUSED int DCALL asm_put_data16(uint16_t data);
+INTDEF WUNUSED int DCALL asm_put_data32(uint32_t data);
+INTDEF WUNUSED int DCALL asm_put_data64(uint64_t data);
 #else /* __INTELLISENSE__ */
 #define asm_put_data8(data) asm_put(data)
 #ifdef CONFIG_BIG_ENDIAN
@@ -1008,11 +1021,11 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL asm_allowconst(DeeObject *__restrict cons
  * NOTE: The given `initializer' is required and the caller must encode
  *       the returned index alongside a `R_DMN_STATIC16' relocation.
  *       This can easily be achieved using the `asm_putsid16()' function. */
-INTDEF int32_t DCALL asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym);
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym);
 
 /* Allocate a new local variable index. */
-INTDEF int32_t DCALL asm_newlocal(void);
-INTDEF int32_t DCALL asm_newlocal_noreuse(void);
+INTDEF WUNUSED int32_t DCALL asm_newlocal(void);
+INTDEF WUNUSED int32_t DCALL asm_newlocal_noreuse(void);
 
 /* Mark a given local variable as no longer being in use.
  * Once this is done, later calls to `asm_newlocal()' are allowed
@@ -1044,13 +1057,19 @@ INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_asymid_r(struct symbol *__restrict
  * @return: * :                              A `SYMBOL_TYPE_EXTERN' symbol, bound to `constval'
  * @return: ASM_BIND_DEEMON_EXPORT_NOTFOUND: `constval' wasn't found in `deemon's exports
  * @return: NULL:                            An error occurred. */
-INTDEF struct symbol *DCALL asm_bind_deemon_export(DeeObject *__restrict constval);
+INTDEF WUNUSED struct symbol *DCALL asm_bind_deemon_export(DeeObject *__restrict constval);
 #define ASM_BIND_DEEMON_EXPORT_NOTFOUND ((struct symbol *)-1)
 
 /* These versions emit read-before-write warnings if the symbol hadn't been allocated, yet. */
-INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL asm_gsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
-INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL asm_lsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
-INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
+INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL
+asm_gsymid_for_read(struct symbol *__restrict sym, /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
+                    struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL
+asm_lsymid_for_read(struct symbol *__restrict sym, /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
+                    struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL
+asm_ssymid_for_read(struct symbol *__restrict sym, /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
+                    struct ast *__restrict warn_ast);
 
 
 #ifndef UINT8_MAX
@@ -1107,16 +1126,19 @@ INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL asm_ssymid_for_read(struct symbol *
  * the proper mechanism and creating the associated relocation.
  * The caller is required to ensure that the given `target' is defined at some point.
  * @param: instr: One of `ASM_JMP', `ASM_JT', `ASM_JF' or `ASM_FOREACH' */
-INTDEF int DCALL asm_gjmp(instruction_t instr, struct asm_sym *__restrict target);
-INTDEF int DCALL asm_gjcc(struct ast *cond, instruction_t instr,
-                          struct asm_sym *__restrict target,
-                          struct ast *ddi_ast);
+INTDEF WUNUSED int DCALL asm_gjmp(instruction_t instr, struct asm_sym *__restrict target);
+INTDEF WUNUSED int DCALL asm_gjcc(struct ast *cond, instruction_t instr,
+                                  struct asm_sym *__restrict target,
+                                  struct ast *ddi_ast);
+
 /* Similar to `asm_gjmp(ASM_JMP)', but generate code to adjust adjust the stack beforehand, as well
  * as code to adjust for potential exception handlers, also creating a `R_DMN_DELHAND' relocation. */
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_gjmps(struct asm_sym *__restrict target);
+
 /* Generate code to adjust for the exception handler level at a given symbol.
  * This function is internally called by `asm_gjmps()'. */
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_gadjhand(struct asm_sym *__restrict target);
+
 /* Generate code to unwind all active exception handlers.
  * This must be called before `return'-ing from within a catch/finally handler. */
 INTDEF int DCALL asm_gunwind(void);
@@ -1493,7 +1515,7 @@ INTDEF int DCALL asm_gpush_s32(int32_t value);
  *       allowed to write multiple instructions. */
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_constexpr(DeeObject *__restrict value);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gpush_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
-INTDEF int DCALL asm_gcall_symbol_n(struct symbol *__restrict function, uint8_t argc, struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL asm_gcall_symbol_n(struct symbol *__restrict function, uint8_t argc, struct ast *__restrict warn_ast);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gprefix_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gprefix_symbol_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF WUNUSED NONNULL((1)) bool DCALL asm_can_prefix_symbol(struct symbol *__restrict sym);
@@ -1509,12 +1531,14 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gpop_symbol(struct symbol *__restri
 
 
 /* Returns `true' if pushing `sym' is more expensive  */
-INTDEF WUNUSED NONNULL((1)) bool DCALL asm_gpush_symbol_is_expensive(struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+asm_gpush_symbol_is_expensive(struct symbol *__restrict sym);
 
 /* Generate code to pop the stack-top value into the given AST. */
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpop_expr(struct ast *__restrict self);
+
 /* Same as `asm_gpop_expr()', but pop `astc' values, one in each AST. */
-INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **__restrict astv);
+INTDEF WUNUSED int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **astv);
 
 /* Generate code before and after the source expression in when
  * trying to store an expression in a given destination `ast'
@@ -1527,11 +1551,10 @@ INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **__restrict ast
  * -> asm_gpop_expr_leave(dst,diff);   // setrange pop, pop, pop;
  */
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpop_expr_enter(struct ast *__restrict self);
-INTDEF int DCALL asm_gpop_expr_leave(struct ast *__restrict self, unsigned int gflags);
-
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpop_expr_leave(struct ast *__restrict self, unsigned int gflags);
 
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
-INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve);
+INTDEF WUNUSED int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve);
 
 #define ASM_PUSH_SCOPE(scope, err)                              \
 	do {                                                        \
@@ -1565,115 +1588,109 @@ INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserv
 
 
 /* Generate a store expression `dst = src' */
-INTDEF int DCALL asm_gstore(struct ast *__restrict dst,
-                            struct ast *__restrict src,
-                            struct ast *__restrict ddi_ast,
-                            unsigned int gflags);
-
-/* Store the given constant expression into `dst'. */
-INTDEF int DCALL
-asm_gstore_constexpr(struct ast *__restrict dst, DeeObject *__restrict src,
-                     struct ast *__restrict ddi_ast,
-                     struct ast *__restrict src_ddi_ast,
-                     unsigned int gflags);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+asm_gstore(struct ast *__restrict dst,
+           struct ast *__restrict src,
+           struct ast *ddi_ast,
+           unsigned int gflags);
 
 /* Unpack the given expression into `num_targets' stack slots. */
-INTDEF int DCALL asm_gunpack_expr(struct ast *__restrict src,
-                                  uint16_t num_targets,
-                                  struct ast *__restrict ddi_ast);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL
+asm_gunpack_expr(struct ast *__restrict src,
+                 uint16_t num_targets,
+                 struct ast *__restrict ddi_ast);
 
 /* Generate code to throw RuntimeError when `lid' is bound at runtime. */
-INTDEF int DCALL asm_gcheck_final_local_bound(uint16_t lid);
+INTDEF WUNUSED int DCALL asm_gcheck_final_local_bound(uint16_t lid);
 
 
 /* Generate attribute-, item- and range-store operations. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_getattr(struct ast *__restrict base,
                 struct ast *__restrict name,
-                struct ast *__restrict ddi_ast,
+                struct ast *ddi_ast,
                 unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_boundattr(struct ast *__restrict base,
                   struct ast *__restrict name,
-                  struct ast *__restrict ddi_ast,
+                  struct ast *ddi_ast,
                   unsigned int gflags);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_delattr(struct ast *__restrict base,
                 struct ast *__restrict name,
-                struct ast *__restrict ddi_ast);
-INTDEF int DCALL
+                struct ast *ddi_ast);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 ast_gen_setattr(struct ast *__restrict base,
                 struct ast *__restrict name,
                 struct ast *__restrict value,
-                struct ast *__restrict ddi_ast,
+                struct ast *ddi_ast,
                 unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 ast_gen_setitem(struct ast *__restrict sequence,
                 struct ast *__restrict index,
                 struct ast *__restrict value,
-                struct ast *__restrict ddi_ast,
+                struct ast *ddi_ast,
                 unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 ast_gen_setrange(struct ast *__restrict sequence,
                  struct ast *__restrict begin,
                  struct ast *__restrict end,
                  struct ast *__restrict value,
-                 struct ast *__restrict ddi_ast,
+                 struct ast *ddi_ast,
                  unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((2)) int DCALL
 ast_gen_operator_func(struct ast *binding,
-                      struct ast *__restrict ddi_ast,
+                      struct ast *ddi_ast,
                       uint16_t operator_name);
 
-
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL
 ast_gen_symbol_inplace(struct symbol *__restrict sym,
                        struct ast *operand,
-                       struct ast *__restrict ddi_ast,
+                       struct ast *ddi_ast,
                        uint16_t inplace_operator_name,
                        bool is_post_operator,
                        unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL
 ast_gen_setattr_inplace(struct ast *__restrict base,
                         struct ast *__restrict name,
                         struct ast *operand,
-                        struct ast *__restrict ddi_ast,
+                        struct ast *ddi_ast,
                         uint16_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL
 ast_gen_setitem_inplace(struct ast *__restrict base,
                         struct ast *__restrict index,
                         struct ast *operand,
-                        struct ast *__restrict ddi_ast,
+                        struct ast *ddi_ast,
                         uint16_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
 ast_gen_setrange_inplace(struct ast *__restrict base,
                          struct ast *__restrict start,
                          struct ast *__restrict end,
                          struct ast *operand,
-                         struct ast *__restrict ddi_ast,
+                         struct ast *ddi_ast,
                          uint16_t inplace_operator_name,
                          bool is_post_operator,
                          unsigned int gflags);
 
 
 /* Generate code to invoke a function `func' using arguments from `args'. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 asm_gcall_expr(struct ast *__restrict func,
                struct ast *__restrict args,
-               struct ast *__restrict ddi_ast,
+               struct ast *ddi_ast,
                unsigned int gflags);
 
 /* Generate code to invoke a function `func' using
  * arguments from `args', and keywords from `kwds'. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 asm_gcall_kw_expr(struct ast *__restrict func,
                   struct ast *__restrict args,
                   struct ast *__restrict kwds,
-                  struct ast *__restrict ddi_ast,
+                  struct ast *ddi_ast,
                   unsigned int gflags);
 
 
@@ -1690,21 +1707,21 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 /* Return a pointer to the instruction, given the base address of the previous one.
  * >> Use this function if you want to enumerate instructions.
  * NOTE: Unknown instructions will return a pointer to `ip + 1' */
-DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
 asm_nextinstr(instruction_t const *__restrict ip);
 
 /* Same as `asm_nextinstr', but also keep track of the current stack depth.
  * NOTE:    The affect of branch instructions is evaluated as the
  *          fall-through path (aka. when the branch isn't taken).
  * WARNING: This also goes for instructions that always take a branch! */
-DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
 asm_nextinstr_sp(instruction_t const *__restrict ip,
                  uint16_t *__restrict pstacksz);
 
 /* Check if the given instruction returns abnormally.
  * @param: instr:      The instruction encoded in big-endian.
  * @param: code_flags: Set of `CODE_F*' describing the execution mode. */
-DFUNDEF bool DCALL asm_isnoreturn(uint16_t instr, uint16_t code_flags);
+DFUNDEF WUNUSED bool DCALL asm_isnoreturn(uint16_t instr, uint16_t code_flags);
 
 /* Same as `asm_nextinstr', but also returns the effective stack effect (sub/add) of the instruction.
  * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
@@ -1718,7 +1735,7 @@ DFUNDEF bool DCALL asm_isnoreturn(uint16_t instr, uint16_t code_flags);
  *     influence (e.g.: `ASM_POP_POP': `*psp_sub = (*psp_sub = *pstacksz)+2,*pstacksz -= 2;')
  *   - Before returning, `*pstacksz' will be adjusted to `(OLD(*pstacksz) - *psp_sub) + *psp_add'
  */
-DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 asm_nextinstr_ef(instruction_t const *__restrict ip,
                  /*in|out*/ uint16_t *__restrict pstacksz,
                  /*out*/ uint16_t *__restrict psp_add,
@@ -1726,8 +1743,8 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 
 /* Return usage information about a given local/static variable by the instruction pointed to by `ip'.
  * @return: * : Set of `ASM_USING_*' */
-INTDEF unsigned int DCALL asm_uses_local(instruction_t const *__restrict ip, uint16_t lid);
-INTDEF unsigned int DCALL asm_uses_static(instruction_t const *__restrict ip, uint16_t sid);
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL asm_uses_local(instruction_t const *__restrict ip, uint16_t lid);
+INTDEF WUNUSED NONNULL((1)) unsigned int DCALL asm_uses_static(instruction_t const *__restrict ip, uint16_t sid);
 #define ASM_USING_READ  0x01 /* The variable is being read from. */
 #define ASM_USING_WRITE 0x02 /* The variable is being written to. */
 
@@ -1794,7 +1811,7 @@ struct instruction_effect {
  * return a pointer to the end of the decoded instruction (which
  * is usually a pointer to the next instruction, should there be one)
  * @param: code_flags: Set of `CODE_F*' */
-DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
 DeeInstruction_Decode(instruction_t const *__restrict ip,
                       uint16_t *__restrict pstacksz,
                       uint16_t code_flags,
@@ -1805,11 +1822,14 @@ DeeInstruction_Decode(instruction_t const *__restrict ip,
 
 
 /* Generate assembly for the given AST. */
-INTDEF int DCALL ast_genasm(struct ast *__restrict self, unsigned int gflags);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+ast_genasm(struct ast *__restrict self, unsigned int gflags);
+
 /* Same as `ast_genasm()', but emit a compiler error and forcefully
  * re-adjust the stack if generated assembly produces more than 0/1
  * stack value(s) depending on `ASM_G_FPUSHRES' having been given. */
-INTDEF int DCALL ast_genasm_one(struct ast *__restrict self, unsigned int gflags);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+ast_genasm_one(struct ast *__restrict self, unsigned int gflags);
 
 /* Variants of `ast_genasm()' that will attempt to emit the expression
  * as either an AbstractSequeceProxy, or as a Set. In either case, if
@@ -1827,13 +1847,16 @@ INTDEF int DCALL ast_genasm_one(struct ast *__restrict self, unsigned int gflags
  *    performance.
  *    Additionally, ast_genasm_set() will try to strip unnecessary sequence
  *    casts from the expression, the same way `ast_genasm_asp()' would. */
-INTDEF int DCALL ast_genasm_asp(struct ast *__restrict self, unsigned int gflags);
-INTDEF int DCALL ast_genasm_set(struct ast *__restrict self, unsigned int gflags);
-INTDEF int DCALL ast_genasm_set_one(struct ast *__restrict self, unsigned int gflags);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+ast_genasm_asp(struct ast *__restrict self, unsigned int gflags);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+ast_genasm_set(struct ast *__restrict self, unsigned int gflags);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+ast_genasm_set_one(struct ast *__restrict self, unsigned int gflags);
 
 /* Strip sequence-style cast expressions from `ast' and return an inner sequence.
  * If `ast' is no sequence expression, re-return it directly. */
-INTDEF struct ast *DCALL ast_strip_seqcast(struct ast *__restrict self);
+INTDEF WUNUSED struct ast *DCALL ast_strip_seqcast(struct ast *__restrict self);
 
 /* Generate text for a given `AST_SWITCH' branch. */
 INTDEF WUNUSED NONNULL((1)) int DCALL ast_genasm_switch(struct ast *__restrict self);
@@ -1854,10 +1877,10 @@ INTDEF WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void);
  * @param: prefc: The amount of required references to create a function object.
  * @param: prefv: Upon success, a vector of symbols that must passed to the
  *                code object when a function is being created. */
-INTDEF WUNUSED DREF DeeCodeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 4, 5)) DREF DeeCodeObject *DCALL
 code_compile(struct ast *__restrict code_ast, uint16_t flags,
              bool first_function, uint16_t *__restrict prefc,
-             /*out:inherit*/struct asm_symbol_ref **__restrict prefv);
+             /*out:inherit*/ struct asm_symbol_ref **__restrict prefv);
 
 /* Similar to `code_compile()', however instructs the assembly to try to use
  * anonymous arguments in order to compile the code, meaning that rather than
@@ -1879,16 +1902,15 @@ code_compile(struct ast *__restrict code_ast, uint16_t flags,
  *                following the regular argument list.
  *                Upon success, the caller must `Dee_Free()' this vector.
  * @param: pargc: Same as `pargv', but filled with the number of reference-arguments. */
-INTDEF WUNUSED DREF DeeCodeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 3, 4, 5, 6)) DREF DeeCodeObject *DCALL
 code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
-                     uint16_t *__restrict prefc,
-                     /*out:inherit*/struct asm_symbol_ref **__restrict prefv,
-                     uint16_t *__restrict pargc,
-                     /*out:inherit*/struct symbol ***__restrict pargv);
+                     uint16_t *__restrict prefc, /*out:inherit*/ struct asm_symbol_ref **__restrict prefv,
+                     uint16_t *__restrict pargc, /*out:inherit*/ struct symbol ***__restrict pargv);
 
 
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL code_docompile(struct ast *__restrict code_ast);
+INTDEF WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
+code_docompile(struct ast *__restrict code_ast);
 
 /* Compile a new module, using `current_rootscope' for module information,
  * and the given code object as root code executed when the module is loaded.
@@ -1896,33 +1918,40 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL code_docompile(struct ast 
  *         `current_rootscope' by the returned module object, meaning that the
  *          root scope will have been reset to an empty (or near empty) state.
  * @param: flags: Set of `ASM_F*' (Assembly flags; see above) */
-INTDEF int DCALL module_compile(DREF struct module_object *__restrict module,
-                                DeeCodeObject *__restrict root_code,
-                                uint16_t flags);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+module_compile(DREF struct module_object *__restrict module,
+               DeeCodeObject *__restrict root_code,
+               uint16_t flags);
 
 
-INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_function(struct ast *__restrict function_ast);
-INTDEF int DCALL asm_gmov_function(struct symbol *__restrict dst,
-                                   struct ast *function_ast,
-                                   struct ast *dst_warn_ast);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+asm_gpush_function(struct ast *__restrict function_ast);
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+asm_gmov_function(struct symbol *__restrict dst,
+                  struct ast *function_ast,
+                  struct ast *dst_warn_ast);
 
 /* Move the given symbol `src_sym' into `dst_sym'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
-INTDEF int (DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
-                                    struct symbol *__restrict src_sym,
-                                    struct ast *dst_ast,
-                                    struct ast *src_ast);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int
+(DCALL asm_gmov_sym_sym)(struct symbol *__restrict dst_sym,
+                         struct symbol *__restrict src_sym,
+                         struct ast *dst_ast,
+                         struct ast *src_ast);
 
 /* Store the expression in `src' into `dst'.
  * NOTE: `asm_can_prefix_symbol(dst_sym)' must be true. */
-INTDEF int (DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
-                                    struct ast *src,
-                                    struct ast *dst_ast);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int
+(DCALL asm_gmov_sym_ast)(struct symbol *__restrict dst_sym,
+                         struct ast *src,
+                         struct ast *dst_ast);
 
 /* Store the symbol `src_sym' into the expression `dst'. */
-INTDEF int (DCALL asm_gmov_ast_sym)(struct ast *dst,
-                                    struct symbol *__restrict src_sym,
-                                    struct ast *src_ast);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int
+(DCALL asm_gmov_ast_sym)(struct ast *dst,
+                         struct symbol *__restrict src_sym,
+                         struct ast *src_ast);
 
 /* @param: loop_flags:   Set of `AST_FLOOP_*'
  * @param: elem_or_cond: The loop element target ([0..1] in a foreach loop),
@@ -1935,25 +1964,29 @@ INTDEF int (DCALL asm_gmov_ast_sym)(struct ast *dst,
  * @return: * :         `loop_break' -- This symbol must be defined immediately
  *                       after the loop, however after variables allocated by
  *                       the scope have been disposed of. */
-INTDEF struct asm_sym *
+INTDEF WUNUSED NONNULL((5)) struct asm_sym *
 (DCALL asm_genloop)(uint16_t loop_flags,
                     struct ast *elem_or_cond,
                     struct ast *iter_or_next,
                     struct ast *block,
-                    struct ast *__restrict ddi_ast);
+                    struct ast *ddi_ast);
 
 /* Sub-routine for `ast_genasm' for `AST_CLASS' */
-INTDEF int (DCALL asm_genclass)(struct ast *__restrict class_ast,
-                                unsigned int gflags);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL asm_genclass)(struct ast *__restrict class_ast,
+                     unsigned int gflags);
+
 /* Sub-routine for `ast_genasm' for `AST_TRY' */
-INTDEF int (DCALL asm_gentry)(struct ast *__restrict try_ast,
-                              unsigned int gflags);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL asm_gentry)(struct ast *__restrict try_ast,
+                   unsigned int gflags);
 
 /* Generate text for an assertion. */
-INTDEF int (DCALL asm_genassert)(struct ast *__restrict expr,
-                                 struct ast *message,
-                                 struct ast *__restrict ddi_ast,
-                                 unsigned int gflags);
+INTDEF WUNUSED NONNULL((1, 3)) int
+(DCALL asm_genassert)(struct ast *__restrict expr,
+                      struct ast *message,
+                      struct ast *ddi_ast,
+                      unsigned int gflags);
 
 
 #ifndef __INTELLISENSE__
@@ -2010,8 +2043,10 @@ INTDEF DeeTypeObject DeeRelInt_Type;
 
 /* Construct and register a new relocation-integer as a constant.
  * If `sym' is NULL, a regular integer is created instead. */
-INTDEF int32_t DCALL asm_newrelint(struct asm_sym *sym, tint_t addend, uint16_t mode);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRelInt_New(struct asm_sym *__restrict sym, tint_t addend, uint16_t mode);
+INTDEF WUNUSED int32_t DCALL asm_newrelint(struct asm_sym *sym, tint_t addend, uint16_t mode);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRelInt_New(struct asm_sym *__restrict sym,
+              tint_t addend, uint16_t mode);
 
 
 DECL_END

@@ -64,9 +64,9 @@ bind_module_symbol(DeeModuleObject *__restrict module,
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((2)) int DCALL
 ast_gen_operator_func(struct ast *binding,
-                      struct ast *__restrict ddi_ast,
+                      struct ast *ddi_ast,
                       uint16_t operator_name) {
 	struct opinfo *info;
 	int temp;

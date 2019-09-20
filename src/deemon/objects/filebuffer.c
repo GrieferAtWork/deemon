@@ -1312,7 +1312,7 @@ PRIVATE struct mode_name const mode_names[] = {
 /* CASEEQ(x,'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_ctor(Buffer *__restrict self,
             size_t argc, DeeObject **argv) {
 	uint16_t mode = (FILE_BUFFER_MODE_AUTO);

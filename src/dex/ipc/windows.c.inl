@@ -1157,7 +1157,7 @@ err:
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-process_join(Process *__restrict self, size_t argc,
+process_join(Process *self, size_t argc,
              DeeObject **argv) {
 	int error;
 	DWORD result;
@@ -1172,7 +1172,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-process_tryjoin(Process *__restrict self, size_t argc,
+process_tryjoin(Process *self, size_t argc,
                 DeeObject **argv) {
 	int error;
 	DWORD result;
@@ -1189,7 +1189,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-process_timedjoin(Process *__restrict self, size_t argc,
+process_timedjoin(Process *self, size_t argc,
                   DeeObject **argv) {
 	int error;
 	DWORD result;
@@ -1207,7 +1207,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-process_started(Process *__restrict self, size_t argc,
+process_started(Process *self, size_t argc,
                 DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":started"))
 		goto err;
@@ -1217,7 +1217,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-process_detached(Process *__restrict self, size_t argc,
+process_detached(Process *self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":detached"))
 		goto err;
@@ -1227,7 +1227,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-process_isachild(Process *__restrict self, size_t argc,
+process_isachild(Process *self, size_t argc,
                  DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isachild"))
 		goto err;
@@ -1237,7 +1237,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-process_terminated(Process *__restrict self, size_t argc,
+process_terminated(Process *self, size_t argc,
                    DeeObject **argv) {
 	DWORD exitcode;
 	if (DeeArg_Unpack(argc, argv, ":terminated"))
@@ -2112,7 +2112,7 @@ PRIVATE struct type_member process_class_members[] = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_init(Process *__restrict self,
              size_t argc, DeeObject **argv) {
 	struct ascii_printer cmdline = ASCII_PRINTER_INIT;

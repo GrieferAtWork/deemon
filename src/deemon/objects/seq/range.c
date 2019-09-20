@@ -96,7 +96,7 @@ err:
 
 INTDEF DeeTypeObject SeqRange_Type;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ri_init(RangeIterator *__restrict self,
         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqRangeIterator", &self->ri_range))
@@ -1007,7 +1007,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 range_init(Range *__restrict self,
            size_t argc, DeeObject **argv) {
 	self->r_step = NULL;
@@ -1118,7 +1118,7 @@ iri_copy(IntRangeIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iri_init(IntRangeIterator *__restrict self,
          size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqIntRangeIterator", &self->iri_range))

@@ -178,7 +178,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_init(StringFindIterator *__restrict self,
          size_t argc, DeeObject **argv) {
 	StringFind *find;
@@ -190,7 +190,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_init(StringFindIterator *__restrict self,
           size_t argc, DeeObject **argv) {
 	StringFind *find;
@@ -504,7 +504,7 @@ sf_ctor(StringFind *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_init(StringFind *__restrict self,
         size_t argc, DeeObject **argv) {
 	self->sf_start = 0;

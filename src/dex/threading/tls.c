@@ -203,7 +203,7 @@ typedef struct {
 	size_t t_index;            /* [owned(tls_free)][const] The per-thread TLS index used by this controller. */
 } Tls;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_init(Tls *__restrict self,
          size_t argc, DeeObject **argv) {
 	self->t_factory = NULL;
@@ -433,7 +433,7 @@ typedef struct {
 	DREF DeeObject *t_value;   /* [0..1] The stored TLS value. */
 } Tls;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_init(Tls *__restrict self,
          size_t argc, DeeObject **argv) {
 	self->t_value   = NULL;

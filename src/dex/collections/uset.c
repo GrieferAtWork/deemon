@@ -160,7 +160,7 @@ usetiterator_visit(USetIterator *__restrict self,
 	Dee_Visit(self->si_set);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 usetiterator_init(USetIterator *__restrict self,
                   size_t argc, DeeObject **argv) {
 	USet *set;
@@ -1069,7 +1069,7 @@ uset_bool(USet *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 uset_init(USet *__restrict self,
           size_t argc, DeeObject **argv) {
 	DeeObject *seq;
@@ -1413,7 +1413,7 @@ urosetiterator_ctor(URoSetIterator *__restrict self) {
 #define urosetiterator_fini  usetiterator_fini
 #define urosetiterator_visit usetiterator_visit
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 urosetiterator_init(URoSetIterator *__restrict self,
                     size_t argc, DeeObject **argv) {
 	URoSet *set;

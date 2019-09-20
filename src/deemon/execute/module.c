@@ -157,7 +157,7 @@ INTERN struct module_symbol empty_module_buckets[] = {
 
 
 
-PUBLIC struct module_symbol *DCALL
+PUBLIC WUNUSED NONNULL((1)) struct module_symbol *DCALL
 DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
 	struct module_symbol *iter, *end;
 	struct module_symbol *result = NULL;
@@ -184,7 +184,7 @@ DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
 	return result;
 }
 
-PUBLIC struct module_symbol *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
                           char const *__restrict attr_name,
                           dhash_t hash) {
@@ -205,7 +205,7 @@ DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
 	return NULL;
 }
 
-PUBLIC struct module_symbol *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
                              char const *__restrict attr_name,
                              size_t attrlen, dhash_t hash) {
@@ -821,10 +821,10 @@ DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self,
 	return module_delattr_len_impl(self, attr_name, attrlen, hash);
 }
 
-INTERN int DCALL
-DeeModule_SetAttrString(DeeModuleObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
+DeeModule_SetAttrString(DeeModuleObject *self,
                         char const *__restrict attr_name, dhash_t hash,
-                        DeeObject *__restrict value) {
+                        DeeObject *value) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -841,11 +841,11 @@ DeeModule_SetAttrString(DeeModuleObject *__restrict self,
 	return module_setattr_impl(self, attr_name, hash, value);
 }
 
-INTERN int DCALL
-DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+DeeModule_SetAttrStringLen(DeeModuleObject *self,
                            char const *__restrict attr_name,
                            size_t attrlen, dhash_t hash,
-                           DeeObject *__restrict value) {
+                           DeeObject *value) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		if (DeeInteractiveModule_Check(self)) {
@@ -1041,7 +1041,7 @@ PUBLIC int (DCALL DeeModule_InitImports)(DeeObject *__restrict self) {
 }
 
 
-PUBLIC char const *DCALL
+PUBLIC WUNUSED NONNULL((1)) char const *DCALL
 DeeModule_GlobalName(DeeObject *__restrict self, uint16_t gid) {
 	struct module_symbol *sym;
 	sym = DeeModule_GetSymbolID((DeeModuleObject *)self, gid);

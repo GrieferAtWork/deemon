@@ -107,7 +107,7 @@ PRIVATE struct gc_head *gc_pending_back  = NULL; /* [0..1] Last pending object. 
  * though constructions of non-variadic GC objects don't need
  * to call this function on the passed object. - That call will
  * automatically be done when the function returns successfully. */
-PUBLIC ATTR_RETNONNULL DeeObject *DCALL
+PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Track(DeeObject *__restrict ob) {
 	struct gc_head *head;
 	ASSERT(ob);
@@ -167,7 +167,7 @@ DeeGC_Track(DeeObject *__restrict ob) {
 	return ob;
 }
 
-PUBLIC ATTR_RETNONNULL DeeObject *DCALL
+PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeGC_Untrack(DeeObject *__restrict ob) {
 	struct gc_head *head;
 	ASSERT(ob);
@@ -931,15 +931,15 @@ LOCAL void *gc_initob(void *ptr) {
 	return ptr;
 }
 
-PUBLIC ATTR_MALLOC void *(DCALL DeeGCObject_Malloc)(size_t n_bytes) {
+PUBLIC WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_Malloc)(size_t n_bytes) {
 	return gc_initob(DeeObject_Malloc(DEE_GC_HEAD_SIZE + n_bytes));
 }
 
-PUBLIC ATTR_MALLOC void *(DCALL DeeGCObject_Calloc)(size_t n_bytes) {
+PUBLIC WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_Calloc)(size_t n_bytes) {
 	return gc_initob(DeeObject_Calloc(DEE_GC_HEAD_SIZE + n_bytes));
 }
 
-PUBLIC void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
+PUBLIC WUNUSED void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
 	if (p) {
 #ifdef GCHEAD_ISTRACKED
 		ASSERTF(!GCHEAD_ISTRACKED(DeeGC_Head((DeeObject *)p)),
@@ -953,17 +953,17 @@ PUBLIC void *(DCALL DeeGCObject_Realloc)(void *p, size_t n_bytes) {
 	return gc_initob(p);
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL DeeGCObject_TryMalloc)(size_t n_bytes) {
 	return gc_initob(DeeObject_TryMalloc(DEE_GC_HEAD_SIZE + n_bytes));
 }
 
-PUBLIC ATTR_MALLOC void *
+PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL DeeGCObject_TryCalloc)(size_t n_bytes) {
 	return gc_initob(DeeObject_TryCalloc(DEE_GC_HEAD_SIZE + n_bytes));
 }
 
-PUBLIC void *
+PUBLIC WUNUSED void *
 (DCALL DeeGCObject_TryRealloc)(void *p, size_t n_bytes) {
 	if (p) {
 #ifdef GCHEAD_ISTRACKED

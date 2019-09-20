@@ -2292,7 +2292,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-string_bytes(String *__restrict self, size_t argc,
+string_bytes(String *self, size_t argc,
              DeeObject **argv) {
 	bool allow_invalid = false;
 	size_t start = 0, end = (size_t)-1;
@@ -9590,7 +9590,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_relocate(String *__restrict self,
+string_relocate(String *self,
                 size_t argc, DeeObject **argv) {
 	struct re_args args;
 	int error;
@@ -9615,7 +9615,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_rerlocate(String *__restrict self,
+string_rerlocate(String *self,
                  size_t argc, DeeObject **argv) {
 	struct re_args args;
 	int error;
@@ -9893,7 +9893,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_relstrip(String *__restrict self,
+string_relstrip(String *self,
                 size_t argc, DeeObject **argv) {
 	struct re_args args;
 	size_t temp;
@@ -9921,7 +9921,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_rerstrip(String *__restrict self,
+string_rerstrip(String *self,
                 size_t argc, DeeObject **argv) {
 	struct re_args_ex args;
 	int error;
@@ -9952,7 +9952,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF String *DCALL
-string_restrip(String *__restrict self,
+string_restrip(String *self,
                size_t argc, DeeObject **argv) {
 	struct re_args_ex args;
 	int error;

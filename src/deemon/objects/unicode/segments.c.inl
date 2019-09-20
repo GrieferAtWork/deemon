@@ -86,7 +86,7 @@ ssegiter_copy(StringSegmentsIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
               size_t argc, DeeObject **argv) {
 	StringSegments *seg;
@@ -243,7 +243,7 @@ sseg_ctor(StringSegments *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_init(StringSegments *__restrict self,
           size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_StringSegments", &self->s_str, &self->s_siz) ||

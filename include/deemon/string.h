@@ -1732,9 +1732,9 @@ DREF DeeObject *DeeString_Chr(uint32_t ch);
 	 sizeof(ch) == 2 ? _DeeString_Chr16((uint16_t)(ch)) : \
 	                   _DeeString_Chr32((uint32_t)(ch)))
 #endif /* __NO_builtin_choose_expr */
-DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch);
-DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch);
-DFUNDEF DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch);
+DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch);
+DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch);
+DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch);
 #endif
 
 
@@ -1974,7 +1974,7 @@ Dee_ascii_printer_allocstr(struct Dee_ascii_printer *__restrict self,
 /* Pack together data from a string printer and return the generated contained string.
  * Upon success, as well as upon failure, the state of `self' is undefined upon return. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_ascii_printer_pack(/*inherit(always)*/struct Dee_ascii_printer *__restrict self);
+Dee_ascii_printer_pack(/*inherit(always)*/ struct Dee_ascii_printer *__restrict self);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
@@ -2158,13 +2158,13 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
  * @return: * :   A reference to the packed string.
  * @return: NULL: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_unicode_printer_pack(/*inherit(always)*/struct Dee_unicode_printer *__restrict self);
+Dee_unicode_printer_pack(/*inherit(always)*/ struct Dee_unicode_printer *__restrict self);
 
 /* Same as `Dee_unicode_printer_pack()', but don't throw errors upon failure, but
  * simply return `NULL' and leave `self' in a valid state, ready for the call
  * to be repeated at a later time. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Dee_unicode_printer_trypack(/*inherit(on_success)*/struct Dee_unicode_printer *__restrict self);
+Dee_unicode_printer_trypack(/*inherit(on_success)*/ struct Dee_unicode_printer *__restrict self);
 
 /* Try to pre-allocate memory for `num_chars' characters.
  * NOTE: This function merely acts as a hint, and calls may even be ignored.

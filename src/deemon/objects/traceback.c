@@ -246,7 +246,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_init(TraceIterator *__restrict self,
                size_t argc, DeeObject **argv) {
 	size_t index = 0;

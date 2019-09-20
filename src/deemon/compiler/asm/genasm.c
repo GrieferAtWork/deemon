@@ -475,8 +475,9 @@ PRIVATE int DCALL cast_sequence(uint16_t type) {
 
 
 /* The heart of the compiler: The AST --> Assembly generator. */
-INTERN int (DCALL ast_genasm)(struct ast *__restrict self,
-                              unsigned int gflags) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL ast_genasm)(struct ast *__restrict self,
+                   unsigned int gflags) {
 #define PUSH_RESULT (gflags & ASM_G_FPUSHRES)
 	ASSERT_AST(self);
 	/* Set the given AST as location information for error messages. */

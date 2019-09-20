@@ -1645,7 +1645,7 @@ sockaddr_repr(DeeSockAddrObject *__restrict self) {
 	                                        SOCKADDR_STR_FNOFAIL));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sockaddr_ctor(DeeSockAddrObject *__restrict self,
               size_t argc, DeeObject **argv) {
 	int af_type, result;

@@ -75,8 +75,7 @@ list_fini(List *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_assign(List *__restrict self,
-            DeeObject *__restrict other) {
+list_assign(List *self, DeeObject *other) {
 	DREF DeeObject **elemv, **old_elemv;
 	size_t elemc, elema, old_elemc;
 	if ((List *)other == self)
@@ -119,8 +118,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_moveassign(List *__restrict self,
-                List *__restrict other) {
+list_moveassign(List *self, List *other) {
 	DREF DeeObject **elemv, **old_elemv;
 	size_t elemc, elema, old_elemc;
 	if (self == other)
@@ -163,6 +161,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 list_copy(List *__restrict self,
           List *__restrict other) {
 	DeeObject **iter, **end, **src;
+	ASSERT(self != other);
 	weakref_support_init(self);
 	rwlock_init(&self->l_lock);
 again:
@@ -234,6 +233,7 @@ list_init_iterator(List *__restrict self,
 	DREF DeeObject **vector, **new_vector;
 	ASSERT(self);
 	ASSERT_OBJECT(iterator);
+	ASSERT((DeeObject *)self != iterator);
 	size = alloc = 0;
 	vector       = NULL;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -380,8 +380,9 @@ err:
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *__restrict objv) {
+DeeList_NewVectorInherited(size_t objc, DREF DeeObject *const *objv) {
 	DREF DeeObject *result;
+	ASSERT(objv || !objc);
 	result = DeeList_NewUninitialized(objc);
 	if unlikely(!result)
 		goto done;
@@ -396,8 +397,10 @@ done:
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeList_NewVectorInheritedHeap(size_t obja, size_t objc,
-                               /*inherit(on_success)*/ DREF DeeObject **__restrict objv) {
+                               /*inherit(on_success)*/ DREF DeeObject **objv) {
 	DREF List *result;
+	ASSERT(objc <= obja);
+	ASSERT(objv || (!obja && !objc));
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
 		goto done;
@@ -413,9 +416,10 @@ done:
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewVector(size_t objc, DeeObject *const *__restrict objv) {
+DeeList_NewVector(size_t objc, DeeObject *const *objv) {
 	DREF DeeObject *result;
 	size_t i;
+	ASSERT(objv || !objc);
 	for (i = 0; i < objc; ++i)
 		Dee_Incref(objv[i]);
 	result = DeeList_NewVectorInherited(objc, objv);
@@ -428,8 +432,8 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeList_Copy(DREF DeeObject *__restrict self) {
+PRIVATE WUNUSED DREF DeeObject *DCALL
+DeeList_Copy(DeeObject *__restrict self) {
 	DREF List *result;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeList_Check(self));
@@ -450,9 +454,9 @@ err_r:
 }
 
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
-               DeeObject *__restrict sequence) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *self,
+               DeeObject *sequence) {
 	DREF DeeObject *result;
 	size_t fast_seqlen;
 	if (!DeeObject_IsShared(self)) {
@@ -478,8 +482,8 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
                         /*inherit(on_success)*/ DREF DeeObject **argv) {
 	DREF List *result;
 	if (!DeeObject_IsShared(self)) {
@@ -615,9 +619,9 @@ again:
 /* @return: 0 : The given `keyed_search_item' count not found found.
  * @return: 1 : The given `keyed_search_item' was deleted once.
  * @return: -1: An error occurred. */
-INTERN int DCALL
-DeeList_Remove(DeeObject *__restrict self, size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+DeeList_Remove(DeeObject *self, size_t start, size_t end,
+               DeeObject *keyed_search_item, DeeObject *key) {
 	DeeObject **vector;
 	size_t i, length;
 	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
@@ -670,9 +674,9 @@ again:
 /* @return: 0 : The given `keyed_search_item' count not found found.
  * @return: 1 : The given `keyed_search_item' was deleted once.
  * @return: -1: An error occurred. */
-INTERN int DCALL
-DeeList_RRemove(DeeObject *__restrict self, size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+DeeList_RRemove(DeeObject *self, size_t start, size_t end,
+                DeeObject *keyed_search_item, DeeObject *key) {
 	DeeObject **vector;
 	size_t i, length;
 	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
@@ -732,9 +736,8 @@ again:
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
-INTERN WUNUSED NONNULL((1, 2)) size_t DCALL
-DeeList_RemoveIf(List *__restrict self,
-                 DeeObject *__restrict should,
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeList_RemoveIf(List *self, DeeObject *should,
                  size_t start, size_t end) {
 	DeeObject **vector;
 	size_t i, length, result;
@@ -795,9 +798,9 @@ err:
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
-INTERN size_t DCALL
-DeeList_RemoveAll(List *__restrict self, size_t start, size_t end,
-                  DeeObject *__restrict keyed_search_item, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeList_RemoveAll(List *self, size_t start, size_t end,
+                  DeeObject *keyed_search_item, DeeObject *key) {
 	DeeObject **vector;
 	size_t i, length, result;
 	DeeList_LockRead(self);
@@ -848,8 +851,9 @@ err:
 	return (size_t)-1;
 }
 
-PUBLIC int (DCALL DeeList_Append)(DeeObject *__restrict self,
-                                 DeeObject *__restrict elem) {
+/* Append objects to a given list. */
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeList_Append)(DeeObject *self, DeeObject *elem) {
 	int result = 0;
 	DeeObject **newvec;
 	ASSERT_OBJECT(self);
@@ -887,8 +891,9 @@ retry:
 	return result;
 }
 
-PUBLIC int (DCALL DeeList_AppendVector)(DeeObject *__restrict self, size_t objc,
-                                       DeeObject *const *__restrict objv) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeList_AppendVector)(DeeObject *self, size_t objc,
+                             DeeObject *const *objv) {
 	int result = 0;
 	DeeObject **newvec, **iter, **end;
 	ASSERT_OBJECT(self);
@@ -928,8 +933,9 @@ retry:
 	return result;
 }
 
-PUBLIC int (DCALL DeeList_AppendIterator)(DeeObject *__restrict self,
-                                         DeeObject *__restrict iterator) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeList_AppendIterator)(DeeObject *self,
+                               DeeObject *iterator) {
 	DREF DeeObject *elem;
 	int error;
 	ASSERT_OBJECT(self);
@@ -949,8 +955,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeList_AppendSequence)(DeeObject *__restrict self,
-                                         DeeObject *__restrict sequence) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeList_AppendSequence)(DeeObject *self,
+                               DeeObject *sequence) {
 	int error;
 	size_t fast_seqlen;
 	ASSERT_OBJECT(self);
@@ -971,8 +978,10 @@ PUBLIC int (DCALL DeeList_AppendSequence)(DeeObject *__restrict self,
 	return error;
 }
 
-PUBLIC int (DCALL DeeList_Insert)(DeeObject *__restrict self, size_t index,
-                                 DeeObject *__restrict elem) {
+/* Insert objects into a given list. */
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeList_Insert)(DeeObject *self, size_t index,
+                       DeeObject *elem) {
 	List *me = (List *)self;
 	ASSERT_OBJECT(elem);
 	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
@@ -1013,9 +1022,10 @@ do_realloc:
 	return 0;
 }
 
-PUBLIC int (DCALL DeeList_InsertVector)(DeeObject *__restrict self,
-                                       size_t index, size_t objc,
-                                       DeeObject *const *__restrict objv) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeList_InsertVector)(DeeObject *self,
+                             size_t index, size_t objc,
+                             DeeObject *const *objv) {
 	List *me = (List *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
 	DeeList_LockWrite(me);
@@ -1060,8 +1070,9 @@ do_realloc:
 	return 0;
 }
 
-PUBLIC int (DCALL DeeList_InsertIterator)(DeeObject *__restrict self, size_t index,
-                                         DeeObject *__restrict iterator) {
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeList_InsertIterator)(DeeObject *self, size_t index,
+                               DeeObject *iterator) {
 	DeeObject *elem;
 	int error;
 	ASSERT_OBJECT(iterator);
@@ -1081,8 +1092,9 @@ err:
 	return -1;
 }
 
-PUBLIC int (DCALL DeeList_InsertSequence)(DeeObject *__restrict self, size_t index,
-                                         DeeObject *__restrict sequence) {
+PUBLIC WUNUSED NONNULL((1, 3)) int
+(DCALL DeeList_InsertSequence)(DeeObject *self, size_t index,
+                               DeeObject *sequence) {
 	DeeObject *iterator;
 	int result;
 	size_t fast_seqlen;
@@ -1110,6 +1122,7 @@ list_init_sequence(List *__restrict self,
 	int result;
 	DeeObject *iter;
 	size_t fast_size;
+	ASSERT((DeeObject *)self != seq);
 	fast_size = DeeFastSeq_GetSize(seq);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
 		size_t i;
@@ -1151,7 +1164,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_init(List *__restrict self,
           size_t argc, DeeObject **argv) {
 	DeeObject *sequence;
@@ -1213,8 +1226,9 @@ DeeList_Clear(DeeObject *__restrict self) {
 	return vec != NULL;
 }
 
-INTERN dssize_t DCALL
-list_printrepr(List *__restrict self, dformatprinter printer, void *arg) {
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+list_printrepr(List *__restrict self,
+               dformatprinter printer, void *arg) {
 	size_t i;
 	dssize_t temp, result = 0;
 	temp = (*printer)(arg, "[", 1);
@@ -1263,9 +1277,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL list_bool(List *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->l_size != 0;
-#else
+#else /* CONFIG_NO_THREADS */
 	return ATOMIC_READ(self->l_size) != 0;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 
@@ -1273,9 +1287,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_size(List *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return DeeInt_NewSize(self->l_size);
-#else
+#else /* CONFIG_NO_THREADS */
 	return DeeInt_NewSize(ATOMIC_READ(self->l_size));
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1306,8 +1320,7 @@ again:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-list_getitem(List *self,
-             DeeObject *index) {
+list_getitem(List *self, DeeObject *index) {
 	size_t i;
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index, &i))
@@ -1338,8 +1351,7 @@ again:
 	if unlikely(end < 0)
 		end += self->l_size;
 	if unlikely((size_t)begin >= self->l_size ||
-		         (size_t)begin >= (size_t)end)
-	{
+	            (size_t)begin >= (size_t)end) {
 		/* Empty list. */
 		DeeList_LockEndRead(self);
 		return DeeList_New();
@@ -1383,8 +1395,7 @@ err_elemv:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_getrange_in(List *__restrict self,
-                 dssize_t begin) {
+list_getrange_in(List *__restrict self, dssize_t begin) {
 	DREF DeeObject **new_vector;
 	DREF List *result;
 	size_t i, new_size;
@@ -1436,9 +1447,7 @@ err_elemv:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-list_getrange(List *__restrict self,
-              DeeObject *__restrict begin,
-              DeeObject *__restrict end) {
+list_getrange(List *self, DeeObject *begin, DeeObject *end) {
 	dssize_t i_begin, i_end = SSIZE_MAX;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
@@ -1475,18 +1484,15 @@ list_delitem_index(List *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_delitem(List *__restrict self,
-             DeeObject *__restrict index) {
+list_delitem(List *self, DeeObject *index) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
 		return -1;
 	return list_delitem_index(self, i);
 }
 
-INTERN int DCALL
-list_setitem_index(List *__restrict self,
-                   size_t index,
-                   DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+list_setitem_index(List *self, size_t index, DeeObject *value) {
 	DREF DeeObject *old_item;
 	DeeList_LockWrite(self);
 	if unlikely(index >= DeeList_SIZE(self)) {
@@ -1504,9 +1510,7 @@ list_setitem_index(List *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-list_setitem(List *__restrict self,
-             DeeObject *__restrict index,
-             DeeObject *__restrict value) {
+list_setitem(List *self, DeeObject *index, DeeObject *value) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
 		return -1;
@@ -1625,10 +1629,10 @@ done_noop:
 	goto done;
 }
 
-PRIVATE int DCALL
-list_setrange_fast_i(List *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+list_setrange_fast_i(List *self,
                      dssize_t start, dssize_t end,
-                     DeeObject *__restrict items,
+                     DeeObject *items,
                      size_t insert_count) {
 	DREF DeeObject **delobv;
 	size_t delete_count, i;
@@ -1726,10 +1730,10 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-list_setrange_fast_in(List *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+list_setrange_fast_in(List *self,
                       dssize_t start,
-                      DeeObject *__restrict items,
+                      DeeObject *items,
                       size_t insert_count) {
 	DREF DeeObject **delobv;
 	size_t delete_count, i;
@@ -1816,10 +1820,10 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-list_setrange_i(List *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+list_setrange_i(List *self,
                 dssize_t start, dssize_t end,
-                DeeObject *__restrict items) {
+                DeeObject *items) {
 	DREF DeeObject **delobv, **insertv;
 	size_t delete_count, insert_count;
 	dssize_t start_index, end_index;
@@ -1950,10 +1954,8 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-list_setrange_in(List *__restrict self,
-                 dssize_t start,
-                 DeeObject *__restrict items) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+list_setrange_in(List *self, dssize_t start, DeeObject *items) {
 	DREF DeeObject **delobv, **insertv;
 	size_t delete_count, insert_count;
 	dssize_t start_index;
@@ -2076,9 +2078,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-list_delrange(List *__restrict self,
-              DeeObject *__restrict start_ob,
-              DeeObject *__restrict end_ob) {
+list_delrange(List *self, DeeObject *start_ob, DeeObject *end_ob) {
 	dssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start_ob, &start_index))
 		goto err;
@@ -2092,10 +2092,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-list_setrange(List *__restrict self,
-              DeeObject *__restrict start_ob,
-              DeeObject *__restrict end_ob,
-              DeeObject *__restrict items) {
+list_setrange(List *self, DeeObject *start_ob,
+              DeeObject *end_ob, DeeObject *items) {
 	dssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start_ob, &start_index))
 		goto err;
@@ -2108,18 +2106,18 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL list_nsi_getsize(List *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+list_nsi_getsize(List *__restrict self) {
 	ASSERT(self->l_size != (size_t)-1);
 #ifdef CONFIG_NO_THREADS
 	return self->l_size;
-#else
+#else /* CONFIG_NO_THREADS */
 	return ATOMIC_READ(self->l_size);
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_nsi_getitem(List *__restrict self,
-                 size_t index) {
+list_nsi_getitem(List *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	DeeList_LockRead(self);
 	if unlikely(index >= DeeList_SIZE(self)) {
@@ -2134,10 +2132,10 @@ list_nsi_getitem(List *__restrict self,
 	return result;
 }
 
-PRIVATE size_t DCALL
-list_nsi_find(List *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+list_nsi_find(List *self,
               size_t start, size_t end,
-              DeeObject *__restrict keyed_search_item,
+              DeeObject *keyed_search_item,
               DeeObject *key) {
 	DREF DeeObject *list_elem;
 	size_t i;
@@ -2162,10 +2160,9 @@ err:
 	return (size_t)-2;
 }
 
-PRIVATE size_t DCALL
-list_nsi_rfind(List *__restrict self,
-               size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item,
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+list_nsi_rfind(List *self, size_t start, size_t end,
+               DeeObject *keyed_search_item,
                DeeObject *key) {
 	DREF DeeObject *list_elem;
 	size_t i;
@@ -2196,10 +2193,8 @@ err:
 	return (size_t)-2;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-list_nsi_xch(List *__restrict self,
-             size_t index,
-             DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+list_nsi_xch(List *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	DeeList_LockWrite(self);
 	if (index >= DeeList_SIZE(self)) {
@@ -2325,8 +2320,8 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-list_insertiter_deprecated(List *__restrict self, size_t argc,
-                           DeeObject **argv) {
+list_insertiter_deprecated(List *self,
+                           size_t argc, DeeObject **argv) {
 	size_t index;
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "Ido:insert_iter", &index, &seq) ||
@@ -2369,8 +2364,7 @@ list_pop(List *self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-list_clear(List *__restrict self, size_t argc,
-           DeeObject **argv) {
+list_clear(List *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		return NULL;
 	DeeList_Clear((DeeObject *)self);
@@ -2379,9 +2373,9 @@ list_clear(List *__restrict self, size_t argc,
 
 #ifdef CONFIG_NO_THREADS
 #define WEAK_READSIZE(x) ((x)->l_size)
-#else
+#else /* CONFIG_NO_THREADS */
 #define WEAK_READSIZE(x) ATOMIC_READ((x)->l_size)
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sizeof(List *self, size_t argc, DeeObject **argv) {
@@ -2429,8 +2423,7 @@ err_empty:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_set_first(List *__restrict self,
-               DeeObject *__restrict value) {
+list_set_first(List *self, DeeObject *value) {
 	DREF DeeObject *oldob;
 	DeeList_LockWrite(self);
 	if unlikely(DeeList_IsEmpty(self))
@@ -2481,8 +2474,7 @@ err_empty:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_set_last(List *__restrict self,
-              DeeObject *__restrict value) {
+list_set_last(List *self, DeeObject *value) {
 	DREF DeeObject *oldob;
 	size_t index;
 	DeeList_LockWrite(self);
@@ -2561,8 +2553,7 @@ list_delallocated(List *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-list_setallocated(List *__restrict self,
-                  DeeObject *__restrict value) {
+list_setallocated(List *self, DeeObject *value) {
 	size_t new_alloc;
 	DREF DeeObject **new_elem;
 	if (DeeObject_AsSize(value, &new_alloc))
@@ -2679,8 +2670,8 @@ list_reverse(List *self, size_t argc, DeeObject **argv) {
 
 
 /* Sort the given list ascendingly, or according to `key' */
-PUBLIC int DCALL
-DeeList_Sort(DeeObject *__restrict self, DeeObject *key) {
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeList_Sort(DeeObject *self, DeeObject *key) {
 	DeeObject **oldv, **newv;
 	size_t i, objc;
 	objc = DeeList_SIZE(self);
@@ -2735,8 +2726,8 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeList_Sorted(DeeObject *__restrict self, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeList_Sorted(DeeObject *self, DeeObject *key) {
 	DeeObject **oldv;
 	size_t i, objc;
 	DeeTupleObject *result;
@@ -3095,8 +3086,7 @@ PRIVATE struct type_gc list_gc = {
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF List *DCALL
-list_add(List *__restrict self,
-         DeeObject *__restrict other) {
+list_add(List *self, DeeObject *other) {
 	DREF List *result;
 	result = (DREF List *)DeeList_Copy((DeeObject *)self);
 	if (likely(result) &&
@@ -3105,15 +3095,14 @@ list_add(List *__restrict self,
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 list_inplace_add(List **__restrict pself,
-                 DeeObject *__restrict other) {
+                 DeeObject *other) {
 	return DeeList_AppendSequence((DeeObject *)*pself, other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF List *DCALL
-list_mul(List *__restrict self,
-         DeeObject *__restrict other) {
+list_mul(List *self, DeeObject *other) {
 	size_t i, my_length, result_length, multiplier;
 	DREF List *result;
 	DREF DeeObject **elemv, **dst;
@@ -3166,9 +3155,9 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 list_inplace_mul(List **__restrict pself,
-                 DeeObject *__restrict other) {
+                 DeeObject *other) {
 	List *self = *pself;
 	DREF DeeObject **elemv, **dst;
 	size_t i, my_length, result_length, multiplier;
@@ -3191,8 +3180,9 @@ again:
 	elemv = self->l_elem;
 	/* Make sure sufficient memory has been allocated. */
 	if (result_length > self->l_alloc) {
-		elemv = (DREF DeeObject **)Dee_TryRealloc(elemv, result_length *
-		                                                 sizeof(DREF DeeObject *));
+		elemv = (DREF DeeObject **)Dee_TryRealloc(elemv,
+		                                          result_length *
+		                                          sizeof(DREF DeeObject *));
 		if unlikely(!elemv) {
 			DeeList_LockEndWrite(self);
 			if (Dee_CollectMemory(result_length * sizeof(DREF DeeObject *)))
@@ -3262,10 +3252,8 @@ PRIVATE struct type_member list_class_members[] = {
 };
 
 
-INTERN int DCALL
-DeeList_EqV(List *__restrict lhs,
-            DeeObject **__restrict rhsv,
-            size_t elemc) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeList_EqV(List *lhs, DeeObject **rhsv, size_t elemc) {
 	size_t i;
 	int temp;
 	DeeList_LockRead(lhs);
@@ -3293,10 +3281,8 @@ err:
 	return temp;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_EqF(List *__restrict lhs,
-            DeeObject *__restrict rhs,
-            size_t elemc) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_EqF(List *lhs, DeeObject *rhs, size_t elemc) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	size_t i;
 	int temp;
@@ -3330,9 +3316,8 @@ err:
 	return temp;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_EqI(List *__restrict lhs,
-            DeeObject *__restrict rhs) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_EqI(List *lhs, DeeObject *rhs) {
 	size_t i;
 	int temp;
 	DREF DeeObject *lhs_elem, *rhs_elem;
@@ -3366,9 +3351,8 @@ err:
 	return temp;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_EqS(List *__restrict lhs,
-            DeeObject *__restrict seq) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_EqS(List *lhs, DeeObject *seq) {
 	int result;
 	size_t fast_size;
 	if (DeeTuple_Check(seq))
@@ -3384,9 +3368,8 @@ DeeList_EqS(List *__restrict lhs,
 	return result;
 }
 
-INTERN int DCALL
-DeeList_LoV(List *__restrict lhs,
-            DeeObject **__restrict rhsv, size_t rhsc) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeList_LoV(List *lhs, DeeObject **rhsv, size_t rhsc) {
 	size_t i;
 	DREF DeeObject *lhs_elem;
 	DeeList_LockRead(lhs);
@@ -3423,9 +3406,8 @@ DeeList_LoV(List *__restrict lhs,
 	return 0; /* size:greater */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LoF(List *__restrict lhs,
-            DeeObject *__restrict rhs, size_t rhsc) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_LoF(List *lhs, DeeObject *rhs, size_t rhsc) {
 	size_t i;
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	DeeList_LockRead(lhs);
@@ -3470,9 +3452,8 @@ DeeList_LoF(List *__restrict lhs,
 	return 0; /* size:greater */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LoI(List *__restrict lhs,
-            DeeObject *__restrict rhs) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_LoI(List *lhs, DeeObject *rhs) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	int result;
 	size_t i;
@@ -3511,9 +3492,8 @@ DeeList_LoI(List *__restrict lhs,
 	return 1; /* size:lower */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LoS(List *__restrict lhs,
-            DeeObject *__restrict seq) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_LoS(List *lhs, DeeObject *seq) {
 	int result;
 	size_t fast_size;
 	if (DeeTuple_Check(seq))
@@ -3531,9 +3511,8 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeList_LeV(List *__restrict lhs,
-            DeeObject **__restrict rhsv, size_t rhsc) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+DeeList_LeV(List *lhs, DeeObject **rhsv, size_t rhsc) {
 	size_t i;
 	DREF DeeObject *lhs_elem;
 	DeeList_LockRead(lhs);
@@ -3570,9 +3549,8 @@ DeeList_LeV(List *__restrict lhs,
 	return 0; /* size:greater */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LeF(List *__restrict lhs,
-            DeeObject *__restrict rhs, size_t rhsc) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_LeF(List *lhs, DeeObject *rhs, size_t rhsc) {
 	size_t i;
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	DeeList_LockRead(lhs);
@@ -3617,9 +3595,8 @@ DeeList_LeF(List *__restrict lhs,
 	return 0; /* size:greater */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LeI(List *__restrict lhs,
-            DeeObject *__restrict rhs) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_LeI(List *lhs, DeeObject *rhs) {
 	DREF DeeObject *lhs_elem, *rhs_elem;
 	int result;
 	size_t i;
@@ -3653,9 +3630,8 @@ DeeList_LeI(List *__restrict lhs,
 	return 1; /* size:lower_or_equal */
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeList_LeS(List *__restrict lhs,
-            DeeObject *__restrict seq) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+DeeList_LeS(List *lhs, DeeObject *seq) {
 	int result;
 	size_t fast_size;
 	if (DeeTuple_Check(seq))
@@ -3926,7 +3902,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_init(ListIterator *__restrict self,
         size_t argc, DeeObject **argv) {
 	self->li_index = 0;
@@ -3986,75 +3962,32 @@ again:
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-li_eq(ListIterator *self,
-      ListIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type))
-		goto err;
-	return_bool(self->li_list == other->li_list &&
-	            LI_GETINDEX(self) == LI_GETINDEX(other));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-li_ne(ListIterator *self,
-      ListIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type))
-		goto err;
-	return_bool(self->li_list != other->li_list ||
-	            LI_GETINDEX(self) != LI_GETINDEX(other));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-li_lo(ListIterator *self,
-      ListIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type))
-		goto err;
-	return_bool(self->li_list < other->li_list ||
-	            (self->li_list == other->li_list &&
-	             LI_GETINDEX(self) < LI_GETINDEX(other)));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-li_le(ListIterator *self,
-      ListIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type))
-		goto err;
-	return_bool(self->li_list < other->li_list ||
-	            (self->li_list == other->li_list &&
-	             LI_GETINDEX(self) <= LI_GETINDEX(other)));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-li_gr(ListIterator *self,
-      ListIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type))
-		goto err;
-	return_bool(self->li_list > other->li_list ||
-	            (self->li_list == other->li_list &&
-	             LI_GETINDEX(self) > LI_GETINDEX(other)));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-li_ge(ListIterator *self,
-      ListIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type))
-		goto err;
-	return_bool(self->li_list > other->li_list ||
-	            (self->li_list == other->li_list &&
-	             LI_GETINDEX(self) >= LI_GETINDEX(other)));
-err:
-	return NULL;
-}
+#define DEFINE_LIST_ITERATOR_COMPARE(name, expr)                                  \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                         \
+	name(ListIterator *self, ListIterator *other) {                               \
+		if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type)) \
+			goto err;                                                             \
+		return_bool(expr);                                                        \
+	err:                                                                          \
+		return NULL;                                                              \
+	}
+DEFINE_LIST_ITERATOR_COMPARE(li_eq, self->li_list == other->li_list &&
+                                    LI_GETINDEX(self) == LI_GETINDEX(other))
+DEFINE_LIST_ITERATOR_COMPARE(li_ne, self->li_list != other->li_list ||
+                                    LI_GETINDEX(self) != LI_GETINDEX(other))
+DEFINE_LIST_ITERATOR_COMPARE(li_lo, self->li_list < other->li_list ||
+                                    (self->li_list == other->li_list &&
+                                     LI_GETINDEX(self) < LI_GETINDEX(other)))
+DEFINE_LIST_ITERATOR_COMPARE(li_le, self->li_list < other->li_list ||
+                                    (self->li_list == other->li_list &&
+                                     LI_GETINDEX(self) <= LI_GETINDEX(other)))
+DEFINE_LIST_ITERATOR_COMPARE(li_gr, self->li_list > other->li_list ||
+                                    (self->li_list == other->li_list &&
+                                     LI_GETINDEX(self) > LI_GETINDEX(other)))
+DEFINE_LIST_ITERATOR_COMPARE(li_ge, self->li_list > other->li_list ||
+                                    (self->li_list == other->li_list &&
+                                     LI_GETINDEX(self) >= LI_GETINDEX(other)))
+#undef DEFINE_LIST_ITERATOR_COMPARE
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeListObject *DCALL
 list_iterator_nii_getseq(ListIterator *__restrict self) {
@@ -4259,7 +4192,7 @@ INTERN DeeTypeObject DeeListIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */li_members,
+	/* .tp_members       = */ li_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

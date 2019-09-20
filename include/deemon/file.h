@@ -264,8 +264,8 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PReadAll(DeeObject *__
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeFile_PWriteAll(DeeObject *__restrict self, void const *__restrict buffer, size_t bufsize, Dee_pos_t pos);
 /* @throw NotImplemented: The file does not support seeking. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_off_t DCALL DeeFile_Seek(DeeObject *__restrict self, Dee_off_t off, int whence);
-#define DeeFile_Tell(self) DeeFile_Seek(self,0,SEEK_CUR)
-#define DeeFile_Rewind(self) DeeFile_Seek(self,0,SEEK_SET)
+#define DeeFile_Tell(self)   DeeFile_Seek(self, 0, SEEK_CUR)
+#define DeeFile_Rewind(self) DeeFile_Seek(self, 0, SEEK_SET)
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Sync(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *psize);

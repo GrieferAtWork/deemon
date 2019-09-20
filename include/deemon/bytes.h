@@ -105,20 +105,20 @@ DDATDEF DeeObject                     DeeBytes_Empty;
 
 
 /* Construct a bytes-buffer from `self', using the generic object-buffer interface. */
-DFUNDEF DREF DeeObject *DCALL DeeObject_Bytes(DeeObject *__restrict self,
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeObject_Bytes(DeeObject *__restrict self,
                                               unsigned int flags,
                                               size_t start, size_t end);
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
-DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
-DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
-DFUNDEF DREF DeeObject *DCALL DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
 DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
 
 /* Constructs a byte-view for data in `base...+=num_bytes' held by `owner'.
  * The given `flags' determines if the view is read-only, or can be modified.
  * @param: flags: Set of `DEE_BUFFER_F*' */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
                  size_t num_bytes, unsigned int flags);
 
@@ -224,8 +224,8 @@ struct Dee_bytes_printer {
  *           after a call to `bytes_printer_fini()'
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
-DFUNDEF DREF DeeObject *
-(DCALL Dee_bytes_printer_pack)(/*inherit(always)*/struct Dee_bytes_printer *__restrict self);
+DFUNDEF WUNUSED DREF DeeObject *
+(DCALL Dee_bytes_printer_pack)(/*inherit(always)*/ struct Dee_bytes_printer *__restrict self);
 
 /* Append the given `text' to the end of the Bytes object.
  * This function is intended to be used as the general-purpose

@@ -50,7 +50,7 @@
 #if defined(__x86_64__) && defined(_MSC_VER)
 /* Inline assembly isn't supported by the 64-bit compiler. */
 #undef CONFIG_LONGJMP_ENUMATTR
-#endif
+#endif /* __x86_64__ && _MSC_VER */
 
 #endif
 
@@ -72,7 +72,7 @@ DECL_BEGIN
 #define Dee_attribute_info           attribute_info
 #define Dee_attribute_lookup_rules   attribute_lookup_rules
 #define attribute_info_fini          Dee_attribute_info_fini
-#endif
+#endif /* DEE_SOURCE */
 
 typedef struct Dee_attribute_object DeeAttributeObject;
 typedef struct Dee_enumattr_object DeeEnumAttrObject;

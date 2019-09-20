@@ -40,7 +40,7 @@ DECL_BEGIN
 #ifndef CONFIG_NO_NOTIFICATIONS
 #define Dee_string_object    string_object
 #define Dee_dex_notification dex_notification
-#endif
+#endif /* !CONFIG_NO_NOTIFICATIONS */
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_dex_object DeeDexObject;
@@ -85,10 +85,12 @@ struct Dee_dex {
 	 *       Any other return value can be used to indicate an error having
 	 *       been thrown, which in turn will cause the caller to propagate
 	 *       said error. */
+	WUNUSED NONNULL((1))
 	int        (DCALL *d_init)(DeeDexObject *__restrict self);
 	/* WARNING: `d_fini()' must not attempt to add more references to `self'.
 	 *           When an extension module is supposed to get unloaded, it _has_
 	 *           to be unloaded and there is no way around that! */
+	NONNULL((1))
 	void       (DCALL *d_fini)(DeeDexObject *__restrict self);
 	union {
 	    char const *const *d_import_names; /* [1..1|SENTINEL([0..0])][0..1]
@@ -100,6 +102,7 @@ struct Dee_dex {
 	 * This function should be implemented to clear global caches or object hooks.
 	 * @return: true:  Something was cleared.
 	 * @return: false: Nothing was cleared. (Same as not implementing this callback) */
+	NONNULL((1))
 	bool       (DCALL *d_clear)(DeeDexObject *__restrict self);
 #ifndef CONFIG_NO_NOTIFICATIONS
 	struct Dee_dex_notification *d_notify;     /* [0..1] Dex notification hooks. */
@@ -131,7 +134,10 @@ EXPDEF struct Dee_dex DEX;
  * NOTE: This isn't where the dex gets initialized!
  * @return:  0: The extension was successfully loaded.
  * @return: -1: An error occurred. */
-INTDEF int DCALL dex_load_handle(DeeDexObject *__restrict self, /*inherited(always)*/void *handle, DeeObject *__restrict input_file);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+dex_load_handle(DeeDexObject *__restrict self,
+                /*inherited(always)*/ void *handle,
+                DeeObject *__restrict input_file);
 
 /* Initialize the given dex module. */
 INTDEF WUNUSED NONNULL((1)) int DCALL dex_initialize(DeeDexObject *__restrict self);

@@ -819,7 +819,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_ctor(DeeStatObject *__restrict self,
           size_t argc, DeeObject **argv) {
 	DeeObject *path;
@@ -830,7 +830,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
            size_t argc, DeeObject **argv) {
 	DeeObject *path;
@@ -2202,7 +2202,7 @@ dir_copy(Dir *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dir_ctor(Dir *__restrict self,
          size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:dir", &self->d_path))

@@ -100,7 +100,7 @@ stringordinalsiter_copy(StringOrdinalsIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
                         size_t argc, DeeObject **argv) {
 	StringOrdinals *ords;

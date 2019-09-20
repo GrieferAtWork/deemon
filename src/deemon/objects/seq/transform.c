@@ -177,7 +177,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 transiter_init(TransformationIterator *__restrict self,
                size_t argc, DeeObject **argv) {
 	Transformation *trans;
@@ -421,7 +421,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 trans_init(Transformation *__restrict self,
            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_SeqTransformation", &self->t_seq, &self->t_fun))

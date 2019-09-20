@@ -747,7 +747,7 @@ reldescs[ASM_OVERLOAD_FRELMSK+1] = {
 	asm_putrel(reldescs[(flags)&ASM_OVERLOAD_FRELMSK].rd_rel##bits, sym, 0)
 
 
-INTERN int FCALL
+INTERN WUNUSED NONNULL((1, 2)) int FCALL
 uasm_invoke(struct asm_mnemonic *__restrict instr,
             struct asm_invocation *__restrict invoc) {
 	struct asm_overload *iter, *end;
@@ -2038,7 +2038,7 @@ assembly_formatter_fini(struct assembly_formatter *__restrict self) {
 
 
 
-PRIVATE /*ref*/struct TPPString *DCALL
+PRIVATE /*ref*/ struct TPPString *DCALL
 assembly_formatter_format(struct assembly_formatter *__restrict self,
                           struct TPPString *__restrict input) {
 #define print(p, s)                                                   \
