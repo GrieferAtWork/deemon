@@ -92,13 +92,14 @@ DDATDEF DeeTypeObject DeeTraceback_Type;
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Fill in stack information in the given traceback for `frame'. */
-INTDEF void DCALL DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
-                                        struct Dee_code_frame *__restrict frame,
-                                        uint16_t frame_id);
+INTDEF NONNULL((1, 2)) void DCALL
+DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
+                      struct Dee_code_frame *__restrict frame,
+                      uint16_t frame_id);
 /* Try to create a new traceback, but don't throw
  * an error and return `NULL' if doing so failed.
  * NOTE: The given `thread' must be the caller's. */
-INTDEF DREF DeeTracebackObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct Dee_thread_object *__restrict thread);
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -148,14 +149,14 @@ DDATDEF DeeTypeObject DeeFrame_Type;
  * The intended use of this is for tracebacks and yield_function-iterators.
  * @param: flags: Set of `DEEFRAME_F*' */
 #ifndef CONFIG_NO_THREADS
-DFUNDEF DREF DeeObject *
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,
                                       struct Dee_code_frame *__restrict frame,
                                       uint16_t flags, void *lock);
 #define DeeFrame_NewReference(owner, frame, flags) \
 	DeeFrame_NewReferenceWithLock(owner, frame, flags, NULL)
 #else /* !CONFIG_NO_THREADS */
-DFUNDEF DREF DeeObject *
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReference)(DeeObject *owner,
                               struct Dee_code_frame *__restrict frame,
                               uint16_t flags);
@@ -171,7 +172,8 @@ DFUNDEF DREF DeeObject *
 	DeeFrame_NewReferenceWithLock(NULL, frame, flags, lock)
 #define DeeFrame_NewShared(frame, flags) \
 	DeeFrame_NewReference(NULL, frame, flags)
-DFUNDEF void DCALL DeeFrame_DecrefShared(DREF DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL
+DeeFrame_DecrefShared(DREF DeeObject *__restrict self);
 
 
 DECL_END

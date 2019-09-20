@@ -58,7 +58,7 @@ STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST == (size_t)-1,
  *  - _transformation (Only if the sequence being transformed is a fast-sequence)
  *  - _intrange
  * Sub-classes of these types are not fast-sequence-compatible. */
-PUBLIC size_t DCALL
+PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSize(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
@@ -81,7 +81,7 @@ DeeFastSeq_GetSize(DeeObject *__restrict self) {
  * The caller is responsible that `index < DeeFastSeq_GetSize(self)'
  * when `self' is an immutable sequence (anything other than `list' and `_sharedvector').
  * WARNING: These function may _ONLY_ be used if `DeeFastSeq_Check(self)' is true. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
@@ -107,7 +107,7 @@ DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
 
 /* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE an error
  * occurred, and `NULL' if the item has been marked as unbound. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self;
@@ -136,7 +136,7 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
 
 
 
-PUBLIC size_t DCALL
+PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);

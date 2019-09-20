@@ -408,7 +408,7 @@ err:
 	return NULL;
 }
 
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 stype_cfunction_rehash(DeeSTypeObject *__restrict self,
                        size_t new_mask) {
 	DeeCFunctionTypeObject **new_map, **dst;
@@ -446,7 +446,7 @@ again:
 	return true;
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 cfunction_hashof(DeeSTypeObject *__restrict return_type,
                  cc_t calling_convention, size_t argc,
                  DeeSTypeObject **__restrict argv) {

@@ -56,7 +56,7 @@ INTDEF DeeTypeObject ModuleExports_Type;
 INTDEF DeeTypeObject ModuleExportsIterator_Type;
 INTDEF DeeTypeObject ModuleGlobals_Type;
 INTDEF DeeTypeObject ModuleGlobalsIterator_Type;
-INTDEF DREF ModuleExports *DCALL DeeModule_ViewExports(DeeModuleObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF ModuleExports *DCALL DeeModule_ViewExports(DeeModuleObject *__restrict self);
 
 
 #ifdef CONFIG_NO_THREADS
@@ -66,7 +66,7 @@ INTDEF DREF ModuleExports *DCALL DeeModule_ViewExports(DeeModuleObject *__restri
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mei_ctor(ModuleExportsIterator *__restrict self) {
 	self->mei_index  = 0;
 	self->mei_module = &empty_module;
@@ -74,7 +74,7 @@ mei_ctor(ModuleExportsIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mei_copy(ModuleExportsIterator *__restrict self,
          ModuleExportsIterator *__restrict other) {
 	self->mei_index  = READ_INDEX(other);
@@ -85,7 +85,7 @@ mei_copy(ModuleExportsIterator *__restrict self,
 
 PRIVATE int DCALL
 mei_init(ModuleExportsIterator *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	ModuleExports *exports_map;
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleExportsIterator", &exports_map) ||
 	    DeeObject_AssertTypeExact((DeeObject *)exports_map, &ModuleExports_Type))
@@ -97,12 +97,12 @@ mei_init(ModuleExportsIterator *__restrict self,
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 mei_fini(ModuleExportsIterator *__restrict self) {
 	Dee_Decref_unlikely(self->mei_module);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 mei_visit(ModuleExportsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->mei_module);
 }
@@ -169,7 +169,7 @@ read_symbol:
 	goto read_symbol;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mei_next(ModuleExportsIterator *__restrict self) {
 	DREF DeeObject *result, *result_name, *result_value;
 	DeeModuleObject *module = self->mei_module;
@@ -224,7 +224,7 @@ continue_symbol_search:
 	return result;
 }
 
-PRIVATE DREF ModuleExports *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ModuleExports *DCALL
 mei_getseq(ModuleExportsIterator *__restrict self) {
 	return DeeModule_ViewExports(self->mei_module);
 }
@@ -282,7 +282,7 @@ INTERN DeeTypeObject ModuleExportsIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 me_ctor(ModuleExports *__restrict self) {
 	self->me_module = &empty_module;
 	Dee_Incref(&empty_module);
@@ -291,7 +291,7 @@ me_ctor(ModuleExports *__restrict self) {
 
 PRIVATE int DCALL
 me_init(ModuleExports *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleExports", &self->me_module) ||
 	    DeeObject_AssertType((DeeObject *)self->me_module, &DeeModule_Type))
 		return -1;
@@ -304,12 +304,12 @@ STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator, mei_module) ==
 #define me_fini  mei_fini
 #define me_visit mei_visit
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 me_bool(ModuleExports *__restrict self) {
 	return self->me_module->mo_globalc;
 }
 
-PRIVATE DREF ModuleExportsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ModuleExportsIterator *DCALL
 me_iter(ModuleExports *__restrict self) {
 	DREF ModuleExportsIterator *result;
 	result = DeeObject_MALLOC(ModuleExportsIterator);
@@ -323,7 +323,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 me_size(ModuleExports *__restrict self) {
 	size_t i, total_symbols = 0;
 	DeeModuleObject *module = self->me_module;
@@ -335,8 +335,8 @@ me_size(ModuleExports *__restrict self) {
 	return DeeInt_NewSize(total_symbols);
 }
 
-PRIVATE DREF DeeObject *DCALL
-me_contains(ModuleExports *__restrict self, DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+me_contains(ModuleExports *self, DeeObject *key) {
 	bool result;
 	DeeModuleObject *module = self->me_module;
 	if (!DeeString_Check(key))
@@ -399,8 +399,8 @@ read_symbol:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-me_get(ModuleExports *__restrict self, DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+me_get(ModuleExports *self, DeeObject *key) {
 	DREF DeeObject *result;
 	DeeModuleObject *module = self->me_module;
 	struct module_symbol *symbol;
@@ -421,9 +421,8 @@ unknown_key:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-me_get_f(ModuleExports *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+me_get_f(ModuleExports *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeObject *key;
 	DeeModuleObject *module = self->me_module;
@@ -453,7 +452,7 @@ err:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	int result;
 	DeeModuleObject *module = self->me_module;
@@ -475,7 +474,7 @@ unknown_key:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 me_set(ModuleExports *__restrict self,
        DeeObject *__restrict key,
        DeeObject *__restrict value) {
@@ -575,7 +574,7 @@ INTERN DeeTypeObject ModuleExports_Type = {
 };
 
 
-INTERN DREF ModuleExports *DCALL
+INTERN WUNUSED NONNULL((1)) DREF ModuleExports *DCALL
 DeeModule_ViewExports(DeeModuleObject *__restrict self) {
 	DREF ModuleExports *result;
 	result = DeeObject_MALLOC(ModuleExports);
@@ -620,13 +619,13 @@ typedef struct {
 	DREF DeeModuleObject *mg_module; /* [1..1] The module who's exports are being viewed. */
 } ModuleGlobals;
 
-INTDEF DREF ModuleGlobals *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
 DeeModule_ViewGlobals(DeeModuleObject *__restrict self);
 
 
 PRIVATE int DCALL
 mgi_init(ModuleGlobalsIterator *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	ModuleGlobals *globals;
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobalsIterator", &globals) ||
 	    DeeObject_AssertTypeExact((DeeObject *)globals, &ModuleGlobals_Type))
@@ -638,7 +637,7 @@ mgi_init(ModuleGlobalsIterator *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mgi_next(ModuleGlobalsIterator *__restrict self) {
 	DeeModuleObject *module = self->mgi_module;
 	DREF DeeObject *result;
@@ -688,7 +687,7 @@ again:
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF ModuleGlobals *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
 mgi_getseq(ModuleGlobalsIterator *__restrict self) {
 	return DeeModule_ViewGlobals(self->mgi_module);
 }
@@ -749,7 +748,7 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
 
 PRIVATE int DCALL
 mg_init(ModuleGlobals *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->mg_module) ||
 	    DeeObject_AssertType((DeeObject *)self->mg_module, &DeeModule_Type))
 		return -1;
@@ -768,7 +767,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator, mei_module) ==
 #define mg_members me_members
 
 
-PRIVATE DREF ModuleGlobalsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ModuleGlobalsIterator *DCALL
 mg_iter(ModuleGlobals *__restrict self) {
 	DREF ModuleGlobalsIterator *result;
 	result = DeeObject_MALLOC(ModuleGlobalsIterator);
@@ -782,7 +781,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 mg_size(ModuleGlobals *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return DeeInt_NewU16(self->mg_module->mo_globalc);
@@ -791,9 +790,9 @@ mg_size(ModuleGlobals *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
-mg_get(ModuleGlobals *__restrict self,
-       DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+mg_get(ModuleGlobals *self,
+       DeeObject *index_ob) {
 	size_t index;
 	DREF DeeObject *result;
 	DeeModuleObject *module = self->mg_module;
@@ -845,7 +844,7 @@ mg_set(ModuleGlobals *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 mg_del(ModuleGlobals *__restrict self,
        DeeObject *__restrict index_ob) {
 	return mg_set(self, index_ob, NULL);
@@ -911,7 +910,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 };
 
 
-INTERN DREF ModuleGlobals *DCALL
+INTERN WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
 DeeModule_ViewGlobals(DeeModuleObject *__restrict self) {
 	DREF ModuleGlobals *result;
 	result = DeeObject_MALLOC(ModuleGlobals);

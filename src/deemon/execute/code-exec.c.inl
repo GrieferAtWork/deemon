@@ -104,9 +104,9 @@ DECL_BEGIN
 
 #ifndef FILE_SHL_DECLARED
 #define FILE_SHL_DECLARED 1
-INTDEF DREF DeeObject *DCALL
-file_shl(DeeObject *__restrict self,
-         DeeObject *__restrict some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+file_shl(DeeObject *self,
+         DeeObject *some_object);
 #endif /* !FILE_SHL_DECLARED */
 
 #ifndef OBJECT_TATTR_DECLARED
@@ -114,7 +114,7 @@ file_shl(DeeObject *__restrict self,
 INTDEF DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name);
 INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name);
 INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, DeeObject *__restrict value);
-INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict attr_name, size_t argc, DeeObject **argv);
 #endif /* !OBJECT_TATTR_DECLARED */
 
 

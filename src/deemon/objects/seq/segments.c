@@ -51,7 +51,7 @@ typedef struct {
 
 PRIVATE int DCALL
 segiter_init(SegmentsIterator *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+             size_t argc, DeeObject **argv) {
 	self->si_len = 1;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegmentsIterator",
 	                  &self->si_iter, &self->si_len))
@@ -67,7 +67,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_ctor(SegmentsIterator *__restrict self) {
 	self->si_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	if unlikely(!self->si_iter)
@@ -78,7 +78,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 segiter_copy(SegmentsIterator *__restrict self,
              SegmentsIterator *__restrict other) {
 	self->si_iter = DeeObject_Copy(other->si_iter);
@@ -90,7 +90,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 segiter_deep(SegmentsIterator *__restrict self,
              SegmentsIterator *__restrict other) {
 	self->si_iter = DeeObject_DeepCopy(other->si_iter);
@@ -102,17 +102,17 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 segiter_fini(SegmentsIterator *__restrict self) {
 	Dee_Decref(self->si_iter);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 segiter_visit(SegmentsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_iter);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 segiter_next(SegmentsIterator *__restrict self) {
 	DREF DeeObject *elem, *result;
 	size_t i;
@@ -146,13 +146,13 @@ err_elem:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_bool(SegmentsIterator *__restrict self) {
 	return DeeObject_Bool(self->si_iter);
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 segiter_getseq(SegmentsIterator *__restrict self) {
 	DREF DeeObject *base_seq, *result;
 	base_seq = DeeObject_GetAttr(self->si_iter, &str_seq);
@@ -272,7 +272,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(Segments, s_len) ==
 #define seg_visit    segiter_visit
 #define seg_bool     segiter_bool
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seg_ctor(Segments *__restrict self) {
 	self->s_seq = Dee_EmptySeq;
 	self->s_len = 1;
@@ -282,7 +282,7 @@ seg_ctor(Segments *__restrict self) {
 
 PRIVATE int DCALL
 seg_init(Segments *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	self->s_len = 1;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegments",
 	                  &self->s_seq, &self->s_len))
@@ -299,7 +299,7 @@ err:
 }
 
 
-PRIVATE DREF SegmentsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SegmentsIterator *DCALL
 seg_iter(Segments *__restrict self) {
 	DREF SegmentsIterator *result;
 	result = DeeObject_MALLOC(SegmentsIterator);
@@ -317,7 +317,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 seg_nsi_getsize(Segments *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->s_seq);
@@ -326,7 +326,7 @@ seg_nsi_getsize(Segments *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seg_getsize(Segments *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->s_seq);
@@ -337,7 +337,7 @@ err:
 	return NULL;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 seg_nsi_fast_getsize(Segments *__restrict self) {
 	size_t result;
 	result = DeeFastSeq_GetSize(self->s_seq);
@@ -346,7 +346,7 @@ seg_nsi_fast_getsize(Segments *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seg_nsi_getitem(Segments *__restrict self, size_t index) {
 	size_t i;
 	DREF DeeObject *result;
@@ -385,8 +385,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-seg_getitem(Segments *__restrict self, DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seg_getitem(Segments *self, DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
@@ -494,7 +494,7 @@ PRIVATE DeeTypeObject SeqSegments_Type = {
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Segments(DeeObject *__restrict self, size_t segsize) {
 	DREF Segments *result;
 	ASSERT(segsize != 0);

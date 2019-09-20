@@ -44,7 +44,7 @@ INTDEF struct compiler_options *inner_compiler_options;
 INTDEF DREF DeeObject *FCALL ast_parse_string(void);
 
 /* Decode the current token (which must be a TOK_STRING) as a unicode string. */
-INTDEF int DCALL ast_decode_unicode_string(struct unicode_printer *__restrict printer);
+INTDEF WUNUSED NONNULL((1)) int DCALL ast_decode_unicode_string(struct unicode_printer *__restrict printer);
 
 #define PARSE_UNARY_DISALLOW_CASTS 0x10000
 
@@ -449,10 +449,10 @@ struct astlist {
 #define ASTLIST_INIT { 0, 0, NULL }
 
 INTDEF void DCALL astlist_fini(struct astlist *__restrict self);
-INTDEF int DCALL astlist_upsize(struct astlist *__restrict self, size_t min_add);
+INTDEF WUNUSED NONNULL((1)) int DCALL astlist_upsize(struct astlist *__restrict self, size_t min_add);
 INTDEF void DCALL astlist_trunc(struct astlist *__restrict self);
-INTDEF int DCALL astlist_append(struct astlist *__restrict self, struct ast *__restrict branch);
-INTDEF int DCALL astlist_appendall(struct astlist *__restrict self, struct astlist *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL astlist_append(struct astlist *__restrict self, struct ast *__restrict branch);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL astlist_appendall(struct astlist *__restrict self, struct astlist *__restrict other);
 
 
 

@@ -87,7 +87,7 @@ DECL_BEGIN
 
 
 PRIVATE DREF DeeObject *DCALL
-librt_getstacklimit_f(size_t argc, DeeObject **__restrict argv) {
+librt_getstacklimit_f(size_t argc, DeeObject **argv) {
 	uint16_t result;
 	if (DeeArg_Unpack(argc, argv, ":getstacklimit"))
 		goto err;
@@ -98,7 +98,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-librt_setstacklimit_f(size_t argc, DeeObject **__restrict argv) {
+librt_setstacklimit_f(size_t argc, DeeObject **argv) {
 	uint16_t result, newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
 	if (DeeArg_Unpack(argc, argv, "|I16u:setstacklimit", &newval))
 		goto err;
@@ -109,7 +109,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-librt_makeclass_f(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+librt_makeclass_f(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DeeTypeObject *base;
 	DeeObject *descriptor;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(base), K(descriptor), KEND });
@@ -1579,7 +1579,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReSplitIterator, librt_get_ReSplitIterator_f);
 
 
 PRIVATE DREF DeeObject *DCALL
-librt_argv_get_f(size_t argc, DeeObject **__restrict argv) {
+librt_argv_get_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":argv.getter"))
 		goto err;
 	return Dee_GetArgv();
@@ -1588,7 +1588,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-librt_argv_set_f(size_t argc, DeeObject **__restrict argv) {
+librt_argv_set_f(size_t argc, DeeObject **argv) {
 	DeeObject *new_tuple;
 	if (DeeArg_Unpack(argc, argv, "o:argv.setter", &new_tuple))
 		goto err;

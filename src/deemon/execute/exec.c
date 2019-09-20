@@ -81,7 +81,7 @@ DECL_BEGIN
  * @param: module_name:     The name of the internal module, or NULL to determine automatically.
  *                          Note that the internal module is never registered globally, and
  *                          only exists as an anonymous module. */
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream,
                   unsigned int mode,
                   size_t argc, DeeObject **argv,
@@ -109,7 +109,7 @@ err:
 	return NULL;
 }
 
-PUBLIC NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStreamString(DeeObject *source_stream,
                         unsigned int mode,
                         size_t argc, DeeObject **argv,
@@ -160,7 +160,7 @@ err:
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module or the module's root function used to describe the code
  * that is being executed. */
-PUBLIC NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               unsigned int mode,
                               int start_line, int start_col,
@@ -187,7 +187,7 @@ err:
 	return NULL;
 }
 
-PUBLIC NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleStreamString(DeeObject *source_stream,
                                   unsigned int mode,
                                   int start_line, int start_col,
@@ -231,7 +231,7 @@ err:
 	return NULL;
 }
 
-PUBLIC NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
                                     unsigned int mode,
                                     int start_line, int start_col,
@@ -264,7 +264,7 @@ err:
 
 
 /* Same as the functions above, but instead take a raw memory block as input */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                   unsigned int mode, size_t argc, DeeObject **argv,
                   int start_line, int start_col,
@@ -293,7 +293,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                         unsigned int mode, size_t argc, DeeObject **argv,
                         int start_line, int start_col,
@@ -326,7 +326,7 @@ err:
 	return NULL;
 }
 
-PUBLIC /*Module*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                             unsigned int mode, int start_line, int start_col,
                             struct compiler_options *options,
@@ -352,7 +352,7 @@ err:
 	return NULL;
 }
 
-PUBLIC /*Callable*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                               unsigned int mode, int start_line, int start_col,
                               struct compiler_options *options,
@@ -378,7 +378,7 @@ err:
 	return NULL;
 }
 
-PUBLIC /*Module*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                   unsigned int mode, int start_line, int start_col,
                                   struct compiler_options *options,
@@ -408,7 +408,7 @@ err:
 	return NULL;
 }
 
-PUBLIC /*Callable*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                     unsigned int mode, int start_line, int start_col,
                                     struct compiler_options *options,
@@ -527,9 +527,8 @@ PRIVATE void __LIBCCALL atexit_callback(void) {
 	Dee_RunAtExit(DEE_RUNATEXIT_FRUNALL);
 }
 
-PUBLIC int DCALL
-Dee_AtExit(DeeObject *__restrict callback,
-           DeeObject *__restrict args) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_AtExit(DeeObject *callback, DeeObject *args) {
 	struct atexit_entry *new_list;
 	ASSERT_OBJECT(callback);
 	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
@@ -575,9 +574,9 @@ err:
 
 #else
 
-PUBLIC int DCALL
-Dee_AtExit(DeeObject *__restrict UNUSED(callback),
-           DeeObject *__restrict UNUSED(args)) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+Dee_AtExit(DeeObject *UNUSED(callback),
+           DeeObject *UNUSED(args)) {
 	DeeError_Throwf(&DeeError_NotImplemented,
 	                "Deemon was built without atexit() support");
 	return -1;
@@ -744,9 +743,7 @@ Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv) {
 
 #else /* CONFIG_NO_THREADS */
 
-PUBLIC ATTR_RETNONNULL
-/*Tuple*/ DREF DeeObject *DCALL
-Dee_GetArgv(void) {
+PUBLIC WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void) {
 	DREF DeeTupleObject *result;
 	for (;;) {
 		result = ATOMIC_XCH(usercode_argv, NULL);
@@ -857,8 +854,9 @@ do_kill_user:
 #endif /* !CONFIG_NO_THREADS */
 
 			/* Tell the user about what's happening (stddbg is forwarded to stderr) */
-			DeeFile_Printf(DeeFile_DefaultStddbg,
-			               "Stop executing user-code to fix unresolvable reference loop\n");
+			if (DeeFile_Printf(DeeFile_DefaultStddbg,
+			                   "Stop executing user-code to fix unresolvable reference loop\n") < 0)
+				DeeError_Print(NULL, Dee_ERROR_PRINT_HANDLEINTR);
 			if (!DeeExec_KillUserCode()) {
 				/* Well... shit!
 				 * If we've gotten here, that probably means that there is some sort of

@@ -1522,7 +1522,7 @@ typedef struct _CrtMemBlockHeader {
 #define _IGNORE_BLOCK 3
 #endif /* !_IGNORE_BLOCK */
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 validate_header(_CrtMemBlockHeader *__restrict hdr) {
 	unsigned int i;
 	__try {
@@ -1549,7 +1549,7 @@ nope:
 	return false;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 do_unhook(_CrtMemBlockHeader *__restrict hdr) {
 	hdr->pBlockHeaderPrev->pBlockHeaderNext = hdr->pBlockHeaderNext;
 	hdr->pBlockHeaderNext->pBlockHeaderPrev = hdr->pBlockHeaderPrev;

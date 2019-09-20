@@ -41,9 +41,9 @@ INTDEF DeeTypeObject SeqIdsIterator_Type;     /* sequence.ids.Iterator */
 INTDEF DeeTypeObject SeqTypesIterator_Type;   /* sequence.types.Iterator */
 INTDEF DeeTypeObject SeqClassesIterator_Type; /* sequence.classes.Iterator */
 
-INTDEF DREF DeeObject *DCALL SeqIds_New(DeeObject *__restrict seq);
-INTDEF DREF DeeObject *DCALL SeqTypes_New(DeeObject *__restrict seq);
-INTDEF DREF DeeObject *DCALL SeqClasses_New(DeeObject *__restrict seq);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqIds_New(DeeObject *__restrict seq);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqTypes_New(DeeObject *__restrict seq);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqClasses_New(DeeObject *__restrict seq);
 
 
 DECL_END

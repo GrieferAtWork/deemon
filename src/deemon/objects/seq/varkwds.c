@@ -49,7 +49,7 @@ DECL_BEGIN
 #define BLVI_GETITER(self) ATOMIC_READ((self)->ki_iter)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_copy(BlackListVarkwdsIterator *__restrict self,
           BlackListVarkwdsIterator *__restrict other) {
 	self->ki_iter = BLVI_GETITER(other);
@@ -59,7 +59,7 @@ blvi_copy(BlackListVarkwdsIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blvi_deep(BlackListVarkwdsIterator *__restrict self,
           BlackListVarkwdsIterator *__restrict other) {
 	self->ki_iter = BLVI_GETITER(other);
@@ -72,12 +72,12 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 blvi_fini(BlackListVarkwdsIterator *__restrict self) {
 	Dee_Decref(self->ki_map);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 blvi_visit(BlackListVarkwdsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ki_map);
 }
@@ -113,7 +113,7 @@ again:
 	return iter;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blvi_next(BlackListVarkwdsIterator *__restrict self) {
 	DREF DeeObject *value, *result;
 	struct kwds_entry *ent;
@@ -133,7 +133,7 @@ blvi_next(BlackListVarkwdsIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 blvi_nsi_nextkey(BlackListVarkwdsIterator *__restrict self) {
 	struct kwds_entry *ent;
 	ent = blvi_nextiter(self);
@@ -142,7 +142,7 @@ blvi_nsi_nextkey(BlackListVarkwdsIterator *__restrict self) {
 	return_reference_(ent->ke_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct kwds_entry *ent;
@@ -313,7 +313,7 @@ kwds_FindIndexStrLen(DeeKwdsObject *__restrict self,
 
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_IsBlackListed(BlackListVarkwds *__restrict self,
                                DeeObject *__restrict name) {
 	dhash_t i, perturb;
@@ -377,7 +377,7 @@ again:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_IsBlackListedString(BlackListVarkwds *__restrict self,
                                      char const *__restrict name,
                                      dhash_t hash) {
@@ -430,7 +430,7 @@ again:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_IsBlackListedStringLen(BlackListVarkwds *__restrict self,
                                         char const *__restrict name,
                                         size_t namesize, dhash_t hash) {
@@ -488,7 +488,7 @@ again:
 
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_HasItem(BlackListVarkwds *__restrict self,
                          DeeObject *__restrict name) {
 	return (kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name) != (size_t)-1) &&
@@ -496,7 +496,7 @@ BlackListVarkwds_HasItem(BlackListVarkwds *__restrict self,
 	       ATOMIC_READ(self->vk_argv) != NULL;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_HasItemString(BlackListVarkwds *__restrict self,
                                char const *__restrict name,
                                dhash_t hash) {
@@ -505,7 +505,7 @@ BlackListVarkwds_HasItemString(BlackListVarkwds *__restrict self,
 	       ATOMIC_READ(self->vk_argv) != NULL;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListVarkwds_HasItemStringLen(BlackListVarkwds *__restrict self,
                                   char const *__restrict name,
                                   size_t namesize, dhash_t hash) {
@@ -514,9 +514,9 @@ BlackListVarkwds_HasItemStringLen(BlackListVarkwds *__restrict self,
 	       ATOMIC_READ(self->vk_argv) != NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-BlackListVarkwds_GetItem(BlackListVarkwds *__restrict self,
-                         DeeObject *__restrict name) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+BlackListVarkwds_GetItem(BlackListVarkwds *self,
+                         DeeObject *name) {
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndex(self->vk_kwds, (DeeStringObject *)name);
@@ -538,7 +538,7 @@ missing:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 BlackListVarkwds_GetItemString(BlackListVarkwds *__restrict self,
                                char const *__restrict name, dhash_t hash) {
 	size_t index;
@@ -562,7 +562,7 @@ missing:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 BlackListVarkwds_GetItemStringLen(BlackListVarkwds *__restrict self,
                                   char const *__restrict name,
                                   size_t namesize, dhash_t hash) {
@@ -587,7 +587,7 @@ missing:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 BlackListVarkwds_GetItemDef(BlackListVarkwds *__restrict self,
                             DeeObject *__restrict name,
                             DeeObject *__restrict def) {
@@ -667,7 +667,7 @@ missing:
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 blv_fini(BlackListVarkwds *__restrict self) {
 	if (self->vk_argv) {
 		size_t i, argc;
@@ -680,7 +680,7 @@ blv_fini(BlackListVarkwds *__restrict self) {
 	Dee_Decref(self->vk_kwds);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 blv_visit(BlackListVarkwds *__restrict self, dvisit_t proc, void *arg) {
 	rwlock_read(&self->vk_lock);
 	if (self->vk_argv) {
@@ -696,7 +696,7 @@ blv_visit(BlackListVarkwds *__restrict self, dvisit_t proc, void *arg) {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 blv_bool(BlackListVarkwds *__restrict self) {
 	size_t i;
 	DeeKwdsObject *kw = self->vk_kwds;
@@ -712,7 +712,7 @@ blv_bool(BlackListVarkwds *__restrict self) {
 	return 0; /* empty */
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 blv_nsi_size(BlackListVarkwds *__restrict self) {
 	size_t i, result = 0;
 	DeeKwdsObject *kw = self->vk_kwds;
@@ -728,7 +728,7 @@ blv_nsi_size(BlackListVarkwds *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF BlackListVarkwdsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BlackListVarkwdsIterator *DCALL
 blv_iter(BlackListVarkwds *__restrict self) {
 	DREF BlackListVarkwdsIterator *result;
 	result = DeeObject_MALLOC(BlackListVarkwdsIterator);
@@ -743,21 +743,21 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blv_size(BlackListVarkwds *__restrict self) {
 	return DeeInt_NewSize(blv_nsi_size(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-blv_contains(BlackListVarkwds *__restrict self,
-             DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+blv_contains(BlackListVarkwds *self,
+             DeeObject *key) {
 	return_bool(likely(DeeString_Check(key)) &&
 	            BlackListVarkwds_HasItem(self, key));
 }
 
-PRIVATE DREF DeeObject *DCALL
-blv_getitem(BlackListVarkwds *__restrict self,
-            DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+blv_getitem(BlackListVarkwds *self,
+            DeeObject *key) {
 	if unlikely(!DeeString_Check(key)) {
 		err_unknown_key((DeeObject *)self, key);
 		return NULL;
@@ -765,7 +765,7 @@ blv_getitem(BlackListVarkwds *__restrict self,
 	return BlackListVarkwds_GetItem(self, key);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 blv_getdefault(BlackListVarkwds *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict def) {
@@ -808,7 +808,7 @@ PRIVATE struct type_member blv_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF BlackListVarkwds *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BlackListVarkwds *DCALL
 blv_copy(BlackListVarkwds *__restrict self) {
 	DREF BlackListVarkwds *result;
 	size_t i, count;
@@ -848,7 +848,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF BlackListVarkwds *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BlackListVarkwds *DCALL
 blv_deep(BlackListVarkwds *__restrict self) {
 	DREF BlackListVarkwds *result;
 	size_t i, count;
@@ -954,7 +954,7 @@ INTERN DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
-                     DeeObject **__restrict argv) {
+                     DeeObject **argv) {
 	DREF BlackListVarkwds *result;
 	size_t argc, mask;
 	if unlikely(!DeeKwds_SIZE(kwds)) {
@@ -1064,7 +1064,7 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 
 
 /* ======================== BlackListMapping ======================== */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blmi_copy(BlackListMappingIterator *__restrict self,
           BlackListMappingIterator *__restrict other) {
 	self->mi_iter = DeeObject_Copy(other->mi_iter);
@@ -1077,20 +1077,20 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 blmi_fini(BlackListMappingIterator *__restrict self) {
 	Dee_Decref(self->mi_iter);
 	Dee_Decref(self->mi_map);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 blmi_visit(BlackListMappingIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->mi_iter);
 	Dee_Visit(self->mi_map);
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blmi_next(BlackListMappingIterator *__restrict self) {
 	DREF DeeObject *result, *pair[2];
 again:
@@ -1115,7 +1115,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blmi_nsi_nextkey(BlackListMappingIterator *__restrict self) {
 	DREF DeeObject *result, *pair[2];
 again:
@@ -1141,7 +1141,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blmi_nsi_nextvalue(BlackListMappingIterator *__restrict self) {
 	DREF DeeObject *result, *pair[2];
 again:
@@ -1248,7 +1248,7 @@ INTERN DeeTypeObject BlackListMappingIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListMapping_IsBlackListed(BlackListMapping *__restrict self,
                                DeeObject *__restrict name) {
 	dhash_t i, perturb;
@@ -1312,7 +1312,7 @@ again:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListMapping_IsBlackListedString(BlackListMapping *__restrict self,
                                      char const *__restrict name,
                                      dhash_t hash) {
@@ -1365,7 +1365,7 @@ again:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 BlackListMapping_IsBlackListedStringLen(BlackListMapping *__restrict self,
                                         char const *__restrict name,
                                         size_t namesize, dhash_t hash) {
@@ -1423,7 +1423,7 @@ again:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 BlackListMapping_BoundItem(BlackListMapping *__restrict self,
                            DeeObject *__restrict name,
                            bool allow_missing) {
@@ -1436,7 +1436,7 @@ BlackListMapping_BoundItem(BlackListMapping *__restrict self,
 	return DeeObject_BoundItem(self->bm_kw, name, allow_missing);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 BlackListMapping_BoundItemString(BlackListMapping *__restrict self,
                                  char const *__restrict name,
                                  dhash_t hash, bool allow_missing) {
@@ -1448,7 +1448,7 @@ BlackListMapping_BoundItemString(BlackListMapping *__restrict self,
 	return DeeObject_BoundItemString(self->bm_kw, name, hash, allow_missing);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 BlackListMapping_BoundItemStringLen(BlackListMapping *__restrict self,
                                     char const *__restrict name,
                                     size_t namesize, dhash_t hash,
@@ -1461,9 +1461,9 @@ BlackListMapping_BoundItemStringLen(BlackListMapping *__restrict self,
 	return DeeObject_BoundItemStringLen(self->bm_kw, name, namesize, hash, allow_missing);
 }
 
-INTERN DREF DeeObject *DCALL
-BlackListMapping_GetItem(BlackListMapping *__restrict self,
-                         DeeObject *__restrict name) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+BlackListMapping_GetItem(BlackListMapping *self,
+                         DeeObject *name) {
 	if (DeeString_Check(name) &&
 	    BlackListMapping_IsBlackListed(self, name))
 		goto missing;
@@ -1473,7 +1473,7 @@ missing:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 BlackListMapping_GetItemString(BlackListMapping *__restrict self,
                                char const *__restrict name, dhash_t hash) {
 	if (BlackListMapping_IsBlackListedString(self, name, hash))
@@ -1484,7 +1484,7 @@ missing:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 BlackListMapping_GetItemStringLen(BlackListMapping *__restrict self,
                                   char const *__restrict name,
                                   size_t namesize, dhash_t hash) {
@@ -1496,7 +1496,7 @@ missing:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 BlackListMapping_GetItemDef(BlackListMapping *__restrict self,
                             DeeObject *__restrict name,
                             DeeObject *__restrict def) {
@@ -1537,19 +1537,19 @@ missing:
 	return def;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 blm_fini(BlackListMapping *__restrict self) {
 	Dee_Decref(self->bm_code);
 	Dee_Decref(self->bm_kw);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 blm_visit(BlackListMapping *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->bm_code);
 	Dee_Visit(self->bm_kw);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 blm_bool(BlackListMapping *__restrict self) {
 	DREF DeeObject *vals[2], *elem, *iter;
 	iter = DeeObject_IterSelf(self->bm_kw);
@@ -1579,7 +1579,7 @@ err:
 	return -1;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 blm_nsi_size(BlackListMapping *__restrict self) {
 	size_t result = 0;
 	DREF DeeObject *vals[2], *elem, *iter;
@@ -1609,7 +1609,7 @@ err:
 }
 
 
-PRIVATE DREF BlackListMappingIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BlackListMappingIterator *DCALL
 blm_iter(BlackListMapping *__restrict self) {
 	DREF BlackListMappingIterator *result;
 	result = DeeObject_MALLOC(BlackListMappingIterator);
@@ -1628,21 +1628,21 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blm_size(BlackListMapping *__restrict self) {
 	return DeeInt_NewSize(blm_nsi_size(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-blm_contains(BlackListMapping *__restrict self,
-             DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+blm_contains(BlackListMapping *self,
+             DeeObject *key) {
 	if (DeeString_Check(key) &&
 	    BlackListMapping_IsBlackListed(self, key))
 		return_false;
 	return DeeObject_ContainsObject(self->bm_kw, key);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 blm_getdefault(BlackListMapping *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict def) {
@@ -1686,7 +1686,7 @@ PRIVATE struct type_member blm_class_members[] = {
 };
 
 
-PRIVATE DREF BlackListMapping *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BlackListMapping *DCALL
 blm_copy(BlackListMapping *__restrict self) {
 	DREF BlackListMapping *result;
 	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +
@@ -1718,7 +1718,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF BlackListMapping *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BlackListMapping *DCALL
 blm_deep(BlackListMapping *__restrict self) {
 	DREF BlackListMapping *result;
 	result = (DREF BlackListMapping *)DeeObject_Malloc(offsetof(BlackListMapping, bm_blck) +

@@ -37,7 +37,7 @@ DECL_BEGIN
 #define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
 #endif /* !CONFIG_LITTLE_ENDIAN */
 
-INTDEF void DCALL
+INTDEF NONNULL((1, 2)) void DCALL
 JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size) {
 	JITObjectTable *iter;
 	dhash_t hash;

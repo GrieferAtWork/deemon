@@ -61,7 +61,7 @@ INTERN DeeObject *symbol_type_names[] = {
 	/* [SYMBOL_TYPE_CONST]  = */ &str_const
 };
 
-PRIVATE uint16_t DCALL
+PRIVATE WUNUSED NONNULL((1)) uint16_t DCALL
 get_symbol_kind_from_name(char const *__restrict name) {
 	/* TODO */
 
@@ -78,7 +78,7 @@ get_symbol_kind_from_name(char const *__restrict name) {
  *                  to change them) */
 #define SYMBOL_TYPE_IS_IMMUTABLE(x) ((x) == SYMBOL_TYPE_ARG)
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_getkind(DeeCompilerSymbolObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
@@ -93,7 +93,7 @@ symbol_getkind(DeeCompilerSymbolObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) int DCALL
 err_symbol_readonly(struct symbol *__restrict sym) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Cannot modify argument symbol %$q",
@@ -101,7 +101,7 @@ err_symbol_readonly(struct symbol *__restrict sym) {
 	                       sym->s_name->k_name);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 symbol_delkind(DeeCompilerSymbolObject *__restrict self) {
 	int result = -1;
 	struct symbol *sym;
@@ -121,7 +121,7 @@ symbol_delkind(DeeCompilerSymbolObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 symbol_setkind(DeeCompilerSymbolObject *__restrict self,
                DeeObject *__restrict value) {
 	int result = -1;
@@ -183,7 +183,7 @@ done2:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_name(DeeCompilerSymbolObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
@@ -273,9 +273,8 @@ PRIVATE struct type_getset symbol_getsets[] = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
-symbol_getalias(DeeCompilerSymbolObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -299,9 +298,8 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-symbol_setalias(DeeCompilerSymbolObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
 	DeeCompilerSymbolObject *other;
@@ -352,9 +350,8 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-symbol_setnone(DeeCompilerSymbolObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":setnone") ||
 	    symbol_delkind(self))
 		return NULL;
@@ -382,7 +379,7 @@ PRIVATE struct type_method symbol_methods[] = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 symbol_repr(DeeCompilerSymbolObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
@@ -397,7 +394,7 @@ symbol_repr(DeeCompilerSymbolObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 symbol_bool(DeeCompilerSymbolObject *__restrict self) {
 	int result = -1;
 	struct symbol *sym;

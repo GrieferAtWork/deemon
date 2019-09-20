@@ -110,7 +110,7 @@ struct Dee_except_frame {
 #ifdef CONFIG_BUILDING_DEEMON
 /* Returns the traceback of a given exception-frame, or
  * `NULL' if no traceback exists for the exception. */
-INTDEF struct Dee_traceback_object *DCALL
+INTDEF WUNUSED NONNULL((1)) struct Dee_traceback_object *DCALL
 except_frame_gettb(struct Dee_except_frame *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -229,21 +229,21 @@ struct Dee_deep_assoc {
  * To see how this function must be used, look at the documentation for `tp_deepload'
  * WARNING: THIS FUNCTION MUST NOT BE CALLED BY THE IMPLEMENTING
  *          TYPE WHEN `tp_deepload' IS BEING IMPLEMENTED! */
-DFUNDEF int DCALL
-Dee_DeepCopyAddAssoc(DeeObject *__restrict new_object,
-                     DeeObject *__restrict old_object);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_DeepCopyAddAssoc(DeeObject *new_object,
+                     DeeObject *old_object);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Lookup a GC association of `old_object', who's
  * new object is an exact instance of `new_type' */
-INTDEF DeeObject *DCALL deepcopy_lookup(DeeThreadObject *__restrict thread_self,
-                                        DeeObject *__restrict old_object,
-                                        DeeTypeObject *__restrict new_type);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
+                DeeTypeObject *new_type);
 /* Begin/end a deepcopy operation after a lookup fails. */
 #define deepcopy_begin(thread_self) (++(thread_self)->t_deepassoc.da_recursion)
 #define deepcopy_end(thread_self)   (--(thread_self)->t_deepassoc.da_recursion || (deepcopy_clear(thread_self), 0))
-INTDEF void DCALL deepcopy_clear(DeeThreadObject *__restrict thread_self);
+INTDEF NONNULL((1)) void DCALL deepcopy_clear(DeeThreadObject *__restrict thread_self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
@@ -358,7 +358,7 @@ struct Dee_thread_object {
  * WARNING: The information returned by these is highly volatile and
  *          only a snapshot of what used to be at a certain point. */
 #ifndef CONFIG_NO_THREADS
-#define DeeThread_IsRunning(x)     ((((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & (Dee_THREAD_STATE_STARTED|Dee_THREAD_STATE_TERMINATED)) == Dee_THREAD_STATE_STARTED)
+#define DeeThread_IsRunning(x)      ((((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & (Dee_THREAD_STATE_STARTED|Dee_THREAD_STATE_TERMINATED)) == Dee_THREAD_STATE_STARTED)
 #define DeeThread_HasStarted(x)     (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_STARTED)
 #define DeeThread_WasDetached(x)    (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_DETACHED)
 #define DeeThread_HasTerminated(x)  (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_TERMINATED)
@@ -381,9 +381,9 @@ DDATDEF DeeTypeObject DeeThread_Type;
 
 #ifndef CONFIG_NO_THREADS
 #ifndef CONFIG_NO_THREADID
-DFUNDEF DREF DeeObject *DCALL DeeThread_NewExternal(Dee_thread_t thread, Dee_threadid_t id);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_NewExternal(Dee_thread_t thread, Dee_threadid_t id);
 #else /* !CONFIG_NO_THREADID */
-DFUNDEF DREF DeeObject *DCALL DeeThread_NewExternal(Dee_thread_t thread);
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_NewExternal(Dee_thread_t thread);
 #endif /* CONFIG_NO_THREADID */
 #endif /* !CONFIG_NO_THREADS */
 
@@ -392,7 +392,8 @@ DFUNDEF DREF DeeObject *DCALL DeeThread_NewExternal(Dee_thread_t thread);
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
  * @return:  0: Successfully started the thread.
  * @return:  1: The thread had already been started. */
-DFUNDEF int DCALL DeeThread_Start(/*Thread*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeThread_Start(/*Thread*/ DeeObject *__restrict self);
 
 /* Schedule an interrupt for a given thread.
  * Interrupts are delivered when through threads
@@ -404,17 +405,21 @@ DFUNDEF int DCALL DeeThread_Start(/*Thread*/ DeeObject *__restrict self);
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
  * @return:  0: Successfully scheduled the interrupt object.
  * @return:  1: The thread has been terminated. */
-DFUNDEF int DCALL DeeThread_Interrupt(/*Thread*/ DeeObject *__restrict self,
-                                      DeeObject *__restrict interrupt_main,
-                                      DeeObject *interrupt_args);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeThread_Interrupt(/*Thread*/ DeeObject *self,
+                    DeeObject *interrupt_main,
+                    DeeObject *interrupt_args);
+
 /* Try to wake the thread. */
-DFUNDEF void DCALL DeeThread_Wake(/*Thread*/ DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL
+DeeThread_Wake(/*Thread*/ DeeObject *__restrict self);
 
 /* Detach the given thread.
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
  * @return:  0: The thread was successfully detached.
  * @return:  1: The thread had already been detached. */
-DFUNDEF int DCALL DeeThread_Detach(/*Thread*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeThread_Detach(/*Thread*/ DeeObject *__restrict self);
 
 /* Join the given thread.
  * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
@@ -424,37 +429,42 @@ DFUNDEF int DCALL DeeThread_Detach(/*Thread*/ DeeObject *__restrict self);
  * @return:  1: The given timeout has expired.
  * @param: timeout_microseconds: The timeout in microseconds, 0 for try-join,
  *                               or (uint64_t)-1 for infinite timeout. */
-DFUNDEF int DCALL DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
-                                 DREF DeeObject **__restrict pthread_result,
-                                 uint64_t timeout_microseconds);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
+               DREF DeeObject **__restrict pthread_result,
+               uint64_t timeout_microseconds);
 
 /* Capture a snapshot of the given thread's execution stack, returning
  * a traceback object describing what is actually being run by it.
  * Note that this is just a snapshot that by no means will remain
  * consistent once this function returns.
  * NOTE: If the given thread is the caller's this is identical `(traceback from deemon)()' */
-DFUNDEF DREF /*Traceback*/ DeeObject *DCALL DeeThread_Trace(/*Thread*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
+DeeThread_Trace(/*Thread*/ DeeObject *__restrict self);
 
 #ifndef CONFIG_NO_THREADS
 /* Lookup the descriptor/id of a given thread object.
  * NOTE: When such an object isn't associated, a ValueError is
  *       thrown an -1 is returned, otherwise 0 is returned. */
-DFUNDEF int DCALL DeeThread_GetThread(/*Thread*/ DeeObject *__restrict self,
-                                      Dee_thread_t *__restrict pthread);
-DFUNDEF int DCALL DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
-                                   Dee_threadid_t *__restrict pthreadid);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeThread_GetThread(/*Thread*/ DeeObject *__restrict self,
+                    Dee_thread_t *__restrict pthread);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
+                 Dee_threadid_t *__restrict pthreadid);
 
 /* Check for an interrupt exception and throw it if there is one.
  * This function should be called before any blocking system call and is
  * invoked by the interpreter before execution of any JMP-instruction, or
  * only those that jump backwards in code (aka. is guarantied to be checked
  * periodically during execution of any kind of infinite-loop). */
-DFUNDEF int (DCALL DeeThread_CheckInterrupt)(void);
+DFUNDEF WUNUSED int (DCALL DeeThread_CheckInterrupt)(void);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Same as `DeeThread_CheckInterrupt()', but faster
  * if the caller already knows their own thread object. */
-INTDEF int (DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict thread_self);
+INTDEF WUNUSED NONNULL((1)) int
+(DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict thread_self);
 #ifndef __OPTIMIZE_SIZE__
 /* Since `DeeThread_Self()' is marked as ATTR_CONST, in many cases where the calling function
  * already knows about its current thread from a previous call to `DeeThread_Self()', the compiler
@@ -480,8 +490,8 @@ INTDEF int (DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict thre
  * NOTE: This function (`DeeThread_Suspend') synchronously waits for the thread to
  *       actually become suspended, meaning that once it returns, the caller is allowed
  *       to assume that the given thread is no longer capable of executing instructions. */
-DFUNDEF void DCALL DeeThread_Suspend(DeeThreadObject *__restrict self);
-DFUNDEF void DCALL DeeThread_Resume(DeeThreadObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeThread_Suspend(DeeThreadObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeThread_Resume(DeeThreadObject *__restrict self);
 
 /* Safely suspend/resume all threads but the calling.
  * The same restrictions that apply to `DeeThread_Suspend()'
@@ -514,17 +524,17 @@ DFUNDEF void DCALL DeeThread_Resume(DeeThreadObject *__restrict self);
  *        the macro `DeeThread_FOREACH()'
  *        Note however that this list is in no particular order
  *        and also contains the calling thread among all the others. */
-DFUNDEF ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_SuspendAll(void);
+DFUNDEF WUNUSED ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_SuspendAll(void);
 DFUNDEF void DCALL DeeThread_ResumeAll(void);
 #define DeeThread_FOREACH(x) for (; (x); (x) = (x)->t_globalnext)
 
 
 /* Sleep for the specified number of microseconds (1/1000000 seconds). */
-DFUNDEF int (DCALL DeeThread_Sleep)(uint64_t microseconds);
+DFUNDEF WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds);
 DFUNDEF void (DCALL DeeThread_SleepNoInterrupt)(uint64_t microseconds);
 
 /* Get the current time (offset from some undefined point) in microseconds. */
-DFUNDEF uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void);
+DFUNDEF WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void);
 
 /* Return the thread controller object for the calling thread.
  * This object is usually allocated when the thread is created
@@ -543,9 +553,9 @@ DFUNDEF uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void);
  * WARNING: Much of deemon's core functionality calls this function
  *          internally, including throwing any kind of exception,
  *          or attempting to execute user-code. */
-DFUNDEF ATTR_CONST ATTR_RETNONNULL DeeThreadObject *(DCALL DeeThread_Self)(void);
+DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *(DCALL DeeThread_Self)(void);
 #ifndef CONFIG_NO_THREADID
-DFUNDEF Dee_threadid_t (DCALL DeeThread_SelfId)(void);
+DFUNDEF WUNUSED ATTR_CONST Dee_threadid_t (DCALL DeeThread_SelfId)(void);
 #endif /* !CONFIG_NO_THREADID */
 
 /* Should be called at the end of any kind of custom-created thread
@@ -570,7 +580,8 @@ DFUNDEF void (DCALL DeeThread_Init)(void);
 DFUNDEF void (DCALL DeeThread_Fini)(void);
 
 /* Join all threads that are still running
- * after sending an interrupt signal to each. */
+ * after sending an interrupt signal to each.
+ * Returns true if at least one thread was joined. */
 DFUNDEF bool (DCALL DeeThread_JoinAll)(void);
 
 /* Clear all TLS variables assigned to slots in the calling thread.

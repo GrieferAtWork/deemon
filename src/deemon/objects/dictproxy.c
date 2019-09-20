@@ -61,7 +61,7 @@ typedef struct {
 #define READ_ITEM(x) ATOMIC_READ((x)->di_next)
 #endif /* !CONFIG_NO_THREADS */
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dictiterator_next_key(DictIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct dict_item *item, *end;
@@ -118,7 +118,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dictiterator_next_item(DictIterator *__restrict self) {
 	DREF DeeObject *result, *result_key, *result_item;
 	struct dict_item *item, *end;
@@ -180,7 +180,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dictiterator_next_value(DictIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct dict_item *item, *end;
@@ -237,7 +237,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dictiterator_bool(DictIterator *__restrict self) {
 	struct dict_item *item = READ_ITEM(self);
 	DeeDictObject *Dict    = self->di_dict;
@@ -250,7 +250,7 @@ dictiterator_bool(DictIterator *__restrict self) {
 
 INTERN int DCALL
 dictiterator_init(DictIterator *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	DeeDictObject *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &Dict) ||
 	    DeeObject_AssertType((DeeObject *)Dict, &DeeDict_Type))
@@ -265,7 +265,7 @@ dictiterator_init(DictIterator *__restrict self,
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 dictiterator_ctor(DictIterator *__restrict self) {
 	self->di_dict = (DeeDictObject *)DeeDict_New();
 	if unlikely(!self->di_dict)
@@ -274,7 +274,7 @@ dictiterator_ctor(DictIterator *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 dictiterator_copy(DictIterator *__restrict self,
                   DictIterator *__restrict other) {
 	self->di_dict = other->di_dict;
@@ -283,12 +283,12 @@ dictiterator_copy(DictIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 dictiterator_fini(DictIterator *__restrict self) {
 	Dee_Decref(self->di_dict);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 dictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->di_dict);
 }
@@ -373,7 +373,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_iter(DeeDictObject *__restrict self) {
 	DREF DictIterator *result;
 	result = DeeObject_MALLOC(DictIterator);
@@ -406,17 +406,17 @@ PRIVATE struct type_member proxy_iterator_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 dictproxyiterator_fini(DictProxyIterator *__restrict self) {
 	Dee_Decref(self->dpi_proxy);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 dictproxyiterator_visit(DictProxyIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->dpi_proxy);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 dictproxyiterator_copy(DictProxyIterator *__restrict self,
                        DictProxyIterator *__restrict other) {
 	self->dpi_base.di_dict = other->dpi_base.di_dict;
@@ -481,7 +481,7 @@ INTDEF DeeTypeObject DictKeysIterator_Type;
 INTDEF DeeTypeObject DictItemsIterator_Type;
 INTDEF DeeTypeObject DictValuesIterator_Type;
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 dictproxyiterator_ctor(DictProxyIterator *__restrict self) {
 	DeeTypeObject *proxy_type;
 	proxy_type             = (DeeObject_InstanceOf((DeeObject *)self, &DictKeysIterator_Type) ? &DeeDictKeys_Type : DeeObject_InstanceOf((DeeObject *)self, &DictItemsIterator_Type) ? &DeeDictItems_Type : &DeeDictValues_Type);
@@ -503,7 +503,7 @@ err:
 
 INTERN int DCALL
 dictproxyiterator_init(DictProxyIterator *__restrict self,
-                       size_t argc, DeeObject **__restrict argv) {
+                       size_t argc, DeeObject **argv) {
 	DictProxy *proxy;
 	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &proxy))
 		goto err;
@@ -579,9 +579,9 @@ INTERN DeeTypeObject DictItemsIterator_Type  = INIT_PROXY_ITERATOR_TYPE("_DictIt
 INTERN DeeTypeObject DictValuesIterator_Type = INIT_PROXY_ITERATOR_TYPE("_DictValuesIterator", &dictiterator_next_value);
 #undef INIT_PROXY_ITERATOR_TYPE
 
-INTERN DREF DeeObject *DCALL
-dict_newproxy_iterator(DictProxy *__restrict self,
-                       DeeTypeObject *__restrict proxy_iterator_type) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_newproxy_iterator(DictProxy *self,
+                       DeeTypeObject *proxy_iterator_type) {
 	DREF DictProxyIterator *result;
 	result = DeeObject_MALLOC(DictProxyIterator);
 	if unlikely(!result)
@@ -601,9 +601,9 @@ done:
 }
 
 
-INTERN DREF DeeObject *DCALL
-dict_newproxy(DeeDictObject *__restrict self,
-              DeeTypeObject *__restrict proxy_type) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_newproxy(DeeDictObject *self,
+              DeeTypeObject *proxy_type) {
 	DREF DictProxy *result;
 	ASSERT_OBJECT_TYPE(self, &DeeDict_Type);
 	result = DeeObject_MALLOC(DictProxy);
@@ -616,7 +616,7 @@ dict_newproxy(DeeDictObject *__restrict self,
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_ctor(DictProxy *__restrict self) {
 	self->dp_dict = (DREF DeeDictObject *)DeeDict_New();
 	if unlikely(!self->dp_dict)
@@ -628,7 +628,7 @@ err:
 
 PRIVATE int DCALL
 proxy_init(DictProxy *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	DeeObject *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_DictProxy", &Dict))
 		goto err;
@@ -641,7 +641,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 proxy_copy(DictProxy *__restrict self,
            DictProxy *__restrict other) {
 	self->dp_dict = other->dp_dict;
@@ -649,19 +649,19 @@ proxy_copy(DictProxy *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 proxy_deep(DictProxy *__restrict self,
            DictProxy *__restrict other) {
 	self->dp_dict = (DREF DeeDictObject *)DeeObject_DeepCopy((DeeObject *)other->dp_dict);
 	return self->dp_dict ? 0 : -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 proxy_fini(DictProxy *__restrict self) {
 	Dee_Decref(self->dp_dict);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_bool(DictProxy *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->dp_dict->d_used != 0;
@@ -670,22 +670,22 @@ proxy_bool(DictProxy *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 proxy_visit(DictProxy *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->dp_dict);
 }
 
-INTERN DREF DeeObject *DCALL dict_size(DeeDictObject *__restrict self);
-INTERN DREF DeeObject *DCALL
-dict_contains(DeeDictObject *__restrict self, DeeObject *__restrict key);
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_size(DeeDictObject *__restrict self);
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_contains(DeeDictObject *self, DeeObject *key);
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_size(DictProxy *__restrict self) {
 	return dict_size(self->dp_dict);
 }
 
-INTERN DREF DeeObject *DCALL
-proxy_contains_key(DictProxy *__restrict self, DeeObject *__restrict key) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+proxy_contains_key(DictProxy *self, DeeObject *key) {
 	return dict_contains(self->dp_dict, key);
 }
 
@@ -726,17 +726,17 @@ PRIVATE struct type_member dict_values_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_keys_iter(DictProxy *__restrict self) {
 	return dict_newproxy_iterator(self, &DictKeysIterator_Type);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_items_iter(DictProxy *__restrict self) {
 	return dict_newproxy_iterator(self, &DictItemsIterator_Type);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_values_iter(DictProxy *__restrict self) {
 	return dict_newproxy_iterator(self, &DictValuesIterator_Type);
 }

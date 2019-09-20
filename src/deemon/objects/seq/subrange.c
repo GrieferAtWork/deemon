@@ -47,7 +47,7 @@ DECL_BEGIN
 
 PRIVATE int DCALL
 subrangeiterator_init(SubRangeIterator *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+                      size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o|IuIu:_SubRangeIterator",
 	                  &self->sr_iter,
 	                  &self->sr_start,
@@ -59,18 +59,18 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 subrangeiterator_fini(SubRangeIterator *__restrict self) {
 	Dee_Decref(self->sr_iter);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 subrangeiterator_visit(SubRangeIterator *__restrict self,
                        dvisit_t proc, void *arg) {
 	Dee_Visit(self->sr_iter);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrangeiterator_next(SubRangeIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	if (!self->sr_size)
@@ -116,7 +116,7 @@ PRIVATE struct type_cmp subrangeiterator_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangeiterator_ge
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrangeiterator_seq_get(SubRangeIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *base_seq;
@@ -150,7 +150,7 @@ PRIVATE struct type_member subrangeiterator_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangeiterator_ctor(SubRangeIterator *__restrict self) {
 	self->sr_start = 0;
 	self->sr_size  = 0;
@@ -159,7 +159,7 @@ subrangeiterator_ctor(SubRangeIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 subrangeiterator_copy(SubRangeIterator *__restrict self,
                       SubRangeIterator *__restrict other) {
 	self->sr_start = other->sr_start;
@@ -172,7 +172,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 subrangeiterator_deep(SubRangeIterator *__restrict self,
                       SubRangeIterator *__restrict other) {
 	self->sr_start = other->sr_start;
@@ -185,7 +185,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangeiterator_bool(SubRangeIterator *__restrict self) {
 	if (!READ_SIZE(self))
 		return 0;
@@ -240,17 +240,17 @@ INTERN DeeTypeObject SeqSubRangeIterator_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 subrange_fini(SubRange *__restrict self) {
 	Dee_Decref(self->sr_seq);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 subrange_visit(SubRange *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->sr_seq);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrange_size(SubRange *__restrict self) {
 	size_t inner_size = DeeObject_Size(self->sr_seq);
 	if unlikely(inner_size == (size_t)-1)
@@ -265,7 +265,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrange_iter(SubRange *__restrict self) {
 	DREF SubRangeIterator *result;
 	DREF DeeObject *iterator;
@@ -318,9 +318,9 @@ PRIVATE struct type_member subrange_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
-subrange_getitem(SubRange *__restrict self,
-                 DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+subrange_getitem(SubRange *self,
+                 DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
@@ -329,7 +329,7 @@ err:
 	return NULL;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 subrange_nsi_getsize(SubRange *__restrict self) {
 	size_t inner_size = DeeObject_Size(self->sr_seq);
 	if unlikely(inner_size != (size_t)-1) {
@@ -342,7 +342,7 @@ subrange_nsi_getsize(SubRange *__restrict self) {
 	return inner_size;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 subrange_nsi_getsize_fast(SubRange *__restrict self) {
 	size_t inner_size = DeeFastSeq_GetSize(self->sr_seq);
 	if unlikely(inner_size != (size_t)-1) {
@@ -355,7 +355,7 @@ subrange_nsi_getsize_fast(SubRange *__restrict self) {
 	return inner_size;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrange_nsi_getitem(SubRange *__restrict self, size_t index) {
 	return DeeObject_GetItemIndex(self->sr_seq,
 	                              self->sr_start + index);
@@ -436,7 +436,7 @@ PRIVATE struct type_seq subrange_seq = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrange_ctor(SubRange *__restrict self) {
 	self->sr_seq   = Dee_EmptySeq;
 	self->sr_start = 0;
@@ -445,7 +445,7 @@ subrange_ctor(SubRange *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 subrange_copy(SubRange *__restrict self,
               SubRange *__restrict other) {
 	self->sr_seq   = other->sr_seq;
@@ -455,7 +455,7 @@ subrange_copy(SubRange *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 subrange_deep(SubRange *__restrict self,
               SubRange *__restrict other) {
 	self->sr_seq = DeeObject_DeepCopy(other->sr_seq);
@@ -470,7 +470,7 @@ err:
 
 PRIVATE int DCALL
 subrange_init(SubRange *__restrict self, size_t argc,
-              DeeObject **__restrict argv) {
+              DeeObject **argv) {
 	size_t end     = (size_t)-1;
 	self->sr_start = 0;
 	if (DeeArg_Unpack(argc, argv, "o|IuIu:_SeqSubRange",
@@ -485,7 +485,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrange_bool(SubRange *__restrict self) {
 	size_t seqsize;
 	if unlikely(!self->sr_size)
@@ -544,7 +544,7 @@ INTERN DeeTypeObject SeqSubRange_Type = {
 	/* .tp_class_members = */ subrange_class_members
 };
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_GetRange(DeeObject *__restrict self,
                 size_t begin, size_t end) {
 	DREF SubRange *result;
@@ -572,7 +572,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_GetRangeN(DeeObject *__restrict self,
                  size_t begin) {
 	DREF SubRangeN *result;
@@ -607,7 +607,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(SubRangeN, sr_seq) ==
 #define subrangen_visit subrange_visit
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrangen_iter(SubRangeN *__restrict self) {
 	DREF DeeObject *result, *elem;
 	size_t offset;
@@ -633,7 +633,7 @@ err:
 	return NULL;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 subrangen_nsi_getsize(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeObject_Size(self->sr_seq);
@@ -647,7 +647,7 @@ subrangen_nsi_getsize(SubRangeN *__restrict self) {
 	return result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 subrangen_nsi_getsize_fast(SubRangeN *__restrict self) {
 	size_t result;
 	result = DeeFastSeq_GetSize(self->sr_seq);
@@ -661,7 +661,7 @@ subrangen_nsi_getsize_fast(SubRangeN *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrangen_size(SubRangeN *__restrict self) {
 	size_t result = subrangen_nsi_getsize(self);
 	if unlikely(result == (size_t)-1)
@@ -671,9 +671,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-subrangen_getitem(SubRangeN *__restrict self,
-                  DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+subrangen_getitem(SubRangeN *self,
+                  DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
@@ -683,7 +683,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrangen_nsi_getitem(SubRangeN *__restrict self, size_t index) {
 	return DeeObject_GetItemIndex(self->sr_seq,
 	                              self->sr_start + index);
@@ -765,7 +765,7 @@ PRIVATE struct type_member subrangen_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangen_ctor(SubRangeN *__restrict self) {
 	self->sr_seq   = Dee_EmptySeq;
 	self->sr_start = 0;
@@ -773,7 +773,7 @@ subrangen_ctor(SubRangeN *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 subrangen_copy(SubRangeN *__restrict self,
                SubRangeN *__restrict other) {
 	self->sr_seq   = other->sr_seq;
@@ -782,7 +782,7 @@ subrangen_copy(SubRangeN *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 subrangen_deep(SubRangeN *__restrict self,
                SubRangeN *__restrict other) {
 	self->sr_seq = DeeObject_DeepCopy(other->sr_seq);
@@ -796,7 +796,7 @@ err:
 
 PRIVATE int DCALL
 subrangen_init(SubRangeN *__restrict self, size_t argc,
-               DeeObject **__restrict argv) {
+               DeeObject **argv) {
 	self->sr_start = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSubRangeN",
 	                  &self->sr_seq, &self->sr_start))
@@ -807,7 +807,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangen_bool(SubRangeN *__restrict self) {
 	size_t seqsize = DeeObject_Size(self->sr_seq);
 	if unlikely(seqsize == (size_t)-1)

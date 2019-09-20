@@ -127,7 +127,7 @@ typedef struct {
 
 PRIVATE int DCALL
 sema_init(Semaphore *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	LONG init_value = 0;
 	if (DeeArg_Unpack(argc, argv, "|I32u:semaphore", &init_value))
 		goto err;
@@ -144,7 +144,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 sema_fini(Semaphore *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	CloseHandle(self->sem_handle);
@@ -159,7 +159,7 @@ PRIVATE ATTR_COLD int DCALL err_post_failed(void) {
 
 PRIVATE DREF DeeObject *DCALL
 sema_post(Semaphore *__restrict self, size_t argc,
-          DeeObject **__restrict argv) {
+          DeeObject **argv) {
 	LONG count = 1;
 	if (DeeArg_Unpack(argc, argv, "|I32u:post", &count))
 		goto err;
@@ -177,7 +177,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 sema_wait(Semaphore *__restrict self, size_t argc,
-          DeeObject **__restrict argv) {
+          DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":wait") ||
 	    nt_WaitForSemaphore(self->sem_handle, (uint64_t)-1))
 		return NULL;
@@ -186,7 +186,7 @@ sema_wait(Semaphore *__restrict self, size_t argc,
 
 PRIVATE DREF DeeObject *DCALL
 sema_trywait(Semaphore *__restrict self, size_t argc,
-             DeeObject **__restrict argv) {
+             DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":trywait"))
 		goto err;
@@ -200,7 +200,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 sema_timedwait(Semaphore *__restrict self, size_t argc,
-               DeeObject **__restrict argv) {
+               DeeObject **argv) {
 	int error;
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))
@@ -215,7 +215,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 sema_fileno(Semaphore *__restrict self, size_t argc,
-            DeeObject **__restrict argv) {
+            DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
 	return DeeInt_NewUIntptr((uintptr_t)self->sem_handle);
@@ -252,12 +252,12 @@ PRIVATE struct type_method sema_methods[] = {
 	{ NULL }
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_enter(Semaphore *__restrict self) {
 	return nt_WaitForSemaphore(self->sem_handle, (uint64_t)-1);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_leave(Semaphore *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!ReleaseSemaphore(self->sem_handle, 1, NULL))
@@ -342,7 +342,7 @@ typedef struct {
 } Mutex;
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mutex_timedenter(Mutex *__restrict self, uint64_t timeout) {
 	DWORD owner, caller;
 	DBG_ALIGNMENT_DISABLE();
@@ -368,7 +368,7 @@ again:
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mutex_leave(Mutex *__restrict self) {
 	DWORD caller;
 	DBG_ALIGNMENT_DISABLE();
@@ -400,7 +400,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mutex_ctor(Mutex *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	self->m_sema = CreateSemaphoreW(NULL, 0, 0x7fffffff, NULL);
@@ -415,14 +415,14 @@ err_nt:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 mutex_fini(Mutex *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	CloseHandle(self->m_sema);
 	DBG_ALIGNMENT_ENABLE();
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mutex_enter(Mutex *__restrict self) {
 	return mutex_timedenter(self, (uint64_t)-1);
 }
@@ -432,18 +432,16 @@ PRIVATE struct type_with mutex_with = {
 	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&mutex_leave
 };
 
-PRIVATE DREF DeeObject *DCALL
-mutex_acquire(Mutex *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_acquire(Mutex *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire") ||
 	    mutex_timedenter(self, (uint64_t)-1))
 		return NULL;
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-mutex_tryacquire(Mutex *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_tryacquire(Mutex *self, size_t argc, DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
 		goto err;
@@ -455,9 +453,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-mutex_timedacquire(Mutex *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_timedacquire(Mutex *self, size_t argc, DeeObject **argv) {
 	int error;
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:tryacquire", &timeout))
@@ -470,9 +467,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-mutex_release(Mutex *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_release(Mutex *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":release") ||
 	    mutex_leave(self))
 		return NULL;

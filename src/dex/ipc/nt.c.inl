@@ -216,7 +216,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS64,CommandLine)      
  * @param: dwAttributeType: The attribute that should be accessed (One of `PROCATTR_*').
  * @return: * :             An object encapsulating the value referred to by `dwAttributeId'
  * @return: NULL:           An error occurred. */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nt_GetProcessAttribute(HANDLE *__restrict lphProcess,
                        DWORD dwProcessId,
                        DWORD dwAttributeId) {

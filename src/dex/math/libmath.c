@@ -132,7 +132,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 
 #define DEFINE_MATH_CONVERSION_1(name)                        \
 	PRIVATE DREF DeeObject *DCALL                             \
-	f_math_##name(size_t argc, DeeObject **__restrict argv) { \
+	f_math_##name(size_t argc, DeeObject **argv) { \
 		double x;                                             \
 		if (DeeArg_Unpack(argc, argv, "D:" #name, &x))        \
 			goto err;                                         \
@@ -143,7 +143,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_CONVERSION_1_E(name)                      \
 	PRIVATE DREF DeeObject *DCALL                             \
-	f_math_##name(size_t argc, DeeObject **__restrict argv) { \
+	f_math_##name(size_t argc, DeeObject **argv) { \
 		double x, result;                                     \
 		if (DeeArg_Unpack(argc, argv, "D:" #name, &x))        \
 			goto err;                                         \
@@ -158,7 +158,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_CONVERSION_2(name)                        \
 	PRIVATE DREF DeeObject *DCALL                             \
-	f_math_##name(size_t argc, DeeObject **__restrict argv) { \
+	f_math_##name(size_t argc, DeeObject **argv) { \
 		double x, y;                                          \
 		if (DeeArg_Unpack(argc, argv, "DD:" #name, &x, &y))   \
 			goto err;                                         \
@@ -169,7 +169,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_CONVERSION_2_E(name)                      \
 	PRIVATE DREF DeeObject *DCALL                             \
-	f_math_##name(size_t argc, DeeObject **__restrict argv) { \
+	f_math_##name(size_t argc, DeeObject **argv) { \
 		double x, y, result;                                  \
 		if (DeeArg_Unpack(argc, argv, "DD:" #name, &x, &y))   \
 			goto err;                                         \
@@ -184,7 +184,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_FLOAT_TRAIT(name)                         \
 	PRIVATE DREF DeeObject *DCALL                             \
-	f_math_##name(size_t argc, DeeObject **__restrict argv) { \
+	f_math_##name(size_t argc, DeeObject **argv) { \
 		double x;                                             \
 		if (DeeArg_Unpack(argc, argv, "D:" #name, &x))        \
 			goto err;                                         \
@@ -195,7 +195,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_FLOAT_TRAIT2(name)                        \
 	PRIVATE DREF DeeObject *DCALL                             \
-	f_math_##name(size_t argc, DeeObject **__restrict argv) { \
+	f_math_##name(size_t argc, DeeObject **argv) { \
 		double x, y;                                          \
 		if (DeeArg_Unpack(argc, argv, "DD:" #name, &x, &y))   \
 			goto err;                                         \
@@ -269,7 +269,7 @@ DEFINE_MATH_FLOAT_TRAIT2(isunordered)
 #undef DEFINE_MATH_CONVERSION_1
 
 PRIVATE DREF DeeObject *DCALL
-f_math_ilogb(size_t argc, DeeObject **__restrict argv) {
+f_math_ilogb(size_t argc, DeeObject **argv) {
 	double x;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "D:ilogb", &x))
@@ -286,7 +286,7 @@ err:
 PRIVATE DEFINE_CMETHOD(math_ilogb, f_math_ilogb);
 
 PRIVATE DREF DeeObject *DCALL
-f_math_frexp(size_t argc, DeeObject **__restrict argv) {
+f_math_frexp(size_t argc, DeeObject **argv) {
 	double x, y, mat;
 	int ex;
 	DREF DeeObject *result, *a, *b;
@@ -317,7 +317,7 @@ err:
 PRIVATE DEFINE_CMETHOD(math_frexp, f_math_frexp);
 
 PRIVATE DREF DeeObject *DCALL
-f_math_modf(size_t argc, DeeObject **__restrict argv) {
+f_math_modf(size_t argc, DeeObject **argv) {
 	DREF DeeObject *result, *a, *b;
 	double x, y;
 	if (DeeArg_Unpack(argc, argv, "D:modf", &x))
@@ -344,7 +344,7 @@ err:
 PRIVATE DEFINE_CMETHOD(math_modf, f_math_modf);
 
 PRIVATE DREF DeeObject *DCALL
-f_math_ldexp(size_t argc, DeeObject **__restrict argv) {
+f_math_ldexp(size_t argc, DeeObject **argv) {
 	double x, result;
 	DeeObject *y;
 	int error, y_value;
@@ -380,7 +380,7 @@ err:
 PRIVATE DEFINE_CMETHOD(math_ldexp, f_math_ldexp);
 
 PRIVATE DREF DeeObject *DCALL
-f_math_sincos(size_t argc, DeeObject **__restrict argv) {
+f_math_sincos(size_t argc, DeeObject **argv) {
 	double x;
 	if (DeeArg_Unpack(argc, argv, "D:sincos", &x))
 		goto err;
@@ -391,7 +391,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-f_math_asincos(size_t argc, DeeObject **__restrict argv) {
+f_math_asincos(size_t argc, DeeObject **argv) {
 	double x, rx, ry;
 	if (DeeArg_Unpack(argc, argv, "D:asincos", &x))
 		goto err;
@@ -406,7 +406,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-f_math_sincosh(size_t argc, DeeObject **__restrict argv) {
+f_math_sincosh(size_t argc, DeeObject **argv) {
 	double x, rx, ry;
 	if (DeeArg_Unpack(argc, argv, "D:sincosh", &x))
 		goto err;
@@ -421,7 +421,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-f_math_asincosh(size_t argc, DeeObject **__restrict argv) {
+f_math_asincosh(size_t argc, DeeObject **argv) {
 	double x, rx, ry;
 	if (DeeArg_Unpack(argc, argv, "D:asincosh", &x))
 		goto err;
@@ -441,7 +441,7 @@ PRIVATE DEFINE_CMETHOD(math_sincosh, f_math_sincosh);
 PRIVATE DEFINE_CMETHOD(math_asincosh, f_math_asincosh);
 
 PRIVATE DREF DeeObject *DCALL
-f_math_scalbn(size_t argc, DeeObject **__restrict argv) {
+f_math_scalbn(size_t argc, DeeObject **argv) {
 	double x, result;
 	int n;
 	if (DeeArg_Unpack(argc, argv, "Dd:scalbn", &x, &n))
@@ -459,7 +459,7 @@ err:
 PRIVATE DEFINE_CMETHOD(math_scalbn, f_math_scalbn);
 
 PRIVATE DREF DeeObject *DCALL
-f_math_remquo(size_t argc, DeeObject **__restrict argv) {
+f_math_remquo(size_t argc, DeeObject **argv) {
 	double x, y, result;
 	int z;
 	if (DeeArg_Unpack(argc, argv, "DD:remquo", &x, &y))

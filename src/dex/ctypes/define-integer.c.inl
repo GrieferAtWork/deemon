@@ -385,7 +385,7 @@ done:
 /* Define functions. */
 PRIVATE int DCALL
 F(intinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
-           T *self, size_t argc, DeeObject **__restrict argv) {
+           T *self, size_t argc, DeeObject **argv) {
 	T value;
 	DeeObject *arg;
 #ifdef NAME

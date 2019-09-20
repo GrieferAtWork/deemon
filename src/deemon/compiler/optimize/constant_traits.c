@@ -96,7 +96,7 @@ LOCAL bool DCALL constexpr_onstack(DeeObject *__restrict self) {
 /* Check if a given constant value can safely appear in constant variable slots.
  * If this is not the case, `asm_gpush_constexpr' should be used to automatically
  * generate code capable of pushing the given value onto the stack. */
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 asm_allowconst(DeeObject *__restrict self) {
 	size_t i;
 	DeeTypeObject *type;
@@ -153,7 +153,7 @@ allowed:
 /* Return true if the optimizer is allowed to perform
  * operations on/with a constant instance `self'.
  * @return: * : One of `CONSTEXPR_*' */
-INTERN int DCALL allow_constexpr(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DCALL allow_constexpr(DeeObject *__restrict self) {
 	size_t i;
 	DeeTypeObject *type;
 again0:
@@ -318,7 +318,7 @@ usecopy:
 }
 
 /* Check if a given object `type' is a type that implements a cast-constructor. */
-INTERN bool DCALL has_cast_constructor(DeeObject *__restrict type) {
+INTERN WUNUSED NONNULL((1)) bool DCALL has_cast_constructor(DeeObject *__restrict type) {
 	if (type == (DeeObject *)&DeeTuple_Type)
 		goto yes;
 	if (type == (DeeObject *)&DeeList_Type)

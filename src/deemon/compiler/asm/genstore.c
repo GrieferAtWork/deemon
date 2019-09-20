@@ -538,7 +538,7 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_delattr(struct ast *__restrict base,
                 struct ast *__restrict name,
                 struct ast *__restrict ddi_ast) {
@@ -636,7 +636,7 @@ err:
 }
 
 
-INTDEF int DCALL asm_check_thiscall(struct symbol *__restrict sym,
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__restrict sym,
                                     struct ast *__restrict warn_ast);
 
 PRIVATE int DCALL
@@ -1862,7 +1862,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 asm_gpop_expr(struct ast *__restrict self) {
 	switch (self->a_type) {
 

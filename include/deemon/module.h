@@ -336,8 +336,8 @@ struct Dee_module_object {
 /* Lock/unlock the symbols of an interactive module object.
  * If `self' is a regular module, these are no-ops. */
 #ifndef CONFIG_NO_THREADS
-DFUNDEF void DCALL DeeModule_LockSymbols(DeeModuleObject *__restrict self);
-DFUNDEF void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeModule_LockSymbols(DeeModuleObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeModule_UnlockSymbols(DeeModuleObject *__restrict self);
 #else /* !CONFIG_NO_THREADS */
 #define DeeModule_LockSymbols(self)   (void)0
 #define DeeModule_UnlockSymbols(self) (void)0
@@ -1036,7 +1036,7 @@ DeeModule_GetRoot(/*Module*/ DeeObject *__restrict self,
  * NOTE: For Always using this function as sometimes,
  *       the timestamp is calculated lazily.
  * NOTE: If the module's file could not be found, 0 is returned. */
-DFUNDEF uint64_t DCALL DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self);
 #endif /* !CONFIG_NO_DEC */
 
 /* Same as `DeeModule_Import', but relative module
@@ -1068,17 +1068,17 @@ DeeModule_Import(/*String*/ DeeObject *__restrict module_name,
 /* Access global variables of a given module by their name described by a C-string.
  * These functions act and behave just as once would expect, raising errors when
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */
-INTDEF DREF DeeObject *DCALL DeeModule_GetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF DREF DeeObject *DCALL DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF bool DCALL DeeModule_HasAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF bool DCALL DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF int DCALL DeeModule_BoundAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF int DCALL DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
-INTDEF int DCALL DeeModule_DelAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
-INTDEF int DCALL DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeModule_HasAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
 INTDEF int DCALL DeeModule_SetAttrString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash, DeeObject *__restrict value);
 INTDEF int DCALL DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash, DeeObject *__restrict value);
-INTDEF int DCALL DeeModule_FindAttrString(DeeModuleObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttrString(DeeModuleObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Lookup the module symbol associated with a given its name or GID.
@@ -1092,10 +1092,10 @@ INTDEF int DCALL DeeModule_FindAttrString(DeeModuleObject *__restrict self, stru
 DFUNDEF struct Dee_module_symbol *DCALL DeeModule_GetSymbolString(DeeModuleObject *__restrict self, char const *__restrict attr_name, Dee_hash_t hash);
 DFUNDEF struct Dee_module_symbol *DCALL DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self, char const *__restrict attr_name, size_t attrlen, Dee_hash_t hash);
 DFUNDEF struct Dee_module_symbol *DCALL DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid);
-DFUNDEF DREF DeeObject *DCALL DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
-DFUNDEF int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
-DFUNDEF int DCALL DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
-DFUNDEF int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol, DeeObject *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol, DeeObject *__restrict value);
 
 /* Return the name of a global variable in the given module.
  * @return: NULL: The given `gid' is not recognized, or the module hasn't finished/started loading yet.
@@ -1119,13 +1119,13 @@ DeeModule_GlobalName(/*Module*/ DeeObject *__restrict self, uint16_t gid);
  * @return: -1: An error occurred during initialization.
  * @return:  0: Successfully initialized the module/the module was already initialized.
  * @return:  1: You are already in the process of initializing this module (not an error). */
-DFUNDEF int DCALL DeeModule_RunInit(/*Module*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_RunInit(/*Module*/ DeeObject *__restrict self);
 
 /* Initialize all modules imported by the given one.
  * @throws: Error.RuntimeError: The module has not been loaded yet. (aka. no source code was assigned)
  * @return: -1: An error occurred during initialization.
  * @return:  0: All modules imported by the given one are now initialized. */
-DFUNDEF int DCALL DeeModule_InitImports(/*Module*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeModule_InitImports(/*Module*/ DeeObject *__restrict self);
 
 DECL_END
 

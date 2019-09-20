@@ -243,7 +243,7 @@ PRIVATE struct deep_assoc_entry empty_deep_assoc[] = {
 #pragma warning(disable: 6322)
 #endif /* _PREFAST_ */
 #pragma pack(push,8)
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 sys_setthreadname(char const *__restrict name) {
 	typedef struct THREADNAME_INFO {
 		DWORD dwType;     // Must be 0x1000.
@@ -278,7 +278,7 @@ sys_setthreadname(char const *__restrict name) {
 #endif
 
 
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 deepassoc_rehash(DeeThreadObject *__restrict self) {
 	struct deep_assoc_entry *new_vector, *iter, *end;
 	size_t new_mask = self->t_deepassoc.da_mask;
@@ -320,9 +320,9 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 
 
 
-PUBLIC int
-(DCALL Dee_DeepCopyAddAssoc)(DeeObject *__restrict new_object,
-                             DeeObject *__restrict old_object) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_DeepCopyAddAssoc)(DeeObject *new_object,
+                             DeeObject *old_object) {
 	size_t mask;
 	dhash_t i, perturb, hash;
 	DeeThreadObject *self = DeeThread_Self();
@@ -375,10 +375,9 @@ again:
 	return -1;
 }
 
-INTERN DeeObject *DCALL
-deepcopy_lookup(DeeThreadObject *__restrict thread_self,
-                DeeObject *__restrict old_object,
-                DeeTypeObject *__restrict new_type) {
+INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
+                DeeTypeObject *new_type) {
 	uintptr_t i, perturb;
 	uintptr_t hash = (Dee_HashPointer(old_object) ^
 	                  Dee_HashPointer(new_type));
@@ -398,7 +397,7 @@ deepcopy_lookup(DeeThreadObject *__restrict thread_self,
 	return NULL;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 deepcopy_clear(DeeThreadObject *__restrict thread_self) {
 	/* NOTE: Everything here is synchronized by lock(PRIVATE(DeeThread_Self())) */
 	struct deep_assoc_entry *begin;
@@ -488,7 +487,7 @@ PRIVATE WCHAR const kernel32[] = {'K','E','R','N','E','L','3','2',0};
 PRIVATE ULONGLONG (WINAPI *lp_GetTickCount64)(void) = NULL;
 #endif /* CONFIG_HOST_WINDOWS */
 
-PUBLIC uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void) {
+PUBLIC WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void) {
 #ifdef CONFIG_HOST_WINDOWS
 	uint64_t result;
 	if (!performance_freq) {
@@ -565,7 +564,7 @@ do_tickcount:
 #define sys_threadstartup  sys_threadstartup
 PRIVATE void suspend_signal_handler(int signo);
 
-PRIVATE void DCALL sys_threadstartup(DeeThreadObject *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL sys_threadstartup(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NEED_SUSPEND_SIGNALS
 #ifndef SA_NODEFER
 #error "The suspension signal handler needs to be able to recurse"
@@ -590,7 +589,7 @@ PRIVATE void DCALL sys_threadstartup(DeeThreadObject *__restrict self) {
 
 #ifdef CONFIG_NEED_SUSPEND_SIGNALS
 #define sys_threadshutdown sys_threadshutdown
-PRIVATE void DCALL sys_threadshutdown(DeeThreadObject *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL sys_threadshutdown(DeeThreadObject *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	signal(PTHREAD_INTERRUPT_SIGNAL, SIG_IGN);
 	DBG_ALIGNMENT_ENABLE();
@@ -610,7 +609,7 @@ PRIVATE void DCALL sys_threadshutdown(DeeThreadObject *__restrict self) {
 #endif /* !sys_threadshutdown */
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 do_suspend_thread(DeeThreadObject *__restrict self) {
 	if (ATOMIC_FETCHINC(self->t_suspended) == 0) {
 		if (self->t_state & THREAD_STATE_STARTED) {
@@ -668,7 +667,7 @@ restart:
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 do_resume_thread(DeeThreadObject *__restrict self) {
 	if (ATOMIC_DECFETCH(self->t_suspended) == 0) {
 		if (self->t_state & THREAD_STATE_STARTED) {
@@ -704,19 +703,19 @@ PRIVATE DEFINE_RECURSIVE_RWLOCK(globthread_lock);
  * That way, only a single thread can ever suspend any
  * others and we prevent the race condition arising from
  * 2 threads attempting to suspend each other. */
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeThread_Suspend(DeeThreadObject *__restrict self) {
 	recursive_rwlock_write(&globthread_lock);
 	do_suspend_thread(self);
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeThread_Resume(DeeThreadObject *__restrict self) {
 	do_resume_thread(self);
 	recursive_rwlock_endwrite(&globthread_lock);
 }
 
-PUBLIC ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_SuspendAll(void) {
+PUBLIC WUNUSED ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_SuspendAll(void) {
 	/* Acquire the calling thread's context (this
 	 * ensures that the caller is tracked and identifiable) */
 	DeeThreadObject *iter, *ts = DeeThread_Self();
@@ -747,7 +746,7 @@ PUBLIC void DCALL DeeThread_ResumeAll(void) {
 	recursive_rwlock_endwrite(&globthread_lock);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 add_running_thread(DeeThreadObject *__restrict thread) {
 	thread->t_globlpself = &DeeThread_Main.t_globalnext;
 	recursive_rwlock_write(&globthread_lock);
@@ -757,7 +756,7 @@ add_running_thread(DeeThreadObject *__restrict thread) {
 	recursive_rwlock_endwrite(&globthread_lock);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 del_running_thread(DeeThreadObject *__restrict thread) {
 	recursive_rwlock_write(&globthread_lock);
 	if (thread->t_globlpself) {
@@ -767,7 +766,10 @@ del_running_thread(DeeThreadObject *__restrict thread) {
 	recursive_rwlock_endwrite(&globthread_lock);
 }
 
-PUBLIC bool (DCALL DeeThread_JoinAll)(void) {
+/* Join all threads that are still running
+ * after sending an interrupt signal to each.
+ * Returns true if at least one thread was joined. */
+PUBLIC WUNUSED bool (DCALL DeeThread_JoinAll)(void) {
 	DeeThreadObject *iter;
 	bool interrupt_phase = true;
 	bool result          = false;
@@ -904,8 +906,8 @@ again:
 	return result;
 }
 
-PRIVATE bool DCALL thread_doclear(DeeThreadObject *__restrict self);
-PRIVATE void DCALL thread_fini(DeeThreadObject *__restrict self);
+PRIVATE NONNULL((1)) bool DCALL thread_doclear(DeeThreadObject *__restrict self);
+PRIVATE NONNULL((1)) void DCALL thread_fini(DeeThreadObject *__restrict self);
 
 PRIVATE void DCALL
 destroy_thread_self(DREF DeeThreadObject *__restrict self) {
@@ -1227,9 +1229,7 @@ PUBLIC void DCALL DeeThread_Shutdown(void) {
 	DBG_ALIGNMENT_ENABLE();
 }
 
-PUBLIC ATTR_CONST ATTR_RETNONNULL
-DeeThreadObject *DCALL
-DeeThread_Self(void) {
+PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(void) {
 	DeeThreadObject *result;
 #ifdef THREAD_SELF_TLS_USE_TLS_ALLOC
 	ASSERT(thread_self_tls != TLS_OUT_OF_INDEXES);
@@ -1284,30 +1284,27 @@ PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
 		DBG_ALIGNMENT_ENABLE();
 		errno = old_error;
 	}
-#endif
+#endif /* CONFIG_NEED_SUSPEND_SIGNALS */
 }
 #endif /* CONFIG_THREADS_PTHREAD || CONFIG_NEED_SUSPEND_SIGNALS */
 
 #ifndef CONFIG_NO_THREADID
-PUBLIC dthreadid_t (DCALL DeeThread_SelfId)(void) {
-#ifdef NO_DBG_ALIGNMENT
-	return os_gettid();
-#else
+PUBLIC WUNUSED ATTR_CONST dthreadid_t (DCALL DeeThread_SelfId)(void) {
 	dthreadid_t result;
 	DBG_ALIGNMENT_DISABLE();
 	result = os_gettid();
 	DBG_ALIGNMENT_ENABLE();
 	return result;
-#endif
 }
 #endif /* !CONFIG_NO_THREADID */
 
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 INTERN uint8_t keyboard_interrupt_counter = 0;
-#endif
+#endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 
 
-INTERN int (DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int
+(DCALL DeeThread_CheckInterruptSelf)(DeeThreadObject *__restrict self) {
 	DREF DeeObject *interrupt_main;
 	DREF DeeTupleObject *interrupt_args;
 	DREF DeeObject *callback_result;
@@ -1411,12 +1408,12 @@ err:
 	return 0;
 }
 
-PUBLIC int (DCALL DeeThread_CheckInterrupt)(void) {
+PUBLIC WUNUSED int (DCALL DeeThread_CheckInterrupt)(void) {
 	return DeeThread_CheckInterruptSelf(DeeThread_Self());
 }
 
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_GetThread(/*Thread*/ DeeObject *__restrict self,
                     dthread_t *__restrict pthread) {
 	ASSERT(pthread);
@@ -1603,7 +1600,7 @@ set_result:
 	return 0;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 	uint16_t state;
 	DeeThreadObject *me = (DeeThreadObject *)self;
@@ -1709,7 +1706,8 @@ PRIVATE LPCANCELSYNCHRONOUSIO pCancelSynchronousIo = NULL;
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_THREADS_PTHREAD */
 
-PUBLIC void DCALL
+/* Try to wake the thread. */
+PUBLIC NONNULL((1)) void DCALL
 DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 	DeeThreadObject *me = (DeeThreadObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
@@ -1742,9 +1740,19 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 #endif /* CONFIG_THREADS_PTHREAD */
 }
 
-PUBLIC int DCALL
-DeeThread_Interrupt(/*Thread*/ DeeObject *__restrict self,
-                    DeeObject *__restrict interrupt_main,
+/* Schedule an interrupt for a given thread.
+ * Interrupts are delivered when through threads
+ * periodically calling `DeeThread_CheckInterrupt()'.
+ * NOTE: Interrupts are delivered in order of being received.
+ * NOTE: When `interrupt_args' is non-NULL, rather than throwing the given
+ *      `interrupt_main' as an error upon arrival, it is invoked
+ *       using `operator ()' with `interrupt_args' (which must be a tuple).
+ * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
+ * @return:  0: Successfully scheduled the interrupt object.
+ * @return:  1: The thread has been terminated. */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeThread_Interrupt(/*Thread*/ DeeObject *self,
+                    DeeObject *interrupt_main,
                     DeeObject *interrupt_args) {
 	uint16_t state;
 	DeeThreadObject *me = (DeeThreadObject *)self;
@@ -1861,7 +1869,11 @@ fail:
 	goto done;
 }
 
-PUBLIC int DCALL
+/* Detach the given thread.
+ * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
+ * @return:  0: The thread was successfully detached.
+ * @return:  1: The thread had already been detached. */
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Detach(/*Thread*/ DeeObject *__restrict self) {
 	uint16_t state;
 	DeeThreadObject *me = (DeeThreadObject *)self;
@@ -1899,7 +1911,15 @@ DeeThread_Detach(/*Thread*/ DeeObject *__restrict self) {
 }
 
 
-PUBLIC int DCALL
+/* Join the given thread.
+ * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
+ *              NOTE: If the thread crashed, its errors are propagated into the calling
+ *                    thread after being encapsulated as `Error.ThreadError' objects.
+ * @return:  0: Successfully joined the thread and wrote its return value in *pthread_result.
+ * @return:  1: The given timeout has expired.
+ * @param: timeout_microseconds: The timeout in microseconds, 0 for try-join,
+ *                               or (uint64_t)-1 for infinite timeout. */
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_Join(/*Thread*/ DeeObject *__restrict self,
                DREF DeeObject **__restrict pthread_result,
                uint64_t timeout_microseconds) {
@@ -2205,7 +2225,7 @@ err:
 }
 
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
                  dthreadid_t *__restrict pthreadid) {
 	ASSERT(pthreadid);
@@ -2227,6 +2247,9 @@ DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
 #endif
 }
 
+/* Clear all TLS variables assigned to slots in the calling thread.
+ * @return: true:  The TLS descriptor table has been finalized.
+ * @return: false: No TLS descriptor table had been assigned. */
 PUBLIC bool (DCALL DeeThread_ClearTls)(void) {
 	DeeThreadObject *caller;
 	bool result = false;
@@ -2245,7 +2268,7 @@ PUBLIC bool (DCALL DeeThread_ClearTls)(void) {
 }
 
 
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 thread_doclear(DeeThreadObject *__restrict self) {
 	bool result = false;
 	void *tls_data;
@@ -2323,13 +2346,13 @@ thread_doclear(DeeThreadObject *__restrict self) {
  * general-purpose register is applicable to this optimization. */
 #define thread_clear thread_doclear
 #else
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 thread_clear(DeeThreadObject *__restrict self) {
 	thread_doclear(self);
 }
 #endif
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 	struct thread_interrupt *iter;
 	while (ATOMIC_FETCHOR(self->t_state, THREAD_STATE_INTERRUPTING) &
@@ -2389,7 +2412,7 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 thread_fini(DeeThreadObject *__restrict self) {
 	struct except_frame *frame;
 	ASSERT(!self->t_exec);
@@ -2485,9 +2508,9 @@ thread_fini(DeeThreadObject *__restrict self) {
 
 #ifndef CONFIG_NO_THREADS
 #ifndef CONFIG_NO_THREADID
-PUBLIC DREF DeeObject *(DCALL DeeThread_NewExternal)(dthread_t thread, dthreadid_t id)
+PUBLIC WUNUSED DREF DeeObject *(DCALL DeeThread_NewExternal)(dthread_t thread, dthreadid_t id)
 #else /* !CONFIG_NO_THREADID */
-PUBLIC DREF DeeObject *(DCALL DeeThread_NewExternal)(dthread_t thread)
+PUBLIC WUNUSED DREF DeeObject *(DCALL DeeThread_NewExternal)(dthread_t thread)
 #endif /* CONFIG_NO_THREADID */
 {
 	DREF DeeThreadObject *result;
@@ -2510,14 +2533,14 @@ done:
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_str(DeeThreadObject *__restrict self) {
 	if (self->t_threadname)
 		return_reference_((DeeObject *)self->t_threadname);
 	return_reference_(&str_Thread);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_repr(DeeThreadObject *__restrict self) {
 	DREF DeeObject *threadmain;
 	DREF DeeObject *threadargs;
@@ -2558,7 +2581,7 @@ err:
 
 PRIVATE int DCALL
 thread_ctor(DeeThreadObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	if unlikely(argc > 3) {
 		err_invalid_argc(DeeString_STR(&str_Thread), argc, 0, 3);
 		goto err;
@@ -2657,9 +2680,8 @@ DeeThread_Join(/*Thread*/ DeeObject *__restrict UNUSED(self),
 }
 #endif /* CONFIG_NO_THREADS */
 
-PRIVATE DREF DeeObject *DCALL
-thread_start(DeeObject *__restrict self, size_t argc,
-             DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_start(DeeObject *self, size_t argc, DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":start"))
 		goto err;
@@ -2671,9 +2693,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_detach(DeeObject *__restrict self, size_t argc,
-              DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_detach(DeeObject *self, size_t argc, DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":detach"))
 		goto err;
@@ -2685,9 +2706,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_join(DeeObject *__restrict self, size_t argc,
-            DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_join(DeeObject *self, size_t argc, DeeObject **argv) {
 	int error;
 	DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":join"))
@@ -2700,9 +2720,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_tryjoin(DeeObject *__restrict self, size_t argc,
-               DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_tryjoin(DeeObject *self, size_t argc, DeeObject **argv) {
 	int error;
 	DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":tryjoin"))
@@ -2717,9 +2736,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_timedjoin(DeeObject *__restrict self, size_t argc,
-                 DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_timedjoin(DeeObject *self, size_t argc, DeeObject **argv) {
 	int error;
 	DeeObject *result;
 	uint64_t timeout;
@@ -2735,9 +2753,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_interrupt(DeeObject *__restrict self, size_t argc,
-                 DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_interrupt(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *sig  = &DeeError_Interrupt_instance;
 	DeeObject *args = NULL;
 	int error;
@@ -2752,48 +2769,43 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_started(DeeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_started(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":started"))
 		return NULL;
 	return_bool(DeeThread_HasStarted(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_detached(DeeObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_detached(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":detached"))
 		return NULL;
 	return_bool(DeeThread_WasDetached(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_terminated(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_terminated(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":terminated"))
 		return NULL;
 	return_bool(DeeThread_HasTerminated(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_interrupted(DeeObject *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_interrupted(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":interrupted"))
 		return NULL;
 	return_bool(DeeThread_WasInterrupted(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_crashed(DeeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_crashed(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":crashed"))
 		return NULL;
 	return_bool(DeeThread_HasCrashed(self));
 }
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 err_not_terminated(DeeThreadObject *__restrict self) {
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Thread %k has not terminated yet",
@@ -2802,9 +2814,8 @@ err_not_terminated(DeeThreadObject *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE DREF DeeObject *DCALL
-thread_crash_error(DeeThreadObject *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":crash_error"))
 		goto err;
 	{
@@ -2839,9 +2850,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-thread_crash_traceback(DeeThreadObject *__restrict self,
-                       size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":crash_traceback"))
 		goto err;
 	{
@@ -2978,7 +2988,7 @@ PRIVATE struct type_method thread_methods[] = {
 
 PRIVATE DREF DeeObject *DCALL
 thread_self(DeeObject *__restrict UNUSED(self),
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))
 		return NULL;
 	return_reference(DeeThread_Self());
@@ -2991,7 +3001,7 @@ thread_current_get(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE DREF DeeObject *DCALL
 thread_selfid(DeeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":selfid"))
 		return NULL;
 #ifdef CONFIG_NO_THREADID_INTERNAL
@@ -3016,7 +3026,7 @@ thread_selfid(DeeObject *__restrict UNUSED(self),
 
 PRIVATE DREF DeeObject *DCALL
 thread_yield(DeeObject *__restrict UNUSED(self),
-             size_t argc, DeeObject **__restrict argv) {
+             size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":yield"))
 		return NULL;
 	SCHED_YIELD();
@@ -3025,7 +3035,7 @@ thread_yield(DeeObject *__restrict UNUSED(self),
 
 PRIVATE DREF DeeObject *DCALL
 thread_check_interrupt(DeeObject *__restrict UNUSED(self),
-                       size_t argc, DeeObject **__restrict argv) {
+                       size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":check_interrupt") ||
 	    DeeThread_CheckInterrupt())
 		return NULL;
@@ -3034,7 +3044,7 @@ thread_check_interrupt(DeeObject *__restrict UNUSED(self),
 
 PRIVATE DREF DeeObject *DCALL
 thread_sleep(DeeObject *__restrict UNUSED(self),
-             size_t argc, DeeObject **__restrict argv) {
+             size_t argc, DeeObject **argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:sleep", &timeout) ||
 	    DeeThread_Sleep(timeout))
@@ -3044,7 +3054,7 @@ thread_sleep(DeeObject *__restrict UNUSED(self),
 
 PRIVATE DREF DeeObject *DCALL
 thread_exit(DeeObject *__restrict UNUSED(self),
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	DeeObject *result = Dee_None;
 	DREF struct threadexit_object *error;
 	if (DeeArg_Unpack(argc, argv, "|o:exit", &result))
@@ -3108,7 +3118,7 @@ PRIVATE struct type_method thread_class_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_callback_get(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	(void)self;
@@ -3173,12 +3183,12 @@ restart:
 #endif
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 thread_callback_del(DeeThreadObject *__restrict self) {
 	return thread_callback_set(self, NULL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_callargs_get(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	(void)self;
@@ -3195,7 +3205,7 @@ thread_callargs_get(DeeThreadObject *__restrict self) {
 #endif
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 thread_callargs_set(DeeThreadObject *__restrict self,
                     DeeObject *__restrict value) {
 #ifdef CONFIG_NO_THREADS
@@ -3237,12 +3247,12 @@ restart:
 #endif
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 thread_callargs_del(DeeThreadObject *__restrict self) {
 	return thread_callargs_set(self, Dee_EmptyTuple);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_result_get(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	err_no_thread_api();
@@ -3274,7 +3284,7 @@ restart:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_id(DeeObject *__restrict self) {
 	dthreadid_t result;
 	if (DeeThread_GetTid(self, &result))
@@ -3282,37 +3292,37 @@ thread_id(DeeObject *__restrict self) {
 	return DeeInt_Newu(SIZEOF_DTHREADID_T, result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_isrunning(DeeObject *__restrict self) {
 	return_bool(DeeThread_IsRunning(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_hasstarted(DeeObject *__restrict self) {
 	return_bool(DeeThread_HasStarted(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_wasdetached(DeeObject *__restrict self) {
 	return_bool(DeeThread_WasDetached(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_hasterminated(DeeObject *__restrict self) {
 	return_bool(DeeThread_HasTerminated(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_wasinterrupted(DeeObject *__restrict self) {
 	return_bool(DeeThread_WasInterrupted(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_hascrashed(DeeObject *__restrict self) {
 	return_bool(DeeThread_HasCrashed(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crashinfo(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	(void)self;
@@ -3492,7 +3502,7 @@ PRIVATE struct type_member thread_members[] = {
 };
 
 
-PUBLIC int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
+PUBLIC WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
 #ifdef CONFIG_HOST_WINDOWS
 	uint64_t end_time;
 	end_time = DeeThread_GetTimeMicroSeconds() + microseconds;
@@ -3683,7 +3693,7 @@ struct localheap {
 	                     *       the heap was used, then it was too small. */
 };
 
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 localheap_init(struct localheap *__restrict self,
                size_t heapsize) {
 	self->lh_req    = 0;
@@ -3742,7 +3752,7 @@ localheap_malloc(struct localheap *__restrict self,
 /* Collect traceback information for the given thread.
  * @return: false: The thread's execution stack was inconsistent. - preempt a bit, then try again.
  * @return: true:  Fully captured the thread's stack. Check `heap' to see if memory was sufficient. */
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
 thread_collect_traceback(DeeThreadObject *__restrict self,
                          struct code_frame *__restrict dst,
                          struct localheap *__restrict heap) {
@@ -3861,7 +3871,7 @@ err:
 
 
 
-PUBLIC DREF /*Traceback*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
 DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	DeeThreadObject *me = (DeeThreadObject *)self;
@@ -3992,7 +4002,7 @@ err:
 
 /* Returns the traceback of a given exception-frame, or
  * `NULL' if no traceback exists for the exception. */
-INTERN struct traceback_object *DCALL
+INTERN WUNUSED NONNULL((1)) struct traceback_object *DCALL
 except_frame_gettb(struct except_frame *__restrict self) {
 	if (self->ef_trace == (DREF DeeTracebackObject *)ITER_DONE)
 		self->ef_trace = DeeTraceback_New(DeeThread_Self());

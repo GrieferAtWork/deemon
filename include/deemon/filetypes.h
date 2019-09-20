@@ -181,14 +181,14 @@ struct Dee_file_buffer_object {
  *                      `FILE_BUFFER_FREADONLY', `FILE_BUFFER_FSYNC' and
  *                      `FILE_BUFFER_FCLOFILE'
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFileBuffer_New(DeeObject *__restrict file,
                   uint16_t mode, size_t size);
 
 /* Change the operations mode of a given buffer.
  * @param: mode: One of `FILE_BUFFER_MODE_*', optionally or'd with `FILE_BUFFER_FSYNC'
  * @param: size: The size of the buffer, or ZERO(0) to allow it to change dynamically. */
-DFUNDEF int DCALL
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size);
 
@@ -278,7 +278,7 @@ DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* File.Writer */
 DFUNDEF DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
 
 /* Returns the current string written by the writer. */
-DFUNDEF DREF DeeObject *DCALL DeeFileWriter_GetString(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFileWriter_GetString(DeeObject *__restrict self);
 
 
 DECL_END

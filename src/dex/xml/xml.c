@@ -59,7 +59,7 @@ LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
 #endif /* !__KOS__ || !__USE_GNU */
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 XMLNode_Destroy(XMLNode *__restrict self) {
 	DREF XMLNode *iter, *next;
 	size_t i;
@@ -405,7 +405,7 @@ err:
  * @return: 0:            Successfully parsed a node.
  * @return: 1:            No node found within the given input text.
  * @return: -1:           An error occurred. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 XMLNode_InitFromString(XMLNode *__restrict self,
                        DeeObject *__restrict data_owner,
                        /*utf-8*/ char const *__restrict text,
@@ -417,7 +417,7 @@ XMLNode_InitFromString(XMLNode *__restrict self,
 
 PRIVATE int DCALL
 node_init(XMLNodeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	(void)self;
 	(void)argc;
 	(void)argv;
@@ -425,13 +425,13 @@ node_init(XMLNodeObject *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 node_fini(XMLNodeObject *__restrict self) {
 	XMLNode_Decref(self->xno_node);
 	Dee_XDecref(self->xno_parent);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 node_visit(XMLNodeObject *__restrict self,
            dvisit_t proc, void *arg) {
 	Dee_XVisit(self->xno_parent);

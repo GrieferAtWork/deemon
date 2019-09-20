@@ -156,7 +156,7 @@ PRIVATE char const decimals[2][17] = {
 	{ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'X' }
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 format_cleanup(char const *__restrict format, va_list args) {
 	int length;
 	char ch;
@@ -336,20 +336,19 @@ end:
 
 
 PRIVATE uint8_t const null8[]   = { '(', 'n', 'u', 'l', 'l', ')', 0 };
-
 PRIVATE uint16_t const null16[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
-
 PRIVATE uint32_t const null32[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
 
-
-LOCAL size_t DCALL strnlen16(uint16_t const *__restrict str, size_t maxlen) {
+LOCAL WUNUSED NONNULL((1)) size_t DCALL
+strnlen16(uint16_t const *__restrict str, size_t maxlen) {
 	uint16_t const *end = str;
 	while (maxlen-- && *end++)
 		;
 	return (size_t)(end - str);
 }
 
-LOCAL size_t DCALL strnlen32(uint32_t const *__restrict str, size_t maxlen) {
+LOCAL WUNUSED NONNULL((1)) size_t DCALL
+strnlen32(uint32_t const *__restrict str, size_t maxlen) {
 	uint32_t const *end = str;
 	while (maxlen-- && *end++)
 		;
@@ -357,7 +356,7 @@ LOCAL size_t DCALL strnlen32(uint32_t const *__restrict str, size_t maxlen) {
 }
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_VPrintf(dformatprinter printer, void *arg,
                   char const *__restrict format, va_list args) {
 	dssize_t result = 0, temp;
@@ -926,7 +925,7 @@ err_finish:
 }
 
 
-PUBLIC dssize_t
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t
 DeeFormat_Printf(dformatprinter printer, void *arg,
                  char const *__restrict format, ...) {
 	dssize_t result;
@@ -940,7 +939,7 @@ DeeFormat_Printf(dformatprinter printer, void *arg,
 
 
 #define tooct(c) ('0'+(char)(unsigned char)(c))
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Quote8(dformatprinter printer, void *arg,
                  uint8_t const *__restrict text, size_t textlen,
                  unsigned int flags) {
@@ -1075,7 +1074,7 @@ err:
 	return temp;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Quote16(dformatprinter printer, void *arg,
                   uint16_t const *__restrict text, size_t textlen,
                   unsigned int flags) {
@@ -1219,7 +1218,7 @@ err:
 	return temp;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Quote32(dformatprinter printer, void *arg,
                   uint32_t const *__restrict text, size_t textlen,
                   unsigned int flags) {
@@ -1431,7 +1430,7 @@ err:
 	return temp;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Quote(dformatprinter printer, void *arg,
                 /*utf-8*/ char const *__restrict text, size_t textlen,
                 unsigned int flags) {
@@ -1647,8 +1646,8 @@ err:
 }
 
 
-PUBLIC dssize_t DCALL
-DeeFormat_Repeat(/*ascii*/dformatprinter printer, void *arg,
+PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
+DeeFormat_Repeat(/*ascii*/ dformatprinter printer, void *arg,
                  /*ascii*/ char ch, size_t count) {
 	char buffer[128];
 	dssize_t temp, result;
@@ -1673,7 +1672,7 @@ err:
 
 
 
-DFUNDEF dssize_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_RepeatUtf8(dformatprinter printer, void *arg,
                      /*utf-8*/ char const *__restrict str,
                      size_t length, size_t total_characters) {
@@ -1730,7 +1729,7 @@ err:
 
 
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 sprintf_callback(char **__restrict pbuffer,
                  char const *__restrict data, size_t datalen) {
 	memcpy(*pbuffer, data, datalen * sizeof(char));
@@ -1743,7 +1742,7 @@ struct snprintf_data {
 	size_t siz;
 };
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 snprintf_callback(struct snprintf_data *__restrict arg,
                   char const *__restrict data, size_t datalen) {
 	if (arg->siz) {
@@ -1756,7 +1755,7 @@ snprintf_callback(struct snprintf_data *__restrict arg,
 	return (dssize_t)datalen;
 }
 
-PUBLIC char *DCALL
+PUBLIC NONNULL((1, 2)) char *DCALL
 Dee_vsprintf(char *__restrict buffer,
              char const *__restrict format, va_list args) {
 	if unlikely(DeeFormat_VPrintf((dformatprinter)&sprintf_callback,
@@ -1766,7 +1765,7 @@ Dee_vsprintf(char *__restrict buffer,
 	return buffer;
 }
 
-PUBLIC char *DCALL
+PUBLIC NONNULL((1, 3)) char *DCALL
 Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
               char const *__restrict format, va_list args) {
 	struct snprintf_data data;
@@ -1780,7 +1779,7 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
 	return data.buf;
 }
 
-PUBLIC char *
+PUBLIC NONNULL((1, 2)) char *
 Dee_sprintf(char *__restrict buffer,
             char const *__restrict format, ...) {
 	char *result;
@@ -1791,7 +1790,7 @@ Dee_sprintf(char *__restrict buffer,
 	return result;
 }
 
-PUBLIC char *
+PUBLIC NONNULL((1, 3)) char *
 Dee_snprintf(char *__restrict buffer, size_t bufsize,
              char const *__restrict format, ...) {
 	char *result;
@@ -1807,7 +1806,7 @@ Dee_snprintf(char *__restrict buffer, size_t bufsize,
 /* ==========? Extensible formating functions ?========== */
 
 
-LOCAL struct kwds_entry *DCALL
+LOCAL WUNUSED NONNULL((1)) struct kwds_entry *DCALL
 kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
 	size_t i;
 	for (i = 0; i <= self->kw_mask; ++i) {
@@ -1824,9 +1823,9 @@ kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
  * If given, also include keyword names & types from `kw'
  * >> foo(10,1.0,"bar",enabled: true);
  * Printed: "int, float, string, enabled: bool" */
-PUBLIC dssize_t
+PUBLIC WUNUSED NONNULL((1)) dssize_t
 (DCALL DeeFormat_PrintArgumentTypesKw)(dformatprinter printer, void *arg,
-                                       size_t argc, DeeObject **__restrict argv,
+                                       size_t argc, DeeObject **argv,
                                        DeeObject *kw) {
 	size_t i;
 	char const *str;

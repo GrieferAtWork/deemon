@@ -127,7 +127,7 @@ done:
 
 PRIVATE int DCALL
 F(floatinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
-             T *self, size_t argc, DeeObject **__restrict argv) {
+             T *self, size_t argc, DeeObject **argv) {
 	double value;
 	DeeObject *arg;
 #ifdef NAME

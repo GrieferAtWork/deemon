@@ -175,7 +175,7 @@ INTDEF dtime_t DCALL DeeTime_Get(DeeTimeObject const *__restrict self);
 #ifdef HAVE_128BIT_TIME
 INTDEF DREF DeeObject *DCALL DeeTime_New64_(uint64_t microseconds, uint16_t kind);
 #define DeeTime_New64(microseconds, repr) DeeTime_New64_(microseconds, TIME_KIND(TIME_MICROSECONDS, repr))
-INTDEF uint64_t DCALL DeeTime_Get64(DeeTimeObject const *__restrict self);
+INTDEF WUNUSED NONNULL((1)) uint64_t DCALL DeeTime_Get64(DeeTimeObject const *__restrict self);
 #else /* HAVE_128BIT_TIME */
 #define DeeTime_Get64(self)               DeeTime_Get(self)
 #define DeeTime_New64(microseconds, repr) DeeTime_New(microseconds, repr)

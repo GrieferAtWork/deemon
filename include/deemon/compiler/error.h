@@ -62,7 +62,7 @@ INTDEF void DCALL parser_errors_fini(struct parser_errors *__restrict self);
  *              thrown the next time `parser_rethrow' is invoked.
  * @return:  0: Compilation can continue normally.
  * @return: -1: An error occurred and was thrown (using DeeError_Throw(); e.g.: `NoMemory()'). */
-INTDEF int DCALL parser_throw(struct Dee_compiler_error_object *__restrict error);
+INTDEF WUNUSED NONNULL((1)) int DCALL parser_throw(struct Dee_compiler_error_object *__restrict error);
 
 /* Check/pack/throw errors. What exactly is done
  * is documented in `parser_errors::pe_except'

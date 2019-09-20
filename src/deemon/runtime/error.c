@@ -45,7 +45,7 @@
 
 DECL_BEGIN
 
-PUBLIC bool DCALL
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeError_Catch(DeeTypeObject *__restrict type) {
 	DeeObject *current;
 	ASSERT_OBJECT(type);
@@ -59,6 +59,11 @@ DeeError_Catch(DeeTypeObject *__restrict type) {
 STATIC_ASSERT(ERROR_PRINT_DOHANDLE   == ERROR_HANDLED_RESTORE);
 STATIC_ASSERT(ERROR_PRINT_HANDLEINTR == ERROR_HANDLED_INTERRUPT);
 
+/* Handle an error and print it, alongside a human-readable message to `stderr'
+ * @param: handle_errors: Describes how (if at all) errors should be handled.
+ * @param: reason: When non-NULL, a message explaining the reason for the exception is being handled.
+ * @return: true:  The current (or previous) error was printed.
+ * @return: false: No error was thrown. */
 PUBLIC bool DCALL
 DeeError_Print(char const *reason, unsigned int handle_errors) {
 	DeeThreadObject *thread_self = DeeThread_Self();
@@ -69,7 +74,7 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 #ifndef CONFIG_NO_THREADS
 	if (handle_errors != ERROR_PRINT_DOHANDLE ||
 	    !DeeType_IsInterrupt(Dee_TYPE(error_ob)))
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	{
 		DeeError_Display(reason, error_ob,
 		                 (DeeObject *)except_frame_gettb(thread_self->t_except));
@@ -81,7 +86,8 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 	return DeeError_Handled(handle_errors);
 }
 
-PUBLIC void DCALL
+/* Display (print to stderr) an error, as well as an optional traceback. */
+PUBLIC NONNULL((2)) void DCALL
 DeeError_Display(char const *reason,
                  DeeObject *__restrict error,
                  DeeObject *traceback) {
@@ -130,7 +136,7 @@ handle_error:
 	return;
 }
 
-PUBLIC int DCALL
+PUBLIC NONNULL((1)) int DCALL
 DeeError_Throw(DeeObject *__restrict ob) {
 	struct except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();
@@ -156,7 +162,7 @@ done:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC NONNULL((1, 2)) int DCALL
 DeeError_VThrowf(DeeTypeObject *__restrict tp,
                  char const *__restrict format,
                  va_list args) {
@@ -179,7 +185,7 @@ err:
 	return -1;
 }
 
-PUBLIC int
+PUBLIC NONNULL((1, 2)) int
 DeeError_Throwf(DeeTypeObject *__restrict tp,
                 char const *__restrict format, ...) {
 	va_list args;
@@ -190,14 +196,14 @@ DeeError_Throwf(DeeTypeObject *__restrict tp,
 	return result;
 }
 
-PUBLIC int DCALL
+PUBLIC NONNULL((1, 3)) int DCALL
 DeeError_VSysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
                     char const *__restrict format, va_list args) {
 	(void)error; /* TODO */
 	return DeeError_VThrowf(tp, format, args);
 }
 
-PUBLIC int
+PUBLIC NONNULL((1, 3)) int
 DeeError_SysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
                    char const *__restrict format, ...) {
 	va_list args;
@@ -212,7 +218,7 @@ DeeError_SysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
 #ifndef CONFIG_NO_THREADS
 INTERN void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
-             /*inherit*/struct except_frame *__restrict frame) {
+                        /*inherit*/ struct except_frame *__restrict frame) {
 	DREF DeeObject *frame_error = frame->ef_error;
 	uint16_t state;
 	/* Special handling for interrupt exceptions.
@@ -292,14 +298,14 @@ PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
 	return true;
 }
 
-PUBLIC DeeObject *DCALL DeeError_Current(void) {
+PUBLIC WUNUSED DeeObject *DCALL DeeError_Current(void) {
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT((ts->t_except != NULL) == (ts->t_exceptsz != 0));
 	return ts->t_except ? ts->t_except->ef_error : NULL;
 }
 
 /* Check if the current exception is an instance of `tp' */
-PUBLIC bool DCALL DeeError_CurrentIs(DeeTypeObject *__restrict tp) {
+PUBLIC WUNUSED NONNULL((1)) bool DCALL DeeError_CurrentIs(DeeTypeObject *__restrict tp) {
 	DeeThreadObject *ts = DeeThread_Self();
 	ASSERT((ts->t_except != NULL) == (ts->t_exceptsz != 0));
 	if unlikely(!ts->t_except)

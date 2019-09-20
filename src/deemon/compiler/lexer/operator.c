@@ -57,7 +57,7 @@ INTERN DeeObject *rt_operator_names[1+(AST_OPERATOR_MAX-AST_OPERATOR_MIN)] = {
 	/* [AST_OPERATOR_GETATTR_OR_SETATTR   - AST_OPERATOR_MIN] = */ &str___gaosa
 };
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 convert_operator_name(uint16_t *__restrict pname, size_t argc) {
 	/* Convert an operator name based on the provided number of arguments. */
 	if (*pname >= AST_OPERATOR_MIN &&

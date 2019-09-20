@@ -416,31 +416,31 @@ struct decl_arg_ast {
 #ifdef CONFIG_BUILDING_DEEMON
 /* Finalize the given declaration ast. */
 INTDEF void DCALL decl_ast_fini(struct decl_ast *__restrict self);
-INTDEF int DCALL decl_ast_copy(struct decl_ast *__restrict self, struct decl_ast const *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL decl_ast_copy(struct decl_ast *__restrict self, struct decl_ast const *__restrict other);
 
 /* If `self' refers to a constant object, return that object.
  * Otherwise, return `NULL' */
-INTDEF DeeObject *DCALL decl_ast_getobj(struct decl_ast const *__restrict self);
-INTDEF bool DCALL decl_ast_isnone(struct decl_ast const *__restrict self); /* Check if `self' refers to `none' or `type none' */
-INTDEF bool DCALL decl_ast_isobject(struct decl_ast const *__restrict self); /* Check if `self' refers to `object from deemon' */
-INTDEF bool DCALL decl_ast_istype(struct decl_ast const *__restrict self, DeeTypeObject *__restrict tp); /* Check if `self' is the given `tp' */
+INTDEF WUNUSED NONNULL((1)) DeeObject *DCALL decl_ast_getobj(struct decl_ast const *__restrict self);
+INTDEF WUNUSED NONNULL((1)) bool DCALL decl_ast_isnone(struct decl_ast const *__restrict self); /* Check if `self' refers to `none' or `type none' */
+INTDEF WUNUSED NONNULL((1)) bool DCALL decl_ast_isobject(struct decl_ast const *__restrict self); /* Check if `self' refers to `object from deemon' */
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL decl_ast_istype(struct decl_ast const *__restrict self, DeeTypeObject *__restrict tp); /* Check if `self' is the given `tp' */
 
 /* Check if the given declaration AST contains information that can't be inferred
  * from non-documentation sources (such as argument names, types, etc.) */
-INTDEF bool DCALL decl_ast_isempty(struct decl_ast const *__restrict self);
+INTDEF WUNUSED NONNULL((1)) bool DCALL decl_ast_isempty(struct decl_ast const *__restrict self);
 
 /* Print declaration information from `self', encoded as described above, into `printer' */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
                struct unicode_printer *__restrict printer);
 
 /* Check if `a' and `b' are exactly identical. */
-INTDEF bool DCALL decl_ast_equal(struct decl_ast const *__restrict a,
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL decl_ast_equal(struct decl_ast const *__restrict a,
                                  struct decl_ast const *__restrict b);
 
 /* Parse a declaration expression. */
-INTDEF int DCALL decl_ast_parse(struct decl_ast *__restrict self);
-INTDEF int DCALL decl_ast_parse_for_symbol(struct symbol *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse(struct decl_ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse_for_symbol(struct symbol *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
@@ -854,23 +854,23 @@ INTDEF void DCALL symbol_addambig(struct symbol *__restrict self,
                                   struct ast_loc *loc);
 
 /* Check if `self' uses `other' when the specified operation is performed. */
-INTDEF bool DCALL symbol_uses_symbol_on_get(struct symbol *__restrict self, struct symbol *__restrict other);
-INTDEF bool DCALL symbol_uses_symbol_on_del(struct symbol *__restrict self, struct symbol *__restrict other);
-INTDEF bool DCALL symbol_uses_symbol_on_set(struct symbol *__restrict self, struct symbol *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_get(struct symbol *__restrict self, struct symbol *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_del(struct symbol *__restrict self, struct symbol *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_uses_symbol_on_set(struct symbol *__restrict self, struct symbol *__restrict other);
 #define symbol_uses_symbol_on_bnd(self, other) symbol_uses_symbol_on_get(self, other)
 
 /* Check if reading from, or checking the given symbol for being bound has side-effects.
  * Note that UnboundLocal errors (as thrown when accessing an unbound local symbol) are
  * not considered true side-effects for this purpose. */
-INTDEF bool DCALL symbol_get_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
-INTDEF bool DCALL symbol_set_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_get_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_set_haseffect(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
 #define symbol_bnd_haseffect(self, caller_scope) symbol_get_haseffect(self, caller_scope)
 #define symbol_del_haseffect(self, caller_scope) symbol_set_haseffect(self, caller_scope)
 #define CONFIG_SYMBOL_BND_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
 #define CONFIG_SYMBOL_SET_HASEFFECT_IS_SYMBOL_GET_HASEFFECT 1
 
 /* Check if the given symbol `self' is reachable from the given `caller_scope' */
-INTDEF bool DCALL symbol_reachable(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL symbol_reachable(struct symbol *__restrict self, DeeScopeObject *__restrict caller_scope);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -1029,7 +1029,7 @@ INTDEF struct symbol *(DCALL get_current_this)(void);
  * NOTE: The caller should then fill in special information in `current_basescope'. */
 INTDEF int (DCALL basescope_push)(void);
 INTDEF void DCALL basescope_pop(void);
-INTDEF void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict scope);
+INTDEF NONNULL((1)) void DCALL basescope_push_ob(DeeBaseScopeObject *__restrict scope);
 
 /* Lookup a symbol for the given `name', following constraints set by `mode'.
  * @param: mode:     Set of `LOOKUP_SYM_*'
@@ -1058,7 +1058,7 @@ INTDEF struct symbol *DCALL
 lookup_nth(unsigned int nth, struct TPPKeyword *__restrict name);
 
 /* Check if `name' is a reserved symbol name. */
-INTDEF bool DCALL
+INTDEF WUNUSED NONNULL((1)) bool DCALL
 is_reserved_symbol_name(struct TPPKeyword *__restrict name);
 
 
@@ -1088,7 +1088,7 @@ scope_lookup_str(DeeScopeObject *__restrict scope,
  * alongside defining them as symbols while duplicating default-values and the
  * var-args flag. - Basically, everything that may be inferred from an argument list.
  * This is done when creating superargs class operators. */
-INTDEF int DCALL copy_argument_symbols(DeeBaseScopeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1)) int DCALL copy_argument_symbols(DeeBaseScopeObject *__restrict other);
 
 /* Fully link all forward-defined symbols inside of a class scope. */
 INTDEF int DCALL link_forward_symbols(void);

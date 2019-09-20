@@ -42,24 +42,24 @@
 
 DECL_BEGIN
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 transiter_fini(TransformationIterator *__restrict self) {
 	Dee_Decref(self->ti_iter);
 	Dee_Decref(self->ti_func);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 transiter_visit(TransformationIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ti_iter);
 	Dee_Visit(self->ti_func);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 transiter_bool(TransformationIterator *__restrict self) {
 	return DeeObject_Bool(self->ti_iter);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 transiter_next(TransformationIterator *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_IterNext(self->ti_iter);
@@ -73,7 +73,7 @@ transiter_next(TransformationIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 transiter_seq_get(TransformationIterator *__restrict self) {
 	/* Forward access to this attribute to the pointed-to iterator. */
 	DREF DeeObject *orig, *result;
@@ -136,7 +136,7 @@ PRIVATE struct type_cmp transiter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&transiter_ge
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 transiter_copy(TransformationIterator *__restrict self,
                TransformationIterator *__restrict other) {
 	self->ti_iter = DeeObject_Copy(other->ti_iter);
@@ -149,7 +149,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 transiter_deep(TransformationIterator *__restrict self,
                TransformationIterator *__restrict other) {
 	self->ti_iter = DeeObject_Copy(other->ti_iter);
@@ -165,7 +165,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 transiter_ctor(TransformationIterator *__restrict self) {
 	self->ti_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	if unlikely(!self->ti_iter)
@@ -179,7 +179,7 @@ err:
 
 PRIVATE int DCALL
 transiter_init(TransformationIterator *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+               size_t argc, DeeObject **argv) {
 	Transformation *trans;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqTransformationIterator", &trans))
 		goto err;
@@ -240,24 +240,24 @@ INTERN DeeTypeObject SeqTransformationIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 trans_fini(Transformation *__restrict self) {
 	Dee_Decref(self->t_seq);
 	Dee_Decref(self->t_fun);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 trans_visit(Transformation *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->t_seq);
 	Dee_Visit(self->t_fun);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 trans_bool(Transformation *__restrict self) {
 	return DeeObject_Bool(self->t_seq);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 trans_iter(Transformation *__restrict self) {
 	DREF TransformationIterator *result;
 	result = DeeObject_MALLOC(TransformationIterator);
@@ -289,14 +289,14 @@ PRIVATE struct type_member trans_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 trans_size(Transformation *__restrict self) {
 	return DeeObject_SizeObject(self->t_seq);
 }
 
-PRIVATE DREF DeeObject *DCALL
-trans_getitem(Transformation *__restrict self,
-              DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+trans_getitem(Transformation *self,
+              DeeObject *index) {
 	DREF DeeObject *orig, *result;
 	orig = DeeObject_GetItem(self->t_seq, index);
 	if unlikely(!orig)
@@ -306,7 +306,7 @@ trans_getitem(Transformation *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 trans_getrange(Transformation *__restrict self,
                DeeObject *__restrict start,
                DeeObject *__restrict end) {
@@ -320,17 +320,17 @@ trans_getrange(Transformation *__restrict self,
 }
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 trans_nsi_getsize(Transformation *__restrict self) {
 	return DeeObject_Size(self->t_seq);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 trans_nsi_getsize_fast(Transformation *__restrict self) {
 	return DeeFastSeq_GetSize(self->t_seq);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 trans_nsi_getitem(Transformation *__restrict self, size_t index) {
 	DREF DeeObject *inner[1], *result;
 	inner[0] = DeeObject_GetItemIndex(self->t_seq, index);
@@ -386,7 +386,7 @@ PRIVATE struct type_seq trans_seq = {
 	/* .tp_nsi       = */ &trans_nsi
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 trans_ctor(Transformation *__restrict self) {
 	self->t_seq = Dee_EmptySeq;
 	self->t_fun = Dee_None;
@@ -395,7 +395,7 @@ trans_ctor(Transformation *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 trans_copy(Transformation *__restrict self,
            Transformation *__restrict other) {
 	self->t_seq = other->t_seq;
@@ -405,7 +405,7 @@ trans_copy(Transformation *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 trans_deep(Transformation *__restrict self,
            Transformation *__restrict other) {
 	self->t_seq = DeeObject_DeepCopy(other->t_seq);
@@ -423,7 +423,7 @@ err:
 
 PRIVATE int DCALL
 trans_init(Transformation *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_SeqTransformation", &self->t_seq, &self->t_fun))
 		goto err;
 	Dee_Incref(self->t_seq);
@@ -480,9 +480,9 @@ INTERN DeeTypeObject SeqTransformation_Type = {
 
 
 
-INTERN DREF DeeObject *DCALL
-DeeSeq_Transform(DeeObject *__restrict self,
-                 DeeObject *__restrict transformation) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_Transform(DeeObject *self,
+                 DeeObject *transformation) {
 	DREF Transformation *result;
 	/* Create a new transformation sequence. */
 	result = DeeObject_MALLOC(Transformation);

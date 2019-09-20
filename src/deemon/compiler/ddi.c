@@ -238,7 +238,7 @@ ddi_transition(uint8_t *__restrict text,
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 xddi_putsymbol(struct bytewriter *__restrict writer,
                uint8_t symbol_class,
                uint16_t symbol_id,

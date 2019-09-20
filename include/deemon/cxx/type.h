@@ -69,28 +69,28 @@ public: /* type_ from deemon */
 	T(new_)() const {
 		return inherit(DeeObject_NewDefault(*this));
 	}
-	T(new_)(size_t argc, DeeObject **__restrict argv) const {
+	T(new_)(size_t argc, DeeObject **argv) const {
 		return inherit(DeeObject_New(*this, argc, argv));
 	}
-	T(new_)(size_t argc, DeeObject **__restrict argv, DeeObject *kw) const {
+	T(new_)(size_t argc, DeeObject **argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, argv, kw));
 	}
-	T(new_)(size_t argc, DeeObject *const *__restrict argv) const {
+	T(new_)(size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_New(*this, argc, (DeeObject **)argv));
 	}
-	T(new_)(size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const {
+	T(new_)(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, (DeeObject **)argv, kw));
 	}
-	T(new_)(size_t argc, Object **__restrict argv) const {
+	T(new_)(size_t argc, Object **argv) const {
 		return inherit(DeeObject_New(*this, argc, (DeeObject **)argv));
 	}
-	T(new_)(size_t argc, Object **__restrict argv, DeeObject *kw) const {
+	T(new_)(size_t argc, Object **argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, (DeeObject **)argv, kw));
 	}
-	T(new_)(size_t argc, Object *const *__restrict argv) const {
+	T(new_)(size_t argc, Object *const *argv) const {
 		return inherit(DeeObject_New(*this, argc, (DeeObject **)argv));
 	}
-	T(new_)(size_t argc, Object *const *__restrict argv, DeeObject *kw) const {
+	T(new_)(size_t argc, Object *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, (DeeObject **)argv, kw));
 	}
 	T(new_)(std::initializer_list<DeeObject *> const &args) const {
@@ -102,28 +102,28 @@ public: /* type_ from deemon */
 	T operator()() const {
 		return inherit(DeeObject_NewDefault(*this));
 	}
-	T operator()(size_t argc, DeeObject **__restrict argv) const {
+	T operator()(size_t argc, DeeObject **argv) const {
 		return inherit(DeeObject_New(*this, argc, argv));
 	}
-	T operator()(size_t argc, DeeObject **__restrict argv, DeeObject *kw) const {
+	T operator()(size_t argc, DeeObject **argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, argv, kw));
 	}
-	T operator()(size_t argc, DeeObject *const *__restrict argv) const {
+	T operator()(size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_New(*this, argc, (DeeObject **)argv));
 	}
-	T operator()(size_t argc, DeeObject *const *__restrict argv, DeeObject *kw) const {
+	T operator()(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, (DeeObject **)argv, kw));
 	}
-	T operator()(size_t argc, Object **__restrict argv) const {
+	T operator()(size_t argc, Object **argv) const {
 		return inherit(DeeObject_New(*this, argc, (DeeObject **)argv));
 	}
-	T operator()(size_t argc, Object **__restrict argv, DeeObject *kw) const {
+	T operator()(size_t argc, Object **argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, (DeeObject **)argv, kw));
 	}
-	T operator()(size_t argc, Object *const *__restrict argv) const {
+	T operator()(size_t argc, Object *const *argv) const {
 		return inherit(DeeObject_New(*this, argc, (DeeObject **)argv));
 	}
-	T operator()(size_t argc, Object *const *__restrict argv, DeeObject *kw) const {
+	T operator()(size_t argc, Object *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, (DeeObject **)argv, kw));
 	}
 	T operator()(std::initializer_list<DeeObject *> const &args) const {

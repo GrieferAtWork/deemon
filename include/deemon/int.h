@@ -632,31 +632,31 @@ DFUNDEF uint8_t *DCALL DeeInt_GetUleb(DeeObject *__restrict self, uint8_t *__res
  *       values, however in deemon's C api, we must limit ourself
  *       to only a set number of bits.
  * @return: One of `INT_*' (See above) */
-DFUNDEF int DCALL DeeInt_TryAs8(DeeObject *__restrict self, int8_t *__restrict value);
-DFUNDEF int DCALL DeeInt_TryAs16(DeeObject *__restrict self, int16_t *__restrict value);
-DFUNDEF int DCALL DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_TryAs64(DeeObject *__restrict self, int64_t *__restrict value);
-DFUNDEF int DCALL DeeInt_TryAs128(DeeObject *__restrict self, Dee_int128_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_TryAs8(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_TryAs16(DeeObject *__restrict self, int16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_TryAs64(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_TryAs128(DeeObject *__restrict self, Dee_int128_t *__restrict value);
 
 /* Similar to the functions above, but explicitly require signed/unsigned 32/64-bit values. */
-DFUNDEF bool DCALL DeeInt_TryAsS8(DeeObject *__restrict self, int8_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsS16(DeeObject *__restrict self, int16_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsS32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsS64(DeeObject *__restrict self, int64_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsS128(DeeObject *__restrict self, Dee_int128_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsU8(DeeObject *__restrict self, uint8_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsU16(DeeObject *__restrict self, uint16_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsU32(DeeObject *__restrict self, uint32_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsU64(DeeObject *__restrict self, uint64_t *__restrict value);
-DFUNDEF bool DCALL DeeInt_TryAsU128(DeeObject *__restrict self, Dee_uint128_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsS8(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsS16(DeeObject *__restrict self, int16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsS32(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsS64(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsS128(DeeObject *__restrict self, Dee_int128_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsU8(DeeObject *__restrict self, uint8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsU16(DeeObject *__restrict self, uint16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsU32(DeeObject *__restrict self, uint32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsU64(DeeObject *__restrict self, uint64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInt_TryAsU128(DeeObject *__restrict self, Dee_uint128_t *__restrict value);
 
 /* Same as the functions above, but raise an `Error.ValueError.ArithmeticError.IntegerOverflow'
  * for `INT_POS_OVERFLOW' and `INT_NEG_OVERFLOW' and returns -1. */
-DFUNDEF int DCALL DeeInt_As8(DeeObject *__restrict self, int8_t *__restrict value);
-DFUNDEF int DCALL DeeInt_As16(DeeObject *__restrict self, int16_t *__restrict value);
-DFUNDEF int DCALL DeeInt_As32(DeeObject *__restrict self, int32_t *__restrict value);
-DFUNDEF int DCALL DeeInt_As64(DeeObject *__restrict self, int64_t *__restrict value);
-DFUNDEF int DCALL DeeInt_As128(DeeObject *__restrict self, Dee_int128_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_As8(DeeObject *__restrict self, int8_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_As16(DeeObject *__restrict self, int16_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_As32(DeeObject *__restrict self, int32_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_As64(DeeObject *__restrict self, int64_t *__restrict value);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInt_As128(DeeObject *__restrict self, Dee_int128_t *__restrict value);
 
 /* Read the signed/unsigned values from the given integer.
  * @return: 0:  Successfully read the value.
@@ -746,10 +746,10 @@ DFUNDEF DREF DeeObject *
 /* Convert an integer to/from a string.
  * WARNING: The caller is responsible not to pass a radix equal to `1'.
  *          When a radix equal to `0', it is automatically determined from the passed string. */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_FromString(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags);
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
                  size_t len, uint32_t radix_and_flags);
 #define DEEINT_STRING(radix,flags) ((radix) << DEEINT_STRING_RSHIFT | (flags))

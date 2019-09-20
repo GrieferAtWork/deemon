@@ -272,7 +272,7 @@ DECL_BEGIN
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 trigger_breakpoint(struct code_frame *__restrict frame) {
 	/* TODO: Add some sort of hook that allows for debugging. */
 	(void)frame;
@@ -463,7 +463,7 @@ frame_chain_contains_code(struct code_frame *__restrict iter, uint16_t count,
 	return 0;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self) {
 	DeeCodeObject *me = (DeeCodeObject *)self;
 	DeeThreadObject *caller;
@@ -534,7 +534,7 @@ err:
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 code_fini(DeeCodeObject *__restrict self) {
 	uint16_t i;
 	ASSERTF(!self->co_module ||
@@ -577,7 +577,7 @@ code_fini(DeeCodeObject *__restrict self) {
 	Dee_Free((void *)self->co_exceptv);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 code_visit(DeeCodeObject *__restrict self,
            dvisit_t proc, void *arg) {
 	size_t i;
@@ -606,7 +606,7 @@ code_visit(DeeCodeObject *__restrict self,
 	Dee_Visit(self->co_ddi);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 code_clear(DeeCodeObject *__restrict self) {
 	DREF DeeObject *buffer[16], **iter = buffer;
 	size_t i; /* Clear out static variables. */
@@ -646,7 +646,7 @@ restart:
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_kwds(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_max >= self->co_argc_min);
 	if (!self->co_keywords)
@@ -656,7 +656,7 @@ code_get_kwds(DeeCodeObject *__restrict self) {
 	                                (DeeObject *const *)self->co_keywords);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getdefault(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_max >= self->co_argc_min);
 	return DeeRefVector_NewReadonly((DeeObject *)self,
@@ -664,7 +664,7 @@ code_getdefault(DeeCodeObject *__restrict self) {
 	                                self->co_defaultv);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getstatic(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_max >= self->co_argc_min);
 	return DeeRefVector_NewReadonly((DeeObject *)self,
@@ -672,57 +672,57 @@ code_getstatic(DeeCodeObject *__restrict self) {
 	                                self->co_staticv);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_isyielding(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FYIELDING);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_iscopyable(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FCOPYABLE);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_hasassembly(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FASSEMBLY);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_islenient(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FLENIENT);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_hasvarargs(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FVARARGS);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_hasvarkwds(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FVARKWDS);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_isthiscall(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FTHISCALL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_hasheapframe(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FHEAPFRAME);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_hasfinally(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FFINALLY);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_isconstructor(DeeCodeObject *__restrict self) {
 	return_bool_(self->co_flags & CODE_FCONSTRUCTOR);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_name(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
@@ -736,7 +736,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_doc(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
@@ -750,7 +750,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 code_get_type(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
@@ -766,7 +766,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operator(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
@@ -781,7 +781,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operatorname(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	struct opinfo *op;
@@ -802,7 +802,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_property(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
@@ -940,7 +940,7 @@ PRIVATE struct type_gc code_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&code_clear
 };
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 code_hash(DeeCodeObject *__restrict self) {
 	dhash_t result;
 	result = self->co_flags;
@@ -995,7 +995,7 @@ code_hash(DeeCodeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 code_eq_impl(DeeCodeObject *__restrict self,
              DeeCodeObject *__restrict other) {
 	int temp;
@@ -1104,9 +1104,9 @@ nope:
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
-code_eq(DeeCodeObject *__restrict self,
-        DeeCodeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+code_eq(DeeCodeObject *self,
+        DeeCodeObject *other) {
 	int result;
 	result = code_eq_impl(self, other);
 	if unlikely(result < 0)
@@ -1114,9 +1114,9 @@ code_eq(DeeCodeObject *__restrict self,
 	return_bool_(result != 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-code_ne(DeeCodeObject *__restrict self,
-        DeeCodeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+code_ne(DeeCodeObject *self,
+        DeeCodeObject *other) {
 	int result;
 	result = code_eq_impl(self, other);
 	if unlikely(result < 0)
@@ -1130,7 +1130,7 @@ PRIVATE struct type_cmp code_cmp = {
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&code_ne
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_str(DeeCodeObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *name = code_get_name(self);
@@ -1151,7 +1151,7 @@ PRIVATE DREF DeeObject *DCALL code_ctor(void) {
 	return_reference_((DeeObject *)&empty_code);
 }
 
-PRIVATE DREF DeeCodeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 code_copy(DeeCodeObject *__restrict self) {
 	DREF DeeCodeObject *result;
 	uint16_t i;
@@ -1246,7 +1246,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeCodeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 code_deepcopy(DeeCodeObject *__restrict self) {
 	DREF DeeCodeObject *result;
 	uint16_t i;
@@ -1319,7 +1319,7 @@ PRIVATE struct code_flag const code_flags_db[] = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 unpack_exception_descriptor(struct except_handler *__restrict self,
                             DeeObject *__restrict desc) {
 	DeeObject *flags = Dee_None;
@@ -1386,7 +1386,7 @@ err:
 
 
 PRIVATE DREF DeeCodeObject *DCALL
-code_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+code_init_kw(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeCodeObject *result;
 	DeeObject *flags        = Dee_None;
 	DeeObject *except       = Dee_None;

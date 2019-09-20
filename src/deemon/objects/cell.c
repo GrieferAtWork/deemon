@@ -57,14 +57,14 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_ctor(Cell *__restrict self) {
 	self->c_item = NULL;
 	rwlock_init(&self->c_lock);
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 cell_copy(Cell *__restrict self,
           Cell *__restrict other) {
 	DeeCell_LockRead(other);
@@ -77,7 +77,7 @@ cell_copy(Cell *__restrict self,
 
 PRIVATE int DCALL
 cell_init(Cell *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:Cell", &self->c_item))
 		return -1;
 	Dee_Incref(self->c_item);
@@ -85,19 +85,19 @@ cell_init(Cell *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 cell_fini(Cell *__restrict self) {
 	Dee_XDecref(self->c_item);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 cell_visit(Cell *__restrict self, dvisit_t proc, void *arg) {
 	DeeCell_LockRead(self);
 	Dee_XVisit(self->c_item);
 	DeeCell_LockEndRead(self);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 cell_clear(Cell *__restrict self) {
 	DREF DeeObject *old_obj;
 	DeeCell_LockWrite(self);
@@ -107,7 +107,7 @@ cell_clear(Cell *__restrict self) {
 	Dee_XDecref(old_obj);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_deepload(Cell *__restrict self) {
 	return DeeObject_XInplaceDeepCopyWithLock(&self->c_item,
 	                                          &self->c_lock);
@@ -233,7 +233,7 @@ DeeCell_Set(DeeObject *self, DeeObject *value) {
 
 PRIVATE DEFINE_STRING(empty_cell_repr, "<>");
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cell_str(Cell *__restrict self) {
 	DREF DeeObject *item;
 	item = DeeCell_TryGet((DeeObject *)self);
@@ -242,7 +242,7 @@ cell_str(Cell *__restrict self) {
 	return DeeString_Newf("Cell -> %K", item);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cell_repr(Cell *__restrict self) {
 	DREF DeeObject *item;
 	item = DeeCell_TryGet((DeeObject *)self);
@@ -257,12 +257,12 @@ cell_repr(Cell *__restrict self) {
 #define CELL_READITEM(x) ATOMIC_READ((x)->c_item)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 cell_bool(Cell *__restrict self) {
 	return CELL_READITEM(self) != NULL;
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 cell_hash(Cell *__restrict self) {
 	return DeeObject_HashGeneric(CELL_READITEM(self));
 }
@@ -303,7 +303,7 @@ PRIVATE struct type_getset cell_getsets[] = {
 };
 
 PRIVATE DREF DeeObject *DCALL
-cell_get(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_get(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "|o:get", &def))
 		goto err;
@@ -321,7 +321,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_delete(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_delete(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval;
 	if (DeeArg_Unpack(argc, argv, ":delete"))
 		goto err;
@@ -335,7 +335,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_pop(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_pop(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:pop", &def))
 		goto err;
@@ -353,7 +353,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_set(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_set(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *newval;
 	if (DeeArg_Unpack(argc, argv, "o:set", &newval))
 		goto err;
@@ -367,7 +367,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_xch(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_xch(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *value, *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:xch", &value, &def))
 		goto err;
@@ -388,7 +388,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_cmpdel(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_cmpdel(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *result;
 	if (DeeArg_Unpack(argc, argv, "o:cmpdel", &oldval))
 		goto err;
@@ -400,7 +400,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_cmpxch(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_cmpxch(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *newval = NULL, *def = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|oo:cmpxch", &oldval, &newval, &def))
 		goto err;
@@ -428,7 +428,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-cell_cmpset(Cell *self, size_t argc, DeeObject **__restrict argv) {
+cell_cmpset(Cell *self, size_t argc, DeeObject **argv) {
 	DeeObject *oldval, *newval = NULL, *result;
 	if (DeeArg_Unpack(argc, argv, "o|o:cmpset", &oldval, &newval))
 		goto err;

@@ -63,13 +63,13 @@ STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_in2nd) == COMPILER_OFFSETO
 /* ================================================================================ */
 /*   COMMON PROXY                                                                   */
 /* ================================================================================ */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 proxy_fini(SetUnion *__restrict self) {
 	Dee_Decref(self->su_a);
 	Dee_Decref(self->su_b);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 proxy_visit(SetUnion *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->su_a);
 	Dee_Visit(self->su_b);
@@ -84,7 +84,7 @@ proxy_visit(SetUnion *__restrict self, dvisit_t proc, void *arg) {
 STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_union) == COMPILER_OFFSETOF(SetUnion, su_a));
 STATIC_ASSERT(COMPILER_OFFSETOF(SetUnionIterator, sui_iter) == COMPILER_OFFSETOF(SetUnion, su_b));
 #define suiter_fini proxy_fini
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_iter(SetUnionIterator *__restrict self) {
 	DREF DeeObject *result;
 	rwlock_read(&self->sui_lock);
@@ -94,7 +94,7 @@ suiter_get_iter(SetUnionIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_set_iter(SetUnionIterator *__restrict self,
                 DeeObject *__restrict iter) {
 	DREF DeeObject *old_iter;
@@ -109,7 +109,7 @@ suiter_set_iter(SetUnionIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_get_in2nd(SetUnionIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return_bool(self->sui_in2nd);
@@ -122,7 +122,7 @@ suiter_get_in2nd(SetUnionIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_set_in2nd(SetUnionIterator *__restrict self,
                  DeeObject *__restrict value) {
 	int newval = DeeObject_Bool(value);
@@ -134,7 +134,7 @@ suiter_set_in2nd(SetUnionIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 suiter_visit(SetUnionIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->sui_union);
 	rwlock_read(&self->sui_lock);
@@ -142,7 +142,7 @@ suiter_visit(SetUnionIterator *__restrict self, dvisit_t proc, void *arg) {
 	rwlock_endread(&self->sui_lock);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_copy(SetUnionIterator *__restrict self,
             SetUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
@@ -163,7 +163,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 suiter_deep(SetUnionIterator *__restrict self,
             SetUnionIterator *__restrict other) {
 	DREF DeeObject *iter;
@@ -187,7 +187,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 suiter_ctor(SetUnionIterator *__restrict self) {
 	self->sui_union = (DREF SetUnion *)DeeObject_NewDefault(self->ob_type == &SetUnionIterator_Type
 	                                                        ? &SetUnion_Type
@@ -208,7 +208,7 @@ err:
 
 PRIVATE int DCALL
 suiter_init(SetUnionIterator *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetUnionIterator", &self->sui_union))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->sui_union, &SetUnion_Type))
@@ -223,7 +223,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 suiter_next(SetUnionIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *iter;
@@ -296,9 +296,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-suiter_eq(SetUnionIterator *__restrict self,
-          SetUnionIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+suiter_eq(SetUnionIterator *self,
+          SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
@@ -324,9 +324,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-suiter_ne(SetUnionIterator *__restrict self,
-          SetUnionIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+suiter_ne(SetUnionIterator *self,
+          SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
@@ -352,9 +352,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-suiter_lo(SetUnionIterator *__restrict self,
-          SetUnionIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+suiter_lo(SetUnionIterator *self,
+          SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
@@ -380,9 +380,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-suiter_le(SetUnionIterator *__restrict self,
-          SetUnionIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+suiter_le(SetUnionIterator *self,
+          SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
@@ -408,9 +408,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-suiter_gr(SetUnionIterator *__restrict self,
-          SetUnionIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+suiter_gr(SetUnionIterator *self,
+          SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
@@ -436,9 +436,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-suiter_ge(SetUnionIterator *__restrict self,
-          SetUnionIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+suiter_ge(SetUnionIterator *self,
+          SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
@@ -536,7 +536,7 @@ INTERN DeeTypeObject SetUnionIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 su_ctor(SetUnion *__restrict self) {
 	self->su_a = Dee_EmptySet;
 	self->su_b = Dee_EmptySet;
@@ -545,7 +545,7 @@ su_ctor(SetUnion *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 su_copy(SetUnion *__restrict self,
         SetUnion *__restrict other) {
 	self->su_a = other->su_a;
@@ -555,7 +555,7 @@ su_copy(SetUnion *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 su_deep(SetUnion *__restrict self,
         SetUnion *__restrict other) {
 	self->su_a = DeeObject_DeepCopy(other->su_a);
@@ -573,7 +573,7 @@ err:
 
 PRIVATE int DCALL
 su_init(SetUnion *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	self->su_a = Dee_EmptySet;
 	self->su_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetUnion", &self->su_a, &self->su_b))
@@ -585,7 +585,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF SetUnionIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SetUnionIterator *DCALL
 su_iter(SetUnion *__restrict self) {
 	DREF SetUnionIterator *result;
 	result = DeeObject_MALLOC(SetUnionIterator);
@@ -606,8 +606,8 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-su_contains(SetUnion *__restrict self, DeeObject *__restrict item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+su_contains(SetUnion *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
 	result = DeeObject_ContainsObject(self->su_a, item);
@@ -699,7 +699,7 @@ INTERN DeeTypeObject SetUnion_Type = {
 #define ssditer_visit   suiter_visit
 #define ssditer_cmp     suiter_cmp
 #define ssditer_getsets suiter_getsets
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ssditer_next(SetSymmetricDifferenceIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *iter;
@@ -830,7 +830,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 #define ssd_deep su_deep
 PRIVATE int DCALL
 ssd_init(SetSymmetricDifference *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	self->ssd_a = Dee_EmptySet;
 	self->ssd_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetSymmetricDifference", &self->ssd_a, &self->ssd_b))
@@ -840,7 +840,7 @@ ssd_init(SetSymmetricDifference *__restrict self,
 	return 0;
 }
 
-PRIVATE DREF SetSymmetricDifferenceIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SetSymmetricDifferenceIterator *DCALL
 ssd_iter(SetSymmetricDifference *__restrict self) {
 	DREF SetSymmetricDifferenceIterator *result;
 	result = DeeObject_MALLOC(SetSymmetricDifferenceIterator);
@@ -861,8 +861,8 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ssd_contains(SetSymmetricDifference *__restrict self, DeeObject *__restrict item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ssd_contains(SetSymmetricDifference *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int cona, conb;
 	cona = DeeObject_Contains(self->ssd_a, item);
@@ -945,14 +945,14 @@ INTERN DeeTypeObject SetSymmetricDifference_Type = {
 /* ================================================================================ */
 /*   SET INTERSECTION                                                               */
 /* ================================================================================ */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 siiter_fini(SetIntersectionIterator *__restrict self) {
 	Dee_Decref_unlikely(self->sii_other);
 	Dee_Decref(self->sii_intersect);
 	Dee_Decref(self->sii_iter);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 siiter_ctor(SetIntersectionIterator *__restrict self) {
 	self->sii_intersect = (DREF SetIntersection *)DeeObject_NewDefault(self->ob_type == &SetDifferenceIterator_Type
 	                                                                   ? &SetIntersection_Type
@@ -971,7 +971,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 siiter_copy(SetIntersectionIterator *__restrict self,
             SetIntersectionIterator *__restrict other) {
 	self->sii_iter = DeeObject_Copy(other->sii_iter);
@@ -986,7 +986,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 siiter_deep(SetIntersectionIterator *__restrict self,
             SetIntersectionIterator *__restrict other) {
 	self->sii_iter = DeeObject_DeepCopy(other->sii_iter);
@@ -1006,7 +1006,7 @@ err:
 
 PRIVATE int DCALL
 siiter_init(SetIntersectionIterator *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetIntersectionIterator", &self->sii_intersect))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->sii_intersect, &SetIntersection_Type))
@@ -1022,14 +1022,14 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 siiter_visit(SetIntersectionIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->sii_intersect);
 	Dee_Visit(self->sii_iter);
 	Dee_Visit(self->sii_other);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 siiter_next(SetIntersectionIterator *__restrict self) {
 	DREF DeeObject *result;
 	int temp;
@@ -1136,7 +1136,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 #define si_deep su_deep
 PRIVATE int DCALL
 si_init(SetIntersection *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	self->si_a = Dee_EmptySet;
 	self->si_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetIntersection", &self->si_a, &self->si_b))
@@ -1148,7 +1148,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF SetIntersectionIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SetIntersectionIterator *DCALL
 si_iter(SetIntersection *__restrict self) {
 	DREF SetIntersectionIterator *result;
 	result = DeeObject_MALLOC(SetIntersectionIterator);
@@ -1169,8 +1169,8 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-si_contains(SetIntersection *__restrict self, DeeObject *__restrict item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+si_contains(SetIntersection *self, DeeObject *item) {
 	DREF DeeObject *result;
 	int temp;
 	result = DeeObject_ContainsObject(self->si_a, item);
@@ -1262,7 +1262,7 @@ INTERN DeeTypeObject SetIntersection_Type = {
 #define sditer_fini    siiter_fini
 #define sditer_visit   siiter_visit
 #define sditer_cmp     siiter_cmp
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sditer_next(SetDifferenceIterator *__restrict self) {
 	DREF DeeObject *result;
 	int temp;
@@ -1341,7 +1341,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 #define sd_deep su_deep
 PRIVATE int DCALL
 sd_init(SetDifference *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	self->sd_a = Dee_EmptySet;
 	self->sd_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetDifference", &self->sd_a, &self->sd_b))
@@ -1353,7 +1353,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF SetDifferenceIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SetDifferenceIterator *DCALL
 sd_iter(SetDifference *__restrict self) {
 	DREF SetDifferenceIterator *result;
 	result = DeeObject_MALLOC(SetDifferenceIterator);
@@ -1374,8 +1374,8 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sd_contains(SetDifference *__restrict self, DeeObject *__restrict item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sd_contains(SetDifference *self, DeeObject *item) {
 	int temp;
 	/* Check the primary set for the object. */
 	temp = DeeObject_Contains(self->sd_a, item);
@@ -1459,9 +1459,9 @@ INTERN DeeTypeObject SetDifference_Type = {
 
 
 
-INTERN DREF DeeObject *DCALL
-DeeSet_Union(DeeObject *__restrict lhs,
-             DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_Union(DeeObject *lhs,
+             DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
 	if (DeeInverseSet_CheckExact(lhs)) {
 		if (!DeeInverseSet_CheckExact(rhs)) {
@@ -1516,8 +1516,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeSet_Intersection(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_Intersection(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
 	if (DeeInverseSet_CheckExact(lhs)) {
 		if (DeeInverseSet_CheckExact(rhs)) {
@@ -1553,8 +1553,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeSet_Difference(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_Difference(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *result, *temp;
 	if (DeeInverseSet_CheckExact(lhs)) {
 		/* Special case: `~a - b' -> `~(a | b)' */
@@ -1585,8 +1585,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeSet_SymmetricDifference(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSet_SymmetricDifference(DeeObject *lhs, DeeObject *rhs) {
 	DREF SetSymmetricDifference *result;
 	if (DeeSet_CheckEmpty(lhs))
 		return_reference_(rhs);

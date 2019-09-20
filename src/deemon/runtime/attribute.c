@@ -41,15 +41,15 @@
 
 DECL_BEGIN
 
-INTDEF DREF DeeObject *DCALL type_getattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL type_callattr_kw(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
+INTDEF DREF DeeObject *DCALL type_callattr(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **argv);
+INTDEF DREF DeeObject *DCALL type_callattr_kw(DeeObject *__restrict self, DeeObject *__restrict name, size_t argc, DeeObject **argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 #define type_callattr_tuple(self, name, args)        type_callattr(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define type_callattr_tuple_kw(self, name, args, kw) type_callattr_kw(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif
-INTDEF int DCALL type_delattr(DeeObject *__restrict self, DeeObject *__restrict name);
-INTDEF int DCALL type_setattr(DeeObject *__restrict self, DeeObject *__restrict name, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_delattr(DeeObject *__restrict self, DeeObject *__restrict name);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_setattr(DeeObject *__restrict self, DeeObject *__restrict name, DeeObject *__restrict value);
 
 /* For type-type, these should be accessed as members, not as class-wrappers:
  * >> import type_ from deemon;
@@ -812,7 +812,7 @@ done:
 	return error;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeType_FindAttrString(DeeTypeObject *__restrict self,
                        struct attribute_info *__restrict result,
                        struct attribute_lookup_rules const *__restrict rules) {
@@ -878,7 +878,7 @@ done:
 	return error;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeType_GetAttrString(DeeTypeObject *__restrict self,
                       char const *__restrict name, dhash_t hash) {
 	DeeTypeObject *iter;
@@ -944,7 +944,7 @@ done:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeType_GetAttrStringLen(DeeTypeObject *__restrict self,
                          char const *__restrict name,
                          size_t namelen, dhash_t hash) {
@@ -1014,7 +1014,7 @@ done:
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeType_BoundAttrString(DeeTypeObject *__restrict self,
                         char const *__restrict name, dhash_t hash) {
 	int result;
@@ -1082,7 +1082,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeType_BoundAttrStringLen(DeeTypeObject *__restrict self,
                            char const *__restrict name,
                            size_t namelen,

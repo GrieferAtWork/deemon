@@ -41,7 +41,7 @@ typedef DeeCompilerWrapperObject CompilerWrapper;
 DEFINE_OBJECT_CACHE(compiler_item, CompilerItem, 64)    /* TODO: Use slabs */
 DEFINE_OBJECT_CACHE(compiler_wrap, CompilerWrapper, 16) /* TODO: Use slabs */
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 	DeeCompilerObject *com = self->ci_compiler;
 	rwlock_write(&com->cp_items.ci_lock);
@@ -63,12 +63,12 @@ DeeCompilerItem_Fini(CompilerItem *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 DeeCompilerItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ci_compiler);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
 	DeeCompilerObject *com = self->ci_compiler;
 	rwlock_write(&com->cp_items.ci_lock);
@@ -87,7 +87,7 @@ DeeCompilerObjItem_Fini(CompilerItem *__restrict self) {
 	recursive_rwlock_endwrite(&DeeCompiler_Lock);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 DeeCompilerObjItem_Visit(CompilerItem *__restrict self, dvisit_t proc, void *arg) {
 	COMPILER_BEGIN(self->ci_compiler);
 	Dee_Visit(self->ci_compiler);
@@ -192,7 +192,7 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
 
 STATIC_ASSERT(COMPILER_OFFSETOF(CompilerItem, ci_compiler) ==
               COMPILER_OFFSETOF(CompilerWrapper, cw_compiler));
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeCompilerWrapper_Fini(CompilerWrapper *__restrict self) {
 	Dee_Decref_unlikely(self->cw_compiler);
 }
@@ -243,7 +243,7 @@ INTERN DeeTypeObject DeeCompilerWrapper_Type = {
 };
 
 /* Construct and return a wrapper for a sub-component of the current compiler. */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
                        DeeTypeObject *__restrict type) {
 	DREF CompilerWrapper *result;
@@ -364,7 +364,7 @@ done:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCompiler_GetItem(DeeTypeObject *__restrict type,
                     void *__restrict value) {
 #ifndef NDEBUG
@@ -380,7 +380,7 @@ DeeCompiler_GetItem(DeeTypeObject *__restrict type,
 	return get_compiler_item_impl(type, value, false);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
                        DeeObject *__restrict value) {
 #ifndef NDEBUG
@@ -438,7 +438,7 @@ INTERN bool DCALL DeeCompiler_DelItem(void *value) {
 }
 
 /* Delete (clear) all compiler items matching the given `type'. */
-INTERN size_t DCALL
+INTERN NONNULL((1)) size_t DCALL
 DeeCompiler_DelItemType(DeeTypeObject *__restrict type) {
 	size_t i, result = 0;
 	CompilerItem *iter, *next;
@@ -489,7 +489,7 @@ err_compiler_item_deleted(DeeCompilerItemObject *__restrict item) {
 	                       item->ob_type);
 }
 
-INTERN void *DCALL
+INTERN WUNUSED NONNULL((1)) void *DCALL
 DeeCompilerItem_GetValue(DeeObject *__restrict self) {
 	void *result;
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));

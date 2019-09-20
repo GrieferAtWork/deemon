@@ -248,10 +248,10 @@ err:
 
 
 #ifdef NDEBUG
-INTERN int (DCALL asm_putddi)(struct ast *__restrict self)
+INTERN WUNUSED NONNULL((1)) int (DCALL asm_putddi)(struct ast *__restrict self)
 #else /* NDEBUG */
-INTERN int (DCALL asm_putddi_dbg)(struct ast *__restrict self,
-                                  char const *file, int line)
+INTERN WUNUSED NONNULL((1)) int (DCALL asm_putddi_dbg)(struct ast *__restrict self,
+                                                       char const *file, int line)
 #endif /* !NDEBUG */
 {
 	struct asm_sym *sym;
@@ -319,7 +319,7 @@ PRIVATE struct ddi_binding *DCALL asm_alloc_ddi_binding(void) {
 	return &current_assembler.a_ddi.da_bndv[current_assembler.a_ddi.da_bndc++];
 }
 
-INTERN int DCALL
+INTERN WUNUSED int DCALL
 asm_putddi_bind(uint16_t ddi_class,
                 uint16_t index,
                 struct TPPKeyword *name) {
@@ -412,7 +412,7 @@ INTERN int DCALL assembler_init(void) {
 #endif /* CONFIG_LANGUAGE_NO_ASM */
 }
 
-INTERN int DCALL
+INTERN NONNULL((1, 2)) int DCALL
 assembler_init_reuse(DeeCodeObject *__restrict code_obj,
                      instruction_t *__restrict text_end) {
 	memset(&current_assembler, 0, sizeof(struct assembler));
@@ -782,7 +782,7 @@ STATIC_ASSERT(ASM_POP_EXTERN + 0x10 == ASM_PUSH_EXTERN);
 STATIC_ASSERT(ASM_POP_GLOBAL + 0x10 == ASM_PUSH_GLOBAL);
 STATIC_ASSERT(ASM_POP_LOCAL + 0x10 == ASM_PUSH_LOCAL);
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_instruction_start(instruction_t *__restrict ptr) {
 	instruction_t *iter = sc_main.sec_begin;
 	while (iter < ptr)
@@ -790,7 +790,7 @@ is_instruction_start(instruction_t *__restrict ptr) {
 	return iter == ptr;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 inc_reladdr_at(instruction_t *__restrict ptr) {
 	code_addr_t addr = (code_addr_t)(ptr - sc_main.sec_begin);
 	struct asm_rel *iter, *end;
@@ -804,7 +804,7 @@ inc_reladdr_at(instruction_t *__restrict ptr) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 asm_fix_jump_prefix(instruction_t *__restrict delop_instr) {
 	instruction_t *prefix_loc;
 	ASSERT(*(delop_instr + 0) == ASM_DELOP);
@@ -1889,15 +1889,15 @@ INTERN int (DCALL asm_putsid16)(uint16_t instr, uint16_t sid) {
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 relint_fini(DeeRelIntObject *__restrict self) {
 	ASSERT(self->ri_sym);
 	--self->ri_sym->as_used;
 }
 
-PRIVATE DREF DeeObject *DCALL
-relint_eq(DeeRelIntObject *__restrict self,
-          DeeRelIntObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+relint_eq(DeeRelIntObject *self,
+          DeeRelIntObject *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeRelInt_Type))
 		return NULL;
 	return_bool(self->ri_sym == other->ri_sym &&
@@ -1905,9 +1905,9 @@ relint_eq(DeeRelIntObject *__restrict self,
 	            self->ri_mode == other->ri_mode);
 }
 
-PRIVATE DREF DeeObject *DCALL
-relint_ne(DeeRelIntObject *__restrict self,
-          DeeRelIntObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+relint_ne(DeeRelIntObject *self,
+          DeeRelIntObject *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeRelInt_Type))
 		return NULL;
 	return_bool(self->ri_sym != other->ri_sym ||
@@ -1967,7 +1967,7 @@ INTERN DeeTypeObject DeeRelInt_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRelInt_New(struct asm_sym *__restrict sym,
               tint_t addend, uint16_t mode) {
 	DREF DeeRelIntObject *result;
@@ -2071,7 +2071,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 asm_gpush_abs(struct asm_sym *__restrict sym) {
 	int32_t cid = asm_newrelint(sym, 0, RELINT_MODE_FADDR);
 	if unlikely(cid < 0)
@@ -2079,7 +2079,7 @@ asm_gpush_abs(struct asm_sym *__restrict sym) {
 	return asm_gpush_const((uint16_t)cid);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 asm_gpush_stk(struct asm_sym *__restrict sym) {
 	int32_t cid = asm_newrelint(sym, 0, RELINT_MODE_FSTCK);
 	if unlikely(cid < 0)
@@ -2226,7 +2226,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 asm_gsetstack_s(struct asm_sym *__restrict target) {
 	instruction_t *data;
 	struct asm_rel *rel;
@@ -2493,7 +2493,7 @@ do_realloc:
 }
 
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_newconst_string(char const *__restrict str, size_t len) {
 	uint16_t result;
 	DREF DeeObject *value;
@@ -2521,7 +2521,7 @@ err:
 	return -1;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_newconst(DeeObject *__restrict constvalue) {
 	int32_t result;
 	DREF DeeObject **iter, **end, *elem;
@@ -2716,7 +2716,7 @@ PRIVATE bool DCALL rehash_globals(void) {
 	return true;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_gsymid(struct symbol *__restrict sym) {
 	uint16_t result;
 	dhash_t name_hash;
@@ -2825,7 +2825,7 @@ err:
 	return -1;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_lsymid(struct symbol *__restrict sym) {
 	int32_t new_index;
 	ASSERT(sym);
@@ -2854,7 +2854,7 @@ end:
 	return new_index;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_ssymid(struct symbol *__restrict sym) {
 	int32_t new_index;
 	ASSERT(sym);
@@ -2874,7 +2874,7 @@ end:
 	return new_index;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) int32_t DCALL
 asm_gsymid_for_read(struct symbol *__restrict sym,
                     struct ast *__restrict warn_ast) {
 	ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_GLOBAL);
@@ -2888,7 +2888,7 @@ err:
 	return -1;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) int32_t DCALL
 asm_lsymid_for_read(struct symbol *__restrict sym,
                     struct ast *__restrict warn_ast) {
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
@@ -2903,7 +2903,7 @@ err:
 	return -1;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) int32_t DCALL
 asm_ssymid_for_read(struct symbol *__restrict sym,
                     struct ast *__restrict warn_ast) {
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
@@ -2919,7 +2919,7 @@ err:
 }
 
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_rsymid(struct symbol *__restrict sym) {
 	uint16_t result;
 	ASSERT(SYMBOL_MAY_REFERENCE(sym));
@@ -2971,7 +2971,7 @@ do_realloc:
 }
 
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_asymid_r(struct symbol *__restrict sym) {
 	uint16_t result;
 	ASSERT(SYMBOL_MAY_REFERENCE(sym));
@@ -3025,7 +3025,7 @@ do_realloc:
 
 
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_newmodule(DeeModuleObject *__restrict mod) {
 	DREF DeeModuleObject **iter, **end;
 	uint16_t result;
@@ -3083,7 +3083,7 @@ do_realloc:
 }
 
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_esymid(struct symbol *__restrict sym) {
 	int32_t result;
 	DeeModuleObject *module;
@@ -3107,7 +3107,7 @@ end:
 	return result;
 }
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_msymid(struct symbol *__restrict sym) {
 	int32_t result;
 	ASSERT(sym);
@@ -3221,7 +3221,7 @@ INTERN int DCALL asm_check_user_labels_defined(void) {
 }
 
 
-INTERN DREF DeeCodeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 code_docompile(struct ast *__restrict code_ast) {
 	int link_error;
 	unsigned int i;

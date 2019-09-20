@@ -73,7 +73,7 @@ tpp_userstream_fopen(char const *__restrict filename) {
 #define TPP_USERSTREAM_FREAD_NONBLOCK(stream, buf, bufsize) \
 	tpp_userstream_fread_nonblock(stream, buf, bufsize)
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 tpp_userstream_fread(DeeFileObject *__restrict self,
                      void *__restrict buffer, size_t bufsize) {
 	dssize_t result;
@@ -91,7 +91,7 @@ tpp_userstream_fread(DeeFileObject *__restrict self,
 	return (size_t)result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 tpp_userstream_fread_nonblock(DeeFileObject *__restrict self,
                               void *__restrict buffer, size_t bufsize) {
 	dssize_t result;

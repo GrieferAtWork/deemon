@@ -41,7 +41,7 @@
 DECL_BEGIN
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSet_Invert(DeeObject *__restrict self) {
 	DREF DeeInverseSetObject *result;
 	/* Just re-return the original set. */
@@ -60,16 +60,16 @@ done:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 invset_ctor(DeeInverseSetObject *__restrict self) {
 	self->is_set = Dee_EmptySet;
 	Dee_Incref(Dee_EmptySet);
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 invset_init(DeeInverseSetObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	self->is_set = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|o:_InverseSet", &self->is_set))
 		goto err;
@@ -79,30 +79,29 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 invset_fini(DeeInverseSetObject *__restrict self) {
 	Dee_Decref(self->is_set);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 invset_visit(DeeInverseSetObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->is_set);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 invset_repr(DeeInverseSetObject *__restrict self) {
 	return DeeString_Newf("~%r", self->is_set);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 invset_iterself(DeeInverseSetObject *__restrict self) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-invset_tpcontains(DeeInverseSetObject *__restrict self,
-                  DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invset_tpcontains(DeeInverseSetObject *self, DeeObject *key) {
 	int result = DeeObject_Contains(self->is_set, key);
 	if unlikely(result < 0)
 		goto err;
@@ -123,7 +122,7 @@ PRIVATE struct type_seq invset_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE DREF DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 invset_iterator_get(DeeTypeObject *__restrict self) {
 	err_unknown_attribute(self,
 	                      DeeString_STR(&str_Iterator),
@@ -181,9 +180,9 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */invset_members,
+	/* .tp_members       = */ invset_members,
 	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */invset_class_getsets,
+	/* .tp_class_getsets = */ invset_class_getsets,
 	/* .tp_class_members = */ NULL
 };
 
@@ -193,8 +192,8 @@ PUBLIC DeeTypeObject DeeInverseSet_Type = {
 /* Returns the number of items found in `lhs' if all of them appear in `rhs'.
  * Otherwise, return `-1' if some of them don't appear in `rhs'
  * Otherwise, return `-2' on error. */
-PRIVATE dssize_t DCALL
-set_issubset_impl(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+set_issubset_impl(DeeObject *lhs, DeeObject *rhs) {
 	dssize_t result = 0;
 	int temp;
 	DREF DeeObject *lhs_iter, *lhs_item;
@@ -225,8 +224,8 @@ err:
 	return -2;
 }
 
-INTERN int DCALL
-DeeSet_IsSubSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs) {
 	if (DeeInverseSet_CheckExact(lhs)) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
 		if (!DeeInverseSet_CheckExact(rhs))
@@ -243,8 +242,8 @@ DeeSet_IsSubSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
 	}
 }
 
-INTERN int DCALL
-DeeSet_IsTrueSubSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs) {
 	if (DeeInverseSet_CheckExact(lhs)) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
 		if (!DeeInverseSet_CheckExact(rhs))
@@ -272,8 +271,8 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-DeeSet_IsSameSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_IsSameSet(DeeObject *lhs, DeeObject *rhs) {
 	dssize_t result;
 	size_t rhs_size;
 	if (DeeInverseSet_CheckExact(lhs)) {
@@ -298,8 +297,8 @@ DeeSet_IsSameSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
 	return rhs_size == (size_t)result;
 }
 
-INTERN int DCALL
-DeeSet_IsDisjoint(DeeObject *__restrict lhs, DeeObject *__restrict rhs) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs) {
 	DREF DeeObject *iter, *item;
 	int result = 1;
 	if (DeeInverseSet_CheckExact(lhs)) {
@@ -341,27 +340,24 @@ err:
 
 
 
-PRIVATE DREF DeeObject *DCALL
-set_difference(DeeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_difference(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:difference", &other))
 		return NULL;
 	return DeeSet_Difference(self, other);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_intersection(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_intersection(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:intersection", &other))
 		return NULL;
 	return DeeSet_Intersection(self, other);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_isdisjoint(DeeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_isdisjoint(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &other) ||
@@ -370,27 +366,24 @@ set_isdisjoint(DeeObject *__restrict self,
 	return_bool_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_union(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_union(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:union", &other))
 		return NULL;
 	return DeeSet_Union(self, other);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_symmetric_difference(DeeObject *__restrict self,
-                         size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_symmetric_difference(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:symmetric_difference", &other))
 		return NULL;
 	return DeeSet_SymmetricDifference(self, other);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_issubset(DeeObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_issubset(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:issubset", &other) ||
@@ -399,9 +392,8 @@ set_issubset(DeeObject *__restrict self,
 	return_bool_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_issuperset(DeeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_issuperset(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other) ||
@@ -410,9 +402,8 @@ set_issuperset(DeeObject *__restrict self,
 	return_bool_(result);
 }
 
-PRIVATE int DCALL
-set_inplace_sub(DeeObject **__restrict pself,
-                DeeObject *__restrict items) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+set_inplace_sub(DeeObject **__restrict pself, DeeObject *items) {
 	DeeObject *self = *pself;
 	size_t i, size;
 	DREF DeeObject *remove_func, *callback_result, *remove_args[1];
@@ -458,9 +449,8 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-set_inplace_mul(DeeObject **__restrict pself,
-                DeeObject *__restrict count) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+set_inplace_mul(DeeObject **__restrict pself, DeeObject *count) {
 	size_t count_integer;
 	if (DeeObject_AsSize(count, &count_integer))
 		goto err;
@@ -476,9 +466,8 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-set_inplace_intersection(DeeObject **__restrict pself,
-                         DeeObject *__restrict items) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+set_inplace_intersection(DeeObject **__restrict pself, DeeObject *items) {
 	DeeObject *self = *pself;
 	int result;
 	DREF DeeObject *new_self;
@@ -490,9 +479,8 @@ set_inplace_intersection(DeeObject **__restrict pself,
 	return result;
 }
 
-PRIVATE int DCALL
-set_inplace_union(DeeObject **__restrict pself,
-                  DeeObject *__restrict items) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+set_inplace_union(DeeObject **__restrict pself, DeeObject *items) {
 	DREF DeeObject *callback_result;
 	callback_result = DeeObject_CallAttr(*pself,
 	                                     &str_insertall,
@@ -504,9 +492,8 @@ set_inplace_union(DeeObject **__restrict pself,
 	return 0;
 }
 
-PRIVATE int DCALL
-set_inplace_symmetric_difference(DeeObject **__restrict pself,
-                                 DeeObject *__restrict items) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+set_inplace_symmetric_difference(DeeObject **__restrict pself, DeeObject *items) {
 	DeeObject *self = *pself;
 	int result;
 	DREF DeeObject *new_self;
@@ -589,7 +576,7 @@ INTERN struct type_getset set_getsets[] = {
 };
 
 
-PRIVATE DREF DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 set_iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &DeeSet_Type)
 		return_reference_(&DeeIterator_Type);
@@ -599,7 +586,7 @@ set_iterator_get(DeeTypeObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE DREF DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 set_frozen_get(DeeTypeObject *__restrict self) {
 	int error;
 	DREF DeeTypeObject *result;
@@ -657,8 +644,8 @@ PRIVATE struct type_getset set_class_getsets[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-set_eq(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_eq(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSameSet(self, some_object);
 	if unlikely(result < 0)
@@ -666,8 +653,8 @@ set_eq(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_ne(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_ne(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSameSet(self, some_object);
 	if unlikely(result < 0)
@@ -675,8 +662,8 @@ set_ne(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(!result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_lo(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_lo(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsTrueSubSet(self, some_object);
 	if unlikely(result < 0)
@@ -684,8 +671,8 @@ set_lo(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_le(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_le(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSubSet(self, some_object);
 	if unlikely(result < 0)
@@ -693,8 +680,8 @@ set_le(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_gr(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_gr(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsTrueSubSet(some_object, self);
 	if unlikely(result < 0)
@@ -702,8 +689,8 @@ set_gr(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_ge(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_ge(DeeObject *self, DeeObject *some_object) {
 	int result;
 	result = DeeSet_IsSubSet(self, some_object);
 	if unlikely(result < 0)
@@ -723,8 +710,8 @@ PRIVATE struct type_cmp set_cmp = {
 };
 
 INTDEF DREF DeeObject *DCALL new_empty_sequence_iterator(void);
-PRIVATE DREF DeeObject *DCALL
-set_iterself(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_iterself(DeeObject *self) {
 	if unlikely(Dee_TYPE(self) == &DeeSet_Type) {
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
@@ -734,25 +721,22 @@ set_iterself(DeeObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_tpcontains(DeeObject *__restrict self, DeeObject *__restrict UNUSED(key)) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_tpcontains(DeeObject *self, DeeObject *UNUSED(key)) {
 	if unlikely(Dee_TYPE(self) == &DeeSet_Type)
 		return_false;
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CONTAINS);
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_getitem(DeeObject *__restrict self,
-            DeeObject *__restrict UNUSED(index)) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_getitem(DeeObject *self, DeeObject *UNUSED(index)) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_getrange(DeeObject *__restrict self,
-             DeeObject *__restrict UNUSED(start),
-             DeeObject *__restrict UNUSED(end)) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+set_getrange(DeeObject *self, DeeObject *UNUSED(start), DeeObject *UNUSED(end)) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETRANGE);
 	return NULL;
 }
@@ -1007,11 +991,11 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */set_methods,
-	/* .tp_getsets       = */set_getsets,
+	/* .tp_methods       = */ set_methods,
+	/* .tp_getsets       = */ set_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */set_class_getsets,
+	/* .tp_class_getsets = */ set_class_getsets,
 	/* .tp_class_members = */ NULL
 };
 

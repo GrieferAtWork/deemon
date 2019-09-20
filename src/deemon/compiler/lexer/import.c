@@ -147,7 +147,7 @@ import_module_symbol(DeeModuleObject *__restrict module,
 /* @return:  1: OK (the parsed object most certainly was a module)
  * @return:  0: OK
  * @return: -1: Error */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_parse_module_name(struct unicode_printer *__restrict printer,
                       bool for_alias) {
 	int result = 0;
@@ -199,7 +199,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_parse_symbol_name(struct unicode_printer *__restrict printer,
                       bool for_alias) {
 	int result = 0;
@@ -369,7 +369,7 @@ err:
  * @return:  1: OK (when `allow_module_name' is true, a module import was parsed)
  * @return:  0: OK
  * @return: -1: Error */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 parse_import_symbol(struct import_item *__restrict result,
                     bool allow_module_name) {
 	struct unicode_printer printer;
@@ -700,7 +700,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_import_single_from_module(DeeModuleObject *__restrict module,
                               struct import_item *__restrict item) {
 	struct module_symbol *sym;
@@ -764,7 +764,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_import_module(struct import_item *__restrict item) {
 	DREF DeeModuleObject *module;
 	struct symbol *import_symbol;

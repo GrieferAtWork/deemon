@@ -125,13 +125,13 @@ err_r:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_setitem(Dict *__restrict self,
              DeeObject *__restrict key,
              DeeObject *__restrict value);
-PRIVATE void DCALL dict_fini(Dict *__restrict self);
+PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self);
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_insert_iterator(Dict *__restrict self,
                      DeeObject *__restrict iterator) {
 	DREF DeeObject *elem;
@@ -160,7 +160,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_iterator(Dict *__restrict self,
                    DeeObject *__restrict iterator) {
 	self->d_mask = 0;
@@ -178,14 +178,14 @@ dict_init_iterator(Dict *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
 
 STATIC_ASSERT(sizeof(struct dict_item) == sizeof(struct rodict_item));
 STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item, di_key) == COMPILER_OFFSETOF(struct rodict_item, di_key));
 STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item, di_value) == COMPILER_OFFSETOF(struct rodict_item, di_value));
 STATIC_ASSERT(COMPILER_OFFSETOF(struct dict_item, di_hash) == COMPILER_OFFSETOF(struct rodict_item, di_hash));
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_sequence(Dict *__restrict self,
                    DeeObject *__restrict sequence) {
 	DREF DeeObject *iterator;
@@ -235,7 +235,7 @@ err:
 	return -1;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDict_FromIterator(DeeObject *__restrict self) {
 	DREF Dict *result;
 	result = DeeGCObject_MALLOC(Dict);
@@ -252,7 +252,7 @@ err_r:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDict_FromSequence(DeeObject *__restrict self) {
 	DREF Dict *result;
 	result = DeeGCObject_MALLOC(Dict);
@@ -271,7 +271,7 @@ err_r:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_ctor(Dict *__restrict self) {
 	self->d_mask = 0;
 	self->d_size = 0;
@@ -284,7 +284,7 @@ dict_ctor(Dict *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_copy(Dict *__restrict self,
           Dict *__restrict other) {
 	struct dict_item *iter, *end;
@@ -320,7 +320,7 @@ again:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_deepload(Dict *__restrict self) {
 	typedef struct {
 		DREF DeeObject *e_key;   /* [0..1][lock(:d_lock)] Dictionary item key. */
@@ -429,7 +429,7 @@ err_items:
 	return -1;
 }
 
-PRIVATE void DCALL dict_fini(Dict *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self) {
 	weakref_support_fini(self);
 	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
 	ASSERT((self->d_elem == empty_dict_items) == (self->d_size == 0));
@@ -447,7 +447,7 @@ PRIVATE void DCALL dict_fini(Dict *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL dict_clear(Dict *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL dict_clear(Dict *__restrict self) {
 	struct dict_item *elem;
 	size_t mask;
 	DeeDict_LockWrite(self);
@@ -476,7 +476,7 @@ PRIVATE void DCALL dict_clear(Dict *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 dict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
 	DeeDict_LockRead(self);
 	ASSERT((self->d_elem == empty_dict_items) == (self->d_mask == 0));
@@ -502,7 +502,7 @@ dict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
  * During this process all dummy items are discarded.
  * @return: true:  Successfully rehashed the Dict.
  * @return: false: Not enough memory. - The caller should collect some and try again. */
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 dict_rehash(Dict *__restrict self, int sizedir) {
 	struct dict_item *new_vector, *iter, *end;
 	size_t new_mask = self->d_mask;
@@ -575,7 +575,7 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeDict_GetItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
@@ -603,7 +603,7 @@ DeeDict_GetItemString(DeeObject *__restrict self,
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeDict_GetItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
@@ -699,7 +699,7 @@ DeeDict_GetItemStringLenDef(DeeObject *__restrict self,
 	return def;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeDict_HasItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
@@ -723,7 +723,7 @@ DeeDict_HasItemString(DeeObject *__restrict self,
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeDict_HasItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
@@ -750,7 +750,7 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
 	return false;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeDict_DelItemString(DeeObject *__restrict self,
                       char const *__restrict key,
                       dhash_t hash) {
@@ -798,7 +798,7 @@ again_lock:
 	return err_unknown_key_str(self, key);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeDict_DelItemStringLen(DeeObject *__restrict self,
                          char const *__restrict key,
                          size_t keylen,
@@ -1045,15 +1045,15 @@ collect_memory:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_size(Dict *__restrict self) {
 	return DeeInt_NewSize(self->d_used);
 }
 
 /* This one's basically your hasitem operator. */
-INTERN DREF DeeObject *DCALL
-dict_contains(Dict *__restrict self,
-              DeeObject *__restrict key) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_contains(Dict *self,
+              DeeObject *key) {
 	size_t mask;
 	struct dict_item *vector;
 	dhash_t i, perturb;
@@ -1095,9 +1095,9 @@ restart:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-dict_getitem(Dict *__restrict self,
-             DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_getitem(Dict *self,
+             DeeObject *key) {
 	size_t mask;
 	struct dict_item *vector;
 	dhash_t i, perturb;
@@ -1143,7 +1143,7 @@ restart:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeDict_GetItemDef(DeeObject *__restrict self,
                    DeeObject *__restrict key,
                    DeeObject *__restrict def) {
@@ -1260,7 +1260,7 @@ restart:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_delitem(Dict *__restrict self,
              DeeObject *__restrict key) {
 	DREF DeeObject *pop_item;
@@ -1271,7 +1271,7 @@ dict_delitem(Dict *__restrict self,
 	       : -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_setitem(Dict *__restrict self,
              DeeObject *__restrict key,
              DeeObject *__restrict value) {
@@ -1507,12 +1507,12 @@ again:
 
 
 /* Implemented in `dictproxy.c' */
-INTDEF DREF DeeObject *DCALL dict_iter(DeeDictObject *__restrict self);
-INTDEF DREF DeeObject *DCALL dictiterator_next_key(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL dictiterator_next_value(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_iter(DeeDictObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dictiterator_next_key(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dictiterator_next_value(DeeObject *__restrict self);
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 dict_nsi_getsize(Dict *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->d_used;
@@ -1521,7 +1521,7 @@ dict_nsi_getsize(Dict *__restrict self) {
 #endif
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 dict_nsi_setdefault(Dict *__restrict self,
                     DeeObject *__restrict key,
                     DeeObject *__restrict defl) {
@@ -1584,7 +1584,7 @@ PRIVATE struct type_seq dict_seq = {
 	/* .tp_nsi       = */ &dict_nsi
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_repr(Dict *__restrict self) {
 	struct unicode_printer p;
 	dssize_t error;
@@ -1638,7 +1638,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_bool(Dict *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->d_used != 0;
@@ -1649,7 +1649,7 @@ dict_bool(Dict *__restrict self) {
 
 PRIVATE int DCALL
 dict_init(Dict *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:Dict", &seq))
 		goto err;
@@ -1659,28 +1659,27 @@ err:
 }
 
 
-INTDEF DREF DeeObject *DCALL
-dict_newproxy(DeeDictObject *__restrict self,
-              DeeTypeObject *__restrict proxy_type);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_newproxy(DeeDictObject *self,
+              DeeTypeObject *proxy_type);
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_keys(DeeDictObject *__restrict self) {
 	return dict_newproxy(self, &DeeDictKeys_Type);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_items(DeeDictObject *__restrict self) {
 	return dict_newproxy(self, &DeeDictItems_Type);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_values(DeeDictObject *__restrict self) {
 	return dict_newproxy(self, &DeeDictValues_Type);
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_doclear(DeeDictObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_doclear(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	dict_clear(self);
@@ -1689,9 +1688,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_get(DeeDictObject *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_get(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		goto err;
@@ -1700,9 +1698,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_pop(DeeDictObject *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_pop(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
 		goto err;
@@ -1711,9 +1708,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_popsomething(DeeDictObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_popsomething(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	struct dict_item *iter;
 	if (DeeArg_Unpack(argc, argv, ":popitem"))
@@ -1748,9 +1744,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_setdefault(DeeDictObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_setdefault(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *value = Dee_None, *old_value;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o|o:setdefault", &key, &value))
@@ -1765,9 +1760,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_setold(DeeDictObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_setold(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *value;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setold", &key, &value))
@@ -1780,9 +1774,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_setnew(DeeDictObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_setnew(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *value;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setnew", &key, &value))
@@ -1795,9 +1788,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_setold_ex(DeeDictObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_setold_ex(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *value, *old_value, *result;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setold_ex", &key, &value))
@@ -1816,9 +1808,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_setnew_ex(DeeDictObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_setnew_ex(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *value, *old_value, *result;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setnew_ex", &key, &value))
@@ -1837,9 +1828,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_update(DeeDictObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_update(DeeDictObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *items, *iterator;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
@@ -1854,9 +1844,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-dict_sizeof(Dict *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_sizeof(Dict *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(sizeof(Dict) +
@@ -1937,9 +1926,9 @@ PRIVATE struct type_method dict_methods[] = {
 };
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-INTDEF DREF DeeObject *DCALL set_get_maxloadfactor(DeeObject *__restrict self);
-INTDEF int DCALL set_del_maxloadfactor(DeeObject *__restrict self);
-INTDEF int DCALL set_set_maxloadfactor(DeeObject *__restrict self, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL set_get_maxloadfactor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL set_del_maxloadfactor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL set_set_maxloadfactor(DeeObject *__restrict self, DeeObject *__restrict value);
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 INTERN struct type_getset dict_getsets[] = {

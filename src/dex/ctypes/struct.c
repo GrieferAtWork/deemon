@@ -38,7 +38,7 @@
 
 DECL_BEGIN
 
-PRIVATE DREF DeeStructTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStructTypeObject *DCALL
 struct_type_rehash(DeeStructTypeObject *__restrict self) {
 	DREF DeeStructTypeObject *result;
 	size_t i, j, perturb, new_mask;
@@ -281,7 +281,7 @@ PRIVATE DREF DeeStructTypeObject *DCALL struct_type_new_empty(void) {
 }
 
 PRIVATE DREF DeeStructTypeObject *DCALL
-struct_type_init(size_t argc, DeeObject **__restrict argv) {
+struct_type_init(size_t argc, DeeObject **argv) {
 	DeeObject *fields_or_name, *fields = NULL;
 	unsigned int flags = STRUCT_TYPE_FNORMAL; /* TODO */
 	if (DeeArg_Unpack(argc, argv, "o|o:struct_type", &fields_or_name, &fields))
@@ -293,7 +293,7 @@ struct_type_init(size_t argc, DeeObject **__restrict argv) {
 	       : DeeStructType_FromSequence(NULL, fields_or_name, flags);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 struct_type_fini(DeeStructTypeObject *__restrict self) {
 	size_t i;
 	for (i = 0; i <= self->st_fmsk; ++i) {
@@ -304,7 +304,7 @@ struct_type_fini(DeeStructTypeObject *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->st_fmsk; ++i) {
@@ -315,9 +315,8 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
-struct_type_offsetof(DeeStructTypeObject *__restrict self,
-                     size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject **argv) {
 	dhash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:offsetof", &name))
@@ -349,9 +348,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-struct_type_offsetafter(DeeStructTypeObject *__restrict self,
-                        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject **argv) {
 	dhash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:offsetafter", &name))
@@ -384,9 +382,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-struct_type_typeof(DeeStructTypeObject *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject **argv) {
 	dhash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:typeof", &name) ||
@@ -749,7 +746,7 @@ err:
 
 PRIVATE int DCALL
 struct_init(DeeStructTypeObject *__restrict tp_self,
-            void *self, size_t argc, DeeObject **__restrict argv) {
+            void *self, size_t argc, DeeObject **argv) {
 	DeeObject *value = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "|o:struct", &value))
 		return -1;

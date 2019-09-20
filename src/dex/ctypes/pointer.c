@@ -95,7 +95,7 @@ PRIVATE struct stype_cmp pointer_cmp = {
 PRIVATE int DCALL
 pointer_init(DeePointerTypeObject *__restrict tp_self,
              union pointer *self,
-             size_t argc, DeeObject **__restrict argv) {
+             size_t argc, DeeObject **argv) {
 	DeeObject *arg;
 	union pointer value;
 	if (DeeArg_Unpack(argc, argv, "o:pointer", &arg))
@@ -171,7 +171,7 @@ err:
 PRIVATE DREF DeeObject *DCALL
 pointer_call(DeePointerTypeObject *__restrict tp_self,
              union pointer *self, size_t argc,
-             DeeObject **__restrict argv) {
+             DeeObject **argv) {
 	union pointer ptr;
 	CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return NULL);
 	return DeeStruct_Call(tp_self->pt_orig, ptr.ptr, argc, argv);
@@ -198,14 +198,14 @@ err_r:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 pointer_set_deref(struct pointer_object *__restrict self,
                   DeeObject *__restrict value) {
 	return DeeStruct_Assign(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig,
 	                        self->p_ptr.ptr, value);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 pointer_del_deref(struct pointer_object *__restrict self) {
 	return pointer_set_deref(self, Dee_None);
 }
@@ -221,9 +221,8 @@ PRIVATE struct type_getset pointer_getsets[] = {
 
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-PRIVATE DREF DeeObject *DCALL
-struct_deref_func(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+struct_deref_func(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__deref__"))
 		goto err;
 	return (DREF DeeObject *)pointer_get_deref((struct pointer_object *)self);
@@ -523,14 +522,14 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_sizeof(struct lvalue_object *__restrict self) {
 	size_t result;
 	result = DeeSType_Sizeof(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_alignof(struct lvalue_object *__restrict self) {
 	size_t result;
 	result = DeeSType_Alignof(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig);
@@ -558,7 +557,7 @@ PRIVATE DREF struct lvalue_object *DCALL lvalue_ctor(void) {
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lvalue_copy(struct lvalue_object *__restrict self) {
 	DeeObject *result;
 	size_t datasize;
@@ -616,7 +615,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lvalue_tp_assign(struct lvalue_object *__restrict self,
                  DeeObject *__restrict other) {
 	return DeeStruct_Assign(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig,

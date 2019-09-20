@@ -37,7 +37,7 @@ DECL_BEGIN
  * generate code to jump to `target' after popping said expression
  * when if equals `case_expr'. However if it doesn't, leave the stack
  * as it was upon entry. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 emit_runtime_check(struct ast *__restrict ddi_ast,
                    struct ast *__restrict case_expr,
                    struct asm_sym *__restrict target) {
@@ -113,7 +113,7 @@ err:
 
 
 /* Construct a tuple `(sym.PC,sym.SP)' for the given `sym' */
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 pack_target_tuple(struct asm_sym *__restrict sym) {
 	DREF DeeObject *ri_ip;
 	DREF DeeObject *ri_sp;
@@ -138,7 +138,7 @@ err:
 	return NULL;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 try_get_integer_as_u16(DeeObject *__restrict self,
                        uint16_t *__restrict result) {
 	if (DeeInt_Check(self)) {
@@ -170,7 +170,7 @@ nope:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_genasm_switch(struct ast *__restrict self) {
 	struct asm_sym *old_break, *switch_break;
 	struct text_label *constant_cases, **pcases, *cases;

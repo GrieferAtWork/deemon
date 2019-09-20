@@ -121,15 +121,15 @@ DDATDEF DeeObject      DeeSet_EmptyInstance;
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF DREF DeeObject *DCALL DeeSet_Invert(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeSet_Union(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-INTDEF DREF DeeObject *DCALL DeeSet_Difference(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-INTDEF DREF DeeObject *DCALL DeeSet_Intersection(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-INTDEF DREF DeeObject *DCALL DeeSet_SymmetricDifference(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-INTDEF int DCALL DeeSet_IsSubSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-INTDEF int DCALL DeeSet_IsTrueSubSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-INTDEF int DCALL DeeSet_IsSameSet(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
-INTDEF int DCALL DeeSet_IsDisjoint(DeeObject *__restrict lhs, DeeObject *__restrict rhs);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSet_Invert(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_Union(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_Difference(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_Intersection(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSet_SymmetricDifference(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsSameSet(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

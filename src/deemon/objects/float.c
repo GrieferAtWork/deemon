@@ -76,13 +76,13 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_init(Float *__restrict self) {
 	self->f_value = 0.0; /* Default to 0. */
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 float_copy(Float *__restrict self,
            Float *__restrict other) {
 	self->f_value = other->f_value;
@@ -91,7 +91,7 @@ float_copy(Float *__restrict self,
 
 PRIVATE int DCALL
 float_ctor(Float *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	DeeObject *arg;
 	char *str;
 	if (DeeArg_Unpack(argc, argv, "o:float", &arg))
@@ -119,28 +119,28 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 float_str(Float *__restrict self) {
 	return DeeString_Newf("%f", self->f_value);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_bool(Float *__restrict self) {
 	return self->f_value != 0.0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 float_double(Float *__restrict self, double *__restrict result) {
 	*result = self->f_value;
 	return 0;
 }
 
-PRIVATE DREF Float *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
 float_neg(Float *__restrict self) {
 	return DeeFloat_NewReuse(self, -self->f_value);
 }
 
-PRIVATE DREF Float *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
 float_add(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
@@ -149,7 +149,7 @@ float_add(Float *__restrict self,
 	return DeeFloat_NewReuse(self, self->f_value + other_val);
 }
 
-PRIVATE DREF Float *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
 float_sub(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
@@ -158,7 +158,7 @@ float_sub(Float *__restrict self,
 	return DeeFloat_NewReuse(self, self->f_value - other_val);
 }
 
-PRIVATE DREF Float *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
 float_mul(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
@@ -167,7 +167,7 @@ float_mul(Float *__restrict self,
 	return DeeFloat_NewReuse(self, self->f_value * other_val);
 }
 
-PRIVATE DREF Float *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
 float_div(Float *__restrict self,
           DeeObject *__restrict other) {
 	double other_val;
@@ -202,7 +202,7 @@ PRIVATE struct type_math float_math = {
 #pragma warning(disable: 4127)
 #endif /* _MSC_VER */
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 float_hash(Float *__restrict self) {
 	if (sizeof(double) == sizeof(dhash_t))
 		return *(dhash_t *)&self->f_value;

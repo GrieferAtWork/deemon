@@ -44,7 +44,7 @@ DECL_BEGIN
 #define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
 #endif /* !CONFIG_LITTLE_ENDIAN */
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCodec_NormalizeName(DeeObject *__restrict name) {
 	char *iter, *end, *str;
 	size_t length;

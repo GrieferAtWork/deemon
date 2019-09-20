@@ -51,7 +51,7 @@ DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
 	                                 fs_unsupported_message);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
 	(void)self;
@@ -59,7 +59,7 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	return NULL;
 }
 
-PUBLIC DREF /*FSFile*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*FSFile*/ DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t UNUSED(fd),
                /*String*/ DeeObject *UNUSED(filename),
                int UNUSED(oflags), bool UNUSED(inherit_fd)) {
@@ -67,14 +67,14 @@ DeeFile_OpenFd(dsysfd_t UNUSED(fd),
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_OpenString(char const *__restrict UNUSED(filename),
                    int UNUSED(oflags), int UNUSED(mode)) {
 	fs_unsupported();
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict UNUSED(filename),
              int UNUSED(oflags), int UNUSED(mode)) {
 	fs_unsupported();
@@ -151,7 +151,7 @@ sysfile_putc(DeeFileObject *__restrict UNUSED(self), int UNUSED(ch),
 
 PRIVATE DREF DeeObject *DCALL
 sysfile_fileno(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **__restrict argv) {
+               size_t argc, DeeObject **argv) {
 	if (!DeeArg_Unpack(argc, argv, ":fileno"))
 		fs_unsupported();
 	return NULL;
@@ -164,7 +164,7 @@ PRIVATE struct type_method sysfile_methods[] = {
 
 PRIVATE DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;
 	return_none;

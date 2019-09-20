@@ -57,7 +57,7 @@ typedef struct {
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 gcsetiterator_ctor(GCSetIterator *__restrict self) {
 	self->gsi_set = &DeeGCSet_Empty;
 	Dee_Incref(&DeeGCSet_Empty);
@@ -65,7 +65,7 @@ gcsetiterator_ctor(GCSetIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 gcsetiterator_copy(GCSetIterator *__restrict self,
                    GCSetIterator *__restrict other) {
 	self->gsi_set = other->gsi_set;
@@ -74,17 +74,17 @@ gcsetiterator_copy(GCSetIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 gcsetiterator_fini(GCSetIterator *__restrict self) {
 	Dee_Decref(self->gsi_set);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 gcsetiterator_visit(GCSetIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->gsi_set);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcsetiterator_next(GCSetIterator *__restrict self) {
 	DeeObject *result;
 #ifdef CONFIG_NO_THREADS
@@ -171,7 +171,7 @@ PRIVATE DREF GCSet *DCALL gcset_ctor(void) {
 	return_reference_(&DeeGCSet_Empty);
 }
 
-PRIVATE DREF GCSet *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
 gcset_deepcopy(GCSet *__restrict self) {
 	if (!self->gs_size)
 		return gcset_ctor();
@@ -200,26 +200,26 @@ err:
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 gcset_fini(GCSet *__restrict self) {
 	size_t i;
 	for (i = 0; i <= self->gs_mask; ++i)
 		Dee_XDecref(self->gs_elem[i]);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 gcset_visit(GCSet *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->gs_mask; ++i)
 		Dee_XVisit(self->gs_elem[i]);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 gcset_bool(GCSet *__restrict self) {
 	return self->gs_size != 0;
 }
 
-PRIVATE DREF GCSetIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCSetIterator *DCALL
 gcset_iter(GCSet *__restrict self) {
 	DREF GCSetIterator *result;
 	result = DeeObject_MALLOC(GCSetIterator);
@@ -233,13 +233,13 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcset_size(GCSet *__restrict self) {
 	return DeeInt_NewSize(self->gs_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-gcset_contains(GCSet *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+gcset_contains(GCSet *self, DeeObject *other) {
 	dhash_t i, perturb, j;
 	i = perturb = GCSET_HASHOBJ(other) & self->gs_mask;
 	for (;; GCSET_HASHNXT(i, perturb)) {
@@ -322,7 +322,7 @@ INTERN GCSet DeeGCSet_Empty = {
 
 
 /* Finalize the given GC-set maker. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 GCSetMaker_Fini(GCSetMaker *__restrict self) {
 	size_t i;
 	GCSet *set = self->gs_set;
@@ -333,7 +333,7 @@ GCSetMaker_Fini(GCSetMaker *__restrict self) {
 	DeeObject_Free(set);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 GCSetMaker_Rehash(GCSetMaker *__restrict self) {
 	size_t new_mask;
 	GCSet *new_set, *old_set;
@@ -402,7 +402,7 @@ again:
 
 
 /* Remove all non-GC objects from the given set. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self) {
 	GCSet *new_set, *old_set;
 	size_t i, j, perturb;
@@ -441,7 +441,7 @@ GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self) {
 
 
 /* Pack the current set of objects and return them after (always) finalizing `self' */
-INTERN DREF GCSet *DCALL
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 GCSetMaker_Pack(/*inherit(always)*/ GCSetMaker *__restrict self) {
 	DREF GCSet *result;
 	if ((result = self->gs_set) != NULL) {
@@ -454,7 +454,7 @@ GCSetMaker_Pack(/*inherit(always)*/ GCSetMaker *__restrict self) {
 }
 
 
-INTERN DREF GCSet *DCALL
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 DeeGC_NewReferred(DeeObject *__restrict start) {
 	GCSetMaker maker = GCSETMAKER_INIT;
 	if (DeeGC_CollectReferred(&maker, start))
@@ -465,7 +465,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF GCSet *DCALL
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 DeeGC_NewReachable(DeeObject *__restrict start) {
 	GCSetMaker maker = GCSETMAKER_INIT;
 	if (DeeGC_CollectReachable(&maker, start))
@@ -476,7 +476,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF GCSet *DCALL
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 DeeGC_NewReferredGC(DeeObject *__restrict start) {
 	GCSetMaker maker = GCSETMAKER_INIT;
 	if (DeeGC_CollectReferred(&maker, start))
@@ -489,7 +489,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF GCSet *DCALL
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 DeeGC_NewReachableGC(DeeObject *__restrict start) {
 	GCSetMaker maker = GCSETMAKER_INIT;
 	if (DeeGC_CollectReachable(&maker, start))
@@ -502,7 +502,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF GCSet *DCALL
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 DeeGC_NewGCReferred(DeeObject *__restrict target) {
 	GCSetMaker maker = GCSETMAKER_INIT;
 	if (DeeGC_CollectGCReferred(&maker, target))
@@ -514,7 +514,7 @@ err:
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 visit_referr_func(DeeObject *__restrict self,
                   GCSetMaker *__restrict data) {
 	if (data->gs_err == 0) {
@@ -524,7 +524,7 @@ visit_referr_func(DeeObject *__restrict self,
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 visit_reachable_func(DeeObject *__restrict self,
                      GCSetMaker *__restrict data) {
 	if (data->gs_err == 0) {
@@ -539,7 +539,7 @@ visit_reachable_func(DeeObject *__restrict self,
 /* Collect referred, or reachable objects.
  * @return:  0: Collection was OK.
  * @return: -1: An error occurred. (not enough memory) */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeGC_CollectReferred(GCSetMaker *__restrict self,
                       DeeObject *__restrict start) {
 again:
@@ -553,7 +553,7 @@ again:
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeGC_CollectReachable(GCSetMaker *__restrict self,
                        DeeObject *__restrict start) {
 again:
@@ -581,7 +581,7 @@ visit_referred_by_func(DeeObject *__restrict self,
 		data->did = true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeGC_ReferredBy(DeeObject *__restrict source, DeeObject *__restrict target) {
 	struct visit_referred_by_data data;
 	/* Check for special case: the 2 objects are identical. */

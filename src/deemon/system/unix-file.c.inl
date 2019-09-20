@@ -63,7 +63,7 @@ DECL_BEGIN
 
 typedef DeeSystemFileObject SystemFile;
 
-PUBLIC DREF /*SystemFile*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t fd,
                /*String*/ DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
@@ -102,7 +102,7 @@ DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 unix_opename(int fd) {
 	/* TODO: readlink("/proc/self/fd/%d" % self->sf_handle) */
 	(void)fd;
@@ -111,7 +111,7 @@ unix_opename(int fd) {
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	SystemFile *me = (SystemFile *)self;
 	DREF DeeObject *result;
@@ -302,15 +302,15 @@ done:
 #define NOSHAR_FLAGS   (PRIVATE_NOSHAR_FLAGS_A) /* Options with which we don't share bits. */
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	DREF SystemFile *result;
 	int fd, used_oflags;
 	char *utf8_filename;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 #if O_RDONLY == OPEN_FRDONLY && \
-O_WRONLY == OPEN_FWRONLY &&     \
-O_RDWR == OPEN_FRDWR
+    O_WRONLY == OPEN_FWRONLY && \
+    O_RDWR == OPEN_FRDWR
 	used_oflags = oflags & (SHARED_FLAGS | O_RDONLY | O_WRONLY | O_RDWR);
 #else
 	{
@@ -471,7 +471,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_OpenString(char const *__restrict filename,
                    int oflags, int mode) {
 	DREF DeeObject *result, *nameob;
@@ -511,7 +511,7 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 	return (DeeObject *)&sysf_std[id];
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer, size_t bufsize,
              dioflag_t flags) {
@@ -528,7 +528,7 @@ sysfile_read(SystemFile *__restrict self,
 	return (dssize_t)result;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer, size_t bufsize,
               dioflag_t flags) {
@@ -562,7 +562,7 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	return result;
 }
 
-PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
 #if !defined(CONFIG_NO_FDATASYNC) && \
     (defined(CONFIG_HAVE_FDATASYNC) || defined(fdatasync) || \
      defined(__USE_POSIX199309) || defined(__USE_UNIX98))
@@ -587,7 +587,7 @@ PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	int result;
 #if !defined(CONFIG_NO_FTRUNCATE) && \
@@ -636,7 +636,7 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_close(SystemFile *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(close((int)self->sf_ownhandle)) {
@@ -649,9 +649,8 @@ sysfile_close(SystemFile *__restrict self) {
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sysfile_fileno(SystemFile *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
 	dsysfd_t result;
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
@@ -662,9 +661,8 @@ sysfile_fileno(SystemFile *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-sysfile_isatty(SystemFile *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":isatty"))
 		goto err;
@@ -707,7 +705,7 @@ PRIVATE struct type_getset sysfile_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
 	if ((int)self->sf_ownhandle >= 0) {
 		DBG_ALIGNMENT_DISABLE();
@@ -719,7 +717,7 @@ sysfile_fini(SystemFile *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;
 #if !defined(CONFIG_NO_SYNC) && \

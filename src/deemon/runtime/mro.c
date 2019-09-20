@@ -47,10 +47,9 @@ PRIVATE DEFINE_RWLOCK(membercache_list_lock);
 PRIVATE struct membercache *membercache_list;
 
 #define streq(a, b) (strcmp(a, b) == 0)
-LOCAL bool DCALL
-streq_len(char const *__restrict zero_zterminated,
-          char const *__restrict comparand,
-          size_t comparand_length) {
+LOCAL NONNULL((1, 2)) bool DCALL
+streq_len(char const *zero_zterminated,
+          char const *comparand, size_t comparand_length) {
 	if (strlen(zero_zterminated) != comparand_length)
 		return false;
 	return memcmp(zero_zterminated, comparand, comparand_length) == 0;
@@ -58,7 +57,7 @@ streq_len(char const *__restrict zero_zterminated,
 
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 membercache_fini(struct membercache *__restrict self) {
 	MEMBERCACHE_WRITE(self);
 	ASSERT((self->mc_table != NULL) ==
@@ -118,7 +117,7 @@ membercache_clear(size_t max_clear) {
 }
 
 STATIC_ASSERT(MEMBERCACHE_UNUSED == 0);
-PRIVATE ATTR_NOINLINE bool DCALL
+PRIVATE ATTR_NOINLINE NONNULL((1)) bool DCALL
 membercache_rehash(struct membercache *__restrict self) {
 	struct membercache_slot *new_vector, *iter, *end;
 	size_t new_mask = self->mc_mask;
@@ -237,10 +236,10 @@ membercache_rehash(struct membercache *__restrict self) {
 	   : "?") \
 
 
-INTERN void DCALL
-membercache_addmethod(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct type_method const *__restrict method) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addmethod(struct membercache *self,
+                      DeeTypeObject *decl, dhash_t hash,
+                      struct type_method const *method) {
 	DEE_DPRINTF("[RT] Caching method `%s.%s' in `%s'\n",
 	            decl->tp_name, method->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
@@ -250,10 +249,10 @@ membercache_addmethod(struct membercache *__restrict self,
 	});
 }
 
-INTERN void DCALL
-membercache_addinstancemethod(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct type_method const *__restrict method) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addinstancemethod(struct membercache *self,
+                              DeeTypeObject *decl, dhash_t hash,
+                              struct type_method const *method) {
 	DEE_DPRINTF("[RT] Caching instance_method `%s.%s' in `%s'\n",
 	            decl->tp_name, method->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
@@ -264,10 +263,10 @@ membercache_addinstancemethod(struct membercache *__restrict self,
 	});
 }
 
-INTERN void DCALL
-membercache_addgetset(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct type_getset const *__restrict getset) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addgetset(struct membercache *self,
+                      DeeTypeObject *decl, dhash_t hash,
+                      struct type_getset const *getset) {
 	DEE_DPRINTF("[RT] Caching getset `%s.%s' in `%s'\n",
 	            decl->tp_name, getset->gs_name,
 	            MEMBERCACHE_GETTYPENAME(self));
@@ -277,10 +276,10 @@ membercache_addgetset(struct membercache *__restrict self,
 	});
 }
 
-INTERN void DCALL
-membercache_addinstancegetset(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct type_getset const *__restrict getset) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addinstancegetset(struct membercache *self,
+                              DeeTypeObject *decl, dhash_t hash,
+                              struct type_getset const *getset) {
 	DEE_DPRINTF("[RT] Caching instance_getset `%s.%s' in `%s'\n",
 	            decl->tp_name, getset->gs_name,
 	            MEMBERCACHE_GETTYPENAME(self));
@@ -291,10 +290,10 @@ membercache_addinstancegetset(struct membercache *__restrict self,
 	});
 }
 
-INTERN void DCALL
-membercache_addmember(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct type_member const *__restrict member) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addmember(struct membercache *self,
+                      DeeTypeObject *decl, dhash_t hash,
+                      struct type_member const *member) {
 	DEE_DPRINTF("[RT] Caching member `%s.%s' in `%s'\n",
 	            decl->tp_name, member->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
@@ -304,10 +303,10 @@ membercache_addmember(struct membercache *__restrict self,
 	});
 }
 
-INTERN void DCALL
-membercache_addinstancemember(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct type_member const *__restrict member) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addinstancemember(struct membercache *self,
+                              DeeTypeObject *decl, dhash_t hash,
+                              struct type_member const *member) {
 	DEE_DPRINTF("[RT] Caching instance_member `%s.%s' in `%s'\n",
 	            decl->tp_name, member->m_name,
 	            MEMBERCACHE_GETTYPENAME(self));
@@ -318,10 +317,10 @@ membercache_addinstancemember(struct membercache *__restrict self,
 	});
 }
 
-INTERN void DCALL
-membercache_addattrib(struct membercache *__restrict self,
-                      DeeTypeObject *__restrict decl, dhash_t hash,
-                      struct class_attribute *__restrict attrib) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addattrib(struct membercache *self,
+                      DeeTypeObject *decl, dhash_t hash,
+                      struct class_attribute *attrib) {
 	char const *name = DeeString_STR(attrib->ca_name);
 	DEE_DPRINTF("[RT] Caching attribute `%s.%s' in `%s'\n",
 	            decl->tp_name, name,
@@ -334,10 +333,10 @@ membercache_addattrib(struct membercache *__restrict self,
 	});
 }
 
-INTERN void DCALL
-membercache_addinstanceattrib(struct membercache *__restrict self,
-                              DeeTypeObject *__restrict decl, dhash_t hash,
-                              struct class_attribute *__restrict attrib) {
+INTERN NONNULL((1, 2, 4)) void DCALL
+membercache_addinstanceattrib(struct membercache *self,
+                              DeeTypeObject *decl, dhash_t hash,
+                              struct class_attribute *attrib) {
 	char const *name = DeeString_STR(attrib->ca_name);
 	DEE_DPRINTF("[RT] Caching instance_attribute `%s.%s' in `%s'\n",
 	            decl->tp_name, name,

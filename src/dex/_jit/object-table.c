@@ -41,7 +41,7 @@ INTERN struct jit_object_entry jit_empty_object_list[1] = {
 };
 
 /* Initialize `dst' as a copy of `src' */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 JITObjectTable_Copy(JITObjectTable *__restrict dst,
                     JITObjectTable const *__restrict src) {
 	struct jit_object_entry *old_table;
@@ -71,7 +71,7 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
 
 /* Insert all elements from `src' into `dst'
  * Existing entires will not be overwritten. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
                            JITObjectTable const *__restrict src) {
 	size_t i;
@@ -95,7 +95,7 @@ err:
 
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 JITObjectTable_Fini(JITObjectTable *__restrict self) {
 	size_t i;
 	if (self->ot_list == jit_empty_object_list)
@@ -108,7 +108,7 @@ JITObjectTable_Fini(JITObjectTable *__restrict self) {
 	Dee_Free(self->ot_list);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	if (self->ot_list == jit_empty_object_list)
@@ -121,7 +121,7 @@ JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg) 
 }
 
 
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 JITObjectTable_TryRehash(JITObjectTable *__restrict self,
                          size_t new_mask) {
 	size_t i, j, perturb;

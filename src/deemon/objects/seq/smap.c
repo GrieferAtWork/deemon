@@ -59,7 +59,7 @@ STATIC_ASSERT(sizeof(SharedMapIterator) == sizeof(SharedVectorIterator));
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_key;
 	SharedMap *map = self->sm_seq;
@@ -91,7 +91,7 @@ smap_nsi_nextkey(SharedMapIterator *__restrict self) {
 	return result_key;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result_value;
 	SharedMap *map = self->sm_seq;
@@ -123,7 +123,7 @@ smap_nsi_nextvalue(SharedMapIterator *__restrict self) {
 	return result_value;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smapiter_next(SharedMapIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *result_key, *result_value;
@@ -174,7 +174,7 @@ done:
 
 PRIVATE int DCALL
 smapiter_ctor(SharedVectorIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->si_seq, &SharedMap_Type))
 		return -1;
@@ -182,14 +182,14 @@ smapiter_ctor(SharedVectorIterator *__restrict self,
 	self->si_index = 0;
 	return 0;
 }
-INTDEF void DCALL sveciter_fini(SharedVectorIterator *__restrict self);
+INTDEF NONNULL((1)) void DCALL sveciter_fini(SharedVectorIterator *__restrict self);
 #define smapiter_fini sveciter_fini
-INTDEF void DCALL sveciter_visit(SharedVectorIterator *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL sveciter_visit(SharedVectorIterator *__restrict self, dvisit_t proc, void *arg);
 #define smapiter_visit sveciter_visit
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 sveciter_bool(SharedVectorIterator *__restrict self);
 #define smapiter_bool sveciter_bool
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_copy(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other);
 #define smapiter_copy sveciter_copy
@@ -252,7 +252,7 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 smap_fini(SharedMap *__restrict self) {
 	DREF DeeObject **begin, **iter;
 	iter = (begin = (DeeObject **)self->sm_vector) + self->sm_length * 2;
@@ -261,7 +261,7 @@ smap_fini(SharedMap *__restrict self) {
 	Dee_Free(begin);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 smap_visit(SharedMap *__restrict self, dvisit_t proc, void *arg) {
 	DREF DeeObject **begin, **iter;
 	iter = (begin = (DeeObject **)self->sm_vector) + self->sm_length * 2;
@@ -269,7 +269,7 @@ smap_visit(SharedMap *__restrict self, dvisit_t proc, void *arg) {
 		Dee_Visit(*iter);
 }
 
-PRIVATE DREF SharedMapIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SharedMapIterator *DCALL
 smap_iter(SharedMap *__restrict self) {
 	DREF SharedMapIterator *result;
 	result = DeeObject_MALLOC(SharedMapIterator);
@@ -284,7 +284,7 @@ done:
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2, 3)) void DCALL
 smap_cache(SharedMap *__restrict self,
            DeeObject *__restrict key,
            DeeObject *__restrict value,
@@ -306,8 +306,8 @@ smap_cache(SharedMap *__restrict self,
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
-smap_contains(SharedMap *__restrict self, DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+smap_contains(SharedMap *self, DeeObject *key) {
 	dhash_t i, perturb, hash;
 	SharedItemEx *item;
 	int temp;
@@ -370,8 +370,8 @@ smap_contains(SharedMap *__restrict self, DeeObject *__restrict key) {
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-smap_getitem(SharedMap *__restrict self, DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+smap_getitem(SharedMap *self, DeeObject *key) {
 	dhash_t i, perturb, hash;
 	SharedItemEx *item;
 	int temp;
@@ -444,7 +444,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 smap_nsi_getdefault(SharedMap *__restrict self,
                     DeeObject *__restrict key,
                     DeeObject *__restrict defl) {
@@ -522,15 +522,15 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-smap_get(SharedMap *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+smap_get(SharedMap *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		return NULL;
 	return smap_nsi_getdefault(self, key, def);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_size(SharedMap *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	size_t result = self->sm_length;
@@ -540,7 +540,7 @@ smap_size(SharedMap *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 smap_bool(SharedMap *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->sm_length != 0;
@@ -549,7 +549,7 @@ smap_bool(SharedMap *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 smap_nsi_getsize(SharedMap *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->sm_length;
@@ -685,7 +685,7 @@ done:
  *    the `ASM_CALL_MAP' opcode, as generated for brace-initializers.
  * NOTE: During decref(), objects are destroyed in reverse order,
  *       mirroring the behavior of adjstack/pop instructions. */
-PUBLIC void DCALL DeeSharedMap_Decref(DeeObject *__restrict self) {
+PUBLIC NONNULL((1)) void DCALL DeeSharedMap_Decref(DeeObject *__restrict self) {
 	DREF DeeObject **begin, **iter;
 	DREF DeeObject **vector_copy;
 	SharedMap *me = (SharedMap *)self;

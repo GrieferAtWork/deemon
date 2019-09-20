@@ -149,7 +149,7 @@ struct xml_node {
 #define XMLNode_Incref(x) (ATOMIC_FETCHINC((x)->xn_refcnt))
 #define XMLNode_Decref(x) (ATOMIC_DECFETCH((x)->xn_refcnt))
 
-INTDEF void DCALL XMLNode_Destroy(XMLNode *__restrict self);
+INTDEF NONNULL((1)) void DCALL XMLNode_Destroy(XMLNode *__restrict self);
 #define XMLNode_Alloc()    DeeSlab_MALLOC(XMLNode)
 #define XMLNode_TryAlloc() DeeSlab_TRYMALLOC(XMLNode)
 
@@ -164,7 +164,7 @@ INTDEF void DCALL XMLNode_Destroy(XMLNode *__restrict self);
  * @return: 0:            Successfully parsed a node.
  * @return: 1:            No node found within the given input text.
  * @return: -1:           An error occurred. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 XMLNode_InitFromString(XMLNode *__restrict self,
                        DeeObject *__restrict data_owner,
                        /*utf-8*/ char const *__restrict text,
@@ -175,7 +175,7 @@ XMLNode_InitFromString(XMLNode *__restrict self,
  * @param: parent:     The parent node for `self'.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The requested node does not exist. */
-INTDEF DREF XMLNode *DCALL XMLNode_GetPrev(XMLNode *__restrict self, XMLNode *__restrict parent);
+INTDEF WUNUSED NONNULL((1, 2)) DREF XMLNode *DCALL XMLNode_GetPrev(XMLNode *__restrict self, XMLNode *__restrict parent);
 INTDEF DREF XMLNode *DCALL XMLNode_GetNext(XMLNode *self, XMLNode *__restrict parent);
 #define XMLNode_GetFirst(self) XMLNode_GetNext(NULL, self)
 

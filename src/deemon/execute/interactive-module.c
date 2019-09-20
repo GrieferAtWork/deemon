@@ -155,22 +155,22 @@ typedef struct {
 
 
 #ifndef CONFIG_NO_THREADS
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 interactivemodule_lockread(InteractiveModule *__restrict self) {
 	recursive_rwlock_read(&self->im_exec_lock);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 interactivemodule_lockwrite(InteractiveModule *__restrict self) {
 	recursive_rwlock_write(&self->im_exec_lock);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 interactivemodule_lockendread(InteractiveModule *__restrict self) {
 	recursive_rwlock_endread(&self->im_exec_lock);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 interactivemodule_lockendwrite(InteractiveModule *__restrict self) {
 	recursive_rwlock_endwrite(&self->im_exec_lock);
 }
@@ -190,13 +190,13 @@ is_an_imod(DeeModuleObject *__restrict self) {
 	}
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeModule_LockSymbols(DeeModuleObject *__restrict self) {
 	if (is_an_imod(self))
 		recursive_rwlock_read(&((InteractiveModule *)self)->im_exec_lock);
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeModule_UnlockSymbols(DeeModuleObject *__restrict self) {
 	if (is_an_imod(self))
 		recursive_rwlock_endread(&((InteractiveModule *)self)->im_exec_lock);
@@ -290,7 +290,7 @@ err:
 
 INTDEF int DCALL skip_lf(void);
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 imod_next(InteractiveModule *__restrict self) {
 	DREF DeeObject *result;
 	struct code_frame *top_frame;
@@ -866,7 +866,7 @@ visit_options_chain(struct compiler_options *entry,
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 module_rehash_globals(DeeModuleObject *__restrict self) {
 	size_t i, new_mask = (self->mo_bucketm << 1) | 1;
 	struct module_symbol *new_vec;
@@ -999,9 +999,9 @@ err:
 	(CODE_FASSEMBLY | CODE_FLENIENT | CODE_FVARARGS | CODE_FHEAPFRAME | CODE_FYIELDING)
 
 
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 rehash_scope(DeeScopeObject *__restrict iter);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
                                  int start_line, int start_col);
 
@@ -1420,7 +1420,7 @@ err:
 
 PRIVATE int DCALL
 imod_ctor(InteractiveModule *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DeeObject *imod_path = NULL;
 	DeeObject *imod_name = NULL;
 	DeeObject *imod_argv = NULL;
@@ -1609,7 +1609,7 @@ err:
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 imod_fini(InteractiveModule *__restrict self) {
 	size_t i;
 	Dee_XDecref(self->im_stream);
@@ -1639,7 +1639,7 @@ imod_fini(InteractiveModule *__restrict self) {
 	Dee_Free(self->im_module.mo_globalv);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 imod_clear(InteractiveModule *__restrict self) {
 	size_t i, localc, old_globalc;
 	DREF DeeObject *old_stream;
@@ -1700,7 +1700,7 @@ imod_clear(InteractiveModule *__restrict self) {
 	decref_options(&old_options);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 imod_visit(InteractiveModule *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	recursive_rwlock_read(&self->im_exec_lock);
@@ -1728,7 +1728,7 @@ imod_visit(InteractiveModule *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE DREF InteractiveModule *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF InteractiveModule *DCALL
 imod_iter(InteractiveModule *__restrict self) {
 	Dee_Incref((DeeObject *)self);
 	return self;

@@ -47,12 +47,12 @@ typedef struct {
 
 PRIVATE int DCALL
 sema_init(Semaphore *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	self->sem_count = 0;
 	return DeeArg_Unpack(argc, argv, "|Iu:semaphore", &self->sem_count);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_enter(Semaphore *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	if (!self->sem_count) {
@@ -78,7 +78,7 @@ sema_enter(Semaphore *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_leave(Semaphore *__restrict self, size_t count) {
 #ifdef CONFIG_NO_THREADS
 	if unlikely((self->sem_count + count) < self->sem_count) {
@@ -104,7 +104,7 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 
 PRIVATE DREF DeeObject *DCALL
 sema_post(Semaphore *__restrict self, size_t argc,
-          DeeObject **__restrict argv) {
+          DeeObject **argv) {
 	size_t count = 1;
 	if (DeeArg_Unpack(argc, argv, "|Iu:post", &count) ||
 	    sema_leave(self, count))
@@ -114,7 +114,7 @@ sema_post(Semaphore *__restrict self, size_t argc,
 
 PRIVATE DREF DeeObject *DCALL
 sema_wait(Semaphore *__restrict self, size_t argc,
-          DeeObject **__restrict argv) {
+          DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":wait") ||
 	    sema_enter(self))
 		return NULL;
@@ -123,7 +123,7 @@ sema_wait(Semaphore *__restrict self, size_t argc,
 
 PRIVATE DREF DeeObject *DCALL
 sema_trywait(Semaphore *__restrict self, size_t argc,
-             DeeObject **__restrict argv) {
+             DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":trywait"))
 		goto err;
 #ifdef CONFIG_NO_THREADS
@@ -148,7 +148,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 sema_timedwait(Semaphore *__restrict self, size_t argc,
-               DeeObject **__restrict argv) {
+               DeeObject **argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))
 		goto err;
@@ -268,7 +268,7 @@ typedef struct {
 } Mutex;
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mutex_enter(Mutex *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	DeeThreadObject *caller = DeeThread_Self();
@@ -288,7 +288,7 @@ mutex_enter(Mutex *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mutex_leave(Mutex *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	DeeThreadObject *caller = DeeThread_Self();
@@ -305,7 +305,7 @@ mutex_leave(Mutex *__restrict self) {
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mutex_ctor(Mutex *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	self->m_owner     = NULL;
@@ -319,18 +319,16 @@ PRIVATE struct type_with mutex_with = {
 	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&mutex_leave
 };
 
-PRIVATE DREF DeeObject *DCALL
-mutex_acquire(Mutex *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_acquire(Mutex *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire") ||
 	    mutex_enter(self))
 		return NULL;
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-mutex_tryacquire(Mutex *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_tryacquire(Mutex *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
 		goto err;
 #ifndef CONFIG_NO_THREADS
@@ -350,9 +348,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-mutex_timedacquire(Mutex *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_timedacquire(Mutex *self, size_t argc, DeeObject **argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:tryacquire", &timeout))
 		goto err;
@@ -376,9 +373,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-mutex_release(Mutex *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+mutex_release(Mutex *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":release") ||
 	    mutex_leave(self))
 		return NULL;

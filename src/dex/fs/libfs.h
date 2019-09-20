@@ -48,8 +48,8 @@ typedef struct stat_object DeeStatObject;
 
 /* Get/Set the current working directory. */
 INTDEF DREF /*String*/ DeeObject *DCALL fs_getcwd(void);
-INTDEF int DCALL fs_printcwd(struct unicode_printer *__restrict printer);
-INTDEF int DCALL fs_chdir(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_printcwd(struct unicode_printer *__restrict printer);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path);
 
 /* Return a temporary directory, such as `/tmp' */
 INTDEF DREF /*String*/ DeeObject *DCALL fs_gettmp(void);
@@ -59,13 +59,13 @@ INTDEF DREF /*String*/ DeeObject *DCALL fs_gethostname(void);
 
 /* System-specific environment variable implementation. */
 INTDEF DREF /*String*/ DeeObject *DCALL fs_getenv(/*String*/ DeeObject *__restrict name, bool try_get);
-INTDEF bool DCALL fs_hasenv(/*String*/ DeeObject *__restrict name);
-INTDEF int DCALL fs_delenv(/*String*/ DeeObject *__restrict name);
-INTDEF int DCALL fs_setenv(/*String*/ DeeObject *__restrict name, /*String*/ DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1)) bool DCALL fs_hasenv(/*String*/ DeeObject *__restrict name);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_delenv(/*String*/ DeeObject *__restrict name);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_setenv(/*String*/ DeeObject *__restrict name, /*String*/ DeeObject *__restrict value);
 /* @return:  1: Failed to retrieve the home path and `try_get' was true.
  * @return:  0: Successfully printed the home path.
  * @return: -1: An error occurred. */
-INTDEF int DCALL fs_printenv(/*utf-8*/ char const *__restrict name,
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_printenv(/*utf-8*/ char const *__restrict name,
                              struct unicode_printer *__restrict printer, bool try_get);
 
 /* The descriptor for a user account.
@@ -87,8 +87,8 @@ INTDEF DREF DeeObject *DCALL fs_getuser(bool try_get);
 /* @return:  1: Failed to retrieve the home path and `try_get' was true.
  * @return:  0: Successfully printed the home path.
  * @return: -1: An error occurred. */
-INTDEF int DCALL fs_printhome(struct unicode_printer *__restrict printer, bool try_get);
-INTDEF int DCALL fs_printuser(struct unicode_printer *__restrict printer, bool try_get);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_printhome(struct unicode_printer *__restrict printer, bool try_get);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_printuser(struct unicode_printer *__restrict printer, bool try_get);
 #ifdef CONFIG_HOST_WINDOWS
 INTDEF int DCALL nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, bool bTryGet);
 INTDEF int DCALL nt_printhome_process(struct unicode_printer *__restrict printer, void *hProcess, bool bTryGet);
@@ -229,25 +229,25 @@ INTDEF DeeTypeObject DeeLStat_Type;
 
 
 /* Filesystem write operations. */
-INTDEF int DCALL fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
                            DeeObject *__restrict mtime, DeeObject *__restrict ctime);
-INTDEF int DCALL fs_chmod(DeeObject *__restrict path, DeeObject *__restrict mode);
-INTDEF int DCALL fs_lchmod(DeeObject *__restrict path, DeeObject *__restrict mode);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_chmod(DeeObject *__restrict path, DeeObject *__restrict mode);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_lchmod(DeeObject *__restrict path, DeeObject *__restrict mode);
 #ifdef CONFIG_HOST_WINDOWS
-INTDEF int DCALL fs_chattr_np(DeeObject *__restrict path, DeeObject *__restrict new_attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_chattr_np(DeeObject *__restrict path, DeeObject *__restrict new_attr);
 #endif /* CONFIG_HOST_WINDOWS */
-INTDEF int DCALL fs_chown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
-INTDEF int DCALL fs_lchown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
-INTDEF int DCALL fs_mkdir(DeeObject *__restrict path, DeeObject *__restrict perm);
-INTDEF int DCALL fs_rmdir(DeeObject *__restrict path);
-INTDEF int DCALL fs_unlink(DeeObject *__restrict path);
-INTDEF int DCALL fs_remove(DeeObject *__restrict path);
-INTDEF int DCALL fs_rename(DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
-INTDEF int DCALL fs_copyfile(DeeObject *__restrict existing_file, DeeObject *__restrict new_file,
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL fs_chown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL fs_lchown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_mkdir(DeeObject *__restrict path, DeeObject *__restrict perm);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_rmdir(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_unlink(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) int DCALL fs_remove(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_rename(DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL fs_copyfile(DeeObject *__restrict existing_file, DeeObject *__restrict new_file,
                              DeeObject *__restrict progress_callback);
-INTDEF int DCALL fs_link(DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
-INTDEF int DCALL fs_symlink(DeeObject *__restrict target_text, DeeObject *__restrict link_path, bool format_target);
-INTDEF DREF DeeObject *DCALL fs_readlink(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_link(DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_symlink(DeeObject *__restrict target_text, DeeObject *__restrict link_path, bool format_target);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_readlink(DeeObject *__restrict path);
 
 
 /* Return the mask and flags to be applied
@@ -258,7 +258,7 @@ INTDEF DREF DeeObject *DCALL fs_readlink(DeeObject *__restrict path);
  * >> }
  * >> chmod(path,chmod_flags);
  */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_getchmod_mask(DeeObject *__restrict mode,
                  uint16_t *__restrict pchmod_mask,
                  uint16_t *__restrict pchmod_flags);
@@ -272,21 +272,21 @@ INTDEF DeeTypeObject DeeEnvIterator_Type; /* Can be default-constructed. */
 /* A singleton instance of `DeeEnv_Type' that is exported from this module as `env'. */
 INTDEF DeeObject DeeEnv_Singleton;
 
-INTDEF DREF DeeObject *DCALL enviterator_next_key(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL enviterator_next_value(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL enviterator_next_key(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL enviterator_next_value(DeeObject *__restrict self);
 
 
 /* Path manipulation functions */
-INTDEF DREF DeeObject *DCALL fs_pathhead(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathtail(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathfile(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathext(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathdrive(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathinctrail(DeeObject *__restrict path);
-INTDEF DREF DeeObject *DCALL fs_pathexctrail(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathhead(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathtail(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathfile(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathext(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathdrive(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathinctrail(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathexctrail(DeeObject *__restrict path);
 INTDEF DREF DeeObject *DCALL fs_pathabs(DeeObject *__restrict path, DeeObject *pwd);
 INTDEF DREF DeeObject *DCALL fs_pathrel(DeeObject *__restrict path, DeeObject *pwd);
-INTDEF bool DCALL fs_pathisabs(DeeObject *__restrict path);
+INTDEF WUNUSED NONNULL((1)) bool DCALL fs_pathisabs(DeeObject *__restrict path);
 INTDEF DREF DeeObject *DCALL fs_pathjoin(size_t pathc, DeeObject **__restrict pathv);
 
 /* @param: options: Set of `FS_EXPAND_F*' */

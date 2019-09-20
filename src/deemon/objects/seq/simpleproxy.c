@@ -35,14 +35,14 @@
 
 DECL_BEGIN
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_ctor(SeqSimpleProxy *__restrict self) {
 	self->sp_seq = Dee_EmptySeq;
 	Dee_Incref(Dee_EmptySeq);
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 proxy_copy(SeqSimpleProxy *__restrict self,
            SeqSimpleProxy *__restrict other) {
 	self->sp_seq = other->sp_seq;
@@ -50,7 +50,7 @@ proxy_copy(SeqSimpleProxy *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 proxy_deep(SeqSimpleProxy *__restrict self,
            SeqSimpleProxy *__restrict other) {
 	self->sp_seq = DeeObject_DeepCopy(other->sp_seq);
@@ -63,7 +63,7 @@ err:
 
 PRIVATE int DCALL
 proxy_init(SeqSimpleProxy *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv,
 	                  self->ob_type == &SeqIds_Type
 	                  ? "o:_SeqIds"
@@ -78,32 +78,32 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 proxy_fini(SeqSimpleProxy *__restrict self) {
 	Dee_Decref(self->sp_seq);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 proxy_visit(SeqSimpleProxy *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->sp_seq);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_bool(SeqSimpleProxy *__restrict self) {
 	return DeeObject_Bool(self->sp_seq);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 proxy_nsi_getsize(SeqSimpleProxy *__restrict self) {
 	return DeeObject_Size(self->sp_seq);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 proxy_nsi_fast_getsize(SeqSimpleProxy *__restrict self) {
 	return DeeFastSeq_GetSize(self->sp_seq);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_size(SeqSimpleProxy *__restrict self) {
 	return DeeObject_SizeObject(self->sp_seq);
 }
@@ -113,7 +113,7 @@ PRIVATE struct type_member proxy_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF SeqSimpleProxyIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SeqSimpleProxyIterator *DCALL
 ids_iter(SeqSimpleProxy *__restrict self) {
 	DREF SeqSimpleProxyIterator *result;
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
@@ -130,7 +130,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF SeqSimpleProxyIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SeqSimpleProxyIterator *DCALL
 types_iter(SeqSimpleProxy *__restrict self) {
 	DREF SeqSimpleProxyIterator *result;
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
@@ -147,7 +147,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF SeqSimpleProxyIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SeqSimpleProxyIterator *DCALL
 classes_iter(SeqSimpleProxy *__restrict self) {
 	DREF SeqSimpleProxyIterator *result;
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
@@ -165,7 +165,7 @@ err_r:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ids_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
@@ -176,7 +176,7 @@ ids_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 types_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
@@ -188,7 +188,7 @@ types_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 classes_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItemIndex(self->sp_seq, index);
@@ -201,8 +201,8 @@ classes_nsi_getitem(SeqSimpleProxy *__restrict self, size_t index) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-ids_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ids_getitem(SeqSimpleProxy *self, DeeObject *index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
 	if likely(elem) {
@@ -212,8 +212,8 @@ ids_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-types_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+types_getitem(SeqSimpleProxy *self, DeeObject *index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
 	if likely(elem) {
@@ -224,8 +224,8 @@ types_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-classes_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+classes_getitem(SeqSimpleProxy *self, DeeObject *index) {
 	DREF DeeObject *result, *elem;
 	result = elem = DeeObject_GetItem(self->sp_seq, index);
 	if likely(elem) {
@@ -237,7 +237,7 @@ classes_getitem(SeqSimpleProxy *__restrict self, DeeObject *__restrict index) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 ids_getrange(SeqSimpleProxy *__restrict self,
              DeeObject *__restrict start,
              DeeObject *__restrict end) {
@@ -250,7 +250,7 @@ ids_getrange(SeqSimpleProxy *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 types_getrange(SeqSimpleProxy *__restrict self,
                DeeObject *__restrict start,
                DeeObject *__restrict end) {
@@ -263,7 +263,7 @@ types_getrange(SeqSimpleProxy *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 classes_getrange(SeqSimpleProxy *__restrict self,
                  DeeObject *__restrict start,
                  DeeObject *__restrict end) {
@@ -278,9 +278,9 @@ classes_getrange(SeqSimpleProxy *__restrict self,
 
 
 
-PRIVATE DREF DeeObject *DCALL
-ids_contains(SeqSimpleProxy *__restrict self,
-             DeeObject *__restrict id_obj) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ids_contains(SeqSimpleProxy *self,
+             DeeObject *id_obj) {
 	uintptr_t id_value;
 	size_t i, fast_size;
 	DREF DeeObject *iter, *elem;
@@ -320,9 +320,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-types_contains(SeqSimpleProxy *__restrict self,
-               DeeTypeObject *__restrict typ) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+types_contains(SeqSimpleProxy *self,
+               DeeTypeObject *typ) {
 	size_t i, fast_size;
 	DREF DeeObject *iter, *elem;
 	if unlikely(!DeeType_Check(typ))
@@ -363,9 +363,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-classes_contains(SeqSimpleProxy *__restrict self,
-                 DeeTypeObject *__restrict typ) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+classes_contains(SeqSimpleProxy *self,
+                 DeeTypeObject *typ) {
 	size_t i, fast_size;
 	DREF DeeObject *iter, *elem;
 	if unlikely(!DeeType_Check(typ))
@@ -692,7 +692,7 @@ INTERN DeeTypeObject SeqClasses_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iter_ctor(SeqSimpleProxyIterator *__restrict self) {
 	self->si_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	if unlikely(!self->si_iter)
@@ -702,7 +702,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iter_copy(SeqSimpleProxyIterator *__restrict self,
           SeqSimpleProxyIterator *__restrict other) {
 	self->si_iter = DeeObject_Copy(other->si_iter);
@@ -715,7 +715,7 @@ err:
 
 PRIVATE int DCALL
 iter_init(SeqSimpleProxyIterator *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	SeqSimpleProxy *seq;
 	DeeTypeObject *tp;
 	if (DeeArg_Unpack(argc, argv,
@@ -784,7 +784,7 @@ PRIVATE struct type_member iter_members[] = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 idsiter_next(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *elem;
@@ -796,7 +796,7 @@ idsiter_next(SeqSimpleProxyIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 typesiter_next(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *elem;
@@ -809,7 +809,7 @@ typesiter_next(SeqSimpleProxyIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 classesiter_next(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *elem;
@@ -823,7 +823,7 @@ classesiter_next(SeqSimpleProxyIterator *__restrict self) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 idsiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *baseseq, *result;
 	result = baseseq = DeeObject_GetAttr(self->si_iter, &str_seq);
@@ -834,7 +834,7 @@ idsiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 typesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *baseseq, *result;
 	result = baseseq = DeeObject_GetAttr(self->si_iter, &str_seq);
@@ -845,7 +845,7 @@ typesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 classesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 	DREF DeeObject *baseseq, *result;
 	result = baseseq = DeeObject_GetAttr(self->si_iter, &str_seq);
@@ -1017,7 +1017,7 @@ INTERN DeeTypeObject SeqClassesIterator_Type = {
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 SeqIds_New(DeeObject *__restrict seq) {
 	DREF SeqSimpleProxy *result;
 	result = DeeObject_MALLOC(SeqSimpleProxy);
@@ -1030,7 +1030,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 SeqTypes_New(DeeObject *__restrict seq) {
 	DREF SeqSimpleProxy *result;
 	result = DeeObject_MALLOC(SeqSimpleProxy);
@@ -1043,7 +1043,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 SeqClasses_New(DeeObject *__restrict seq) {
 	DREF SeqSimpleProxy *result;
 	result = DeeObject_MALLOC(SeqSimpleProxy);

@@ -57,7 +57,7 @@ typedef DeeMemoryFileObject MemoryFile;
 typedef DeeFileReaderObject Reader;
 typedef DeeFileWriterObject Writer;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mf_init(MemoryFile *__restrict self) {
 	self->mf_begin = NULL;
 	self->mf_ptr   = NULL;
@@ -65,7 +65,7 @@ mf_init(MemoryFile *__restrict self) {
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 mf_fini(MemoryFile *__restrict self) {
 	/* We only get here if `DeeFile_ReleaseMemory()'
 	 * was used to duplicate the memory block! */
@@ -184,7 +184,7 @@ err_overflow:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mf_close(MemoryFile *__restrict self) {
 	DeeFile_LockWrite(self);
 	self->mf_end = self->mf_begin;
@@ -206,7 +206,7 @@ mf_getc(MemoryFile *__restrict self, dioflag_t UNUSED(flags)) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 mf_ungetc(MemoryFile *__restrict self, int ch) {
 	int result;
 	DeeFile_LockWrite(self);
@@ -490,7 +490,7 @@ err_overflow:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_sync(Reader *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	if unlikely(!self->r_owner)
@@ -503,7 +503,7 @@ reader_sync(Reader *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_close(Reader *__restrict self) {
 	DREF DeeObject *owner;
 	DeeFile_LockWrite(self);
@@ -525,7 +525,7 @@ reader_close(Reader *__restrict self) {
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 reader_getowner(Reader *__restrict self) {
 	DREF DeeObject *result;
 	DeeFile_LockRead(self);
@@ -537,7 +537,7 @@ reader_getowner(Reader *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 reader_setowner(Reader *__restrict self,
                 DeeObject *__restrict value) {
 	DeeObject *old_value;
@@ -583,7 +583,7 @@ reader_getc(Reader *__restrict self, dioflag_t UNUSED(flags)) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_ungetc(Reader *__restrict self,
               int ch) {
 	int result;
@@ -615,7 +615,7 @@ reader_ungetc(Reader *__restrict self,
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 reader_fini(Reader *__restrict self) {
 	if (self->r_owner) {
 		DeeObject_PutBuf(self->r_owner,
@@ -625,7 +625,7 @@ reader_fini(Reader *__restrict self) {
 	}
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_ctor(Reader *__restrict self) {
 	rwlock_init(&self->fo_lock);
 	self->r_owner = NULL;
@@ -637,7 +637,7 @@ reader_ctor(Reader *__restrict self) {
 
 PRIVATE int DCALL
 reader_init(Reader *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	size_t begin = 0, end = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "o|IdId:_FileReader", &self->r_owner, &begin, &end) ||
 	    DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
@@ -795,7 +795,7 @@ err_r:
 
 
 
-PRIVATE int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 writer_ctor(Writer *__restrict self) {
 	rwlock_init(&self->fo_lock);
 	unicode_printer_init(&self->w_printer);
@@ -804,7 +804,7 @@ writer_ctor(Writer *__restrict self) {
 }
 
 PRIVATE int DCALL
-writer_init(Writer *__restrict self, size_t argc, DeeObject **__restrict argv) {
+writer_init(Writer *__restrict self, size_t argc, DeeObject **argv) {
 	DeeStringObject *init_string;
 	if (DeeArg_Unpack(argc, argv, "o:_FileWriter", &init_string) ||
 	    DeeObject_AssertTypeExact((DeeObject *)init_string, &DeeString_Type))
@@ -826,7 +826,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 writer_fini(Writer *__restrict self) {
 	if (self->w_string) {
 		Dee_Decref(self->w_string);
@@ -840,7 +840,7 @@ writer_fini(Writer *__restrict self) {
 	}
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFileWriter_GetString(DeeObject *__restrict self) {
 	Writer *me = (Writer *)self;
 	DREF DeeStringObject *result;
@@ -923,7 +923,7 @@ err_collect:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_delstring(Writer *__restrict self) {
 	DeeFile_LockWrite(self);
 	if (self->w_string) {
@@ -951,7 +951,7 @@ writer_delstring(Writer *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 writer_setstring(Writer *__restrict self,
                  DeeStringObject *__restrict value) {
 	DREF DeeStringObject *old_string;
@@ -1006,15 +1006,14 @@ PRIVATE struct type_getset writer_getsets[] = {
 
 PRIVATE DREF DeeStringObject *DCALL
 writer_get(Writer *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
 		return NULL;
 	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-writer_size(Writer *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+writer_size(Writer *self, size_t argc, DeeObject **argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		return NULL;
@@ -1026,9 +1025,8 @@ writer_size(Writer *__restrict self,
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-writer_allocated(Writer *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+writer_allocated(Writer *self, size_t argc, DeeObject **argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":allocated"))
 		return NULL;
@@ -1040,9 +1038,8 @@ writer_allocated(Writer *__restrict self,
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-writer_sizeof(Writer *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+writer_sizeof(Writer *self, size_t argc, DeeObject **argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
@@ -1082,7 +1079,7 @@ PRIVATE struct type_method writer_methods[] = {
 
 #define UNICODE_PRINTER_INITIAL_BUFSIZE 64
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 writer_tryappend8(Writer *__restrict self,
                   uint8_t const *__restrict buffer,
                   size_t bufsize) {
@@ -1200,7 +1197,7 @@ err:
 	return false;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 writer_tryappendch(Writer *__restrict self, uint32_t ch) {
 	size_t written, avail;
 	if (!self->w_printer.up_buffer) {
@@ -1475,7 +1472,7 @@ utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 	return result;
 }
 
-INTDEF uint32_t DCALL
+INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
 

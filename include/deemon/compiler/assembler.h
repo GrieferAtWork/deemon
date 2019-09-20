@@ -383,7 +383,7 @@ struct asm_invoke_operand {
 };
 
 /* Print a human-readable representation of `self' to `printer' */
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
 asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
                          struct ascii_printer *__restrict printer);
 
@@ -451,11 +451,11 @@ struct asm_invocation {
 struct asm_mnemonic;
 
 /* Print a human-readable representation of `self' to `printer' */
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 asm_invocation_print(struct asm_invocation *__restrict self,
                      struct asm_mnemonic *__restrict instr,
                      struct ascii_printer *__restrict printer);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 asm_invocation_tostring(struct asm_invocation *__restrict self,
                         struct asm_mnemonic *__restrict instr);
 
@@ -788,9 +788,10 @@ struct assembler {
 	 : SYMBOL_MAY_REFERENCE(x))
 
 /* Initialize/Finalize the given assembler. */
-INTDEF int  DCALL assembler_init(void);
-INTDEF int  DCALL assembler_init_reuse(DeeCodeObject *__restrict code_obj,
-                                       instruction_t *__restrict text_end);
+INTDEF int DCALL assembler_init(void);
+INTDEF NONNULL((1, 2)) int DCALL
+assembler_init_reuse(DeeCodeObject *__restrict code_obj,
+                     instruction_t *__restrict text_end);
 INTDEF void DCALL assembler_fini(void);
 
 /* The active assembly context */
@@ -807,16 +808,14 @@ INTDEF struct assembler current_assembler;
  *       that it is meant to be describing, and will continue
  *       to describe code until the next checkpoint. */
 #ifdef NDEBUG
-INTDEF int DCALL asm_putddi(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_putddi(struct ast *__restrict self);
 #else /* NDEBUG */
-INTDEF int DCALL asm_putddi_dbg(struct ast *__restrict self, char const *file, int line);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_putddi_dbg(struct ast *__restrict self, char const *file, int line);
 #define asm_putddi(self) asm_putddi_dbg(self, __FILE__, __LINE__)
 #endif /* !NDEBUG */
 
 /* Generate symbol binding information as part of the next DDI checkpoint. */
-INTDEF int DCALL asm_putddi_bind(uint16_t ddi_class,
-                                 uint16_t index,
-                                 struct TPPKeyword *name);
+INTDEF WUNUSED int DCALL asm_putddi_bind(uint16_t ddi_class, uint16_t index, struct TPPKeyword *name);
 #define asm_putddi_sbind(index, name) asm_putddi_bind(DDI_BINDING_CLASS_STACK, index, name)
 #define asm_putddi_lbind(index, name) asm_putddi_bind(DDI_BINDING_CLASS_LOCAL, index, name)
 #define asm_putddi_sunbind(index)     asm_putddi_sbind(index, NULL)
@@ -988,21 +987,21 @@ INTDEF int DCALL asm_put_data64(uint64_t data);
 #endif /* !__INTELLISENSE__ */
 
 /* Push the absolute address of an assembly symbol + offset onto the stack. */
-INTDEF int DCALL asm_gpush_abs(struct asm_sym *__restrict sym); /* PC */
-INTDEF int DCALL asm_gpush_stk(struct asm_sym *__restrict sym); /* SP */
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_abs(struct asm_sym *__restrict sym); /* PC */
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_stk(struct asm_sym *__restrict sym); /* SP */
 
 /* Add the given `constvalue' to the set of
  * constant variables and return its 16-bit index.
  * If another constant identical to the given is already apart
  * of the constant variable, its index is returned instead.
  * NOTE: The return type is 32-bits to allow for -1 to be returned on error. */
-INTDEF int32_t DCALL asm_newconst(DeeObject *__restrict constvalue);
-INTDEF int32_t DCALL asm_newconst_string(char const *__restrict str, size_t len);
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newconst(DeeObject *__restrict constvalue);
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newconst_string(char const *__restrict str, size_t len);
 
 /* Check if a given constant value can safely appear in constant variable slots.
  * If this is not the case, `asm_gpush_constexpr' should be used to automatically
  * generate code capable of pushing the given value onto the stack. */
-INTDEF bool DCALL asm_allowconst(DeeObject *__restrict constvalue);
+INTDEF WUNUSED NONNULL((1)) bool DCALL asm_allowconst(DeeObject *__restrict constvalue);
 
 /* Similar to `asm_newconst', but don't re-use identical static variables.
  * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.
@@ -1024,19 +1023,19 @@ INTDEF void DCALL asm_dellocal(uint16_t index);
 
 /* Make sure that `mod' is being imported by the current
  * root-scope, if necessary adding it as a new dependency. */
-INTDEF int32_t DCALL asm_newmodule(struct module_object *__restrict mod);
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newmodule(struct module_object *__restrict mod);
 
 /* Ensure that a given symbol has been allocated and return its index.
  * NOTE: These function automatically save the symbol index within the symbol itself,
  *       thus ensuring that successive calls to these functions will quickly yield the same value. */
-INTDEF int32_t DCALL asm_gsymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
-INTDEF int32_t DCALL asm_lsymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
-INTDEF int32_t DCALL asm_ssymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
-INTDEF int32_t DCALL asm_esymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_EXTERN' (Returns the module index in the current root-scope's import vector)
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_gsymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_lsymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_ssymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_esymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_EXTERN' (Returns the module index in the current root-scope's import vector)
                                                                    *  NOTE: This function will dereference external aliases. */
-INTDEF int32_t DCALL asm_msymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_MODULE' */
-INTDEF int32_t DCALL asm_rsymid(struct symbol *__restrict sym);   /* Reference a symbol for a lower base-scope. */
-INTDEF int32_t DCALL asm_asymid_r(struct symbol *__restrict sym); /* For use in `ASM_FARGREFS' mode: Return an argument ID for a referenced symbol. */
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_msymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_MODULE' */
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_rsymid(struct symbol *__restrict sym);   /* Reference a symbol for a lower base-scope. */
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_asymid_r(struct symbol *__restrict sym); /* For use in `ASM_FARGREFS' mode: Return an argument ID for a referenced symbol. */
 
 /* Search the export table of the builtin `deemon' module for `constval'.
  * If the object could be found, return an anonymous `SYMBOL_TYPE_EXTERN'
@@ -1049,9 +1048,9 @@ INTDEF struct symbol *DCALL asm_bind_deemon_export(DeeObject *__restrict constva
 #define ASM_BIND_DEEMON_EXPORT_NOTFOUND ((struct symbol *)-1)
 
 /* These versions emit read-before-write warnings if the symbol hadn't been allocated, yet. */
-INTDEF int32_t DCALL asm_gsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
-INTDEF int32_t DCALL asm_lsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
-INTDEF int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
+INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL asm_gsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_GLOBAL' */
+INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL asm_lsymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
+INTDEF WUNUSED NONNULL((1, 2)) int32_t DCALL asm_ssymid_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast); /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
 
 
 #ifndef UINT8_MAX
@@ -1114,10 +1113,10 @@ INTDEF int DCALL asm_gjcc(struct ast *cond, instruction_t instr,
                           struct ast *ddi_ast);
 /* Similar to `asm_gjmp(ASM_JMP)', but generate code to adjust adjust the stack beforehand, as well
  * as code to adjust for potential exception handlers, also creating a `R_DMN_DELHAND' relocation. */
-INTDEF int DCALL asm_gjmps(struct asm_sym *__restrict target);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gjmps(struct asm_sym *__restrict target);
 /* Generate code to adjust for the exception handler level at a given symbol.
  * This function is internally called by `asm_gjmps()'. */
-INTDEF int DCALL asm_gadjhand(struct asm_sym *__restrict target);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gadjhand(struct asm_sym *__restrict target);
 /* Generate code to unwind all active exception handlers.
  * This must be called before `return'-ing from within a catch/finally handler. */
 INTDEF int DCALL asm_gunwind(void);
@@ -1469,7 +1468,7 @@ INTDEF int DCALL asm_gpop_stack(uint16_t absolute_stack_addr);
 INTDEF int DCALL asm_gadjstack(int16_t offset);
 /* Similar to `asm_gadjstack()', but set the absolute stack size. */
 INTDEF int DCALL asm_gsetstack(uint16_t absolute_stack_size);
-INTDEF int DCALL asm_gsetstack_s(struct asm_sym *__restrict target);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gsetstack_s(struct asm_sym *__restrict target);
 
 /* High-level encoding of l/r-rot instructions. */
 INTDEF int DCALL asm_glrot(uint16_t num_slots);
@@ -1492,16 +1491,16 @@ INTDEF int DCALL asm_gpush_s32(int32_t value);
 /* High-level assembly generator functions.
  * NOTE: Unlike functions above, there are
  *       allowed to write multiple instructions. */
-INTDEF int DCALL asm_gpush_constexpr(DeeObject *__restrict value);
-INTDEF int DCALL asm_gpush_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_constexpr(DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gpush_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 INTDEF int DCALL asm_gcall_symbol_n(struct symbol *__restrict function, uint8_t argc, struct ast *__restrict warn_ast);
-INTDEF int DCALL asm_gprefix_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
-INTDEF int DCALL asm_gprefix_symbol_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
-INTDEF bool DCALL asm_can_prefix_symbol(struct symbol *__restrict sym);
-INTDEF bool DCALL asm_can_prefix_symbol_for_read(struct symbol *__restrict sym);
-INTDEF int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
-INTDEF int DCALL asm_gdel_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
-INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gprefix_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gprefix_symbol_for_read(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1)) bool DCALL asm_can_prefix_symbol(struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1)) bool DCALL asm_can_prefix_symbol_for_read(struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gpush_bnd_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gdel_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__restrict warn_ast);
 
 /* Check if `sym' is accessible from the current
  * source location, returning `false' if it isn't. */
@@ -1510,10 +1509,10 @@ INTDEF int DCALL asm_gpop_symbol(struct symbol *__restrict sym, struct ast *__re
 
 
 /* Returns `true' if pushing `sym' is more expensive  */
-INTDEF bool DCALL asm_gpush_symbol_is_expensive(struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1)) bool DCALL asm_gpush_symbol_is_expensive(struct symbol *__restrict sym);
 
 /* Generate code to pop the stack-top value into the given AST. */
-INTDEF int DCALL asm_gpop_expr(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpop_expr(struct ast *__restrict self);
 /* Same as `asm_gpop_expr()', but pop `astc' values, one in each AST. */
 INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **__restrict astv);
 
@@ -1527,11 +1526,11 @@ INTDEF int DCALL asm_gpop_expr_multiple(size_t astc, struct ast **__restrict ast
  * -> ast_genasm(src,ASM_G_FPUSHRES);  // push c;
  * -> asm_gpop_expr_leave(dst,diff);   // setrange pop, pop, pop;
  */
-INTDEF int DCALL asm_gpop_expr_enter(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpop_expr_enter(struct ast *__restrict self);
 INTDEF int DCALL asm_gpop_expr_leave(struct ast *__restrict self, unsigned int gflags);
 
 
-INTDEF int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_enter_scope(DeeScopeObject *__restrict scope);
 INTDEF int DCALL asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve);
 
 #define ASM_PUSH_SCOPE(scope, err)                              \
@@ -1598,7 +1597,7 @@ ast_gen_boundattr(struct ast *__restrict base,
                   struct ast *__restrict name,
                   struct ast *__restrict ddi_ast,
                   unsigned int gflags);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_delattr(struct ast *__restrict base,
                 struct ast *__restrict name,
                 struct ast *__restrict ddi_ast);
@@ -1837,10 +1836,10 @@ INTDEF int DCALL ast_genasm_set_one(struct ast *__restrict self, unsigned int gf
 INTDEF struct ast *DCALL ast_strip_seqcast(struct ast *__restrict self);
 
 /* Generate text for a given `AST_SWITCH' branch. */
-INTDEF int DCALL ast_genasm_switch(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL ast_genasm_switch(struct ast *__restrict self);
 
 /* Generate user-assembly for a given `AST_ASSEMBLY' branch. */
-INTDEF int DCALL ast_genasm_userasm(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL ast_genasm_userasm(struct ast *__restrict self);
 
 /* Compile a DDI object for use by generated code. */
 INTDEF DREF DeeDDIObject *DCALL ddi_compile(void);
@@ -1889,7 +1888,7 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 
 
 
-INTDEF DREF DeeCodeObject *DCALL code_docompile(struct ast *__restrict code_ast);
+INTDEF WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL code_docompile(struct ast *__restrict code_ast);
 
 /* Compile a new module, using `current_rootscope' for module information,
  * and the given code object as root code executed when the module is loaded.
@@ -1902,7 +1901,7 @@ INTDEF int DCALL module_compile(DREF struct module_object *__restrict module,
                                 uint16_t flags);
 
 
-INTDEF int DCALL asm_gpush_function(struct ast *__restrict function_ast);
+INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_function(struct ast *__restrict function_ast);
 INTDEF int DCALL asm_gmov_function(struct symbol *__restrict dst,
                                    struct ast *function_ast,
                                    struct ast *dst_warn_ast);
@@ -2012,7 +2011,7 @@ INTDEF DeeTypeObject DeeRelInt_Type;
 /* Construct and register a new relocation-integer as a constant.
  * If `sym' is NULL, a regular integer is created instead. */
 INTDEF int32_t DCALL asm_newrelint(struct asm_sym *sym, tint_t addend, uint16_t mode);
-INTDEF DREF DeeObject *DCALL DeeRelInt_New(struct asm_sym *__restrict sym, tint_t addend, uint16_t mode);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRelInt_New(struct asm_sym *__restrict sym, tint_t addend, uint16_t mode);
 
 
 DECL_END

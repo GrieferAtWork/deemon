@@ -115,7 +115,7 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 asm_enter_scope(DeeScopeObject *__restrict scope) {
 	uint16_t num_stack_vars = 0;
 	DeeScopeObject *old_scope;

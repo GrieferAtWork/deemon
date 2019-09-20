@@ -775,7 +775,7 @@ err_nofp:
 	return -1;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 display_help_namewidth(struct cmd_option *__restrict option,
                        char const *__restrict prefix) {
 	char const *name, *text, *arg_end, *line_end;
@@ -1500,7 +1500,7 @@ INTERN ATTR_NORETURN void __stack_chk_fail(void) {
 #endif /* __GNUC__ && !NDEBUG */
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 emitpp_writeout(void const *__restrict p, size_t s) {
 	if (DeeFile_WriteAll(script_options.co_decoutput, p, s) < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
@@ -1901,7 +1901,7 @@ PRIVATE void DCALL clear_inner_tpp_state(void) {
 
 /* Just as the name says: execute a module's root-function
  * and capture stdout output, which is then returned. */
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 exec_module_and_capture_stdout(DeeModuleObject *__restrict module) {
 	DREF DeeStringObject *result = NULL;
 	DREF DeeFunctionObject *module_root;
@@ -2453,7 +2453,7 @@ err_nofin:
 
 
 #ifdef CONFIG_HOST_WINDOWS
-PRIVATE bool DCALL os_trychdir(char *__restrict path) {
+PRIVATE NONNULL((1)) bool DCALL os_trychdir(char *__restrict path) {
 	DREF DeeObject *pathob;
 	LPWSTR wpath;
 	DWORD dwError;
@@ -2512,7 +2512,7 @@ err:
 #endif /* !CONFIG_HOST_WINDOWS */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dchdir_and_format_source_files(char *__restrict filename) {
 	int result;
 	/* Try to chdir() into the folder of the module.

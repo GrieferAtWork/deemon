@@ -135,28 +135,28 @@ Deque_ItemPointer(Deque *__restrict self, size_t index) {
 
 
 /* Push/pop items from the front/back. */
-INTDEF int DCALL Deque_PushFront(Deque *__restrict self, DeeObject *__restrict item);
-INTDEF int DCALL Deque_PushBack(Deque *__restrict self, DeeObject *__restrict item);
-INTDEF DREF DeeObject *DCALL Deque_PopFront(Deque *__restrict self);
-INTDEF DREF DeeObject *DCALL Deque_PopBack(Deque *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Deque_PushFront(Deque *__restrict self, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Deque_PushBack(Deque *__restrict self, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopFront(Deque *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_PopBack(Deque *__restrict self);
 
 /* Deque rotation */
-INTDEF void DCALL Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects' left. */
-INTDEF void DCALL Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects' right. */
-INTDEF void DCALL Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects' left. */
-INTDEF void DCALL Deque_rrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects' right. */
+INTDEF NONNULL((1)) void DCALL Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects' left. */
+INTDEF NONNULL((1)) void DCALL Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the first `num_objects' right. */
+INTDEF NONNULL((1)) void DCALL Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects' left. */
+INTDEF NONNULL((1)) void DCALL Deque_rrrot_unlocked(Deque *__restrict self, size_t num_objects); /* Rotate the last `num_objects' right. */
 
-INTDEF int DCALL Deque_llrot(Deque *__restrict self, size_t num_objects);
-INTDEF int DCALL Deque_lrrot(Deque *__restrict self, size_t num_objects);
-INTDEF int DCALL Deque_rlrot(Deque *__restrict self, size_t num_objects);
-INTDEF int DCALL Deque_rrrot(Deque *__restrict self, size_t num_objects);
+INTDEF WUNUSED NONNULL((1)) int DCALL Deque_llrot(Deque *__restrict self, size_t num_objects);
+INTDEF WUNUSED NONNULL((1)) int DCALL Deque_lrrot(Deque *__restrict self, size_t num_objects);
+INTDEF WUNUSED NONNULL((1)) int DCALL Deque_rlrot(Deque *__restrict self, size_t num_objects);
+INTDEF WUNUSED NONNULL((1)) int DCALL Deque_rrrot(Deque *__restrict self, size_t num_objects);
 
 
 /* @return: true:  Successfully inserted the given item.
  * @return: false: Insertion failed. - Unlock the deque and collect
  *                `SIZEOF_BUCKET(self->d_bucket_sz)' bytes of memory. */
-INTDEF bool DCALL Deque_PushFront_unlocked(Deque *__restrict self, DeeObject *__restrict item);
-INTDEF bool DCALL Deque_PushBack_unlocked(Deque *__restrict self, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushFront_unlocked(Deque *__restrict self, DeeObject *__restrict item);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL Deque_PushBack_unlocked(Deque *__restrict self, DeeObject *__restrict item);
 INTDEF bool DCALL Deque_Insert_unlocked(Deque *__restrict self, size_t index, DeeObject *__restrict item);
 
 /* @return: * : The item that was popped. */
@@ -167,9 +167,9 @@ INTDEF ATTR_RETNONNULL DREF DeeObject *DCALL Deque_Pop_unlocked(Deque *__restric
 
 /* Insert/delete an item at a given index. */
 INTDEF int DCALL Deque_Insert(Deque *__restrict self, size_t index, DeeObject *__restrict item);
-INTDEF size_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
-INTDEF DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, size_t index);
-INTDEF DREF DeeObject *DCALL Deque_Pops(Deque *__restrict self, Dee_ssize_t index);
+INTDEF WUNUSED NONNULL((1)) size_t DCALL Deque_Erase(Deque *__restrict self, size_t index, size_t num_items);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pop(Deque *__restrict self, size_t index);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Deque_Pops(Deque *__restrict self, Dee_ssize_t index);
 
 typedef struct {
 	DequeBucket *di_bucket;
@@ -477,12 +477,12 @@ INTDEF struct uset_item empty_set_items[1];
 #define empty_set_items ((struct uset_item *)empty_dict_items)
 #endif /* !__INTELLISENSE__ */
 
-INTDEF DREF USet *DCALL USet_FromSequence(DeeObject *__restrict sequence);
-INTDEF DREF UDict *DCALL UDict_FromSequence(DeeObject *__restrict sequence);
-INTDEF DREF URoSet *DCALL URoSet_FromIterator(DeeObject *__restrict iterator);
-INTDEF DREF URoSet *DCALL URoSet_FromSequence(DeeObject *__restrict sequence);
-INTDEF DREF URoDict *DCALL URoDict_FromIterator(DeeObject *__restrict iterator);
-INTDEF DREF URoDict *DCALL URoDict_FromSequence(DeeObject *__restrict sequence);
+INTDEF WUNUSED NONNULL((1)) DREF USet *DCALL USet_FromSequence(DeeObject *__restrict sequence);
+INTDEF WUNUSED NONNULL((1)) DREF UDict *DCALL UDict_FromSequence(DeeObject *__restrict sequence);
+INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromIterator(DeeObject *__restrict iterator);
+INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromSequence(DeeObject *__restrict sequence);
+INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromIterator(DeeObject *__restrict iterator);
+INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromSequence(DeeObject *__restrict sequence);
 
 /* Unique map/set types.
  * These function identical to the normal Dict/HashSet, but instead

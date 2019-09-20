@@ -622,7 +622,7 @@ PRIVATE DeeObject *buitlin_set0[DTYPE_BUILTIN_NUM] = {
 //[[[end]]]
 
 
-INTERN uint16_t DCALL
+INTERN WUNUSED NONNULL((1)) uint16_t DCALL
 Dec_BuiltinID(DeeObject *__restrict obj) {
 	struct builtin_desc *iter;
 	for (iter = builtin_descs;
@@ -697,7 +697,7 @@ corrupt_heref(DecFile *__restrict self,
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 DecFile_Init(DecFile *__restrict self,
              DeeObject *__restrict input_stream,
              DeeModuleObject *__restrict module,
@@ -817,7 +817,7 @@ end_not_a_dec:
 	return 1;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 DecFile_Fini(DecFile *__restrict self) {
 	Dee_XDecref(self->df_strtab);
 	Dee_Decref(self->df_module);
@@ -825,7 +825,7 @@ DecFile_Fini(DecFile *__restrict self) {
 	Dee_Free(self->df_data);
 }
 
-INTERN DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DeeObject *DCALL
 DecFile_Strtab(DecFile *__restrict self) {
 	DeeStringObject *result;
 	if ((result = self->df_strtab) == NULL) {
@@ -852,7 +852,7 @@ DecFile_Strtab(DecFile *__restrict self) {
 #define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
 #endif /* !CONFIG_LITTLE_ENDIAN */
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DecFile_IsUpToDate(DecFile *__restrict self) {
 	Dec_Ehdr *hdr = self->df_ehdr;
 	uint64_t timestamp, other;
@@ -918,7 +918,7 @@ err:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_LoadImports(DecFile *__restrict self) {
 	int result = 1;
 	Dec_Strmap *impmap;
@@ -1041,7 +1041,7 @@ err:
 	goto stop;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DecFile_LoadGlobals(DecFile *__restrict self) {
 	int result = 1;
 	Dec_Glbmap *glbmap;
@@ -2077,7 +2077,7 @@ err_currupt:
 }
 
 
-INTERN DREF DeeDDIObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeDDIObject *DCALL
 DecFile_LoadDDI(DecFile *__restrict self,
                 uint8_t *__restrict reader,
                 bool is_8bit_ddi) {
@@ -2578,7 +2578,7 @@ corrupt:
 
 INTDEF struct module_symbol empty_module_buckets[];
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DecFile_Load(DecFile *__restrict self) {
 	DeeModuleObject *module;
 	int result;
@@ -2650,7 +2650,7 @@ err:
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_OpenDec(DeeModuleObject *__restrict module,
                   DeeObject *__restrict input_stream,
                   struct compiler_options *__restrict options) {
@@ -2673,7 +2673,7 @@ done:
 	return result;
 }
 
-PUBLIC uint64_t DCALL
+PUBLIC WUNUSED NONNULL((1)) uint64_t DCALL
 DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self) {
 	uint64_t result;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
@@ -2746,7 +2746,7 @@ nt_getunixfiletime(uint64_t filetime) {
 }
 #endif /* CONFIG_HOST_WINDOWS */
 
-PRIVATE uint64_t DCALL
+PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
 os_mtime_for(DeeObject *__restrict filename) {
 #ifdef CONFIG_HOST_WINDOWS
 	WIN32_FILE_ATTRIBUTE_DATA attrib;
@@ -2850,7 +2850,7 @@ DecTime_ClearCache(size_t UNUSED(max_clear)) {
 }
 
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 mtime_cache_lookup(DeeObject *__restrict path,
                    uint64_t *__restrict presult) {
 	bool result = false;
@@ -2934,7 +2934,7 @@ mtime_cache_rehash(void) {
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 mtime_cache_insert(DeeObject *__restrict path,
                    uint64_t value) {
 	size_t mask;
@@ -2994,10 +2994,10 @@ done:
 
 
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 make_absolute(DeeObject *__restrict path);
 
-INTERN uint64_t DCALL
+INTERN WUNUSED NONNULL((1)) uint64_t DCALL
 DecTime_Lookup(DeeObject *__restrict filename) {
 	uint64_t result;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);

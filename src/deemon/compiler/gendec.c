@@ -70,7 +70,7 @@ DECL_BEGIN
 #define SEP '/'
 #endif /* !CONFIG_HOST_WINDOWS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_imports(DeeModuleObject *__restrict self) {
 	DeeModuleObject **iter, **end;
 	char *module_pathstr, *module_pathend;
@@ -244,7 +244,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 decgen_globals(DeeModuleObject *__restrict self) {
 #if 1
 	struct module_symbol *symbegin, *symend;
@@ -520,7 +520,7 @@ err:
 
 STATIC_ASSERT((DTYPE16_CLASSDESC & 0xff) == DTYPE_CLASSDESC);
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 	uint32_t straddr;
 	uint8_t *strptr;
@@ -768,7 +768,7 @@ err:
 
 
 /* Emit a `DTYPE_KWDS', followed by a keywords descriptor. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dec_putkwds(DeeKwdsObject *__restrict self) {
 	if (dec_putb(DTYPE_KWDS))
 		goto err;
@@ -1238,7 +1238,7 @@ err:
 }
 
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 allow_8bit_code(DeeCodeObject *__restrict self) {
 	uint16_t i;
 	/* In big-file mode, we can never emit an 8-bit
@@ -1292,7 +1292,7 @@ nope:
 }
 
 /* Emit a DDI-compatible string table. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dec_do_putddi_strtab(DeeDDIObject *__restrict self,
                      uint32_t const *__restrict vec,
                      uint32_t length) {
@@ -1353,7 +1353,7 @@ err:
 }
 
 /* Generate a DDI-compatible string table and emit a pointer to it. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dec_putddi_strtab_ptr(DeeDDIObject *__restrict self,
                       uint32_t const *__restrict vec,
                       uint32_t length, bool use_16bit) {

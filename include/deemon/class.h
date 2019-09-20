@@ -198,7 +198,11 @@
  * NOTE: Please don't define destructors like those seen above.
  *       The runtime will automatically unbind all instance members
  *       during destruction of a class instance, and it can do so
- *       must more efficiently that your destructor ever could.
+ *       much more efficiently that your destructor ever could.
+ *       Also note that it does this even when you define a destructor,
+ *       so no custom destructor should ever end by unbinding instance
+ *       members (as a matter of fact: There should add an optimization
+ *       for this...)
  */
 
 
@@ -281,13 +285,13 @@ struct Dee_class_attribute {
 #ifdef CONFIG_BUILDING_DEEMON
 /* Check if the current execution context allows access to `self',
  * which is either an instance or class method of `impl_class' */
-INTDEF WUNUSED bool DCALL
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
                                DeeTypeObject *__restrict impl_class);
 #define class_attribute_mayaccess(self, impl_class)   \
 	(!((self)->ca_flag & CLASS_ATTRIBUTE_FPRIVATE) || \
 	 class_attribute_mayaccess_impl(self, impl_class))
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 /* A special operator invoked using the same
@@ -441,19 +445,19 @@ DDATDEF DeeTypeObject DeeClassDescriptor_Type;
 /* Lookup class / instance attributes within the given class descriptor.
  * @return: * :   A pointer to attribute that was found.
  * @return: NULL: Attribute could not be found (no error is thrown) */
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/ DeeObject *__restrict attr, Dee_hash_t hash);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash)(DeeClassDescriptorObject *__restrict self, /*String*/ DeeObject *__restrict attr, Dee_hash_t hash);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeWithHash)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeWithHash)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 #ifdef __INTELLISENSE__
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/ DeeObject *__restrict attr);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttribute)(DeeClassDescriptorObject *__restrict self, /*String*/ DeeObject *__restrict attr);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
-DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttribute)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryClassAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttribute)(DeeClassDescriptorObject *self, /*String*/ DeeObject *attr);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeString)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr);
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttributeStringLen)(DeeClassDescriptorObject *__restrict self, char const *__restrict attr, size_t attrlen);
 #else /* __INTELLISENSE__ */
 #define DeeClassDescriptor_QueryClassAttribute(self, attr) \
 	DeeClassDescriptor_QueryClassAttributeWithHash(self, attr, DeeString_Hash(attr))
@@ -474,9 +478,9 @@ DFUNDEF struct Dee_class_attribute *(DCALL DeeClassDescriptor_QueryInstanceAttri
 #define Dee_CLASS_HEADER_OPC1    8
 #define Dee_CLASS_HEADER_OPC2  ((Dee_CLASS_OPERATOR_USERCOUNT+7)/8)
 
-#if (Dee_CLASS_HEADER_OPC1*Dee_CLASS_HEADER_OPC2) < Dee_CLASS_OPERATOR_USERCOUNT
+#if (Dee_CLASS_HEADER_OPC1 * Dee_CLASS_HEADER_OPC2) < Dee_CLASS_OPERATOR_USERCOUNT
 #error "FIXME: Not enough space for all available operators"
-#endif
+#endif /* (Dee_CLASS_HEADER_OPC1 * Dee_CLASS_HEADER_OPC2) < Dee_CLASS_OPERATOR_USERCOUNT */
 
 struct Dee_class_optable {
 	/* [0..1][lock(READ(:cd_lock),SET_TO_NULL(:cd_lock),WRITE_ONCE)][*] Table of operators.
@@ -549,7 +553,7 @@ struct Dee_class_desc {
 struct Dee_instance_desc {
 #ifndef CONFIG_NO_THREADS
 	Dee_rwlock_t    id_lock;       /* Lock that must be held when accessing  */
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject *id_vtab[1024]; /* [0..1][lock(id_lock)]
 	                                * [DeeClass_DESC(:ob_type)->cd_desc->cd_imemb_size]
 	                                * Instance member table. */
@@ -563,76 +567,143 @@ struct attribute_info;
 struct attribute_lookup_rules;
 
 /* Instance member access (by addr) */
-INTDEF DREF DeeObject *DCALL DeeInstance_GetMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
-INTDEF bool DCALL DeeInstance_BoundMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
-INTDEF int DCALL DeeInstance_DelMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
-INTDEF void DCALL DeeInstance_SetMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr, DeeObject *__restrict value);
-INTDEF DREF DeeObject *DCALL DeeInstance_GetMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr);
-INTDEF int DCALL DeeInstance_BoundMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr);
-INTDEF int DCALL DeeInstance_DelMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr);
-INTDEF int DCALL DeeInstance_SetMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeInstance_GetMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInstance_BoundMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInstance_DelMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
+INTDEF NONNULL((1, 2, 4)) void DCALL DeeInstance_SetMember(/*Class*/ DeeTypeObject *tp_self, /*Instance*/ DeeObject *self, uint16_t addr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeInstance_GetMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInstance_BoundMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInstance_DelMemberSafe(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, uint16_t addr);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeInstance_SetMemberSafe(DeeTypeObject *tp_self, DeeObject *self, uint16_t addr, DeeObject *value);
 
 /* Class member access (by addr) */
-INTDEF void DCALL DeeClass_SetMember(DeeTypeObject *__restrict self, uint16_t addr, DeeObject *__restrict value);
-INTDEF int DCALL DeeClass_SetMemberSafe(DeeTypeObject *__restrict self, uint16_t addr, DeeObject *__restrict value);
-INTDEF DREF DeeObject *DCALL DeeClass_GetMember(DeeTypeObject *__restrict self, uint16_t addr);
-INTDEF DREF DeeObject *DCALL DeeClass_GetMemberSafe(DeeTypeObject *__restrict self, uint16_t addr);
+INTDEF NONNULL((1, 3)) void DCALL DeeClass_SetMember(DeeTypeObject *self, uint16_t addr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeClass_SetMemberSafe(DeeTypeObject *self, uint16_t addr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeClass_GetMember(DeeTypeObject *__restrict self, uint16_t addr);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeClass_GetMemberSafe(DeeTypeObject *__restrict self, uint16_t addr);
 
 
 /* Enumerate user-defined class or instance attributes. */
-INTDEF dssize_t DCALL DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
-INTDEF dssize_t DCALL DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self, DeeObject *instance, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
+                                DeeObject *instance, denum_t proc, void *arg);
 
 /* Enumerate user-defined instance attributes, as
  * accessed by `DeeClass_GetInstanceAttribute()'. */
-INTDEF dssize_t DCALL DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self, denum_t proc, void *arg);
 
 /* Find a specific class-, instance- or
  * instance-through-class-attribute, matching the given lookup rules.
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-INTDEF int DCALL DeeClass_FindClassAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, DeeObject *instance, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
-INTDEF int DCALL DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker, DeeTypeObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
+                            struct attribute_info *__restrict result,
+                            struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
+DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, DeeObject *instance,
+                               struct attribute_info *__restrict result,
+                               struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
+                                    struct attribute_info *__restrict result,
+                                    struct attribute_lookup_rules const *__restrict rules);
 
 /* Get/Call/Del/Set an instance attribute, as acquired
  * through `DeeClassDescriptor_QueryInstanceAttribute()'. */
-INTDEF DREF DeeObject *DCALL DeeInstance_GetAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr);
-INTDEF int DCALL DeeInstance_BoundAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL DeeInstance_VCallAttributef(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeKw(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+DeeInstance_GetAttribute(struct class_desc *__restrict desc,
+                         struct Dee_instance_desc *__restrict self,
+                         DeeObject *__restrict this_arg,
+                         struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
+                           struct Dee_instance_desc *__restrict self,
+                           DeeObject *__restrict this_arg,
+                           struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+DeeInstance_CallAttribute(struct class_desc *__restrict desc,
+                          struct Dee_instance_desc *__restrict self,
+                          DeeObject *this_arg,
+                          struct Dee_class_attribute *__restrict attr,
+                          size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
+                            struct Dee_instance_desc *__restrict self,
+                            DeeObject *this_arg,
+                            struct Dee_class_attribute *__restrict attr,
+                            char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
+DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
+                            struct Dee_instance_desc *__restrict self,
+                            DeeObject *this_arg,
+                            struct Dee_class_attribute *__restrict attr,
+                            size_t argc, DeeObject **argv, DeeObject *kw);
+
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
+                               struct Dee_instance_desc *__restrict self,
+                               DeeObject *this_arg,
+                               struct Dee_class_attribute *__restrict attr,
+                               DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
+DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
+                                 struct Dee_instance_desc *__restrict self,
+                                 DeeObject *this_arg,
+                                 struct Dee_class_attribute *__restrict attr,
+                                 DeeObject *args, DeeObject *kw);
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF int DCALL DeeInstance_DelAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr);
-INTDEF int DCALL DeeInstance_SetAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
+
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeInstance_DelAttribute(struct class_desc *__restrict desc,
+                         struct Dee_instance_desc *__restrict self,
+                         DeeObject *__restrict this_arg,
+                         struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+DeeInstance_SetAttribute(struct class_desc *__restrict desc,
+                         struct Dee_instance_desc *__restrict self,
+                         DeeObject *this_arg,
+                         struct Dee_class_attribute *__restrict attr,
+                         DeeObject *value);
+
 /* @return:  2: Attribute isn't a basic one
  * @return:  0: Basic attribute successfully set
  * @return: -1: An error occurred. */
 #ifdef __INTELLISENSE__
-INTDEF int DCALL DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, DeeObject *__restrict this_arg, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+DeeInstance_SetBasicAttribute(struct class_desc *__restrict desc,
+                              struct Dee_instance_desc *__restrict self,
+                              DeeObject *this_arg,
+                              struct Dee_class_attribute *__restrict attr,
+                              DeeObject *value);
 #else /* __INTELLISENSE__ */
 #define DeeInstance_SetBasicAttribute(desc, self, this_arg, attr, value) \
 	DeeInstance_SetBasicAttribute_(desc, self, attr, value)
-INTDEF int (DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc, struct Dee_instance_desc *__restrict self, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int
+(DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc,
+                                       struct Dee_instance_desc *__restrict self,
+                                       struct Dee_class_attribute *__restrict attr,
+                                       DeeObject *__restrict value);
 #endif /* !__INTELLISENSE__ */
 
 /* Get/Call/Del/Set a class attribute, as acquired
  * through `DeeClassDescriptor_QueryClassAttribute()'. */
 #ifdef __INTELLISENSE__
-INTDEF DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args, DeeObject *kw);
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *value);
 #else /* __INTELLISENSE__ */
 #define DeeClass_GetClassAttribute(class_type, attr)                    DeeInstance_GetAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
 #define DeeClass_BoundClassAttribute(class_type, attr)                  DeeInstance_BoundAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
@@ -664,17 +735,17 @@ INTDEF int DCALL DeeClass_SetClassAttribute(DeeTypeObject *__restrict class_type
  * >> print MyClass.class_field;     // DeeClass_GetClassAttribute("class_field")
  * >> myclass_field = MyClass.field; // DeeClass_GetInstanceAttribute("field")
  */
-INTDEF DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject **argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args, DeeObject *kw);
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-INTDEF DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
-INTDEF int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr, DeeObject *__restrict value);
-INTDEF int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
 #define DeeClass_SetBasicInstanceAttribute DeeClass_SetInstanceAttribute
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -688,7 +759,7 @@ INTDEF int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class
  * @param: descriptor: A `DeeClassDescriptor_Type'-object, detailing the class's prototype.
  * @throw: TypeError: The given `base' is neither `none', nor a type-object.
  * @throw: TypeError: The given `base' is a final or variable type. */
-DFUNDEF DREF DeeTypeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeTypeObject *DCALL
 DeeClass_New(DeeTypeObject *__restrict base,
              DeeObject *__restrict descriptor);
 
@@ -697,18 +768,18 @@ DeeClass_New(DeeTypeObject *__restrict base,
  * If the operator doesn't exist, return NULL and throw
  * a NotImplemented error, or return NULL and don't throw
  * an error when `DeeClass_TryGetOperator()' was used. */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_GetOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 /* Same as `DeeClass_GetOperator()', but don't simply return `NULL'
  * if the operator hasn't been implemented, and `ITER_DONE' when it
  * has been, but wasn't assigned anything. */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_TryGetOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 /* Same as `DeeClass_TryGetOperator()', but don't return an operator
  * that has been inherited from a base-class, but return `NULL' instead. */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 
@@ -721,293 +792,293 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
  * potentially cache) the operator, before invoking it. */
 
 /* `OPERATOR_CONSTRUCTOR' + `CLASS_OPERATOR_SUPERARGS' */
-INTDEF int DCALL instance_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_super_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_super_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_super_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_super_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_super_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_kwsuper_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_kwsuper_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_kwsuper_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_kwsuper_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_super_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_super_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_super_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_super_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_super_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_kwsuper_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_kwsuper_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_kwsuper_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_kwsuper_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 
 /* `CLASS_OPERATOR_SUPERARGS' */
-INTDEF int DCALL instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_super_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_super_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_super_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_super_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_super_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_kwsuper_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_kwsuper_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_kwsuper_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_kwsuper_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_kwsuper_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_super_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_super_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_super_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_super_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_kwsuper_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_kwsuper_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_kwsuper_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_kwsuper_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 
 /* `OPERATOR_CONSTRUCTOR' */
-INTDEF int DCALL instance_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
-INTDEF int DCALL instance_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_nobase_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
  * NOTE: These functions always invoke the user-defined constructor without any arguments! */
 #define instance_inherited_tctor instance_tctor
 #define instance_inherited_ctor  instance_ctor
-INTDEF int DCALL instance_inherited_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_inherited_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_inherited_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_inherited_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_inherited_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_inherited_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_inherited_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 
 /* No predefined construction operators. */
-INTDEF int DCALL instance_builtin_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* No predefined construction operators. (but the type doesn't have a base) */
-INTDEF int DCALL instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_nobase_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* No predefined construction operators, but the `TP_FINHERITCTOR' flag is set. */
-INTDEF int DCALL instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_inherited_ctor(DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_inherited_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_inherited_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_inherited_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_inherited_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_inherited_ctor(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_inherited_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_inherited_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_inherited_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 
 /* Builtin (pre-defined) hooks that are used when the user-class doesn't override these operators. */
-INTDEF int DCALL instance_builtin_tcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_builtin_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_builtin_tdeepload(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_builtin_deepload(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_copy(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tdeepload(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_deepload(DeeObject *__restrict self);
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
-INTDEF int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_builtin_nobase_deepload(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_deepload(DeeObject *__restrict self);
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-INTDEF void DCALL instance_builtin_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
-INTDEF int DCALL instance_builtin_tassign(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_builtin_assign(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_builtin_tmoveassign(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_builtin_moveassign(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF NONNULL((1)) void DCALL instance_builtin_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_assign(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tmoveassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_moveassign(DeeObject *self, DeeObject *other);
 
 #ifdef CLASS_TP_FAUTOINIT
 /* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
 #define instance_auto_tctor instance_tctor
 #define instance_auto_ctor  instance_ctor
-INTDEF int DCALL instance_auto_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_auto_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_auto_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 #define instance_builtin_auto_tctor instance_builtin_tctor
 #define instance_builtin_auto_ctor  instance_builtin_ctor
-INTDEF int DCALL instance_builtin_auto_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_auto_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_auto_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #define instance_auto_nobase_tctor instance_nobase_tctor
 #define instance_auto_nobase_ctor  instance_nobase_ctor
-INTDEF int DCALL instance_auto_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_nobase_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_auto_nobase_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 #define instance_builtin_auto_nobase_tctor instance_builtin_nobase_tctor
 #define instance_builtin_auto_nobase_ctor  instance_builtin_nobase_ctor
-INTDEF int DCALL instance_builtin_auto_nobase_tinit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF int DCALL instance_builtin_auto_nobase_tinitkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF int DCALL instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_init(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_initkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-INTDEF DREF DeeObject *DCALL instance_builtin_auto_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_builtin_auto_repr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_auto_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_builtin_auto_repr(DeeObject *__restrict self);
 #endif /* CLASS_TP_FAUTOINIT */
 
 
 /* Hooks when the user-class overrides the associated operator. */
-INTDEF int DCALL instance_tcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_copy(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_tdeepcopy(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_deepcopy(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF void DCALL instance_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
-INTDEF int DCALL instance_tassign(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_assign(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_tmoveassign(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_moveassign(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_copy(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tdeepcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_deepcopy(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF NONNULL((1)) void DCALL instance_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tassign(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_assign(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tmoveassign(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_moveassign(DeeObject *__restrict self, DeeObject *__restrict other);
 
 /* GC support for class objects. */
-INTDEF void DCALL instance_tvisit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg);
-INTDEF void DCALL instance_visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
-INTDEF void DCALL instance_tclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF void DCALL instance_clear(DeeObject *__restrict self);
-INTDEF void DCALL instance_tpclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, unsigned int gc_priority);
-INTDEF void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);
+INTDEF NONNULL((1, 2, 3)) void DCALL instance_tvisit(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL instance_visit(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
+INTDEF NONNULL((1, 2)) void DCALL instance_tclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL instance_clear(DeeObject *__restrict self);
+INTDEF NONNULL((1, 2)) void DCALL instance_tpclear(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, unsigned int gc_priority);
+INTDEF NONNULL((1)) void DCALL instance_pclear(DeeObject *__restrict self, unsigned int gc_priority);
 INTDEF struct type_gc instance_gc;
 
 /* Builtin (standard) operators for hashing and comparing class objects. */
-INTDEF Dee_hash_t DCALL instance_builtin_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF Dee_hash_t DCALL instance_builtin_hash(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_builtin_teq(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_eq(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_tne(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_ne(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_tlo(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_lo(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_tle(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_le(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_tgr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_gr(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_tge(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_builtin_ge(DeeObject *__restrict self, DeeObject *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL instance_builtin_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL instance_builtin_hash(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_eq(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_tne(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_ne(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_tlo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_lo(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_tle(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_le(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_tgr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_gr(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_builtin_tge(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_ge(DeeObject *self, DeeObject *other);
 INTDEF struct type_cmp instance_builtin_cmp;
 
 /* Hooks for user-defined operators. */
-INTDEF DREF DeeObject *DCALL instance_tstr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_str(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_repr(DeeObject *__restrict self);
-INTDEF int DCALL instance_tbool(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_bool(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_tcall(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL instance_call(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL instance_tcallkw(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL instance_callkw(DeeObject *__restrict self, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL instance_tnext(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_next(DeeObject *__restrict self);
-INTDEF int DCALL instance_tint32(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, int32_t *__restrict result);
-INTDEF int DCALL instance_int32(DeeObject *__restrict self, int32_t *__restrict result);
-INTDEF int DCALL instance_tint64(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, int64_t *__restrict result);
-INTDEF int DCALL instance_int64(DeeObject *__restrict self, int64_t *__restrict result);
-INTDEF DREF DeeObject *DCALL instance_tint(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_int(DeeObject *__restrict self);
-INTDEF int DCALL instance_tdouble(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, double *__restrict result);
-INTDEF int DCALL instance_double(DeeObject *__restrict self, double *__restrict result);
-INTDEF DREF DeeObject *DCALL instance_tinv(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_inv(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_tpos(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_pos(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_tneg(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_neg(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_tadd(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_add(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tsub(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_sub(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tmul(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_mul(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tdiv(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_div(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tmod(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_mod(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tshl(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_shl(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tshr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_shr(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tand(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_and(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_or(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_txor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_xor(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tpow(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_pow(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_tinc(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself);
-INTDEF int DCALL instance_inc(DeeObject **__restrict pself);
-INTDEF int DCALL instance_tdec(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself);
-INTDEF int DCALL instance_dec(DeeObject **__restrict pself);
-INTDEF int DCALL instance_tiadd(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_iadd(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tisub(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_isub(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_timul(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_imul(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tidiv(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_idiv(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_timod(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_imod(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tishl(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_ishl(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tishr(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_ishr(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tiand(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_iand(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tior(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_ior(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tixor(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_ixor(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_tipow(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF int DCALL instance_ipow(DeeObject **__restrict pself, DeeObject *__restrict other);
-INTDEF Dee_hash_t DCALL instance_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF Dee_hash_t DCALL instance_hash(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_teq(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_eq(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tne(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_ne(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tlo(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_lo(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tle(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_le(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tgr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_gr(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tge(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_ge(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_titer(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_iter(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_tsize(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_size(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL instance_tcontains(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_contains(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_tgetitem(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF DREF DeeObject *DCALL instance_getitem(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_tdelitem(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_delitem(DeeObject *__restrict self, DeeObject *__restrict other);
-INTDEF int DCALL instance_tsetitem(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict other, DeeObject *__restrict value);
-INTDEF int DCALL instance_setitem(DeeObject *__restrict self, DeeObject *__restrict other, DeeObject *__restrict value);
-INTDEF DREF DeeObject *DCALL instance_tgetrange(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
-INTDEF DREF DeeObject *DCALL instance_getrange(DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
-INTDEF int DCALL instance_tdelrange(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
-INTDEF int DCALL instance_delrange(DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end);
-INTDEF int DCALL instance_tsetrange(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end, DeeObject *__restrict value);
-INTDEF int DCALL instance_setrange(DeeObject *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end, DeeObject *__restrict value);
-INTDEF int DCALL instance_tenter(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_enter(DeeObject *__restrict self);
-INTDEF int DCALL instance_tleave(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
-INTDEF int DCALL instance_leave(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tstr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_str(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_repr(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tbool(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_bool(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tcall(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_call(DeeObject *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tcallkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_callkw(DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tnext(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_next(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tint32(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, int32_t *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_int32(DeeObject *__restrict self, int32_t *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tint64(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, int64_t *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_int64(DeeObject *__restrict self, int64_t *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tint(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_int(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tdouble(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, double *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_double(DeeObject *__restrict self, double *__restrict result);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tinv(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_inv(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tpos(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_pos(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tneg(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_neg(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tadd(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_add(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tsub(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_sub(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tmul(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_mul(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tdiv(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_div(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tmod(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_mod(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tshl(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_shl(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tshr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_shr(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tand(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_and(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tor(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_or(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_txor(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_xor(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tpow(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_pow(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tinc(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_inc(DeeObject **__restrict pself);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tdec(DeeTypeObject *__restrict tp_self, DeeObject **__restrict pself);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_dec(DeeObject **__restrict pself);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tiadd(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_iadd(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tisub(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_isub(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_timul(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_imul(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tidiv(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_idiv(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_timod(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_imod(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tishl(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_ishl(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tishr(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_ishr(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tiand(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_iand(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tior(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_ior(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tixor(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_ixor(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tipow(DeeTypeObject *tp_self, DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_ipow(DeeObject **__restrict pself, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_hash_t DCALL instance_thash(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL instance_hash(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_teq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_eq(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tne(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_ne(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tlo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_lo(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tle(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_le(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tgr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_gr(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tge(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_ge(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_titer(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_iter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tsize(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_size(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tcontains(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_contains(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tgetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_getitem(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tdelitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_delitem(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL instance_tsetitem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_setitem(DeeObject *self, DeeObject *other, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL instance_tgetrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_getrange(DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL instance_tdelrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_delrange(DeeObject *self, DeeObject *start, DeeObject *end);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL instance_tsetrange(DeeTypeObject *tp_self, DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL instance_setrange(DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tenter(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_enter(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tleave(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_leave(DeeObject *__restrict self);
 
-INTDEF DREF DeeObject *DCALL instance_tgetattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict name);
-INTDEF DREF DeeObject *DCALL instance_getattr(DeeObject *__restrict self, /*String*/ DeeObject *__restrict name);
-INTDEF int DCALL instance_tdelattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict name);
-INTDEF int DCALL instance_delattr(DeeObject *__restrict self, /*String*/ DeeObject *__restrict name);
-INTDEF int DCALL instance_tsetattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, /*String*/ DeeObject *__restrict name, DeeObject *__restrict value);
-INTDEF int DCALL instance_setattr(DeeObject *__restrict self, /*String*/ DeeObject *__restrict name, DeeObject *__restrict value);
-INTDEF dssize_t DCALL instance_enumattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL instance_tgetattr(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_getattr(DeeObject *self, /*String*/ DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tdelattr(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_delattr(DeeObject *self, /*String*/ DeeObject *name);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL instance_tsetattr(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *name, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_setattr(DeeObject *self, /*String*/ DeeObject *name, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self, denum_t proc, void *arg);
 
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 /* Instance-member wrapper objects
@@ -1029,9 +1100,9 @@ DDATDEF DeeTypeObject DeeInstanceMember_Type;
 #define DeeInstanceMember_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeInstanceMember_Type)
 
 /* Construct a new instance member for the given `attribute' */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
-                      struct Dee_class_attribute *__restrict attribute);
+                      struct Dee_class_attribute *__restrict attr);
 
 DECL_END
 

@@ -47,16 +47,16 @@ DECL_BEGIN
 /* Dummy key object. */
 #define dummy (&DeeDict_Dummy)
 
-PRIVATE int DCALL USet_InitEmpty(USet *__restrict self);
-PRIVATE void DCALL USet_Fini(USet *__restrict self);
-PRIVATE int DCALL USet_InitCopy(USet *__restrict self, USet *__restrict other);
-PRIVATE int DCALL USet_InitIterator(USet *__restrict self, DeeObject *__restrict iterator);
-PRIVATE int DCALL USet_InitSequence(USet *__restrict self, DeeObject *__restrict sequence);
-PRIVATE int DCALL USet_Insert(USet *__restrict self, DeeObject *__restrict ob);
-PRIVATE int DCALL USet_DoInsertNolock(USet *__restrict self, DeeObject *__restrict ob);
+PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL USet_InitEmpty(USet *__restrict self);
+PRIVATE NONNULL((1)) void DCALL USet_Fini(USet *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitCopy(USet *__restrict self, USet *__restrict other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitIterator(USet *__restrict self, DeeObject *__restrict iterator);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_InitSequence(USet *__restrict self, DeeObject *__restrict sequence);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_Insert(USet *__restrict self, DeeObject *__restrict ob);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_DoInsertNolock(USet *__restrict self, DeeObject *__restrict ob);
 LOCAL void DCALL USet_DoInsertUnlocked(USet *__restrict self, DREF DeeObject *__restrict ob);
-PRIVATE int DCALL USet_Remove(USet *__restrict self, DeeObject *__restrict ob);
-PRIVATE bool DCALL USet_Contains(USet *__restrict self, DeeObject *__restrict ob);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL USet_Remove(USet *__restrict self, DeeObject *__restrict ob);
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL USet_Contains(USet *__restrict self, DeeObject *__restrict ob);
 
 
 INTDEF DeeTypeObject USet_Type;
@@ -73,7 +73,7 @@ INTDEF DeeTypeObject URoSetIterator_Type;
 #define READ_ITEM(x) ATOMIC_READ((x)->si_next)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 usetiterator_next(USetIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct uset_item *item, *end;
@@ -130,7 +130,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 usetiterator_ctor(USetIterator *__restrict self) {
 	self->si_set = (USet *)DeeObject_NewDefault(&USet_Type);
 	if unlikely(!self->si_set)
@@ -139,7 +139,7 @@ usetiterator_ctor(USetIterator *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 usetiterator_copy(USetIterator *__restrict self,
                   USetIterator *__restrict other) {
 	self->si_set = other->si_set;
@@ -149,12 +149,12 @@ usetiterator_copy(USetIterator *__restrict self,
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 usetiterator_fini(USetIterator *__restrict self) {
 	Dee_Decref(self->si_set);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 usetiterator_visit(USetIterator *__restrict self,
                    dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_set);
@@ -162,7 +162,7 @@ usetiterator_visit(USetIterator *__restrict self,
 
 INTERN int DCALL
 usetiterator_init(USetIterator *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	USet *set;
 	if (DeeArg_Unpack(argc, argv, "o:_UniqueSetIterator", &set) ||
 	    DeeObject_AssertType((DeeObject *)set, &USet_Type))
@@ -177,7 +177,7 @@ usetiterator_init(USetIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 usetiterator_bool(USetIterator *__restrict self) {
 	struct uset_item *item = READ_ITEM(self);
 	USet *set              = self->si_set;
@@ -269,7 +269,7 @@ INTERN DeeTypeObject USetIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
 USet_InitEmpty(USet *__restrict self) {
 	self->s_mask = 0;
 	self->s_size = 0;
@@ -282,7 +282,7 @@ USet_InitEmpty(USet *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_InitIterator(USet *__restrict self,
                   DeeObject *__restrict iterator) {
 	DREF DeeObject *elem;
@@ -327,7 +327,7 @@ USet_DoInsertUnlocked(USet *__restrict self,
  * During this process all dummy items are discarded.
  * @return: true:  Successfully rehashed the set.
  * @return: false: Not enough memory. - The caller should collect some and try again. */
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 uset_rehash(USet *__restrict self, int sizedir) {
 	struct uset_item *new_vector, *iter, *end;
 	size_t new_mask = self->s_mask;
@@ -399,7 +399,7 @@ uset_rehash(USet *__restrict self, int sizedir) {
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_Remove(USet *__restrict self,
             DeeObject *__restrict ob) {
 	size_t mask;
@@ -441,7 +441,7 @@ restart:
 	return 0;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 USet_Contains(USet *__restrict self,
               DeeObject *__restrict ob) {
 	size_t mask;
@@ -464,7 +464,7 @@ USet_Contains(USet *__restrict self,
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_Insert(USet *__restrict self,
             DeeObject *__restrict ob) {
 	struct uset_item *first_dummy;
@@ -527,7 +527,7 @@ again:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_DoInsertNolock(USet *__restrict self,
                     DeeObject *__restrict ob) {
 	struct uset_item *first_dummy;
@@ -575,7 +575,7 @@ again:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_InitSequence(USet *__restrict self,
                   DeeObject *__restrict sequence) {
 	DeeTypeObject *type = Dee_TYPE(sequence);
@@ -746,7 +746,7 @@ err:
 	return -1;
 }
 
-INTERN DREF USet *DCALL
+INTERN WUNUSED NONNULL((1)) DREF USet *DCALL
 USet_FromSequence(DeeObject *__restrict sequence) {
 	DREF USet *result;
 	result = DeeGCObject_MALLOC(USet);
@@ -787,7 +787,7 @@ PRIVATE struct type_member uset_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 USet_InitCopy(USet *__restrict self,
               USet *__restrict other) {
 	struct uset_item *iter, *end;
@@ -822,7 +822,7 @@ again:
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 uset_deepload(USet *__restrict self) {
 	DREF DeeObject **new_items, **items = NULL;
 	size_t i, hash_i, item_count, ols_item_count = 0;
@@ -909,7 +909,7 @@ err_items:
 	return -1;
 }
 
-PRIVATE void DCALL USet_Fini(USet *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL USet_Fini(USet *__restrict self) {
 	weakref_support_fini(self);
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
 	ASSERT((self->s_elem == empty_set_items) == (self->s_size == 0));
@@ -922,7 +922,7 @@ PRIVATE void DCALL USet_Fini(USet *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL uset_clear(USet *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL uset_clear(USet *__restrict self) {
 	struct uset_item *elem;
 	size_t mask;
 	DeeHashSet_LockWrite(self);
@@ -949,7 +949,7 @@ PRIVATE void DCALL uset_clear(USet *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 uset_visit(USet *__restrict self, dvisit_t proc, void *arg) {
 	DeeHashSet_LockRead(self);
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
@@ -967,7 +967,7 @@ uset_visit(USet *__restrict self, dvisit_t proc, void *arg) {
 	DeeHashSet_LockEndRead(self);
 }
 
-PRIVATE DREF USetIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF USetIterator *DCALL
 uset_iter(USet *__restrict self) {
 	DREF USetIterator *result;
 	result = DeeObject_MALLOC(USetIterator);
@@ -986,7 +986,7 @@ done:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uset_size(USet *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return DeeInt_NewSize(self->s_used);
@@ -995,7 +995,7 @@ uset_size(USet *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 uset_nsi_getsize(USet *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->s_used;
@@ -1004,12 +1004,12 @@ uset_nsi_getsize(USet *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
-uset_contains(USet *__restrict self, DeeObject *__restrict search_item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+uset_contains(USet *self, DeeObject *search_item) {
 	return_bool(USet_Contains(self, search_item));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uset_repr(USet *__restrict self) {
 	struct unicode_printer p;
 	dssize_t error;
@@ -1060,7 +1060,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 uset_bool(USet *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->s_used != 0;
@@ -1071,7 +1071,7 @@ uset_bool(USet *__restrict self) {
 
 PRIVATE int DCALL
 uset_init(USet *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:UniqueSet", &seq))
 		goto err;
@@ -1081,8 +1081,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-uset_pop(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_pop(USet *self, size_t argc, DeeObject **argv) {
 	size_t i;
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":pop"))
@@ -1109,8 +1109,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-uset_doclear(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_doclear(USet *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	uset_clear(self);
@@ -1119,8 +1119,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-uset_insert(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_insert(USet *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:insert", &item))
@@ -1133,8 +1133,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-uset_unify(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_unify(USet *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:unify", &item))
 		goto err;
@@ -1156,8 +1156,8 @@ insert_callback(USet *__restrict self, DeeObject *item) {
 }
 #endif
 
-PRIVATE DREF DeeObject *DCALL
-uset_update(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_update(USet *self, size_t argc, DeeObject **argv) {
 	DeeObject *items;
 	dssize_t result;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
@@ -1170,8 +1170,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-uset_remove(USet *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_remove(USet *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:remove", &item))
@@ -1185,9 +1185,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-uset_sizeof(USet *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+uset_sizeof(USet *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(sizeof(USet) +
@@ -1362,7 +1361,7 @@ INTERN DeeTypeObject USet_Type = {
 #define READ_ITEM(x) ATOMIC_READ((x)->si_next)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 urosetiterator_next(URoSetIterator *__restrict self) {
 	struct uset_item *item, *end;
 	end = self->si_set->rs_elem + self->si_set->rs_mask + 1;
@@ -1401,7 +1400,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 urosetiterator_ctor(URoSetIterator *__restrict self) {
 	self->si_set = URoSet_New();
 	if unlikely(!self->si_set)
@@ -1416,7 +1415,7 @@ urosetiterator_ctor(URoSetIterator *__restrict self) {
 
 INTERN int DCALL
 urosetiterator_init(URoSetIterator *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+                    size_t argc, DeeObject **argv) {
 	URoSet *set;
 	if (DeeArg_Unpack(argc, argv, "o:_UniqueRoSetIterator", &set) ||
 	    DeeObject_AssertType((DeeObject *)set, &URoSet_Type))
@@ -1427,7 +1426,7 @@ urosetiterator_init(URoSetIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 urosetiterator_bool(URoSetIterator *__restrict self) {
 	struct uset_item *item = READ_ITEM(self);
 	URoSet *set            = self->si_set;

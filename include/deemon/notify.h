@@ -58,7 +58,7 @@ DECL_BEGIN
  * @return: * :        The value of the environment variable `name'
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: No value assigned to the environment variable `name' */
-DFUNDEF DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restrict name);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restrict name);
 
 
 #ifndef CONFIG_NO_DEX
@@ -83,7 +83,7 @@ DFUNDEF DREF DeeObject *DCALL Dee_GetEnv(DeeObject *__restrict name);
 
 /* >> DEFINE_NOTIFY_ENVIRON_INTEGER(int,my_envint,7,"MY_ENVINT");
  * >> DREF DeeObject *DCALL
- * >> get_my_envint(size_t argc, DeeObject **__restrict argv) {
+ * >> get_my_envint(size_t argc, DeeObject **argv) {
  * >>     int result;
  * >>     if (DeeArg_Unpack(argc, argv,":get_my_envint"))
  * >>         goto err;
@@ -155,15 +155,15 @@ typedef int (DCALL *Dee_notify_t)(DeeObject *arg);
  *               and `name' with the same `arg' and was not registered again / removed.
  * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen').
  * WARNING: Notifications may be invoked more than once if added from a notification callback. */
-DFUNDEF int (DCALL DeeNotify_BeginListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
-DFUNDEF int (DCALL DeeNotify_EndListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
+DFUNDEF WUNUSED NONNULL((2, 3)) int (DCALL DeeNotify_BeginListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
+DFUNDEF NONNULL((2, 3)) int (DCALL DeeNotify_EndListen)(uint16_t cls, DeeObject *__restrict name, Dee_notify_t callback, DeeObject *arg);
 
 /* Broadcast a change notification for the given class `cls' and `name'
  * NOTE: The caller is responsible for passing a string for `name'
  * @return:  * : The number of callbacks that were executed.
  * @return: -1 : Callback invocation was stopped after a callback indicated an error. */
-DFUNDEF int DCALL DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name);
-DFUNDEF int DCALL DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name);
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name);
+DFUNDEF WUNUSED NONNULL((2)) int DCALL DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Delete all registered notification callbacks.

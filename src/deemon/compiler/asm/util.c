@@ -134,11 +134,11 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_i(DeeTupleObject *__restrict self,
                  dssize_t begin, dssize_t end);
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_getrange_as_tuple(DeeListObject *__restrict self,
                        dssize_t begin, dssize_t end) {
 	DREF DeeTupleObject *result;
@@ -638,7 +638,7 @@ err:
 }
 
 
-INTERN int DCALL asm_check_thiscall(struct symbol *__restrict sym,
+INTERN WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__restrict sym,
                                     struct ast *__restrict warn_ast) {
 	/* Throw a compiler-error when one attempts to
 	 * access an instance member from a class method.
@@ -1151,7 +1151,7 @@ err:
 	return -1;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 asm_can_prefix_symbol(struct symbol *__restrict sym) {
 	ASSERT(sym);
 check_sym_class:
@@ -1182,7 +1182,7 @@ check_sym_class:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 asm_can_prefix_symbol_for_read(struct symbol *__restrict sym) {
 	ASSERT(sym);
 check_sym_class:

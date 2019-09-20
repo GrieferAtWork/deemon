@@ -433,7 +433,7 @@ INTERN int (DCALL dec_putrelat)(uint32_t addr, uint8_t type,
 	return 0;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 dec_section_empty(struct dec_section *__restrict self) {
 	do {
 		if (self->ds_iter != self->ds_begin)

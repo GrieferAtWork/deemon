@@ -492,14 +492,14 @@ DFUNDEF void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restric
  * @return: true:  Successfully initialized the given weak reference.
  * @return: false: The given object `ob' does not support weak referencing. */
 #ifdef __INTELLISENSE__
-DFUNDEF bool DCALL
+DFUNDEF NONNULL((1, 2)) bool DCALL
 Dee_weakref_init(struct Dee_weakref *__restrict self,
                  DeeObject *__restrict ob,
                  Dee_weakref_callback_t callback);
 #else /* __INTELLISENSE__ */
 #define Dee_weakref_init(self, ob, callback) \
 	((self)->wr_del = (callback), _Dee_weakref_init(self, ob))
-DFUNDEF bool DCALL
+DFUNDEF NONNULL((1, 2)) bool DCALL
 _Dee_weakref_init(struct Dee_weakref *__restrict self,
                   DeeObject *__restrict ob);
 #endif /* !__INTELLISENSE__ */
@@ -531,13 +531,14 @@ DFUNDEF void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self,
  * @return: true:    Successfully overwritten the weak reference.
  * @return: false:   The given object `ob' does not support weak referencing
  *                   and the stored weak reference was not modified. */
-DFUNDEF bool DCALL Dee_weakref_set(struct Dee_weakref *__restrict self,
-                                   DeeObject *__restrict ob);
+DFUNDEF NONNULL((1, 2)) bool DCALL
+Dee_weakref_set(struct Dee_weakref *__restrict self,
+                DeeObject *__restrict ob);
 
 /* Clear the weak reference `self', returning true if it used to point to an object.
  * NOTE: Upon success (return is `true'), the callback will not be
  *       executed for the previously bound object's destruction. */
-DFUNDEF bool DCALL
+DFUNDEF NONNULL((1)) bool DCALL
 Dee_weakref_clear(struct Dee_weakref *__restrict self);
 
 /* Lock a weak reference, returning a regular reference to the pointed-to object.
@@ -605,9 +606,9 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 
 
 /* incref() + return `self' */
-DFUNDEF DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);
 #if defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_TRACE_REFCHANGES)
-DFUNDEF void DCALL DeeObject_Destroy(DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy(DeeObject *__restrict self);
 #else /* CONFIG_NO_BADREFCNT_CHECKS && !CONFIG_TRACE_REFCHANGES */
 DFUNDEF void DCALL DeeObject_Destroy_d(DeeObject *__restrict self, char const *file, int line);
 #define DeeObject_Destroy(self) DeeObject_Destroy_d(self, __FILE__, __LINE__)
@@ -1015,7 +1016,7 @@ struct Dee_type_constructor {
 			WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
 			WUNUSED NONNULL((1)) DREF DeeObject *(DCALL *tp_deep_ctor)(DeeObject *__restrict other);
 			WUNUSED              DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject **argv);
-			WUNUSED NONNULL((1)) void            (DCALL *tp_free)(void *__restrict ob);
+			        NONNULL((1)) void            (DCALL *tp_free)(void *__restrict ob);
 			struct { uintptr_t tp_pad; } tp_pad; /* ... */
 			DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject **argv, DeeObject *kw);
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
@@ -2027,8 +2028,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeType_GetModule(DeeTypeObje
 
 /* Object creation (constructor invocation). */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);
-DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject **__restrict argv);
-DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_NewKw(DeeTypeObject *object_type, size_t argc, DeeObject **__restrict argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject **argv);
+DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_NewKw(DeeTypeObject *object_type, size_t argc, DeeObject **argv, DeeObject *kw);
 DFUNDEF ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *DeeObject_NewPack(DeeTypeObject *object_type, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_VNewPack(DeeTypeObject *object_type, size_t argc, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DeeObject_Newf(DeeTypeObject *object_type, char const *__restrict format, ...);
@@ -2156,7 +2157,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt128)(DeeObject *__res
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsDouble)(DeeObject *__restrict self, double *__restrict result);
 
 /* Cast-to-pointer conversion operator invocation. */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
 
 #define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)  DeeObject_AsInt8(self, (int8_t *)(result))
 #define DEE_PRIVATE_OBJECT_AS_INT_2(self, result)  DeeObject_AsInt16(self, (int16_t *)(result))
@@ -2345,7 +2346,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLen)(DeeObje
 
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *other);
-DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc, /*inherit(on_success)*/ DREF DeeObject **__restrict argv);
+DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_ExtendInherited)(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc, /*inherit(on_success)*/ DREF DeeObject **argv);
 
 /* Process UTF-8-encoded `data' in whatever way you wish. */
 typedef WUNUSED NONNULL((2)) Dee_ssize_t

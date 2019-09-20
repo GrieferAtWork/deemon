@@ -365,7 +365,7 @@ get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_str(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -377,7 +377,7 @@ keyword_str(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_hash(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -389,7 +389,7 @@ keyword_hash(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_macrofile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -407,7 +407,7 @@ keyword_macrofile(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_oldmacrofile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -425,7 +425,7 @@ keyword_oldmacrofile(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_defmacrofile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -443,7 +443,7 @@ keyword_defmacrofile(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_cachedfile(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -461,7 +461,7 @@ keyword_cachedfile(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_id(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -546,7 +546,7 @@ DEFINE_KEYWORD_FLAG_FUNCTIONS(is_poisoned, TPP_KEYWORDFLAG_IS_POISONED)
 DEFINE_KEYWORD_FLAG_FUNCTIONS(has_tpp_builtin, TPP_KEYWORDFLAG_HAS_TPP_BUILTIN)
 #undef DEFINE_KEYWORD_FLAG_FUNCTIONS
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_get_counter(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -564,7 +564,7 @@ keyword_get_counter(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 keyword_del_counter(DeeCompilerItemObject *__restrict self) {
 	int result = -1;
 	struct TPPKeyword *item;
@@ -579,7 +579,7 @@ keyword_del_counter(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 keyword_set_counter(DeeCompilerItemObject *__restrict self,
                     DeeObject *__restrict value) {
 	int result = -1;
@@ -605,7 +605,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 keyword_get_uservalue(DeeCompilerItemObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	struct TPPKeyword *item;
@@ -623,7 +623,7 @@ keyword_get_uservalue(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 keyword_del_uservalue(DeeCompilerItemObject *__restrict self) {
 	int result = -1;
 	struct TPPKeyword *item;
@@ -638,7 +638,7 @@ keyword_del_uservalue(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 keyword_set_uservalue(DeeCompilerItemObject *__restrict self,
                       DeeObject *__restrict value) {
 	int result = -1;
@@ -833,37 +833,37 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_keywords(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerKeywords(self->cw_compiler);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_extensions(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerExtensions(self->cw_compiler);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_warnings(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerWarnings(self->cw_compiler);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_syspaths(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerSyspaths(self->cw_compiler);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_ifdef(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerIfdef(self->cw_compiler);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_token(DeeCompilerWrapperObject *__restrict self) {
 	return DeeCompiler_GetLexerToken(self->cw_compiler);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_file(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -877,7 +877,7 @@ lexer_get_file(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_textfile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	struct TPPFile *file;
@@ -893,7 +893,7 @@ lexer_get_textfile(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_basefile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	struct TPPFile *file;
@@ -909,7 +909,7 @@ lexer_get_basefile(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_textposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -944,7 +944,7 @@ is_empty_file:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_textendposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -979,7 +979,7 @@ is_empty_file:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -1004,7 +1004,7 @@ lexer_get_tokenposition(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *file_ob;
@@ -1029,7 +1029,7 @@ lexer_get_tokenendposition(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_atstartofline(DeeCompilerWrapperObject *__restrict self) {
 	int result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1039,7 +1039,7 @@ lexer_get_atstartofline(DeeCompilerWrapperObject *__restrict self) {
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_flags(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1048,7 +1048,7 @@ lexer_get_flags(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_flags(DeeCompilerWrapperObject *__restrict self,
                 DeeObject *__restrict value) {
 	uint32_t new_flags;
@@ -1122,7 +1122,7 @@ DEFINE_LEXER_FLAG_FUNCTIONS(reemitunknownpragma, TPPLEXER_FLAG_REEMIT_UNKNOWN_PR
 DEFINE_LEXER_FLAG_FUNCTIONS(eofonparen, TPPLEXER_FLAG_EOF_ON_PAREN)
 #undef DEFINE_LEXER_FLAG_FUNCTIONS
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eofparen(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1131,7 +1131,7 @@ lexer_get_eofparen(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_eofparen(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_eof_paren = 0;
@@ -1139,7 +1139,7 @@ lexer_del_eofparen(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_eofparen(DeeCompilerWrapperObject *__restrict self,
                    DeeObject *__restrict value) {
 	size_t new_eofparen;
@@ -1151,7 +1151,7 @@ lexer_set_eofparen(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eobfile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1160,7 +1160,7 @@ lexer_get_eobfile(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_eobfile(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_eob_file = NULL;
@@ -1175,7 +1175,7 @@ err_invalid_file_compiler(DeeCompilerItemObject *__restrict obj) {
 	                       "File is associated with a different compiler");
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_eobfile(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -1199,7 +1199,7 @@ lexer_set_eobfile(DeeCompilerWrapperObject *__restrict self,
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_eoffile(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1208,7 +1208,7 @@ lexer_get_eoffile(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_eoffile(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_eof_file = NULL;
@@ -1216,7 +1216,7 @@ lexer_del_eoffile(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_eoffile(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -1241,7 +1241,7 @@ lexer_set_eoffile(DeeCompilerWrapperObject *__restrict self,
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1250,7 +1250,7 @@ lexer_get_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_limit_mrec = TPPLEXER_DEFAULT_LIMIT_MREC;
@@ -1258,7 +1258,7 @@ lexer_del_macrolimit(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_macrolimit(DeeCompilerWrapperObject *__restrict self,
                      DeeObject *__restrict value) {
 	size_t new_macrolimit;
@@ -1270,7 +1270,7 @@ lexer_set_macrolimit(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_includelimit(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1279,7 +1279,7 @@ lexer_get_includelimit(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_includelimit(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_limit_incl = TPPLEXER_DEFAULT_LIMIT_INCL;
@@ -1287,7 +1287,7 @@ lexer_del_includelimit(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_includelimit(DeeCompilerWrapperObject *__restrict self,
                        DeeObject *__restrict value) {
 	size_t new_includelimit;
@@ -1299,7 +1299,7 @@ lexer_set_includelimit(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_warningcount(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1308,7 +1308,7 @@ lexer_get_warningcount(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_warningcount(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_warncount = 0;
@@ -1316,7 +1316,7 @@ lexer_del_warningcount(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_warningcount(DeeCompilerWrapperObject *__restrict self,
                        DeeObject *__restrict value) {
 	size_t new_warningcount;
@@ -1328,7 +1328,7 @@ lexer_set_warningcount(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_errorcount(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1337,7 +1337,7 @@ lexer_get_errorcount(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_errorcount(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_errorcount = 0;
@@ -1345,7 +1345,7 @@ lexer_del_errorcount(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_errorcount(DeeCompilerWrapperObject *__restrict self,
                      DeeObject *__restrict value) {
 	size_t new_errorcount;
@@ -1357,7 +1357,7 @@ lexer_set_errorcount(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1366,7 +1366,7 @@ lexer_get_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_maxerrors = TPPLEXER_DEFAULT_LIMIT_ECNT;
@@ -1374,7 +1374,7 @@ lexer_del_maxerrors(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_maxerrors(DeeCompilerWrapperObject *__restrict self,
                     DeeObject *__restrict value) {
 	size_t new_maxerrors;
@@ -1386,7 +1386,7 @@ lexer_set_maxerrors(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_tabsize(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1395,7 +1395,7 @@ lexer_get_tabsize(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_tabsize(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_tabsize = TPPLEXER_DEFAULT_TABSIZE;
@@ -1403,7 +1403,7 @@ lexer_del_tabsize(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_tabsize(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	size_t new_tabsize;
@@ -1415,7 +1415,7 @@ lexer_set_tabsize(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_get_counter(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -1424,7 +1424,7 @@ lexer_get_counter(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 lexer_del_counter(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_counter = TPPLEXER_DEFAULT_TABSIZE;
@@ -1432,7 +1432,7 @@ lexer_del_counter(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 lexer_set_counter(DeeCompilerWrapperObject *__restrict self,
                   DeeObject *__restrict value) {
 	int64_t new_counter;
@@ -1853,9 +1853,8 @@ PRIVATE struct type_member lexer_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-INTERN DREF DeeObject *DCALL
-lexer_include(DeeCompilerWrapperObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_include(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *arg, *filename = Dee_None;
 	DREF DeeObject *stream;
 	/*ref*/ struct TPPFile *file;
@@ -1904,9 +1903,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_nextraw(DeeCompilerWrapperObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_nextraw(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
 	if (DeeArg_Unpack(argc, argv, ":nextraw"))
@@ -1922,9 +1920,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_nextpp(DeeCompilerWrapperObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_nextpp(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
 	if (DeeArg_Unpack(argc, argv, ":nextpp"))
@@ -1940,9 +1937,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_next(DeeCompilerWrapperObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_next(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
 	if (DeeArg_Unpack(argc, argv, ":next"))
@@ -1958,9 +1954,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_nextraw_nb(DeeCompilerWrapperObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_nextraw_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
 	if (DeeArg_Unpack(argc, argv, ":nextraw_nb"))
@@ -1976,9 +1971,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_nextpp_nb(DeeCompilerWrapperObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_nextpp_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
 	if (DeeArg_Unpack(argc, argv, ":nextpp_nb"))
@@ -1994,9 +1988,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_next_nb(DeeCompilerWrapperObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_next_nb(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	tok_t result;
 	uint16_t old_exceptsz;
 	if (DeeArg_Unpack(argc, argv, ":next_nb"))
@@ -2012,9 +2005,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_seterr(DeeCompilerWrapperObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_seterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":seterr"))
 		goto err;
@@ -2026,9 +2018,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_unseterr(DeeCompilerWrapperObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_unseterr(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":unseterr"))
 		goto err;
@@ -2040,9 +2031,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_popfile(DeeCompilerWrapperObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_popfile(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	bool result;
 	if (DeeArg_Unpack(argc, argv, ":popfile"))
 		goto err;
@@ -2063,10 +2053,9 @@ DOC_DEF(lexer_getkwd_doc,
         "when @create is :false and the keyword hasn't been accessed yet");
 PRIVATE struct keyword getkwd_kwlist[] = { K(name), K(create), KEND };
 
-INTERN DREF DeeObject *DCALL
-lexer_getkwd(DeeCompilerWrapperObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv,
-             DeeObject *kw) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_getkwd(DeeCompilerWrapperObject *self, size_t argc,
+             DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	char *name_utf8;
 	DeeObject *name;
@@ -2103,10 +2092,9 @@ DOC_DEF(lexer_getxkwd_doc,
         "Same as #getkwd, however the given @name may contain escaped "
         "line-feeds that are removed prior to it being used to lookup "
         "a keyword");
-INTERN DREF DeeObject *DCALL
-lexer_getxkwd(DeeCompilerWrapperObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
-              DeeObject *kw) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_getxkwd(DeeCompilerWrapperObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	char *name_utf8;
 	DeeObject *name;
@@ -2143,9 +2131,8 @@ DOC_DEF(lexer_getkwdid_doc,
         "Lookup the keyword associated with the given @id, "
         "returning it or :none if no such keyword exists.\n"
         "WARNING: This is an O(n) operation and should be avoided if at all possible");
-INTERN DREF DeeObject *DCALL
-lexer_getkwdid(DeeCompilerWrapperObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_getkwdid(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	unsigned int id;
 	struct TPPKeyword *kwd;
@@ -2165,9 +2152,8 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_undef(DeeCompilerWrapperObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_undef(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *name;
 	int error;
 	char *utf8_name;
@@ -2187,10 +2173,9 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_define(DeeCompilerWrapperObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv,
-             DeeObject *kw) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_define(DeeCompilerWrapperObject *self, size_t argc,
+             DeeObject **argv, DeeObject *kw) {
 	DeeObject *name, *value;
 	int error;
 	char *utf8_name, *utf8_value;
@@ -2218,10 +2203,9 @@ err:
 
 PRIVATE struct keyword assertion_kwlist[] = { K(predicate), K(answer), KEND };
 
-INTERN DREF DeeObject *DCALL
-lexer_addassert(DeeCompilerWrapperObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv,
-                DeeObject *kw) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_addassert(DeeCompilerWrapperObject *self, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DeeObject *name, *value;
 	int error;
 	char *utf8_name, *utf8_value;
@@ -2244,10 +2228,9 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-lexer_delassert(DeeCompilerWrapperObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv,
-                DeeObject *kw) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_delassert(DeeCompilerWrapperObject *self, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DeeObject *name, *value = NULL;
 	int error;
 	char *utf8_name, *utf8_value = NULL;
@@ -2415,16 +2398,16 @@ INTERN DeeTypeObject DeeCompilerLexer_Type = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_keywords_iter(DeeCompilerWrapperObject *__restrict self) {
 	(void)self; /* TODO */
 	DERROR_NOTIMPLEMENTED();
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-lexer_keywords_getitem(DeeCompilerWrapperObject *__restrict self,
-                       DeeObject *__restrict name) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+lexer_keywords_getitem(DeeCompilerWrapperObject *self,
+                       DeeObject *name) {
 	DREF DeeObject *result;
 	struct TPPKeyword *kwd;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -2607,9 +2590,8 @@ INTERN DeeTypeObject DeeCompilerLexerWarnings_Type = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-lexer_syspaths_push(DeeCompilerWrapperObject *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_syspaths_push(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":push"))
 		goto err;
@@ -2623,9 +2605,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-lexer_syspaths_pop(DeeCompilerWrapperObject *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_syspaths_pop(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":pop"))
 		goto err;
@@ -2637,9 +2618,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-lexer_syspaths_insert(DeeCompilerWrapperObject *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	DeeObject *path;
 	char *utf8, *copy;
@@ -2662,9 +2642,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-lexer_syspaths_remove(DeeCompilerWrapperObject *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	DeeObject *path;
 	char *utf8, *copy;
@@ -2707,7 +2686,7 @@ PRIVATE struct type_method lexer_syspaths_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lexer_syspaths_size(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2716,9 +2695,9 @@ lexer_syspaths_size(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-lexer_syspaths_getitem(DeeCompilerWrapperObject *__restrict self,
-                       DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+lexer_syspaths_getitem(DeeCompilerWrapperObject *self,
+                       DeeObject *index) {
 	DREF DeeObject *result;
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
@@ -2844,7 +2823,7 @@ INTERN DeeTypeObject DeeCompilerLexerIfdef_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 token_bool(DeeCompilerWrapperObject *__restrict self) {
 	int result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2861,7 +2840,7 @@ PRIVATE int(TPPCALL unicode_printer_tppappend)(char const *__restrict buf, size_
 	       : 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_text(DeeCompilerWrapperObject *__restrict self) {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -2886,7 +2865,7 @@ PRIVATE int(TPPCALL unicode_printer_tppappend_escape)(char const *__restrict buf
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_str(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2897,7 +2876,7 @@ token_str(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_repr(DeeCompilerWrapperObject *__restrict self) {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -2917,7 +2896,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_rawtext(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2929,7 +2908,7 @@ token_rawtext(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_id(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2938,7 +2917,7 @@ token_id(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 token_delid(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_token.t_id = 0;
@@ -2946,7 +2925,7 @@ token_delid(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 token_setid(DeeCompilerWrapperObject *__restrict self,
             DeeObject *__restrict value) {
 	int new_id;
@@ -2958,7 +2937,7 @@ token_setid(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_num(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -2967,7 +2946,7 @@ token_num(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 token_delnum(DeeCompilerWrapperObject *__restrict self) {
 	COMPILER_BEGIN(self->cw_compiler);
 	TPPLexer_Current->l_token.t_num = 0;
@@ -2975,7 +2954,7 @@ token_delnum(DeeCompilerWrapperObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 token_setnum(DeeCompilerWrapperObject *__restrict self,
              DeeObject *__restrict value) {
 	unsigned long new_num;
@@ -2987,7 +2966,7 @@ token_setnum(DeeCompilerWrapperObject *__restrict self,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 token_keyword(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result = NULL;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -3001,7 +2980,7 @@ token_keyword(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 token_setkeyword(DeeCompilerWrapperObject *__restrict self,
                  DeeObject *__restrict value) {
 	struct TPPKeyword *kwd;
@@ -3078,9 +3057,8 @@ PRIVATE struct type_getset lexer_token_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
-lexer_token_decodestring(DeeCompilerWrapperObject *__restrict self,
-                         size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_token_decodestring(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (DeeArg_Unpack(argc, argv, ":decodestring"))
@@ -3102,9 +3080,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-lexer_token_decodeinteger(DeeCompilerWrapperObject *__restrict self,
-                          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+lexer_token_decodeinteger(DeeCompilerWrapperObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result = NULL;
 	bool warnchar          = true;
 	if (DeeArg_Unpack(argc, argv, "|b:decodeinteger", &warnchar))
@@ -3148,7 +3125,7 @@ PRIVATE struct type_method lexer_token_methods[] = {
 };
 
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 token_hash(DeeCompilerWrapperObject *__restrict self) {
 	dhash_t result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -3157,9 +3134,9 @@ token_hash(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-token_eq(DeeCompilerWrapperObject *__restrict self,
-         DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+token_eq(DeeCompilerWrapperObject *self,
+         DeeObject *other) {
 	bool result;
 	char const *other_utf8;
 	tok_t other_id;
@@ -3173,9 +3150,9 @@ token_eq(DeeCompilerWrapperObject *__restrict self,
 	return_bool_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-token_ne(DeeCompilerWrapperObject *__restrict self,
-         DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+token_ne(DeeCompilerWrapperObject *self,
+         DeeObject *other) {
 	bool result;
 	char const *other_utf8;
 	tok_t other_id;
@@ -3296,7 +3273,7 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_str(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3312,7 +3289,7 @@ file_str(DeeCompilerItemObject *__restrict self) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_istext(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3326,7 +3303,7 @@ file_istext(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_ismacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3340,7 +3317,7 @@ file_ismacro(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_isexpand(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3354,7 +3331,7 @@ file_isexpand(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_origin(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3372,7 +3349,7 @@ file_origin(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_alltext(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3387,7 +3364,7 @@ file_alltext(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_nexttext(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3402,7 +3379,7 @@ file_nexttext(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_position(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3417,7 +3394,7 @@ file_position(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_filename(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3461,7 +3438,7 @@ err_not_a_functionmacrofile(struct TPPFile *__restrict file) {
 	                       "This file isn't a function-like macro file");
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delfilename(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -3482,7 +3459,7 @@ file_delfilename(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setfilename(DeeCompilerItemObject *__restrict self,
                  DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -3514,7 +3491,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_realfilename(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3530,7 +3507,7 @@ file_realfilename(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_name(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3545,7 +3522,7 @@ file_name(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_lineoffset(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3562,7 +3539,7 @@ file_lineoffset(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_dellineoffset(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -3580,7 +3557,7 @@ file_dellineoffset(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setlineoffset(DeeCompilerItemObject *__restrict self,
                    DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -3602,7 +3579,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_stream(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3626,7 +3603,7 @@ file_stream(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3646,7 +3623,7 @@ file_getguard(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -3664,7 +3641,7 @@ file_delguard(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setguard(DeeCompilerItemObject *__restrict self,
               DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -3697,7 +3674,7 @@ file_setguard(DeeCompilerItemObject *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getnewguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3717,7 +3694,7 @@ file_getnewguard(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delnewguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -3735,7 +3712,7 @@ file_delnewguard(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setnewguard(DeeCompilerItemObject *__restrict self,
                  DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -3768,7 +3745,7 @@ file_setnewguard(DeeCompilerItemObject *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_includecount(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3788,7 +3765,7 @@ file_includecount(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readcount(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3805,7 +3782,7 @@ file_readcount(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getdisallowguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3823,7 +3800,7 @@ file_getdisallowguard(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_deldisallowguard(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -3841,7 +3818,7 @@ file_deldisallowguard(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setdisallowguard(DeeCompilerItemObject *__restrict self,
                       DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -3869,7 +3846,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getissystemheader(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3887,7 +3864,7 @@ file_getissystemheader(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delissystemheader(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -3905,7 +3882,7 @@ file_delissystemheader(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setissystemheader(DeeCompilerItemObject *__restrict self,
                        DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -3933,7 +3910,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getnonblocking(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -3951,7 +3928,7 @@ file_getnonblocking(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delnonblocking(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -3969,7 +3946,7 @@ file_delnonblocking(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setnonblocking(DeeCompilerItemObject *__restrict self,
                     DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -3997,7 +3974,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_isfunctionmacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4012,7 +3989,7 @@ file_isfunctionmacro(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_iskeywordmacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4027,7 +4004,7 @@ file_iskeywordmacro(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_definitionsfile(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4047,7 +4024,7 @@ file_definitionsfile(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_definitionsposition(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4069,7 +4046,7 @@ file_definitionsposition(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_previousdefinition(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4089,7 +4066,7 @@ file_previousdefinition(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pushcount(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4106,7 +4083,7 @@ file_pushcount(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_keywordexpandorigin(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4124,7 +4101,7 @@ file_keywordexpandorigin(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_isvariadicmacro(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4140,7 +4117,7 @@ file_isvariadicmacro(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getallowselfexpansion(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4159,7 +4136,7 @@ file_getallowselfexpansion(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delallowselfexpansion(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -4177,7 +4154,7 @@ file_delallowselfexpansion(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setallowselfexpansion(DeeCompilerItemObject *__restrict self,
                            DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -4203,7 +4180,7 @@ done:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getkeepargumentspace(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4222,7 +4199,7 @@ file_getkeepargumentspace(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_delkeepargumentspace(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	int result = -1;
@@ -4240,7 +4217,7 @@ file_delkeepargumentspace(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setkeepargumentspace(DeeCompilerItemObject *__restrict self,
                           DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -4265,7 +4242,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_getfunctionmacrovariant(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	uint32_t variant;
@@ -4285,7 +4262,7 @@ file_getfunctionmacrovariant(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 file_setfunctionmacrovariant(DeeCompilerItemObject *__restrict self,
                              DeeObject *__restrict value) {
 	struct TPPFile *file;
@@ -4338,7 +4315,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_functionmacroargc(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4356,7 +4333,7 @@ file_functionmacroargc(DeeCompilerItemObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_functionmacroexpansions(DeeCompilerItemObject *__restrict self) {
 	struct TPPFile *file;
 	DREF DeeObject *result = NULL;
@@ -4609,9 +4586,9 @@ PRIVATE struct type_getset file_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
-file_nextchunk(DeeCompilerItemObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_nextchunk(DeeCompilerItemObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	bool extend = false, binary = false, nonblocking = false;
 	unsigned int flags     = 0;
 	DREF DeeObject *result = NULL;

@@ -63,12 +63,12 @@ STATIC_ASSERT(COMPILER_OFFSETOF(StringSegments, s_siz) == COMPILER_OFFSETOF(Byte
 
 INTDEF DeeTypeObject BytesSegmentsIterator_Type;
 INTDEF DeeTypeObject BytesSegments_Type;
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_Segments(DeeBytesObject *__restrict self,
                   size_t segment_size);
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsegiter_ctor(BytesSegmentsIterator *__restrict self) {
 	self->b_str = (DREF DeeBytesObject *)Dee_EmptyBytes;
 	self->b_siz = 1;
@@ -78,7 +78,7 @@ bsegiter_ctor(BytesSegmentsIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bsegiter_copy(BytesSegmentsIterator *__restrict self,
               BytesSegmentsIterator *__restrict other) {
 	self->b_str = other->b_str;
@@ -91,7 +91,7 @@ bsegiter_copy(BytesSegmentsIterator *__restrict self,
 
 PRIVATE int DCALL
 bsegiter_init(BytesSegmentsIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	BytesSegments *seg;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesSegmentsIterator", &seg) ||
 	    DeeObject_AssertTypeExact((DeeObject *)seg, &BytesSegments_Type))
@@ -106,7 +106,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsegiter_next(BytesSegmentsIterator *__restrict self) {
 	size_t part_size;
 	uint8_t *new_ptr, *ptr;
@@ -135,13 +135,13 @@ bsegiter_next(BytesSegmentsIterator *__restrict self) {
 #define bsegiter_fini ssegiter_fini
 #define bsegiter_bool ssegiter_bool
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bsegiter_visit(BytesSegmentsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->b_str);
 }
 
 
-PRIVATE DREF BytesSegments *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesSegments *DCALL
 bsegiter_getseq(BytesSegmentsIterator *__restrict self) {
 	return (DREF BytesSegments *)DeeBytes_Segments(self->b_str,
 	                                               self->b_siz);
@@ -206,7 +206,7 @@ INTERN DeeTypeObject BytesSegmentsIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_ctor(BytesSegments *__restrict self) {
 	self->b_str = (DREF DeeBytesObject *)Dee_EmptyBytes;
 	self->b_siz = 1;
@@ -216,7 +216,7 @@ bseg_ctor(BytesSegments *__restrict self) {
 
 PRIVATE int DCALL
 bseg_init(BytesSegments *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_BytesSegments", &self->b_str, &self->b_siz) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->b_str, &DeeBytes_Type))
 		goto err;
@@ -231,18 +231,18 @@ err:
 }
 
 #define bseg_fini sseg_fini
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bseg_visit(BytesSegments *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->b_str);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bseg_bool(BytesSegments *__restrict self) {
 	return !DeeBytes_IsEmpty(self->b_str);
 }
 
 
-PRIVATE DREF BytesSegmentsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesSegmentsIterator *DCALL
 bseg_iter(BytesSegments *__restrict self) {
 	DREF BytesSegmentsIterator *result;
 	result = DeeObject_MALLOC(BytesSegmentsIterator);
@@ -258,7 +258,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bseg_size(BytesSegments *__restrict self) {
 	size_t result = DeeBytes_SIZE(self->b_str);
 	result += (self->b_siz - 1);
@@ -266,9 +266,9 @@ bseg_size(BytesSegments *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bseg_contains(BytesSegments *__restrict self,
-              DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bseg_contains(BytesSegments *self,
+              DeeObject *other) {
 	uint8_t *other_data, *iter, *end;
 	DeeBytesObject *str;
 	size_t other_size;
@@ -310,7 +310,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeBytesObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeBytesObject *DCALL
 bseg_get(BytesSegments *__restrict self,
          DeeObject *__restrict index_ob) {
 	size_t index, length;
@@ -397,7 +397,7 @@ INTERN DeeTypeObject BytesSegments_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_Segments(DeeBytesObject *__restrict self,
                   size_t segment_size) {
 	DREF BytesSegments *result;

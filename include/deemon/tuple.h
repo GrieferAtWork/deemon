@@ -133,8 +133,8 @@ DFUNDEF WUNUSED DREF DeeObject *DeeTuple_PackSymbolic(size_t n, /*DREF*/ ...);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeTuple_VPackSymbolic(size_t n, /*DREF*/ va_list args);
 
 /* Create a new tuple from a given vector. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVector(size_t objc, DeeObject *const *__restrict objv);
+DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *DCALL DeeTuple_NewVectorSymbolic(size_t objc, /*inherit(on_success)*/ DREF DeeObject *const *__restrict objv);
 
 /* Similar to `Dee_Packf', but parse any number of formated values and
  * put them in a tuple, essentially doing the same as `Dee_Packf' when
@@ -148,7 +148,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *sequence);
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
-                         /*inherit(on_success)*/ DREF DeeObject **__restrict argv);
+                         /*inherit(on_success)*/ DREF DeeObject **argv);
 
 /* Append all elements from an iterator to a tuple.
  * @assume(DeeTuple_IsEmpty(*pself) || !DeeObject_IsShared(*pself)); */

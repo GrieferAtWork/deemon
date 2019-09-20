@@ -99,11 +99,11 @@ DFUNDEF DREF DeeObject *DCALL DeeList_NewVectorInheritedHeap(size_t obja, size_t
 /* Create a new list object. */
 #define DeeList_New()   DeeObject_NewDefault(&DeeList_Type)
 DFUNDEF DREF DeeObject *DCALL DeeList_NewHint(size_t n_prealloc);
-DFUNDEF DREF DeeObject *DCALL DeeList_FromSequence(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeList_FromIterator(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromIterator(DeeObject *__restrict self);
 /* WARNING: The caller must start gc-tracking the list once elements are initialized. */
 DFUNDEF DREF DeeObject *DCALL DeeList_NewUninitialized(size_t n_elem);
-DFUNDEF void DCALL DeeList_FreeUninitialized(DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeList_FreeUninitialized(DeeObject *__restrict self);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Concat a list and some generic sequence,
@@ -113,33 +113,33 @@ DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                DeeObject *__restrict sequence);
 INTDEF DREF DeeObject *DCALL
 DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
-                        /*inherit(on_success)*/ DREF DeeObject **__restrict argv);
+                        /*inherit(on_success)*/ DREF DeeObject **argv);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* @return: * : The actual number of deleted items.
  * @return: (size_t)-1: Error. */
-DFUNDEF size_t DCALL
+DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
               size_t index, size_t count);
 
 /* @return: * :   The popped element.
  * @return: NULL: The given index was out-of-bounds and an IndexError was thrown. */
-DFUNDEF DREF DeeObject *DCALL DeeList_Pop(DeeObject *__restrict self, Dee_ssize_t index);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_Pop(DeeObject *__restrict self, Dee_ssize_t index);
 
 /* Clear the given list.
  * Returns `true' if the list wasn't empty before. */
-DFUNDEF bool DCALL DeeList_Clear(DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) bool DCALL DeeList_Clear(DeeObject *__restrict self);
 
 /* Sort the given list ascendingly, or according to `key' */
 DFUNDEF int DCALL DeeList_Sort(DeeObject *__restrict self, DeeObject *key);
 
 /* Reverse the order of the elements of `self' */
-DFUNDEF void DCALL DeeList_Reverse(DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeList_Reverse(DeeObject *__restrict self);
 
 /* Append objects to a given list. */
-DFUNDEF int DCALL DeeList_Append(DeeObject *__restrict self, DeeObject *__restrict elem);
-DFUNDEF int DCALL DeeList_AppendIterator(DeeObject *__restrict self, DeeObject *__restrict iterator);
-DFUNDEF int DCALL DeeList_AppendSequence(DeeObject *__restrict self, DeeObject *__restrict sequence);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_Append(DeeObject *__restrict self, DeeObject *__restrict elem);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_AppendIterator(DeeObject *__restrict self, DeeObject *__restrict iterator);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_AppendSequence(DeeObject *__restrict self, DeeObject *__restrict sequence);
 DFUNDEF int DCALL DeeList_AppendVector(DeeObject *__restrict self, size_t objc, DeeObject *const *__restrict objv);
 
 /* Insert objects into a given list. */

@@ -502,7 +502,7 @@ err:
 
 
 /* Finalize the given L-value list. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 JITLValueList_Fini(JITLValueList *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->ll_size; ++i)
@@ -511,7 +511,7 @@ JITLValueList_Fini(JITLValueList *__restrict self) {
 }
 
 /* Append the given @value onto @self, returning -1 on error and 0 on success. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 JITLValueList_Append(JITLValueList *__restrict self,
                      /*inherit(on_success)*/ JITLValue *__restrict value) {
 	ASSERT(self->ll_size <= self->ll_alloc);
@@ -544,7 +544,7 @@ err:
 }
 
 /* Append an R-value expression. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 JITLValueList_AppendRValue(JITLValueList *__restrict self,
                            DeeObject *__restrict value) {
 	ASSERT(self->ll_size <= self->ll_alloc);
@@ -580,7 +580,7 @@ err:
 
 
 /* Pack `self' and append all of the referenced objects to the given object list. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 JITLValueList_CopyObjects(JITLValueList *__restrict self,
                           struct objectlist *__restrict dst,
                           JITContext *__restrict context) {
@@ -610,7 +610,7 @@ err:
  * the proper LValue of at the same position within `self'
  * @return:  0: Success.
  * @return: -1: An error occurred. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 JITLValueList_UnpackAssign(JITLValueList *__restrict self,
                            JITContext *__restrict context,
                            DeeObject *__restrict values) {
@@ -686,7 +686,7 @@ err:
 /* Similar to `JITLexer_GetLValue()', but also finalize
  * the stored L-value, and set it to describe nothing.
  * NOTE: The stored L-value is _always_ reset! */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 JITLexer_PackLValue(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLValue_GetValue(&self->jl_lvalue,
@@ -698,7 +698,7 @@ JITLexer_PackLValue(JITLexer *__restrict self) {
 
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 _JITContext_PopLocals(JITContext *__restrict self) {
 	JITObjectTable *tab;
 	ASSERT(self->jc_locals.otp_ind == 0);
@@ -714,7 +714,7 @@ _JITContext_PopLocals(JITContext *__restrict self) {
 /* Get a pointer to the first locals object-table for the current scope,
  * either for reading (in which case `NULL' is indicative of an empty scope),
  * or for writing (in which case `NULL' indicates an error) */
-INTERN JITObjectTable *DCALL
+INTERN WUNUSED NONNULL((1)) JITObjectTable *DCALL
 JITContext_GetRWLocals(JITContext *__restrict self) {
 	JITObjectTable *result;
 	/*ASSERT(self->jc_locals.otp_ind >= 1);*/

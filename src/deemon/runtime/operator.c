@@ -553,8 +553,8 @@ err_object_type:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_NewKw(DeeTypeObject *object_type,
-                size_t argc, DeeObject **argv, DeeObject *kw) {
+DeeObject_NewKw(DeeTypeObject *object_type, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
@@ -1502,11 +1502,11 @@ err_no_keywords:
 INTERN DREF DeeObject *DCALL
 DeeObject_TThisCall(DeeTypeObject *tp_self,
                     DeeObject *self, DeeObject *this_arg,
-                    size_t argc, DeeObject **__restrict argv);
+                    size_t argc, DeeObject **argv);
 INTERN DREF DeeObject *DCALL
 DeeObject_TThisCallKw(DeeTypeObject *tp_self,
                       DeeObject *self, DeeObject *this_arg,
-                      size_t argc, DeeObject **__restrict argv,
+                      size_t argc, DeeObject **argv,
                       DeeObject *kw);
 #endif /* !DEFINE_TYPE_OPERATORS */
 
@@ -1772,7 +1772,7 @@ DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 }
 
 #ifndef DEFINE_TYPE_OPERATORS
-PUBLIC void DCALL
+PUBLIC NONNULL((1, 2)) void DCALL
 DeeObject_Visit(DeeObject *__restrict self,
                 dvisit_t proc, void *arg) {
 	DeeTypeObject *tp_self;
@@ -1796,7 +1796,7 @@ DeeObject_Visit(DeeObject *__restrict self,
 		(*proc)((DeeObject *)Dee_TYPE(self), arg);
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeObject_Clear(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
@@ -2426,14 +2426,14 @@ err:
 
 
 #ifndef DEFINE_TYPE_OPERATORS
-INTERN DeeTypeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 type_get_int_caster(DeeTypeObject *__restrict start) {
 	while (!DeeType_HasPrivateOperator(start, OPERATOR_INT))
 		start = DeeType_Base(start);
 	return start;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_GetInt8(DeeObject *__restrict self,
                   int8_t *__restrict result) {
 	int32_t val32;
@@ -2462,7 +2462,7 @@ DeeObject_GetInt8(DeeObject *__restrict self,
 	return error;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_GetInt16(DeeObject *__restrict self,
                    int16_t *__restrict result) {
 	int32_t val32;
@@ -2814,7 +2814,7 @@ err_self:
 }
 
 #ifndef DEFINE_TYPE_OPERATORS
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AddS8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
@@ -2830,7 +2830,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_SubS8(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
@@ -2846,7 +2846,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AddInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
@@ -2862,7 +2862,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_SubInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* Optimization for `int' */
@@ -2878,7 +2878,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_MulInt(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -2892,7 +2892,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_DivInt(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -2906,7 +2906,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ModInt(DeeObject *__restrict self, int8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -2920,7 +2920,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ShlInt(DeeObject *__restrict self, uint8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -2934,7 +2934,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_ShrInt(DeeObject *__restrict self, uint8_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -2948,7 +2948,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_AndInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -2962,7 +2962,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_OrInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -2976,7 +2976,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_XorInt(DeeObject *__restrict self, uint32_t val) {
 	DREF DeeObject *val_ob, *result;
 	/* TODO: Optimization for `int' */
@@ -3536,7 +3536,7 @@ DeeObject_ConcatInherited(DREF DeeObject *self, DeeObject *other) {
 
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeObject_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
-                          /*inherit(on_success)*/ DREF DeeObject **__restrict argv) {
+                          /*inherit(on_success)*/ DREF DeeObject **argv) {
 	DREF DeeObject *result;
 	DREF DeeObject *other;
 	if (DeeTuple_CheckExact(self))
@@ -4771,11 +4771,11 @@ done:
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject **__restrict argv);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject **argv);
 #ifndef DEFINE_TYPE_OPERATORS
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_getattr(DeeObject *self, DeeObject *name);
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
-DeeObject_TCallAttr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name, size_t argc, DeeObject **__restrict argv);
+DeeObject_TCallAttr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name, size_t argc, DeeObject **argv);
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 

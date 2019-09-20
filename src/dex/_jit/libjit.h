@@ -388,21 +388,21 @@ struct jit_lvalue_list {
 	 ASSERT((self)->ll_list == NULL))
 
 /* Finalize the given L-value list. */
-INTDEF void DCALL JITLValueList_Fini(JITLValueList *__restrict self);
+INTDEF NONNULL((1)) void DCALL JITLValueList_Fini(JITLValueList *__restrict self);
 
 /* Append the given @value onto @self, returning -1 on error and 0 on success. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITLValueList_Append(JITLValueList *__restrict self,
                      /*inherit(on_success)*/JITLValue *__restrict value);
 /* Append an R-value expression. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITLValueList_AppendRValue(JITLValueList *__restrict self,
                            DeeObject *__restrict value);
 
 struct objectlist;
 /* Copy `self' and append all of the referenced objects to the given object list.
  * NOTE: `self' remains valid after this operation! */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 JITLValueList_CopyObjects(JITLValueList *__restrict self,
                           struct objectlist *__restrict dst,
                           JITContext *__restrict context);
@@ -411,7 +411,7 @@ JITLValueList_CopyObjects(JITLValueList *__restrict self,
  * the proper LValue of at the same position within `self'
  * @return:  0: Success.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 JITLValueList_UnpackAssign(JITLValueList *__restrict self,
                            JITContext *__restrict context,
                            DeeObject *__restrict values);
@@ -453,7 +453,7 @@ struct jit_lexer {
 /* Similar to `JITLexer_GetLValue()', but also finalize
  * the stored L-value, and set it to describe nothing.
  * NOTE: The stored L-value is _always_ reset! */
-INTDEF DREF DeeObject *DCALL JITLexer_PackLValue(JITLexer *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL JITLexer_PackLValue(JITLexer *__restrict self);
 
 
 /* Check if the current token is a keyword `x' */
@@ -531,8 +531,8 @@ INTDEF struct jit_object_entry jit_empty_object_list[1];
 #define JITObjectTable_Init(self)                             \
 	((self)->ot_mask = (self)->ot_size = (self)->ot_used = 0, \
 	 (self)->ot_list                                     = jit_empty_object_list)
-INTDEF void DCALL JITObjectTable_Fini(JITObjectTable *__restrict self);
-INTDEF void DCALL JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL JITObjectTable_Fini(JITObjectTable *__restrict self);
+INTDEF NONNULL((1, 2)) void DCALL JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg);
 
 /* Allocate/free a JIT object table from cache. */
 DECLARE_STRUCT_CACHE(jit_object_table,struct jit_object_table);
@@ -541,13 +541,13 @@ DECLARE_STRUCT_CACHE(jit_object_table,struct jit_object_table);
 #endif /* !NDEBUG */
 
 /* Initialize `dst' as a copy of `src' */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITObjectTable_Copy(JITObjectTable *__restrict dst,
                     JITObjectTable const *__restrict src);
 
 /* Insert all elements from `src' into `dst'
  * Existing entires will not be overwritten. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 JITObjectTable_UpdateTable(JITObjectTable *__restrict dst,
                            JITObjectTable const *__restrict src);
 
@@ -646,17 +646,17 @@ struct jit_context {
 #define JITContext_PopScope(x)                  \
 	(void)(ASSERT((x)->jc_locals.otp_ind != 0), \
 	       (--(x)->jc_locals.otp_ind == 0) ? _JITContext_PopLocals(x) : (void)0)
-INTDEF void DCALL _JITContext_PopLocals(JITContext *__restrict self);
+INTDEF NONNULL((1)) void DCALL _JITContext_PopLocals(JITContext *__restrict self);
 
 /* Get a pointer to the first locals object-table for the current scope,
  * either for reading (in which case `NULL' is indicative of an empty scope),
  * or for writing (in which case `NULL' indicates an error) */
 #ifdef __INTELLISENSE__
-INTDEF JITObjectTable *DCALL JITContext_GetROLocals(JITContext *__restrict self);
-INTDEF JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self);
+INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetROLocals(JITContext *__restrict self);
+INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self);
 #else /* __INTELLISENSE__ */
 #define JITContext_GetROLocals(self) ((self)->jc_locals.otp_tab)
-INTDEF JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self);
+INTDEF WUNUSED NONNULL((1)) JITObjectTable *DCALL JITContext_GetRWLocals(JITContext *__restrict self);
 #endif /* !__INTELLISENSE__ */
 
 
@@ -1131,7 +1131,7 @@ JITFunction_CreateArgument(JITFunctionObject *__restrict self,
  * to symbols from surrounding scopes, or the use of `yield'. */
 INTDEF void FCALL JITLexer_ScanExpression(JITLexer *__restrict self, bool allow_casts);
 INTDEF void FCALL JITLexer_ScanStatement(JITLexer *__restrict self);
-INTDEF void DCALL JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size);
+INTDEF NONNULL((1, 2)) void DCALL JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size);
 
 
 

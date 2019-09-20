@@ -49,7 +49,7 @@ typedef struct {
 	int               s_width; /* [const] The width of `s_split->s_str' */
 } StringSplitIterator;
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 splititer_next(StringSplitIterator *__restrict self) {
 	uint8_t *result_start, *result_end;
 	uint8_t *next_ptr;
@@ -106,7 +106,7 @@ splititer_next(StringSplitIterator *__restrict self) {
 	                              self->s_width);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 casesplititer_next(StringSplitIterator *__restrict self) {
 	/* Literally the same as the non-case version, but use `memcasemem(b|w|l)' instead. */
 	uint8_t *result_start, *result_end;
@@ -168,7 +168,7 @@ casesplititer_next(StringSplitIterator *__restrict self) {
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 splititer_fini(StringSplitIterator *__restrict self) {
 	Dee_Decref(self->s_split);
 }
@@ -179,7 +179,7 @@ splititer_fini(StringSplitIterator *__restrict self) {
 #define GET_SPLIT_NEXT(x) ATOMIC_READ((x)->s_next)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 splititer_bool(StringSplitIterator *__restrict self) {
 	return GET_SPLIT_NEXT(self) != NULL;
 }
@@ -225,7 +225,7 @@ PRIVATE struct type_member splititer_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 splititer_copy(StringSplitIterator *__restrict self,
                StringSplitIterator *__restrict other) {
 	self->s_split = other->s_split;
@@ -333,13 +333,13 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 split_fini(StringSplit *__restrict self) {
 	Dee_Decref(self->s_str);
 	Dee_Decref(self->s_sep);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 split_bool(StringSplit *__restrict self) {
 	return !DeeString_IsEmpty(self->s_str);
 }
@@ -396,12 +396,12 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF StringSplitIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringSplitIterator *DCALL
 split_iter(StringSplit *__restrict self) {
 	return split_doiter(self, &StringSplitIterator_Type);
 }
 
-PRIVATE DREF StringSplitIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringSplitIterator *DCALL
 casesplit_iter(StringSplit *__restrict self) {
 	return split_doiter(self, &StringCaseSplitIterator_Type);
 }
@@ -537,9 +537,9 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 };
 
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
-INTERN DREF DeeObject *DCALL
-DeeString_Split(DeeObject *__restrict self,
-                DeeObject *__restrict seperator) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeString_Split(DeeObject *self,
+                DeeObject *seperator) {
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(seperator, &DeeString_Type);
@@ -556,9 +556,9 @@ done:
 }
 
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
-INTERN DREF DeeObject *DCALL
-DeeString_CaseSplit(DeeObject *__restrict self,
-                    DeeObject *__restrict seperator) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeString_CaseSplit(DeeObject *self,
+                    DeeObject *seperator) {
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT(seperator, &DeeString_Type);
@@ -629,7 +629,7 @@ find_lfl(uint32_t *__restrict start, size_t size) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 lineiter_next(LineSplitIterator *__restrict self) {
 	uint8_t *result_start, *result_end;
 	uint8_t *next_ptr;
@@ -706,7 +706,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(StringSplitIterator, s_next) ==
               COMPILER_OFFSETOF(LineSplitIterator, ls_next));
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 lineiter_copy(LineSplitIterator *__restrict self,
               LineSplitIterator *__restrict other) {
 	self->ls_split = other->ls_split;
@@ -775,7 +775,7 @@ PRIVATE struct type_member linesplit_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF LineSplitIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF LineSplitIterator *DCALL
 linesplit_iter(LineSplit *__restrict self) {
 	DREF LineSplitIterator *result;
 	result = DeeObject_MALLOC(LineSplitIterator);
@@ -799,7 +799,7 @@ PRIVATE struct type_seq linesplit_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&linesplit_iter
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 linesplit_fini(LineSplit *__restrict self) {
 	Dee_Decref(self->ls_str);
 }
@@ -861,7 +861,7 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 
 /* @return: An abstract sequence type for enumerating
  *          the segments of a string split into lines. */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_SplitLines(DeeObject *__restrict self,
                      bool keepends) {
 	DREF LineSplit *result;

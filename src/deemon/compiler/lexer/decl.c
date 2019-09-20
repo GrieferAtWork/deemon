@@ -43,7 +43,7 @@ DECL_BEGIN
 
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_copy(struct decl_ast *__restrict self,
               struct decl_ast const *__restrict other) {
 	memcpy(self, other, sizeof(struct decl_ast));
@@ -176,7 +176,7 @@ free_inner:
 
 
 /* If `self' refers to a constant object, return that object. */
-INTERN DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DeeObject *DCALL
 decl_ast_getobj(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
 		return self->da_const;
@@ -190,7 +190,7 @@ decl_ast_getobj(struct decl_ast const *__restrict self) {
 }
 
 /* Check if `self' refers to `none' or `type none' */
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isnone(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
 		return DeeNone_Check(self->da_const) || self->da_const == (DeeObject *)&DeeNone_Type;
@@ -217,7 +217,7 @@ check_symbol:
 }
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isobject(struct decl_ast const *__restrict self) {
 	if (self->da_type == DAST_CONST)
 		return self->da_const == (DeeObject *)&DeeObject_Type;
@@ -243,7 +243,7 @@ check_symbol:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 decl_ast_istype(struct decl_ast const *__restrict self,
                 DeeTypeObject *__restrict tp) {
 	if (tp == &DeeNone_Type)
@@ -279,7 +279,7 @@ check_symbol:
 }
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 decl_ast_isempty(struct decl_ast const *__restrict self) {
 	switch (self->da_type) {
 
@@ -387,7 +387,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_const_type(DeeObject const *__restrict ob,
                           struct unicode_printer *__restrict printer) {
 	uint16_t i;
@@ -449,7 +449,7 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_type(struct decl_ast const *__restrict self,
                     struct unicode_printer *__restrict printer) {
 	switch (self->da_type) {
@@ -635,7 +635,7 @@ err:
 }
 
 #if 0
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print_const_expr(DeeObject *__restrict self,
                           struct unicode_printer *__restrict printer) {
 	if (unicode_printer_putascii(printer, '!'))
@@ -685,7 +685,7 @@ err:
 }
 #endif
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_print(struct decl_ast const *__restrict self,
                struct unicode_printer *__restrict printer) {
 	size_t i;
@@ -812,7 +812,7 @@ INTDEF int DCALL decl_ast_escapetext32(uint32_t const *__restrict text, size_t t
 
 
 /* Pack together the current documentation string. */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_tags_doc(struct decl_ast const *__restrict decl) {
 #if 0
 	(void)decl;
@@ -911,7 +911,7 @@ err2:
 
 
 /* Parse a declaration expression. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 	uint32_t old_flags;
 	switch (tok) {
@@ -1217,7 +1217,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse_unary(struct decl_ast *__restrict self) {
 	int result;
 	result = decl_ast_parse_unary_head(self);
@@ -1296,7 +1296,7 @@ err_r:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse_alt(struct decl_ast *__restrict self) {
 	int result;
 	size_t elema, elemc, i;
@@ -1370,7 +1370,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse_for_symbol(struct symbol *__restrict self) {
 	if likely(self->s_decltype.da_type == DAST_NONE) {
 		if unlikely(decl_ast_parse(&self->s_decltype))
@@ -1394,7 +1394,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 decl_ast_parse(struct decl_ast *__restrict self) {
 	int result;
 	result = decl_ast_parse_alt(self);
@@ -1426,7 +1426,7 @@ err:
 
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 decl_ast_equal(struct decl_ast const *__restrict a,
                struct decl_ast const *__restrict b) {
 	if (a->da_type != b->da_type)

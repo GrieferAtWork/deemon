@@ -85,7 +85,7 @@ INTERN char const symclass_names[0x1f + 1][8] = {
 };
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 symbol_uses_symbol_on_get(struct symbol *__restrict self,
                           struct symbol *__restrict other) {
 again:
@@ -145,7 +145,7 @@ again:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 symbol_uses_symbol_on_del(struct symbol *__restrict self,
                           struct symbol *__restrict other) {
 again:
@@ -203,7 +203,7 @@ again:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 symbol_uses_symbol_on_set(struct symbol *__restrict self,
                           struct symbol *__restrict other) {
 again:
@@ -262,7 +262,7 @@ again:
 }
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 symbol_reachable(struct symbol *__restrict self,
                  DeeScopeObject *__restrict caller_scope) {
 again:
@@ -325,7 +325,7 @@ again:
 }
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 symbol_get_haseffect(struct symbol *__restrict self,
                      DeeScopeObject *__restrict caller_scope) {
 again:
@@ -360,7 +360,7 @@ again:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 symbol_set_haseffect(struct symbol *__restrict self,
                      DeeScopeObject *__restrict caller_scope) {
 again:
@@ -525,7 +525,7 @@ visitsym(struct symbol *__restrict self, dvisit_t proc, void *arg) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 scope_fini(DeeScopeObject *__restrict self) {
 	struct symbol **biter, **bend, *iter, *next;
 	weakref_support_fini(self);
@@ -561,7 +561,7 @@ scope_fini(DeeScopeObject *__restrict self) {
 	Dee_XDecref(self->s_prev);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 scope_visit(DeeScopeObject *__restrict self, dvisit_t proc, void *arg) {
 	struct symbol **biter, **bend, *iter;
 	recursive_rwlock_read(&DeeCompiler_Lock);
@@ -635,7 +635,7 @@ INTERN DeeTypeObject DeeScope_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 class_scope_fini(DeeClassScopeObject *__restrict self) {
 	ASSERT(self->cs_this->s_scope == (DeeScopeObject *)self);
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
@@ -708,7 +708,7 @@ visit_switch_cases(struct text_label *switch_cases,
 
 
 /* -------- DeeBaseScopeObject Implementation -------- */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 base_scope_fini(DeeBaseScopeObject *__restrict self) {
 	ASSERT(self->bs_argc_max >= self->bs_argc_min);
 	{
@@ -738,7 +738,7 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
 	Dee_Free(self->bs_argv);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 base_scope_visit(DeeBaseScopeObject *__restrict self,
                  dvisit_t proc, void *arg) {
 	recursive_rwlock_read(&DeeCompiler_Lock);
@@ -811,7 +811,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 /* -------- DeeRootScopeObject Implementation -------- */
 PRIVATE int DCALL
 root_scope_ctor(DeeRootScopeObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+                size_t argc, DeeObject **argv) {
 	DeeModuleObject *module;
 	if (DeeArg_Unpack(argc, argv, "o:root_scope", &module))
 		goto err;
@@ -836,7 +836,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 root_scope_fini(DeeRootScopeObject *__restrict self) {
 	Dee_Decref(self->rs_module);
 	Dee_XDecref(self->rs_code);
@@ -862,12 +862,12 @@ root_scope_fini(DeeRootScopeObject *__restrict self) {
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 root_scope_str(DeeRootScopeObject *__restrict self) {
 	return_reference_((DeeObject *)self->rs_module->mo_name);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 root_scope_visit(DeeRootScopeObject *__restrict self,
                  dvisit_t proc, void *arg) {
 	size_t i;
@@ -999,7 +999,7 @@ INTERN struct symbol *(DCALL get_current_this)(void) {
 	return NULL;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 basescope_push_ob(DeeBaseScopeObject *__restrict scope) {
 	ASSERT((current_scope != NULL) == (current_basescope != NULL));
 	ASSERT(scope->bs_scope.s_prev == current_scope);
@@ -1047,7 +1047,7 @@ INTERN void DCALL basescope_pop(void) {
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	unsigned int i, count;
 	ASSERT(current_basescope != other);
@@ -1123,7 +1123,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 link_forward_symbol(struct symbol *__restrict self) {
 	DeeScopeObject *iter;
 	if (SYMBOL_TYPE(self) != SYMBOL_TYPE_FWD)
@@ -1174,7 +1174,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 rehash_scope(DeeScopeObject *__restrict iter) {
 	struct symbol **new_map, **biter, **bend;
 	struct symbol *sym_iter, *s_next, **bucket;
@@ -1217,7 +1217,7 @@ rehash_realloc:
 	return 0;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 is_reserved_symbol_name(struct TPPKeyword *__restrict name) {
 	/* Quick check: any keywords not registered as builtin are allowed. */
 	if (TPP_ISUSERKEYWORD(name->k_id))

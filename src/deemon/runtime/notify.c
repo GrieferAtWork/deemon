@@ -47,7 +47,7 @@ PRIVATE DREF DeeObject *fs_module = NULL;
 PRIVATE DEFINE_RWLOCK(fs_module_lock);
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_fs_object(DeeObject *__restrict name) {
 	DREF DeeObject *result, *mod;
 again:
@@ -90,7 +90,7 @@ INTERN bool DCALL clear_fs_module(void) {
 	return mod != NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_GetEnv(DeeObject *__restrict name) {
 	DREF DeeObject *result;
 	DREF DeeObject *fs_environ;
@@ -244,7 +244,7 @@ notify_rehash(int sizedir) {
  * @return:   1: The given `callback' has already / hasn't been registered for `cls'
  *               and `name' with the same `arg' and was not registered again / removed.
  * @return:  -1: An error occurred (Never returned by `DeeNotify_EndListen'). */
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((2, 3)) int DCALL
 DeeNotify_BeginListen(uint16_t cls, DeeObject *__restrict name,
                       Dee_notify_t callback, DeeObject *arg) {
 	struct notify_entry *first_dummy;
@@ -314,7 +314,7 @@ again:
 }
 
 
-PUBLIC int DCALL
+PUBLIC NONNULL((2, 3)) int DCALL
 DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
                     Dee_notify_t callback, DeeObject *arg) {
 	dhash_t hash, perturb, i;
@@ -365,7 +365,7 @@ not_found:
  * NOTE: The caller is responsible for passing a string for `name'
  * @return:  * : The number of callbacks that were executed.
  * @return: -1 : Callback invocation was stopped after a callback indicated an error. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((2)) int DCALL
 DeeNotify_DoBroadcast(uint16_t cls,
                       char const *__restrict name,
                       size_t name_size,
@@ -425,7 +425,7 @@ again:
 	return result;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((2)) int DCALL
 DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name) {
 	size_t name_size;
 	dhash_t name_hash;
@@ -437,7 +437,7 @@ DeeNotify_Broadcast(uint16_t cls, DeeObject *__restrict name) {
 	return DeeNotify_DoBroadcast(cls, DeeString_STR(name), name_size, name_hash);
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((2)) int DCALL
 DeeNotify_BroadcastString(uint16_t cls, char const *__restrict name) {
 	size_t name_size;
 	dhash_t name_hash;

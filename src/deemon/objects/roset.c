@@ -55,7 +55,7 @@ INTDEF DeeTypeObject RoSetIterator_Type;
 #define READ_ITEM(x) ATOMIC_READ((x)->si_next)
 #endif /* !CONFIG_NO_THREADS */
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 rosetiterator_ctor(SetIterator *__restrict self) {
 	self->si_set = (Set *)DeeRoSet_New();
 	if unlikely(!self->si_set)
@@ -66,7 +66,7 @@ rosetiterator_ctor(SetIterator *__restrict self) {
 
 INTERN int DCALL
 rosetiterator_init(SetIterator *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	Set *set;
 	if (DeeArg_Unpack(argc, argv, "o:_RoSetIterator", &set) ||
 	    DeeObject_AssertTypeExact((DeeObject *)set, &DeeRoSet_Type))
@@ -77,7 +77,7 @@ rosetiterator_init(SetIterator *__restrict self,
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 rosetiterator_copy(SetIterator *__restrict self,
                    SetIterator *__restrict other) {
 	self->si_set = other->si_set;
@@ -86,17 +86,17 @@ rosetiterator_copy(SetIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 rosetiterator_fini(SetIterator *__restrict self) {
 	Dee_Decref(self->si_set);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 rosetiterator_visit(SetIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_set);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rosetiterator_bool(SetIterator *__restrict self) {
 	struct roset_item *item = READ_ITEM(self);
 	Set *set                = self->si_set;
@@ -110,7 +110,7 @@ rosetiterator_bool(SetIterator *__restrict self) {
 	return 1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rosetiterator_next(SetIterator *__restrict self) {
 	struct roset_item *item, *end;
 	end = self->si_set->rs_elem + self->si_set->rs_mask + 1;
@@ -233,7 +233,7 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromSequence(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	size_t length_hint;
@@ -378,7 +378,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 	DREF Set *result, *new_result;
 	DREF DeeObject *elem;
@@ -429,7 +429,7 @@ err_r:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self,
                               size_t num_items) {
 	size_t mask = ROSET_INITIAL_MASK;
@@ -439,13 +439,13 @@ DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self,
 	return DeeRoSet_FromIterator_impl(self, mask);
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoSet_FromIterator(DeeObject *__restrict self) {
 	return DeeRoSet_FromIterator_impl(self, ROSET_INITIAL_MASK);
 }
 
 
-PRIVATE DREF SetIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SetIterator *DCALL
 roset_iter(Set *__restrict self) {
 	DREF SetIterator *result;
 	result = DeeObject_MALLOC(SetIterator);
@@ -459,14 +459,14 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 roset_size(Set *__restrict self) {
 	return DeeInt_NewSize(self->rs_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-roset_contains(Set *__restrict self,
-               DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+roset_contains(Set *self,
+               DeeObject *key) {
 	size_t i, perturb, hash;
 	struct roset_item *item;
 	hash    = DeeObject_Hash(key);
@@ -491,7 +491,7 @@ err:
 	return NULL;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeRoSet_Contains(DeeObject *__restrict self,
                   DeeObject *__restrict key) {
 	size_t i, perturb, hash;
@@ -519,7 +519,7 @@ err:
 	return -1;
 }
 
-PUBLIC bool DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
 DeeRoSet_ContainsString(DeeObject *__restrict self,
                         char const *__restrict key,
                         size_t key_length) {
@@ -547,7 +547,7 @@ DeeRoSet_ContainsString(DeeObject *__restrict self,
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 roset_fini(Set *__restrict self) {
 	size_t i;
 	for (i = 0; i <= self->rs_mask; ++i) {
@@ -557,7 +557,7 @@ roset_fini(Set *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 roset_visit(Set *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->rs_mask; ++i) {
@@ -567,12 +567,12 @@ roset_visit(Set *__restrict self, dvisit_t proc, void *arg) {
 	}
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 roset_bool(Set *__restrict self) {
 	return self->rs_size != 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 roset_repr(Set *__restrict self) {
 	struct unicode_printer p = UNICODE_PRINTER_INIT;
 	bool is_first            = true;
@@ -603,9 +603,8 @@ PRIVATE struct type_seq roset_seq = {
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&roset_contains
 };
 
-PRIVATE DREF DeeObject *DCALL
-roset_sizeof(Set *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+roset_sizeof(Set *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(Set, rs_elem) +
@@ -651,7 +650,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF Set *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Set *DCALL
 roset_deepcopy(Set *__restrict self) {
 	DREF Set *result;
 	size_t i;
@@ -681,7 +680,7 @@ err:
 }
 
 PRIVATE DREF Set *DCALL
-roset_init(size_t argc, DeeObject **__restrict argv) {
+roset_init(size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoSet", &seq))
 		return NULL;

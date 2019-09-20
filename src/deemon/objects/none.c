@@ -91,7 +91,7 @@ none_str(DeeObject *__restrict UNUSED(a)) {
 	return_reference_(&str_none);
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 none_hash(DeeObject *__restrict UNUSED(self)) {
 	return 0;
 }
@@ -139,8 +139,8 @@ none_ne(DeeObject *__restrict UNUSED(self),
 	return_bool(!DeeNone_Check(other));
 }
 
-PRIVATE dssize_t DCALL
-none_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+none_enumattr(DeeTypeObject *UNUSED(tp_self),
               DeeObject *UNUSED(self),
               denum_t UNUSED(proc), void *UNUSED(arg)) {
 	return 0;

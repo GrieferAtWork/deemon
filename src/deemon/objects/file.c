@@ -73,8 +73,8 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 #define UNPACK_ARGS(n, args)   UNPACK_ARGS_##n args
 
 /* File operator invocation. */
-#define DEFILE_FILE_OPERATOR(Tresult, eof_result, error_result, Read, READ, ft_read, n, args, param)            \
-	PUBLIC Tresult DCALL                                                                                        \
+#define DEFILE_FILE_OPERATOR(nn, Tresult, eof_result, error_result, Read, READ, ft_read, n, args, param)        \
+	PUBLIC WUNUSED nn Tresult DCALL                                                                             \
 	DeeFile_##Read(DeeObject *__restrict self UNPACK_ARGS(n, args)) {                                           \
 		DeeTypeObject *tp_self = Dee_TYPE(self);                                                                \
 		if (tp_self == &DeeSuper_Type) {                                                                        \
@@ -95,15 +95,16 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 		err_unimplemented_operator(Dee_TYPE(self), FILE_OPERATOR_##READ);                                       \
 		return error_result;                                                                                    \
 	}
-DEFILE_FILE_OPERATOR(dssize_t, 0, -1, Readf, READ, ft_read, 3, (void *__restrict buffer, size_t bufsize, dioflag_t flags), (buffer, bufsize, flags))
-DEFILE_FILE_OPERATOR(dssize_t, 0, -1, Writef, WRITE, ft_write, 3, (void const *__restrict buffer, size_t bufsize, dioflag_t flags), (buffer, bufsize, flags))
-DEFILE_FILE_OPERATOR(doff_t, 0, -1, Seek, SEEK, ft_seek, 2, (doff_t off, int whence), (off, whence))
-DEFILE_FILE_OPERATOR(int, 0, -1, Sync, SYNC, ft_sync, 0, (), ())
-DEFILE_FILE_OPERATOR(int, 0, -1, Trunc, TRUNC, ft_trunc, 1, (dpos_t size), (size))
-DEFILE_FILE_OPERATOR(int, 0, -1, Close, CLOSE, ft_close, 0, (), ())
-DEFILE_FILE_OPERATOR(int, GETC_EOF, GETC_ERR, Ungetc, UNGETC, ft_ungetc, 1, (int ch), (ch))
+DEFILE_FILE_OPERATOR(NONNULL((1, 2)), dssize_t, 0, -1, Readf, READ, ft_read, 3, (void *__restrict buffer, size_t bufsize, dioflag_t flags), (buffer, bufsize, flags))
+DEFILE_FILE_OPERATOR(NONNULL((1, 2)), dssize_t, 0, -1, Writef, WRITE, ft_write, 3, (void const *__restrict buffer, size_t bufsize, dioflag_t flags), (buffer, bufsize, flags))
+DEFILE_FILE_OPERATOR(NONNULL((1)), doff_t, 0, -1, Seek, SEEK, ft_seek, 2, (doff_t off, int whence), (off, whence))
+DEFILE_FILE_OPERATOR(NONNULL((1)), int, 0, -1, Sync, SYNC, ft_sync, 0, (), ())
+DEFILE_FILE_OPERATOR(NONNULL((1)), int, 0, -1, Trunc, TRUNC, ft_trunc, 1, (dpos_t size), (size))
+DEFILE_FILE_OPERATOR(NONNULL((1)), int, 0, -1, Close, CLOSE, ft_close, 0, (), ())
+DEFILE_FILE_OPERATOR(NONNULL((1)), int, GETC_EOF, GETC_ERR, Ungetc, UNGETC, ft_ungetc, 1, (int ch), (ch))
 #undef DEFILE_FILE_OPERATOR
-PUBLIC dssize_t DCALL
+
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_Read(DeeObject *__restrict self,
              void *__restrict buffer,
              size_t bufsize) {
@@ -130,7 +131,7 @@ DeeFile_Read(DeeObject *__restrict self,
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_Write(DeeObject *__restrict self,
               void const *__restrict buffer,
               size_t bufsize) {
@@ -157,7 +158,7 @@ DeeFile_Write(DeeObject *__restrict self,
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
@@ -189,7 +190,7 @@ DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *psize) {
 	return -1;
 }
 
-PUBLIC int DCALL DeeFile_Getc(DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) int DCALL DeeFile_Getc(DeeObject *__restrict self) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeSuper_Type) {
@@ -228,7 +229,7 @@ PUBLIC int DCALL DeeFile_Getc(DeeObject *__restrict self) {
 	return GETC_ERR;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -267,7 +268,7 @@ DeeFile_Getcf(DeeObject *__restrict self, dioflag_t flags) {
 	return GETC_ERR;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_Putc(DeeObject *__restrict self, int ch) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -307,7 +308,7 @@ DeeFile_Putc(DeeObject *__restrict self, int ch) {
 	return GETC_ERR;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags) {
 	int result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -346,7 +347,7 @@ DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags) {
 	return GETC_ERR;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_PRead(DeeObject *__restrict self,
               void *__restrict buffer,
               size_t bufsize, dpos_t pos) {
@@ -379,7 +380,7 @@ DeeFile_PRead(DeeObject *__restrict self,
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_PReadf(DeeObject *__restrict self,
                void *__restrict buffer,
                size_t bufsize, dpos_t pos, dioflag_t flags) {
@@ -412,7 +413,7 @@ DeeFile_PReadf(DeeObject *__restrict self,
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_PWrite(DeeObject *__restrict self,
                void const *__restrict buffer,
                size_t bufsize, dpos_t pos) {
@@ -445,7 +446,7 @@ DeeFile_PWrite(DeeObject *__restrict self,
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_PWritef(DeeObject *__restrict self,
                 void const *__restrict buffer,
                 size_t bufsize, dpos_t pos, dioflag_t flags) {
@@ -481,7 +482,7 @@ DeeFile_PWritef(DeeObject *__restrict self,
 
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_ReadAll(DeeObject *__restrict self,
                 void *__restrict buffer, size_t bufsize) {
 	dssize_t result = 0, temp;
@@ -500,7 +501,7 @@ DeeFile_ReadAll(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_WriteAll(DeeObject *__restrict self,
                  void const *__restrict buffer,
                  size_t bufsize) {
@@ -520,7 +521,7 @@ DeeFile_WriteAll(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_PReadAll(DeeObject *__restrict self,
                  void *__restrict buffer,
                  size_t bufsize, dpos_t pos) {
@@ -541,7 +542,7 @@ DeeFile_PReadAll(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeFile_PWriteAll(DeeObject *__restrict self,
                   void const *__restrict buffer,
                   size_t bufsize, dpos_t pos) {
@@ -562,7 +563,7 @@ DeeFile_PWriteAll(DeeObject *__restrict self,
 	return result;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_IsAtty(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
 	int result;
@@ -587,13 +588,13 @@ err_call:
 	return -1;
 }
 
-PUBLIC dsysfd_t DCALL
+PUBLIC WUNUSED NONNULL((1)) dsysfd_t DCALL
 DeeFile_Fileno(DeeObject *__restrict self) {
 #ifdef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 	if (DeeObject_AssertType(self, (DeeTypeObject *)&DeeSystemFile_Type))
 		goto err;
 	return DeeSystemFile_Fileno(self);
-#else
+#else /* CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 	DREF DeeObject *result_ob;
 	dsysfd_t result;
 	/* Special case: If the file is a system-file,  */
@@ -617,10 +618,10 @@ err_result_ob:
 	Dee_Decref(result_ob);
 err:
 	return DSYSFD_INVALID;
-#endif
+#endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 }
 
-PUBLIC DREF /*String*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeFile_Filename(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	/* Special case: If the file is a system-file,  */
@@ -640,7 +641,7 @@ DeeFile_Filename(DeeObject *__restrict self) {
 	/* return NULL;*/
 }
 
-PUBLIC DREF /*Bytes*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
                  size_t max_length, bool keep_lf) {
 	DeeTypeObject *tp_self;
@@ -733,7 +734,7 @@ err:
 
 #define READTEXT_BUFSIZE 1024
 
-PUBLIC DREF /*Bytes*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadText(DeeObject *__restrict self,
                  size_t max_length, bool readall) {
 	uint32_t features;
@@ -788,7 +789,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF /*Bytes*/ DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadText(DeeObject *__restrict self,
                   size_t max_length, dpos_t pos,
                   bool readall) {
@@ -847,12 +848,12 @@ err:
 
 
 
-PRIVATE int DCALL print_sp(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL print_sp(DeeObject *__restrict self) {
 	dssize_t result = DeeFile_WriteAll(self, " ", sizeof(char));
 	return result < 0 ? (int)result : 0;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_PrintNl(DeeObject *__restrict self) {
 	dssize_t result = DeeFile_WriteAll(self, "\n", sizeof(char));
 	return (unlikely(result < 0))
@@ -864,31 +865,31 @@ DeeFile_PrintNl(DeeObject *__restrict self) {
 	(DeeObject_Print(ob, (dformatprinter)&DeeFile_WriteAll, self) < 0)
 
 
-PUBLIC int DCALL
-DeeFile_PrintObject(DeeObject *__restrict self,
-                    DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintObject(DeeObject *self,
+                    DeeObject *ob) {
 	return print_ob_str(self, ob);
 }
 
-PUBLIC int DCALL
-DeeFile_PrintObjectSp(DeeObject *__restrict self,
-                      DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintObjectSp(DeeObject *self,
+                      DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob))
 		return -1;
 	return print_sp(self);
 }
 
-PUBLIC int DCALL
-DeeFile_PrintObjectNl(DeeObject *__restrict self,
-                      DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintObjectNl(DeeObject *self,
+                      DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob))
 		return -1;
 	return DeeFile_PrintNl(self);
 }
 
-PUBLIC int DCALL
-DeeFile_PrintAll(DeeObject *__restrict self,
-                 DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintAll(DeeObject *self,
+                 DeeObject *ob) {
 	int result;
 	DREF DeeObject *elem;
 	bool is_first    = true;
@@ -943,9 +944,9 @@ err_m1:
 	goto err;
 }
 
-PUBLIC int DCALL
-DeeFile_PrintAllSp(DeeObject *__restrict self,
-                   DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintAllSp(DeeObject *self,
+                   DeeObject *ob) {
 	int result;
 	DREF DeeObject *elem;
 	size_t fast_size = DeeFastSeq_GetSize(ob);
@@ -985,9 +986,9 @@ err:
 	return -1;
 }
 
-PUBLIC int DCALL
-DeeFile_PrintAllNl(DeeObject *__restrict self,
-                   DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeFile_PrintAllNl(DeeObject *self,
+                   DeeObject *ob) {
 	if unlikely(DeeFile_PrintAll(self, ob))
 		return -1;
 	return DeeFile_PrintNl(self);
@@ -996,13 +997,12 @@ DeeFile_PrintAllNl(DeeObject *__restrict self,
 
 
 
-PUBLIC dssize_t DCALL
-DeeFile_VPrintf(DeeObject *__restrict self,
-                char const *__restrict format, va_list args) {
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeFile_VPrintf(DeeObject *self, char const *__restrict format, va_list args) {
 	return DeeFormat_VPrintf((dformatprinter)&DeeFile_WriteAll, self, format, args);
 }
 
-PUBLIC dssize_t
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t
 DeeFile_Printf(DeeObject *__restrict self,
                char const *__restrict format, ...) {
 	va_list args;
@@ -1014,10 +1014,10 @@ DeeFile_Printf(DeeObject *__restrict self,
 }
 
 
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 type_ctor(DeeTypeObject *__restrict self);
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 filetype_ctor(DeeFileTypeObject *__restrict self) {
 	self->ft_read   = NULL;
 	self->ft_write  = NULL;
@@ -1083,9 +1083,9 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_init(DeeFileObject *__restrict UNUSED(self)) {
- return 0;
+	return 0;
 }
 
 
@@ -1171,9 +1171,9 @@ PRIVATE struct open_option const open_options[] = {
 	{ "nobuf", OPEN_EXFLAG_FNOBUF, 0, 0 },
 };
 
-PRIVATE DREF DeeObject *DCALL
-file_class_open(DeeObject *__restrict UNUSED(self),
-                size_t argc, DeeObject **__restrict argv,
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_class_open(DeeObject *UNUSED(self),
+                size_t argc, DeeObject **argv,
                 DeeObject *kw) {
 	DeeObject *path;
 	DREF DeeObject *result, *new_result;
@@ -1370,7 +1370,7 @@ PRIVATE uint16_t const std_buffer_modes[DEE_STDCNT] = {
 #endif /* DEE_STDDBG_IS_UNIQUE */
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED DREF DeeObject *DCALL
 create_std_buffer(unsigned int id) {
 	DREF DeeObject *result, *new_result;
 	ASSERT(id < DEE_STDCNT);
@@ -1408,7 +1408,7 @@ done:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_GetStd(unsigned int id) {
 	DREF DeeObject *result;
 	ASSERT(id < DEE_STDCNT);
@@ -1429,7 +1429,7 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_TryGetStd(unsigned int id) {
 	DREF DeeObject *result;
 	ASSERT(id < DEE_STDCNT);
@@ -1451,7 +1451,7 @@ done:
 	return result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFile_SetStd(unsigned int id, DeeObject *file) {
 	DREF DeeObject *old_stream;
 	ASSERT(id < DEE_STDCNT);
@@ -1473,7 +1473,7 @@ PRIVATE DREF DeeObject *files_module = NULL;
 PRIVATE DEFINE_RWLOCK(files_module_lock);
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_files_object(DeeObject *__restrict name) {
 	DREF DeeObject *result, *mod;
 again:
@@ -1533,11 +1533,11 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 }
 
 #define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)       \
-	PRIVATE DREF DeeObject *DCALL                                 \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL            \
 	file_class_get_##stdxxx(DeeObject *__restrict UNUSED(self)) { \
 		return DeeFile_GetStd(DEE_STDXXX);                        \
 	}                                                             \
-	PRIVATE int DCALL                                             \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                        \
 	file_class_del_##stdxxx(DeeObject *__restrict self) {         \
 		DREF DeeObject *old_stream;                               \
 		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);            \
@@ -1547,9 +1547,9 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 		}                                                         \
 		return 0;                                                 \
 	}                                                             \
-	PRIVATE int DCALL                                             \
-	file_class_set_##stdxxx(DeeObject *__restrict UNUSED(self),   \
-	                        DeeObject *__restrict value) {        \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                     \
+	file_class_set_##stdxxx(DeeObject *UNUSED(self),              \
+	                        DeeObject *value) {                   \
 		DREF DeeObject *old_stream;                               \
 		old_stream = DeeFile_SetStd(DEE_STDXXX, value);           \
 		if (old_stream && old_stream != ITER_DONE)                \
@@ -1562,28 +1562,28 @@ DEFINE_FILE_CLASS_STD_FUNCTIONS(stderr, DEE_STDERR)
 #undef DEFINE_FILE_CLASS_STD_FUNCTIONS
 
 #if DEE_STDDBG != DEE_STDERR
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_stddbg(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeFile_DefaultStd(DEE_STDDBG));
 }
 #endif /* DEE_STDDBG != DEE_STDERR */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_default_stdin(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeFile_DefaultStd(DEE_STDIN));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_default_stdout(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeFile_DefaultStd(DEE_STDOUT));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_default_stderr(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeFile_DefaultStd(DEE_STDERR));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_getjoined(DeeObject *__restrict UNUSED(self)) {
 	return get_files_object(&str_Joined);
 }
@@ -1688,7 +1688,7 @@ PRIVATE struct type_member file_class_members[] = {
  *       end of the file and determining where that position is located at.
  * @return: * : The size of the given file `self' in bytes.
  * @return: -1: An error occurred. */
-PUBLIC dpos_t DCALL
+PUBLIC WUNUSED NONNULL((1)) dpos_t DCALL
 DeeFile_GetSize(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_CallAttr(self, &str_size, 0, NULL);
@@ -1720,9 +1720,9 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-file_read(DeeObject *__restrict self, size_t argc,
-          DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_read(DeeObject *self, size_t argc,
+          DeeObject **argv, DeeObject *kw) {
 	size_t max_length = (size_t)-1;
 	bool readall      = false;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(maxbytes), K(readall), KEND });
@@ -1733,9 +1733,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_readinto(DeeObject *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_readinto(DeeObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	dssize_t result;
 	DeeObject *dst;
@@ -1756,9 +1756,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_write(DeeObject *__restrict self, size_t argc,
-           DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_write(DeeObject *self, size_t argc,
+           DeeObject **argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	bool writeall = true;
@@ -1779,9 +1779,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_pread(DeeObject *__restrict self, size_t argc,
-           DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_pread(DeeObject *self, size_t argc,
+           DeeObject **argv, DeeObject *kw) {
 	dpos_t file_pos;
 	size_t max_length = (size_t)-1;
 	bool readall      = false;
@@ -1793,9 +1793,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_preadinto(DeeObject *__restrict self, size_t argc,
-               DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_preadinto(DeeObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	dssize_t result;
 	DeeObject *data;
@@ -1816,9 +1816,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_pwrite(DeeObject *__restrict self, size_t argc,
-            DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_pwrite(DeeObject *self, size_t argc,
+            DeeObject **argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	dpos_t file_pos;
@@ -1851,9 +1851,9 @@ PRIVATE struct whence_name whence_names[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-file_seek(DeeObject *__restrict self, size_t argc,
-          DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_seek(DeeObject *self, size_t argc,
+          DeeObject **argv, DeeObject *kw) {
 	DeeObject *whence_ob = NULL;
 	doff_t seek_off;
 	int whence = SEEK_SET;
@@ -1885,7 +1885,7 @@ file_seek(DeeObject *__restrict self, size_t argc,
 			                whence_ob);
 			goto err;
 		}
-		/* Fallback: Conver the whence-object to an integer. */
+		/* Fallback: Convert the whence-object to an integer. */
 		if (DeeObject_AsInt(whence_ob, &whence))
 			goto err;
 	}
@@ -1898,9 +1898,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_tell(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_tell(DeeObject *self, size_t argc, DeeObject **argv) {
 	doff_t result;
 	if (DeeArg_Unpack(argc, argv, ":tell"))
 		goto err;
@@ -1912,9 +1911,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_rewind(DeeObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_rewind(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":rewind"))
 		goto err;
 	if (DeeFile_Rewind(self) < 0)
@@ -1924,9 +1922,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_trunc(DeeObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_trunc(DeeObject *self, size_t argc, DeeObject **argv) {
 	dpos_t trunc_pos;
 	if (argc == 0) {
 		/* Truncate at the current position. */
@@ -1945,9 +1942,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_sync(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_sync(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		goto err;
 	if (DeeFile_Sync(self))
@@ -1957,9 +1953,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_close(DeeObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_close(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":close"))
 		goto err;
 	if (DeeFile_Close(self))
@@ -1969,9 +1964,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_getc(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_getc(DeeObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":getc"))
 		goto err;
@@ -1987,9 +1981,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_ungetc(DeeObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_ungetc(DeeObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, "d:ungetc", &result))
 		goto err;
@@ -2001,9 +1994,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_putc(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_putc(DeeObject *self, size_t argc, DeeObject **argv) {
 	int result;
 	uint8_t byte;
 	if (DeeArg_Unpack(argc, argv, "I8u:putc", &byte))
@@ -2016,9 +2008,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_size(DeeObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_size(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		goto err;
@@ -2052,9 +2043,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_readline(DeeObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_readline(DeeObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t max_length = (size_t)-1;
 	bool keeplf       = true;
@@ -2075,9 +2065,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-file_readall(DeeObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_readall(DeeObject *self, size_t argc, DeeObject **argv) {
 	size_t max_length = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "|Id:readall", &max_length))
 		goto err;
@@ -2086,9 +2075,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_readallat(DeeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+file_readallat(DeeObject *self, size_t argc, DeeObject **argv) {
 	dpos_t file_pos;
 	size_t max_length = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "I64u|Id:readallat", &file_pos, &max_length))
@@ -2245,12 +2233,12 @@ PRIVATE struct type_with file_with = {
 	/* .tp_leave = */ &DeeFile_Close
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_next(DeeFileObject *__restrict self) {
 	return DeeFile_ReadLine((DeeObject *)self, (size_t)-1, true);
 }
 
-PRIVATE DREF DeeFileObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeFileObject *DCALL
 file_return_self(DeeFileObject *__restrict self) {
 	/* A file is its own iterator */
 	return_reference_(self);
@@ -2268,17 +2256,15 @@ PRIVATE struct type_seq file_seq = {
 };
 
 
-INTERN DREF DeeObject *DCALL
-file_shl(DeeObject *__restrict self,
-         DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+file_shl(DeeObject *self, DeeObject *some_object) {
 	if (DeeFile_PrintObject(self, some_object))
 		return NULL;
 	return_reference_(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-file_shr(DeeObject *__restrict self,
-         DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+file_shr(DeeObject *self, DeeObject *some_object) {
 	DeeBuffer buffer;
 	dssize_t result;
 	if (DeeObject_GetBuf(some_object, &buffer, Dee_BUFFER_FWRITABLE))

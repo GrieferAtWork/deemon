@@ -54,7 +54,7 @@
 DECL_BEGIN
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
                          struct ascii_printer *__restrict printer) {
 	dssize_t temp, result = 0;
@@ -360,7 +360,7 @@ err:
 	return temp;
 }
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 asm_invocation_print(struct asm_invocation *__restrict self,
                      struct asm_mnemonic *__restrict instr,
                      struct ascii_printer *__restrict printer) {
@@ -443,7 +443,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 asm_invocation_tostring(struct asm_invocation *__restrict self,
                         struct asm_mnemonic *__restrict instr) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
@@ -2226,7 +2226,7 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_genasm_userasm(struct ast *__restrict self) {
 	struct assembler_state old_state;
 	int result;
@@ -2555,7 +2555,7 @@ err:
 
 #else /* !CONFIG_LANGUAGE_NO_ASM */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 compile_operator(struct asm_operand *__restrict op, bool is_output) {
 	char const *format;
 	struct ast *expr = op->ao_expr;
@@ -2601,7 +2601,7 @@ err_undefined_mode:
 	                       format);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_genasm_userasm(struct ast *__restrict self) {
 	size_t i;
 	ASSERT(self->a_type == AST_ASSEMBLY);

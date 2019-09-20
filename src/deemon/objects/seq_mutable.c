@@ -3286,7 +3286,7 @@ ria_visit(RemoveIfAllWrapper *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-ria_call(RemoveIfAllWrapper *self, size_t argc, DeeObject **__restrict argv) {
+ria_call(RemoveIfAllWrapper *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result, *key_elem;
 	if unlikely(argc != 1) {
 		err_invalid_argc("_SeqRemoveIfAllWrapper", argc, 1, 1);

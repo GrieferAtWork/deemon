@@ -37,7 +37,7 @@ INTDEF DeeObject *rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_MIN)];
 /* @return:  1: Symbol doesn't exist.
  * @return:  0: Everything is OK.
  * @return: -1: An error occurred. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 bind_module_symbol(DeeModuleObject *__restrict module,
                    uint16_t *__restrict pmodid,
                    uint16_t *__restrict psymid,

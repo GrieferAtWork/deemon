@@ -48,7 +48,7 @@ DOC_DEF(isstruct_doc, "->?Dbool\nReturns :true if @this :structured_type is a :s
 /* Interpret `self' as a pointer and store the result in `*result'
  * @return:  0: Successfully converted `self' to a pointer.
  * @return: -1: An error occurred. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsPointer(DeeObject *__restrict self,
                     DeeSTypeObject *__restrict pointer_base,
                     union pointer *__restrict result) {
@@ -67,7 +67,7 @@ DeeObject_AsPointer(DeeObject *__restrict self,
 }
 
 /* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TryAsPointer(DeeObject *__restrict self,
                        DeeSTypeObject *__restrict pointer_base,
                        union pointer *__restrict result) {
@@ -142,14 +142,14 @@ err:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stype_init(DeeSTypeObject *__restrict self) {
 	/* Clear all new fields added by structured types. */
 	memset((&self->st_base) + 1, 0, sizeof(DeeSTypeObject) - COMPILER_OFFSETAFTER(DeeSTypeObject, st_base));
 	return (*DeeType_Type.tp_init.tp_alloc.tp_ctor)((DeeObject *)&self->st_base);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 stype_fini(DeeSTypeObject *__restrict self) {
 	/* Free array/function type caches. */
 	Dee_Free(self->st_array.sa_list);
@@ -162,7 +162,7 @@ stype_fini(DeeSTypeObject *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 stype_dofunc(DeeSTypeObject *__restrict self, size_t argc,
-             DeeObject **__restrict argv, cc_t cc_flags) {
+             DeeObject **argv, cc_t cc_flags) {
 	DeeSTypeObject **argv_types;
 	size_t i;
 	cc_t cc = (cc_t)((unsigned int)CC_DEFAULT |
@@ -192,15 +192,13 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stype_func(DeeSTypeObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stype_func(DeeSTypeObject *self, size_t argc, DeeObject **argv) {
 	return stype_dofunc(self, argc, argv, (cc_t)0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-stype_vfunc(DeeSTypeObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stype_vfunc(DeeSTypeObject *self, size_t argc, DeeObject **argv) {
 	return stype_dofunc(self, argc, argv, CC_FVARARGS);
 }
 
@@ -230,13 +228,13 @@ PRIVATE struct type_method stype_methods[] = {
 	//{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_sizeof(DeeSTypeObject *__restrict self) {
 	size_t result = DeeSType_Sizeof(self);
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_alignof(DeeSTypeObject *__restrict self) {
 	size_t result = DeeSType_Alignof(self);
 	return DeeInt_NewSize(result);
@@ -267,9 +265,8 @@ PRIVATE struct type_member stype_members[] = {
 
 
 
-PRIVATE DREF DeeArrayTypeObject *DCALL
-stype_getitem(DeeSTypeObject *__restrict self,
-              DeeObject *__restrict array_size_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeArrayTypeObject *DCALL
+stype_getitem(DeeSTypeObject *self, DeeObject *array_size_ob) {
 	/* Use `operator []' to construct array types. */
 	size_t array_size;
 	if (DeeObject_AsSize(array_size_ob, &array_size))
@@ -281,7 +278,7 @@ PRIVATE struct type_seq stype_seq = {
 	/* .tp_iter_self = */ NULL,
 	/* .tp_size      = */ NULL,
 	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict self, DeeObject *__restrict index))&stype_getitem,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *index))&stype_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
@@ -290,9 +287,8 @@ PRIVATE struct type_seq stype_seq = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-stype_call(DeeSTypeObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stype_call(DeeSTypeObject *self, size_t argc, DeeObject **argv) {
 	size_t i;
 	/* Create a new instance, or create a new function-type. */
 	if (!argc)
@@ -367,7 +363,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 };
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ptype_fini(DeePointerTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->pt_orig;
 	/* Delete the weak-link to the original type. */
@@ -378,7 +374,7 @@ ptype_fini(DeePointerTypeObject *__restrict self) {
 	Dee_Decref((DeeObject *)orig);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 ptype_visit(DeePointerTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	ASSERTF(DeeObject_Check((DeeObject *)self->pt_orig),
 	        "Missing base type for %p:%s",
@@ -444,7 +440,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeePointerTypeObject, pt_orig) ==
               COMPILER_OFFSETOF(DeeLValueTypeObject, lt_orig));
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ltype_sizeof(DeeLValueTypeObject *__restrict self) {
 	size_t result = DeeSType_Sizeof(self->lt_orig);
 	return DeeInt_NewSize(result);
@@ -462,7 +458,7 @@ PRIVATE struct type_member ltype_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ltype_fini(DeeLValueTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->lt_orig;
 	/* Delete the weak-link to the original type. */
@@ -519,14 +515,14 @@ INTERN DeeTypeObject DeeLValueType_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 make_structured_name(DeeSTypeObject *__restrict self, char class_ch) {
 	/* TODO: Special handling for function-pointers. */
 	return DeeString_Newf("%s%c", self->st_base.tp_name, class_ch);
 }
 
 
-PRIVATE DREF DeePointerTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeePointerTypeObject *DCALL
 pointertype_new(DeeSTypeObject *__restrict self) {
 	DREF DeePointerTypeObject *result;
 	DREF DeeStringObject *name;
@@ -571,7 +567,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeLValueTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeLValueTypeObject *DCALL
 lvaluetype_new(DeeSTypeObject *__restrict self) {
 	DREF DeeLValueTypeObject *result;
 	DREF DeeStringObject *name;
@@ -609,7 +605,7 @@ err_r:
 	return NULL;
 }
 
-INTERN DREF DeePointerTypeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeePointerTypeObject *DCALL
 DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 	DREF DeePointerTypeObject *result;
 	ASSERT_OBJECT_TYPE((DeeObject *)self, &DeeSType_Type);
@@ -640,7 +636,7 @@ DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeLValueTypeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeLValueTypeObject *DCALL
 DeeSType_LValue(DeeSTypeObject *__restrict self) {
 	DREF DeeLValueTypeObject *result;
 	ASSERT_OBJECT_TYPE((DeeObject *)self, &DeeSType_Type);
@@ -671,7 +667,7 @@ DeeSType_LValue(DeeSTypeObject *__restrict self) {
 	return result;
 }
 
-INTERN DeeSTypeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DeeSTypeObject *DCALL
 DeeSType_Get(DeeObject *__restrict self) {
 	/* Quick check: is it a structured type. */
 	if (DeeSType_Check(self))
@@ -706,7 +702,7 @@ err_unimplemented_operator(DeeSTypeObject *__restrict tp, uint16_t operator_name
 	                                                   "?");
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 struct_ctor(DeeObject *__restrict self) {
 	DeeSTypeObject *tp_self = (DeeSTypeObject *)Dee_TYPE(self);
 	while (!DeeSType_Check((DeeObject *)tp_self))
@@ -716,7 +712,7 @@ struct_ctor(DeeObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_copy(DeeObject *__restrict self,
             DeeObject *__restrict other) {
 	DeeSTypeObject *tp_self = (DeeSTypeObject *)Dee_TYPE(self);
@@ -731,7 +727,7 @@ struct_copy(DeeObject *__restrict self,
 
 PRIVATE int DCALL
 struct_init(DeeObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	DeeSTypeObject *orig_type, *tp_self;
 	orig_type = tp_self = (DeeSTypeObject *)Dee_TYPE(self);
 	do {
@@ -743,7 +739,7 @@ struct_init(DeeObject *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_assign(DeeObject *__restrict self,
               DeeObject *__restrict some_object) {
 	return DeeStruct_Assign((DeeSTypeObject *)Dee_TYPE(self),
@@ -786,26 +782,25 @@ DEFINE_UNARY_STRUCT_OPERATOR(DREF DeeObject *, struct_str, DeeStruct_Str)
 DEFINE_UNARY_STRUCT_OPERATOR(DREF DeeObject *, struct_repr, DeeStruct_Repr)
 DEFINE_UNARY_STRUCT_OPERATOR(int, struct_bool, DeeStruct_Bool)
 
-PRIVATE DREF DeeObject *DCALL
-struct_call(DeeObject *__restrict self, size_t argc,
-            DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+struct_call(DeeObject *self, size_t argc, DeeObject **argv) {
 	return DeeStruct_Call((DeeSTypeObject *)Dee_TYPE(self),
 	                      DeeStruct_Data(self), argc, argv);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_int32(DeeObject *__restrict self, int32_t *__restrict result) {
 	return DeeStruct_Int32((DeeSTypeObject *)Dee_TYPE(self),
 	                       DeeStruct_Data(self), result);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_int64(DeeObject *__restrict self, int64_t *__restrict result) {
 	return DeeStruct_Int64((DeeSTypeObject *)Dee_TYPE(self),
 	                       DeeStruct_Data(self), result);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_double(DeeObject *__restrict self, double *__restrict result) {
 	return DeeStruct_Double((DeeSTypeObject *)Dee_TYPE(self),
 	                        DeeStruct_Data(self), result);
@@ -855,7 +850,7 @@ DEFINE_TRINARY_STRUCT_OPERATOR(int, struct_setitem, DeeStruct_SetItem)
 DEFINE_TRINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_getrange, DeeStruct_GetRange)
 DEFINE_TRINARY_STRUCT_OPERATOR(int, struct_delrange, DeeStruct_DelRange)
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 struct_setrange(DeeObject *__restrict self, DeeObject *__restrict begin,
                 DeeObject *__restrict end, DeeObject *__restrict value) {
 	return DeeStruct_SetRange((DeeSTypeObject *)Dee_TYPE(self),
@@ -957,19 +952,19 @@ PRIVATE struct type_buffer struct_buffer = {
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_sizeof(DeeObject *__restrict self) {
 	size_t result = DeeStruct_Size(self);
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_alignof(DeeObject *__restrict self) {
 	size_t result = DeeStruct_Align(self);
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 struct_ref(DeeObject *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *pointer_type;
@@ -1003,9 +998,8 @@ PRIVATE struct type_getset struct_getsets[] = {
 };
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-PRIVATE DREF DeeObject *DCALL
-struct_ref_func(DeeObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+struct_ref_func(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__ref__"))
 		goto err;
 	return struct_ref(self);
@@ -1098,7 +1092,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Ref(DeeObject *__restrict self) {
 	DREF struct pointer_object *result;
 	DREF DeePointerTypeObject *tp_result;
@@ -1137,7 +1131,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Deref(DeeObject *__restrict self) {
 	struct lvalue_object *result;
 	DREF DeeLValueTypeObject *tp_result;
@@ -1311,7 +1305,7 @@ DeeStruct_Bool(DeeSTypeObject *__restrict tp_self,
 INTERN DREF DeeObject *DCALL
 DeeStruct_Call(DeeSTypeObject *__restrict tp_self,
                void *self, size_t argc,
-               DeeObject **__restrict argv) {
+               DeeObject **argv) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_call)
@@ -1732,7 +1726,7 @@ DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 atype_fini(DeeArrayTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->at_orig;
 	/* Delete the weak-link to the original type. */
@@ -1810,7 +1804,7 @@ INTERN ATTR_COLD void DCALL err_no_cfunction(void) {
 
 
 #ifndef CONFIG_NO_CFUNCTION
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 	size_t i;
 	DeeSTypeObject *orig = self->ft_orig;
@@ -1826,7 +1820,7 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 	Dee_Free(self->ft_ffi_arg_type_v);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 ftype_visit(DeeCFunctionTypeObject *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	Dee_Visit((DeeTypeObject *)self->ft_orig);
@@ -1839,7 +1833,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeArrayTypeObject, at_orig) ==
               COMPILER_OFFSETOF(DeeLValueTypeObject, lt_orig));
 #endif /* !CONFIG_NO_CFUNCTION */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ftype_args(DeeCFunctionTypeObject *__restrict self) {
 #ifdef CONFIG_NO_CFUNCTION
 	(void)self;

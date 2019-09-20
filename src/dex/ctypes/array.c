@@ -55,12 +55,12 @@ typedef struct {
 	union pointer             ai_end;   /* [const] Iterator end position. */
 } ArrayIterator;
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 aiter_fini(ArrayIterator *__restrict self) {
 	Dee_Decref((DeeObject *)self->ai_type);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 aiter_visit(ArrayIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit((DeeObject *)self->ai_type);
 }
@@ -97,7 +97,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 aiter_bool(ArrayIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->ai_pos.ptr >= self->ai_end.ptr;
@@ -190,7 +190,7 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 
 
 PRIVATE DREF ArrayIterator *DCALL
-array_iter(DeeArrayTypeObject *__restrict tp_self, void *base) {
+array_iter(DeeArrayTypeObject *tp_self, void *base) {
 	DREF ArrayIterator *result;
 	/* Create a new array iterator. */
 	result = DeeObject_MALLOC(ArrayIterator);
@@ -214,12 +214,12 @@ err_r:
 }
 
 PRIVATE DREF DeeObject *DCALL
-array_size(DeeArrayTypeObject *__restrict tp_self, void *UNUSED(base)) {
+array_size(DeeArrayTypeObject *tp_self, void *UNUSED(base)) {
 	return DeeInt_NewSize(tp_self->at_count);
 }
 
 PRIVATE DREF DeeObject *DCALL
-array_contains(DeeArrayTypeObject *__restrict tp_self, void *base,
+array_contains(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *__restrict other) {
 	DREF struct lvalue_object *temp = NULL;
 	DREF DeeLValueTypeObject *lval_type;
@@ -264,7 +264,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL
-array_get(DeeArrayTypeObject *__restrict tp_self, void *base,
+array_get(DeeArrayTypeObject *tp_self, void *base,
           DeeObject *__restrict index_ob) {
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *lval_type;
@@ -296,7 +296,7 @@ err:
 }
 
 PRIVATE int DCALL
-array_set(DeeArrayTypeObject *__restrict tp_self, void *base,
+array_set(DeeArrayTypeObject *tp_self, void *base,
           DeeObject *__restrict index_ob, DeeObject *__restrict value) {
 	int result;
 	DREF DeeObject *item;
@@ -310,13 +310,13 @@ array_set(DeeArrayTypeObject *__restrict tp_self, void *base,
 }
 
 PRIVATE int DCALL
-array_del(DeeArrayTypeObject *__restrict tp_self, void *base,
+array_del(DeeArrayTypeObject *tp_self, void *base,
           DeeObject *__restrict index_ob) {
 	return array_set(tp_self, base, index_ob, Dee_None);
 }
 
 PRIVATE DREF DeeObject *DCALL
-array_getrange(DeeArrayTypeObject *__restrict tp_self, void *base,
+array_getrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *__restrict begin_ob, DeeObject *__restrict end_ob) {
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *lval_type;
@@ -358,7 +358,7 @@ err:
 }
 
 PRIVATE int DCALL
-array_delrange(DeeArrayTypeObject *__restrict tp_self, void *base,
+array_delrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *__restrict begin_ob, DeeObject *__restrict end_ob) {
 	dssize_t begin, end = -1;
 	if (DeeObject_AsSSize(begin_ob, &begin) ||
@@ -403,10 +403,8 @@ err:
 }
 
 PRIVATE int DCALL
-array_setrange(DeeArrayTypeObject *__restrict tp_self, void *base,
-               DeeObject *__restrict begin_ob,
-               DeeObject *__restrict end_ob,
-               DeeObject *__restrict value) {
+array_setrange(DeeArrayTypeObject *tp_self, void *base,
+               DeeObject *begin_ob, DeeObject *end_ob, DeeObject *value) {
 	dssize_t begin, end = SSIZE_MAX;
 	DREF DeeObject *iter, *elem;
 	/* When `none' is passed, simply clear out affected memory. */
@@ -479,14 +477,13 @@ err:
 }
 
 PRIVATE int DCALL
-array_assign(DeeArrayTypeObject *__restrict tp_self, void *base,
-             DeeObject *__restrict value) {
+array_assign(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	return array_setrange(tp_self, base, Dee_None, Dee_None, value);
 }
 
 PRIVATE int DCALL
-array_init(DeeArrayTypeObject *__restrict tp_self, void *base,
-           size_t argc, DeeObject **__restrict argv) {
+array_init(DeeArrayTypeObject *tp_self, void *base,
+           size_t argc, DeeObject **argv) {
 	DeeObject *arg;
 	if (DeeArg_Unpack(argc, argv, "o:array", &arg))
 		return -1;
@@ -494,7 +491,7 @@ array_init(DeeArrayTypeObject *__restrict tp_self, void *base,
 }
 
 PRIVATE DREF struct pointer_object *DCALL
-array_adddiff(DeeArrayTypeObject *__restrict tp_self,
+array_adddiff(DeeArrayTypeObject *tp_self,
               void *base, ptrdiff_t diff) {
 	/* Follow C-conventions and return a pointer to the `diff's element. */
 	DREF struct pointer_object *result;
@@ -521,8 +518,7 @@ err:
 }
 
 PRIVATE DREF struct pointer_object *DCALL
-array_add(DeeArrayTypeObject *__restrict tp_self,
-          void *base, DeeObject *__restrict value) {
+array_add(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
 		return NULL;
@@ -530,8 +526,7 @@ array_add(DeeArrayTypeObject *__restrict tp_self,
 }
 
 PRIVATE DREF struct pointer_object *DCALL
-array_sub(DeeArrayTypeObject *__restrict tp_self,
-          void *base, DeeObject *__restrict value) {
+array_sub(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
 		return NULL;
@@ -539,7 +534,7 @@ array_sub(DeeArrayTypeObject *__restrict tp_self,
 }
 
 PRIVATE DREF DeeObject *DCALL
-array_repr(DeeArrayTypeObject *__restrict tp_self, void *base) {
+array_repr(DeeArrayTypeObject *tp_self, void *base) {
 	union pointer iter, end;
 	size_t item_size;
 	struct ascii_printer p = ASCII_PRINTER_INIT;
@@ -575,13 +570,13 @@ err:
 
 
 PRIVATE int DCALL
-array_bool(DeeArrayTypeObject *__restrict tp_self, void *UNUSED(base)) {
+array_bool(DeeArrayTypeObject *tp_self, void *UNUSED(base)) {
 	return tp_self->at_count != 0;
 }
 
 PRIVATE DREF DeeObject *DCALL
-array_call(DeeArrayTypeObject *__restrict tp_self,
-           void *base, size_t argc, DeeObject **__restrict argv) {
+array_call(DeeArrayTypeObject *tp_self,
+           void *base, size_t argc, DeeObject **argv) {
 	/* Because arrays must behave compatible to pointers,
 	 * calling an array will call its first element. */
 	return DeeStruct_Call(tp_self->at_orig, base, argc, argv);
@@ -717,7 +712,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 };
 
 
-PRIVATE DREF DeeArrayTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeArrayTypeObject *DCALL
 arraytype_new(DeeSTypeObject *__restrict item_type,
               size_t num_items) {
 	DREF DeeArrayTypeObject *result;
@@ -763,7 +758,7 @@ err_r:
 	return NULL;
 }
 
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 stype_array_rehash(DeeSTypeObject *__restrict self,
                    size_t new_mask) {
 	DeeArrayTypeObject **new_map, **dst;
@@ -803,7 +798,7 @@ again:
 
 
 
-INTDEF DREF DeeArrayTypeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeArrayTypeObject *DCALL
 DeeSType_Array(DeeSTypeObject *__restrict self,
                size_t num_items) {
 	DREF DeeArrayTypeObject *result, *new_result, **pbucket;

@@ -1796,7 +1796,7 @@ DFUNDEF WUNUSED ATTR_RETNONNULL ATTR_CONST struct Dee_unitraits *
 /* case-fold the given unicode character `ch', and
  * return the number of resulting folded characters.
  * @assume(return >= 1 && return <= Dee_UNICODE_FOLDED_MAX); */
-DFUNDEF WUNUSED ATTR_PURE size_t
+DFUNDEF ATTR_PURE size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
                         uint32_t buf[Dee_UNICODE_FOLDED_MAX]);
 
@@ -1828,14 +1828,14 @@ DFUNDEF WUNUSED ATTR_PURE size_t
 #define Dee_UNICODE_CONVERT_UPPER offsetof(struct Dee_unitraits, ut_upper)
 #define Dee_UNICODE_CONVERT_TITLE offsetof(struct Dee_unitraits, ut_title)
 
-FORCELOCAL uint32_t DCALL _DeeUni_SwapCase(uint32_t ch) {
+FORCELOCAL WUNUSED ATTR_CONST uint32_t DCALL _DeeUni_SwapCase(uint32_t ch) {
 	struct Dee_unitraits *record = DeeUni_Descriptor(ch);
 	return (uint32_t)(ch + ((record->ut_flags & Dee_UNICODE_FUPPER)
 	                        ? record->ut_lower
 	                        : record->ut_upper));
 }
 
-FORCELOCAL uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
+FORCELOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 	if (ch >= 0x41 && ch <= 0x5a)
 		return ch + 0x20;
 	if (ch >= 0x61 && ch <= 0x7a)
@@ -1861,7 +1861,7 @@ FORCELOCAL uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 #define DeeUni_IsDecimalX(ch, x)                               \
 	(sizeof(ch) == 1 ? ((uint8_t)(ch) == (uint8_t)('0' + (x))) \
 	                 : ((ch) == '0' + (x) || _DeeUni_IsDecimalX(ch, x)))
-FORCELOCAL bool (DCALL _DeeUni_IsDecimalX)(uint32_t ch, uint8_t x) {
+FORCELOCAL WUNUSED ATTR_CONST bool (DCALL _DeeUni_IsDecimalX)(uint32_t ch, uint8_t x) {
 	struct Dee_unitraits *record = DeeUni_Descriptor(ch);
 	return (record->ut_flags & Dee_UNICODE_FDECIMAL) && record->ut_digit == x;
 }
@@ -2170,7 +2170,7 @@ Dee_unicode_printer_trypack(/*inherit(on_success)*/struct Dee_unicode_printer *_
  * NOTE: This function merely acts as a hint, and calls may even be ignored.
  * @return: true:  The pre-allocation was successful.
  * @return: false: The pre-allocation has failed. */
-DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DFUNDEF NONNULL((1)) bool DCALL
 Dee_unicode_printer_allocate(struct Dee_unicode_printer *__restrict self,
                              size_t num_chars, unsigned int width);
 
@@ -2478,7 +2478,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
                                     uint32_t chr, size_t start, size_t length);
 
 /* Move `length' characters from `src' to `dst' */
-DFUNDEF WUNUSED NONNULL((1)) void
+DFUNDEF NONNULL((1)) void
 (DCALL Dee_unicode_printer_memmove)(struct Dee_unicode_printer *__restrict self,
                                     size_t dst, size_t src, size_t length);
 

@@ -43,7 +43,7 @@ DECL_BEGIN
 DECLARE_OBJECT_CACHE(compiler_item, DeeCompilerItemObject)
 typedef DeeCompilerScopeObject Scope;
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCompiler_GetScope(struct scope_object *__restrict scope) {
 	DeeTypeObject *result_type;
 	if (Dee_TYPE(scope) == &DeeScope_Type) {
@@ -134,7 +134,7 @@ get_scope_lookupmode(DeeObject *__restrict value,
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_getbase(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -143,7 +143,7 @@ scope_getbase(DeeCompilerScopeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_getprev(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -157,7 +157,7 @@ scope_getprev(DeeCompilerScopeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_get_isclassscope(DeeCompilerScopeObject *__restrict self) {
 	return_bool(DeeScope_IsClassScope(self->ci_value));
 }
@@ -185,7 +185,7 @@ PRIVATE struct type_getset scope_getsets[] = {
 	{ NULL }
 };
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 print_scope_repr(DeeScopeObject *__restrict self,
                  struct unicode_printer *__restrict printer) {
 	dssize_t error;
@@ -195,13 +195,13 @@ print_scope_repr(DeeScopeObject *__restrict self,
 	       : 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_str(DeeCompilerScopeObject *__restrict self) {
 	return DeeString_Newf("<scope at %p>", self->ci_value);
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 scope_bool(DeeCompilerScopeObject *__restrict self) {
 	int result;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -210,14 +210,14 @@ scope_bool(DeeCompilerScopeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_iter(DeeCompilerScopeObject *__restrict self) {
 	(void)self; /* TODO */
 	DERROR_NOTIMPLEMENTED();
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_size(DeeCompilerScopeObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -226,9 +226,9 @@ scope_size(DeeCompilerScopeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-scope_contains(DeeCompilerScopeObject *__restrict self,
-               DeeObject *__restrict elem) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+scope_contains(DeeCompilerScopeObject *self,
+               DeeObject *elem) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
 	if (DeeObject_InstanceOfExact(elem, &DeeCompilerSymbol_Type)) {
@@ -251,9 +251,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-scope_getitem(DeeCompilerScopeObject *__restrict self,
-              DeeObject *__restrict elem) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+scope_getitem(DeeCompilerScopeObject *self,
+              DeeObject *elem) {
 	DREF DeeObject *result;
 	struct symbol *sym;
 	char *utf8;
@@ -272,7 +272,7 @@ scope_getitem(DeeCompilerScopeObject *__restrict self,
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 scope_delitem(DeeCompilerScopeObject *__restrict self,
               DeeObject *__restrict elem) {
 	int result;
@@ -312,9 +312,8 @@ PRIVATE struct type_member scope_class_members[] = {
     TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
-scope_newanon(DeeCompilerScopeObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+scope_newanon(DeeCompilerScopeObject *self, size_t argc, DeeObject **argv) {
  DREF DeeObject *result = NULL; struct symbol *sym;
  COMPILER_BEGIN(self->ci_compiler);
  if (DeeArg_Unpack(argc, argv,":newanon"))
@@ -329,10 +328,9 @@ done:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-scope_newlocal(DeeCompilerScopeObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv,
-               DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
  DREF DeeObject *result = NULL; struct symbol *sym; struct TPPKeyword *kwd;
  DeeObject *name,*loc = NULL; bool requirenew = true; char *name_utf8;
  PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };

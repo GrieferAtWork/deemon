@@ -25,12 +25,12 @@
 INTERN DREF DeeObject *DCALL
 cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self,
                  void (*self)(void),
-                 size_t argc, DeeObject **__restrict argv)
+                 size_t argc, DeeObject **argv)
 #else /* VARARGS */
 INTERN DREF DeeObject *DCALL
 cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
                void (*self)(void),
-               size_t argc, DeeObject **__restrict argv)
+               size_t argc, DeeObject **argv)
 #endif /* !VARARGS */
 {
 #ifdef VARARGS

@@ -47,7 +47,7 @@ DECL_BEGIN
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_ctor(RepeatIterator *__restrict self) {
 	self->ri_rep = (DREF Repeat *)DeeSeq_Repeat(Dee_EmptySeq, 1);
 	if unlikely(!self->ri_rep)
@@ -59,7 +59,7 @@ repeatiter_ctor(RepeatIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatiter_copy(RepeatIterator *__restrict self,
                 RepeatIterator *__restrict other) {
 	DREF DeeObject *copy;
@@ -81,7 +81,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatiter_deep(RepeatIterator *__restrict self,
                 RepeatIterator *__restrict other) {
 	DREF DeeObject *copy;
@@ -108,7 +108,7 @@ err:
 
 PRIVATE int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+                size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatIterator", &self->ri_rep) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->ri_rep, &SeqRepeat_Type))
 		return -1;
@@ -121,13 +121,13 @@ repeatiter_init(RepeatIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 repeatiter_fini(RepeatIterator *__restrict self) {
 	Dee_Decref(self->ri_rep);
 	Dee_Decref(self->ri_iter);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ri_rep);
 	Dee_Visit(self->ri_iter);
@@ -225,7 +225,7 @@ PRIVATE struct type_cmp repeatiter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatiter_ge
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatiter_next(RepeatIterator *__restrict self) {
 	DREF DeeObject *result, *iter;
 	rwlock_read(&self->ri_lock);
@@ -263,7 +263,7 @@ done:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatiter_get_iter(RepeatIterator *__restrict self) {
 	DREF DeeObject *result;
 	rwlock_read(&self->ri_lock);
@@ -273,7 +273,7 @@ repeatiter_get_iter(RepeatIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatiter_set_iter(RepeatIterator *__restrict self,
                     DeeObject *__restrict value) {
 	DREF DeeObject *oldvalue;
@@ -289,7 +289,7 @@ repeatiter_set_iter(RepeatIterator *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatiter_get_num(RepeatIterator *__restrict self) {
 	size_t result;
 	rwlock_read(&self->ri_lock);
@@ -298,7 +298,7 @@ repeatiter_get_num(RepeatIterator *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatiter_set_num(RepeatIterator *__restrict self,
                    DeeObject *__restrict value) {
 	size_t newvalue;
@@ -376,7 +376,7 @@ INTERN DeeTypeObject SeqRepeatIterator_Type = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_ctor(Repeat *__restrict self) {
 	self->r_num = 1;
 	self->r_seq = Dee_EmptySeq;
@@ -384,7 +384,7 @@ repeat_ctor(Repeat *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeat_copy(Repeat *__restrict self,
             Repeat *__restrict other) {
 	self->r_num = other->r_num;
@@ -393,7 +393,7 @@ repeat_copy(Repeat *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeat_deep(Repeat *__restrict self,
             Repeat *__restrict other) {
 	self->r_seq = DeeObject_DeepCopy(other->r_seq);
@@ -407,7 +407,7 @@ err:
 
 PRIVATE int DCALL
 repeat_init(Repeat *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqRepeat", &self->r_seq, &self->r_num))
 		return -1;
 	if unlikely(!self->r_num) {
@@ -418,22 +418,22 @@ repeat_init(Repeat *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 repeat_fini(Repeat *__restrict self) {
 	Dee_Decref(self->r_seq);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 repeat_visit(Repeat *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->r_seq);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_bool(Repeat *__restrict self) {
 	return DeeObject_Bool(self->r_seq);
 }
 
-PRIVATE DREF RepeatIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF RepeatIterator *DCALL
 repeat_iter(Repeat *__restrict self) {
 	DREF RepeatIterator *result;
 	result = DeeObject_MALLOC(RepeatIterator);
@@ -454,7 +454,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeat_size(Repeat *__restrict self) {
 	size_t base_size;
 	size_t result;
@@ -468,15 +468,15 @@ repeat_size(Repeat *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeat_contains(Repeat *__restrict self,
-                DeeObject *__restrict item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_contains(Repeat *self,
+                DeeObject *item) {
 	return DeeObject_ContainsObject(self->r_seq, item);
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeat_get(Repeat *__restrict self,
-           DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeat_get(Repeat *self,
+           DeeObject *index_ob) {
 	size_t index;
 	size_t seq_size;
 	if (DeeObject_AsSize(index_ob, &index))
@@ -493,7 +493,7 @@ repeat_get(Repeat *__restrict self,
 	return DeeObject_GetItemIndex(self->r_seq, index);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeat_nsi_getsize(Repeat *__restrict self) {
 	size_t base_size;
 	size_t result;
@@ -507,7 +507,7 @@ repeat_nsi_getsize(Repeat *__restrict self) {
 	return result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeat_nsi_getsize_fast(Repeat *__restrict self) {
 	size_t base_size;
 	size_t result;
@@ -519,7 +519,7 @@ repeat_nsi_getsize_fast(Repeat *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeat_nsi_getitem(Repeat *__restrict self, size_t index) {
 	size_t seq_size;
 	seq_size = DeeObject_Size(self->r_seq);
@@ -685,7 +685,7 @@ INTERN DeeTypeObject SeqRepeat_Type = {
 #endif /* CONFIG_NO_THREADS */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_ctor(RepeatItemIterator *__restrict self) {
 	self->rii_rep = (DREF RepeatItem *)DeeSeq_RepeatItem(Dee_None, 0);
 	if unlikely(!self->rii_rep)
@@ -695,7 +695,7 @@ repeatitemiter_ctor(RepeatItemIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatitemiter_copy(RepeatItemIterator *__restrict self,
                     RepeatItemIterator *__restrict other) {
 	self->rii_num = REPEATITEMPITER_READ_NUM(other);
@@ -705,7 +705,7 @@ repeatitemiter_copy(RepeatItemIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatitemiter_deep(RepeatItemIterator *__restrict self,
                     RepeatItemIterator *__restrict other) {
 	self->rii_num = REPEATITEMPITER_READ_NUM(other);
@@ -720,7 +720,7 @@ err:
 
 PRIVATE int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqItemRepeatIterator", &self->rii_rep))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->rii_rep, &SeqItemRepeat_Type))
@@ -733,19 +733,19 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 repeatitemiter_fini(RepeatItemIterator *__restrict self) {
 	Dee_Decref(self->rii_rep);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 repeatitemiter_visit(RepeatItemIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->rii_rep);
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitemiter_eq(RepeatItemIterator *__restrict self,
-                  RepeatItemIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitemiter_eq(RepeatItemIterator *self,
+                  RepeatItemIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
 		goto err;
 	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
@@ -755,9 +755,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitemiter_ne(RepeatItemIterator *__restrict self,
-                  RepeatItemIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitemiter_ne(RepeatItemIterator *self,
+                  RepeatItemIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
 		goto err;
 	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
@@ -767,9 +767,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitemiter_lo(RepeatItemIterator *__restrict self,
-                  RepeatItemIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitemiter_lo(RepeatItemIterator *self,
+                  RepeatItemIterator *other) {
 	size_t my_num, ot_num;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
 		goto err;
@@ -782,9 +782,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitemiter_le(RepeatItemIterator *__restrict self,
-                  RepeatItemIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitemiter_le(RepeatItemIterator *self,
+                  RepeatItemIterator *other) {
 	size_t my_num, ot_num;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
 		goto err;
@@ -797,9 +797,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitemiter_gr(RepeatItemIterator *__restrict self,
-                  RepeatItemIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitemiter_gr(RepeatItemIterator *self,
+                  RepeatItemIterator *other) {
 	size_t my_num, ot_num;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
 		goto err;
@@ -812,9 +812,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitemiter_ge(RepeatItemIterator *__restrict self,
-                  RepeatItemIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitemiter_ge(RepeatItemIterator *self,
+                  RepeatItemIterator *other) {
 	size_t my_num, ot_num;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
 		goto err;
@@ -838,7 +838,7 @@ PRIVATE struct type_cmp repeatitemiter_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitemiter_ge
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitemiter_next(RepeatItemIterator *__restrict self) {
 	size_t count;
 #ifndef CONFIG_NO_THREADS
@@ -907,7 +907,7 @@ INTERN DeeTypeObject SeqItemRepeatIterator_Type = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_ctor(RepeatItem *__restrict self) {
 	self->ri_num = 1;
 	self->ri_obj = Dee_None;
@@ -915,7 +915,7 @@ repeatitem_ctor(RepeatItem *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatitem_copy(RepeatItem *__restrict self,
                 RepeatItem *__restrict other) {
 	self->ri_num = other->ri_num;
@@ -924,7 +924,7 @@ repeatitem_copy(RepeatItem *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 repeatitem_deep(RepeatItem *__restrict self,
                 RepeatItem *__restrict other) {
 	self->ri_num = other->ri_num;
@@ -938,7 +938,7 @@ err:
 
 PRIVATE int DCALL
 repeatitem_init(RepeatItem *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+                size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqItemRepeat", &self->ri_obj, &self->ri_num))
 		goto err;
 	if unlikely(!self->ri_num)
@@ -953,12 +953,12 @@ STATIC_ASSERT(COMPILER_OFFSETOF(Repeat,r_seq) == COMPILER_OFFSETOF(RepeatItem,ri
 #define repeatitem_fini  repeat_fini
 #define repeatitem_visit repeat_visit
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_bool(RepeatItem *__restrict self) {
 	return self->ri_num ? 1 : 0;
 }
 
-PRIVATE DREF RepeatItemIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF RepeatItemIterator *DCALL
 repeatitem_iter(RepeatItem *__restrict self) {
 	DREF RepeatItemIterator *result;
 	result = DeeObject_MALLOC(RepeatItemIterator);
@@ -973,20 +973,20 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitem_size(RepeatItem *__restrict self) {
 	return DeeInt_NewSize(self->ri_num);
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitem_contains(RepeatItem *__restrict self,
-                    DeeObject *__restrict item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitem_contains(RepeatItem *self,
+                    DeeObject *item) {
 	return DeeObject_CompareEqObject(self->ri_obj, item);
 }
 
-PRIVATE DREF DeeObject *DCALL
-repeatitem_get(RepeatItem *__restrict self,
-               DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+repeatitem_get(RepeatItem *self,
+               DeeObject *index_ob) {
 	dssize_t index;
 	if (DeeObject_AsSSize(index_ob, &index))
 		return NULL;
@@ -1000,7 +1000,7 @@ repeatitem_get(RepeatItem *__restrict self,
 	return_reference_(self->ri_obj);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 repeatitem_getrange(RepeatItem *__restrict self,
                     DeeObject *__restrict start_ob,
                     DeeObject *__restrict end_ob) {
@@ -1028,19 +1028,19 @@ err:
 }
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeatitem_nsi_getsize(RepeatItem *__restrict self) {
 	if unlikely(self->ri_num == (size_t)-1)
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
 	return self->ri_num;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeatitem_nsi_getsize_fast(RepeatItem *__restrict self) {
 	return self->ri_num;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitem_nsi_getitem(RepeatItem *__restrict self, size_t index) {
 	if unlikely(index >= self->ri_num) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->ri_num);
@@ -1054,7 +1054,7 @@ repeatitem_nsi_getitem_fast(RepeatItem *__restrict self, size_t UNUSED(index)) {
 	return_reference_(self->ri_obj);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitem_nsi_getrange(RepeatItem *__restrict self,
                         dssize_t start,
                         dssize_t end) {
@@ -1072,7 +1072,7 @@ repeatitem_nsi_getrange(RepeatItem *__restrict self,
 	return DeeSeq_RepeatItem(self->ri_obj, (size_t)end);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 repeatitem_nsi_getrange_n(RepeatItem *__restrict self,
                           dssize_t start) {
 	if unlikely(start < 0)
@@ -1220,7 +1220,7 @@ INTERN DeeTypeObject SeqItemRepeat_Type = {
 
 
 /* Construct new repetition-proxy-sequence objects. */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Repeat(DeeObject *__restrict self, size_t count) {
 	DREF Repeat *result;
 	if (!count || DeeFastSeq_GetSize(self) == 0)
@@ -1236,7 +1236,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
 	DREF RepeatItem *result;
 	if (!count)
@@ -1252,7 +1252,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_RepeatItemForever(DeeObject *__restrict item) {
 	/* TODO: Dedicated sequence-proxy type */
 	return DeeSeq_RepeatItem(item, (size_t)-1);

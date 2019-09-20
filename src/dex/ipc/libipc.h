@@ -109,7 +109,7 @@ INTDEF DeeTypeObject DeeProcEnum_Type;
  * @param: dwAttributeType: The attribute that should be accessed (One of `PROCATTR_*').
  * @return: * :             An object encapsulating the value referred to by `dwAttributeId'
  * @return: NULL:           An error occurred. */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nt_GetProcessAttribute(HANDLE *__restrict lphProcess,
                        DWORD dwProcessId,
                        DWORD dwAttributeId);

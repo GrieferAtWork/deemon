@@ -188,7 +188,7 @@ textjumps_add(struct textjumps *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 textjumps_collect(struct textjumps *__restrict self,
                   instruction_t *__restrict instr_start,
                   instruction_t *__restrict instr_end,

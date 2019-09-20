@@ -608,7 +608,7 @@ INTERN DeeDDIObject empty_ddi = {
 	}
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ddi_fini(DeeDDIObject *__restrict self) {
 	ASSERT(self != &empty_ddi);
 	Dee_Free((void *)self->d_strings);
@@ -625,7 +625,7 @@ PRIVATE DREF DeeDDIObject *DCALL ddi_ctor(void) {
 	return_reference_((DREF DeeDDIObject *)&empty_ddi);
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 ddi_hash(DeeDDIObject *__restrict self) {
 	dhash_t result;
 	uint16_t i;
@@ -640,7 +640,7 @@ ddi_hash(DeeDDIObject *__restrict self) {
 	return result;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 ddi_eq_impl(DeeDDIObject *__restrict self,
             DeeDDIObject *__restrict other) {
 	if (self == other)
@@ -671,17 +671,17 @@ nope:
 	return false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ddi_eq(DeeDDIObject *__restrict self,
-       DeeDDIObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ddi_eq(DeeDDIObject *self,
+       DeeDDIObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
 		return NULL;
 	return_bool(ddi_eq_impl(self, other));
 }
 
-PRIVATE DREF DeeObject *DCALL
-ddi_ne(DeeDDIObject *__restrict self,
-       DeeDDIObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ddi_ne(DeeDDIObject *self,
+       DeeDDIObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
 		return NULL;
 	return_bool(!ddi_eq_impl(self, other));

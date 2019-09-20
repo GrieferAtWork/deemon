@@ -47,7 +47,7 @@ INTERN struct parser_errors current_parser_errors;
 INTDEF char const *TPPCALL find_most_likely_warning(char const *__restrict name);
 INTDEF char const *TPPCALL find_most_likely_extension(char const *__restrict name);
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_symbol_declaration(struct unicode_printer *__restrict printer,
                          struct symbol *__restrict sym) {
 	dssize_t temp, result;
@@ -72,7 +72,7 @@ err:
 	return result;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
 print_warning_message(struct unicode_printer *__restrict _printer,
                       int _wnum, va_list _args) {
 	dssize_t _warnf_temp, _warnf_result = 0;
@@ -186,7 +186,7 @@ parser_errors_fini(struct parser_errors *__restrict self) {
 	Dee_Free(self->pe_errorv);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 parser_throw(struct compiler_error_object *__restrict error) {
 	ASSERT_OBJECT_TYPE(error, &DeeError_CompilerError);
 	/* Special case: If TPP was started using `-E' or `-F', then it is
@@ -563,7 +563,7 @@ err:
 INTDEF DeeTypeObject *DCALL
 get_warning_error_class(int wnum);
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 tpp_is_reachable_file(struct TPPFile *__restrict file) {
 	struct TPPFile *iter = token.t_file;
 	/* Make sure that the given file is still valid. */

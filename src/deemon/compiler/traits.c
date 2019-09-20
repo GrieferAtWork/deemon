@@ -26,7 +26,7 @@
 
 DECL_BEGIN
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 ast_chk_multiple_hasexpand(struct ast *__restrict self) {
 	struct ast **iter, **end;
 	ASSERT_AST(self);

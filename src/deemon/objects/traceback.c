@@ -63,7 +63,7 @@ INTERN struct empty_traceback_object empty_traceback = {
 
 
 
-INTERN DREF DeeTracebackObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct thread_object *__restrict thread) {
 	DREF DeeTracebackObject *result;
 	ASSERT(thread == DeeThread_Self());
@@ -154,7 +154,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 	return result;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 DeeTraceback_AddFrame(DeeTracebackObject *__restrict self,
                       struct code_frame *__restrict frame,
                       uint16_t frame_id) {
@@ -214,7 +214,7 @@ INTDEF DeeTypeObject DeeTracebackIterator_Type;
 #define WRITE_NEXT(x, y) ATOMIC_WRITE((x)->ti_next, y)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_ctor(TraceIterator *__restrict self) {
 	self->ti_trace = (DREF DeeTracebackObject *)&empty_traceback;
 	self->ti_next  = self->ti_trace->tb_frames;
@@ -222,7 +222,7 @@ traceiter_ctor(TraceIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 traceiter_copy(TraceIterator *__restrict self,
                TraceIterator *__restrict other) {
 	self->ti_trace = other->ti_trace;
@@ -231,7 +231,7 @@ traceiter_copy(TraceIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 traceiter_deep(TraceIterator *__restrict self,
                TraceIterator *__restrict other) {
 	size_t index;
@@ -248,7 +248,7 @@ err:
 
 PRIVATE int DCALL
 traceiter_init(TraceIterator *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+               size_t argc, DeeObject **argv) {
 	size_t index = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_TracebackIterator",
 	                  &self->ti_trace, &index))
@@ -265,22 +265,22 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 traceiter_fini(TraceIterator *__restrict self) {
 	Dee_Decref(self->ti_trace);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 traceiter_visit(TraceIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ti_trace);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_bool(TraceIterator *__restrict self) {
 	return READ_NEXT(self) >= self->ti_trace->tb_frames;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceiter_next(TraceIterator *__restrict self) {
 	struct code_frame *result_frame;
 #ifdef CONFIG_NO_THREADS
@@ -307,18 +307,18 @@ PRIVATE struct type_member traceiter_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeTracebackObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 traceiter_nii_getseq(TraceIterator *__restrict self) {
 	return_reference_(self->ti_trace);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 traceiter_nii_getindex(TraceIterator *__restrict self) {
 	return (size_t)((self->ti_trace->tb_frames + (self->ti_trace->tb_numframes - 1)) -
 	                READ_NEXT(self));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_nii_setindex(TraceIterator *__restrict self, size_t index) {
 	if (index > self->ti_trace->tb_numframes)
 		index = self->ti_trace->tb_numframes;
@@ -328,7 +328,7 @@ traceiter_nii_setindex(TraceIterator *__restrict self, size_t index) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_nii_rewind(TraceIterator *__restrict self) {
 	WRITE_NEXT(self,
 	           self->ti_trace->tb_frames +
@@ -336,7 +336,7 @@ traceiter_nii_rewind(TraceIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceiter_nii_peek(TraceIterator *__restrict self) {
 	struct code_frame *result_frame;
 	result_frame = READ_NEXT(self);
@@ -349,14 +349,14 @@ traceiter_nii_peek(TraceIterator *__restrict self) {
 	                                     &self->ti_trace->tb_lock);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_nii_hasprev(TraceIterator *__restrict self) {
 	return (READ_NEXT(self) <
 	        (self->ti_trace->tb_frames +
 	         (self->ti_trace->tb_numframes - 1)));
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_nii_next(TraceIterator *__restrict self) {
 	struct code_frame *result_frame;
 #ifdef CONFIG_NO_THREADS
@@ -475,7 +475,7 @@ PRIVATE DREF DeeTracebackObject *DCALL traceback_new(void) {
 	return DeeTraceback_New(DeeThread_Self());
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 traceback_fini(DeeTracebackObject *__restrict self) {
 	struct code_frame *frame;
 	size_t i, frame_index;
@@ -511,7 +511,7 @@ traceback_fini(DeeTracebackObject *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 traceback_visit(DeeTracebackObject *__restrict self,
                 dvisit_t proc, void *arg) {
 	struct code_frame *iter, *end;
@@ -545,7 +545,7 @@ traceback_visit(DeeTracebackObject *__restrict self,
 	rwlock_endread(&self->tb_lock);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 traceback_clear(DeeTracebackObject *__restrict self) {
 	DREF DeeObject *decref_later_buffer[64], **decref_later;
 	struct code_frame *iter, *end;
@@ -638,7 +638,7 @@ clear_buffer:
 	decref_later = decref_later_buffer;
 }
 
-PRIVATE DREF TraceIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF TraceIterator *DCALL
 traceback_iter(DeeTracebackObject *__restrict self) {
 	TraceIterator *result;
 	/* Create a new traceback iterator object. */
@@ -653,11 +653,11 @@ done:
 	return result;
 }
 
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_ddi(struct ascii_printer *__restrict printer,
           DeeCodeObject *__restrict code, code_addr_t ip);
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceback_repr(DeeTracebackObject *__restrict self) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	uint16_t i                   = self->tb_numframes;
@@ -728,9 +728,8 @@ PRIVATE struct type_gc traceback_gc = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-traceback_sizeof(DeeTracebackObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+traceback_sizeof(DeeTracebackObject *self, size_t argc, DeeObject **argv) {
 	size_t result;
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))

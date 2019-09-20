@@ -52,7 +52,7 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 #define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(name, func, IF_SUFFIX, is_suffix)  \
 	PRIVATE DREF DeeObject *DCALL                                               \
 	parser_##name(DeeCompilerWrapperObject *__restrict self,                    \
-	              size_t argc, DeeObject **__restrict argv,                     \
+	              size_t argc, DeeObject **argv,                     \
 	              DeeObject *kw) {                                              \
 		DREF DeeObject *result = NULL;                                          \
 		DeeCompilerAstObject *head;                                             \
@@ -93,7 +93,7 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 #define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                  \
 	PRIVATE DREF DeeObject *DCALL                                                             \
 	parser_##name(DeeCompilerWrapperObject *__restrict self,                                  \
-	              size_t argc, DeeObject **__restrict argv,                                   \
+	              size_t argc, DeeObject **argv,                                   \
 	              DeeObject *kw) {                                                            \
 		DREF DeeObject *result = NULL;                                                        \
 		DREF struct ast *result_ast;                                                          \
@@ -160,10 +160,9 @@ DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(parse_seqtail, ast_parse_brace_list, IF_TRU
 #undef DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION
 
 
-PRIVATE DREF DeeObject *DCALL
-parser_parse_stmt(DeeCompilerWrapperObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv,
-                  DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+parser_parse_stmt(DeeCompilerWrapperObject *self, size_t argc,
+                  DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	bool nonblocking       = false;
 	DREF struct ast *result_ast;
@@ -188,10 +187,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-parser_parse_allstmt(DeeCompilerWrapperObject *__restrict self,
-                     size_t argc, DeeObject **__restrict argv,
-                     DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+parser_parse_allstmt(DeeCompilerWrapperObject *self, size_t argc,
+                     DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeObject *end         = Dee_EmptyString;
 	DREF struct ast *result_ast;
@@ -424,7 +422,7 @@ PRIVATE struct type_method parser_methods[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 parser_getlfstmt(DeeCompilerWrapperObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->cw_compiler);
@@ -434,7 +432,7 @@ parser_getlfstmt(DeeCompilerWrapperObject *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 parser_setlfstmt(DeeCompilerWrapperObject *__restrict self,
                  DeeObject *__restrict value) {
 	int newval = DeeObject_Bool(value);

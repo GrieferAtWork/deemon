@@ -44,7 +44,7 @@ DECL_BEGIN
 #define RVI_GETPOS(x) ATOMIC_READ((x)->rvi_pos)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rveciter_copy(RefVectorIterator *__restrict self,
               RefVectorIterator *__restrict other) {
 	self->rvi_vector = other->rvi_vector;
@@ -54,7 +54,7 @@ rveciter_copy(RefVectorIterator *__restrict self,
 
 PRIVATE int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_RefVectorIterator", &self->rvi_vector) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->rvi_vector, &RefVector_Type))
 		return -1;
@@ -63,17 +63,17 @@ rveciter_ctor(RefVectorIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 rveciter_fini(RefVectorIterator *__restrict self) {
 	Dee_Decref(self->rvi_vector);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 rveciter_visit(RefVectorIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->rvi_vector);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rveciter_next(RefVectorIterator *__restrict self) {
 	DREF DeeObject **presult, *result;
 	RefVector *vector = self->rvi_vector;
@@ -107,7 +107,7 @@ rveciter_next(RefVectorIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rveciter_bool(RefVectorIterator *__restrict self) {
 	RefVector *vector = self->rvi_vector;
 	if (RVI_GETPOS(self) >= vector->rv_vector + vector->rv_length)
@@ -115,27 +115,27 @@ rveciter_bool(RefVectorIterator *__restrict self) {
 	return 1;
 }
 
-PRIVATE DREF DeeObject *DCALL
-rveciter_eq(RefVectorIterator *__restrict self,
-            RefVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rveciter_eq(RefVectorIterator *self,
+            RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector &&
 	             RVI_GETPOS(self) == RVI_GETPOS(other));
 }
 
-PRIVATE DREF DeeObject *DCALL
-rveciter_ne(RefVectorIterator *__restrict self,
-            RefVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rveciter_ne(RefVectorIterator *self,
+            RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector != other->rvi_vector ||
 	             RVI_GETPOS(self) != RVI_GETPOS(other));
 }
 
-PRIVATE DREF DeeObject *DCALL
-rveciter_lo(RefVectorIterator *__restrict self,
-            RefVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rveciter_lo(RefVectorIterator *self,
+            RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
@@ -143,9 +143,9 @@ rveciter_lo(RefVectorIterator *__restrict self,
 	             : self->rvi_vector < other->rvi_vector);
 }
 
-PRIVATE DREF DeeObject *DCALL
-rveciter_le(RefVectorIterator *__restrict self,
-            RefVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rveciter_le(RefVectorIterator *self,
+            RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
@@ -153,9 +153,9 @@ rveciter_le(RefVectorIterator *__restrict self,
 	             : self->rvi_vector <= other->rvi_vector);
 }
 
-PRIVATE DREF DeeObject *DCALL
-rveciter_gr(RefVectorIterator *__restrict self,
-            RefVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rveciter_gr(RefVectorIterator *self,
+            RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
@@ -163,9 +163,9 @@ rveciter_gr(RefVectorIterator *__restrict self,
 	             : self->rvi_vector > other->rvi_vector);
 }
 
-PRIVATE DREF DeeObject *DCALL
-rveciter_ge(RefVectorIterator *__restrict self,
-            RefVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rveciter_ge(RefVectorIterator *self,
+            RefVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
@@ -234,22 +234,22 @@ INTERN DeeTypeObject RefVectorIterator_Type = {
 };
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 rvec_fini(RefVector *__restrict self) {
 	Dee_Decref(self->rv_owner);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 rvec_visit(RefVector *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->rv_owner);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_bool(RefVector *__restrict self) {
 	return self->rv_length != 0;
 }
 
-PRIVATE DREF RefVectorIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF RefVectorIterator *DCALL
 rvec_iter(RefVector *__restrict self) {
 	DREF RefVectorIterator *result;
 	result = DeeObject_MALLOC(RefVectorIterator);
@@ -263,14 +263,14 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rvec_size(RefVector *__restrict self) {
 	return DeeInt_NewSize(self->rv_length);
 }
 
-PRIVATE DREF DeeObject *DCALL
-rvec_contains(RefVector *__restrict self,
-              DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rvec_contains(RefVector *self,
+              DeeObject *other) {
 	size_t index;
 	int temp;
 	for (index = 0; index < self->rv_length; ++index) {
@@ -298,9 +298,9 @@ rvec_contains(RefVector *__restrict self,
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-rvec_getitem(RefVector *__restrict self,
-             DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rvec_getitem(RefVector *self,
+             DeeObject *index_ob) {
 	size_t index;
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
@@ -378,20 +378,20 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rvec_delitem(RefVector *__restrict self,
              DeeObject *__restrict index_ob) {
 	return rvec_setitem(self, index_ob, NULL);
 }
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 rvec_nsi_getsize(RefVector *__restrict self) {
 	ASSERT(self->rv_length != (size_t)-1);
 	return self->rv_length;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->rv_length) {
@@ -419,7 +419,7 @@ rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
@@ -455,7 +455,7 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
 	ASSERT(index < self->rv_length);
@@ -518,7 +518,7 @@ rvec_nsi_setitem(RefVector *__restrict self, size_t index,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->rv_length);
@@ -788,7 +788,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_nsi_delrange(RefVector *__restrict self,
                   dssize_t start, dssize_t end) {
 	size_t i;
@@ -805,7 +805,7 @@ rvec_nsi_delrange(RefVector *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_nsi_delrange_n(RefVector *__restrict self,
                     dssize_t start) {
 	size_t i, end = self->rv_length;
@@ -893,7 +893,7 @@ rvec_nsi_setrange_n(RefVector *__restrict self,
 	                         values);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 rvec_delrange(RefVector *__restrict self,
               DeeObject *__restrict start,
               DeeObject *__restrict end) {
@@ -910,7 +910,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 rvec_setrange(RefVector *__restrict self,
               DeeObject *__restrict start,
               DeeObject *__restrict end,
@@ -985,7 +985,7 @@ PRIVATE struct type_member rvec_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rvec_get_writable(RefVector *__restrict self) {
 #ifndef CONFIG_NO_THREADS
  return_bool_(self->rv_plock != NULL);
@@ -1001,7 +1001,7 @@ PRIVATE struct type_getset rvec_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_init(RefVector *__restrict self) {
 	self->rv_owner = Dee_None;
 	Dee_Incref(Dee_None);
@@ -1015,7 +1015,7 @@ rvec_init(RefVector *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 rvec_copy(RefVector *__restrict self,
           RefVector *__restrict other) {
 	self->rv_owner = other->rv_owner;
@@ -1107,7 +1107,7 @@ done:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sveciter_ctor(SharedVectorIterator *__restrict self) {
 	self->si_seq = (DREF SharedVector *)DeeObject_NewDefault(&SharedVector_Type);
 	if unlikely(!self->si_seq)
@@ -1120,7 +1120,7 @@ err:
 
 PRIVATE int DCALL
 sveciter_init(SharedVectorIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedVectorIterator", &self->si_seq))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->si_seq, &SharedVector_Type))
@@ -1132,17 +1132,17 @@ err:
 	return -1;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 sveciter_fini(SharedVectorIterator *__restrict self) {
 	Dee_Decref(self->si_seq);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 sveciter_visit(SharedVectorIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_seq);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sveciter_next(SharedVectorIterator *__restrict self) {
 	DREF DeeObject *result = ITER_DONE;
 	SharedVector *vec      = self->si_seq;
@@ -1173,7 +1173,7 @@ sveciter_next(SharedVectorIterator *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 sveciter_bool(SharedVectorIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->si_index < self->si_seq->sv_length;
@@ -1183,7 +1183,7 @@ sveciter_bool(SharedVectorIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_copy(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other) {
 #ifdef CONFIG_NO_THREADS
@@ -1196,7 +1196,7 @@ sveciter_copy(SharedVectorIterator *__restrict self,
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_deep(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other) {
 	self->si_seq = (DREF SharedVector *)DeeObject_DeepCopy((DeeObject *)other->si_seq);
@@ -1224,9 +1224,9 @@ PRIVATE struct type_member sveciter_members[] = {
 #define READ_INDEX(x) ATOMIC_READ((x)->si_index)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE DREF DeeObject *DCALL
-sveciter_eq(SharedVectorIterator *__restrict self,
-            SharedVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sveciter_eq(SharedVectorIterator *self,
+            SharedVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool_(self->si_seq == other->si_seq &&
@@ -1235,9 +1235,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sveciter_ne(SharedVectorIterator *__restrict self,
-            SharedVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sveciter_ne(SharedVectorIterator *self,
+            SharedVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq != other->si_seq ||
@@ -1246,9 +1246,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sveciter_lo(SharedVectorIterator *__restrict self,
-            SharedVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sveciter_lo(SharedVectorIterator *self,
+            SharedVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
@@ -1258,9 +1258,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sveciter_le(SharedVectorIterator *__restrict self,
-            SharedVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sveciter_le(SharedVectorIterator *self,
+            SharedVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
@@ -1270,9 +1270,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sveciter_gr(SharedVectorIterator *__restrict self,
-            SharedVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sveciter_gr(SharedVectorIterator *self,
+            SharedVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
@@ -1282,9 +1282,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sveciter_ge(SharedVectorIterator *__restrict self,
-            SharedVectorIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sveciter_ge(SharedVectorIterator *self,
+            SharedVectorIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
@@ -1351,7 +1351,7 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 svec_fini(SharedVector *__restrict self) {
 	DREF DeeObject **begin, **iter;
 	iter = (begin = self->sv_vector) + self->sv_length;
@@ -1360,7 +1360,7 @@ svec_fini(SharedVector *__restrict self) {
 	Dee_Free(begin);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 svec_visit(SharedVector *__restrict self, dvisit_t proc, void *arg) {
 	DREF DeeObject **begin, **iter;
 	iter = (begin = self->sv_vector) + self->sv_length;
@@ -1369,7 +1369,7 @@ svec_visit(SharedVector *__restrict self, dvisit_t proc, void *arg) {
 	}
 }
 
-PRIVATE DREF SharedVectorIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SharedVectorIterator *DCALL
 svec_iter(SharedVector *__restrict self) {
 	DREF SharedVectorIterator *result;
 	result = DeeObject_MALLOC(SharedVectorIterator);
@@ -1383,7 +1383,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_size(SharedVector *__restrict self) {
 #ifdef CONFIG_NO_THREADS
  size_t result = self->sv_length;
@@ -1393,9 +1393,9 @@ svec_size(SharedVector *__restrict self) {
  return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-svec_contains(SharedVector *__restrict self,
-              DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+svec_contains(SharedVector *self,
+              DeeObject *other) {
 	size_t index;
 	int temp;
 	rwlock_read(&self->sv_lock);
@@ -1419,9 +1419,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-svec_getitem(SharedVector *__restrict self,
-             DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+svec_getitem(SharedVector *self,
+             DeeObject *index_ob) {
 	size_t index;
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
@@ -1442,7 +1442,7 @@ err:
 }
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 svec_nsi_getsize(SharedVector *__restrict self) {
 	ASSERT(self->sv_length != (size_t)-1);
 #ifdef CONFIG_NO_THREADS
@@ -1452,7 +1452,7 @@ svec_nsi_getsize(SharedVector *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	rwlock_read(&self->sv_lock);
@@ -1468,7 +1468,7 @@ svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	rwlock_read(&self->sv_lock);
@@ -1593,7 +1593,7 @@ PRIVATE struct type_member svec_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 svec_ctor(SharedVector *__restrict self) {
 	rwlock_init(&self->sv_lock);
 	self->sv_length = 0;
@@ -1601,7 +1601,7 @@ svec_ctor(SharedVector *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 svec_copy(SharedVector *__restrict self,
           SharedVector *__restrict other) {
 	size_t i;
@@ -1626,7 +1626,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 svec_deep(SharedVector *__restrict self,
           SharedVector *__restrict other) {
 	size_t i;
@@ -1645,7 +1645,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 svec_bool(SharedVector *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->sv_length != 0;

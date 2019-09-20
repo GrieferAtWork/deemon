@@ -68,20 +68,20 @@
 
 DECL_BEGIN
 
-INTDEF DREF DeeObject *DCALL nt_GetEnvironmentVariableA(char const *__restrict name);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL nt_GetEnvironmentVariableA(char const *__restrict name);
 INTDEF DREF DeeObject *DCALL nt_GetTempPath(void);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully changed working directories.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL nt_SetCurrentDirectory(DeeObject *__restrict lpPathName);
+INTDEF WUNUSED NONNULL((1)) int DCALL nt_SetCurrentDirectory(DeeObject *__restrict lpPathName);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
                        GET_FILEEX_INFO_LEVELS fInfoLevelId,
                        LPVOID lpFileInformation);
@@ -90,7 +90,7 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
  * @return:  0: Successfully retrieved attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_GetFileAttributes(DeeObject *__restrict lpFileName,
                      DWORD *__restrict presult);
 
@@ -98,7 +98,7 @@ nt_GetFileAttributes(DeeObject *__restrict lpFileName,
  * @return:  0: Successfully set attributes.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_SetFileAttributes(DeeObject *__restrict lpFileName,
                      DWORD dwFileAttributes);
 
@@ -106,7 +106,7 @@ nt_SetFileAttributes(DeeObject *__restrict lpFileName,
  * @return:  0: Successfully created the new directory.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_CreateDirectory(DeeObject *__restrict lpPathName,
                    LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 
@@ -114,21 +114,21 @@ nt_CreateDirectory(DeeObject *__restrict lpPathName,
  * @return:  0: Successfully removed the given directory.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_RemoveDirectory(DeeObject *__restrict lpPathName);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully removed the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 nt_DeleteFile(DeeObject *__restrict lpFileName);
 
 /* Work around a problem with long path names.
  * @return:  0: Successfully moved the given file.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_MoveFile(DeeObject *__restrict lpExistingFileName,
             DeeObject *__restrict lpNewFileName);
 
@@ -136,7 +136,7 @@ nt_MoveFile(DeeObject *__restrict lpExistingFileName,
  * @return:  0: Successfully created the hardlink.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 nt_CreateHardLink(DeeObject *__restrict lpFileName,
                   DeeObject *__restrict lpExistingFileName,
                   LPSECURITY_ATTRIBUTES lpSecurityAttributes);
@@ -697,7 +697,7 @@ typedef struct {
 	LPWCH e_iter;    /* [1..1] Next environment string (Pointed to an empty string when done). */
 } Env;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 env_init(Env *__restrict self) {
 again:
 	DBG_ALIGNMENT_DISABLE();
@@ -712,20 +712,20 @@ again:
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 env_fini(Env *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	FreeEnvironmentStringsW(self->e_strings);
 	DBG_ALIGNMENT_ENABLE();
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 env_bool(Env *__restrict self) {
 	return self->e_iter[0] != 0;
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 env_next(Env *__restrict self) {
 	LPWCH result_string, next_string;
 	DREF DeeObject *name, *value, *result;
@@ -774,7 +774,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_key(DeeObject *__restrict self) {
 	LPWCH result_string, next_string;
 	Env *me = (Env *)self;
@@ -806,7 +806,7 @@ enviterator_next_key(DeeObject *__restrict self) {
 	                         STRING_ERROR_FREPLAC);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_value(DeeObject *__restrict self) {
 	LPWCH result_string, next_string;
 	Env *me = (Env *)self;
@@ -891,14 +891,14 @@ INTERN DeeTypeObject DeeEnvIterator_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 err_unknown_env_var(DeeObject *__restrict name) {
 	DeeError_Throwf(&DeeError_KeyError,
 	                "Unknown environment variable `%k'",
 	                name);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 fs_hasenv(/*String*/ DeeObject *__restrict name) {
 	LPWSTR wname;
 	bool result;
@@ -913,7 +913,7 @@ fs_hasenv(/*String*/ DeeObject *__restrict name) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_getenv(DeeObject *__restrict name, bool try_get) {
 	LPWSTR buffer, new_buffer;
 	DREF DeeObject *result;
@@ -961,7 +961,7 @@ err:
 	return NULL;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_wprintenv(uint16_t const *__restrict name,
              struct unicode_printer *__restrict printer,
              bool try_get) {
@@ -1003,7 +1003,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_printenv(/*utf-8*/ char const *__restrict name,
             struct unicode_printer *__restrict printer,
             bool try_get) {
@@ -1056,7 +1056,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_delenv(DeeObject *__restrict name) {
 	LPWSTR wname;
 	wname = (LPWSTR)DeeString_AsWide(name);
@@ -1074,7 +1074,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_setenv(DeeObject *__restrict name,
           DeeObject *__restrict value) {
 	LPWSTR wname, wvalue;
@@ -1311,7 +1311,7 @@ PRIVATE ATTR_COLD int DCALL err_getcwd(DWORD dwError) {
 	                          "Failed to retrieve the current working directory");
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_printcwd(struct unicode_printer *__restrict printer) {
 	LPWSTR buffer;
 	DWORD new_bufsize, bufsize = PATH_MAX;
@@ -1402,7 +1402,7 @@ err:
 
 
 
-INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
+INTERN WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path) {
 	int result;
 	if (DeeThread_CheckInterrupt())
 		goto err;
@@ -1560,7 +1560,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool bTryGet) {
 	LPGETPROFILESDIRECTORYW my_GetProfilesDirectoryW;
 	LPWSTR wBuffer;
@@ -1621,7 +1621,7 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict printer, bool bTryGet) {
 	LPGETDEFAULTUSERPROFILEDIRECTORYW my_GetDefaultUserProfileDirectoryW;
 	LPWSTR wBuffer;
@@ -1681,7 +1681,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer, bool bTryGet) {
 	LPGETALLUSERSPROFILEDIRECTORYW my_GetAllUsersProfileDirectoryW;
 	LPWSTR wBuffer;
@@ -1764,7 +1764,7 @@ nt_printhome_process(struct unicode_printer *__restrict printer, void *hProcess,
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_printhome(struct unicode_printer *__restrict printer, bool try_get) {
 	PRIVATE uint16_t const var_HOME[]        = { 'H', 'O', 'M', 'E', 0 };
 	PRIVATE uint16_t const var_USERPROFILE[] = { 'U', 'S', 'E', 'R', 'P', 'R', 'O', 'F', 'I', 'L', 'E', 0 };
@@ -1830,7 +1830,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 	DWORD dwBufsize = 64 + 1;
 	LPWSTR wBuffer  = unicode_printer_alloc_wchar(printer, dwBufsize - 1);
@@ -1900,7 +1900,7 @@ struct user_object {
 
 PRIVATE int DCALL
 user_init(struct user_object *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DREF DeeObject *name_or_id = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:user", &name_or_id))
 		goto err;
@@ -1990,7 +1990,7 @@ user_fini(struct user_object *__restrict self) {
 	LocalFree(self->u_sd);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 user_get_name_and_domain(struct user_object *__restrict self,
                          LPWSTR *__restrict pname,
                          LPWSTR *__restrict pdomain,
@@ -2055,7 +2055,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 user_get_name(struct user_object *__restrict self) {
 	LPWSTR name, domain;
 	SID_NAME_USE use;
@@ -2067,7 +2067,7 @@ user_get_name(struct user_object *__restrict self) {
 	return DeeString_PackWideBuffer(name, STRING_ERROR_FIGNORE);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 user_get_domain(struct user_object *__restrict self) {
 	LPWSTR name, domain;
 	SID_NAME_USE use;
@@ -2079,7 +2079,7 @@ user_get_domain(struct user_object *__restrict self) {
 	return DeeString_PackWideBuffer(domain, STRING_ERROR_FIGNORE);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 user_get_home(struct user_object *__restrict self) {
 	LPWSTR name, domain;
 	SID_NAME_USE use;
@@ -2314,7 +2314,7 @@ PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_nttype_info(void) {
  * @return:  0: Successfully did a stat() in the given `path'.
  * @return: -1: The state failed and an error was thrown.
  * @param: flags: Set of `DOSTAT_F*' */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Stat_Init(Stat *__restrict self,
           DeeObject *__restrict path,
           uint16_t flags) {
@@ -2522,7 +2522,7 @@ err:
 
 PRIVATE int DCALL
 stat_ctor(DeeStatObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:stat", &path))
 		return -1;
@@ -2531,14 +2531,14 @@ stat_ctor(DeeStatObject *__restrict self,
 
 PRIVATE int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:lstat", &path))
 		return -1;
 	return Stat_Init(&self->st_stat, path, DOSTAT_FLSTAT);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 stat_fini(DeeStatObject *__restrict self) {
 	Stat_Fini(&self->st_stat);
 }
@@ -2550,7 +2550,7 @@ stat_fini(DeeStatObject *__restrict self) {
 #endif /* !CONFIG_BIG_ENDIAN */
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTime_NewFiletime(FILETIME const *__restrict val) {
 	uint64_t result;
 	result = (FILETIME_GET64(*(uint64_t *)val) /
@@ -2560,7 +2560,7 @@ DeeTime_NewFiletime(FILETIME const *__restrict val) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_dev(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOVOLSERIAL) {
 		err_no_dev_info();
@@ -2569,7 +2569,7 @@ stat_get_dev(DeeStatObject *__restrict self) {
 	return DeeInt_NewU32((uint32_t)self->st_stat.s_info.dwVolumeSerialNumber);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ino(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOFILEID) {
 		err_no_ino_info();
@@ -2579,7 +2579,7 @@ stat_get_ino(DeeStatObject *__restrict self) {
 	                     ((uint64_t)self->st_stat.s_info.nFileIndexLow));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mode(DeeStatObject *__restrict self) {
 	uint32_t result = 0222 | 0111; /* XXX: executable should depend on extension. */
 	if (self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
@@ -2620,7 +2620,7 @@ stat_get_mode(DeeStatObject *__restrict self) {
 	return DeeInt_NewU32(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_nlink(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNONLINK) {
 		err_no_link_info();
@@ -2629,7 +2629,7 @@ stat_get_nlink(DeeStatObject *__restrict self) {
 	return DeeInt_NewU32(self->st_stat.s_info.nNumberOfLinks);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_uid(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) {
 		err_no_uid_info();
@@ -2638,7 +2638,7 @@ stat_get_uid(DeeStatObject *__restrict self) {
 	return nt_NewUserDescriptorFromHandleOwner(self->st_stat.s_hand, SE_FILE_OBJECT);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_gid(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) {
 		err_no_gid_info();
@@ -2653,7 +2653,7 @@ stat_get_rdev(DeeStatObject *__restrict UNUSED(self)) {
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_size(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOSIZE) {
 		err_no_size_info();
@@ -2663,7 +2663,7 @@ stat_get_size(DeeStatObject *__restrict self) {
 	                     ((uint64_t)self->st_stat.s_info.nFileSizeLow));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_atime(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
 		err_no_time_info();
@@ -2672,7 +2672,7 @@ stat_get_atime(DeeStatObject *__restrict self) {
 	return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastAccessTime);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mtime(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
 		err_no_time_info();
@@ -2681,7 +2681,7 @@ stat_get_mtime(DeeStatObject *__restrict self) {
 	return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastWriteTime);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
 	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
 		err_no_time_info();
@@ -2690,12 +2690,12 @@ stat_get_ctime(DeeStatObject *__restrict self) {
 	return DeeTime_NewFiletime(&self->st_stat.s_info.ftCreationTime);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_getntattr_np(DeeStatObject *__restrict self) {
 	return DeeInt_NewU32(self->st_stat.s_info.dwFileAttributes);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_getnttype_np(DeeStatObject *__restrict self) {
 	DWORD result = stat_get_nttype(&self->st_stat, false);
 	if unlikely(result == FILE_TYPE_UNKNOWN)
@@ -2730,9 +2730,8 @@ PRIVATE struct type_getset stat_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
-stat_isdir(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isdir(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isdir"))
 		return NULL;
 	if (self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
@@ -2740,9 +2739,8 @@ stat_isdir(DeeStatObject *__restrict self,
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_ischr(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_ischr(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":ischr"))
 		return NULL;
 	if (!(self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
@@ -2750,9 +2748,8 @@ stat_ischr(DeeStatObject *__restrict self,
 	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_CHAR);
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_isblk(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isblk(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isblk"))
 		return NULL;
 	if (!(self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
@@ -2760,9 +2757,8 @@ stat_isblk(DeeStatObject *__restrict self,
 	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_DISK);
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_isreg(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isreg(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isreg"))
 		return NULL;
 	return_bool(!(self->st_stat.s_info.dwFileAttributes &
@@ -2770,25 +2766,22 @@ stat_isreg(DeeStatObject *__restrict self,
 	               FILE_ATTRIBUTE_REPARSE_POINT)));
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_isfifo(DeeStatObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isfifo(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isfifo"))
 		return NULL;
 	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_PIPE);
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_islnk(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_islnk(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":islnk"))
 		return NULL;
 	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_PIPE);
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_issock(DeeStatObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_issock(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":issock"))
 		return NULL;
 	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_REMOTE);
@@ -2805,9 +2798,8 @@ PRIVATE struct type_method stat_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_exists(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_exists(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -2833,9 +2825,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isdir(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isdir(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -2863,9 +2854,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_ischr(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_ischr(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -2889,9 +2879,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isblk(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isblk(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -2915,9 +2904,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isreg(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isreg(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -2953,9 +2941,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isfifo(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isfifo(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -2977,7 +2964,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 stat_class_islnk(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -3006,9 +2993,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_issock(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_issock(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -3028,9 +3014,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_ishidden(DeeObject *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_ishidden(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	Stat buf;
@@ -3067,7 +3052,7 @@ err:
 }
 
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_exe_filename(DeeObject *__restrict path) {
 	DREF DeeObject *pathext_ob;
 	bool result;
@@ -3113,7 +3098,7 @@ is_exe_filename(DeeObject *__restrict path) {
 
 PRIVATE DREF DeeObject *DCALL
 stat_class_isexe(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	bool result;
 	if (DeeArg_Unpack(argc, argv, "o:isexe", &path))
@@ -3253,7 +3238,7 @@ INTERN DeeTypeObject DeeLStat_Type = {
  * @return:  1: Successfully written the handle to `phandle',
  *              but the caller must CloseHandle() it when they are done
  * @return: -1: An error occurred. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 get_pathhandle_wrattr(DeeObject *__restrict path,
                       HANDLE *__restrict phandle) {
 	int result;
@@ -3308,7 +3293,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_GetFileTime(DeeObject *__restrict lpTime,
                FILETIME *__restrict lpFileTime) {
 	uint64_t value;
@@ -3331,7 +3316,7 @@ err:
 }
 
 /* Filesystem write operations. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
           DeeObject *__restrict mtime, DeeObject *__restrict ctime) {
 	int result;
@@ -3386,7 +3371,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_chmod(DeeObject *__restrict path,
          DeeObject *__restrict mode) {
 	uint16_t mask, flags;
@@ -3457,13 +3442,13 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_lchmod(DeeObject *__restrict path,
           DeeObject *__restrict mode) {
 	return fs_chmod(path, mode);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_chattr_np(DeeObject *__restrict path,
              DeeObject *__restrict new_attr) {
 	DWORD attr;
@@ -3513,7 +3498,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_chown(DeeObject *__restrict path,
          DeeObject *__restrict user,
          DeeObject *__restrict group) {
@@ -3525,14 +3510,14 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_lchown(DeeObject *__restrict path,
           DeeObject *__restrict user,
           DeeObject *__restrict group) {
 	return fs_chown(path, user, group);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_mkdir(DeeObject *__restrict path,
          DeeObject *__restrict perm) {
 	int error;
@@ -3600,7 +3585,7 @@ handle_rmdir_error(DWORD error, DeeObject *__restrict path) {
 	                          path);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_rmdir(DeeObject *__restrict path) {
 	int error;
 	if (DeeThread_CheckInterrupt())
@@ -3656,7 +3641,7 @@ handle_unlink_error(DWORD error, DeeObject *__restrict path) {
 	                          path);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_unlink(DeeObject *__restrict path) {
 	int error;
 	if (DeeThread_CheckInterrupt())
@@ -3716,7 +3701,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_remove(DeeObject *__restrict path) {
 	int error;
 	if (DeeThread_CheckInterrupt())
@@ -3755,7 +3740,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_rename(DeeObject *__restrict existing_path,
           DeeObject *__restrict new_path) {
 	int error;
@@ -3826,7 +3811,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_link(DeeObject *__restrict existing_path,
         DeeObject *__restrict new_path) {
 	int error;
@@ -3901,7 +3886,7 @@ fail:
 #define SYMBOLIC_LINK_FLAG_DIRECTORY 0x1
 #define SYMBOLIC_LINK_FLAG_ALLOW_UNPRIVILEGED_CREATE 0x2
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_symlink(DeeObject *__restrict target_text,
            DeeObject *__restrict link_path,
            bool format_target) {
@@ -4004,7 +3989,7 @@ typedef struct _REPARSE_DATA_BUFFER {
 
 
 #define READLINK_INITIAL_BUFFER 300
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict path) {
 	PREPARSE_DATA_BUFFER buffer;
 	HANDLE link_fd;
@@ -4164,7 +4149,7 @@ typedef struct {
 #endif /* !CONFIG_NO_THREADS */
 } DirIterator;
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DirIterator *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	FindClose(self->d_hnd);
@@ -4172,13 +4157,13 @@ diriter_fini(DirIterator *__restrict self) {
 	Dee_Decref(self->d_dir);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 diriter_visit(DirIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->d_dir);
 }
 
 #if 0 /* Find-handles aren't real handles! */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 diriter_copy(DirIterator *__restrict self,
              DirIterator *__restrict other) {
 	HANDLE prochnd = GetCurrentProcess();
@@ -4214,7 +4199,7 @@ err_handle_findnextfile(DWORD dwError, DeeObject *__restrict path) {
 }
 
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 diriter_next(DirIterator *__restrict self) {
 	WCHAR *result_string, *begin;
 	size_t length;
@@ -4317,7 +4302,7 @@ err_handle_opendir(DWORD error, DeeObject *__restrict path) {
 }
 
 
-PRIVATE DREF DirIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DirIterator *DCALL
 dir_iter(Dir *__restrict self) {
 	DREF DirIterator *result;
 	LPWSTR wname, wpattern;
@@ -4431,12 +4416,12 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 dir_fini(Dir *__restrict self) {
 	Dee_Decref(self->d_path);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dir_copy(Dir *__restrict self,
          Dir *__restrict other) {
 	self->d_path = other->d_path;
@@ -4446,7 +4431,7 @@ dir_copy(Dir *__restrict self,
 
 PRIVATE int DCALL
 dir_ctor(Dir *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:dir", &self->d_path))
 		goto err;
 	if (DeeString_Check(self->d_path)) {
@@ -4584,7 +4569,7 @@ typedef struct {
 	LPWSTR      q_wild; /* The wildcard pattern string with which to match filenames. */
 } QueryIterator;
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 queryiter_next(QueryIterator *__restrict self) {
 	WCHAR *result_string, *begin;
 	size_t length;
@@ -4729,7 +4714,7 @@ PRIVATE struct type_member query_class_members[] = {
 };
 
 
-PRIVATE DREF QueryIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF QueryIterator *DCALL
 query_iter(Dir *__restrict self) {
 	DREF QueryIterator *result;
 	LPWSTR wname, wpattern;

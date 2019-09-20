@@ -196,13 +196,13 @@ nosuper:
 }
 
 
-INTERN WUNUSED NONNULL((1)) void DCALL
+INTERN NONNULL((1)) void DCALL
 super_fini(Super *__restrict self) {
 	Dee_Decref(self->s_self);
 	Dee_Decref(self->s_type);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 super_visit(Super *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->s_self);
 	Dee_Visit(self->s_type);
@@ -239,7 +239,8 @@ super_call(Super *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_call_kw(Super *self, size_t argc, DeeObject **argv, DeeObject *kw) {
+super_call_kw(Super *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	return DeeObject_TCallKw(self->s_type, self->s_self, argc, argv, kw);
 }
 
@@ -633,7 +634,7 @@ super_getbuf(Super *__restrict self,
 	return DeeObject_TGetBuf(self->s_type, self->s_self, info, flags);
 }
 
-PRIVATE WUNUSED NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 super_putbuf(Super *__restrict self,
              DeeBuffer *__restrict info,
              unsigned int flags) {

@@ -99,7 +99,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 compare_lo(DeeObject *__restrict lhs,
            DeeObject *__restrict rhs,
            DeeObject *__restrict key) {

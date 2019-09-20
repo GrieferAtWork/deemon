@@ -102,7 +102,7 @@ match_contains(char *__restrict sel_start,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ssi_next(StringScanIterator *__restrict self) {
 	DREF DeeObject *result;
 	uint32_t ch32;
@@ -518,7 +518,7 @@ err:
 	return NULL;
 }
 
-PRIVATE void DCALL ssi_fini(StringScanIterator *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL ssi_fini(StringScanIterator *__restrict self) {
 	/* likely: it was probably only created for iteration,
 	 *         in which case it'll be destroyed with us. */
 	Dee_Decref_likely(self->si_scanner);
@@ -555,7 +555,7 @@ PRIVATE struct type_member ssi_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_copy(StringScanIterator *__restrict self,
          StringScanIterator *__restrict other) {
 	rwlock_read(&other->si_lock);
@@ -622,13 +622,13 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 
 
 
-PRIVATE void DCALL ss_fini(StringScanner *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL ss_fini(StringScanner *__restrict self) {
 	Dee_Decref(self->ss_data);
 	/* unlikely: it's probably a string constant */
 	Dee_Decref_unlikely(self->ss_format);
 }
 
-PRIVATE DREF StringScanIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringScanIterator *DCALL
 ss_iter(StringScanner *__restrict self) {
 	DREF StringScanIterator *result;
 	result = DeeObject_MALLOC(StringScanIterator);
@@ -747,9 +747,9 @@ INTERN DeeTypeObject StringScan_Type = {
  * >>     print "c:", c;
  * >> }
  */
-INTERN DREF DeeObject *DCALL
-DeeString_Scanf(DeeObject *__restrict self,
-                DeeObject *__restrict format) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeString_Scanf(DeeObject *self,
+                DeeObject *format) {
 	DREF StringScanner *result;
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(format);

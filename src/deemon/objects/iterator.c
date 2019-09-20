@@ -52,11 +52,11 @@ err_not_bidirectional(DeeObject *__restrict self) {
 	                       Dee_TYPE(self));
 }
 
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 has_generic_attribute(DeeTypeObject *__restrict tp_self,
                       DeeObject *__restrict self,
                       DeeObject *__restrict attr);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 get_generic_attribute(DeeTypeObject *__restrict tp_self,
                       DeeObject *__restrict self,
                       DeeObject *__restrict name);
@@ -66,14 +66,14 @@ PRIVATE int DCALL iterator_inc(DeeObject **__restrict pself);
 PRIVATE int DCALL iterator_dec(DeeObject **__restrict pself);
 PRIVATE int DCALL iterator_inplace_add(DeeObject **__restrict pself, DeeObject *__restrict countob);
 PRIVATE int DCALL iterator_inplace_sub(DeeObject **__restrict pself, DeeObject *__restrict countob);
-PRIVATE DREF DeeObject *DCALL iterator_add(DeeObject *__restrict self, DeeObject *__restrict countob);
-PRIVATE DREF DeeObject *DCALL iterator_sub(DeeObject *__restrict self, DeeObject *__restrict countob);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_add(DeeObject *self, DeeObject *countob);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_sub(DeeObject *self, DeeObject *countob);
 
 
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iterator_bool(DeeObject *__restrict self) {
 	DeeObject *elem;
 	/* Check if the Iterator has been exhausted
@@ -92,7 +92,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_repr(DeeObject *__restrict self) {
 	struct unicode_printer p = UNICODE_PRINTER_INIT;
 	DREF DeeObject *iterator = DeeObject_Copy(self);
@@ -134,7 +134,7 @@ iterator_iternext(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
 get_remaining_iterations(DeeObject *__restrict self) {
 	dssize_t result;
 	DREF DeeObject *elem;
@@ -192,9 +192,8 @@ PRIVATE struct type_cmp iterator_cmp = {
 	/* .tp_ge   = */ &iterator_ge
 };
 
-PRIVATE DREF DeeObject *DCALL
-iterator_next(DeeObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_next(DeeObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result, *defl = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:next", &defl))
 		goto err;
@@ -226,9 +225,8 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
-iterator_prev(DeeObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_prev(DeeObject *self, size_t argc, DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":prev"))
 		goto err;
@@ -243,14 +241,13 @@ err:
 INTDEF DeeIntObject int_size_max;
 #if SSIZE_MIN < INT32_MIN
 INTERN DEFINE_INT64(int_size_min, SSIZE_MIN);
-#else
+#else /* SSIZE_MIN < INT32_MIN */
 INTERN DEFINE_INT32(int_size_min, SSIZE_MIN);
-#endif
+#endif /* SSIZE_MIN >= INT32_MIN */
 
 
-PRIVATE DREF DeeObject *DCALL
-iterator_rewind(DeeObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_rewind(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":rewind"))
 		goto err;
 	if (DeeIterator_Rewind(self))
@@ -756,9 +753,8 @@ err:
 
 
 
-PRIVATE DREF DeeObject *DCALL
-iterator_revert(DeeObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_revert(DeeObject *self, size_t argc, DeeObject **argv) {
 	dssize_t count;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "Id:revert", &count))
@@ -778,9 +774,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-iterator_advance(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_advance(DeeObject *self, size_t argc, DeeObject **argv) {
 	dssize_t count;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "Id:advance", &count))
@@ -800,9 +795,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-iterator_peek(DeeObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+iterator_peek(DeeObject *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	DeeObject *defl = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:peek", &defl))
@@ -1114,7 +1108,7 @@ PRIVATE struct type_method iterator_methods[] = {
  *                      from its sequence, as can happen in linked lists when the Iterator's
  *                      link entry gets removed)
  * @return: (size_t)-1: Error */
-INTERN size_t DCALL
+INTERN WUNUSED NONNULL((1)) size_t DCALL
 DeeIterator_GetIndex(DeeObject *__restrict self) {
 	DREF DeeObject *copy, *temp;
 	size_t index;
@@ -1191,7 +1185,7 @@ err:
 /* Set the Iterator's position
  * @return:  0: Success
  * @return: -1: Error */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeIterator_SetIndex(DeeObject *__restrict self, size_t new_index) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *temp;
@@ -1224,7 +1218,7 @@ err:
 /* Rewind the Iterator to its starting position
  * @return:  0: Success
  * @return: -1: Error */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeIterator_Rewind(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *temp, *temp2, *temp3;
@@ -1448,7 +1442,7 @@ done:
  * @return:  1: Success (the Iterator has reached its starting position)
  * @return:  2: Success (the Iterator hasn't reached its starting position)
  * @return: -1: Error */
-INTERN int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step) {
+INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step) {
 	return iterator_do_revert(self, step, NULL, NULL);
 }
 
@@ -1457,7 +1451,7 @@ INTERN int DCALL DeeIterator_Revert(DeeObject *__restrict self, size_t step) {
  * @return:  1: Success (the Iterator has become exhausted)
  * @return:  2: Success (the Iterator hasn't become exhausted)
  * @return: -1: Error */
-INTERN int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
+INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
 	return iterator_do_advance(self, step, NULL, NULL);
 }
 
@@ -1465,7 +1459,7 @@ INTERN int DCALL DeeIterator_Advance(DeeObject *__restrict self, size_t step) {
  * @return:  0: Success
  * @return:  1: The iterator was already at its starting location
  * @return: -1: Error */
-INTERN int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Prev(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
@@ -1738,7 +1732,7 @@ err:
  * @return:  0: Success
  * @return:  1: The iterator had already been exhausted
  * @return: -1: Error */
-INTERN int DCALL DeeIterator_Next(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_Next(DeeObject *__restrict self) {
 	return iterator_do_advance(self, 1, &DeeInt_One, &DeeInt_MinusOne);
 }
 
@@ -1746,7 +1740,7 @@ INTERN int DCALL DeeIterator_Next(DeeObject *__restrict self) {
  * @return:  0: No, it isn't
  * @return:  1: Yes, it is
  * @return: -1: Error */
-INTERN int DCALL DeeIterator_HasPrev(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) int DCALL DeeIterator_HasPrev(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
 		DREF DeeObject *temp, *temp2;
@@ -1826,7 +1820,7 @@ err:
 
 /* Peek the next iterator value, but don't actually advance the Iterator.
  * @return: ITER_DONE: The iterator has already been exhausted. */
-INTERN DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeIterator_Peek(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *temp;
 	int error;
@@ -1888,8 +1882,8 @@ err:
 }
 
 
-INTDEF DREF DeeObject *DCALL IteratorFuture_For(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorFuture_For(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
 PRIVATE DeeObject *bidirectional_iterator_attributes[] = {
 	&str_revert,
@@ -1902,7 +1896,7 @@ PRIVATE DeeObject *bidirectional_iterator_attributes[] = {
 
 /* Return the sequence associated with the Iterator, or NULL on error.
  * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeIterator_GetSeq(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
@@ -1926,7 +1920,7 @@ DeeIterator_GetSeq(DeeObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iterator_is_bidirectional(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	while (tp_self != &DeeIterator_Type) {
@@ -1956,7 +1950,7 @@ iterator_is_bidirectional(DeeObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_get_isbidirectional(DeeObject *__restrict self) {
 	int temp = iterator_is_bidirectional(self);
 	if unlikely(temp < 0)
@@ -1966,7 +1960,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_get_hasnext(DeeObject *__restrict self) {
 	int temp = DeeObject_Bool(self);
 	if unlikely(temp < 0)
@@ -1976,7 +1970,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_get_hasprev(DeeObject *__restrict self) {
 	int error = DeeIterator_HasPrev(self);
 	if unlikely(error < 0)
@@ -1986,7 +1980,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_get_index(DeeObject *__restrict self) {
 	size_t result = DeeIterator_GetIndex(self);
 	if unlikely(result == (size_t)-1)
@@ -1998,7 +1992,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iterator_set_index(DeeObject *__restrict self,
                    DeeObject *__restrict indexob) {
 	DeeTypeObject *tp_self;
@@ -2214,9 +2208,9 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
-iterator_add(DeeObject *__restrict self,
-             DeeObject *__restrict countob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+iterator_add(DeeObject *self,
+             DeeObject *countob) {
 	DREF DeeObject *result;
 	dssize_t count;
 	/* Increment the Iterator by `(int)count' */
@@ -2235,9 +2229,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-iterator_sub(DeeObject *__restrict self,
-             DeeObject *__restrict countob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+iterator_sub(DeeObject *self,
+             DeeObject *countob) {
 	DREF DeeObject *result;
 	dssize_t count;
 	/* Increment the Iterator by `(int)count' */
@@ -2349,7 +2343,7 @@ PRIVATE struct type_math iterator_math = {
  * with reading from a copied iterators not having any unwanted side-effects. */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iterator_assign(DeeObject *__restrict self,
                 DeeObject *__restrict other) {
 	size_t index;
@@ -2528,7 +2522,7 @@ typedef struct {
 } IteratorFuture;
 
 INTDEF DeeTypeObject IteratorFuture_Type;
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorFuture_For(DeeObject *__restrict self) {
 	DREF IteratorFuture *result;
 	result = DeeObject_MALLOC(IteratorFuture);
@@ -2541,7 +2535,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_ctor(IteratorFuture *__restrict self) {
 	self->if_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	return (likely(self->if_iter))
@@ -2549,7 +2543,7 @@ if_ctor(IteratorFuture *__restrict self) {
 	       : -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 if_copy(IteratorFuture *__restrict self,
         IteratorFuture *__restrict other) {
 	self->if_iter = DeeObject_Copy(other->if_iter);
@@ -2560,7 +2554,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 if_deep(IteratorFuture *__restrict self,
         IteratorFuture *__restrict other) {
 	self->if_iter = DeeObject_DeepCopy(other->if_iter);
@@ -2573,7 +2567,7 @@ err:
 
 PRIVATE int DCALL
 if_init(IteratorFuture *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_IteratorFuture", &self->if_iter))
 		goto err;
 	Dee_Incref(self->if_iter);
@@ -2582,22 +2576,22 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_bool(IteratorFuture *__restrict self) {
 	return DeeObject_Bool(self->if_iter);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 if_fini(IteratorFuture *__restrict self) {
 	Dee_Decref(self->if_iter);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 if_visit(IteratorFuture *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->if_iter);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 if_iter(IteratorFuture *__restrict self) {
 	return DeeObject_Copy(self->if_iter);
 }
@@ -2674,7 +2668,7 @@ typedef struct {
 } IteratorPending;
 
 INTDEF DeeTypeObject IteratorPending_Type;
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 IteratorPending_For(DeeObject *__restrict self) {
 	DREF IteratorPending *result;
 	result = DeeObject_MALLOC(IteratorPending);
@@ -2692,7 +2686,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(IteratorFuture, if_iter) ==
 #define ip_ctor if_ctor
 #define ip_deep if_deep
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ip_copy(IteratorPending *__restrict self,
         IteratorPending *__restrict other) {
 	self->ip_iter = other->ip_iter;
@@ -2702,7 +2696,7 @@ ip_copy(IteratorPending *__restrict self,
 
 PRIVATE int DCALL
 ip_init(IteratorPending *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_IteratorPending", &self->ip_iter))
 		goto err;
 	Dee_Incref(self->ip_iter);
@@ -2715,7 +2709,7 @@ err:
 #define ip_fini  if_fini
 #define ip_visit if_visit
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ip_iter(IteratorPending *__restrict self) {
 	return_reference_(self->ip_iter);
 }

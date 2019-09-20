@@ -127,8 +127,8 @@ err_r:
 }
 
 
-PRIVATE void DCALL set_fini(Set *__restrict self);
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) void DCALL set_fini(Set *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_init_iterator(Set *__restrict self,
                   DeeObject *__restrict iterator) {
 	DREF DeeObject *elem;
@@ -157,13 +157,13 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL set_copy(Set *__restrict self, Set *__restrict other);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL set_copy(Set *__restrict self, Set *__restrict other);
 
 STATIC_ASSERT(sizeof(struct hashset_item) == sizeof(struct roset_item));
 STATIC_ASSERT(COMPILER_OFFSETOF(struct hashset_item, si_key) == COMPILER_OFFSETOF(struct roset_item, si_key));
 STATIC_ASSERT(COMPILER_OFFSETOF(struct hashset_item, si_hash) == COMPILER_OFFSETOF(struct roset_item, si_hash));
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_init_sequence(Set *__restrict self,
                   DeeObject *__restrict sequence) {
 	DREF DeeObject *iterator;
@@ -207,7 +207,7 @@ err:
 	return -1;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeHashSet_FromIterator(DeeObject *__restrict self) {
 	DREF Set *result;
 	result = DeeGCObject_MALLOC(Set);
@@ -224,7 +224,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeHashSet_FromSequence(DeeObject *__restrict self) {
 	DREF Set *result;
 	result = DeeGCObject_MALLOC(Set);
@@ -242,7 +242,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 set_ctor(Set *__restrict self) {
 	self->s_mask = 0;
 	self->s_size = 0;
@@ -255,7 +255,7 @@ set_ctor(Set *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 set_copy(Set *__restrict self,
          Set *__restrict other) {
 	struct hashset_item *iter, *end;
@@ -289,7 +289,7 @@ again:
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 set_deepload(Set *__restrict self) {
 	DREF DeeObject **new_items, **items = NULL;
 	size_t i, hash_i, item_count, ols_item_count = 0;
@@ -374,7 +374,7 @@ err_items:
 	return -1;
 }
 
-PRIVATE void DCALL set_fini(Set *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL set_fini(Set *__restrict self) {
 	weakref_support_fini(self);
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
 	ASSERT((self->s_elem == empty_set_items) == (self->s_size == 0));
@@ -391,7 +391,7 @@ PRIVATE void DCALL set_fini(Set *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL set_clear(Set *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL set_clear(Set *__restrict self) {
 	struct hashset_item *elem;
 	size_t mask;
 	DeeHashSet_LockWrite(self);
@@ -420,7 +420,7 @@ PRIVATE void DCALL set_clear(Set *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 set_visit(Set *__restrict self, dvisit_t proc, void *arg) {
 	DeeHashSet_LockRead(self);
 	ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
@@ -446,7 +446,7 @@ set_visit(Set *__restrict self, dvisit_t proc, void *arg) {
  * During this process all dummy items are discarded.
  * @return: true:  Successfully rehashed the set.
  * @return: false: Not enough memory. - The caller should collect some and try again. */
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 set_rehash(Set *__restrict self, int sizedir) {
 	struct hashset_item *new_vector, *iter, *end;
 	size_t new_mask = self->s_mask;
@@ -522,9 +522,9 @@ set_rehash(Set *__restrict self, int sizedir) {
 
 
 
-PUBLIC DREF DeeObject *DCALL
-DeeHashSet_Unify(DeeObject *__restrict self,
-                 DeeObject *__restrict search_item) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeHashSet_Unify(DeeObject *self,
+                 DeeObject *search_item) {
 	Set *me = (Set *)self;
 	size_t mask;
 	struct hashset_item *vector;
@@ -617,7 +617,7 @@ again:
 	return NULL;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeHashSet_Insert(DeeObject *__restrict self, DeeObject *__restrict search_item) {
 	Set *me = (Set *)self;
 	size_t mask;
@@ -701,7 +701,7 @@ again:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeHashSet_Remove(DeeObject *__restrict self, DeeObject *__restrict search_item) {
 	Set *me = (Set *)self;
 	size_t mask;
@@ -763,7 +763,7 @@ restart:
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeHashSet_UnifyString(DeeObject *__restrict self,
                        char const *__restrict search_item,
                        size_t search_item_length) {
@@ -861,7 +861,7 @@ again:
 	return NULL;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeHashSet_InsertString(DeeObject *__restrict self,
                         char const *__restrict search_item,
                         size_t search_item_length) {
@@ -955,7 +955,7 @@ again:
 	return -1;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeHashSet_RemoveString(DeeObject *__restrict self,
                         char const *__restrict search_item,
                         size_t search_item_length) {
@@ -1010,7 +1010,7 @@ again_lock:
 
 
 
-DFUNDEF int DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeHashSet_Contains(DeeObject *__restrict self,
                     DeeObject *__restrict search_item) {
 	Set *me = (Set *)self;
@@ -1053,7 +1053,7 @@ restart:
 	DeeHashSet_LockEndRead(me);
 	return 0;
 }
-DFUNDEF bool DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL
 DeeHashSet_ContainsString(DeeObject *__restrict self,
                           char const *__restrict search_item,
                           size_t search_item_length) {
@@ -1089,7 +1089,7 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_size(Set *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return DeeInt_NewSize(self->s_used);
@@ -1098,7 +1098,7 @@ set_size(Set *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 set_nsi_getsize(Set *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->s_used;
@@ -1107,8 +1107,8 @@ set_nsi_getsize(Set *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_contains(Set *__restrict self, DeeObject *__restrict search_item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_contains(Set *self, DeeObject *search_item) {
 	int result = DeeHashSet_Contains((DeeObject *)self, search_item);
 	if unlikely(result < 0)
 		return NULL;
@@ -1134,7 +1134,7 @@ typedef struct {
 #define READ_ITEM(x) ATOMIC_READ((x)->si_next)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 setiterator_next(SetIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct hashset_item *item, *end;
@@ -1191,7 +1191,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 setiterator_ctor(SetIterator *__restrict self) {
 	self->si_set = (DeeHashSetObject *)DeeHashSet_New();
 	if unlikely(!self->si_set)
@@ -1200,7 +1200,7 @@ setiterator_ctor(SetIterator *__restrict self) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 setiterator_copy(SetIterator *__restrict self,
                  SetIterator *__restrict other) {
 	self->si_set = other->si_set;
@@ -1209,12 +1209,12 @@ setiterator_copy(SetIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 setiterator_fini(SetIterator *__restrict self) {
 	Dee_Decref(self->si_set);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 setiterator_visit(SetIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_set);
 }
@@ -1223,7 +1223,7 @@ INTDEF DeeTypeObject HashSetIterator_Type;
 
 INTERN int DCALL
 setiterator_init(SetIterator *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	Set *set;
 	if (DeeArg_Unpack(argc, argv, "o:_HashSetIterator", &set) ||
 	    DeeObject_AssertType((DeeObject *)set, &DeeHashSet_Type))
@@ -1238,7 +1238,7 @@ setiterator_init(SetIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 setiterator_bool(SetIterator *__restrict self) {
 	struct hashset_item *item = READ_ITEM(self);
 	Set *set                  = self->si_set;
@@ -1272,12 +1272,12 @@ PRIVATE struct type_member setiterator_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF Set *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Set *DCALL
 seti_nii_getseq(SetIterator *__restrict self) {
 	return_reference_(self->si_set);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 seti_nii_getindex(SetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
@@ -1291,7 +1291,7 @@ seti_nii_getindex(SetIterator *__restrict self) {
 	return (size_t)(elem - vector);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_setindex(SetIterator *__restrict self, size_t new_index) {
 	size_t mask;
 	struct hashset_item *vector;
@@ -1309,7 +1309,7 @@ seti_nii_setindex(SetIterator *__restrict self, size_t new_index) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_rewind(SetIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	self->si_next = self->si_set->s_elem;
@@ -1319,7 +1319,7 @@ seti_nii_rewind(SetIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_revert(SetIterator *__restrict self, size_t step) {
 	size_t index, mask;
 	struct hashset_item *vector, *elem;
@@ -1345,7 +1345,7 @@ again:
 	return elem == vector ? 1 : 2;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_advance(SetIterator *__restrict self, size_t step) {
 	size_t index, mask;
 	struct hashset_item *vector, *elem;
@@ -1372,7 +1372,7 @@ again:
 	return index == mask + 1 ? 1 : 2;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_prev(SetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
@@ -1395,7 +1395,7 @@ again:
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_next(SetIterator *__restrict self) {
 	size_t mask;
 	struct hashset_item *vector, *elem;
@@ -1419,7 +1419,7 @@ again:
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seti_nii_hasprev(SetIterator *__restrict self) {
 	struct hashset_item *item = READ_ITEM(self);
 	Set *set                  = self->si_set;
@@ -1430,7 +1430,7 @@ seti_nii_hasprev(SetIterator *__restrict self) {
 	        item <= set->s_elem + (set->s_mask + 1));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seti_nii_peek(SetIterator *__restrict self) {
 	DREF DeeObject *result;
 	struct hashset_item *item, *end;
@@ -1542,7 +1542,7 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 
 
 
-PRIVATE DREF SetIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SetIterator *DCALL
 set_iter(Set *__restrict self) {
 	DREF SetIterator *result;
 	result = DeeObject_MALLOC(SetIterator);
@@ -1585,7 +1585,7 @@ PRIVATE struct type_seq set_seq = {
 	/* .tp_nsi       = */ &set_nsi
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_repr(Set *__restrict self) {
 	struct unicode_printer p;
 	dssize_t error;
@@ -1636,7 +1636,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 set_bool(Set *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->s_used != 0;
@@ -1647,7 +1647,7 @@ set_bool(Set *__restrict self) {
 
 PRIVATE int DCALL
 set_init(Set *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	int error;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:HashSet", &seq))
@@ -1664,8 +1664,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-set_pop(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_pop(Set *self, size_t argc, DeeObject **argv) {
 	size_t i;
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":pop"))
@@ -1692,8 +1692,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_doclear(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_doclear(Set *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	set_clear(self);
@@ -1702,8 +1702,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_insert(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_insert(Set *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:insert", &item))
@@ -1716,8 +1716,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_unify(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_unify(Set *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:unify", &item))
 		goto err;
@@ -1736,8 +1736,8 @@ insert_callback(Set *__restrict self, DeeObject *item) {
 }
 #endif
 
-PRIVATE DREF DeeObject *DCALL
-set_update(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_update(Set *self, size_t argc, DeeObject **argv) {
 	DeeObject *items;
 	dssize_t result;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
@@ -1750,8 +1750,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-set_remove(Set *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+set_remove(Set *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:remove", &item))
@@ -1765,9 +1765,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-hashset_sizeof(Set *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+hashset_sizeof(Set *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(sizeof(Set) +

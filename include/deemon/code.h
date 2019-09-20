@@ -579,7 +579,7 @@ DDATDEF DeeTypeObject DeeCode_Type;
  *     to potential code-tearing, as well as the resulting inconsistencies that may
  *     cause running code to throw errors, but not cause the interpreter to crash.
  * Note that this function may also fail because an interrupt was send to the calling thread! */
-DFUNDEF int DCALL DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self);
 
 
 /* Extended frame information for functions invoked with keyword arguments.
@@ -741,7 +741,7 @@ DFUNDEF DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(struct Dee_c
  * @return: * :    One of `TRIGGER_BREAKPOINT_*' describing how execution
  *                 should continue once the breakpoint has been dealt with.
  */
-INTDEF int DCALL trigger_breakpoint(struct Dee_code_frame *__restrict frame);
+INTDEF WUNUSED NONNULL((1)) int DCALL trigger_breakpoint(struct Dee_code_frame *__restrict frame);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Breakpoint execution modes. */
@@ -859,9 +859,9 @@ DDATDEF DeeTypeObject DeeYieldFunctionIterator_Type; /* foo().operator __itersel
 
 
 /* Create a new function object. */
-DFUNDEF DREF DeeObject *DCALL
-DeeFunction_New(DeeObject *__restrict code, size_t refc,
-                DeeObject *const *__restrict refv);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeFunction_New(DeeObject *code, size_t refc,
+                DeeObject *const *refv);
 
 
 struct Dee_function_info {
@@ -884,54 +884,54 @@ struct Dee_function_info {
  * @return:  0: The function could be located (though which information became available must still be checked)
  * @return:  1: The function couldn't be found (all fields in `info' are set to indicate <unknown>)
  * @return: -1: An error occurred. */
-DFUNDEF int DCALL DeeFunction_GetInfo(DeeObject *__restrict self, struct Dee_function_info *__restrict info);
-DFUNDEF int DCALL DeeCode_GetInfo(DeeObject *__restrict self, struct Dee_function_info *__restrict info);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFunction_GetInfo(DeeObject *__restrict self, struct Dee_function_info *__restrict info);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCode_GetInfo(DeeObject *__restrict self, struct Dee_function_info *__restrict info);
 
 
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF DREF DeeObject *DCALL
-DeeFunction_NewInherited(DeeObject *__restrict code, size_t refc,
+INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeFunction_NewInherited(DeeObject *code, size_t refc,
                          /*inherit(on_success)*/ DREF DeeObject *const *__restrict refv);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFunction_NewNoRefs(DeeObject *__restrict code);
 
 
 /* Optimized operator for calling a `function' object using the `thiscall' calling convention.
  * NOTE: Potentially required conversions are performed by this function automatically! */
-INTDEF DREF DeeObject *DCALL
-DeeFunction_ThisCall(DeeFunctionObject *__restrict self,
-                     DeeObject *__restrict this_arg,
-                     size_t argc, DeeObject **__restrict argv);
-INTDEF DREF DeeObject *DCALL
-DeeFunction_ThisCallKw(DeeFunctionObject *__restrict self,
-                       DeeObject *__restrict this_arg,
-                       size_t argc, DeeObject **__restrict argv,
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeFunction_ThisCall(DeeFunctionObject *self,
+                     DeeObject *this_arg,
+                     size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeFunction_ThisCallKw(DeeFunctionObject *self,
+                       DeeObject *this_arg,
+                       size_t argc, DeeObject **argv,
                        DeeObject *kw);
 
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTDEF DREF DeeObject *DCALL
-DeeFunction_CallTuple(DeeFunctionObject *__restrict self,
-                      DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL
-DeeFunction_CallTupleKw(DeeFunctionObject *__restrict self,
-                        DeeObject *__restrict args,
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeFunction_CallTuple(DeeFunctionObject *self,
+                      DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeFunction_CallTupleKw(DeeFunctionObject *self,
+                        DeeObject *args,
                         DeeObject *kw);
-INTDEF DREF DeeObject *DCALL
-DeeFunction_ThisCallTuple(DeeFunctionObject *__restrict self,
-                          DeeObject *__restrict this_arg,
-                          DeeObject *__restrict args);
-INTDEF DREF DeeObject *DCALL
-DeeFunction_ThisCallTupleKw(DeeFunctionObject *__restrict self,
-                            DeeObject *__restrict this_arg,
-                            DeeObject *__restrict args,
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeFunction_ThisCallTuple(DeeFunctionObject *self,
+                          DeeObject *this_arg,
+                          DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeFunction_ThisCallTupleKw(DeeFunctionObject *self,
+                            DeeObject *this_arg,
+                            DeeObject *args,
                             DeeObject *kw);
 #else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-#define DeeFunction_CallTuple(self,args)                   DeeFunction_Call(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
-#define DeeFunction_CallTupleKw(self,args,kw)              DeeFunction_CallKw(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
-#define DeeFunction_ThisCallTuple(self,this_arg,args)      DeeFunction_ThisCall(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
-#define DeeFunction_ThisCallTupleKw(self,this_arg,args,kw) DeeFunction_ThisCallKw(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#define DeeFunction_CallTuple(self, args)                     DeeFunction_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeFunction_CallTupleKw(self, args, kw)               DeeFunction_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeFunction_ThisCallTuple(self, this_arg, args)       DeeFunction_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw) DeeFunction_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 #endif /* CONFIG_BUILDING_DEEMON */
 

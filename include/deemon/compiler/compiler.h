@@ -60,10 +60,12 @@ struct Dee_compiler_options;
 
 typedef struct compiler_item_object DeeCompilerItemObject;
 typedef struct compiler_wrapper_object DeeCompilerWrapperObject;
-struct compiler_item_object { Dee_COMPILER_ITEM_OBJECT_HEAD(void) };
+struct compiler_item_object {
+	Dee_COMPILER_ITEM_OBJECT_HEAD(void)
+};
 struct compiler_wrapper_object {
-    Dee_OBJECT_HEAD
-    DREF DeeCompilerObject *cw_compiler; /* [1..1][const] The compiler being wrapped. */
+	Dee_OBJECT_HEAD
+	DREF DeeCompilerObject *cw_compiler; /* [1..1][const] The compiler being wrapped. */
 };
 #define Dee_COMPILER_ITEM_HASH(x) Dee_HashPointer((x)->ci_value)
 INTDEF DeeTypeObject DeeCompilerItem_Type;
@@ -71,25 +73,29 @@ INTDEF DeeTypeObject DeeCompilerObjItem_Type;
 INTDEF DeeTypeObject DeeCompilerWrapper_Type;
 
 /* Construct and return a wrapper for a sub-component of the current compiler. */
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
-                                                    DeeTypeObject *__restrict type);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
+                       DeeTypeObject *__restrict type);
 
 /* Lookup or create a new compiler item for `value' */
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetItem(DeeTypeObject *__restrict type,
-                                                 void *__restrict value);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
-                                                    DeeObject *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCompiler_GetItem(DeeTypeObject *__restrict type,
+                    void *__restrict value);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeCompiler_GetObjItem(DeeTypeObject *__restrict type,
+                       DeeObject *__restrict value);
 
 /* Delete (clear) the compiler item associated with `value'. */
 INTDEF bool DCALL DeeCompiler_DelItem(void *value);
 
 /* Delete (clear) all compiler items matching the given `type'. */
-INTDEF size_t DCALL DeeCompiler_DelItemType(DeeTypeObject *__restrict type);
+INTDEF NONNULL((1)) size_t DCALL
+DeeCompiler_DelItemType(DeeTypeObject *__restrict type);
 
 /* Returns the value of a given compiler item.
  * @return: * :   A pointer to the item's value.
  * @return: NULL: The item got deleted (a ReferenceError was thrown) */
-INTDEF void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict self);
+INTDEF NONNULL((1)) void *(DCALL DeeCompilerItem_GetValue)(DeeObject *__restrict self);
 #define DeeCompilerItem_VALUE(self, T) \
 	((T *)DeeCompilerItem_GetValue((DeeObject *)Dee_REQUIRES_OBJECT(self)))
 
@@ -167,9 +173,8 @@ DDATDEF DeeTypeObject DeeCompiler_Type; /* Compiler from rt */
 
 /* Construct a new compiler for generating the source for the given `module'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
-DFUNDEF DREF DeeCompilerObject *DCALL
-DeeCompiler_New(DeeObject *__restrict module,
-                uint16_t flags);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
+DeeCompiler_New(DeeObject *__restrict module, uint16_t flags);
 
 
 
@@ -206,7 +211,8 @@ DDATDEF DREF DeeCompilerObject *DeeCompiler_Current;
  *       >>    DeeCompiler_End();
  *       >> DeeCompiler_End();
  */
-DFUNDEF void DCALL DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler);
+DFUNDEF NONNULL((1)) void DCALL
+DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler);
 DFUNDEF void DCALL DeeCompiler_End(void);
 
 /* Check if `compiler' is the currently active one.
@@ -221,7 +227,8 @@ DFUNDEF void DCALL DeeCompiler_End(void);
  * NOTE:  Unlike with `DeeCompiler_Begin()' and `DeeCompiler_End()', the
  *        caller must not be holding any kind of lock on `DeeCompiler_Lock'
  *        when calling this function! */
-DFUNDEF void DCALL DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler);
+DFUNDEF NONNULL((1)) void DCALL
+DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler);
 
 #ifdef CONFIG_NO_THREADS
 #define Dee_COMPILER_BEGIN(c) DeeCompiler_Begin(c)

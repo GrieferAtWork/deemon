@@ -69,12 +69,12 @@ INTDEF DREF DeeIntObject *DCALL DeeInt_Alloc_dbg(size_t n_digits, char const *fi
 #define DeeInt_Alloc(n_digits)  DeeInt_Alloc_dbg(n_digits,__FILE__,__LINE__)
 #endif /* !NDEBUG */
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
-INTDEF void DCALL DeeInt_Free(DeeIntObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL DeeInt_Free(DeeIntObject *__restrict self);
 #else /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
 #define DeeInt_Free(self) DeeObject_Free(self)
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
-INTDEF DREF DeeIntObject *DCALL int_copy(DeeIntObject const *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL int_copy(DeeIntObject const *__restrict self);
 INTDEF DREF DeeIntObject *DCALL int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v);
 INTDEF DREF DeeObject *DCALL int_add(DeeIntObject *a, DeeObject *b);
 INTDEF DREF DeeObject *DCALL int_sub(DeeIntObject *a, DeeObject *b);
@@ -93,10 +93,10 @@ INTDEF DREF DeeObject *DCALL int_pow(DeeIntObject *a, DeeObject *b);
 INTDEF int DCALL int_inc(DREF DeeIntObject **__restrict pself);
 INTDEF int DCALL int_dec(DREF DeeIntObject **__restrict pself);
 
-INTDEF DREF DeeObject *DCALL DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b);
-INTDEF DREF DeeObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b);
-INTDEF DREF DeeObject *DCALL DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b);
-INTDEF DREF DeeObject *DCALL DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b);
 
 DECL_END
 

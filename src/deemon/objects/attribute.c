@@ -53,27 +53,27 @@ typedef DeeEnumAttrObject         EnumAttr;
 typedef DeeEnumAttrIteratorObject EnumAttrIter;
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 attr_fini(Attr *__restrict self) {
 	if (self->a_info.a_perm & ATTR_NAMEOBJ)
 		Dee_Decref(COMPILER_CONTAINER_OF(self->a_name, DeeStringObject, s_str));
 	attribute_info_fini(&self->a_info);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 attr_visit(Attr *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->a_info.a_decl);
 	Dee_XVisit(self->a_info.a_attrtype);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_str(Attr *__restrict self) {
 	return DeeString_Newf("%k.%s",
 	                      self->a_info.a_decl,
 	                      self->a_name);
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 attr_hash(Attr *__restrict self) {
 	dhash_t result;
 	result = (DeeObject_Hash(self->a_info.a_decl) ^
@@ -89,8 +89,8 @@ attr_hash(Attr *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-attr_eq(Attr *__restrict self, Attr *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+attr_eq(Attr *self, Attr *other) {
 	int result;
 	if (DeeObject_AssertType((DeeObject *)other, &DeeAttribute_Type))
 		goto err;
@@ -145,7 +145,7 @@ PRIVATE struct type_member attr_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 attr_get_name(Attr *__restrict self) {
 	DREF DeeStringObject *result;
 	char const *name_str;
@@ -181,7 +181,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 attr_get_doc(Attr *__restrict self) {
 	DREF DeeStringObject *result;
 	char const *doc_str;
@@ -219,47 +219,47 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_canget(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_PERMGET);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_candel(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_PERMDEL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_canset(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_PERMSET);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_cancall(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_PERMCALL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_isprivate(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_PRIVATE);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_isinstance(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_IMEMBER);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_isproperty(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_PROPERTY);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_iswrapper(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_WRAPPER);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_isclass(Attr *__restrict self) {
 	return_bool_(self->a_info.a_perm & ATTR_CMEMBER);
 }
@@ -279,7 +279,7 @@ PRIVATE char attr_flags[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_getflags(Attr *__restrict self) {
 	DREF DeeObject *result;
 	uint16_t mask          = self->a_info.a_perm & 0x1ff;
@@ -308,7 +308,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 attr_repr(Attr *__restrict self) {
 	DREF DeeObject *flags_str, *result;
 	flags_str = attr_getflags(self);
@@ -414,7 +414,7 @@ PRIVATE DEFINE_KWLIST(attrinit_kwlist, { K(ob), K(name), K(flagmask), K(flagval)
 
 PRIVATE int DCALL
 attribute_init(DeeAttributeObject *__restrict self, size_t argc,
-               DeeObject **__restrict argv, DeeObject *kw) {
+               DeeObject **argv, DeeObject *kw) {
 	int lookup_error;
 	DeeObject *search_self, *search_name;
 	DeeObject *flagmask = NULL, *flagval = NULL;
@@ -483,7 +483,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+                 DeeObject **argv, DeeObject *kw) {
 	int lookup_error;
 	struct attribute_info info;
 	DeeObject *search_self, *search_name;
@@ -549,7 +549,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+                 DeeObject **argv, DeeObject *kw) {
 	DREF DeeAttributeObject *result;
 	int lookup_error;
 	struct attribute_info info;
@@ -806,7 +806,7 @@ err:
 
 PRIVATE int DCALL
 enumattr_init(EnumAttr *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	DeeObject *a, *b = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:enumattr", &a, &b))
 		return -1;
@@ -855,7 +855,7 @@ enumattr_init(EnumAttr *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 enumattr_fini(EnumAttr *__restrict self) {
 	Dee_Decref(self->ea_type);
 	Dee_XDecref(self->ea_obj);
@@ -869,7 +869,7 @@ enumattr_fini(EnumAttr *__restrict self) {
 #endif
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 enumattr_visit(EnumAttr *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ea_type);
 	Dee_XVisit(self->ea_obj);
@@ -882,7 +882,7 @@ enumattr_visit(EnumAttr *__restrict self, dvisit_t proc, void *arg) {
 #endif
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 enumattriter_setup(EnumAttrIter *__restrict self,
                    EnumAttr *__restrict seq) {
 	self->ei_seq = seq;
@@ -897,7 +897,7 @@ enumattriter_setup(EnumAttrIter *__restrict self,
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 }
 
-PRIVATE DREF EnumAttrIter *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF EnumAttrIter *DCALL
 enumattr_iter(EnumAttr *__restrict self) {
 	DREF EnumAttrIter *result;
 	result = DeeObject_MALLOC(EnumAttrIter);
@@ -909,15 +909,15 @@ done:
 	return result;
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 enumattr_hash(EnumAttr *__restrict self) {
 	return ((self->ea_obj ? DeeObject_Hash(self->ea_obj) : 0) ^
 	        Dee_HashPointer(self->ea_type));
 }
 
-PRIVATE DREF DeeObject *DCALL
-enumattr_eq(EnumAttr *__restrict self,
-            EnumAttr *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+enumattr_eq(EnumAttr *self,
+            EnumAttr *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeEnumAttr_Type))
 		return NULL;
 	if (self->ea_type != other->ea_type)
@@ -925,9 +925,9 @@ enumattr_eq(EnumAttr *__restrict self,
 	return DeeObject_CompareEqObject(self->ea_obj, other->ea_obj);
 }
 
-PRIVATE DREF DeeObject *DCALL
-enumattr_ne(EnumAttr *__restrict self,
-            EnumAttr *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+enumattr_ne(EnumAttr *self,
+            EnumAttr *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeEnumAttr_Type))
 		return NULL;
 	if (self->ea_type != other->ea_type)
@@ -1019,7 +1019,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 
 PRIVATE int DCALL
 enumattriter_init(EnumAttrIter *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	EnumAttr *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_EnumAttrIterator", &seq))
 		goto err;
@@ -1031,7 +1031,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 enumattriter_fini(EnumAttrIter *__restrict self) {
 #ifdef CONFIG_LONGJMP_ENUMATTR
 	DREF Attr **iter = self->ei_bufpos;
@@ -1054,7 +1054,7 @@ enumattriter_fini(EnumAttrIter *__restrict self) {
 	Dee_Decref(self->ei_seq);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 enumattriter_visit(EnumAttrIter *__restrict self, dvisit_t proc, void *arg) {
 #ifdef CONFIG_LONGJMP_ENUMATTR
 	DREF Attr **iter = self->ei_bufpos;
@@ -1169,7 +1169,7 @@ enumattr_start(EnumAttrIter *__restrict self) {
 }
 #endif
 
-PRIVATE DREF Attr *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Attr *DCALL
 enumattriter_next(EnumAttrIter *__restrict self) {
 #ifdef CONFIG_LONGJMP_ENUMATTR
 	DREF Attr *result;
@@ -1395,15 +1395,15 @@ attribute_lookup_enum(DeeObject *__restrict declarator,
 }
 
 
-INTDEF dssize_t DCALL
-type_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
-              DeeObject *__restrict self, denum_t proc, void *arg);
-INTDEF dssize_t DCALL
-module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
-                DeeObject *__restrict self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+type_enumattr(DeeTypeObject *UNUSED(tp_self),
+              DeeObject *self, denum_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+module_enumattr(DeeTypeObject *UNUSED(tp_self),
+                DeeObject *self, denum_t proc, void *arg);
 
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
                     DeeObject *__restrict self,
                     struct attribute_info *__restrict result,

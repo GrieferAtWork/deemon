@@ -298,7 +298,7 @@ INTDEF char *DCALL peek_next_advance(char *p, struct TPPFile *__restrict *tok_fi
 INTDEF struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char *__restrict tok_begin, int create_missing);
 INTDEF struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
 INTDEF char *DCALL advance_wraplf(char *__restrict p);
-INTDEF bool DCALL tpp_is_reachable_file(struct TPPFile *__restrict file);
+INTDEF WUNUSED NONNULL((1)) bool DCALL tpp_is_reachable_file(struct TPPFile *__restrict file);
 
 DECL_END
 #else /* CONFIG_BUILDING_DEEMON */

@@ -121,7 +121,7 @@ LOCAL size_t DCALL get_slab_size(void (DCALL *tp_free)(void *__restrict ob)) {
  * NOTE: Upon failure, the message and inner fields are initialized to NULL. */
 PRIVATE bool DCALL
 error_try_init(DeeErrorObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+               size_t argc, DeeObject **argv) {
 	size_t instance_size;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
 	instance_size = GET_INSTANCE_SIZE(self);
@@ -178,7 +178,7 @@ PRIVATE struct type_member error_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 error_ctor(DeeErrorObject *__restrict self) {
 	size_t instance_size;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
@@ -190,7 +190,7 @@ error_ctor(DeeErrorObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 error_copy(DeeErrorObject *__restrict self,
            DeeErrorObject *__restrict other) {
 	size_t instance_size;
@@ -205,7 +205,7 @@ error_copy(DeeErrorObject *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 error_deep(DeeErrorObject *__restrict self,
            DeeErrorObject *__restrict other) {
 	size_t instance_size;
@@ -229,7 +229,7 @@ PRIVATE struct keyword error_init_kwlist[] = { K(message), K(inner), KEND };
 
 PRIVATE int DCALL
 error_init(DeeErrorObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	size_t instance_size;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
 	instance_size = GET_INSTANCE_SIZE(self);
@@ -255,7 +255,7 @@ err:
 
 PRIVATE int DCALL
 error_init_kw(DeeErrorObject *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+              DeeObject **argv, DeeObject *kw) {
 	size_t instance_size;
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
 	instance_size = GET_INSTANCE_SIZE(self);
@@ -275,19 +275,19 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 error_fini(DeeErrorObject *__restrict self) {
 	Dee_XDecref(self->e_message);
 	Dee_XDecref(self->e_inner);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 error_visit(DeeErrorObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->e_message);
 	Dee_XVisit(self->e_inner);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 error_str(DeeErrorObject *__restrict self) {
 	if (self->e_message)
 		return_reference_((DeeObject *)self->e_message);
@@ -296,7 +296,7 @@ error_str(DeeErrorObject *__restrict self) {
 	return DeeObject_Str((DeeObject *)Dee_TYPE(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 error_repr(DeeErrorObject *__restrict self) {
 	if (self->e_inner) {
 		if (self->e_message) {
@@ -405,7 +405,7 @@ INIT_CUSTOM_ERROR("UnboundAttribute", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeEr
 
 
 /* BEGIN::CompilerError */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 comerr_fini(DeeCompilerErrorObject *__restrict self) {
 	size_t i, count = self->ce_errorc;
 	ASSERTF(self->ce_locs.cl_prev == NULL ||
@@ -432,7 +432,7 @@ comerr_fini(DeeCompilerErrorObject *__restrict self) {
 	Dee_weakref_fini(&self->ce_master);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 comerr_visit(DeeCompilerErrorObject *__restrict self,
              dvisit_t proc, void *arg) {
 	size_t i, count = self->ce_errorc;
@@ -445,7 +445,7 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 INTDEF dssize_t DCALL
 comerr_print(DeeCompilerErrorObject *__restrict self,
              dformatprinter printer, void *arg);
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 comerr_str(DeeCompilerErrorObject *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if unlikely(comerr_print(self, &unicode_printer_print, &printer) < 0)
@@ -497,7 +497,7 @@ PRIVATE struct type_member nomemory_members[] = {
 
 PRIVATE int DCALL
 nomemory_ctor(DeeNoMemoryErrorObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	if (error_try_init((DeeErrorObject *)self, argc, argv))
 		goto done;
 	self->nm_allocsize = 1;
@@ -507,21 +507,21 @@ done:
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 nomemory_copy(DeeNoMemoryErrorObject *__restrict self,
               DeeNoMemoryErrorObject *__restrict other) {
 	self->nm_allocsize = other->nm_allocsize;
 	return error_copy((DeeErrorObject *)self, (DeeErrorObject *)other);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 nomemory_deep(DeeNoMemoryErrorObject *__restrict self,
               DeeNoMemoryErrorObject *__restrict other) {
 	self->nm_allocsize = other->nm_allocsize;
 	return error_deep((DeeErrorObject *)self, (DeeErrorObject *)other);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nomemory_str(DeeNoMemoryErrorObject *__restrict self) {
 	if (self->nm_allocsize)
 		return DeeString_Newf("Failed to allocated %Iu bytes",
@@ -754,7 +754,7 @@ INIT_CUSTOM_ERROR("FileClosed", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FS
 
 PRIVATE int DCALL
 appexit_init(struct appexit_object *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+             size_t argc, DeeObject **argv) {
 #ifdef EXIT_FAILURE
 	self->ae_exitcode = EXIT_FAILURE;
 #else /* EXIT_FAILURE */
@@ -764,19 +764,19 @@ appexit_init(struct appexit_object *__restrict self,
 	return DeeArg_Unpack(argc, argv, "|d:appexit", &self->ae_exitcode);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 appexit_copy(struct appexit_object *__restrict self,
              struct appexit_object *__restrict other) {
 	self->ae_exitcode = other->ae_exitcode;
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 appexit_str(struct appexit_object *__restrict self) {
 	return DeeString_Newf("exit:%d", self->ae_exitcode);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 appexit_repr(struct appexit_object *__restrict self) {
 	return DeeString_Newf("AppExit(%d)", self->ae_exitcode);
 }
@@ -789,7 +789,7 @@ PRIVATE struct type_member appexit_members[] = {
 
 PRIVATE DREF DeeObject *DCALL
 appexit_class_atexit(DeeObject *__restrict UNUSED(self),
-                     size_t argc, DeeObject **__restrict argv) {
+                     size_t argc, DeeObject **argv) {
 	DeeObject *callback, *args = Dee_EmptyTuple;
 	if (DeeArg_Unpack(argc, argv, "o|o:atexit", &callback, &args))
 		goto err;
@@ -845,7 +845,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 appexit_class_exit(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	int exitcode    = EXIT_FAILURE;
 	bool run_atexit = true;
 	if (DeeArg_Unpack(argc, argv, "|db:exit", &exitcode, &run_atexit))
@@ -963,7 +963,7 @@ INIT_CUSTOM_ERROR("Interrupt", NULL, TP_FNORMAL | TP_FINHERITCTOR | TP_FINTERRUP
                   NULL, NULL, NULL, interrupt_class_members);
 PRIVATE int DCALL
 threadexit_init(struct threadexit_object *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+                size_t argc, DeeObject **argv) {
 	self->te_result = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "|o", &self->te_result))
 		return -1;
@@ -1002,7 +1002,7 @@ PRIVATE struct type_member signal_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 signal_repr(DeeSignalObject *__restrict self) {
 	return DeeString_Newf("%k()", Dee_TYPE(self));
 }

@@ -131,7 +131,7 @@ intcache_clear(size_t max_clear) {
 	return result;
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 DeeInt_Free(DeeIntObject *__restrict self) {
 	size_t n_digits;
 	ASSERT(self);
@@ -961,7 +961,7 @@ invalid_r:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_FromString(/*utf-8*/ char const *__restrict str,
                   size_t len, uint32_t radix_and_flags) {
 	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
@@ -1121,7 +1121,7 @@ invalid:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
                  size_t len, uint32_t radix_and_flags) {
 	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
@@ -1686,7 +1686,7 @@ err:
 
 
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs8(DeeObject *__restrict self, int8_t *__restrict value) {
 	int result;
 #if DIGIT_BITS <= 16
@@ -1724,7 +1724,7 @@ DeeInt_TryAs8(DeeObject *__restrict self, int8_t *__restrict value) {
 	return result;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs16(DeeObject *__restrict self, int16_t *__restrict value) {
 #if DIGIT_BITS <= 16
 	uint16_t prev, result;
@@ -1797,7 +1797,7 @@ overflow:
 #endif /* DIGIT_BITS > 16 */
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs32(DeeObject *__restrict self, int32_t *__restrict value) {
 	uint32_t prev, result;
 	int sign;
@@ -1839,7 +1839,7 @@ overflow:
 	return INT_UNSIGNED;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs64(DeeObject *__restrict self, int64_t *__restrict value) {
 	uint64_t prev, result;
 	int sign;
@@ -1887,7 +1887,7 @@ overflow:
 	return INT_UNSIGNED;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs128(DeeObject *__restrict self, dint128_t *__restrict value) {
 	duint128_t result;
 	int sign;
@@ -2497,7 +2497,7 @@ PRIVATE DREF DeeObject *DCALL int_return_zero(void) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-int_new(size_t argc, DeeObject **__restrict argv) {
+int_new(size_t argc, DeeObject **argv) {
 	DeeObject *val;
 	uint16_t radix = 0;
 	if (DeeArg_Unpack(argc, argv, "o|I16u:int", &val, &radix))
@@ -2528,7 +2528,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL int_bool(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL int_bool(DeeObject *__restrict self) {
 	return ((DeeIntObject *)self)->ob_size != 0;
 }
 
@@ -2573,7 +2573,7 @@ PRIVATE struct type_math int_math = {
 
 
 /* Integer compare. */
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 int_compareint(DeeIntObject *__restrict a,
                DeeIntObject *__restrict b) {
 	dssize_t sign;
@@ -2598,7 +2598,7 @@ int_compareint(DeeIntObject *__restrict a,
 }
 
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 int_hash(DeeIntObject *__restrict self) {
 	dhash_t x;
 	dssize_t i;
@@ -2623,8 +2623,8 @@ int_hash(DeeIntObject *__restrict self) {
 	return x * sign;
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_cmp_eq(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+int_cmp_eq(DeeObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
 	if ((some_object = DeeObject_Int(some_object)) == NULL)
 		return NULL;
@@ -2634,8 +2634,8 @@ int_cmp_eq(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool(compare_value == 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_cmp_ne(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+int_cmp_ne(DeeObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
 	if ((some_object = DeeObject_Int(some_object)) == NULL)
 		return NULL;
@@ -2645,8 +2645,8 @@ int_cmp_ne(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool(compare_value != 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_cmp_lo(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+int_cmp_lo(DeeObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
 	if ((some_object = DeeObject_Int(some_object)) == NULL)
 		return NULL;
@@ -2656,8 +2656,8 @@ int_cmp_lo(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool(compare_value < 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_cmp_le(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+int_cmp_le(DeeObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
 	if ((some_object = DeeObject_Int(some_object)) == NULL)
 		return NULL;
@@ -2667,8 +2667,8 @@ int_cmp_le(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool(compare_value <= 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_cmp_gr(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+int_cmp_gr(DeeObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
 	if ((some_object = DeeObject_Int(some_object)) == NULL)
 		return NULL;
@@ -2678,8 +2678,8 @@ int_cmp_gr(DeeObject *__restrict self, DeeObject *__restrict some_object) {
 	return_bool(compare_value > 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_cmp_ge(DeeObject *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+int_cmp_ge(DeeObject *self, DeeObject *some_object) {
 	dssize_t compare_value;
 	if ((some_object = DeeObject_Int(some_object)) == NULL)
 		return NULL;
@@ -2700,7 +2700,7 @@ PRIVATE struct type_cmp int_cmp = {
 	/* .tp_ge   = */ &int_cmp_ge,
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_str(DeeObject *__restrict self) {
 #if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
 	struct unicode_printer p = UNICODE_PRINTER_INIT;
@@ -2725,7 +2725,7 @@ err:
 #endif
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr_impl(DeeObject *__restrict self, uint32_t flags) {
 #if 0 /* XXX: Locale support? And if so, enable the unicode variant here. */
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -2747,9 +2747,9 @@ err_printer:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_tostr(DeeObject *__restrict self, size_t argc,
-          DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_tostr(DeeObject *self, size_t argc,
+          DeeObject **argv, DeeObject *kw) {
 	uint32_t flags                  = 10 << DEEINT_PRINT_RSHIFT;
 	char *flags_str                 = NULL;
 	PRIVATE struct keyword kwlist[] = { K(radix), K(mode), KEND };
@@ -2787,9 +2787,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_hex(DeeObject *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_hex(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":hex"))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS));
@@ -2797,9 +2796,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_bin(DeeObject *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_bin(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":bin"))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS));
@@ -2807,9 +2805,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_oct(DeeObject *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_oct(DeeObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":oct"))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS));
@@ -2817,10 +2814,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-int_tobytes(DeeIntObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv,
-            DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_tobytes(DeeIntObject *self, size_t argc,
+            DeeObject **argv, DeeObject *kw) {
 	struct keyword kwlist[] = { K(length), K(byteorder), K(signed), KEND };
 	size_t length;
 	DeeObject *byteorder = Dee_None;
@@ -2869,7 +2865,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 int_frombytes(DeeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **__restrict argv,
+              size_t argc, DeeObject **argv,
               DeeObject *kw) {
 	struct keyword kwlist[] = { K(bytes), K(byteorder), K(signed), KEND };
 	DeeObject *bytes;
@@ -2927,9 +2923,8 @@ PRIVATE struct type_method int_class_methods[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-int_sizeof(DeeIntObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_sizeof(DeeIntObject *self, size_t argc, DeeObject **argv) {
 	size_t int_size;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
@@ -2990,7 +2985,7 @@ PRIVATE struct type_method int_methods[] = {
 };
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 int_get_bitcount_impl(DeeIntObject *__restrict self) {
 	size_t asize;
 	digit dig, mask;
@@ -3019,7 +3014,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_get_bitcount(DeeIntObject *__restrict self) {
 	size_t result = int_get_bitcount_impl(self);
 	if unlikely(result == (size_t)-1)
@@ -3029,7 +3024,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_get_bytecount(DeeIntObject *__restrict self) {
 	size_t bits = int_get_bitcount_impl(self);
 	size_t result;

@@ -52,7 +52,7 @@ DECL_BEGIN
 #define VALIST_ADDR(x) (&(x))
 #endif /* !CONFIG_VA_LIST_IS_ARRAY */
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 count_pack_args(char const *__restrict format) {
 	size_t result = 0;
 	for (;;) {
@@ -187,7 +187,7 @@ done:
 
 
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 Dee_VPPackf_Cleanup(char const *__restrict format, va_list args) {
 again:
 	switch (*format++) {
@@ -308,7 +308,7 @@ do_int:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Dee_VPPackf(char const **__restrict pformat,
             struct va_list_struct *__restrict pargs) {
 	DREF DeeObject *result;
@@ -520,9 +520,10 @@ end:
 }
 
 
-PUBLIC int (DCALL Dee_VPUnpackf)(DeeObject *__restrict self,
-                                 char const **__restrict pformat,
-                                 struct va_list_struct *__restrict pargs) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int
+(DCALL Dee_VPUnpackf)(DeeObject *__restrict self,
+                      char const **__restrict pformat,
+                      struct va_list_struct *__restrict pargs) {
 	char const *format = *pformat;
 again:
 	switch (*format++) {
@@ -949,8 +950,9 @@ err:
 	return NULL;
 }
 
-PUBLIC int (DCALL DeeArg_VUnpack)(size_t argc, DeeObject **__restrict argv,
-                                  char const *__restrict format, va_list args) {
+PUBLIC WUNUSED NONNULL((3)) int
+(DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject **argv,
+                       char const *__restrict format, va_list args) {
 	char const *fmt_start = format;
 	bool is_optional      = false;
 	int temp;
@@ -995,8 +997,9 @@ invalid_argc:
 	return -1;
 }
 
-PUBLIC int (DeeArg_Unpack)(size_t argc, DeeObject **__restrict argv,
-                           char const *__restrict format, ...) {
+PUBLIC WUNUSED NONNULL((3)) int
+(DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject **argv,
+                char const *__restrict format, ...) {
 	int result;
 	va_list args;
 	va_start(args, format);
@@ -1027,7 +1030,7 @@ kwds_findstr(DeeKwdsObject *__restrict self,
 }
 
 PUBLIC int
-(DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject **__restrict argv,
+(DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject **argv,
                          DeeObject *kw, struct keyword *__restrict kwlist,
                          char const *__restrict format, va_list args) {
 	char const *fmt_start;
@@ -1245,7 +1248,7 @@ invalid_argc:
 }
 
 PUBLIC int
-(DeeArg_UnpackKw)(size_t argc, DeeObject **__restrict argv,
+(DeeArg_UnpackKw)(size_t argc, DeeObject **argv,
                   DeeObject *kw, struct keyword *__restrict kwlist,
                   char const *__restrict format, ...) {
 	int result;
@@ -1258,7 +1261,7 @@ PUBLIC int
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_VPackf(char const *__restrict format, va_list args) {
 	DREF DeeObject *result;
 	result = Dee_VPPackf((char const **)&format, (struct va_list_struct *)VALIST_ADDR(args));
@@ -1267,15 +1270,16 @@ Dee_VPackf(char const *__restrict format, va_list args) {
 	return result;
 }
 
-PUBLIC int (DCALL Dee_VUnpackf)(DeeObject *__restrict self,
-                                char const *__restrict format,
-                                va_list args) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL Dee_VUnpackf)(DeeObject *__restrict self,
+                     char const *__restrict format,
+                     va_list args) {
 	return Dee_VPUnpackf(self, (char const **)&format,
 	                     (struct va_list_struct *)VALIST_ADDR(args));
 }
 
 
-PUBLIC DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 Dee_Packf(char const *__restrict format, ...) {
 	struct va_list_struct args;
 	DREF DeeObject *result;
@@ -1297,8 +1301,9 @@ DeeTuple_Newf(char const *__restrict format, ...) {
 	return result;
 }
 
-PUBLIC int (Dee_Unpackf)(DeeObject *__restrict self,
-                         char const *__restrict format, ...) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(Dee_Unpackf)(DeeObject *__restrict self,
+              char const *__restrict format, ...) {
 	int result;
 	struct va_list_struct args;
 	va_start(args.vl_ap, format);

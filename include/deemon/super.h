@@ -37,9 +37,9 @@ struct Dee_super_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
 	Dee_OBJECT_HEAD
 	DREF DeeTypeObject *s_type; /* [1..1][const] Super-type.
-	                             *   NOTE: This is never `&DeeSuper_Type' itself and the
-	                             *         check `DeeObject_InstanceOf(s_self,s_type)'
-	                             *         must always succeed. */
+	                             * NOTE: This is never `&DeeSuper_Type' itself and the
+	                             *       check `DeeObject_InstanceOf(s_self,s_type)'
+	                             *       must always succeed. */
 	DREF DeeObject     *s_self; /* [1..1][const] Wrapped object (Never another super-object). */
 };
 

@@ -347,7 +347,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDex_New(DeeObject *__restrict name) {
 	DREF DeeDexObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -411,7 +411,7 @@ again:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 dex_initialize(DeeDexObject *__restrict self) {
 	int (DCALL *func)(DeeDexObject * __restrict self);
 	ASSERT(self->d_dex);
@@ -458,7 +458,7 @@ err:
 
 INTDEF size_t DCALL membercache_clear(size_t max_clear);
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 dex_fini(DeeDexObject *__restrict self) {
 	ASSERT(!self->d_pself);
 	if (self->d_module.mo_flags & MODULE_FDIDLOAD) {
@@ -502,7 +502,7 @@ dex_fini(DeeDexObject *__restrict self) {
 
 
 #if 0
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 dex_visit(DeeDexObject *__restrict self,
           dvisit_t proc, void *arg) {
 	if (self->d_module.mo_flags & MODULE_FDIDLOAD) {
@@ -575,7 +575,7 @@ extern IMAGE_DOS_HEADER __ImageBase;
 
 #ifdef USE_LOADLIBRARY /* Windows */
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict ptr) {
 	HMODULE hTypeModule;
 	DBG_ALIGNMENT_DISABLE();
@@ -661,7 +661,7 @@ iter_modules_callback(struct dl_phdr_info *info,
 	return 0;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict ptr) {
 	struct iter_modules_data data;
 	data.search_ptr = ptr;
@@ -673,7 +673,7 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 
 #elif defined(CONFIG_HAVE_KOS_DL_H) /* KOS Mk3 + ELF */
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict ptr) {
 	struct module_basic_info info;
 	DeeDexObject *iter;
@@ -730,7 +730,7 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
  * WARNING: When the given `ptr' is invalid, this function
  *          will clobber `dlerror()'!
  */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict ptr) {
 	DeeDexObject *iter;
 	void *module_handle;
@@ -765,7 +765,7 @@ DeeModule_FromStaticPointer(void const *__restrict ptr) {
 
 #else
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *__restrict ptr) {
 	/* XXX: Further support? */
 	(void)ptr;

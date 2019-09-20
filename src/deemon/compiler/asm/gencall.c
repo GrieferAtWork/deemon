@@ -42,7 +42,7 @@
 
 DECL_BEGIN
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 push_tuple_items(DeeObject *__restrict self,
                  struct ast *__restrict ddi_ast) {
 	size_t i, size;
@@ -64,7 +64,7 @@ INTDEF struct module_symbol *DCALL
 get_module_symbol(DeeModuleObject *__restrict module,
                   DeeStringObject *__restrict name);
 
-INTDEF int DCALL asm_check_thiscall(struct symbol *__restrict sym,
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__restrict sym,
                                     struct ast *__restrict warn_ast);
 
 

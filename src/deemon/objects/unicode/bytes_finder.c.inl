@@ -69,7 +69,7 @@ INTDEF DeeTypeObject BytesCaseFindIterator_Type;
 INTDEF DeeTypeObject BytesCaseFind_Type;
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_FindAll((Bytes *)Dee_EmptyBytes,
 	                                                    Dee_EmptyBytes, 0, 0);
@@ -83,7 +83,7 @@ bfi_ctor(BytesFindIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_ctor(BytesFindIterator *__restrict self) {
 	self->bfi_find = (DREF BytesFind *)DeeBytes_CaseFindAll((Bytes *)Dee_EmptyBytes,
 	                                                        Dee_EmptyBytes, 0, 0);
@@ -97,7 +97,7 @@ bcfi_ctor(BytesFindIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bfi_copy(BytesFindIterator *__restrict self,
          BytesFindIterator *__restrict other) {
 	self->bfi_find       = other->bfi_find;
@@ -110,7 +110,7 @@ bfi_copy(BytesFindIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bfi_setup(BytesFindIterator *__restrict self,
           BytesFind *__restrict find) {
 	self->bfi_find       = find;
@@ -125,7 +125,7 @@ bfi_setup(BytesFindIterator *__restrict self,
 
 PRIVATE int DCALL
 bfi_init(BytesFindIterator *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	BytesFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesFindIterator", &find))
 		goto err;
@@ -138,7 +138,7 @@ err:
 
 PRIVATE int DCALL
 bcfi_init(BytesFindIterator *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	BytesFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesCaseFindIterator", &find))
 		goto err;
@@ -149,7 +149,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bfi_next(BytesFindIterator *__restrict self) {
 	uint8_t *ptr, *new_ptr;
 again:
@@ -165,7 +165,7 @@ again:
 	return ITER_DONE;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bcfi_next(BytesFindIterator *__restrict self) {
 	uint8_t *ptr, *new_ptr;
 again:
@@ -186,17 +186,17 @@ again:
 	return ITER_DONE;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 bfi_fini(BytesFindIterator *__restrict self) {
 	Dee_Decref(self->bfi_find);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bfi_visit(BytesFindIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->bfi_find);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_bool(BytesFindIterator *__restrict self) {
 	uint8_t *ptr;
 	ptr = ATOMIC_READ(self->bfi_ptr);
@@ -206,7 +206,7 @@ bfi_bool(BytesFindIterator *__restrict self) {
 	return ptr != NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_bool(BytesFindIterator *__restrict self) {
 	uint8_t *ptr;
 	ptr = ATOMIC_READ(self->bfi_ptr);
@@ -354,7 +354,7 @@ INTERN DeeTypeObject BytesCaseFindIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bf_ctor(BytesFind *__restrict self) {
 	self->bf_bytes         = (DREF Bytes *)Dee_EmptyBytes;
 	self->bf_other         = Dee_EmptyBytes;
@@ -368,7 +368,7 @@ bf_ctor(BytesFind *__restrict self) {
 
 PRIVATE int DCALL
 bf_init(BytesFind *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "oo|IdId:_BytesFind",
 	                  &self->bf_bytes, &self->bf_other,
@@ -389,19 +389,19 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 bf_fini(BytesFind *__restrict self) {
 	Dee_Decref(self->bf_bytes);
 	Dee_Decref(self->bf_other);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bf_visit(BytesFind *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->bf_bytes);
 	Dee_Visit(self->bf_other);
 }
 
-PRIVATE DREF BytesFindIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesFindIterator *DCALL
 bf_iter(BytesFind *__restrict self) {
 	DREF BytesFindIterator *result;
 	result = DeeObject_MALLOC(BytesFindIterator);
@@ -417,7 +417,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF BytesFindIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesFindIterator *DCALL
 bcf_iter(BytesFind *__restrict self) {
 	DREF BytesFindIterator *result;
 	result = DeeObject_MALLOC(BytesFindIterator);

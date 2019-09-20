@@ -205,7 +205,7 @@ typedef struct {
 
 PRIVATE int DCALL
 tls_init(Tls *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	self->t_factory = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:Tls", &self->t_factory))
 		goto err;
@@ -219,7 +219,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 tls_fini(Tls *__restrict self) {
 	/* Free the allocated TLS index. */
 	tls_free(self->t_index);
@@ -227,7 +227,7 @@ tls_fini(Tls *__restrict self) {
 	Dee_XDecref(self->t_factory);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 tls_visit(Tls *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->t_factory);
 }
@@ -238,7 +238,7 @@ PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 	                       "The TLS variable has been unbound");
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_getvalue(Tls *__restrict self) {
 	DREF DeeObject **presult, *result;
 	presult = thread_tls_get(self->t_index);
@@ -297,7 +297,7 @@ err:
 /* @return:  1: The TLS variable was previously unbound.
  * @return:  0: Successfully unbound the TLS variable.
  * @return: -1: An error occurred. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_dodelitem(Tls *__restrict self) {
 	DREF DeeObject **pitem, *item;
 	pitem = thread_tls_get(self->t_index);
@@ -343,7 +343,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_delvalue(Tls *__restrict self) {
 	int result = tls_dodelitem(self);
 	if (result > 0)
@@ -351,7 +351,7 @@ tls_delvalue(Tls *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
 	DREF DeeObject **pitem, *item;
 	pitem = thread_tls_get(self->t_index);
@@ -397,7 +397,7 @@ err:
 	return NULL;
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 tls_hash(Tls *__restrict self) {
 	/* Since TLS indices are unique, they're perfect for hasing. */
 	return (dhash_t)self->t_index;
@@ -419,7 +419,7 @@ DEFINE_TLS_COMPARE(tls_gr, >)
 DEFINE_TLS_COMPARE(tls_ge, >=)
 #undef DEFINE_TLS_COMPARE
 
-PRIVATE int DCALL tls_bool(Tls *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(Tls *__restrict self) {
 	DREF DeeObject **slot;
 	slot = thread_tls_tryget(self->t_index);
 	return slot != NULL && ITER_ISOK(*slot);
@@ -435,7 +435,7 @@ typedef struct {
 
 PRIVATE int DCALL
 tls_init(Tls *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	self->t_value   = NULL;
 	self->t_factory = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:Tls", &self->t_factory))
@@ -447,14 +447,14 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 tls_fini(Tls *__restrict self) {
 	if (ITER_ISOK(self->t_value))
 		Dee_Decref(self->t_value);
 	Dee_XDecref(self->t_factory);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 tls_visit(Tls *__restrict self, dvisit_t proc, void *arg) {
 	if (ITER_ISOK(self->t_value))
 		Dee_Visit(self->t_value);
@@ -467,7 +467,7 @@ PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 	                       "The TLS variable has been unbound");
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tls_getvalue(Tls *__restrict self) {
 	DREF DeeObject *result;
 	result = self->t_value;
@@ -520,7 +520,7 @@ err:
 /* @return:  1: The TLS variable was previously unbound.
  * @return:  0: Successfully unbound the TLS variable.
  * @return: -1: An error occurred. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_dodelitem(Tls *__restrict self) {
 	DREF DeeObject *item;
 again:
@@ -561,7 +561,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_delvalue(Tls *__restrict self) {
 	int result = tls_dodelitem(self);
 	if (result > 0)
@@ -569,7 +569,7 @@ tls_delvalue(Tls *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
 	DREF DeeObject *item;
 	Dee_Incref(value);
@@ -606,7 +606,7 @@ err:
 	return NULL;
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 tls_hash(Tls *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
@@ -626,7 +626,7 @@ DEFINE_TLS_COMPARE(tls_gr, >)
 DEFINE_TLS_COMPARE(tls_ge, >=)
 #undef DEFINE_TLS_COMPARE
 
-PRIVATE int DCALL tls_bool(Tls *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(Tls *__restrict self) {
 	return ITER_ISOK(self->t_value);
 }
 
@@ -646,34 +646,30 @@ PRIVATE struct type_getset tls_getsets[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-tls_xch(Tls *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tls_xch(Tls *self, size_t argc, DeeObject **argv) {
 	DeeObject *newval;
 	if (DeeArg_Unpack(argc, argv, "o:xch", &newval))
 		return NULL;
 	return tls_xchitem(self, newval);
 }
 
-PRIVATE DREF DeeObject *DCALL
-tls_pop(Tls *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tls_pop(Tls *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":pop"))
 		return NULL;
 	return tls_xchitem(self, ITER_DONE);
 }
 
-PRIVATE DREF DeeObject *DCALL
-tls_get(Tls *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tls_get(Tls *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
 		return NULL;
 	return tls_getvalue(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-tls_delete(Tls *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tls_delete(Tls *self, size_t argc, DeeObject **argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":delete"))
 		goto err;
@@ -685,9 +681,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-tls_set(Tls *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tls_set(Tls *self, size_t argc, DeeObject **argv) {
 	DeeObject *ob;
 	if (DeeArg_Unpack(argc, argv, "o:set", &ob) ||
 	    tls_setvalue(self, ob))

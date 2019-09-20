@@ -53,7 +53,7 @@ LOCAL size_t dee_strnlen(char const *__restrict str, size_t maxlen) {
 
 
 INTERN DREF DeeObject *DCALL
-capi_free(size_t argc, DeeObject **__restrict argv) {
+capi_free(size_t argc, DeeObject **argv) {
 	DREF DeeObject *uptr;
 	union pointer ptr;
 	if (DeeArg_Unpack(argc, argv, "o:free", &uptr) ||
@@ -66,7 +66,7 @@ err:
 }
 
 INTERN DREF DeeObject *DCALL
-capi_malloc(size_t argc, DeeObject **__restrict argv) {
+capi_malloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t num_bytes;
@@ -85,7 +85,7 @@ err:
 
 
 INTERN DREF DeeObject *DCALL
-capi_realloc(size_t argc, DeeObject **__restrict argv) {
+capi_realloc(size_t argc, DeeObject **argv) {
 	DREF DeeObject *uptr;
 	DREF DeeObject *result;
 	union pointer ptr;
@@ -114,7 +114,7 @@ err:
 }
 
 INTERN DREF DeeObject *DCALL
-capi_calloc(size_t argc, DeeObject **__restrict argv) {
+capi_calloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t count, num_bytes = 1, total;
@@ -143,7 +143,7 @@ err:
 
 
 INTERN DREF DeeObject *DCALL
-capi_trymalloc(size_t argc, DeeObject **__restrict argv) {
+capi_trymalloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t num_bytes;
@@ -160,7 +160,7 @@ err:
 
 
 INTERN DREF DeeObject *DCALL
-capi_tryrealloc(size_t argc, DeeObject **__restrict argv) {
+capi_tryrealloc(size_t argc, DeeObject **argv) {
 	DREF DeeObject *uptr;
 	DREF DeeObject *result;
 	union pointer ptr;
@@ -189,7 +189,7 @@ err:
 }
 
 INTERN DREF DeeObject *DCALL
-capi_trycalloc(size_t argc, DeeObject **__restrict argv) {
+capi_trycalloc(size_t argc, DeeObject **argv) {
 	void *ptr;
 	DREF DeeObject *result;
 	size_t count, num_bytes = 1, total;
@@ -217,7 +217,7 @@ err:
 
 
 INTERN DREF DeeObject *DCALL
-capi_strdup(size_t argc, DeeObject **__restrict argv) {
+capi_strdup(size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t len, maxlen = (size_t)-1;
 	DeeObject *str_ob;
@@ -245,7 +245,7 @@ err:
 
 
 INTERN DREF DeeObject *DCALL
-capi_trystrdup(size_t argc, DeeObject **__restrict argv) {
+capi_trystrdup(size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t len, maxlen = (size_t)-1;
 	DeeObject *str_ob;

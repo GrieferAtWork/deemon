@@ -53,7 +53,7 @@ DECL_BEGIN
  * HINT: The algorithm used by VC/VC++ is located
  *       in `crt/src/stdargv.c' of Visual Studio
  */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 cmdline_add_arg(struct ascii_printer *__restrict printer,
                 DeeStringObject *__restrict arg) {
 	char *begin, *iter, *end, *flush_start;
@@ -107,7 +107,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 cmdline_add_args(struct ascii_printer *__restrict printer,
                  DeeObject *__restrict args) {
 	DREF DeeObject *iter, *elem;
@@ -139,7 +139,7 @@ err:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmdline_split(DeeStringObject *__restrict cmdline) {
 	char *iter, *end;
 	struct ascii_printer printer;

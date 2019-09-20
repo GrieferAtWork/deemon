@@ -80,23 +80,23 @@ PRIVATE bool atexit_registered = false;
 #endif /* !CONFIG_NO_STDLIB */
 
 /* Add/Remove a given buffer from the TTY-buffer chain. */
-PRIVATE void DCALL buffer_addtty(Buffer *__restrict self);
-PRIVATE void DCALL buffer_deltty(Buffer *__restrict self);
+PRIVATE NONNULL((1)) void DCALL buffer_addtty(Buffer *__restrict self);
+PRIVATE NONNULL((1)) void DCALL buffer_deltty(Buffer *__restrict self);
 
 
 PRIVATE ATTR_COLD int DCALL err_buffer_closed(void);
 
-PRIVATE dssize_t DCALL buffer_read_nolock(Buffer *__restrict self, uint8_t *__restrict buffer, size_t bufsize, dioflag_t flags);
-PRIVATE dssize_t DCALL buffer_write_nolock(Buffer *__restrict self, uint8_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL buffer_read_nolock(Buffer *__restrict self, uint8_t *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL buffer_write_nolock(Buffer *__restrict self, uint8_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
 PRIVATE doff_t DCALL buffer_seek_nolock(Buffer *__restrict self, doff_t off, int whence);
-PRIVATE int DCALL buffer_sync_nolock(Buffer *__restrict self, uint16_t mode);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_sync_nolock(Buffer *__restrict self, uint16_t mode);
 #define BUFFER_SYNC_FNORMAL          0x0000
 #define BUFFER_SYNC_FERROR_IF_CLOSED 0x0001 /* Throw an error if the buffer was closed. */
 #define BUFFER_SYNC_FNOSYNC_FILE     0x0002 /* Don't synchronize the underlying file, regardless of whether
                                              * or not the `FILE_BUFFER_FSYNC' flag has been set. */
-PRIVATE int DCALL buffer_getc_nolock(Buffer *__restrict self, dioflag_t flags);
-PRIVATE int DCALL buffer_ungetc_nolock(Buffer *__restrict self, int ch);
-PRIVATE int DCALL buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_getc_nolock(Buffer *__restrict self, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_ungetc_nolock(Buffer *__restrict self, int ch);
+PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size);
 
 
 #ifndef CONFIG_NO_STDLIB
@@ -139,7 +139,7 @@ PRIVATE void atexit_flushall(void) {
 }
 #endif /* !CONFIG_NO_STDLIB */
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 buffer_addtty(Buffer *__restrict self) {
 	buffer_ttys_lock_enter();
 #ifndef CONFIG_NO_STDLIB
@@ -159,7 +159,7 @@ buffer_addtty(Buffer *__restrict self) {
 	buffer_ttys_lock_leave();
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 buffer_deltty(Buffer *__restrict self) {
 	buffer_ttys_lock_enter();
 	if (self->fb_ttych.fbl_pself) {
@@ -263,7 +263,7 @@ buffer_tryrealloc_nolock_d(Buffer *__restrict self, size_t new_size,
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_determine_isatty(Buffer *__restrict self) {
 	int is_a_tty;
 	DREF DeeObject *file;
@@ -304,7 +304,7 @@ err:
  * @param: mode: One of `FILE_BUFFER_MODE_*'
  * @param: size: The size of the buffer, or ZERO(0)
  *               to allow it to change dynamically. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFileBuffer_New(DeeObject *__restrict file,
                   uint16_t mode, size_t size) {
 	DREF Buffer *result;
@@ -326,7 +326,7 @@ err_r:
  * @param: mode: One of `FILE_BUFFER_MODE_*'
  * @param: size: The size of the buffer, or ZERO(0)
  *               to allow it to change dynamically. */
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size) {
 	int result = 0;
@@ -429,7 +429,7 @@ PUBLIC int DCALL DeeFileBuffer_SyncTTYs(void) {
 }
 
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 buffer_read_nolock(Buffer *__restrict self,
                    uint8_t *__restrict buffer,
                    size_t bufsize, dioflag_t flags) {
@@ -603,7 +603,7 @@ err:
 	return -1;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 buffer_write_nolock(Buffer *__restrict self,
                     uint8_t const *__restrict buffer,
                     size_t bufsize, dioflag_t flags) {
@@ -854,7 +854,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_sync_nolock(Buffer *__restrict self, uint16_t mode) {
 	dpos_t abs_chngpos;
 	size_t changed_size;
@@ -928,7 +928,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_getc_nolock(Buffer *__restrict self, dioflag_t flags) {
 	uint8_t *new_buffer;
 	dssize_t read_size;
@@ -1087,7 +1087,7 @@ err:
 	goto done;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_ungetc_nolock(Buffer *__restrict self, int ch) {
 	uint8_t *new_buffer;
 	size_t new_bufsize, inc_size;
@@ -1145,7 +1145,7 @@ err:
 	return GETC_ERR;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size) {
 	dpos_t abs_pos, abs_end;
 	int result;
@@ -1182,7 +1182,7 @@ err:
 }
 
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 buffer_read(Buffer *__restrict self,
             void *__restrict buffer,
             size_t bufsize, dioflag_t flags) {
@@ -1193,7 +1193,7 @@ buffer_read(Buffer *__restrict self,
 	return result;
 }
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 buffer_write(Buffer *__restrict self,
              void const *__restrict buffer,
              size_t bufsize, dioflag_t flags) {
@@ -1204,7 +1204,7 @@ buffer_write(Buffer *__restrict self,
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_sync(Buffer *__restrict self) {
 	int result;
 	buf_write(self);
@@ -1213,7 +1213,7 @@ buffer_sync(Buffer *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_getc(Buffer *__restrict self, dioflag_t flags) {
 	int result;
 	buf_write(self);
@@ -1222,7 +1222,7 @@ buffer_getc(Buffer *__restrict self, dioflag_t flags) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_ungetc(Buffer *__restrict self, int ch) {
 	int result;
 	buf_write(self);
@@ -1231,7 +1231,7 @@ buffer_ungetc(Buffer *__restrict self, int ch) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_trunc(Buffer *__restrict self, dpos_t new_size) {
 	int result;
 	buf_write(self);
@@ -1250,7 +1250,7 @@ buffer_seek(Buffer *__restrict self,
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_close(Buffer *__restrict self) {
 	DREF DeeObject *file;
 	uint8_t *buffer;
@@ -1314,7 +1314,7 @@ PRIVATE struct mode_name const mode_names[] = {
 
 PRIVATE int DCALL
 buffer_ctor(Buffer *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	uint16_t mode = (FILE_BUFFER_MODE_AUTO);
 	DeeObject *file;
 	char const *mode_str = NULL;
@@ -1413,7 +1413,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 buffer_fini(Buffer *__restrict self) {
 	if (self->fb_ttych.fbl_pself) {
 #ifndef CONFIG_NO_THREADS
@@ -1437,7 +1437,7 @@ buffer_fini(Buffer *__restrict self) {
 		Dee_Free(self->fb_base);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 buffer_visit(Buffer *__restrict self, dvisit_t proc, void *arg) {
 	buf_write(self);
 	Dee_XVisit(self->fb_file);
@@ -1445,9 +1445,8 @@ buffer_visit(Buffer *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-buffer_size(Buffer *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+buffer_size(Buffer *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *file, *result;
 	buf_write(self);
 	file = self->fb_file;
@@ -1467,9 +1466,8 @@ err_closed_unlock:
 }
 
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
-PRIVATE DREF DeeObject *DCALL
-buffer_fileno(Buffer *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+buffer_fileno(Buffer *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *file, *result;
 	buf_write(self);
 	file = self->fb_file;
@@ -1489,9 +1487,8 @@ err_closed_unlock:
 }
 #endif
 
-PRIVATE DREF DeeObject *DCALL
-buffer_isatty(Buffer *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+buffer_isatty(Buffer *self, size_t argc, DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":isatty"))
 		goto err;
@@ -1506,9 +1503,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-buffer_flush(Buffer *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+buffer_flush(Buffer *self, size_t argc, DeeObject **argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":flush"))
 		goto err;
@@ -1525,10 +1521,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-buffer_setbuf(Buffer *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
-              DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+buffer_setbuf(Buffer *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	uint16_t mode;
 	char const *mode_iter;
 	char const *mode_str;
@@ -1641,7 +1636,7 @@ PRIVATE struct type_method buffer_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_filename(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
 	buf_write(self);
@@ -1661,7 +1656,7 @@ err_closed_unlock:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_getfile(Buffer *__restrict self) {
 	DREF DeeObject *result;
 	buf_write(self);
@@ -1694,7 +1689,7 @@ PRIVATE struct type_getset buffer_getsets[] = {
 
 PRIVATE DREF DeeObject *DCALL
 buffer_class_sync(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		goto err;
 	if (DeeFileBuffer_SyncTTYs())

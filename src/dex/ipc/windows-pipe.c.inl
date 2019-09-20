@@ -39,7 +39,7 @@ DECL_BEGIN
 
 typedef DeeSystemFileObject SystemFile;
 
-PRIVATE DREF SystemFile *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SystemFile *DCALL
 open_fd(DeeFileTypeObject *__restrict fType, HANDLE hHandle) {
 	DREF SystemFile *result;
 	result = DeeObject_MALLOC(SystemFile);
@@ -58,7 +58,7 @@ done:
 
 PRIVATE DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **__restrict argv) {
+               size_t argc, DeeObject **argv) {
 	DWORD pipe_size = 0;
 	HANDLE hReader, hWriter;
 	DREF SystemFile *fReader, *fWriter;

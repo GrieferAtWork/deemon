@@ -36,7 +36,7 @@ DECL_BEGIN
 
 #if 1
 #define is_builtin_object is_builtin_object
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_builtin_object(DeeObject *__restrict ob) {
 	if (Dec_BuiltinID(ob) != DEC_BUILTINID_UNKNOWN)
 		return true;
@@ -44,21 +44,21 @@ is_builtin_object(DeeObject *__restrict ob) {
 	return false;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 warn_idcompare_nonbuiltin(struct ast *__restrict warn_ast) {
 	return WARNAST(warn_ast, W_COMPARE_SODO_NONBUILTIN_UNDEFINED);
 }
 #endif
 
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 ast_sequence_is_nonempty(struct ast *__restrict self) {
 	(void)self;
 	/* TODO: Check if `self' is a non-empty sequence expression. */
 	return false;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 ast_iterator_is_nonempty(struct ast *__restrict self) {
 	/* Simple (and most likely) case: Check if `self' invokes `operator iter'. */
 	if (self->a_type == AST_OPERATOR &&

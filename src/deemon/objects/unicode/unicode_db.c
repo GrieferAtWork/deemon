@@ -40,7 +40,7 @@ DeeUni_Descriptor(uint32_t ch) {
 	return (struct unitraits *)&default_traits;
 }
 
-PUBLIC WUNUSED ATTR_PURE size_t
+PUBLIC ATTR_PURE size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
                         uint32_t buf[UNICODE_FOLDED_MAX]) {
 	struct unitraits *trt;

@@ -64,7 +64,7 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
 }
 #endif /* !__USE_GNU */
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathhead(DeeObject *__restrict path) {
 	char *tailsep;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -84,7 +84,7 @@ fs_pathhead(DeeObject *__restrict path) {
 	                          (size_t)((tailsep + 1) - DeeString_STR(path)));
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathtail(DeeObject *__restrict path) {
 	char *tailsep;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -105,7 +105,7 @@ fs_pathtail(DeeObject *__restrict path) {
 	                          (size_t)(DeeString_END(path) - tailsep));
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathfile(DeeObject *__restrict path) {
 	char *tailsep, *extpos;
 	size_t tailsize;
@@ -132,7 +132,7 @@ fs_pathfile(DeeObject *__restrict path) {
 	return DeeString_NewSized(tailsep, tailsize);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathext(DeeObject *__restrict path) {
 	char *extpos;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -150,7 +150,7 @@ fs_pathext(DeeObject *__restrict path) {
 PRIVATE DEFINE_STRING(str_single_slash, SEP_S);
 PRIVATE DEFINE_STRING(str_single_dot, ".");
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathdrive(DeeObject *__restrict path) {
 #ifdef CONFIG_HOST_WINDOWS
 	char *drive_start, *end;
@@ -183,7 +183,7 @@ fs_pathdrive(DeeObject *__restrict path) {
 #endif /* !CONFIG_HOST_WINDOWS */
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathinctrail(DeeObject *__restrict path) {
 	char endch;
 	DREF DeeObject *result;
@@ -202,7 +202,7 @@ fs_pathinctrail(DeeObject *__restrict path) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathexctrail(DeeObject *__restrict path) {
 	size_t pathlen;
 	char endch;
@@ -216,7 +216,7 @@ fs_pathexctrail(DeeObject *__restrict path) {
 	return DeeString_NewSized(DeeString_STR(path), pathlen - 1);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 fs_pathisabs(DeeObject *__restrict path) {
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	return ISABS_STR(path);
@@ -1248,7 +1248,7 @@ err_without_printer:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_getchmod_mask(DeeObject *__restrict mode,
                  uint16_t *__restrict pchmod_mask,
                  uint16_t *__restrict pchmod_flags) {

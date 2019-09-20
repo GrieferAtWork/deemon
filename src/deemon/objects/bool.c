@@ -40,19 +40,19 @@ bool_return_false(void) {
 }
 
 PRIVATE DREF DeeObject *DCALL
-bool_new(size_t argc, DeeObject **__restrict argv) {
+bool_new(size_t argc, DeeObject **argv) {
 	bool value;
 	if (DeeArg_Unpack(argc, argv, "b:bool", &value))
 		return NULL;
 	return_bool_(value);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_str(DeeObject *__restrict self) {
 	return_reference(DeeBool_IsTrue(self) ? &str_true : &str_false);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bool_bool(DeeObject *__restrict self) {
 	return DeeBool_IsTrue(self);
 }
@@ -60,47 +60,47 @@ bool_bool(DeeObject *__restrict self) {
 #if __SIZEOF_INT__ == __SIZEOF_POINTER__
 #define bool_hash (*(dhash_t (DCALL *)(DeeObject *__restrict))&bool_bool)
 #else /* __SIZEOF_INT__ == __SIZEOF_POINTER__ */
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 bool_hash(DeeObject *__restrict self) {
 	return DeeBool_IsTrue(self);
 }
 #endif /* __SIZEOF_INT__ != __SIZEOF_POINTER__ */
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_int32(DeeObject *__restrict self,
            int32_t *__restrict result) {
 	*result = DeeBool_IsTrue(self);
 	return INT_UNSIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_int64(DeeObject *__restrict self,
            int64_t *__restrict result) {
 	*result = DeeBool_IsTrue(self);
 	return INT_UNSIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bool_double(DeeObject *__restrict self,
             double *__restrict result) {
 	*result = DeeBool_IsTrue(self);
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_int(DeeObject *__restrict self) {
 	return_reference(DeeBool_IsTrue(self) ? &DeeInt_One : &DeeInt_Zero);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_inv(DeeObject *__restrict self) {
 	return_bool(!DeeBool_IsTrue(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_or(DeeObject *__restrict self,
-        DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_or(DeeObject *self,
+        DeeObject *other) {
 	int temp;
 	if (DeeBool_IsTrue(self))
 		return_true;
@@ -110,9 +110,9 @@ bool_or(DeeObject *__restrict self,
 	return_bool(temp);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_and(DeeObject *__restrict self,
-         DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_and(DeeObject *self,
+         DeeObject *other) {
 	int temp;
 	if (!DeeBool_IsTrue(self))
 		return_false;
@@ -122,17 +122,17 @@ bool_and(DeeObject *__restrict self,
 	return_bool(temp);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_xor(DeeObject *__restrict self,
-         DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_xor(DeeObject *self,
+         DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		return NULL;
 	return_bool(DeeBool_IsTrue(self) ^ temp);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_div(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_div(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		return NULL;
@@ -143,8 +143,8 @@ bool_div(DeeObject *__restrict self, DeeObject *__restrict other) {
 	return_reference_(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_mod(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_mod(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
 		return NULL;
@@ -155,8 +155,8 @@ bool_mod(DeeObject *__restrict self, DeeObject *__restrict other) {
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_shl(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_shl(DeeObject *self, DeeObject *other) {
 	dssize_t shift_value;
 	if (DeeObject_AsSSize(other, &shift_value))
 		return NULL;
@@ -167,8 +167,8 @@ bool_shl(DeeObject *__restrict self, DeeObject *__restrict other) {
 	return_reference_(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_shr(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_shr(DeeObject *self, DeeObject *other) {
 	dssize_t shift_value;
 	if (DeeObject_AsSSize(other, &shift_value))
 		return NULL;
@@ -181,8 +181,8 @@ bool_shr(DeeObject *__restrict self, DeeObject *__restrict other) {
 	return_reference_(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_pow(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_pow(DeeObject *self, DeeObject *other) {
 	int temp;
 	if (DeeBool_IsTrue(self))
 		return_true;
@@ -243,24 +243,24 @@ PRIVATE struct type_math bool_math = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
-bool_eq(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_eq(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		return NULL;
 	return_bool_((!error) != DeeBool_IsTrue(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_ne(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_ne(DeeObject *self, DeeObject *other) {
 	int error = DeeObject_Bool(other);
 	if unlikely(error < 0)
 		return NULL;
 	return_bool_((!error) == DeeBool_IsTrue(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_lo(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_lo(DeeObject *self, DeeObject *other) {
 	int error;
 	if (DeeBool_IsTrue(self))
 		return_false; /* true < X --> false */
@@ -270,8 +270,8 @@ bool_lo(DeeObject *__restrict self, DeeObject *__restrict other) {
 	return_bool_(error); /* false < X --> X */
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_le(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_le(DeeObject *self, DeeObject *other) {
 	int error;
 	if (!DeeBool_IsTrue(self))
 		return_true; /* false <= X --> true */
@@ -281,8 +281,8 @@ bool_le(DeeObject *__restrict self, DeeObject *__restrict other) {
 	return_bool_(error); /* true <= X --> X */
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_gr(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_gr(DeeObject *self, DeeObject *other) {
 	int error;
 	if (!DeeBool_IsTrue(self))
 		return_false; /* false > X --> false */
@@ -292,8 +292,8 @@ bool_gr(DeeObject *__restrict self, DeeObject *__restrict other) {
 	return_bool_(error); /* true > X --> X */
 }
 
-PRIVATE DREF DeeObject *DCALL
-bool_ge(DeeObject *__restrict self, DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bool_ge(DeeObject *self, DeeObject *other) {
 	int error;
 	if (DeeBool_IsTrue(self))
 		return_true; /* true >= X --> true */

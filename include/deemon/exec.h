@@ -53,7 +53,7 @@ DECL_BEGIN
  *          executable is used as home folder instead.
  * @return: NULL: Failed to determine the home folder (an error was set).
  * NOTE: The home path _MUST_ include a trailing slash! */
-DFUNDEF DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void);
+DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void);
 /* Set the new home folder, overwriting whatever was set before.
  * HINT: You may pass `NULL' to cause the default home path to be re-created. */
 DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
@@ -109,8 +109,8 @@ DDATDEF uint64_t DCALL DeeExec_GetTimestamp(void);
  * @return:  0: Successfully registered the given callback.
  * @return: -1: An error occurred or atexit() can no longer be used
  *              because `Dee_RunAtExit()' is being, or had been called. */
-DFUNDEF int DCALL Dee_AtExit(DeeObject *__restrict callback,
-                             DeeObject *__restrict args);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_AtExit(DeeObject *callback, DeeObject *args);
 
 /* Run callbacks that have been registered using `Dee_AtExit()'
  * @return:  0: Successfully executed all callbacks.
@@ -139,7 +139,7 @@ DFUNDEF int DCALL Dee_Exit(int exitcode, bool run_atexit);
  * invoked using the Argv tuple modifiable using this pair of functions.
  * The deemon launcher should call `Dee_SetArgv()' to set the original argument tuple.
  * NOTE: By default, an empty tuple is set for argv. */
-DFUNDEF ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void);
+DFUNDEF WUNUSED ATTR_RETNONNULL /*Tuple*/ DREF DeeObject *DCALL Dee_GetArgv(void);
 DFUNDEF NONNULL((1)) void DCALL Dee_SetArgv(/*Tuple*/ DeeObject *__restrict argv);
 
 
@@ -185,12 +185,12 @@ struct Dee_compiler_options;
  * @param: module_name:     The name of the internal module, or NULL to determine automatically.
  *                          Note that the internal module is never registered globally, and
  *                          only exists as an anonymous module. */
-DFUNDEF NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream, unsigned int mode,
                   size_t argc, DeeObject **argv, int start_line, int start_col,
                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                   DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
                         size_t argc, DeeObject **argv, int start_line, int start_col,
                         struct Dee_compiler_options *options, DeeObject *default_symbols,
@@ -206,23 +206,23 @@ DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
  * generated, before that module's root is returned, or if the given user-code
  * is only executed when the function is called, potentially allowing for
  * JIT-like execution of simple expressions such as `10 + 20' */
-DFUNDEF NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             unsigned int mode, int start_line, int start_col,
                             struct Dee_compiler_options *options, DeeObject *default_symbols,
                             DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStream(DeeObject *source_stream,
                               unsigned int mode, int start_line, int start_col,
                               struct Dee_compiler_options *options, DeeObject *default_symbols,
                               DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleStreamString(DeeObject *source_stream,
                                   unsigned int mode, int start_line, int start_col,
                                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                                   /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                   /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
                                     unsigned int mode, int start_line, int start_col,
                                     struct Dee_compiler_options *options, DeeObject *default_symbols,
@@ -231,36 +231,36 @@ DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
 
 
 /* Same as the functions above, but instead take a raw memory block as input */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                   unsigned int mode, size_t argc, DeeObject **argv,
                   int start_line, int start_col,
                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                   DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                         unsigned int mode, size_t argc, DeeObject **argv,
                         int start_line, int start_col,
                         struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                         /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF /*Module*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                             unsigned int mode, int start_line, int start_col,
                             struct Dee_compiler_options *options, DeeObject *default_symbols,
                             DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
                               unsigned int mode, int start_line, int start_col,
                               struct Dee_compiler_options *options, DeeObject *default_symbols,
                               DeeObject *source_pathname, DeeObject *module_name);
-DFUNDEF /*Module*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                   unsigned int mode, int start_line, int start_col,
                                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                                   /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                   /*utf-8*/ char const *module_name, size_t module_namesize);
-DFUNDEF /*Callable*/ DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) /*Callable*/ DREF DeeObject *DCALL
 DeeExec_CompileFunctionMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
                                     unsigned int mode, int start_line, int start_col,
                                     struct Dee_compiler_options *options, DeeObject *default_symbols,

@@ -90,9 +90,9 @@ DDATDEF DeeTypeObject DeeRoSet_Type;
 #define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_roset' is final */
 #define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeRoSet_Type)
 
-DFUNDEF DREF DeeObject *DCALL DeeRoSet_FromSequence(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeRoSet_FromIterator(DeeObject *__restrict self);
-DFUNDEF DREF DeeObject *DCALL DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIterator(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
 
 /* Internal functions for constructing a read-only set object. */
 DFUNDEF DREF DeeObject *DCALL DeeRoSet_New(void);
@@ -105,8 +105,8 @@ DFUNDEF int DCALL DeeRoSet_Insert(DeeObject **__restrict pself, DeeObject *__res
 /* @return:  1/true:  The object exists.
  * @return:  0/false: No such object exists.
  * @return: -1:       An error occurred. */
-DFUNDEF int DCALL DeeRoSet_Contains(DeeObject *__restrict self, DeeObject *__restrict key);
-DFUNDEF bool DCALL DeeRoSet_ContainsString(DeeObject *__restrict self, char const *__restrict key, size_t key_length);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeRoSet_Contains(DeeObject *__restrict self, DeeObject *__restrict key);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoSet_ContainsString(DeeObject *__restrict self, char const *__restrict key, size_t key_length);
 
 /* Hash-iteration control. */
 #define Dee_ROSET_HASHST(self, ro)     ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)

@@ -53,9 +53,9 @@ DECLARE_OBJECT_CACHE(super, DeeSuperObject); /* TODO: Get rid of this (rely on s
 #define instance_method_tp_alloc super_tp_alloc
 #define instance_method_tp_free  super_tp_free
 
-PUBLIC DREF DeeObject *DCALL
-DeeInstanceMethod_New(DeeObject *__restrict func,
-                      DeeObject *__restrict this_arg) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeInstanceMethod_New(DeeObject *func,
+                      DeeObject *this_arg) {
 	DREF InstanceMethod *result;
 	ASSERT_OBJECT(func);
 	ASSERT_OBJECT(this_arg);
@@ -70,7 +70,7 @@ DeeInstanceMethod_New(DeeObject *__restrict func,
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 im_ctor(InstanceMethod *__restrict self) {
 	/* Initialize a stub instance-method. */
 	self->im_func = Dee_None;
@@ -83,7 +83,7 @@ im_ctor(InstanceMethod *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 im_copy(InstanceMethod *__restrict self,
         InstanceMethod *__restrict other) {
 	self->im_this = other->im_this;
@@ -93,7 +93,7 @@ im_copy(InstanceMethod *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 im_deepcopy(InstanceMethod *__restrict self,
             InstanceMethod *__restrict other) {
 	self->im_this = DeeObject_DeepCopy(other->im_this);
@@ -109,7 +109,7 @@ im_deepcopy(InstanceMethod *__restrict self,
 
 PRIVATE int DCALL
 im_init(InstanceMethod *__restrict self,
-        size_t argc, DeeObject **__restrict argv,
+        size_t argc, DeeObject **argv,
         DeeObject *kw) {
 	DeeObject *thisarg, *func;
 	PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
@@ -122,31 +122,30 @@ im_init(InstanceMethod *__restrict self,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 im_repr(InstanceMethod *__restrict self) {
 	return DeeString_Newf("InstanceMethod(func: %r, thisarg: %r)", self->im_func, self->im_this);
 }
 
-PRIVATE DREF DeeObject *DCALL
-im_call(InstanceMethod *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+im_call(InstanceMethod *self, size_t argc, DeeObject **argv) {
 	return DeeObject_ThisCall(self->im_func, self->im_this, argc, argv);
 }
 
-PRIVATE DREF DeeObject *DCALL
-im_callkw(InstanceMethod *__restrict self, size_t argc,
-          DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+im_callkw(InstanceMethod *self, size_t argc,
+          DeeObject **argv, DeeObject *kw) {
 	return DeeObject_ThisCallKw(self->im_func, self->im_this, argc, argv, kw);
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 im_hash(InstanceMethod *__restrict self) {
 	return DeeObject_Hash(self->im_func) ^ DeeObject_Hash(self->im_this);
 }
 
-PRIVATE DREF DeeObject *DCALL
-im_eq(InstanceMethod *__restrict self,
-      InstanceMethod *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+im_eq(InstanceMethod *self,
+      InstanceMethod *other) {
 	int temp;
 	if (DeeObject_AssertType((DeeObject *)other, &DeeInstanceMethod_Type))
 		return NULL;
@@ -161,9 +160,9 @@ im_eq(InstanceMethod *__restrict self,
 	return_bool_(temp);
 }
 
-PRIVATE DREF DeeObject *DCALL
-im_ne(InstanceMethod *__restrict self,
-      InstanceMethod *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+im_ne(InstanceMethod *self,
+      InstanceMethod *other) {
 	int temp;
 	if (DeeObject_AssertType((DeeObject *)other, &DeeInstanceMethod_Type))
 		return NULL;
@@ -187,8 +186,8 @@ PRIVATE struct type_cmp im_cmp = {
 
 /* Since `super' and `InstanceMethod' share an identical
  * layout, we can re-use some operators here... */
-INTDEF void DCALL super_fini(DeeSuperObject *__restrict self);
-INTDEF void DCALL super_visit(DeeSuperObject *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL super_fini(DeeSuperObject *__restrict self);
+INTDEF NONNULL((1, 2)) void DCALL super_visit(DeeSuperObject *__restrict self, dvisit_t proc, void *arg);
 #define im_fini   super_fini
 #define im_visit  super_visit
 
@@ -245,7 +244,7 @@ instancemethod_getattr(InstanceMethod *__restrict self,
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_name(InstanceMethod *__restrict self) {
 	struct class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
@@ -264,7 +263,7 @@ return_attr: {
 }
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_doc(InstanceMethod *__restrict self) {
 	struct class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
@@ -285,7 +284,7 @@ return_attr: {
 }
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_kwds(InstanceMethod *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_GetAttr(self->im_func, &str___kwds__);
@@ -297,7 +296,7 @@ instancemethod_get_kwds(InstanceMethod *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 instancemethod_get_type(InstanceMethod *__restrict self) {
 	DeeTypeObject *result;
 	if (!instancemethod_getattr(self, NULL, &result))
@@ -305,7 +304,7 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 	return_reference_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_module(InstanceMethod *__restrict self) {
 	return DeeObject_GetAttr(self->im_func, &str___module__);
 }

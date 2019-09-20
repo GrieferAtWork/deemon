@@ -46,7 +46,7 @@
 DECL_BEGIN
 
 INTDEF struct module_symbol empty_module_buckets[];
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_compile(DeeModuleObject *__restrict mod,
                DeeCodeObject *__restrict root_code,
                uint16_t flags) {

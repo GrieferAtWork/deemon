@@ -51,7 +51,7 @@
 DECL_BEGIN
 
 
-INTERN DREF DeeStringObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 module_symbol_getnameobj(struct module_symbol *__restrict self) {
 	DREF DeeStringObject *result;
 	char const *name_str;
@@ -82,7 +82,7 @@ done:
 	return result;
 }
 
-INTERN DREF DeeStringObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 module_symbol_getdocobj(struct module_symbol *__restrict self) {
 	DREF DeeStringObject *result;
 	char const *doc_str;
@@ -117,7 +117,7 @@ done:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_GetRoot(DeeObject *__restrict self,
                   bool set_initialized) {
 	DREF DeeFunctionObject *result;
@@ -227,7 +227,7 @@ DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrSymbol(DeeModuleObject *__restrict self,
                         struct module_symbol *__restrict symbol) {
 	DREF DeeObject *result;
@@ -266,7 +266,7 @@ read_symbol:
 	goto read_symbol;
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self,
                           struct module_symbol *__restrict symbol) {
 	ASSERT(symbol >= self->mo_bucketv &&
@@ -447,7 +447,7 @@ module_hasattr_len_impl(DeeModuleObject *__restrict self,
 	                                         hash);
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
                         struct module_symbol *__restrict symbol) {
 	DREF DeeObject *old_value;
@@ -545,7 +545,7 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
 	                                     ATTR_ACCESS_DEL);
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self,
                         struct module_symbol *__restrict symbol,
                         DeeObject *__restrict value) {
@@ -659,10 +659,10 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
 
 
 #ifndef CONFIG_NO_THREADS
-INTDEF void DCALL interactivemodule_lockread(DeeModuleObject *__restrict self);
-INTDEF void DCALL interactivemodule_lockwrite(DeeModuleObject *__restrict self);
-INTDEF void DCALL interactivemodule_lockendread(DeeModuleObject *__restrict self);
-INTDEF void DCALL interactivemodule_lockendwrite(DeeModuleObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL interactivemodule_lockread(DeeModuleObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL interactivemodule_lockwrite(DeeModuleObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL interactivemodule_lockendread(DeeModuleObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL interactivemodule_lockendwrite(DeeModuleObject *__restrict self);
 #else
 #deifne interactivemodule_lockread(self)     (void)0
 #deifne interactivemodule_lockwrite(self)    (void)0
@@ -671,7 +671,7 @@ INTDEF void DCALL interactivemodule_lockendwrite(DeeModuleObject *__restrict sel
 #endif
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrString(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
@@ -689,7 +689,7 @@ DeeModule_GetAttrString(DeeModuleObject *__restrict self,
 	return module_getattr_impl(self, attr_name, hash);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
                            char const *__restrict attr_name,
                            size_t attrlen, dhash_t hash) {
@@ -711,7 +711,7 @@ DeeModule_GetAttrStringLen(DeeModuleObject *__restrict self,
 	return module_getattr_len_impl(self, attr_name, attrlen, hash);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrString(DeeModuleObject *__restrict self,
                           char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
@@ -728,7 +728,7 @@ DeeModule_BoundAttrString(DeeModuleObject *__restrict self,
 	return module_boundattr_impl(self, attr_name, hash);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self,
                              char const *__restrict attr_name,
                              size_t attrlen, dhash_t hash) {
@@ -746,7 +746,7 @@ DeeModule_BoundAttrStringLen(DeeModuleObject *__restrict self,
 	return module_boundattr_len_impl(self, attr_name, attrlen, hash);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeModule_HasAttrString(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
@@ -763,7 +763,7 @@ DeeModule_HasAttrString(DeeModuleObject *__restrict self,
 	return module_hasattr_impl(self, attr_name, hash);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self,
                            char const *__restrict attr_name,
                            size_t attrlen, dhash_t hash) {
@@ -781,7 +781,7 @@ DeeModule_HasAttrStringLen(DeeModuleObject *__restrict self,
 	return module_hasattr_len_impl(self, attr_name, attrlen, hash);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_DelAttrString(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name, dhash_t hash) {
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
@@ -800,7 +800,7 @@ DeeModule_DelAttrString(DeeModuleObject *__restrict self,
 	return module_delattr_impl(self, attr_name, hash);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeModule_DelAttrStringLen(DeeModuleObject *__restrict self,
                            char const *__restrict attr_name,
                            size_t attrlen, dhash_t hash) {
@@ -864,7 +864,7 @@ DeeModule_SetAttrStringLen(DeeModuleObject *__restrict self,
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 err_module_not_loaded(DeeModuleObject *__restrict self) {
 	DeeError_Throwf(&DeeError_RuntimeError,
 	                "Cannot initialized Module `%k' that hasn't been loaded yet",
@@ -872,7 +872,7 @@ err_module_not_loaded(DeeModuleObject *__restrict self) {
 }
 
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeModule_RunInit(DeeObject *__restrict self) {
 	uint16_t flags;
 	DeeThreadObject *caller;
@@ -1049,18 +1049,18 @@ DeeModule_GlobalName(DeeObject *__restrict self, uint16_t gid) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_str(DeeModuleObject *__restrict self) {
 	return_reference_((DeeObject *)self->mo_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_repr(DeeModuleObject *__restrict self) {
 	return DeeString_Newf("import(%r)", self->mo_name);
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_getattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
 	return DeeModule_GetAttrString(self,
@@ -1068,7 +1068,7 @@ module_getattr(DeeModuleObject *__restrict self,
 	                               DeeString_Hash(name));
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 module_delattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
 	return DeeModule_DelAttrString(self,
@@ -1076,7 +1076,7 @@ module_delattr(DeeModuleObject *__restrict self,
 	                               DeeString_Hash(name));
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 module_setattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name,
                DeeObject *__restrict value) {
@@ -1085,9 +1085,9 @@ module_setattr(DeeModuleObject *__restrict self,
 	                               DeeString_Hash(name), value);
 }
 
-INTERN dssize_t DCALL
-module_enumattr(DeeTypeObject *__restrict UNUSED(tp_self),
-                DeeModuleObject *__restrict self, denum_t proc, void *arg) {
+INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+module_enumattr(DeeTypeObject *UNUSED(tp_self),
+                DeeModuleObject *self, denum_t proc, void *arg) {
 	struct module_symbol *iter, *end, *doc_iter;
 	dssize_t temp, result = 0;
 	ASSERT_OBJECT(self);
@@ -1175,7 +1175,7 @@ err_m1:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_FindAttrString(DeeModuleObject *__restrict self,
                          struct attribute_info *__restrict result,
                          struct attribute_lookup_rules const *__restrict rules) {
@@ -1270,7 +1270,7 @@ PRIVATE struct type_attr module_attr = {
 	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&module_enumattr
 };
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) int DCALL
 err_module_not_fully_loaded(DeeModuleObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Module %k has not been fully loaded, yet",
@@ -1278,7 +1278,7 @@ err_module_not_fully_loaded(DeeModuleObject *__restrict self) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_code(DeeModuleObject *__restrict self) {
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		err_module_not_fully_loaded(self);
@@ -1287,7 +1287,7 @@ module_get_code(DeeModuleObject *__restrict self) {
 	return_reference_((DREF DeeObject *)self->mo_root);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_path(DeeModuleObject *__restrict self) {
 	if (!(self->mo_flags & MODULE_FDIDLOAD)) {
 		err_module_not_fully_loaded(self);
@@ -1298,7 +1298,7 @@ module_get_path(DeeModuleObject *__restrict self) {
 	return_reference_((DREF DeeObject *)self->mo_path);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_isglobal(DeeModuleObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return_bool(self->mo_globpself != NULL);
@@ -1307,7 +1307,7 @@ module_get_isglobal(DeeModuleObject *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_haspath(DeeModuleObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return_bool(self->mo_pself != NULL);
@@ -1316,7 +1316,7 @@ module_get_haspath(DeeModuleObject *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_get_imports(DeeModuleObject *__restrict self) {
 	return DeeRefVector_NewReadonly((DeeObject *)self, self->mo_importc,
 	                                (DeeObject **)self->mo_importv);
@@ -1329,9 +1329,9 @@ PRIVATE struct type_member module_members[] = {
 	TYPE_MEMBER_END
 };
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewExports(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_ViewGlobals(DeeObject *__restrict self);
 
 PRIVATE struct type_getset module_getsets[] = {
@@ -1401,7 +1401,7 @@ PRIVATE struct type_getset module_class_getsets[] = {
 
 PRIVATE DREF DeeObject *DCALL
 module_class_open(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	/* This is pretty much the same as the builtin `import()' function.
 	 * The only reason it exist is to be a deprecated alias for backwards
 	 * compatibility with the old deemon. */
@@ -1422,9 +1422,9 @@ PRIVATE struct type_method module_class_methods[] = {
 };
 
 
-INTDEF void DCALL module_unbind(DeeModuleObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL module_unbind(DeeModuleObject *__restrict self);
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 module_fini(DeeModuleObject *__restrict self) {
 	struct module_symbol *iter, *end;
 	DREF DeeModuleObject **miter, **mend;
@@ -1458,7 +1458,7 @@ module_fini(DeeModuleObject *__restrict self) {
 	Dee_Free((void *)self->mo_importv);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 module_visit(DeeModuleObject *__restrict self,
              dvisit_t proc, void *arg) {
 	size_t i;
@@ -1479,7 +1479,7 @@ module_visit(DeeModuleObject *__restrict self,
 		Dee_XVisit(self->mo_importv[i]);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 module_clear(DeeModuleObject *__restrict self) {
 	DREF DeeObject *buffer[16], **iter = buffer, **iter2;
 	DREF DeeCodeObject *root_code;
@@ -1550,22 +1550,22 @@ INTERN struct type_gc module_gc = {
 
 /* Single module objects are unique, comparing/hashing
  * them is as single as comparing their memory locations. */
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 module_hash(DeeModuleObject *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-module_eq(DeeModuleObject *__restrict self,
-          DeeModuleObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+module_eq(DeeModuleObject *self,
+          DeeModuleObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeModule_Type))
 		return NULL;
 	return_bool_(self == other);
 }
 
-PRIVATE DREF DeeObject *DCALL
-module_ne(DeeModuleObject *__restrict self,
-          DeeModuleObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+module_ne(DeeModuleObject *self,
+          DeeModuleObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeModule_Type))
 		return NULL;
 	return_bool_(self != other);

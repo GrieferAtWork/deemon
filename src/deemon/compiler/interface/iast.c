@@ -87,7 +87,7 @@ err_symbol_not_reachable(struct scope_object *__restrict scope,
 	                       sym->s_name->k_size, sym->s_name->k_name);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 scope_reaches_symbol(DeeScopeObject *__restrict scope,
                      struct symbol *__restrict sym) {
 	DeeScopeObject *dst = sym->s_scope;
@@ -111,7 +111,7 @@ INTERN ATTR_COLD int DCALL err_different_root_scope(void) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL ast_getscope(Ast *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL ast_getscope(Ast *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
 	result = DeeCompiler_GetScope(self->ci_value->a_scope);
@@ -119,7 +119,7 @@ PRIVATE DREF DeeObject *DCALL ast_getscope(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setscope(Ast *__restrict self,
              DeeCompilerScopeObject *__restrict value) {
 	struct ast *branch = self->ci_value;
@@ -197,7 +197,7 @@ PRIVATE DeeObject *ast_names[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_gettypeid(Ast *__restrict self) {
 	uint16_t result;
 	do {
@@ -206,7 +206,7 @@ ast_gettypeid(Ast *__restrict self) {
 	return DeeInt_NewU16(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getkind(Ast *__restrict self) {
 	uint16_t result;
 	do {
@@ -225,7 +225,7 @@ err_invalid_ast_type(Ast *__restrict self,
 	                       ast_getkind(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconstexpr(Ast *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -240,7 +240,7 @@ ast_getconstexpr(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconstexpr(Ast *__restrict self,
                  DeeObject *__restrict value) {
 	int result = 0;
@@ -258,7 +258,7 @@ ast_setconstexpr(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getsym(Ast *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -274,7 +274,7 @@ ast_getsym(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setsym(Ast *__restrict self,
            DeeCompilerSymbolObject *__restrict value) {
 	int result = 0;
@@ -316,7 +316,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getmultiple(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -347,7 +347,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delmultiple(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -368,7 +368,7 @@ ast_delmultiple(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setmultiple(Ast *__restrict self, DeeObject *__restrict value) {
 	int result = 0;
 	struct ast *me;
@@ -424,7 +424,7 @@ err_branch_v:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getmultiple_typing(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -465,7 +465,7 @@ ast_getmultiple_typing(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setmultiple_typing(Ast *__restrict self,
                        DeeTypeObject *__restrict value) {
 	int result = 0;
@@ -487,7 +487,7 @@ ast_setmultiple_typing(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getreturnast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -506,7 +506,7 @@ ast_getreturnast(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delreturnast(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -526,7 +526,7 @@ ast_delreturnast(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setreturnast(Ast *__restrict self,
                  DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -554,7 +554,7 @@ ast_setreturnast(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getyieldast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -570,7 +570,7 @@ ast_getyieldast(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setyieldast(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -596,7 +596,7 @@ ast_setyieldast(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getthrowast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -615,7 +615,7 @@ ast_getthrowast(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delthrowast(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -635,7 +635,7 @@ ast_delthrowast(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setthrowast(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -663,7 +663,7 @@ ast_setthrowast(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_gettryguard(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -679,7 +679,7 @@ ast_gettryguard(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_settryguard(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -706,7 +706,7 @@ ast_settryguard(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_gettryhandlers(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -781,7 +781,7 @@ done:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_settryhandlers(Ast *__restrict self,
                    DeeObject *__restrict value) {
 	int result = 0;
@@ -814,7 +814,7 @@ ast_settryhandlers(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopisforeach(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -831,7 +831,7 @@ ast_getloopisforeach(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopisforeach(Ast *__restrict self,
                      DeeObject *__restrict value) {
 	int result = 0;
@@ -856,7 +856,7 @@ ast_setloopisforeach(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopispostcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -873,7 +873,7 @@ ast_getloopispostcond(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopispostcond(Ast *__restrict self,
                       DeeObject *__restrict value) {
 	int result = 0;
@@ -894,7 +894,7 @@ ast_setloopispostcond(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopisunlikely(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -911,7 +911,7 @@ ast_getloopisunlikely(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopisunlikely(Ast *__restrict self,
                       DeeObject *__restrict value) {
 	int result = 0;
@@ -932,7 +932,7 @@ ast_setloopisunlikely(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopflags(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -975,7 +975,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopflags(Ast *__restrict self,
                  DeeObject *__restrict value) {
 	int result = 0;
@@ -1005,21 +1005,21 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) int DCALL
 err_is_a_foreach_loop(Ast *__restrict self) {
 	(void)self;
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Ast is a foreach-loop");
 }
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) int DCALL
 err_not_a_foreach_loop(Ast *__restrict self) {
 	(void)self;
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Ast isn't a foreach-loop");
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1041,7 +1041,7 @@ ast_getloopcond(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delloopcond(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1063,7 +1063,7 @@ ast_delloopcond(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopcond(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1093,7 +1093,7 @@ ast_setloopcond(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopnext(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1115,7 +1115,7 @@ ast_getloopnext(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delloopnext(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1137,7 +1137,7 @@ ast_delloopnext(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopnext(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1167,7 +1167,7 @@ ast_setloopnext(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopelem(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1189,7 +1189,7 @@ ast_getloopelem(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delloopelem(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1211,7 +1211,7 @@ ast_delloopelem(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopelem(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1241,7 +1241,7 @@ ast_setloopelem(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopiter(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1260,7 +1260,7 @@ ast_getloopiter(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopiter(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1289,7 +1289,7 @@ ast_setloopiter(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getlooploop(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1308,7 +1308,7 @@ ast_getlooploop(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_dellooploop(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1328,7 +1328,7 @@ ast_dellooploop(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setlooploop(Ast *__restrict self,
                 DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1357,7 +1357,7 @@ ast_setlooploop(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopelemcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1376,7 +1376,7 @@ ast_getloopelemcond(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delloopelemcond(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1396,7 +1396,7 @@ ast_delloopelemcond(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopelemcond(Ast *__restrict self,
                     DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1424,7 +1424,7 @@ ast_setloopelemcond(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopiternext(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1443,7 +1443,7 @@ ast_getloopiternext(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delloopiternext(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1465,7 +1465,7 @@ ast_delloopiternext(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopiternext(Ast *__restrict self,
                     DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1493,7 +1493,7 @@ ast_setloopiternext(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getloopctlisbreak(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1510,7 +1510,7 @@ ast_getloopctlisbreak(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setloopctlisbreak(Ast *__restrict self,
                       DeeObject *__restrict value) {
 	int result = 0;
@@ -1531,7 +1531,7 @@ ast_setloopctlisbreak(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconditionalcond(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1547,7 +1547,7 @@ ast_getconditionalcond(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconditionalcond(Ast *__restrict self,
                        DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1573,7 +1573,7 @@ ast_setconditionalcond(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconditionaltt(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1592,7 +1592,7 @@ ast_getconditionaltt(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delconditionaltt(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1612,7 +1612,7 @@ ast_delconditionaltt(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconditionaltt(Ast *__restrict self,
                      DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1640,7 +1640,7 @@ ast_setconditionaltt(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconditionalff(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1659,7 +1659,7 @@ ast_getconditionalff(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delconditionalff(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -1679,7 +1679,7 @@ ast_delconditionalff(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconditionalff(Ast *__restrict self,
                      DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1708,7 +1708,7 @@ ast_setconditionalff(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconditionalflags(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1751,7 +1751,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconditionalflags(Ast *__restrict self,
                         DeeObject *__restrict value) {
 	int result = 0;
@@ -1778,7 +1778,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconditionalisbool(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1795,7 +1795,7 @@ ast_getconditionalisbool(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconditionalisbool(Ast *__restrict self,
                          DeeObject *__restrict value) {
 	int result = 0;
@@ -1816,7 +1816,7 @@ ast_setconditionalisbool(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconditionalislikely(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1833,7 +1833,7 @@ ast_getconditionalislikely(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconditionalislikely(Ast *__restrict self,
                            DeeObject *__restrict value) {
 	int result = 0;
@@ -1854,7 +1854,7 @@ ast_setconditionalislikely(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getconditionalisunlikely(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1871,7 +1871,7 @@ ast_getconditionalisunlikely(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setconditionalisunlikely(Ast *__restrict self,
                              DeeObject *__restrict value) {
 	int result = 0;
@@ -1892,7 +1892,7 @@ ast_setconditionalisunlikely(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getboolast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1908,7 +1908,7 @@ ast_getboolast(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setboolast(Ast *__restrict self,
                DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -1934,7 +1934,7 @@ ast_setboolast(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getboolisnegated(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1951,7 +1951,7 @@ ast_getboolisnegated(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setboolisnegated(Ast *__restrict self,
                      DeeObject *__restrict value) {
 	int result = 0;
@@ -1972,7 +1972,7 @@ ast_setboolisnegated(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getexpandast(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -1988,7 +1988,7 @@ ast_getexpandast(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setexpandast(Ast *__restrict self,
                  DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2014,7 +2014,7 @@ ast_setexpandast(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getfunctioncode(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2030,7 +2030,7 @@ ast_getfunctioncode(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setfunctioncode(Ast *__restrict self,
                     DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2088,7 +2088,7 @@ get_operator_name(uint16_t opid) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorfuncname(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2104,7 +2104,7 @@ ast_getoperatorfuncname(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorfuncname(Ast *__restrict self,
                         DeeObject *__restrict value) {
 	int result = 0;
@@ -2123,7 +2123,7 @@ ast_setoperatorfuncname(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorfuncbinding(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2142,7 +2142,7 @@ ast_getoperatorfuncbinding(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_deloperatorfuncbinding(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -2162,7 +2162,7 @@ ast_deloperatorfuncbinding(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorfuncbinding(Ast *__restrict self,
                            DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2191,7 +2191,7 @@ ast_setoperatorfuncbinding(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorname(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2207,7 +2207,7 @@ ast_getoperatorname(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorname(Ast *__restrict self,
                     DeeObject *__restrict value) {
 	int result = 0;
@@ -2227,7 +2227,7 @@ ast_setoperatorname(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatora(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2243,7 +2243,7 @@ ast_getoperatora(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatora(Ast *__restrict self,
                  DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2270,7 +2270,7 @@ ast_setoperatora(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorb(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2289,7 +2289,7 @@ ast_getoperatorb(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_deloperatorb(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -2309,7 +2309,7 @@ ast_deloperatorb(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorb(Ast *__restrict self,
                  DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2337,7 +2337,7 @@ ast_setoperatorb(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorc(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2356,7 +2356,7 @@ ast_getoperatorc(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_deloperatorc(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -2376,7 +2376,7 @@ ast_deloperatorc(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorc(Ast *__restrict self,
                  DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2404,7 +2404,7 @@ ast_setoperatorc(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatord(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2423,7 +2423,7 @@ ast_getoperatord(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_deloperatord(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
@@ -2443,7 +2443,7 @@ ast_deloperatord(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatord(Ast *__restrict self,
                  DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2472,7 +2472,7 @@ ast_setoperatord(Ast *__restrict self,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorflags(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2522,7 +2522,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorflags(Ast *__restrict self,
                      DeeObject *__restrict value) {
 	int result = 0;
@@ -2548,7 +2548,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorispost(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2565,7 +2565,7 @@ ast_getoperatorispost(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorispost(Ast *__restrict self,
                       DeeObject *__restrict value) {
 	int result = 0;
@@ -2586,7 +2586,7 @@ ast_setoperatorispost(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorisvarargs(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2603,7 +2603,7 @@ ast_getoperatorisvarargs(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorisvarargs(Ast *__restrict self,
                          DeeObject *__restrict value) {
 	int result = 0;
@@ -2624,7 +2624,7 @@ ast_setoperatorisvarargs(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorismaybeprefix(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2641,7 +2641,7 @@ ast_getoperatorismaybeprefix(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorismaybeprefix(Ast *__restrict self,
                              DeeObject *__restrict value) {
 	int result = 0;
@@ -2662,7 +2662,7 @@ ast_setoperatorismaybeprefix(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getoperatorisdontoptimize(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2679,7 +2679,7 @@ ast_getoperatorisdontoptimize(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setoperatorisdontoptimize(Ast *__restrict self,
                               DeeObject *__restrict value) {
 	int result = 0;
@@ -2700,7 +2700,7 @@ ast_setoperatorisdontoptimize(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getactionname(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2717,7 +2717,7 @@ ast_getactionname(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setactionname(Ast *__restrict self,
                   DeeObject *__restrict value) {
 	int result = 0;
@@ -2752,7 +2752,7 @@ ast_setactionname(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getactiona(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2771,7 +2771,7 @@ ast_getactiona(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setactiona(Ast *__restrict self,
                DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2799,7 +2799,7 @@ ast_setactiona(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getactionb(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2818,7 +2818,7 @@ ast_getactionb(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setactionb(Ast *__restrict self,
                DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -2846,7 +2846,7 @@ ast_setactionb(Ast *__restrict self,
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_getactionc(Ast *__restrict self) {
 	DREF DeeObject *result;
 	struct ast *me;
@@ -2865,7 +2865,7 @@ ast_getactionc(Ast *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ast_setactionc(Ast *__restrict self,
                DeeCompilerAstObject *__restrict value) {
 	int result = 0;
@@ -3033,7 +3033,7 @@ err:
 		DO(print_leave_scope(printer, arg, is_expression, need_semicolon, indent, is_scope)); \
 	} __WHILE0
 
-INTDEF bool DCALL
+INTDEF WUNUSED NONNULL((1)) bool DCALL
 DeeString_IsSymbol(DeeObject *__restrict self,
                    size_t start_index,
                    size_t end_index);
@@ -3097,7 +3097,7 @@ err:
 	return -1;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_instance_method(DeeBaseScopeObject *__restrict self) {
 	if (!(self->bs_flags & CODE_FTHISCALL))
 		return false;
@@ -4577,7 +4577,7 @@ err:
 #undef print
 #undef DO
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_str(DeeCompilerAstObject *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -4594,7 +4594,7 @@ err:
 }
 
 
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 print_scope_repr(DeeScopeObject *__restrict self,
                  struct unicode_printer *__restrict printer);
 
@@ -4653,7 +4653,7 @@ PRIVATE char const action_names[][10] = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 print_ast_repr(struct ast *__restrict self,
                struct unicode_printer *__restrict printer) {
 #define DO(x)                \
@@ -5026,7 +5026,7 @@ err:
 #undef DO
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ast_repr(DeeCompilerAstObject *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	COMPILER_BEGIN(self->ci_compiler);

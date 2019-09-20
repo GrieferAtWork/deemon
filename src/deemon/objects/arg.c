@@ -60,7 +60,7 @@ typedef struct {
 INTDEF DeeTypeObject DeeKwdsIterator_Type;
 PRIVATE DREF Kwds *DCALL kwds_ctor(void);
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_ctor(KwdsIterator *__restrict self) {
 	self->ki_map = kwds_ctor();
 	if unlikely(!self->ki_map)
@@ -70,7 +70,7 @@ kwdsiter_ctor(KwdsIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kwdsiter_copy(KwdsIterator *__restrict self,
               KwdsIterator *__restrict other) {
 	self->ki_map  = other->ki_map;
@@ -82,8 +82,8 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 
 #define kwdsiter_deep kwdsiter_copy /* Only uses Immutable types, so deepcopy == copy */
 
-PRIVATE int DCALL
-kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_KwdsIterator", &self->ki_map) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->ki_map, &DeeKwds_Type))
 		return -1;
@@ -93,17 +93,17 @@ kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject **__restrict
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 kwdsiter_fini(KwdsIterator *__restrict self) {
 	Dee_Decref(self->ki_map);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 kwdsiter_visit(KwdsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ki_map);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwdsiter_bool(KwdsIterator *__restrict self) {
 	struct kwds_entry *entry;
 	entry = READ_ITER(self);
@@ -117,7 +117,7 @@ kwdsiter_bool(KwdsIterator *__restrict self) {
 	return 1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 	DREF DeeObject *value, *result;
 #ifdef CONFIG_NO_THREADS
@@ -154,7 +154,7 @@ kwds_nsi_nextitem(KwdsIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextkey(KwdsIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
@@ -185,7 +185,7 @@ kwds_nsi_nextkey(KwdsIterator *__restrict self) {
 	return_reference_((DeeObject *)entry->ke_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
@@ -218,9 +218,8 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, op)                            \
-	PRIVATE DREF DeeObject *DCALL                                          \
-	name(KwdsIterator *__restrict self,                                    \
-	     KwdsIterator *__restrict other) {                                 \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(KwdsIterator *self, KwdsIterator *other) {                        \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
 			return NULL;                                                   \
 		return_bool(READ_ITER(self) op READ_ITER(other));                  \
@@ -296,7 +295,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 };
 
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED DREF DeeObject *DCALL
 DeeKwds_NewWithHint(size_t num_items) {
 	DREF Kwds *result;
 	size_t init_mask = 1;
@@ -312,7 +311,8 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF Kwds *DCALL kwds_rehash(DREF Kwds *__restrict self) {
+INTERN WUNUSED NONNULL((1)) DREF Kwds *DCALL
+kwds_rehash(DREF Kwds *__restrict self) {
 	DREF Kwds *result;
 	size_t i, j, perturb;
 	size_t new_mask = (self->kw_mask << 1) | 1;
@@ -343,9 +343,10 @@ done:
 /* Append a new entry for `name'.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
-INTERN int (DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
-                                 char const *__restrict name,
-                                 size_t name_len, dhash_t hash) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeKwds_Append)(DREF DeeObject **__restrict pself,
+                       char const *__restrict name,
+                       size_t name_len, dhash_t hash) {
 	dhash_t i, perturb;
 	struct kwds_entry *entry;
 	DREF Kwds *self = (DREF Kwds *)*pself;
@@ -434,7 +435,7 @@ done:
 }
 
 PRIVATE DREF Kwds *DCALL
-kwds_init(size_t argc, DeeObject **__restrict argv) {
+kwds_init(size_t argc, DeeObject **argv) {
 	/* TODO */
 	(void)argc;
 	(void)argv;
@@ -442,14 +443,14 @@ kwds_init(size_t argc, DeeObject **__restrict argv) {
 	return NULL;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 kwds_fini(Kwds *__restrict self) {
 	size_t i;
 	for (i = 0; i <= self->kw_mask; ++i)
 		Dee_XDecref(self->kw_map[i].ke_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_repr(Kwds *__restrict self) {
 	size_t i;
 	bool is_first                  = true;
@@ -475,13 +476,13 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kwds_bool(Kwds *__restrict self) {
 	return self->kw_size != 0;
 }
 
 
-PRIVATE DREF KwdsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF KwdsIterator *DCALL
 kwds_iter(Kwds *__restrict self) {
 	DREF KwdsIterator *result;
 	result = DeeObject_MALLOC(KwdsIterator);
@@ -496,19 +497,19 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_size(Kwds *__restrict self) {
 	return DeeInt_NewSize(self->kw_size);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 kwds_nsi_getsize(Kwds *__restrict self) {
 	return self->kw_size;
 }
 
-PRIVATE DREF DeeObject *DCALL
-kwds_contains(Kwds *__restrict self,
-              DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+kwds_contains(Kwds *self,
+              DeeObject *key) {
 	if (!DeeString_Check(key))
 		goto nope;
 	return_bool(kwds_findstr(self,
@@ -519,7 +520,7 @@ nope:
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 kwds_nsi_getdefault(Kwds *__restrict self,
                     DeeObject *__restrict key,
                     DeeObject *__restrict def) {
@@ -538,9 +539,9 @@ nope:
 	return def;
 }
 
-PRIVATE DREF DeeObject *DCALL
-kwds_get(Kwds *__restrict self,
-         DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+kwds_get(Kwds *self,
+         DeeObject *key) {
 	DREF DeeObject *result;
 	result = kwds_nsi_getdefault(self, key, ITER_DONE);
 	if (result != ITER_DONE)
@@ -651,7 +652,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(KwdsIterator, ki_map) ==
               COMPILER_OFFSETOF(KmapIterator, ki_map));
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_ctor(KmapIterator *__restrict self) {
 	self->ki_map = (DREF KwdsMapping *)DeeObject_NewDefault(&DeeKwdsMapping_Type);
 	if unlikely(!self->ki_map)
@@ -666,7 +667,7 @@ err:
 #define kmapiter_copy kwdsiter_copy
 #define kmapiter_deep kwdsiter_deep
 PRIVATE int DCALL
-kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject **__restrict argv) {
+kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_KwdsMappingIterator", &self->ki_map))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->ki_map, &DeeKwdsMapping_Type))
@@ -680,12 +681,12 @@ err:
 }
 
 #define kmapiter_fini kwdsiter_fini
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 kmapiter_visit(KmapIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ki_map);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmapiter_bool(KmapIterator *__restrict self) {
 	struct kwds_entry *entry;
 	entry = READ_ITER(self);
@@ -698,12 +699,12 @@ kmapiter_bool(KmapIterator *__restrict self) {
 	}
 #ifndef CONFIG_NO_THREADS
 	return ATOMIC_READ(self->ki_map->kmo_argv) != NULL;
-#else
+#else /* !CONFIG_NO_THREADS */
 	return self->ki_map->kmo_argv != NULL;
-#endif
+#endif /* CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextitem(KmapIterator *__restrict self) {
 	DREF DeeObject *value, *result;
 #ifdef CONFIG_NO_THREADS
@@ -717,7 +718,7 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 		++entry;
 	}
 	self->ki_iter = entry + 1;
-#else
+#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		entry = old_iter = ATOMIC_READ(self->ki_iter);
@@ -731,7 +732,7 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	rwlock_read(&self->ki_map->kmo_lock);
 	if unlikely(!self->ki_map->kmo_argv) {
 		rwlock_endread(&self->ki_map->kmo_lock);
@@ -745,7 +746,7 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextkey(KmapIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	struct kwds_entry *entry;
@@ -758,7 +759,7 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 		++entry;
 	}
 	self->ki_iter = entry + 1;
-#else
+#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		entry = old_iter = ATOMIC_READ(self->ki_iter);
@@ -772,13 +773,13 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	if unlikely(!ATOMIC_READ(self->ki_map->kmo_argv))
 		return ITER_DONE;
 	return_reference_((DeeObject *)entry->ke_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 	DREF DeeObject *value;
 #ifdef CONFIG_NO_THREADS
@@ -792,7 +793,7 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 		++entry;
 	}
 	self->ki_iter = entry + 1;
-#else
+#else /* CONFIG_NO_THREADS */
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		entry = old_iter = ATOMIC_READ(self->ki_iter);
@@ -806,7 +807,7 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 		if (ATOMIC_CMPXCH(self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	rwlock_read(&self->ki_map->kmo_lock);
 	if unlikely(!self->ki_map->kmo_argv) {
 		rwlock_endread(&self->ki_map->kmo_lock);
@@ -870,7 +871,7 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmap_ctor(KwdsMapping *__restrict self) {
 	self->kmo_kwds = kwds_ctor();
 	if unlikely(!self->kmo_kwds)
@@ -882,7 +883,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kmap_copy(KwdsMapping *__restrict self,
           KwdsMapping *__restrict other) {
 	size_t i, count;
@@ -905,7 +906,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 kmap_deep(KwdsMapping *__restrict self,
           KwdsMapping *__restrict other) {
 	size_t i, count;
@@ -938,9 +939,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmap_init(KwdsMapping *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DeeObject *args;
 	size_t i;
 	if (DeeArg_Unpack(argc, argv, "oo:_KwdsMapping", &self->kmo_kwds, &args))
@@ -968,7 +969,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 kmap_fini(KwdsMapping *__restrict self) {
 	if (self->kmo_argv) {
 		size_t count = self->kmo_kwds->kw_size;
@@ -980,7 +981,7 @@ kmap_fini(KwdsMapping *__restrict self) {
 	Dee_Decref(self->kmo_kwds);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 kmap_visit(KwdsMapping *__restrict self, dvisit_t proc, void *arg) {
 	rwlock_read(&self->kmo_lock);
 	if (self->kmo_argv) {
@@ -992,19 +993,19 @@ kmap_visit(KwdsMapping *__restrict self, dvisit_t proc, void *arg) {
 	/*Dee_Visit(self->kmo_kwds);*/ /* Only ever references strings, so there'd be no point. */
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmap_bool(KwdsMapping *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	if (!ATOMIC_READ(self->kmo_argv))
 		return 0;
-#else
+#else /* !CONFIG_NO_THREADS */
 	if (!self->kmo_argv)
 		return 0;
-#endif
+#endif /* CONFIG_NO_THREADS */
 	return self->kmo_kwds->kw_size != 0;
 }
 
-PRIVATE DREF KmapIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF KmapIterator *DCALL
 kmap_iter(KwdsMapping *__restrict self) {
 	DREF KmapIterator *result;
 	result = DeeObject_MALLOC(KmapIterator);
@@ -1019,40 +1020,39 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_size(KwdsMapping *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	if (!ATOMIC_READ(self->kmo_argv))
 		return_reference_(&DeeInt_Zero);
-#else
+#else /* !CONFIG_NO_THREADS */
 	if (!self->kmo_argv)
 		return_reference_(&DeeInt_Zero);
-#endif
+#endif /* CONFIG_NO_THREADS */
 	return DeeInt_NewSize(self->kmo_kwds->kw_size);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 kmap_nsi_getsize(KwdsMapping *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	if (!ATOMIC_READ(self->kmo_argv))
 		return 0;
-#else
+#else /* !CONFIG_NO_THREADS */
 	if (!self->kmo_argv)
 		return 0;
-#endif
+#endif /* CONFIG_NO_THREADS */
 	return self->kmo_kwds->kw_size;
 }
 
-PRIVATE DREF DeeObject *DCALL
-kmap_contains(KwdsMapping *__restrict self,
-              DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+kmap_contains(KwdsMapping *self, DeeObject *key) {
 #ifndef CONFIG_NO_THREADS
 	if (!ATOMIC_READ(self->kmo_argv))
 		goto nope;
-#else
+#else /* !CONFIG_NO_THREADS */
 	if (!self->kmo_argv)
 		goto nope;
-#endif
+#endif /* CONFIG_NO_THREADS */
 	if (!DeeString_Check(key))
 		goto nope;
 	return_bool(kwds_findstr(self->kmo_kwds,
@@ -1063,10 +1063,8 @@ nope:
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-kmap_nsi_getdefault(KwdsMapping *__restrict self,
-                    DeeObject *__restrict key,
-                    DeeObject *__restrict def) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+kmap_nsi_getdefault(KwdsMapping *self, DeeObject *key, DeeObject *def) {
 	size_t index;
 	DREF DeeObject *result;
 	if (!DeeString_Check(key))
@@ -1092,9 +1090,9 @@ nope:
 	return def;
 }
 
-PRIVATE DREF DeeObject *DCALL
-kmap_get(KwdsMapping *__restrict self,
-         DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+kmap_get(KwdsMapping *self,
+         DeeObject *key) {
 	DREF DeeObject *result;
 	result = kmap_nsi_getdefault(self, key, ITER_DONE);
 	if (result != ITER_DONE)
@@ -1195,7 +1193,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
  *       to clean up the returned object. */
 PUBLIC DREF DeeObject *DCALL
 DeeKwdsMapping_New(/*Kwds*/ DeeObject *__restrict kwds,
-                   DeeObject **__restrict argv) {
+                   DeeObject **argv) {
 	DREF KwdsMapping *result;
 	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
 	result = DeeObject_MALLOC(KwdsMapping);
@@ -1258,7 +1256,7 @@ clear_argv:
 
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
                              char const *__restrict name,
                              dhash_t hash) {
@@ -1279,7 +1277,7 @@ DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
 	return true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
                                 char const *__restrict name,
                                 size_t namesize,
@@ -1301,7 +1299,7 @@ DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
 	return true;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwdsMapping_GetItemString(DeeObject *__restrict self,
                              char const *__restrict name,
                              dhash_t hash) {
@@ -1357,7 +1355,7 @@ no_such_key:
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self,
                                 char const *__restrict name,
                                 size_t namesize,
@@ -1421,7 +1419,7 @@ no_such_key:
  * the actually mapped arguments. */
 PUBLIC DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict pargc,
-             DeeObject **__restrict argv,
+             DeeObject **argv,
              DeeObject *kw) {
 	if (!kw)
 		return_reference_(Dee_EmptyMapping);
@@ -1442,7 +1440,7 @@ DeeArg_GetKw(size_t *__restrict pargc,
 }
 
 PUBLIC void DCALL
-DeeArg_PutKw(size_t argc, DeeObject **__restrict argv, DeeObject *__restrict kw) {
+DeeArg_PutKw(size_t argc, DeeObject **argv, DeeObject *__restrict kw) {
 	if (DeeKwdsMapping_Check(kw) &&
 	    ((DeeKwdsMappingObject *)kw)->kmo_argv == argv + argc) {
 		/* If we're the ones owning the keywords-mapping, we must also decref() it. */
@@ -1454,7 +1452,7 @@ DeeArg_PutKw(size_t argc, DeeObject **__restrict argv, DeeObject *__restrict kw)
 
 
 PUBLIC DREF DeeObject *DCALL
-DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
+DeeArg_GetKwString(size_t argc, DeeObject **argv,
                    DeeObject *kw, char const *__restrict name) {
 	dhash_t hash;
 	if (!kw) {
@@ -1482,7 +1480,7 @@ DeeArg_GetKwString(size_t argc, DeeObject **__restrict argv,
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
+DeeArg_GetKwStringLen(size_t argc, DeeObject **argv, DeeObject *kw,
                       char const *__restrict name, size_t namelen, dhash_t hash) {
 	if (!kw) {
 		err_unknown_key_str_len(Dee_EmptyMapping, name, namelen);
@@ -1508,7 +1506,7 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject **__restrict argv, DeeObject *kw,
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeArg_GetKwStringDef(size_t argc, DeeObject **__restrict argv,
+DeeArg_GetKwStringDef(size_t argc, DeeObject **argv,
                       DeeObject *kw, char const *__restrict name,
                       DeeObject *__restrict def) {
 	dhash_t hash;
@@ -1534,7 +1532,7 @@ return_def:
 }
 
 PUBLIC DREF DeeObject *DCALL
-DeeArg_GetKwStringLenDef(size_t argc, DeeObject **__restrict argv,
+DeeArg_GetKwStringLenDef(size_t argc, DeeObject **argv,
                          DeeObject *kw, char const *__restrict name,
                          size_t namelen, dhash_t hash,
                          DeeObject *__restrict def) {

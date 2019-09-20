@@ -693,11 +693,11 @@ typedef union {
 
 /* Wrapper around `gethostbyaddr()'
  * @param flags: Set of `SOCKADDR_STR_F*' */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sock_gethostbyaddr(void const *__restrict data, socklen_t datalen, sa_family_t family, int flags);
 
 /* @param flags: Set of `SOCKADDR_STR_F*' */
-INTDEF DREF DeeObject *DCALL SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags);
 #define SOCKADDR_STR_FNORMAL 0x0000 /* Normal flags:?Dstring. */
 #define SOCKADDR_STR_FNOFAIL 0x0001 /* Don't return with an error if DNS lookup failed. */
 #define SOCKADDR_STR_FNODNS  0x0002 /* Don't use DNS names in the string (use raw IPs instead). */
@@ -710,7 +710,7 @@ INTDEF socklen_t DCALL SockAddr_Sizeof(sa_family_t family, int protocol);
  * HINT: `family' may be set to `AF_AUTO' for automatic deduction. */
 INTDEF int DCALL SockAddr_FromArgv(SockAddr *__restrict self,
                                    int family, int protocol, int type,
-                                   size_t argc, DeeObject **__restrict argv);
+                                   size_t argc, DeeObject **argv);
 
 typedef struct socket_object DeeSocketObject;
 typedef struct sockaddr_object DeeSockAddrObject;
@@ -720,9 +720,9 @@ typedef struct sockaddr_object DeeSockAddrObject;
 INTDEF DREF DeeObject *DCALL sock_getafname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
 INTDEF DREF DeeObject *DCALL sock_gettypename(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
 INTDEF DREF DeeObject *DCALL sock_getprotoname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
-INTDEF bool DCALL sock_getafvalue(char const *__restrict name, int *__restrict presult);
-INTDEF bool DCALL sock_gettypevalue(char const *__restrict name, int *__restrict presult);
-INTDEF bool DCALL sock_getprotovalue(char const *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_getafvalue(char const *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_gettypevalue(char const *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_getprotovalue(char const *__restrict name, int *__restrict presult);
 
 /* Same as the functions above, but return an int-object for
  * `value' when the database doesn't recognize the value. */
@@ -736,13 +736,13 @@ INTDEF DREF DeeObject *DCALL sock_getprotonameorid(int value);
  *    - sock_getafof:    AF_AUTO
  *    - sock_gettypeof:  SOCK_STREAM
  *    - sock_getprotoof: 0 */
-INTDEF int DCALL sock_getafof(DeeObject *__restrict name, int *__restrict presult);
-INTDEF int DCALL sock_gettypeof(DeeObject *__restrict name, int *__restrict presult);
-INTDEF int DCALL sock_getprotoof(DeeObject *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getafof(DeeObject *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_gettypeof(DeeObject *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getprotoof(DeeObject *__restrict name, int *__restrict presult);
 
 
 /* Translate the MSG_* flags used by send/recv functions. */
-INTDEF int DCALL sock_getmsgflagsof(DeeObject *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getmsgflagsof(DeeObject *__restrict name, int *__restrict presult);
 INTDEF DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
 
 #if 0
@@ -798,12 +798,12 @@ INTDEF DeeTypeObject DeeSocket_Type;
 
 /* Try to retrieve the local (sock) / remote (peer) address of a given socket.
  * @param: throw_error: When true, throw an error describing the reason before returning `-1'. */
-INTDEF int DCALL DeeSocket_GetSockName(DeeSocketObject *__restrict self, SockAddr *__restrict result, bool throw_error);
-INTDEF int DCALL DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self, SockAddr *__restrict result, bool throw_error);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_GetSockName(DeeSocketObject *__restrict self, SockAddr *__restrict result, bool throw_error);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self, SockAddr *__restrict result, bool throw_error);
 /* Bind/Connect commands. */
-INTDEF int DCALL DeeSocket_Bind(DeeSocketObject *__restrict self, SockAddr const *__restrict addr);
-INTDEF int DCALL DeeSocket_Connect(DeeSocketObject *__restrict self, SockAddr const *__restrict addr);
-INTDEF int DCALL DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_Bind(DeeSocketObject *__restrict self, SockAddr const *__restrict addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_Connect(DeeSocketObject *__restrict self, SockAddr const *__restrict addr);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog);
 /* Accept a new connection.
  * @return: -1: An error occurred.
  * @return:  0: Successfully accepted a new connection.
@@ -845,7 +845,7 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    SockAddr *source);
 
 /* Convert a given object to message flags (Set of `MSG_*') */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_getmsgflagsof(DeeObject *__restrict name,
                   int *__restrict presult);
 INTDEF DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
@@ -869,10 +869,10 @@ INTDEF DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
  *   - "WRITEREAD": SHUT_RDWR
  * When the given mode is not recognized, an
  * `Error.ValueError' is thrown and -1 is returned. */
-INTDEF int DCALL get_shutdown_mode(char const *__restrict mode, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL get_shutdown_mode(char const *__restrict mode, int *__restrict presult);
 /* Same as `get_shutdown_mode', but interpret strings
  * and convert everything else to an integer. */
-INTDEF int DCALL get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict presult);
 
 
 

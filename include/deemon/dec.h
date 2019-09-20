@@ -565,7 +565,7 @@ INTDEF DeeObject *DCALL Dec_GetBuiltin(uint8_t set, uint8_t id);
  * Note however that the compiler is very much aware of what can be used as a
  * builtin object, and will automatically prevent constant propagation if there
  * is no way of encoding the resulting object as a DEC constant expression. */
-INTDEF uint16_t DCALL Dec_BuiltinID(DeeObject *__restrict obj);
+INTDEF WUNUSED NONNULL((1)) uint16_t DCALL Dec_BuiltinID(DeeObject *__restrict obj);
 #define DEC_BUILTINID_UNKNOWN     0 /* The object is not recognized as a builtin. */
 #define DEC_BUILTINID_MAKE(setid,objid) ((setid) << 8 | (objid))
 #define DEC_BUILTINID_SETOF(x)          (((x)&0xff00) >> 8)
@@ -603,35 +603,36 @@ typedef struct {
  * @return:  0: Successfully initialized the DEC file.
  * @return: -1: An error occurred while attempting to read the DEC's data,
  *              or failed to allocate a sufficient buffer for the DEC. */
-INTDEF int  DCALL DecFile_Init(DecFile *__restrict self,
-                               DeeObject *__restrict input_stream,
-                               struct module_object *__restrict module,
-                               struct string_object *__restrict dec_pathname,
-                               struct compiler_options *__restrict options);
-INTDEF void DCALL DecFile_Fini(DecFile *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+DecFile_Init(DecFile *__restrict self,
+             DeeObject *__restrict input_stream,
+             struct module_object *__restrict module,
+             struct string_object *__restrict dec_pathname,
+             struct compiler_options *__restrict options);
+INTDEF NONNULL((1)) void DCALL DecFile_Fini(DecFile *__restrict self);
 
 /* Return a string for the entire strtab of a given DEC-file.
  * Upon error, NULL is returned.
  * NOTE: The return value is _NOT_ a reference! */
-INTDEF DeeObject *DCALL DecFile_Strtab(DecFile *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DeeObject *DCALL DecFile_Strtab(DecFile *__restrict self);
 
 /* Check if a given DEC file is up to date, or if it must not be loaded.
  * because it a dependency has changed since it was created.
  * @return:  0: The file is up-to-date.
  * @return:  1: The file is not up-to-date.
  * @return: -1: An error occurred. */
-INTDEF int DCALL DecFile_IsUpToDate(DecFile *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DecFile_IsUpToDate(DecFile *__restrict self);
 
 /* Load a given DEC file and fill in the given `module'.
  * @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file has been corrupted or is out of date.
  * @return: -1: An error occurred. */
-INTDEF int DCALL DecFile_Load(DecFile *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL DecFile_Load(DecFile *__restrict self);
 
 /* @return:  0: Successfully loaded the given DEC file.
  * @return:  1: The DEC file was out of date or had been corrupted.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeModule_OpenDec(struct module_object *__restrict module,
                   DeeObject *__restrict input_stream,
                   struct compiler_options *__restrict options);
@@ -677,7 +678,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
  * @return: * :           Last-modified time (in microseconds since 01.01.1970).
  * @return: 0 :           The given file could not be found.
  * @return: (uint64_t)-1: The lookup failed and an error was thrown. */
-INTDEF uint64_t DCALL DecTime_Lookup(DeeObject *__restrict filename);
+INTDEF WUNUSED NONNULL((1)) uint64_t DCALL DecTime_Lookup(DeeObject *__restrict filename);
 
 /* Return the current time (in microseconds since 01.01.1970) (never fails). */
 INTDEF uint64_t DCALL DecTime_Now(void);

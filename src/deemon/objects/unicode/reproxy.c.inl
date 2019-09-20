@@ -70,7 +70,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(ReSequence, re_args) ==
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_ctor(ReSequenceIterator *__restrict self) {
 	self->re_data    = (DREF String *)Dee_EmptyString;
 	self->re_pattern = (DREF String *)Dee_EmptyString;
@@ -85,7 +85,7 @@ refaiter_ctor(ReSequenceIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 refaiter_copy(ReSequenceIterator *__restrict self,
               ReSequenceIterator *__restrict other) {
 	self->re_data    = other->re_data;
@@ -108,7 +108,7 @@ refaiter_copy(ReSequenceIterator *__restrict self,
 
 PRIVATE int DCALL
 refaiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReFindAllIterator", &reseq))
 		goto err;
@@ -124,13 +124,13 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 refaiter_fini(ReSequenceIterator *__restrict self) {
 	Dee_Decref(self->re_data);
 	Dee_Decref(self->re_pattern);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_bool(ReSequenceIterator *__restrict self) {
 	struct regex_range_ptr range;
 	char *dataptr;
@@ -155,7 +155,7 @@ STATIC_ASSERT((COMPILER_OFFSETOF(struct regex_range, rr_end) -
               (COMPILER_OFFSETOF(struct regex_range_ex, rr_end) -
                COMPILER_OFFSETOF(struct regex_range_ex, rr_start)));
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refaiter_next(ReSequenceIterator *__restrict self) {
 	struct regex_range_ex range;
 	char *dataptr;
@@ -205,7 +205,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct re_args args_copy;
 	rwlock_read(&self->re_lock);
@@ -326,7 +326,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 
 PRIVATE int DCALL
 relaiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReLocateAllIterator", &reseq) ||
 	    DeeObject_AssertTypeExact((DeeObject *)reseq, &ReLocateAll_Type))
@@ -342,7 +342,7 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 relaiter_getseq(ReSequenceIterator *__restrict self) {
 	struct re_args args_copy;
 	rwlock_read(&self->re_lock);
@@ -362,7 +362,7 @@ PRIVATE struct type_getset relaiter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 relaiter_next(ReSequenceIterator *__restrict self) {
 	struct regex_range_ptr range;
 	char *dataptr;
@@ -463,7 +463,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 
 PRIVATE int DCALL
 respiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReSplitIterator", &reseq) ||
 	    DeeObject_AssertTypeExact((DeeObject *)reseq, &ReSplit_Type))
@@ -480,7 +480,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 respiter_getseq(ReSequenceIterator *__restrict self) {
 	struct re_args args_copy;
 	rwlock_read(&self->re_lock);
@@ -500,7 +500,7 @@ PRIVATE struct type_getset respiter_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 respiter_next(ReSequenceIterator *__restrict self) {
 	struct regex_range_ptr range;
 	char *dataptr;
@@ -548,7 +548,7 @@ again:
 	                         STRING_ERROR_FIGNORE);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 respiter_bool(ReSequenceIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->re_args.re_dataptr != NULL;
@@ -604,7 +604,7 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_ctor(ReSequence *__restrict self) {
 	self->re_data    = (DREF String *)Dee_EmptyString;
 	self->re_pattern = (DREF String *)Dee_EmptyString;
@@ -620,7 +620,7 @@ refa_ctor(ReSequence *__restrict self) {
 
 PRIVATE int DCALL
 refa_init(ReSequence *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	String *rules = NULL;
 	if (DeeArg_Unpack(argc, argv, "oo|o" /*":_ReFindAll"*/,
 	                  &self->re_data, &self->re_pattern, &rules) ||
@@ -652,7 +652,7 @@ err:
 
 #define refa_fini refaiter_fini
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_bool(ReSequence *__restrict self) {
 	struct regex_range_ptr range;
 	/* Check if there is at least a single match. */
@@ -664,7 +664,7 @@ refa_bool(ReSequence *__restrict self) {
 	                        self->re_args.re_flags);
 }
 
-PRIVATE DREF ReSequenceIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
 refa_iter(ReSequence *__restrict self) {
 	DREF ReSequenceIterator *result;
 	result = DeeObject_MALLOC(ReSequenceIterator);
@@ -680,7 +680,7 @@ done:
 	return result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 refa_nsi_getsize(ReSequence *__restrict self) {
 	int error;
 	size_t result;
@@ -710,7 +710,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 refa_size(ReSequence *__restrict self) {
 	size_t result = refa_nsi_getsize(self);
 	if unlikely(result == (size_t)-1)
@@ -827,7 +827,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 #define rela_size    refa_size
 #define rela_nsi     refa_nsi
 
-PRIVATE DREF ReSequenceIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
 rela_iter(ReSequence *__restrict self) {
 	DREF ReSequenceIterator *result;
 	result = DeeObject_MALLOC(ReSequenceIterator);
@@ -910,7 +910,7 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 #define resp_fini    refa_fini
 #define resp_members refa_members
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 resp_ctor(ReSequence *__restrict self) {
 	int result               = refa_ctor(self);
 	self->re_args.re_dataptr = NULL;
@@ -919,19 +919,19 @@ resp_ctor(ReSequence *__restrict self) {
 
 PRIVATE int DCALL
 resp_init(ReSequence *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	int result = refa_init(self, argc, argv);
 	if (!self->re_args.re_datalen)
 		self->re_args.re_dataptr = NULL;
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 resp_bool(ReSequence *__restrict self) {
 	return self->re_args.re_dataptr != NULL;
 }
 
-PRIVATE DREF ReSequenceIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ReSequenceIterator *DCALL
 resp_iter(ReSequence *__restrict self) {
 	DREF ReSequenceIterator *result;
 	result = DeeObject_MALLOC(ReSequenceIterator);
@@ -948,7 +948,7 @@ done:
 	return result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 resp_nsi_getsize(ReSequence *__restrict self) {
 	size_t result;
 	if (!self->re_args.re_dataptr)
@@ -959,7 +959,7 @@ resp_nsi_getsize(ReSequence *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 resp_size(ReSequence *__restrict self) {
 	size_t result = resp_nsi_getsize(self);
 	if unlikely(result == (size_t)-1)
@@ -1065,7 +1065,7 @@ INTERN DeeTypeObject ReSplit_Type = {
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 string_re_findall(String *__restrict self,
                   String *__restrict pattern,
                   struct re_args const *__restrict args) {
@@ -1083,7 +1083,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 string_re_locateall(String *__restrict self,
                     String *__restrict pattern,
                     struct re_args const *__restrict args) {
@@ -1101,7 +1101,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 string_re_split(String *__restrict self,
                 String *__restrict pattern,
                 struct re_args const *__restrict args) {

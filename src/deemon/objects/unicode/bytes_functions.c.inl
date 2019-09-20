@@ -68,9 +68,9 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *DCALL
-bytes_contains(Bytes *__restrict self,
-               DeeObject *__restrict find_ob) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_contains(Bytes *self,
+               DeeObject *find_ob) {
 	Needle needle;
 	if (get_needle(&needle, find_ob))
 		return NULL;
@@ -86,9 +86,9 @@ bytes_contains(Bytes *__restrict self,
 PRIVATE struct keyword find_kwlist[] = { K(needle), K(start), K(end), KEND };
 #endif /* !PRIVATE_FIND_KWLIST_DEFINED */
 
-PRIVATE DREF DeeObject *DCALL
-bytes_find(Bytes *__restrict self, size_t argc,
-           DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_find(Bytes *self, size_t argc,
+           DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -111,9 +111,9 @@ bytes_find(Bytes *__restrict self, size_t argc,
 	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casefind(Bytes *__restrict self, size_t argc,
-               DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casefind(Bytes *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -143,9 +143,9 @@ not_found:
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rfind(Bytes *__restrict self, size_t argc,
-            DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rfind(Bytes *self, size_t argc,
+            DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -168,9 +168,9 @@ bytes_rfind(Bytes *__restrict self, size_t argc,
 	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caserfind(Bytes *__restrict self, size_t argc,
-                DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserfind(Bytes *self, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -200,9 +200,9 @@ not_found:
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_index(Bytes *__restrict self, size_t argc,
-            DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_index(Bytes *self, size_t argc,
+            DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -227,9 +227,9 @@ bytes_index(Bytes *__restrict self, size_t argc,
 	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caseindex(Bytes *__restrict self, size_t argc,
-                DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caseindex(Bytes *self, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -259,9 +259,9 @@ bytes_caseindex(Bytes *__restrict self, size_t argc,
 	                     result + needle.n_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rindex(Bytes *__restrict self, size_t argc,
-             DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rindex(Bytes *self, size_t argc,
+             DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -286,9 +286,9 @@ bytes_rindex(Bytes *__restrict self, size_t argc,
 	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caserindex(Bytes *__restrict self, size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserindex(Bytes *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -318,9 +318,9 @@ bytes_caserindex(Bytes *__restrict self, size_t argc,
 	                     result + needle.n_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_count(Bytes *__restrict self, size_t argc,
-            DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_count(Bytes *self, size_t argc,
+            DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t result;
@@ -348,9 +348,9 @@ bytes_count(Bytes *__restrict self, size_t argc,
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casecount(Bytes *__restrict self, size_t argc,
-                DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casecount(Bytes *self, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t result;
@@ -378,9 +378,9 @@ bytes_casecount(Bytes *__restrict self, size_t argc,
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_contains_f(Bytes *__restrict self, size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_contains_f(Bytes *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -397,9 +397,9 @@ bytes_contains_f(Bytes *__restrict self, size_t argc,
 	                    needle.n_size) != NULL);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casecontains_f(Bytes *__restrict self, size_t argc,
-                     DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casecontains_f(Bytes *self, size_t argc,
+                     DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -422,9 +422,8 @@ DeeBytes_Format(dformatprinter printer,
                 char const *__restrict format,
                 size_t format_len, DeeObject *__restrict args);
 
-PRIVATE DREF DeeObject *DCALL
-bytes_format(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_format(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *args;
 	if (DeeArg_Unpack(argc, argv, "o:format", &args))
 		goto err;
@@ -447,7 +446,7 @@ err:
 
 
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_getsubstr(Bytes *__restrict self,
                 size_t start, size_t end) {
 	if (end >= DeeBytes_SIZE(self)) {
@@ -469,7 +468,7 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 
 PRIVATE DREF Bytes *DCALL
 bytes_substr(Bytes *__restrict self, size_t argc,
-             DeeObject **__restrict argv, DeeObject *kw) {
+             DeeObject **argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:substr", &start, &end))
 		goto err;
@@ -480,7 +479,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_resized(Bytes *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	DREF Bytes *result;
 	size_t new_size;
 	if (argc == 1) {
@@ -514,7 +513,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_reversed(Bytes *__restrict self, size_t argc,
-               DeeObject **__restrict argv, DeeObject *kw) {
+               DeeObject **argv, DeeObject *kw) {
 	DREF Bytes *result;
 	uint8_t *data, *dst;
 	size_t start = 0, end = (size_t)-1;
@@ -540,7 +539,7 @@ done:
 
 PRIVATE DREF Bytes *DCALL
 bytes_reverse(Bytes *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+              DeeObject **argv, DeeObject *kw) {
 	uint8_t *data, *dst;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:reverse", &start, &end))
@@ -568,7 +567,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_makereadonly(Bytes *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":makereadonly"))
 		goto err;
 	if (!DeeBytes_WRITABLE(self))
@@ -582,7 +581,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_makewritable(Bytes *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":makewritable"))
 		goto err;
 	if (DeeBytes_WRITABLE(self))
@@ -594,9 +593,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_hex(Bytes *__restrict self, size_t argc,
-          DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_hex(Bytes *self, size_t argc,
+          DeeObject **argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1, i;
 	char *dst;
 	DREF DeeStringObject *result;
@@ -632,9 +631,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-bytes_ord(Bytes *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_ord(Bytes *self, size_t argc, DeeObject **argv) {
 	size_t index = 0;
 	if (argc) {
 		if (DeeArg_Unpack(argc, argv, "Iu:ord", &index))
@@ -654,12 +652,11 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
-DeeString_Scanf(DeeObject *__restrict self,
-                DeeObject *__restrict format);
-PRIVATE DREF DeeObject *DCALL
-bytes_scanf(Bytes *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeString_Scanf(DeeObject *self,
+                DeeObject *format);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_scanf(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *format;
 	if (DeeArg_Unpack(argc, argv, "o:scanf", &format) ||
 	    DeeObject_AssertTypeExact(format, &DeeString_Type))
@@ -696,7 +693,7 @@ bytes_scanf(Bytes *__restrict self,
 #define DeeBytes_IsAnyAlnum(self, start, end)   DeeBytes_TestAnyTrait(self, start, end, UNICODE_FALPHA|UNICODE_FDECIMAL)
 #define DeeBytes_IsAnyNumeric(self, start, end) DeeBytes_TestAnyTrait(self, start, end, UNICODE_FDIGIT|UNICODE_FDECIMAL)
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_TestTrait(Bytes *__restrict self,
                    size_t start_index,
                    size_t end_index,
@@ -715,7 +712,7 @@ DeeBytes_TestTrait(Bytes *__restrict self,
 	return true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsAscii(Bytes *__restrict self,
                  size_t start_index,
                  size_t end_index) {
@@ -733,7 +730,7 @@ DeeBytes_IsAscii(Bytes *__restrict self,
 	return true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_TestAnyTrait(Bytes *__restrict self,
                       size_t start_index,
                       size_t end_index,
@@ -753,7 +750,7 @@ DeeBytes_TestAnyTrait(Bytes *__restrict self,
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsAnyAscii(Bytes *__restrict self,
                     size_t start_index,
                     size_t end_index) {
@@ -773,7 +770,7 @@ DeeBytes_IsAnyAscii(Bytes *__restrict self,
 }
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsTitle(Bytes *__restrict self,
                  size_t start_index,
                  size_t end_index) {
@@ -796,7 +793,7 @@ DeeBytes_IsTitle(Bytes *__restrict self,
 	return true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 DeeBytes_IsSymbol(Bytes *__restrict self,
                   size_t start_index,
                   size_t end_index) {
@@ -820,7 +817,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 #define DEFINE_BYTES_TRAIT(name, function, test_ch)                     \
 	PRIVATE DREF DeeObject *DCALL                                       \
 	bytes_##name(Bytes *__restrict self,                                \
-	             size_t argc, DeeObject **__restrict argv) {            \
+	             size_t argc, DeeObject **argv) {            \
 		size_t start = 0, end = (size_t)-1;                             \
 		if (argc == 1) {                                                \
 			uint8_t ch;                                                 \
@@ -845,7 +842,7 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 #define DEFINE_ANY_BYTES_TRAIT(name, function)                                           \
 	PRIVATE DREF DeeObject *DCALL                                                        \
 	bytes_##name(Bytes *__restrict self, size_t argc,                                    \
-	             DeeObject **__restrict argv, DeeObject *kw) {                           \
+	             DeeObject **argv, DeeObject *kw) {                           \
 		size_t start = 0, end = (size_t)-1;                                              \
 		if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId" #name, &start, &end)) \
 			return NULL;                                                                 \
@@ -885,9 +882,8 @@ DEFINE_ANY_BYTES_TRAIT(isanyascii, DeeBytes_IsAnyAscii)
 #undef DEFINE_ANY_BYTES_TRAIT
 #undef DEFINE_BYTES_TRAIT
 
-PRIVATE DREF DeeObject *DCALL
-bytes_asnumber(Bytes *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_asnumber(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t ch;
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
@@ -923,9 +919,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_asdigit(Bytes *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_asdigit(Bytes *self, size_t argc, DeeObject **argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
@@ -961,9 +956,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_asdecimal(Bytes *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_asdecimal(Bytes *self, size_t argc, DeeObject **argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
@@ -1002,7 +996,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_lower(Bytes *__restrict self, size_t argc,
-            DeeObject **__restrict argv, DeeObject *kw) {
+            DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
 	DREF Bytes *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:lower", &start, &end))
@@ -1023,7 +1017,7 @@ done:
 
 PRIVATE DREF Bytes *DCALL
 bytes_upper(Bytes *__restrict self, size_t argc,
-            DeeObject **__restrict argv, DeeObject *kw) {
+            DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
 	DREF Bytes *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:upper", &start, &end))
@@ -1044,7 +1038,7 @@ done:
 
 PRIVATE DREF Bytes *DCALL
 bytes_title(Bytes *__restrict self, size_t argc,
-            DeeObject **__restrict argv, DeeObject *kw) {
+            DeeObject **argv, DeeObject *kw) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
 	size_t i, start = 0, end = (size_t)-1;
 	DREF Bytes *result;
@@ -1071,7 +1065,7 @@ done:
 
 PRIVATE DREF Bytes *DCALL
 bytes_capitalize(Bytes *__restrict self, size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+                 DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
 	DREF Bytes *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:capitalize", &start, &end))
@@ -1093,7 +1087,7 @@ done:
 
 PRIVATE DREF Bytes *DCALL
 bytes_swapcase(Bytes *__restrict self, size_t argc,
-               DeeObject **__restrict argv, DeeObject *kw) {
+               DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
 	DREF Bytes *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:swapcase", &start, &end))
@@ -1116,7 +1110,7 @@ done:
 
 PRIVATE DREF Bytes *DCALL
 bytes_tolower(Bytes *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+              DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:tolower", &start, &end))
 		goto err;
@@ -1135,7 +1129,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_toupper(Bytes *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+              DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:toupper", &start, &end))
 		goto err;
@@ -1154,7 +1148,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_totitle(Bytes *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+              DeeObject **argv, DeeObject *kw) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
 	size_t i, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:totitle", &start, &end))
@@ -1179,7 +1173,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_tocapitalize(Bytes *__restrict self, size_t argc,
-                   DeeObject **__restrict argv, DeeObject *kw) {
+                   DeeObject **argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:tocapitalize", &start, &end))
 		goto err;
@@ -1203,7 +1197,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_toswapcase(Bytes *__restrict self, size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+                 DeeObject **argv, DeeObject *kw) {
 	size_t i, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:toswapcase", &start, &end))
 		goto err;
@@ -1227,7 +1221,7 @@ PRIVATE struct keyword replace_kwlist[] = { K(find), K(replace), K(max), KEND };
 
 PRIVATE DREF Bytes *DCALL
 bytes_replace(Bytes *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+              DeeObject **argv, DeeObject *kw) {
 	DREF Bytes *result;
 	uint8_t *begin, *end, *block_begin;
 	DeeObject *find_ob, *replace_ob;
@@ -1286,7 +1280,7 @@ return_self:
 
 PRIVATE DREF Bytes *DCALL
 bytes_casereplace(Bytes *__restrict self, size_t argc,
-                  DeeObject **__restrict argv, DeeObject *kw) {
+                  DeeObject **argv, DeeObject *kw) {
 	DREF Bytes *result;
 	uint8_t *begin, *end, *block_begin;
 	DeeObject *find_ob, *replace_ob;
@@ -1346,7 +1340,7 @@ return_self:
 
 PRIVATE DREF Bytes *DCALL
 bytes_toreplace(Bytes *__restrict self, size_t argc,
-                DeeObject **__restrict argv, DeeObject *kw) {
+                DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob, *replace_ob;
 	size_t max_count = (size_t)-1;
 	Needle find_needle, replace_needle;
@@ -1394,7 +1388,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_tocasereplace(Bytes *__restrict self, size_t argc,
-                    DeeObject **__restrict argv, DeeObject *kw) {
+                    DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob, *replace_ob;
 	size_t max_count = (size_t)-1;
 	Needle find_needle, replace_needle;
@@ -1444,25 +1438,25 @@ err:
 /* The string decode() and encode() member functions also function for `bytes' objects.
  * As a matter of fact: they'd work for any kind of object, however built-in
  *                      codecs only function for bytes and string objects! */
-INTDEF DREF DeeObject *DCALL
-string_decode(DeeObject *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw);
-INTDEF DREF DeeObject *DCALL
-string_encode(DeeObject *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_decode(DeeObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_encode(DeeObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw);
 
 
-INTDEF DREF DeeObject *DCALL DeeBytes_SplitByte(Bytes *__restrict self, uint8_t sep);
-INTDEF DREF DeeObject *DCALL DeeBytes_Split(Bytes *__restrict self, DeeObject *__restrict sep);
-INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplitByte(Bytes *__restrict self, uint8_t sep);
-INTDEF DREF DeeObject *DCALL DeeBytes_CaseSplit(Bytes *__restrict self, DeeObject *__restrict sep);
-INTDEF DREF DeeObject *DCALL DeeBytes_SplitLines(Bytes *__restrict self, bool keepends);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_SplitByte(Bytes *__restrict self, uint8_t sep);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeBytes_Split(Bytes *self, DeeObject *sep);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_CaseSplitByte(Bytes *__restrict self, uint8_t sep);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeBytes_CaseSplit(Bytes *self, DeeObject *sep);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_SplitLines(Bytes *__restrict self, bool keepends);
 INTDEF DREF DeeObject *DCALL DeeBytes_FindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
 INTDEF DREF DeeObject *DCALL DeeBytes_CaseFindAll(Bytes *self, DeeObject *other, size_t start, size_t end);
 
-PRIVATE DREF DeeObject *DCALL
-bytes_findall(Bytes *__restrict self, size_t argc,
-              DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_findall(Bytes *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	DeeObject *arg;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:findall", &arg, &start, &end))
@@ -1470,9 +1464,9 @@ bytes_findall(Bytes *__restrict self, size_t argc,
 	return DeeBytes_FindAll(self, arg, start, end);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casefindall(Bytes *__restrict self, size_t argc,
-                  DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casefindall(Bytes *self, size_t argc,
+                  DeeObject **argv, DeeObject *kw) {
 	DeeObject *arg;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casefindall", &arg, &start, &end))
@@ -1480,9 +1474,8 @@ bytes_casefindall(Bytes *__restrict self, size_t argc,
 	return DeeBytes_CaseFindAll(self, arg, start, end);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_join(Bytes *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_join(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:join", &seq))
 		goto err;
@@ -1550,9 +1543,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_split(Bytes *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_split(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	uint8_t sep;
 	if (DeeArg_Unpack(argc, argv, "o:split", &other))
@@ -1566,9 +1558,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casesplit(Bytes *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casesplit(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *other;
 	uint8_t sep;
 	if (DeeArg_Unpack(argc, argv, "o:casesplit", &other))
@@ -1582,18 +1573,17 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_splitlines(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_splitlines(Bytes *self, size_t argc, DeeObject **argv) {
 	bool keepends = false;
 	if (DeeArg_Unpack(argc, argv, "|b:splitlines", &keepends))
 		return NULL;
 	return DeeBytes_SplitLines(self, keepends);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_startswith(Bytes *__restrict self, size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_startswith(Bytes *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw) {
 	Needle needle;
 	DeeObject *arg;
 	size_t start = 0, end = (size_t)-1;
@@ -1609,9 +1599,9 @@ bytes_startswith(Bytes *__restrict self, size_t argc,
 	                   needle.n_data, needle.n_size));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casestartswith(Bytes *__restrict self, size_t argc,
-                     DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casestartswith(Bytes *self, size_t argc,
+                     DeeObject **argv, DeeObject *kw) {
 	Needle needle;
 	DeeObject *arg;
 	size_t start = 0, end = (size_t)-1;
@@ -1627,9 +1617,9 @@ bytes_casestartswith(Bytes *__restrict self, size_t argc,
 	                               needle.n_data, needle.n_size));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_endswith(Bytes *__restrict self, size_t argc,
-               DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_endswith(Bytes *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	Needle needle;
 	DeeObject *arg;
 	size_t start = 0, end = (size_t)-1;
@@ -1646,9 +1636,9 @@ bytes_endswith(Bytes *__restrict self, size_t argc,
 	                   needle.n_data, needle.n_size));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caseendswith(Bytes *__restrict self, size_t argc,
-                   DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caseendswith(Bytes *self, size_t argc,
+                   DeeObject **argv, DeeObject *kw) {
 	Needle needle;
 	DeeObject *arg;
 	size_t start = 0, end = (size_t)-1;
@@ -1701,9 +1691,9 @@ err_r_0:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_parition(Bytes *__restrict self, size_t argc,
-               DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_parition(Bytes *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -1725,9 +1715,9 @@ bytes_parition(Bytes *__restrict self, size_t argc,
 	                            needle.n_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caseparition(Bytes *__restrict self, size_t argc,
-                   DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caseparition(Bytes *self, size_t argc,
+                   DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -1749,9 +1739,9 @@ bytes_caseparition(Bytes *__restrict self, size_t argc,
 	                            needle.n_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rparition(Bytes *__restrict self, size_t argc,
-                DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rparition(Bytes *self, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -1773,9 +1763,9 @@ bytes_rparition(Bytes *__restrict self, size_t argc,
 	                            needle.n_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caserparition(Bytes *__restrict self, size_t argc,
-                    DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserparition(Bytes *self, size_t argc,
+                    DeeObject **argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -1797,9 +1787,8 @@ bytes_caserparition(Bytes *__restrict self, size_t argc,
 	                            needle.n_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_strip(Bytes *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_strip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin, *end;
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:strip", &mask))
@@ -1830,9 +1819,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casestrip(Bytes *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casestrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin, *end;
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:casestrip", &mask))
@@ -1863,9 +1851,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_lstrip(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_lstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin, *end;
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:lstrip", &mask))
@@ -1891,9 +1878,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caselstrip(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caselstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin, *end;
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:caselstrip", &mask))
@@ -1919,9 +1905,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rstrip(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin, *end;
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:rstrip", &mask))
@@ -1947,9 +1932,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caserstrip(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin, *end;
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:caserstrip", &mask))
@@ -1975,9 +1959,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_sstrip(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_sstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin;
 	DeeObject *mask;
 	Needle needle;
@@ -2012,9 +1995,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casesstrip(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casesstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin;
 	DeeObject *mask;
 	Needle needle;
@@ -2049,9 +2031,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_lsstrip(Bytes *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_lsstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin;
 	DeeObject *mask;
 	Needle needle;
@@ -2080,9 +2061,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caselsstrip(Bytes *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caselsstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin;
 	DeeObject *mask;
 	Needle needle;
@@ -2111,9 +2091,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rsstrip(Bytes *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rsstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin;
 	DeeObject *mask;
 	Needle needle;
@@ -2141,9 +2120,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casersstrip(Bytes *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casersstrip(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *begin;
 	DeeObject *mask;
 	Needle needle;
@@ -2182,7 +2160,7 @@ struct bcompare_args {
 PRIVATE int DCALL
 get_bcompare_args(Bytes *__restrict self,
                   struct bcompare_args *__restrict args,
-                  size_t argc, DeeObject **__restrict argv,
+                  size_t argc, DeeObject **argv,
                   char const *__restrict funname) {
 	DeeObject *other;
 	size_t temp, temp2;
@@ -2483,9 +2461,8 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_compare(Bytes *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_compare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int result;
 	if (get_bcompare_args(self, &args, argc, argv, "compare"))
@@ -2504,9 +2481,8 @@ bytes_compare(Bytes *__restrict self,
 	return DeeInt_NewInt(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_vercompare(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_vercompare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int8_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "vercompare"))
@@ -2516,9 +2492,8 @@ bytes_vercompare(Bytes *__restrict self,
 	return DeeInt_NewS8(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_wildcompare(Bytes *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_wildcompare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int result;
 	if (get_bcompare_args(self, &args, argc, argv, "wildcompare"))
@@ -2528,9 +2503,8 @@ bytes_wildcompare(Bytes *__restrict self,
 	return DeeInt_NewInt(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_fuzzycompare(Bytes *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_fuzzycompare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	dssize_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "fuzzycompare"))
@@ -2544,9 +2518,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_wmatch(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_wmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int result;
 	if (get_bcompare_args(self, &args, argc, argv, "wmatch"))
@@ -2556,9 +2529,8 @@ bytes_wmatch(Bytes *__restrict self,
 	return_bool_(result == 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casecompare(Bytes *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casecompare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int result;
 	if (get_bcompare_args(self, &args, argc, argv, "casecompare"))
@@ -2577,9 +2549,8 @@ bytes_casecompare(Bytes *__restrict self,
 	return DeeInt_NewInt(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casevercompare(Bytes *__restrict self,
-                     size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casevercompare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int8_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "casevercompare"))
@@ -2589,9 +2560,8 @@ bytes_casevercompare(Bytes *__restrict self,
 	return DeeInt_NewS8(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casewildcompare(Bytes *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casewildcompare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int result;
 	if (get_bcompare_args(self, &args, argc, argv, "casewildcompare"))
@@ -2601,9 +2571,8 @@ bytes_casewildcompare(Bytes *__restrict self,
 	return DeeInt_NewInt(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casefuzzycompare(Bytes *__restrict self,
-                       size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casefuzzycompare(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	dssize_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "casefuzzycompare"))
@@ -2617,9 +2586,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casewmatch(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casewmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	int result;
 	if (get_bcompare_args(self, &args, argc, argv, "casewmatch"))
@@ -2629,9 +2597,8 @@ bytes_casewmatch(Bytes *__restrict self,
 	return_bool_(result == 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_center(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_center(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t width;
 	DeeObject *filler_ob = NULL;
@@ -2668,9 +2635,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_ljust(Bytes *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_ljust(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t width;
 	DeeObject *filler_ob = NULL;
@@ -2704,9 +2670,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rjust(Bytes *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rjust(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t width;
 	DeeObject *filler_ob = NULL;
@@ -2739,9 +2704,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_zfill(Bytes *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_zfill(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeObject *result;
 	size_t width;
 	DeeObject *filler_ob = NULL;
@@ -2781,9 +2745,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_expandtabs(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_expandtabs(Bytes *self, size_t argc, DeeObject **argv) {
 	size_t tab_width = 8;
 	if (DeeArg_Unpack(argc, argv, "|Iu:expandtabs", &tab_width))
 		goto err;
@@ -2830,9 +2793,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_unifylines(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_unifylines(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *replace_ob = NULL;
 	Needle replace;
 	if (DeeArg_Unpack(argc, argv, "|o:unifylines", &replace_ob))
@@ -2890,9 +2852,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_indent(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_indent(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *filler_ob = NULL;
 	Needle filler;
 	if (DeeArg_Unpack(argc, argv, "|o:indent", &filler_ob))
@@ -2960,9 +2921,8 @@ retself:
 	return_reference_((DeeObject *)self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_dedent(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_dedent(Bytes *self, size_t argc, DeeObject **argv) {
 	size_t max_chars   = 1;
 	DeeObject *mask_ob = NULL;
 	if (DeeArg_Unpack(argc, argv, "|Iuo:dedent", &max_chars, &mask_ob))
@@ -3044,9 +3004,8 @@ retself:
 	return_reference_((DeeObject *)self);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_common(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_common(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	size_t result = 0;
 	if (get_bcompare_args(self, &args, argc, argv, "common"))
@@ -3063,9 +3022,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rcommon(Bytes *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rcommon(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	size_t result = 0;
 	if (get_bcompare_args(self, &args, argc, argv, "rcommon"))
@@ -3086,9 +3044,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casecommon(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casecommon(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	size_t result = 0;
 	if (get_bcompare_args(self, &args, argc, argv, "casecommon"))
@@ -3111,9 +3068,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casercommon(Bytes *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casercommon(Bytes *self, size_t argc, DeeObject **argv) {
 	struct bcompare_args args;
 	size_t result = 0;
 	if (get_bcompare_args(self, &args, argc, argv, "casercommon"))
@@ -3141,9 +3097,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-bytes_findmatch(Bytes *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_findmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3170,9 +3125,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rfindmatch(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rfindmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3199,9 +3153,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_indexmatch(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_indexmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3228,9 +3181,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rindexmatch(Bytes *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rindexmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3257,9 +3209,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casefindmatch(Bytes *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casefindmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3289,9 +3240,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caserfindmatch(Bytes *__restrict self,
-                     size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserfindmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3322,9 +3272,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caseindexmatch(Bytes *__restrict self,
-                     size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3355,9 +3304,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caserindexmatch(Bytes *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *ptr, *scan_str;
@@ -3388,9 +3336,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_partitionmatch(Bytes *__restrict self,
-                     size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_partitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeTupleObject *result;
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
@@ -3456,9 +3403,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_rpartitionmatch(Bytes *__restrict self,
-                      size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeTupleObject *result;
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
@@ -3525,9 +3471,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_casepartitionmatch(Bytes *__restrict self,
-                         size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeTupleObject *result;
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
@@ -3593,9 +3538,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_caserpartitionmatch(Bytes *__restrict self,
-                          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	DREF DeeTupleObject *result;
 	DeeObject *s_open_ob, *s_clos_ob;
 	size_t start = 0, end = (size_t)-1;
@@ -3662,12 +3606,11 @@ err:
 	return NULL;
 }
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_Segments(DeeBytesObject *__restrict self, size_t substring_length);
 
-PRIVATE DREF DeeObject *DCALL
-bytes_segments(Bytes *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_segments(Bytes *self, size_t argc, DeeObject **argv) {
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:segments", &substring_length))
 		goto err;
@@ -3680,9 +3623,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_distribute(Bytes *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_distribute(Bytes *self, size_t argc, DeeObject **argv) {
 	size_t substring_count;
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:distribute", &substring_count))
@@ -3702,9 +3644,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-bytes_sizeof(Bytes *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_sizeof(Bytes *self, size_t argc, DeeObject **argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;

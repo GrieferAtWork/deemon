@@ -58,9 +58,9 @@ DDATDEF DeeTypeObject DeeInstanceMethod_Type;
  * In user-code, it is used to implement the temporary/split type when
  * an instance attribute with the `CLASS_ATTRIBUTE_FMETHOD' flag is loaded
  * as an object, rather than being called directly. */
-DFUNDEF DREF DeeObject *DCALL
-DeeInstanceMethod_New(DeeObject *__restrict func,
-                      DeeObject *__restrict this_arg);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeInstanceMethod_New(DeeObject *func,
+                      DeeObject *this_arg);
 
 DECL_END
 

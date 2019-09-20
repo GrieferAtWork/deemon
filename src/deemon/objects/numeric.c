@@ -38,7 +38,7 @@ DECL_BEGIN
 INTDEF int DCALL none_i1(void *UNUSED(b));
 INTDEF int DCALL none_i2(void *UNUSED(b), void *UNUSED(c));
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asflt(DeeObject *__restrict self) {
 	double result;
 	if (DeeObject_AsDouble(self, &result))
@@ -46,7 +46,7 @@ numeric_asflt(DeeObject *__restrict self) {
 	return DeeFloat_New(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_ass8(DeeObject *__restrict self) {
 	int8_t result;
 	if (DeeObject_AsInt8(self, &result))
@@ -54,7 +54,7 @@ numeric_ass8(DeeObject *__restrict self) {
 	return DeeInt_NewS8(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_ass16(DeeObject *__restrict self) {
 	int16_t result;
 	if (DeeObject_AsInt16(self, &result))
@@ -62,7 +62,7 @@ numeric_ass16(DeeObject *__restrict self) {
 	return DeeInt_NewS16(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_ass32(DeeObject *__restrict self) {
 	int32_t result;
 	if (DeeObject_AsInt32(self, &result))
@@ -70,7 +70,7 @@ numeric_ass32(DeeObject *__restrict self) {
 	return DeeInt_NewS32(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_ass64(DeeObject *__restrict self) {
 	int64_t result;
 	if (DeeObject_AsInt64(self, &result))
@@ -78,7 +78,7 @@ numeric_ass64(DeeObject *__restrict self) {
 	return DeeInt_NewS64(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_ass128(DeeObject *__restrict self) {
 	dint128_t result;
 	if (DeeObject_AsInt128(self, &result))
@@ -86,7 +86,7 @@ numeric_ass128(DeeObject *__restrict self) {
 	return DeeInt_NewS128(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asu8(DeeObject *__restrict self) {
 	uint8_t result;
 	if (DeeObject_AsUInt8(self, &result))
@@ -94,7 +94,7 @@ numeric_asu8(DeeObject *__restrict self) {
 	return DeeInt_NewU8(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asu16(DeeObject *__restrict self) {
 	uint16_t result;
 	if (DeeObject_AsUInt16(self, &result))
@@ -102,7 +102,7 @@ numeric_asu16(DeeObject *__restrict self) {
 	return DeeInt_NewU16(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asu32(DeeObject *__restrict self) {
 	uint32_t result;
 	if (DeeObject_AsUInt32(self, &result))
@@ -110,7 +110,7 @@ numeric_asu32(DeeObject *__restrict self) {
 	return DeeInt_NewU32(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asu64(DeeObject *__restrict self) {
 	uint64_t result;
 	if (DeeObject_AsUInt64(self, &result))
@@ -118,7 +118,7 @@ numeric_asu64(DeeObject *__restrict self) {
 	return DeeInt_NewU64(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_asu128(DeeObject *__restrict self) {
 	duint128_t result;
 	if (DeeObject_AsUInt128(self, &result))
@@ -126,7 +126,7 @@ numeric_asu128(DeeObject *__restrict self) {
 	return DeeInt_NewU128(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed8(DeeObject *__restrict self) {
 	int8_t result;
 	if unlikely(DeeObject_GetInt8(self, &result) < 0)
@@ -136,7 +136,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned8(DeeObject *__restrict self) {
 	uint8_t result;
 	if unlikely(DeeObject_GetInt8(self, (int8_t *)&result) < 0)
@@ -146,7 +146,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed16(DeeObject *__restrict self) {
 	int16_t result;
 	if unlikely(DeeObject_GetInt16(self, &result) < 0)
@@ -156,7 +156,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned16(DeeObject *__restrict self) {
 	uint16_t result;
 	if unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
@@ -166,7 +166,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed32(DeeObject *__restrict self) {
 	int32_t result;
 	if unlikely(DeeObject_GetInt32(self, &result) < 0)
@@ -176,7 +176,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned32(DeeObject *__restrict self) {
 	uint32_t result;
 	if unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
@@ -186,7 +186,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed64(DeeObject *__restrict self) {
 	int64_t result;
 	if unlikely(DeeObject_GetInt64(self, &result) < 0)
@@ -196,7 +196,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned64(DeeObject *__restrict self) {
 	uint64_t result;
 	if unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
@@ -206,7 +206,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_signed128(DeeObject *__restrict self) {
 	dint128_t result;
 	if unlikely(DeeObject_GetInt128(self, &result) < 0)
@@ -216,7 +216,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_unsigned128(DeeObject *__restrict self) {
 	duint128_t result;
 	if unlikely(DeeObject_GetInt128(self, (dint128_t *)&result) < 0)
@@ -226,7 +226,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap16(DeeObject *__restrict self) {
 	uint16_t result;
 	if unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
@@ -236,7 +236,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap32(DeeObject *__restrict self) {
 	uint32_t result;
 	if unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
@@ -246,7 +246,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap64(DeeObject *__restrict self) {
 	uint64_t result;
 	if unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
@@ -256,7 +256,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_swap128(DeeObject *__restrict self) {
 	duint128_t result;
 	uint64_t temp;
@@ -272,7 +272,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap16(DeeObject *__restrict self) {
 	uint16_t result;
 	if unlikely(DeeObject_GetInt16(self, (int16_t *)&result) < 0)
@@ -282,7 +282,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap32(DeeObject *__restrict self) {
 	uint32_t result;
 	if unlikely(DeeObject_GetInt32(self, (int32_t *)&result) < 0)
@@ -292,7 +292,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap64(DeeObject *__restrict self) {
 	uint64_t result;
 	if unlikely(DeeObject_GetInt64(self, (int64_t *)&result) < 0)
@@ -302,7 +302,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 numeric_sswap128(DeeObject *__restrict self) {
 	dint128_t result;
 	uint64_t temp;

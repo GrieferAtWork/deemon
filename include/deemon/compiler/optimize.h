@@ -105,7 +105,7 @@ INTDEF int (DCALL ast_assumes_setsymval)(struct ast_assumes *__restrict self,
 /* Lookup the assumed value of a given symbol `sym', and return a reference to it.
  * NOTE: When no such assumption is available, or the symbol is assumed to be
  *       unknown, `NULL' is returned, but no error is thrown. */
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 ast_assumes_getsymval(struct ast_assumes *__restrict self,
                       struct symbol *__restrict sym);
 
@@ -264,7 +264,7 @@ INTDEF int (DCALL ast_optimize_all)(struct ast *__restrict self, bool result_use
 
 /* Check if `a' and `b' are semantically speaking the same AST.
  * When the `OPTIMIZE_FNOCOMPARE' flag is set, this always returns `false' */
-INTDEF bool DCALL ast_equal(struct ast *__restrict a, struct ast *__restrict b);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL ast_equal(struct ast *__restrict a, struct ast *__restrict b);
 
 /* Check if the 2 given ASTs can be exchanged in such a way that
  * the second is executed prior to the first within assembly.
@@ -272,12 +272,12 @@ INTDEF bool DCALL ast_equal(struct ast *__restrict a, struct ast *__restrict b);
  * on the latter, nor does it invoke any side-effects that could
  * have any influence on the other.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `false'. */
-INTDEF bool DCALL ast_can_exchange(struct ast *__restrict first,
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL ast_can_exchange(struct ast *__restrict first,
                                    struct ast *__restrict second);
 
 /* Check if the given ast `self' makes use of `sym' in any way.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `true'. */
-INTDEF bool DCALL ast_uses_symbol(struct ast *__restrict self,
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL ast_uses_symbol(struct ast *__restrict self,
                                   struct symbol *__restrict sym);
 
 /* Do a shallow assignment of `other' onto `self' */
@@ -299,12 +299,12 @@ INTDEF struct ast *DCALL ast_setscope_and_ddi(struct ast *self,
                                               struct ast *__restrict src);
 
 /* Internal optimization helpers... */
-INTDEF bool DCALL ast_has_sideeffects(struct ast *__restrict self);
-INTDEF bool DCALL ast_is_nothrow(struct ast *__restrict self, bool result_used);
+INTDEF WUNUSED NONNULL((1)) bool DCALL ast_has_sideeffects(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) bool DCALL ast_is_nothrow(struct ast *__restrict self, bool result_used);
 
 /* Check if a given ast `self' is, or contains a `goto' branch,
  * or a `break' / `continue' branch when `consider_loopctl' is set. */
-INTDEF bool DCALL ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
+INTDEF WUNUSED NONNULL((1)) bool DCALL ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
 #define AST_CONTAINS_GOTO_CONSIDER_NONE     0x00
 #define AST_CONTAINS_GOTO_CONSIDER_CONTINUE 0x01
 #define AST_CONTAINS_GOTO_CONSIDER_BREAK    0x02
@@ -331,7 +331,7 @@ INTDEF int (DCALL ast_get_boolean_noeffect)(struct ast *__restrict self);
 
 /* Predict the typing of a given AST, or return NULL when unpredictable.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'. */
-INTDEF DeeTypeObject *DCALL ast_predict_type(struct ast *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DeeTypeObject *DCALL ast_predict_type(struct ast *__restrict self);
 
 
 
@@ -346,7 +346,7 @@ INTDEF int (DCALL allow_constexpr)(DeeObject *__restrict self);
 
 /* Check if a given object `type' is a type that implements a cast-constructor.
  * When `type' isn't derived from `DeeType_Type', always return `false' */
-INTDEF bool DCALL has_cast_constructor(DeeObject *__restrict type);
+INTDEF WUNUSED NONNULL((1)) bool DCALL has_cast_constructor(DeeObject *__restrict type);
 
 
 #ifndef __INTELLISENSE__

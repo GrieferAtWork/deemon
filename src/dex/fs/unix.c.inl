@@ -448,7 +448,7 @@ PRIVATE ATTR_COLD int DCALL err_getcwd(int error) {
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_printcwd(struct unicode_printer *__restrict printer) {
 #ifdef _WDIRECT_DEFINED
 	wchar_t *buffer;
@@ -537,7 +537,7 @@ err:
 	return NULL;
 }
 
-INTERN int DCALL fs_chdir(DeeObject *__restrict path) {
+INTERN WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path) {
 	int error;
 	if (DeeThread_CheckInterrupt())
 		goto err;
@@ -646,7 +646,7 @@ fs_getuser(bool try_get) {
 	return_empty_string;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_printhome(struct unicode_printer *__restrict printer, bool try_get) {
 	(void)printer; /* TODO */
 	if (try_get)
@@ -654,7 +654,7 @@ fs_printhome(struct unicode_printer *__restrict printer, bool try_get) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 	(void)printer; /* TODO */
 	if (try_get)
@@ -737,7 +737,7 @@ struct stat_object {
 /* @return:  1: `try_stat' was true and the given `path' could not be found.
  * @return:  0: Successfully did a stat() in the given `path'.
  * @return: -1: The state failed and an error was thrown. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Stat_Init(STRUCT_STAT *__restrict self,
           DeeObject *__restrict path,
           bool try_stat, bool do_lstat) {
@@ -821,7 +821,7 @@ err:
 
 PRIVATE int DCALL
 stat_ctor(DeeStatObject *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:stat", &path))
 		goto err;
@@ -832,7 +832,7 @@ err:
 
 PRIVATE int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+           size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:lstat", &path))
 		goto err;
@@ -841,7 +841,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_dev(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_dev) <= 4) {
 		return DeeInt_NewU32((uint32_t)self->st_stat.st_dev);
@@ -851,7 +851,7 @@ stat_get_dev(DeeStatObject *__restrict self) {
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ino(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_ino) <= 2) {
 		return DeeInt_NewU16((uint16_t)self->st_stat.st_ino);
@@ -866,7 +866,7 @@ stat_get_ino(DeeStatObject *__restrict self) {
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mode(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_mode) <= 2) {
 		return DeeInt_NewU16((uint16_t)self->st_stat.st_mode);
@@ -876,7 +876,7 @@ stat_get_mode(DeeStatObject *__restrict self) {
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_nlink(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_nlink) <= 2) {
 		return DeeInt_NewU16((uint16_t)self->st_stat.st_nlink);
@@ -891,7 +891,7 @@ stat_get_nlink(DeeStatObject *__restrict self) {
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_rdev(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_rdev) <= 4) {
 		return DeeInt_NewU32((uint32_t)self->st_stat.st_rdev);
@@ -901,7 +901,7 @@ stat_get_rdev(DeeStatObject *__restrict self) {
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_size(DeeStatObject *__restrict self) {
 	__STATIC_IF(sizeof(self->st_stat.st_size) <= 4) {
 		return DeeInt_NewU32((uint32_t)self->st_stat.st_size);
@@ -911,19 +911,19 @@ stat_get_size(DeeStatObject *__restrict self) {
 	}
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_atime(DeeStatObject *__restrict self) {
 	/* TODO: Extensions for better resolution. */
 	return DeeTime_New((uint64_t)self->st_stat.st_atime * MICROSECONDS_PER_SECOND);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mtime(DeeStatObject *__restrict self) {
 	/* TODO: Extensions for better resolution. */
 	return DeeTime_New((uint64_t)self->st_stat.st_mtime * MICROSECONDS_PER_SECOND);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
 	/* TODO: Extensions for better resolution. */
 	return DeeTime_New((uint64_t)self->st_stat.st_ctime * MICROSECONDS_PER_SECOND);
@@ -945,9 +945,8 @@ PRIVATE struct type_getset stat_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
-stat_isdir(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isdir(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isdir"))
 		goto err;
 	return_bool(S_ISDIR(self->st_stat.st_mode));
@@ -955,9 +954,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_ischr(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_ischr(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":ischr"))
 		goto err;
 	return_bool(S_ISCHR(self->st_stat.st_mode));
@@ -965,9 +963,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_isblk(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isblk(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isblk"))
 		goto err;
 	return_bool(S_ISBLK(self->st_stat.st_mode));
@@ -975,9 +972,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_isreg(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isreg(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isreg"))
 		goto err;
 	return_bool(S_ISREG(self->st_stat.st_mode));
@@ -985,9 +981,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_isfifo(DeeStatObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isfifo(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isfifo"))
 		goto err;
 	return_bool(S_ISFIFO(self->st_stat.st_mode));
@@ -995,9 +990,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_islnk(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_islnk(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":islnk"))
 		goto err;
 	return_bool(S_ISLNK(self->st_stat.st_mode));
@@ -1005,9 +999,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_issock(DeeStatObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_issock(DeeStatObject *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":issock"))
 		goto err;
 	return_bool(S_ISSOCK(self->st_stat.st_mode));
@@ -1026,9 +1019,8 @@ PRIVATE struct type_method stat_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_exists(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_exists(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1042,9 +1034,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isdir(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isdir(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1058,9 +1049,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_ischr(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_ischr(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1074,9 +1064,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isblk(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isblk(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1090,9 +1079,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isreg(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isreg(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1106,9 +1094,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isfifo(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isfifo(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1122,9 +1109,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_islnk(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_islnk(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1138,9 +1124,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_issock(DeeObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_issock(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1154,7 +1139,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 do_ishidden(DeeObject *__restrict path) {
 	int result;
 	char *begin, *iter;
@@ -1179,7 +1164,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 stat_class_ishidden(DeeObject *__restrict UNUSED(self),
-                    size_t argc, DeeObject **__restrict argv) {
+                    size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:ishidden", &path))
@@ -1192,9 +1177,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stat_class_isexe(DeeObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isexe(DeeObject *self, size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	STRUCT_STAT buf;
@@ -1315,7 +1299,7 @@ INTERN DeeTypeObject DeeLStat_Type = {
 
 
 /* Filesystem write operations. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
           DeeObject *__restrict mtime, DeeObject *__restrict ctime) {
 	if (DeeThread_CheckInterrupt())
@@ -1331,7 +1315,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_chmod(DeeObject *__restrict path,
          DeeObject *__restrict mode) {
 	uint16_t mask, flags;
@@ -1346,7 +1330,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_lchmod(DeeObject *__restrict path,
           DeeObject *__restrict mode) {
 	uint16_t mask, flags;
@@ -1361,7 +1345,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_chown(DeeObject *__restrict path,
          DeeObject *__restrict user,
          DeeObject *__restrict group) {
@@ -1374,7 +1358,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_lchown(DeeObject *__restrict path,
           DeeObject *__restrict user,
           DeeObject *__restrict group) {
@@ -1387,7 +1371,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_mkdir(DeeObject *__restrict path,
          DeeObject *__restrict perm) {
 	int error;
@@ -1496,7 +1480,7 @@ no_access:
 	}
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_rmdir(DeeObject *__restrict path) {
 	int error;
 	if (DeeThread_CheckInterrupt())
@@ -1583,7 +1567,7 @@ err_isdir:
 	}
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_unlink(DeeObject *__restrict path) {
 	int error;
 	if (DeeThread_CheckInterrupt())
@@ -1618,7 +1602,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_remove(DeeObject *__restrict path) {
 	int error;
 #ifdef _WIO_DEFINED
@@ -1707,7 +1691,7 @@ err_path_crossdev2(int error,
 	                          existing_path, new_path);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_rename(DeeObject *__restrict existing_path,
           DeeObject *__restrict new_path) {
 	int error;
@@ -1808,7 +1792,7 @@ err:
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_link(DeeObject *__restrict existing_path,
         DeeObject *__restrict new_path) {
 	int error;
@@ -1878,7 +1862,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_symlink(DeeObject *__restrict target_text,
            DeeObject *__restrict link_path,
            bool format_target) {
@@ -1928,7 +1912,7 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict path) {
 	if (!DeeString_Check(path)) {
 		DREF DeeObject *result;
@@ -2026,7 +2010,7 @@ typedef struct {
 #endif
 } DirIterator;
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DirIterator *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	closedir(self->d_hnd);
@@ -2034,15 +2018,15 @@ diriter_fini(DirIterator *__restrict self) {
 	Dee_Decref(self->d_dir);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 diriter_visit(DirIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->d_dir);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryNewSized(char const *__restrict str, size_t len);
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 diriter_next(DirIterator *__restrict self) {
 	DREF DeeStringObject *result;
 	struct dirent *ent;
@@ -2122,7 +2106,7 @@ err_handle_opendir(DeeObject *__restrict path) {
 	                          path);
 }
 
-PRIVATE DREF DirIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DirIterator *DCALL
 dir_iter(Dir *__restrict self) {
 	DREF DirIterator *result;
 	char *utf8;
@@ -2205,12 +2189,12 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 dir_fini(Dir *__restrict self) {
 	Dee_Decref(self->d_path);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dir_copy(Dir *__restrict self,
          Dir *__restrict other) {
 	self->d_path = other->d_path;
@@ -2220,7 +2204,7 @@ dir_copy(Dir *__restrict self,
 
 PRIVATE int DCALL
 dir_ctor(Dir *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:dir", &self->d_path))
 		goto err;
 	if (DeeString_Check(self->d_path)) {
@@ -2350,7 +2334,7 @@ typedef struct {
 	char const *q_wild; /* The wildcard pattern string with which to match filenames. */
 } QueryIterator;
 
-PRIVATE DREF DeeStringObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 queryiter_next(QueryIterator *__restrict self) {
 	DREF DeeStringObject *result;
 again:
@@ -2423,7 +2407,7 @@ PRIVATE struct type_member query_class_members[] = {
 };
 
 
-PRIVATE DREF QueryIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF QueryIterator *DCALL
 query_iter(Dir *__restrict self) {
 	DREF QueryIterator *result;
 	char *query_start, *query_str;

@@ -157,7 +157,7 @@ err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
 
 #ifndef TPPLIKE_STRING_TO_FLOAT_DEFINED
 #define TPPLIKE_STRING_TO_FLOAT_DEFINED 1
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 JIT_atof(JITLexer *__restrict self, char const *__restrict start, size_t length) {
 	double fltval = 0;
 	char *iter, *end, ch;

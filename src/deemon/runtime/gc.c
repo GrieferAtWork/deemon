@@ -1031,7 +1031,7 @@ DeeSlab_ENUMERATE(DEFINE_GC_SLAB_FUNCTIONS)
 
 #ifndef NDEBUG
 #ifdef CONFIG_TRACE_REFCHANGES
-INTDEF void DCALL
+INTDEF NONNULL((1)) void DCALL
 dump_reference_history(DeeObject *__restrict obj);
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
@@ -1058,17 +1058,17 @@ typedef struct {
 	                          * NULL when the iterator has been exhausted. */
 } GCIter;
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 gciter_fini(GCIter *__restrict self) {
 	Dee_XDecref(self->gi_next);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 gciter_visit(GCIter *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->gi_next);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 gciter_bool(GCIter *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->gi_next != NULL;
@@ -1077,7 +1077,7 @@ gciter_bool(GCIter *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gciter_next(GCIter *__restrict self) {
 	DREF DeeObject *result;
 	struct gc_head *next;
@@ -1229,7 +1229,7 @@ PRIVATE struct type_member gcenum_class_members[] = {
 
 PRIVATE DREF DeeObject *DCALL
 gcenum_collect(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **__restrict argv) {
+               size_t argc, DeeObject **argv) {
 	size_t max = (size_t)-1, result;
 	if (DeeArg_Unpack(argc, argv, "|Iu:collect", &max))
 		goto err;
@@ -1241,7 +1241,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 gcenum_referred(DeeObject *__restrict UNUSED(self),
-                size_t argc, DeeObject **__restrict argv) {
+                size_t argc, DeeObject **argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:referred", &start))
 		goto err;
@@ -1252,7 +1252,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 gcenum_referredgc(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:referredgc", &start))
 		goto err;
@@ -1263,7 +1263,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 gcenum_reachable(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:reachable", &start))
 		goto err;
@@ -1274,7 +1274,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 gcenum_reachablegc(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:reachablegc", &start))
 		goto err;
@@ -1285,7 +1285,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 gcenum_referring(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	DeeObject *to;
 	if (DeeArg_Unpack(argc, argv, "o:referring", &to))
 		goto err;
@@ -1296,7 +1296,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 gcenum_isreferring(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	DeeObject *from, *to;
 	if (DeeArg_Unpack(argc, argv, "oo:isreferring", &from, &to))
 		goto err;
@@ -1383,7 +1383,7 @@ PUBLIC DeeObject DeeGCEnumTracked_Singleton = {
 };
 
 /* GC objects referring to X */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeGC_CollectGCReferred(GCSetMaker *__restrict self,
                         DeeObject *__restrict target) {
 	struct gc_head *iter;

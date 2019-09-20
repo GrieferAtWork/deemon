@@ -152,7 +152,7 @@ LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
 #define ISABS(x) ((x)[0] == '/')
 #endif /* !CONFIG_HOST_WINDOWS */
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
 print_pwd(struct unicode_printer *__restrict printer) {
 #ifdef CONFIG_HOST_WINDOWS
 	LPWSTR buffer;
@@ -226,7 +226,7 @@ err:
 #endif
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 make_absolute(DeeObject *__restrict path) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	char *iter, *begin, *end, *flush_start, *flush_end, ch;
@@ -409,7 +409,7 @@ err:
  * @return: 0: You're now responsible to load the module.
  * @return: 1: The module has already been loaded.
  * @return: 2: You've already started loading this module. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeModule_BeginLoading(DeeModuleObject *__restrict self) {
 	uint16_t flags;
 #ifndef CONFIG_NO_THREADS
@@ -452,17 +452,17 @@ begin_loading:
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 DeeModule_FailLoading(DeeModuleObject *__restrict self) {
 	ATOMIC_FETCHAND(self->mo_flags, ~(MODULE_FLOADING));
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 DeeModule_DoneLoading(DeeModuleObject *__restrict self) {
 	ATOMIC_FETCHOR(self->mo_flags, MODULE_FDIDLOAD);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 TPPFile_SetStartingLineAndColumn(struct TPPFile *__restrict self,
                                  int start_line, int start_col) {
 	/* Set the starting-line offset. */
@@ -729,7 +729,7 @@ PRIVATE struct module_bucket *modules_glob_v = NULL; /* [lock(modules_glob_lock)
 PRIVATE DEFINE_RWLOCK(modules_glob_lock);
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 	DeeModuleObject *result = NULL;
 #ifndef CONFIG_NO_THREADS
@@ -763,7 +763,7 @@ find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 	return result;
 }
 
-PRIVATE DeeModuleObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_glob_module(DeeStringObject *__restrict module_name) {
 #ifdef CONFIG_NOCASE_FS
 	dhash_t hash = DeeString_HashCase((DeeObject *)module_name);
@@ -898,7 +898,7 @@ do_alloc_new_vector:
 }
 
 
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 add_file_module(DeeModuleObject *__restrict self) {
 	dhash_t hash;
 	struct module_bucket *bucket;
@@ -928,7 +928,7 @@ add_file_module(DeeModuleObject *__restrict self) {
 	return true;
 }
 
-PRIVATE bool DCALL
+PRIVATE NONNULL((1)) bool DCALL
 add_glob_module(DeeModuleObject *__restrict self) {
 	dhash_t hash;
 	struct module_bucket *bucket;
@@ -960,7 +960,7 @@ add_glob_module(DeeModuleObject *__restrict self) {
 
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 module_unbind(DeeModuleObject *__restrict self) {
 	if (self->mo_pself) {
 		rwlock_write(&modules_lock);
@@ -1504,7 +1504,7 @@ err_module_not_found(DeeObject *__restrict module_name) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_DoGet(char const *__restrict name,
                 size_t size, dhash_t hash) {
 	DREF DeeModuleObject *result = NULL;
@@ -1544,7 +1544,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_Get(DeeObject *__restrict module_name) {
 	/* TODO: Support for mixed LATIN-1/UTF-8 strings */
 	return DeeModule_DoGet(DeeString_STR(module_name),
@@ -1557,7 +1557,7 @@ DeeModule_Get(DeeObject *__restrict module_name) {
 	                       );
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
                     size_t module_namesize) {
 	return DeeModule_DoGet(module_name,
@@ -2875,7 +2875,7 @@ err:
 /* Similar to `DeeExec_RunStream()', but rather than directly executing it,
  * return the module or the module's root function used to describe the code
  * that is being executed. */
-PUBLIC NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) /*Module*/ DREF DeeObject *DCALL
 DeeExec_CompileModuleStream(DeeObject *source_stream,
                             unsigned int mode,
                             int start_line, int start_col,
@@ -3232,7 +3232,7 @@ PRIVATE DEFINE_STRING(default_deemon_home,CONFIG_DEEMON_HOME);
 
 #if !defined(CONFIG_DEEMON_HOME) && \
    (!defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX))
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 unix_readlink(/*utf-8*/ char const *__restrict path) {
 	char *buffer, *new_buffer;
 	int error;
@@ -3399,7 +3399,7 @@ PRIVATE DEFINE_RWLOCK(deemon_home_lock);
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE DREF DeeStringObject *deemon_home = NULL;
-PUBLIC DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
+PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
 	DREF DeeStringObject *result;
 	rwlock_read(&deemon_home_lock);
 	result = deemon_home;

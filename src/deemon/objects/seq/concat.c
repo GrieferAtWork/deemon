@@ -61,7 +61,7 @@ typedef struct {
 } CatIterator;
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_ctor(CatIterator *__restrict self) {
 	self->c_cat = (DREF Cat *)DeeSeq_Concat(Dee_EmptySeq, Dee_EmptySeq);
 	if unlikely(!self->c_cat)
@@ -78,7 +78,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 catiterator_copy(CatIterator *__restrict self,
                  CatIterator *__restrict other) {
 	DREF DeeObject *iterator;
@@ -99,7 +99,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 catiterator_deep(CatIterator *__restrict self,
                  CatIterator *__restrict other) {
 	DREF DeeObject *iterator;
@@ -127,7 +127,7 @@ err:
 
 PRIVATE int DCALL
 catiterator_init(CatIterator *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqConcatIterator", &self->c_cat))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->c_cat, &SeqConcat_Type))
@@ -143,19 +143,19 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 catiterator_fini(CatIterator *__restrict self) {
 	Dee_Decref(self->c_curr);
 	Dee_Decref(self->c_cat);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 catiterator_visit(CatIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->c_curr);
 	Dee_Visit(self->c_cat);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_bool(CatIterator *__restrict self) {
 	int result;
 	DeeObject **iter, **end;
@@ -245,7 +245,7 @@ PRIVATE struct type_cmp catiterator_cmp = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_next(CatIterator *__restrict self) {
 	DREF DeeObject *iter, *result;
 again_locked:
@@ -305,7 +305,7 @@ do_iter:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_seq_get(CatIterator *__restrict self) {
 	DREF DeeObject *result;
 	rwlock_read(&self->c_lock);
@@ -315,7 +315,7 @@ catiterator_seq_get(CatIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 catiterator_curr_get(CatIterator *__restrict self) {
 	DREF DeeObject *result;
 	rwlock_read(&self->c_lock);
@@ -325,7 +325,7 @@ catiterator_curr_get(CatIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 catiterator_curr_set(CatIterator *__restrict self,
                      DeeObject *__restrict value) {
 	DREF DeeObject *oldval;
@@ -403,12 +403,12 @@ INTERN DeeTypeObject SeqConcatIterator_Type = {
 };
 
 
-INTDEF void DCALL tuple_fini(Tuple *__restrict self);
-INTDEF void DCALL tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg);
+INTDEF NONNULL((1)) void DCALL tuple_fini(Tuple *__restrict self);
+INTDEF NONNULL((1, 2)) void DCALL tuple_visit(Tuple *__restrict self, dvisit_t proc, void *arg);
 #define cat_fini   tuple_fini
 #define cat_visit  tuple_visit
 
-PRIVATE DREF CatIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF CatIterator *DCALL
 cat_iter(Cat *__restrict self) {
 	DREF CatIterator *result;
 	result = DeeObject_MALLOC(CatIterator);
@@ -432,7 +432,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_getsequences(Cat *__restrict self) {
 	return DeeRefVector_NewReadonly((DeeObject *)self,
 	                                DeeTuple_SIZE(self),
@@ -454,7 +454,7 @@ PRIVATE struct type_member cat_class_members[] = {
 };
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cat_nsi_getsize(Cat *__restrict self) {
 	size_t i, result = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
@@ -470,7 +470,7 @@ cat_nsi_getsize(Cat *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_size(Cat *__restrict self) {
 	size_t result = cat_nsi_getsize(self);
 	if unlikely(result == (size_t)-1)
@@ -478,9 +478,9 @@ cat_size(Cat *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-cat_contains(Cat *__restrict self,
-             DeeObject *__restrict search_item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cat_contains(Cat *self,
+             DeeObject *search_item) {
 	size_t i;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		DREF DeeObject *result;
@@ -499,7 +499,7 @@ cat_contains(Cat *__restrict self,
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_nsi_getitem(Cat *__restrict self, size_t index) {
 	size_t i, temp, sub_index = index, total_length = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
@@ -515,9 +515,9 @@ cat_nsi_getitem(Cat *__restrict self, size_t index) {
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-cat_getitem(Cat *__restrict self,
-            DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cat_getitem(Cat *self,
+            DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		return NULL;
@@ -717,10 +717,10 @@ PRIVATE struct type_seq cat_seq = {
 };
 
 
-INTDEF void DCALL tuple_tp_free(void *__restrict ob);
+INTDEF NONNULL((1)) void DCALL tuple_tp_free(void *__restrict ob);
 #define cat_tp_free  tuple_tp_free
 
-PRIVATE int DCALL cat_bool(Cat *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL cat_bool(Cat *__restrict self) {
 	size_t i;
 	int temp;
 	for (i = 0; i < self->t_size; ++i) {
@@ -734,10 +734,10 @@ PRIVATE int DCALL cat_bool(Cat *__restrict self) {
 
 
 
-INTDEF DREF Tuple *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF Tuple *DCALL
 tuple_deepcopy(Tuple *__restrict self);
 
-PRIVATE DREF Cat *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Cat *DCALL
 cat_deepcopy(Cat *__restrict self) {
 	DREF Cat *result;
 	result = (DREF Cat *)tuple_deepcopy((Tuple *)self);
@@ -797,9 +797,9 @@ INTERN DeeTypeObject SeqConcat_Type = {
 	/* .tp_class_members = */ cat_class_members
 };
 
-INTERN DREF DeeObject *DCALL
-DeeSeq_Concat(DeeObject *__restrict self,
-              DeeObject *__restrict other) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_Concat(DeeObject *self,
+              DeeObject *other) {
 	DREF DeeObject **dst, **iter, **end;
 	DREF DeeTupleObject *result;
 	/* Special handling for recursive cats. */

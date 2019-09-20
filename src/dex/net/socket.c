@@ -54,7 +54,7 @@ err_no_af_support(neterrno_t error, sa_family_t af) {
 
 PRIVATE int DCALL
 socket_ctor(Socket *__restrict self,
-            size_t argc, DeeObject **__restrict argv,
+            size_t argc, DeeObject **argv,
             DeeObject *kw) {
 	int af, type, proto;
 	DeeObject *arg_af, *arg_type = Dee_None, *arg_proto = Dee_None;
@@ -123,7 +123,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 socket_fini(Socket *__restrict self) {
 	if (self->s_state & SOCKET_FOPENED) {
 		DBG_ALIGNMENT_DISABLE();
@@ -132,13 +132,13 @@ socket_fini(Socket *__restrict self) {
 	}
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 socket_bool(Socket *__restrict self) {
 	return !!(self->s_state & SOCKET_FOPENED);
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSocket_GetSockName(DeeSocketObject *__restrict self,
                       SockAddr *__restrict result,
                       bool throw_error) {
@@ -202,7 +202,7 @@ again:
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
                       SockAddr *__restrict result,
                       bool throw_error) {
@@ -252,7 +252,7 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
 }
 
 
-PRIVATE DREF DeeSockAddrObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeSockAddrObject *DCALL
 socket_sockname_get(Socket *__restrict self) {
 	DREF DeeSockAddrObject *result;
 	result = DeeObject_MALLOC(DeeSockAddrObject);
@@ -268,7 +268,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF DeeSockAddrObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeSockAddrObject *DCALL
 socket_peeraddr_get(Socket *__restrict self) {
 	DREF DeeSockAddrObject *result;
 	if (DeeThread_CheckInterrupt())
@@ -289,7 +289,7 @@ err:
 
 PRIVATE DEFINE_STRING(shutdown_all, "rw");
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 socket_do_shutdown(Socket *__restrict self, int how) {
 	int error;
 	DBG_ALIGNMENT_DISABLE();
@@ -316,7 +316,7 @@ err_shutdown_failed(Socket *__restrict self, int error) {
 
 PRIVATE DREF DeeObject *DCALL
 socket_close(Socket *__restrict self, size_t argc,
-             DeeObject **__restrict argv) {
+             DeeObject **argv) {
 	sock_t socket_handle;
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	if (DeeArg_Unpack(argc, argv, "|o:close", &shutdown_mode))
@@ -385,7 +385,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_shutdown(Socket *__restrict self, size_t argc,
-                DeeObject **__restrict argv) {
+                DeeObject **argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	if (DeeArg_Unpack(argc, argv, "|o:shutdown", &shutdown_mode))
 		goto err;
@@ -454,7 +454,7 @@ err_addr_not_available(neterrno_t error, SockAddr const *__restrict addr,
 	                          SockAddr_ToString(addr, prototype, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSocket_Bind(DeeSocketObject *__restrict self,
                SockAddr const *__restrict addr) {
 	int error;
@@ -574,7 +574,7 @@ err_network_down(int error, Socket *__restrict socket,
 #pragma warning(disable : 4548)
 #endif /* _MSC_VER */
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeSocket_Connect(DeeSocketObject *__restrict self,
                   SockAddr const *__restrict addr) {
 	int error;
@@ -740,7 +740,7 @@ PRIVATE int DCALL get_default_backlog(void) {
 #endif /* !CONFIG_NO_NOTIFICATIONS */
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog) {
 	int error;
 	uint16_t state;
@@ -1120,13 +1120,13 @@ err_invalid_transfer_mode(int error, Socket *__restrict self,
 
 
 #ifdef SOCKET_HAVE_CONFIGURE_SENDRECV
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 socket_configure_recv(Socket *__restrict self) {
 	(void)self;
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 socket_configure_send(Socket *__restrict self) {
 	(void)self;
 	return 0;
@@ -1167,7 +1167,7 @@ err_configure_send(Socket *__restrict self) {
 #define WAITFORDATA_SEND 1
 #endif /* !CONFIG_HOST_WINDOWS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 wait_for_data(Socket *__restrict self,
               uint64_t end_time, int mode) {
 	int error;
@@ -1876,7 +1876,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_bind(Socket *__restrict self, size_t argc,
-            DeeObject **__restrict argv) {
+            DeeObject **argv) {
 	SockAddr addr;
 	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
@@ -1896,7 +1896,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_connect(Socket *__restrict self, size_t argc,
-               DeeObject **__restrict argv) {
+               DeeObject **argv) {
 	SockAddr addr;
 	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
@@ -1916,7 +1916,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_listen(Socket *__restrict self, size_t argc,
-              DeeObject **__restrict argv) {
+              DeeObject **argv) {
 	int max_backlog = -1;
 	if (DeeArg_Unpack(argc, argv, "|d:listen", &max_backlog))
 		goto err;
@@ -1927,7 +1927,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_doaccept(Socket *__restrict self, uint64_t timeout) {
 	DREF Socket *result;
 	int error;
@@ -1959,7 +1959,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_accept(Socket *__restrict self, size_t argc,
-              DeeObject **__restrict argv) {
+              DeeObject **argv) {
 	uint64_t timeout = (uint64_t)-1;
 	if (DeeArg_Unpack(argc, argv, "|I64d:accept", &timeout))
 		return NULL;
@@ -1968,7 +1968,7 @@ socket_accept(Socket *__restrict self, size_t argc,
 
 PRIVATE DREF DeeObject *DCALL
 socket_tryaccept(Socket *__restrict self, size_t argc,
-                 DeeObject **__restrict argv) {
+                 DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryaccept"))
 		return NULL;
 	return socket_doaccept(self, 0);
@@ -1976,7 +1976,7 @@ socket_tryaccept(Socket *__restrict self, size_t argc,
 
 PRIVATE DREF DeeObject *DCALL
 socket_recv(Socket *__restrict self, size_t argc,
-            DeeObject **__restrict argv) {
+            DeeObject **argv) {
 	size_t max_size;
 	uint64_t timeout;
 	int flags;
@@ -2035,7 +2035,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_recvinto(Socket *__restrict self, size_t argc,
-                DeeObject **__restrict argv) {
+                DeeObject **argv) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	DeeObject *arg1 = NULL, *arg2 = NULL;
@@ -2085,7 +2085,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_recvfrom(Socket *__restrict self, size_t argc,
-                DeeObject **__restrict argv) {
+                DeeObject **argv) {
 	DREF DeeSockAddrObject *result_addr;
 	DREF DeeObject *result_text, *result;
 	size_t max_size;
@@ -2170,7 +2170,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_recvfrominto(Socket *__restrict self, size_t argc,
-                    DeeObject **__restrict argv) {
+                    DeeObject **argv) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	DeeObject *arg1 = NULL, *arg2 = NULL;
@@ -2253,7 +2253,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_send(Socket *__restrict self, size_t argc,
-            DeeObject **__restrict argv) {
+            DeeObject **argv) {
 	DeeBuffer buffer;
 	DeeObject *data, *arg_0 = NULL, *arg_1 = NULL;
 	uint64_t timeout;
@@ -2304,7 +2304,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 socket_sendto(Socket *__restrict self, size_t argc,
-              DeeObject **__restrict argv) {
+              DeeObject **argv) {
 	DeeBuffer buffer;
 	SockAddr target_addr;
 	DeeObject *target, *data, *arg_0 = NULL, *arg_1 = NULL;
@@ -2376,33 +2376,29 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-socket_isbound(Socket *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_isbound(Socket *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isbound"))
 		return NULL;
 	return_bool(self->s_state & SOCKET_FBOUND);
 }
 
-PRIVATE DREF DeeObject *DCALL
-socket_isconnected(Socket *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_isconnected(Socket *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isconnected"))
 		return NULL;
 	return_bool(self->s_state & SOCKET_FCONNECTED);
 }
 
-PRIVATE DREF DeeObject *DCALL
-socket_islistening(Socket *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_islistening(Socket *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":islistening"))
 		return NULL;
 	return_bool(self->s_state & SOCKET_FLISTENING);
 }
 
-PRIVATE DREF DeeObject *DCALL
-socket_wasshutdown(Socket *__restrict self,
-                   size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_wasshutdown(Socket *self, size_t argc, DeeObject **argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	int mode;
 	uint16_t state = self->s_state;
@@ -2428,17 +2424,15 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-socket_wasclosed(Socket *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_wasclosed(Socket *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":wasclosed"))
 		return NULL;
 	return_bool(!(self->s_state & SOCKET_FOPENED));
 }
 
-PRIVATE DREF DeeObject *DCALL
-socket_fileno(Socket *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_fileno(Socket *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
 #ifdef CONFIG_HOST_WINDOWS
@@ -2715,7 +2709,7 @@ PRIVATE struct type_member socket_members[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_str(DeeSocketObject *__restrict self) {
 	bool has_sock, has_peer;
 	uint16_t state;
@@ -2768,7 +2762,7 @@ err:
 }
 
 #if 0
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_repr(DeeSocketObject *__restrict self) {
 	bool has_sock, has_peer;
 	uint16_t state;

@@ -33,19 +33,19 @@
 
 DECL_BEGIN
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 filter_fini(Filter *__restrict self) {
 	Dee_Decref(self->f_seq);
 	Dee_Decref(self->f_fun);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 filter_visit(FilterIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->fi_func);
 	Dee_Visit(self->fi_iter);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_ctor(FilterIterator *__restrict self) {
 	self->fi_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	if unlikely(!self->fi_iter)
@@ -59,7 +59,7 @@ err:
 
 PRIVATE int DCALL
 filteriterator_init(FilterIterator *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+                    size_t argc, DeeObject **argv) {
 	Filter *filter;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqFilterIterator", &filter))
 		goto err;
@@ -75,7 +75,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 filteriterator_copy(FilterIterator *__restrict self,
                     FilterIterator *__restrict other) {
 	self->fi_iter = DeeObject_Copy(other->fi_iter);
@@ -88,7 +88,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 filteriterator_deep(FilterIterator *__restrict self,
                     FilterIterator *__restrict other) {
 	self->fi_iter = DeeObject_DeepCopy(other->fi_iter);
@@ -110,7 +110,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(FilterIterator, fi_func) == COMPILER_OFFSETOF(Fi
 #define filteriterator_fini  filter_fini
 #define filteriterator_visit filter_visit
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 filteriterator_next(FilterIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeObject *pred_result;
@@ -169,7 +169,7 @@ PRIVATE struct type_cmp filteriterator_cmp = {
 };
 
 
-PRIVATE DREF Filter *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Filter *DCALL
 filteriterator_seq_get(FilterIterator *__restrict self) {
 	DREF Filter *result;
 	DREF DeeObject *base_seq;
@@ -252,7 +252,7 @@ INTERN DeeTypeObject SeqFilterIterator_Type = {
 };
 
 
-PRIVATE DREF FilterIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF FilterIterator *DCALL
 filter_iter(Filter *__restrict self) {
 	DREF FilterIterator *result;
 	result = DeeObject_MALLOC(FilterIterator);
@@ -294,7 +294,7 @@ PRIVATE struct type_member filter_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 filter_ctor(Filter *__restrict self) {
 	self->f_seq = Dee_EmptySeq;
 	self->f_fun = Dee_None;
@@ -303,7 +303,7 @@ filter_ctor(Filter *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 filter_copy(Filter *__restrict self,
             Filter *__restrict other) {
 	self->f_seq = other->f_seq;
@@ -313,7 +313,7 @@ filter_copy(Filter *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 filter_deep(Filter *__restrict self,
             Filter *__restrict other) {
 	self->f_seq = DeeObject_DeepCopy(other->f_seq);
@@ -331,7 +331,7 @@ err:
 
 PRIVATE int DCALL
 filter_init(Filter *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+            size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_SeqFilter", &self->f_seq, &self->f_fun))
 		goto err;
 	self->f_seq = Dee_EmptySeq;
@@ -390,9 +390,9 @@ INTERN DeeTypeObject SeqFilter_Type = {
 	/* .tp_class_members = */ filter_class_members
 };
 
-INTERN DREF DeeObject *DCALL
-DeeSeq_Filter(DeeObject *__restrict self,
-              DeeObject *__restrict pred_keep) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeSeq_Filter(DeeObject *self,
+              DeeObject *pred_keep) {
 	DREF Filter *result;
 	result = DeeObject_MALLOC(Filter);
 	if unlikely(!result)

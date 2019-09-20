@@ -247,11 +247,11 @@ struct stype_object {
 #endif /* !CONFIG_NO_CFUNCTION */
 	size_t                  st_align;     /* [const] Alignment required by this type. */
 	int             (DCALL *st_init)(DeeSTypeObject *__restrict tp_self, void *self,
-	                                  size_t argc, DeeObject **__restrict argv);
+	                                  size_t argc, DeeObject **argv);
 	int             (DCALL *st_assign)(DeeSTypeObject *__restrict tp_self, void *self, DeeObject *__restrict value);
 	struct stype_cast       st_cast;      /* Type casting operators. */
 	DREF DeeObject *(DCALL *st_call)(DeeSTypeObject *__restrict tp_self, void *self,
-	                                 size_t argc, DeeObject **__restrict argv);
+	                                 size_t argc, DeeObject **argv);
 	struct stype_math      *st_math;      /* [0..1] Math related operators. */
 	struct stype_cmp       *st_cmp;       /* [0..1] Compare operators. */
 	struct stype_seq       *st_seq;       /* [0..1] Sequence operators. */
@@ -285,8 +285,8 @@ INTDEF DeeTypeObject DeeLValueType_Type;
 
 /* Return (and create if missing) the pointer/l-value
  * type associated with a given structured type. */
-INTDEF DREF DeePointerTypeObject *DCALL DeeSType_Pointer(DeeSTypeObject *__restrict self);
-INTDEF DREF DeeLValueTypeObject *DCALL DeeSType_LValue(DeeSTypeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeePointerTypeObject *DCALL DeeSType_Pointer(DeeSTypeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeLValueTypeObject *DCALL DeeSType_LValue(DeeSTypeObject *__restrict self);
 
 /* Return the structured type equivalent of `self', or
  * re-return `self' if it already is a structured type.
@@ -299,7 +299,7 @@ INTDEF DREF DeeLValueTypeObject *DCALL DeeSType_LValue(DeeSTypeObject *__restric
  * If `self' is not one of these mappings and also not
  * a c-type, a TypeError is thrown and NULL is returned.
  * WARNING: This function does not return a reference! */
-INTDEF DeeSTypeObject *DCALL DeeSType_Get(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DeeSTypeObject *DCALL DeeSType_Get(DeeObject *__restrict self);
 
 /* Check of `ob' is a structured object. */
 #define DeeStruct_Check(ob)  DeeSType_Check(Dee_TYPE(ob))
@@ -370,7 +370,7 @@ INTDEF DeeLValueTypeObject DeeLValue_Type;
 /* Interpret `self' as a pointer and store the result in `*result'
  * @return:  0: Successfully converted `self' to a pointer.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_AsPointer(DeeObject *__restrict self,
                     DeeSTypeObject *__restrict pointer_base,
                     union pointer *__restrict result);
@@ -378,7 +378,7 @@ DeeObject_AsPointer(DeeObject *__restrict self,
  * @return:  1: The conversion failed.
  * @return:  0: Successfully converted `self' to a pointer.
  * @return: -1: An error occurred. */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeObject_TryAsPointer(DeeObject *__restrict self,
                        DeeSTypeObject *__restrict pointer_base,
                        union pointer *__restrict result);
@@ -397,8 +397,8 @@ DeePointer_NewFor(DeeSTypeObject *__restrict pointer_type,
 
 /* The main functions for the new `ref' (`&self') and `ind' (`*self')
  * operators made available through the ctypes module. */
-INTDEF DREF DeeObject *DCALL DeeObject_Ref(DeeObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeObject_Deref(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Ref(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Deref(DeeObject *__restrict self);
 
 
 INTDEF struct stype_math pointer_math0; /* Math functions for pointer types with a base-size of `0' */
@@ -411,7 +411,7 @@ INTDEF int DCALL DeeStruct_Assign(DeeSTypeObject *__restrict tp_self, void *self
 INTDEF DREF DeeObject *DCALL DeeStruct_Str(DeeSTypeObject *__restrict tp_self, void *self);
 INTDEF DREF DeeObject *DCALL DeeStruct_Repr(DeeSTypeObject *__restrict tp_self, void *self);
 INTDEF int DCALL DeeStruct_Bool(DeeSTypeObject *__restrict tp_self, void *self);
-INTDEF DREF DeeObject *DCALL DeeStruct_Call(DeeSTypeObject *__restrict tp_self, void *self, size_t argc, DeeObject **__restrict argv);
+INTDEF DREF DeeObject *DCALL DeeStruct_Call(DeeSTypeObject *__restrict tp_self, void *self, size_t argc, DeeObject **argv);
 INTDEF int DCALL DeeStruct_Int32(DeeSTypeObject *__restrict tp_self, void *self, int32_t *__restrict result);
 INTDEF int DCALL DeeStruct_Int64(DeeSTypeObject *__restrict tp_self, void *self, int64_t *__restrict result);
 INTDEF int DCALL DeeStruct_Double(DeeSTypeObject *__restrict tp_self, void *self, double *__restrict result);
@@ -760,7 +760,7 @@ INTDEF DeeArrayTypeObject DeeArray_Type;
 
 /* Construct an array structured type that
  * consists of `num_items' instances of `self'. */
-INTDEF DREF DeeArrayTypeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeArrayTypeObject *DCALL
 DeeSType_Array(DeeSTypeObject *__restrict self, size_t num_items);
 
 

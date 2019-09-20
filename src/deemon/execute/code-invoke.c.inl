@@ -102,23 +102,37 @@ kwds_find_index(DeeKwdsObject *__restrict self,
 #endif /* CALL_KW */
 
 
-INTERN DREF DeeObject *DCALL
-MY_FUNCTION_NAME(DeeFunctionObject *__restrict self
+INTERN WUNUSED
+#ifdef CALL_TUPLE
+#ifdef CALL_THIS
+	NONNULL((1, 2, 3))
+#else /* CALL_THIS */
+	NONNULL((1, 2))
+#endif /* !CALL_THIS */
+#else /* CALL_TUPLE */
+#ifdef CALL_THIS
+	NONNULL((1, 2))
+#else /* CALL_THIS */
+	NONNULL((1))
+#endif /* !CALL_THIS */
+#endif /* !CALL_TUPLE */
+DREF DeeObject *DCALL
+MY_FUNCTION_NAME(DeeFunctionObject *self
 #ifdef CALL_THIS
                  ,
-                 DeeObject *__restrict this_arg
+                 DeeObject *this_arg
 #endif /* CALL_THIS */
 #ifdef CALL_TUPLE
 #define GET_ARGC() DeeTuple_SIZE(args)
 #define GET_ARGV() DeeTuple_ELEM(args)
                  ,
-                 DeeObject *__restrict args
+                 DeeObject *args
 #else /* CALL_TUPLE */
 #define GET_ARGC() argc
 #define GET_ARGV() argv
                  ,
                  size_t argc,
-                 DeeObject **__restrict argv
+                 DeeObject **argv
 #endif /* !CALL_TUPLE */
 #ifdef CALL_KW
                  ,

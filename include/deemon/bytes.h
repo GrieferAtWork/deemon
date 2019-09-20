@@ -111,7 +111,7 @@ DFUNDEF DREF DeeObject *DCALL DeeObject_Bytes(DeeObject *__restrict self,
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
 DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
 DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
-DFUNDEF DREF DeeObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
 DFUNDEF DREF DeeObject *DCALL DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
 DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
 
@@ -144,7 +144,7 @@ DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
 
 /* Construct a writable bytes-object that is initialized from the
  * items of the given `seq' casted to integers in the range of 00-FF */
-DFUNDEF DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_FromSequence(DeeObject *__restrict seq);
 
 #ifdef CONFIG_BUILDING_DEEMON

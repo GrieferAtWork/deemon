@@ -67,7 +67,7 @@ typedef struct {
 
 PRIVATE int DCALL
 bsi_init(BytesSplitIterator *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_BytesSplitIterator",
 	                  &self->bsi_split))
 		goto err;
@@ -90,7 +90,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bsi_copy(BytesSplitIterator *__restrict self,
          BytesSplitIterator *__restrict other) {
 	self->bsi_split   = other->bsi_split;
@@ -103,17 +103,17 @@ bsi_copy(BytesSplitIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 bsi_fini(BytesSplitIterator *__restrict self) {
 	Dee_Decref(self->bsi_split);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bsi_visit(BytesSplitIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->bsi_split);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsi_bool(BytesSplitIterator *__restrict self) {
 	return READ_BSI_ITER(self) != NULL;
 }
@@ -156,7 +156,7 @@ PRIVATE struct type_cmp bsi_cmp = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsi_next(BytesSplitIterator *__restrict self) {
 	uint8_t *start, *end;
 #ifdef CONFIG_NO_THREADS
@@ -199,7 +199,7 @@ bsi_next(BytesSplitIterator *__restrict self) {
 	                        self->bsi_bytes->b_flags);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsci_next(BytesSplitIterator *__restrict self) {
 	uint8_t *start, *end;
 #ifdef CONFIG_NO_THREADS
@@ -350,7 +350,7 @@ INTERN DeeTypeObject BytesCaseSplitIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bs_ctor(BytesSplit *__restrict self) {
 	self->bs_bytes     = (DREF Bytes *)Dee_EmptyBytes;
 	self->bs_sep_owner = NULL;
@@ -362,7 +362,7 @@ bs_ctor(BytesSplit *__restrict self) {
 
 PRIVATE int DCALL
 bs_init(BytesSplit *__restrict self, size_t argc,
-        DeeObject **__restrict argv) {
+        DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_BytesSplit", &self->bs_bytes, &self->bs_sep_owner))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->bs_bytes, &DeeBytes_Type))
@@ -390,24 +390,24 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 bs_fini(BytesSplit *__restrict self) {
 	Dee_Decref(self->bs_bytes);
 	Dee_XDecref(self->bs_sep_owner);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bs_visit(BytesSplit *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->bs_bytes);
 	Dee_XVisit(self->bs_sep_owner);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bs_bool(BytesSplit *__restrict self) {
 	return DeeBytes_SIZE(self->bs_bytes) != 0;
 }
 
-PRIVATE DREF BytesSplitIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesSplitIterator *DCALL
 bs_iter(BytesSplit *__restrict self) {
 	DREF BytesSplitIterator *result;
 	result = DeeObject_MALLOC(BytesSplitIterator);
@@ -427,7 +427,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF BytesSplitIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesSplitIterator *DCALL
 bcs_iter(BytesSplit *__restrict self) {
 	DREF BytesSplitIterator *result;
 	result = DeeObject_MALLOC(BytesSplitIterator);
@@ -471,7 +471,7 @@ PRIVATE struct type_seq bcs_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bs_getsep(BytesSplit *__restrict self) {
 	return DeeBytes_NewView(self->bs_sep_owner ? self->bs_sep_owner : (DeeObject *)self,
 	                        self->bs_sep_ptr, self->bs_sep_len, Dee_BUFFER_FREADONLY);
@@ -590,7 +590,7 @@ INTERN DeeTypeObject BytesCaseSplit_Type = {
 	/* .tp_class_members = */ bcs_class_members
 };
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_SplitByte(Bytes *__restrict self,
                    uint8_t sep) {
 	DREF BytesSplit *result;
@@ -608,9 +608,9 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeBytes_Split(Bytes *__restrict self,
-               DeeObject *__restrict sep) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeBytes_Split(Bytes *self,
+               DeeObject *sep) {
 	ASSERT_OBJECT(sep);
 	ASSERT(DeeString_Check(sep) || DeeBytes_Check(sep));
 	DREF BytesSplit *result;
@@ -638,7 +638,7 @@ err_r:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_CaseSplitByte(Bytes *__restrict self,
                        uint8_t sep) {
 	DREF BytesSplit *result;
@@ -656,9 +656,9 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeBytes_CaseSplit(Bytes *__restrict self,
-                   DeeObject *__restrict sep) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeBytes_CaseSplit(Bytes *self,
+                   DeeObject *sep) {
 	ASSERT_OBJECT(sep);
 	ASSERT(DeeString_Check(sep) || DeeBytes_Check(sep));
 	DREF BytesSplit *result;
@@ -720,7 +720,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(BytesSplitIterator, bsi_iter) ==
 
 PRIVATE int DCALL
 blsi_init(BytesLineSplitIterator *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	BytesLineSplit *ls;
 	self->blsi_keepends = false;
 	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplitIterator", &ls, &self->blsi_keepends) ||
@@ -737,7 +737,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 blsi_copy(BytesLineSplitIterator *__restrict self,
           BytesLineSplitIterator *__restrict other) {
 	self->blsi_bytes = other->blsi_bytes;
@@ -752,7 +752,7 @@ blsi_copy(BytesLineSplitIterator *__restrict self,
 #define blsi_bool   bsi_bool
 #define blsi_cmp    bsi_cmp
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blsi_next(BytesLineSplitIterator *__restrict self) {
 	uint8_t *start, *end;
 #ifdef CONFIG_NO_THREADS
@@ -827,7 +827,7 @@ return_view:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 blsi_getseq(BytesLineSplitIterator *__restrict self) {
 	return DeeBytes_SplitLines(self->blsi_bytes,
 	                           self->blsi_keepends);
@@ -897,7 +897,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(BytesLineSplitIterator, blsi_bytes) ==
 STATIC_ASSERT(COMPILER_OFFSETOF(BytesSplit, bs_bytes) ==
               COMPILER_OFFSETOF(BytesLineSplit, bls_bytes));
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bls_ctor(BytesLineSplit *__restrict self) {
 	self->bls_bytes    = (DREF Bytes *)Dee_EmptyBytes;
 	self->bls_keepends = false;
@@ -907,7 +907,7 @@ bls_ctor(BytesLineSplit *__restrict self) {
 
 PRIVATE int DCALL
 bls_init(BytesLineSplit *__restrict self, size_t argc,
-         DeeObject **__restrict argv) {
+         DeeObject **argv) {
 	self->bls_keepends = false;
 	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplit", &self->bls_bytes, &self->bls_keepends) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->bls_bytes, &DeeBytes_Type))
@@ -922,7 +922,7 @@ err:
 #define bls_visit   blsi_visit
 #define bls_bool    bs_bool
 
-PRIVATE DREF BytesLineSplitIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesLineSplitIterator *DCALL
 bls_iter(BytesLineSplit *__restrict self) {
 	DREF BytesLineSplitIterator *result;
 	result = DeeObject_MALLOC(BytesLineSplitIterator);
@@ -1010,7 +1010,7 @@ INTERN DeeTypeObject BytesLineSplit_Type = {
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_SplitLines(Bytes *__restrict self,
                     bool keepends) {
 	DREF BytesLineSplit *result;

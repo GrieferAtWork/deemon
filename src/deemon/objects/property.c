@@ -40,7 +40,7 @@ DECL_BEGIN
 
 typedef DeePropertyObject Property;
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_ctor(Property *__restrict self) {
 	self->p_get = NULL;
 	self->p_del = NULL;
@@ -48,7 +48,7 @@ property_ctor(Property *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_copy(Property *__restrict self,
               Property *__restrict other) {
 	self->p_get = other->p_get;
@@ -60,7 +60,7 @@ property_copy(Property *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_deep(Property *__restrict self,
               Property *__restrict other) {
 	self->p_get = NULL;
@@ -86,7 +86,7 @@ err:
 
 PRIVATE int DCALL
 property_init_kw(Property *__restrict self, size_t argc,
-                 DeeObject **__restrict argv, DeeObject *kw) {
+                 DeeObject **argv, DeeObject *kw) {
 	PRIVATE DEFINE_KWLIST(kwlist, { K(getter), K(delete), K(setter), KEND });
 	self->p_get = NULL;
 	self->p_del = NULL;
@@ -108,28 +108,28 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 property_fini(Property *__restrict self) {
 	Dee_XDecref(self->p_get);
 	Dee_XDecref(self->p_del);
 	Dee_XDecref(self->p_set);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 property_visit(Property *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->p_get);
 	Dee_XVisit(self->p_del);
 	Dee_XVisit(self->p_set);
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 property_hash(Property *__restrict self) {
 	return ((self->p_get ? DeeObject_Hash(self->p_get) : 0) ^
 	        (self->p_del ? DeeObject_Hash(self->p_del) : 0) ^
 	        (self->p_set ? DeeObject_Hash(self->p_set) : 0));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_repr(Property *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if unlikely(UNICODE_PRINTER_PRINT(&printer, "Property(") < 0)
@@ -153,9 +153,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-property_eq(Property *__restrict self,
-            Property *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+property_eq(Property *self,
+            Property *other) {
 	int temp;
 	if (DeeObject_AssertType((DeeObject *)other, &DeeProperty_Type))
 		return NULL;
@@ -200,22 +200,22 @@ PRIVATE struct type_member property_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_canget(Property *__restrict self) {
 	return_bool_(self->p_get != NULL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_candel(Property *__restrict self) {
 	return_bool_(self->p_del != NULL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_canset(Property *__restrict self) {
 	return_bool_(self->p_set != NULL);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_info(Property *__restrict self,
               struct function_info *__restrict info) {
 	int result = 1;
@@ -232,9 +232,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-property_getattr(Property *__restrict self,
-                 DeeObject *__restrict name) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+property_getattr(Property *self,
+                 DeeObject *name) {
 	if (self->p_get)
 		return DeeObject_GetAttr(self->p_get, name);
 	if (self->p_del)
@@ -244,7 +244,7 @@ property_getattr(Property *__restrict self,
 	return ITER_DONE;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_get_name(Property *__restrict self) {
 	struct function_info info;
 	int error;
@@ -264,7 +264,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_get_doc(Property *__restrict self) {
 	struct function_info info;
 	int error;
@@ -284,7 +284,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 property_get_type(Property *__restrict self) {
 	struct function_info info;
 	int error;
@@ -306,12 +306,12 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_function_module(DeeObject *__restrict self) {
 	return_reference_((DeeObject *)(((DeeFunctionObject *)self)->fo_code->co_module));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_get_module(Property *__restrict self) {
 	DREF DeeObject *result;
 	if (self->p_get && DeeFunction_Check(self->p_get))
@@ -360,9 +360,8 @@ PRIVATE struct type_getset property_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
-property_call(Property *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+property_call(Property *self, size_t argc, DeeObject **argv) {
 	if likely(self->p_get)
 		return DeeObject_Call(self->p_get, argc, argv);
 	err_unbound_attribute(&DeeProperty_Type, DeeString_STR(&str_get));

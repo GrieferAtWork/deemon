@@ -62,7 +62,7 @@ DECLARE_OBJECT_CACHE(ast, struct ast)
 
 INTERN int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
+              size_t argc, DeeObject **argv,
               DeeObject *kw) {
 	DeeObject *module       = Dee_None;
 	struct keyword kwlist[] = { K(module), KEND };
@@ -116,17 +116,17 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 compiler_get_lexer(DeeCompilerObject *__restrict self) {
 	return DeeCompiler_GetLexer(self);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 compiler_get_parser(DeeCompilerObject *__restrict self) {
 	return DeeCompiler_GetParser(self);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 compiler_get_scope(DeeCompilerObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self);
@@ -135,7 +135,7 @@ compiler_get_scope(DeeCompilerObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 compiler_set_scope(DeeCompilerObject *__restrict self,
                    DeeCompilerScopeObject *__restrict value) {
 	int result = 0;
@@ -155,7 +155,7 @@ compiler_set_scope(DeeCompilerObject *__restrict self,
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 compiler_get_basescope(DeeCompilerObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self);
@@ -164,7 +164,7 @@ compiler_get_basescope(DeeCompilerObject *__restrict self) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 compiler_set_basescope(DeeCompilerObject *__restrict self,
                        DeeCompilerScopeObject *__restrict value) {
 	int result = 0;
@@ -185,7 +185,7 @@ compiler_set_basescope(DeeCompilerObject *__restrict self,
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 compiler_get_rootscope(DeeCompilerObject *__restrict self) {
 	DREF DeeObject *result;
 	COMPILER_BEGIN(self);
@@ -195,7 +195,7 @@ compiler_get_rootscope(DeeCompilerObject *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 compiler_get_module(DeeCompilerObject *__restrict self) {
 	DREF DeeModuleObject *result;
 	COMPILER_BEGIN(self);
@@ -296,10 +296,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeconstexpr(DeeCompilerObject *__restrict self,
-                  size_t argc, DeeObject **__restrict argv,
-                  DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeconstexpr(DeeCompilerObject *self, size_t argc,
+                  DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeObject *value;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -326,10 +325,9 @@ done:
 
 PRIVATE struct keyword makesym_kwlist[] = { K(sym), K(scope), K(loc), KEND };
 
-PRIVATE DREF DeeObject *DCALL
-ast_makesym(DeeCompilerObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv,
-            DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makesym(DeeCompilerObject *self, size_t argc,
+            DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeCompilerSymbolObject *sym;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -369,10 +367,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeunbind(DeeCompilerObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv,
-               DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeunbind(DeeCompilerObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeCompilerSymbolObject *sym;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -411,10 +408,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makebound(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
-              DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makebound(DeeCompilerObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeCompilerSymbolObject *sym;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -453,7 +449,7 @@ done:
 	return result;
 }
 
-INTERN uint16_t DCALL
+INTERN WUNUSED NONNULL((1)) uint16_t DCALL
 get_ast_multiple_typing(DeeTypeObject *__restrict typing) {
 	uint16_t result;
 	if (DeeNone_Check(typing)) {
@@ -479,10 +475,9 @@ get_ast_multiple_typing(DeeTypeObject *__restrict typing) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makemultiple(DeeCompilerObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv,
-                 DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makemultiple(DeeCompilerObject *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	uint16_t flags;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -549,10 +544,9 @@ done:
 
 PRIVATE struct keyword makeexpr_kwlist[] = { K(expr), K(scope), K(loc), KEND };
 
-PRIVATE DREF DeeObject *DCALL
-ast_makereturn(DeeCompilerObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv,
-               DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makereturn(DeeCompilerObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result        = NULL;
 	DeeCompilerAstObject *expr    = (DeeCompilerAstObject *)Dee_None;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -592,10 +586,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeyield(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
-              DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeyield(DeeCompilerObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result        = NULL;
 	DeeCompilerAstObject *expr    = (DeeCompilerAstObject *)Dee_None;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -630,10 +623,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makethrow(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
-              DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makethrow(DeeCompilerObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result        = NULL;
 	DeeCompilerAstObject *expr    = (DeeCompilerAstObject *)Dee_None;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -848,10 +840,9 @@ err_catch:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-ast_maketry(DeeCompilerObject *__restrict self,
-            size_t argc, DeeObject **__restrict argv,
-            DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_maketry(DeeCompilerObject *self, size_t argc,
+            DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeCompilerAstObject *guard;
 	DeeObject *handlers;
@@ -899,7 +890,7 @@ done:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_loop_flags(char const *__restrict flags,
                  uint16_t *__restrict presult) {
 	char const *next_flag;
@@ -936,10 +927,9 @@ parse_loop_flags(char const *__restrict flags,
 
 
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeloop(DeeCompilerObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv,
-             DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeloop(DeeCompilerObject *self, size_t argc,
+             DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result        = NULL;
 	uint16_t flags                = 0;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -1046,10 +1036,9 @@ done2:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeloopctl(DeeCompilerObject *__restrict self,
-                size_t argc, DeeObject **__restrict argv,
-                DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeloopctl(DeeCompilerObject *self, size_t argc,
+                DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	bool isbreak;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -1075,7 +1064,7 @@ done:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_conditional_flags(char const *__restrict flags,
                         uint16_t *__restrict presult) {
 	char const *next_flag;
@@ -1112,10 +1101,9 @@ parse_conditional_flags(char const *__restrict flags,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeconditional(DeeCompilerObject *__restrict self,
-                    size_t argc, DeeObject **__restrict argv,
-                    DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeconditional(DeeCompilerObject *self, size_t argc,
+                    DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	uint16_t flags         = 0;
 	DeeCompilerAstObject *cond;
@@ -1204,10 +1192,9 @@ done:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-ast_makebool(DeeCompilerObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv,
-             DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makebool(DeeCompilerObject *self, size_t argc,
+             DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeCompilerAstObject *expr;
 	bool negate                   = false;
@@ -1245,10 +1232,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeexpand(DeeCompilerObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv,
-               DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeexpand(DeeCompilerObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result = NULL;
 	DeeCompilerAstObject *expr;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
@@ -1306,10 +1292,9 @@ check_function_code_scope(DeeBaseScopeObject *code_scope,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makefunction(DeeCompilerObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv,
-                 DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makefunction(DeeCompilerObject *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw) {
 	/* "(code:?AAst?Ert:Compiler,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
 	DREF DeeObject *result = NULL;
 	DeeCompilerAstObject *code;
@@ -1349,7 +1334,7 @@ done:
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict presult) {
 	if (DeeString_Check(opid)) {
 		char *name = DeeString_STR(opid);
@@ -1400,10 +1385,9 @@ unknown_str:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeoperatorfunc(DeeCompilerObject *__restrict self,
-                     size_t argc, DeeObject **__restrict argv,
-                     DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeoperatorfunc(DeeCompilerObject *self, size_t argc,
+                     DeeObject **argv, DeeObject *kw) {
 	/* "(string name,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n"
 	 * "(int name,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
 	DREF DeeObject *result = NULL;
@@ -1450,7 +1434,7 @@ done:
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 parse_operator_flags(char const *__restrict flags,
                      uint16_t *__restrict presult) {
 	char const *next_flag;
@@ -1487,10 +1471,9 @@ parse_operator_flags(char const *__restrict flags,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeoperator(DeeCompilerObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv,
-                 DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeoperator(DeeCompilerObject *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw) {
 	/* "(string name,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope=!N)->?AAst?Ert:Compiler\n"
 	 * "(int name,a:?AAst?Ert:Compiler,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,d:?AAst?Ert:Compiler=!N,flags=!P{},scope=!N)->?AAst?Ert:Compiler\n" */
 	DREF DeeObject *result = NULL;
@@ -1617,7 +1600,7 @@ done:
 }
 
 
-INTERN int32_t DCALL
+INTERN WUNUSED NONNULL((1)) int32_t DCALL
 get_action_by_name(char const *__restrict name) {
 #define EQAT(ptr, str) (memcmp(ptr, str, sizeof(str)) == 0)
 #define RETURN(id)     \
@@ -1712,7 +1695,7 @@ done:
 #undef RETURN
 }
 
-INTERN char const *DCALL
+INTERN WUNUSED char const *DCALL
 get_action_name(uint16_t action) {
 	char const *result;
 	switch (action & AST_FACTION_KINDMASK) {
@@ -1816,10 +1799,9 @@ get_action_name(uint16_t action) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeaction(DeeCompilerObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv,
-               DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeaction(DeeCompilerObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	/* "(string name,a:?AAst?Ert:Compiler=!N,b:?AAst?Ert:Compiler=!N,c:?AAst?Ert:Compiler=!N,bool mustrun=true,scope=!N)->?AAst?Ert:Compiler\n" */
 	DREF DeeObject *result = NULL;
 	DeeObject *name;
@@ -1924,9 +1906,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeclass(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeclass(DeeCompilerObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	(void)self;
 	(void)argc;
 	(void)argv;
@@ -1935,9 +1917,9 @@ ast_makeclass(DeeCompilerObject *__restrict self,
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makelabel(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makelabel(DeeCompilerObject *self, size_t argc,
+              DeeObject **argv, DeeObject *kw) {
 	(void)self;
 	(void)argc;
 	(void)argv;
@@ -1946,9 +1928,9 @@ ast_makelabel(DeeCompilerObject *__restrict self,
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makegoto(DeeCompilerObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makegoto(DeeCompilerObject *self, size_t argc,
+             DeeObject **argv, DeeObject *kw) {
 	(void)self;
 	(void)argc;
 	(void)argv;
@@ -1957,9 +1939,9 @@ ast_makegoto(DeeCompilerObject *__restrict self,
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeswitch(DeeCompilerObject *__restrict self,
-               size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeswitch(DeeCompilerObject *self, size_t argc,
+               DeeObject **argv, DeeObject *kw) {
 	(void)self;
 	(void)argc;
 	(void)argv;
@@ -1968,9 +1950,9 @@ ast_makeswitch(DeeCompilerObject *__restrict self,
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ast_makeassembly(DeeCompilerObject *__restrict self,
-                 size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ast_makeassembly(DeeCompilerObject *self, size_t argc,
+                 DeeObject **argv, DeeObject *kw) {
 	(void)self;
 	(void)argc;
 	(void)argv;

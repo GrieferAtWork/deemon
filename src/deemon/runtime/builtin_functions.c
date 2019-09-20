@@ -45,7 +45,7 @@
 DECL_BEGIN
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_hasattr(size_t argc, DeeObject **__restrict argv) {
+f_builtin_hasattr(size_t argc, DeeObject **argv) {
 	DeeObject *self, *attr;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "oo:hasattr", &self, &attr))
@@ -63,7 +63,7 @@ err:
 INTERN DEFINE_CMETHOD(builtin_hasattr, &f_builtin_hasattr);
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_hasitem(size_t argc, DeeObject **__restrict argv) {
+f_builtin_hasitem(size_t argc, DeeObject **argv) {
 	DeeObject *self, *key;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "oo:hasitem", &self, &key))
@@ -79,7 +79,7 @@ err:
 INTERN DEFINE_CMETHOD(builtin_hasitem, &f_builtin_hasitem);
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_boundattr(size_t argc, DeeObject **__restrict argv) {
+f_builtin_boundattr(size_t argc, DeeObject **argv) {
 	DeeObject *self, *attr;
 	bool allow_missing = true;
 	if (DeeArg_Unpack(argc, argv, "oo|b:boundattr", &self, &attr, &allow_missing))
@@ -105,7 +105,7 @@ err:
 INTERN DEFINE_CMETHOD(builtin_boundattr, &f_builtin_boundattr);
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_bounditem(size_t argc, DeeObject **__restrict argv) {
+f_builtin_bounditem(size_t argc, DeeObject **argv) {
 	DeeObject *self, *key;
 	bool allow_missing = true;
 	if (DeeArg_Unpack(argc, argv, "oo|b:bounditem", &self, &key, &allow_missing))
@@ -122,7 +122,7 @@ err:
 INTERN DEFINE_CMETHOD(builtin_bounditem, &f_builtin_bounditem);
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_import(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+f_builtin_import(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeObject *module_name, *base = NULL;
 	PRIVATE struct keyword kwlist[] = { K(name), K(base), KEND };
@@ -152,7 +152,7 @@ INTERN DEFINE_KWCMETHOD(builtin_import, &f_builtin_import);
 
 PRIVATE DREF DeeObject *DCALL
 builtin_exec_fallback(size_t argc,
-                      DeeObject **__restrict argv,
+                      DeeObject **argv,
                       DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeObject *expr, *globals = NULL;
@@ -267,7 +267,7 @@ again:
 
 
 PRIVATE DREF DeeObject *DCALL
-f_builtin_exec(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+f_builtin_exec(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result, *exec;
 	rwlock_read(&jit_access_lock);
 	exec = jit_exec;
@@ -338,7 +338,7 @@ INTERN DEFINE_KWCMETHOD(builtin_exec, &f_builtin_exec);
 
 PRIVATE DREF DeeObject *DCALL
 get_expression_repr(uint16_t operator_name,
-                    size_t argc, DeeObject **__restrict argv) {
+                    size_t argc, DeeObject **argv) {
 	struct opinfo *info;
 	struct unicode_printer printer;
 	size_t i;
@@ -411,7 +411,7 @@ err_printer:
 /* ASSERT(string message = "", int operator_id = -1, operator_args...) -> none;
  * NOTE: When `operator_id' is -1, ignore all remaining arguments. */
 PRIVATE DREF DeeObject *DCALL
-f_rt_assert(size_t argc, DeeObject **__restrict argv) {
+f_rt_assert(size_t argc, DeeObject **argv) {
 	DeeObject *message = Dee_EmptyString;
 	DeeObject *assertion_error;
 	int operator_name = -1;
@@ -470,7 +470,7 @@ INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert);
  * >> print operator + (args...);
  */
 PRIVATE DREF DeeObject *DCALL /* POsOrADd */
-f_rt_pooad(size_t argc, DeeObject **__restrict argv) {
+f_rt_pooad(size_t argc, DeeObject **argv) {
 	switch (argc) {
 	case 1: return DeeObject_Pos(argv[0]);
 	case 2: return DeeObject_Add(argv[0], argv[1]);
@@ -481,7 +481,7 @@ f_rt_pooad(size_t argc, DeeObject **__restrict argv) {
 }
 
 PRIVATE DREF DeeObject *DCALL /* NEgOrSuB */
-f_rt_neosb(size_t argc, DeeObject **__restrict argv) {
+f_rt_neosb(size_t argc, DeeObject **argv) {
 	switch (argc) {
 	case 1: return DeeObject_Neg(argv[0]);
 	case 2: return DeeObject_Sub(argv[0], argv[1]);
@@ -492,7 +492,7 @@ f_rt_neosb(size_t argc, DeeObject **__restrict argv) {
 }
 
 PRIVATE DREF DeeObject *DCALL /* GetItemOrSetItem */
-f_rt_giosi(size_t argc, DeeObject **__restrict argv) {
+f_rt_giosi(size_t argc, DeeObject **argv) {
 	switch (argc) {
 	case 2: return DeeObject_GetItem(argv[0], argv[1]);
 	case 3:
@@ -507,7 +507,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL /* GetRangeOrSetRange */
-f_rt_grosr(size_t argc, DeeObject **__restrict argv) {
+f_rt_grosr(size_t argc, DeeObject **argv) {
 	switch (argc) {
 	case 3: return DeeObject_GetRange(argv[0], argv[1], argv[2]);
 	case 4:
@@ -522,7 +522,7 @@ err:
 }
 
 PRIVATE DREF DeeObject *DCALL /* GetAttrOrSetAttr */
-f_rt_gaosa(size_t argc, DeeObject **__restrict argv) {
+f_rt_gaosa(size_t argc, DeeObject **argv) {
 	switch (argc) {
 	case 2:
 		if (DeeObject_AssertTypeExact(argv[1], &DeeString_Type))
@@ -552,7 +552,7 @@ INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa);
 
 
 PRIVATE DREF DeeObject *DCALL
-f_rt_badcall(size_t argc, DeeObject **__restrict argv) {
+f_rt_badcall(size_t argc, DeeObject **argv) {
 	DeeThreadObject *ts;
 	size_t argc_cur, argc_min = 0, argc_max;
 	char *function_name = NULL;
@@ -580,7 +580,7 @@ INTERN DEFINE_CMETHOD(rt_badcall, &f_rt_badcall);
 
 
 PRIVATE DREF DeeObject *DCALL
-f_rt_roloc(size_t argc, DeeObject **__restrict argv) {
+f_rt_roloc(size_t argc, DeeObject **argv) {
 	DeeThreadObject *ts;
 	uint16_t lid;
 	if (DeeArg_Unpack(argc, argv, "I16u:__roloc", &lid))

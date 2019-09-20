@@ -300,7 +300,7 @@ make_bound_expression(struct ast *__restrict base_expr,
 }
 
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeString_DecodeLFEscaped(struct unicode_printer *__restrict printer,
                           /*utf-8*/ char const *__restrict start,
                           size_t length) {
@@ -338,7 +338,7 @@ err:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_decode_unicode_string(struct unicode_printer *__restrict printer) {
 	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
 	char *escape_start = token.t_begin;

@@ -533,7 +533,7 @@ DeeString_HashCase(DeeObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_repr(DeeObject *__restrict self) {
 	union dcharptr str;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
@@ -567,7 +567,7 @@ err:
 	return NULL;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 string_fini(String *__restrict self) {
 	struct string_utf *utf;
 	/* Clean up UTF data. */
@@ -578,7 +578,7 @@ string_fini(String *__restrict self) {
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 compare_string_bytes(String *__restrict lhs,
                      DeeBytesObject *__restrict rhs) {
 	size_t lhs_len;
@@ -642,7 +642,7 @@ compare_string_bytes(String *__restrict lhs,
 	return 1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 compare_strings(String *__restrict lhs,
                 String *__restrict rhs) {
 	size_t lhs_len;
@@ -853,8 +853,8 @@ compare_strings(String *__restrict lhs,
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-string_lo(String *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_lo(String *self, DeeObject *some_object) {
 	int result;
 	if (DeeBytes_Check(some_object))
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
@@ -866,8 +866,8 @@ string_lo(String *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(result < 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-string_le(String *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_le(String *self, DeeObject *some_object) {
 	int result;
 	if (DeeBytes_Check(some_object))
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
@@ -879,8 +879,8 @@ string_le(String *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(result <= 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-string_gr(String *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_gr(String *self, DeeObject *some_object) {
 	int result;
 	if (DeeBytes_Check(some_object))
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
@@ -892,8 +892,8 @@ string_gr(String *__restrict self, DeeObject *__restrict some_object) {
 	return_bool_(result > 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-string_ge(String *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_ge(String *self, DeeObject *some_object) {
 	int result;
 	if (DeeBytes_Check(some_object))
 		result = compare_string_bytes(self, (DeeBytesObject *)some_object);
@@ -906,12 +906,12 @@ string_ge(String *__restrict self, DeeObject *__restrict some_object) {
 }
 
 
-INTDEF bool DCALL
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 string_eq_bytes(String *__restrict self,
                 DeeBytesObject *__restrict other);
 
-PRIVATE DREF DeeObject *DCALL
-string_eq(String *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_eq(String *self, DeeObject *some_object) {
 	/* Basic checks for same-object. */
 	if (self == (String *)some_object)
 		return_true;
@@ -925,8 +925,8 @@ string_eq(String *__restrict self, DeeObject *__restrict some_object) {
 	return_bool(compare_strings(self, (String *)some_object) == 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-string_ne(String *__restrict self, DeeObject *__restrict some_object) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_ne(String *self, DeeObject *some_object) {
 	/* Basic checks for same-object. */
 	if (self == (String *)some_object)
 		return_false;
@@ -959,12 +959,12 @@ typedef struct {
 #endif /* !CONFIG_NO_THREADS */
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 stringiter_fini(StringIterator *__restrict self) {
 	Dee_Decref(self->si_string);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {
 	DREF DeeObject *result;
 	/* Consume one character (atomically) */
@@ -1002,12 +1002,12 @@ stringiter_next(StringIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_bool(StringIterator *__restrict self) {
 	return READ_ITER_PTR(self) < self->si_end.ptr;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_ctor(StringIterator *__restrict self) {
 	self->si_string   = (DREF String *)Dee_EmptyString;
 	self->si_iter.ptr = DeeString_STR(Dee_EmptyString);
@@ -1017,7 +1017,7 @@ stringiter_ctor(StringIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 stringiter_copy(StringIterator *__restrict self,
                 StringIterator *__restrict other) {
 	self->si_string   = other->si_string;
@@ -1030,7 +1030,7 @@ stringiter_copy(StringIterator *__restrict self,
 
 PRIVATE int DCALL
 stringiter_init(StringIterator *__restrict self,
-                size_t argc, DeeObject **__restrict argv) {
+                size_t argc, DeeObject **argv) {
 	String *str;
 	if (DeeArg_Unpack(argc, argv, "o:string.Iterator", &str))
 		goto err;
@@ -1074,17 +1074,17 @@ DEFINE_STRINGITER_COMPARE(stringiter_gr, >)
 DEFINE_STRINGITER_COMPARE(stringiter_ge, >=)
 #undef DEFINE_STRINGITER_COMPARE
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 stringiter_nii_getseq(StringIterator *__restrict self) {
 	return_reference_(self->si_string);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_hasprev(StringIterator *__restrict self) {
 	return READ_ITER_PTR(self) > (void *)DeeString_WSTR(self->si_string);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 stringiter_nii_getindex(StringIterator *__restrict self) {
 	union dcharptr pos;
 	pos.ptr = READ_ITER_PTR(self);
@@ -1092,7 +1092,7 @@ stringiter_nii_getindex(StringIterator *__restrict self) {
 	       STRING_SIZEOF_WIDTH(self->si_width);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_setindex(StringIterator *__restrict self, size_t index) {
 	if (index > DeeString_WLEN(self->si_string))
 		index = DeeString_WLEN(self->si_string);
@@ -1101,7 +1101,7 @@ stringiter_nii_setindex(StringIterator *__restrict self, size_t index) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_rewind(StringIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	self->si_iter.ptr = DeeString_WSTR(self->si_string);
@@ -1112,7 +1112,7 @@ stringiter_nii_rewind(StringIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_prev(StringIterator *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	union dcharptr pos;
@@ -1132,7 +1132,7 @@ stringiter_nii_prev(StringIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_next(StringIterator *__restrict self) {
 	/* Consume one character (atomically) */
 #ifdef CONFIG_NO_THREADS
@@ -1153,7 +1153,7 @@ stringiter_nii_next(StringIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_nii_peek(StringIterator *__restrict self) {
 	DREF DeeObject *result;
 	union dcharptr pos;
@@ -1257,7 +1257,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_iter(String *__restrict self) {
 	DREF StringIterator *result;
 	result = DeeObject_MALLOC(StringIterator);
@@ -1275,19 +1275,19 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTDEF DREF DeeObject *DCALL
-string_contains(String *__restrict self,
-                DeeObject *__restrict some_object);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_contains(String *self,
+                DeeObject *some_object);
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_size(String *__restrict self) {
 	size_t result = DeeString_WLEN(self);
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-string_get(String *__restrict self,
-           DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_get(String *self,
+           DeeObject *index) {
 	int width = DeeString_WIDTH(self);
 	union dcharptr str;
 	size_t i, len;
@@ -1315,7 +1315,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 string_range_get(String *__restrict self,
                  DeeObject *__restrict begin,
                  DeeObject *__restrict end) {
@@ -1354,13 +1354,13 @@ PRIVATE struct type_cmp string_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ge,
 };
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 string_nsi_getsize(String *__restrict self) {
 	ASSERT(DeeString_WLEN(self) != (size_t)-1);
 	return DeeString_WLEN(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_nsi_getitem(String *__restrict self, size_t index) {
 	if unlikely(index >= DeeString_WLEN(self))
 		goto err_index;
@@ -1421,7 +1421,7 @@ PRIVATE struct type_member string_class_members[] = {
 
 PRIVATE DREF DeeObject *DCALL
 string_class_chr(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	uint32_t ch;
 	if (DeeArg_Unpack(argc, argv, "I32u:chr", &ch))
 		goto err;
@@ -1432,7 +1432,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *__restrict UNUSED(self),
-                     size_t argc, DeeObject **__restrict argv) {
+                     size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:fromseq", &seq))
 		goto err;
@@ -1483,15 +1483,15 @@ PRIVATE struct type_method string_class_methods[] = {
 INTDEF struct type_method string_methods[];
 INTDEF struct type_math string_math;
 
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Ordinals(DeeObject *__restrict self);
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_hashed(String *__restrict self) {
 	return_bool(self->s_hash != DEE_STRING_HASH_UNSET);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getfirst(String *__restrict self) {
 	void *str = DeeString_WSTR(self);
 	int width = DeeString_WIDTH(self);
@@ -1503,7 +1503,7 @@ err_empty:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_getlast(String *__restrict self) {
 	void *str     = DeeString_WSTR(self);
 	int width     = DeeString_WIDTH(self);

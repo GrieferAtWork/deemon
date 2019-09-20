@@ -66,20 +66,20 @@ INTDEF DeeTypeObject DeeCompilerBaseScope_Type;       /* objitem (extends `DeeCo
 INTDEF DeeTypeObject DeeCompilerRootScope_Type;       /* objitem (extends `DeeCompilerBaseScope_Type') */
 
 
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetScope(struct scope_object *__restrict scope);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetScope(struct scope_object *__restrict scope);
 #ifdef __INTELLISENSE__
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetKeyword(struct TPPKeyword *__restrict kwd);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetSymbol(struct symbol *__restrict sym);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetFile(struct TPPFile *__restrict file);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexer(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerKeywords(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerExtensions(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerWarnings(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerSyspaths(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerIfdef(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetLexerToken(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetParser(DeeCompilerObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetKeyword(struct TPPKeyword *__restrict kwd);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetSymbol(struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetFile(struct TPPFile *__restrict file);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexer(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexerKeywords(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexerExtensions(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexerWarnings(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexerSyspaths(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexerIfdef(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetLexerToken(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetParser(DeeCompilerObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
 #else /* __INTELLISENSE__ */
 #define DeeCompiler_GetKeyword(kwd)          DeeCompiler_GetItem(&DeeCompilerKeyword_Type, kwd)
 #define DeeCompiler_GetSymbol(sym)           DeeCompiler_GetItem(&DeeCompilerSymbol_Type, sym)
@@ -97,12 +97,12 @@ INTDEF DREF DeeObject *DCALL DeeCompiler_GetAst(struct ast *__restrict branch);
 
 /* Type fields of DeeCompilerItem_Type and DeeCompilerWrapper_Type */
 INTDEF struct type_member DeeCompilerItem_Members[];
-INTDEF void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL DeeCompilerItem_Fini(DeeCompilerItemObject *__restrict self);
 INTDEF void DCALL DeeCompilerItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
-INTDEF void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL DeeCompilerObjItem_Fini(DeeCompilerItemObject *__restrict self);
 INTDEF void DCALL DeeCompilerObjItem_Visit(DeeCompilerItemObject *__restrict self, Dee_visit_t proc, void *arg);
 
-INTDEF void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL DeeCompilerWrapper_Fini(DeeCompilerWrapperObject *__restrict self);
 #define DeeCompilerWrapper_Visit    DeeCompilerItem_Visit
 #define DeeCompilerWrapper_Members  DeeCompilerItem_Members
 
@@ -116,7 +116,7 @@ INTDEF ATTR_COLD int DCALL err_different_base_scope(void);
 INTDEF ATTR_COLD int DCALL err_different_root_scope(void);
 INTDEF ATTR_COLD int DCALL err_compiler_item_deleted(DeeCompilerItemObject *__restrict item);
 INTDEF ATTR_COLD int DCALL err_symbol_not_reachable(struct scope_object *__restrict scope, struct symbol *__restrict sym);
-INTDEF bool DCALL scope_reaches_symbol(struct scope_object *__restrict scope, struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL scope_reaches_symbol(struct scope_object *__restrict scope, struct symbol *__restrict sym);
 
 struct unicode_printer;
 
@@ -129,7 +129,7 @@ INTDEF int DCALL get_astloc_from_obj(DeeObject *obj, struct ast_loc *__restrict 
 INTDEF int DCALL set_astloc_from_obj(DeeObject *obj, struct ast *__restrict result);
 
 /* Print the repr-form of the given ast-location to the given unicode printer `(filename,line,col)' */
-INTDEF int DCALL print_ast_loc_repr(struct ast_loc *__restrict self, struct unicode_printer *__restrict printer);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL print_ast_loc_repr(struct ast_loc *__restrict self, struct unicode_printer *__restrict printer);
 
 /* @return: TOK_ERR: An error occurred (and was thrown)
  * @return: -2:      A keyword wasn't found (and `create_missing' was false) */
@@ -143,7 +143,7 @@ INTDEF dhash_t DCALL get_token_namehash(tok_t id, struct TPPKeyword *kwd);
 /* For AST_MULTIPLE: Return the flags for constructing a sequence for `typing'
  * NOTE: `typing' doesn't necessarily need to be a type object!
  * @return: (uint16_t)-1: Error. */
-INTDEF uint16_t DCALL get_ast_multiple_typing(DeeTypeObject *__restrict typing);
+INTDEF WUNUSED NONNULL((1)) uint16_t DCALL get_ast_multiple_typing(DeeTypeObject *__restrict typing);
 
 struct catch_expr;
 struct base_scope_object;
@@ -155,26 +155,27 @@ unpack_catch_expressions(DeeObject *__restrict handlers,
                          struct base_scope_object *__restrict base_scope);
 
 /* Parse the flags for a loop-ast from a string (:rt:Compiler.makeloop) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 parse_loop_flags(char const *__restrict flags,
                  uint16_t *__restrict presult);
 
 /* Parse the flags for a conditional-ast from a string (:rt:Compiler.makeconditional) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 parse_conditional_flags(char const *__restrict flags,
                         uint16_t *__restrict presult);
 
 /* Parse the flags for an operator-ast from a string (:rt:Compiler.makeoperator) */
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 parse_operator_flags(char const *__restrict flags,
                      uint16_t *__restrict presult);
 
 /* Parse the operator name and determine its ID. */
-INTDEF int DCALL get_operator_id(DeeObject *__restrict opid,
-                                 uint16_t *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+get_operator_id(DeeObject *__restrict opid,
+                uint16_t *__restrict presult);
 
-INTDEF int32_t DCALL get_action_by_name(char const *__restrict name);
-INTDEF char const *DCALL get_action_name(uint16_t action);
+INTDEF WUNUSED NONNULL((1)) int32_t DCALL get_action_by_name(char const *__restrict name);
+INTDEF WUNUSED char const *DCALL get_action_name(uint16_t action);
 
 
 

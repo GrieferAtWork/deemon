@@ -70,7 +70,7 @@ INTERN ATTR_COLD int DCALL err_no_active_exception(void) {
 	return DeeError_Throwf(&DeeError_RuntimeError, "No active exception");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_subclass_final_type(DeeTypeObject *__restrict tp) {
 	ASSERT_OBJECT(tp);
 	ASSERT(DeeType_Check(tp));
@@ -79,8 +79,8 @@ err_subclass_final_type(DeeTypeObject *__restrict tp) {
 }
 
 PUBLIC ATTR_COLD NONNULL((1, 2)) int
-(DCALL DeeObject_TypeAssertFailed)(DeeObject *__restrict self,
-                                   DeeTypeObject *__restrict wanted_type) {
+(DCALL DeeObject_TypeAssertFailed)(DeeObject *self,
+                                   DeeTypeObject *wanted_type) {
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(wanted_type);
 	ASSERT(DeeType_Check(wanted_type));
@@ -89,10 +89,9 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 	                       wanted_type, Dee_TYPE(self), self);
 }
 
-INTERN ATTR_COLD NONNULL((1, 3)) int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc,
-                                 DeeObject **__restrict argv,
-                                 DeeObject *kw) {
+                                 DeeObject **argv, DeeObject *kw) {
 	int result;
 	DREF DeeObject *error_args[1], *error_ob;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -128,8 +127,8 @@ err:
 	return -1;
 }
 
-INTERN ATTR_COLD int DCALL
-err_divide_by_zero(DeeObject *__restrict a, DeeObject *__restrict b) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_divide_by_zero(DeeObject *a, DeeObject *b) {
 	ASSERT_OBJECT(a);
 	ASSERT_OBJECT(b);
 	return DeeError_Throwf(&DeeError_DivideByZero,
@@ -142,8 +141,8 @@ err_divide_by_zero_i(dssize_t a) {
 	                       "Divide by Zero: `%Id / 0'", a);
 }
 
-INTERN ATTR_COLD int DCALL
-err_shift_negative(DeeObject *__restrict a, DeeObject *__restrict b, bool is_left_shift) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_shift_negative(DeeObject *a, DeeObject *b, bool is_left_shift) {
 	ASSERT_OBJECT(a);
 	ASSERT_OBJECT(b);
 	return DeeError_Throwf(&DeeError_NegativeShift,
@@ -152,7 +151,7 @@ err_shift_negative(DeeObject *__restrict a, DeeObject *__restrict b, bool is_lef
 	                       is_left_shift ? "<<" : ">>");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_cannot_weak_reference(DeeObject *__restrict ob) {
 	ASSERT_OBJECT(ob);
 	return DeeError_Throwf(&DeeError_TypeError,
@@ -160,8 +159,8 @@ err_cannot_weak_reference(DeeObject *__restrict ob) {
 	                       Dee_TYPE(ob));
 }
 
-INTERN ATTR_COLD int DCALL
-err_reference_loop(DeeObject *__restrict a, DeeObject *__restrict b) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_reference_loop(DeeObject *a, DeeObject *b) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Reference loop between instance of %k and %k",
 	                       Dee_TYPE(a), Dee_TYPE(b));
@@ -172,13 +171,13 @@ INTERN ATTR_COLD int DCALL err_cannot_lock_weakref(void) {
 	                       "Cannot lock weak reference");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_bytes_not_writable(DeeObject *__restrict UNUSED(bytes_ob)) {
 	return DeeError_Throwf(&DeeError_BufferError,
 	                       "The Bytes object is not writable");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unimplemented_operator(DeeTypeObject *__restrict tp, uint16_t operator_name) {
 	struct opinfo *info = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
@@ -188,7 +187,7 @@ err_unimplemented_operator(DeeTypeObject *__restrict tp, uint16_t operator_name)
 	                       tp, info ? info->oi_sname : Q3);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unimplemented_operator2(DeeTypeObject *__restrict tp,
                             uint16_t operator_name,
                             uint16_t operator_name2) {
@@ -203,7 +202,7 @@ err_unimplemented_operator2(DeeTypeObject *__restrict tp,
 	                       tp, info2 ? info2->oi_sname : Q3);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unimplemented_operator3(DeeTypeObject *__restrict tp,
                             uint16_t operator_name,
                             uint16_t operator_name2,
@@ -221,7 +220,7 @@ err_unimplemented_operator3(DeeTypeObject *__restrict tp,
 	                       tp, info3 ? info3->oi_sname : Q3);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_index_out_of_bounds(DeeObject *__restrict self,
                         size_t index, size_t size) {
 	ASSERT_OBJECT(self);
@@ -230,9 +229,8 @@ err_index_out_of_bounds(DeeObject *__restrict self,
 	                       index, size, Dee_TYPE(self));
 }
 
-INTERN ATTR_COLD int DCALL
-err_index_out_of_bounds_ob(DeeObject *__restrict self,
-                           DeeObject *__restrict index) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_index_out_of_bounds_ob(DeeObject *self, DeeObject *index) {
 	return DeeError_Throwf(&DeeError_IndexError,
 	                       "Index `%r' lies outside the valid bounds `0...%R' of sequence of type `%k'",
 	                       index, DeeObject_SizeObject(self), Dee_TYPE(self));
@@ -246,7 +244,7 @@ err_va_index_out_of_bounds(size_t index, size_t size) {
 	                       index, size);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unbound_index(DeeObject *__restrict self, size_t index) {
 	ASSERT_OBJECT(self);
 	return DeeError_Throwf(&DeeError_UnboundItem,
@@ -254,7 +252,7 @@ err_unbound_index(DeeObject *__restrict self, size_t index) {
 	                       index, Dee_TYPE(self), self);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_expected_single_character_string(DeeObject *__restrict str) {
 	size_t length;
 	ASSERT_OBJECT(str);
@@ -265,7 +263,7 @@ err_expected_single_character_string(DeeObject *__restrict str) {
 	                       length, str);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_expected_string_for_attribute(DeeObject *__restrict but_instead_got) {
 	ASSERT_OBJECT(but_instead_got);
 	ASSERT(!DeeString_Check(but_instead_got));
@@ -274,7 +272,7 @@ err_expected_string_for_attribute(DeeObject *__restrict but_instead_got) {
 	                       Dee_TYPE(but_instead_got), but_instead_got);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_integer_overflow(DeeObject *__restrict overflowing_object,
                      size_t cutoff_bits, bool positive_overflow) {
 	ASSERT_OBJECT(overflowing_object);
@@ -303,9 +301,8 @@ err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow) {
 	                       cutoff_bits);
 }
 
-INTERN int FCALL
-check_empty_keywords(DeeObject *__restrict kw,
-                     DeeTypeObject *__restrict tp_self) {
+INTERN NONNULL((1, 2)) int FCALL
+check_empty_keywords(DeeObject *kw, DeeTypeObject *tp_self) {
 	if (DeeKwds_Check(kw)) {
 		if (DeeKwds_SIZE(kw) != 0)
 			goto err_no_keywords;
@@ -323,7 +320,7 @@ err:
 	return -1;
 }
 
-INTERN int FCALL
+INTERN NONNULL((1)) int FCALL
 check_empty_keywords_obj(DeeObject *__restrict kw) {
 	if (DeeKwds_Check(kw)) {
 		if (DeeKwds_SIZE(kw) != 0)
@@ -342,15 +339,14 @@ err:
 	return -1;
 }
 
-INTERN ATTR_COLD int DCALL
-err_keywords_not_accepted(DeeTypeObject *__restrict tp_self,
-                          DeeObject *__restrict kw) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_keywords_not_accepted(DeeTypeObject *tp_self, DeeObject *kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Instance of %k does not accept keyword arguments %r",
 	                       tp_self, kw);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_keywords_func_not_accepted(char const *__restrict name,
                                DeeObject *__restrict kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
@@ -358,9 +354,8 @@ err_keywords_func_not_accepted(char const *__restrict name,
 	                       name, kw);
 }
 
-INTERN ATTR_COLD int DCALL
-err_keywords_ctor_not_accepted(DeeTypeObject *__restrict tp_self,
-                               DeeObject *__restrict kw) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_keywords_ctor_not_accepted(DeeTypeObject *tp_self, DeeObject *kw) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Constructor for %k does not accept keyword arguments %r",
 	                       tp_self, kw);
@@ -374,14 +369,14 @@ err_keywords_bad_for_argc(size_t argc, size_t kwdc) {
 	                       kwdc, argc);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_keywords_not_found(char const *__restrict keyword) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Missing argument %s",
 	                       keyword);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_keywords_shadows_positional(char const *__restrict keyword) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Keyword argument %s has already been passed as positional",
@@ -402,12 +397,10 @@ err_invalid_distribution_count(size_t distcnt) {
 	                       distcnt);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_invalid_argc_missing_kw(char const *__restrict argument_name,
                             char const *function_name,
-                            size_t argc_cur,
-                            size_t argc_min,
-                            size_t argc_max) {
+                            size_t argc_cur, size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
 		return DeeError_Throwf(&DeeError_TypeError,
 		                       "Missing argument %s in call to function%s%s expecting %Iu arguments when %Iu w%s given",
@@ -430,7 +423,7 @@ err_invalid_argc_missing_kw(char const *__restrict argument_name,
 	}
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_argc(char const *function_name, size_t argc_cur,
                  size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
@@ -446,7 +439,7 @@ err_invalid_argc(char const *function_name, size_t argc_cur,
 	}
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_argc_len(char const *function_name, size_t function_size,
                      size_t argc_cur, size_t argc_min, size_t argc_max) {
 	if (argc_min == argc_max) {
@@ -462,7 +455,7 @@ err_invalid_argc_len(char const *function_name, size_t function_size,
 	}
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_argc_va(char const *function_name, size_t argc_cur, size_t argc_min) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "function%s%s expects at least %Iu arguments when only %Iu w%s given",
@@ -470,7 +463,7 @@ err_invalid_argc_va(char const *function_name, size_t argc_cur, size_t argc_min)
 	                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_argc_unpack(DeeObject *__restrict unpack_object,
                         size_t argc_cur, size_t argc_min, size_t argc_max) {
 	ASSERT_OBJECT(unpack_object);
@@ -487,7 +480,7 @@ err_invalid_argc_unpack(DeeObject *__restrict unpack_object,
 	}
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_unpack_size(DeeObject *__restrict unpack_object,
                         size_t need_size, size_t real_size) {
 	ASSERT_OBJECT(unpack_object);
@@ -498,7 +491,7 @@ err_invalid_unpack_size(DeeObject *__restrict unpack_object,
 	                       real_size == 1 ? "as" : "ere");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_unpack_size_minmax(DeeObject *__restrict unpack_object,
                                size_t need_size_min, size_t need_size_max,
                                size_t real_size) {
@@ -518,9 +511,9 @@ err_invalid_va_unpack_size(size_t need_size, size_t real_size) {
 	                       real_size == 1 ? "as" : "ere");
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
-                             DeeObject *__restrict unpack_iterator,
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_invalid_unpack_iter_size(DeeObject *unpack_object,
+                             DeeObject *unpack_iterator,
                              size_t need_size) {
 	ASSERT_OBJECT(unpack_object);
 	ASSERT_OBJECT(unpack_iterator);
@@ -532,9 +525,8 @@ err_invalid_unpack_iter_size(DeeObject *__restrict unpack_object,
 	                       need_size == 0 ? "as" : "ere");
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_unpack_iter_size_minmax(DeeObject *__restrict unpack_object,
-                                    DeeObject *__restrict unpack_iterator,
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_invalid_unpack_iter_size_minmax(DeeObject *unpack_object, DeeObject *unpack_iterator,
                                     size_t need_size_min, size_t need_size_max) {
 	ASSERT_OBJECT(unpack_object);
 	ASSERT_OBJECT(unpack_iterator);
@@ -546,7 +538,7 @@ err_invalid_unpack_iter_size_minmax(DeeObject *__restrict unpack_object,
 	                       need_size_max == 0 ? "as" : "ere");
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unbound_global(DeeModuleObject *__restrict module,
                    uint16_t global_index) {
 	char const *name;
@@ -560,9 +552,8 @@ err_unbound_global(DeeModuleObject *__restrict module,
 	                       DeeString_STR(module->mo_name));
 }
 
-INTERN ATTR_COLD int DCALL
-err_unbound_local(struct code_object *__restrict code,
-                  void *__restrict ip, uint16_t local_index) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_unbound_local(struct code_object *code, void *ip, uint16_t local_index) {
 	char const *code_name = NULL;
 	uint8_t *error;
 	struct ddi_state state;
@@ -603,9 +594,8 @@ err_unbound_local(struct code_object *__restrict code,
 	                       code_name ? code_name : "");
 }
 
-INTERN ATTR_COLD int DCALL
-err_unbound_arg(struct code_object *__restrict code,
-                void *__restrict ip, uint16_t arg_index) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_unbound_arg(struct code_object *code, void *ip, uint16_t arg_index) {
 	char const *code_name;
 	(void)ip;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
@@ -629,9 +619,9 @@ err_unbound_arg(struct code_object *__restrict code,
 	                       code_name ? code_name : "");
 }
 
-INTERN ATTR_COLD int DCALL
-err_readonly_local(struct code_object *__restrict code,
-                   void *__restrict ip, uint16_t local_index) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_readonly_local(struct code_object *code,
+                   void *ip, uint16_t local_index) {
 	char const *code_name = NULL;
 	uint8_t *error;
 	struct ddi_state state;
@@ -672,9 +662,8 @@ err_readonly_local(struct code_object *__restrict code,
 	                       code_name ? code_name : "");
 }
 
-INTERN ATTR_COLD int DCALL
-err_illegal_instruction(struct code_object *__restrict code,
-                        void *__restrict ip) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_illegal_instruction(struct code_object *code, void *ip) {
 	char const *code_name = DeeCode_NAME(code);
 	if (!code_name)
 		code_name = "<anonymous>";
@@ -683,14 +672,14 @@ err_illegal_instruction(struct code_object *__restrict code,
 	                       code_name, (uint32_t)((instruction_t *)ip - code->co_code));
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_requires_class(DeeTypeObject *__restrict tp_self) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Needed a class when %k is only a regular type",
 	                       tp_self);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_invalid_class_addr(DeeTypeObject *__restrict tp_self,
                        uint16_t addr) {
 	return DeeError_Throwf(&DeeError_TypeError,
@@ -698,9 +687,9 @@ err_invalid_class_addr(DeeTypeObject *__restrict tp_self,
 	                       addr, tp_self);
 }
 
-INTERN ATTR_COLD int DCALL
-err_invalid_instance_addr(DeeTypeObject *__restrict tp_self,
-                          DeeObject *__restrict UNUSED(self),
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_invalid_instance_addr(DeeTypeObject *tp_self,
+                          DeeObject *UNUSED(self),
                           uint16_t addr) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Invalid class instance address %I16u for %k",
@@ -708,8 +697,8 @@ err_invalid_instance_addr(DeeTypeObject *__restrict tp_self,
 }
 
 
-INTERN ATTR_COLD int DCALL
-err_invalid_refs_size(DeeObject *__restrict code, size_t num_refs) {
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+err_invalid_refs_size(DeeObject *code, size_t num_refs) {
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Code object expects %I16u references when %Iu were given",
@@ -725,7 +714,7 @@ PRIVATE char const access_names[4][4] = {
 	/* [?]               = */ "",
 };
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unknown_attribute(DeeTypeObject *__restrict tp,
                       char const *__restrict name,
                       int access) {
@@ -737,7 +726,7 @@ err_unknown_attribute(DeeTypeObject *__restrict tp,
 	                       access_names[access & ATTR_ACCESS_MASK], tp, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unknown_attribute_len(DeeTypeObject *__restrict tp,
                           char const *__restrict name,
                           size_t namelen,
@@ -753,7 +742,7 @@ err_unknown_attribute_len(DeeTypeObject *__restrict tp,
 	                       name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unknown_attribute_lookup(DeeTypeObject *__restrict tp,
                              char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -761,7 +750,7 @@ err_unknown_attribute_lookup(DeeTypeObject *__restrict tp,
 	                       tp, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((2)) int DCALL
 err_nodoc_attribute(char const *base,
                     char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_ValueError,
@@ -769,7 +758,7 @@ err_nodoc_attribute(char const *base,
 	                       base ? base : "?", name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_cant_access_attribute(DeeTypeObject *__restrict tp,
                           char const *__restrict name,
                           int access) {
@@ -782,7 +771,7 @@ err_cant_access_attribute(DeeTypeObject *__restrict tp,
 	                       tp, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_cant_access_attribute_len(DeeTypeObject *__restrict tp,
                               char const *__restrict name,
                               size_t namelen,
@@ -796,14 +785,14 @@ err_cant_access_attribute_len(DeeTypeObject *__restrict tp,
 	                       tp, namelen, name);
 }
 
-PRIVATE ATTR_RETNONNULL char const *DCALL
+PRIVATE ATTR_RETNONNULL WUNUSED char const *DCALL
 get_desc_name(struct class_desc *__restrict desc) {
 	return desc->cd_desc->cd_name
 	       ? DeeString_STR(desc->cd_desc->cd_name)
 	       : "<unnamed>";
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_cant_access_attribute_c(struct class_desc *__restrict desc,
                             char const *__restrict name,
                             int access) {
@@ -815,7 +804,7 @@ err_cant_access_attribute_c(struct class_desc *__restrict desc,
 	                       get_desc_name(desc), name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name) {
 	ASSERT_OBJECT(tp);
 	ASSERT(name);
@@ -825,7 +814,7 @@ err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name)
 	                       tp, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restrict name) {
 	ASSERT(desc);
 	ASSERT(name);
@@ -834,7 +823,7 @@ err_unbound_attribute_c(struct class_desc *__restrict desc, char const *__restri
 	                       get_desc_name(desc), name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_not_loaded_attr(DeeModuleObject *__restrict self,
                            char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -843,7 +832,7 @@ err_module_not_loaded_attr(DeeModuleObject *__restrict self,
 	                       name, self->mo_name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_not_loaded_attr_len(DeeModuleObject *__restrict self,
                                char const *__restrict name,
                                size_t namelen, int access) {
@@ -853,7 +842,7 @@ err_module_not_loaded_attr_len(DeeModuleObject *__restrict self,
 	                       namelen, name, self->mo_name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_no_such_global(DeeModuleObject *__restrict self,
                           char const *__restrict name, int access) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -862,7 +851,7 @@ err_module_no_such_global(DeeModuleObject *__restrict self,
 	                       self->mo_name, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_no_such_global_len(DeeModuleObject *__restrict self,
                               char const *__restrict name,
                               size_t namelen, int access) {
@@ -872,7 +861,7 @@ err_module_no_such_global_len(DeeModuleObject *__restrict self,
 	                       self->mo_name, namelen, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_readonly_global(DeeModuleObject *__restrict self,
                            char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -880,7 +869,7 @@ err_module_readonly_global(DeeModuleObject *__restrict self,
 	                       self->mo_name, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_cannot_read_property(DeeModuleObject *__restrict self,
                                 char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -888,7 +877,7 @@ err_module_cannot_read_property(DeeModuleObject *__restrict self,
 	                       self->mo_name, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_cannot_delete_property(DeeModuleObject *__restrict self,
                                   char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -896,7 +885,7 @@ err_module_cannot_delete_property(DeeModuleObject *__restrict self,
 	                       self->mo_name, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_module_cannot_write_property(DeeModuleObject *__restrict self,
                                  char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_AttributeError,
@@ -904,7 +893,7 @@ err_module_cannot_write_property(DeeModuleObject *__restrict self,
 	                       self->mo_name, name);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {
 	ASSERT_OBJECT(map);
 	ASSERT_OBJECT(key);
@@ -913,7 +902,7 @@ err_unknown_key(DeeObject *__restrict map, DeeObject *__restrict key) {
 	                       key, Dee_TYPE(map), map);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unknown_key_str(DeeObject *__restrict map, char const *__restrict key) {
 	ASSERT_OBJECT(map);
 	ASSERT(key);
@@ -922,7 +911,7 @@ err_unknown_key_str(DeeObject *__restrict map, char const *__restrict key) {
 	                       key, Dee_TYPE(map), map);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unknown_key_str_len(DeeObject *__restrict map, char const *__restrict key, size_t keylen) {
 	ASSERT_OBJECT(map);
 	ASSERT(key);
@@ -931,7 +920,7 @@ err_unknown_key_str_len(DeeObject *__restrict map, char const *__restrict key, s
 	                       keylen, key, Dee_TYPE(map), map);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_empty_sequence(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_ValueError,
@@ -939,7 +928,7 @@ err_empty_sequence(DeeObject *__restrict seq) {
 	                       Dee_TYPE(seq));
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_changed_sequence(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_RuntimeError,
@@ -947,37 +936,37 @@ err_changed_sequence(DeeObject *__restrict seq) {
 	                       Dee_TYPE(seq), seq);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_immutable_sequence(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_SequenceError,
 	                       "Instances of sequence type `%k' are immutable",
 	                       Dee_TYPE(self));
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_fixedlength_sequence(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_SequenceError,
 	                       "Instances of sequence type `%k' have a fixed length",
 	                       Dee_TYPE(self));
 }
 
-INTERN ATTR_COLD int DCALL
-err_item_not_found(DeeObject *__restrict seq, DeeObject *__restrict item) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_item_not_found(DeeObject *seq, DeeObject *item) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Could not locate item `%k' in sequence `%k'",
 	                       item, seq);
 }
 
-INTERN ATTR_COLD int DCALL
-err_index_not_found(DeeObject *__restrict seq, DeeObject *__restrict item) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_index_not_found(DeeObject *seq, DeeObject *item) {
 	ASSERT_OBJECT(seq);
 	return DeeError_Throwf(&DeeError_IndexError,
 	                       "Could not locate item `%k' in sequence `%k'",
 	                       item, seq);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
 err_class_protected_member(DeeTypeObject *__restrict class_type,
                            struct class_attribute *__restrict member) {
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
@@ -989,21 +978,21 @@ err_class_protected_member(DeeTypeObject *__restrict class_type,
 	                       member->ca_name, class_type);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_no_super_class(DeeTypeObject *__restrict type) {
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Type `%k' has no super-class", type);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_file_not_found(char const *__restrict filename) {
 	return DeeError_Throwf(&DeeError_FileNotFound,
 	                       "File `%s' could not be found",
 	                       filename);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_file_not_found_ob(DeeObject *__restrict filename) {
 	return DeeError_Throwf(&DeeError_FileNotFound,
 	                       "File `%k' could not be found",
@@ -1012,7 +1001,7 @@ err_file_not_found_ob(DeeObject *__restrict filename) {
 
 #ifndef CONFIG_NO_STDIO
 #ifdef CONFIG_HOST_WINDOWS
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
 err_system_error_code(char const *__restrict function,
                       unsigned long last_error) {
 	DeeError_Throwf(&DeeError_SystemError,
@@ -1021,7 +1010,7 @@ err_system_error_code(char const *__restrict function,
 	return -1;
 }
 
-INTERN ATTR_NOINLINE ATTR_COLD int DCALL
+INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
 err_system_error(char const *__restrict function) {
 	return err_system_error_code(function, GetLastError());
 }
@@ -1030,14 +1019,14 @@ err_system_error(char const *__restrict function) {
 
 
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_sp(struct code_frame *__restrict frame, size_t access_sp) {
 	return DeeError_Throwf(&DeeError_SegFault,
 	                       "Unbound stack variable %Iu lies above active end %Iu",
 	                       access_sp, frame->cf_stacksz);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_symid(struct code_frame *__restrict UNUSED(frame),
                       char category, uint16_t id) {
 	return DeeError_Throwf(&DeeError_IllegalInstruction,
@@ -1045,37 +1034,37 @@ err_srt_invalid_symid(struct code_frame *__restrict UNUSED(frame),
 	                       category, id);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_static(struct code_frame *__restrict frame, uint16_t sid) {
 	return err_srt_invalid_symid(frame, 'S', sid);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_const(struct code_frame *__restrict frame, uint16_t cid) {
 	return err_srt_invalid_symid(frame, 'C', cid);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_locale(struct code_frame *__restrict frame, uint16_t lid) {
 	return err_srt_invalid_symid(frame, 'L', lid);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_ref(struct code_frame *__restrict frame, uint16_t rid) {
 	return err_srt_invalid_symid(frame, 'R', rid);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_module(struct code_frame *__restrict frame, uint16_t mid) {
 	return err_srt_invalid_symid(frame, 'M', mid);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_global(struct code_frame *__restrict frame, uint16_t gid) {
 	return err_srt_invalid_symid(frame, 'G', gid);
 }
 
-INTERN ATTR_COLD int DCALL
+INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_srt_invalid_extern(struct code_frame *__restrict frame, uint16_t mid, uint16_t gid) {
 	if (mid >= frame->cf_func->fo_code->co_module->mo_importc)
 		return err_srt_invalid_module(frame, mid);

@@ -221,7 +221,7 @@ PRIVATE struct type_method stat_methods[] = {
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
 	PRIVATE DREF DeeObject *DCALL                        \
 	funnam(DeeObject *__restrict UNUSED(self),           \
-	       size_t argc, DeeObject **__restrict argv) {   \
+	       size_t argc, DeeObject **argv) {   \
 		DeeObject *path;                                 \
 		if (DeeArg_Unpack(argc, argv, "o:" name, &path)) \
 			return NULL;                                 \

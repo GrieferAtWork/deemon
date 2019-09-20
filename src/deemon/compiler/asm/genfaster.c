@@ -34,7 +34,7 @@
 
 DECL_BEGIN
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
 has_sequence_cast_constructor(DeeObject *__restrict type) {
 	if (type == (DeeObject *)&DeeTuple_Type)
 		goto yes;

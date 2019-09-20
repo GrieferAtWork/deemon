@@ -40,10 +40,10 @@ typedef JITFunctionObject JITFunction;
 typedef JITYieldFunctionObject JITYieldFunction;
 typedef JITYieldFunctionIteratorObject JITYieldFunctionIterator;
 
-INTDEF DREF DeeObject *DCALL jf_getname(JITFunction *__restrict self);
-INTDEF DREF DeeObject *DCALL jf_getdoc(JITFunction *__restrict self);
-INTDEF DREF DeeObject *DCALL jf_getkwds(JITFunction *__restrict self);
-INTDEF DREF DeeObject *DCALL jf_gettext(JITFunction *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getname(JITFunction *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getdoc(JITFunction *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getkwds(JITFunction *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_gettext(JITFunction *__restrict self);
 
 
 #ifdef CONFIG_LITTLE_ENDIAN
@@ -80,7 +80,7 @@ jit_state_fini(struct jit_state *__restrict self) {
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 jy_fini(JITYieldFunction *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->jy_argc; ++i)
@@ -89,7 +89,7 @@ jy_fini(JITYieldFunction *__restrict self) {
 	Dee_Decref(self->jy_func);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 jy_visit(JITYieldFunction *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i < self->jy_argc; ++i)
@@ -98,7 +98,7 @@ jy_visit(JITYieldFunction *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->jy_func);
 }
 
-PRIVATE DREF JITYieldFunctionIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF JITYieldFunctionIterator *DCALL
 jy_iter(JITYieldFunction *__restrict self) {
 	DREF JITYieldFunctionIterator *result;
 	JITFunction *jf = self->jy_func;
@@ -216,7 +216,7 @@ PRIVATE struct type_seq jy_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jy_getargs(JITYieldFunction *__restrict self) {
 	size_t arg_offset = 0;
 	/* Adjust for shared arguments. */
@@ -229,22 +229,22 @@ jy_getargs(JITYieldFunction *__restrict self) {
 	                                self->jy_argv + arg_offset);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jy_getname(JITYieldFunction *__restrict self) {
 	return jf_getname(self->jy_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jy_getdoc(JITYieldFunction *__restrict self) {
 	return jf_getdoc(self->jy_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jy_getkwds(JITYieldFunction *__restrict self) {
 	return jf_getkwds(self->jy_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jy_gettext(JITYieldFunction *__restrict self) {
 	return jf_gettext(self->jy_func);
 }
@@ -333,7 +333,7 @@ INTERN DeeTypeObject JITYieldFunction_Type = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 JITLexer_JumpToDoWhileCondition(JITLexer *__restrict self,
                                 struct jit_state *__restrict st) {
 	if (st->js_dowhile.f_cond) {
@@ -362,7 +362,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
 	for (;;) {
 		/* XXX: Full tagging support? */
@@ -414,7 +414,7 @@ err:
  *              implement loop statements)
  * @return:  0: The state was successfully removed
  * @return: -1: An error occurred. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 	struct jit_state *st = self->ji_state;
 	unsigned char *old_pos;
@@ -651,7 +651,7 @@ err:
 
 /* Unwind the active state-stack until `new_curr_state', such that upon
  * successfully return, `new_curr_state' will be the currently active state. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 JITYieldFunctionIterator_UnwindUntil(JITYieldFunctionIterator *__restrict self,
                                      struct jit_state *__restrict new_curr_state) {
 	while (self->ji_state != new_curr_state) {
@@ -687,7 +687,7 @@ err:
  *              and the loop control command was handled successfully.
  * @return:  0: Failed to locate a valid receiver for the loop control command.
  * @return: -1: An error occurred. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 JITYieldFunctionIterator_HandleLoopctl(JITYieldFunctionIterator *__restrict self,
                                        bool ctl_is_break) {
 	/* Search for the nearest state that can handle the loop control command,
@@ -910,7 +910,7 @@ err:
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ji_next(JITYieldFunctionIterator *__restrict self) {
 	DREF DeeObject *result;
 	int error;
@@ -1788,7 +1788,7 @@ err_r:
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ji_fini(JITYieldFunctionIterator *__restrict self) {
 	JITFunctionObject *jf = self->ji_func->jy_func;
 	ASSERT(!jf->jf_globals || self->ji_ctx.jc_globals == jf->jf_globals);
@@ -1798,29 +1798,28 @@ ji_fini(JITYieldFunctionIterator *__restrict self) {
 		prev = curr->js_prev;
 		switch (curr->js_kind) {
 
-			{
-				DeeThreadObject *ts;
-			case JIT_STATE_KIND_TRY:
-				/* Service finally-blocks. */
-				if (self->ji_ctx.jc_flags & JITCONTEXT_FSYNERR)
-					break; /* Don't service if a syntax-error occurred. */
-				JITLexer_YieldAt(&self->ji_lex, curr->js_try.t_guard);
-				ts                     = DeeThread_Self();
-				self->ji_ctx.jc_except = ts->t_exceptsz;
-				/* Skip the guarded statement block. */
-				if (JITLexer_SkipStatement(&self->ji_lex))
-					goto err_try;
-				/* Service all finally statements that were used to guard this block. */
-				JITLexer_EvalFinallyStatements(&self->ji_lex);
+		case JIT_STATE_KIND_TRY: {
+			DeeThreadObject *ts;
+			/* Service finally-blocks. */
+			if (self->ji_ctx.jc_flags & JITCONTEXT_FSYNERR)
+				break; /* Don't service if a syntax-error occurred. */
+			JITLexer_YieldAt(&self->ji_lex, curr->js_try.t_guard);
+			ts                     = DeeThread_Self();
+			self->ji_ctx.jc_except = ts->t_exceptsz;
+			/* Skip the guarded statement block. */
+			if (JITLexer_SkipStatement(&self->ji_lex))
+				goto err_try;
+			/* Service all finally statements that were used to guard this block. */
+			if (JITLexer_EvalFinallyStatements(&self->ji_lex))
+				goto err_try;
 err_try:
-				/* Dump all unhandled exceptions caused by */
-				while (ts->t_exceptsz > self->ji_ctx.jc_except)
-					DeeError_Print(NULL, ERROR_PRINT_DOHANDLE);
-			}
-			break;
+			/* Dump all unhandled exceptions caused by */
+			while (ts->t_exceptsz > self->ji_ctx.jc_except)
+				DeeError_Print(NULL, ERROR_PRINT_DOHANDLE);
+		}	break;
 
 		case JIT_STATE_KIND_WITH:
-			if (unlikely(DeeObject_Leave(curr->js_with.w_obj))) {
+			if unlikely(DeeObject_Leave(curr->js_with.w_obj)) {
 				/* Dump the unhandled exception! */
 				DeeError_Print("Unhandled exception in `operator leave'",
 				               ERROR_PRINT_DOHANDLE);
@@ -1849,7 +1848,7 @@ err_try:
 	Dee_Decref(self->ji_func);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
 	JITFunctionObject *jf = self->ji_func->jy_func;
 	JITObjectTable *tab;
@@ -1872,32 +1871,32 @@ ji_visit(JITYieldFunctionIterator *__restrict self, dvisit_t proc, void *arg) {
 	recursive_rwlock_endread(&self->ji_lock);
 }
 
-PRIVATE DREF JITFunction *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF JITFunction *DCALL
 ji_getfunc(JITYieldFunctionIterator *__restrict self) {
 	return_reference_(self->ji_func->jy_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ji_getargs(JITYieldFunctionIterator *__restrict self) {
 	return jy_getargs(self->ji_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ji_getname(JITYieldFunctionIterator *__restrict self) {
 	return jf_getname(self->ji_func->jy_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ji_getdoc(JITYieldFunctionIterator *__restrict self) {
 	return jf_getdoc(self->ji_func->jy_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ji_getkwds(JITYieldFunctionIterator *__restrict self) {
 	return jf_getkwds(self->ji_func->jy_func);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ji_gettext(JITYieldFunctionIterator *__restrict self) {
 	return jf_gettext(self->ji_func->jy_func);
 }

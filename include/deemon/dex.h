@@ -134,8 +134,8 @@ EXPDEF struct Dee_dex DEX;
 INTDEF int DCALL dex_load_handle(DeeDexObject *__restrict self, /*inherited(always)*/void *handle, DeeObject *__restrict input_file);
 
 /* Initialize the given dex module. */
-INTDEF int DCALL dex_initialize(DeeDexObject *__restrict self);
-INTDEF DREF DeeObject *DCALL DeeDex_New(DeeObject *__restrict name);
+INTDEF WUNUSED NONNULL((1)) int DCALL dex_initialize(DeeDexObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDex_New(DeeObject *__restrict name);
 
 /* Clear global data caches of all loaded dex modules. */
 INTDEF bool DCALL DeeDex_Cleanup(void);

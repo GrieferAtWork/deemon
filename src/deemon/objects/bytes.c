@@ -59,17 +59,17 @@ typedef struct {
 INTDEF DeeTypeObject BytesIterator_Type;
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 bytesiter_fini(BytesIterator *__restrict self) {
 	Dee_Decref(self->bi_bytes);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bytesiter_visit(BytesIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->bi_bytes);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytesiter_next(BytesIterator *__restrict self) {
 	uint8_t *pos;
 	do {
@@ -80,7 +80,7 @@ bytesiter_next(BytesIterator *__restrict self) {
 	return DeeInt_NewU8(*pos);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytesiter_ctor(BytesIterator *__restrict self) {
 	self->bi_bytes = (DREF Bytes *)Dee_EmptyBytes;
 	self->bi_iter  = self->bi_bytes->b_data;
@@ -89,7 +89,7 @@ bytesiter_ctor(BytesIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytesiter_copy(BytesIterator *__restrict self,
                BytesIterator *__restrict other) {
 	self->bi_bytes = other->bi_bytes;
@@ -105,7 +105,7 @@ bytesiter_copy(BytesIterator *__restrict self,
 
 PRIVATE int DCALL
 bytesiter_init(BytesIterator *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+               size_t argc, DeeObject **argv) {
 	Bytes *bytes;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesIterator", &bytes) ||
 	    DeeObject_AssertTypeExact((DeeObject *)bytes, &DeeBytes_Type))
@@ -117,27 +117,27 @@ bytesiter_init(BytesIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytesiter_eq(BytesIterator *__restrict self,
-             BytesIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytesiter_eq(BytesIterator *self,
+             BytesIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &BytesIterator_Type))
 		return NULL;
 	return_bool(self->bi_bytes == other->bi_bytes &&
 	            self->bi_iter == other->bi_iter);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytesiter_ne(BytesIterator *__restrict self,
-             BytesIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytesiter_ne(BytesIterator *self,
+             BytesIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &BytesIterator_Type))
 		return NULL;
 	return_bool(self->bi_bytes != other->bi_bytes ||
 	            self->bi_iter != other->bi_iter);
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytesiter_lo(BytesIterator *__restrict self,
-             BytesIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytesiter_lo(BytesIterator *self,
+             BytesIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &BytesIterator_Type))
 		return NULL;
 	return_bool(self->bi_bytes < other->bi_bytes ||
@@ -145,9 +145,9 @@ bytesiter_lo(BytesIterator *__restrict self,
 	             self->bi_iter < other->bi_iter));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytesiter_le(BytesIterator *__restrict self,
-             BytesIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytesiter_le(BytesIterator *self,
+             BytesIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &BytesIterator_Type))
 		return NULL;
 	return_bool(self->bi_bytes < other->bi_bytes ||
@@ -155,9 +155,9 @@ bytesiter_le(BytesIterator *__restrict self,
 	             self->bi_iter <= other->bi_iter));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytesiter_gr(BytesIterator *__restrict self,
-             BytesIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytesiter_gr(BytesIterator *self,
+             BytesIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &BytesIterator_Type))
 		return NULL;
 	return_bool(self->bi_bytes > other->bi_bytes ||
@@ -165,9 +165,9 @@ bytesiter_gr(BytesIterator *__restrict self,
 	             self->bi_iter > other->bi_iter));
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytesiter_ge(BytesIterator *__restrict self,
-             BytesIterator *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytesiter_ge(BytesIterator *self,
+             BytesIterator *other) {
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &BytesIterator_Type))
 		return NULL;
 	return_bool(self->bi_bytes > other->bi_bytes ||
@@ -336,7 +336,7 @@ err:
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	DREF Bytes *result;
 	size_t i, bufsize;
@@ -513,7 +513,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	DREF Bytes *result;
 	result = (DREF Bytes *)DeeObject_Malloc(COMPILER_OFFSETOF(Bytes, b_data) +
@@ -619,7 +619,7 @@ done:
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 bytes_fini(Bytes *__restrict self) {
 	/* Check for special case: we're owning the object buffer outself. */
 	if (self->b_orig == (DREF DeeObject *)self)
@@ -629,7 +629,7 @@ bytes_fini(Bytes *__restrict self) {
 	Dee_Decref(self->b_orig);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 bytes_visit(Bytes *__restrict self, dvisit_t proc, void *arg) {
 	/* Check for special case: we're owning the object buffer outself. */
 	if (self->b_orig == (DREF DeeObject *)self)
@@ -641,14 +641,14 @@ PRIVATE DREF Bytes *DCALL bytes_ctor(void) {
 	return_reference_((DREF Bytes *)Dee_EmptyBytes);
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_copy(Bytes *__restrict other) {
 	return (DREF Bytes *)DeeBytes_NewBufferData(DeeBytes_DATA(other),
 	                                            DeeBytes_SIZE(other));
 }
 
 PRIVATE DREF Bytes *DCALL
-bytes_init(size_t argc, DeeObject **__restrict argv) {
+bytes_init(size_t argc, DeeObject **argv) {
 	DeeObject *ob;
 	unsigned int flags = Dee_BUFFER_FREADONLY;
 	size_t start = 0, end = (size_t)-1;
@@ -767,7 +767,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_assign(Bytes *__restrict self,
              DeeObject *__restrict values) {
 	if unlikely(!DeeBytes_WRITABLE(self))
@@ -780,7 +780,7 @@ err_readonly:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_str(Bytes *__restrict self) {
 	return DeeString_NewSized((char *)DeeBytes_DATA(self),
 	                          DeeBytes_SIZE(self));
@@ -819,7 +819,7 @@ err:
 	return temp;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if unlikely(bytes_print_repr(self,
@@ -832,13 +832,13 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_bool(Bytes *__restrict self) {
 	return DeeBytes_SIZE(self) != 0;
 }
 
 
-PRIVATE DREF BytesIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF BytesIterator *DCALL
 bytes_iter(Bytes *__restrict self) {
 	DREF BytesIterator *result;
 	result = DeeObject_MALLOC(BytesIterator);
@@ -853,16 +853,16 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_size(Bytes *__restrict self) {
 	return DeeInt_NewSize(DeeBytes_SIZE(self));
 }
-INTDEF DREF DeeObject *DCALL
-bytes_contains(Bytes *__restrict self,
-               DeeObject *__restrict needle);
-PRIVATE DREF DeeObject *DCALL
-bytes_getitem(Bytes *__restrict self,
-              DeeObject *__restrict index) {
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_contains(Bytes *self,
+               DeeObject *needle);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_getitem(Bytes *self,
+              DeeObject *index) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
 		goto err;
@@ -875,7 +875,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_delitem(Bytes *__restrict self,
               DeeObject *__restrict index) {
 	size_t i;
@@ -895,7 +895,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 bytes_setitem(Bytes *__restrict self,
               DeeObject *__restrict index,
               DeeObject *__restrict value) {
@@ -919,7 +919,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF Bytes *DCALL
 bytes_getrange(Bytes *__restrict self,
                DeeObject *__restrict begin,
                DeeObject *__restrict end) {
@@ -953,7 +953,7 @@ err:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 bytes_setrange(Bytes *__restrict self,
                DeeObject *__restrict begin,
                DeeObject *__restrict end,
@@ -985,7 +985,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 bytes_delrange(Bytes *__restrict self,
                DeeObject *__restrict begin,
                DeeObject *__restrict end) {
@@ -993,22 +993,22 @@ bytes_delrange(Bytes *__restrict self,
 }
 
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 bytes_hash(Bytes *__restrict self) {
 	return Dee_HashPtr(DeeBytes_DATA(self),
 	                   DeeBytes_SIZE(self));
 }
 
-INTDEF bool DCALL
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 string_eq_bytes(DeeStringObject *__restrict self,
                 DeeBytesObject *__restrict other);
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 compare_string_bytes(DeeStringObject *__restrict lhs,
                      DeeBytesObject *__restrict rhs);
 
-PRIVATE DREF DeeObject *DCALL
-bytes_eq(Bytes *__restrict self,
-         DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_eq(Bytes *self,
+         DeeObject *other) {
 	uint8_t *other_data;
 	size_t other_size;
 	if (DeeString_Check(other))
@@ -1024,9 +1024,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-bytes_ne(Bytes *__restrict self,
-         DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_ne(Bytes *self,
+         DeeObject *other) {
 	uint8_t *other_data;
 	size_t other_size;
 	if (DeeString_Check(other))
@@ -1082,7 +1082,7 @@ DEFINE_BYTES_COMPARE(bytes_gr, >)
 DEFINE_BYTES_COMPARE(bytes_ge, >=)
 #undef DEFINE_BYTES_COMPARE
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_add(Bytes *__restrict self,
           DeeObject *__restrict other) {
 	DREF Bytes *result;
@@ -1101,7 +1101,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_mul(Bytes *__restrict self,
           DeeObject *__restrict other) {
 	DREF Bytes *result;
@@ -1136,9 +1136,9 @@ INTDEF dssize_t DCALL
 DeeString_CFormat(dformatprinter printer,
                   dformatprinter format_printer, void *arg,
                   /*utf-8*/ char const *__restrict format, size_t format_len,
-                  size_t argc, DeeObject **__restrict argv);
+                  size_t argc, DeeObject **argv);
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_mod(Bytes *__restrict self,
           DeeObject *__restrict args) {
 	struct bytes_printer printer = BYTES_PRINTER_INIT;
@@ -1248,13 +1248,13 @@ PRIVATE struct type_cmp bytes_cmp = {
 };
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 bytes_nsi_getsize(Bytes *__restrict self) {
 	ASSERT(DeeBytes_SIZE(self) != (size_t)-1);
 	return DeeBytes_SIZE(self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_nsi_getitem(Bytes *__restrict self, size_t index) {
 	if unlikely(index >= DeeBytes_SIZE(self))
 		goto err_bounds;
@@ -1264,7 +1264,7 @@ err_bounds:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_nsi_delitem(Bytes *__restrict self,
                   size_t index) {
 	if unlikely(index >= DeeBytes_SIZE(self)) {
@@ -1302,7 +1302,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_nsi_getrange_i(Bytes *__restrict self,
                      dssize_t start_index,
                      dssize_t end_index) {
@@ -1323,7 +1323,7 @@ bytes_nsi_getrange_i(Bytes *__restrict self,
 	                                      self->b_flags);
 }
 
-PRIVATE DREF Bytes *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 bytes_nsi_getrange_in(Bytes *__restrict self,
                       dssize_t start_index) {
 	if unlikely(start_index < 0)
@@ -1457,18 +1457,18 @@ PRIVATE struct type_seq bytes_seq = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_isreadonly(Bytes *__restrict self) {
 	return_bool_(!(self->b_flags & Dee_BUFFER_FWRITABLE));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_iswritable(Bytes *__restrict self) {
 	return_bool_(self->b_flags & Dee_BUFFER_FWRITABLE);
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getfirst(Bytes *__restrict self) {
 	if unlikely(DeeBytes_IsEmpty(self)) {
 		err_empty_sequence((DeeObject *)self);
@@ -1477,7 +1477,7 @@ bytes_getfirst(Bytes *__restrict self) {
 	return DeeInt_NewU8(DeeBytes_DATA(self)[0]);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_setfirst(Bytes *__restrict self, DeeObject *__restrict value) {
 	uint8_t int_value;
 	if unlikely(DeeBytes_IsEmpty(self))
@@ -1497,7 +1497,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getlast(Bytes *__restrict self) {
 	if unlikely(DeeBytes_IsEmpty(self)) {
 		err_empty_sequence((DeeObject *)self);
@@ -1506,7 +1506,7 @@ bytes_getlast(Bytes *__restrict self) {
 	return DeeInt_NewU8(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_setlast(Bytes *__restrict self, DeeObject *__restrict value) {
 	uint8_t int_value;
 	if unlikely(DeeBytes_IsEmpty(self))
@@ -1526,12 +1526,12 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_delfirst(Bytes *__restrict self) {
 	return bytes_setfirst(self, Dee_None);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_dellast(Bytes *__restrict self) {
 	return bytes_setlast(self, Dee_None);
 }
@@ -1601,7 +1601,7 @@ INTDEF struct type_method bytes_methods[];
 
 PRIVATE DREF Bytes *DCALL
 bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:fromseq", &seq))
 		goto err;
@@ -1612,7 +1612,7 @@ err:
 
 PRIVATE DREF Bytes *DCALL
 bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	DeeObject *hex_str;
 	DREF Bytes *result;
 	uint8_t *dst;
@@ -2057,7 +2057,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
  *           after a call to `bytes_printer_fini()'
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self) {
 	DREF Bytes *result = self->bp_bytes;
 	if unlikely(!result)
@@ -2091,7 +2091,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/struct bytes_printer *__restrict self)
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_bytes_printer_append(struct bytes_printer *__restrict self,
                          uint8_t const *__restrict data, size_t datalen) {
 	Bytes *bytes;

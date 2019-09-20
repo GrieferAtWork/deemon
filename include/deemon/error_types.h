@@ -55,7 +55,7 @@ struct Dee_compiler_error_loc {
 	struct Dee_compiler_error_loc *cl_prev; /* [0..1][OVERRIDE(->cl_file,[1..1])]
 	                                         * Calling compiler location (might be used
 	                                         * when the parser was inside of a macro) */
-	/*ref*/struct TPPFile         *cl_file; /* [0..1] The file in which the error occurred
+	/*ref*/ struct TPPFile        *cl_file; /* [0..1] The file in which the error occurred
 	                                         * (when `NULL', no location information is available) */
 	int                            cl_line; /* The line within `cl_file' (0-based) */
 	int                            cl_col;  /* The column within that `cl_line' (0-based) */

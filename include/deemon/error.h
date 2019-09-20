@@ -49,6 +49,7 @@ typedef int32_t Dee_syserrno_t;
 
 /* Builtin error classes. */
 DDATDEF DeeTypeObject DeeError_Signal;
+
 /* Interrupt signal (cannot be caught using a normal catch-guard)
  * NOTE: In order for an exception handler to be able to process this
  *       signal, it must have the `EXCEPTION_HANDLER_FINTERPT' flag set
@@ -204,11 +205,11 @@ DDATDEF DeeObject DeeError_Interrupt_instance;
 /* Try to catch (and thereby handle) an instance of `type',
  * returning true if doing so was possible.
  * Upon success, the actual error object thrown is discarded during this process. */
-DFUNDEF bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict type);
 
 /* Throw a given object `ob' as an error.
  * @return: -1: Always returns `-1' */
-DFUNDEF int DCALL DeeError_Throw(DeeObject *__restrict ob);
+DFUNDEF NONNULL((1)) int DCALL DeeError_Throw(DeeObject *__restrict ob);
 
 
 /* Value set for `Dee_syserrno_t' when the error is not known. */
@@ -219,20 +220,26 @@ DFUNDEF int DCALL DeeError_Throw(DeeObject *__restrict ob);
 /* Throw a new error of type `tp', using a printf-formatted
  * message passed through `format' and varargs.
  * @return: -1: Always returns `-1'*/
-DFUNDEF int DeeError_Throwf(DeeTypeObject *__restrict tp, char const *__restrict format, ...);
-DFUNDEF int DCALL DeeError_VThrowf(DeeTypeObject *__restrict tp, char const *__restrict format, va_list args);
-DFUNDEF int DeeError_SysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error, char const *__restrict format, ...);
-DFUNDEF int DCALL DeeError_VSysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error, char const *__restrict format, va_list args);
+DFUNDEF NONNULL((1, 2)) int DeeError_Throwf(DeeTypeObject *__restrict tp, char const *__restrict format, ...);
+DFUNDEF NONNULL((1, 2)) int DCALL DeeError_VThrowf(DeeTypeObject *__restrict tp, char const *__restrict format, va_list args);
+DFUNDEF NONNULL((1, 3)) int DeeError_SysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error, char const *__restrict format, ...);
+DFUNDEF NONNULL((1, 3)) int DCALL DeeError_VSysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error, char const *__restrict format, va_list args);
 
 /* Return the currently effective error, or NULL if none is. */
-DFUNDEF DeeObject *DCALL DeeError_Current(void);
+DFUNDEF WUNUSED DeeObject *DCALL DeeError_Current(void);
+
 /* Check if the current exception is an instance of `tp' */
-DFUNDEF bool DCALL DeeError_CurrentIs(DeeTypeObject *__restrict tp);
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DeeError_CurrentIs(DeeTypeObject *__restrict tp);
 
 /* Handle an error and print it, alongside a human-readable message to `stderr'
  * @param: handle_errors: Describes how (if at all) errors should be handled.
- * @param: reason: When non-NULL, a message explaining the reason for the exception is being handled. */
-DFUNDEF bool DCALL DeeError_Print(char const *reason, unsigned int handle_errors);
+ * @param: reason: When non-NULL, a message explaining the reason for the exception is being handled.
+ * @return: true:  The current (or previous) error was printed.
+ * @return: false: No error was thrown. */
+DFUNDEF bool DCALL
+DeeError_Print(char const *reason, unsigned int handle_errors);
+
 #define Dee_ERROR_PRINT_DONTHANDLE 0
 #define Dee_ERROR_PRINT_DOHANDLE   1
 #ifdef CONFIG_NO_THREADS
@@ -242,7 +249,8 @@ DFUNDEF bool DCALL DeeError_Print(char const *reason, unsigned int handle_errors
 #endif /* !CONFIG_NO_THREADS */
 
 /* Display (print to stderr) an error, as well as an optional traceback. */
-DFUNDEF void DCALL DeeError_Display(char const *reason, DeeObject *__restrict error, DeeObject *traceback);
+DFUNDEF NONNULL((2)) void DCALL
+DeeError_Display(char const *reason, DeeObject *__restrict error, DeeObject *traceback);
 
 /* Handle the current error, discarding it in the process.
  * @param: mode:   One of `ERROR_HANDLED_*'

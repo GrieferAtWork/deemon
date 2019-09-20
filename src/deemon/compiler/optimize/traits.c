@@ -63,7 +63,7 @@ is_generic_sequence_type(DeeTypeObject *self) {
 }
 
 
-INTERN DeeTypeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 ast_predict_type(struct ast *__restrict self) {
 	ASSERT_AST(self);
 	/* When AST type prediction is disabled, always indicate unpredictable ASTs. */
@@ -341,7 +341,7 @@ ast_predict_type(struct ast *__restrict self) {
 
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 ast_has_sideeffects(struct ast *__restrict self) {
 	if (optimizer_flags & OPTIMIZE_FNOPREDICT)
 		return true;
@@ -773,7 +773,7 @@ unpredictable_noreturn:
 
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 ast_is_nothrow(struct ast *__restrict self, bool result_used) {
 	switch (self->a_type) {
 
@@ -881,7 +881,7 @@ is_nothrow:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_get_boolean(struct ast *__restrict self) {
 	/* NOTE: Assume that other operations on constant
 	 *       expressions have already been propagated. */
@@ -895,7 +895,7 @@ ast_get_boolean(struct ast *__restrict self) {
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 ast_get_boolean_noeffect(struct ast *__restrict self) {
 	int result;
 	result = ast_get_boolean(self);
@@ -905,7 +905,7 @@ ast_get_boolean_noeffect(struct ast *__restrict self) {
 }
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 ast_uses_symbol(struct ast *__restrict self,
                 struct symbol *__restrict sym) {
 	if (optimizer_flags & OPTIMIZE_FNOPREDICT)
@@ -1017,7 +1017,7 @@ yup:
 	return true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 ast_can_exchange(struct ast *__restrict first,
                  struct ast *__restrict second) {
 	if (optimizer_flags & OPTIMIZE_FNOPREDICT)
@@ -1068,7 +1068,7 @@ yup:
 	return true;
 }
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 ast_equal_impl(struct ast *__restrict a,
                struct ast *__restrict b) {
 	if (a->a_type != b->a_type)
@@ -1178,7 +1178,7 @@ ne:
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 ast_equal(struct ast *__restrict a,
           struct ast *__restrict b) {
 	if (optimizer_flags & OPTIMIZE_FNOCOMPARE)
@@ -1193,7 +1193,7 @@ ast_equal(struct ast *__restrict a,
 /* Check if a given ast `self' is, or contains a `goto' branch,
  * or a `break' / `continue' branch when `consider_loopctl' is true.
  * NOTE: `goto' branches found in inner functions are not considered here! */
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 ast_contains_goto(struct ast *__restrict self,
                   uint16_t consider_loopctl) {
 	switch (self->a_type) {

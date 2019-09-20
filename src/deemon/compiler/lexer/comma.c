@@ -53,7 +53,7 @@ astlist_fini(struct astlist *__restrict self) {
 	Dee_Free(self->ast_v);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 astlist_upsize(struct astlist *__restrict self,
                size_t min_add) {
 	DREF struct ast **new_vector;
@@ -93,7 +93,7 @@ astlist_trunc(struct astlist *__restrict self) {
 		self->ast_v = new_vector;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 astlist_append(struct astlist *__restrict self,
                struct ast *__restrict branch) {
 	if (self->ast_c == self->ast_a &&
@@ -104,7 +104,7 @@ astlist_append(struct astlist *__restrict self,
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 astlist_appendall(struct astlist *__restrict self,
                   struct astlist *__restrict other) {
 	size_t avail = self->ast_a - self->ast_c;

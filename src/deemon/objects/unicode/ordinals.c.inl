@@ -57,7 +57,7 @@ typedef struct {
 } StringOrdinals;
 
 INTDEF DeeTypeObject StringOrdinals_Type;
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Ordinals(DeeObject *__restrict self) {
 	DREF StringOrdinals *result;
 	result = DeeObject_MALLOC(StringOrdinals);
@@ -74,12 +74,12 @@ done:
 
 
 
-PRIVATE void DCALL stringordinals_fini(StringOrdinals *__restrict self);
+PRIVATE NONNULL((1)) void DCALL stringordinals_fini(StringOrdinals *__restrict self);
 STATIC_ASSERT(COMPILER_OFFSETOF(StringOrdinals, so_str) ==
               COMPILER_OFFSETOF(StringOrdinalsIterator, soi_str));
 #define stringordinalsiter_fini stringordinals_fini
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinalsiter_ctor(StringOrdinalsIterator *__restrict self) {
 	self->soi_str     = (DREF DeeStringObject *)Dee_EmptyString;
 	self->soi_width   = STRING_WIDTH_1BYTE;
@@ -89,7 +89,7 @@ stringordinalsiter_ctor(StringOrdinalsIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 stringordinalsiter_copy(StringOrdinalsIterator *__restrict self,
                         StringOrdinalsIterator *__restrict other) {
 	self->soi_str     = other->soi_str;
@@ -102,7 +102,7 @@ stringordinalsiter_copy(StringOrdinalsIterator *__restrict self,
 
 PRIVATE int DCALL
 stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
-                        size_t argc, DeeObject **__restrict argv) {
+                        size_t argc, DeeObject **argv) {
 	StringOrdinals *ords;
 	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinalsIterator", &ords) ||
 	    DeeObject_AssertTypeExact((DeeObject *)ords, &StringOrdinals_Type))
@@ -115,12 +115,12 @@ stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinalsiter_bool(StringOrdinalsIterator *__restrict self) {
 	return READ_PTR(self) < self->soi_end.ptr;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringordinalsiter_next(StringOrdinalsIterator *__restrict self) {
 	union dcharptr pchar;
 #ifdef CONFIG_NO_THREADS
@@ -148,7 +148,7 @@ stringordinalsiter_next(StringOrdinalsIterator *__restrict self) {
 	}
 }
 
-PRIVATE DREF StringOrdinals *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringOrdinals *DCALL
 stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 	return (DREF StringOrdinals *)DeeString_Ordinals((DeeObject *)self->soi_str);
 }
@@ -211,17 +211,17 @@ INTERN DeeTypeObject StringOrdinalsIterator_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 stringordinals_fini(StringOrdinals *__restrict self) {
 	Dee_Decref(self->so_str);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinals_bool(StringOrdinals *__restrict self) {
 	return !DeeString_IsEmpty(self->so_str);
 }
 
-PRIVATE DREF StringOrdinalsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringOrdinalsIterator *DCALL
 stringordinals_iter(StringOrdinals *__restrict self) {
 	DREF StringOrdinalsIterator *result;
 	result = DeeObject_MALLOC(StringOrdinalsIterator);
@@ -237,14 +237,14 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringordinals_size(StringOrdinals *__restrict self) {
 	return DeeInt_NewSize(WSTR_LENGTH(self->so_ptr.ptr));
 }
 
-PRIVATE DREF DeeObject *DCALL
-stringordinals_contains(StringOrdinals *__restrict self,
-                        DeeObject *__restrict ord_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+stringordinals_contains(StringOrdinals *self,
+                        DeeObject *ord_ob) {
 	uint32_t ord;
 	if (DeeObject_AsUInt32(ord_ob, &ord))
 		return NULL;
@@ -266,9 +266,9 @@ stringordinals_contains(StringOrdinals *__restrict self,
 	return_false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-stringordinals_get(StringOrdinals *__restrict self,
-                   DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+stringordinals_get(StringOrdinals *self,
+                   DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;

@@ -84,26 +84,26 @@ typedef DeeFrameObject Frame;
 	                 ? (void)recursive_rwlock_endwrite((x)->f_prlock) \
 	                 : (void)rwlock_endwrite((x)->f_plock))           \
 	              : (void)0)
-#else
+#else /* !CONFIG_NO_THREADS */
 #define PLOCK_READ(x)     (void)0
 #define PLOCK_TRYREAD(x)  true
 #define PLOCK_WRITE(x)    ((x)->f_flags & DEEFRAME_FWRITABLE)
 #define PLOCK_TRYWRITE(x) ((x)->f_flags & DEEFRAME_FWRITABLE)
 #define PLOCK_ENDREAD(x)  (void)0
 #define PLOCK_ENDWRITE(x) (void)0
-#endif
+#endif /* CONFIG_NO_THREADS */
 
 #ifndef CONFIG_NO_THREADS
-PUBLIC DREF DeeObject *
+PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,
                                       struct code_frame *__restrict frame,
                                       uint16_t flags, void *lock)
-#else
-PUBLIC DREF DeeObject *
+#else /* !CONFIG_NO_THREADS */
+PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
 (DCALL DeeFrame_NewReference)(DeeObject *owner,
                               struct code_frame *__restrict frame,
                               uint16_t flags)
-#endif
+#endif /* CONFIG_NO_THREADS */
 {
 	DREF Frame *result;
 	ASSERT_OBJECT_OPT(owner);
@@ -124,7 +124,7 @@ done:
 }
 
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeFrame_DecrefShared(DREF DeeObject *__restrict self) {
 	Frame *me;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeFrame_Type);
@@ -139,11 +139,11 @@ DeeFrame_DecrefShared(DREF DeeObject *__restrict self) {
 
 #if defined(CONFIG_HOST_WINDOWS) && 0
 #define TRACEBACK_SLASH  "\\"
-#else
+#else /* CONFIG_HOST_WINDOWS */
 #define TRACEBACK_SLASH  "/"
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 print_ddi(struct ascii_printer *__restrict printer,
           DeeCodeObject *__restrict code, code_addr_t ip) {
 	dssize_t print_error;
@@ -192,7 +192,7 @@ print_ddi(struct ascii_printer *__restrict printer,
 	return print_error;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 print_ddi_string(DeeCodeObject *__restrict code, code_addr_t ip) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
 	if unlikely(print_ddi(&printer, code, ip) < 0)
@@ -205,17 +205,17 @@ err:
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 frame_fini(Frame *__restrict self) {
 	Dee_XDecref(self->f_owner);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 frame_visit(Frame *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->f_owner);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_repr(Frame *__restrict self) {
 	DREF DeeCodeObject *code;
 	DREF DeeObject *result;
@@ -236,7 +236,7 @@ frame_repr(Frame *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeCodeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeCodeObject *DCALL
 frame_getddi(Frame *__restrict self,
              struct ddi_state *__restrict state,
              code_addr_t *pstartip,
@@ -272,7 +272,7 @@ frame_getddi(Frame *__restrict self,
 	       : (DREF DeeCodeObject *)NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getlocation(Frame *__restrict self) {
 	DREF DeeObject *result, *entry;
 	DREF DeeObject *fileob, *nameob;
@@ -347,7 +347,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getfile(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
@@ -374,7 +374,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getline(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
@@ -392,7 +392,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getcol(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
@@ -410,7 +410,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getname(Frame *__restrict self) {
 	DREF DeeObject *result;
 	DREF DeeCodeObject *code;
@@ -430,7 +430,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getfunc(Frame *__restrict self) {
 	DREF DeeFunctionObject *result;
 	rwlock_read(&self->f_lock);
@@ -446,7 +446,7 @@ frame_getfunc(Frame *__restrict self) {
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_iswritable(Frame *__restrict self) {
 	return_bool(self->f_flags & DEEFRAME_FWRITABLE);
 }
@@ -463,7 +463,7 @@ err_readonly_frame(Frame *__restrict UNUSED(self)) {
 	                       "The Frame is readonly and cannot be modifed");
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getcode(Frame *__restrict self) {
 	DREF DeeCodeObject *result;
 	rwlock_read(&self->f_lock);
@@ -481,7 +481,7 @@ err_df:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getpc(Frame *__restrict self) {
 	code_addr_t pc;
 	rwlock_read(&self->f_lock);
@@ -506,7 +506,7 @@ err_df:
  *                    stored within `f_frame->cf_sp' at that point. (must be done to prevent a race condition)
  * @return: -1: Information could not be determined. (no error was thrown, but `DEEFRAME_FUNDEFSP2' was set)
  * @return: -2: The frame has continued execution, or was otherwise released. (no error was thrown) */
-PRIVATE int32_t DCALL
+PRIVATE NONNULL((1)) int32_t DCALL
 frame_revengsp(Frame *__restrict self) {
 	(void)self;
 	/* TODO */
@@ -520,7 +520,7 @@ frame_revengsp(Frame *__restrict self) {
  * @return: * : The actual depth of the stack.
  * @return: -1: Information could not be determined. (no error was thrown)
  * @return: -2: The frame has continued execution, or was otherwise released. (no error was thrown) */
-PRIVATE int32_t DCALL
+PRIVATE WUNUSED NONNULL((1)) int32_t DCALL
 frame_getsp(Frame *__restrict self) {
 	int32_t result;
 	uint16_t flags = ATOMIC_READ(self->f_flags);
@@ -547,8 +547,8 @@ frame_getsp(Frame *__restrict self) {
 	return frame_revengsp(self);
 }
 
-PRIVATE int DCALL
-frame_setpc(Frame *__restrict self, DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+frame_setpc(Frame *self, DeeObject *value) {
 	code_addr_t pc;
 	if unlikely(!(self->f_flags & DEEFRAME_FWRITABLE))
 		return err_readonly_frame(self);
@@ -559,8 +559,7 @@ frame_setpc(Frame *__restrict self, DeeObject *__restrict value) {
 	 * This is required, since we're about to modify PC, meaning that
 	 * if SP was still unknown at this point, trying to reverse it at
 	 * a later point in time could yield invalid results. */
-	if ((self->f_flags & (DEEFRAME_FUNDEFSP | DEEFRAME_FUNDEFSP2)) ==
-	    DEEFRAME_FUNDEFSP)
+	if ((self->f_flags & (DEEFRAME_FUNDEFSP | DEEFRAME_FUNDEFSP2)) == DEEFRAME_FUNDEFSP)
 		frame_revengsp(self);
 	rwlock_read(&self->f_lock);
 	if unlikely(!self->f_frame)
@@ -577,7 +576,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_getsp_obj(Frame *__restrict self) {
 	int32_t result = frame_getsp(self);
 	if unlikely(result == -2)

@@ -121,7 +121,7 @@ coti_next_ent(ClassOperatorTableIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 coti_next(ClassOperatorTableIterator *__restrict self) {
 	struct class_operator *ent;
 	struct opinfo *info;
@@ -140,7 +140,7 @@ coti_next(ClassOperatorTableIterator *__restrict self) {
 	                     ent->co_addr);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 coti_next_key(ClassOperatorTableIterator *__restrict self) {
 	struct class_operator *ent;
 	struct opinfo *info;
@@ -153,7 +153,7 @@ coti_next_key(ClassOperatorTableIterator *__restrict self) {
 	return DeeInt_NewU16(ent->co_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 coti_next_value(ClassOperatorTableIterator *__restrict self) {
 	struct class_operator *ent;
 	ent = coti_next_ent(self);
@@ -162,12 +162,12 @@ coti_next_value(ClassOperatorTableIterator *__restrict self) {
 	return DeeInt_NewU16(ent->co_addr);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 coti_fini(ClassOperatorTableIterator *__restrict self) {
 	Dee_Decref(self->co_desc);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 coti_copy(ClassOperatorTableIterator *__restrict self,
           ClassOperatorTableIterator *__restrict other) {
 	self->co_desc = other->co_desc;
@@ -177,7 +177,7 @@ coti_copy(ClassOperatorTableIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE DREF ClassOperatorTable *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassOperatorTable *DCALL
 coti_getseq(ClassOperatorTableIterator *__restrict self) {
 	DREF ClassOperatorTable *result;
 	result = DeeObject_MALLOC(ClassOperatorTable);
@@ -281,12 +281,12 @@ STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
 #define cot_fini coti_fini
 #define cot_members coti_members
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 cot_bool(ClassOperatorTable *__restrict self) {
 	return self->co_desc->cd_clsop_list != empty_class_operators;
 }
 
-PRIVATE DREF ClassOperatorTableIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassOperatorTableIterator *DCALL
 cot_iter(ClassOperatorTable *__restrict self) {
 	DREF ClassOperatorTableIterator *result;
 	result = DeeObject_MALLOC(ClassOperatorTableIterator);
@@ -302,7 +302,7 @@ done:
 	return result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cot_nsi_getsize(ClassOperatorTable *__restrict self) {
 	uint16_t i;
 	size_t result         = 0;
@@ -314,12 +314,12 @@ cot_nsi_getsize(ClassOperatorTable *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cot_size(ClassOperatorTable *__restrict self) {
 	return DeeInt_NewSize(cot_nsi_getsize(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 cot_getitemdef(ClassOperatorTable *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict defl) {
@@ -351,9 +351,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-cot_getitem(ClassOperatorTable *__restrict self,
-            DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cot_getitem(ClassOperatorTable *self,
+            DeeObject *key) {
 	DREF DeeObject *result;
 	result = cot_getitemdef(self, key, ITER_DONE);
 	if (result == ITER_DONE) {
@@ -469,7 +469,7 @@ INTDEF DeeTypeObject ClassAttribute_Type;
 INTDEF DeeTypeObject ClassAttributeTable_Type;
 INTDEF DeeTypeObject ClassAttributeTableIterator_Type;
 
-PRIVATE DREF ClassAttribute *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF ClassAttribute *DCALL
 cattr_new(ClassDescriptor *__restrict desc,
           struct class_attribute *__restrict attr) {
 	DREF ClassAttribute *result;
@@ -538,7 +538,7 @@ cati_next_ent(ClassAttributeTableIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cati_next(ClassAttributeTableIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF ClassAttribute *attr;
@@ -554,7 +554,7 @@ cati_next(ClassAttributeTableIterator *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cati_next_key(ClassAttributeTableIterator *__restrict self) {
 	struct class_attribute *ent;
 	ent = cati_next_ent(self);
@@ -563,7 +563,7 @@ cati_next_key(ClassAttributeTableIterator *__restrict self) {
 	return_reference_((DeeObject *)ent->ca_name);
 }
 
-PRIVATE DREF ClassAttribute *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassAttribute *DCALL
 cati_next_value(ClassAttributeTableIterator *__restrict self) {
 	struct class_attribute *ent;
 	ent = cati_next_ent(self);
@@ -572,7 +572,7 @@ cati_next_value(ClassAttributeTableIterator *__restrict self) {
 	return cattr_new(self->ca_desc, ent);
 }
 
-PRIVATE DREF ClassAttributeTableIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassAttributeTableIterator *DCALL
 cat_iter(ClassAttributeTable *__restrict self) {
 	DREF ClassAttributeTableIterator *result;
 	result = DeeObject_MALLOC(ClassAttributeTableIterator);
@@ -587,7 +587,7 @@ done:
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_bool(ClassAttributeTable *__restrict self) {
 	size_t i;
 	for (i = 0; i <= self->ca_mask; ++i) {
@@ -597,7 +597,7 @@ cat_bool(ClassAttributeTable *__restrict self) {
 	return 0;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cat_nsi_getsize(ClassAttributeTable *__restrict self) {
 	size_t i, result = 0;
 	for (i = 0; i <= self->ca_mask; ++i) {
@@ -607,12 +607,12 @@ cat_nsi_getsize(ClassAttributeTable *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cat_size(ClassAttributeTable *__restrict self) {
 	return DeeInt_NewSize(cat_nsi_getsize(self));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 cat_getitemdef(ClassAttributeTable *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict defl) {
@@ -643,9 +643,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-cat_getitem(ClassAttributeTable *__restrict self,
-            DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cat_getitem(ClassAttributeTable *self,
+            DeeObject *key) {
 	DREF DeeObject *result;
 	result = cat_getitemdef(self, key, ITER_DONE);
 	if (result == ITER_DONE) {
@@ -655,7 +655,7 @@ cat_getitem(ClassAttributeTable *__restrict self,
 	return result;
 }
 
-PRIVATE DREF ClassAttributeTable *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassAttributeTable *DCALL
 cati_getseq(ClassAttributeTableIterator *__restrict self) {
 	DREF ClassAttributeTable *result;
 	result = DeeObject_MALLOC(ClassAttributeTable);
@@ -688,7 +688,7 @@ PRIVATE struct type_member cat_class_members[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_str(ClassAttribute *__restrict self) {
 	DeeStringObject *cnam = self->ca_desc->cd_name;
 	if (cnam)
@@ -696,7 +696,7 @@ ca_str(ClassAttribute *__restrict self) {
 	return_reference_((DeeObject *)self->ca_attr->ca_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_repr(ClassAttribute *__restrict self) {
 	ClassDescriptor *desc = self->ca_desc;
 	DeeStringObject *cnam = desc->cd_name;
@@ -709,12 +709,12 @@ ca_repr(ClassAttribute *__restrict self) {
 	return DeeString_Newf("<anonymous>.__class__.%cattr[%r]", field_id, self->ca_attr->ca_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_getname(ClassAttribute *__restrict self) {
 	return_reference_((DeeObject *)self->ca_attr->ca_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_getdoc(ClassAttribute *__restrict self) {
 	DeeStringObject *result;
 	result = self->ca_attr->ca_doc;
@@ -723,42 +723,42 @@ ca_getdoc(ClassAttribute *__restrict self) {
 	return_reference_((DeeObject *)result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_getaddr(ClassAttribute *__restrict self) {
 	return DeeInt_NewU16(self->ca_attr->ca_addr);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_isprivate(ClassAttribute *__restrict self) {
 	return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FPRIVATE);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_isfinal(ClassAttribute *__restrict self) {
 	return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FFINAL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_isreadonly(ClassAttribute *__restrict self) {
 	return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_ismethod(ClassAttribute *__restrict self) {
 	return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_isproperty(ClassAttribute *__restrict self) {
 	return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FGETSET);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_isclassmem(ClassAttribute *__restrict self) {
 	return_bool(self->ca_attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_getisclassns(ClassAttribute *__restrict self) {
 	ClassDescriptor *desc = self->ca_desc;
 	return_bool(!(self->ca_attr >= desc->cd_iattr_list &&
@@ -781,7 +781,7 @@ PRIVATE struct attr_flag_entry const class_attribute_flags_db[] = {
 	{ CLASS_ATTRIBUTE_FCLASSMEM, "classns" },
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ca_getflags(ClassAttribute *__restrict self) {
 	unsigned int i;
 	uint16_t flags;
@@ -1044,7 +1044,7 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 cd_fini(ClassDescriptor *__restrict self) {
 	size_t i;
 	if (self->cd_cattr_list != empty_class_attributes) {
@@ -1069,7 +1069,7 @@ cd_fini(ClassDescriptor *__restrict self) {
 }
 
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 class_attribute_eq(struct class_attribute *__restrict lhs,
                    struct class_attribute *__restrict rhs) {
 	if (!lhs->ca_name)
@@ -1105,9 +1105,9 @@ nope:
 	return false;
 }
 
-PRIVATE DREF DeeObject *DCALL
-cd_eq(ClassDescriptor *__restrict self,
-      ClassDescriptor *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cd_eq(ClassDescriptor *self,
+      ClassDescriptor *other) {
 	size_t i;
 	if (!DeeClassDescriptor_Check(other))
 		goto nope;
@@ -1176,42 +1176,42 @@ PRIVATE struct type_cmp cd_cmp = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_isfinal(ClassDescriptor *__restrict self) {
 	return_bool(self->cd_flags & TP_FFINAL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_isinttruncated(ClassDescriptor *__restrict self) {
 	return_bool(self->cd_flags & TP_FTRUNCATE);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_isinterrupt(ClassDescriptor *__restrict self) {
 	return_bool(self->cd_flags & TP_FINTERRUPT);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_hassuperconstructor(ClassDescriptor *__restrict self) {
 	return_bool(self->cd_flags & TP_FINHERITCTOR);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_hassuperkwds(ClassDescriptor *__restrict self) {
 	return_bool(self->cd_flags & CLASS_TP_FSUPERKWDS);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_hasautoinit(ClassDescriptor *__restrict self) {
 	return_bool(self->cd_flags & CLASS_TP_FAUTOINIT);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_ismoveany(ClassDescriptor *__restrict self) {
 	return_bool(self->cd_flags & TP_FMOVEANY);
 }
 
-PRIVATE DREF ClassOperatorTable *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassOperatorTable *DCALL
 cd_operators(ClassDescriptor *__restrict self) {
 	DREF ClassOperatorTable *result;
 	result = DeeObject_MALLOC(ClassOperatorTable);
@@ -1224,7 +1224,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF ClassAttributeTable *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassAttributeTable *DCALL
 cd_iattr(ClassDescriptor *__restrict self) {
 	DREF ClassAttributeTable *result;
 	result = DeeObject_MALLOC(ClassAttributeTable);
@@ -1239,7 +1239,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF ClassAttributeTable *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassAttributeTable *DCALL
 cd_cattr(ClassDescriptor *__restrict self) {
 	DREF ClassAttributeTable *result;
 	result = DeeObject_MALLOC(ClassAttributeTable);
@@ -1269,7 +1269,7 @@ PRIVATE struct class_flag_entry const class_flags_db[] = {
 	{ TP_FMOVEANY,         "moveany" },
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_getflags(ClassDescriptor *__restrict self) {
 	unsigned int i;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
@@ -1291,9 +1291,8 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-cd_sizeof(ClassDescriptor *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cd_sizeof(ClassDescriptor *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(ClassDescriptor, cd_iattr_list) +
@@ -1398,7 +1397,7 @@ PRIVATE struct type_member cd_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cd_str(ClassDescriptor *__restrict self) {
 	if (self->cd_name)
 		return_reference_((DeeObject *)self->cd_name);
@@ -1547,7 +1546,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 cd_rehash_cattr(ClassDescriptor *__restrict self) {
 	struct class_attribute *new_map;
 	size_t new_mask;
@@ -1585,7 +1584,7 @@ err:
 }
 
 
-PRIVATE ClassDescriptor *DCALL
+PRIVATE WUNUSED NONNULL((1)) ClassDescriptor *DCALL
 cd_alloc_from_iattr(DeeObject *__restrict iattr,
                     uint16_t imemb_size,
                     uint16_t cmemb_size) {
@@ -1775,7 +1774,7 @@ err:
 
 
 PRIVATE DREF ClassDescriptor *DCALL
-cd_init_kw(size_t argc, DeeObject **__restrict argv, DeeObject *kw) {
+cd_init_kw(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
 	DREF DeeObject *iterator, *elem, *data[2];
 	DeeStringObject *class_name;
@@ -2078,7 +2077,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(ObjectTable, ot_owner) ==
               COMPILER_OFFSETOF(ClassAttributeTable, ca_desc));
 #define ot_fini    cot_fini
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_str(ObjectTable *__restrict self) {
 	DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
 	if (DeeType_IsTypeType(tp))
@@ -2086,28 +2085,28 @@ ot_str(ObjectTable *__restrict self) {
 	return DeeString_Newf("<object table for instance of %k>", tp);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_bool(ObjectTable *__restrict self) {
 	return self->ot_size != 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 ot_visit(ObjectTable *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ot_owner);
 }
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 ot_nsi_getsize(ObjectTable *__restrict self) {
 	return self->ot_size;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_size(ObjectTable *__restrict self) {
 	return DeeInt_NewU16(self->ot_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_nsi_getitem(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->ot_size)
@@ -2128,7 +2127,7 @@ err_index:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_nsi_getitem_fast(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->ot_size);
@@ -2139,7 +2138,7 @@ ot_nsi_getitem_fast(ObjectTable *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
@@ -2208,9 +2207,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-ot_getitem(ObjectTable *__restrict self,
-           DeeObject *__restrict index) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+ot_getitem(ObjectTable *self,
+           DeeObject *index) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
 		goto err;
@@ -2219,7 +2218,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ot_delitem(ObjectTable *__restrict self,
            DeeObject *__restrict index) {
 	size_t i;
@@ -2230,7 +2229,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 ot_setitem(ObjectTable *__restrict self,
            DeeObject *__restrict index,
            DeeObject *__restrict value) {
@@ -2291,7 +2290,7 @@ PRIVATE struct type_seq ot_seq = {
 };
 
 
-PRIVATE DREF DeeTypeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 ot_gettype(ObjectTable *__restrict self) {
 	DREF DeeTypeObject *result;
 	result = DeeType_Check(self->ot_owner)
@@ -2302,7 +2301,7 @@ ot_gettype(ObjectTable *__restrict self) {
 	return_reference_(result);
 }
 
-PRIVATE DREF ClassDescriptor *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ClassDescriptor *DCALL
 ot_getclass(ObjectTable *__restrict self) {
 	DREF ClassDescriptor *result;
 	DREF DeeTypeObject *type;
@@ -2315,12 +2314,12 @@ ot_getclass(ObjectTable *__restrict self) {
 	return_reference_(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_isctable(ObjectTable *__restrict self) {
 	return_bool(DeeType_Check(self->ot_owner));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_isitable(ObjectTable *__restrict self) {
 	return_bool(!DeeType_Check(self->ot_owner));
 }
@@ -2347,7 +2346,7 @@ PRIVATE struct type_member ot_members[] = {
 
 PRIVATE int DCALL
 ot_init(ObjectTable *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	DeeObject *ob;
 	DeeTypeObject *type = NULL;
 	struct class_desc *desc;
@@ -2438,7 +2437,7 @@ INTERN DeeTypeObject ObjectTable_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_ctable(DeeTypeObject *__restrict self) {
 	DREF ObjectTable *result;
 	struct class_desc *desc;
@@ -2457,7 +2456,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instance_get_itable(DeeObject *__restrict self) {
 	DREF ObjectTable *result;
 	struct class_desc *desc;
@@ -2489,10 +2488,9 @@ done:
 
 PRIVATE struct keyword thisarg_kwlist[] = { K(thisarg), KEND };
 
-PRIVATE DREF DeeObject *DCALL
-instancemember_get(DeeInstanceMemberObject *__restrict self,
-                   size_t argc, DeeObject **__restrict argv,
-                   DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+instancemember_get(DeeInstanceMemberObject *self, size_t argc,
+                   DeeObject **argv, DeeObject *kw) {
 	DeeObject *thisarg;
 	struct class_desc *desc;
 	if (DeeArg_UnpackKw(argc, argv, kw, thisarg_kwlist, "o:get", &thisarg))
@@ -2509,10 +2507,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-instancemember_delete(DeeInstanceMemberObject *__restrict self,
-                      size_t argc, DeeObject **__restrict argv,
-                      DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+instancemember_delete(DeeInstanceMemberObject *self, size_t argc,
+                      DeeObject **argv, DeeObject *kw) {
 	DeeObject *thisarg;
 	struct class_desc *desc;
 	if (DeeArg_UnpackKw(argc, argv, kw, thisarg_kwlist, "o:delete", &thisarg))
@@ -2531,10 +2528,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-instancemember_set(DeeInstanceMemberObject *__restrict self,
-                   size_t argc, DeeObject **__restrict argv,
-                   DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+instancemember_set(DeeInstanceMemberObject *self, size_t argc,
+                   DeeObject **argv, DeeObject *kw) {
 	DeeObject *thisarg, *value;
 	struct class_desc *desc;
 	PRIVATE struct keyword kwlist[] = { K(thisarg), K(value), KEND };
@@ -2555,7 +2551,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 instancemember_copy(DeeInstanceMemberObject *__restrict self,
                     DeeInstanceMemberObject *__restrict other) {
 	self->im_type      = other->im_type;
@@ -2564,12 +2560,12 @@ instancemember_copy(DeeInstanceMemberObject *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 instancemember_fini(DeeInstanceMemberObject *__restrict self) {
 	Dee_Decref(self->im_type);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 instancemember_visit(DeeInstanceMemberObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->im_type);
 }
@@ -2594,7 +2590,7 @@ PRIVATE struct type_method instancemember_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_module(DeeInstanceMemberObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self->im_type);
@@ -2603,19 +2599,19 @@ instancemember_get_module(DeeInstanceMemberObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_name(DeeInstanceMemberObject *__restrict self) {
 	return_reference_((DREF DeeObject *)self->im_attribute->ca_name);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_doc(DeeInstanceMemberObject *__restrict self) {
 	if (!self->im_attribute->ca_doc)
 		return_none;
 	return_reference_((DREF DeeObject *)self->im_attribute->ca_doc);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_canget(DeeInstanceMemberObject *__restrict self) {
 	ASSERT(self);
 	if ((self->im_attribute->ca_flag & (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)) ==
@@ -2626,7 +2622,7 @@ instancemember_get_canget(DeeInstanceMemberObject *__restrict self) {
 	return_true;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_candel(DeeInstanceMemberObject *__restrict self) {
 	ASSERT(self);
 	if (self->im_attribute->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
@@ -2639,7 +2635,7 @@ instancemember_get_candel(DeeInstanceMemberObject *__restrict self) {
 	return_true;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_canset(DeeInstanceMemberObject *__restrict self) {
 	ASSERT(self);
 	if (self->im_attribute->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
@@ -2689,15 +2685,15 @@ PRIVATE struct type_member instancemember_members[] = {
 /* NOTE: Must also hash and compare the type because if the class is
  *       created multiple times, then the member descriptor remains
  *       the same and is shared between all instances. */
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 instancemember_hash(DeeInstanceMemberObject *__restrict self) {
 	return (Dee_HashPointer(self->im_type) ^
 	        Dee_HashPointer(self->im_attribute));
 }
 
-PRIVATE DREF DeeObject *DCALL
-instancemember_eq(DeeInstanceMemberObject *__restrict self,
-                  DeeInstanceMemberObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+instancemember_eq(DeeInstanceMemberObject *self,
+                  DeeInstanceMemberObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeInstanceMember_Type))
 		return NULL;
 	return_bool_(self->im_type == other->im_type &&
@@ -2756,18 +2752,18 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 };
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
-                      struct class_attribute *__restrict attribute) {
+                      struct class_attribute *__restrict attr) {
 	DREF DeeInstanceMemberObject *result;
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
-	ASSERT(attribute);
+	ASSERT(attr);
 	result = DeeObject_MALLOC(DeeInstanceMemberObject);
 	if unlikely(!result)
 		goto done;
 	result->im_type      = class_type;
-	result->im_attribute = attribute;
+	result->im_attribute = attr;
 	Dee_Incref(class_type);
 	DeeObject_Init(result, &DeeInstanceMember_Type);
 done:
@@ -2775,7 +2771,7 @@ done:
 }
 
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
                                      denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
@@ -2839,7 +2835,7 @@ DeeClass_EnumClassInstanceAttributes(DeeTypeObject *__restrict self,
 	return result;
 }
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
                              denum_t proc, void *arg) {
 	dssize_t temp, result = 0;
@@ -2898,7 +2894,7 @@ DeeClass_EnumClassAttributes(DeeTypeObject *__restrict self,
 	return result;
 }
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
                                 DeeObject *instance,
                                 denum_t proc, void *arg) {
@@ -2972,9 +2968,8 @@ DeeClass_EnumInstanceAttributes(DeeTypeObject *__restrict self,
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-INTERN int DCALL
-DeeClass_FindClassAttribute(DeeTypeObject *__restrict tp_invoker,
-                            DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
                             struct attribute_info *__restrict result,
                             struct attribute_lookup_rules const *__restrict rules) {
 	struct class_attribute *attr;
@@ -3041,9 +3036,8 @@ not_found:
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-INTERN int DCALL
-DeeClass_FindClassInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
-                                    DeeTypeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self,
                                     struct attribute_info *__restrict result,
                                     struct attribute_lookup_rules const *__restrict rules) {
 	struct class_attribute *attr;
@@ -3116,10 +3110,8 @@ not_found:
  * @return:  0: Attribute found (*result was filled with data).
  * @return:  1: No attribute matching the given requirements was found.
  * @return: -1: An error occurred. */
-INTERN int DCALL
-DeeClass_FindInstanceAttribute(DeeTypeObject *__restrict tp_invoker,
-                               DeeTypeObject *__restrict self,
-                               DeeObject *instance,
+INTERN WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
+DeeClass_FindInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *self, DeeObject *instance,
                                struct attribute_info *__restrict result,
                                struct attribute_lookup_rules const *__restrict rules) {
 	struct class_attribute *attr;
@@ -3193,7 +3185,7 @@ not_found:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
                               struct class_attribute *__restrict attr) {
 	DREF DeePropertyObject *result;
@@ -3247,7 +3239,7 @@ err:
 	return NULL;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
                                 struct class_attribute *__restrict attr) {
 	int result;
@@ -3271,10 +3263,10 @@ DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeClass_CallInstanceAttribute(DeeTypeObject *__restrict class_type,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeClass_CallInstanceAttribute(DeeTypeObject *class_type,
                                struct class_attribute *__restrict attr,
-                               size_t argc, DeeObject **__restrict argv) {
+                               size_t argc, DeeObject **argv) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
@@ -3330,10 +3322,10 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeClass_CallInstanceAttributeKw(DeeTypeObject *__restrict class_type,
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type,
                                  struct class_attribute *__restrict attr,
-                                 size_t argc, DeeObject **__restrict argv,
+                                 size_t argc, DeeObject **argv,
                                  DeeObject *kw) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
@@ -3387,10 +3379,10 @@ err:
 }
 
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTERN DREF DeeObject *DCALL
-DeeClass_CallInstanceAttributeTuple(DeeTypeObject *__restrict class_type,
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
                                     struct class_attribute *__restrict attr,
-                                    DeeObject *__restrict args) {
+                                    DeeObject *args) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
@@ -3446,10 +3438,10 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
-DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *__restrict class_type,
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type,
                                       struct class_attribute *__restrict attr,
-                                      DeeObject *__restrict args, DeeObject *kw) {
+                                      DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
@@ -3502,8 +3494,8 @@ err:
 }
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
-INTERN DREF DeeObject *DCALL
-DeeClass_VCallInstanceAttributef(DeeTypeObject *__restrict class_type,
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
                                  struct class_attribute *__restrict attr,
                                  char const *__restrict format, va_list args) {
 	DREF DeeObject *callback, *result, *args_tuple;
@@ -3568,7 +3560,7 @@ err:
 	return NULL;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
                               struct class_attribute *__restrict attr) {
 	struct class_desc *my_class = DeeClass_DESC(class_type);
@@ -3627,10 +3619,10 @@ err_noaccess:
 	                                 ATTR_ACCESS_DEL);
 }
 
-INTERN int DCALL
-DeeClass_SetInstanceAttribute(DeeTypeObject *__restrict class_type,
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
                               struct class_attribute *__restrict attr,
-                              DeeObject *__restrict value) {
+                              DeeObject *value) {
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
 		goto err_noaccess;
@@ -3683,7 +3675,7 @@ err_noaccess:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_GetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
@@ -3738,7 +3730,7 @@ illegal:
 	return NULL;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
                            struct instance_desc *__restrict self,
                            DeeObject *__restrict this_arg,
@@ -3783,12 +3775,12 @@ unbound:
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttribute(struct class_desc *__restrict desc,
                           struct instance_desc *__restrict self,
-                          DeeObject *__restrict this_arg,
+                          DeeObject *this_arg,
                           struct class_attribute *__restrict attr,
-                          size_t argc, DeeObject **__restrict argv) {
+                          size_t argc, DeeObject **argv) {
 	DREF DeeObject *result, *callback;
 	ASSERT(self);
 	ASSERT(attr);
@@ -3838,10 +3830,10 @@ illegal:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
-                            DeeObject *__restrict this_arg,
+                            DeeObject *this_arg,
                             struct class_attribute *__restrict attr,
                             char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *callback;
@@ -3893,12 +3885,12 @@ illegal:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
                             DeeObject *__restrict this_arg,
                             struct class_attribute *__restrict attr,
-                            size_t argc, DeeObject **__restrict argv,
+                            size_t argc, DeeObject **argv,
                             DeeObject *kw) {
 	DREF DeeObject *result, *callback;
 	ASSERT(self);
@@ -3950,12 +3942,12 @@ illegal:
 }
 
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct instance_desc *__restrict self,
-                               DeeObject *__restrict this_arg,
+                               DeeObject *this_arg,
                                struct class_attribute *__restrict attr,
-                               DeeObject *__restrict args) {
+                               DeeObject *args) {
 	DREF DeeObject *result, *callback;
 	ASSERT(self);
 	ASSERT(attr);
@@ -4005,12 +3997,12 @@ illegal:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
                                  struct instance_desc *__restrict self,
-                                 DeeObject *__restrict this_arg,
+                                 DeeObject *this_arg,
                                  struct class_attribute *__restrict attr,
-                                 DeeObject *__restrict args, DeeObject *kw) {
+                                 DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result, *callback;
 	ASSERT(self);
 	ASSERT(attr);
@@ -4062,7 +4054,7 @@ illegal:
 #endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_DelAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
@@ -4118,12 +4110,12 @@ illegal:
 	                                   ATTR_ACCESS_DEL);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 DeeInstance_SetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
-                         DeeObject *__restrict this_arg,
+                         DeeObject *this_arg,
                          struct class_attribute *__restrict attr,
-                         DeeObject *__restrict value) {
+                         DeeObject *value) {
 	ASSERT(self);
 	ASSERT(attr);
 	ASSERT_OBJECT(this_arg);
@@ -4171,10 +4163,11 @@ illegal:
 	                                   ATTR_ACCESS_SET);
 }
 
-INTERN int (DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc,
-                                                  struct instance_desc *__restrict self,
-                                                  struct class_attribute *__restrict attr,
-                                                  DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
+(DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc,
+                                       struct instance_desc *__restrict self,
+                                       struct class_attribute *__restrict attr,
+                                       DeeObject *__restrict value) {
 	DREF DeeObject *old_value;
 	ASSERT(self);
 	ASSERT(attr);
@@ -4204,7 +4197,7 @@ illegal:
 
 
 
-INTERN WUNUSED bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
                                DeeTypeObject *__restrict impl_class) {
 	struct code_frame *caller_frame;
@@ -4223,9 +4216,9 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
 }
 
 
-PUBLIC struct class_attribute *DCALL
-DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *__restrict self,
-                                               /*String*/ DeeObject *__restrict name, dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
+DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *self,
+                                               /*String*/ DeeObject *name, dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -4246,7 +4239,7 @@ DeeClassDescriptor_QueryClassAttributeWithHash(DeeClassDescriptorObject *__restr
 	return NULL;
 }
 
-PUBLIC struct class_attribute *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryClassAttributeStringWithHash(DeeClassDescriptorObject *__restrict self,
                                                      char const *__restrict name, dhash_t hash) {
 	struct class_attribute *result;
@@ -4265,7 +4258,7 @@ DeeClassDescriptor_QueryClassAttributeStringWithHash(DeeClassDescriptorObject *_
 	return NULL;
 }
 
-PUBLIC struct class_attribute *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject *__restrict self,
                                                         char const *__restrict name,
                                                         size_t attrlen,
@@ -4288,9 +4281,9 @@ DeeClassDescriptor_QueryClassAttributeStringLenWithHash(DeeClassDescriptorObject
 	return NULL;
 }
 
-PUBLIC struct class_attribute *DCALL
-DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *__restrict self,
-                                                  /*String*/ DeeObject *__restrict name, dhash_t hash) {
+PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
+DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *self,
+                                                  /*String*/ DeeObject *name, dhash_t hash) {
 	struct class_attribute *result;
 	dhash_t i, perturb;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
@@ -4311,7 +4304,7 @@ DeeClassDescriptor_QueryInstanceAttributeWithHash(DeeClassDescriptorObject *__re
 	return NULL;
 }
 
-PUBLIC struct class_attribute *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject *__restrict self,
                                                         char const *__restrict name, dhash_t hash) {
 	struct class_attribute *result;
@@ -4330,7 +4323,7 @@ DeeClassDescriptor_QueryInstanceAttributeStringWithHash(DeeClassDescriptorObject
 	return NULL;
 }
 
-PUBLIC struct class_attribute *DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) struct class_attribute *DCALL
 DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(DeeClassDescriptorObject *__restrict self,
                                                            char const *__restrict name,
                                                            size_t attrlen, dhash_t hash) {
@@ -4352,7 +4345,7 @@ DeeClassDescriptor_QueryInstanceAttributeStringLenWithHash(DeeClassDescriptorObj
 	return NULL;
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unbound_class_member(/*Class*/ DeeTypeObject *__restrict class_type,
                          struct class_desc *__restrict desc,
                          uint16_t addr) {
@@ -4391,7 +4384,7 @@ got_it:
 	return err_unbound_attribute(class_type, name);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
 err_unbound_member(/*Class*/ DeeTypeObject *__restrict class_type,
                    struct class_desc *__restrict desc,
                    uint16_t addr) {
@@ -4419,9 +4412,10 @@ err_unbound_member(/*Class*/ DeeTypeObject *__restrict class_type,
 
 
 /* Instance member access (by addr) */
-INTERN DREF DeeObject *(DCALL DeeInstance_GetMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
-                                                     /*Instance*/ DeeObject *__restrict self,
-                                                     uint16_t addr) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeInstance_GetMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
+                              /*Instance*/ DeeObject *__restrict self,
+                              uint16_t addr) {
 	struct class_desc *desc;
 	struct instance_desc *inst;
 	DREF DeeObject *result;
@@ -4441,9 +4435,10 @@ INTERN DREF DeeObject *(DCALL DeeInstance_GetMember)(/*Class*/ DeeTypeObject *__
 	return result;
 }
 
-INTERN bool (DCALL DeeInstance_BoundMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
-                                            /*Instance*/ DeeObject *__restrict self,
-                                            uint16_t addr) {
+INTERN WUNUSED NONNULL((1, 2)) bool
+(DCALL DeeInstance_BoundMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
+                                /*Instance*/ DeeObject *__restrict self,
+                                uint16_t addr) {
 	struct class_desc *desc;
 	struct instance_desc *inst;
 	ASSERT_OBJECT_TYPE(tp_self, &DeeType_Type);
@@ -4459,9 +4454,10 @@ INTERN bool (DCALL DeeInstance_BoundMember)(/*Class*/ DeeTypeObject *__restrict 
 #endif /* !CONFIG_NO_THREADS */
 }
 
-INTERN int (DCALL DeeInstance_DelMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
-                                         /*Instance*/ DeeObject *__restrict self,
-                                         uint16_t addr) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeInstance_DelMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
+                              /*Instance*/ DeeObject *__restrict self,
+                              uint16_t addr) {
 	struct class_desc *desc;
 	struct instance_desc *inst;
 	DREF DeeObject *old_value;
@@ -4486,9 +4482,10 @@ INTERN int (DCALL DeeInstance_DelMember)(/*Class*/ DeeTypeObject *__restrict tp_
 	return 0;
 }
 
-INTERN void (DCALL DeeInstance_SetMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
-                                          /*Instance*/ DeeObject *__restrict self,
-                                          uint16_t addr, DeeObject *__restrict value) {
+INTERN NONNULL((1, 2, 4)) void
+(DCALL DeeInstance_SetMember)(/*Class*/ DeeTypeObject *tp_self,
+                              /*Instance*/ DeeObject *self,
+                              uint16_t addr, DeeObject *value) {
 	struct class_desc *desc;
 	struct instance_desc *inst;
 	DREF DeeObject *old_value;
@@ -4508,9 +4505,10 @@ INTERN void (DCALL DeeInstance_SetMember)(/*Class*/ DeeTypeObject *__restrict tp
 }
 
 
-INTERN DREF DeeObject *(DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *__restrict tp_self,
-                                                         DeeObject *__restrict self,
-                                                         uint16_t addr) {
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *__restrict tp_self,
+                                  DeeObject *__restrict self,
+                                  uint16_t addr) {
 	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
@@ -4529,9 +4527,10 @@ err:
 	return NULL;
 }
 
-INTERN int (DCALL DeeInstance_BoundMemberSafe)(DeeTypeObject *__restrict tp_self,
-                                               DeeObject *__restrict self,
-                                               uint16_t addr) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeInstance_BoundMemberSafe)(DeeTypeObject *__restrict tp_self,
+                                    DeeObject *__restrict self,
+                                    uint16_t addr) {
 	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
@@ -4549,9 +4548,10 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL DeeInstance_DelMemberSafe)(DeeTypeObject *__restrict tp_self,
-                                             DeeObject *__restrict self,
-                                             uint16_t addr) {
+INTERN WUNUSED NONNULL((1, 2)) int
+(DCALL DeeInstance_DelMemberSafe)(DeeTypeObject *__restrict tp_self,
+                                  DeeObject *__restrict self,
+                                  uint16_t addr) {
 	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
@@ -4569,9 +4569,10 @@ err:
 	return -1;
 }
 
-INTERN int (DCALL DeeInstance_SetMemberSafe)(DeeTypeObject *__restrict tp_self,
-                                             DeeObject *__restrict self,
-                                             uint16_t addr, DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeInstance_SetMemberSafe)(DeeTypeObject *tp_self,
+                                  DeeObject *self,
+                                  uint16_t addr, DeeObject *value) {
 	if (DeeObject_AssertType((DeeObject *)tp_self, &DeeType_Type))
 		goto err;
 	if (DeeObject_AssertType(self, tp_self))
@@ -4591,8 +4592,9 @@ err:
 }
 
 /* Class member access (by addr) */
-INTERN void (DCALL DeeClass_SetMember)(DeeTypeObject *__restrict self,
-                                       uint16_t addr, DeeObject *__restrict value) {
+INTERN NONNULL((1, 3)) void
+(DCALL DeeClass_SetMember)(DeeTypeObject *self,
+                           uint16_t addr, DeeObject *value) {
 	struct class_desc *desc;
 	DREF DeeObject *old_value;
 	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
@@ -4608,8 +4610,9 @@ INTERN void (DCALL DeeClass_SetMember)(DeeTypeObject *__restrict self,
 	Dee_XDecref(old_value);
 }
 
-INTERN int (DCALL DeeClass_SetMemberSafe)(DeeTypeObject *__restrict self,
-                                          uint16_t addr, DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3)) int
+(DCALL DeeClass_SetMemberSafe)(DeeTypeObject *__restrict self,
+                               uint16_t addr, DeeObject *__restrict value) {
 	if (DeeObject_AssertType((DeeObject *)self, &DeeType_Type))
 		goto err;
 	if (!DeeType_IsClass(self))
@@ -4626,8 +4629,8 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *(DCALL DeeClass_GetMember)(DeeTypeObject *__restrict self,
-                                                  uint16_t addr) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeClass_GetMember)(DeeTypeObject *__restrict self, uint16_t addr) {
 	struct class_desc *desc;
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
@@ -4644,8 +4647,8 @@ INTERN DREF DeeObject *(DCALL DeeClass_GetMember)(DeeTypeObject *__restrict self
 	return result;
 }
 
-INTERN DREF DeeObject *(DCALL DeeClass_GetMemberSafe)(DeeTypeObject *__restrict self,
-                                                      uint16_t addr) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeClass_GetMemberSafe)(DeeTypeObject *__restrict self, uint16_t addr) {
 	if (DeeObject_AssertType((DeeObject *)self, &DeeType_Type))
 		goto err;
 	if (!DeeType_IsClass(self))

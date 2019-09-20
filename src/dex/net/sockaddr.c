@@ -91,7 +91,7 @@ PRIVATE struct msg_desc const sock_msg_names[] = {
 
 /* Return a human-readable representation of
  * send/recv flags, or the flags as an integer object. */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sock_getmsgflagsof(DeeObject *__restrict name,
                    int *__restrict presult) {
 	if (DeeString_Check(name)) {
@@ -353,7 +353,7 @@ sock_gettypename(int value) {
 	return ITER_DONE;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 sock_getafvalue(char const *__restrict name, int *__restrict presult) {
 	struct af_desc const *iter = sock_af_names;
 	size_t name_len;
@@ -369,7 +369,7 @@ sock_getafvalue(char const *__restrict name, int *__restrict presult) {
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
 	struct type_desc const *iter = sock_type_names;
 	size_t name_len;
@@ -426,7 +426,7 @@ again:
 	return_empty_string;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 sock_getprotovalue(char const *__restrict name,
                    int *__restrict presult) {
 	struct protoent *ent;
@@ -455,7 +455,7 @@ again:
 }
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sock_getafof(DeeObject *__restrict name, int *__restrict presult) {
 	if (DeeNone_Check(name)) {
 		*presult = AF_AUTO;
@@ -472,7 +472,7 @@ sock_getafof(DeeObject *__restrict name, int *__restrict presult) {
 	return DeeObject_AsInt(name, presult);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sock_gettypeof(DeeObject *__restrict name, int *__restrict presult) {
 	if (DeeNone_Check(name)) {
 		*presult = SOCK_STREAM;
@@ -489,7 +489,7 @@ sock_gettypeof(DeeObject *__restrict name, int *__restrict presult) {
 	return DeeObject_AsInt(name, presult);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 sock_getprotoof(DeeObject *__restrict name, int *__restrict presult) {
 #if 0 /* None already evaluates to int(0) */
 	if (DeeNone_Check(name)) {
@@ -557,7 +557,7 @@ PRIVATE struct shutdown_option const shutdown_options[] = {
 };
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_shutdown_mode(char const *__restrict mode,
                   int *__restrict presult) {
 	char const *used_mode = mode;
@@ -586,7 +586,7 @@ get_shutdown_mode(char const *__restrict mode,
 	                       mode);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_shutdown_modeof(DeeObject *__restrict mode,
                     int *__restrict presult) {
 	if (DeeString_Check(mode))
@@ -693,7 +693,7 @@ err_no_host_data(char const *__restrict host,
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sock_gethostbyaddr(void const *__restrict data, socklen_t datalen,
                    sa_family_t family, int flags) {
 	struct hostent *hp;
@@ -799,7 +799,7 @@ nodns:
 
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags) {
 	DREF DeeObject *result;
 	sa_family_t family = self->sa.sa_family;
@@ -1329,7 +1329,7 @@ PRIVATE int DCALL priv_stobdaddr(char *name, bdaddr_t *bdaddr) {
 INTERN int DCALL
 SockAddr_FromArgv(SockAddr *__restrict self,
                   int family, int protocol, int type,
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	DeeObject *arg0;
 	(void)protocol; /* Not used most of the time */
 
@@ -1633,12 +1633,12 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_str(DeeSockAddrObject *__restrict self) {
 	return SockAddr_ToString(&self->sa_addr, 0, SOCKADDR_STR_FNOFAIL);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_repr(DeeSockAddrObject *__restrict self) {
 	return DeeString_Newf("sockaddr(%R)",
 	                      SockAddr_ToString(&self->sa_addr, 0,
@@ -1647,7 +1647,7 @@ sockaddr_repr(DeeSockAddrObject *__restrict self) {
 
 PRIVATE int DCALL
 sockaddr_ctor(DeeSockAddrObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	int af_type, result;
 	if (!argc) {
 		DeeError_Throwf(&DeeError_TypeError,
@@ -1672,7 +1672,7 @@ PRIVATE struct type_member sockaddr_members[] = {
 };
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 err_no_such_attribute(DeeSockAddrObject *__restrict self,
                       char const *__restrict name) {
 	DeeError_Throwf(&DeeError_AttributeError,
@@ -1683,14 +1683,14 @@ err_no_such_attribute(DeeSockAddrObject *__restrict self,
 
 
 #ifdef AF_INET
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet_host(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET)
 		return err_no_such_attribute(self, "inet_host");
 	return DeeInt_NewU32(NTOH32(self->sa_addr.sa_inet.sin_addr.s_addr));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet_port(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET)
 		return err_no_such_attribute(self, "inet_port");
@@ -1699,28 +1699,28 @@ sockaddr_inet_port(DeeSockAddrObject *__restrict self) {
 #endif /* AF_INET */
 
 #ifdef AF_INET6
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_port(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_port");
 	return DeeInt_NewU16(NTOH16(self->sa_addr.sa_inet6.sin6_port));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_host(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_host");
 	return DeeInt_NewU128(*(duint128_t *)&self->sa_addr.sa_inet6.sin6_addr);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_flowinfo(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_flowinfo");
 	return DeeInt_NewU32(self->sa_addr.sa_inet6.sin6_flowinfo);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sockaddr_inet6_scope_id(DeeSockAddrObject *__restrict self) {
 	if (self->sa_addr.sa.sa_family != AF_INET6)
 		return err_no_such_attribute(self, "inet6_scope_id");
@@ -1748,23 +1748,23 @@ PRIVATE struct type_getset sockaddr_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 sockaddr_hash(DeeSockAddrObject *__restrict self) {
 	return Dee_HashPtr(&self->sa_addr, SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0));
 }
 
-PRIVATE DREF DeeObject *DCALL
-sockaddr_eq(DeeSockAddrObject *__restrict self,
-            DeeSockAddrObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sockaddr_eq(DeeSockAddrObject *self,
+            DeeSockAddrObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeSockAddr_Type))
 		return NULL;
 	return_bool(memcmp(&self->sa_addr, &other->sa_addr,
 	                   SockAddr_Sizeof(self->sa_addr.sa.sa_family, 0)) == 0);
 }
 
-PRIVATE DREF DeeObject *DCALL
-sockaddr_ne(DeeSockAddrObject *__restrict self,
-            DeeSockAddrObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sockaddr_ne(DeeSockAddrObject *self,
+            DeeSockAddrObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeSockAddr_Type))
 		return NULL;
 	return_bool(memcmp(&self->sa_addr, &other->sa_addr,

@@ -65,7 +65,7 @@ DECL_BEGIN
 
 
 
-INTERN DREF DeeIntObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_copy(DeeIntObject const *__restrict self) {
 	DREF DeeIntObject *result;
 	size_t num_digits;
@@ -91,7 +91,7 @@ int_normalize(/*inherit(always)*/ DREF DeeIntObject *__restrict v) {
 	return v;
 }
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 x_add(DeeIntObject *__restrict a,
       DeeIntObject *__restrict b) {
 	dssize_t size_a = ABS(a->ob_size);
@@ -120,7 +120,7 @@ x_add(DeeIntObject *__restrict a,
 	return int_normalize(z);
 }
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 x_sub(DeeIntObject *__restrict a,
       DeeIntObject *__restrict b) {
 	dssize_t size_a = ABS(a->ob_size);
@@ -230,7 +230,7 @@ done:
 
 
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_add_int(DeeIntObject *__restrict a, digit b) {
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t i;
@@ -252,7 +252,7 @@ x_add_int(DeeIntObject *__restrict a, digit b) {
 	return int_normalize(z);
 }
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_add_int2(DeeIntObject *__restrict a, twodigits b) {
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t i;
@@ -278,7 +278,7 @@ x_add_int2(DeeIntObject *__restrict a, twodigits b) {
 }
 
 #if (DIGIT_BITS * 2) < 32
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_add_int3(DeeIntObject *__restrict a, uint32_t b) {
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t i;
@@ -342,7 +342,7 @@ x_sub_revint(digit a, DeeIntObject *__restrict b) {
 }
 
 #if (DIGIT_BITS * 2) < 32
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int3(DeeIntObject *__restrict a, uint32_t b);
 PRIVATE DREF DeeIntObject *DCALL
 x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
@@ -396,7 +396,7 @@ x_sub_revint3(uint32_t a, DeeIntObject *__restrict b) {
 #endif /* (DIGIT_BITS * 2) < 32 */
 
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int(DeeIntObject *__restrict a, digit b) {
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t i;
@@ -420,7 +420,7 @@ x_sub_int(DeeIntObject *__restrict a, digit b) {
 	return int_normalize(z);
 }
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 	dssize_t size_a = ABS(a->ob_size);
 	dssize_t i;
@@ -489,7 +489,7 @@ x_sub_int2(DeeIntObject *__restrict a, twodigits b) {
 }
 
 #if (DIGIT_BITS * 2) < 32
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 x_sub_int3(DeeIntObject *__restrict a, uint32_t b) {
 	dssize_t size_a = ABS(a->ob_size);
 	digit borrow;
@@ -778,7 +778,7 @@ err:
 	return -1;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b) {
 	DeeIntObject *z;
 	if (!b)
@@ -801,7 +801,7 @@ DeeInt_AddSDigit(DeeIntObject *__restrict a, sdigit b) {
 	return (DREF DeeObject *)z;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b) {
 	DeeIntObject *z;
 	if (!b)
@@ -840,7 +840,7 @@ DeeInt_AddU32(DeeIntObject *__restrict a, uint32_t b) {
 	return (DREF DeeObject *)z;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b) {
 	DeeIntObject *z;
 	if (ABS(a->ob_size) <= 1)
@@ -863,7 +863,7 @@ DeeInt_SubSDigit(DeeIntObject *__restrict a, sdigit b) {
 	return (DeeObject *)z;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_SubU32(DeeIntObject *__restrict a, uint32_t b) {
 	DeeIntObject *z;
 	if (ABS(a->ob_size) <= 1)
@@ -1008,7 +1008,7 @@ divrem1(DeeIntObject *__restrict a, digit n, digit *prem) {
 }
 
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 x_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	DeeIntObject *z;
 	dssize_t i;
@@ -1087,10 +1087,10 @@ kmul_split(DeeIntObject *__restrict n, dssize_t size,
 	return 0;
 }
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 k_lopsided_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b);
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	dssize_t asize   = ABS(a->ob_size);
 	dssize_t bsize   = ABS(b->ob_size);
@@ -1185,7 +1185,7 @@ fail:
 	return NULL;
 }
 
-PRIVATE DREF DeeIntObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeIntObject *DCALL
 k_lopsided_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	dssize_t const asize = ABS(a->ob_size);
 	dssize_t nbdone, bsize     = ABS(b->ob_size);

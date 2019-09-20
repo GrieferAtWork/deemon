@@ -110,7 +110,7 @@ PRIVATE DREF DeeObject *DCALL debugfile_get(void) {
 
 PRIVATE DREF DeeObject *DCALL
 debugfile_isatty(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isatty"))
 		return NULL;
 	/* Considering its purpose, always act as though debug_file
@@ -184,7 +184,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 };
 #endif
 
-PUBLIC DREF /*SystemFile*/ DeeObject *DCALL
+PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t fd, /*String*/ DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
 	SystemFile *result;
@@ -200,17 +200,17 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE int DCALL error_file_closed(SystemFile *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL error_file_closed(SystemFile *__restrict self) {
 	(void)self;
 	return DeeError_Throwf(&DeeError_FileClosed, "File was closed");
 }
 
-PRIVATE int DCALL error_file_io(SystemFile *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL error_file_io(SystemFile *__restrict self) {
 	(void)self;
 	return DeeError_Throwf(&DeeError_FSError, "I/O Operation failed");
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_OpenString(char const *__restrict filename,
                    int oflags, int UNUSED(mode)) {
 	char modbuf[16], *iter = modbuf;
@@ -270,7 +270,7 @@ err_fp:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	char *utf8_filename;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
@@ -449,7 +449,7 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	return result;
 }
 
-PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
 	if (!self->sf_handle)
 		return error_file_closed(self);
 	DBG_ALIGNMENT_DISABLE();
@@ -462,7 +462,7 @@ PRIVATE int DCALL sysfile_sync(SystemFile *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	if (!self->sf_handle)
 		return error_file_closed(self);
@@ -497,7 +497,7 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 #endif
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_close(SystemFile *__restrict self) {
 	if (!self->sf_handle)
 		return error_file_closed(self);
@@ -541,7 +541,7 @@ sysfile_getc(SystemFile *__restrict self, dioflag_t UNUSED(flags)) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_ungetc(SystemFile *__restrict self, int ch) {
 	int result;
 	if (!self->sf_handle) {
@@ -602,7 +602,7 @@ DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 #endif
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
@@ -614,9 +614,8 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-sysfile_fileno(SystemFile *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
 #ifdef CONFIG_DONT_EXPOSE_FILENO
 	if (!DeeArg_Unpack(argc, argv, ":fileno"))
 		DeeSystemFile_Fileno((DeeObject *)self);
@@ -632,9 +631,8 @@ sysfile_fileno(SystemFile *__restrict self,
 #endif
 }
 
-PRIVATE DREF DeeObject *DCALL
-sysfile_isatty(SystemFile *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":isatty"))
 		return NULL;
 	if (!self->sf_handle) {
@@ -647,9 +645,8 @@ sysfile_isatty(SystemFile *__restrict self,
 	            self->sf_handle == stderr);
 }
 
-PRIVATE DREF DeeObject *DCALL
-sysfile_flush(SystemFile *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_flush(SystemFile *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":flush") ||
 	    sysfile_sync(self))
 		return NULL;
@@ -680,9 +677,8 @@ PRIVATE struct mode_name const mode_names[] = {
 /* CASEEQ(x,'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
 
-PRIVATE DREF DeeObject *DCALL
-sysfile_setbuf(SystemFile *__restrict self,
-               size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_setbuf(SystemFile *self, size_t argc, DeeObject **argv) {
 	int mode;
 	char const *mode_iter;
 	DeeObject *file;
@@ -781,7 +777,7 @@ PRIVATE struct type_method sysfile_methods[] = {
 	{ NULL }
 };
 
-PRIVATE DREF SystemFile *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SystemFile *DCALL
 sysfile_getfile(SystemFile *__restrict self) {
 	return_reference_(self);
 }
@@ -799,7 +795,7 @@ PRIVATE struct type_member sysfile_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
 	if (self->sf_ownhandle) {
 		DBG_ALIGNMENT_DISABLE();
@@ -811,7 +807,7 @@ sysfile_fini(SystemFile *__restrict self) {
 
 PRIVATE DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **__restrict argv) {
+                   size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;
 	/* Flush all streams. */

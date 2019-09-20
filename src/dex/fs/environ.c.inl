@@ -76,7 +76,7 @@ PRIVATE unsigned int env_version = 0;
 
 PRIVATE char *empty_env[] = { NULL };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 env_init(Env *__restrict self) {
 /*again:*/
 	rwlock_read(&env_lock);
@@ -90,12 +90,12 @@ env_init(Env *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 env_bool(Env *__restrict self) {
 	return self->e_iter[0] != 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryNewSized(char const *__restrict str, size_t len) {
 	DREF DeeStringObject *result;
 	result = (DREF DeeStringObject *)DeeObject_TryMalloc(offsetof(DeeStringObject, s_str) +
@@ -112,7 +112,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 env_next(Env *__restrict self) {
 	unsigned int my_version;
 	DREF DeeObject *result_tuple;
@@ -179,7 +179,7 @@ err:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_key(DeeObject *__restrict self) {
 	unsigned int my_version;
 	DREF DeeObject *name;
@@ -223,7 +223,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_value(DeeObject *__restrict self) {
 	unsigned int my_version;
 	DREF DeeObject *value;
@@ -320,21 +320,21 @@ INTERN DeeTypeObject DeeEnvIterator_Type = {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 err_unknown_env_var(DeeObject *__restrict name) {
 	DeeError_Throwf(&DeeError_KeyError,
 	                "Unknown environment variable `%k'",
 	                name);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 err_unknown_env_var_s(char const *__restrict name) {
 	DeeError_Throwf(&DeeError_KeyError,
 	                "Unknown environment variable `%s'",
 	                name);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 fs_hasenv(/*String*/ DeeObject *__restrict name) {
 	bool result;
 	rwlock_read(&env_lock);
@@ -345,7 +345,7 @@ fs_hasenv(/*String*/ DeeObject *__restrict name) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_getenv(DeeObject *__restrict name, bool try_get) {
 	DREF DeeObject *result;
 	char *strval;
@@ -377,7 +377,7 @@ again:
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_printenv(char const *__restrict name,
             struct unicode_printer *__restrict printer,
             bool try_get) {
@@ -422,7 +422,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_delenv(DeeObject *__restrict name) {
 	/* TODO: unsetenv() */
 	/* TODO: putenv() */
@@ -431,7 +431,7 @@ fs_delenv(DeeObject *__restrict name) {
 	return DeeNotify_Broadcast(Dee_NOTIFICATION_CLASS_ENVIRON, name);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_setenv(DeeObject *__restrict name,
           DeeObject *__restrict value) {
 	/* TODO: setenv() */

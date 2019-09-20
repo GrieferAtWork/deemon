@@ -76,7 +76,7 @@ typedef struct {
 #ifndef CONFIG_NO_SHLIB
 PRIVATE int DCALL
 shlib_init(Shlib *__restrict self, size_t argc,
-           DREF DeeObject **__restrict argv) {
+           DREF DeeObject **argv) {
 	DeeStringObject *name, *cc_name = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:shlib", &name, &cc_name) ||
 	    DeeObject_AssertTypeExact((DeeObject *)name, &DeeString_Type))
@@ -152,7 +152,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 shlib_fini(Shlib *__restrict self) {
 #ifndef CONFIG_NO_CFUNCTION
 	Dee_XDecref((DeeObject *)self->sh_vfunptr);
@@ -164,7 +164,7 @@ shlib_fini(Shlib *__restrict self) {
 #endif
 }
 #ifndef CONFIG_NO_CFUNCTION
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 shlib_visit(Shlib *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit((DeeObject *)self->sh_vfunptr);
 }
@@ -245,9 +245,9 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
-shlib_getitem(Shlib *__restrict self,
-              DeeObject *__restrict name) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+shlib_getitem(Shlib *self,
+              DeeObject *name) {
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
 	void *symaddr;
@@ -274,9 +274,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-shlib_getattr(Shlib *__restrict self,
-              DeeObject *__restrict name) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+shlib_getattr(Shlib *self,
+              DeeObject *name) {
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
 	void *symaddr;
@@ -343,7 +343,7 @@ PRIVATE struct type_attr shlib_attr = {
 
 PRIVATE DREF DeeObject *DCALL
 shlib_base(Shlib *__restrict self, size_t argc,
-           DeeObject **__restrict argv) {
+           DeeObject **argv) {
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
 	if (DeeArg_Unpack(argc, argv, ":base"))
@@ -378,7 +378,7 @@ INTERN bool DCALL clear_void_pointer(void) {
 
 PRIVATE DREF DeeObject *DCALL
 shlib_base(Shlib *__restrict self, size_t argc,
-           DeeObject **__restrict argv) {
+           DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":base"))
 		goto err;
 	err_shlib_unsupported();

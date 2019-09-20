@@ -93,7 +93,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL resize_argument_list(uint16_t *__restrict parga) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL resize_argument_list(uint16_t *__restrict parga) {
 	struct symbol **new_symv;
 	ASSERT(current_basescope->bs_argc <= *parga);
 	if (current_basescope->bs_argc >= *parga) {
@@ -118,7 +118,7 @@ do_realloc_symv:
 	return 0;
 }
 
-PRIVATE int DCALL resize_default_list(uint16_t *__restrict pdefaulta) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL resize_default_list(uint16_t *__restrict pdefaulta) {
 	DREF DeeObject **new_defaultv;
 	uint16_t defaultc;
 	defaultc = (size_t)(current_basescope->bs_argc_max - current_basescope->bs_argc_min);

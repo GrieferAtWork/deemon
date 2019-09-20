@@ -50,19 +50,19 @@ DECL_BEGIN
 
 /* UTF-8 helper API */
 DDATDEF uint8_t const Dee_utf8_sequence_len[256];
-DFUNDEF uint32_t (DCALL Dee_utf8_readchar)(char const **__restrict piter, char const *__restrict end);
-DFUNDEF uint32_t (DCALL Dee_utf8_readchar_u)(char const **__restrict piter);
-DFUNDEF uint32_t (DCALL Dee_utf8_readchar_rev)(char const **__restrict pend, char const *__restrict begin);
-DFUNDEF char *(DCALL Dee_utf8_writechar)(char *__restrict buffer, uint32_t ch); /* Up to `UTF8_MAX_MBLEN' bytes may be used in `buffer' */
+DFUNDEF NONNULL((1, 2)) uint32_t (DCALL Dee_utf8_readchar)(char const **__restrict piter, char const *end);
+DFUNDEF NONNULL((1)) uint32_t (DCALL Dee_utf8_readchar_u)(char const **__restrict piter);
+DFUNDEF NONNULL((1, 2)) uint32_t (DCALL Dee_utf8_readchar_rev)(char const **__restrict pend, char const *begin);
+DFUNDEF WUNUSED NONNULL((1)) char *(DCALL Dee_utf8_writechar)(char *__restrict buffer, uint32_t ch); /* Up to `UTF8_MAX_MBLEN' bytes may be used in `buffer' */
 #define Dee_UTF8_MAX_MBLEN  8 /* The max length of a UTF-8 multi-byte sequence (100% future-proof,
                                * as this is the theoretical limit. - The actual limit would be `4') */
 
 
 #ifdef __INTELLISENSE__
 extern "C++" {
-size_t (DCALL DeeUni_FoldedLength)(uint8_t const *__restrict text, size_t length);
-size_t (DCALL DeeUni_FoldedLength)(uint16_t const *__restrict text, size_t length);
-size_t (DCALL DeeUni_FoldedLength)(uint32_t const *__restrict text, size_t length);
+NONNULL((1)) size_t (DCALL DeeUni_FoldedLength)(uint8_t const *__restrict text, size_t length);
+NONNULL((1)) size_t (DCALL DeeUni_FoldedLength)(uint16_t const *__restrict text, size_t length);
+NONNULL((1)) size_t (DCALL DeeUni_FoldedLength)(uint32_t const *__restrict text, size_t length);
 }
 #else
 #define DeeUni_FoldedLength(text, length)                                        \
@@ -98,9 +98,9 @@ LOCAL size_t
 #endif
 
 
-LOCAL char *
-(DCALL Dee_utf8_skipspace)(char const *__restrict str,
-                           char const *__restrict end) {
+LOCAL WUNUSED NONNULL((1, 2)) char *
+(DCALL Dee_utf8_skipspace)(char const *str,
+                           char const *end) {
 	char *result;
 	for (;;) {
 		uint32_t chr;
@@ -112,9 +112,9 @@ LOCAL char *
 	return result;
 }
 
-LOCAL char *
-(DCALL Dee_utf8_skipspace_rev)(char const *__restrict end,
-                               char const *__restrict begin) {
+LOCAL WUNUSED NONNULL((1, 2)) char *
+(DCALL Dee_utf8_skipspace_rev)(char const *end,
+                               char const *begin) {
 	char *result;
 	for (;;) {
 		uint32_t chr;
@@ -130,20 +130,22 @@ LOCAL char *
 /* Get/Set a character, given its index within the string. */
 #define DeeString_GetChar(self, index)        DeeString_GetChar((DeeStringObject *)Dee_REQUIRES_OBJECT(self), index)
 #define DeeString_SetChar(self, index, value) DeeString_SetChar((DeeStringObject *)Dee_REQUIRES_OBJECT(self), index, value)
-DFUNDEF uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index);
-DFUNDEF void (DCALL DeeString_SetChar)(DeeStringObject *__restrict self, size_t index, uint32_t value);
+DFUNDEF WUNUSED NONNULL((1)) uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index);
+DFUNDEF NONNULL((1)) void (DCALL DeeString_SetChar)(DeeStringObject *__restrict self, size_t index, uint32_t value);
 
 
 /* Move `num_chars' characters from `src' to `dst' */
 #define DeeString_Memmove(self, dst, src, num_chars) \
 	DeeString_Memmove((DeeStringObject *)Dee_REQUIRES_OBJECT(self), dst, src, num_chars)
-DFUNDEF void (DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
-                                       size_t dst, size_t src, size_t num_chars);
+DFUNDEF NONNULL((1)) void
+(DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
+                          size_t dst, size_t src, size_t num_chars);
 
 /* Pop the last character of a string, which must be an ASCII character. */
 #define DeeString_PopbackAscii(self) \
 	DeeString_PopbackAscii((DeeStringObject *)Dee_REQUIRES_OBJECT(self))
-DFUNDEF void (DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self);
+DFUNDEF NONNULL((1)) void
+(DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self);
 
 
 

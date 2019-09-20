@@ -68,7 +68,7 @@ INTDEF DeeTypeObject StringCaseFindIterator_Type;
 INTDEF DeeTypeObject StringCaseFind_Type;
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_find = (DREF StringFind *)DeeString_FindAll((String *)Dee_EmptyString,
 	                                                      (String *)Dee_EmptyString,
@@ -84,7 +84,7 @@ sfi_ctor(StringFindIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_ctor(StringFindIterator *__restrict self) {
 	self->sfi_find = (DREF StringFind *)DeeString_CaseFindAll((String *)Dee_EmptyString,
 	                                                          (String *)Dee_EmptyString,
@@ -100,7 +100,7 @@ scfi_ctor(StringFindIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sfi_copy(StringFindIterator *__restrict self,
          StringFindIterator *__restrict other) {
 	self->sfi_find           = other->sfi_find;
@@ -114,7 +114,7 @@ sfi_copy(StringFindIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 sfi_setup(StringFindIterator *__restrict self,
           StringFind *__restrict find) {
 	size_t my_start, my_end;
@@ -180,7 +180,7 @@ err:
 
 PRIVATE int DCALL
 sfi_init(StringFindIterator *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	StringFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_StringFindIterator", &find) ||
 	    DeeObject_AssertTypeExact((DeeObject *)find, &StringFind_Type))
@@ -192,7 +192,7 @@ err:
 
 PRIVATE int DCALL
 scfi_init(StringFindIterator *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	StringFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_StringCaseFindIterator", &find) ||
 	    DeeObject_AssertTypeExact((DeeObject *)find, &StringCaseFind_Type))
@@ -202,7 +202,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sfi_next(StringFindIterator *__restrict self) {
 	union dcharptr ptr, new_ptr;
 again:
@@ -245,7 +245,7 @@ again:
 	return ITER_DONE;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scfi_next(StringFindIterator *__restrict self) {
 	union dcharptr ptr, new_ptr;
 	size_t match_length, result;
@@ -297,12 +297,12 @@ iter_done:
 	return ITER_DONE;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 sfi_fini(StringFindIterator *__restrict self) {
 	Dee_Decref(self->sfi_find);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
 	union dcharptr ptr;
 	ptr.ptr = ATOMIC_READ(self->sfi_ptr.ptr);
@@ -329,7 +329,7 @@ sfi_bool(StringFindIterator *__restrict self) {
 	return ptr.ptr != NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_bool(StringFindIterator *__restrict self) {
 	union dcharptr ptr;
 	ptr.ptr = ATOMIC_READ(self->sfi_ptr.ptr);
@@ -494,7 +494,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_ctor(StringFind *__restrict self) {
 	self->sf_str    = (DREF String *)Dee_EmptyString;
 	self->sf_needle = (DREF String *)Dee_EmptyString;
@@ -506,7 +506,7 @@ sf_ctor(StringFind *__restrict self) {
 
 PRIVATE int DCALL
 sf_init(StringFind *__restrict self,
-        size_t argc, DeeObject **__restrict argv) {
+        size_t argc, DeeObject **argv) {
 	self->sf_start = 0;
 	self->sf_end   = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "oo|IdId:_StringFind",
@@ -522,13 +522,13 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 sf_fini(StringFind *__restrict self) {
 	Dee_Decref(self->sf_str);
 	Dee_Decref(self->sf_needle);
 }
 
-PRIVATE DREF StringFindIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringFindIterator *DCALL
 sf_iter(StringFind *__restrict self) {
 	DREF StringFindIterator *result;
 	result = DeeObject_MALLOC(StringFindIterator);
@@ -544,7 +544,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE DREF StringFindIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringFindIterator *DCALL
 scf_iter(StringFind *__restrict self) {
 	DREF StringFindIterator *result;
 	result = DeeObject_MALLOC(StringFindIterator);

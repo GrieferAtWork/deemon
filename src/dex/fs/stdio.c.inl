@@ -77,7 +77,7 @@ fs_chdir(DeeObject *__restrict UNUSED(path)) {
 #include "generic-user.c.inl"
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_exists_str(char const *__restrict filename) {
 	FILE *fp;
 	DBG_ALIGNMENT_DISABLE();
@@ -95,7 +95,7 @@ file_exists_str(char const *__restrict filename) {
 /* @return: -1: An error occurred.
  * @return:  0: The file does not exist.
  * @return:  1: The file does exist. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_exists(DeeObject *__restrict filename) {
 	int result;
 	if (DeeString_Check(filename))
@@ -146,7 +146,7 @@ typedef struct {
 
 PRIVATE int DCALL
 stat_ctor(Stat *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:stat", &path))
@@ -159,7 +159,7 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 stat_fini(Stat *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	fclose(self->st_file);
@@ -171,7 +171,7 @@ stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 	return fs_getcwd();
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_size(Stat *__restrict self) {
 	long result;
 	DBG_ALIGNMENT_DISABLE();
@@ -208,7 +208,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 #define DEFINE_STATIC_QUERY(funnam, name, return_)     \
 	PRIVATE DREF DeeObject *DCALL                      \
 	funnam(DeeObject *__restrict UNUSED(self),         \
-	       size_t argc, DeeObject **__restrict argv) { \
+	       size_t argc, DeeObject **argv) { \
 		if (DeeArg_Unpack(argc, argv, ":" name))       \
 			return NULL;                               \
 		return_;                                       \
@@ -235,7 +235,7 @@ PRIVATE struct type_method stat_methods[] = {
 
 PRIVATE DREF DeeObject *DCALL
 stat_class_exists(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **__restrict argv) {
+                  size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:exists", &path))
@@ -250,7 +250,7 @@ err:
 
 PRIVATE DREF DeeObject *DCALL
 stat_class_isreg(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:isreg", &path))
@@ -266,7 +266,7 @@ err:
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
 	PRIVATE DREF DeeObject *DCALL                        \
 	funnam(DeeObject *__restrict UNUSED(self),           \
-	       size_t argc, DeeObject **__restrict argv) {   \
+	       size_t argc, DeeObject **argv) {   \
 		DeeObject *path;                                 \
 		if (DeeArg_Unpack(argc, argv, "o:" name, &path)) \
 			return NULL;                                 \
@@ -434,12 +434,12 @@ fs_rmdir(DeeObject *__restrict UNUSED(path)) {
 	return fs_unsupported();
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_unlink(DeeObject *__restrict path) {
 	return fs_remove(path);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_remove(DeeObject *__restrict path) {
 	char *name;
 	if (!DeeString_Check(path)) {
@@ -470,7 +470,7 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_rename(DeeObject *__restrict existing_path,
           DeeObject *__restrict new_path) {
 	char *old_name, *new_name;

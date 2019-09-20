@@ -55,7 +55,7 @@ typedef struct {
 #define READ_ITEM(x) ATOMIC_READ((x)->di_next)
 #endif /* !CONFIG_NO_THREADS */
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 rodictiterator_ctor(DictIterator *__restrict self) {
 	self->di_dict = (Dict *)DeeRoDict_New();
 	if unlikely(!self->di_dict)
@@ -66,7 +66,7 @@ rodictiterator_ctor(DictIterator *__restrict self) {
 
 INTERN int DCALL
 rodictiterator_init(DictIterator *__restrict self,
-                    size_t argc, DeeObject **__restrict argv) {
+                    size_t argc, DeeObject **argv) {
 	Dict *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_RoDictIterator", &Dict) ||
 	    DeeObject_AssertTypeExact((DeeObject *)Dict, &DeeRoDict_Type))
@@ -77,7 +77,7 @@ rodictiterator_init(DictIterator *__restrict self,
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 rodictiterator_copy(DictIterator *__restrict self,
                     DictIterator *__restrict other) {
 	self->di_dict = other->di_dict;
@@ -86,17 +86,17 @@ rodictiterator_copy(DictIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 rodictiterator_fini(DictIterator *__restrict self) {
 	Dee_Decref(self->di_dict);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 rodictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->di_dict);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rodictiterator_bool(DictIterator *__restrict self) {
 	struct rodict_item *item = READ_ITEM(self);
 	Dict *Dict               = self->di_dict;
@@ -110,7 +110,7 @@ rodictiterator_bool(DictIterator *__restrict self) {
 	return 1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_next_item(DictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
@@ -149,7 +149,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_next_key(DictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
@@ -188,7 +188,7 @@ iter_exhausted:
 	return ITER_DONE;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodictiterator_next_value(DictIterator *__restrict self) {
 	struct rodict_item *item, *end;
 	end = self->di_dict->rd_elem + self->di_dict->rd_mask + 1;
@@ -313,7 +313,7 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_FromSequence(DeeObject *__restrict self) {
 	DREF DeeObject *result;
 	size_t length_hint;
@@ -461,7 +461,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
 	DREF Dict *result, *new_result;
 	DREF DeeObject *elem;
@@ -513,7 +513,7 @@ err_r:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_FromIteratorWithHint(DeeObject *__restrict self,
                                size_t num_items) {
 	size_t mask = RODICT_INITIAL_MASK;
@@ -523,13 +523,13 @@ DeeRoDict_FromIteratorWithHint(DeeObject *__restrict self,
 	return DeeRoDict_FromIterator_impl(self, mask);
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_FromIterator(DeeObject *__restrict self) {
 	return DeeRoDict_FromIterator_impl(self, RODICT_INITIAL_MASK);
 }
 
 
-PRIVATE DREF DictIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DictIterator *DCALL
 rodict_iter(Dict *__restrict self) {
 	DREF DictIterator *result;
 	result = DeeObject_MALLOC(DictIterator);
@@ -543,14 +543,14 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_size(Dict *__restrict self) {
 	return DeeInt_NewSize(self->rd_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
-rodict_contains(Dict *__restrict self,
-                DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rodict_contains(Dict *self,
+                DeeObject *key) {
 	size_t i, perturb, hash;
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
@@ -575,9 +575,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-rodict_getitem(Dict *__restrict self,
-               DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+rodict_getitem(Dict *self,
+               DeeObject *key) {
 	size_t i, perturb, hash;
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
@@ -602,7 +602,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeRoDict_GetItemDef(DeeObject *__restrict self,
                      DeeObject *__restrict key,
                      DeeObject *__restrict def) {
@@ -633,7 +633,7 @@ err:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeRoDict_GetItemString(DeeObject *__restrict self,
                         char const *__restrict key,
                         dhash_t hash) {
@@ -658,7 +658,7 @@ DeeRoDict_GetItemString(DeeObject *__restrict self,
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
                            char const *__restrict key,
                            size_t keylen,
@@ -739,7 +739,7 @@ DeeRoDict_GetItemStringLenDef(DeeObject *__restrict self,
 	return_reference_(def);
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeRoDict_HasItemString(DeeObject *__restrict self,
                         char const *__restrict key,
                         dhash_t hash) {
@@ -763,7 +763,7 @@ DeeRoDict_HasItemString(DeeObject *__restrict self,
 	return false;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
                            char const *__restrict key,
                            size_t keylen,
@@ -791,7 +791,7 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 rodict_fini(Dict *__restrict self) {
 	size_t i;
 	for (i = 0; i <= self->rd_mask; ++i) {
@@ -802,7 +802,7 @@ rodict_fini(Dict *__restrict self) {
 	}
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 rodict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	for (i = 0; i <= self->rd_mask; ++i) {
@@ -813,12 +813,12 @@ rodict_visit(Dict *__restrict self, dvisit_t proc, void *arg) {
 	}
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 rodict_bool(Dict *__restrict self) {
 	return self->rd_size != 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rodict_repr(Dict *__restrict self) {
 	struct unicode_printer p = UNICODE_PRINTER_INIT;
 	bool is_first            = true;
@@ -844,7 +844,7 @@ err:
 	return NULL;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 rodict_nsi_getsize(Dict *__restrict self) {
 	ASSERT(self->rd_size != (size_t)-2);
 	return self->rd_size;
@@ -878,9 +878,8 @@ PRIVATE struct type_seq rodict_seq = {
 	/* .tp_nsi       = */ &rodict_nsi
 };
 
-PRIVATE DREF DeeObject *DCALL
-rodict_get(Dict *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rodict_get(Dict *self, size_t argc, DeeObject **argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		goto err;
@@ -889,9 +888,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-rodict_sizeof(Dict *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rodict_sizeof(Dict *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(Dict, rd_elem) +
@@ -942,7 +940,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF Dict *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF Dict *DCALL
 rodict_deepcopy(Dict *__restrict self) {
 	DREF Dict *result;
 	size_t i;
@@ -978,7 +976,7 @@ err:
 }
 
 PRIVATE DREF Dict *DCALL
-rodict_init(size_t argc, DeeObject **__restrict argv) {
+rodict_init(size_t argc, DeeObject **argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoDict", &seq))
 		return NULL;

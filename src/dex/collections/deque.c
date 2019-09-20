@@ -35,11 +35,12 @@
 #include <deemon/seq.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/typecore.h>
 
 DECL_BEGIN
 
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 Deque_PushFront_unlocked(Deque *__restrict self,
                          DeeObject *__restrict item) {
 	DequeBucket *new_bucket;
@@ -88,7 +89,7 @@ Deque_PushFront_unlocked(Deque *__restrict self,
 	return true;
 }
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 Deque_PushBack_unlocked(Deque *__restrict self,
                         DeeObject *__restrict item) {
 	DequeBucket *new_bucket;
@@ -241,7 +242,7 @@ Deque_PopBack_unlocked(Deque *__restrict self) {
 
 
 /* Rotate the first `num_objects' left. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
 	DREF DeeObject *lobj;
@@ -260,7 +261,7 @@ Deque_llrot_unlocked(Deque *__restrict self, size_t num_objects) {
 }
 
 /* Rotate the first `num_objects' right. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
 	DREF DeeObject *temp, *next;
@@ -281,7 +282,7 @@ Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 }
 
 /* Rotate the last `num_objects' left. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
 	DREF DeeObject *temp, *next;
@@ -302,7 +303,7 @@ Deque_rlrot_unlocked(Deque *__restrict self, size_t num_objects) {
 }
 
 /* Rotate the last `num_objects' right. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 Deque_rrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	DequeIterator iter;
 	DREF DeeObject *robj;
@@ -368,7 +369,7 @@ Deque_Pop_unlocked(Deque *__restrict self, size_t index) {
 
 
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Deque_PushFront(Deque *__restrict self, DeeObject *__restrict item) {
 again:
 	Deque_LockWrite(self);
@@ -384,7 +385,7 @@ again:
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Deque_PushBack(Deque *__restrict self, DeeObject *__restrict item) {
 again:
 	Deque_LockWrite(self);
@@ -400,7 +401,7 @@ again:
 	return 0;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Deque_PopFront(Deque *__restrict self) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
@@ -414,7 +415,7 @@ Deque_PopFront(Deque *__restrict self) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Deque_PopBack(Deque *__restrict self) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
@@ -449,7 +450,7 @@ again:
 	return 0;
 }
 
-INTERN size_t DCALL
+INTERN WUNUSED NONNULL((1)) size_t DCALL
 Deque_Erase(Deque *__restrict self,
             size_t index, size_t num_items) {
 	size_t result;
@@ -487,7 +488,7 @@ again:
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Deque_Pop(Deque *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
@@ -504,7 +505,7 @@ Deque_Pop(Deque *__restrict self, size_t index) {
 	return result;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Deque_Pops(Deque *__restrict self, dssize_t index) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
@@ -523,7 +524,7 @@ Deque_Pops(Deque *__restrict self, dssize_t index) {
 	return result;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 Deque_llrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
 	if unlikely(num_objects > self->d_size) {
@@ -538,7 +539,7 @@ Deque_llrot(Deque *__restrict self, size_t num_objects) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 Deque_lrrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
 	if unlikely(num_objects > self->d_size) {
@@ -553,7 +554,7 @@ Deque_lrrot(Deque *__restrict self, size_t num_objects) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 Deque_rlrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
 	if unlikely(num_objects > self->d_size) {
@@ -568,7 +569,7 @@ Deque_rlrot(Deque *__restrict self, size_t num_objects) {
 	return 0;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 Deque_rrrot(Deque *__restrict self, size_t num_objects) {
 	Deque_LockWrite(self);
 	if unlikely(num_objects > self->d_size) {
@@ -585,7 +586,7 @@ Deque_rrrot(Deque *__restrict self, size_t num_objects) {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_ctor(Deque *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->d_lock);
@@ -620,7 +621,7 @@ done:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deq_copy(Deque *__restrict self,
          Deque *__restrict other) {
 	DequeBucket *iter;
@@ -701,7 +702,7 @@ err_restart_collect:
 	goto again;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_deepload(Deque *__restrict self) {
 	Deque_LockRead(self);
 	if (self->d_size) {
@@ -748,7 +749,7 @@ deq_deepload(Deque *__restrict self) {
 
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 deq_fini(Deque *__restrict self) {
 	size_t i;
 	DequeBucket *iter, *next;
@@ -785,7 +786,7 @@ deque_push_back(void *self, DeeObject *__restrict ob) {
 
 PRIVATE int DCALL
 deq_init(Deque *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	DeeObject *init   = Dee_EmptySeq;
 	self->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
 	if (DeeArg_Unpack(argc, argv, "|oIu:Deque", &init, &self->d_bucket_sz))
@@ -826,6 +827,13 @@ deq_init(Deque *__restrict self,
 #define DEQUE_BUFFER_START d_head
 #endif /* !CONFIG_NO_THREADS */
 
+#if defined(__GNUC__) && __GNUC__ >= 9
+/* Get rid of:
+ *   array subscript 0 is outside array bounds of 'DEQUE_BUFFER_TYPE' {aka 'unsigned char[40]'}
+ * Either I'm not seeing the bug in my code, or the fact that GCC apparently claims that `0'
+ * is outside the bounds of [0,40) is incorrect, because 0 is _very_ _well_ within those bounds! */
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif /* __GNUC__ && __GNUC__ >= 9 */
 
 
 #define DEQUE_BUFFER_SIZE \
@@ -834,19 +842,14 @@ deq_init(Deque *__restrict self,
 	(COMPILER_OFFSETOF(Deque, d_version) - COMPILER_OFFSETOF(Deque, DEQUE_BUFFER_START))
 #define DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION \
 	(COMPILER_OFFSETOF(Deque, d_version) - COMPILER_OFFSETOF(Deque, d_head))
-typedef unsigned char DEQUE_BUFFER_TYPE[DEQUE_BUFFER_SIZE];
-typedef unsigned char DEQUE_BUFFER_TYPE_NOLOCK_NOVERSION[DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION];
-#define DEQUE_BUFFER_GET(x) ((Deque *)((x)-COMPILER_OFFSETOF(Deque, DEQUE_BUFFER_START)))
-#define DEQUE_BUFFER_FOR(x) ((unsigned char *)&(x)->DEQUE_BUFFER_START)
-#ifndef CONFIG_NO_THREADS
-#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((x)-COMPILER_OFFSETOF(Deque, d_head)))
-#define DEQUE_BUFFER_FOR_NOLOCK(x) ((unsigned char *)&(x)->d_head)
-#else /* !CONFIG_NO_THREADS */
-#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((x)-COMPILER_OFFSETOF(Deque, d_head)))
-#define DEQUE_BUFFER_FOR_NOLOCK(x) ((unsigned char *)&(x)->d_head)
-#endif /* CONFIG_NO_THREADS */
+typedef __BYTE_TYPE__ DEQUE_BUFFER_TYPE[DEQUE_BUFFER_SIZE];
+typedef __BYTE_TYPE__ DEQUE_BUFFER_TYPE_NOLOCK_NOVERSION[DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION];
+#define DEQUE_BUFFER_GET(x)        ((Deque *)((__BYTE_TYPE__ *)(x) - COMPILER_OFFSETOF(Deque, DEQUE_BUFFER_START)))
+#define DEQUE_BUFFER_FOR(x)        ((__BYTE_TYPE__ *)&(x)->DEQUE_BUFFER_START)
+#define DEQUE_BUFFER_GET_NOLOCK(x) ((Deque *)((__BYTE_TYPE__ *)(x) - COMPILER_OFFSETOF(Deque, d_head)))
+#define DEQUE_BUFFER_FOR_NOLOCK(x) ((__BYTE_TYPE__ *)&(x)->d_head)
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deq_assign(Deque *__restrict self,
            DeeObject *__restrict seq) {
 	DEQUE_BUFFER_TYPE bTemp, bOld;
@@ -891,7 +894,7 @@ deq_assign(Deque *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deq_moveassign(Deque *__restrict self,
                Deque *__restrict other) {
 	DEQUE_BUFFER_TYPE bNew, bOld;
@@ -922,7 +925,7 @@ deq_moveassign(Deque *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL deq_bool(Deque *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL deq_bool(Deque *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	return self->d_size != 0;
 #else /* CONFIG_NO_THREADS */
@@ -930,7 +933,7 @@ PRIVATE int DCALL deq_bool(Deque *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 deq_visit(Deque *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	DequeBucket *iter;
@@ -952,7 +955,7 @@ deq_visit(Deque *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 deq_clear(Deque *__restrict self) {
 	DEQUE_BUFFER_TYPE bData;
 	Deque_LockWrite(self);
@@ -1006,7 +1009,7 @@ PRIVATE struct type_gc deq_gc = {
 };
 
 
-PRIVATE DREF DequeIteratorObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DequeIteratorObject *DCALL
 deq_iter(Deque *__restrict self) {
 	DREF DequeIteratorObject *result;
 	result = DeeObject_MALLOC(DequeIteratorObject);
@@ -1027,7 +1030,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_size(Deque *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	return DeeInt_NewSize(ATOMIC_READ(self->d_size));
@@ -1036,8 +1039,8 @@ deq_size(Deque *__restrict self) {
 #endif /* CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_contains(Deque *__restrict self, DeeObject *__restrict item) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+deq_contains(Deque *self, DeeObject *item) {
 	Deque_LockRead(self);
 	if (self->d_size) {
 		DequeIterator iter;
@@ -1071,8 +1074,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_get(Deque *__restrict self, DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+deq_get(Deque *self, DeeObject *index_ob) {
 	size_t index;
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
@@ -1093,7 +1096,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deq_del(Deque *__restrict self, DeeObject *__restrict index_ob) {
 	size_t index;
 	DREF DeeObject *result;
@@ -1108,7 +1111,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 deq_set(Deque *__restrict self,
         DeeObject *__restrict index_ob,
         DeeObject *__restrict value) {
@@ -1135,7 +1138,7 @@ err:
 	return -1;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 deq_nsi_size(Deque *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	return ATOMIC_READ(self->d_size);
@@ -1144,7 +1147,7 @@ deq_nsi_size(Deque *__restrict self) {
 #endif /* CONFIG_NO_THREADS */
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_nsi_getitem(Deque *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	Deque_LockRead(self);
@@ -1163,7 +1166,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_nsi_delitem(Deque *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = Deque_Pop(self, index);
@@ -1272,9 +1275,8 @@ PRIVATE struct type_seq deq_seq = {
 	/* .tp_nsi       = */ &deq_nsi
 };
 
-PRIVATE DREF DeeObject *DCALL
-deq_pushfront(Deque *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_pushfront(Deque *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:pushfront", &item))
 		goto err;
@@ -1285,9 +1287,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_pushback(Deque *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_pushback(Deque *self, size_t argc, DeeObject **argv) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:pushback", &item))
 		goto err;
@@ -1298,9 +1299,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_popfront(Deque *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_popfront(Deque *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
 	return Deque_PopFront(self);
@@ -1308,9 +1308,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_popback(Deque *__restrict self,
-            size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_popback(Deque *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":popback"))
 		goto err;
 	return Deque_PopBack(self);
@@ -1320,9 +1319,9 @@ err:
 
 INTERN struct keyword seq_insert_kwlist[] = { K(index), K(item), KEND };
 
-PRIVATE DREF DeeObject *DCALL
-deq_insert(Deque *__restrict self, size_t argc,
-           DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_insert(Deque *self, size_t argc,
+           DeeObject **argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, "Ido:insert", &index, &item))
@@ -1336,9 +1335,9 @@ err:
 
 INTERN struct keyword seq_erase_kwlist[] = { K(index), K(count), KEND };
 
-PRIVATE DREF DeeObject *DCALL
-deq_erase(Deque *__restrict self, size_t argc,
-          DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_erase(Deque *self, size_t argc,
+          DeeObject **argv, DeeObject *kw) {
 	size_t index, result;
 	size_t num_items = 1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, "Id|Iu:erase", &index, &num_items))
@@ -1353,18 +1352,17 @@ err:
 
 INTERN struct keyword seq_pop_kwlist[] = { K(index), KEND };
 
-PRIVATE DREF DeeObject *DCALL
-deq_pop(Deque *__restrict self, size_t argc,
-        DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_pop(Deque *self, size_t argc,
+        DeeObject **argv, DeeObject *kw) {
 	size_t index;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "Id:pop", &index))
 		return NULL;
 	return Deque_Pop(self, index);
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_llrot(Deque *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_llrot(Deque *self, size_t argc, DeeObject **argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:llrot", &num_items) ||
 	    Deque_llrot(self, num_items))
@@ -1372,9 +1370,8 @@ deq_llrot(Deque *__restrict self,
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_lrrot(Deque *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_lrrot(Deque *self, size_t argc, DeeObject **argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:lrrot", &num_items) ||
 	    Deque_lrrot(self, num_items))
@@ -1382,9 +1379,8 @@ deq_lrrot(Deque *__restrict self,
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_rlrot(Deque *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_rlrot(Deque *self, size_t argc, DeeObject **argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:rlrot", &num_items) ||
 	    Deque_rlrot(self, num_items))
@@ -1392,9 +1388,8 @@ deq_rlrot(Deque *__restrict self,
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_rrrot(Deque *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_rrrot(Deque *self, size_t argc, DeeObject **argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:rrrot", &num_items) ||
 	    Deque_rrrot(self, num_items))
@@ -1402,9 +1397,8 @@ deq_rrrot(Deque *__restrict self,
 	return_none;
 }
 
-PRIVATE DREF DeeObject *DCALL
-deq_sizeof(Deque *__restrict self,
-           size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_sizeof(Deque *self, size_t argc, DeeObject **argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
@@ -1606,7 +1600,7 @@ INTERN DeeTypeObject Deque_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_ctor(DequeIteratorObject *__restrict self) {
 #ifndef CONFIG_NO_THREADS
 	rwlock_init(&self->di_lock);
@@ -1619,7 +1613,7 @@ deqiter_ctor(DequeIteratorObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deqiter_copy(DequeIteratorObject *__restrict self,
              DequeIteratorObject *__restrict other) {
 	rwlock_init(&self->di_lock);
@@ -1632,7 +1626,7 @@ deqiter_copy(DequeIteratorObject *__restrict self,
 	return 0;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 deqiter_getindex(DequeIteratorObject *__restrict self) {
 	size_t result;
 	rwlock_read(&self->di_lock);
@@ -1645,7 +1639,7 @@ deqiter_getindex(DequeIteratorObject *__restrict self) {
 	return result;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 	rwlock_write(&self->di_lock);
 	Deque_LockRead(self->di_deq);
@@ -1661,7 +1655,7 @@ deqiter_setindex(DequeIteratorObject *__restrict self, size_t index) {
 	rwlock_endwrite(&self->di_lock);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deqiter_deep(DequeIteratorObject *__restrict self,
              DequeIteratorObject *__restrict other) {
 	size_t index;
@@ -1687,7 +1681,7 @@ err:
 
 PRIVATE int DCALL
 deqiter_init(DequeIteratorObject *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+             size_t argc, DeeObject **argv) {
 	size_t index = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:DequeIterator", &self->di_deq, &index))
 		goto err;
@@ -1711,17 +1705,17 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 deqiter_fini(DequeIteratorObject *__restrict self) {
 	Dee_Decref(self->di_deq);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 deqiter_visit(DequeIteratorObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->di_deq);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_bool(DequeIteratorObject *__restrict self) {
 	int result;
 	rwlock_read(&self->di_lock);
@@ -1730,7 +1724,7 @@ deqiter_bool(DequeIteratorObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deqiter_next(DequeIteratorObject *__restrict self) {
 	DREF DeeObject *result;
 	rwlock_read(&self->di_lock);
@@ -1751,7 +1745,7 @@ deqiter_next(DequeIteratorObject *__restrict self) {
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deqiter_getindex_ob(DequeIteratorObject *__restrict self) {
 	size_t result;
 	result = deqiter_getindex(self);
@@ -1760,7 +1754,7 @@ deqiter_getindex_ob(DequeIteratorObject *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 deqiter_setindex_ob(DequeIteratorObject *__restrict self,
                     DeeObject *__restrict value) {
 	size_t newindex = (size_t)-1;

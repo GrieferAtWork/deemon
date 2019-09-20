@@ -968,7 +968,7 @@ print_generic:
 	return DeeFormat_Printf(printer, arg, "ref %u", (unsigned int)rid);
 }
 
-PRIVATE DREF DeeClassDescriptorObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeClassDescriptorObject *DCALL
 find_class_descriptor_in_constants(DeeCodeObject *__restrict code,
                                    char const *__restrict class_name) {
 	DREF DeeClassDescriptorObject *result;

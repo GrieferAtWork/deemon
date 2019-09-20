@@ -104,7 +104,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF FixedList *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
 fl_copy(FixedList *__restrict self) {
 	DREF FixedList *result;
 	size_t i;
@@ -127,7 +127,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF FixedList *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
 fl_init_iterator(DeeObject *__restrict iterator) {
 	DREF FixedList *result, *new_result;
 	DREF DeeObject *elem;
@@ -249,7 +249,7 @@ err:
 
 
 PRIVATE DREF FixedList *DCALL
-fl_init(size_t argc, DeeObject **__restrict argv) {
+fl_init(size_t argc, DeeObject **argv) {
 	DREF FixedList *result;
 	DeeObject *size_ob, *init = NULL;
 	size_t size;
@@ -345,7 +345,7 @@ err:
 	return NULL;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 fl_fini(FixedList *__restrict self) {
 	size_t i;
 	weakref_support_fini(self);
@@ -353,7 +353,7 @@ fl_fini(FixedList *__restrict self) {
 		Dee_XDecref(self->fl_elem[i]);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fl_assign(FixedList *__restrict self, DeeObject *__restrict other) {
 	DREF DeeObject **items, *temp;
 	size_t i;
@@ -382,7 +382,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fl_moveassign(FixedList *__restrict self,
               FixedList *__restrict other) {
 	DREF DeeObject **items;
@@ -428,7 +428,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 fl_deepload(FixedList *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->fl_size; ++i) {
@@ -441,11 +441,11 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL fl_bool(FixedList *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL fl_bool(FixedList *__restrict self) {
 	return self->fl_size != 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 fl_visit(FixedList *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	rwlock_read(&self->fl_lock);
@@ -454,7 +454,7 @@ fl_visit(FixedList *__restrict self, dvisit_t proc, void *arg) {
 	rwlock_endread(&self->fl_lock);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 fl_clear(FixedList *__restrict self) {
 	size_t i, buflen = 0;
 	DREF DeeObject *buf[16];
@@ -517,17 +517,17 @@ PRIVATE struct type_gc fl_gc = {
 };
 
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 fl_nsi_size(FixedList *__restrict self) {
 	return self->fl_size;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fl_size(FixedList *__restrict self) {
 	return DeeInt_NewSize(self->fl_size);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fl_nsi_getitem(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size) {
@@ -548,7 +548,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fl_nsi_getitem_fast(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->fl_size);
@@ -559,7 +559,7 @@ fl_nsi_getitem_fast(FixedList *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 fl_nsi_delitem(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->fl_size) {
@@ -629,9 +629,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-fl_getitem(FixedList *__restrict self,
-           DeeObject *__restrict index_ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+fl_getitem(FixedList *self,
+           DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
@@ -640,7 +640,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fl_delitem(FixedList *__restrict self,
            DeeObject *__restrict index_ob) {
 	size_t index;
@@ -651,7 +651,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 fl_setitem(FixedList *__restrict self,
            DeeObject *__restrict index_ob,
            DeeObject *__restrict value) {
@@ -663,9 +663,9 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
-fl_contains(FixedList *__restrict self,
-            DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+fl_contains(FixedList *self,
+            DeeObject *value) {
 	size_t i;
 	for (i = 0; i < self->fl_size; ++i) {
 		DREF DeeObject *elem;
@@ -687,7 +687,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF FixedListIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF FixedListIterator *DCALL
 fl_iter(FixedList *__restrict self) {
 	DREF FixedListIterator *result;
 	result = DeeObject_MALLOC(FixedListIterator);
@@ -746,9 +746,8 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_nsi       = */ &fl_nsi
 };
 
-PRIVATE DREF DeeObject *DCALL
-fl_clear_meth(FixedList *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+fl_clear_meth(FixedList *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	fl_clear(self);
@@ -757,9 +756,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-fl_sizeof(FixedList *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+fl_sizeof(FixedList *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(FixedList, fl_elem) +
@@ -888,7 +886,7 @@ INTERN DeeTypeObject FixedList_Type = {
 #define FLI_GETITER(x)  ATOMIC_READ((x)->li_iter)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_ctor(FixedListIterator *__restrict self) {
 	self->li_iter = 0;
 	self->li_list = fl_ctor();
@@ -897,7 +895,7 @@ fli_ctor(FixedListIterator *__restrict self) {
 	       : -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fli_copy(FixedListIterator *__restrict self,
          FixedListIterator *__restrict other) {
 	self->li_list = other->li_list;
@@ -906,7 +904,7 @@ fli_copy(FixedListIterator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 fli_deep(FixedListIterator *__restrict self,
          FixedListIterator *__restrict other) {
 	self->li_iter = FLI_GETITER(other);
@@ -920,7 +918,7 @@ err:
 
 PRIVATE int DCALL
 fli_init(FixedListIterator *__restrict self,
-         size_t argc, DeeObject **__restrict argv) {
+         size_t argc, DeeObject **argv) {
 	self->li_iter = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:FixedListIterator", &self->li_list, &self->li_iter))
 		goto err;
@@ -932,12 +930,12 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 fli_fini(FixedListIterator *__restrict self) {
 	Dee_Decref(self->li_list);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 fli_visit(FixedListIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->li_list);
 }
@@ -976,7 +974,7 @@ PRIVATE struct type_member fli_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fli_next(FixedListIterator *__restrict self) {
 	DREF DeeObject *result;
 	size_t iter, newiter;

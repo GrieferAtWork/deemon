@@ -60,7 +60,7 @@ INTDEF DeeTypeObject SeqLocator_Type;
 INTDEF DeeTypeObject SeqLocatorIterator_Type;
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 locatoriter_ctor(LocatorIterator *__restrict self) {
 	self->li_iter = DeeObject_IterSelf(Dee_EmptySeq);
 	if unlikely(!self->li_iter)
@@ -73,7 +73,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 locatoriter_copy(LocatorIterator *__restrict self,
                  LocatorIterator *__restrict other) {
 	self->li_iter = DeeObject_Copy(other->li_iter);
@@ -88,7 +88,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 locatoriter_deep(LocatorIterator *__restrict self,
                  LocatorIterator *__restrict other) {
 	self->li_iter = DeeObject_DeepCopy(other->li_iter);
@@ -114,7 +114,7 @@ err:
 
 PRIVATE int DCALL
 locatoriter_init(LocatorIterator *__restrict self,
-                 size_t argc, DeeObject **__restrict argv) {
+                 size_t argc, DeeObject **argv) {
 	Locator *loc;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqLocatorIterator", &loc))
 		goto err;
@@ -132,21 +132,21 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 locatoriter_fini(LocatorIterator *__restrict self) {
 	Dee_Decref(self->li_iter);
 	Dee_Decref(self->li_elem);
 	Dee_XDecref(self->li_pred);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 locatoriter_visit(LocatorIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->li_iter);
 	Dee_Visit(self->li_elem);
 	Dee_XVisit(self->li_pred);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 locatoriter_next(LocatorIterator *__restrict self) {
 	DREF DeeObject *result;
 	for (;;) {
@@ -203,7 +203,7 @@ PRIVATE struct type_cmp locatoriter_cmp = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 locatoriter_seq_get(LocatorIterator *__restrict self) {
 	DREF DeeObject *inner_seq, *result;
 	/* Forward access to this attribute to the pointed-to iterator. */
@@ -276,7 +276,7 @@ INTERN DeeTypeObject SeqLocatorIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 locator_ctor(Locator *__restrict self) {
 	self->l_seq  = Dee_EmptySeq;
 	self->l_elem = Dee_None;
@@ -286,7 +286,7 @@ locator_ctor(Locator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 locator_copy(Locator *__restrict self,
              Locator *__restrict other) {
 	self->l_seq  = other->l_seq;
@@ -298,7 +298,7 @@ locator_copy(Locator *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 locator_deep(Locator *__restrict self,
              Locator *__restrict other) {
 	self->l_seq = DeeObject_DeepCopy(other->l_seq);
@@ -324,7 +324,7 @@ err:
 
 PRIVATE int DCALL
 locator_init(Locator *__restrict self,
-             size_t argc, DeeObject **__restrict argv) {
+             size_t argc, DeeObject **argv) {
 	self->l_pred = NULL;
 	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqLocator", &self->l_seq, &self->l_elem, &self->l_pred))
 		goto err;
@@ -342,21 +342,21 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 locator_fini(Locator *__restrict self) {
 	Dee_Decref(self->l_seq);
 	Dee_Decref(self->l_elem);
 	Dee_XDecref(self->l_pred);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 locator_visit(Locator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->l_seq);
 	Dee_Visit(self->l_elem);
 	Dee_XVisit(self->l_pred);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 locator_iter(Locator *__restrict self) {
 	DREF LocatorIterator *result;
 	result = DeeObject_MALLOC(LocatorIterator);

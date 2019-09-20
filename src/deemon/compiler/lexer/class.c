@@ -368,7 +368,7 @@ err:
  * that should be used for an other operator or member-method other
  * than the constructor.
  * Upon success (0), the scope can later be popped using `basescope_pop()'. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 class_maker_push_methscope(struct class_maker *__restrict self) {
 	if (basescope_push())
 		goto err;
@@ -385,7 +385,7 @@ err:
  * Upon success (0), the scope can later be popped using `basescope_pop()'.
  * The constructor scope must be active when member initializers
  * and (obviously) the constructor operator are being parsed. */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 class_maker_push_ctorscope(struct class_maker *__restrict self) {
 	if (self->cm_ctor_scope) {
 		/* The constructor scope already exists. */
@@ -564,7 +564,7 @@ do_realloc:
 	return self->cm_class_initv + self->cm_class_initc++;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 priv_reserve_instance_init(struct class_maker *__restrict self) {
 	if (self->cm_initc == self->cm_inita) {
 		DREF struct ast **new_vector;
@@ -594,7 +594,7 @@ do_realloc:
  * NOTE: If the symbol describes an instance member, `initializer' must have been generated
  *       in the context of the constructor scope (as it will be run immediately before
  *       the __constructor__ operator) */
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 class_maker_addinit(struct class_maker *__restrict self,
                     struct symbol *__restrict sym,
                     struct ast *__restrict initializer,
@@ -911,7 +911,7 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 parse_constructor_initializers(struct class_maker *__restrict self) {
 	uint32_t old_flags;
 	for (;;) {

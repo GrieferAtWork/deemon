@@ -88,7 +88,7 @@ err_r:
 	(COMPILER_OFFSETOF(DeeSlabStat, st_slabs) + \
 	 ((x)->st_stat.st_slabcount * sizeof(DeeSlabInfo)))
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 ss_hash(SlabStatObject *__restrict self) {
 	return Dee_HashPtr(&self->st_stat, SLABSTAT_DATASIZE(self));
 }
@@ -121,12 +121,12 @@ PRIVATE struct type_cmp ss_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ss_ge
 };
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 ss_nsi_getsize(SlabStatObject *__restrict self) {
 	return self->st_stat.st_slabcount;
 }
 
-PRIVATE DREF SlabInfoObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SlabInfoObject *DCALL
 ss_nsi_getitem(SlabStatObject *__restrict self, size_t index) {
 	DREF SlabInfoObject *result;
 	if unlikely(index >= self->st_stat.st_slabcount) {
@@ -146,7 +146,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF SlabStatIteratorObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SlabStatIteratorObject *DCALL
 ss_iter(SlabStatObject *__restrict self) {
 	DREF SlabStatIteratorObject *result;
 	result = DeeObject_MALLOC(SlabStatIteratorObject);
@@ -160,12 +160,12 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ss_size(SlabStatObject *__restrict self) {
 	return DeeInt_NewSize(self->st_stat.st_slabcount);
 }
 
-PRIVATE DREF SlabInfoObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF SlabInfoObject *DCALL
 ss_getitem(SlabStatObject *__restrict self,
            DeeObject *__restrict index_ob) {
 	size_t index;
@@ -279,7 +279,7 @@ INTERN DeeTypeObject SlabStat_Type = {
 #define READ_INDEX(x) ATOMIC_READ((x)->sti_index)
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssi_copy(SlabStatIteratorObject *__restrict self,
          SlabStatIteratorObject *__restrict other) {
 	self->sti_index = READ_INDEX(other);
@@ -288,12 +288,12 @@ ssi_copy(SlabStatIteratorObject *__restrict self,
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ssi_fini(SlabStatIteratorObject *__restrict self) {
 	Dee_Decref(self->sti_stat);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssi_bool(SlabStatIteratorObject *__restrict self) {
 	return READ_INDEX(self) < self->sti_stat->st_stat.st_slabcount;
 }
@@ -325,7 +325,7 @@ PRIVATE struct type_cmp ssi_cmp = {
 };
 
 
-PRIVATE DREF SlabInfoObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF SlabInfoObject *DCALL
 ssi_next(SlabStatIteratorObject *__restrict self) {
 	DREF SlabInfoObject *result;
 	size_t index;
@@ -410,7 +410,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(SlabStatIteratorObject, sti_stat) ==
               COMPILER_OFFSETOF(SlabInfoObject, si_stat));
 #define si_fini  ssi_fini
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 si_str(SlabInfoObject *__restrict self) {
 	return DeeString_Newf("size: %Iu, alloc: %Iu/%Iu, free: %Iu/%Iu",
 	                      self->si_info->si_itemsize,
@@ -420,17 +420,17 @@ si_str(SlabInfoObject *__restrict self) {
 	                      self->si_info->si_max_free);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 si_repr(SlabInfoObject *__restrict self) {
 	return DeeString_Newf("<slabinfo %k>", self);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 si_get_index(SlabInfoObject *__restrict self) {
 	return DeeInt_NewSize((size_t)(self->si_info - self->si_stat->st_stat.st_slabs));
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 si_get_slabsize(SlabInfoObject *__restrict self) {
 	return DeeInt_NewSize(self->si_info->si_slabend -
 	                      self->si_info->si_slabstart);

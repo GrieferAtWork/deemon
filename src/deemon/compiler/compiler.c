@@ -72,7 +72,7 @@ PRIVATE void *DCALL memxch(void *a, void *b, size_t num_bytes) {
 
 
 /* compiler --> GLOBAL */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 load_compiler(DeeCompilerObject *__restrict compiler) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
@@ -96,7 +96,7 @@ load_compiler(DeeCompilerObject *__restrict compiler) {
 
 
 /* GLOBAL --> compiler */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 save_compiler(DeeCompilerObject *__restrict compiler) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
@@ -127,7 +127,7 @@ save_compiler(DeeCompilerObject *__restrict compiler) {
 
 
 PUBLIC DREF DeeCompilerObject *DeeCompiler_Current = NULL;
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeCompiler_Begin(DREF DeeCompilerObject *__restrict compiler) {
 #ifndef CONFIG_NO_THREADS
 	ASSERT(recursive_rwlock_writing(&DeeCompiler_Lock));
@@ -198,7 +198,7 @@ DeeCompiler_End(void) {
 	}
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 	ASSERT(DeeCompiler_Check(compiler));
 #ifndef CONFIG_NO_THREADS
@@ -228,9 +228,8 @@ DeeCompiler_Unload(DREF DeeCompilerObject *__restrict compiler) {
 /* -------- Compiler Object Implementation -------- */
 /* Construct a new compiler for generating the source for the given `module'.
  * @param: flags: Set of `COMPILER_F*' (see above) */
-PUBLIC DREF DeeCompilerObject *DCALL
-DeeCompiler_New(DeeObject *__restrict module,
-                uint16_t flags) {
+PUBLIC WUNUSED NONNULL((1)) DREF DeeCompilerObject *DCALL
+DeeCompiler_New(DeeObject *__restrict module, uint16_t flags) {
 	DREF DeeCompilerObject *result;
 	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
 	ASSERTF(!(flags & ~COMPILER_FMASK), "Invalid compiler flags in %x", flags);
@@ -277,7 +276,7 @@ err_r:
 	return NULL;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 compiler_fini(DeeCompilerObject *__restrict self) {
 	weakref_support_fini(self);
 
@@ -315,7 +314,7 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 	Dee_Free(self->cp_items.ci_list);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 compiler_visit(DeeCompilerObject *__restrict self, dvisit_t proc, void *arg) {
 	/* First: Make sure that the compiler is fully unloaded. */
 	DeeCompiler_Unload(self);
@@ -331,7 +330,7 @@ INTDEF struct type_member compiler_class_members[];
 
 INTDEF int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **__restrict argv,
+              size_t argc, DeeObject **argv,
               DeeObject *kw);
 
 PUBLIC DeeTypeObject DeeCompiler_Type = {

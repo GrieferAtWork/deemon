@@ -58,12 +58,12 @@ typedef struct {
 
 INTDEF DeeTypeObject StringSegmentsIterator_Type;
 INTDEF DeeTypeObject StringSegments_Type;
-INTDEF DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Segments(String *__restrict self,
                    size_t segment_size);
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_ctor(StringSegmentsIterator *__restrict self) {
 	self->s_str   = (DREF DeeStringObject *)Dee_EmptyString;
 	self->s_siz   = 1;
@@ -74,7 +74,7 @@ ssegiter_ctor(StringSegmentsIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ssegiter_copy(StringSegmentsIterator *__restrict self,
               StringSegmentsIterator *__restrict other) {
 	self->s_str   = other->s_str;
@@ -88,7 +88,7 @@ ssegiter_copy(StringSegmentsIterator *__restrict self,
 
 PRIVATE int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
-              size_t argc, DeeObject **__restrict argv) {
+              size_t argc, DeeObject **argv) {
 	StringSegments *seg;
 	if (DeeArg_Unpack(argc, argv, "o:_StringSegmentsIterator", &seg))
 		goto err;
@@ -105,7 +105,7 @@ err:
 	return -1;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ssegiter_next(StringSegmentsIterator *__restrict self) {
 	size_t part_size;
 	uint8_t *new_ptr, *ptr;
@@ -131,17 +131,17 @@ ssegiter_next(StringSegmentsIterator *__restrict self) {
 	return DeeString_NewWithWidth(ptr, part_size, self->s_width);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 ssegiter_fini(StringSegmentsIterator *__restrict self) {
 	Dee_Decref(self->s_str);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_bool(StringSegmentsIterator *__restrict self) {
 	return READ_PTR(self) < self->s_end;
 }
 
-PRIVATE DREF StringSegments *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringSegments *DCALL
 ssegiter_getseq(StringSegmentsIterator *__restrict self) {
 	return (DREF StringSegments *)DeeString_Segments(self->s_str,
 	                                                 self->s_siz);
@@ -235,7 +235,7 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_ctor(StringSegments *__restrict self) {
 	self->s_str = (DREF DeeStringObject *)Dee_EmptyString;
 	self->s_siz = 1;
@@ -245,7 +245,7 @@ sseg_ctor(StringSegments *__restrict self) {
 
 PRIVATE int DCALL
 sseg_init(StringSegments *__restrict self,
-          size_t argc, DeeObject **__restrict argv) {
+          size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_StringSegments", &self->s_str, &self->s_siz) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->s_str, &DeeString_Type))
 		goto err;
@@ -259,18 +259,18 @@ err:
 	return -1;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 sseg_fini(StringSegments *__restrict self) {
 	Dee_Decref(self->s_str);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_bool(StringSegments *__restrict self) {
 	return !DeeString_IsEmpty(self->s_str);
 }
 
 
-PRIVATE DREF StringSegmentsIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF StringSegmentsIterator *DCALL
 sseg_iter(StringSegments *__restrict self) {
 	DREF StringSegmentsIterator *result;
 	result = DeeObject_MALLOC(StringSegmentsIterator);
@@ -287,7 +287,7 @@ done:
 	return result;
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sseg_size(StringSegments *__restrict self) {
 	size_t result = DeeString_WLEN(self->s_str);
 	result += (self->s_siz - 1);
@@ -295,9 +295,9 @@ sseg_size(StringSegments *__restrict self) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE DREF DeeObject *DCALL
-sseg_contains(StringSegments *__restrict self,
-              DeeStringObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+sseg_contains(StringSegments *self,
+              DeeStringObject *other) {
 	DeeStringObject *str;
 	union dcharptr my_str, my_end, ot_str;
 	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeString_Type))
@@ -388,7 +388,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF String *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
 sseg_get(StringSegments *__restrict self,
          DeeObject *__restrict index_ob) {
 	size_t index, length;
@@ -475,7 +475,7 @@ INTERN DeeTypeObject StringSegments_Type = {
 };
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Segments(String *__restrict self,
                    size_t segment_size) {
 	DREF StringSegments *result;

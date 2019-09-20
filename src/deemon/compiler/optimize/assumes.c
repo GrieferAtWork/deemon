@@ -370,7 +370,7 @@ INTERN int
 }
 
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 same_constant_value(DeeObject *__restrict a,
                     DeeObject *__restrict b) {
 	int temp;

@@ -771,7 +771,7 @@ err:
 
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_printstring(struct unicode_printer *__restrict self,
                                 DeeObject *__restrict string) {
 	struct string_utf *utf;
@@ -1516,7 +1516,7 @@ utf32_to_utf8(uint32_t *__restrict src, size_t src_len,
 }
 
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	size_t i, length, utf8_length;
 	DREF String *result;
@@ -1571,7 +1571,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) {
 	size_t i, length, utf8_length;
 	DREF String *result;
@@ -1806,7 +1806,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryPackUtf16Buffer(/*inherit(on_success)*/ uint16_t *__restrict text) {
 	size_t i, length, utf8_length;
 	struct string_utf *utf;
@@ -2041,7 +2041,7 @@ err:
 	return NULL;
 }
 
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) {
 	size_t i, length, utf8_length;
 	DREF String *result;
@@ -2297,7 +2297,7 @@ case STRING_ENCODING_-- - MBCS: {
 
 #endif
 
-INTDEF uint32_t DCALL
+INTDEF WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen);
 
 PUBLIC DREF DeeObject *DCALL
@@ -2893,7 +2893,7 @@ PUBLIC DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch) {
 }
 
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Convert(DeeObject *__restrict self,
                   size_t start, size_t end,
                   uintptr_t kind) {
@@ -2934,7 +2934,7 @@ DeeString_Convert(DeeObject *__restrict self,
 	return DeeString_PackWidthBuffer(result, width);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
 	uintptr_t kind = UNICODE_CONVERT_TITLE;
 	unsigned int width;
@@ -2986,7 +2986,7 @@ DeeString_ToTitle(DeeObject *__restrict self, size_t start, size_t end) {
 	return DeeString_PackWidthBuffer(result, width);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Capitalize(DeeObject *__restrict self, size_t start, size_t end) {
 	unsigned int width;
 	void *str, *result;
@@ -3028,7 +3028,7 @@ DeeString_Capitalize(DeeObject *__restrict self, size_t start, size_t end) {
 	return DeeString_PackWidthBuffer(result, width);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Swapcase(DeeObject *__restrict self, size_t start, size_t end) {
 	unsigned int width;
 	void *str, *result;
@@ -3070,7 +3070,7 @@ DeeString_Swapcase(DeeObject *__restrict self, size_t start, size_t end) {
 
 
 
-INTERN uint32_t DCALL
+INTERN WUNUSED NONNULL((1)) uint32_t DCALL
 utf8_getchar(uint8_t const *__restrict base, uint8_t seqlen) {
 	uint32_t result;
 	switch (seqlen) {
@@ -3173,9 +3173,9 @@ utf8_getchar16(uint8_t const *__restrict base, uint8_t seqlen) {
 	return result;
 }
 
-PUBLIC uint32_t DCALL
+PUBLIC NONNULL((1, 2)) uint32_t DCALL
 Dee_utf8_readchar(char const **__restrict piter,
-                  char const *__restrict end) {
+                  char const *end) {
 	uint32_t result;
 	char const *iter = *piter;
 	if (iter >= end)
@@ -3344,9 +3344,9 @@ Dee_utf8_readchar_u(char const **__restrict piter) {
 	return result;
 }
 
-PUBLIC uint32_t DCALL
+PUBLIC NONNULL((1, 2)) uint32_t DCALL
 Dee_utf8_readchar_rev(char const **__restrict pend,
-                      char const *__restrict begin) {
+                      char const *begin) {
 	uint32_t result;
 	char const *end = *pend;
 	uint8_t seqlen  = 1;
@@ -3361,7 +3361,7 @@ Dee_utf8_readchar_rev(char const **__restrict pend,
 
 
 
-PUBLIC char *DCALL
+PUBLIC WUNUSED NONNULL((1)) char *DCALL
 Dee_utf8_writechar(char *__restrict buffer, uint32_t ch) {
 	uint8_t *dst = (uint8_t *)buffer;
 	if (ch <= UTF8_1BYTE_MAX) {
@@ -3416,7 +3416,7 @@ Dee_utf8_writechar(char *__restrict buffer, uint32_t ch) {
 
 
 /* Unicode printer API */
-PUBLIC bool DCALL
+PUBLIC NONNULL((1)) bool DCALL
 Dee_unicode_printer_allocate(struct unicode_printer *__restrict self,
                              size_t num_chars, unsigned int width) {
 	ASSERT(!(width & ~UNICODE_PRINTER_FWIDTH));
@@ -3554,7 +3554,7 @@ err:
  *           after a call to `unicode_printer_fini()'
  * @return: * :   A reference to the packed string.
  * @return: NULL: An error occurred. */
-PUBLIC DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_unicode_printer_pack(/*inherit(always)*/ struct unicode_printer *__restrict self) {
 	void *result_buffer = self->up_buffer;
 	if unlikely(!result_buffer)
@@ -3979,7 +3979,7 @@ PUBLIC int (DCALL Dee_unicode_printer_pututf16)(struct unicode_printer *__restri
  * HINT: This function is intentionally designed as compatible with `dformatprinter'
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_print(void *__restrict self,
                           /*utf-8*/ char const *__restrict text,
                           size_t textlen) {
@@ -4045,7 +4045,7 @@ err:
 }
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_printutf16(struct unicode_printer *__restrict self,
                                /*utf-16*/ uint16_t const *__restrict text,
                                size_t textlen) {
@@ -4110,7 +4110,7 @@ err:
  *  - `unicode_printer_print32' prints characters from the range U+0000 .. U+10FFFF (FFFFFFFF)
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_print8(struct unicode_printer *__restrict self,
                            uint8_t const *__restrict text,
                            size_t textlen) {
@@ -4238,7 +4238,7 @@ err:
 }
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 Dee_unicode_printer_repeatascii(struct unicode_printer *__restrict self,
                                 char ch, size_t num_chars) {
 	size_t result = num_chars;
@@ -4364,7 +4364,7 @@ err:
 }
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_print16(struct unicode_printer *__restrict self,
                             uint16_t const *__restrict text,
                             size_t textlen) {
@@ -4501,7 +4501,7 @@ err:
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_print32(struct unicode_printer *__restrict self,
                             uint32_t const *__restrict text,
                             size_t textlen) {
@@ -4846,7 +4846,7 @@ err:
 	return temp;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 Dee_unicode_printer_reserve(struct unicode_printer *__restrict self,
                             size_t num_chars) {
 	size_t result = self->up_length;
@@ -4913,7 +4913,7 @@ err:
 
 
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1)) dssize_t DCALL
 DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
 	char utf8_repr[UTF8_MAX_MBLEN];
 	size_t utf8_len;
@@ -4933,7 +4933,7 @@ DeeFormat_Putc(dformatprinter printer, void *arg, uint32_t ch) {
  * Upon success, return the index (offset from the base) of the string (in characters).
  * @return: * : The offset from the base of string being printed, where the given `str' can be found.
  * @return: -1: Failed to allocate the string. */
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_reuse(struct unicode_printer *__restrict self,
                           /*utf-8*/ char const *__restrict str, size_t length) {
 	size_t result;
@@ -4946,7 +4946,7 @@ err:
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_reuse8(struct unicode_printer *__restrict self,
                            uint8_t const *__restrict str, size_t length) {
 	size_t result;
@@ -4959,7 +4959,7 @@ err:
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_reuse16(struct unicode_printer *__restrict self,
                             uint16_t const *__restrict str, size_t length) {
 	size_t result;
@@ -4972,7 +4972,7 @@ err:
 	return -1;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 Dee_unicode_printer_reuse32(struct unicode_printer *__restrict self,
                             uint32_t const *__restrict str, size_t length) {
 	size_t result;
@@ -6005,7 +6005,7 @@ err:
  * This function is intended to be used as the general-purpose
  * dformatprinter-compatible callback for generating data to-be
  * written into a Bytes object. */
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 bytes_printer_print(void *__restrict self,
                     /*utf-8*/ char const *__restrict text, size_t textlen) {
 	uint32_t ch32;
@@ -6084,7 +6084,7 @@ PUBLIC int (DCALL bytes_printer_putc)(struct bytes_printer *__restrict self, cha
 	return bytes_printer_print(self, &ch, 1) < 0 ? -1 : 0;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Print8(dformatprinter printer, void *arg,
                  uint8_t const *__restrict text,
                  size_t textlen) {
@@ -6127,7 +6127,7 @@ err:
 	return temp;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Print16(dformatprinter printer, void *arg,
                   uint16_t const *__restrict text,
                   size_t textlen) {
@@ -6161,7 +6161,7 @@ err:
 	return temp;
 }
 
-PUBLIC dssize_t DCALL
+PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeFormat_Print32(dformatprinter printer, void *arg,
                   uint32_t const *__restrict text, size_t textlen) {
 	dssize_t temp, result = 0;
@@ -6185,7 +6185,8 @@ err:
 
 
 /* Helper functions for manipulating strings that have already been created. */
-PUBLIC uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index) {
+PUBLIC WUNUSED NONNULL((1)) uint32_t
+(DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size_t index) {
 	union dcharptr str;
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -6209,8 +6210,9 @@ PUBLIC uint32_t (DCALL DeeString_GetChar)(DeeStringObject *__restrict self, size
 	}
 }
 
-PUBLIC void (DCALL DeeString_SetChar)(DeeStringObject *__restrict self,
-                                     size_t index, uint32_t value) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeString_SetChar)(DeeStringObject *__restrict self,
+                          size_t index, uint32_t value) {
 	union dcharptr str;
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -6356,8 +6358,9 @@ check_1byte:
 	}
 }
 
-PUBLIC void (DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
-                                      size_t dst, size_t src, size_t num_chars) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeString_Memmove)(DeeStringObject *__restrict self,
+                          size_t dst, size_t src, size_t num_chars) {
 	union dcharptr str;
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
@@ -6501,7 +6504,8 @@ check_1byte:
 	(ASSERT(WSTR_LENGTH(x)), --WSTR_LENGTH(x), \
 	 (x)[WSTR_LENGTH(x)] = 0)
 
-PUBLIC void (DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeString_PopbackAscii)(DeeStringObject *__restrict self) {
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	ASSERT(!DeeObject_IsShared(self));

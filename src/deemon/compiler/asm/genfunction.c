@@ -68,7 +68,7 @@ err:
 	return NULL;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 asm_gpush_function(struct ast *__restrict function_ast) {
 	DREF DeeCodeObject *code;
 	int32_t cid;

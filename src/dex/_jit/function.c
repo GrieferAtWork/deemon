@@ -38,7 +38,7 @@ DECL_BEGIN
 
 typedef JITFunctionObject JITFunction;
 
-INTERN bool DCALL
+INTERN NONNULL((1)) bool DCALL
 JITFunction_TryRehashArguments(JITFunction *__restrict self,
                                size_t new_mask) {
 	size_t i, j, perturb;
@@ -474,7 +474,7 @@ err_r:
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 jf_fini(JITFunction *__restrict self) {
 	Dee_Decref(self->jf_source);
 	Dee_XDecref(self->jf_impbase);
@@ -484,7 +484,7 @@ jf_fini(JITFunction *__restrict self) {
 	Dee_Free(self->jf_argv);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 jf_visit(JITFunction *__restrict self, dvisit_t proc, void *arg) {
 	size_t i;
 	Dee_Visit(self->jf_source);
@@ -507,7 +507,7 @@ jf_visit(JITFunction *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_str(JITFunction *__restrict self) {
 	struct jit_object_entry *ent;
 	if (self->jf_selfarg == (size_t)-1)
@@ -519,7 +519,7 @@ jf_str(JITFunction *__restrict self) {
 }
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_repr(JITFunction *__restrict self) {
 	size_t i;
 	struct jit_object_entry *ent;
@@ -604,9 +604,9 @@ err:
 }
 
 
-PRIVATE DREF DeeObject *DCALL
-jf_call_kw(JITFunction *__restrict self, size_t argc,
-           DeeObject **__restrict argv, DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+jf_call_kw(JITFunction *self, size_t argc,
+           DeeObject **argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	JITLexer lexer;
 	JITContext context;
@@ -798,7 +798,7 @@ err_argc:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 compare_objtabs(JITObjectTable *__restrict a,
                 JITObjectTable *__restrict b) {
 	size_t i;
@@ -840,7 +840,7 @@ err_temp:
 	return temp;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 jf_equal(JITFunction *__restrict a,
          JITFunction *__restrict b) {
 	int temp;
@@ -908,16 +908,16 @@ err_temp:
 	return temp;
 }
 
-PRIVATE dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 jf_hash(JITFunction *__restrict self) {
 	(void)self;
 	/* TODO */
 	return 0;
 }
 
-PRIVATE DREF DeeObject *DCALL
-jf_eq(JITFunction *__restrict self,
-      JITFunction *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+jf_eq(JITFunction *self,
+      JITFunction *other) {
 	int result;
 	if (DeeObject_AssertTypeExact(other, &JITFunction_Type))
 		goto err;
@@ -929,9 +929,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DREF DeeObject *DCALL
-jf_ne(JITFunction *__restrict self,
-      JITFunction *__restrict other) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+jf_ne(JITFunction *self,
+      JITFunction *other) {
 	int result;
 	if (DeeObject_AssertTypeExact(other, &JITFunction_Type))
 		goto err;
@@ -953,17 +953,17 @@ PRIVATE struct type_cmp jf_cmp = {
 
 
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_hasvarargs(JITFunction *__restrict self) {
 	return_bool_(self->jf_varargs != (size_t)-1);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_hasvarkwds(JITFunction *__restrict self) {
 	return_bool_(self->jf_varkwds != (size_t)-1);
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_getname(JITFunction *__restrict self) {
 	struct jit_object_entry *ent;
 	if (self->jf_selfarg == (size_t)-1)
@@ -979,7 +979,7 @@ jf_getdoc(JITFunction *__restrict UNUSED(self)) {
 	return_none;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_getkwds(JITFunction *__restrict self) {
 	/* XXX: Add a generic sequence proxy type for this! */
 	DREF DeeObject *result;
@@ -1007,19 +1007,19 @@ err_r_i:
 	return NULL;
 }
 
-INTERN DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_gettext(JITFunction *__restrict self) {
 	return DeeString_NewUtf8(self->jf_source_start,
 	                         (size_t)(self->jf_source_end - self->jf_source_start),
 	                         STRING_ERROR_FIGNORE);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_isyielding(JITFunction *__restrict self) {
 	return_bool(self->jf_flags & JIT_FUNCTION_FYIELDING);
 }
 
-PRIVATE DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_getisretexpr(JITFunction *__restrict self) {
 	return_bool(self->jf_flags & JIT_FUNCTION_FRETEXPR);
 }
