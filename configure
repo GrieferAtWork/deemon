@@ -311,7 +311,7 @@ if [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
 	WITH_ASSEMBLY_INTERPRETER="0"
 	case "$TARGET_CPU" in
 		i?86)
-			printf "Checking: Compile an AT&T assembly source file..."
+			printf "checking if one can compile an AT&T assembly source file..."
 			unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
 			unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
 			cat > "$BLD_ROOT/test.S" <<EOF
@@ -322,10 +322,10 @@ foo:
 	ret $8
 EOF
 			if "$CONFIG_CC" -c -o "$BLD_ROOT/test.o" "$BLD_ROOT/test.S" > /dev/null 2>&1; then
-				printf " Yes\n"
+				printf " yes\n"
 				WITH_ASSEMBLY_INTERPRETER="1"
 			else
-				printf " No\n"
+				printf " no\n"
 			fi
 			unlink "$BLD_ROOT/test.o" > /dev/null 2>&1
 			unlink "$BLD_ROOT/test.S" > /dev/null 2>&1
@@ -543,6 +543,7 @@ case "$TARGET" in
 		if [[ "$WITH_DEX" == "1" ]]; then
 			CONFIG_CORE_LDFLAGS="$CONFIG_CORE_LDFLAGS -Wl,--export-dynamic"
 			CONFIG_DEX_LDFLAGS="$CONFIG_DEX_LDFLAGS -Wl,--allow-shlib-undefined"
+			CONFIG_DEX_CFLAGS="$CONFIG_DEX_CFLAGS -fPIC"
 		fi
 		;;
 esac
