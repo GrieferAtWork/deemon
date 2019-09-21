@@ -439,6 +439,16 @@ else
 					export CFLAGS="$CFLAGS -DSYMBOL_UNDERSCORE";
 					export CXXFLAGS="$CXXFLAGS -DSYMBOL_UNDERSCORE";
 				fi
+				case "$TARGET" in
+					*CYGWIN* | *Cygwin* | *cygwin*)
+						;;
+					*)
+						# Force libffi to be built as position-independent,
+						# thus preventing DT_TEXTREL in ctypes.so
+						export CFLAGS="$CFLAGS -fPIC";
+						export CXXFLAGS="$CXXFLAGS -fPIC";
+						;;
+				esac
 				cmd bash "$SRC_ROOT/src/dex/ctypes/ffi/libffi/configure" \
 					--host="$LIBFFI_TARGET" \
 					--target="$LIBFFI_TARGET" \
