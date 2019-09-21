@@ -3504,7 +3504,9 @@ fs_chown(DeeObject *__restrict path,
          DeeObject *__restrict group) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	(void)path, (void)user, (void)group; /* TODO */
+	(void)path;
+	(void)user;
+	(void)group; /* TODO */
 	DERROR_NOTIMPLEMENTED();
 err:
 	return -1;

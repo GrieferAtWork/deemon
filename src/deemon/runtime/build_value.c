@@ -1029,7 +1029,7 @@ kwds_findstr(DeeKwdsObject *__restrict self,
 	return (size_t)-1;
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((4, 5)) int
 (DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject **argv,
                          DeeObject *kw, struct keyword *__restrict kwlist,
                          char const *__restrict format, va_list args) {
@@ -1247,7 +1247,7 @@ invalid_argc:
 	}
 }
 
-PUBLIC int
+PUBLIC WUNUSED NONNULL((4, 5)) int
 (DeeArg_UnpackKw)(size_t argc, DeeObject **argv,
                   DeeObject *kw, struct keyword *__restrict kwlist,
                   char const *__restrict format, ...) {

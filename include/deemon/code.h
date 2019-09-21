@@ -147,6 +147,9 @@ DECL_BEGIN
 #define Dee_code_frame_kwds                 code_frame_kwds
 #define Dee_function_info                   function_info
 #define function_info_fini                  Dee_function_info_fini
+#define DEFINE_CODE                         Dee_DEFINE_CODE
+#define DEFINE_FUNCTION                     Dee_DEFINE_FUNCTION
+#define DEFINE_FUNCTION_NOREFS              Dee_DEFINE_FUNCTION_NOREFS
 #endif /* DEE_SOURCE */
 
 struct Dee_code_frame;
@@ -497,55 +500,55 @@ struct Dee_code_object {
 #endif /* CONFIG_NO_THREADS */
 
 /* Define a statically allocated code object. */
-#define DEFINE_CODE(name,                                                   \
-                    co_flags_, co_localc_, co_staticc_, co_refc_,           \
-                    co_exceptc_, co_argc_min_, co_argc_max_, co_framesize_, \
-                    co_codebytes_, co_module_, co_keywords_, co_defaultv_,  \
-                    co_staticv_, co_exceptv_, co_ddi_, ...)                 \
-	struct {                                                                \
-		struct gc_head_raw _gc_head_data;                                   \
-		struct {                                                            \
-			Dee_OBJECT_HEAD                                                 \
-			uint16_t                              co_flags;                 \
-			uint16_t                              co_localc;                \
-			uint16_t                              co_staticc;               \
-			uint16_t                              co_refc;                  \
-			uint16_t                              co_exceptc;               \
-			uint16_t                              co_argc_min;              \
-			uint16_t                              co_argc_max;              \
-			uint16_t                              co_padding;               \
-			uint32_t                              co_framesize;             \
-			Dee_code_size_t                       co_codebytes;             \
-			_DEE_CODE_CO_STATIC_LOCK_FIELD                                  \
-			DREF struct Dee_module_object        *co_module;                \
-			DREF struct Dee_string_object *const *co_keywords;              \
-			DREF DeeObject                *const *co_defaultv;              \
-			DREF DeeObject                      **co_staticv;               \
-			struct Dee_except_handler            *co_exceptv;               \
-			DREF DeeDDIObject                    *co_ddi;                   \
-			Dee_instruction_t                     co_code[co_codebytes_];   \
-		} ob;                                                               \
-	} name = {                                                              \
-		{ NULL, NULL },                                                     \
-		{ Dee_OBJECT_HEAD_INIT(&DeeCode_Type),                              \
-		  co_flags_,                                                        \
-		  co_localc_,                                                       \
-		  co_staticc_,                                                      \
-		  co_refc_,                                                         \
-		  co_exceptc_,                                                      \
-		  co_argc_min_,                                                     \
-		  co_argc_max_,                                                     \
-		  0,                                                                \
-		  co_framesize_,                                                    \
-		  co_codebytes_,                                                    \
-		  _DEE_CODE_CO_STATIC_LOCK_INIT                                     \
-		  co_module_,                                                       \
-		  co_keywords_,                                                     \
-		  co_defaultv_,                                                     \
-		  co_staticv_,                                                      \
-		  co_exceptv_,                                                      \
-		  co_ddi_,                                                          \
-		  __VA_ARGS__ }                                                     \
+#define Dee_DEFINE_CODE(name,                                                   \
+                        co_flags_, co_localc_, co_staticc_, co_refc_,           \
+                        co_exceptc_, co_argc_min_, co_argc_max_, co_framesize_, \
+                        co_codebytes_, co_module_, co_keywords_, co_defaultv_,  \
+                        co_staticv_, co_exceptv_, co_ddi_, ...)                 \
+	struct {                                                                    \
+		struct gc_head_raw _gc_head_data;                                       \
+		struct {                                                                \
+			Dee_OBJECT_HEAD                                                     \
+			uint16_t                              co_flags;                     \
+			uint16_t                              co_localc;                    \
+			uint16_t                              co_staticc;                   \
+			uint16_t                              co_refc;                      \
+			uint16_t                              co_exceptc;                   \
+			uint16_t                              co_argc_min;                  \
+			uint16_t                              co_argc_max;                  \
+			uint16_t                              co_padding;                   \
+			uint32_t                              co_framesize;                 \
+			Dee_code_size_t                       co_codebytes;                 \
+			_DEE_CODE_CO_STATIC_LOCK_FIELD                                      \
+			DREF struct Dee_module_object        *co_module;                    \
+			DREF struct Dee_string_object *const *co_keywords;                  \
+			DREF DeeObject                *const *co_defaultv;                  \
+			DREF DeeObject                      **co_staticv;                   \
+			struct Dee_except_handler            *co_exceptv;                   \
+			DREF DeeDDIObject                    *co_ddi;                       \
+			Dee_instruction_t                     co_code[co_codebytes_];       \
+		} ob;                                                                   \
+	} name = {                                                                  \
+		{ NULL, NULL },                                                         \
+		{ Dee_OBJECT_HEAD_INIT(&DeeCode_Type),                                  \
+		  co_flags_,                                                            \
+		  co_localc_,                                                           \
+		  co_staticc_,                                                          \
+		  co_refc_,                                                             \
+		  co_exceptc_,                                                          \
+		  co_argc_min_,                                                         \
+		  co_argc_max_,                                                         \
+		  0,                                                                    \
+		  co_framesize_,                                                        \
+		  co_codebytes_,                                                        \
+		  _DEE_CODE_CO_STATIC_LOCK_INIT                                         \
+		  co_module_,                                                           \
+		  co_keywords_,                                                         \
+		  co_defaultv_,                                                         \
+		  co_staticv_,                                                          \
+		  co_exceptv_,                                                          \
+		  co_ddi_,                                                              \
+		  __VA_ARGS__ }                                                         \
 	}
 
 
@@ -731,8 +734,10 @@ DeeCode_ExecFrameSafe(struct Dee_code_frame *__restrict frame);
  * These functions are highly platform- and arch-specific, and are meant
  * to provide some way of preventing a true stack overflow when user-code
  * has increased `DeeExec_StackLimit' to unreasonable heights. */
-DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameFastAltStack(struct Dee_code_frame *__restrict frame);
-DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
+DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DeeCode_ExecFrameFastAltStack(struct Dee_code_frame *__restrict frame);
+DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 
 
@@ -758,7 +763,8 @@ DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL DeeCode_ExecFrameSafeAltStack(stru
  * @return: * :    One of `TRIGGER_BREAKPOINT_*' describing how execution
  *                 should continue once the breakpoint has been dealt with.
  */
-INTDEF WUNUSED NONNULL((1)) int DCALL trigger_breakpoint(struct Dee_code_frame *__restrict frame);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+trigger_breakpoint(struct Dee_code_frame *__restrict frame);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Breakpoint execution modes. */
@@ -810,24 +816,24 @@ struct Dee_function_object {
 #define DeeFunction_CODE(x) ((DeeFunctionObject *)Dee_REQUIRES_OBJECT(x))->fo_code
 #define DeeFunction_REFS(x) ((DeeFunctionObject *)Dee_REQUIRES_OBJECT(x))->fo_refv
 
-#define DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
-	struct {                                           \
-		Dee_OBJECT_HEAD                                \
-		DREF DeeCodeObject *fo_code;                   \
-		DREF DeeObject     *fo_refv[fo_refc_];         \
-	} name = {                                         \
-		Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),       \
-		fo_code_,                                      \
-		__VA_ARGS__                                    \
+#define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
+	struct {                                               \
+		Dee_OBJECT_HEAD                                    \
+		DREF DeeCodeObject *fo_code;                       \
+		DREF DeeObject     *fo_refv[fo_refc_];             \
+	} name = {                                             \
+		Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),           \
+		fo_code_,                                          \
+		__VA_ARGS__                                        \
 	}
 
-#define DEFINE_FUNCTION_NOREFS(name, fo_code_)   \
-	struct {                                     \
-		Dee_OBJECT_HEAD                          \
-		DREF DeeCodeObject *fo_code;             \
-	} name = {                                   \
-		Dee_OBJECT_HEAD_INIT(&DeeFunction_Type), \
-		fo_code_                                 \
+#define Dee_DEFINE_FUNCTION_NOREFS(name, fo_code_) \
+	struct {                                       \
+		Dee_OBJECT_HEAD                            \
+		DREF DeeCodeObject *fo_code;               \
+	} name = {                                     \
+		Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),   \
+		fo_code_                                   \
 	}
 
 
@@ -901,8 +907,12 @@ struct Dee_function_info {
  * @return:  0: The function could be located (though which information became available must still be checked)
  * @return:  1: The function couldn't be found (all fields in `info' are set to indicate <unknown>)
  * @return: -1: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFunction_GetInfo(DeeObject *__restrict self, struct Dee_function_info *__restrict info);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCode_GetInfo(DeeObject *__restrict self, struct Dee_function_info *__restrict info);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeFunction_GetInfo(DeeObject *__restrict self,
+                    struct Dee_function_info *__restrict info);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeCode_GetInfo(DeeObject *__restrict self,
+                struct Dee_function_info *__restrict info);
 
 
 

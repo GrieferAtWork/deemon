@@ -93,6 +93,8 @@
 #define EXPDEF extern
 #define FUNDEF extern
 #define DATDEF extern
+#define DFUNDEF extern
+#define DDATDEF extern
 #define PUBLIC
 #define INTERN
 #define PUBLIC_CONST
@@ -174,8 +176,31 @@
 	void DeeDbgSlab_Free##size(void *restrict ptr, char const *file, int line); \
 	void DeeGCObject_SlabFree##size(void *restrict ptr);
 
+#define OBJECT_HEAD               Dee_ref_t ob_refcnt; DeeTypeObject *ob_type;
 #define Dee_OBJECT_HEAD           Dee_ref_t ob_refcnt; DeeTypeObject *ob_type;
+#define OBJECT_HEAD_EX(Ttype)     Dee_ref_t ob_refcnt; Ttype *ob_type;
 #define Dee_OBJECT_HEAD_EX(Ttype) Dee_ref_t ob_refcnt; Ttype *ob_type;
-#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define Dee_WEAKREF_SUPPORT       struct Dee_weakref_list ob_weakrefs;
+#define ERROR_OBJECT_HEAD         Dee_ref_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
+#define Dee_ERROR_OBJECT_HEAD     Dee_ref_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
+#define FILE_OBJECT_HEAD          Dee_ref_t ob_refcnt; DeeFileTypeObject *ob_type;
+#define Dee_FILE_OBJECT_HEAD      Dee_ref_t ob_refcnt; DeeFileTypeObject *ob_type;
 
+#define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
+#define WEAKREF_SUPPORT           struct Dee_weakref_list ob_weakrefs;
+#define Dee_WEAKREF_SUPPORT       struct Dee_weakref_list ob_weakrefs;
+#define WEAKREF(T)                struct Dee_weakref
+#define Dee_WEAKREF(T)            struct Dee_weakref
+#define DEFINE_KWDS(name, ...)                DeeKwdsObject name
+#define Dee_DEFINE_KWDS(name, ...)            DeeKwdsObject name
+#define DEFINE_KWLIST                         struct dee_keyword name[] = __VA_ARGS__
+#define Dee_DEFINE_KWLIST(name, ...)          struct dee_keyword name[] = __VA_ARGS__
+#define DEFINE_BYTES(name, ...)               DeeBytesObject name
+#define Dee_DEFINE_BYTES(name, ...)           DeeBytesObject name
+#define DEFINE_BYTES_EX(name, ...)            DeeBytesObject name
+#define Dee_DEFINE_BYTES_EX(name, ...)        DeeBytesObject name
+#define DEFINE_CODE(name, ...)                DeeCodeObject name
+#define Dee_DEFINE_CODE(name, ...)            DeeCodeObject name
+#define DEFINE_FUNCTION(name, ...)            DeeFunctionObject name
+#define Dee_DEFINE_FUNCTION(name, ...)        DeeFunctionObject name
+#define DEFINE_FUNCTION_NOREFS(name, ...)     DeeFunctionObject name
+#define Dee_DEFINE_FUNCTION_NOREFS(name, ...) DeeFunctionObject name

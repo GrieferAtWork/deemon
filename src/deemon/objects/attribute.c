@@ -1404,8 +1404,7 @@ module_enumattr(DeeTypeObject *UNUSED(tp_self),
 
 
 PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-DeeAttribute_Lookup(DeeTypeObject *__restrict tp_self,
-                    DeeObject *__restrict self,
+DeeAttribute_Lookup(DeeTypeObject *tp_self, DeeObject *self,
                     struct attribute_info *__restrict result,
                     struct attribute_lookup_rules const *__restrict rules) {
 	int error;

@@ -77,7 +77,7 @@ DFUNDEF void *(DCALL DeeDbg_UntrackAlloc)(void *ptr, char const *file, int line)
 #define DeeDbg_TryCalloc(n_bytes, file, line)       Dee_TryCalloc(n_bytes)
 #define DeeDbg_TryRealloc(ptr, n_bytes, file, line) Dee_TryRealloc(ptr, n_bytes)
 #define DeeDbg_Free(ptr, file, line)                Dee_Free(ptr)
-#define Dee_UntrackAlloc(ptr)                      (ptr)
+#define Dee_UntrackAlloc(ptr)                       (ptr)
 #endif /* NDEBUG */
 
 /* Reclaim free memory by going through internal pre-allocation caches,

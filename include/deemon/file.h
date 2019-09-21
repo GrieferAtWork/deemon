@@ -102,14 +102,14 @@ struct Dee_file_object {
 #define Dee_SYSFD_CLOSE(x) CloseHandle(x)
 #ifdef INVALID_HANDLE_VALUE
 #define Dee_SYSFD_INVALID  INVALID_HANDLE_VALUE
-#else
+#else /* INVALID_HANDLE_VALUE */
 #define Dee_SYSFD_INVALID  ((Dee_sysfd_t)-1)
-#endif
+#endif /* !INVALID_HANDLE_VALUE */
 #if defined(_WINNT_) || defined(__wtypes_h__) || defined(__wtypesbase_h__)
 typedef HANDLE Dee_sysfd_t;
-#else
+#else /* _WINNT_ || __wtypes_h__ || __wtypesbase_h__ */
 typedef void  *Dee_sysfd_t;
-#endif
+#endif /* !_WINNT_ && !__wtypes_h__ && !__wtypesbase_h__ */
 #elif defined(CONFIG_HOST_UNIX)
 #define Dee_SYSFD_SIZEOF    __SIZEOF_INT__
 #define Dee_SYSFD_SIGNED    1
@@ -146,9 +146,9 @@ typedef Dee_sysfd_t dsysfd_t;
 
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
 #ifdef DSYSFD_SIGNED
-#define DeeObject_AsFd(self,result) DeeObject_AsXUInt(DSYSFD_SIZEOF,self,result)
+#define DeeObject_AsFd(self, result) DeeObject_AsXUInt(DSYSFD_SIZEOF, self, result)
 #else /* DSYSFD_SIGNED */
-#define DeeObject_AsFd(self,result) DeeObject_AsXInt(DSYSFD_SIZEOF,self,result)
+#define DeeObject_AsFd(self, result) DeeObject_AsXInt(DSYSFD_SIZEOF, self, result)
 #endif /* !DSYSFD_SIGNED */
 #endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 
@@ -217,15 +217,15 @@ DDATDEF DeeTypeObject DeeFileType_Type;
 
 /* Base class for all file types. */
 DDATDEF DeeFileTypeObject DeeFile_Type;
-#define DeeFile_Check(ob)      DeeObject_InstanceOf(ob,(DeeTypeObject *)&DeeFile_Type)
-#define DeeFile_CheckExact(ob) DeeObject_InstanceOfExact(ob,(DeeTypeObject *)&DeeFile_Type)
+#define DeeFile_Check(ob)      DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeFile_Type)
+#define DeeFile_CheckExact(ob) DeeObject_InstanceOfExact(ob, (DeeTypeObject *)&DeeFile_Type)
 
 /* Builtin system file sub-classes.
  * NOTE: When not implemented by the host, attempting to use these
  *       types will cause an `Error.RuntimeError.NotImplemented'. */
 DDATDEF DeeFileTypeObject DeeSystemFile_Type; /* A system file. (Usually contains a generic descriptor, such as `int', `HANDLE' or `FILE *') */
 DDATDEF DeeFileTypeObject     DeeFSFile_Type; /* A file-system file. (Created using `file.open(...)') */
-#define DeeSystemFile_Check(ob) DeeObject_InstanceOf(ob,(DeeTypeObject *)&DeeSystemFile_Type)
+#define DeeSystemFile_Check(ob) DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeSystemFile_Type)
 
 /*  A buffering file that is basically what stdio's `FILE' is to a HANDLE/fd.
  * (Providing getc/ungetc and fully/line-buffered I/O operations)
@@ -522,7 +522,8 @@ DeeFile_OpenFd(Dee_sysfd_t fd, /*String*/ DeeObject *filename,
 
 #ifdef CONFIG_HOST_WINDOWS
 /* Fix the given filename and extend it to an absolute UNC path. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL nt_FixUncPath(DeeObject *__restrict pfilename);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nt_FixUncPath(DeeObject *__restrict pfilename);
 
 #if defined(GUARD_DEEMON_SYSTEM_WIN_FILE_C_INL) || \
    (defined(_WINNT_) || defined(__wtypes_h__) || defined(__wtypesbase_h__))

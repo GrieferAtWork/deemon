@@ -105,21 +105,23 @@ DDATDEF DeeObject                     DeeBytes_Empty;
 
 
 /* Construct a bytes-buffer from `self', using the generic object-buffer interface. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeObject_Bytes(DeeObject *__restrict self,
-                                              unsigned int flags,
-                                              size_t start, size_t end);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_Bytes(DeeObject *__restrict self,
+                unsigned int flags,
+                size_t start, size_t end);
+
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
-DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
 
 /* Constructs a byte-view for data in `base...+=num_bytes' held by `owner'.
  * The given `flags' determines if the view is read-only, or can be modified.
  * @param: flags: Set of `DEE_BUFFER_F*' */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeBytes_NewView(DeeObject *__restrict owner, void *__restrict base,
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeBytes_NewView(DeeObject *owner, void *base,
                  size_t num_bytes, unsigned int flags);
 
 #ifdef __INTELLISENSE__
@@ -150,9 +152,9 @@ DeeBytes_FromSequence(DeeObject *__restrict seq);
 #ifdef CONFIG_BUILDING_DEEMON
 /* Print all bytes from `self' encoded as UTF-8.
  * In other words, bytes that are non-ASCII (aka. 80-FF) are
- * encoded as 2-byte UTF-8 sequences, allowing them to be
- * properly interpreted by the given `printer' */
-INTDEF Dee_ssize_t DCALL
+ * encoded as 2-byte UTF-8 sequences (aka: as LATIN-1), allowing
+ * them to be properly interpreted by the given `printer' */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeBytes_PrintUtf8(DeeObject *__restrict self,
                    Dee_formatprinter_t printer, void *arg);
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -162,7 +164,7 @@ DeeBytes_PrintUtf8(DeeObject *__restrict self,
  * storing those bytes in the given `dst' vector.
  * If the length of `seq' doesn't match `num_bytes', an UnpackError is thrown.
  * If `seq' is the none-singleton, `dst...+=num_bytes' is zero-initialized. */
-DFUNDEF int
+DFUNDEF WUNUSED NONNULL((1, 3)) int
 (DCALL DeeSeq_ItemsToBytes)(uint8_t *__restrict dst, size_t num_bytes,
                             DeeObject *__restrict seq);
 
@@ -224,26 +226,28 @@ struct Dee_bytes_printer {
  *           after a call to `bytes_printer_fini()'
  * @return: * :   A reference to the packed Bytes object.
  * @return: NULL: An error occurred. */
-DFUNDEF WUNUSED DREF DeeObject *
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_bytes_printer_pack)(/*inherit(always)*/ struct Dee_bytes_printer *__restrict self);
 
 /* Append the given `text' to the end of the Bytes object.
  * This function is intended to be used as the general-purpose
  * Dee_formatprinter_t-compatible callback for generating data to-be
  * written into a Bytes object. */
-DFUNDEF Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL Dee_bytes_printer_print)(void *__restrict self,
                                 /*utf-8*/ char const *__restrict text,
                                 size_t textlen);
 
 /* Append a single UTF-8 character. */
-DFUNDEF int (DCALL Dee_bytes_printer_putc)(struct Dee_bytes_printer *__restrict self, char ch);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL Dee_bytes_printer_putc)(struct Dee_bytes_printer *__restrict self, char ch);
 
 /* Append a single byte. */
-DFUNDEF int (DCALL Dee_bytes_printer_putb)(struct Dee_bytes_printer *__restrict self, uint8_t byte);
+DFUNDEF WUNUSED NONNULL((1)) int
+(DCALL Dee_bytes_printer_putb)(struct Dee_bytes_printer *__restrict self, uint8_t byte);
 
 /* Repeat the given `byte' a total of `count' times. */
-DFUNDEF Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DCALL Dee_bytes_printer_repeat)(struct Dee_bytes_printer *__restrict self,
                                  uint8_t byte, size_t count);
 
@@ -254,23 +258,25 @@ DFUNDEF Dee_ssize_t
  *    do with any kind of encoding. - It just blindly copies the given
  *    data into the buffer of the resulting Bytes object.
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
-DFUNDEF Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DCALL Dee_bytes_printer_append)(struct Dee_bytes_printer *__restrict self,
                                  uint8_t const *__restrict data,
                                  size_t datalen);
 
 /* Allocate a buffer of `datalen' bytes at the end of the printer. */
-DFUNDEF uint8_t *(DCALL Dee_bytes_printer_alloc)(struct Dee_bytes_printer *__restrict self, size_t datalen);
+DFUNDEF WUNUSED NONNULL((1)) uint8_t *
+(DCALL Dee_bytes_printer_alloc)(struct Dee_bytes_printer *__restrict self, size_t datalen);
 
 /* Release the last `datalen' bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
-DFUNDEF void (DCALL Dee_bytes_printer_release)(struct Dee_bytes_printer *__restrict self, size_t datalen);
+DFUNDEF NONNULL((1)) void
+(DCALL Dee_bytes_printer_release)(struct Dee_bytes_printer *__restrict self, size_t datalen);
 
 #ifdef __INTELLISENSE__
-Dee_ssize_t (Dee_bytes_printer_printf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, ...);
-Dee_ssize_t (Dee_bytes_printer_vprintf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, va_list args);
-Dee_ssize_t (Dee_bytes_printer_printobject)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
-Dee_ssize_t (Dee_bytes_printer_printobjectrepr)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
+WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, ...);
+WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_vprintf)(struct Dee_bytes_printer *__restrict self, char const *__restrict format, va_list args);
+WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printobject)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
+WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_bytes_printer_printobjectrepr)(struct Dee_bytes_printer *__restrict self, DeeObject *__restrict ob);
 #else /* __INTELLISENSE__ */
 #define Dee_bytes_printer_printf(self, ...)           DeeFormat_Printf(&Dee_bytes_printer_print, self, __VA_ARGS__)
 #define Dee_bytes_printer_vprintf(self, format, args) DeeFormat_VPrintf(&Dee_bytes_printer_print, self, format, args)
@@ -283,7 +289,7 @@ Dee_ssize_t (Dee_bytes_printer_printobjectrepr)(struct Dee_bytes_printer *__rest
 #define DeeSeq_ItemsToBytes(dst, num_bytes, seq) __builtin_expect(DeeSeq_ItemsToBytes(dst, num_bytes, seq), 0)
 #define Dee_bytes_printer_putc(self, ch)         __builtin_expect(Dee_bytes_printer_putc(self, ch), 0)
 #define Dee_bytes_printer_putb(self, byte)       __builtin_expect(Dee_bytes_printer_putb(self, byte), 0)
-#endif /* !__INTELLISENSE__ */
+#endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE

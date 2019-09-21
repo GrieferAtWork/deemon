@@ -472,7 +472,7 @@ struct Dee_weakref_list {
 	(__hybrid_atomic_load((x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
 	 ? (Dee_weakref_support_fini(&(x)->ob_weakrefs))                   \
 	 : (void)0)
-DFUNDEF void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
+DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
 
 #ifdef DEE_SOURCE
 #define WEAKREF_SUPPORT      Dee_WEAKREF_SUPPORT
@@ -505,19 +505,19 @@ _Dee_weakref_init(struct Dee_weakref *__restrict self,
 #endif /* !__INTELLISENSE__ */
 
 /* Finalize a given weak reference. */
-DFUNDEF void DCALL Dee_weakref_fini(struct Dee_weakref *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL Dee_weakref_fini(struct Dee_weakref *__restrict self);
 
 /* Move/Copy a given weak reference into another, optionally
  * overwriting whatever object was referenced before.
  * NOTE: Assignment here does _NOT_ override a set deletion callback! */
-DFUNDEF void DCALL Dee_weakref_move(struct Dee_weakref *__restrict dst, struct Dee_weakref *__restrict src);
-DFUNDEF void DCALL Dee_weakref_moveassign(struct Dee_weakref *__restrict dst, struct Dee_weakref *__restrict src);
+DFUNDEF NONNULL((1, 2)) void DCALL Dee_weakref_move(struct Dee_weakref *__restrict dst, struct Dee_weakref *__restrict src);
+DFUNDEF NONNULL((1, 2)) void DCALL Dee_weakref_moveassign(struct Dee_weakref *__restrict dst, struct Dee_weakref *__restrict src);
 #ifdef __INTELLISENSE__
-DFUNDEF void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref const *__restrict other);
-DFUNDEF void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref const *__restrict other);
+DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref const *__restrict other);
+DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref const *__restrict other);
 #else /* __INTELLISENSE__ */
-DFUNDEF void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
-DFUNDEF void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
+DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
+DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
 #ifdef __cplusplus
 #define Dee_weakref_copy(self,other) Dee_weakref_copy(self,(struct ::Dee_weakref *)(other))
 #define Dee_weakref_copyassign(self,other) Dee_weakref_copyassign(self,(struct ::Dee_weakref *)(other))
@@ -545,9 +545,9 @@ Dee_weakref_clear(struct Dee_weakref *__restrict self);
  * @return: * :   A new reference to the pointed-to object.
  * @return: NULL: Failed to lock the weak reference. */
 #ifdef __INTELLISENSE__
-DFUNDEF WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref const *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref const *__restrict self);
 #else /* __INTELLISENSE__ */
-DFUNDEF WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref *__restrict self);
 #ifdef __cplusplus
 #define Dee_weakref_lock(self) Dee_weakref_lock((struct ::Dee_weakref *)(self))
 #else /* __cplusplus */
@@ -557,9 +557,9 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct Dee_weakref *__r
 
 /* Return the state of a snapshot of `self' currently being bound. */
 #ifdef __INTELLISENSE__
-DFUNDEF WUNUSED bool (DCALL Dee_weakref_bound)(struct Dee_weakref const *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct Dee_weakref const *__restrict self);
 #else /* __INTELLISENSE__ */
-DFUNDEF WUNUSED bool (DCALL Dee_weakref_bound)(struct Dee_weakref *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct Dee_weakref *__restrict self);
 #ifdef __cplusplus
 #define Dee_weakref_bound(self) Dee_weakref_bound((struct ::Dee_weakref *)(self))
 #else /* __cplusplus */
@@ -572,7 +572,7 @@ DFUNDEF WUNUSED bool (DCALL Dee_weakref_bound)(struct Dee_weakref *__restrict se
  * `NULL' when none was assigned, or `Dee_ITER_DONE' when `new_ob'
  * does not support weak referencing functionality.
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
-DFUNDEF WUNUSED DREF DeeObject *
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_weakref_cmpxch)(struct Dee_weakref *__restrict self,
                            DeeObject *old_ob, DeeObject *new_ob);
 
@@ -594,10 +594,10 @@ typedef Dee_visit_t  dvisit_t;
 /* Used to undo object construction in generic sub-classes after
  * base classes have already been constructed, before a later
  * constructor fails.
- * This function will invoke destructors of  */
-DFUNDEF bool DCALL
+ * This function will invoke destructors of each type already constructed. */
+DFUNDEF WUNUSED NONNULL((2)) bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
-                           DeeObject *__restrict self);
+                           DeeObject *self);
 
 /* Same as `DeeObject_UndoConstruction()', however optimize for the
  * case of `undo_start' known to either be `NULL' or `DeeObject_Type' */
@@ -606,13 +606,27 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 
 
 /* incref() + return `self' */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);
 #if defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_TRACE_REFCHANGES)
 DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy(DeeObject *__restrict self);
 #else /* CONFIG_NO_BADREFCNT_CHECKS && !CONFIG_TRACE_REFCHANGES */
-DFUNDEF void DCALL DeeObject_Destroy_d(DeeObject *__restrict self, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy_d(DeeObject *__restrict self, char const *file, int line);
 #define DeeObject_Destroy(self) DeeObject_Destroy_d(self, __FILE__, __LINE__)
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS || CONFIG_TRACE_REFCHANGES */
+
+/* Reference control macros as functions.
+ * Use these (#undef'ing the macros) in dex modules that
+ * should work independently of the deemon configuration. */
+DFUNDEF NONNULL((1)) void (DCALL Dee_Incref)(DeeObject *__restrict ob);
+DFUNDEF NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n);
+DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob);
+DFUNDEF NONNULL((1)) void (DCALL Dee_Decref)(DeeObject *__restrict ob);
+DFUNDEF NONNULL((1)) void (DCALL Dee_DecrefDokill)(DeeObject *__restrict ob);
+DFUNDEF NONNULL((1)) void (DCALL Dee_DecrefNokill)(DeeObject *__restrict ob);
+DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob);
+DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob);
+DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob);
+
 
 #ifdef __INTELLISENSE__
 #define Dee_Incref_untraced(x)             (&(x)->ob_refcnt)
@@ -677,50 +691,53 @@ DFUNDEF void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, char const *file
 #   define _DeeRefcnt_IncFetch(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)))
 #   define _DeeRefcnt_DecFetch(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)))
 #endif
-#endif
+#endif /* _MSC_VER && CONFIG_HOST_WINDOWS */
 #ifndef _DeeRefcnt_FetchInc
 #define _DeeRefcnt_FetchInc(x)   __hybrid_atomic_fetchinc(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_FetchDec(x)   __hybrid_atomic_fetchdec(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_IncFetch(x)   __hybrid_atomic_incfetch(x, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_DecFetch(x)   __hybrid_atomic_decfetch(x, __ATOMIC_SEQ_CST)
-#endif
+#endif /* !_DeeRefcnt_FetchInc */
 #ifndef _DeeRefcnt_FetchAdd
 #define _DeeRefcnt_FetchAdd(x, n) __hybrid_atomic_fetchadd(x, n, __ATOMIC_SEQ_CST)
 #define _DeeRefcnt_AddFetch(x, n) __hybrid_atomic_addfetch(x, n, __ATOMIC_SEQ_CST)
-#endif
+#endif /* !_DeeRefcnt_FetchAdd */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#define Dee_Incref_untraced(x)                 (_DeeRefcnt_FetchInc((x)->ob_refcnt) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Incref_n_untraced(x, n)            (_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Decref_untraced(x)                 (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)          (unlikely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x)        (likely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_DecrefDokill_untraced(x)           (_DeeRefcnt_FetchDec((x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)           (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeFatal_BadDecref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_DecrefWasOk_untraced(x)            (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
-#define Dee_DecrefIfOne_untraced(self)         Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
+#define Dee_Incref_untraced(x)          (_DeeRefcnt_FetchInc((x)->ob_refcnt) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
+#define Dee_Incref_n_untraced(x, n)     (_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
+#define Dee_Decref_untraced(x)          (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_likely_untraced(x)   (unlikely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_unlikely_untraced(x) (likely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec((x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
+#define Dee_DecrefNokill_untraced(x)    (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeFatal_BadDecref((DeeObject *)(x), __FILE__, __LINE__), false))
+#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-#define Dee_Incref_untraced(x)                 _DeeRefcnt_FetchInc((x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)            _DeeRefcnt_AddFetch((x)->ob_refcnt, n)
-#define Dee_Decref_untraced(x)                 (_DeeRefcnt_DecFetch((x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)          (unlikely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x)        (likely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_DecrefDokill_untraced(x)           (DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)           _DeeRefcnt_DecFetch((x)->ob_refcnt)
-#define Dee_DecrefWasOk_untraced(x)            (_DeeRefcnt_DecFetch((x)->ob_refcnt) ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
-#define Dee_DecrefIfOne_untraced(self)         Dee_DecrefIfOne_untraced((DeeObject *)(self))
+#define Dee_Incref_untraced(x)          _DeeRefcnt_FetchInc((x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     _DeeRefcnt_AddFetch((x)->ob_refcnt, n)
+#define Dee_Decref_untraced(x)          (_DeeRefcnt_DecFetch((x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_likely_untraced(x)   (unlikely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_unlikely_untraced(x) (likely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_DecrefDokill_untraced(x)    (DeeObject_Destroy((DeeObject *)(x)))
+#define Dee_DecrefNokill_untraced(x)    _DeeRefcnt_DecFetch((x)->ob_refcnt)
+#define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_DecFetch((x)->ob_refcnt) ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced((DeeObject *)(self))
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_DecrefIfNotOne_untraced(self)  Dee_DecrefIfNotOne_untraced((DeeObject *)(self))
 #define Dee_IncrefIfNotZero_untraced(self) Dee_IncrefIfNotZero_untraced((DeeObject *)(self))
 
 #ifndef __OPTIMIZE_SIZE__
-#define DeeObject_NewRef_untraced(self) DeeObject_NewRef_untraced_inline(self)
-LOCAL WUNUSED DREF DeeObject *DCALL
+#define DeeObject_NewRef_untraced(self) \
+	DeeObject_NewRef_untraced_inline(self)
+LOCAL NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_NewRef_untraced_inline(DeeObject *__restrict self) {
 	Dee_Incref_untraced(self);
 	return self;
 }
 #endif /* !__OPTIMIZE_SIZE__ */
-LOCAL bool (DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
+
+LOCAL WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
 	Dee_ref_t refcnt;
 	do {
 		refcnt = __hybrid_atomic_load(self->ob_refcnt, __ATOMIC_ACQUIRE);
@@ -731,7 +748,8 @@ LOCAL bool (DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
 	return true;
 }
 
-LOCAL bool (DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
+LOCAL WUNUSED NONNULL((1)) bool
+(DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
 	Dee_ref_t refcnt;
 	do {
 		refcnt = __hybrid_atomic_load(self->ob_refcnt, __ATOMIC_ACQUIRE);
@@ -743,8 +761,9 @@ LOCAL bool (DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
 }
 #ifndef __INTELLISENSE__
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-LOCAL bool (DCALL Dee_DecrefIfOne_untraced_d)(DeeObject *__restrict self,
-                                             char const *file, int line) {
+LOCAL WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefIfOne_untraced_d)(DeeObject *__restrict self,
+                                   char const *file, int line) {
 	if (!__hybrid_atomic_cmpxch(self->ob_refcnt, 1, 0,
 	                            __ATOMIC_SEQ_CST,
 	                            __ATOMIC_SEQ_CST))
@@ -753,7 +772,8 @@ LOCAL bool (DCALL Dee_DecrefIfOne_untraced_d)(DeeObject *__restrict self,
 	return true;
 }
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-LOCAL bool (DCALL Dee_DecrefIfOne_untraced)(DeeObject *__restrict self) {
+LOCAL WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefIfOne_untraced)(DeeObject *__restrict self) {
 	if (!__hybrid_atomic_cmpxch(self->ob_refcnt, 1, 0,
 	                            __ATOMIC_SEQ_CST,
 	                            __ATOMIC_SEQ_CST))
@@ -767,15 +787,15 @@ LOCAL bool (DCALL Dee_DecrefIfOne_untraced)(DeeObject *__restrict self) {
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_TRACE_REFCHANGES
-DFUNDEF void DCALL Dee_Incref_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF void DCALL Dee_Incref_n_traced(DeeObject *__restrict ob, Dee_ref_t n, char const *file, int line);
-DFUNDEF bool DCALL Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF void DCALL Dee_Decref_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF void DCALL Dee_DecrefDokill_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF void DCALL Dee_DecrefNokill_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF bool DCALL Dee_DecrefIfOne_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF bool DCALL Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL Dee_Incref_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL Dee_Incref_n_traced(DeeObject *__restrict ob, Dee_ref_t n, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL Dee_Decref_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL Dee_DecrefDokill_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL Dee_DecrefNokill_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefIfOne_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *file, int line);
 #define Dee_Decref_likely_traced(ob, file, line)   Dee_Decref_traced(ob, file, line)
 #define Dee_Decref_unlikely_traced(ob, file, line) Dee_Decref_traced(ob, file, line)
 #define Dee_Incref(x)                (Dee_Incref_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
@@ -866,7 +886,7 @@ DFUNDEF bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *
  * @return: >= 0:     Add this value to the sum of all other positive values, which `DeeObject_EnumAttr()' will then return.
  * @return: -1:       An error occurred and was thrown (This may also be returned by `DeeObject_EnumAttr()' when enumeration fails for some other reason)
  * WARNING: The callback must _NEVER_ be invoked while _ANY_ kind of lock is held! */
-typedef NONNULL((1, 2)) Dee_ssize_t
+typedef WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL *Dee_enum_t)(DeeObject *__restrict declarator,
                     char const *__restrict attr_name, char const *attr_doc,
                     uint16_t perm, DeeTypeObject *attr_type, void *arg);
@@ -1373,18 +1393,18 @@ typedef Dee_setmethod_t   dsetmethod_t;
 #endif /* DEE_SOURCE */
 
 struct Dee_type_method {
-	char const          *m_name;   /* [1..1][SENTINAL(NULL)] Method name. */
-	Dee_objmethod_t      m_func;   /* [1..1] The method that is getting invoked. */
+	char const           *m_name;   /* [1..1][SENTINAL(NULL)] Method name. */
+	Dee_objmethod_t       m_func;   /* [1..1] The method that is getting invoked. */
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
-	uintptr_t            m_flag;   /* Method flags (Set of `Dee_TYPE_METHOD_F*'). */
+	uintptr_t             m_flag;   /* Method flags (Set of `Dee_TYPE_METHOD_F*'). */
 };
 
 struct Dee_type_getset {
-	char const          *gs_name; /* [1..1][SENTINAL(NULL)] Member name. */
+	char const           *gs_name; /* [1..1][SENTINAL(NULL)] Member name. */
 	/* Getset callbacks (NULL callbacks will result in `Error.AttributeError' being raised) */
-	Dee_getmethod_t      gs_get;  /* [0..1] Getter callback. */
-	Dee_delmethod_t      gs_del;  /* [0..1] Delete callback. */
-	Dee_setmethod_t      gs_set;  /* [0..1] Setter callback. */
+	Dee_getmethod_t       gs_get;  /* [0..1] Getter callback. */
+	Dee_delmethod_t       gs_del;  /* [0..1] Delete callback. */
+	Dee_setmethod_t       gs_set;  /* [0..1] Setter callback. */
 	/*utf-8*/ char const *gs_doc;  /* [0..1] Documentation string. */
 };
 
@@ -1469,13 +1489,13 @@ struct Dee_type_getset {
 
 
 struct Dee_type_member {
-	char const          *m_name;   /* [1..1][SENTINAL(NULL)] Member name. */
+	char const           *m_name;   /* [1..1][SENTINAL(NULL)] Member name. */
 	union {
-		DeeObject       *m_const;  /* [valid_if(m_name[-1] == '!')][1..1] Constant. */
+		DeeObject        *m_const;  /* [valid_if(m_name[-1] == '!')][1..1] Constant. */
 		struct {
-			uint16_t     m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
-			uint16_t     m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
-		}                m_field;
+			uint16_t      m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
+			uint16_t      m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
+		}                 m_field;
 	};
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
 };
@@ -1806,7 +1826,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 
 
 #define Dee_ITER_ISOK(x) (((uintptr_t)(x)-1) < (uintptr_t)-2l) /* `x != NULL && x != Dee_ITER_DONE' */
-#define Dee_ITER_DONE     ((DeeObject *)-1l) /* Returned when the iterator has been exhausted. */
+#define Dee_ITER_DONE    ((DeeObject *)-1l) /* Returned when the iterator has been exhausted. */
 
 #ifdef DEE_SOURCE
 #define ITER_ISOK           Dee_ITER_ISOK /* `x != NULL && x != ITER_DONE' */
@@ -1817,7 +1837,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 struct Dee_type_object {
 	Dee_OBJECT_HEAD
 	char const             *tp_name;     /* [0..1] Name of this type. */
-	/*utf-8*/ char const    *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
+	/*utf-8*/ char const   *tp_doc;      /* [0..1] Documentation string of this type and its operators. */
 	uint16_t                tp_flags;    /* Type flags (Set of `TP_F*'). */
 	uint16_t                tp_weakrefs; /* Offset to `offsetof(Dee?Object *,ob_weakrefs)', or 0 when not supported.
 	                                      * NOTE: Must be explicitly inherited by derived types.
@@ -1877,7 +1897,7 @@ struct Dee_type_object {
 #define DeeType_IsIntTruncated(x)        (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FTRUNCATE)
 #define DeeType_HasMoveAny(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FMOVEANY)
 #define DeeType_IsIterator(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_iter_next != NULL)
-#define DeeType_IsTypeType(x)            DeeType_IsInherited((DeeTypeObject *)Dee_REQUIRES_OBJECT(x),&DeeType_Type)
+#define DeeType_IsTypeType(x)            DeeType_IsInherited((DeeTypeObject *)Dee_REQUIRES_OBJECT(x), &DeeType_Type)
 #define DeeType_IsCustom(x)              (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
 #define DeeType_IsSuperConstructible(x)  (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINHERITCTOR)
 #define DeeType_IsNoArgConstructible(x)  (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_ctor != NULL)
@@ -1975,7 +1995,7 @@ INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_GenericFindAttrString(DeeT
 #define DeeObject_GenericBoundAttrStringLen(self, attr, attrlen, hash) DeeObject_TGenericBoundAttrStringLen(Dee_TYPE(self), self, attr, attrlen, hash)
 #define DeeObject_GenericHasAttrString(self, attr, hash)               DeeObject_TGenericHasAttrString(Dee_TYPE(self), attr, hash)
 #define DeeObject_GenericHasAttrStringLen(self, attr, attrlen, hash)   DeeObject_TGenericHasAttrStringLen(Dee_TYPE(self), attr, attrlen, hash)
-#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 DDATDEF DeeTypeObject DeeObject_Type; /* `object' */

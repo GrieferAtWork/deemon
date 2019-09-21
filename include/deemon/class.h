@@ -309,9 +309,9 @@ class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
  *       essentially passing an empty argument list. */
 #ifdef DEE_SOURCE
 #define CLASS_OPERATOR_SUPERARGS       Dee_OPERATOR_USERCOUNT
-#define CLASS_OPERATOR_USERCOUNT      (Dee_OPERATOR_USERCOUNT+1)
+#define CLASS_OPERATOR_USERCOUNT      (Dee_OPERATOR_USERCOUNT + 1)
 #endif /* DEE_SOURCE */
-#define Dee_CLASS_OPERATOR_USERCOUNT  (Dee_OPERATOR_USERCOUNT+1)
+#define Dee_CLASS_OPERATOR_USERCOUNT  (Dee_OPERATOR_USERCOUNT + 1)
 
 
 struct Dee_class_operator {

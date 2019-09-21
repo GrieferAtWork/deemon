@@ -544,7 +544,7 @@ Dec_DecodePointer(uint8_t **__restrict pptr) {
  * NOTE: The caller is responsible for passing an `id' that is located
  *       within the inclusive bounds `DTYPE_BUILTIN_MIN...DTYPE_BUILTIN_MAX'.
  *       This function internally asserts this and crashes if that is not the case. */
-INTDEF DeeObject *DCALL Dec_GetBuiltin(uint8_t set, uint8_t id);
+INTDEF WUNUSED DeeObject *DCALL Dec_GetBuiltin(uint8_t set, uint8_t id);
 
 /* Return the ID of a given object.
  * If the given object isn't a builtin object, `DEC_BUILTINID_UNKNOWN' is returned.

@@ -252,15 +252,18 @@ again:
 }
 
 #ifdef __INTELLISENSE__
-PUBLIC void (DCALL Dee_weakref_copy)(struct weakref *__restrict self,
-                                    struct weakref const *__restrict other)
+PUBLIC NONNULL((1, 2)) void
+(DCALL Dee_weakref_copy)(struct weakref *__restrict self,
+                         struct weakref const *__restrict other)
 #else /* __INTELLISENSE__ */
-PUBLIC void (DCALL Dee_weakref_copy)(struct weakref *__restrict self,
-                                    struct weakref *__restrict other)
+PUBLIC NONNULL((1, 2)) void
+(DCALL Dee_weakref_copy)(struct weakref *__restrict self,
+                         struct weakref *__restrict other)
 #endif /* !__INTELLISENSE__ */
 {
 	ASSERT(self);
 	ASSERT(other);
+	ASSERT(self != other);
 #ifndef NDEBUG
 	ASSERT(other->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
@@ -386,9 +389,9 @@ again:
 	}
 }
 
-PUBLIC void DCALL
-Dee_weakref_moveassign(struct weakref *__restrict self,
-                       struct weakref *__restrict other) {
+PUBLIC NONNULL((1, 2)) void DCALL
+Dee_weakref_moveassign(struct weakref *self,
+                       struct weakref *other) {
 	ASSERT(self);
 	ASSERT(other);
 #ifndef NDEBUG
@@ -491,11 +494,12 @@ again:
 	}
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1, 2)) void DCALL
 Dee_weakref_move(struct weakref *__restrict dst,
                  struct weakref *__restrict src) {
 	ASSERT(dst);
 	ASSERT(src);
+	ASSERT(dst != src);
 #ifndef NDEBUG
 	ASSERT(src->wr_obj != (DeeObject *)WEAKREF_BAD_POINTER);
 #endif /* !NDEBUG */
@@ -684,9 +688,11 @@ again:
  * @return: * :   A new reference to the pointed-to object.
  * @return: NULL: Failed to lock the weak reference. */
 #ifdef __INTELLISENSE__
-PUBLIC WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref const *__restrict self)
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL Dee_weakref_lock)(struct weakref const *__restrict self)
 #else /* __INTELLISENSE__ */
-PUBLIC WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL Dee_weakref_lock)(struct weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
 	DREF DeeObject *result;
@@ -723,9 +729,9 @@ PUBLIC WUNUSED DREF DeeObject *(DCALL Dee_weakref_lock)(struct weakref *__restri
 
 /* Return the state of a snapshot of `self' currently being bound. */
 #ifdef __INTELLISENSE__
-PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
+PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
 #else /* __INTELLISENSE__ */
-PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
+PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
 	DeeObject *curr;
@@ -757,7 +763,7 @@ PUBLIC bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
  * `NULL' when none was assigned, or `ITER_DONE' when `new_ob'
  * does not support weak referencing functionality.
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_weakref_cmpxch(struct weakref *__restrict self,
                    DeeObject *old_ob,
                    DeeObject *new_ob) {
@@ -883,15 +889,16 @@ again:
 
 
 
-PUBLIC WUNUSED DREF DeeObject *(DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
+PUBLIC NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
 	ASSERT_OBJECT(self);
 	Dee_Incref(self);
 	return self;
 }
 
-PUBLIC bool DCALL
+PUBLIC WUNUSED NONNULL((2)) bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
-                           DeeObject *__restrict self) {
+                           DeeObject *self) {
 	if unlikely(!ATOMIC_CMPXCH(self->ob_refcnt, 1, 0))
 		return false;
 	for (;; undo_start = DeeType_Base(undo_start)) {
@@ -1041,7 +1048,7 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref, 12),
 
 
 /* Finalize weakref support */
-PUBLIC void
+PUBLIC NONNULL((1)) void
 (DCALL Dee_weakref_support_fini)(struct weakref_list *__restrict list) {
 	struct weakref *iter, *next;
 restart_clear_weakrefs:
@@ -1091,19 +1098,24 @@ restart_clear_weakrefs:
 
 
 #ifdef CONFIG_NO_BADREFCNT_CHECKS
-PUBLIC void (DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
-                                        char const *UNUSED(file), int UNUSED(line)) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
+                            char const *UNUSED(file),
+                            int UNUSED(line)) {
 	return DeeObject_Destroy(self);
 }
 
-PUBLIC void (DCALL DeeObject_Destroy)(DeeObject *__restrict self)
+PUBLIC NONNULL((1)) void
+(DCALL DeeObject_Destroy)(DeeObject *__restrict self)
 #else /* CONFIG_NO_BADREFCNT_CHECKS */
-PUBLIC void (DCALL DeeObject_Destroy)(DeeObject *__restrict self) {
+PUBLIC NONNULL((1)) void
+(DCALL DeeObject_Destroy)(DeeObject *__restrict self) {
 	return DeeObject_Destroy_d(self, NULL, 0);
 }
 
-PUBLIC void (DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
-                                        char const *file, int line)
+PUBLIC NONNULL((1)) void
+(DCALL DeeObject_Destroy_d)(DeeObject *__restrict self,
+                            char const *file, int line)
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 {
 #undef CONFIG_OBJECT_DESTROY_CHECK_MEMORY
@@ -4221,7 +4233,7 @@ PRIVATE DEFINE_RWLOCK(reftracker_lock);
 #endif /* !CONFIG_NO_THREADS */
 PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 
-PRIVATE dref_t DCALL
+PRIVATE NONNULL((1)) dref_t DCALL
 print_refchange(struct Dee_refchange *__restrict item,
                 dref_t prev_total) {
 	char mode[2] = { '+', 0 };
@@ -4242,7 +4254,7 @@ print_refchange(struct Dee_refchange *__restrict item,
 	return prev_total;
 }
 
-PRIVATE dref_t DCALL
+PRIVATE NONNULL((1)) dref_t DCALL
 print_refchanges(struct Dee_refchanges *__restrict item,
                  dref_t prev_total) {
 	unsigned int i;
@@ -4279,7 +4291,7 @@ PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 add_reftracker(struct Dee_reftracker *__restrict self) {
 	rwlock_write(&reftracker_lock);
 	self->rt_pself = &reftracker_list;
@@ -4289,7 +4301,7 @@ add_reftracker(struct Dee_reftracker *__restrict self) {
 	rwlock_endwrite(&reftracker_lock);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 del_reftracker(struct Dee_reftracker *__restrict self) {
 	rwlock_write(&reftracker_lock);
 	if ((*self->rt_pself = self->rt_next) != NULL)
@@ -4298,7 +4310,7 @@ del_reftracker(struct Dee_reftracker *__restrict self) {
 }
 
 /* Reference count tracing. */
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 free_reftracker(struct Dee_reftracker *__restrict self) {
 	if (self) {
 		struct Dee_refchanges *iter, *next;
@@ -4314,15 +4326,13 @@ free_reftracker(struct Dee_reftracker *__restrict self) {
 	}
 }
 
-#ifdef CONFIG_TRACE_REFCHANGES
+#define DID_DEFINE_DEEOBJECT_FREETRACKER 1
 PUBLIC NONNULL((1)) void DCALL
 DeeObject_FreeTracker(DeeObject *__restrict self) {
 	free_reftracker(self->ob_trace);
 }
-#endif /* CONFIG_NO_BADREFCNT_CHECKS */
 
-
-PRIVATE struct Dee_reftracker *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct Dee_reftracker *DCALL
 get_reftracker(DeeObject *__restrict self) {
 	struct Dee_reftracker *result, *new_result;
 	result = self->ob_trace;
@@ -4351,7 +4361,7 @@ done:
 	return result;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 reftracker_addchange(DeeObject *__restrict ob,
                      char const *file, int line) {
 	unsigned int i;
@@ -4384,7 +4394,7 @@ again:
 }
 
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 Dee_Incref_traced(DeeObject *__restrict ob,
                   char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
@@ -4396,7 +4406,7 @@ Dee_Incref_traced(DeeObject *__restrict ob,
 	reftracker_addchange(ob, file, line);
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 Dee_Incref_n_traced(DeeObject *__restrict ob, dref_t n,
                     char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
@@ -4409,8 +4419,9 @@ Dee_Incref_n_traced(DeeObject *__restrict ob, dref_t n,
 		reftracker_addchange(ob, file, line);
 }
 
-PUBLIC bool DCALL
-Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob, char const *file, int line) {
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob,
+                           char const *file, int line) {
 	dref_t oldref;
 	do {
 		if ((oldref = ATOMIC_READ(ob->ob_refcnt)) == 0)
@@ -4420,8 +4431,9 @@ Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob, char const *file, int line)
 	return true;
 }
 
-PUBLIC void DCALL
-Dee_Decref_traced(DeeObject *__restrict ob, char const *file, int line) {
+PUBLIC NONNULL((1)) void DCALL
+Dee_Decref_traced(DeeObject *__restrict ob,
+                  char const *file, int line) {
 	dref_t newref;
 	newref = ATOMIC_FETCHDEC(ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
@@ -4435,8 +4447,9 @@ Dee_Decref_traced(DeeObject *__restrict ob, char const *file, int line) {
 	}
 }
 
-PUBLIC void DCALL
-Dee_DecrefDokill_traced(DeeObject *__restrict ob, char const *file, int line) {
+PUBLIC NONNULL((1)) void DCALL
+Dee_DecrefDokill_traced(DeeObject *__restrict ob,
+                        char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if (ATOMIC_FETCHDEC(ob->ob_refcnt) != 1)
 		DeeFatal_BadDecref(ob, file, line);
@@ -4447,8 +4460,9 @@ Dee_DecrefDokill_traced(DeeObject *__restrict ob, char const *file, int line) {
 	DeeObject_Destroy_d(ob, file, line);
 }
 
-PUBLIC void DCALL
-Dee_DecrefNokill_traced(DeeObject *__restrict ob, char const *file, int line) {
+PUBLIC NONNULL((1)) void DCALL
+Dee_DecrefNokill_traced(DeeObject *__restrict ob,
+                        char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if (ATOMIC_FETCHDEC(ob->ob_refcnt) <= 1)
 		DeeFatal_BadDecref(ob, file, line);
@@ -4458,16 +4472,18 @@ Dee_DecrefNokill_traced(DeeObject *__restrict ob, char const *file, int line) {
 	reftracker_addchange(ob, file, -line);
 }
 
-PUBLIC bool DCALL
-Dee_DecrefIfOne_traced(DeeObject *__restrict ob, char const *file, int line) {
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+Dee_DecrefIfOne_traced(DeeObject *__restrict ob,
+                       char const *file, int line) {
 	if (!ATOMIC_CMPXCH(ob->ob_refcnt, 1, 0))
 		return false;
 	DeeObject_Destroy_d(ob, file, line);
 	return true;
 }
 
-PUBLIC bool DCALL
-Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob, char const *file, int line) {
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob,
+                          char const *file, int line) {
 	dref_t oldref;
 	do {
 		if ((oldref = ATOMIC_READ(ob->ob_refcnt)) <= 1)
@@ -4477,7 +4493,7 @@ Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob, char const *file, int line) 
 	return true;
 }
 
-PUBLIC bool DCALL
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
                        char const *file, int line) {
 	dref_t newref;
@@ -4496,110 +4512,126 @@ Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
 
 #else /* CONFIG_TRACE_REFCHANGES */
 
-PUBLIC void (DCALL Dee_Incref_traced)(DeeObject *__restrict ob,
-                                      char const *UNUSED(file),
-                                      int UNUSED(line)) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_Incref_traced)(DeeObject *__restrict ob,
+                          char const *UNUSED(file),
+                          int UNUSED(line)) {
 	Dee_Incref(ob);
 }
 
-PUBLIC void (DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, dref_t n,
-                                        char const *UNUSED(file),
-                                        int UNUSED(line)) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, dref_t n,
+                            char const *UNUSED(file),
+                            int UNUSED(line)) {
 	Dee_Incref_n(ob, n);
 }
 
-PUBLIC bool (DCALL Dee_IncrefIfNotZero_traced)(DeeObject *__restrict ob,
-                                               char const *UNUSED(file),
-                                               int UNUSED(line)) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_IncrefIfNotZero_traced)(DeeObject *__restrict ob,
+                                   char const *UNUSED(file),
+                                   int UNUSED(line)) {
 	return Dee_IncrefIfNotZero(ob);
 }
 
-PUBLIC void (DCALL Dee_Decref_traced)(DeeObject *__restrict ob,
-                                      char const *UNUSED(file),
-                                      int UNUSED(line)) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_Decref_traced)(DeeObject *__restrict ob,
+                          char const *UNUSED(file),
+                          int UNUSED(line)) {
 	Dee_Decref(ob);
 }
 
-PUBLIC void (DCALL Dee_DecrefDokill_traced)(DeeObject *__restrict ob,
-                                            char const *UNUSED(file),
-                                            int UNUSED(line)) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_DecrefDokill_traced)(DeeObject *__restrict ob,
+                                char const *UNUSED(file),
+                                int UNUSED(line)) {
 	Dee_DecrefDokill(ob);
 }
 
-PUBLIC void (DCALL Dee_DecrefNokill_traced)(DeeObject *__restrict ob,
-                                            char const *UNUSED(file),
-                                            int UNUSED(line)) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_DecrefNokill_traced)(DeeObject *__restrict ob,
+                                char const *UNUSED(file),
+                                int UNUSED(line)) {
 	Dee_DecrefNokill(ob);
 }
 
-PUBLIC bool (DCALL Dee_DecrefIfOne_traced)(DeeObject *__restrict ob,
-                                           char const *UNUSED(file),
-                                           int UNUSED(line)) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefIfOne_traced)(DeeObject *__restrict ob,
+                               char const *UNUSED(file),
+                               int UNUSED(line)) {
 	return Dee_DecrefIfOne(ob);
 }
 
-PUBLIC bool (DCALL Dee_DecrefIfNotOne_traced)(DeeObject *__restrict ob,
-                                              char const *UNUSED(file),
-                                              int UNUSED(line)) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefIfNotOne_traced)(DeeObject *__restrict ob,
+                                  char const *UNUSED(file),
+                                  int UNUSED(line)) {
 	return Dee_DecrefIfNotOne(ob);
 }
 
-PUBLIC bool (DCALL Dee_DecrefWasOk_traced)(DeeObject *__restrict ob,
-                                           char const *UNUSED(file),
-                                           int UNUSED(line)) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefWasOk_traced)(DeeObject *__restrict ob,
+                               char const *UNUSED(file),
+                               int UNUSED(line)) {
 	return Dee_DecrefWasOk(ob);
 }
+
 DFUNDEF void (DCALL Dee_DumpReferenceLeaks)(void);
 PUBLIC void (DCALL Dee_DumpReferenceLeaks)(void) {
 }
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 /* Also export all the reference-control macros as functions. */
-DFUNDEF void (DCALL Dee_Incref)(DeeObject *__restrict ob);
-DFUNDEF void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n);
-DFUNDEF bool (DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob);
-DFUNDEF void (DCALL Dee_Decref)(DeeObject *__restrict ob);
-DFUNDEF void (DCALL Dee_DecrefDokill)(DeeObject *__restrict ob);
-DFUNDEF void (DCALL Dee_DecrefNokill)(DeeObject *__restrict ob);
-DFUNDEF bool (DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob);
-DFUNDEF bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob);
-DFUNDEF bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob);
-
-PUBLIC void (DCALL Dee_Incref)(DeeObject *__restrict ob) {
+PUBLIC NONNULL((1)) void (DCALL Dee_Incref)(DeeObject *__restrict ob) {
 	Dee_Incref_untraced(ob);
 }
 
-PUBLIC void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n) {
+PUBLIC NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n) {
 	Dee_Incref_n_untraced(ob, n);
 }
 
-PUBLIC bool (DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob) {
 	return Dee_IncrefIfNotZero_untraced(ob);
 }
 
-PUBLIC void (DCALL Dee_Decref)(DeeObject *__restrict ob) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_Decref)(DeeObject *__restrict ob) {
 	Dee_Decref_untraced(ob);
 }
 
-PUBLIC void (DCALL Dee_DecrefDokill)(DeeObject *__restrict ob) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_DecrefDokill)(DeeObject *__restrict ob) {
 	Dee_DecrefDokill_untraced(ob);
 }
 
-PUBLIC void (DCALL Dee_DecrefNokill)(DeeObject *__restrict ob) {
+PUBLIC NONNULL((1)) void
+(DCALL Dee_DecrefNokill)(DeeObject *__restrict ob) {
 	Dee_DecrefNokill_untraced(ob);
 }
 
-PUBLIC bool (DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob) {
 	return Dee_DecrefIfOne_untraced(ob);
 }
 
-PUBLIC bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob) {
 	return Dee_DecrefIfNotOne_untraced(ob);
 }
 
-PUBLIC bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob) {
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob) {
 	return Dee_DecrefWasOk_untraced(ob);
 }
+
+
+#ifndef DID_DEFINE_DEEOBJECT_FREETRACKER
+#define DID_DEFINE_DEEOBJECT_FREETRACKER 1
+PUBLIC NONNULL((1)) void /* Defined only for binary compatibility */
+(DCALL DeeObject_FreeTracker)(DeeObject *__restrict UNUSED(self)) {
+}
+#endif /* !DID_DEFINE_DEEOBJECT_FREETRACKER */
+
 
 
 #ifndef NDEBUG

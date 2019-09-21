@@ -634,7 +634,7 @@ Dec_BuiltinID(DeeObject *__restrict obj) {
 }
 
 /* Builtin object database. */
-INTERN DeeObject *DCALL
+INTERN WUNUSED DeeObject *DCALL
 Dec_GetBuiltin(uint8_t set, uint8_t id) {
 	ASSERT(id >= DTYPE_BUILTIN_MIN);
 #if DTYPE_BUILTIN_MAX != 0xff

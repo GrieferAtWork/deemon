@@ -241,7 +241,7 @@ again:
 #endif /* !Arch... */
 
 
-DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL
+DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
@@ -252,7 +252,7 @@ DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
 	return result;
 }
 
-DFUNDEF WUNUSED DREF DeeObject *ATTR_FASTCALL
+DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();

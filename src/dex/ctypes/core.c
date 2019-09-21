@@ -49,8 +49,8 @@ DOC_DEF(isstruct_doc, "->?Dbool\nReturns :true if @this :structured_type is a :s
  * @return:  0: Successfully converted `self' to a pointer.
  * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeObject_AsPointer(DeeObject *__restrict self,
-                    DeeSTypeObject *__restrict pointer_base,
+DeeObject_AsPointer(DeeObject *self,
+                    DeeSTypeObject *pointer_base,
                     union pointer *__restrict result) {
 	int error;
 	DREF DeePointerTypeObject *pointer_type;
@@ -68,8 +68,8 @@ DeeObject_AsPointer(DeeObject *__restrict self,
 
 /* Same as `DeeObject_AsPointer()', but only ~try~ to interpret it. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeObject_TryAsPointer(DeeObject *__restrict self,
-                       DeeSTypeObject *__restrict pointer_base,
+DeeObject_TryAsPointer(DeeObject *self,
+                       DeeSTypeObject *pointer_base,
                        union pointer *__restrict result) {
 	if (DeeNone_Check(self)) {
 		/* none is the NULL pointer. */
@@ -160,8 +160,8 @@ stype_fini(DeeSTypeObject *__restrict self) {
 #endif /* !CONFIG_NO_CFUNCTION */
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-stype_dofunc(DeeSTypeObject *__restrict self, size_t argc,
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stype_dofunc(DeeSTypeObject *self, size_t argc,
              DeeObject **argv, cc_t cc_flags) {
 	DeeSTypeObject **argv_types;
 	size_t i;
@@ -740,40 +740,39 @@ struct_init(DeeObject *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-struct_assign(DeeObject *__restrict self,
-              DeeObject *__restrict some_object) {
+struct_assign(DeeObject *self, DeeObject *some_object) {
 	return DeeStruct_Assign((DeeSTypeObject *)Dee_TYPE(self),
 	                        DeeStruct_Data(self), some_object);
 }
 
 #define DEFINE_UNARY_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
-	PRIVATE Treturn DCALL                                                \
+	PRIVATE WUNUSED NONNULL((1)) Treturn DCALL                           \
 	struct_xxx(DeeObject *__restrict self) {                             \
 		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),           \
 		                     DeeStruct_Data(self));                      \
 	}
 #define DEFINE_BINARY_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
-	PRIVATE Treturn DCALL                                                 \
-	struct_xxx(DeeObject *__restrict self, DeeObject *__restrict other) { \
+	PRIVATE WUNUSED NONNULL((1, 2)) Treturn DCALL                         \
+	struct_xxx(DeeObject *self, DeeObject *other) {                       \
 		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),            \
 		                     DeeStruct_Data(self), other);                \
 	}
-#define DEFINE_TRINARY_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx)                     \
-	PRIVATE Treturn DCALL                                                                      \
-	struct_xxx(DeeObject *__restrict self, DeeObject *__restrict a, DeeObject *__restrict b) { \
-		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),                                 \
-		                     DeeStruct_Data(self), a, b);                                      \
+#define DEFINE_TRINARY_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
+	PRIVATE WUNUSED NONNULL((1, 2, 3)) Treturn DCALL                       \
+	struct_xxx(DeeObject *self, DeeObject *a, DeeObject *b) {              \
+		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),             \
+		                     DeeStruct_Data(self), a, b);                  \
 	}
 #define DEFINE_UNARY_INPLACE_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
-	PRIVATE Treturn DCALL                                                        \
+	PRIVATE WUNUSED NONNULL((1)) Treturn DCALL                                   \
 	struct_xxx(DeeObject **__restrict pself) {                                   \
 		DeeObject *self = *pself;                                                \
 		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),                   \
 		                     DeeStruct_Data(self));                              \
 	}
 #define DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(Treturn, struct_xxx, DeeStruct_Xxx) \
-	PRIVATE Treturn DCALL                                                         \
-	struct_xxx(DeeObject **__restrict pself, DeeObject *__restrict other) {       \
+	PRIVATE WUNUSED NONNULL((1, 2)) Treturn DCALL                                 \
+	struct_xxx(DeeObject **__restrict pself, DeeObject *other) {                  \
 		DeeObject *self = *pself;                                                 \
 		return DeeStruct_Xxx((DeeSTypeObject *)Dee_TYPE(self),                    \
 		                     DeeStruct_Data(self), other);                        \
@@ -851,8 +850,8 @@ DEFINE_TRINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_getrange, DeeStruct_GetR
 DEFINE_TRINARY_STRUCT_OPERATOR(int, struct_delrange, DeeStruct_DelRange)
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-struct_setrange(DeeObject *__restrict self, DeeObject *__restrict begin,
-                DeeObject *__restrict end, DeeObject *__restrict value) {
+struct_setrange(DeeObject *self, DeeObject *begin,
+                DeeObject *end, DeeObject *value) {
 	return DeeStruct_SetRange((DeeSTypeObject *)Dee_TYPE(self),
 	                          DeeStruct_Data(self), begin, end, value);
 }
@@ -861,9 +860,8 @@ DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_getattr, DeeStruct_GetAtt
 DEFINE_BINARY_STRUCT_OPERATOR(int, struct_delattr, DeeStruct_DelAttr)
 DEFINE_TRINARY_STRUCT_OPERATOR(int, struct_setattr, DeeStruct_SetAttr)
 
-PRIVATE dssize_t DCALL
-struct_enumattr(DeeTypeObject *__restrict tp_self,
-                DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+struct_enumattr(DeeTypeObject *tp_self, DeeObject *UNUSED(self),
                 denum_t proc, void *arg) {
 	return DeeStruct_EnumAttr((DeeSTypeObject *)tp_self, proc, arg);
 }
@@ -937,7 +935,7 @@ PRIVATE struct type_attr struct_attr = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 struct_getbuf(DeeObject *__restrict self,
               DeeBuffer *__restrict info,
               unsigned int UNUSED(flags)) {
@@ -1178,8 +1176,8 @@ err_tpres:
 	goto err;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeePointer_New(DeePointerTypeObject *__restrict pointer_type,
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeePointer_New(DeePointerTypeObject *pointer_type,
                void *pointer_value) {
 	struct pointer_object *result;
 	ASSERT(DeePointerType_Check(pointer_type));
@@ -1194,8 +1192,8 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeePointer_NewFor(DeeSTypeObject *__restrict pointer_type,
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeePointer_NewFor(DeeSTypeObject *pointer_type,
                   void *pointer_value) {
 	DREF DeeObject *result;
 	DREF DeePointerTypeObject *ptr_type;
@@ -1211,9 +1209,9 @@ err:
 
 
 
-INTERN int DCALL
-DeeStruct_Assign(DeeSTypeObject *__restrict tp_self,
-                 void *self, DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeStruct_Assign(DeeSTypeObject *tp_self,
+                 void *self, DeeObject *value) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_assign)
@@ -1264,9 +1262,8 @@ DeeStruct_Assign(DeeSTypeObject *__restrict tp_self,
 	return err_unimplemented_operator(orig_type, OPERATOR_ASSIGN);
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Str(DeeSTypeObject *__restrict tp_self,
-              void *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeStruct_Str(DeeSTypeObject *tp_self, void *self) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cast.st_str)
@@ -1277,9 +1274,8 @@ DeeStruct_Str(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Repr(DeeSTypeObject *__restrict tp_self,
-               void *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeStruct_Repr(DeeSTypeObject *tp_self, void *self) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cast.st_repr)
@@ -1290,9 +1286,8 @@ DeeStruct_Repr(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN int DCALL
-DeeStruct_Bool(DeeSTypeObject *__restrict tp_self,
-               void *self) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeStruct_Bool(DeeSTypeObject *tp_self, void *self) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cast.st_bool)
@@ -1302,8 +1297,8 @@ DeeStruct_Bool(DeeSTypeObject *__restrict tp_self,
 	return err_unimplemented_operator(orig_type, OPERATOR_BOOL);
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Call(DeeSTypeObject *__restrict tp_self,
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeStruct_Call(DeeSTypeObject *tp_self,
                void *self, size_t argc,
                DeeObject **argv) {
 	DeeSTypeObject *orig_type = tp_self;
@@ -1316,10 +1311,8 @@ DeeStruct_Call(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN int DCALL
-DeeStruct_Int32(DeeSTypeObject *__restrict tp_self,
-                void *self,
-                int32_t *__restrict result) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeStruct_Int32(DeeSTypeObject *tp_self, void *self, int32_t *result) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_int32)
@@ -1329,9 +1322,8 @@ DeeStruct_Int32(DeeSTypeObject *__restrict tp_self,
 	return err_unimplemented_operator(orig_type, OPERATOR_INT);
 }
 
-INTERN int DCALL
-DeeStruct_Int64(DeeSTypeObject *__restrict tp_self,
-                void *self, int64_t *__restrict result) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeStruct_Int64(DeeSTypeObject *tp_self, void *self, int64_t *result) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_int64)
@@ -1341,9 +1333,8 @@ DeeStruct_Int64(DeeSTypeObject *__restrict tp_self,
 	return err_unimplemented_operator(orig_type, OPERATOR_INT);
 }
 
-INTERN int DCALL
-DeeStruct_Double(DeeSTypeObject *__restrict tp_self,
-                 void *self, double *__restrict result) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeStruct_Double(DeeSTypeObject *tp_self, void *self, double *result) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_double)
@@ -1353,8 +1344,8 @@ DeeStruct_Double(DeeSTypeObject *__restrict tp_self,
 	return err_unimplemented_operator(orig_type, OPERATOR_FLOAT);
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Int(DeeSTypeObject *__restrict tp_self, void *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeStruct_Int(DeeSTypeObject *tp_self, void *self) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_math && tp_self->st_math->st_int)
@@ -1366,8 +1357,8 @@ DeeStruct_Int(DeeSTypeObject *__restrict tp_self, void *self) {
 }
 
 #define DEFINE_UNARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, OPERATOR_XXX)   \
-	INTERN Treturn DCALL                                                                         \
-	DeeStruct_Xxx(DeeSTypeObject *__restrict tp_self, void *self) {                              \
+	INTERN WUNUSED NONNULL((1)) Treturn DCALL                                                    \
+	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self) {                                         \
 		DeeSTypeObject *orig_type = tp_self;                                                     \
 		do {                                                                                     \
 			if (tp_self->st_math && tp_self->st_math->st_xxx)                                    \
@@ -1378,9 +1369,8 @@ DeeStruct_Int(DeeSTypeObject *__restrict tp_self, void *self) {
 		return error_result;                                                                     \
 	}
 #define DEFINE_BINARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, OPERATOR_XXX)  \
-	INTERN Treturn DCALL                                                                         \
-	DeeStruct_Xxx(DeeSTypeObject *__restrict tp_self, void *self,                                \
-	              DeeObject *__restrict other) {                                                 \
+	INTERN WUNUSED NONNULL((1, 3)) Treturn DCALL                                                 \
+	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self, DeeObject *other) {                       \
 		DeeSTypeObject *orig_type = tp_self;                                                     \
 		do {                                                                                     \
 			if (tp_self->st_math && tp_self->st_math->st_xxx)                                    \
@@ -1420,17 +1410,14 @@ DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplacePow, st_inplace_pow, OPERA
 #undef DEFINE_BINARY_MATH_OPERATOR
 #undef DEFINE_UNARY_MATH_OPERATOR
 
-INTERN dhash_t DCALL
-DeeStruct_Hash(DeeSTypeObject *__restrict tp_self,
-               void *self) {
+INTERN WUNUSED NONNULL((1)) dhash_t DCALL
+DeeStruct_Hash(DeeSTypeObject *tp_self, void *self) {
 	return Dee_HashPtr(self, DeeSType_Sizeof(tp_self));
 }
 
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Eq(DeeSTypeObject *__restrict tp_self,
-             void *self,
-             DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_Eq(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_eq)
@@ -1444,10 +1431,8 @@ DeeStruct_Eq(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Ne(DeeSTypeObject *__restrict tp_self,
-             void *self,
-             DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_Ne(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_ne)
@@ -1461,10 +1446,8 @@ DeeStruct_Ne(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Lo(DeeSTypeObject *__restrict tp_self,
-             void *self,
-             DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_Lo(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_lo)
@@ -1478,10 +1461,8 @@ DeeStruct_Lo(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Le(DeeSTypeObject *__restrict tp_self,
-             void *self,
-             DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_Le(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_le)
@@ -1495,10 +1476,8 @@ DeeStruct_Le(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Gr(DeeSTypeObject *__restrict tp_self,
-             void *self,
-             DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_Gr(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_gr)
@@ -1512,10 +1491,8 @@ DeeStruct_Gr(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Ge(DeeSTypeObject *__restrict tp_self,
-             void *self,
-             DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_Ge(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_cmp && tp_self->st_cmp->st_ge)
@@ -1529,8 +1506,8 @@ DeeStruct_Ge(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_IterSelf(DeeSTypeObject *__restrict tp_self, void *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeStruct_IterSelf(DeeSTypeObject *tp_self, void *self) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_iter_self)
@@ -1541,8 +1518,8 @@ DeeStruct_IterSelf(DeeSTypeObject *__restrict tp_self, void *self) {
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_GetSize(DeeSTypeObject *__restrict tp_self, void *self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeStruct_GetSize(DeeSTypeObject *tp_self, void *self) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_size)
@@ -1553,9 +1530,9 @@ DeeStruct_GetSize(DeeSTypeObject *__restrict tp_self, void *self) {
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_Contains(DeeSTypeObject *__restrict tp_self,
-                   void *self, DeeObject *__restrict some_object) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_Contains(DeeSTypeObject *tp_self,
+                   void *self, DeeObject *some_object) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_contains)
@@ -1566,9 +1543,8 @@ DeeStruct_Contains(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_GetItem(DeeSTypeObject *__restrict tp_self, void *self,
-                  DeeObject *__restrict index) {
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+DeeStruct_GetItem(DeeSTypeObject *tp_self, void *self, DeeObject *index) {
 	DeeSTypeObject *orig_type = tp_self;
 	DREF DeeObject *result, *new_result;
 	do {
@@ -1585,9 +1561,8 @@ DeeStruct_GetItem(DeeSTypeObject *__restrict tp_self, void *self,
 	return new_result;
 }
 
-INTERN int DCALL
-DeeStruct_DelItem(DeeSTypeObject *__restrict tp_self, void *self,
-                  DeeObject *__restrict index) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeStruct_DelItem(DeeSTypeObject *tp_self, void *self, DeeObject *index) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_del)
@@ -1598,9 +1573,9 @@ DeeStruct_DelItem(DeeSTypeObject *__restrict tp_self, void *self,
 	return DeeStruct_SetItem(tp_self, self, index, Dee_None);
 }
 
-INTERN int DCALL
-DeeStruct_SetItem(DeeSTypeObject *__restrict tp_self, void *self,
-                  DeeObject *__restrict index, DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
+DeeStruct_SetItem(DeeSTypeObject *tp_self, void *self,
+                  DeeObject *index, DeeObject *value) {
 	DeeSTypeObject *orig_type = tp_self;
 	DREF DeeObject *temp, *temp2;
 	int result;
@@ -1626,10 +1601,9 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_GetRange(DeeSTypeObject *__restrict tp_self, void *self,
-                   DeeObject *__restrict begin,
-                   DeeObject *__restrict end) {
+INTERN WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *DCALL
+DeeStruct_GetRange(DeeSTypeObject *tp_self, void *self,
+                   DeeObject *begin, DeeObject *end) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_range_get)
@@ -1640,10 +1614,9 @@ DeeStruct_GetRange(DeeSTypeObject *__restrict tp_self, void *self,
 	return NULL;
 }
 
-INTERN int DCALL
-DeeStruct_DelRange(DeeSTypeObject *__restrict tp_self, void *self,
-                   DeeObject *__restrict begin,
-                   DeeObject *__restrict end) {
+INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
+DeeStruct_DelRange(DeeSTypeObject *tp_self, void *self,
+                   DeeObject *begin, DeeObject *end) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_range_del)
@@ -1653,11 +1626,9 @@ DeeStruct_DelRange(DeeSTypeObject *__restrict tp_self, void *self,
 	return err_unimplemented_operator(orig_type, OPERATOR_DELRANGE);
 }
 
-INTERN int DCALL
-DeeStruct_SetRange(DeeSTypeObject *__restrict tp_self, void *self,
-                   DeeObject *__restrict begin,
-                   DeeObject *__restrict end,
-                   DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
+DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self,
+                   DeeObject *begin, DeeObject *end, DeeObject *value) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_seq && tp_self->st_seq->stp_range_set)
@@ -1667,10 +1638,8 @@ DeeStruct_SetRange(DeeSTypeObject *__restrict tp_self, void *self,
 	return err_unimplemented_operator(orig_type, OPERATOR_SETRANGE);
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeStruct_GetAttr(DeeSTypeObject *__restrict tp_self,
-                  void *self,
-                  DeeObject *__restrict name) {
+INTERN WUNUSED NONNULL((1, 3)) WUNUSED DREF DeeObject *DCALL
+DeeStruct_GetAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_attr && tp_self->st_attr->st_getattr)
@@ -1683,10 +1652,8 @@ DeeStruct_GetAttr(DeeSTypeObject *__restrict tp_self,
 	return NULL;
 }
 
-INTERN int DCALL
-DeeStruct_DelAttr(DeeSTypeObject *__restrict tp_self,
-                  void *self,
-                  DeeObject *__restrict name) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+DeeStruct_DelAttr(DeeSTypeObject *tp_self, void *self, DeeObject *name) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_attr && tp_self->st_attr->st_delattr)
@@ -1696,11 +1663,9 @@ DeeStruct_DelAttr(DeeSTypeObject *__restrict tp_self,
 	return err_unimplemented_operator(orig_type, OPERATOR_DELATTR);
 }
 
-INTERN int DCALL
-DeeStruct_SetAttr(DeeSTypeObject *__restrict tp_self,
-                  void *self,
-                  DeeObject *__restrict name,
-                  DeeObject *__restrict value) {
+INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
+DeeStruct_SetAttr(DeeSTypeObject *tp_self, void *self,
+                  DeeObject *name, DeeObject *value) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_attr && tp_self->st_attr->st_setattr)
@@ -1710,7 +1675,7 @@ DeeStruct_SetAttr(DeeSTypeObject *__restrict tp_self,
 	return err_unimplemented_operator(orig_type, OPERATOR_SETATTR);
 }
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeStruct_EnumAttr(DeeSTypeObject *__restrict tp_self,
                    denum_t proc, void *arg) {
 	DeeSTypeObject *orig_type = tp_self;

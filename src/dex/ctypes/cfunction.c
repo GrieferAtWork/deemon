@@ -41,12 +41,12 @@ DECL_BEGIN
 
 
 #ifdef CONFIG_NO_CFUNCTION
-INTERN cc_t DCALL
+INTERN WUNUSED NONNULL((1)) cc_t DCALL
 cc_trylookup(char const *__restrict UNUSED(name)) {
 	return CC_INVALID;
 }
 
-INTERN char const *DCALL
+INTERN WUNUSED char const *DCALL
 cc_getname(cc_t UNUSED(cc)) {
 	return NULL;
 }
@@ -82,7 +82,7 @@ PRIVATE struct cc_entry const cc_db[] = {
 };
 
 
-INTERN cc_t DCALL
+INTERN WUNUSED NONNULL((1)) cc_t DCALL
 cc_trylookup(char const *__restrict name) {
 	size_t i;
 	/* Search for a calling convention matching the given name. */
@@ -93,7 +93,7 @@ cc_trylookup(char const *__restrict name) {
 	return CC_INVALID;
 }
 
-INTERN char const *DCALL
+INTERN WUNUSED char const *DCALL
 cc_getname(cc_t cc) {
 	size_t i;
 	/* Search for the database entry for the given CC. */
@@ -104,7 +104,7 @@ cc_getname(cc_t cc) {
 	return NULL;
 }
 
-PRIVATE ffi_type *DCALL
+PRIVATE WUNUSED NONNULL((1)) ffi_type *DCALL
 stype_ffitype(DeeSTypeObject *__restrict self) {
 	if (self->st_ffitype)
 		return self->st_ffitype;
@@ -116,7 +116,7 @@ stype_ffitype(DeeSTypeObject *__restrict self) {
 
 #endif /* !CONFIG_NO_CFUNCTION */
 
-INTERN cc_t DCALL
+INTERN WUNUSED NONNULL((1)) cc_t DCALL
 cc_lookup(char const *__restrict name) {
 #ifdef CONFIG_NO_CFUNCTION
 	DeeError_Throwf(&DeeError_ValueError,
@@ -483,15 +483,15 @@ nope:
 #endif /* !CONFIG_NO_CFUNCTION */
 
 
-INTERN WUNUSED DREF DeeCFunctionTypeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeCFunctionTypeObject *DCALL
 DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
                    cc_t calling_convention, size_t argc,
-                   DeeSTypeObject **__restrict argv,
-                   bool inherit_argv) {
+                   DeeSTypeObject **argv, bool inherit_argv) {
 #ifdef CONFIG_NO_CFUNCTION
 	(void)return_type;
 	(void)calling_convention;
-	(void)argc, (void)argv;
+	(void)argc;
+	(void)argv;
 	if (inherit_argv)
 		Dee_Free(argv);
 	err_no_cfunction();

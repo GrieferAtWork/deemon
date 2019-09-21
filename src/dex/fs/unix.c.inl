@@ -1351,7 +1351,9 @@ fs_chown(DeeObject *__restrict path,
          DeeObject *__restrict group) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	(void)path, (void)user, (void)group;
+	(void)path;
+	(void)user;
+	(void)group;
 	/* TODO: chown() */
 	DERROR_NOTIMPLEMENTED();
 err:
@@ -1364,7 +1366,9 @@ fs_lchown(DeeObject *__restrict path,
           DeeObject *__restrict group) {
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	(void)path, (void)user, (void)group;
+	(void)path;
+	(void)user;
+	(void)group;
 	/* TODO: lchown() */
 	DERROR_NOTIMPLEMENTED();
 err:

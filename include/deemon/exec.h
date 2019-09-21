@@ -54,6 +54,7 @@ DECL_BEGIN
  * @return: NULL: Failed to determine the home folder (an error was set).
  * NOTE: The home path _MUST_ include a trailing slash! */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void);
+
 /* Set the new home folder, overwriting whatever was set before.
  * HINT: You may pass `NULL' to cause the default home path to be re-created. */
 DFUNDEF void DCALL DeeExec_SetHome(/*String*/ DeeObject *new_home);
@@ -83,10 +84,10 @@ DDATDEF DeeListObject DeeModule_Path;
 DDATDEF DeeObject     DeeModule_Path;
 #endif /* !GUARD_DEEMON_EXECUTE_MODPATH_C */
 DFUNDEF void DCALL DeeModule_InitPath(void);
-#define DeeModule_FiniPath()  DeeList_Clear(&DeeModule_Path)
+#define DeeModule_FiniPath() DeeList_Clear(&DeeModule_Path)
 
 /* Initialize the module path sub-system and return its global list of path. */
-#define DeeModule_GetPath()  (DeeModule_InitPath(),&DeeModule_Path)
+#define DeeModule_GetPath() (DeeModule_InitPath(), &DeeModule_Path)
 
 /* The timestamp when deemon was compiled, generated as `__DATE__ "|" __TIME__' */
 DDATDEF char const DeeExec_Timestamp[];

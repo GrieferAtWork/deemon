@@ -1191,8 +1191,8 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
  * actual argument values passed to the function.
  * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
  *       to clean up the returned object. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeKwdsMapping_New(/*Kwds*/ DeeObject *__restrict kwds,
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
                    DeeObject **argv) {
 	DREF KwdsMapping *result;
 	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
@@ -1210,8 +1210,8 @@ done:
 /* Unshare the argument vector from a keywords-mapping object, automatically
  * constructing a copy if all contained objects if `self' is being shared,
  * or destroying `self' without touching the argument vector if not. */
-PUBLIC void DCALL
-DeeKwdsMapping_Decref(DREF DeeObject *__restrict self) {
+PUBLIC NONNULL((1)) void DCALL
+DeeKwdsMapping_Decref(DREF DeeObject *self) {
 	DREF KwdsMapping *me;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me = (DREF KwdsMapping *)self;
@@ -1326,11 +1326,11 @@ no_such_key:
 	return result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeKwdsMapping_GetItemStringDef(DeeObject *self,
                                 char const *__restrict name,
                                 dhash_t hash,
-                                DeeObject *__restrict def) {
+                                DeeObject *def) {
 	size_t index;
 	KwdsMapping *me;
 	DREF DeeObject *result;
@@ -1383,12 +1383,12 @@ no_such_key:
 	return result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self,
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DeeKwdsMapping_GetItemStringLenDef(DeeObject *self,
                                    char const *__restrict name,
                                    size_t namesize,
                                    dhash_t hash,
-                                   DeeObject *__restrict def) {
+                                   DeeObject *def) {
 	size_t index;
 	KwdsMapping *me;
 	DREF DeeObject *result;
@@ -1417,7 +1417,7 @@ no_such_key:
 /* Construct/access keyword arguments passed to a function as a
  * high-level {(string,object)...}-like mapping that is bound to
  * the actually mapped arguments. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict pargc,
              DeeObject **argv,
              DeeObject *kw) {
@@ -1439,8 +1439,9 @@ DeeArg_GetKw(size_t *__restrict pargc,
 	return_reference_(kw);
 }
 
-PUBLIC void DCALL
-DeeArg_PutKw(size_t argc, DeeObject **argv, DeeObject *__restrict kw) {
+PUBLIC NONNULL((3)) void DCALL
+DeeArg_PutKw(size_t argc, DeeObject **argv, DREF DeeObject *kw) {
+	ASSERT_OBJECT(kw);
 	if (DeeKwdsMapping_Check(kw) &&
 	    ((DeeKwdsMappingObject *)kw)->kmo_argv == argv + argc) {
 		/* If we're the ones owning the keywords-mapping, we must also decref() it. */
@@ -1451,7 +1452,7 @@ DeeArg_PutKw(size_t argc, DeeObject **argv, DeeObject *__restrict kw) {
 }
 
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwString(size_t argc, DeeObject **argv,
                    DeeObject *kw, char const *__restrict name) {
 	dhash_t hash;
@@ -1479,7 +1480,7 @@ DeeArg_GetKwString(size_t argc, DeeObject **argv,
 	return DeeObject_GetItemString(kw, name, hash);
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLen(size_t argc, DeeObject **argv, DeeObject *kw,
                       char const *__restrict name, size_t namelen, dhash_t hash) {
 	if (!kw) {
@@ -1505,10 +1506,10 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject **argv, DeeObject *kw,
 	return DeeObject_GetItemStringLen(kw, name, namelen, hash);
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((4, 5)) DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject **argv,
                       DeeObject *kw, char const *__restrict name,
-                      DeeObject *__restrict def) {
+                      DeeObject *def) {
 	dhash_t hash;
 	if (!kw) {
 return_def:
@@ -1531,11 +1532,11 @@ return_def:
 	return DeeObject_GetItemStringDef(kw, name, hash, def);
 }
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLenDef(size_t argc, DeeObject **argv,
                          DeeObject *kw, char const *__restrict name,
                          size_t namelen, dhash_t hash,
-                         DeeObject *__restrict def) {
+                         DeeObject *def) {
 	if (!kw) {
 return_def:
 		if (def != ITER_DONE)

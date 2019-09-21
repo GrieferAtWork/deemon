@@ -24,7 +24,7 @@
 #include "object.h"
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 DECL_BEGIN
 
@@ -72,7 +72,7 @@ DFUNDEF WUNUSED NONNULL((3)) int DCALL DeeArg_VUnpack(size_t argc, /*nonnull_if(
 #define DeeArg_Unpack(argc, argv, ...)           __builtin_expect(DeeArg_Unpack(argc, argv, __VA_ARGS__), 0)
 #define DeeArg_VUnpack(argc, argv, format, args) __builtin_expect(DeeArg_VUnpack(argc, argv, format, args), 0)
 #endif /* !__NO_builtin_expect */
-#endif
+#endif /* !__INTELLISENSE__ */
 
 
 
@@ -234,7 +234,7 @@ struct dee_kwds_mapping_object {
 	                               *       case code should operate as though `kmo_kwds->kw_size' was zero. */
 #ifndef CONFIG_NO_THREADS
 	Dee_rwlock_t        kmo_lock; /* Lock for unsharing the argument vector. */
-#endif
+#endif /* !CONFIG_NO_THREADS */
 };
 
 DDATDEF DeeTypeObject DeeKwdsMapping_Type;
@@ -247,48 +247,49 @@ DDATDEF DeeTypeObject DeeKwdsMapping_Type;
  * actual argument values passed to the function.
  * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
  *       to clean up the returned object. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeKwdsMapping_New(/*Kwds*/ DeeObject *__restrict kwds,
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
                    DeeObject **argv);
 
 /* Unshare the argument vector from a keywords-mapping object, automatically
  * constructing a copy if all contained objects if `self' is being shared,
  * or destroying `self' without touching the argument vector if not. */
-DFUNDEF void DCALL DeeKwdsMapping_Decref(DREF DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeKwdsMapping_Decref(DREF DeeObject *__restrict self);
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeKwdsMapping_HasItemString(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemString(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringDef(DeeObject *self, char const *__restrict name, Dee_hash_t hash, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
-INTDEF WUNUSED DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *__restrict def);
-#endif
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenDef(DeeObject *self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *def);
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 /* Construct/access keyword arguments passed to a function as a
  * high-level {(string,object)...}-like mapping that is bound to
  * the actually mapped arguments. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeArg_GetKw(size_t *__restrict pargc, DeeObject **argv, DeeObject *kw);
-DFUNDEF void DCALL DeeArg_PutKw(size_t argc, DeeObject **argv, DeeObject *__restrict kw);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeArg_GetKw(size_t *__restrict pargc, DeeObject **argv, DeeObject *kw);
+DFUNDEF NONNULL((3)) void DCALL DeeArg_PutKw(size_t argc, DeeObject **argv, DREF DeeObject *kw);
 
 /* In a keyword-enabled function, return the argument associated with a given
  * `name', or throw a TypeError exception or return `def' if not provided. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwString(size_t argc, DeeObject **argv, DeeObject *kw,
                    char const *__restrict name);
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLen(size_t argc, DeeObject **argv, DeeObject *kw,
                       char const *__restrict name, size_t namelen, Dee_hash_t hash);
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((4, 5)) DREF DeeObject *DCALL
 DeeArg_GetKwStringDef(size_t argc, DeeObject **argv,
                       DeeObject *kw, char const *__restrict name,
-                      DeeObject *__restrict def);
-DFUNDEF WUNUSED DREF DeeObject *DCALL
+                      DeeObject *def);
+DFUNDEF WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLenDef(size_t argc, DeeObject **argv,
                          DeeObject *kw, char const *__restrict name,
                          size_t namelen, Dee_hash_t hash,
-                         DeeObject *__restrict def);
+                         DeeObject *def);
 
 
 
@@ -318,31 +319,19 @@ struct dee_keyword {
  *    finally using `DeeObject_Size()' to see how many keyword-arguments
  *    were given by the keyword-list, and throwing an error if more were
  *    given than what was actually used. */
-DFUNDEF int DeeArg_UnpackKw(size_t argc, DeeObject **argv,
-                            DeeObject *kw, struct dee_keyword *__restrict kwlist,
-                            char const *__restrict format, ...);
-DFUNDEF int DCALL DeeArg_VUnpackKw(size_t argc, DeeObject **argv,
-                                   DeeObject *kw, struct dee_keyword *__restrict kwlist,
-                                   char const *__restrict format, va_list args);
-
-/* Same as `DeeArg_UnpackKw', but don't throw errors if argument types,
- * or argument counts don't match (which would otherwise throw a TypeError),
- * and return `1' instead.
- * @return:  1: Unpacking failed (argument list and keyword don't match requirements)
- * @return:  0: Unpacking was successful.
- * @return: -1: An error occurred. */
-DFUNDEF int DeeArg_TryUnpackKw(size_t argc, DeeObject **argv,
-                               DeeObject *kw, struct dee_keyword *__restrict kwlist,
-                               char const *__restrict format, ...);
-DFUNDEF int DCALL DeeArg_VTryUnpackKw(size_t argc, DeeObject **argv,
-                                      DeeObject *kw, struct dee_keyword *__restrict kwlist,
-                                      char const *__restrict format, va_list args);
-
+DFUNDEF WUNUSED NONNULL((4, 5)) int
+DeeArg_UnpackKw(size_t argc, DeeObject **argv,
+                DeeObject *kw, struct dee_keyword *__restrict kwlist,
+                char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((4, 5)) int DCALL
+DeeArg_VUnpackKw(size_t argc, DeeObject **argv,
+                 DeeObject *kw, struct dee_keyword *__restrict kwlist,
+                 char const *__restrict format, va_list args);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeArg_UnpackKw(argc, argv, kw,kwlist, ...)            __builtin_expect(DeeArg_UnpackKw(argc, argv, kw,kwlist,__VA_ARGS__),0)
-#define DeeArg_VUnpackKw(argc, argv, kw,kwlist,format,args)   __builtin_expect(DeeArg_VUnpackKw(argc, argv, kw,kwlist,format,args),0)
+#define DeeArg_UnpackKw(argc, argv, kw, kwlist, ...)           __builtin_expect(DeeArg_UnpackKw(argc, argv, kw, kwlist, __VA_ARGS__), 0)
+#define DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args) __builtin_expect(DeeArg_VUnpackKw(argc, argv, kw, kwlist, format, args), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

@@ -89,7 +89,7 @@ DeeError_Print(char const *reason, unsigned int handle_errors) {
 /* Display (print to stderr) an error, as well as an optional traceback. */
 PUBLIC NONNULL((2)) void DCALL
 DeeError_Display(char const *reason,
-                 DeeObject *__restrict error,
+                 DeeObject *error,
                  DeeObject *traceback) {
 	DeeStringObject *error_str;
 	ASSERT_OBJECT(error);
