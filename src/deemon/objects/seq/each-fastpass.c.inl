@@ -255,7 +255,7 @@ err_r:
 	return NULL;
 }
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 F(transform)(STRUCT_TYPE *__restrict self,
              /*inherit(always)*/ DREF DeeObject *__restrict elem) {
 	DREF DeeObject *result;

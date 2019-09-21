@@ -386,7 +386,7 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression);
 /* Parse a primary and second expression in hybrid mode. */
 #define ast_parse_hybrid_primary(pwas_expression) \
 	ast_parse_statement_or_expression(pwas_expression)
-LOCAL DREF struct ast *FCALL
+LOCAL WUNUSED DREF struct ast *FCALL
 ast_parse_hybrid_secondary(unsigned int *__restrict pwas_expression) {
 	DREF struct ast *result;
 	switch (*pwas_expression) {

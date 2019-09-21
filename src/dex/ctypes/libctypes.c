@@ -539,12 +539,12 @@ PRIVATE DEFINE_CMETHOD(ctypes_strfry, capi_strfry);
 
 #ifdef CONFIG_HAVE_ERRNO_H
 PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_errno_get(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+capi_errno_get(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
 	return DeeInt_NewInt(errno);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_errno_del(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+capi_errno_del(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
 	errno = 0;
 	return_none;
 }
@@ -567,7 +567,7 @@ PRIVATE DEFINE_CMETHOD(ctypes_errno_set, capi_errno_set);
 #else /* CONFIG_HAVE_ERRNO_H */
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_errno_access(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) {
+capi_errno_access(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
 	DeeError_Throwf(&DeeError_UnsupportedAPI, "No errno support");
 	return NULL;
 }
@@ -706,7 +706,22 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(x:?Guint64_t)->?Guint64_t\n"
 	      "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
 
-	/* <errno.h> - style accessors. */
+	/* <errno.h> - style accessors.
+	 * XXX: the `posix` dex also exports an identical field, however by us also
+	 *      exporting our own variant, an incompatibility is created where the
+	 *      following code will create an ambiguous symbol warning:
+	 *   >> import * from ctypes;
+	 *   >> import * from posix;
+	 *   >> 
+	 *   >> print errno; // Ambiguous
+	 * Maybe this shouldn't even be considered a bug, since it can easily be fixed by
+	 * adding an explicit import `import errno from posix' or `import errno from ctypes',
+	 * especially considering that both actually have their own implementations...
+	 * Alternatively, we could remove `errno` from ctypes (I think it really only belongs
+	 * into posix, because even though STDC defines <errno.h>, it is posix that adds all
+	 * of the different error values onto it, with STDC only defining EDOM, EILSEQ, and
+	 * maybe a hand full of others)
+	 */
 	{ "errno", (DeeObject *)&ctypes_errno_get, MODSYM_FPROPERTY,
 	  DOC("->?Dint\nAccess the system's errno runtime variable") },
 	{ NULL, (DeeObject *)&ctypes_errno_del }, /* PROPERTY.DELETE */

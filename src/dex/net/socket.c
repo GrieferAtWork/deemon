@@ -52,7 +52,7 @@ err_no_af_support(neterrno_t error, sa_family_t af) {
 	                          sock_getafnameorid(af));
 }
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1)) int DCALL
 socket_ctor(Socket *__restrict self,
             size_t argc, DeeObject **argv,
             DeeObject *kw) {
@@ -314,9 +314,8 @@ err_shutdown_failed(Socket *__restrict self, int error) {
 	                          self);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_close(Socket *self, size_t argc,
-             DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_close(Socket *self, size_t argc, DeeObject **argv) {
 	sock_t socket_handle;
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	if (DeeArg_Unpack(argc, argv, "|o:close", &shutdown_mode))
@@ -383,9 +382,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_shutdown(Socket *self, size_t argc,
-                DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_shutdown(Socket *self, size_t argc, DeeObject **argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	if (DeeArg_Unpack(argc, argv, "|o:shutdown", &shutdown_mode))
 		goto err;
@@ -446,8 +444,9 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_COLD int DCALL
-err_addr_not_available(neterrno_t error, SockAddr const *__restrict addr,
+PRIVATE ATTR_COLD NONNULL((2)) int DCALL
+err_addr_not_available(neterrno_t error,
+                       SockAddr const *__restrict addr,
                        int prototype) {
 	return DeeError_SysThrowf(&DeeError_AddrNotAvail, error,
 	                          "The specified address %K is not available from the local machine",
@@ -559,7 +558,7 @@ select_interruptible(SOCKET hSocket, LONG lNetworkEvents, DWORD dwTimeout) {
 #define SELECT_TIMEOUT 100000 /* In microseconds. */
 
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((2, 3)) int DCALL
 err_network_down(int error, Socket *__restrict socket,
                  SockAddr const *__restrict addr) {
 	return DeeError_SysThrowf(&DeeError_NetUnreachable, error,
@@ -813,7 +812,7 @@ err:
 #pragma warning(disable : 4548)
 #endif /* _MSC_VER */
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
 DeeSocket_Accept(DeeSocketObject *__restrict self,
                  uint64_t timeout_microseconds,
                  sock_t *__restrict sock_fd,
@@ -1098,10 +1097,10 @@ restart_after_timeout:
 	((dssize_t)recv(socket, (char *)(buffer), (int)(length), flags))
 #define recvfrom(socket, buffer, length, flags, target, targetlen) \
 	((dssize_t)recvfrom(socket, (char *)(buffer), (int)(length), flags, target, targetlen))
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 err_message_too_large(int error, Socket *__restrict self, size_t bufsize) {
 	return DeeError_SysThrowf(&DeeError_MessageSize, error,
 	                          "Message consisting of %Iu bytes is too large for socket %k",
@@ -1110,7 +1109,7 @@ err_message_too_large(int error, Socket *__restrict self, size_t bufsize) {
 
 PRIVATE char const transfer_context_send[] = "transfer";
 PRIVATE char const transfer_context_recv[] = "receive";
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((2, 3)) int DCALL
 err_invalid_transfer_mode(int error, Socket *__restrict self,
                           char const *__restrict context, int mode) {
 	return DeeError_SysThrowf(&DeeError_NoSupport, error,
@@ -1328,21 +1327,21 @@ send_timeout_nounlock:
 
 
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 err_receive_not_connected(int error, Socket *__restrict socket) {
 	return DeeError_SysThrowf(&DeeError_NotConnected, error,
 	                          "Cannot receive data from socket %k that isn't connected",
 	                          socket);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 err_receive_timed_out(int error, Socket *__restrict socket) {
 	return DeeError_SysThrowf(&DeeError_TimedOut, error,
 	                          "Timed out while receiving data through socket %k",
 	                          socket);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 err_connect_reset(int error, Socket *__restrict socket) {
 	return DeeError_SysThrowf(&DeeError_ConnectReset, error,
 	                          "The connection of socket %k was reset by its peer",
@@ -1350,7 +1349,7 @@ err_connect_reset(int error, Socket *__restrict socket) {
 }
 
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeSocket_Send(DeeSocketObject *__restrict self,
                uint64_t timeout_microseconds,
                void const *__restrict buf, size_t bufsize,
@@ -1398,10 +1397,10 @@ again:
 		if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
 		    || error == EAGAIN
-#endif
+#endif /* EAGAIN && EAGAIN != EWOULDBLOCK */
 #ifdef EINTR
 		    || error == EINTR
-#endif
+#endif /* EINTR */
 		    ) {
 			if (timeout_microseconds != (uint64_t)-1) {
 				if (!timeout_microseconds ||
@@ -1417,7 +1416,7 @@ again:
 		} else if (error == ENOTCONN
 #ifdef EPIPE
 		           || (error == EPIPE && !(self->s_state & SOCKET_FSHUTDOWN_W))
-#endif
+#endif /* EPIPE */
 		           ) {
 			DeeError_SysThrowf(&DeeError_NotConnected, error,
 			                   "Cannot send data through unconnected socket %k",
@@ -1425,7 +1424,7 @@ again:
 #ifdef EPIPE
 		} else if (error == EPIPE) {
 			err_socket_closed(error, self);
-#endif
+#endif /* EPIPE */
 		} else if (error == EMSGSIZE) {
 			err_message_too_large(error, self, bufsize);
 		} else if (error == ECONNRESET) {
@@ -1451,7 +1450,7 @@ err:
 	return -1;
 }
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
 DeeSocket_Recv(DeeSocketObject *__restrict self,
                uint64_t timeout_microseconds,
                void *__restrict buf, size_t bufsize,
@@ -1499,10 +1498,10 @@ again:
 		if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
 		    || error == EAGAIN
-#endif
+#endif /* EAGAIN&& EAGAIN != EWOULDBLOCK */
 #ifdef EINTR
 		    || error == EINTR
-#endif
+#endif /* EINTR */
 		    ) {
 			if (timeout_microseconds != (uint64_t)-1) {
 				if (!timeout_microseconds ||
@@ -1517,7 +1516,7 @@ again:
 				goto again;
 			goto err;
 		}
-#endif
+#endif /* ENOMEM */
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 #ifdef MSG_OOB
@@ -1525,7 +1524,7 @@ again:
 			/* Indicate that nothing was read by returning 0. */
 			result = 0;
 			goto done;
-#endif
+#endif /* MSG_OOB */
 		} else if (error == ECONNRESET) {
 			err_connect_reset(error, self);
 		} else if (error == ENOTCONN) {
@@ -1549,7 +1548,7 @@ err:
 }
 
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((2, 3)) int DCALL
 err_host_unreachable(int error, Socket *__restrict socket,
                      SockAddr const *__restrict target) {
 	return DeeError_SysThrowf(&DeeError_HostUnreachable, error,
@@ -1559,7 +1558,7 @@ err_host_unreachable(int error, Socket *__restrict socket,
 	                                            SOCKADDR_STR_FNODNS));
 }
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
 DeeSocket_SendTo(DeeSocketObject *__restrict self,
                  uint64_t timeout_microseconds,
                  void const *__restrict buf, size_t bufsize,
@@ -1609,11 +1608,11 @@ again:
 		if (error == EWOULDBLOCK
 #if defined(EAGAIN) && EAGAIN != EWOULDBLOCK
 		    || error == EAGAIN
-#endif
+#endif /* EAGAIN && EAGAIN != EWOULDBLOCK */
 #ifdef EINTR
 		    || error == EINTR
-#endif
-		) {
+#endif /* EINTR */
+		    ) {
 			if (timeout_microseconds != (uint64_t)-1) {
 				if (!timeout_microseconds ||
 				    DeeThread_GetTimeMicroSeconds() >= end_time)
@@ -1627,7 +1626,7 @@ again:
 				goto again;
 			goto err;
 		}
-#endif
+#endif /* ENOMEM */
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 		} else if (error == EAFNOSUPPORT) {
@@ -1651,7 +1650,7 @@ again:
 #ifdef EPIPE
 		} else if (error == EPIPE) {
 			err_socket_closed(error, self);
-#endif
+#endif /* EPIPE */
 		} else if (error == EMSGSIZE) {
 			err_message_too_large(error, self, bufsize);
 		} else if (error == EOPNOTSUPP) {
@@ -1682,7 +1681,7 @@ err:
 	return -1;
 }
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
 DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
                    uint64_t timeout_microseconds,
                    void *__restrict buf, size_t bufsize,
@@ -1785,7 +1784,7 @@ err:
 	return -1;
 }
 
-PRIVATE size_t DCALL get_recv_chunksize(void) {
+PRIVATE WUNUSED size_t DCALL get_recv_chunksize(void) {
 	/* XXX: Consult an environment variable? */
 #if 0
 	return 1;
@@ -1794,15 +1793,15 @@ PRIVATE size_t DCALL get_recv_chunksize(void) {
 #endif
 }
 
-PRIVATE size_t DCALL get_recv_burstsize(void) {
+PRIVATE WUNUSED size_t DCALL get_recv_burstsize(void) {
 	/* XXX: Consult an environment variable? */
-	/* The max size of a single ethernet frame
-	 * (although we can't really assume ethernet connections...) */
+	/* The max size of a single Ethernet frame
+	 * (although we can't really assume Ethernet connections...) */
 	return 1542;
 }
 
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    uint64_t timeout_microseconds,
                    size_t max_bufsize, int flags,
@@ -1874,9 +1873,8 @@ err:
 
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_bind(Socket *self, size_t argc,
-            DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_bind(Socket *self, size_t argc, DeeObject **argv) {
 	SockAddr addr;
 	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
@@ -1894,9 +1892,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_connect(Socket *self, size_t argc,
-               DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_connect(Socket *self, size_t argc, DeeObject **argv) {
 	SockAddr addr;
 	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
@@ -1914,9 +1911,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_listen(Socket *self, size_t argc,
-              DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_listen(Socket *self, size_t argc, DeeObject **argv) {
 	int max_backlog = -1;
 	if (DeeArg_Unpack(argc, argv, "|d:listen", &max_backlog))
 		goto err;
@@ -1957,26 +1953,23 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_accept(Socket *self, size_t argc,
-              DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_accept(Socket *self, size_t argc, DeeObject **argv) {
 	uint64_t timeout = (uint64_t)-1;
 	if (DeeArg_Unpack(argc, argv, "|I64d:accept", &timeout))
 		return NULL;
 	return socket_doaccept(self, timeout);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_tryaccept(Socket *self, size_t argc,
-                 DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_tryaccept(Socket *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryaccept"))
 		return NULL;
 	return socket_doaccept(self, 0);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_recv(Socket *self, size_t argc,
-            DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_recv(Socket *self, size_t argc, DeeObject **argv) {
 	size_t max_size;
 	uint64_t timeout;
 	int flags;
@@ -2033,9 +2026,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_recvinto(Socket *self, size_t argc,
-                DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_recvinto(Socket *self, size_t argc, DeeObject **argv) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	DeeObject *arg1 = NULL, *arg2 = NULL;
@@ -2083,9 +2075,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_recvfrom(Socket *self, size_t argc,
-                DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_recvfrom(Socket *self, size_t argc, DeeObject **argv) {
 	DREF DeeSockAddrObject *result_addr;
 	DREF DeeObject *result_text, *result;
 	size_t max_size;
@@ -2168,9 +2159,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_recvfrominto(Socket *self, size_t argc,
-                    DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_recvfrominto(Socket *self, size_t argc, DeeObject **argv) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	DeeObject *arg1 = NULL, *arg2 = NULL;
@@ -2251,9 +2241,8 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_send(Socket *self, size_t argc,
-            DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_send(Socket *self, size_t argc, DeeObject **argv) {
 	DeeBuffer buffer;
 	DeeObject *data, *arg_0 = NULL, *arg_1 = NULL;
 	uint64_t timeout;
@@ -2302,9 +2291,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-socket_sendto(Socket *self, size_t argc,
-              DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_sendto(Socket *self, size_t argc, DeeObject **argv) {
 	DeeBuffer buffer;
 	SockAddr target_addr;
 	DeeObject *target, *data, *arg_0 = NULL, *arg_1 = NULL;

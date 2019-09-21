@@ -176,7 +176,7 @@ fs_chdir(DeeObject *__restrict UNUSED(path)) {
 PRIVATE int DCALL
 stat_ctor(DeeObject *__restrict UNUSED(self),
           size_t UNUSED(argc),
-          DeeObject **__restrict UNUSED(argv)) {
+          DeeObject **UNUSED(argv)) {
 	return fs_unsupported();
 }
 
@@ -203,7 +203,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_isxxx(DeeObject *__restrict UNUSED(self),
            size_t UNUSED(argc),
-           DeeObject **__restrict UNUSED(argv)) {
+           DeeObject **UNUSED(argv)) {
 	return fs_getcwd();
 }
 

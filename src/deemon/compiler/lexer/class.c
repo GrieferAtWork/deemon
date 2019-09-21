@@ -153,7 +153,7 @@ err:
 	return -1;
 }
 
-LOCAL DREF DeeClassDescriptorObject *DCALL
+LOCAL WUNUSED DREF DeeClassDescriptorObject *DCALL
 rehash_instance_attributes(DREF DeeClassDescriptorObject *__restrict self) {
 	size_t new_mask, i, j, perturb;
 	DREF DeeClassDescriptorObject *new_descr;

@@ -223,7 +223,7 @@ function gii(name: string, value: string = none, libname: string = none, visi: s
 @@Generate a wrapper for a c method (gw -- GenerateWrapper)
 @@Usage (in a file `libfoo.c', after running `$ deemon -F libfoo.c'):
 @@>/*[[[deemon import("_dexutils").gw("bar", "arg1:obj:string,arg2:o,arg3:o=NULL,arg4:b=true"); ]]]*/
-@@>FORCELOCAL DREF DeeObject *DCALL libfoo_bar_f_impl(DeeStringObject *__restrict arg1, DeeObject *__restrict arg2, DeeObject *arg3, bool arg4);
+@@>FORCELOCAL WUNUSED DREF DeeObject *DCALL libfoo_bar_f_impl(DeeStringObject *arg1, DeeObject *arg2, DeeObject *arg3, bool arg4);
 @@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject **argv, DeeObject *kw);
 @@>#define LIBFOO_BAR_DEF(doc) { "bar", (DeeObject *)&libfoo_bar, MODSYM_FNORMAL, DOC("(arg1:?Dstring,arg2,arg3?,arg4:?Dbool=!t)\n" doc)}
 @@>PRIVATE DEFINE_KWCMETHOD(libfoo_bar, libfoo_bar_f);
@@ -241,7 +241,7 @@ function gii(name: string, value: string = none, libname: string = none, visi: s
 @@>err:
 @@>	return NULL;
 @@>}
-@@>FORCELOCAL DREF DeeObject *DCALL libfoo_bar_f_impl(DeeStringObject *__restrict arg1, DeeObject *__restrict arg2, DeeObject *arg3, bool arg4)
+@@>FORCELOCAL WUNUSED DREF DeeObject *DCALL libfoo_bar_f_impl(DeeStringObject *arg1, DeeObject *arg2, DeeObject *arg3, bool arg4)
 @@>//[[[end]]]
 @@>{
 @@>	...
@@ -274,7 +274,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		arg_data[i] = (x.strip(), y.strip(), z.strip());
 	}
 	function print_user_impl() {
-		print "FORCELOCAL DREF DeeObject *DCALL", user_impl_name + "(",;
+		print "FORCELOCAL WUNUSED DREF DeeObject *DCALL", user_impl_name + "(",;
 		if (!arg_data)
 			print "void",;
 		else {
@@ -295,9 +295,9 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 						conv = map[4][0];
 				}
 				print conv,;
-				if (conv.endswith("*") && z != "NULL")
+				/*if (conv.endswith("*") && z != "NULL")
 					print "__restrict ",;
-				else if (!conv.endswith("*"))
+				else*/ if (!conv.endswith("*"))
 					print " ",;
 				print x,;
 			}
@@ -307,7 +307,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	print_user_impl();
 	print ";";
 	print visi == "INTERN" ? "INTDEF" : visi,
-		"DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv"
+		"WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv"
 		.format({ libname, name }),;
 	if (kw && arg_data) print ", DeeObject *kw",;
 	print ");";
@@ -398,10 +398,10 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 			print "K({}), ".format({ x }),;
 		print "KEND });";
 		print "#endif /* !"+kwlist_def_name, "*/";
-		print visi, "DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv, DeeObject *kw) {{".format({ libname, name });
+		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv, DeeObject *kw) {{".format({ libname, name });
 	} else {
 		print visi, "DEFINE_CMETHOD({}{}, {0}{1}_f);".format({ libname, name });
-		print visi, "DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv) {{".format({ libname, name });
+		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv) {{".format({ libname, name });
 	}
 	for (local x, y, z: arg_data) {
 		local conv;

@@ -871,9 +871,6 @@
     <None Include="..\src\deemon\execute\code-exec.c.inl">
       <Filter>src\deemon\execute</Filter>
     </None>
-    <None Include="..\src\.sources">
-      <Filter>src</Filter>
-    </None>
     <None Include="..\src\deemon\execute\code-exec-targets.c.inl">
       <Filter>src\deemon\execute</Filter>
     </None>

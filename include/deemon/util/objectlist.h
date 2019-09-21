@@ -58,7 +58,7 @@ objectlist_fini(struct objectlist *__restrict self) {
  * the first of them, leaving it up to the caller to initialize that memory.
  * Upon error, `NULL' is returned instead.
  * The caller is responsible to ensure that `num_objects' is non-zero. */
-LOCAL DREF DeeObject **DCALL
+LOCAL WUNUSED DREF DeeObject **DCALL
 objectlist_alloc(struct objectlist *__restrict self, size_t num_objects) {
 	DREF DeeObject **result;
 	size_t min_alloc = self->ol_size + num_objects;
@@ -146,7 +146,7 @@ objectlist_extendseq(struct objectlist *__restrict self,
 
 /* Pack the given objectlist into a List.
  * Upon success, `self' will have been finalized. */
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 objectlist_packlist(struct objectlist *__restrict self) {
 	return DeeList_NewVectorInheritedHeap(self->ol_alloc,
 	                                      self->ol_size,
@@ -155,7 +155,7 @@ objectlist_packlist(struct objectlist *__restrict self) {
 
 /* Pack the given objectlist into a Tuple.
  * Upon success, `self' will have been finalized. */
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 objectlist_packtuple(struct objectlist *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeTuple_NewVectorSymbolic(self->ol_size, self->ol_list);

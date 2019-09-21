@@ -38,12 +38,12 @@
 
 DEE_CXX_BEGIN
 
-FORCELOCAL DREF DeeObject *(DCALL incref)(DeeObject *__restrict obj) {
+FORCELOCAL WUNUSED DREF DeeObject *(DCALL incref)(DeeObject *__restrict obj) {
 	Dee_Incref(obj);
 	return obj;
 }
 
-FORCELOCAL DREF DeeObject *(DCALL xincref)(DeeObject *obj) {
+FORCELOCAL WUNUSED DREF DeeObject *(DCALL xincref)(DeeObject *obj) {
 	Dee_XIncref(obj);
 	return obj;
 }
@@ -84,12 +84,12 @@ FORCELOCAL void (DCALL xdecref_nokill)(DREF DeeObject *obj) {
 	Dee_XDecrefNokill(obj);
 }
 #ifdef CONFIG_TRACE_REFCHANGES
-FORCELOCAL DREF DeeObject *(DCALL incref_traced)(DeeObject *__restrict obj, char const *file, int line) {
+FORCELOCAL WUNUSED DREF DeeObject *(DCALL incref_traced)(DeeObject *__restrict obj, char const *file, int line) {
 	Dee_Incref_traced(obj, file, line);
 	return obj;
 }
 
-FORCELOCAL DREF DeeObject *(DCALL xincref_traced)(DeeObject *obj, char const *file, int line) {
+FORCELOCAL WUNUSED DREF DeeObject *(DCALL xincref_traced)(DeeObject *obj, char const *file, int line) {
 	if (obj)
 		Dee_Incref_traced(obj, file, line);
 	return obj;

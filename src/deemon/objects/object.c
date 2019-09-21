@@ -3861,7 +3861,7 @@ get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 	return (DREF DeeObject *)result;
 }
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 DeeClass_GetModule(DeeTypeObject *__restrict self) {
 	struct class_desc *my_class    = self->tp_class;
 	DeeClassDescriptorObject *desc = my_class->cd_desc;

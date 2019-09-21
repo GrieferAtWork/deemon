@@ -459,7 +459,6 @@ err:
 
 
 PRIVATE WCHAR const wPathStr[] = { 'P', 'A', 'T', 'H', 0 };
-
 PRIVATE WCHAR const wPathExtStr[] = { 'P', 'A', 'T', 'H', 'E', 'X', 'T', 0 };
 
 
@@ -1587,8 +1586,9 @@ process_get_files(Process *__restrict self) {
 
 
 
-INTERN ATTR_COLD int DCALL
-err_unbound_attribute(DeeTypeObject *__restrict tp, char const *__restrict name) {
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+err_unbound_attribute(DeeTypeObject *__restrict tp,
+                      char const *__restrict name) {
 	ASSERT_OBJECT(tp);
 	ASSERT(name);
 	ASSERT(DeeType_Check(tp));
@@ -1643,8 +1643,8 @@ process_get_std(Process *__restrict self, int stdno) {
 	return process_get_attribute_and_unlock(self, stdno);
 }
 
-PRIVATE int DCALL
-process_set_std(Process *__restrict self, int stdno, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+process_set_std(Process *self, int stdno, DeeObject *value) {
 	DREF DeeObject *old_stream;
 	if (self == &this_process) {
 		old_stream = DeeFile_SetStd(stdno, value);
@@ -1681,27 +1681,27 @@ err:
 	return -1;
 }
 
-#define DEFINE_PROCESS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)                          \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                 \
-	process_get_##stdxxx(Process *__restrict self) {                              \
-		return process_get_std(self, DEE_STDXXX);                                 \
-	}                                                                             \
-	PRIVATE int DCALL                                                             \
-	process_del_##stdxxx(Process *__restrict self) {                              \
-		return process_set_std(self, DEE_STDXXX, NULL);                           \
-	}                                                                             \
-	PRIVATE int DCALL                                                             \
-	process_set_##stdxxx(Process *__restrict self, DeeObject *__restrict value) { \
-		return process_set_std(self, DEE_STDXXX, value);                          \
+#define DEFINE_PROCESS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)    \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL      \
+	process_get_##stdxxx(Process *__restrict self) {        \
+		return process_get_std(self, DEE_STDXXX);           \
+	}                                                       \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                  \
+	process_del_##stdxxx(Process *__restrict self) {        \
+		return process_set_std(self, DEE_STDXXX, NULL);     \
+	}                                                       \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL               \
+	process_set_##stdxxx(Process *self, DeeObject *value) { \
+		return process_set_std(self, DEE_STDXXX, value);    \
 	}
 DEFINE_PROCESS_STD_FUNCTIONS(stdin, DEE_STDIN)
 DEFINE_PROCESS_STD_FUNCTIONS(stdout, DEE_STDOUT)
 DEFINE_PROCESS_STD_FUNCTIONS(stderr, DEE_STDERR)
 #undef DEFINE_PROCESS_STD_FUNCTIONS
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-call_extern(DeeObject *__restrict module_name,
-            DeeObject *__restrict global_name,
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+call_extern(DeeObject *module_name,
+            DeeObject *global_name,
             size_t argc, DeeObject **argv) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
@@ -1715,8 +1715,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-get_extern(DeeObject *module_name,
-           DeeObject *global_name) {
+get_extern(DeeObject *module_name, DeeObject *global_name) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
 	if unlikely(!module)
@@ -1750,8 +1749,8 @@ process_get_environ(Process *__restrict self) {
 	return process_get_attribute_and_unlock(self, PROCATTR_ENVIRONMENT);
 }
 
-PRIVATE int DCALL
-process_set_environ(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+process_set_environ(Process *self, DeeObject *value) {
 	DREF DeeObject *temp;
 	if (self == &this_process) {
 		int result;
@@ -1800,8 +1799,8 @@ process_get_pwd(Process *__restrict self) {
 	return process_get_attribute_and_unlock(self, PROCATTR_CURRENTDIRECTORY);
 }
 
-PRIVATE int DCALL
-process_set_pwd(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+process_set_pwd(Process *self, DeeObject *value) {
 	DREF DeeStringObject *oldval;
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
@@ -1890,8 +1889,8 @@ done:
 	return (DeeObject *)result;
 }
 
-PRIVATE int DCALL
-process_set_exe(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+process_set_exe(Process *self, DeeObject *value) {
 	DREF DeeStringObject *old_value;
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
@@ -1967,8 +1966,8 @@ done:
 	return (DeeObject *)result;
 }
 
-PRIVATE int DCALL
-process_set_cmdline(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+process_set_cmdline(Process *self, DeeObject *value) {
 	DREF DeeStringObject *old_value;
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
@@ -2019,7 +2018,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-process_set_argv(Process *__restrict self, DeeObject *__restrict value) {
+process_set_argv(Process *self, DeeObject *value) {
 	DREF DeeStringObject *cmdline;
 	int result;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
@@ -2044,7 +2043,7 @@ PRIVATE struct type_getset process_getsets[] = {
 #ifndef CONFIG_NO_THREADS
 	{ "threads", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL,
 	  DOC("->?S?Dthread\nEnumerate all the threads of @this process") },
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	{ "files", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files },
 	{ "stdin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdin,
@@ -2091,8 +2090,8 @@ PRIVATE struct type_getset process_getsets[] = {
 
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_class_self(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))
 		return NULL;

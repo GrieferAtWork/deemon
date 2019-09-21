@@ -220,7 +220,7 @@ INTERN bool DCALL clear_void_pointer(void) {
 	return true;
 }
 
-LOCAL DREF DeeSTypeObject *DCALL get_void_pointer(void) {
+LOCAL WUNUSED DREF DeeSTypeObject *DCALL get_void_pointer(void) {
 	DREF DeeSTypeObject *result;
 	rwlock_read(&static_type_lock);
 	result = void_ptr;

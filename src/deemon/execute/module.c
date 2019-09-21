@@ -308,7 +308,7 @@ read_symbol:
 	goto read_symbol;
 }
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 module_getattr_impl(DeeModuleObject *__restrict self,
                     char const *__restrict attr_name, dhash_t hash) {
 	dhash_t i, perturb;
@@ -331,7 +331,7 @@ module_getattr_impl(DeeModuleObject *__restrict self,
 	return NULL;
 }
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 module_getattr_len_impl(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name,
                         size_t attrlen, dhash_t hash) {

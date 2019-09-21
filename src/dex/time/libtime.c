@@ -18,7 +18,7 @@
  */
 #ifndef GUARD_DEX_TIME_LIBTIME_C
 #define GUARD_DEX_TIME_LIBTIME_C 1
-#define CONFIG_BUILDING_LIBTIME
+#define CONFIG_BUILDING_LIBTIME 1
 #define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
@@ -52,7 +52,7 @@ DECL_BEGIN
 #define FILETIME_GET64(x)   (x)
 #endif /* !CONFIG_BIG_ENDIAN */
 
-INTERN dtime_t DCALL time_now(void) {
+INTERN WUNUSED dtime_t DCALL time_now(void) {
 #ifdef CONFIG_HOST_WINDOWS
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 	dtime_t result;
@@ -61,7 +61,8 @@ INTERN dtime_t DCALL time_now(void) {
 	DBG_ALIGNMENT_DISABLE();
 	GetSystemTimePreciseAsFileTime((LPFILETIME)&filetime);
 	/* System-time only has millisecond-precision, so we copy over that part. */
-	result = (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND)) %
+	result = (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS /
+	                                      MICROSECONDS_PER_SECOND)) %
 	         MICROSECONDS_PER_MILLISECOND;
 	FileTimeToSystemTime((LPFILETIME)&filetime, &systime);
 	SystemTimeToTzSpecificLocalTime(NULL, &systime, &systime);
@@ -197,7 +198,10 @@ PRIVATE struct month const month_info[2][MONTHS_PER_YEAR] = {
 };
 
 
-INTERN dtime_half_t
+#define time_day2mon(x) time_day2mon((dtime_half_t)(x))
+#define time_mon2day(x) time_mon2day((dtime_half_t)(x))
+
+PRIVATE WUNUSED dtime_half_t
 (TIMECALL time_day2mon)(dtime_half_t x) {
 	unsigned int i;
 	struct month const *chain;
@@ -209,7 +213,7 @@ INTERN dtime_half_t
 	return (years * MONTHS_PER_YEAR) + i;
 }
 
-INTERN dtime_half_t
+PRIVATE WUNUSED dtime_half_t
 (TIMECALL time_mon2day)(dtime_half_t x) {
 	dtime_half_t years  = x / MONTHS_PER_YEAR;
 	dtime_half_t result = month_info[time_isleapyear(years)][x % MONTHS_PER_YEAR].m_start;
@@ -217,7 +221,8 @@ INTERN dtime_half_t
 }
 
 
-PUBLIC WUNUSED DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds) {
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeTime_New)(uint64_t microseconds) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
@@ -256,7 +261,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN dtime_t DCALL
+INTERN WUNUSED NONNULL((1)) dtime_t DCALL
 DeeTime_Get(DeeTimeObject const *__restrict self) {
 	if (self->t_type == TIME_MICROSECONDS)
 		return self->t_time;
@@ -356,7 +361,7 @@ PRIVATE struct repr_name const repr_desc[] = {
 	{ "Millennia", TIME_REPR_MLL }
 };
 
-PRIVATE char const *DCALL
+PRIVATE WUNUSED char const *DCALL
 get_repr_name(uint8_t repr) {
 	struct repr_name const *iter;
 	char const *result = NULL;
@@ -435,7 +440,7 @@ time_as(DeeTimeObject *self,
 	return NULL;
 }
 
-PRIVATE dtime_t DCALL
+PRIVATE WUNUSED dtime_t DCALL
 time_getint(DeeTimeObject *__restrict self,
             uint8_t repr) {
 	dtime_t msecs, result;
@@ -1376,21 +1381,21 @@ time_intval(DeeTimeObject *__restrict self) {
 #define object_as_time_half DeeObject_AsInt32
 #endif /* !HAVE_128BIT_TIME */
 
-#define DEFINE_TIME_AS(name, repr)                                                    \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                     \
-	time_getas_##name(DeeObject *__restrict self) {                                   \
-		return (DREF DeeObject *)time_asrepr((DeeTimeObject *)self, repr);            \
-	}                                                                                 \
-	PRIVATE int DCALL                                                                 \
-	time_setas_##name(DeeObject *__restrict self, DREF DeeObject *__restrict value) { \
-		dtime_t tval;                                                                 \
-		if (object_as_time(value, &tval))                                             \
-			return -1;                                                                \
-		return time_setint((DeeTimeObject *)self, repr, tval);                        \
-	}                                                                                 \
-	PRIVATE int DCALL                                                                 \
-	time_delas_##name(DeeObject *__restrict self) {                                   \
-		return time_setint((DeeTimeObject *)self, repr, 0);                           \
+#define DEFINE_TIME_AS(name, repr)                                         \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                     \
+	time_getas_##name(DeeObject *__restrict self) {                        \
+		return (DREF DeeObject *)time_asrepr((DeeTimeObject *)self, repr); \
+	}                                                                      \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                              \
+	time_setas_##name(DeeObject *self, DREF DeeObject *value) {            \
+		dtime_t tval;                                                      \
+		if (object_as_time(value, &tval))                                  \
+			return -1;                                                     \
+		return time_setint((DeeTimeObject *)self, repr, tval);             \
+	}                                                                      \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                                 \
+	time_delas_##name(DeeObject *__restrict self) {                        \
+		return time_setint((DeeTimeObject *)self, repr, 0);                \
 	}
 DEFINE_TIME_AS(mic, TIME_REPR_MIC)
 DEFINE_TIME_AS(mil, TIME_REPR_MIL)
@@ -1492,8 +1497,8 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-time_timepart_set(DeeTimeObject *__restrict self,
-                  DeeObject *__restrict value) {
+time_timepart_set(DeeTimeObject *self,
+                  DeeObject *value) {
 	dtime_t tval = DeeTime_Get(self);
 	dtime_half_t addend;
 	if (object_as_time_half(value, &addend))
@@ -1533,8 +1538,8 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-time_datepart_set(DeeTimeObject *__restrict self,
-                  DeeObject *__restrict value) {
+time_datepart_set(DeeTimeObject *self,
+                  DeeObject *value) {
 	dtime_t tval = DeeTime_Get(self);
 	dtime_t addend;
 	if (object_as_time(value, &addend))
@@ -1570,8 +1575,8 @@ time_get_time_t(DeeTimeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-time_set_time_t(DeeTimeObject *__restrict self,
-                DeeObject *__restrict value) {
+time_set_time_t(DeeTimeObject *self,
+                DeeObject *value) {
 	dtime_t tval;
 	if (object_as_time(value, &tval))
 		return -1;
@@ -1721,8 +1726,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTimeObject *DCALL
-time_add(DeeTimeObject *__restrict self,
-         DeeTimeObject *__restrict other) {
+time_add(DeeTimeObject *self, DeeTimeObject *other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
@@ -1757,8 +1761,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTimeObject *DCALL
-time_sub(DeeTimeObject *__restrict self,
-         DeeTimeObject *__restrict other) {
+time_sub(DeeTimeObject *self, DeeTimeObject *other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
@@ -1793,8 +1796,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTimeObject *DCALL
-time_mul(DeeTimeObject *__restrict self,
-         DeeObject *__restrict other) {
+time_mul(DeeTimeObject *self, DeeObject *other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
@@ -1817,17 +1819,15 @@ err:
 	return NULL;
 }
 
-PRIVATE ATTR_COLD void DCALL
-err_divide_by_zero(DeeTimeObject *__restrict self,
-                   DeeObject *__restrict other) {
+PRIVATE ATTR_COLD NONNULL((1, 2)) void DCALL
+err_divide_by_zero(DeeTimeObject *self, DeeObject *other) {
 	DeeError_Throwf(&DeeError_DivideByZero,
 	                "Divide by Zero: `%k / %k'",
 	                self, other);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTimeObject *DCALL
-time_div(DeeTimeObject *__restrict self,
-         DeeObject *__restrict other) {
+time_div(DeeTimeObject *self, DeeObject *other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
@@ -1846,6 +1846,11 @@ time_div(DeeTimeObject *__restrict self,
 			goto err_divzero;
 		result->t_months = self->t_months / result->t_months;
 	}
+	/* XXX: Should this return an int or float when a Time object was given,
+	 *      and only return a time object when int or float was given:
+	 *      minutes(1) / seconds(30) == 2
+	 *      minutes(1) / 2           == seconds(30)
+	 */
 	DeeObject_Init(result, &DeeTime_Type);
 done:
 	return result;
@@ -1857,8 +1862,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTimeObject *DCALL
-time_mod(DeeTimeObject *__restrict self,
-         DeeObject *__restrict other) {
+time_mod(DeeTimeObject *self, DeeObject *other) {
 	DREF DeeTimeObject *result;
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
@@ -1877,6 +1881,7 @@ time_mod(DeeTimeObject *__restrict self,
 			goto err_divzero;
 		result->t_months = self->t_months % result->t_months;
 	}
+	/* XXX: Same as with DIV: return int under certain circumstances */
 	DeeObject_Init(result, &DeeTime_Type);
 done:
 	return result;
@@ -1966,44 +1971,44 @@ err:
 
 
 #ifdef HAVE_128BIT_TIME
-#define DEFINE_INTERVAL_GENERATOR(name, new)                     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                \
-	f_libtime_##name(size_t argc, DeeObject **argv) { \
-		DeeObject *value_ob;                                     \
-		dtime_t value;                                           \
-		if (DeeArg_Unpack(argc, argv, "o:" #name, &value_ob) ||  \
-		    object_as_time(value_ob, &value))                    \
-			return NULL;                                         \
-		return new;                                              \
-	}                                                            \
+#define DEFINE_INTERVAL_GENERATOR(name, new)                    \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                       \
+	f_libtime_##name(size_t argc, DeeObject **argv) {           \
+		DeeObject *value_ob;                                    \
+		dtime_t value;                                          \
+		if (DeeArg_Unpack(argc, argv, "o:" #name, &value_ob) || \
+		    object_as_time(value_ob, &value))                   \
+			return NULL;                                        \
+		return new;                                             \
+	}                                                           \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
-#define DEFINE_INTERVAL_GENERATOR_HALF(name, new)                \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                \
-	f_libtime_##name(size_t argc, DeeObject **argv) { \
-		dtime_half_t value;                                      \
-		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value))    \
-			return NULL;                                         \
-		return new;                                              \
-	}                                                            \
+#define DEFINE_INTERVAL_GENERATOR_HALF(name, new)             \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
+	f_libtime_##name(size_t argc, DeeObject **argv) {         \
+		dtime_half_t value;                                   \
+		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value)) \
+			return NULL;                                      \
+		return new;                                           \
+	}                                                         \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #else /* HAVE_128BIT_TIME */
-#define DEFINE_INTERVAL_GENERATOR(name, new)                     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                \
-	f_libtime_##name(size_t argc, DeeObject **argv) { \
-		dtime_t value;                                           \
-		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value))    \
-			return NULL;                                         \
-		return new;                                              \
-	}                                                            \
+#define DEFINE_INTERVAL_GENERATOR(name, new)                  \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
+	f_libtime_##name(size_t argc, DeeObject **argv) {         \
+		dtime_t value;                                        \
+		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value)) \
+			return NULL;                                      \
+		return new;                                           \
+	}                                                         \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
-#define DEFINE_INTERVAL_GENERATOR_HALF(name, new)                \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                \
-	f_libtime_##name(size_t argc, DeeObject **argv) { \
-		dtime_half_t value;                                      \
-		if (DeeArg_Unpack(argc, argv, "I32d:" #name, &value))    \
-			return NULL;                                         \
-		return new;                                              \
-	}                                                            \
+#define DEFINE_INTERVAL_GENERATOR_HALF(name, new)             \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
+	f_libtime_##name(size_t argc, DeeObject **argv) {         \
+		dtime_half_t value;                                   \
+		if (DeeArg_Unpack(argc, argv, "I32d:" #name, &value)) \
+			return NULL;                                      \
+		return new;                                           \
+	}                                                         \
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #endif /* !HAVE_128BIT_TIME */
 DEFINE_INTERVAL_GENERATOR(microseconds, DeeTime_New(value, TIME_REPR_MICS));
@@ -2119,80 +2124,80 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_now(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_now(DeeObject *UNUSED(self),
                size_t argc, DeeObject **argv) {
 	return f_libtime_now(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_tick(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_tick(DeeObject *UNUSED(self),
                 size_t argc, DeeObject **argv) {
 	return f_libtime_tick(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_milliseconds(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_milliseconds(DeeObject *UNUSED(self),
                         size_t argc, DeeObject **argv) {
 	return f_libtime_milliseconds(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_seconds(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_seconds(DeeObject *UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	return f_libtime_seconds(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_minutes(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_minutes(DeeObject *UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	return f_libtime_minutes(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_hours(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_hours(DeeObject *UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	return f_libtime_hours(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_days(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_days(DeeObject *UNUSED(self),
                 size_t argc, DeeObject **argv) {
 	return f_libtime_days(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_weeks(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_weeks(DeeObject *UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	return f_libtime_weeks(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_months(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_months(DeeObject *UNUSED(self),
                   size_t argc, DeeObject **argv) {
 	return f_libtime_months(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_years(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_years(DeeObject *UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	return f_libtime_years(argc, argv);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_maketime(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_maketime(DeeObject *UNUSED(self),
                     size_t argc, DeeObject **argv, DeeObject *kw) {
 	return f_libtime_maketime(argc, argv, kw);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_makedate(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_makedate(DeeObject *UNUSED(self),
                     size_t argc, DeeObject **argv, DeeObject *kw) {
 	return f_libtime_makedate(argc, argv, kw);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_from_time_t(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_from_time_t(DeeObject *UNUSED(self),
                        size_t argc, DeeObject **argv) {
 	time_t value;
 	DREF DeeTimeObject *result;
@@ -2211,8 +2216,8 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_freq(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+time_class_freq(DeeObject *UNUSED(self),
                 size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":freq"))
 		return NULL;
@@ -2265,8 +2270,7 @@ time_copy(DeeTimeObject *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-time_assign(DeeTimeObject *__restrict self,
-            DeeTimeObject *__restrict other) {
+time_assign(DeeTimeObject *self, DeeTimeObject *other) {
 	if (DeeTime_Check(other)) {
 		self->t_kind = other->t_kind;
 		self->t_time = other->t_time;
@@ -2278,7 +2282,7 @@ time_assign(DeeTimeObject *__restrict self,
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 time_init(DeeTimeObject *__restrict self,
           size_t argc, DeeObject **argv,
           DeeObject *kw) {
@@ -2381,14 +2385,13 @@ time_hash(DeeTimeObject *__restrict self) {
 #endif /* SIZEOF_DTIME_T != __SIZEOF_POINTER__ */
 }
 
-#define DEFINE_TIME_CMP(name, op)              \
-	PRIVATE WUNUSED DREF DeeObject *DCALL              \
-	name(DeeTimeObject *__restrict self,       \
-	     DeeObject *__restrict other) {        \
-		dtime_t val;                           \
-		if (object_as_time(other, &val))       \
-			return NULL;                       \
-		return_bool(DeeTime_Get(self) op val); \
+#define DEFINE_TIME_CMP(name, op)                 \
+	PRIVATE WUNUSED DREF DeeObject *DCALL         \
+	name(DeeTimeObject *self, DeeObject *other) { \
+		dtime_t val;                              \
+		if (object_as_time(other, &val))          \
+			return NULL;                          \
+		return_bool(DeeTime_Get(self) op val);    \
 	}
 DEFINE_TIME_CMP(time_eq, ==)
 DEFINE_TIME_CMP(time_ne, !=)

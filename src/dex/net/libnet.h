@@ -612,7 +612,7 @@ struct sockaddr_un {
 	sa_family_t sun_family;    /* AF_UNIX */
 	char        sun_path[108]; /* pathname */
 };
-#endif
+#endif /* AF_UNIX && !CONFIG_HOST_UNIX */
 #endif /* CONFIG_HOST_WINDOWS */
 
 #if defined(AF_INET6) && \
@@ -634,14 +634,14 @@ struct sockaddr_un {
 #endif /* !SHUT_RDWR */
 
 #ifdef CONFIG_HOST_WINDOWS
-typedef DWORD             neterrno_t;
+typedef DWORD            neterrno_t;
 #define GET_NET_ERROR()  (neterrno_t)WSAGetLastError()
-#define SET_NET_ERROR(x)  WSASetLastError((int)(x))
+#define SET_NET_ERROR(x) WSASetLastError((int)(x))
 #endif /* CONFIG_HOST_WINDOWS */
 
 #ifndef GET_NET_ERROR
-typedef int               neterrno_t;
-#define GET_NET_ERROR()   errno
+typedef int              neterrno_t;
+#define GET_NET_ERROR()  errno
 #define SET_NET_ERROR(x) (void)(errno=(x))
 #endif /* !GET_NET_ERROR */
 
@@ -694,10 +694,12 @@ typedef union {
 /* Wrapper around `gethostbyaddr()'
  * @param flags: Set of `SOCKADDR_STR_F*' */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sock_gethostbyaddr(void const *__restrict data, socklen_t datalen, sa_family_t family, int flags);
+sock_gethostbyaddr(void const *__restrict data, socklen_t datalen,
+                   sa_family_t family, int flags);
 
 /* @param flags: Set of `SOCKADDR_STR_F*' */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+SockAddr_ToString(SockAddr const *__restrict self, int protocol, int flags);
 #define SOCKADDR_STR_FNORMAL 0x0000 /* Normal flags:?Dstring. */
 #define SOCKADDR_STR_FNOFAIL 0x0001 /* Don't return with an error if DNS lookup failed. */
 #define SOCKADDR_STR_FNODNS  0x0002 /* Don't use DNS names in the string (use raw IPs instead). */
@@ -706,11 +708,13 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SockAddr_ToString(SockAddr con
 
 /* Returns the effective size of the given socket address when used with `protocol'. */
 INTDEF socklen_t DCALL SockAddr_Sizeof(sa_family_t family, int protocol);
+
 /* Initialize a generic socket address from an argument vector.
  * HINT: `family' may be set to `AF_AUTO' for automatic deduction. */
-INTDEF int DCALL SockAddr_FromArgv(SockAddr *__restrict self,
-                                   int family, int protocol, int type,
-                                   size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+SockAddr_FromArgv(SockAddr *__restrict self,
+                  int family, int protocol, int type,
+                  size_t argc, DeeObject **argv);
 
 typedef struct socket_object DeeSocketObject;
 typedef struct sockaddr_object DeeSockAddrObject;
@@ -720,9 +724,15 @@ typedef struct sockaddr_object DeeSockAddrObject;
 INTDEF WUNUSED DREF DeeObject *DCALL sock_getafname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
 INTDEF WUNUSED DREF DeeObject *DCALL sock_gettypename(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
 INTDEF WUNUSED DREF DeeObject *DCALL sock_getprotoname(int value); /* @return: ITER_DONE: Not found. @return: NULL: Error. */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_getafvalue(char const *__restrict name, int *__restrict presult);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_gettypevalue(char const *__restrict name, int *__restrict presult);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL sock_getprotovalue(char const *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+sock_getafvalue(char const *__restrict name,
+                int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+sock_gettypevalue(char const *__restrict name,
+                  int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+sock_getprotovalue(char const *__restrict name,
+                   int *__restrict presult);
 
 /* Same as the functions above, but return an int-object for
  * `value' when the database doesn't recognize the value. */
@@ -736,14 +746,22 @@ INTDEF WUNUSED DREF DeeObject *DCALL sock_getprotonameorid(int value);
  *    - sock_getafof:    AF_AUTO
  *    - sock_gettypeof:  SOCK_STREAM
  *    - sock_getprotoof: 0 */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getafof(DeeObject *__restrict name, int *__restrict presult);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_gettypeof(DeeObject *__restrict name, int *__restrict presult);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getprotoof(DeeObject *__restrict name, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+sock_getafof(DeeObject *__restrict name,
+             int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+sock_gettypeof(DeeObject *__restrict name,
+               int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+sock_getprotoof(DeeObject *__restrict name,
+                int *__restrict presult);
 
 
 /* Translate the MSG_* flags used by send/recv functions. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL sock_getmsgflagsof(DeeObject *__restrict name, int *__restrict presult);
-INTDEF WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+sock_getmsgflagsof(DeeObject *__restrict name, int *__restrict presult);
+INTDEF WUNUSED DREF DeeObject *DCALL
+sock_getmsgflagsnameorid(int flags);
 
 #if 0
 #define SOCKET_HAVE_CONFIGURE_SENDRECV
@@ -798,47 +816,63 @@ INTDEF DeeTypeObject DeeSocket_Type;
 
 /* Try to retrieve the local (sock) / remote (peer) address of a given socket.
  * @param: throw_error: When true, throw an error describing the reason before returning `-1'. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_GetSockName(DeeSocketObject *__restrict self, SockAddr *__restrict result, bool throw_error);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self, SockAddr *__restrict result, bool throw_error);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSocket_GetSockName(DeeSocketObject *__restrict self,
+                      SockAddr *__restrict result, bool throw_error);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
+                      SockAddr *__restrict result, bool throw_error);
+
 /* Bind/Connect commands. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_Bind(DeeSocketObject *__restrict self, SockAddr const *__restrict addr);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSocket_Connect(DeeSocketObject *__restrict self, SockAddr const *__restrict addr);
-INTDEF WUNUSED NONNULL((1)) int DCALL DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSocket_Bind(DeeSocketObject *__restrict self,
+               SockAddr const *__restrict addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+DeeSocket_Connect(DeeSocketObject *__restrict self,
+                  SockAddr const *__restrict addr);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+DeeSocket_Listen(DeeSocketObject *__restrict self, int max_backlog);
+
 /* Accept a new connection.
  * @return: -1: An error occurred.
  * @return:  0: Successfully accepted a new connection.
  * @return:  1: Timed out.
  * @param: timeout_microseconds: The timeout (in microseconds).
  *                               Set to `0' for try-accept; Set to (uint64_t)-1 to never time out. */
-INTDEF int DCALL DeeSocket_Accept(DeeSocketObject *__restrict self,
-                                  uint64_t timeout_microseconds,
-                                  sock_t *__restrict sock_fd,
-                                  SockAddr *__restrict addr);
+INTDEF NONNULL((1, 3, 4)) int DCALL
+DeeSocket_Accept(DeeSocketObject *__restrict self,
+                 uint64_t timeout_microseconds,
+                 sock_t *__restrict sock_fd,
+                 SockAddr *__restrict addr);
 
 /* Send/Receive data. `timeout_microseconds' behaves the same as for `DeeSocket_Accept()'.
  * @return: * : The number of received bytes.
  * @return: -1: An error occurred.
  * @return: -2: The given `timeout_microseconds' has expired. */
-INTDEF dssize_t DCALL DeeSocket_Recv(DeeSocketObject *__restrict self,
-                                     uint64_t timeout_microseconds,
-                                     void *__restrict buf, size_t bufsize,
-                                     int flags);
-INTDEF dssize_t DCALL DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
-                                         uint64_t timeout_microseconds,
-                                         void *__restrict buf, size_t bufsize,
-                                         int flags, SockAddr *__restrict source);
-INTDEF dssize_t DCALL DeeSocket_Send(DeeSocketObject *__restrict self,
-                                     uint64_t timeout_microseconds,
-                                     void const *__restrict buf, size_t bufsize,
-                                     int flags);
-INTDEF dssize_t DCALL DeeSocket_SendTo(DeeSocketObject *__restrict self,
-                                       uint64_t timeout_microseconds,
-                                       void const *__restrict buf, size_t bufsize,
-                                       int flags, SockAddr const *__restrict target);
+INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+DeeSocket_Recv(DeeSocketObject *__restrict self,
+               uint64_t timeout_microseconds,
+               void *__restrict buf, size_t bufsize,
+               int flags);
+INTDEF WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
+DeeSocket_RecvFrom(DeeSocketObject *__restrict self,
+                   uint64_t timeout_microseconds,
+                   void *__restrict buf, size_t bufsize,
+                   int flags, SockAddr *__restrict source);
+INTDEF WUNUSED NONNULL((1, 3)) dssize_t DCALL
+DeeSocket_Send(DeeSocketObject *__restrict self,
+               uint64_t timeout_microseconds,
+               void const *__restrict buf, size_t bufsize,
+               int flags);
+INTDEF WUNUSED NONNULL((1, 3, 6)) dssize_t DCALL
+DeeSocket_SendTo(DeeSocketObject *__restrict self,
+                 uint64_t timeout_microseconds,
+                 void const *__restrict buf, size_t bufsize,
+                 int flags, SockAddr const *__restrict target);
 
 /* Receive data from the given source, or the bound peer (when `source' is NULL)
  * NOTE: When the given `timeout_microseconds' has expired, `ITER_DONE' is returned. */
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSocket_RecvData(DeeSocketObject *__restrict self,
                    uint64_t timeout_microseconds,
                    size_t max_bufsize, int flags,
@@ -848,7 +882,8 @@ DeeSocket_RecvData(DeeSocketObject *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sock_getmsgflagsof(DeeObject *__restrict name,
                   int *__restrict presult);
-INTDEF WUNUSED DREF DeeObject *DCALL sock_getmsgflagsnameorid(int flags);
+INTDEF WUNUSED DREF DeeObject *DCALL
+sock_getmsgflagsnameorid(int flags);
 
 
 
@@ -904,7 +939,7 @@ INTDEF DeeTypeObject     DeeError_HostNotFound; /* Host name does not exist. */
 INTDEF DeeTypeObject         DeeError_NoHostAddress; /* Host has no addresses associated with it. */
 
 /* Throws an `Error.SystemError.FSError.FileClosed' */
-INTDEF void DCALL err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self);
+INTDEF NONNULL((2)) void DCALL err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self);
 
 
 DECL_END

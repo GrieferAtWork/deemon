@@ -102,9 +102,8 @@ sema_leave(Semaphore *__restrict self, size_t count) {
 #endif /* !CONFIG_NO_THREADS */
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_post(Semaphore *self, size_t argc,
-          DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sema_post(Semaphore *self, size_t argc, DeeObject **argv) {
 	size_t count = 1;
 	if (DeeArg_Unpack(argc, argv, "|Iu:post", &count) ||
 	    sema_leave(self, count))
@@ -112,18 +111,16 @@ sema_post(Semaphore *self, size_t argc,
 	return_none;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_wait(Semaphore *self, size_t argc,
-          DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sema_wait(Semaphore *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":wait") ||
 	    sema_enter(self))
 		return NULL;
 	return_none;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_trywait(Semaphore *self, size_t argc,
-             DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sema_trywait(Semaphore *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":trywait"))
 		goto err;
 #ifdef CONFIG_NO_THREADS
@@ -146,9 +143,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-sema_timedwait(Semaphore *self, size_t argc,
-               DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sema_timedwait(Semaphore *self, size_t argc, DeeObject **argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))
 		goto err;

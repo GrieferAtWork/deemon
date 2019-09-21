@@ -344,7 +344,7 @@ split_bool(StringSplit *__restrict self) {
 	return !DeeString_IsEmpty(self->s_str);
 }
 
-LOCAL DREF StringSplitIterator *DCALL
+LOCAL WUNUSED DREF StringSplitIterator *DCALL
 split_doiter(StringSplit *__restrict self,
              DeeTypeObject *__restrict iter_type) {
 	DREF StringSplitIterator *result;

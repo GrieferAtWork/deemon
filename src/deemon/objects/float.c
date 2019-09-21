@@ -45,7 +45,7 @@ DEFINE_OBJECT_CACHE(float,Float,128) /* TODO: Get rid of this (rely on slabs, in
 #endif /* !NDEBUG */
 
 
-LOCAL DREF Float *DCALL
+LOCAL WUNUSED DREF Float *DCALL
 DeeFloat_NewReuse(Float *__restrict self, double value) {
 	DREF Float *result;
 	if (!DeeObject_IsShared(self)) {

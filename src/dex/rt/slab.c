@@ -52,9 +52,8 @@ PRIVATE WUNUSED DREF SlabStatObject *DCALL ss_ctor(void) {
 	                       COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
 	                       (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)));
 	if unlikely(reqsize >
-		         COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
-		         (Dee_SLAB_COUNT * sizeof(DeeSlabInfo)))
-	{
+	            COMPILER_OFFSETOF(DeeSlabStat, st_slabs) +
+	            (Dee_SLAB_COUNT * sizeof(DeeSlabInfo))) {
 		size_t oldsize;
 do_realloc_result:
 		oldsize    = reqsize;
@@ -94,9 +93,8 @@ ss_hash(SlabStatObject *__restrict self) {
 }
 
 #define DEFINE_SS_COMPARE(name, op, return_diff_size)                                       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                           \
-	name(SlabStatObject *__restrict self,                                                   \
-	     SlabStatObject *__restrict other) {                                                \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                   \
+	name(SlabStatObject *self, SlabStatObject *other) {                                     \
 		if (DeeObject_AssertTypeExact(other, &SlabStat_Type))                               \
 			return NULL;                                                                    \
 		if (SLABSTAT_DATASIZE(self) != SLABSTAT_DATASIZE(other))                            \
@@ -166,8 +164,7 @@ ss_size(SlabStatObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF SlabInfoObject *DCALL
-ss_getitem(SlabStatObject *__restrict self,
-           DeeObject *__restrict index_ob) {
+ss_getitem(SlabStatObject *self, DeeObject *index_ob) {
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
@@ -268,7 +265,7 @@ INTERN DeeTypeObject SlabStat_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ss_class_members
+	/* .tp_class_members = */ ss_class_members
 };
 
 
@@ -298,13 +295,12 @@ ssi_bool(SlabStatIteratorObject *__restrict self) {
 	return READ_INDEX(self) < self->sti_stat->st_stat.st_slabcount;
 }
 
-#define DEFINE_SSI_COMPARE(name, op)                                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                     \
-	name(SlabStatIteratorObject *__restrict self,                     \
-	     SlabStatIteratorObject *__restrict other) {                  \
-		if (DeeObject_AssertTypeExact(other, &SlabStatIterator_Type)) \
-			return NULL;                                              \
-		return_bool(READ_INDEX(self) op READ_INDEX(other));           \
+#define DEFINE_SSI_COMPARE(name, op)                                    \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
+	name(SlabStatIteratorObject *self, SlabStatIteratorObject *other) { \
+		if (DeeObject_AssertTypeExact(other, &SlabStatIterator_Type))   \
+			return NULL;                                                \
+		return_bool(READ_INDEX(self) op READ_INDEX(other));             \
 	}
 DEFINE_SSI_COMPARE(ssi_eq, ==)
 DEFINE_SSI_COMPARE(ssi_ne, !=)
@@ -437,7 +433,7 @@ si_get_slabsize(SlabInfoObject *__restrict self) {
 }
 
 #define DEFINE_FIELD_READER(field_name)                        \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                              \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL         \
 	si_get_##field_name(SlabInfoObject *__restrict self) {     \
 		return DeeInt_NewSize(self->si_info->si_##field_name); \
 	}
@@ -464,8 +460,8 @@ PRIVATE struct type_member si_members[] = {
 };
 
 PRIVATE struct type_getset si_getsets[] = {
-#define DEFINE_FIELD(name, doc)                                                      \
-	{ #name,                                                                         \
+#define DEFINE_FIELD(name, doc)                                                     \
+	{ #name,                                                                        \
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_get_##name, NULL, NULL, \
 	  DOC("->?Dint\n" doc) }
 	DEFINE_FIELD(slabsize, "Total size of the slab (in bytes)"),
@@ -491,9 +487,8 @@ PRIVATE struct type_getset si_getsets[] = {
 };
 
 #define DEFINE_SI_COMPARE(name, op)                                                   \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                     \
-	name(SlabInfoObject *__restrict self,                                             \
-	     SlabInfoObject *__restrict other) {                                          \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                             \
+	name(SlabInfoObject *self, SlabInfoObject *other) {                               \
 		if (DeeObject_AssertTypeExact(other, &SlabInfo_Type))                         \
 			return NULL;                                                              \
 		return_bool(memcmp(self->si_info, other->si_info, sizeof(DeeSlabInfo)) op 0); \

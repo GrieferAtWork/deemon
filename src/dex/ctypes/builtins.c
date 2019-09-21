@@ -292,7 +292,7 @@ void_str(DeeSTypeObject *__restrict UNUSED(tp_self), void *UNUSED(self)) {
 PRIVATE int DCALL
 void_init(DeeSTypeObject *__restrict UNUSED(tp_self),
           void *UNUSED(self), size_t UNUSED(argc),
-          DeeObject **__restrict UNUSED(argv)) {
+          DeeObject **UNUSED(argv)) {
 	/* Emulate void-casting, which simply discards its operand. */
 	return 0;
 }

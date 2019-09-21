@@ -980,7 +980,7 @@ INTDEF int FCALL JITLexer_SkipHybrid(JITLexer *__restrict self, unsigned int *pw
 #define AST_PARSE_WASEXPR_MAYBE  2 /* It could either be an expression, or a statement. */
 
 
-LOCAL DREF DeeObject *FCALL
+LOCAL WUNUSED DREF DeeObject *FCALL
 JITLexer_EvalHybridSecondary(JITLexer *__restrict self,
                              unsigned int *pwas_expression) {
 	DREF DeeObject *result;
@@ -1039,7 +1039,7 @@ JITLexer_SkipHybridSecondary(JITLexer *__restrict self,
  * automatically unwinds L-value expressions. */
 #define JITLexer_SkipRValue(self) \
 	JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL)
-LOCAL DREF DeeObject *FCALL
+LOCAL WUNUSED DREF DeeObject *FCALL
 JITLexer_EvalRValue(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL);
@@ -1052,7 +1052,7 @@ JITLexer_EvalRValue(JITLexer *__restrict self) {
 
 #define JITLexer_SkipRValueDecl(self) \
 	JITLexer_SkipComma(self, AST_COMMA_NORMAL | AST_COMMA_ALLOWVARDECLS, NULL)
-LOCAL DREF DeeObject *FCALL
+LOCAL WUNUSED DREF DeeObject *FCALL
 JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
 	DREF DeeObject *result;
 	result = JITLexer_EvalComma(self,

@@ -1369,6 +1369,7 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 		uint8_t a, b, c, d;
 #endif /* AF_INET */
 		switch (argc) {
+
 		case 1:
 			arg0 = argv[0];
 			/* (string address) */
@@ -1500,7 +1501,10 @@ do_generic_string_2:
 #ifdef AF_NETLINK
 	case AF_NETLINK: {
 		switch (argc) {
-		case 1: goto do_generic_string;
+
+		case 1:
+			goto do_generic_string;
+
 		case 2:
 			memset(&self->sa_nl, 0, sizeof(struct sockaddr_nl));
 			self->sa_nl.nl_family = AF_NETLINK;
@@ -1508,6 +1512,7 @@ do_generic_string_2:
 			    DeeObject_AsUINT(argv[1], &self->sa_nl.nl_groups))
 				goto err;
 			break;
+
 		default:
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Construction address Family AF_NETLINK "
@@ -1901,8 +1906,8 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL, /* XXX: Buffer interface to access the raw sockaddr data? */
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */sockaddr_getsets,
-	/* .tp_members       = */sockaddr_members,
+	/* .tp_getsets       = */ sockaddr_getsets,
+	/* .tp_members       = */ sockaddr_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

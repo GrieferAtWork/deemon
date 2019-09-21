@@ -19,6 +19,7 @@
 #ifndef GUARD_DEX_RT_LIBRT_H
 #define GUARD_DEX_RT_LIBRT_H 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>

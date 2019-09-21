@@ -104,7 +104,7 @@ XMLNode_Destroy(XMLNode *__restrict self) {
 
 #define XML_NODE_DEFAULT_CHILD_MASK 3
 
-LOCAL bool DCALL
+LOCAL NONNULL((1)) bool DCALL
 XMLNode_TryRehashChildren(XMLNode *__restrict self) {
 	size_t new_mask, old_mask, i;
 	struct xml_node_child *new_list, *old_list;
@@ -157,8 +157,8 @@ err:
  * @param: parent:     The parent node for `self'.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The requested node does not exist. */
-INTERN WUNUSED DREF XMLNode *DCALL
-XMLNode_GetPrev(XMLNode *self,
+INTERN WUNUSED NONNULL((1, 2)) DREF XMLNode *DCALL
+XMLNode_GetPrev(XMLNode *__restrict self,
                 XMLNode *__restrict parent) {
 	DREF XMLNode *result;
 	rwlock_read(&parent->xn_lock);
@@ -172,8 +172,8 @@ XMLNode_GetPrev(XMLNode *self,
 	return (DREF XMLNode *)ITER_DONE;
 }
 
-INTERN WUNUSED DREF XMLNode *DCALL
-XMLNode_GetNext(XMLNode *self,
+INTERN WUNUSED NONNULL((1, 2)) DREF XMLNode *DCALL
+XMLNode_GetNext(XMLNode *__restrict self,
                 XMLNode *__restrict parent) {
 	DREF XMLNode *result;
 	char *iter, *end, *temp;

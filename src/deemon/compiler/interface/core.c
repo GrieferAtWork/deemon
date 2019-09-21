@@ -264,7 +264,7 @@ done:
 
 
 /* Lookup or create a new compiler item for `value' */
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 get_compiler_item_impl(DeeTypeObject *__restrict type,
                        void *__restrict value,
                        bool is_an_object) {

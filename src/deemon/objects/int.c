@@ -839,7 +839,7 @@ PRIVATE twodigits convmultmax_base[37] = {
 	0,
 };
 
-LOCAL DREF DeeIntObject *DCALL
+LOCAL WUNUSED DREF DeeIntObject *DCALL
 int_from_nonbinary_string(char *__restrict begin,
                           char *__restrict end,
                           unsigned int radix,

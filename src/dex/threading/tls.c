@@ -78,7 +78,7 @@ thread_tls_tryget(size_t index) {
 
 
 /* TLS controller callbacks for libthreading's TLS implementation. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 thread_tls_fini(struct tls_descriptor *__restrict data) {
 	size_t i, count = data->td_size;
 	/* Decref all allocated instances within this TLS vector. */
@@ -90,7 +90,7 @@ thread_tls_fini(struct tls_descriptor *__restrict data) {
 	Dee_Free(data);
 }
 
-INTERN void DCALL
+INTERN NONNULL((1, 2)) void DCALL
 thread_tls_visit(struct tls_descriptor *__restrict data,
                  dvisit_t proc, void *arg) {
 	size_t i, count = data->td_size;
@@ -112,7 +112,7 @@ PRIVATE size_t tls_count   = 0;    /* [lock(tls_reglock)] The total number of TL
 /* Allocate a new TLS index.
  * @return: * :         The newly allocated TLS index.
  * @return: (size_t)-1: Not enough available memory. */
-PRIVATE size_t DCALL tls_alloc(void);
+PRIVATE WUNUSED size_t DCALL tls_alloc(void);
 /* Free a previously allocated TLS index. */
 PRIVATE void DCALL tls_free(size_t index);
 
@@ -120,7 +120,7 @@ PRIVATE void DCALL tls_free(size_t index);
 
 
 
-PRIVATE size_t DCALL tls_alloc(void) {
+PRIVATE WUNUSED size_t DCALL tls_alloc(void) {
 	size_t result;
 again:
 	rwlock_write(&tls_reglock);
@@ -352,7 +352,7 @@ tls_delvalue(Tls *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
+tls_setvalue(Tls *self, DeeObject *value) {
 	DREF DeeObject **pitem, *item;
 	pitem = thread_tls_get(self->t_index);
 	if unlikely(!pitem)
@@ -366,8 +366,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-tls_xchitem(Tls *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+tls_xchitem(Tls *self, DeeObject *value) {
 	DREF DeeObject **pitem, *result;
 	ASSERT(value != NULL);
 again:
@@ -404,9 +404,8 @@ tls_hash(Tls *__restrict self) {
 }
 
 #define DEFINE_TLS_COMPARE(name, op)                                \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
-	name(Tls *__restrict self,                                      \
-	     Tls *__restrict other) {                                   \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
+	name(Tls *self, Tls *other) {                                   \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeTls_Type)) \
 			return NULL;                                            \
 		return_bool_(self->t_index op other->t_index);              \
@@ -570,7 +569,7 @@ tls_delvalue(Tls *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
+tls_setvalue(Tls *self, DeeObject *value) {
 	DREF DeeObject *item;
 	Dee_Incref(value);
 	item          = self->t_value; /* Inherit */
@@ -579,8 +578,8 @@ tls_setvalue(Tls *__restrict self, DeeObject *__restrict value) {
 	return 0;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-tls_xchitem(Tls *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+tls_xchitem(Tls *self, DeeObject *value) {
 	DREF DeeObject *result;
 	ASSERT(value != NULL);
 again:
@@ -611,9 +610,8 @@ tls_hash(Tls *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
 #define DEFINE_TLS_COMPARE(name, op)                                \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
-	name(Tls *__restrict self,                                      \
-	     Tls *__restrict other) {                                   \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
+	name(Tls *self, Tls *other) {                                   \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeTls_Type)) \
 			return NULL;                                            \
 		return_bool_(self op other);                                \

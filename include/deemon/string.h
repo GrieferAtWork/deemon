@@ -1695,7 +1695,7 @@ FORCELOCAL WUNUSED NONNULL((1)) DREF DeeObject *
 
 
 
-FORCELOCAL DREF DeeObject *DCALL
+FORCELOCAL WUNUSED DREF DeeObject *DCALL
 DeeString_NewWithWidth(void const *__restrict str,
                        size_t length, unsigned int width) {
 	Dee_SWITCH_SIZEOF_WIDTH(width) {

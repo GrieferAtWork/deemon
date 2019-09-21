@@ -134,7 +134,7 @@ PRIVATE struct type_cmp mei_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mei_ge,
 };
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 module_it_getattr_symbol(DeeModuleObject *__restrict self,
                          struct module_symbol *__restrict symbol) {
 	DREF DeeObject *result;
@@ -349,7 +349,7 @@ me_contains(ModuleExports *self, DeeObject *key) {
 	return_bool_(result);
 }
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 module_my_getattr_symbol(ModuleExports *__restrict exports_map,
                          DeeModuleObject *__restrict self,
                          struct module_symbol *__restrict symbol) {

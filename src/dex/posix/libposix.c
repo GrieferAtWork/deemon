@@ -472,7 +472,7 @@ err_unsupported(char const *__restrict name) {
 
 #if defined(HAVE_WOPEN) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("open","filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(dwchar_t const *__restrict filename, unsigned int oflags, unsigned int mode);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(dwchar_t const *__restrict filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_OPEN_DEF { "open", (DeeObject *)&libposix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=0644)->?Dint") },
 #define LIBPOSIX_OPEN_DEF_DOC(doc) { "open", (DeeObject *)&libposix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=0644)->?Dint\n" doc) },
@@ -497,7 +497,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **a
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(dwchar_t const *__restrict filename, unsigned int oflags, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(dwchar_t const *__restrict filename, unsigned int oflags, unsigned int mode)
 //[[[end]]]
 {
 	int result;
@@ -528,7 +528,7 @@ err:
 
 #if !defined(HAVE_WOPEN) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("open","filename:c:char[],oflags:u,mode:u=0644->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int oflags, unsigned int mode);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_OPEN_DEF { "open", (DeeObject *)&libposix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=0644)->?Dint") },
 #define LIBPOSIX_OPEN_DEF_DOC(doc) { "open", (DeeObject *)&libposix_open, MODSYM_FNORMAL, DOC("(filename:?Dstring,oflags:?Dint,mode:?Dint=0644)->?Dint\n" doc) },
@@ -553,7 +553,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **a
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int oflags, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int oflags, unsigned int mode)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -601,7 +601,7 @@ err:
     defined(HAVE_WCREAT64) || defined(HAVE_WOPEN64) || \
     defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("creat","filename:c:wchar_t[],mode:u=0644->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(dwchar_t const *__restrict filename, unsigned int mode);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(dwchar_t const *__restrict filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_CREAT_DEF { "creat", (DeeObject *)&libposix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=0644)->?Dint") },
 #define LIBPOSIX_CREAT_DEF_DOC(doc) { "creat", (DeeObject *)&libposix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=0644)->?Dint\n" doc) },
@@ -625,7 +625,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(dwchar_t const *__restrict filename, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(dwchar_t const *__restrict filename, unsigned int mode)
 //[[[end]]]
 {
 #if defined(HAVE_FILEIO) && (defined(HAVE_CREAT) || \
@@ -676,7 +676,7 @@ err:
 #if !(defined(HAVE_WCREAT) || defined(HAVE_WOPEN) || \
      defined(HAVE_WCREAT64) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("creat","filename:c:char[],mode:u=0644->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int mode);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_CREAT_DEF { "creat", (DeeObject *)&libposix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=0644)->?Dint") },
 #define LIBPOSIX_CREAT_DEF_DOC(doc) { "creat", (DeeObject *)&libposix_creat, MODSYM_FNORMAL, DOC("(filename:?Dstring,mode:?Dint=0644)->?Dint\n" doc) },
@@ -700,7 +700,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int mode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *__restrict filename, unsigned int mode)
 //[[[end]]]
 {
 #if defined(HAVE_FILEIO) && (defined(HAVE_CREAT) || \
@@ -751,7 +751,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("read","fd:d,buf:obj:buffer->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject *__restrict buf);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject *__restrict buf);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_read_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_READ_DEF { "read", (DeeObject *)&libposix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint") },
 #define LIBPOSIX_READ_DEF_DOC(doc) { "read", (DeeObject *)&libposix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint\n" doc) },
@@ -769,7 +769,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_read_f(size_t argc, DeeObject **a
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject *__restrict buf)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject *__restrict buf)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -804,7 +804,7 @@ err:
 }
 
 /*[[[deemon import("_dexutils").gw("write","fd:d,buf:obj:buffer->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject *__restrict buf);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject *__restrict buf);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_write_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_WRITE_DEF { "write", (DeeObject *)&libposix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint") },
 #define LIBPOSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&libposix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes)->?Dint\n" doc) },
@@ -822,7 +822,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_write_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject *__restrict buf)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject *__restrict buf)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -860,7 +860,7 @@ err:
 
 #if defined(HAVE_PREAD64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pread","fd:d,buf:obj:buffer,offset:I64d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int64_t offset);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_PREAD_DEF { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
 #define LIBPOSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
@@ -879,7 +879,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int64_t offset)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int64_t offset)
 //[[[end]]]
 {
 	DeeBuffer buffer;
@@ -911,7 +911,7 @@ err:
 
 #if !defined(HAVE_PREAD64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pread","fd:d,buf:obj:buffer,offset:I32d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int32_t offset);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_PREAD_DEF { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
 #define LIBPOSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&libposix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
@@ -930,7 +930,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int32_t offset)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *__restrict buf, int32_t offset)
 //[[[end]]]
 {
 #ifdef HAVE_PREAD
@@ -969,7 +969,7 @@ err:
 
 #if defined(HAVE_PWRITE64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pwrite","fd:d,buf:obj:buffer,offset:I64d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int64_t offset);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_PWRITE_DEF { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
 #define LIBPOSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
@@ -988,7 +988,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int64_t offset)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int64_t offset)
 //[[[end]]]
 {
 	DeeBuffer buffer;
@@ -1020,7 +1020,7 @@ err:
 
 #if !defined(HAVE_PWRITE64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pwrite","fd:d,buf:obj:buffer,offset:I32d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int32_t offset);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_PWRITE_DEF { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
 #define LIBPOSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&libposix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
@@ -1039,7 +1039,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int32_t offset)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *__restrict buf, int32_t offset)
 //[[[end]]]
 {
 #ifdef HAVE_PWRITE
@@ -1078,7 +1078,7 @@ err:
 
 #if defined(HAVE_LSEEK64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("lseek","fd:d,off:I64d,whence:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int64_t off, int whence);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int64_t off, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_LSEEK_DEF { "lseek", (DeeObject *)&libposix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint") },
 #define LIBPOSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&libposix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint\n" doc) },
@@ -1097,7 +1097,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int64_t off, int whence)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int64_t off, int whence)
 //[[[end]]]
 {
 	int64_t result;
@@ -1124,7 +1124,7 @@ err:
 
 #if !defined(HAVE_LSEEK64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("lseek","fd:d,off:I32d,whence:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t off, int whence);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t off, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_LSEEK_DEF { "lseek", (DeeObject *)&libposix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint") },
 #define LIBPOSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&libposix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint\n" doc) },
@@ -1143,7 +1143,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t off, int whence)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t off, int whence)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -1176,7 +1176,7 @@ err:
 #endif
 
 /*[[[deemon import("_dexutils").gw("close","fd:d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_close_f_impl(int fd);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_close_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_close_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_CLOSE_DEF { "close", (DeeObject *)&libposix_close, MODSYM_FNORMAL, DOC("(fd:?Dint)") },
 #define LIBPOSIX_CLOSE_DEF_DOC(doc) { "close", (DeeObject *)&libposix_close, MODSYM_FNORMAL, DOC("(fd:?Dint)\n" doc) },
@@ -1193,7 +1193,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_close_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_close_f_impl(int fd)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_close_f_impl(int fd)
 //[[[end]]]
 {
 	int result;
@@ -1224,7 +1224,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("fsync","fd:d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_fsync_f_impl(int fd);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fsync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fsync_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_FSYNC_DEF { "fsync", (DeeObject *)&libposix_fsync, MODSYM_FNORMAL, DOC("(fd:?Dint)") },
 #define LIBPOSIX_FSYNC_DEF_DOC(doc) { "fsync", (DeeObject *)&libposix_fsync, MODSYM_FNORMAL, DOC("(fd:?Dint)\n" doc) },
@@ -1241,7 +1241,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fsync_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_fsync_f_impl(int fd)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fsync_f_impl(int fd)
 //[[[end]]]
 {
 	int result;
@@ -1271,7 +1271,7 @@ err:
 }
 
 /*[[[deemon import("_dexutils").gw("fdatasync","fd:d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_FDATASYNC_DEF { "fdatasync", (DeeObject *)&libposix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?Dint)") },
 #define LIBPOSIX_FDATASYNC_DEF_DOC(doc) { "fdatasync", (DeeObject *)&libposix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?Dint)\n" doc) },
@@ -1288,7 +1288,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f(size_t argc, DeeObjec
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd)
 //[[[end]]]
 {
 #ifdef HAVE_FDATASYNC
@@ -1321,7 +1321,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("getpid","->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_getpid_f_impl(void);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_getpid_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_getpid_f(size_t argc, DeeObject **argv);
 #define LIBPOSIX_GETPID_DEF { "getpid", (DeeObject *)&libposix_getpid, MODSYM_FNORMAL, DOC("()->?Dint") },
 #define LIBPOSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&libposix_getpid, MODSYM_FNORMAL, DOC("()->?Dint\n" doc) },
@@ -1333,7 +1333,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_getpid_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_getpid_f_impl(void)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_getpid_f_impl(void)
 //[[[end]]]
 {
 #ifdef HAVE_GETPID
@@ -1367,7 +1367,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("umask","mask:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_umask_f_impl(int mask);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_umask_f_impl(int mask);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_umask_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_UMASK_DEF { "umask", (DeeObject *)&libposix_umask, MODSYM_FNORMAL, DOC("(mask:?Dint)->?Dint") },
 #define LIBPOSIX_UMASK_DEF_DOC(doc) { "umask", (DeeObject *)&libposix_umask, MODSYM_FNORMAL, DOC("(mask:?Dint)->?Dint\n" doc) },
@@ -1384,7 +1384,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_umask_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_umask_f_impl(int mask)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_umask_f_impl(int mask)
 //[[[end]]]
 {
 #ifdef HAVE_UMASK
@@ -1416,7 +1416,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("dup","fd:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_dup_f_impl(int fd);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_dup_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_DUP_DEF { "dup", (DeeObject *)&libposix_dup, MODSYM_FNORMAL, DOC("(fd:?Dint)->?Dint") },
 #define LIBPOSIX_DUP_DEF_DOC(doc) { "dup", (DeeObject *)&libposix_dup, MODSYM_FNORMAL, DOC("(fd:?Dint)->?Dint\n" doc) },
@@ -1433,7 +1433,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_dup_f(size_t argc, DeeObject **ar
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_dup_f_impl(int fd)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup_f_impl(int fd)
 //[[[end]]]
 {
 #ifdef HAVE_DUP
@@ -1466,7 +1466,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("dup2","oldfd:d,newfd:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int newfd);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int newfd);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_dup2_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_DUP2_DEF { "dup2", (DeeObject *)&libposix_dup2, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint)->?Dint") },
 #define LIBPOSIX_DUP2_DEF_DOC(doc) { "dup2", (DeeObject *)&libposix_dup2, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint)->?Dint\n" doc) },
@@ -1484,7 +1484,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_dup2_f(size_t argc, DeeObject **a
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int newfd)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int newfd)
 //[[[end]]]
 {
 #ifdef HAVE_DUP2
@@ -1518,7 +1518,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("dup3","oldfd:d,newfd:d,flags:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int newfd, int flags);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int newfd, int flags);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_dup3_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_DUP3_DEF { "dup3", (DeeObject *)&libposix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint,flags:?Dint)->?Dint") },
 #define LIBPOSIX_DUP3_DEF_DOC(doc) { "dup3", (DeeObject *)&libposix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint,flags:?Dint)->?Dint\n" doc) },
@@ -1537,7 +1537,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_dup3_f(size_t argc, DeeObject **a
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int newfd, int flags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int newfd, int flags)
 //[[[end]]]
 {
 #if defined(HAVE_DUP3) || defined(_MSC_VER)
@@ -1591,7 +1591,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("isatty","fd:d->?Dbool"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_isatty_f_impl(int fd);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_isatty_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_isatty_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_ISATTY_DEF { "isatty", (DeeObject *)&libposix_isatty, MODSYM_FNORMAL, DOC("(fd:?Dint)->?Dbool") },
 #define LIBPOSIX_ISATTY_DEF_DOC(doc) { "isatty", (DeeObject *)&libposix_isatty, MODSYM_FNORMAL, DOC("(fd:?Dint)->?Dbool\n" doc) },
@@ -1608,7 +1608,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_isatty_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_isatty_f_impl(int fd)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_isatty_f_impl(int fd)
 //[[[end]]]
 {
 #ifdef HAVE_ISATTY
@@ -1647,7 +1647,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("system","command:c:char[]->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/ char const *__restrict command);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/ char const *__restrict command);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_system_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_SYSTEM_DEF { "system", (DeeObject *)&libposix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint") },
 #define LIBPOSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&libposix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
@@ -1670,7 +1670,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_system_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/ char const *__restrict command)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/ char const *__restrict command)
 //[[[end]]]
 {
 #ifdef HAVE_SYSTEM
@@ -1700,7 +1700,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("sched_yield","->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_sched_yield_f_impl(void);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_sched_yield_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_sched_yield_f(size_t argc, DeeObject **argv);
 #define LIBPOSIX_SCHED_YIELD_DEF { "sched_yield", (DeeObject *)&libposix_sched_yield, MODSYM_FNORMAL, DOC("()->?Dint") },
 #define LIBPOSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&libposix_sched_yield, MODSYM_FNORMAL, DOC("()->?Dint\n" doc) },
@@ -1712,7 +1712,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_sched_yield_f(size_t argc, DeeObj
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_sched_yield_f_impl(void)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_sched_yield_f_impl(void)
 //[[[end]]]
 {
 	SCHED_YIELD();
@@ -1727,6 +1727,20 @@ libposix_errno_get_f(size_t argc, DeeObject **argv) {
 		goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
 	return DeeInt_NewInt(errno);
+#else
+	err_unsupported("errno");
+#endif
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+libposix_errno_del_f(size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":errno.delete"))
+		goto err;
+#ifdef CONFIG_HAVE_ERRNO_H
+	errno = 0;
+	return_none;
 #else
 	err_unsupported("errno");
 #endif
@@ -1750,11 +1764,12 @@ err:
 }
 
 PRIVATE DEFINE_CMETHOD(libposix_errno_get, &libposix_errno_get_f);
+PRIVATE DEFINE_CMETHOD(libposix_errno_del, &libposix_errno_del_f);
 PRIVATE DEFINE_CMETHOD(libposix_errno_set, &libposix_errno_set_f);
 
 
 /*[[[deemon import("_dexutils").gw("atexit","callback:?DCallable,args:?DTuple=Dee_EmptyTuple"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_atexit_f_impl(DeeObject *__restrict callback, DeeObject *__restrict args);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_atexit_f_impl(DeeObject *__restrict callback, DeeObject *__restrict args);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_atexit_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_ATEXIT_DEF { "atexit", (DeeObject *)&libposix_atexit, MODSYM_FNORMAL, DOC("(callback:?DCallable,args:?DTuple=!T0)") },
 #define LIBPOSIX_ATEXIT_DEF_DOC(doc) { "atexit", (DeeObject *)&libposix_atexit, MODSYM_FNORMAL, DOC("(callback:?DCallable,args:?DTuple=!T0)\n" doc) },
@@ -1772,7 +1787,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_atexit_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_atexit_f_impl(DeeObject *__restrict callback, DeeObject *__restrict args)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_atexit_f_impl(DeeObject *__restrict callback, DeeObject *__restrict args)
 //[[[end]]]
 {
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
@@ -1786,7 +1801,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("exit","exitcode:d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_exit_f_impl(int exitcode);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_exit_f_impl(int exitcode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_exit_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_EXIT_DEF { "exit", (DeeObject *)&libposix_exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)") },
 #define LIBPOSIX_EXIT_DEF_DOC(doc) { "exit", (DeeObject *)&libposix_exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
@@ -1803,7 +1818,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_exit_f(size_t argc, DeeObject **a
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_exit_f_impl(int exitcode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_exit_f_impl(int exitcode)
 //[[[end]]]
 {
 	Dee_Exit(exitcode, true);
@@ -1812,7 +1827,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_exit_f_impl(int exitcode)
 
 
 /*[[[deemon import("_dexutils").gw("_exit","exitcode:d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix__exit_f_impl(int exitcode);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix__exit_f_impl(int exitcode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix__exit_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX__EXIT_DEF { "_exit", (DeeObject *)&libposix__exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)") },
 #define LIBPOSIX__EXIT_DEF_DOC(doc) { "_exit", (DeeObject *)&libposix__exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
@@ -1829,7 +1844,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix__exit_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix__exit_f_impl(int exitcode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix__exit_f_impl(int exitcode)
 //[[[end]]]
 {
 	Dee_Exit(exitcode, false);
@@ -1838,7 +1853,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix__exit_f_impl(int exitcode)
 
 
 /*[[[deemon import("_dexutils").gw("abort",""); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_abort_f_impl(void);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_abort_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_abort_f(size_t argc, DeeObject **argv);
 #define LIBPOSIX_ABORT_DEF { "abort", (DeeObject *)&libposix_abort, MODSYM_FNORMAL, DOC("()") },
 #define LIBPOSIX_ABORT_DEF_DOC(doc) { "abort", (DeeObject *)&libposix_abort, MODSYM_FNORMAL, DOC("()\n" doc) },
@@ -1850,7 +1865,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_abort_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_abort_f_impl(void)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_abort_f_impl(void)
 //[[[end]]]
 {
 	Dee_Exit(EXIT_FAILURE, false);
@@ -1863,7 +1878,7 @@ FORCELOCAL DREF DeeObject *DCALL libposix_abort_f_impl(void)
      defined(HAVE_WTRUNCATE64) || defined(HAVE_TRUNCATE64) || defined(__DEEMON__)
 #if defined(HAVE_WTRUNCATE64) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:wchar_t[],len:I64d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int64_t len);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
@@ -1887,7 +1902,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int64_t len)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int64_t len)
 //[[[end]]]
 {
 	int result;
@@ -1932,7 +1947,7 @@ err:
 
 #if !(defined(HAVE_WTRUNCATE64) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:char[],len:I64d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int64_t len);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
@@ -1956,7 +1971,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int64_t len)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int64_t len)
 //[[[end]]]
 {
 	int result;
@@ -2003,7 +2018,7 @@ err:
        defined(HAVE_WTRUNCATE64) || defined(HAVE_TRUNCATE64)) || defined(__DEEMON__)
 #if defined(HAVE_WTRUNCATE) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:wchar_t[],len:I32d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int32_t len);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
@@ -2027,7 +2042,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int32_t len)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *__restrict filename, int32_t len)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -2073,7 +2088,7 @@ err:
 
 #if !(defined(HAVE_WTRUNCATE) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:char[],len:I32d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int32_t len);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
 #define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
@@ -2097,7 +2112,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int32_t len)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *__restrict filename, int32_t len)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -2144,7 +2159,7 @@ err:
 
 #if defined(HAVE_FTRUNCATE64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("ftruncate","fd:d,len:I64d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int64_t len);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&libposix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)") },
 #define LIBPOSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&libposix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)\n" doc) },
@@ -2162,7 +2177,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObjec
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int64_t len)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int64_t len)
 //[[[end]]]
 {
 	int result;
@@ -2189,7 +2204,7 @@ err:
 
 #if !defined(HAVE_FTRUNCATE64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("ftruncate","fd:d,len:I32d"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int32_t len);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&libposix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)") },
 #define LIBPOSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&libposix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)\n" doc) },
@@ -2207,7 +2222,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObjec
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int32_t len)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int32_t len)
 //[[[end]]]
 {
 #ifdef HAVE_FILEIO
@@ -2239,7 +2254,7 @@ err:
 #endif
 
 /*[[[deemon import("_dexutils").gw("access","filename:c:char[],how:d->?Dbool"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *__restrict filename, int how);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *__restrict filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_ACCESS_DEF { "access", (DeeObject *)&libposix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define LIBPOSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&libposix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
@@ -2263,7 +2278,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject *
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *__restrict filename, int how)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *__restrict filename, int how)
 //[[[end]]]
 {
 #ifdef HAVE_ACCESS
@@ -2308,7 +2323,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("euidaccess","filename:c:char[],how:d->?Dbool"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ char const *__restrict filename, int how);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ char const *__restrict filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_euidaccess_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_EUIDACCESS_DEF { "euidaccess", (DeeObject *)&libposix_euidaccess, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define LIBPOSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&libposix_euidaccess, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
@@ -2332,7 +2347,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_euidaccess_f(size_t argc, DeeObje
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ char const *__restrict filename, int how)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ char const *__restrict filename, int how)
 //[[[end]]]
 {
 #if defined(HAVE_EUIDACCESS) || defined(HAVE_EACCESS)
@@ -2378,7 +2393,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("faccessat","dfd:d,filename:c:char[],how:d,atflags:d->?Dbool"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, int how, int atflags);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, int how, int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_faccessat_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_FACCESSAT_DEF { "faccessat", (DeeObject *)&libposix_faccessat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool") },
 #define LIBPOSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&libposix_faccessat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
@@ -2404,7 +2419,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_faccessat_f(size_t argc, DeeObjec
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, int how, int atflags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, int how, int atflags)
 //[[[end]]]
 {
 #ifdef HAVE_FACCESSAT
@@ -2450,7 +2465,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("pipe","->?T2?Dint?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_pipe_f_impl(void);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pipe_f(size_t argc, DeeObject **argv);
 #define LIBPOSIX_PIPE_DEF { "pipe", (DeeObject *)&libposix_pipe, MODSYM_FNORMAL, DOC("()->?T2?Dint?Dint") },
 #define LIBPOSIX_PIPE_DEF_DOC(doc) { "pipe", (DeeObject *)&libposix_pipe, MODSYM_FNORMAL, DOC("()->?T2?Dint?Dint\n" doc) },
@@ -2462,7 +2477,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pipe_f(size_t argc, DeeObject **a
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_pipe_f_impl(void)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe_f_impl(void)
 //[[[end]]]
 {
 #ifdef HAVE_PIPE
@@ -2558,7 +2573,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("pipe2","oflags:d->?T2?Dint?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pipe2_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_PIPE2_DEF { "pipe2", (DeeObject *)&libposix_pipe2, MODSYM_FNORMAL, DOC("(oflags:?Dint)->?T2?Dint?Dint") },
 #define LIBPOSIX_PIPE2_DEF_DOC(doc) { "pipe2", (DeeObject *)&libposix_pipe2, MODSYM_FNORMAL, DOC("(oflags:?Dint)->?T2?Dint?Dint\n" doc) },
@@ -2575,7 +2590,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pipe2_f(size_t argc, DeeObject **
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 //[[[end]]]
 {
 #if defined(HAVE_PIPE2) ||                                        \
@@ -2726,7 +2741,7 @@ err:
 
 
 /*[[[deemon import("_dexutils").gw("fchownat","dfd:d,filename:c:char[],owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:d->?Dint"); ]]]*/
-FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags);
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **argv, DeeObject *kw);
 #define LIBPOSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint") },
 #define LIBPOSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint\n" doc) },
@@ -2753,7 +2768,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject
 err:
 	return NULL;
 }
-FORCELOCAL DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *__restrict filename, DeeObject *__restrict owner, DeeObject *__restrict group, int atflags)
 //[[[end]]]
 {
 #ifdef HAVE_FCHOWNAT
@@ -2869,7 +2884,7 @@ err:
 #define DEFINE_LIBFS_FORWARD_WRAPPER(name, symbol_name)                                   \
 	PRIVATE DEFINE_STRING(libposix_libfs_name_##name, symbol_name);                       \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                                         \
-	libposix_getfs_##name##_f(size_t UNUSED(argc), DeeObject **__restrict UNUSED(argv)) { \
+	libposix_getfs_##name##_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) { \
 		return DeeObject_GetAttr(FS_MODULE, (DeeObject *)&libposix_libfs_name_##name);    \
 	}                                                                                     \
 	PRIVATE DEFINE_CMETHOD(libposix_getfs_##name, &libposix_getfs_##name##_f);
@@ -3030,83 +3045,83 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Scheduling control */
 	LIBPOSIX_SCHED_YIELD_DEF
-/* TODO: sched_get_priority_min() */
-/* TODO: sched_get_priority_max() */
-/* TODO: sched_getparam() */
-/* TODO: sched_setparam() */
-/* TODO: sched_getscheduler() */
-/* TODO: sched_setscheduler() */
-/* TODO: sched_rr_get_interval() */
-/* TODO: sched_getaffinity() */
-/* TODO: sched_getaffinity() */
-/* TODO: nice() */
-/* TODO: getpriority() */
-/* TODO: setpriority() */
-/* TODO: fork() */
-/* TODO: wait() */
-/* TODO: wait3() */
-/* TODO: wait4() */
-/* TODO: waitid() */
-/* TODO: waitpid() */
-/* TODO: kill() */
-/* TODO: killpg() */
-/* TODO: getppid() */
-/* TODO: getpgrp() */
-/* TODO: setpgrp() */
-/* TODO: getpgid() */
-/* TODO: setpgid() */
-/* TODO: getsid() */
-/* TODO: setsid() */
-/* TODO: WCOREDUMP() */
-/* TODO: WIFCONTINUED() */
-/* TODO: WIFSTOPPED() */
-/* TODO: WIFSIGNALED() */
-/* TODO: WIFEXITED() */
-/* TODO: WEXITSTATUS() */
-/* TODO: WTERMSIG() */
-/* TODO: WSTOPSIG() */
+	/* TODO: sched_get_priority_min() */
+	/* TODO: sched_get_priority_max() */
+	/* TODO: sched_getparam() */
+	/* TODO: sched_setparam() */
+	/* TODO: sched_getscheduler() */
+	/* TODO: sched_setscheduler() */
+	/* TODO: sched_rr_get_interval() */
+	/* TODO: sched_getaffinity() */
+	/* TODO: sched_getaffinity() */
+	/* TODO: nice() */
+	/* TODO: getpriority() */
+	/* TODO: setpriority() */
+	/* TODO: fork() */
+	/* TODO: wait() */
+	/* TODO: wait3() */
+	/* TODO: wait4() */
+	/* TODO: waitid() */
+	/* TODO: waitpid() */
+	/* TODO: kill() */
+	/* TODO: killpg() */
+	/* TODO: getppid() */
+	/* TODO: getpgrp() */
+	/* TODO: setpgrp() */
+	/* TODO: getpgid() */
+	/* TODO: setpgid() */
+	/* TODO: getsid() */
+	/* TODO: setsid() */
+	/* TODO: WCOREDUMP() */
+	/* TODO: WIFCONTINUED() */
+	/* TODO: WIFSTOPPED() */
+	/* TODO: WIFSIGNALED() */
+	/* TODO: WIFEXITED() */
+	/* TODO: WEXITSTATUS() */
+	/* TODO: WTERMSIG() */
+	/* TODO: WSTOPSIG() */
 
-/* User/Permission control */
-/* TODO: geteuid() */
-/* TODO: seteuid() */
-/* TODO: getegid() */
-/* TODO: setegid() */
-/* TODO: getgid() */
-/* TODO: setgid() */
-/* TODO: getuid() */
-/* TODO: setuid() */
-/* TODO: setreuid() */
-/* TODO: setregid() */
-/* TODO: getgrouplist() */
-/* TODO: getgroups() */
-/* TODO: setgroups() */
-/* TODO: initgroups() */
-/* TODO: setresuid() */
-/* TODO: setresgid() */
-/* TODO: getresuid() */
-/* TODO: getresgid() */
+	/* User/Permission control */
+	/* TODO: geteuid() */
+	/* TODO: seteuid() */
+	/* TODO: getegid() */
+	/* TODO: setegid() */
+	/* TODO: getgid() */
+	/* TODO: setgid() */
+	/* TODO: getuid() */
+	/* TODO: setuid() */
+	/* TODO: setreuid() */
+	/* TODO: setregid() */
+	/* TODO: getgrouplist() */
+	/* TODO: getgroups() */
+	/* TODO: setgroups() */
+	/* TODO: initgroups() */
+	/* TODO: setresuid() */
+	/* TODO: setresgid() */
+	/* TODO: getresuid() */
+	/* TODO: getresgid() */
 
-/* Random number generation */
-/* TODO: urandom() */
-/* TODO: getrandom() */
+	/* Random number generation */
+	/* TODO: urandom() */
+	/* TODO: getrandom() */
 
-/* Environ control */
-/* TODO: getenv() */
-/* TODO: setenv() */
-/* TODO: putenv() */
-/* TODO: unputenv() */
-/* TODO: clearenv() */
+	/* Environ control */
+	/* TODO: getenv() */
+	/* TODO: setenv() */
+	/* TODO: putenv() */
+	/* TODO: unputenv() */
+	/* TODO: clearenv() */
 
-/* Python-like helper functions */
-/* TODO: cpu_count() */
-/* TODO: get_inheritable() */
-/* TODO: set_inheritable() */
+	/* Python-like helper functions */
+	/* TODO: cpu_count() */
+	/* TODO: get_inheritable() */
+	/* TODO: set_inheritable() */
 
-/* Higher-level wrapper functions */
-/* TODO: popen() */
-/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
+	/* Higher-level wrapper functions */
+	/* TODO: popen() */
+	/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
 
-/* Forward-aliases to `libfs' */
+	/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                         \
 	{ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
 	  DOC(proto "Alias for :fs." libfs_name) },
@@ -3415,7 +3430,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "errno", (DeeObject *)&libposix_errno_get, MODSYM_FPROPERTY,
 	  DOC("->?Dint\n"
 	      "Read/write the C errno thread-local variable") },
-	{ NULL, NULL, MODSYM_FNORMAL }, /* `del errno' */
+	{ NULL, (DeeObject *)&libposix_errno_del, MODSYM_FNORMAL },
 	{ NULL, (DeeObject *)&libposix_errno_set, MODSYM_FNORMAL },
 	/* TODO: strerror() */
 

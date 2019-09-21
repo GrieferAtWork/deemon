@@ -48,7 +48,7 @@ PRIVATE struct tls_callback_hooks thrd_hooks = {
 	/* .tc_visit = */ (void (DCALL *)(void *__restrict, dvisit_t, void *))&thread_tls_visit
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 libthreading_init(DeeDexObject *__restrict UNUSED(self)) {
 	/* Install our custom TLS callback hooks. */
 	memcpy(&orig_hooks, &_DeeThread_TlsCallbacks,
@@ -58,7 +58,7 @@ libthreading_init(DeeDexObject *__restrict UNUSED(self)) {
 	return 0;
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 libthreading_fini(DeeDexObject *__restrict UNUSED(self)) {
 	/* Restore the original callback hooks. */
 	memcpy(&_DeeThread_TlsCallbacks, &orig_hooks,

@@ -714,7 +714,7 @@ DFUNDEF void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, char const *file
 
 #ifndef __OPTIMIZE_SIZE__
 #define DeeObject_NewRef_untraced(self) DeeObject_NewRef_untraced_inline(self)
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 DeeObject_NewRef_untraced_inline(DeeObject *__restrict self) {
 	Dee_Incref_untraced(self);
 	return self;

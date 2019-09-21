@@ -306,7 +306,7 @@ DequeIterator_Next(DequeIterator *__restrict self,
 	}
 }
 
-LOCAL DREF DeeObject **DCALL
+LOCAL WUNUSED DREF DeeObject **DCALL
 DequeIterator_PrevItemPointer(DequeIterator *__restrict self,
                               Deque *__restrict deq) {
 	Dee_ASSERT(DequeIterator_HasPrev(self, deq));
@@ -315,7 +315,7 @@ DequeIterator_PrevItemPointer(DequeIterator *__restrict self,
 	return &DEQUEBUCKET_PREV(self->di_bucket)->db_items[deq->d_bucket_sz - 1];
 }
 
-LOCAL DREF DeeObject **DCALL
+LOCAL WUNUSED DREF DeeObject **DCALL
 DequeIterator_NextItemPointer(DequeIterator *__restrict self,
                               Deque *__restrict deq) {
 	Dee_ASSERT(DequeIterator_HasNext(self, deq));

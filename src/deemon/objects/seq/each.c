@@ -1146,7 +1146,7 @@ sew_size(SeqEachBase *__restrict self) {
 	return DeeObject_SizeObject(self->se_seq);
 }
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 seo_transform(SeqEachOperator *__restrict self,
               /*inherit(always)*/ DREF DeeObject *__restrict elem) {
 	DREF DeeObject *result;

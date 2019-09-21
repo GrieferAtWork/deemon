@@ -3205,7 +3205,7 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorInt, DeeObject_InplaceXor, 
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 
-LOCAL DREF DeeObject *DCALL
+LOCAL WUNUSED DREF DeeObject *DCALL
 invoke_not(DREF DeeObject *ob) {
 	if (ob) {
 		int temp = DeeObject_Bool(ob);

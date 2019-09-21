@@ -1626,7 +1626,7 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
 #define Dee_MODULE_OPENINPATH_FRELMODULE   0x0001 /* The module name is relative */
 #define Dee_MODULE_OPENINPATH_FTHROWERROR  0x0002 /* Throw an error if the module isn't found. */
 
-LOCAL DREF DeeModuleObject *DCALL
+LOCAL WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
                         /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                         DeeObject *module_global_name,

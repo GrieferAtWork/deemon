@@ -25,6 +25,7 @@
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
+#include <hybrid/atomic.h>
 
 #include <Windows.h>
 #include <string.h>
@@ -47,7 +48,7 @@
 #else
 #   define PATH_MAX 260
 #endif
-#endif
+#endif /* !PATH_MAX */
 
 
 DECL_BEGIN
@@ -295,7 +296,7 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 			*(void **)&func = (void *)-1;
 		ATOMIC_CMPXCH(pQueryFullProcessImageNameW, NULL, func);
 	}
-	/* If the function is not suppported, return ITER_DONE. */
+	/* If the function is not supported, return ITER_DONE. */
 	if (*(void **)&func == (void *)-1)
 		return ITER_DONE;
 	buffer = DeeString_NewWideBuffer(bufsize);

@@ -166,12 +166,12 @@ INTDEF DeeTypeObject DeeTime_Type;
 #define DeeTime_Check(ob)      DeeObject_InstanceOf(ob, &DeeTime_Type)
 #define DeeTime_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeTime_Type)
 
-EXPDEF DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);
+EXPDEF WUNUSED DREF DeeObject *(DCALL DeeTime_New)(uint64_t microseconds);
 INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_New_(dtime_t microseconds, uint16_t kind);
 INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_NewMonths_(dtime_half_t num_months, uint16_t kind);
 #define DeeTime_New(microseconds, repr)     DeeTime_New_(microseconds, TIME_KIND(TIME_MICROSECONDS, repr))
 #define DeeTime_NewMonths(num_months, repr) DeeTime_NewMonths_(num_months, TIME_KIND(TIME_MONTHS, repr))
-INTDEF dtime_t DCALL DeeTime_Get(DeeTimeObject const *__restrict self);
+INTDEF WUNUSED NONNULL((1)) dtime_t DCALL DeeTime_Get(DeeTimeObject const *__restrict self);
 #ifdef HAVE_128BIT_TIME
 INTDEF WUNUSED DREF DeeObject *DCALL DeeTime_New64_(uint64_t microseconds, uint16_t kind);
 #define DeeTime_New64(microseconds, repr) DeeTime_New64_(microseconds, TIME_KIND(TIME_MICROSECONDS, repr))
@@ -185,7 +185,7 @@ INTDEF WUNUSED NONNULL((1)) uint64_t DCALL DeeTime_Get64(DeeTimeObject const *__
 #define DeeTime_Set64(self, value) \
 	(void)(_Time_Set64(*(self), value), (self)->t_type = TIME_MICROSECONDS)
 
-INTDEF dtime_t DCALL time_now(void);
+INTDEF WUNUSED dtime_t DCALL time_now(void);
 #endif /* CONFIG_BUILDING_LIBTIME */
 
 #define time_tick() DeeThread_GetTimeMicroSeconds()
@@ -225,12 +225,6 @@ INTDEF dtime_t DCALL time_now(void);
 /* NOTE: Converting days <-> years and days <-> months assumes a base of `0'! */
 #define time_day2yer(x)    ((400 * ((x) + 1)) / 146097)
 #define time_yer2day(x)    (((146097 * (x)) / 400) /*-1*/)
-#ifdef CONFIG_BUILDING_LIBTIME
-INTDEF dtime_half_t (TIMECALL time_day2mon)(dtime_half_t x);
-INTDEF dtime_half_t (TIMECALL time_mon2day)(dtime_half_t x);
-#endif /* CONFIG_BUILDING_LIBTIME */
-#define time_day2mon(x) time_day2mon((dtime_half_t)(x))
-#define time_mon2day(x) time_mon2day((dtime_half_t)(x))
 
 
 
@@ -246,30 +240,30 @@ INTDEF dtime_half_t (TIMECALL time_mon2day)(dtime_half_t x);
 #define YEARS_PER_MILLENIUM     (YEARS_PER_CENTURY * CENTURIES_PER_MILLENIUM)
 
 /* Given `x' as microseconds from 0, return various interpretations. */
-#define time_get_microseconds(x)   (x)
-#define time_get_milliseconds(x)  ((x) / MICROSECONDS_PER_MILLISECOND)
-#define time_get_seconds(x)       ((x) / MICROSECONDS_PER_SECOND)
-#define time_get_minutes(x)       ((x) / MICROSECONDS_PER_MINUTE)
-#define time_get_hours(x)         ((x) / MICROSECONDS_PER_HOUR)
-#define time_get_days(x)          ((x) / MICROSECONDS_PER_DAY)
-#define time_get_weeks(x)         ((x) / MICROSECONDS_PER_WEEK)
-#define time_get_months(x)          time_day2mon(time_get_days(x))
-#define time_get_years(x)           time_day2yer(time_get_days(x))
-#define time_get_decades(x)        (time_day2yer(time_get_days(x)) / YEARS_PER_DECADE)
-#define time_get_centuries(x)      (time_day2yer(time_get_days(x)) / YEARS_PER_CENTURY)
-#define time_get_millenia(x)       (time_day2yer(time_get_days(x)) / YEARS_PER_MILLENIUM)
-#define time_set_microseconds(x)   (x)
-#define time_set_milliseconds(x)  ((x) * MICROSECONDS_PER_MILLISECOND)
-#define time_set_seconds(x)       ((x) * MICROSECONDS_PER_SECOND)
-#define time_set_minutes(x)       ((x) * MICROSECONDS_PER_MINUTE)
-#define time_set_hours(x)         ((x) * MICROSECONDS_PER_HOUR)
-#define time_set_days(x)          ((x) * MICROSECONDS_PER_DAY)
-#define time_set_weeks(x)         ((x) * MICROSECONDS_PER_WEEK)
-#define time_set_months(x)          time_set_days(time_mon2day(x))
-#define time_set_years(x)           time_set_days(time_yer2day(x))
-#define time_set_decades(x)         time_set_days(time_yer2day((x) * YEARS_PER_DECADE)))
-#define time_set_centuries(x)       time_set_days(time_yer2day((x) * YEARS_PER_CENTURY)))
-#define time_set_millenia(x)        time_set_days(time_yer2day((x) * YEARS_PER_MILLENIUM)))
+#define time_get_microseconds(x) (x)
+#define time_get_milliseconds(x) ((x) / MICROSECONDS_PER_MILLISECOND)
+#define time_get_seconds(x)      ((x) / MICROSECONDS_PER_SECOND)
+#define time_get_minutes(x)      ((x) / MICROSECONDS_PER_MINUTE)
+#define time_get_hours(x)        ((x) / MICROSECONDS_PER_HOUR)
+#define time_get_days(x)         ((x) / MICROSECONDS_PER_DAY)
+#define time_get_weeks(x)        ((x) / MICROSECONDS_PER_WEEK)
+#define time_get_months(x)       time_day2mon(time_get_days(x))
+#define time_get_years(x)        time_day2yer(time_get_days(x))
+#define time_get_decades(x)      (time_day2yer(time_get_days(x)) / YEARS_PER_DECADE)
+#define time_get_centuries(x)    (time_day2yer(time_get_days(x)) / YEARS_PER_CENTURY)
+#define time_get_millenia(x)     (time_day2yer(time_get_days(x)) / YEARS_PER_MILLENIUM)
+#define time_set_microseconds(x) (x)
+#define time_set_milliseconds(x) ((x) * MICROSECONDS_PER_MILLISECOND)
+#define time_set_seconds(x)      ((x) * MICROSECONDS_PER_SECOND)
+#define time_set_minutes(x)      ((x) * MICROSECONDS_PER_MINUTE)
+#define time_set_hours(x)        ((x) * MICROSECONDS_PER_HOUR)
+#define time_set_days(x)         ((x) * MICROSECONDS_PER_DAY)
+#define time_set_weeks(x)        ((x) * MICROSECONDS_PER_WEEK)
+#define time_set_months(x)       time_set_days(time_mon2day(x))
+#define time_set_years(x)        time_set_days(time_yer2day(x))
+#define time_set_decades(x)      time_set_days(time_yer2day((x) * YEARS_PER_DECADE)))
+#define time_set_centuries(x)    time_set_days(time_yer2day((x) * YEARS_PER_CENTURY)))
+#define time_set_millenia(x)     time_set_days(time_yer2day((x) * YEARS_PER_MILLENIUM)))
 
 
 DECL_END
