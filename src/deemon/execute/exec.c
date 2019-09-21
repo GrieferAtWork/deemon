@@ -837,6 +837,15 @@ PUBLIC void DCALL Dee_Initialize(void) {
 }
 
 
+#ifdef CONFIG_HOST_WINDOWS
+#ifndef CONFIG_OUTPUTDEBUGSTRINGA_DEFINED
+#define CONFIG_OUTPUTDEBUGSTRINGA_DEFINED 1
+extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
+extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
+#endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
+#endif /* CONFIG_HOST_WINDOWS */
+
+
 PUBLIC size_t DCALL Dee_Shutdown(void) {
 	size_t result = 0, temp;
 	size_t num_gc = 0, num_empty_gc = 0;
@@ -862,8 +871,13 @@ do_kill_user:
 				 * If we've gotten here, that probably means that there is some sort of
 				 * resource leak caused by deemon itself, meaning it's probably my fault... */
 #ifndef NDEBUG
+#ifdef CONFIG_HOST_WINDOWS
+				if (!IsDebuggerPresent())
+					break;
+#endif /* CONFIG_HOST_WINDOWS */
 				/* Log all GC objects still alive */
 				gc_dump_all();
+				
 #ifdef CONFIG_TRACE_REFCHANGES
 				DEE_DPRINT("\n\n\nReference Leaks:\n");
 				Dee_DumpReferenceLeaks();
