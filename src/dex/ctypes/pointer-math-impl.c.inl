@@ -19,7 +19,7 @@
 #define DEE_SOURCE 1
 #ifdef __INTELLISENSE__
 #define N 0
-#endif
+#endif /* __INTELLISENSE__ */
 
 #ifndef N
 #error "Must #define N before including this file"

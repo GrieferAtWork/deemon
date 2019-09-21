@@ -978,7 +978,7 @@
                                       * [4][-1,+1]   `PREFIX: push op $<imm16>, pop' */
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement range-initializers. */
 #define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement range-initializers. */
-#define ASM_THISCALL_TUPLE    0xf01d /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of prepending `pop' before `pop...', then using the result as argument list).
+#define ASM_THISCALL_TUPLE    0xf01d /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of inserting `pop' before `pop...', then using the result as argument list).
                                       * >> Object args    = POP();
                                       * >> Object thisarg = POP();
                                       * >> Object func    = POP();

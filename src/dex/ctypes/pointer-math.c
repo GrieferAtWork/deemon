@@ -27,7 +27,7 @@
 #include "pointer-math-impl.c.inl"
 #define N 2 /* Anything but 0 or 1 */
 #include "pointer-math-impl.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 
 #endif /* !GUARD_DEX_CTYPES_POINTER_MATH_C */

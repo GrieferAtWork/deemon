@@ -26,6 +26,7 @@
 
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
+#include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/object.h>
@@ -173,7 +174,7 @@ shlib_visit(Shlib *__restrict self, dvisit_t proc, void *arg) {
 #ifdef _WIN32_WCE
 #undef  GetProcAddress
 #define GetProcAddress GetProcAddressA
-#endif
+#endif /* _WIN32_WCE */
 
 PRIVATE void *DCALL
 shlib_dlsym(Shlib *__restrict self,
@@ -192,12 +193,12 @@ shlib_dlsym(Shlib *__restrict self,
 			goto done;
 		memcpy(name_copy + 1, name, (name_len + 1) * sizeof(char));
 		name_copy[0] = '_';
-		/* Lookup after prepending a leading underscore. */
+		/* Lookup after inserting a leading underscore. */
 		result = dlsym(self->sh_lib, name_copy);
 		Dee_AFree(name_copy);
 	}
 done:
-#endif
+#endif /* __i386__ || __x86_64__ */
 	return result;
 #endif
 }
@@ -275,6 +276,18 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+shlib_contains(Shlib *self,
+               DeeObject *name) {
+	void *symaddr;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	symaddr = shlib_dlsym(self, DeeString_STR(name));
+	return_bool_(symaddr != NULL);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 shlib_getattr(Shlib *self,
               DeeObject *name) {
 	DREF struct pointer_object *result;
@@ -330,7 +343,7 @@ err:
 PRIVATE struct type_seq shlib_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL, /* TODO */
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, /* TODO */
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_contains,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_getitem
 };
 
@@ -366,11 +379,11 @@ err:
 }
 
 #else /* !CONFIG_NO_SHLIB */
+
 PRIVATE void DCALL err_shlib_unsupported(void) {
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "Shared libraries are not supported by the host");
 }
-
 
 INTERN bool DCALL clear_void_pointer(void) {
 	return false;
@@ -385,6 +398,7 @@ shlib_base(Shlib *self, size_t argc,
 err:
 	return NULL;
 }
+
 #endif /* CONFIG_NO_SHLIB */
 
 

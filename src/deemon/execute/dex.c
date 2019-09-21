@@ -298,7 +298,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	result = GetProcAddress((HMODULE)me->d_handle, name);
 	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
-		/* Try again after prepending an underscore. */
+		/* Try again after inserting an underscore. */
 		if (((uintptr_t)(name) & ~(PAGESIZE - 1)) ==
 		    ((uintptr_t)(name - 1) & ~(PAGESIZE - 1)) &&
 		    name[-1] == '_') {
@@ -329,7 +329,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	result = dlsym(me->d_handle, name);
 	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
-		/* Try again after prepending an underscore. */
+		/* Try again after inserting an underscore. */
 		if (((uintptr_t)(name) & ~(PAGESIZE - 1)) ==
 		    ((uintptr_t)(name - 1) & ~(PAGESIZE - 1)) &&
 		    name[-1] == '_') {
