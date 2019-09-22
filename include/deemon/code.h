@@ -369,6 +369,7 @@ struct Dee_ddi_object {
  * @param: self:            The code object for which DDI information should be queried.
  * @param: state:     [out] DDI information for the closest checkpoint below `uip'
  * @param: opt_endip: [out] When non-NULL, filled with the UIP of the closest checkpoint above `uip'
+ * @param: flags:           Set of `DDI_STATE_F*'
  * @return: * :             Successfully found the DDI state describing `uip'
  * @return: DDI_NEXT_ERR:   [!DDI_STATE_FNOTHROW] An error occurred.
  * @return: DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP' was read. */

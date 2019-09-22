@@ -854,7 +854,7 @@ asm_fix_jump_prefix(instruction_t *__restrict delop_instr) {
 		/* ASM16_GLOBAL */
 		/* ASM16_STATIC */
 		/* ASM16_STACK */
-		switch (prefix_loc[0]) {
+		switch (prefix_loc[1]) {
 
 		case ASM16_LOCAL & 0xff:
 		case ASM16_GLOBAL & 0xff:
@@ -923,28 +923,32 @@ INTERN bool DCALL asm_minjmp(void) {
 				/* Make sure that the upper 8 bits are truly sign-extensions. */
 				if (instr[2] != ((instr[1] & 0x80) ? 0xff : 0x00))
 					break;
-#if 1 /* This variant is required because the other would overflow if `target == 0xff'   \
-       * If we used the other variant, the assembler would have to loop over and use     \
-       * BIGCODE mode (which would produce working code btw.), however doing so not only \
-       * is unnecessary, but also considerably slower because of wrapper assembly:       \
-       * >>    jf    pop, 1f                                                             \
-       * Then becoming:                                                                  \
-       * >>    jt    pop, 2f                                                             \
-       * >>    jmp   1f       // 32-bit                                                  \
-       * >>2: */
+#if 1
+				/* This variant is required because the other overflows if `target == 0xff'
+				 * If we used the other variant, the assembler would have to loop over and use
+				 * BIGCODE mode (which would produce working code btw.), however doing so not only
+				 * is unnecessary, but also considerably slower because of wrapper assembly:
+				 * >>    jf    pop, 1f
+				 * Then becoming:
+				 * >>    jt    pop, 2f
+				 * >>    jmp   1f       // 32-bit
+				 * >>2: */
 				*(instr + 2) = *((int8_t *)(instr + 1)) + 1; /* This +1 is negated by the `++iter->ar_addr' below. */
 				*(instr + 1) = *(instr + 0) & ~1;            /* Turn the instruction into its 8-bit counterpart. */
 				*(instr + 0) = ASM_DELOP;                    /* Mark the leading byte for deletion */
 				++iter->ar_addr;                             /* Move the relocation up 1 byte, so it points to the new 8-bit offset. */
 				asm_fix_jump_prefix(instr + 0);
 #else
+				if (*((int8_t *)(instr + 1)) == 0x7f)
+					break;
 				*(instr + 0) &= ~1;         /* Turn the instruction into its 8-bit counterpart. */
 				++*((int8_t *)(instr + 1)); /* Increment the jump offset by one, because the
 				                             * source address is now located one byte lower. */
 				*(instr + 2) = ASM_DELOP;   /* Mark the (now) unused high 8 bits as a DELOP. */
 #endif
-				iter->ar_type = R_DMN_DISP8; /* Change the relocation into an 8-bit disposition. */
-				result        = true;        /* Indicate that we managed to optimize something. */
+				/* Change the relocation into an 8-bit disposition. */
+				iter->ar_type = R_DMN_DISP8;
+				result = true; /* Indicate that we managed to optimize something. */
 			}
 		}	break;
 

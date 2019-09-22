@@ -172,7 +172,10 @@ print_ddi(struct ascii_printer *__restrict printer,
 			                                   file ? file : "",
 			                                   iter->dx_base.dr_lno + 1,
 			                                   iter->dx_base.dr_col + 1,
-			                                   name ? name : (code->co_flags & CODE_FCONSTRUCTOR ? "<anonymous_ctor>" : "<anonymous>"),
+			                                   name ? name
+			                                        : (code->co_flags & CODE_FCONSTRUCTOR
+			                                           ? "<anonymous_ctor>"
+			                                           : "<anonymous>"),
 			                                   ip);
 			if unlikely(print_error < 0)
 				break;

@@ -1006,12 +1006,12 @@ inc_execsz_start:
 #define THIRD                sp[-3]
 #define FOURTH               sp[-4]
 #define POP()                (*--sp)
-#define POPREF()             (--sp,Dee_Decref(*sp))
-#define PUSH(ob)             (*sp = (ob),++sp)
-#define PUSHREF(ob)          (*sp = (ob),Dee_Incref(*sp),++sp)
+#define POPREF()             (--sp, Dee_Decref(*sp))
+#define PUSH(ob)             (*sp = (ob), ++sp)
+#define PUSHREF(ob)          (*sp = (ob), Dee_Incref(*sp), ++sp)
 #define STACK_BEGIN          frame->cf_stack
 #define STACK_END            (frame->cf_stack+code->co_framesize)
-#define STACKUSED            (sp-frame->cf_stack)
+#define STACKUSED            (sp - frame->cf_stack)
 #define STACKPREALLOC        ((uint16_t)((code->co_framesize/sizeof(DeeObject *))-code->co_localc))
 #ifdef USE_SWITCH
 #define RAW_TARGET2(op, _op) case op&0xff: target##_op:
@@ -1039,9 +1039,15 @@ inc_execsz_start:
 #define ASSERT_YIELDING()    do{ if unlikely(!(code->co_flags & CODE_FYIELDING)) { EXCEPTION_CLEANUP goto err_requires_yield_code; } }__WHILE0
 #define STACKFREE            ((frame->cf_stack+(frame->cf_stacksz ? frame->cf_stacksz : STACKPREALLOC))-sp)
 #define STACKSIZE            (frame->cf_stacksz ? frame->cf_stacksz : STACKPREALLOC)
-#define ASSERT_USAGE(sp_sub, sp_add) \
-	if unlikely((sp_sub) != 0 && ((-(sp_sub)) > STACKUSED)) { EXCEPTION_CLEANUP goto err_invalid_stack_affect; } \
-	if unlikely(((sp_sub) + (sp_add)) != 0 && (((sp_sub) + (sp_add)) > STACKFREE)) { EXCEPTION_CLEANUP goto increase_stacksize; }
+#define ASSERT_USAGE(sp_sub, sp_add)                                                 \
+	if unlikely((sp_sub) != 0 && ((-(sp_sub)) > STACKUSED)) {                        \
+		EXCEPTION_CLEANUP                                                            \
+		goto err_invalid_stack_affect;                                               \
+	}                                                                                \
+	if unlikely(((sp_sub) + (sp_add)) != 0 && (((sp_sub) + (sp_add)) > STACKFREE)) { \
+		EXCEPTION_CLEANUP                                                            \
+		goto increase_stacksize;                                                     \
+	}
 #else /* EXEC_SAFE */
 #define ASSERT_TUPLE(ob)     ASSERT(DeeTuple_CheckExact(ob))
 #define ASSERT_STRING(ob)    ASSERT(DeeString_CheckExact(ob))
@@ -1091,24 +1097,42 @@ next_instr:
 	DEE_CHECKMEMORY();
 #endif
 #if 0
-	{
-		struct ddi_regs start, stop;
+	if (_Dee_dprint_enabled) {
+		struct ddi_state state;
 		code_addr_t ip_addr = ip.ptr - code->co_code;
-		printf("ip %.4X: ", (unsigned)ip_addr);
-		if (!DeeDDI_FindIP((DeeObject *)code->co_ddi, &start, &stop, ip_addr))
-			printf("No information\n");
-		else {
-			ASSERT(ip_addr < stop.dr_uip);
-			ASSERT(ip_addr >= start.dr_uip);
-			ASSERT(start.dr_uip < stop.dr_uip);
-			printf("%.4X...%.4X - line %d, col %d, path `%s', file `%s' (SP: %u/%u)\n",
-			       (unsigned)start.dr_uip, (unsigned)stop.dr_uip,
-			       start.dr_lno + 1, start.dr_col + 1,
-			       (start.dr_path && start.dr_path - 1 < code->co_ddi->d_paths) ? DeeDDI_PATH_NAME(code->co_ddi, start.dr_path - 1) : "",
-			       start.dr_file < code->co_ddi->d_files ? DeeDDI_FILE_NAME(code->co_ddi, start.dr_file) : "",
-			       (unsigned)start.dr_usp, (unsigned)(sp - frame->cf_stack));
-			if (start.dr_uip == ip_addr)
-				ASSERT(start.dr_usp == (unsigned)(sp - frame->cf_stack));
+		if (!DeeCode_FindDDI((DeeObject *)code, &state, NULL, ip_addr, DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
+			DEE_DPRINTF("%s+%.4I32X [trace]\n", DeeCode_NAME(code), ip_addr);
+		} else {
+			struct ddi_xregs *iter;
+			char const *path, *file, *name;
+			char const *base_name = DeeCode_NAME(code);
+			DDI_STATE_DO(iter, &state) {
+				file = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_file);
+				name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_name);
+				if (!state.rs_regs.dr_path--)
+					path = NULL;
+				else {
+					path = DeeCode_GetDDIString((DeeObject *)code, iter->dx_base.dr_path);
+				}
+				DEE_DPRINTF("%s%s%s(%d,%d) : %s+%.4I32X",
+				            path ? path : "",
+				            path ? "/" : "",
+				            file ? file : "",
+				            iter->dx_base.dr_lno + 1,
+				            iter->dx_base.dr_col + 1,
+				            name ? name
+				                 : (code->co_flags & CODE_FCONSTRUCTOR
+				                    ? "<anonymous_ctor>"
+				                    : "<anonymous>"),
+				            ip_addr);
+				if (name != base_name && *base_name) {
+					/* Also print the name of the base-function */
+					DEE_DPRINTF(" (%s)", base_name);
+				}
+				DEE_DPRINTF(" [sp=%I16u]\n", (uint16_t)STACKUSED);
+			}
+			DDI_STATE_WHILE(iter, &state);
+			Dee_ddi_state_fini(&state);
 		}
 	}
 #endif

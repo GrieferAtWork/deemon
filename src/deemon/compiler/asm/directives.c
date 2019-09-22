@@ -169,7 +169,7 @@ PRIVATE struct reloc_type const reloc_db[] = {
 	/* [R_DMN_STCK16]   = */ { "STCK16" },
 	/* [R_DMN_STCKA8]   = */ { "STCKA8" },
 	/* [R_DMN_STCKA16]  = */ { "STCKA16" },
-	/* [R_DMN_DELHAND]  = */ { "DELHAND" },
+	/* [R_DMN_DELHAND]  = */ { "DELHAND" }
 };
 STATIC_ASSERT(COMPILER_LENOF(reloc_db) == R_DMN_COUNT);
 

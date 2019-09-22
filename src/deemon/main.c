@@ -1453,14 +1453,14 @@ INTERN struct compiler_options import_options = {
 	/* .co_error_handler = */ &error_handler,
 	/* .co_error_arg     = */ NULL,
 	/* .co_tabwidth      = */ 0,
-	/* .co_compiler      = */COMPILER_FNORMAL,
-	/* .co_parser        = */PARSE_FNORMAL,
-	/* .co_optimizer     = */OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
+	/* .co_compiler      = */ COMPILER_FNORMAL,
+	/* .co_parser        = */ PARSE_FNORMAL,
+	/* .co_optimizer     = */ OPTIMIZE_FENABLED | OPTIMIZE_FCONSTSYMS,
 	/* .co_unwind_limit  = */ 0,
-	/* .co_assembler     = */ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP,
-	/* .co_decloader     = */DEC_FNORMAL,
+	/* .co_assembler     = */ ASM_FOPTIMIZE | ASM_FPEEPHOLE | ASM_FREUSELOC | ASM_FSTACKDISP,
+	/* .co_decloader     = */ DEC_FNORMAL,
 #ifdef DEC_WRITE_FNORMAL
-	/* .co_decwriter     = */DEC_WRITE_FNORMAL,
+	/* .co_decwriter     = */ DEC_WRITE_FNORMAL,
 #else /* DEC_WRITE_FNORMAL */
 	/* .co_decwriter     = */ 0,
 #endif /* !DEC_WRITE_FNORMAL */
@@ -1477,14 +1477,14 @@ INTERN struct compiler_options script_options = {
 	/* .co_error_handler = */ &error_handler,
 	/* .co_error_arg     = */ NULL,
 	/* .co_tabwidth      = */ 0,
-	/* .co_compiler      = */COMPILER_FNORMAL,
-	/* .co_parser        = */PARSE_FNORMAL,
-	/* .co_optimizer     = */OPTIMIZE_FDISABLED,
+	/* .co_compiler      = */ COMPILER_FNORMAL,
+	/* .co_parser        = */ PARSE_FNORMAL,
+	/* .co_optimizer     = */ OPTIMIZE_FDISABLED,
 	/* .co_unwind_limit  = */ 0,
-	/* .co_assembler     = */ASM_FNORMAL | ASM_FNODEC | ASM_FOPTIMIZE,
-	/* .co_decloader     = */DEC_FDISABLE,
+	/* .co_assembler     = */ ASM_FNORMAL | ASM_FNODEC | ASM_FOPTIMIZE,
+	/* .co_decloader     = */ DEC_FDISABLE,
 #ifdef DEC_WRITE_FNORMAL
-	/* .co_decwriter     = */DEC_WRITE_FNORMAL,
+	/* .co_decwriter     = */ DEC_WRITE_FNORMAL,
 #else /* DEC_WRITE_FNORMAL */
 	/* .co_decwriter     = */ 0,
 #endif /* !DEC_WRITE_FNORMAL */

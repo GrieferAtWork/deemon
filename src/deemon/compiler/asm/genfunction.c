@@ -44,6 +44,7 @@ ast_assemble_function(struct ast *__restrict function_ast,
 	ASSERT_OBJECT_TYPE((DeeObject *)function_ast->a_function.f_scope, &DeeBaseScope_Type);
 	ASSERT(function_ast->a_function.f_scope->bs_root == current_rootscope);
 	ASSERT(current_basescope == current_scope->s_base);
+
 	prev_scope = current_scope;
 	/* Temporarily override the active scope + base-scope. */
 	current_scope     = (DREF DeeScopeObject *)function_ast->a_function.f_scope;
@@ -53,7 +54,9 @@ ast_assemble_function(struct ast *__restrict function_ast,
 	result = code_compile(function_ast->a_function.f_code,
 	                      /* Don't propagate `ASM_FBIGCODE' */
 	                      (current_assembler.a_flag & ~ASM_FBIGCODE) |
-	                      (DeeCompiler_Current->cp_options ? (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE) : 0),
+	                      (DeeCompiler_Current->cp_options
+	                       ? (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE)
+	                       : 0),
 	                      false, prefc, prefv);
 	/* Now that the code has been generated, it's time to
 	 * register it as a constant variable of our own code. */
