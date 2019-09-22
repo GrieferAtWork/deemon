@@ -565,11 +565,15 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	}
 	/* Copy declaration information into the function symbol (if it exists) */
 	if (funcself_symbol) {
-		if (funcself_symbol->s_decltype.da_type != DAST_NONE &&
-		    !decl_ast_equal(&funcself_symbol->s_decltype, &my_decl)) {
+		if (funcself_symbol->s_decltype.da_type != DAST_NONE) {
+			bool are_equal;
+			are_equal = decl_ast_equal(&funcself_symbol->s_decltype,
+			                           &my_decl);
 			decl_ast_fini(&my_decl);
-			if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, funcself_symbol))
-				goto err;
+			if (!are_equal) {
+				if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, funcself_symbol))
+					goto err;
+			}
 		} else {
 			decl_ast_move(&funcself_symbol->s_decltype, &my_decl);
 		}

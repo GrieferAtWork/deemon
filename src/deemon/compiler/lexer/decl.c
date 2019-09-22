@@ -1089,7 +1089,7 @@ err_seq_0:
 				decl_ast_fini(decl_seq);
 				goto err_seq;
 			}
-			memcpy(&elemv[0], decl_seq, sizeof(struct decl_ast));
+			decl_ast_move(&elemv[0], decl_seq);
 			if unlikely(yield() < 0) {
 err_elemv_0:
 				decl_ast_fini(&elemv[0]);

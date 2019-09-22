@@ -625,16 +625,19 @@ err_args:
 				struct symbol *var_symbol = current->a_sym;
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
-					struct decl_ast decl;
 					if unlikely(yield() < 0)
 						goto err_current;
 					if unlikely(decl_ast_parse(&decl))
 						goto err_current;
-					if (var_symbol->s_decltype.da_type != DAST_NONE &&
-					    !decl_ast_equal(&var_symbol->s_decltype, &decl)) {
+					if (var_symbol->s_decltype.da_type != DAST_NONE) {
+						bool are_equal;
+						are_equal = decl_ast_equal(&var_symbol->s_decltype,
+						                           &decl);
 						decl_ast_fini(&decl);
-						if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, var_symbol))
-							goto err_current;
+						if (!are_equal) {
+							if (WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, var_symbol))
+								goto err_current;
+						}
 					} else {
 						decl_ast_move(&var_symbol->s_decltype, &decl);
 					}
