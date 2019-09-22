@@ -1263,9 +1263,9 @@ bytes_replace(Bytes *__restrict self, size_t argc,
 		++begin;
 	}
 	if unlikely(bytes_printer_append(&printer, block_begin,
-		                              (size_t)((end - block_begin) +
-		                                       (find_needle.n_size - 1))) < 0)
-	goto err;
+	                                 (size_t)((end - block_begin) +
+	                                          (find_needle.n_size - 1))) < 0)
+		goto err;
 	/* Pack together a Bytes object. */
 	return (DREF Bytes *)bytes_printer_pack(&printer);
 err:
@@ -1322,9 +1322,9 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
 		++begin;
 	}
 	if unlikely(bytes_printer_append(&printer, block_begin,
-		                              (size_t)((end - block_begin) +
-		                                       (find_needle.n_size - 1))) < 0)
-	goto err;
+	                                 (size_t)((end - block_begin) +
+	                                          (find_needle.n_size - 1))) < 0)
+		goto err;
 	/* Pack together a Bytes object. */
 	return (DREF Bytes *)bytes_printer_pack(&printer);
 err:
@@ -1491,10 +1491,10 @@ bytes_join(Bytes *self, size_t argc, DeeObject **argv) {
 			for (i = 0; i < fast_size; ++i) {
 				/* Print `self' prior to every object, starting with the 2nd one. */
 				if unlikely(!is_first &&
-					         bytes_printer_append(&printer,
-					                              DeeBytes_DATA(self),
-					                              DeeBytes_SIZE(self)) < 0)
-				goto err_printer;
+				            bytes_printer_append(&printer,
+				                                 DeeBytes_DATA(self),
+				                                 DeeBytes_SIZE(self)) < 0)
+					goto err_printer;
 				elem = DeeFastSeq_GetItem(seq, i);
 				if unlikely(!elem)
 					goto err_printer;
