@@ -44,11 +44,6 @@
 #define DEE_VERSION_COMPILER 200
 #define DEE_VERSION_REVISION 0
 
-/* TODO: There are _a_ _lot_ of invalid uses of __restrict (most
- *       notably: in type operators such as the compare operators)
- *       -> Go through all of them and remove __restrict here it's
- *          use is wrong */
-
 #include <hybrid/compiler.h>
 
 #include <hybrid/__byteorder.h>

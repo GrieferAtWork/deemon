@@ -1245,26 +1245,28 @@ bytes_replace(Bytes *__restrict self, size_t argc,
 	bytes_printer_init(&printer);
 	end         = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if likely(max_count)
-		while (begin <= end) {
-		if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
-			/* Found one */
-			if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
-			    unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0))
-				goto err;
-			begin += find_needle.n_size;
-			block_begin = begin;
-			if (begin >= end)
-				break;
-			if unlikely(!--max_count)
-				break;
-			continue;
+	if likely(max_count) {
+		while (begin < end) {
+			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
+				/* Found one */
+				if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
+				    unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0))
+					goto err;
+				begin += find_needle.n_size;
+				block_begin = begin;
+				if (begin >= end)
+					break;
+				if unlikely(!--max_count)
+					break;
+				continue;
+			}
+			++begin;
 		}
-		++begin;
 	}
+	end += (find_needle.n_size - 1);
+	ASSERT(block_begin <= end);
 	if unlikely(bytes_printer_append(&printer, block_begin,
-	                                 (size_t)((end - block_begin) +
-	                                          (find_needle.n_size - 1))) < 0)
+	                                 (size_t)(end - block_begin)) < 0)
 		goto err;
 	/* Pack together a Bytes object. */
 	return (DREF Bytes *)bytes_printer_pack(&printer);
@@ -1304,26 +1306,28 @@ bytes_casereplace(Bytes *__restrict self, size_t argc,
 	bytes_printer_init(&printer);
 	end         = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
 	block_begin = begin;
-	if likely(max_count)
-		while (begin <= end) {
-		if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
-			/* Found one */
-			if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
-			    unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0))
-				goto err;
-			begin += find_needle.n_size;
-			block_begin = begin;
-			if (begin >= end)
-				break;
-			if unlikely(!--max_count)
-				break;
-			continue;
+	if likely(max_count) {
+		while (begin < end) {
+			if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
+				/* Found one */
+				if (unlikely(bytes_printer_append(&printer, block_begin, (size_t)(begin - block_begin)) < 0) ||
+				    unlikely(bytes_printer_append(&printer, replace_needle.n_data, replace_needle.n_size) < 0))
+					goto err;
+				begin += find_needle.n_size;
+				block_begin = begin;
+				if (begin >= end)
+					break;
+				if unlikely(!--max_count)
+					break;
+				continue;
+			}
+			++begin;
 		}
-		++begin;
 	}
+	end += (find_needle.n_size - 1);
+	ASSERT(block_begin <= end);
 	if unlikely(bytes_printer_append(&printer, block_begin,
-	                                 (size_t)((end - block_begin) +
-	                                          (find_needle.n_size - 1))) < 0)
+	                                 (size_t)(end - block_begin)) < 0)
 		goto err;
 	/* Pack together a Bytes object. */
 	return (DREF Bytes *)bytes_printer_pack(&printer);
@@ -1366,19 +1370,20 @@ bytes_toreplace(Bytes *__restrict self, size_t argc,
 		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if likely(max_count)
-		while (begin <= end) {
-		if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
-			/* Found one */
-			memcpy(begin, replace_needle.n_data, replace_needle.n_size);
-			begin += find_needle.n_size;
-			if (begin >= end)
-				break;
-			if unlikely(!--max_count)
-				break;
-			continue;
+	if likely(max_count) {
+		while (begin < end) {
+			if (MEMEQB(begin, find_needle.n_data, find_needle.n_size)) {
+				/* Found one */
+				memcpy(begin, replace_needle.n_data, replace_needle.n_size);
+				begin += find_needle.n_size;
+				if (begin >= end)
+					break;
+				if unlikely(!--max_count)
+					break;
+				continue;
+			}
+			++begin;
 		}
-		++begin;
 	}
 done:
 	return_reference_(self);
@@ -1414,19 +1419,20 @@ bytes_tocasereplace(Bytes *__restrict self, size_t argc,
 		goto done;
 
 	end = (begin = DeeBytes_DATA(self)) + (DeeBytes_SIZE(self) - (find_needle.n_size - 1));
-	if likely(max_count)
-		while (begin <= end) {
-		if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
-			/* Found one */
-			memcpy(begin, replace_needle.n_data, replace_needle.n_size);
-			begin += find_needle.n_size;
-			if (begin >= end)
-				break;
-			if unlikely(!--max_count)
-				break;
-			continue;
+	if likely(max_count) {
+		while (begin < end) {
+			if (dee_memasciicaseeq(begin, find_needle.n_data, find_needle.n_size)) {
+				/* Found one */
+				memcpy(begin, replace_needle.n_data, replace_needle.n_size);
+				begin += find_needle.n_size;
+				if (begin >= end)
+					break;
+				if unlikely(!--max_count)
+					break;
+				continue;
+			}
+			++begin;
 		}
-		++begin;
 	}
 done:
 	return_reference_(self);
