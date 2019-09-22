@@ -277,6 +277,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_codecs", "_codecs", "{A1CA
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hashlib", "dex\hashlib.vcxproj", "{D2ACD173-EA49-4031-92ED-A69D25649B1A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
