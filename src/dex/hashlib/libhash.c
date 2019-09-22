@@ -392,6 +392,7 @@ for (local algo: crc_algos) {
 	print ".ha_base",;
 	print ",";
 }
+print "\tNULL";
 print "};";
 ]]]*/
 #define WIDTH 1
@@ -2150,6 +2151,7 @@ PRIVATE struct dhashalgo const *const dhash_algorithms[] = {
 	&dhash_crc_64__jones.ha_base,
 	&dhash_crc_64__ecma.ha_base,
 	&dhash_crc_64__iso.ha_base,
+	NULL
 };
 //[[[end]]]
 
