@@ -330,9 +330,7 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	new_buffer = DeeString_TryResizeWideBuffer(buffer, bufsize);
-	if likely(new_buffer)
-		buffer = new_buffer;
+	buffer = DeeString_TruncateWideBuffer(buffer, bufsize);
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_r:
 	DeeString_FreeWideBuffer(buffer);

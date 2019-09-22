@@ -253,6 +253,7 @@ nt_GetEnvironmentVariable(LPCWSTR lpName) {
 		buffer  = new_buffer;
 		bufsize = error - 1;
 	}
+	buffer = DeeString_TruncateWideBuffer(buffer, error);
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(buffer);
@@ -355,10 +356,8 @@ err_result:
 				/* Process was successfully created. */
 				DREF DeeStringObject *result;
 				DBG_ALIGNMENT_ENABLE();
-				new_buffer = DeeString_TryResizeWideBuffer(buffer, pathlen);
-				if (new_buffer)
-					buffer = new_buffer;
-				result = (DREF DeeStringObject *)DeeString_PackWideBuffer(new_buffer, STRING_ERROR_FREPLAC);
+				buffer = DeeString_TruncateWideBuffer(buffer, pathlen);
+				result = (DREF DeeStringObject *)DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 				/* XXX: But the process is already running if `result' is NULL... */
 				return result;
 			}
@@ -428,9 +427,7 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 			DREF DeeStringObject *result;
 			DBG_ALIGNMENT_ENABLE();
 			/* Process was successfully created. */
-			new_buffer = DeeString_TryResizeWideBuffer(buffer, pathlen);
-			if (new_buffer)
-				buffer = new_buffer;
+			buffer = DeeString_TruncateWideBuffer(buffer, pathlen);
 			result = (DREF DeeStringObject *)DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 			/* XXX: But the process is already running if `result' is NULL... */
 			return result;
@@ -1643,16 +1640,20 @@ process_get_std(Process *__restrict self, int stdno) {
 	return process_get_attribute_and_unlock(self, stdno);
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_std(Process *self, int stdno, DeeObject *value) {
 	DREF DeeObject *old_stream;
 	if (self == &this_process) {
 		old_stream = DeeFile_SetStd(stdno, value);
 		if (!old_stream) {
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
 			if (value)
 				goto done;
 			err_unbound_attribute(&DeeProcess_Type, std_names[stdno]);
 			goto err;
+#else /* CONFIG_ERROR_DELETE_UNBOUND */
+			goto done;
+#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 		}
 		if (old_stream != ITER_DONE)
 			Dee_Decref(old_stream);
@@ -1677,7 +1678,9 @@ done:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Process %k has already been started",
 	                self);
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
 err:
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	return -1;
 }
 
@@ -1749,7 +1752,7 @@ process_get_environ(Process *__restrict self) {
 	return process_get_attribute_and_unlock(self, PROCATTR_ENVIRONMENT);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_environ(Process *self, DeeObject *value) {
 	DREF DeeObject *temp;
 	if (self == &this_process) {
@@ -1799,7 +1802,7 @@ process_get_pwd(Process *__restrict self) {
 	return process_get_attribute_and_unlock(self, PROCATTR_CURRENTDIRECTORY);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_pwd(Process *self, DeeObject *value) {
 	DREF DeeStringObject *oldval;
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
@@ -1824,10 +1827,13 @@ process_set_pwd(Process *self, DeeObject *value) {
 		rwlock_endwrite(&self->p_lock);
 		if (oldval) {
 			Dee_Decref(oldval);
-		} else if (!value) {
+		}
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+		else if (!value) {
 			err_unbound_attribute(&DeeProcess_Type, "pwd");
 			goto err;
 		}
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 		return 0;
 	}
 	rwlock_endwrite(&self->p_lock);
@@ -1889,7 +1895,7 @@ done:
 	return (DeeObject *)result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_exe(Process *self, DeeObject *value) {
 	DREF DeeStringObject *old_value;
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
@@ -1899,8 +1905,7 @@ err_started:
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot set exe for running process %k",
 		                self);
-err:
-		return -1;
+		goto err;
 	}
 	rwlock_write(&self->p_lock);
 	if (self->p_state & (PROCESS_FSTARTING | PROCESS_FSTARTED)) {
@@ -1913,11 +1918,16 @@ err:
 	rwlock_endwrite(&self->p_lock);
 	if (old_value) {
 		Dee_Decref(old_value);
-	} else if (!value) {
+	}
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+	else if (!value) {
 		err_unbound_attribute(&DeeProcess_Type, "exe");
 		goto err;
 	}
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1966,7 +1976,7 @@ done:
 	return (DeeObject *)result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_set_cmdline(Process *self, DeeObject *value) {
 	DREF DeeStringObject *old_value;
 	if (value && DeeObject_AssertTypeExact(value, &DeeString_Type))
@@ -1976,8 +1986,7 @@ err_started:
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot set cmdline for running process %k",
 		                self);
-err:
-		return -1;
+		goto err;
 	}
 	rwlock_write(&self->p_lock);
 	if (self->p_state & (PROCESS_FSTARTING | PROCESS_FSTARTED)) {
@@ -1990,11 +1999,16 @@ err:
 	rwlock_endwrite(&self->p_lock);
 	if (old_value) {
 		Dee_Decref(old_value);
-	} else if (!value) {
+	}
+#ifdef CONFIG_ERROR_DELETE_UNBOUND
+	else if (!value) {
 		err_unbound_attribute(&DeeProcess_Type, "cmdline");
 		goto err;
 	}
+#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2339,6 +2353,6 @@ DECL_END
 #include "nt.c.inl"
 #include "windows-pipe.c.inl"
 #include "windows-cmdline.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEX_IPC_WINDOWS_C_INL */

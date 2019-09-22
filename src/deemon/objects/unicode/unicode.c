@@ -1753,7 +1753,8 @@ read_text_i:
 			        "WSTR_LENGTH(text) = %Iu\n"
 			        "length            = %Iu\n"
 			        "text              = %$I16s\n",
-			        character_count, WSTR_LENGTH(text), length, WSTR_LENGTH(text), text);
+			        character_count, WSTR_LENGTH(text),
+			        length, WSTR_LENGTH(text), text);
 			char16_to_utf8(text, length, (uint8_t *)result->s_str);
 			break;
 

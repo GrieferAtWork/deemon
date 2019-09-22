@@ -945,9 +945,7 @@ fs_getenv(DeeObject *__restrict name, bool try_get) {
 		buffer  = new_buffer;
 		bufsize = error - 1;
 	}
-	new_buffer = DeeString_TryResizeWideBuffer(buffer, error);
-	if likely(new_buffer)
-		buffer = new_buffer;
+	buffer = DeeString_TruncateWideBuffer(buffer, error);
 	result = DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 	if unlikely(!result)
 		goto err_consume;
@@ -1139,9 +1137,7 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	/* Truncate the buffer and return it. */
-	new_buffer = DeeString_TryResizeWideBuffer(buffer, bufsize);
-	if likely(new_buffer)
-		buffer = new_buffer;
+	buffer = DeeString_TruncateWideBuffer(buffer, bufsize);
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(buffer);
@@ -1390,9 +1386,7 @@ again:
 		buffer  = new_buffer;
 		bufsize = new_bufsize;
 	}
-	new_buffer = DeeString_TryResizeWideBuffer(buffer, new_bufsize);
-	if likely(new_buffer)
-		buffer = new_buffer;
+	buffer = DeeString_TruncateWideBuffer(buffer, new_bufsize);
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(buffer);
@@ -2037,12 +2031,8 @@ user_get_name_and_domain(struct user_object *__restrict self,
 		wNameBufSize = (DWORD)wcsnlen(wNameBuffer, wNameBufSize);
 	if (wDomainBuffer[wDomainBufSize])
 		wDomainBufSize = (DWORD)wcsnlen(wDomainBuffer, wDomainBufSize);
-	wNewBuffer = DeeString_TryResizeWideBuffer(wNameBuffer, wNameBufSize);
-	if likely(wNewBuffer)
-		wNameBuffer = wNewBuffer;
-	wNewBuffer  = DeeString_TryResizeWideBuffer(wDomainBuffer, wDomainBufSize);
-	if likely(wNewBuffer)
-		wDomainBuffer = wNewBuffer;
+	wNameBuffer   = DeeString_TruncateWideBuffer(wNameBuffer, wNameBufSize);
+	wDomainBuffer = DeeString_TruncateWideBuffer(wDomainBuffer, wDomainBufSize);
 	*pname        = wNameBuffer;
 	*pdomain      = wDomainBuffer;
 	return 0;

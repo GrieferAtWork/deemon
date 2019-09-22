@@ -119,9 +119,7 @@ nt_GetTempPath(void) {
 		buffer  = new_buffer;
 		bufsize = error;
 	}
-	new_buffer = DeeString_TryResizeWideBuffer(buffer, error);
-	if likely(new_buffer)
-		buffer = new_buffer;
+	buffer = DeeString_TruncateWideBuffer(buffer, error);
 	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(buffer);

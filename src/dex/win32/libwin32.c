@@ -984,9 +984,7 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
-	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if likely(lpNewBuffer)
-		lpBuffer = lpNewBuffer;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1056,9 +1054,7 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
-	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if likely(lpNewBuffer)
-		lpBuffer = lpNewBuffer;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1404,9 +1400,7 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
-	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if likely(lpNewBuffer)
-		lpBuffer = lpNewBuffer;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1462,9 +1456,7 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
-	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if likely(lpNewBuffer)
-		lpBuffer = lpNewBuffer;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1518,9 +1510,7 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
-	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if likely(lpNewBuffer)
-		lpBuffer = lpNewBuffer;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1595,9 +1585,7 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
-	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if likely(lpNewBuffer)
-		lpBuffer = lpNewBuffer;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
@@ -1653,9 +1641,7 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
-	lpNewBuffer = DeeString_TryResizeWideBuffer(lpBuffer, dwError);
-	if likely(lpNewBuffer)
-		lpBuffer = lpNewBuffer;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
 	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 err_result:
 	DeeString_FreeWideBuffer(lpBuffer);
