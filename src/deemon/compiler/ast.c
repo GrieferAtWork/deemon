@@ -33,6 +33,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
+#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 

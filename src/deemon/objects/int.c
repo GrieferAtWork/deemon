@@ -42,6 +42,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 
@@ -88,11 +89,13 @@ intcache_clear(size_t max_clear) {
 		struct free_int *chain_end;
 		size_t total_free;
 		set = &free_ints[i];
+#ifndef CONFIG_NO_THREADS
 		while (!rwlock_trywrite(&set->fis_lock)) {
 			if (!set->fis_size)
 				goto next_set;
 			SCHED_YIELD();
 		}
+#endif  /* !CONFIG_NO_THREADS */
 		total_free = set->fis_size * (offsetof(DeeIntObject, ob_digit) +
 		                              i * sizeof(digit));
 		chain      = set->fis_head;
@@ -141,11 +144,13 @@ DeeInt_Free(DeeIntObject *__restrict self) {
 	if (n_digits < CONFIG_INT_CACHE_MAXCOUNT) {
 		struct free_int_set *set;
 		set = &free_ints[n_digits];
+#ifndef CONFIG_NO_THREADS
 		while (!rwlock_trywrite(&set->fis_lock)) {
-			if (set->fis_size >= CONFIG_INT_CACHE_MAXSIZE)
+			if (ATOMIC_READ(set->fis_size) >= CONFIG_INT_CACHE_MAXSIZE)
 				goto do_free;
 			SCHED_YIELD();
 		}
+#endif  /* !CONFIG_NO_THREADS */
 		COMPILER_READ_BARRIER();
 		if (set->fis_size < CONFIG_INT_CACHE_MAXSIZE) {
 			((struct free_int *)self)->fi_next = set->fis_head;
@@ -172,11 +177,13 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 	if (n_digits < CONFIG_INT_CACHE_MAXCOUNT) {
 		struct free_int_set *set;
 		set = &free_ints[n_digits];
+#ifndef CONFIG_NO_THREADS
 		while (!rwlock_trywrite(&set->fis_lock)) {
 			if (!set->fis_size)
 				goto do_alloc;
 			SCHED_YIELD();
 		}
+#endif  /* !CONFIG_NO_THREADS */
 		ASSERT((set->fis_size != 0) == (set->fis_head != NULL));
 		if (set->fis_size) {
 			result        = (DREF DeeIntObject *)set->fis_head;

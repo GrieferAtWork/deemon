@@ -26,6 +26,8 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/object.h>
 
+#include <assert.h>
+
 DECL_BEGIN
 
 INTDEF void DCALL ast_incwrite(struct ast *__restrict self);

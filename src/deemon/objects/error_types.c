@@ -36,6 +36,7 @@
 
 #include "../runtime/strings.h"
 
+#include <assert.h>
 #ifndef CONFIG_NO_STDLIB
 #include <stdlib.h> /* EXIT_FAILURE */
 #endif /* !CONFIG_NO_STDLIB */

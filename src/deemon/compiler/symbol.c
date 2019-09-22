@@ -37,6 +37,7 @@
 
 #include <hybrid/minmax.h>
 
+#include <assert.h>
 #include <stdint.h>
 
 DECL_BEGIN

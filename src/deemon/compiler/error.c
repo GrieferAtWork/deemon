@@ -38,6 +38,7 @@
 #include <deemon/traceback.h>
 #include <deemon/util/cache.h>
 
+#include <assert.h>
 #include <stdarg.h>
 
 DECL_BEGIN
