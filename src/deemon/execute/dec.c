@@ -1216,8 +1216,13 @@ set_none_result:
 	}	break;
 
 	/* Variable-length integers. */
-	case DTYPE_SLEB: result = DeeInt_NewSleb(&reader); break;
-	case DTYPE_ULEB: result = DeeInt_NewUleb(&reader); break;
+	case DTYPE_SLEB:
+		result = DeeInt_NewSleb(&reader);
+		break;
+
+	case DTYPE_ULEB:
+		result = DeeInt_NewUleb(&reader);
+		break;
 
 	/* A string that is apart of the string table. */
 	case DTYPE_STRING: {

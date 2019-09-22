@@ -1675,12 +1675,12 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ &string_buffer,
-	/* .tp_methods       = */string_methods,
-	/* .tp_getsets       = */string_getsets,
+	/* .tp_methods       = */ string_methods,
+	/* .tp_getsets       = */ string_getsets,
 	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */string_class_methods,
+	/* .tp_class_methods = */ string_class_methods,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */string_class_members
+	/* .tp_class_members = */ string_class_members
 };
 
 PRIVATE struct {

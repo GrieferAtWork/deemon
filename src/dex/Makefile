@@ -32,6 +32,18 @@ $(BIN_PATH)/lib/collections$(DLL): $(DEX_OBJECTS_collections) $(BIN_PATH)/deemon
 	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_collections) $(LIBS) $(DEX_LIBS)
 
 
+## hashlib
+DEX += hashlib
+DEX_SOURCES_hashlib += $(wildcard $(SRC_ROOT)/src/dex/hashlib/*.c)
+DEX_OBJECTS_hashlib = $(call dex_objects,hashlib,$(DEX_SOURCES_hashlib))
+-include $(foreach F,$(DEX_OBJECTS_hashlib),$(F:.o=.MF))
+$(BLD_PATH)/dex/hashlib/%.o: $(SRC_ROOT)/%.c
+	@mkdir -p $(dir $@)
+	$(DEX_CC) -MMD -MF $(@:.o=.MF) -c -o $@ $(CFLAGS) $(DEX_CFLAGS) $<
+$(BIN_PATH)/lib/hashlib$(DLL): $(DEX_OBJECTS_hashlib) $(BIN_PATH)/deemon$(EXE)
+	$(DEX_CC) -o $@ -L$(BIN_PATH) $(LDFLAGS) $(DEX_LDFLAGS) $(DEX_OBJECTS_hashlib) $(LIBS) $(DEX_LIBS)
+
+
 ### ctypes
 ifndef CONFIG_WITHOUT_DEX_CTYPES
 ifndef DEX_CTYPES_CC

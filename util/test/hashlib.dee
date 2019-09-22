@@ -1,0 +1,125 @@
+/* Copyright (c) 2019 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from hashlib;
+
+function check_crc(name: string, check: int) {
+	local res = hash(name, "123456789");
+	assert res == check, "Invalid hash for {!r}: {} != {}"
+		.format({ name, res.hex(), check.hex() });
+}
+
+check_crc("CRC-1", 0x1);
+check_crc("CRC-3/ROHC", 0x6);
+check_crc("CRC-4/INTERLAKEN", 0xb);
+check_crc("CRC-4/ITU", 0x7);
+check_crc("CRC-5/EPC", 0x00);
+check_crc("CRC-5/ITU", 0x07);
+check_crc("CRC-5/USB", 0x19);
+check_crc("CRC-6/CDMA2000-A", 0x0d);
+check_crc("CRC-6/CDMA2000-B", 0x3b);
+check_crc("CRC-6/DARC", 0x26);
+check_crc("CRC-6/ITU", 0x06);
+check_crc("CRC-7", 0x75);
+check_crc("CRC-7/ROHC", 0x53);
+check_crc("CRC-7/UMTS", 0x61);
+check_crc("CRC-8", 0xf4);
+check_crc("CRC-8/AUTOSAR", 0xdf);
+check_crc("CRC-8/CDMA2000", 0xda);
+check_crc("CRC-8/DARC", 0x15);
+check_crc("CRC-8/DVB-S2", 0xbc);
+check_crc("CRC-8/EBU", 0x97);
+check_crc("CRC-8/I-CODE", 0x7e);
+check_crc("CRC-8/ITU", 0xa1);
+check_crc("CRC-8/LTE", 0xea);
+check_crc("CRC-8/MAXIM", 0xa1);
+check_crc("CRC-8/OPENSAFETY", 0x3e);
+check_crc("CRC-8/ROHC", 0xd0);
+check_crc("CRC-8/SAE-J1850", 0x4b);
+check_crc("CRC-8/WCDMA", 0x25);
+check_crc("CRC-10", 0x199);
+check_crc("CRC-10/CDMA2000", 0x233);
+check_crc("CRC-11", 0x5a3);
+check_crc("CRC-11/UMTS", 0x061);
+check_crc("CRC-12/CDMA2000", 0xd4d);
+check_crc("CRC-12/DECT", 0xf5b);
+//TODO: check_crc("CRC-12/UMTS", 0xdaf);
+check_crc("CRC-13/BBC", 0x04fa);
+check_crc("CRC-14/DARC", 0x082d);
+check_crc("CRC-15", 0x059e);
+check_crc("CRC-15/MPT1327", 0x2566);
+check_crc("ARC", 0xbb3d);
+check_crc("CRC-16/AUG-CCITT", 0xe5cc);
+check_crc("CRC-16/BUYPASS", 0xfee8);
+check_crc("CRC-16/CCITT-FALSE", 0x29b1);
+check_crc("CRC-16/CDMA2000", 0x4c06);
+check_crc("CRC-16/CMS", 0xaee7);
+check_crc("CRC-16/DDS-110", 0x9ecf);
+check_crc("CRC-16/DECT-R", 0x007e);
+check_crc("CRC-16/DECT-X", 0x007f);
+check_crc("CRC-16/DNP", 0xea82);
+check_crc("CRC-16/EN-13757", 0xc2b7);
+check_crc("CRC-16/GENIBUS", 0xd64e);
+check_crc("CRC-16/LJ1200", 0xbdf4);
+check_crc("CRC-16/MAXIM", 0x44c2);
+check_crc("CRC-16/MCRF4XX", 0x6f91);
+check_crc("CRC-16/OPENSAFETY-A", 0x5d38);
+check_crc("CRC-16/OPENSAFETY-B", 0x20fe);
+check_crc("CRC-16/PROFIBUS", 0xa819);
+check_crc("CRC-16/RIELLO", 0x63d0);
+check_crc("CRC-16/T10-DIF", 0xd0db);
+check_crc("CRC-16/TELEDISK", 0x0fb3);
+check_crc("CRC-16/TMS37157", 0x26b1);
+check_crc("CRC-16/USB", 0xb4c8);
+check_crc("CRC-A", 0xbf05);
+check_crc("KERMIT", 0x2189);
+check_crc("MODBUS", 0x4b37);
+check_crc("X-25", 0x906e);
+check_crc("XMODEM", 0x31c3);
+check_crc("CRC-24", 0x21cf02);
+check_crc("CRC-24/BLE", 0xd39857);
+//check_crc("CRC-24/BLE", 0xc25a56); // that's not the checksum...
+check_crc("CRC-24/FLEXRAY-A", 0x7979bd);
+check_crc("CRC-24/FLEXRAY-B", 0x1f23b8);
+check_crc("CRC-24/INTERLAKEN", 0xb4f3e6);
+check_crc("CRC-24/LTE-A", 0xcde703);
+check_crc("CRC-24/LTE-B", 0x23ef52);
+check_crc("CRC-30/CDMA", 0x04c34abf);
+check_crc("CRC-31/PHILIPS", 0x0ce9e46c);
+check_crc("CRC-32", 0xcbf43926);
+check_crc("CRC-32/AUTOSAR", 0x1697d06a);
+check_crc("CRC-32/BZIP2", 0xfc891918);
+check_crc("CRC-32C", 0xe3069283);
+check_crc("CRC-32D", 0x87315576);
+check_crc("CRC-32/MPEG-2", 0x0376e6e7);
+check_crc("CRC-32/POSIX", 0x765e7680);
+check_crc("CRC-32Q", 0x3010bf7f);
+check_crc("JAMCRC", 0x340bc6d9);
+check_crc("XFER", 0xbd0be338);
+
+check_crc("CRC-40/GSM", 0xd4164fc646);
+check_crc("CRC-64", 0x6c40df5f0b497347);
+check_crc("CRC-64/WE", 0x62ec59e3f1a4f00a);
+check_crc("CRC-64/XZ", 0x995dc9bbdf1939fa);
+//check_crc("CRC-82/DARC", 0x09ea83f625023801fd612ui128); // that's future's music...
+
+check_crc("CRC-64/JONES", 0xCAA717168609F281);
+check_crc("CRC-64/ECMA", 0x2b9c7ee4e2780c8a);
+check_crc("CRC-64/ISO", 0x46a5a9388a5beffe);

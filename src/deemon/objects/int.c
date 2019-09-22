@@ -284,7 +284,6 @@ DeeInt_NewSleb(uint8_t **__restrict preader) {
 					goto done2;
 				}
 				/* Simple case: unused. */
-				++dst;
 				break;
 			}
 			/* Less than one digit. */
@@ -351,7 +350,6 @@ DeeInt_NewUleb(uint8_t **__restrict preader) {
 					goto done2;
 				}
 				/* Simple case: unused. */
-				++dst;
 				break;
 			}
 			/* Less than one digit. */

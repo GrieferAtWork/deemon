@@ -1,0 +1,102 @@
+/* Copyright (c) 2019 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import hashlib;
+
+
+global class crc_algorithm {
+
+	private member m_name: string;
+
+	this(name: string) {
+		m_name = name;
+	}
+
+	@@Returns the actual name of the crc (same as returned by crc_algorithm.name)
+	public operator str(): string {
+		return m_name;
+	}
+
+	@@The internal name of this crc crc_algorithm.
+	public property name: string = {
+		get(): string {
+			return m_name;
+		}
+	}
+
+	@@An iterable object listing all name aliases for this crc_algorithm
+	public property alias: {string...} = {
+		get(): {string...} {
+			/* TODO */
+			return none;
+		}
+	}
+
+	static function enum(): {crc_algorithm...} {
+		/* TODO */
+		return none;
+	}
+
+}
+
+
+global class crc_hasher {
+
+	private member m_name: string;
+	private member m_result: int;
+
+	this(algo: string | crc_algorithm) {
+		if (algo is crc_algorithm)
+			algo = algo.name;
+		m_name = algo;
+	}
+
+	@@Adds additional data to the crc generation process.
+	@@How data is split does not matter for the crc result.
+	@@Only order and content of packages matters
+	public function add(data: Bytes | string, s: int = -1) {
+		if (s >= 0)
+			data = data[:s];
+		if (m_result is bound)
+			m_result = hashlib.hash(m_name, data, m_result);
+		else {
+			m_result = hashlib.hash(m_name, data);
+		}
+	}
+
+	public property result: int = {
+		get(): int {
+			if (m_result !is bound)
+				m_result = hashlib.hash(m_name, none);
+			return m_result;
+		}
+	}
+
+	@@The crc_algorithm that is used by this hasher
+	public property algorithm: crc_algorithm = {
+		get(): crc_algorithm {
+			return crc_algorithm(m_name);
+		}
+	}
+
+}
+
+global crc = hashlib.hash;
+
