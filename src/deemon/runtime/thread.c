@@ -209,6 +209,12 @@ PRIVATE HANDLE DCALL os_getcurrenthread(void) {
 #define os_gettid() 0
 #endif /* !os_gettid */
 
+#if defined(CONFIG_THREADS_PTHREAD) && defined(__pthread_gettid_np_defined)
+#define os_gettid_with_thread(thread) pthread_gettid_np(thread)
+#else /* CONFIG_THREADS_PTHREAD && __pthread_gettid_np_defined */
+#define os_gettid_with_thread(thread) os_gettid()
+#endif /* !CONFIG_THREADS_PTHREAD || !__pthread_gettid_np_defined */
+
 
 
 #ifndef CONFIG_NO_THREADID
@@ -887,7 +893,7 @@ again:
 	result->t_thread = os_getcurrenthread();
 #ifndef CONFIG_NO_THREADID
 	DBG_ALIGNMENT_DISABLE();
-	result->t_threadid = os_gettid();
+	result->t_threadid = os_gettid_with_thread(result->t_thread);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* !CONFIG_NO_THREADID */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
@@ -1030,7 +1036,7 @@ PRIVATE void DCALL DeeThread_InitMain(void) {
 	DeeThread_Main.t_thread = os_getcurrenthread();
 #ifndef CONFIG_NO_THREADID
 	DBG_ALIGNMENT_DISABLE();
-	DeeThread_Main.t_threadid = os_gettid();
+	DeeThread_Main.t_threadid = os_gettid_with_thread(DeeThread_Main.t_thread);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* !CONFIG_NO_THREADID */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
@@ -1233,7 +1239,7 @@ PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(
 	DeeThreadObject *result;
 #ifdef THREAD_SELF_TLS_USE_TLS_ALLOC
 	ASSERT(thread_self_tls != TLS_OUT_OF_INDEXES);
-#endif
+#endif /* THREAD_SELF_TLS_USE_TLS_ALLOC */
 	DBG_ALIGNMENT_DISABLE();
 	result = (DeeThreadObject *)thread_tls_get();
 	DBG_ALIGNMENT_ENABLE();
@@ -1246,11 +1252,11 @@ PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(
 #ifdef CONFIG_HOST_WINDOWS
 		fprintf(stderr, "Failed to lazily allocate the thread-self descriptor: %lu\n",
 		        (unsigned long)GetLastError());
-#else
+#else /* CONFIG_HOST_WINDOWS */
 		fprintf(stderr, "Failed to lazily allocate the thread-self descriptor: %d\n",
 		        (int)errno);
-#endif
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !CONFIG_NO_STDIO */
 		abort();
 	}
 	/* Save the generated thread object in the TLS slot. */
@@ -1404,7 +1410,7 @@ err:
 		Dee_Decref(keyboard_interrupt);
 		goto err;
 	}
-#endif
+#endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 	return 0;
 }
 
@@ -1639,9 +1645,8 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		DBG_ALIGNMENT_DISABLE();
 		error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to start thread %k", self);
-		return -1;
+		return DeeError_SysThrowf(&DeeError_SystemError, error,
+		                          "Failed to start thread %k", self);
 	}
 #elif defined(CONFIG_THREADS_PTHREAD)
 	{
@@ -1675,9 +1680,8 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 			/* Drop the reference that never came to be... */
 			del_running_thread(me);
 			Dee_DecrefNokill(self);
-			DeeError_SysThrowf(&DeeError_SystemError, error,
-			                   "Failed to start thread %k", self);
-			return -1;
+			return DeeError_SysThrowf(&DeeError_SystemError, error,
+			                          "Failed to start thread %k", self);
 		}
 	}
 #endif
@@ -1884,17 +1888,15 @@ DeeThread_Detach(/*Thread*/ DeeObject *__restrict self) {
 	if (!(me->t_state & (THREAD_STATE_STARTED | THREAD_STATE_TERMINATED))) {
 		/* Thread was never started. */
 		ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
-		DeeError_Throwf(&DeeError_ValueError,
-		                "Cannot detach thread %k that hasn't been started",
-		                self);
-		return -1;
+		return DeeError_Throwf(&DeeError_ValueError,
+		                       "Cannot detach thread %k that hasn't been started",
+		                       self);
 	}
 	if (me->t_state & THREAD_STATE_EXTERNAL) {
 		ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
-		DeeError_Throwf(&DeeError_ValueError,
-		                "Cannot detach external thread %k",
-		                self);
-		return -1;
+		return DeeError_Throwf(&DeeError_ValueError,
+		                       "Cannot detach external thread %k",
+		                       self);
 	}
 	if (me->t_state & THREAD_STATE_DETACHED) {
 		/* Thread was already detached. */
@@ -2231,16 +2233,14 @@ DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
 	ASSERT(pthreadid);
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
 #if defined(CONFIG_NO_THREADID_INTERNAL) || defined(CONFIG_NO_THREADID)
-	DeeError_Throwf(&DeeError_SystemError,
-	                "Cannot determine id of thread %k",
-	                self);
-	return -1;
+	return DeeError_Throwf(&DeeError_SystemError,
+	                       "Cannot determine id of thread %k",
+	                       self);
 #else
 	if unlikely(!(((DeeThreadObject *)self)->t_state & THREAD_STATE_STARTED)) {
-		DeeError_Throwf(&DeeError_ValueError,
-		                "Thread %k has no id because it wasn't started",
-		                self);
-		return -1;
+		return DeeError_Throwf(&DeeError_ValueError,
+		                       "Thread %k has no id because it wasn't started",
+		                       self);
 	}
 	*pthreadid = ((DeeThreadObject *)self)->t_threadid;
 	return 0;
@@ -2434,7 +2434,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 		 *       anything other than to cause an error when attempts
 		 *       are made to join the thread never-the-less. */
 		CloseHandle(self->t_thread);
-#endif
+#endif /* CONFIG_THREADS_WINDOWS */
 #ifdef CONFIG_THREADS_PTHREAD
 		/* detach the thread descriptor. */
 		if (!(self->t_state & THREAD_STATE_EXTERNAL)) {
@@ -2605,7 +2605,7 @@ thread_ctor(DeeThreadObject *__restrict self,
 		if (DeeNone_Check(self->t_threadargs))
 			self->t_threadargs = (DREF struct tuple_object *)Dee_EmptyTuple;
 		else {
-			/* Make sure that the callaback arguments are a tuple. */
+			/* Make sure that the callback arguments are a tuple. */
 			if (DeeObject_AssertTypeExact((DeeObject *)self->t_threadargs,
 			                              &DeeTuple_Type))
 				goto err_main;
@@ -2642,6 +2642,7 @@ err:
 }
 
 #else /* !CONFIG_NO_THREADS */
+
 PUBLIC void DCALL DeeThread_Fini(void) {
 	ASSERT(!DeeThread_Main.t_deepassoc.da_used);
 	if (DeeThread_Main.t_deepassoc.da_list != empty_deep_assoc) {
@@ -3124,7 +3125,7 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 	(void)self;
 	err_no_thread_api();
 	return NULL;
-#else
+#else /* CONFIG_NO_THREADS */
 	DREF DeeObject *result;
 	while (ATOMIC_FETCHOR(self->t_state, THREAD_STATE_STARTING) &
 	       THREAD_STATE_STARTING)
@@ -3136,7 +3137,7 @@ thread_callback_get(DeeThreadObject *__restrict self) {
 	if (!result)
 		result = DeeObject_GetAttr((DeeObject *)self, &str_run);
 	return result;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 #ifndef CONFIG_NO_THREADS
@@ -3147,7 +3148,7 @@ err_cannot_set_thread_subclass_callback(DeeThreadObject *__restrict self,
 	                       "Cannot set the %s of %k being a subclass %k of thread",
 	                       attr_name, self, Dee_TYPE(self));
 }
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 PRIVATE int DCALL
 thread_callback_set(DeeThreadObject *__restrict self,
@@ -3156,7 +3157,7 @@ thread_callback_set(DeeThreadObject *__restrict self,
 	(void)self;
 	(void)value;
 	return err_no_thread_api();
-#else
+#else /* CONFIG_NO_THREADS */
 	DREF DeeObject *old_callback;
 	uint16_t state;
 	if (!DeeThread_CheckExact(self))
@@ -3180,7 +3181,7 @@ restart:
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 	Dee_XDecref(old_callback);
 	return 0;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3193,7 +3194,7 @@ thread_callargs_get(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	(void)self;
 	return err_no_thread_api();
-#else
+#else /* CONFIG_NO_THREADS */
 	DREF DeeObject *result;
 	while (ATOMIC_FETCHOR(self->t_state, THREAD_STATE_STARTING) &
 	       THREAD_STATE_STARTING)
@@ -3202,7 +3203,7 @@ thread_callargs_get(DeeThreadObject *__restrict self) {
 	Dee_Incref(result);
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 	return result;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3212,7 +3213,7 @@ thread_callargs_set(DeeThreadObject *__restrict self,
 	(void)self;
 	(void)value;
 	return err_no_thread_api();
-#else
+#else /* CONFIG_NO_THREADS */
 	DREF DeeObject *old_callargs;
 	uint16_t state;
 	/* Allow `none' to be used in place to an empty tuple. */
@@ -3244,7 +3245,7 @@ restart:
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 	Dee_Decref(old_callargs);
 	return 0;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -3257,7 +3258,7 @@ thread_result_get(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	err_no_thread_api();
 	return NULL;
-#else
+#else /* CONFIG_NO_THREADS */
 	uint16_t state;
 	DREF DeeObject *result;
 restart:
@@ -3280,7 +3281,7 @@ restart:
 	Dee_XIncref(result);
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 	return result;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 }
 
 
@@ -3327,7 +3328,7 @@ thread_crashinfo(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	(void)self;
 	err_no_thread_api();
-#else
+#else /* CONFIG_NO_THREADS */
 	uint16_t state, i, count;
 	DREF DeeTupleObject *result;
 restart:
@@ -3383,18 +3384,19 @@ restart:
 	}
 	ATOMIC_FETCHAND(self->t_state, ~THREAD_STATE_STARTING);
 	return (DREF DeeObject *)result;
-err_start_over: {
-	bool can_start_over;
-	can_start_over = Dee_CollectMemory(offsetof(DeeTupleObject, t_elem) +
-	                                   2 * sizeof(DREF DeeObject *));
-	while (i--)
-		Dee_DecrefDokill(result->t_elem[i]);
-	DeeObject_Free(result);
-	if (can_start_over)
-		goto restart;
-}
+err_start_over:
+	{
+		bool can_start_over;
+		can_start_over = Dee_CollectMemory(offsetof(DeeTupleObject, t_elem) +
+		                                   2 * sizeof(DREF DeeObject *));
+		while (i--)
+			Dee_DecrefDokill(result->t_elem[i]);
+		DeeObject_Free(result);
+		if (can_start_over)
+			goto restart;
+	}
 err:
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	return NULL;
 }
 
@@ -3580,7 +3582,7 @@ DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 PRIVATE struct type_gc thread_gc = {
 	/* .tp_clear  = */ (void (DCALL *)(DeeObject *__restrict))&thread_clear
 };
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 
 PUBLIC DeeTypeObject DeeThread_Type = {
@@ -3867,7 +3869,7 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 err:
 	return false;
 }
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 
 
@@ -3995,7 +3997,7 @@ err_free_result:
 err:
 		return NULL;
 	}
-#endif
+#endif /* !CONFIG_NO_THREADS */
 	return (DREF DeeObject *)DeeTraceback_New((DeeThreadObject *)self);
 }
 
