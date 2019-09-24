@@ -970,24 +970,29 @@ again:
 			                                      TRUE);
 			DBG_ALIGNMENT_ENABLE();
 			switch (wait_state) {
+
 			case WAIT_IO_COMPLETION:
 				/* Interrupt. */
 				ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
 				goto again;
+
 			case WAIT_TIMEOUT:
 				ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
 				return 1; /* Timeout */
+
 			case WAIT_FAILED:
 				/* Error */
 				ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
 				DeeError_SysThrowf(&DeeError_SystemError, GetLastError(),
 				                   "Failed to join process %k", self);
 				goto err;
+
 #if 0
 			case WAIT_ABANDONED_0:
 			case WAIT_OBJECT_0:
 				break;
 #endif
+
 			default: break;
 			}
 		}
@@ -1305,6 +1310,8 @@ PRIVATE struct type_method process_methods[] = {
 	      "@return true: The :process has been terminated\n"
 	      "@return false: The :process was already terminated\n"
 	      "Terminate @this process with the given @exitcode") },
+	/* TODO: Maybe get rid of some of these and replace them with getsets?
+	 *       -> In general, we should try to match the api from deemon.Thread */
 	{ "started", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_started,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this process was started") },

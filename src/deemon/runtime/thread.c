@@ -169,7 +169,7 @@
 #ifdef _WIN32_WCE
 #undef GetProcAddress
 #define GetProcAddress GetProcAddressA
-#endif
+#endif /* _WIN32_WCE */
 
 DECL_BEGIN
 
