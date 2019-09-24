@@ -21,8 +21,26 @@
 
 #include <deemon/api.h>
 #include <deemon/string.h>
+#include <stddef.h>
 
 DECL_BEGIN
+
+#ifdef CONFIG_HAVE_UNICODE_H
+
+PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct unitraits *
+(DCALL DeeUni_Descriptor)(uint32_t ch) {
+	return (struct unitraits *)__unicode_descriptor(ch);
+}
+
+PUBLIC size_t
+(DCALL DeeUni_ToFolded)(uint32_t ch,
+                        uint32_t buf[UNICODE_FOLDED_MAX]) {
+	return (size_t)(unicode_fold((__CHAR32_TYPE__)ch,
+	                             (__CHAR32_TYPE__ *)buf) -
+	                (__CHAR32_TYPE__ *)buf);
+}
+
+#else /* CONFIG_HAVE_UNICODE_H */
 
 #ifndef __INTELLISENSE__
 #include "unicode_db.h"
@@ -33,14 +51,14 @@ DECL_BEGIN
 
 static struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
 
-PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct unitraits *DCALL
-DeeUni_Descriptor(uint32_t ch) {
+PUBLIC WUNUSED ATTR_RETNONNULL ATTR_CONST struct unitraits *
+(DCALL DeeUni_Descriptor)(uint32_t ch) {
 	if likely(ch < UNICODE_COUNT_VALID)
 		return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);
 	return (struct unitraits *)&default_traits;
 }
 
-PUBLIC ATTR_PURE size_t
+PUBLIC size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
                         uint32_t buf[UNICODE_FOLDED_MAX]) {
 	struct unitraits *trt;
@@ -76,7 +94,7 @@ PUBLIC ATTR_PURE size_t
 #define UNICODE_FSYMCONT 0x0800
 #endif /* !UNICODE_FPRINT */
 
-PUBLIC uniflag_t const DeeAscii_Flags[256] = {
+PUBLIC uniflag_t const _DeeAscii_Flags[256] = {
 /*[[[deemon
 import string from deemon;
 for (local i: [:256]) {
@@ -84,8 +102,8 @@ for (local i: [:256]) {
 	local flags = 0;
 	// This code right here is the definition of a logic loop:
 	//    - This code uses the deemon unicode API to determine character traits
-	//    - The deemon unicode API uses `DeeAscii_Flags' to determine those traits
-	//    - This code is what generates `DeeAscii_Flags'
+	//    - The deemon unicode API uses `_DeeAscii_Flags' to determine those traits
+	//    - This code is what generates `_DeeAscii_Flags'
 	// -> If this list ever becomes corrupt and deemon is re-built, you must find
 	//   `#define DeeUni_Flags(ch) ...' in <deemon/string.h>, and temporarily replace
 	//    it with `#define DeeUni_Flags(ch) (DeeUni_Descriptor(ch)->ut_flags)',
@@ -131,6 +149,8 @@ for (local i: [:256]) {
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 //[[[end]]]
 };
+
+#endif /* !CONFIG_HAVE_UNICODE_H */
 
 DECL_END
 

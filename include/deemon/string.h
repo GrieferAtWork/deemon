@@ -33,6 +33,27 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifndef CONFIG_HAVE_UNICODE_H
+#if !defined(CONFIG_NO_UNICODE_H) && defined(__KOS__) && (__KOS_VERSION__ >= 400) && \
+    (defined(__NO_has_include) || __has_include(<unicode.h>))
+#define CONFIG_HAVE_UNICODE_H 1
+#endif
+#endif /* !CONFIG_HAVE_UNICODE_H */
+
+#ifdef CONFIG_HAVE_UNICODE_H
+#include <unicode.h>
+#if !defined(__utf8_seqlen_defined) || !defined(__UNICODE_FPRINT) || !defined(__UNICODE_FALPHA) || \
+    !defined(__UNICODE_FSPACE) || !defined(__UNICODE_FLF) || !defined(__UNICODE_FLOWER) || \
+    !defined(__UNICODE_FUPPER) || !defined(__UNICODE_FTITLE) || !defined(__UNICODE_FCNTRL) || \
+    !defined(__UNICODE_FDIGIT) || !defined(__UNICODE_FDECIMAL) || !defined(__UNICODE_FSYMSTRT) || \
+    !defined(__UNICODE_FSYMCONT) || !defined(__CRT_HAVE___unicode_descriptor) || !defined(__CRT_HAVE_unicode_fold) || \
+    !defined(UNICODE_FOLDED_MAX) || !defined(__unicode_flags)
+#undef CONFIG_HAVE_UNICODE_H
+#endif /* !... */
+#endif /* CONFIG_HAVE_UNICODE_H */
+
+
+
 DECL_BEGIN
 
 /* Explanation of WIDTH-STRINGS vs. UTF-STRINGS:
@@ -1739,7 +1760,20 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch);
 
 
 
-
+#ifdef CONFIG_HAVE_UNICODE_H
+#define Dee_UNICODE_FPRINT   __UNICODE_FPRINT
+#define Dee_UNICODE_FALPHA   __UNICODE_FALPHA
+#define Dee_UNICODE_FSPACE   __UNICODE_FSPACE
+#define Dee_UNICODE_FLF      __UNICODE_FLF
+#define Dee_UNICODE_FLOWER   __UNICODE_FLOWER
+#define Dee_UNICODE_FUPPER   __UNICODE_FUPPER
+#define Dee_UNICODE_FTITLE   __UNICODE_FTITLE
+#define Dee_UNICODE_FCNTRL   __UNICODE_FCNTRL
+#define Dee_UNICODE_FDIGIT   __UNICODE_FDIGIT
+#define Dee_UNICODE_FDECIMAL __UNICODE_FDECIMAL
+#define Dee_UNICODE_FSYMSTRT __UNICODE_FSYMSTRT
+#define Dee_UNICODE_FSYMCONT __UNICODE_FSYMCONT
+#else /* CONFIG_HAVE_UNICODE_H */
 #define Dee_UNICODE_FPRINT   0x0001 /* The character is printable, or SPC (` '). */
 #define Dee_UNICODE_FALPHA   0x0002 /* The character is alphabetic. */
 #define Dee_UNICODE_FSPACE   0x0004 /* The character is a space-character. */
@@ -1756,6 +1790,7 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch);
 /*      Dee_UNICODE_F        0x2000 */
 /*      Dee_UNICODE_F        0x4000 */
 /*      Dee_UNICODE_F        0x8000 */
+#endif /* !CONFIG_HAVE_UNICODE_H */
 typedef uint16_t Dee_uniflag_t;
 
 
@@ -1767,15 +1802,66 @@ typedef uint16_t Dee_uniflag_t;
  *    time, meaning that when working with 8-bit characters,
  *    no call to `DeeUni_Descriptor()' needs to be assembled.
  * NOTE: Technically, this should be called `DeeLatin1_Flags'... */
-DDATDEF Dee_uniflag_t const DeeAscii_Flags[256];
+#ifndef CONFIG_HAVE_UNICODE_H
+DDATDEF Dee_uniflag_t const _DeeAscii_Flags[256];
+#endif /* !CONFIG_HAVE_UNICODE_H */
 
-#define DeeAscii_IsUpper(ch) (DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_FUPPER)
-#define DeeAscii_IsLower(ch) (DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_FLOWER)
+#ifdef CONFIG_HAVE_UNICODE_H
+#ifdef __unicode_asciiisupper
+#define DeeAscii_IsUpper __unicode_asciiisupper
+#endif /* __unicode_asciiisupper */
+#ifdef __unicode_asciiislower
+#define DeeAscii_IsLower __unicode_asciiislower
+#endif /* __unicode_asciiislower */
+#ifdef __unicode_asciitolower
+#define DeeAscii_ToLower __unicode_asciitolower
+#endif /* __unicode_asciitolower */
+#ifdef __unicode_asciitoupper
+#define DeeAscii_ToUpper __unicode_asciitoupper
+#endif /* __unicode_asciitoupper */
+#ifdef __unicode_asciitotitle
+#define DeeAscii_ToTitle __unicode_asciitotitle
+#endif /* __unicode_asciitotitle */
+#ifdef __unicode_asciiasdigit
+#define DeeAscii_AsDigit __unicode_asciiasdigit
+#endif /* __unicode_asciiasdigit */
+#else /* CONFIG_HAVE_UNICODE_H */
+#define DeeAscii_IsUpper(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_FUPPER)
+#define DeeAscii_IsLower(ch) (_DeeAscii_Flags[(uint8_t)(ch)] & Dee_UNICODE_FLOWER)
+#endif /* !CONFIG_HAVE_UNICODE_H */
+
+#ifndef DeeAscii_IsUpper
+#define DeeAscii_IsUpper(ch) ((uint8_t)(ch) >= 0x41 && (uint8_t)(ch) <= 0x5a)
+#endif /* !DeeAscii_IsUpper */
+#ifndef DeeAscii_IsLower
+#define DeeAscii_IsLower(ch) ((uint8_t)(ch) >= 0x61 && (uint8_t)(ch) <= 0x7a)
+#endif /* !DeeAscii_IsLower */
+#ifndef DeeAscii_ToLower
 #define DeeAscii_ToLower(ch) (DeeAscii_IsUpper(ch) ? (uint8_t)(ch)+0x20 : (uint8_t)(ch))
+#endif /* !DeeAscii_ToLower */
+#ifndef DeeAscii_ToUpper
 #define DeeAscii_ToUpper(ch) (DeeAscii_IsLower(ch) ? (uint8_t)(ch)-0x20 : (uint8_t)(ch))
+#endif /* !DeeAscii_ToUpper */
+#ifndef DeeAscii_ToTitle
 #define DeeAscii_ToTitle(ch) (DeeAscii_IsLower(ch) ? (uint8_t)(ch)-0x20 : (uint8_t)(ch))
+#endif /* !DeeAscii_ToTitle */
+#ifndef DeeAscii_AsDigit
 #define DeeAscii_AsDigit(ch) ((uint8_t)(ch)-0x30)
+#endif /* !DeeAscii_AsDigit */
 
+#ifdef CONFIG_HAVE_UNICODE_H
+#ifdef DEE_SOURCE
+#undef Dee_unitraits
+#define unitraits      __unitraits
+#endif /* DEE_SOURCE */
+#define Dee_unitraits  __unitraits
+#define ut_flags       __ut_flags
+#define ut_digit       __ut_digit
+#define ut_fold        __ut_fold 
+#define ut_lower       __ut_lower
+#define ut_upper       __ut_upper
+#define ut_title       __ut_title
+#else /* CONFIG_HAVE_UNICODE_H */
 struct Dee_unitraits {
 	Dee_uniflag_t const ut_flags; /* Character flags (Set of `UNICODE_F*') */
 	uint8_t       const ut_digit; /* Digit/decimal value (`DeeUni_IsNumeric'), or 0. */
@@ -1784,46 +1870,70 @@ struct Dee_unitraits {
 	int32_t       const ut_upper; /* Delta added to the character to convert it to uppercase, or 0. */
 	int32_t       const ut_title; /* Delta added to the character to convert it to titlecase, or 0. */
 };
+#endif /* !CONFIG_HAVE_UNICODE_H */
 
 /* Unicode character traits database access. */
+#ifdef CONFIG_HAVE_UNICODE_H
+#define DeeUni_Descriptor(ch) __unicode_descriptor((__CHAR32_TYPE__)(ch))
+#else /* CONFIG_HAVE_UNICODE_H */
 DFUNDEF WUNUSED ATTR_RETNONNULL ATTR_CONST struct Dee_unitraits *
 (DCALL DeeUni_Descriptor)(uint32_t ch);
+#endif /* !CONFIG_HAVE_UNICODE_H */
 
 /* Max number of characters which may be generated
  * by case folding a single unicode character. */
+#ifdef CONFIG_HAVE_UNICODE_H
+#define Dee_UNICODE_FOLDED_MAX UNICODE_FOLDED_MAX
+#else /* CONFIG_HAVE_UNICODE_H */
 #define Dee_UNICODE_FOLDED_MAX 3
+#endif /* !CONFIG_HAVE_UNICODE_H */
 
 /* case-fold the given unicode character `ch', and
  * return the number of resulting folded characters.
  * @assume(return >= 1 && return <= Dee_UNICODE_FOLDED_MAX); */
-DFUNDEF ATTR_PURE size_t
+#ifdef CONFIG_HAVE_UNICODE_H
+#define DeeUni_ToFolded(ch, buf) \
+	((size_t)(unicode_fold((__CHAR32_TYPE__)(ch), (__CHAR32_TYPE__ *)(buf)) - (__CHAR32_TYPE__ *)(buf)))
+#else /* CONFIG_HAVE_UNICODE_H */
+DFUNDEF size_t
 (DCALL DeeUni_ToFolded)(uint32_t ch,
                         uint32_t buf[Dee_UNICODE_FOLDED_MAX]);
+#endif /* !CONFIG_HAVE_UNICODE_H */
 
 
-#if 0
+#ifdef CONFIG_HAVE_UNICODE_H
+#define DeeUni_Flags(ch) __unicode_flags(ch)
+#elif 0
 #define DeeUni_Flags(ch) (DeeUni_Descriptor(ch)->ut_flags)
 #elif !defined(__NO_builtin_choose_expr)
-#define DeeUni_Flags(ch) __builtin_choose_expr(sizeof(ch) == 1, DeeAscii_Flags[(uint8_t)(ch)], DeeUni_Descriptor(ch)->ut_flags)
+#define DeeUni_Flags(ch) __builtin_choose_expr(sizeof(ch) == 1, _DeeAscii_Flags[(uint8_t)(ch)], DeeUni_Descriptor(ch)->ut_flags)
 #else
-#define DeeUni_Flags(ch) (sizeof(ch) == 1 ? DeeAscii_Flags[(uint8_t)(ch)] : DeeUni_Descriptor(ch)->ut_flags)
+#define DeeUni_Flags(ch) (sizeof(ch) == 1 ? _DeeAscii_Flags[(uint8_t)(ch)] : DeeUni_Descriptor(ch)->ut_flags)
 #endif
 
 /* ctype-style character conversion. */
-#ifndef __NO_builtin_choose_expr
-#define DeeUni_ToLower(ch)      __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)DeeAscii_ToLower(ch), (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_lower))
-#define DeeUni_ToUpper(ch)      __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)DeeAscii_ToUpper(ch), (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_upper))
-#define DeeUni_ToTitle(ch)      __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)DeeAscii_ToTitle(ch), (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_title))
-#define DeeUni_AsDigit(ch)      __builtin_choose_expr(sizeof(ch) == 1, DeeAscii_AsDigit(ch), DeeUni_Descriptor(ch)->ut_digit)
-#define DeeUni_SwapCase(ch)     __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)_DeeUni_SwapCase8((uint8_t)(ch)), _DeeUni_SwapCase(ch))
+#ifdef CONFIG_HAVE_UNICODE_H
+#define DeeUni_ToLower  unicode_tolower
+#define DeeUni_ToUpper  unicode_toupper
+#define DeeUni_ToTitle  unicode_totitle
+#define DeeUni_AsDigit  unicode_asdigit
+#elif !defined(__NO_builtin_choose_expr)
+#define DeeUni_ToLower(ch) __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)DeeAscii_ToLower(ch), (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_lower))
+#define DeeUni_ToUpper(ch) __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)DeeAscii_ToUpper(ch), (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_upper))
+#define DeeUni_ToTitle(ch) __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)DeeAscii_ToTitle(ch), (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_title))
+#define DeeUni_AsDigit(ch) __builtin_choose_expr(sizeof(ch) == 1, DeeAscii_AsDigit(ch), DeeUni_Descriptor(ch)->ut_digit)
 #else /* !__NO_builtin_choose_expr */
-#define DeeUni_ToLower(ch)      (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToLower(ch) : (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_lower))
-#define DeeUni_ToUpper(ch)      (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToUpper(ch) : (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_upper))
-#define DeeUni_ToTitle(ch)      (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToTitle(ch) : (uint32_t)((ch)+DeeUni_Descriptor(ch)->ut_title))
-#define DeeUni_AsDigit(ch)      (sizeof(ch) == 1 ? DeeAscii_AsDigit(ch) : DeeUni_Descriptor(ch)->ut_digit)
-#define DeeUni_SwapCase(ch)     (sizeof(ch) == 1 ? (uint32_t)_DeeUni_SwapCase8((uint8_t)(ch)) : _DeeUni_SwapCase(ch))
+#define DeeUni_ToLower(ch) (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToLower(ch) : (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_lower))
+#define DeeUni_ToUpper(ch) (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToUpper(ch) : (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_upper))
+#define DeeUni_ToTitle(ch) (sizeof(ch) == 1 ? (uint32_t)DeeAscii_ToTitle(ch) : (uint32_t)((ch) + DeeUni_Descriptor(ch)->ut_title))
+#define DeeUni_AsDigit(ch) (sizeof(ch) == 1 ? DeeAscii_AsDigit(ch) : DeeUni_Descriptor(ch)->ut_digit)
 #endif /* __NO_builtin_choose_expr */
-#define DeeUni_Convert(ch, kind) ((uint32_t)((ch)+*(int32_t *)((uintptr_t)DeeUni_Descriptor(ch)+(kind))))
+#ifndef __NO_builtin_choose_expr
+#define DeeUni_SwapCase(ch) __builtin_choose_expr(sizeof(ch) == 1, (uint32_t)_DeeUni_SwapCase8((uint8_t)(ch)), _DeeUni_SwapCase(ch))
+#else /* !__NO_builtin_choose_expr */
+#define DeeUni_SwapCase(ch) (sizeof(ch) == 1 ? (uint32_t)_DeeUni_SwapCase8((uint8_t)(ch)) : _DeeUni_SwapCase(ch))
+#endif /* __NO_builtin_choose_expr */
+#define DeeUni_Convert(ch, kind) ((uint32_t)((ch) + *(int32_t *)((uintptr_t)DeeUni_Descriptor(ch) + (kind))))
 #define Dee_UNICODE_CONVERT_LOWER offsetof(struct Dee_unitraits, ut_lower)
 #define Dee_UNICODE_CONVERT_UPPER offsetof(struct Dee_unitraits, ut_upper)
 #define Dee_UNICODE_CONVERT_TITLE offsetof(struct Dee_unitraits, ut_title)
@@ -1844,20 +1954,64 @@ FORCELOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 }
 
 /* ctype-style character traits testing. */
+#ifdef CONFIG_HAVE_UNICODE_H
+#define DeeUni_IsAlpha   unicode_isalpha
+#define DeeUni_IsLower   unicode_islower
+#define DeeUni_IsUpper   unicode_isupper
+#define DeeUni_IsAlnum   unicode_isalnum
+#define DeeUni_IsSpace   unicode_isspace
+#define DeeUni_IsTab     unicode_istab
+#define DeeUni_IsLF      unicode_islf
+#define DeeUni_IsPrint   unicode_isprint
+#define DeeUni_IsDigit   unicode_isdigit
+#define DeeUni_IsDecimal unicode_isdecimal
+#define DeeUni_IsNumeric unicode_isnumeric
+#define DeeUni_IsTitle   unicode_istitle
+#define DeeUni_IsSymStrt unicode_issymstrt
+#define DeeUni_IsSymCont unicode_issymcont
+#endif /* CONFIG_HAVE_UNICODE_H */
+#ifndef DeeUni_IsAlpha
 #define DeeUni_IsAlpha(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FALPHA)
+#endif /* !DeeUni_IsAlpha */
+#ifndef DeeUni_IsLower
 #define DeeUni_IsLower(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FLOWER)
+#endif /* !DeeUni_IsLower */
+#ifndef DeeUni_IsUpper
 #define DeeUni_IsUpper(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FUPPER)
+#endif /* !DeeUni_IsUpper */
+#ifndef DeeUni_IsAlnum
 #define DeeUni_IsAlnum(ch)    (DeeUni_Flags(ch) & (Dee_UNICODE_FALPHA|Dee_UNICODE_FDECIMAL))
+#endif /* !DeeUni_IsAlnum */
+#ifndef DeeUni_IsSpace
 #define DeeUni_IsSpace(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FSPACE)
+#endif /* !DeeUni_IsSpace */
+#ifndef DeeUni_IsTab
 #define DeeUni_IsTab(ch)      ((ch) == 9)
+#endif /* !DeeUni_IsTab */
+#ifndef DeeUni_IsLF
 #define DeeUni_IsLF(ch)       (DeeUni_Flags(ch) & Dee_UNICODE_FLF)
+#endif /* !DeeUni_IsLF */
+#ifndef DeeUni_IsPrint
 #define DeeUni_IsPrint(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FPRINT)
+#endif /* !DeeUni_IsPrint */
+#ifndef DeeUni_IsDigit
 #define DeeUni_IsDigit(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FDIGIT)
+#endif /* !DeeUni_IsDigit */
+#ifndef DeeUni_IsDecimal
 #define DeeUni_IsDecimal(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_FDECIMAL)
+#endif /* !DeeUni_IsDecimal */
+#ifndef DeeUni_IsNumeric
 #define DeeUni_IsNumeric(ch)  (DeeUni_Flags(ch) & (Dee_UNICODE_FDIGIT|Dee_UNICODE_FDECIMAL))
+#endif /* !DeeUni_IsNumeric */
+#ifndef DeeUni_IsTitle
 #define DeeUni_IsTitle(ch)    (DeeUni_Flags(ch) & (Dee_UNICODE_FTITLE|Dee_UNICODE_FUPPER))
+#endif /* !DeeUni_IsTitle */
+#ifndef DeeUni_IsSymStrt
 #define DeeUni_IsSymStrt(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_FSYMSTRT)
+#endif /* !DeeUni_IsSymStrt */
+#ifndef DeeUni_IsSymCont
 #define DeeUni_IsSymCont(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_FSYMCONT)
+#endif /* !DeeUni_IsSymCont */
 #define DeeUni_IsDecimalX(ch, x)                               \
 	(sizeof(ch) == 1 ? ((uint8_t)(ch) == (uint8_t)('0' + (x))) \
 	                 : ((ch) == '0' + (x) || _DeeUni_IsDecimalX(ch, x)))
@@ -1880,7 +2034,9 @@ FORCELOCAL WUNUSED ATTR_CONST bool (DCALL _DeeUni_IsDecimalX)(uint32_t ch, uint8
 #define UNICODE_FSYMSTRT   Dee_UNICODE_FSYMSTRT
 #define UNICODE_FSYMCONT   Dee_UNICODE_FSYMCONT
 typedef Dee_uniflag_t uniflag_t;
+#ifndef UNICODE_FOLDED_MAX
 #define UNICODE_FOLDED_MAX Dee_UNICODE_FOLDED_MAX
+#endif /* !UNICODE_FOLDED_MAX */
 #define UNICODE_CONVERT_LOWER Dee_UNICODE_CONVERT_LOWER
 #define UNICODE_CONVERT_UPPER Dee_UNICODE_CONVERT_UPPER
 #define UNICODE_CONVERT_TITLE Dee_UNICODE_CONVERT_TITLE
@@ -1944,11 +2100,11 @@ DFUNDEF NONNULL((1)) void DCALL Dee_ascii_printer_release(struct Dee_ascii_print
 #ifdef __INTELLISENSE__
 WUNUSED NONNULL((1, 2)) Dee_ssize_t Dee_ascii_printer_printf(struct Dee_ascii_printer *__restrict self, char const *__restrict format, ...);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t Dee_ascii_printer_vprintf(struct Dee_ascii_printer *__restrict self, char const *__restrict format, va_list args);
-#define Dee_ASCII_PRINTER_PRINT(self,S) Dee_ascii_printer_print(self,S,COMPILER_STRLEN(S))
+#define Dee_ASCII_PRINTER_PRINT(self, S) Dee_ascii_printer_print(self, S, COMPILER_STRLEN(S))
 #else /* __INTELLISENSE__ */
-#define Dee_ascii_printer_printf(self, ...)          DeeFormat_Printf(&Dee_ascii_printer_print,self,__VA_ARGS__)
-#define Dee_ascii_printer_vprintf(self,format,args) DeeFormat_VPrintf(&Dee_ascii_printer_print,self,format,args)
-#define Dee_ASCII_PRINTER_PRINT(self,S) Dee_ascii_printer_print(self,S,COMPILER_STRLEN(S))
+#define Dee_ascii_printer_printf(self, ...)           DeeFormat_Printf(&Dee_ascii_printer_print, self, __VA_ARGS__)
+#define Dee_ascii_printer_vprintf(self, format, args) DeeFormat_VPrintf(&Dee_ascii_printer_print, self, format, args)
+#define Dee_ASCII_PRINTER_PRINT(self, S) Dee_ascii_printer_print(self, S, COMPILER_STRLEN(S))
 #endif /* !__INTELLISENSE__ */
 
 /* Print a single character, returning -1 on error or 0 on success. */
