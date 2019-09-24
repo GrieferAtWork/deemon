@@ -237,6 +237,7 @@ struct stype_object {
 	struct stype_cfunction  st_cfunction; /* [lock(st_cachelock)] Derived function sub-types. */
 	ffi_type               *st_ffitype;   /* [0..1][owned][lock(WRITE_ONCE)] The type used by FFI to represent this type. */
 #endif /* !CONFIG_NO_CFUNCTION */
+	size_t                  st_sizeof;    /* [const] Bytes required by instances of this type. */
 	size_t                  st_align;     /* [const] Alignment required by this type. */
 	WUNUSED NONNULL((1))
 	int             (DCALL *st_init)(DeeSTypeObject *tp_self, void *self,
@@ -267,8 +268,8 @@ struct lvalue_type_object {
 /* The type for all structured types (aka. `DeeSTypeObject' objects)
  * (such as C-integer types, or C-style struct/union-declarations). */
 INTDEF DeeTypeObject DeeSType_Type;
-#define DeeSType_Check(ob)  DeeObject_InstanceOf((DeeObject *)(ob),&DeeSType_Type)
-#define DeeSType_Sizeof(x)  (((DeeSTypeObject *)(x))->st_base.tp_init.tp_alloc.tp_instance_size - sizeof(DeeObject))
+#define DeeSType_Check(ob)  DeeObject_InstanceOf((DeeObject *)(ob), &DeeSType_Type)
+#define DeeSType_Sizeof(x)  (((DeeSTypeObject *)(x))->st_sizeof)
 #define DeeSType_Alignof(x) (((DeeSTypeObject *)(x))->st_align)
 
 /* The types for all pointer/l-value types (aka. `DeePointerTypeObject' / `DeeLValueTypeObject' objects)

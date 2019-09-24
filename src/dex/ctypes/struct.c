@@ -145,8 +145,9 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
 	if unlikely(!elem)
 		goto err_r;
 	/* Fill in size & alignment info. */
-	result->st_base.st_align                                  = min_align;
-	result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = (sizeof(DeeObject) + instance_size);
+	result->st_base.st_sizeof = instance_size;
+	result->st_base.st_align  = min_align;
+	result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject) + instance_size;
 	return result;
 err_r:
 	for (i = 0; i <= result->st_fmsk; ++i) {
@@ -234,8 +235,9 @@ DeeStructType_FromSequence(DeeObject *name,
 			}
 		}
 		/* Fill in size & alignment info. */
-		result->st_base.st_align                                  = min_align;
-		result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = (sizeof(DeeObject) + instance_size);
+		result->st_base.st_sizeof = instance_size;
+		result->st_base.st_align  = min_align;
+		result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject) + instance_size;
 	} else {
 		/* Use iterators to construct the struct-type. */
 		fields = DeeObject_IterSelf(fields);
@@ -842,6 +844,7 @@ INTERN DeeStructTypeObject DeeStruct_Type = {
 		/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
 		/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
+		/* .st_sizeof   = */ 0,
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
 		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&struct_init,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_assign,

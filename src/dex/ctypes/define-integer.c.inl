@@ -1003,10 +1003,11 @@ INTERN DeeSTypeObject TYPE_NAME = {
 #error "Unsupported integral type for use with FFY (Try builtin with `-DCONFIG_NO_CFUNCTION')"
 #endif
 #endif /* !CONFIG_NO_CFUNCTION */
+	/* .st_sizeof   = */ SIZEOF,
 #ifdef ALIGNOF
-	/* .st_align    = */ALIGNOF,
+	/* .st_align    = */ ALIGNOF,
 #else /* ALIGNOF */
-	/* .st_align    = */SIZEOF,
+	/* .st_align    = */ SIZEOF,
 #endif /* !ALIGNOF */
 	/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&F(intinit),
 	/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(intass),

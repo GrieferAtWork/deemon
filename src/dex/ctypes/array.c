@@ -204,7 +204,6 @@ array_iter(DeeArrayTypeObject *tp_self, void *base) {
 	result->ai_pos.ptr   = base;
 	result->ai_siz       = DeeSType_Sizeof(tp_self->at_orig);
 	result->ai_end.uint  = (uintptr_t)base + result->ai_siz * tp_self->at_count;
-
 	DeeObject_Init(result, &ArrayIterator_Type);
 done:
 	return result;
@@ -692,6 +691,7 @@ INTERN DeeArrayTypeObject DeeArray_Type = {
 		/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
 		/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
+		/* .st_sizeof   = */ 0,
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
 		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&array_init,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&array_assign,
@@ -732,7 +732,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 	result->at_orig          = item_type;           /* Inherit reference. */
 	result->at_base.st_align = item_type->st_align; /* Re-use item alignment type. */
 	if (OVERFLOW_UMUL(num_items, DeeSType_Sizeof(item_type),
-	                  &result->at_base.st_base.tp_init.tp_alloc.tp_instance_size)) {
+	                  &result->at_base.st_sizeof)) {
 		/* Overflow: Array is too large. */
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "Array `%k' is too large",
@@ -742,6 +742,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 		Dee_Decref(name);
 		goto err_r;
 	}
+	result->at_base.st_base.tp_init.tp_alloc.tp_instance_size = result->at_base.st_sizeof;
 	result->at_base.st_base.tp_init.tp_alloc.tp_instance_size += sizeof(DeeObject);
 	result->at_base.st_base.tp_name  = DeeString_STR(name); /* Inherit reference. */
 	result->at_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;

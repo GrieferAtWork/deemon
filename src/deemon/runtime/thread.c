@@ -1039,6 +1039,9 @@ PRIVATE void DCALL DeeThread_InitMain(void) {
 	DeeThread_Main.t_threadid = os_gettid_with_thread(DeeThread_Main.t_thread);
 	DBG_ALIGNMENT_ENABLE();
 #endif /* !CONFIG_NO_THREADID */
+	/* TODO: The main thread shouldn't have a join-semaphore.
+	 *       Instead, attempting to join the main thread should
+	 *       cause some kind of error! */
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
 #ifdef CONFIG_HOST_WINDOWS
 	DBG_ALIGNMENT_DISABLE();

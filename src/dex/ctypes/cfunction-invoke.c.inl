@@ -362,22 +362,25 @@ def_var_data:
 		result = Dee_None;
 		Dee_Incref(result);
 	} else {
-		size_t datasize;
 		DeeSTypeObject *orig_type = tp_self->ft_orig;
-		datasize                  = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
-		if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
-			/* This can happen when the user creates their own
-			 * classes that are derived from structured types. */
-			result = (DeeObject *)DeeGCObject_Malloc(datasize);
+		if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
+			result = (DREF DeeObject *)(*orig_type->st_base.tp_init.tp_alloc.tp_alloc)();
 		} else {
-			result = (DeeObject *)DeeObject_Malloc(datasize);
+			size_t datasize;
+			datasize = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
+			if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
+				/* This can happen when the user creates their own
+				 * classes that are derived from structured types. */
+				result = (DeeObject *)DeeGCObject_Malloc(datasize);
+			} else {
+				result = (DeeObject *)DeeObject_Malloc(datasize);
+			}
 		}
 		if unlikely(!result)
 			goto done_wbuf;
 		/* Construct a new structured type that is returned as result. */
 		DeeObject_Init(result, (DeeTypeObject *)orig_type);
-		memcpy(DeeStruct_Data(result), ret_mem,
-		       datasize - sizeof(DeeObject));
+		memcpy(DeeStruct_Data(result), ret_mem, DeeSType_Sizeof(orig_type));
 	}
 #undef ret_mem
 done_wbuf:

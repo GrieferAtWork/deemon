@@ -538,6 +538,7 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 	Dee_Incref((DeeObject *)&DeePointer_Type);
 	/* Initialize fields. */
 	result->pt_orig                                           = self; /* Inherit reference. */
+	result->pt_base.st_sizeof                                 = sizeof(void *);
 	result->pt_base.st_align                                  = CONFIG_CTYPES_ALIGNOF_POINTER;
 	result->pt_base.st_base.tp_name                           = DeeString_STR(name); /* Inherit reference. */
 	result->pt_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(struct pointer_object);
@@ -583,6 +584,7 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	Dee_Incref((DeeObject *)&DeeLValue_Type);
 	/* Initialize fields. */
 	result->lt_orig                                           = self; /* Inherit reference. */
+	result->lt_base.st_sizeof                                 = sizeof(void *);
 	result->lt_base.st_align                                  = CONFIG_CTYPES_ALIGNOF_LVALUE;
 	result->lt_base.st_base.tp_name                           = DeeString_STR(name); /* Inherit reference. */
 	result->lt_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(struct lvalue_object);
@@ -1074,6 +1076,7 @@ INTERN DeeSTypeObject DeeStructured_Type = {
 	/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
 	/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
+	/* .st_sizeof   = */ 0,
 	/* .st_align    = */ 0,
 	/* .st_init     = */ NULL,
 	/* .st_assign   = */ NULL,

@@ -297,6 +297,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 		/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
 		/* .st_ffitype  = */ &ffi_type_pointer,
 #endif /* !CONFIG_NO_CFUNCTION */
+		/* .st_sizeof   = */ sizeof(void *),
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
 		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&pointer_init,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&pointer_assign,
@@ -564,17 +565,21 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 	uint8_t *dst, *src;
 	DeeSTypeObject *orig_type = (DeeSTypeObject *)Dee_TYPE(self);
 	ASSERT(!orig_type->st_base.tp_init.tp_alloc.tp_free);
-	datasize = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
-	if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
-		/* This can happen when the user creates their own
-		 * classes that are derived from structured types. */
-		result = (DeeObject *)DeeGCObject_Malloc(datasize);
+	if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
+		result = (DeeObject *)(*orig_type->st_base.tp_init.tp_alloc.tp_alloc)();
 	} else {
-		result = (DeeObject *)DeeObject_Malloc(datasize);
+		datasize = orig_type->st_base.tp_init.tp_alloc.tp_instance_size;
+		if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
+			/* This can happen when the user creates their own
+			 * classes that are derived from structured types. */
+			result = (DeeObject *)DeeGCObject_Malloc(datasize);
+		} else {
+			result = (DeeObject *)DeeObject_Malloc(datasize);
+		}
 	}
 	if unlikely(!result)
 		goto done;
-	datasize -= sizeof(DeeObject);
+	datasize = orig_type->st_sizeof;
 	dst = (uint8_t *)DeeStruct_Data(result);
 	src = (uint8_t *)self->l_ptr.ptr;
 	/* Copy data into the copy of the underlying object. */
@@ -583,7 +588,9 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 	CTYPES_FAULTPROTECT({
 		memcpy(dst, src, datasize);
 	}, {
-		if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
+		if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
+			(*orig_type->st_base.tp_init.tp_alloc.tp_free)(result);
+		} else if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
 			DeeGCObject_Free(result);
 		} else {
 			DeeObject_Free(result);
@@ -595,7 +602,9 @@ lvalue_copy(struct lvalue_object *__restrict self) {
 		while (datasize--)
 			*dst++ = *src++;
 	}, {
-		if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
+		if (orig_type->st_base.tp_init.tp_alloc.tp_free) {
+			(*orig_type->st_base.tp_init.tp_alloc.tp_free)(result);
+		} else if unlikely(orig_type->st_base.tp_flags & TP_FGC) {
 			DeeGCObject_Free(result);
 		} else {
 			DeeObject_Free(result);
@@ -655,10 +664,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 						/* .tp_copy_ctor = */ (void *)&lvalue_copy,
 						/* .tp_deep_ctor = */ NULL,
 						/* .tp_any_ctor  = */ NULL,
-						/* .tp_free      = */ NULL,
-						{
-							/* ..tp_alloc.tp_instance_size = */sizeof(struct pointer_object)
-						}
+						TYPE_FIXED_ALLOCATOR(struct pointer_object)
 					}
 				},
 				/* .tp_dtor        = */ NULL,
@@ -681,7 +687,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 			/* .tp_with          = */ NULL,
 			/* .tp_buffer        = */ &lvalue_buffer,
 			/* .tp_methods       = */ NULL,
-			/* .tp_getsets       = */lvalue_getsets,
+			/* .tp_getsets       = */ lvalue_getsets,
 			/* .tp_members       = */ NULL,
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
@@ -697,7 +703,8 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 		/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
 		/* .st_ffitype  = */ &ffi_type_pointer,
 #endif /* !CONFIG_NO_CFUNCTION */
-		/* .st_align    = */CONFIG_CTYPES_ALIGNOF_LVALUE,
+		/* .st_sizeof   = */ sizeof(void *),
+		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_LVALUE,
 		/* .st_init     = */ NULL,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&lvalue_assign,
 		/* .st_cast     = */ {

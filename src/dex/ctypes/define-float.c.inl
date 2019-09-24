@@ -478,6 +478,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
 	/* .st_ffitype  = */ &ffi_type_void,
 #endif
 #endif /* !CONFIG_NO_CFUNCTION */
+	/* .st_sizeof   = */ sizeof(T),
 #if TYPE_ID == 0
 	/* .st_align    = */ CONFIG_ALIGNOF_FLOAT,
 #elif TYPE_ID == 1

@@ -194,6 +194,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 		/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
 		/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
+		/* .st_sizeof   = */ 0,
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
 		/* .st_init     = */ NULL,
 		/* .st_assign   = */ NULL,
@@ -325,7 +326,7 @@ cfunctiontype_new(DeeSTypeObject *__restrict return_type,
 	Dee_Incref((DeeObject *)&DeeCFunction_Type);
 	/* Initialize fields. */
 	result->ft_orig = return_type; /* Inherit reference. */
-	result->ft_base.st_base.tp_init.tp_alloc.tp_instance_size += sizeof(DeeObject);
+	result->ft_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject);
 	result->ft_base.st_base.tp_name  = DeeString_STR(name); /* Inherit reference. */
 	result->ft_base.st_base.tp_flags = TP_FTRUNCATE | TP_FINHERITCTOR | TP_FNAMEOBJECT | TP_FHEAP | TP_FMOVEANY;
 	result->ft_base.st_base.tp_base  = &DeeCFunction_Type.ft_base.st_base; /* Inherit reference. */

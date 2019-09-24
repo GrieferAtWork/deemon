@@ -352,6 +352,7 @@ INTERN DeeSTypeObject DeeCVoid_Type = {
 	/* .st_cfunction= */ STYPE_CFUNCTION_INIT,
 	/* .st_ffitype  = */ &ffi_type_void,
 #endif /* !CONFIG_NO_CFUNCTION */
+	/* .st_sizeof   = */ 0,
 	/* .st_align    = */ 0,
 	/* .st_init     = */ &void_init,
 	/* .st_assign   = */ NULL,
