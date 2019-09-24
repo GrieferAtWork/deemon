@@ -36,7 +36,7 @@ class foo: List {
 	// Note how the constructor uses a runtime-only
 	// variable from a surrounding strong scope
 	this() {
-		print "In constructor",x;
+		print "In constructor", x;
 		// Runtime member variable
 		// >> Stored in the class itself
 		this.variable = x*20;
@@ -48,7 +48,7 @@ class foo: List {
 		// >> If we would revive 'this' in here, we could abort destruction
 		//    Note how we us 'this.variable', a runtime-member originally
 		//    set in the constructor.
-		print "In destructor",this.variable;
+		print "In destructor", this.variable;
 	}
 
 	// Overriding the 'str' and 'repr' operators
@@ -57,7 +57,7 @@ class foo: List {
 
 	// Calling a function with the same name from an underlying object
 	function append(args...) {
-		print "Appending:",args;
+		print "Appending:", args;
 		super.append(args...);
 	}
 
@@ -73,11 +73,11 @@ class foo: List {
 	//       based on the amount of arguments the associated function takes
 	//       >> __pos__ / __add__ - __neg__ / __sub__
 	// A full list of operators is at the end of this file
-	operator () (a,b,c) {
+	operator () (a, b, c) {
 		print ">> Call operator";
-		print ">> a =",a;
-		print ">> b =",b;
-		print ">> c =",c;
+		print ">> a =", a;
+		print ">> b =", b;
+		print ">> c =", c;
 	}
 
 	// properties / getsets
@@ -89,13 +89,13 @@ class foo: List {
 		// For a full list of valid names, look at the end of this file
 		operator get()  { print "In Getter"; return 42; }
 		operator del()  { print "In Delete"; }
-		operator set(v) { print "In Setter",v; }
+		operator set(v) { print "In Setter", v; }
 	};
 
 };
 
 a = foo.new();
-a.append(10,20,30);
+a.append(10, 20, 30);
 print str a;
 print repr a;
 
@@ -138,16 +138,16 @@ print "done";
 //		operator () (args...);      operator __call__(args...);
 //		operator # ();              operator __size__();
 //		operator [] (key);          operator __getitem__(key);
-//		operator [] (lo,hi);        operator __getrange__(lo,hi);
-//		operator [:] (lo,hi);       operator __getrange__(lo,hi);
-//		operator []= (key,v);       operator __setitem__(key);
-//		operator []= (lo,hi,v);     operator __setrange__(lo,hi);
-//		operator [:]= (lo,hi,v);    operator __setrange__(lo,hi);
+//		operator [] (lo, hi);       operator __getrange__(lo, hi);
+//		operator [:] (lo, hi);      operator __getrange__(lo, hi);
+//		operator []= (key, v);      operator __setitem__(key);
+//		operator []= (lo, hi, v);   operator __setrange__(lo, hi, v);
+//		operator [:]= (lo, hi, v);  operator __setrange__(lo, hi, v);
 //		operator del [] (key);      operator __detitem__(key);
-//		operator del [] (lo,hi);    operator __detrange__(lo,hi);
-//		operator del [:] (lo,hi);   operator __detrange__(lo,hi);
+//		operator del [] (lo, hi);   operator __detrange__(lo, hi);
+//		operator del [:] (lo, hi);  operator __detrange__(lo, hi);
 // 		operator . (attr);          operator __getattr__(attr);
-// 		operator .= (attr,v);       operator __setattr__(attr,value);
+// 		operator .= (attr, v);      operator __setattr__(attr, v);
 // 		operator del. (attr);       operator __delattr__(attr);
 //      // NOTE: The following aren't 100% identical:
 //      //       'operator for' should be implemented by a yield-function,
@@ -304,7 +304,7 @@ print "done";
 
 // Fun facts:
 //   - All member functions of classes are implicitly
-//     declared with '__attribute__((__thiscall__,__super__(...)))',
+//     declared with '__attribute__((__thiscall__, __super__(...)))',
 //     where '...' referrs to the base of the class
 //   - The attribute operators are only invoked if all
 //     other possibilities of finding an attribute

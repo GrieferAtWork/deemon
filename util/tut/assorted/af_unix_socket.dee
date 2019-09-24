@@ -23,7 +23,7 @@ import * from fs;
 import * from deemon;
 
 local sockfile = "/tmp/my_sockfile";
-local sa = sockaddr("AF_UNIX",sockfile);
+local sa = sockaddr("AF_UNIX", sockfile);
 
 if (stat.exists(sockfile)) {
 	/* Client */
@@ -41,15 +41,15 @@ if (stat.exists(sockfile)) {
 	ac_thread = thread([]{
 		for (;;) {
 			thread([](client){
-				print "New connection:",client;
+				print "New connection:", client;
 				for (local l: client.recv())
 					print repr l;
 				client.close();
-			},sock.accept()).start();
+			}, sock.accept()).start();
 		}
 	});
 	ac_thread.start();
-	print "Server up. Press [RETURN] to exit:",repr sock;
+	print "Server up. Press [RETURN] to exit:", repr sock;
 	file.stdin.readline();
 	ac_thread.interrupt();
 	sock.close();

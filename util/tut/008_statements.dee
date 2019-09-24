@@ -25,9 +25,9 @@ local x = 42;
 if (x == 42) {
 	x = 7;
 } else {
-	print "x wasn't 42, but is",x;
+	print "x wasn't 42, but is", x;
 }
-print "Now x is",x;
+print "Now x is", x;
 
 /* Deemon implements any kind of statment also seen in C (including labels) */
 
@@ -44,14 +44,14 @@ default:
 }
 
 for (local i = 0; i < 10; ++i)
-	print "for: i =",i;
+	print "for: i =", i;
 
 do {
-	print "do: x =",x;
+	print "do: x =", x;
 } while ((x -= 2) > 2);
 
 while ((x % 20) != 11) {
-	print "while: x =",x;
+	print "while: x =", x;
 	++x;
 }
 
@@ -80,8 +80,7 @@ print x && y; /* false -- Logical and -- Same as `!!x ? !!y : ' */
 /* Since deemon supports exceptions, it has try-catch/finally statements.
  * Also note that any arbitrary object can be thrown as an exception,
  * though builtin functions usually only thrown object derived from either
- * `Error from deemon' or `Signal from deemon'
- */
+ * `Error from deemon' or `Signal from deemon' */
 try {
 	try {
 		print "Reachable";
@@ -92,7 +91,7 @@ try {
 	}
 	print "Also not reachable";
 } catch (e...) {
-	print "caught:",e; /* caught: 42 */
+	print "caught:", e; /* caught: 42 */
 }
 
 /* Catch-expressions can be written in one of the following ways:
@@ -115,12 +114,12 @@ for (local x: items) {
 /* And going even further, in order to best support sequences-of-sequences,
  * you can do something like this: */
 local item_pairs = { { "a", 10 }, { "b", 20 }, { "c", 30 } };
-for (local x,y: item_pairs) {
-	print x,y;
+for (local x, y: item_pairs) {
+	print x, y;
 }
 
 /* This becomes especially interesting when dealing with mapping-like objects,
- * as those objects are generally written as {(object,object)...}, meaning they're
+ * as those objects are generally written as {(Object, Object)...}, meaning they're
  * usually sequences of 2-element sequences. */
 {
 	import Dict from deemon;
@@ -130,8 +129,8 @@ for (local x,y: item_pairs) {
 		"c" : 31,
 	};
 	items["foobar"] = items + ...; /* sum(items) */
-	for (local key,value: items)
-		print key,"=",repr value;
+	for (local key, value: items)
+		print key, "=", repr value;
 }
 
 /* Deemon also includes the `continue' and `break' statements which may

@@ -34,7 +34,7 @@
 
 		/* Default constructor: Load class members from the argument list
 		 * In this case, this is identical to a constructor:
-		 * >> this(x?,y?,another_one?) {
+		 * >> this(x?, y?, another_one?) {
 		 * >> 	this.i_am_private = 1234;
 		 * >> 	this.another_one = "Bites the dust";
 		 * >> 	if (x is bound)
@@ -54,7 +54,7 @@
 		}
 	}
 
-	local inst = MyClass(10,20);
+	local inst = MyClass(10, 20);
 	assert inst.x == 10;
 	assert inst.y == 20;
 	assert inst.priv_var == 1234;

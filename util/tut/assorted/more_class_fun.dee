@@ -27,11 +27,11 @@ class a_class {
 	private member m_z;
 
 	dump() {
-		print m_x,m_y,m_z;
+		print m_x, m_y, m_z;
 	}
 
 	~this() {
-		print ">> Destructor: a_class",this;
+		print ">> Destructor: a_class", this;
 	}
 
 	this(x,y,z) {
@@ -40,11 +40,14 @@ class a_class {
 		m_z = z;
 	}
 	operator + (right) {
-		print this,"+",right;
+		print this, "+", right;
 		return 42;
 	}
 
-	operator str() -> "a_class({}, {}, {})".format({ m_x, m_y, m_z });
+	operator str() {
+		return "a_class({}, {}, {})"
+			.format({ m_x, m_y, m_z });
+	}
 	
 	operator for() {
 		yield m_x;
@@ -55,22 +58,22 @@ class a_class {
 	static property MY_CONSTANT = { get() -> 42; }
 
 	my_getset = {
-		get()  { print "Getter:",this; return 42; }
-		del()  { print "Delete:",this; }
-		set(v) { print "Setter:",this,v; }
+		get()  { print "Getter:", this; return 42; }
+		del()  { print "Delete:", this; }
+		set(v) { print "Setter:", this, v; }
 	}
 
 };
 
-a = a_class(10,20,30);
+a = a_class(10, 20, 30);
 
-print "a_class.MY_CONSTANT =",a_class.MY_CONSTANT;
+print "a_class.MY_CONSTANT =", a_class.MY_CONSTANT;
 
 for (local x: a)
 	print x;
 a.dump();
 
-print a+a;
+print a + a;
 
 print a.my_getset;
 del a.my_getset;

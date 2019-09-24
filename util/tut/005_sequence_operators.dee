@@ -40,39 +40,40 @@ print repr({ 10: 20, 30: 40 }); /* Abstract Mapping -- Context-dependent behavio
  */
 
 /* tuples, and how ambiguity with arithmetic parenthesis is handled. */
-print (10,20,30);  /* This is a 3-element tuple `(10,20,30)' */
-print (10,20,);    /* This is a 2-element tuple `(10,20)' */
-print (10,20);     /* This is a 2-element tuple `(10,20)' */
-print (10,);       /* This is a 1-element tuple `(10)' */
-print (10);        /* This isn't a tuple, but regular parenthesis that still referrs to `10' */
-print ();          /* This is an empty tuple `()' */
+print (10, 20, 30); /* This is a 3-element tuple `(10,20,30)' */
+print (10, 20,);    /* This is a 2-element tuple `(10,20)' */
+print (10, 20);     /* This is a 2-element tuple `(10,20)' */
+print (10,);        /* This is a 1-element tuple `(10)' */
+print (10);         /* This isn't a tuple, but regular parenthesis that still evaluates to `10' */
+print ();           /* This is an empty tuple `()' */
 
 /* lists, and how they actually differ from tuples.
  * To anwer this, I have to reach ahead a little bit and quickly
  * introduce variables. - They should be self-explainatory for now,
  * so don't worry about them for the time being. */
-local x = [10,20,30];
-print x; /* [10,20,30] */
+local x = [10, 20, 30];
+print x; /* [10, 20, 30] */
 x.append(40);
-print x; /* [10,20,30,40] */
+print x; /* [10, 20, 30, 40] */
 /* Lists are mutable, meaning that elements can be appened, removed, inserted, etc.
  * Tuples however aren't, as they are fixed-length, and cannot be modified
  * or resized once created. */
 
 /* Sequence length expressions. */
-print #[10,20,30];      /* 3 */
+print #[10, 20, 30];    /* 3 */
 print #"foobar";        /* 6 */
 /* Sequence expressions can be prefixed by `#', which will return the length of that sequence.
  * However, be careful not to have a line of source code start with a `#', as this
- * will cause that line to be interpreted as a preprocessor directive. */
+ * will cause that line to be interpreted as a preprocessor directive.
+ * The simplest work-around for this corner-case is to add parenthesis  */
 
 /* You can test for the presence of an item within a sequence by using `in' */
-print 10 in [10,20,30];  /* true */
-print 10 in [40,50,60];  /* false */
-print 10 !in [10,20,30]; /* false */  // Tests can be negated by writing `!in'
+print 10 in [10, 20, 30];  /* true */
+print 10 in [40, 50, 60];  /* false */
+print 10 !in [10, 20, 30]; /* false */  // Tests can be negated by writing `!in'
 
 /* Index and sub-range expressions. */
-print [10,20,30][1];   /* 20 */
+print [10, 20, 30][1];   /* 20 */
 /* An index expression is written as `<sequence>[<index>]'
  * In most cases, `<index>' is an integer expression, and `<sequence>'
  * is the sequence being indexed, in which case `<index>' must be non-negative
@@ -80,11 +81,11 @@ print [10,20,30][1];   /* 20 */
 
 /* Quite similar to sequence indexing, you may also access a sub-range
  * of a sequence using a syntax that is quite similar: */
-print repr [10,20,30,40][1:2];   /* [20] */
-print repr [10,20,30,40][2:];    /* [30,40] */
-print repr [10,20,30,40][:1];    /* [10] */
-print repr [10,20,30,40][:];     /* [10,20,30,40] */
-print repr [10,20,30,40][:-1];   /* [10,20,30] */
+print repr [10, 20, 30, 40][1:2];   /* [20] */
+print repr [10, 20, 30, 40][2:];    /* [30, 40] */
+print repr [10, 20, 30, 40][:1];    /* [10] */
+print repr [10, 20, 30, 40][:];     /* [10, 20, 30, 40] */
+print repr [10, 20, 30, 40][:-1];   /* [10, 20, 30] */
 /* Sequence range expressions are written as `<sequence>[<start>:<end>]'
  * However unlike sequence indexing, they are much more powerful, while
  * also returning another sequence (generally an abstract sequence)
@@ -101,10 +102,10 @@ print repr [10,20,30,40][:-1];   /* [10,20,30] */
 
 /* Another important sequence construct are range expressions.
  * Note the abstract sequence syntax! */
-print repr [:10];     /* { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 } */
-print repr [2:10];    /* { 2, 3, 4, 5, 6, 7, 8, 9 } */
-print repr [2:10,3];  /* { 2, 5, 8 } */
-print repr [10:0,-3]; /* { 10, 7, 4, 1 } */
+print repr [:10];      /* { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 } */
+print repr [2:10];     /* { 2, 3, 4, 5, 6, 7, 8, 9 } */
+print repr [2:10, 3];  /* { 2, 5, 8 } */
+print repr [10:0, -3]; /* { 10, 7, 4, 1 } */
 
 /* Range expressions are written as `[<start>:<end>,<step>]',
  * with `<start>' defaulting to a default-constructed instance
@@ -120,7 +121,7 @@ print repr [10:0,-3]; /* { 10, 7, 4, 1 } */
 
 /* [10, 20, 30, 40, 50, 60, 70] */
 print repr [(10, 20, 30)..., 40, [50, 60, 70]...];
-print repr [[:8]...,4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
+print repr [[:8]..., 4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
 
 /* It should be quite obvious how expand expressions work, but
  * just in case you're not understanding, the 3 dots (`...') are
@@ -130,8 +131,8 @@ print repr [[:8]...,4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
  * who's arguments are taken and re-interpreted as though they were
  * written as a list of comma-separated expression at the same
  * location as the expand modifier itself. */
-print repr((["a","b","c"]...)); /* Cast to tuple -- ("a", "b", "c") */
-print repr([("a","b","c")...]); /* Cast to list  -- ["a", "b", "c"] */
+print repr((["a", "b", "c"]...)); /* Cast to tuple -- ("a", "b", "c") */
+print repr([("a", "b", "c")...]); /* Cast to list  -- ["a", "b", "c"] */
 
 /* Expand expressions can be used anywhere a comma-separated list of
  * expressions can be used, which includes argument lists, print statements, etc.

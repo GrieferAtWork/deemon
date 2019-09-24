@@ -22,7 +22,7 @@ function yfunc(x) {
 	print "yfunc("+str x+"): Entered";
 	try {
 		for (;;) {
-			print "yfunc("+str x+"): yielding:",x;
+			print "yfunc("+str x+"): yielding:", x;
 			/* Yield may never return if the iterator is destroyed. */
 			yield x;
 		}
@@ -39,17 +39,17 @@ iterator = generator.operator iter();
 print "Begin iteration";
 
 /* Read a whole bunch of stuff from 'yfunc' */
-print "Received:",iterator.operator next();
-print "Received:",iterator.operator next();
-print "Received:",iterator.operator next();
-print "Received:",iterator.operator next();
-print "Received:",iterator.operator next();
+print "Received:", iterator.operator next();
+print "Received:", iterator.operator next();
+print "Received:", iterator.operator next();
+print "Received:", iterator.operator next();
+print "Received:", iterator.operator next();
 
 /* Multiple execution object of the same function */
 iterator2 = generator.operator iter();
 
 /* Kick-start the second iterator */
-print "Received:",iterator2.operator next();
+print "Received:", iterator2.operator next();
 del iterator2; /* Will print the finally message */
 del iterator;  /* Will print a second finally message */
 

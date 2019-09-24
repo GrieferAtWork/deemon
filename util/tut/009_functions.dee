@@ -24,52 +24,52 @@
 
 
 @@A regular function that is exported from this module
-function foo(x,y) {
-	print "foo("+x+","+y+")";
+function foo(x, y) {
+	print "foo(" + x + ", " + y + ")";
 	return x + y;
 }
 
-print foo(10,20); /* 30 */
+print foo(10, 20); /* 30 */
 
 
-function bar(x,args...) {
+function bar(x, args...) {
 	/* args is a tuple containing all variable arguments passed to the function. */
-	print "x =",x;
-	print "args =",args;
+	print "x =", x;
+	print "args =", args;
 	/* Without a `return' statement, the function returns `none' */
 }
 
-bar(1,2,3,4);
+bar(1, 2, 3, 4);
 
 
 /* Arguments can be given a default value, and be omitted during invocation. */
-function baz(x,y = 7,z = 8) {
-	print "baz("+x+","+y+","+z+")";
+function baz(x, y = 7, z = 8) {
+	print "baz(" + x + ", " + y + ", " + z + ")";
 }
 baz(1);
-baz(1,2);
-baz(1,2,3);
+baz(1, 2);
+baz(1, 2, 3);
 
 
-function foobar(x,y = 11,z?) {
+function foobar(x, y = 11, z?) {
 	/* A variable can be declared with a trailing `?', marking
 	 * it as optional, with its presence then being detectable
 	 * as the symbol either being bound, or not */
-	print "baz("+x+","+y+","+(z is bound ? z : "<NOT BOUND>")+")";
+	print "baz(" + x + ", " + y + ", " + (z is bound ? z : "<NOT BOUND>") + ")";
 }
 foobar(1);
-foobar(1,2);
-foobar(1,2,3);
+foobar(1, 2);
+foobar(1, 2, 3);
 
 
 /* Finally, let's quickly look at lambda functions. */
 local variable_outside_of_lambda = "foobar";
-local lambda = [](x,y) {
+local lambda = [](x, y) {
 	print variable_outside_of_lambda; /* This is a reference symbol. */
 	return x < y;
 };
-print lambda(10,20); /* true */
-print lambda(20,10); /* false */
+print lambda(10, 20); /* true */
+print lambda(20, 10); /* false */
 /* They're really nothing special, other than you being allowed
  * to omit the argument list when the lambda doesn't take any. */
 
@@ -79,7 +79,7 @@ print lambda(20,10); /* false */
  * a function returning a value, let's take a look at what `yield' does. */
 function yielding_function(items) {
 	for (local x: items) {
-		print "Now yielding value from",x;
+		print "Now yielding value from", x;
 		yield x * 2;
 	}
 }
@@ -96,7 +96,7 @@ function yielding_function(items) {
  * its elements are needed.
  */
 for (local x: yielding_function([:20])) {
-	print "Got value:",x;
+	print "Got value:", x;
 }
 
 
@@ -105,7 +105,7 @@ for (local x: yielding_function([:20])) {
 local mygen = for (local x: [:10]) 2 ** x;
 
 for (local x: mygen) {
-	print "mygen>",x;  /* 1,2,4,8,16,32,64,128,256,512 */
+	print "mygen>", x;  /* 1, 2, 4, 8, 16, 32, 64, 128, 256, 512 */
 }
 
 /* Remember expand expressions, with which you can easily create a
@@ -115,8 +115,8 @@ print repr values;
 
 
 
-/* Though really fancy, generator expressions aren't anything special,
- * as they could also be expressed using lambdas: */
+/* Though really fancy, generator expressions aren't anything
+ * special, as they could also be expressed using lambdas: */
 mygen = [] {
 	for (local x: [:10])
 		yield 2 ** x;

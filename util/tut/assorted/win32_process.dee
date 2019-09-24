@@ -22,9 +22,9 @@ import Pipe, process from ipc;
 import File from deemon;
 
 /* Create pipes for stdin, stdout and stderr */
-ir,iw = Pipe.new()...;
-or,ow = Pipe.new()...;
-er,ew = Pipe.new()...;
+ir, iw = Pipe.new()...;
+or, ow = Pipe.new()...;
+er, ew = Pipe.new()...;
 
 /* Create a process for 'cmd' */
 p = process("cmd");
@@ -59,12 +59,12 @@ print p.terminated();
  *       >> You proove yourself that it works by
  *          commenting out the 'iw.close()' */
 for (l: File.Buffer(or))
-	print ">>",l.rstrip().center(100);
+	print ">>", l.rstrip().center(100);
 for (l: File.Buffer(er))
-	print "ERR>>",l.rstrip();
+	print "ERR>>", l.rstrip();
 
 /* Finally join the process (though it should already have terminated) */
-print "RETURN:",p.join();
+print "RETURN:", p.join();
 
 
 

@@ -37,7 +37,7 @@ print "Run with deemon -F deemon_format.dee!";
 //[[[end]]]
 
 /*[[[deemon
-print "print",repr("Again: "+TEXT)+";";
+print "print", repr("Again: " + TEXT) + ";";
 ]]]*/
 print "Again: Run with deemon -F deemon_format.dee!";
 //[[[end]]]

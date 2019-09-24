@@ -1111,9 +1111,6 @@
     <None Include="..\util\tut\assorted\python_style_main.dee">
       <Filter>scripts\tut\assorted</Filter>
     </None>
-    <None Include="..\util\tut\assorted\run_all.bat">
-      <Filter>scripts\tut\assorted</Filter>
-    </None>
     <None Include="..\util\tut\assorted\simple_echo.dee">
       <Filter>scripts\tut\assorted</Filter>
     </None>

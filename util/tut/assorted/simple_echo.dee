@@ -29,7 +29,7 @@ for (l: File.stdin) {
 		break;
 	/* Print without linefeed (readline()
 	 * returns a string ending with '\n') */
-	print "ECHO:",l,;
+	print "ECHO:", l,;
 }
 
 

@@ -55,7 +55,7 @@ try {
 		 * regardless of whether or not the finally was located
 		 * The problem was related to the generated assembly:
 		 * >> end finally   // Propagate return values, or active exceptions
-		 * Generataing this instruction is partially correct, but it does have
+		 * Generating this instruction is partially correct, but it does have
 		 * a more advanced variant that needs to be generated in cases where
 		 * finally appears within catch-handlers.
 		 * >> end finally   #1

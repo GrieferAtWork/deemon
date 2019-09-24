@@ -68,7 +68,7 @@ for (i = 0; i < 20000; ++i) {
 }
 
 // Interrupt + join the gc thread
-print "interrupt:",gc_collector.interrupt();
+print "interrupt:", gc_collector.interrupt();
 gc_collector.join();
 
 

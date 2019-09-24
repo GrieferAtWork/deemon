@@ -31,7 +31,7 @@
 {
 	/* A bit more complex cases, where we modify the elements
 	 * of the sequence in question. */
-	local lists = { [10,20,30], [1,2,3], [19,41,57] };
+	local lists = { [10, 20, 30], [1, 2, 3], [19, 41, 57] };
 	assert lists == { { 10, 20, 30 }, { 1, 2, 3 }, { 19, 41, 57 } };
 
 	/* Modifying member function.

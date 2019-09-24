@@ -27,7 +27,7 @@ class a {
 		this.foo();
 	}
 	foo() {
-		print type this,"--","a::foo()";
+		print type this, "--", "a::foo()";
 	}
 };
 class b: a {
@@ -52,7 +52,7 @@ class c: b {
 	 * The following would be defined as: [[thiscall,super(b)]]
 	 * The super attribute states which class super references should link to */
 	foo() {
-		print type this,"--","c::foo()";
+		print type this, "--", "c::foo()";
 		/* Call a method from the base class */
 		super.foo();
 	}

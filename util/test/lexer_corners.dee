@@ -22,16 +22,16 @@ import * from deemon;
 
 /* Assert the valid compilation of syntax constants with
  * which the compiler has had troubles in the past. */
-function identical(a,b) {
+function identical(a, b) {
 	return type a === type b && a == b;
 }
 
 
-assert identical((1),1);
-assert identical(([1]),List { 1 });
-assert identical(([1],),Tuple { List { 1 } });
-assert identical(([1]...),Tuple { 1 });
-assert identical(([1]...,),Tuple { 1 });
+assert identical((1), 1);
+assert identical(([1]), List { 1 });
+assert identical(([1],), Tuple { List { 1 } });
+assert identical(([1]...), Tuple { 1 });
+assert identical(([1]...,), Tuple { 1 });
 
 
 

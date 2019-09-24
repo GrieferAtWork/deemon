@@ -30,9 +30,10 @@ import * from fs;
  * However, while the two objects share the same meaning, it is
  * implementation-specific if they actually are the exact same object.
  * However, it is guarantied that they can be used interchangably. */
-for (local name,value: environ) {
-	print repr name,"-->",repr value;
+for (local name, value: environ) {
+	print repr name, "-->", repr value;
 }
+
 for (local p: environ["PATH"].split(DELIM))
 	print p;
 

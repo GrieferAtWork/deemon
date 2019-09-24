@@ -24,7 +24,7 @@ import Error from deemon;
 function walk(p) {
 	try {
 		for (local x: dir(p)) {
-			x = joinpath(p,x);
+			x = joinpath(p, x);
 			if (stat.isdir(x))
 				yield walk(x)...;
 			else {

@@ -337,15 +337,15 @@ print barfoo;
 {
 	import List from deemon; /* See `Doc("/deemon/List")'. */
 	List a = { 10, 20, 30 };
-	print repr a;  /* [10,20,30] */
+	print repr a;  /* [10, 20, 30] */
 	List b;
 	print repr b;  /* [] */
 	List c({ 1, 2, 3 });
-	print repr c;  /* [1,2,3] */
+	print repr c;  /* [1, 2, 3] */
 	List d();
 	print repr d;  /* [] */
 	List e { 9, 8, 7 };
-	print repr e;  /* [9,8,7] */
+	print repr e;  /* [9, 8, 7] */
 }
 /* Local variables can also be declared as `<type_expr> <symbol_name>',
  * following C/C++ syntax, while also allowing for the immediate initialization:
@@ -360,7 +360,7 @@ print barfoo;
 /* Now that we've seen `=' being used to assign variables, it should
  * be noted that it can also be used in 3 other situations. */
 {
-	local x = [1,2,3];
+	local x = [1, 2, 3];
 	x.allocated = 9;      /* This is a setattr expression. */
 	x[1]  = "foo";        /* This is a setitem expression. */
 	print repr x;         /* [1, "foo", 3] */
@@ -412,19 +412,19 @@ print barfoo;
 
 /* The expand expression used in variable assignments. */
 {
-	local values = (10,20,30);
-	local x,y,z = values...;
+	local values = (10, 20, 30);
+	local x, y, z = values...;
 	print x;  /* 10 */
 	print y;  /* 20 */
 	print z;  /* 30 */
 
 	/* An alternate representation of the line above. */
-	(x,y,z) = ("foo","bar","foobar");
+	(x, y, z) = ("foo", "bar", "foobar");
 	print x;  /* foo */
 	print y;  /* bar */
 	print z;  /* foobar */
 
-	x,y = (1,2)...,z = 7;
+	x, y = (1, 2)..., z = 7;
 	print x;  /* 1 */
 	print y;  /* 2 */
 	print z;  /* 7 */

@@ -483,7 +483,6 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" 
     <None Include="..\util\tut\assorted\nametuple.dee" />
     <None Include="..\util\tut\assorted\pipe_thread.dee" />
     <None Include="..\util\tut\assorted\python_style_main.dee" />
-    <None Include="..\util\tut\assorted\run_all.bat" />
     <None Include="..\util\tut\assorted\simple_echo.dee" />
     <None Include="..\util\tut\assorted\simple_io.dee" />
     <None Include="..\util\tut\assorted\simple_scanf.dee" />

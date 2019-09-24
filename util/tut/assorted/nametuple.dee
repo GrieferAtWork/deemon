@@ -34,7 +34,7 @@ function nameTuple(fields: {string...}): Type {
 						for (local name: fields)
 							init[name]);
 			} else {
-				m_values = Tuple.unpack(num_fields,init);
+				m_values = Tuple.unpack(num_fields, init);
 			}
 		}
 		operator [] (index: int) -> m_values[index];

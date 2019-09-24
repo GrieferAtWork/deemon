@@ -27,19 +27,28 @@ local class LinkedListNode {
 	public member m_next;
 	public member m_value;
 
-	this(prev,next,value)
+	this(prev, next, value)
 		: m_prev(prev)
 		, m_next(next)
 		, m_value(value)
 	{
 	}
+
 	//~this() {
-	//	print "Destroying node:",this.m_value,this;
-	//	print "    >>",m_prev;
-	//	print "    >>",m_next;
+	//	print "Destroying node:", this.m_value, this;
+	//	print "    >>", m_prev;
+	//	print "    >>", m_next;
 	//}
-	operator str() -> "({}, {}, {})".format({ m_prev, m_value, m_next });
-	operator repr() -> "LinkedListNode({!r}, {!r}, {!r})".format({ m_prev, m_next, m_value });
+
+	operator str() {
+		return "({}, {}, {})"
+			.format({ m_prev, m_value, m_next });
+	}
+
+	operator repr() {
+		return "LinkedListNode({!r}, {!r}, {!r})"
+			.format({ m_prev, m_next, m_value });
+	}
 };
 
 
@@ -59,7 +68,7 @@ global class LinkedList: Sequence from deemon {
 
 	@@Insert the given object @ob at the front
 	function pushfront(ob) {
-		local new_node = LinkedListNode(none,m_front,ob);
+		local new_node = LinkedListNode(none, m_front, ob);
 		if (m_back is none)
 			m_back = new_node;
 		m_front.m_prev = new_node;
@@ -68,7 +77,7 @@ global class LinkedList: Sequence from deemon {
 
 	@@Insert the given object @ob at the back
 	function pushback(ob) {
-		local new_node = LinkedListNode(m_back,none,ob);
+		local new_node = LinkedListNode(m_back, none, ob);
 		if (m_front is none)
 			m_front = new_node;
 		m_back.m_next = new_node;
@@ -110,7 +119,7 @@ global class LinkedList: Sequence from deemon {
 
 	@@Returns a representation of @this :LinkedList in abstract-Sequence syntax
 	operator repr(): string {
-		return "{ "+", ".join(for (local x: this) repr x)+" }";
+		return "{ " + ", ".join(for (local x: this) repr x) + " }";
 	}
 
 	this(init: Sequence = none) {

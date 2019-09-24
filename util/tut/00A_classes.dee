@@ -72,10 +72,10 @@ public:
 		 * matter, in that members can be used before they are declared.
 		 * Here, `my_future_member' is such a member, as it is declared
 		 * further below. */
-		print "my_private_member      =",repr my_private_member;
-		print "my_final_member        =",repr my_final_member;
-		print "my_class_member        =",repr my_class_member;
-		print "my_future_member       =",repr my_future_member;
+		print "my_private_member      =", repr my_private_member;
+		print "my_final_member        =", repr my_final_member;
+		print "my_class_member        =", repr my_class_member;
+		print "my_future_member       =", repr my_future_member;
 
 		/* Seperately, inside of non-static class member functions, 2 new
 		 * builtin keywords becomes available, one of them being `this',
@@ -90,17 +90,17 @@ public:
 		 * to be overwritten by a sub-class, meaning that `final' members
 		 * are accessed directly, while other members are accessed more
 		 * along the lines of `this.operator . ("<NAME_OF_MEMBER>")' */
-		print "this.my_private_member =",repr this.my_private_member;
+		print "this.my_private_member =", repr this.my_private_member;
 
 		/* The following causes an AttributeError, since `my_class_member'
 		 * is declared as part of the class itself, meaning that the instance
 		 * addressible as `this' doesn't actually have such an attribute. */
-//		print "this.my_class_member   =",repr this.my_class_member;
+//		print "this.my_class_member   =", repr this.my_class_member;
 
 		/* This is the correct way of explicitly accessing class members,
 		 * since the object owning the member in this case is the declaring
 		 * class */
-		print "MyList.my_class_member =",repr MyList.my_class_member;
+		print "MyList.my_class_member =", repr MyList.my_class_member;
 	}
 
 	public member my_future_member = "Declared after first use";
@@ -148,10 +148,10 @@ public:
 	@@Note however that a constructor can also be omitted entirely, in which case
 	@@it behaves identical to `this(): super() { }', or be written by one of the
 	@@following:
-	@@>// Same as `this(args...,**kwds): super(args...,**kwds) { }'
+	@@>// Same as `this(args..., **kwds): super(args...,**kwds) { }'
 	@@>this = super;
 	@@>
-	@@>// Same as `this(args...,**kwds): super(({ throw TypeError("..."); })) { }'
+	@@>// Same as `this(args..., **kwds): super(({ throw TypeError("..."); })) { }'
 	@@>this = del;
 	@@>
 	@@>// Automatically generated constructor for data-classes (see below)
@@ -174,7 +174,7 @@ public:
 		 * Note that the initializer-List portion of the declaration is entirely
 		 * optional. - The only situation when it is actually mandatory is in order
 		 * to invoke a super-constructor with non-empty arguments. */
-		print "In constructor for MyList",repr args;
+		print "In constructor for MyList", repr args;
 	}
 
 	@@Secondly, a destructor of a class can be declared by writing `~this()'
@@ -242,7 +242,7 @@ public:
 	}
 
 	@@Additionally, operators can also be deleted by using the
-	@@following syntax (this this case, the multiply operator
+	@@following syntax (in this case, the multiply operator
 	@@is being deleted)
 	operator * = del;
 
@@ -296,28 +296,28 @@ public:
 	 *   >=      ge      2    `operator >= (other)'                   `this >= other'                   no
 	 *   #       size    1    `operator # ()'                         `#this'                           no
 	 *   :=      assign  2    `operator := (other)'                   `this := other'                   no
-	 *   ()      call    *    `operator () (args...,**kwds)'          `this(args...,**kwds)'            no
+	 *   ()      call    *    `operator () (args..., **kwds)'         `this(args..., **kwds)'           no
 	 *   []      getitem 2    `operator [] (index)'                   `this[index]'                     no
 	 *   del[]   delitem 2    `operator del[] (index)'                `del this[index]'                 no
-	 *   []      setitem 3    `operator [] (index,value)'             `this[index] = value'             no
-	 *   []=     setitem 3    `operator []= (index,value)'            `this[index] = value'             no
-	 *   [:]     getrange 3   `operator [:] (start,end)'              `this[start:end]'                 no
-	 *   del[:]  delrange 3   `operator del[:] (start,end)'           `del this[start:end]'             no
-	 *   [:]     setrange 4   `operator [:] (start,end,values)'       `this[start:end] = values'        no
-	 *   [:]=    setrange 4   `operator [:]= (start,end,values)'      `this[start:end] = values'        no
+	 *   []      setitem 3    `operator [] (index, value)'            `this[index] = value'             no
+	 *   []=     setitem 3    `operator []= (index, value)'           `this[index] = value'             no
+	 *   [:]     getrange 3   `operator [:] (start, end)'             `this[start:end]'                 no
+	 *   del[:]  delrange 3   `operator del[:] (start, end)'          `del this[start:end]'             no
+	 *   [:]     setrange 4   `operator [:] (start, end, values)'     `this[start:end] = values'        no
+	 *   [:]=    setrange 4   `operator [:]= (start, end, values)'    `this[start:end] = values'        no
 	 *   .       getattr 2    `operator . (name: string)'             `this.name_as_keyword'            no
 	 *   del.    delattr 2    `operator del. (name: string)'          `del this.name_as_keyword'        no
 	 *   .       setattr 3    `operator . (name: string, value)'      `this.name_as_keyword = value'    no
 	 *   .=      setattr 3    `operator .= (name: string, value)'     `this.name_as_keyword = value'    no
-	 *           enumattr 1   `operator enumattr(): {attribute...}'   `enumattr(this)'                  no
+	 *           enumattr 1   `operator enumattr(): {Attribute...}'   `enumattr(this)'                  no
 	 *           deepcopy 2   `operator deepcopy(other)'              `deepcopy this'                   no
 	 *           copy    2    `operator copy(other)'                  `copy this'                       no
 	 *   ""      str     1    `operator str(other): string'           `str this'                        no
 	 *           repr    1    `operator repr(other): string'          `repr this'                       no
 	 *           hash    1    `operator hash(): int'                  `this.operator hash()'            no
 	 *           next    1    `operator next()'                       `foreach(local x: this)'          no
-	 *           iter    1    `operator iter(): iterator'             `for (local x: this)'             no
-	 *           for     1    `operator for(): {object...}'           `for (local x: this)'             no
+	 *           iter    1    `operator iter(): Iterator'             `for (local x: this)'             no
+	 *           for     1    `operator for(): {Object...}'           `for (local x: this)'             no
 	 *   move:=  moveassign 2 `operator move := (other)'              `this := copy other'              no
 	 *           enter   1    `operator enter()'                      `with (this) { ... }'             no
 	 *           leave   1    `operator leave()'                      `with (this) { ... }'             no

@@ -38,8 +38,8 @@ print x is none; /* false -- alias for `x is type none' */
 
 /* Using none in an unpack-expression always produces the required number of results,
  * which is something that cannot be reproduced using any other kind of object. */
-local x,y,z = none...;
-print x,y,z; /* none none none */
+local x, y, z = none...;
+print x, y, z; /* none none none */
 
 
 /* `none' implements any arbitrary attribute and all operators by
@@ -52,13 +52,13 @@ print (none.foo.bar.whatever + 7) * 3; /* none */
 
 /* Using `none' as the target of a file-targeted print expression
  * causes the results of the print to be discarded. */
-print none: x,y,z;
+print none: x, y, z;
 
 
 /* `none' can also be used to discard a specific value in an unpack expression */
-local values = (10,20,30);
-local x,none,y = values...;
-print x,y; /* 10 30 */
+local values = (10, 20, 30);
+local x, none, y = values...;
+print x, y; /* 10 30 */
 
 
 
@@ -81,7 +81,7 @@ print y("1234");   /* foobar1234 */
 print y("barfoo"); /* foobarbarfoo */
 
 /* Also note that `operator <name>' can also be used by itself. */
-print operator + (x,"1234"); /* foobar1234 */
+print operator + (x, "1234"); /* foobar1234 */
 
 /* When it comes to what operators exist, as well as what their names
  * are, look at the tutorial for classes. */

@@ -18,28 +18,29 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-function return_args(args...) -> args;
+function returnArgsTuple(args...) -> args;
 
 /* Ensure validity of how c-style cast expressions are parsed.
  * Due to the fact that types are only known at runtime, the
  * rules governing deemon's behavior when it comes to this are
  * kind-of complicated, considering ambiguity. */
-assert (return_args)42 == (42,);
-assert (return_args)(42) == (42,);
-assert (return_args)(42,) == (42,);
-assert (return_args)((42)) == (42,);
-assert (return_args)((42,)) == ((42,),);
-assert (return_args)pack(42) == ((42,),);
-assert (return_args)(10,20,30) == (10,20,30);
+assert (returnArgsTuple)42 == (42,);
+assert (returnArgsTuple)(42) == (42,);
+assert (returnArgsTuple)(42,) == (42,);
+assert (returnArgsTuple)((42)) == (42,);
+assert (returnArgsTuple)((42,)) == ((42,),);
+assert (returnArgsTuple)pack(42) == ((42,),);
+assert ((returnArgsTuple)pack 42) == ((42,),);
+assert (returnArgsTuple)(10, 20, 30) == (10, 20, 30);
 
 function foo(...) {
-	local x = [10,20];
-	local a,b = (x)...; /* `unpack(x)' vs. `x((varargs...,),)' */
+	local x = [10, 20];
+	local a, b = (x)...; /* `unpack(x)' vs. `x((varargs...,),)' */
 	assert a == 10;
 	assert b == 20;
 }
 
-foo(10,20,30);
+foo(10, 20, 30);
 
 /* Deemon warns amount the ambiguity who's behavior we're validating here.
  * NOTE: The first option described in the comments is the one always taken. */

@@ -33,29 +33,29 @@ assert "abc".rindex("abc") == 0;
 
 /* Assert string split functions */
 assert "".split("/")        == [];
-assert "/".split("/")       == ["",""];
+assert "/".split("/")       == ["", ""];
 assert "foo".split("/")     == ["foo"];
-assert "foo/".split("/")    == ["foo",""];
-assert "foo/bar".split("/") == ["foo","bar"];
-assert "/bar".split("/")    == ["","bar"];
+assert "foo/".split("/")    == ["foo", ""];
+assert "foo/bar".split("/") == ["foo", "bar"];
+assert "/bar".split("/")    == ["", "bar"];
 
 
-assert "".replace("","42")                      == "42";
-assert "".replace(" ","42")                     == "";
-assert "".replace("","")                        == "";
-assert " ".replace("","")                       == " ";
-assert " ".replace(" ","42")                    == "42";
-assert " ".replace(" ","42 ")                   == "42 ";
-assert " ".replace(" "," 42")                   == " 42";
-assert " ".replace(" "," 42 ")                  == " 42 ";
-assert ",foo,bar,".replace(",","-,-")           == "-,-foo-,-bar-,-";
-assert "foo\r\nbar\r\nfoobar".splitlines(true)  == ["foo\r\n","bar\r\n","foobar"];
-assert "foo\rbar\rfoobar".splitlines(true)      == ["foo\r","bar\r","foobar"];
-assert "foo\nbar\nfoobar".splitlines(true)      == ["foo\n","bar\n","foobar"];
-assert "foo\r\nbar\r\nfoobar".splitlines(false) == ["foo","bar","foobar"];
-assert "foo\rbar\rfoobar".splitlines(false)     == ["foo","bar","foobar"];
-assert "foo\nbar\nfoobar".splitlines(false)     == ["foo","bar","foobar"];
-assert [pack(10,20,30)...] == [10,20,30];
+assert "".replace("", "42")                     == "42";
+assert "".replace(" ", "42")                    == "";
+assert "".replace("", "")                       == "";
+assert " ".replace("", "")                      == " ";
+assert " ".replace(" ", "42")                   == "42";
+assert " ".replace(" ", "42 ")                  == "42 ";
+assert " ".replace(" ", " 42")                  == " 42";
+assert " ".replace(" ", " 42 ")                 == " 42 ";
+assert ",foo,bar,".replace(",", "-,-")          == "-,-foo-,-bar-,-";
+assert "foo\r\nbar\r\nfoobar".splitlines(true)  == ["foo\r\n", "bar\r\n", "foobar"];
+assert "foo\rbar\rfoobar".splitlines(true)      == ["foo\r", "bar\r", "foobar"];
+assert "foo\nbar\nfoobar".splitlines(true)      == ["foo\n", "bar\n", "foobar"];
+assert "foo\r\nbar\r\nfoobar".splitlines(false) == ["foo", "bar", "foobar"];
+assert "foo\rbar\rfoobar".splitlines(false)     == ["foo", "bar", "foobar"];
+assert "foo\nbar\nfoobar".splitlines(false)     == ["foo", "bar", "foobar"];
+assert [pack(10, 20, 30)...] == [10, 20, 30];
 
 
 

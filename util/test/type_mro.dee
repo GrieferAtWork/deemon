@@ -22,6 +22,6 @@ import Type, File from deemon;
 
 /* Instance-attributes of `Type' are unbound (aka. instance-wrappers)
  * when accessed as attributes of `Type' itself. */
-assert Type.baseof(Type,Type);
-assert Type.baseof(Type,type(File));
+assert Type.baseof(Type, Type);
+assert Type.baseof(Type, type(File));
 

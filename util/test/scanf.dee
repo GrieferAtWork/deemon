@@ -19,7 +19,7 @@
  */
 
 local data = "000100  \t 20\n10";
-local a,b,c = data.scanf("%d %d %d")...;
+local a, b, c = data.scanf("%d %d %d")...;
 
 assert a == 100;
 assert b == 20;
@@ -28,7 +28,7 @@ assert c == 10;
 // A more advanced example, using character ranges
 // NOTE: '%[^0-9]' means: scan a string until a digit is encountered
 local data = "ab-cd42";
-local a,b = data.scanf("%[^0-9]%d")...;
+local a, b = data.scanf("%[^0-9]%d")...;
 
 assert a == "ab-cd";
 assert b == 42;

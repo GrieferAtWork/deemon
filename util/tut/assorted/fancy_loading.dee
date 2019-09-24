@@ -23,25 +23,26 @@ import * from time;
 
 function loading_text(text) {
 	while (1) {
-		print "\r-",text,;
+		print "\r-", text,;
 		Thread.sleep(milliseconds(100));
-		print "\r\\",text,;
+		print "\r\\", text,;
 		Thread.sleep(milliseconds(100));
-		print "\r|",text,;
+		print "\r|", text,;
 		Thread.sleep(milliseconds(100));
-		print "\r/",text,;
+		print "\r/", text,;
 		Thread.sleep(milliseconds(100));
 	}
 }
 
 function wait_for_nothing(text) {
-	t = Thread(loading_text,(text+"...",));
+	local t = Thread(loading_text, (text + "...",));
 	t.start();
 	Thread.sleep(seconds(1));
 	t.interrupt();
 	t.join();
-	print "\r|",text.ljust(50),"DONE";
+	print "\r|", text.ljust(50), "DONE";
 }
+
 wait_for_nothing("Loading data");
 wait_for_nothing("Processing information");
 wait_for_nothing("Interfacing interface");

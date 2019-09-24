@@ -35,8 +35,8 @@ local n0          = 0;
 function get_message(x) -> "x = "+x;
 
 for (local x: [
-	n0,n1,n127,n128,n0xff,n0xfff,n0xffff,n0xfffff,
-	n0xffffff,n0xfffffff,n0xffffffff,n123456789]) {
+	n0, n1, n127, n128, n0xff, n0xfff, n0xffff, n0xfffff,
+	n0xffffff, n0xfffffff, n0xffffffff, n123456789]) {
 	assert x + 123456789 == x + n123456789, get_message(x);
 	assert x - 123456789 == x - n123456789, get_message(x);
 	assert x + 0xffffffff == x + n0xffffffff, get_message(x);

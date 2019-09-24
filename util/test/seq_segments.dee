@@ -22,28 +22,18 @@
 local x = { 10, 20, 30, 40, 50, 60, 70, 80 };
 
 function assert_seg3(x) {
-	assert x == { {10,20,30}, {40,50,60}, {70,80} };
+	assert x == { { 10, 20, 30 }, { 40, 50, 60 }, { 70, 80 } };
 	assert #x == 3;
 	assert x[0] == { 10, 20, 30 };
 	assert x[1] == { 40, 50, 60 };
 	assert x[2] == { 70, 80 };
 }
 
-assert x.segments(1) == { {10}, {20}, {30}, {40}, {50}, {60}, {70}, {80} };
-assert x.segments(2) == { {10,20}, {30,40}, {50,60}, {70,80} };
+assert x.segments(1) == { { 10 }, { 20 }, { 30 }, { 40 }, { 50 }, { 60 }, { 70 }, { 80 } };
+assert x.segments(2) == { { 10, 20 }, { 30, 40 }, { 50, 60 }, { 70, 80 } };
 assert_seg3(x.segments(3));
 assert_seg3(copy x.segments(3));
 assert_seg3(deepcopy x.segments(3));
 
 assert (try x.segments(0) catch (...) "ERROR") == "ERROR";
-
-
-
-
-
-
-
-
-
-
 

@@ -24,20 +24,20 @@
  * s.a.: http://www.cplusplus.com/reference/cstdio/scanf/ */
 
 data = "000100  \t 20\n10";
-a,b,c = data.scanf("%d %d %d")...;
+a, b, c = data.scanf("%d %d %d")...;
 
-print "a:",a;
-print "b:",b;
-print "c:",c;
+print "a:", a;
+print "b:", b;
+print "c:", c;
 
 
 /* A more advanced example, using character ranges
  * NOTE: '%[^0-9]' means: scan a string until a digit is encountered */
 data = "ab-cd42";
-a,b = data.scanf("%[^0-9]%d")...;
+a, b = data.scanf("%[^0-9]%d")...;
 
-print "a:",repr a;
-print "b:",repr b;
+print "a:", repr a;
+print "b:", repr b;
 
 
 

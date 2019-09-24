@@ -26,7 +26,7 @@ import * from fs;
 function status(message) {
 	if (#message > 60)
 		message = message[:57] + "...";
-	print "\r"," " * 60,;
+	print "\r", " " * 60,;
 	print "\r",;
 	print message,;
 	File.stdout.sync();
@@ -37,17 +37,17 @@ function scan_path(p: string, rel: string) {
 	try {
 		files = List(dir(p));
 	} catch (e...) {
-		print "WARNING: Broken library path",repr p;
-		print ">",e;
+		print "WARNING: Broken library path", repr p;
+		print ">", e;
 		return;
 	}
 	for (local x: files) {
 		local n = rel + x;
-		local y = joinpath(p,x);
+		local y = joinpath(p, x);
 		if (stat.isdir(y)) {
-			scan_path(y,n + ".");
+			scan_path(y, n + ".");
 		} else if (y.endswith(".dee")) {
-//			local decname = joinpath(p,"."+x[:-4]+".dec");
+//			local decname = joinpath(p, "." + x[:-4] + ".dec");
 //			try unlink(decname); catch (...);
 			n = n[:-4];
 			status("\tImporting: " + repr n);
@@ -57,7 +57,7 @@ function scan_path(p: string, rel: string) {
 }
 
 for (local p: Module.path) {
-	scan_path(p,"");
+	scan_path(p, "");
 }
 
 status("");

@@ -33,8 +33,8 @@ function test() {
 
 callback = test(); /* Create the callback */
 iterator = callback.operator iter(); /* Create an iterator */
-print "first:",iterator.operator next(); /* 10 */
-print "second:",iterator.operator next(); /* 20 */
+print "first:", iterator.operator next(); /* 10 */
+print "second:", iterator.operator next(); /* 20 */
 /* The iterator is now dangling after 'yield 20' */
 
 /* Copy the iterator (only allowed because 'test' is marked '@copyable') */

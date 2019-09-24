@@ -24,5 +24,5 @@ class my_class {
 	operator int() -> 42;
 }
 
-print 10+my_class(); /* guess what this does... */
+print 10 + my_class(); /* guess what this does... */
 

@@ -28,10 +28,9 @@ final class MyClass {
 			++prop_called;
 		}
 	}
-	
+
 	test() {
 		local x;
-
 		x;           /* This can be optimized away */
 		prop_called; /* This can be optimized away  */
 		myprop;      /* This must not be optimized away (because it's a property) */

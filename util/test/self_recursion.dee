@@ -19,9 +19,8 @@
  */
 
 
-function rec(x,y) {
-	return (y > 1 ? rec(x,y-1)*2 : x);
+function rec(x, y) {
+	return (y > 1 ? rec(x, y - 1) * 2 : x);
 }
 
-assert rec(2,10) == 2**10;
-
+assert rec(2, 10) == 2 ** 10;

@@ -163,37 +163,17 @@ function testSequenceType(typ: Type, cls: string) {
 	}
 }
 function testMutableSequence(typ: Type, cls: string) {
-	testSequenceType(typ,cls);
+	testSequenceType(typ, cls);
 }
 
-testMutableSequence(List,LIKE_SEQ);
-testSequenceType(Tuple,LIKE_SEQ);
-testMutableSequence(HashSet,LIKE_SET);
-testSequenceType(HashSet.Frozen,LIKE_MAP);
-testMutableSequence(Dict,LIKE_MAP);
-testSequenceType(Dict.Frozen,LIKE_MAP);
+testMutableSequence(List, LIKE_SEQ);
+testSequenceType(Tuple, LIKE_SEQ);
+testMutableSequence(HashSet, LIKE_SET);
+testSequenceType(HashSet.Frozen, LIKE_MAP);
+testMutableSequence(Dict, LIKE_MAP);
+testSequenceType(Dict.Frozen, LIKE_MAP);
 
-testMutableSequence(collections.Deque,LIKE_SEQ);
-testMutableSequence(collections.FixedList,LIKE_SEQ);
-testMutableSequence(collections.UniqueSet,LIKE_SET);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+testMutableSequence(collections.Deque, LIKE_SEQ);
+testMutableSequence(collections.FixedList, LIKE_SEQ);
+testMutableSequence(collections.UniqueSet, LIKE_SET);
 

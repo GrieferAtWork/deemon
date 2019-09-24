@@ -37,35 +37,35 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 	assert x.id == x.func();
 	assert x.id == Foo.func(x);
 	assert x.id == Foo.func.__thiscall__(x);
-	assert x.id == Foo.func.__thiscall__(x,());
+	assert x.id == Foo.func.__thiscall__(x, ());
 	assert x.id == func2(x);
 	assert x.id == func2(x: x);
 	assert x.id == func2.__thiscall__(x);
-	assert x.id == func2.__thiscall__(x,());
+	assert x.id == func2.__thiscall__(x, ());
 }
 
 {
 	function kw0(**kwds) -> kwds;
-	function kw1(x,**kwds) -> kwds;
-	function kw2(x,y,**kwds) -> kwds;
-	function kw3(x,y,z,**kwds) -> kwds;
+	function kw1(x, **kwds) -> kwds;
+	function kw2(x, y, **kwds) -> kwds;
+	function kw3(x, y, z, **kwds) -> kwds;
 	/* Assert allowed invocations */
 	assert (try kw0() catch (TypeError) "nope") == {};
 	assert (try kw0(10) catch (TypeError) "nope") == "nope";
-	assert (try kw0(10,20) catch (TypeError) "nope") == "nope";
-	assert (try kw0(10,20,30) catch (TypeError) "nope") == "nope";
+	assert (try kw0(10, 20) catch (TypeError) "nope") == "nope";
+	assert (try kw0(10, 20, 30) catch (TypeError) "nope") == "nope";
 	assert (try kw1() catch (TypeError) "nope") == "nope";
 	assert (try kw1(10) catch (TypeError) "nope") == {};
-	assert (try kw1(10,20) catch (TypeError) "nope") == "nope";
-	assert (try kw1(10,20,30) catch (TypeError) "nope") == "nope";
+	assert (try kw1(10, 20) catch (TypeError) "nope") == "nope";
+	assert (try kw1(10, 20, 30) catch (TypeError) "nope") == "nope";
 	assert (try kw2() catch (TypeError) "nope") == "nope";
 	assert (try kw2(10) catch (TypeError) "nope") == "nope";
-	assert (try kw2(10,20) catch (TypeError) "nope") == {};
-	assert (try kw2(10,20,30) catch (TypeError) "nope") == "nope";
+	assert (try kw2(10, 20) catch (TypeError) "nope") == {};
+	assert (try kw2(10, 20, 30) catch (TypeError) "nope") == "nope";
 	assert (try kw3() catch (TypeError) "nope") == "nope";
 	assert (try kw3(10) catch (TypeError) "nope") == "nope";
-	assert (try kw3(10,20) catch (TypeError) "nope") == "nope";
-	assert (try kw3(10,20,30) catch (TypeError) "nope") == {};
+	assert (try kw3(10, 20) catch (TypeError) "nope") == "nope";
+	assert (try kw3(10, 20, 30) catch (TypeError) "nope") == {};
 	/* Assert keyword blacklisting */
 	assert !(kw0(x: 0, y: 1, z: 2, foo: 10) != { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 });
 	assert kw0(x: 0, y: 1, z: 2, foo: 10) == { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 };
@@ -142,8 +142,8 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		assert x.get("foo") == "bar";
 		assert x.get(11) == 22;
 		assert x.get("MISSING") === none;
-		assert x.get("MISSING",true) === true;
-		assert x.get("MISSING",false) === false;
+		assert x.get("MISSING", true) === true;
+		assert x.get("MISSING", false) === false;
 	}
 	function check_iterators(x) {
 		str(x);
@@ -275,7 +275,7 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		"a8rochrb sq3duw9owx vsozqogcoabap295 azq"
 		"a8rochrb sq3duw9owx vsozqogcoabap295 azq",
 		"AbCCAUssdagOASFDAFhlhASTOHAfhfdhasufdh&&&A/",
-		string(File.open(__FILE__).read().decode("ascii")).substr(0,1024)
+		string(File.open(__FILE__).read().decode("ascii")).substr(0, 1024)
 	};
 
 	for (local s: strings) {
@@ -333,7 +333,7 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 
 	for (local s: mb_strings) {
 		for (local c: builtin_codecs) {
-			if (c in ["ascii","latin-1"])
+			if (c in ["ascii", "latin-1"])
 				continue;
 			local enc = s.encode(c);
 			check_string(enc);
