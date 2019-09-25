@@ -67,8 +67,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\dex\ipc\generic-cmdline.c.inl" />
+    <None Include="..\..\src\dex\ipc\generic-pipe.c.inl" />
     <None Include="..\..\src\dex\ipc\generic.c.inl" />
     <None Include="..\..\src\dex\ipc\nt.c.inl" />
+    <None Include="..\..\src\dex\ipc\unix-cmdline.c.inl" />
+    <None Include="..\..\src\dex\ipc\unix-pipe.c.inl" />
     <None Include="..\..\src\dex\ipc\unix.c.inl" />
     <None Include="..\..\src\dex\ipc\windows-cmdline.c.inl" />
     <None Include="..\..\src\dex\ipc\windows-pipe.c.inl" />
@@ -79,6 +83,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\dex\ipc\libipc.h" />
+    <ClInclude Include="..\..\src\dex\ipc\strings.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A7E9B388-A71B-48FE-8DD4-D92910EC2D79}</ProjectGuid>

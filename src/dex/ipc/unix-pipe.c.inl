@@ -16,8 +16,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_IPC_WINDOWS_PIPE_C_INL
-#define GUARD_DEX_IPC_WINDOWS_PIPE_C_INL 1
+#ifndef GUARD_DEX_IPC_UNIX_PIPE_C_INL
+#define GUARD_DEX_IPC_UNIX_PIPE_C_INL 1
 #define DEE_SOURCE 1
 #define _KOS_SOURCE 1
 
@@ -37,21 +37,36 @@
 
 #include "strings.h"
 
+#ifdef CONFIG_HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* CONFIG_HAVE_UNISTD_H */
+
+#ifdef CONFIG_HAVE_ERRNO_H
+#include <errno.h>
+#endif /* CONFIG_HAVE_ERRNO_H */
+
+
+#ifdef CONFIG_HAVE_IO_H
+#include <io.h>
+#define pipe(fds) _pipe(fds, 4096, 0)
+#endif /* CONFIG_HAVE_IO_H */
+
+
+
 DECL_BEGIN
 
 typedef DeeSystemFileObject SystemFile;
 
 PRIVATE WUNUSED NONNULL((1)) DREF SystemFile *DCALL
-open_fd(DeeFileTypeObject *__restrict fType, HANDLE hHandle) {
+open_fd(DeeFileTypeObject *__restrict fType, int fd) {
 	DREF SystemFile *result;
 	result = DeeObject_MALLOC(SystemFile);
 	if unlikely(!result)
 		goto done;
 	/* Fill in the system file. */
 	result->sf_filename  = NULL;
-	result->sf_handle    = hHandle;
-	result->sf_ownhandle = hHandle; /* Inherit */
-	result->sf_filetype  = FILE_TYPE_PIPE;
+	result->sf_handle    = (Dee_sysfd_t)fd;
+	result->sf_ownhandle = (Dee_sysfd_t)fd; /* Inherit */
 	DeeLFileObject_Init(result, fType);
 done:
 	return result;
@@ -61,24 +76,25 @@ done:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **argv) {
-	DWORD pipe_size = 0;
-	HANDLE hReader, hWriter;
+	int fds[2];
+	uint32_t pipe_size;
 	DREF SystemFile *fReader, *fWriter;
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Pipe_function_new_name, &pipe_size))
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	if (!CreatePipe(&hReader, &hWriter, NULL, pipe_size)) {
+	if (pipe(fds) != 0) {
 		DBG_ALIGNMENT_ENABLE();
-		nt_ThrowLastError();
+		DeeError_SysThrowf(&DeeError_SystemError, errno,
+		                   "Failed to create pipe");
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
 	/* Create file objects for the pipe handles. */
-	fReader = open_fd(&DeePipeReader_Type, hReader);
+	fReader = open_fd(&DeePipeReader_Type, fds[0]);
 	if unlikely(!fReader)
 		goto err_hreadwrite;
-	fWriter = open_fd(&DeePipeWriter_Type, hWriter);
+	fWriter = open_fd(&DeePipeWriter_Type, fds[1]);
 	if unlikely(!fWriter)
 		goto err_fread_hwrite;
 	/* Pack the file into a tuple. */
@@ -92,10 +108,10 @@ err_freadwrite:
 	goto err;
 err_hreadwrite:
 	DBG_ALIGNMENT_DISABLE();
-	CloseHandle(hReader);
+	close(fds[0]);
 err_hwriter:
 	DBG_ALIGNMENT_DISABLE();
-	CloseHandle(hWriter);
+	close(fds[1]);
 	DBG_ALIGNMENT_ENABLE();
 err:
 	return NULL;
@@ -120,7 +136,7 @@ INTERN DeeFileTypeObject DeePipe_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ S_Pipe_tp_name,
-		/* .tp_doc      = */ DOC(S_Pipe_tp_doc),
+		/* .tp_doc      = */ S_Pipe_tp_doc,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
@@ -293,4 +309,4 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
 
 DECL_END
 
-#endif /* !GUARD_DEX_IPC_WINDOWS_PIPE_C_INL */
+#endif /* !GUARD_DEX_IPC_UNIX_PIPE_C_INL */

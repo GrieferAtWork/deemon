@@ -2881,12 +2881,12 @@ err:
 #undef S_ISLNK
 #undef S_ISSOCK
 
-#define DEFINE_LIBFS_FORWARD_WRAPPER(name, symbol_name)                                   \
-	PRIVATE DEFINE_STRING(libposix_libfs_name_##name, symbol_name);                       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                         \
-	libposix_getfs_##name##_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) { \
-		return DeeObject_GetAttr(FS_MODULE, (DeeObject *)&libposix_libfs_name_##name);    \
-	}                                                                                     \
+#define DEFINE_LIBFS_FORWARD_WRAPPER(name, symbol_name)                                \
+	PRIVATE DEFINE_STRING(libposix_libfs_name_##name, symbol_name);                    \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                              \
+	libposix_getfs_##name##_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {         \
+		return DeeObject_GetAttr(FS_MODULE, (DeeObject *)&libposix_libfs_name_##name); \
+	}                                                                                  \
 	PRIVATE DEFINE_CMETHOD(libposix_getfs_##name, &libposix_getfs_##name##_f);
 #define DEFINE_LIBFS_FORWARD_WRAPPER_S(name) \
 	DEFINE_LIBFS_FORWARD_WRAPPER(name, #name)

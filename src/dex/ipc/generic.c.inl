@@ -24,11 +24,13 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/list.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/tuple.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
@@ -36,6 +38,10 @@
 #include <deemon/thread.h>
 
 #include "libipc.h"
+#include "strings.h"
+
+/**/
+#include "generic-cmdline.c.inl"
 
 DECL_BEGIN
 
@@ -47,14 +53,17 @@ PRIVATE Process this_process = {
 	OBJECT_HEAD_INIT(&DeeProcess_Type),
 };
 
-PRIVATE int DCALL ipc_unimplemented(void) {
+#ifndef IPC_UNIMPLEMENTED_DEFINED
+#define IPC_UNIMPLEMENTED_DEFINED 1
+PRIVATE ATTR_COLD int DCALL ipc_unimplemented(void) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       "IPI functionality is not supported");
 }
+#endif /* !IPC_UNIMPLEMENTED_DEFINED */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_start(Process *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":start"))
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_start_name))
 		goto err;
 	if (self == &this_process)
 		return_false;
@@ -65,7 +74,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_detach(Process *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":detach"))
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_detach_name))
 		goto err;
 	if (self == &this_process)
 		return_false;
@@ -75,9 +84,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_id(Process *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":id"))
-		goto err;
+process_id(Process *__restrict self) {
 	if (self == &this_process)
 		return_reference_(&DeeInt_Zero);
 	ipc_unimplemented();
@@ -88,7 +95,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_terminate(Process *self, size_t argc, DeeObject **argv) {
 	uint32_t exit_code = 0;
-	if (DeeArg_Unpack(argc, argv, "|I32u:terminate", &exit_code))
+	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Process_function_terminate_name, &exit_code))
 		goto err;
 	if (self == &this_process) {
 		Dee_Exit((int)exit_code, false);
@@ -100,42 +107,36 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_join(Process *self, size_t argc,
-             DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":join"))
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_join(Process *self, size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_join_name))
 		goto err;
 	ipc_unimplemented();
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_tryjoin(Process *self, size_t argc,
-                DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":tryjoin"))
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_tryjoin(Process *self, size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_tryjoin_name))
 		goto err;
 	ipc_unimplemented();
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_timedjoin(Process *self, size_t argc,
-                  DeeObject **argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_timedjoin(Process *self, size_t argc, DeeObject **argv) {
 	uint64_t timeout;
-	if (DeeArg_Unpack(argc, argv, "I64d:timedjoin", &timeout))
+	if (DeeArg_Unpack(argc, argv, "I64d:" S_Process_function_timedjoin_name, &timeout))
 		goto err;
 	ipc_unimplemented();
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_started(Process *self, size_t argc,
-                DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":started"))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_hasstarted(Process *__restrict self) {
 	if (self == &this_process)
 		return_true;
 	ipc_unimplemented();
@@ -143,11 +144,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_detached(Process *self, size_t argc,
-                 DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":detached"))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_wasdetached(Process *__restrict self) {
 	if (self == &this_process)
 		return_false;
 	ipc_unimplemented();
@@ -155,11 +153,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_isachild(Process *self, size_t argc,
-                 DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isachild"))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_isachild(Process *self) {
 	if (self == &this_process)
 		return_false;
 	ipc_unimplemented();
@@ -167,11 +162,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_terminated(Process *self, size_t argc,
-                   DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":terminated"))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_wasterminated(Process *self) {
 	if (self == &this_process)
 		return_false;
 	ipc_unimplemented();
@@ -181,66 +173,24 @@ err:
 
 
 PRIVATE struct type_method process_methods[] = {
-	{ "start", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_start,
-	  DOC("->?Dbool\n"
-	      "@interrupt\n"
-	      "@throw FileNotFound The specified executable could not be found\n"
-	      "@throw FileAccessError The current user does not have permissions to access the "
-	      "executable, or the executable is lacking execute permissions\n"
-	      "@throw SystemError Failed to start the process for some reason\n"
-	      "Begin execution of the process") },
-	{ "join", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_join,
-	  DOC("->?Dint\n"
-	      "@interrupt\n"
-	      "@throw ValueError @this process was never started\n"
-	      "@throw SystemError Failed to join @this process for some reason\n"
-	      "@return The exit code of the process\n"
-	      "Joins @this process and returns the return value of its main function\n"
-	      "In the event") },
-	{ "tryjoin", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_tryjoin,
-	  DOC("->?Dint\n"
-	      "()\n"
-	      "@throw ValueError @this process was never started\n"
-	      "@throw SystemError Failed to join @this process for some reason\n"
-	      "Same as #join, but don't check for interrupts and fail immediately") },
-	{ "timedjoin", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_timedjoin,
-	  DOC("(timeout_in_microseconds:?Dint)->?Dint\n"
-	      "(timeout_in_microseconds:?Dint)\n"
-	      "@throw ValueError @this process was never started\n"
-	      "@throw SystemError Failed to join @this process for some reason\n"
-	      "Same as #join, but only attempt to join for a given @timeout_in_microseconds") },
-	{ "detach", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detach,
-	  DOC("->?Dbool\n"
-	      "@throw ValueError @this process was never started\n"
-	      "@throw ValueError @this process is not a child of the calling process\n"
-	      "@throw SystemError Failed to detach @this process for some reason\n"
-	      "@return true: The :process has been detached\n"
-	      "@return false: The :process was already detached\n"
-	      "Detaches @this process") },
-	{ "terminate", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminate,
-	  DOC("(exitcode=!0)->?Dbool\n"
-	      "@throw ValueError @this process was never started\n"
-	      "@throw SystemError Failed to terminate @this process for some reason\n"
-	      "@return true: The :process has been terminated\n"
-	      "@return false: The :process was already terminated\n"
-	      "Terminate @this process with the given @exitcode") },
-	{ "started", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_started,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this process was started") },
-	{ "detached", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detached,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this process has been detached") },
-	{ "terminated", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminated,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this process has terminated") },
-	{ "isachild", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_isachild,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this process is a child of the calling process") },
-	{ "id", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_id,
-	  DOC("->?Dint\n"
-	      "@throw ValueError The process hasn't been started yet\n"
-	      "@throw SystemError The system does not provide a way to query process ids\n"
-	      "Returns an operating-system specific id of @this process") },
+	{ S_Process_function_start_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_start,
+	  DOC(S_Process_function_start_doc) },
+	{ S_Process_function_join_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_join,
+	  DOC(S_Process_function_join_doc) },
+	{ S_Process_function_tryjoin_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_tryjoin,
+	  DOC(S_Process_function_tryjoin_doc) },
+	{ S_Process_function_timedjoin_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_timedjoin,
+	  DOC(S_Process_function_timedjoin_doc) },
+	{ S_Process_function_detach_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detach,
+	  DOC(S_Process_function_detach_doc) },
+	{ S_Process_function_terminate_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminate,
+	  DOC(S_Process_function_terminate_doc) },
 	{ NULL }
 };
 
@@ -251,44 +201,43 @@ process_get_files(Process *__restrict self) {
 	return NULL;
 }
 
-#define DEFINE_PROCESS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)                          \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                 \
-	process_get_##stdxxx(Process *__restrict self) {                              \
-		if (self == &this_process)                                                \
-			return DeeFile_GetStd(DEE_STDXXX);                                    \
-		ipc_unimplemented();                                                      \
-		return NULL;                                                              \
-	}                                                                             \
-	PRIVATE int DCALL                                                             \
-	process_del_##stdxxx(Process *__restrict self) {                              \
-		if (self == &this_process) {                                              \
-			DREF DeeObject *oldval;                                               \
-			oldval = DeeFile_SetStd(DEE_STDXXX, NULL);                            \
-			if (ITER_ISOK(oldval))                                                \
-				Dee_Decref(oldval);                                               \
-			return 0;                                                             \
-		}                                                                         \
-		return ipc_unimplemented();                                               \
-	}                                                                             \
-	PRIVATE int DCALL                                                             \
-	process_set_##stdxxx(Process *__restrict self, DeeObject *__restrict value) { \
-		if (self == &this_process) {                                              \
-			DREF DeeObject *oldval;                                               \
-			oldval = DeeFile_SetStd(DEE_STDXXX, value);                           \
-			if (ITER_ISOK(oldval))                                                \
-				Dee_Decref(oldval);                                               \
-			return 0;                                                             \
-		}                                                                         \
-		return ipc_unimplemented();                                               \
+#define DEFINE_PROCESS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)    \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL      \
+	process_get_##stdxxx(Process *__restrict self) {        \
+		if (self == &this_process)                          \
+			return DeeFile_GetStd(DEE_STDXXX);              \
+		ipc_unimplemented();                                \
+		return NULL;                                        \
+	}                                                       \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                  \
+	process_del_##stdxxx(Process *__restrict self) {        \
+		if (self == &this_process) {                        \
+			DREF DeeObject *oldval;                         \
+			oldval = DeeFile_SetStd(DEE_STDXXX, NULL);      \
+			if (ITER_ISOK(oldval))                          \
+				Dee_Decref(oldval);                         \
+			return 0;                                       \
+		}                                                   \
+		return ipc_unimplemented();                         \
+	}                                                       \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL               \
+	process_set_##stdxxx(Process *self, DeeObject *value) { \
+		if (self == &this_process) {                        \
+			DREF DeeObject *oldval;                         \
+			oldval = DeeFile_SetStd(DEE_STDXXX, value);     \
+			if (ITER_ISOK(oldval))                          \
+				Dee_Decref(oldval);                         \
+			return 0;                                       \
+		}                                                   \
+		return ipc_unimplemented();                         \
 	}
 DEFINE_PROCESS_STD_FUNCTIONS(stdin, DEE_STDIN)
 DEFINE_PROCESS_STD_FUNCTIONS(stdout, DEE_STDOUT)
 DEFINE_PROCESS_STD_FUNCTIONS(stderr, DEE_STDERR)
 #undef DEFINE_PROCESS_STD_FUNCTIONS
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-call_extern(DeeObject *__restrict module_name,
-            DeeObject *__restrict global_name,
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+call_extern(DeeObject *module_name, DeeObject *global_name,
             size_t argc, DeeObject **argv) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
@@ -302,8 +251,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-get_extern(DeeObject *module_name,
-           DeeObject *global_name) {
+get_extern(DeeObject *module_name, DeeObject *global_name) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
 	if unlikely(!module)
@@ -320,7 +268,6 @@ PRIVATE DEFINE_STRING(str_getcwd, "getcwd");
 PRIVATE DEFINE_STRING(str_chdir, "chdir");
 PRIVATE DEFINE_STRING(str_environ, "environ");
 
-#ifndef CONFIG_NO_THREADS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_threads(Process *__restrict self) {
 	if (self == &this_process)
@@ -328,7 +275,7 @@ process_get_threads(Process *__restrict self) {
 	ipc_unimplemented();
 	return NULL;
 }
-#endif /* !CONFIG_NO_THREADS */
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_get_environ(Process *__restrict self) {
 	if (self == &this_process)
@@ -337,8 +284,18 @@ process_get_environ(Process *__restrict self) {
 	return NULL;
 }
 
-PRIVATE int DCALL
-process_set_environ(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_get_memory(Process *__restrict self) {
+#if 0
+	if (self == &this_process)
+		; /* TODO */
+#endif
+	ipc_unimplemented();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+process_set_environ(Process *self, DeeObject *value) {
 	if (self == &this_process) {
 		DREF DeeObject *temp;
 		int result;
@@ -366,8 +323,8 @@ process_get_pwd(Process *__restrict self) {
 	return NULL;
 }
 
-PRIVATE int DCALL
-process_set_pwd(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+process_set_pwd(Process *self, DeeObject *value) {
 	if (value &&
 	    DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
@@ -388,7 +345,9 @@ process_set_pwd(Process *__restrict self, DeeObject *value) {
 err_running:
 	DeeError_Throwf(&DeeError_ValueError,
 	                "Cannot %s pwd of running process %k",
-	                value ? "change" : "delete", self);
+	                value ? "change"
+	                      : "delete",
+	                self);
 err:
 	return -1;
 }
@@ -398,14 +357,16 @@ process_del_pwd(Process *__restrict self) {
 	return process_set_pwd(self, NULL);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_get_exe(Process *__restrict UNUSED(self)) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_get_exe(Process *__restrict self) {
+	if (self == &this_process)
+		return_reference_((DeeObject *)DeeModule_GetDeemon()->mo_name);
 	ipc_unimplemented();
 	return NULL;
 }
 
-PRIVATE int DCALL
-process_set_exe(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+process_set_exe(Process *self, DeeObject *value) {
 	if (value &&
 	    DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
@@ -425,14 +386,43 @@ process_del_exe(Process *__restrict self) {
 	return process_set_exe(self, NULL);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_get_cmdline(Process *__restrict UNUSED(self)) {
-	ipc_unimplemented();
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_get_cmdline(Process *__restrict self) {
+	if (self == &this_process) {
+		size_t i;
+		DREF DeeObject *argv = Dee_GetArgv();
+		struct unicode_printer printer = UNICODE_PRINTER_INIT;
+		DeeStringObject *deemon_str = DeeModule_GetDeemon()->mo_name;
+		if (unicode_printer_print(&printer,
+		                          DeeString_STR(deemon_str),
+		                          DeeString_SIZE(deemon_str)) < 0)
+			goto err_printer;
+		for (i = 0; i < DeeTuple_SIZE(argv); ++i) {
+			char *arg;
+			if (unicode_printer_putascii(&printer, ' '))
+				goto err_printer;
+			ASSERT_OBJECT_TYPE_EXACT(DeeTuple_GET(argv, i), &DeeString_Type);
+			arg = DeeString_AsUtf8(DeeTuple_GET(argv, i));
+			if unlikely(!arg)
+				goto err_printer;
+			if (process_cmdline_encode_argument(&unicode_printer_print,
+			                                    &printer,
+			                                    arg, WSTR_LENGTH(arg)) < 0)
+				goto err_printer;
+		}
+		Dee_Decref(argv);
+		return unicode_printer_pack(&printer);
+err_printer:
+		unicode_printer_fini(&printer);
+		Dee_Decref(argv);
+	} else {
+		ipc_unimplemented();
+	}
 	return NULL;
 }
 
-PRIVATE int DCALL
-process_set_cmdline(Process *__restrict self, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+process_set_cmdline(Process *self, DeeObject *value) {
 	if (value &&
 	    DeeObject_AssertTypeExact(value, &DeeString_Type))
 		goto err;
@@ -452,17 +442,36 @@ process_del_cmdline(Process *__restrict self) {
 	return process_set_cmdline(self, NULL);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-process_get_argv(Process *__restrict UNUSED(self)) {
-	ipc_unimplemented();
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+process_get_argv(Process *__restrict self) {
+	if (self == &this_process) {
+		size_t i;
+		DREF DeeObject *argv, *result, *temp;
+		argv   = Dee_GetArgv();
+		result = DeeTuple_NewUninitialized(DeeTuple_SIZE(argv) + 1);
+		if unlikely(!result)
+			goto err;
+		temp = (DeeObject *)DeeModule_GetDeemon()->mo_name;
+		Dee_Incref(temp);
+		DeeTuple_SET(result, 0, temp);
+		for (i = 0; i < DeeTuple_SIZE(argv); ++i) {
+			temp = DeeTuple_GET(argv, i);
+			Dee_Incref(temp);
+			DeeTuple_SET(result, i + 1, temp);
+		}
+		Dee_Decref(argv);
+		return result;
+err_argv:
+		Dee_Decref(argv);
+	} else {
+		ipc_unimplemented();
+	}
+err:
 	return NULL;
 }
 
-PRIVATE int DCALL
-process_set_argv(Process *__restrict UNUSED(self),
-                 DeeObject *__restrict value) {
-	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+process_set_argv(Process *self, DeeObject *value) {
 	ipc_unimplemented();
 err:
 	return -1;
@@ -470,50 +479,75 @@ err:
 
 
 PRIVATE struct type_getset process_getsets[] = {
-#ifndef CONFIG_NO_THREADS
-	{ "threads", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL,
-	  DOC("->?S?Dthread\nEnumerate all the threads of @this process") },
-#endif
-	{ "files", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files },
-	{ "stdin", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
+	{ S_Process_getset_hasstarted_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_hasstarted, NULL, NULL,
+	  DOC(S_Process_getset_hasstarted_doc) },
+	{ S_Process_getset_wasdetached_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_wasdetached, NULL, NULL,
+	  DOC(S_Process_getset_wasdetached_doc) },
+	{ S_Process_getset_hasterminated_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_wasterminated, NULL, NULL,
+	  DOC(S_Process_getset_hasterminated_doc) },
+	{ S_Process_getset_isachild_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_isachild, NULL, NULL,
+	  DOC(S_Process_getset_isachild_doc) },
+	{ S_Process_getset_id_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_id, NULL, NULL,
+	  DOC(S_Process_getset_id_doc) },
+	{ S_Process_getset_threads_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL,
+	  DOC(S_Process_getset_threads_doc) },
+	{ S_Process_getset_files_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files, NULL, NULL,
+	  DOC(S_Process_getset_files_doc) },
+	{ S_Process_getset_stdin_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdin,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stdin,
-	  DOC("->?DFile\nGet or set the standard input stream used by the process") },
-	{ "stdout", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdout,
+	  DOC(S_Process_getset_stdin_doc) },
+	{ S_Process_getset_stdout_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdout,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdout,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stdout,
-	  DOC("->?DFile\nGet or set the standard output stream used by the process") },
-	{ "stderr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stderr,
+	  DOC(S_Process_getset_stdout_doc) },
+	{ S_Process_getset_stderr_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stderr,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stderr,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stderr,
-	  DOC("->?DFile\nGet or set the standard error stream used by the process") },
-	{ "pwd", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_pwd,
+	  DOC(S_Process_getset_stderr_doc) },
+	{ S_Process_getset_pwd_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_pwd,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_pwd,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_pwd,
-	  DOC("->?DFile\nGet or set the process working directory used by the process") },
-	{ "exe", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_exe,
+	  DOC(S_Process_getset_pwd_doc) },
+	{ S_Process_getset_exe_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_exe,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_exe,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_exe,
-	  DOC("->?Dstring\nThe filename of the image being executed by the process") },
-	{ "cmdline", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
+	  DOC(S_Process_getset_exe_doc) },
+	{ S_Process_getset_cmdline_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_cmdline,
-	  DOC("->?Dstring\nThe commandline used to executed the process") },
-	{ "argv", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_argv,
+	  DOC(S_Process_getset_cmdline_doc) },
+	{ S_Process_getset_argv_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_argv,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline, /* Same thing! */
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_argv,
-	  DOC("->?S?Dstring\nThe argument vector passed to the programms C-main() method") },
-	{ "cmd", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
+	  DOC(S_Process_getset_argv_doc) },
+	{ S_Process_getset_cmd_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_cmdline,
-	  DOC("->?Dstring\nDeprecated alias for #cmdline") },
-	{ "environ", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_environ,
+	  DOC(S_Process_getset_cmd_doc) },
+	{ S_Process_getset_environ_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_environ,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_environ,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_environ,
-	  DOC("->?S?T2?Dstring?Dstring\nThe state of environment variables in the given process") },
-	/* Process environment control:
-	 * >> property memory -> file; // A file allowing read/write access to the process's VM
-	 */
+	  DOC(S_Process_getset_environ_doc) },
+	{ S_Process_getset_memory_name,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_memory, NULL, NULL,
+	  DOC(S_Process_getset_memory_doc) },
 	{ NULL }
 };
 
@@ -523,20 +557,22 @@ PRIVATE struct type_getset process_getsets[] = {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 process_class_self(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":self"))
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_self_name))
 		return NULL;
 	return_reference_((DeeObject *)&this_process);
 }
 
 PRIVATE struct type_method process_class_methods[] = {
-	{ "self", &process_class_self,
-	  DOC("->?.\n"
-	      "Deprecated alias for #current") },
+	{ S_Process_function_self_name,
+	  &process_class_self,
+	  DOC(S_Process_function_self_doc) },
 	{ NULL }
 };
 
 PRIVATE struct type_member process_class_members[] = {
-	TYPE_MEMBER_CONST("current", &this_process),
+	TYPE_MEMBER_CONST_DOC(S_Process_member_current_name,
+	                      &this_process,
+	                      S_Process_member_current_doc),
 	TYPE_MEMBER_END
 };
 
@@ -545,7 +581,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_init(Process *__restrict self,
              size_t argc, DeeObject **argv) {
 	DeeObject *temp;
-	if (DeeArg_Unpack(argc, argv, "o|o:process", &temp, &temp))
+	if (DeeArg_Unpack(argc, argv, "o|o:" S_Process_tp_name, &temp, &temp))
 		goto err;
 	return 0;
 err:
@@ -554,20 +590,8 @@ err:
 
 INTERN DeeTypeObject DeeProcess_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "process",
-	/* .tp_doc      = */ DOC("(exe:?Dstring)\n"
-	                         "(exe:?Dstring,args:{?Dstring})\n"
-	                         "@param args A sequence of :{string}s that should be passed as secondary arguments. "
-	                                     "When provided, @exe is prepended first, however the full argument list "
-	                                     "can be overwritten using the #argv property\n"
-	                         "Construct a new, non-started process for application @exe\n"
-	                         "If provided, additional arguments @args are passed "
-	                         "to the process's C-level ${main()} function\n"
-	                         "To start a process, invoke the #start function, prior to which "
-	                         "you are able to override/redirect the full commandline (#cmdline), "
-	                         "the full argument list (#argv, including the implicit initial "
-	                         "argument that normally defaults to @exe), or the standard file "
-	                         "streams (#stdin, #stdout, #stderr) using :pipe readers/writers."),
+	/* .tp_name     = */ S_Process_tp_name,
+	/* .tp_doc      = */ DOC(S_Process_tp_doc),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -613,8 +637,8 @@ INTERN DeeTypeObject DeeProcess_Type = {
 
 INTERN DeeTypeObject DeeProcEnumIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "enumproc.Iterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ S_ProcEnumIterator_tp_name,
+	/* .tp_doc      = */ DOC(S_ProcEnumIterator_tp_doc),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -663,8 +687,8 @@ PRIVATE struct type_member enumproc_class_members[] = {
 
 INTERN DeeTypeObject DeeProcEnum_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "enumproc",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ S_ProcEnum_tp_name,
+	/* .tp_doc      = */ DOC(S_ProcEnum_tp_doc),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -693,7 +717,7 @@ INTERN DeeTypeObject DeeProcEnum_Type = {
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
-	/* .tp_seq           = */ NULL, /* TODO */
+	/* .tp_seq           = */ NULL,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
@@ -705,209 +729,6 @@ INTERN DeeTypeObject DeeProcEnum_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ enumproc_class_members
 };
-
-
-typedef DeeSystemFileObject SystemFile;
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-pipe_class_new(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **argv) {
-	uint32_t pipe_size;
-	if (DeeArg_Unpack(argc, argv, "|I32u:new", &pipe_size))
-		goto err;
-	ipc_unimplemented();
-err:
-	return NULL;
-}
-
-
-PRIVATE struct type_member pipe_class_members[] = {
-	TYPE_MEMBER_CONST("Reader", (DeeObject *)&DeePipeReader_Type),
-	TYPE_MEMBER_CONST("Writer", (DeeObject *)&DeePipeWriter_Type),
-	TYPE_MEMBER_END
-};
-
-PRIVATE struct type_method pipe_class_methods[] = {
-	{ "new", &pipe_class_new,
-	  DOC("(size_hint=!0)->?T2?#reader?#writer\n"
-	      "Creates a new pair of linked pipe files") },
-	{ NULL }
-};
-
-INTERN DeeFileTypeObject DeePipe_Type = {
-	/* .ft_base = */ {
-		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */ "pipe",
-		/* .tp_doc      = */ NULL,
-		/* .tp_flags    = */ TP_FNORMAL,
-		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
-		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
-					TYPE_FIXED_ALLOCATOR(SystemFile)
-				}
-			},
-			/* .tp_dtor        = */ NULL,
-			/* .tp_assign      = */ NULL,
-			/* .tp_move_assign = */ NULL
-		},
-		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
-		},
-		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ NULL,
-		/* .tp_gc            = */ NULL,
-		/* .tp_math          = */ NULL,
-		/* .tp_cmp           = */ NULL,
-		/* .tp_seq           = */ NULL,
-		/* .tp_iter_next     = */ NULL,
-		/* .tp_attr          = */ NULL,
-		/* .tp_with          = */ NULL,
-		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */ NULL,
-		/* .tp_getsets       = */ NULL,
-		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */ pipe_class_methods,
-		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ pipe_class_members
-	},
-	/* .ft_read   = */ NULL,
-	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ NULL,
-	/* .ft_sync   = */ NULL,
-	/* .ft_trunc  = */ NULL,
-	/* .ft_close  = */ NULL,
-	/* .ft_pread  = */ NULL,
-	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ NULL,
-	/* .ft_ungetc = */ NULL,
-	/* .ft_putc   = */ NULL
-};
-
-INTERN DeeFileTypeObject DeePipeReader_Type = {
-	/* .ft_base = */ {
-		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */ "pipe.reader",
-		/* .tp_doc      = */ NULL,
-		/* .tp_flags    = */ TP_FNORMAL,
-		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeePipe_Type,
-		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
-					TYPE_FIXED_ALLOCATOR(SystemFile)
-				}
-			},
-			/* .tp_dtor        = */ NULL,
-			/* .tp_assign      = */ NULL,
-			/* .tp_move_assign = */ NULL
-		},
-		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
-		},
-		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ NULL,
-		/* .tp_gc            = */ NULL,
-		/* .tp_math          = */ NULL,
-		/* .tp_cmp           = */ NULL,
-		/* .tp_seq           = */ NULL,
-		/* .tp_iter_next     = */ NULL,
-		/* .tp_attr          = */ NULL,
-		/* .tp_with          = */ NULL,
-		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */ NULL,
-		/* .tp_getsets       = */ NULL,
-		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */ NULL,
-		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ NULL
-	},
-	/* .ft_read   = */ NULL,
-	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ NULL,
-	/* .ft_sync   = */ NULL,
-	/* .ft_trunc  = */ NULL,
-	/* .ft_close  = */ NULL,
-	/* .ft_pread  = */ NULL,
-	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ NULL,
-	/* .ft_ungetc = */ NULL,
-	/* .ft_putc   = */ NULL
-};
-
-INTERN DeeFileTypeObject DeePipeWriter_Type = {
-	/* .ft_base = */ {
-		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */ "pipe.writer",
-		/* .tp_doc      = */ NULL,
-		/* .tp_flags    = */ TP_FNORMAL,
-		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_NONE,
-		/* .tp_base     = */ (DeeTypeObject *)&DeePipe_Type,
-		/* .tp_init = */ {
-			{
-				/* .tp_alloc = */ {
-					/* .tp_ctor      = */ NULL,
-					/* .tp_copy_ctor = */ NULL,
-					/* .tp_deep_ctor = */ NULL,
-					/* .tp_any_ctor  = */ NULL,
-					TYPE_FIXED_ALLOCATOR(SystemFile)
-				}
-			},
-			/* .tp_dtor        = */ NULL,
-			/* .tp_assign      = */ NULL,
-			/* .tp_move_assign = */ NULL
-		},
-		/* .tp_cast = */ {
-			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
-			/* .tp_bool = */ NULL
-		},
-		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ NULL,
-		/* .tp_gc            = */ NULL,
-		/* .tp_math          = */ NULL,
-		/* .tp_cmp           = */ NULL,
-		/* .tp_seq           = */ NULL,
-		/* .tp_iter_next     = */ NULL,
-		/* .tp_attr          = */ NULL,
-		/* .tp_with          = */ NULL,
-		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */ NULL,
-		/* .tp_getsets       = */ NULL,
-		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */ NULL,
-		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ NULL
-	},
-	/* .ft_read   = */ NULL,
-	/* .ft_write  = */ NULL,
-	/* .ft_seek   = */ NULL,
-	/* .ft_sync   = */ NULL,
-	/* .ft_trunc  = */ NULL,
-	/* .ft_close  = */ NULL,
-	/* .ft_pread  = */ NULL,
-	/* .ft_pwrite = */ NULL,
-	/* .ft_getc   = */ NULL,
-	/* .ft_ungetc = */ NULL,
-	/* .ft_putc   = */ NULL
-};
-
 
 DECL_END
 

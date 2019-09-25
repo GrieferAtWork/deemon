@@ -372,6 +372,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAllNl(DeeObject *self, De
  *       a filesystem, that is), an `Error.SystemError.UnsupportedAPI' is thrown.
  * @return: * :        A new reference to the file in question.
  * @return: NULL:      An error (other than file-not-found) has occurred.
+ * @return: ITER_DONE: The specified file does not exist.
  * @return: ITER_DONE: `OPEN_FCREAT' has not been given and file could not be found (no error was thrown)
  * @return: ITER_DONE: `OPEN_FEXCL' has been given and the file already exists (no error was thrown) */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL

@@ -16,49 +16,9 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_IPC_LIBIPC_C
-#define GUARD_DEX_IPC_LIBIPC_C 1
-#define DEE_SOURCE 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1
+#ifndef GUARD_DEX_IPC_UNIX_CMDLINE_C_INL
+#define GUARD_DEX_IPC_UNIX_CMDLINE_C_INL 1
 
-#include "libipc.h"
+#include "generic-cmdline.c.inl"
 
-#include <deemon/api.h>
-#include <deemon/dex.h>
-
-#ifndef __INTELLISENSE__
-#ifdef CONFIG_HOST_WINDOWS
-#   include "windows.c.inl"
-#elif defined(CONFIG_HOST_UNIX)
-#   include "unix.c.inl"
-#else
-#   include "generic.c.inl"
-#   include "generic-pipe.c.inl"
-#endif
-#endif /* !__INTELLISENSE__ */
-
-
-DECL_BEGIN
-
-PRIVATE struct dex_symbol symbols[] = {
-	{ "Process", (DeeObject *)&DeeProcess_Type },
-	{ "enumproc", (DeeObject *)&DeeProcEnum_Type },
-	{ "Pipe", (DeeObject *)&DeePipe_Type },
-	{ NULL }
-};
-
-PUBLIC struct dex DEX = {
-	/* .d_symbols      = */ symbols,
-	/* .d_init         = */ NULL,
-#ifdef HAVE_LIBCMDLINE_FINI
-	/* .d_fini         = */ libcmdline_fini,
-#else /* HAVE_LIBCMDLINE_FINI */
-	/* .d_fini         = */ NULL,
-#endif /* !HAVE_LIBCMDLINE_FINI */
-	/* .d_import_names = */ { NULL }
-};
-
-DECL_END
-
-#endif /* !GUARD_DEX_IPC_LIBIPC_C */
+#endif /* !GUARD_DEX_IPC_UNIX_CMDLINE_C_INL */

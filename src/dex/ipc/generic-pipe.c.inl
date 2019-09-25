@@ -16,92 +16,43 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_IPC_WINDOWS_PIPE_C_INL
-#define GUARD_DEX_IPC_WINDOWS_PIPE_C_INL 1
+#ifndef GUARD_DEX_IPC_GENERIC_PIPE_C_INL
+#define GUARD_DEX_IPC_GENERIC_PIPE_C_INL 1
 #define DEE_SOURCE 1
 #define _KOS_SOURCE 1
-
-#include "libipc.h"
-/**/
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
-#include <deemon/tuple.h>
 
-#include <string.h>
-
+#include "libipc.h"
 #include "strings.h"
 
 DECL_BEGIN
 
-typedef DeeSystemFileObject SystemFile;
-
-PRIVATE WUNUSED NONNULL((1)) DREF SystemFile *DCALL
-open_fd(DeeFileTypeObject *__restrict fType, HANDLE hHandle) {
-	DREF SystemFile *result;
-	result = DeeObject_MALLOC(SystemFile);
-	if unlikely(!result)
-		goto done;
-	/* Fill in the system file. */
-	result->sf_filename  = NULL;
-	result->sf_handle    = hHandle;
-	result->sf_ownhandle = hHandle; /* Inherit */
-	result->sf_filetype  = FILE_TYPE_PIPE;
-	DeeLFileObject_Init(result, fType);
-done:
-	return result;
+#ifndef IPC_UNIMPLEMENTED_DEFINED
+#define IPC_UNIMPLEMENTED_DEFINED 1
+PRIVATE ATTR_COLD int DCALL ipc_unimplemented(void) {
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "IPI functionality is not supported");
 }
+#endif /* !IPC_UNIMPLEMENTED_DEFINED */
 
+
+typedef DeeSystemFileObject SystemFile;
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
                size_t argc, DeeObject **argv) {
-	DWORD pipe_size = 0;
-	HANDLE hReader, hWriter;
-	DREF SystemFile *fReader, *fWriter;
-	DREF DeeObject *result;
+	uint32_t pipe_size;
 	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Pipe_function_new_name, &pipe_size))
 		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	if (!CreatePipe(&hReader, &hWriter, NULL, pipe_size)) {
-		DBG_ALIGNMENT_ENABLE();
-		nt_ThrowLastError();
-		goto err;
-	}
-	DBG_ALIGNMENT_ENABLE();
-	/* Create file objects for the pipe handles. */
-	fReader = open_fd(&DeePipeReader_Type, hReader);
-	if unlikely(!fReader)
-		goto err_hreadwrite;
-	fWriter = open_fd(&DeePipeWriter_Type, hWriter);
-	if unlikely(!fWriter)
-		goto err_fread_hwrite;
-	/* Pack the file into a tuple. */
-	result = DeeTuple_PackSymbolic(2, fReader, fWriter);
-	if unlikely(!result)
-		goto err_freadwrite;
-	return result;
-err_freadwrite:
-	Dee_Decref(fReader);
-	Dee_Decref(fWriter);
-	goto err;
-err_hreadwrite:
-	DBG_ALIGNMENT_DISABLE();
-	CloseHandle(hReader);
-err_hwriter:
-	DBG_ALIGNMENT_DISABLE();
-	CloseHandle(hWriter);
-	DBG_ALIGNMENT_ENABLE();
+	ipc_unimplemented();
 err:
 	return NULL;
-err_fread_hwrite:
-	Dee_Decref(fReader);
-	goto err_hwriter;
 }
 
 
@@ -293,4 +244,4 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
 
 DECL_END
 
-#endif /* !GUARD_DEX_IPC_WINDOWS_PIPE_C_INL */
+#endif /* !GUARD_DEX_IPC_GENERIC_PIPE_C_INL */

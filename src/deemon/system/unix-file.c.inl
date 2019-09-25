@@ -775,10 +775,10 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */sysfile_methods,
-		/* .tp_getsets       = */sysfile_getsets,
+		/* .tp_methods       = */ sysfile_methods,
+		/* .tp_getsets       = */ sysfile_getsets,
 		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */sysfile_class_methods,
+		/* .tp_class_methods = */ sysfile_class_methods,
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},

@@ -3317,14 +3317,14 @@ unix_readlink(/*utf-8*/ char const *__restrict path) {
 	size_t bufsize, new_size;
 	dssize_t req_size;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	bufsize                        = PATH_MAX;
-	buffer                         = unicode_printer_alloc_utf8(&printer, bufsize);
+	bufsize = PATH_MAX;
+	buffer  = unicode_printer_alloc_utf8(&printer, bufsize);
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
 		struct stat st;
 		if (DeeThread_CheckInterrupt())
-			goto err;
+			goto err_buf;
 		DBG_ALIGNMENT_DISABLE();
 		req_size = readlink(path, buffer, bufsize + 1);
 		if unlikely(req_size < 0) {
@@ -3334,7 +3334,7 @@ handle_error:
 			DeeError_SysThrowf(&DeeError_FSError, error,
 			                   "Failed to read symbolic link %q",
 			                   path);
-			goto err;
+			goto err_buf;
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if ((size_t)req_size <= bufsize)
@@ -3353,12 +3353,13 @@ handle_error:
 			break; /* Shouldn't happen, but might due to race conditions? */
 		new_buffer = unicode_printer_resize_utf8(&printer, buffer, new_size);
 		if unlikely(!new_buffer)
-			goto err;
+			goto err_buf;
 		buffer  = new_buffer;
 		bufsize = new_size;
 	}
 	/* Release unused data. */
-	unicode_printer_confirm_utf8(&printer, buffer, (size_t)req_size);
+	if (unicode_printer_confirm_utf8(&printer, buffer, (size_t)req_size) < 0)
+		goto err_buf;
 	bufsize = UNICODE_PRINTER_LENGTH(&printer);
 	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) != '/')
 		--bufsize;
@@ -3367,6 +3368,8 @@ handle_error:
 	UNICODE_PRINTER_SETCHAR(&printer, bufsize, '/');
 	unicode_printer_truncate(&printer, bufsize + 1);
 	return unicode_printer_pack(&printer);
+err_buf:
+	unicode_printer_free_utf8(&printer, buffer);
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
