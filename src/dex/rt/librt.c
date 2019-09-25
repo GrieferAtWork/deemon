@@ -1590,10 +1590,15 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_argv_set_f(size_t argc, DeeObject **argv) {
 	DeeObject *new_tuple;
+	size_t i;
 	if (DeeArg_Unpack(argc, argv, "o:argv.setter", &new_tuple))
 		goto err;
 	if (DeeObject_AssertTypeExact(new_tuple, &DeeTuple_Type))
 		goto err;
+	for (i = 0; i < DeeTuple_SIZE(new_tuple); ++i) {
+		if (DeeObject_AssertTypeExact(DeeTuple_GET(new_tuple, i), &DeeString_Type))
+			goto err;
+	}
 	Dee_SetArgv(new_tuple);
 	return_none;
 err:
