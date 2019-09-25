@@ -264,6 +264,8 @@ gii("AT_THIS_STACK");
 //[[[end]]]
 
 
+
+
 PRIVATE ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
 err_unsupported(char const *__restrict name) {
  return DeeError_Throwf(&DeeError_UnsupportedAPI,
@@ -3167,7 +3169,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBPOSIX_DUP_DEF
 	LIBPOSIX_DUP2_DEF
 	LIBPOSIX_DUP3_DEF
-	/* TODO: closerange() */
 	/* TODO: lockf() */
 	LIBPOSIX_PREAD_DEF
 	/* TODO: readv() */

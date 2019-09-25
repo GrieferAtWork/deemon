@@ -914,6 +914,49 @@ process_timedjoin(Process *self, size_t argc, DeeObject **argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64d:" S_Process_function_timedjoin_name, &timeout))
 		goto err;
+	/* NOTE: wait() w/ timeout can be implemented with `signalfd()':
+	 * >> pid_t waitpid_timeout(pid_t pid, struct timespec *tmo, int *status) {
+	 * >>     pid_t result;
+	 * >>     result = waitpid(pid, status, WNOHANG);
+	 * >>     if (result == 0) {
+	 * >>         int fd;
+	 * >>         struct pollfd pfd[1];
+	 * >>         sigset_t ss, old_ss;
+	 * >>         sigemptyset(&ss);
+	 * >>         sigaddset(&ss, SIGCHLD);
+	 * >>         // Create a signalfd to wait for SIGCHLD
+	 * >>         // NOTE: Also set the `SFD_NONBLOCK' flag so us reading
+	 * >>         //       from the descriptor in order to clear it will
+	 * >>         //       not block.
+	 * >>         fd = signalfd(-1, &ss, SFD_CLOEXEC | SFD_NONBLOCK);
+	 * >>         // Prevent SIGCHLD from triggering a signal handler, and
+	 * >>         // ensure that it is always able to handle the signal.
+	 * >>         sigprocmask(SIG_BLOCK, &ss, &old_ss);
+	 * >>         pfd[0].fd     = fd;
+	 * >>         pfd[0].events = POLLIN;
+	 * >>         for (;;) {
+	 * >>             // With our signalfd connected, try once again
+	 * >>             // if the given process has already terminated.
+	 * >>             // If it has, we wouldn't receive SIGCHLD
+	 * >>             result = waitpid(pid, status, WNOHANG);
+	 * >>             if (result != 0)
+	 * >>                 break;
+	 * >>             // TODO: Starting with the second iteration, read from `signalfd()',
+	 * >>             //       since there may be other processes that could be dying
+	 * >>             //       while we're waiting for ours.
+	 * >>             // Poll (with timeout) the signalfd, which will become
+	 * >>             // readable once our process got a SIGCHLD from a dying child
+	 * >>             // TODO: Account for lost `tmo' during multiple iterations.
+	 * >>             ppoll(pfd, 1, tmo, NULL);
+	 * >>         }
+	 * >>         // Restore the old signal mask.
+	 * >>         sigprocmask(SIG_SETMASK, &old_ss, NULL);
+	 * >>     }
+	 * >>     return result;
+	 * >> }
+	 * >> 
+	 */
+
 	/* TODO */
 	ipc_unimplemented();
 err:
