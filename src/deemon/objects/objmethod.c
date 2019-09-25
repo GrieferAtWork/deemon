@@ -2269,8 +2269,8 @@ DeeCMethod_CallFunc_d(dcmethod_t fun, size_t argc, DeeObject **argv) {
 	uint16_t old_depth      = caller->t_exceptsz;
 	result                  = (*fun)(argc, argv);
 	if unlikely(result ? old_depth != caller->t_exceptsz
-		                : old_depth + 1 != caller->t_exceptsz)
-	fatal_invalid_except(result, old_depth + !result, (void *)fun);
+	                   : old_depth + 1 != caller->t_exceptsz)
+		fatal_invalid_except(result, old_depth + !result, (void *)fun);
 	return result;
 }
 
@@ -2282,8 +2282,8 @@ DeeObjMethod_CallFunc_d(dobjmethod_t fun, DeeObject *self,
 	uint16_t old_depth      = caller->t_exceptsz;
 	result                  = (*fun)(self, argc, argv);
 	if unlikely(result ? old_depth != caller->t_exceptsz
-		                : old_depth + 1 != caller->t_exceptsz)
-	fatal_invalid_except(result, old_depth + !result, (void *)fun);
+	                   : old_depth + 1 != caller->t_exceptsz)
+		fatal_invalid_except(result, old_depth + !result, (void *)fun);
 	return result;
 }
 
@@ -2295,8 +2295,8 @@ DeeKwCMethod_CallFunc_d(dkwcmethod_t fun, size_t argc,
 	uint16_t old_depth      = caller->t_exceptsz;
 	result                  = (*fun)(argc, argv, kw);
 	if unlikely(result ? old_depth != caller->t_exceptsz
-		                : old_depth + 1 != caller->t_exceptsz)
-	fatal_invalid_except(result, old_depth + !result, (void *)fun);
+	                   : old_depth + 1 != caller->t_exceptsz)
+		fatal_invalid_except(result, old_depth + !result, (void *)fun);
 	return result;
 }
 

@@ -740,8 +740,14 @@ again:
 	                        used_stdout,
 	                        used_stderr,
 	                        search_path);
-
-	self->p_pid = cpid;
+	if (cpid < 0) {
+		DeeError_SysThrowf(&DeeError_SystemError, errno,
+		                   "Failed to spawn new process");
+	} else {
+		self->p_pid = cpid;
+		result = Dee_None;
+		Dee_Incref(Dee_None);
+	}
 done_procenv_envp:
 	process_free_envp(used_envp);
 done_procenv_argv:
