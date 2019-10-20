@@ -636,6 +636,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "uint16_t", (DeeObject *)&DeeCUInt16_Type },
 	{ "uint32_t", (DeeObject *)&DeeCUInt32_Type },
 	{ "uint64_t", (DeeObject *)&DeeCUInt64_Type },
+	/* TODO: endian-specific integer types (e.g. `le16' and `be16')
+	 *       These could be used in structures and always encode/decode
+	 *       the underlying value to/from a regular deemon `int' object
+	 *       to automatically apply the necessary endian conversion
+	 * >> import * from ctypes;
+	 * >> union foo = {
+	 * >> 	.le = le32,
+	 * >> 	.be = be32,
+	 * >> };
+	 * >> x = foo(le: 0x12345678);
+	 * >> print x.be; // 0x78563412
+	 */
 	{ "float", (DeeObject *)&DeeCFloat_Type },
 	{ "double", (DeeObject *)&DeeCDouble_Type },
 	{ "ldouble", (DeeObject *)&DeeCLDouble_Type },
