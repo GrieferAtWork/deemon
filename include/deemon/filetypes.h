@@ -126,7 +126,7 @@ struct Dee_file_buffer_object {
 
 #define Dee_FILE_BUFFER_FNORMAL     0x0000 /* Normal buffer flags. */
 #define Dee_FILE_BUFFER_FREADONLY   0x0001 /* The buffer can only be used for reading. */
-#define Dee_FILE_BUFFER_FNODYNSCALE 0x0002 /* The buffer is allowed to dynamically change its buffer size. */
+#define Dee_FILE_BUFFER_FNODYNSCALE 0x0002 /* The buffer is not allowed to dynamically change its buffer size. */
 #define Dee_FILE_BUFFER_FLNBUF      0x0004 /* The buffer is line-buffered, meaning that it will
                                             * flush its data whenever a line-feed is printed.
                                             * Additionally if the `FILE_BUFFER_FISATTY' flag is set,

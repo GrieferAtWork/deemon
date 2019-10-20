@@ -386,7 +386,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 		}
 		/* Relocate pointers. */
 		me->fb_ptr  = new_buffer + (me->fb_ptr - me->fb_base);
-		me->fb_chng = new_buffer;
+		me->fb_base = new_buffer;
 		me->fb_size = size;
 	}
 	me->fb_chng = me->fb_base;
@@ -456,6 +456,11 @@ read_from_buffer:
 		bufsize -= bufavail;
 		if (!bufsize)
 			goto done;
+		/* Make sure that we only invoke read() on the underlying
+		 * file once, so-as to ensure that we don't start blocking
+		 * because the underlying file is pipe-like and now empty,
+		 * before the caller got a chance to process the data that
+		 * we _did_ manage to extract! */
 		if (did_read_data)
 			goto done;
 		buffer += bufavail;
@@ -463,7 +468,7 @@ read_from_buffer:
 	/* The buffer is empty and must be re-filled. */
 	/* First off: Flush any changes that had been made. */
 	COMPILER_BARRIER();
-	if (buffer_sync_nolock(self, true))
+	if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 		goto err;
 	if (buffer_determine_isatty(self))
 		goto err;
@@ -493,37 +498,37 @@ read_from_buffer:
 	/* Determine where the next block of data is. */
 	next_data = self->fb_fblk + (self->fb_ptr - self->fb_base);
 
-	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
-		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
-read_through:
-		file = self->fb_file;
-		Dee_Incref(file);
-		if (next_data != self->fb_fpos) {
-			/* Seek in the underlying file to get where we need to go. */
-			doff_t new_pos;
-			COMPILER_BARRIER();
-			new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
-			COMPILER_BARRIER();
-			Dee_Decref(file);
-			if unlikely(new_pos < 0)
-				goto err;
-			self->fb_fpos = next_data;
-			goto again; /* Must start over because of recursive callbacks. */
-		}
-		COMPILER_BARRIER();
-		read_size = DeeFile_Readf(file, buffer, bufsize, flags);
-		COMPILER_BARRIER();
-		Dee_Decref(file);
-		if unlikely(read_size < 0)
-			goto err;
-		self->fb_fpos = next_data + bufsize;
-		result += read_size;
-		goto done;
-	}
 	/* If no buffer had been allocated, allocate one now. */
 	if unlikely(!self->fb_size) {
 		/* Start out with the smallest size. */
 		size_t initial_bufsize;
+		if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
+			/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
+read_through:
+			file = self->fb_file;
+			Dee_Incref(file);
+			if (next_data != self->fb_fpos) {
+				/* Seek in the underlying file to get where we need to go. */
+				doff_t new_pos;
+				COMPILER_BARRIER();
+				new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
+				COMPILER_BARRIER();
+				Dee_Decref(file);
+				if unlikely(new_pos < 0)
+					goto err;
+				self->fb_fpos = next_data;
+				goto again; /* Must start over because of recursive callbacks. */
+			}
+			COMPILER_BARRIER();
+			read_size = DeeFile_Readf(file, buffer, bufsize, flags);
+			COMPILER_BARRIER();
+			Dee_Decref(file);
+			if unlikely(read_size < 0)
+				goto err;
+			self->fb_fpos = next_data + bufsize;
+			result += read_size;
+			goto done;
+		}
 		if (bufsize >= FILE_BUFSIZ_MAX)
 			goto read_through;
 		initial_bufsize = bufsize;
@@ -538,7 +543,7 @@ read_through:
 		self->fb_base = new_buffer;
 		self->fb_size = initial_bufsize;
 	} else if (bufsize >= self->fb_size) {
-		/* The caller want's at least as much as this buffer could even handle.
+		/* The caller wants at least as much as this buffer could even handle.
 		 * Upscale the buffer, or use load data using read-through mode. */
 		if (self->fb_flag & (FILE_BUFFER_FNODYNSCALE | FILE_BUFFER_FREADING))
 			goto read_through;
@@ -859,6 +864,7 @@ buffer_sync_nolock(Buffer *__restrict self, uint16_t mode) {
 	dpos_t abs_chngpos;
 	size_t changed_size;
 	dssize_t temp;
+	uint16_t old_flags;
 	DREF DeeObject *file;
 again:
 	if unlikely(!self->fb_file) {
@@ -888,11 +894,15 @@ again:
 		goto again;
 	}
 	/* Write all changed data. */
+	old_flags = self->fb_flag;
+	self->fb_flag |= FILE_BUFFER_FREADING;
 	COMPILER_BARRIER();
 	temp = DeeFile_WriteAll(file,
 	                        self->fb_chng,
 	                        changed_size);
 	COMPILER_BARRIER();
+	self->fb_flag &= ~FILE_BUFFER_FREADING;
+	self->fb_flag |= old_flags & FILE_BUFFER_FREADING;
 	Dee_Decref(file);
 	if unlikely(temp < 0)
 		goto err;
@@ -949,8 +959,6 @@ read_from_buffer:
 	COMPILER_BARRIER();
 	if (buffer_sync_nolock(self, BUFFER_SYNC_FERROR_IF_CLOSED))
 		goto err;
-	if (buffer_determine_isatty(self))
-		goto err;
 	COMPILER_BARRIER();
 	self->fb_chng = self->fb_base;
 	self->fb_chsz = 0;
@@ -979,37 +987,36 @@ read_from_buffer:
 	/* Determine where the next block of data is. */
 	next_data = self->fb_fblk + (self->fb_ptr - self->fb_base);
 
-	if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
-		/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
-read_through:
-		file = self->fb_file;
-		Dee_Incref(file);
-		if (next_data != self->fb_fpos) {
-			/* Seek in the underlying file to get where we need to go. */
-			doff_t new_pos;
-			COMPILER_BARRIER();
-			new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
-			COMPILER_BARRIER();
-			Dee_Decref(file);
-			if unlikely(new_pos < 0)
-				goto err;
-			self->fb_fpos = next_data;
-			goto again; /* Must start over because of recursive callbacks. */
-		}
-		COMPILER_BARRIER();
-		result = DeeFile_Getcf(file, flags);
-		COMPILER_BARRIER();
-		Dee_Decref(file);
-		if (result >= 0) {
-			/* Set the file and block address. */
-			self->fb_fpos = next_data + 1;
-			self->fb_fblk = next_data + 1;
-		}
-		goto done;
-	}
-
 	/* If no buffer had been allocated, allocate one now. */
 	if unlikely(!self->fb_size) {
+		if unlikely(self->fb_flag & FILE_BUFFER_FNODYNSCALE) {
+			/* Dynamic scaling is disabled. Must forward the getc() to the underlying file. */
+read_through:
+			file = self->fb_file;
+			Dee_Incref(file);
+			if (next_data != self->fb_fpos) {
+				/* Seek in the underlying file to get where we need to go. */
+				doff_t new_pos;
+				COMPILER_BARRIER();
+				new_pos = DeeFile_Seek(file, (doff_t)next_data, SEEK_SET);
+				COMPILER_BARRIER();
+				Dee_Decref(file);
+				if unlikely(new_pos < 0)
+					goto err;
+				self->fb_fpos = next_data;
+				goto again; /* Must start over because of recursive callbacks. */
+			}
+			COMPILER_BARRIER();
+			result = DeeFile_Getcf(file, flags);
+			COMPILER_BARRIER();
+			Dee_Decref(file);
+			if (result >= 0) {
+				/* Set the file and block address. */
+				self->fb_fpos = next_data + 1;
+				self->fb_fblk = next_data + 1;
+			}
+			goto done;
+		}
 		/* Start out with the smallest size. */
 		new_buffer = buffer_tryrealloc_nolock(self, FILE_BUFSIZ_MIN);
 		if unlikely(!new_buffer) {
