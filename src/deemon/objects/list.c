@@ -41,8 +41,6 @@
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 
-#include <stdlib.h>
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

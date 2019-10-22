@@ -34,7 +34,7 @@
 #include <string.h>
 
 #ifndef CONFIG_NO_CTYPE
-#include <ctype.h>
+#include <ctype.h> /* FIXME: This needs a feature check (if it's even required...) */
 #endif /* !CONFIG_NO_CTYPE */
 
 #include "../../runtime/runtime_error.h"

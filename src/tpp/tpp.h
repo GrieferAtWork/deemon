@@ -432,6 +432,9 @@
 #ifndef __SIZEOF_INT__
 #define __SIZEOF_INT__    4
 #endif
+#ifndef TPP_assert
+#define TPP_assert    assert
+#endif /* !TPP_assert */
 
 #ifdef __cplusplus
 extern "C" {
@@ -703,7 +706,7 @@ struct TPPFile {
 
 TPPFUN struct TPPFile TPPFile_Empty;
 #define TPPFile_Incref(self)          (void)(++(self)->f_refcnt)
-#define TPPFile_Decref(self)          (void)(assert((self)->f_refcnt),--(self)->f_refcnt || (TPPFile_Destroy(self),0))
+#define TPPFile_Decref(self)          (void)(TPP_assert((self)->f_refcnt),--(self)->f_refcnt || (TPPFile_Destroy(self),0))
 TPPFUN void TPPCALL TPPFile_Destroy(struct TPPFile *__restrict self);
 
 /* Create a new explicit text file by inherited the given `inherited_text'.

@@ -18,9 +18,6 @@
  */
 #ifndef GUARD_DEEMON_SYSTEM_FILE_C
 #define GUARD_DEEMON_SYSTEM_FILE_C 1
-/* The following two are required for STDC files. */
-#define _DOS_SOURCE 1
-#define _LARGEFILE64_SOURCE 1
 
 #include <deemon/api.h>
 

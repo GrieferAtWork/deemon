@@ -33,7 +33,6 @@
 #undef CONFIG_HAVE_IO_H
 #elif !defined(CONFIG_HAVE_IO_H) && \
       (defined(_MSC_VER) || __has_include(<io.h>))
-#undef CONFIG_HAVE_IO_H
 #define CONFIG_HAVE_IO_H 1
 #endif
 
@@ -41,7 +40,6 @@
 #undef CONFIG_HAVE_DIRECT_H
 #elif !defined(CONFIG_HAVE_DIRECT_H) && \
       (defined(_MSC_VER) || __has_include(<direct.h>))
-#undef CONFIG_HAVE_DIRECT_H
 #define CONFIG_HAVE_DIRECT_H 1
 #endif
 
@@ -49,7 +47,6 @@
 #undef CONFIG_HAVE_PROCESS_H
 #elif !defined(CONFIG_HAVE_PROCESS_H) && \
       (defined(_MSC_VER) || __has_include(<process.h>))
-#undef CONFIG_HAVE_PROCESS_H
 #define CONFIG_HAVE_PROCESS_H 1
 #endif
 
@@ -59,7 +56,6 @@
       (defined(__linux__) || defined(__linux) || defined(linux) || \
        defined(__unix__) || defined(__unix) || defined(unix) || \
        __has_include(<unistd.h>))
-#undef CONFIG_HAVE_UNISTD_H
 #define CONFIG_HAVE_UNISTD_H 1
 #endif
 
@@ -70,7 +66,6 @@
        defined(__linux__) || defined(__linux) || defined(linux) || \
        defined(__unix__) || defined(__unix) || defined(unix) || \
        __has_include(<errno.h>))
-#undef CONFIG_HAVE_ERRNO_H
 #define CONFIG_HAVE_ERRNO_H 1
 #endif
 
@@ -81,7 +76,6 @@
        defined(__linux__) || defined(__linux) || defined(linux) || \
        defined(__unix__) || defined(__unix) || defined(unix) || \
        __has_include(<signal.h>))
-#undef CONFIG_HAVE_SIGNAL_H
 #define CONFIG_HAVE_SIGNAL_H 1
 #endif
 
@@ -92,7 +86,6 @@
       (defined(__linux__) || defined(__linux) || defined(linux) || \
        defined(__unix__) || defined(__unix) || defined(unix) || \
        __has_include(<sched.h>))
-#undef CONFIG_HAVE_SCHED_H
 #define CONFIG_HAVE_SCHED_H 1
 #endif
 
@@ -103,7 +96,6 @@
        defined(__linux__) || defined(__linux) || defined(linux) || \
        defined(__unix__) || defined(__unix) || defined(unix) || \
        __has_include(<sys/stat.h>))
-#undef CONFIG_HAVE_SYS_STAT_H
 #define CONFIG_HAVE_SYS_STAT_H 1
 #endif
 
@@ -113,10 +105,22 @@
       (defined(__linux__) || defined(__linux) || defined(linux) || \
        defined(__unix__) || defined(__unix) || defined(unix) || \
        __has_include(<sys/wait.h>))
-#undef CONFIG_HAVE_SYS_WAIT_H
 #define CONFIG_HAVE_SYS_WAIT_H 1
 #endif
 
+#ifdef CONFIG_NO_WAIT_H
+#undef CONFIG_HAVE_WAIT_H
+#elif !defined(CONFIG_HAVE_WAIT_H) && \
+      (__has_include(<wait.h>))
+#define CONFIG_HAVE_WAIT_H 1
+#endif
+
+#ifdef CONFIG_NO_SYS_SIGNALFD_H
+#undef CONFIG_HAVE_SYS_SIGNALFD_H
+#elif !defined(CONFIG_HAVE_SYS_SIGNALFD_H) && \
+      (__has_include(<wait.h>))
+#define CONFIG_HAVE_SYS_SIGNALFD_H 1
+#endif
 
 
 DECL_BEGIN

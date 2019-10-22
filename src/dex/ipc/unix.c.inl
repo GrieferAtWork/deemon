@@ -81,6 +81,14 @@
 #include <sys/wait.h>
 #endif /* CONFIG_HAVE_SYS_WAIT_H */
 
+#ifdef CONFIG_HAVE_WAIT_H
+#include <wait.h>
+#endif /* CONFIG_HAVE_WAIT_H */
+
+#ifdef CONFIG_HAVE_SYS_SIGNALFD_H
+#include <sys/signalfd.h>
+#endif /* CONFIG_HAVE_SYS_SIGNALFD_H */
+
 #include <stdarg.h>
 
 #ifdef SIGKILL
@@ -95,19 +103,61 @@
 #error "No termination signal recognized"
 #endif
 
+#ifdef CONFIG_NO_WAITPID
+#undef CONFIG_HAVE_WAITPID
+#elif !defined(CONFIG_HAVE_WAITPID) && \
+      (defined(__linux__) || defined(__linux) || defined(linux) || \
+       defined(__unix__) || defined(__unix) || defined(unix))
+#define CONFIG_HAVE_WAITPID 1
+#endif
+
+#ifdef CONFIG_NO_WAIT4
+#undef CONFIG_HAVE_WAIT4
+#elif !defined(CONFIG_HAVE_WAIT4) && \
+      (defined(__USE_MISC))
+#define CONFIG_HAVE_WAIT4 1
+#endif
+
+
+#ifdef CONFIG_NO_VFORK
+#undef CONFIG_HAVE_VFORK
+#elif !defined(CONFIG_HAVE_VFORK) && \
+      (defined(__USE_MISC) || (defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_VFORK 1
+#endif
+
+#ifdef CONFIG_NO_SIGPROCMASK
+#undef CONFIG_HAVE_SIGPROCMASK
+#elif !defined(CONFIG_HAVE_SIGPROCMASK) && \
+      (defined(__unix__) || defined(__unix) || defined(unix) || \
+       defined(__USE_POSIX))
+#define CONFIG_HAVE_SIGPROCMASK 1
+#endif
+
 /**/
 #include "generic-cmdline.c.inl"
 
 DECL_BEGIN
 
+#ifdef CONFIG_HAVE_WAITPID
+#define joinpid(pid, pexit_status)    waitpid(pid, pexit_status, 0)
+#define tryjoinpid(pid, pexit_status) waitpid(pid, pexit_status, WNOHANG)
+#elif defined(CONFIG_HAVE_WAIT4)
+#define joinpid(pid, pexit_status)    wait4(pid, pexit_status, 0, NULL)
+#define tryjoinpid(pid, pexit_status) wait4(pid, pexit_status, WNOHANG, NULL)
+#elif defined(__INTELLISENSE__)
+pid_t joinpid(pid_t pid, int *pexit_status);
+pid_t tryjoinpid(pid_t pid, int *pexit_status);
+#define WEXITSTATUS(status) 0
+#define WIFEXITED(status)   1
+#else
+#error "No known way of joining child processes detected"
+#endif
+
+
 #ifdef _MSC_VER
 typedef uintptr_t pid_t;
 #endif /* _MSC_VER */
-
-#if !defined(CONFIG_HAVE_VFORK) && !defined(CONFIG_NO_VFORK) && \
-    ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC))
-#define CONFIG_HAVE_VFORK 1
-#endif
 
 #ifdef __INTELLISENSE__
 #ifdef CONFIG_HOST_WINDOWS
@@ -131,10 +181,6 @@ int kill(pid_t pid, int signo);
 #ifndef STDERR_FILENO
 #define STDERR_FILENO 2
 #endif /* !STDERR_FILENO */
-
-#ifndef EXIT_FAILURE
-#define EXIT_FAILURE 1
-#endif /* !EXIT_FAILURE */
 
 #if !defined(CONFIG_NO__Exit) && \
     (defined(CONFIG_HAVE__Exit) ||   \
@@ -283,6 +329,7 @@ typedef struct {
 	DREF DeeStringObject      *p_exe;     /* [lock(p_lock)][0..1] The filename to an executable that should be run by the process. */
 	DREF DeeObject            *p_argv;    /* [lock(p_lock)][0..1] The argument vector for the executable. */
 	pid_t                      p_pid;     /* [valid_if(PROCESS_FSTARTED)] The ID of the process (pid) */
+	int                        p_status;  /* [valid_if(PROCESS_FDIDJOIN)] The process's exit status. */
 #define PROCESS_FNORMAL        0x0000     /* Normal process flags. */
 #define PROCESS_FSTARTED       0x0001     /* The process has been started. (Always set for external processes) */
 #define PROCESS_FDETACHED      0x0002     /* The process has been detached (`p_pid' is dangling and `p_handle' is invalid). */
@@ -861,7 +908,6 @@ process_terminate(Process *self, size_t argc, DeeObject **argv) {
 	rwlock_write(&self->p_lock);
 	if (!(self->p_state & PROCESS_FSTARTED)) {
 		rwlock_endwrite(&self->p_lock);
-		/* Already terminated. */
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Process %k has not been started",
 		                self);
@@ -888,77 +934,216 @@ err:
 	return NULL;
 }
 
+/* @return:  1: Join failed (timeout)
+ * @return:  0: Success
+ * @return: -1: Error
+ * */
+PRIVATE WUNUSED NONNULL((2)) int DCALL
+wait_for_process(Process *__restrict self,
+                 pid_t pid,
+                 uint64_t timeout_microseconds) {
+	int result;
+#ifdef EINTR
+again:
+#endif /* EINTR */
+	/* Handle the simple cases: no timeout/infinite timeout. */
+	if (timeout_microseconds == 0)
+		result = tryjoinpid(pid, &self->p_status);
+	else if (timeout_microseconds == (uint64_t)-1)
+		result = joinpid(pid, &self->p_status);
+	else {
+#if defined(CONFIG_HAVE_SYS_SIGNALFD_H) && \
+    defined(CONFIG_HAVE_SIGPROCMASK)
+		/* The complicated: a custom timeout. */
+		/* NOTE: wait() w/ timeout can be implemented with `signalfd()':
+		 * >> pid_t waitpid_timeout(pid_t pid, struct timespec *tmo, int *status) {
+		 * >>     pid_t result;
+		 * >>     result = waitpid(pid, status, WNOHANG);
+		 * >>     if (result == 0) {
+		 * >>         int fd;
+		 * >>         struct pollfd pfd[1];
+		 * >>         sigset_t ss, old_ss;
+		 * >>         sigemptyset(&ss);
+		 * >>         sigaddset(&ss, SIGCHLD);
+		 * >>         // Create a signalfd to wait for SIGCHLD
+		 * >>         // NOTE: Also set the `SFD_NONBLOCK' flag so us reading
+		 * >>         //       from the descriptor in order to clear it will
+		 * >>         //       not block.
+		 * >>         fd = signalfd(-1, &ss, SFD_CLOEXEC | SFD_NONBLOCK);
+		 * >>         // Prevent SIGCHLD from triggering a signal handler, and
+		 * >>         // ensure that it is always able to handle the signal.
+		 * >>         sigprocmask(SIG_BLOCK, &ss, &old_ss);
+		 * >>         pfd[0].fd     = fd;
+		 * >>         pfd[0].events = POLLIN;
+		 * >>         for (;;) {
+		 * >>             // With our signalfd connected, try once again
+		 * >>             // if the given process has already terminated.
+		 * >>             // If it has, we wouldn't receive SIGCHLD
+		 * >>             result = waitpid(pid, status, WNOHANG);
+		 * >>             if (result != 0)
+		 * >>                 break;
+		 * >>             // TODO: Starting with the second iteration, read from `signalfd()',
+		 * >>             //       since there may be other processes that could be dying
+		 * >>             //       while we're waiting for ours.
+		 * >>             // Poll (with timeout) the signalfd, which will become
+		 * >>             // readable once our process got a SIGCHLD from a dying child
+		 * >>             // TODO: Account for lost `tmo' during multiple iterations.
+		 * >>             ppoll(pfd, 1, tmo, NULL);
+		 * >>         }
+		 * >>         // Restore the old signal mask.
+		 * >>         sigprocmask(SIG_SETMASK, &old_ss, NULL);
+		 * >>     }
+		 * >>     return result;
+		 * >> }
+		 * >> 
+		 */
+		/* TODO */
+#else /* Proper */
+		/* TODO: while (!DID_TIME_OUT) tryjoin(); */
+#endif /* Poll-based */
+		DeeError_NOTIMPLEMENTED();
+		goto err;
+	}
+	if (result == 0) {
+		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+		return 1; /* Poll failed */
+	}
+	if (result > 0)
+		return 0; /* Success */
+	result = errno;
+#ifdef EINTR
+	if (result == EINTR)
+		goto again;
+#endif /* EINTR */
+	ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+	DeeError_SysThrowf(&DeeError_SystemError, result,
+	                   "Failed to join process %k", self);
+err:
+	return -1;
+}
+
+
+/* @return: 1: Timeout */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+process_dojoin(Process *__restrict self,
+               int *__restrict proc_result,
+               uint64_t timeout_microseconds) {
+	int result = 0;
+	ASSERT(proc_result);
+#ifdef EINTR
+again:
+#endif /* EINTR */
+	if (!(self->p_state & PROCESS_FDIDJOIN)) {
+		uint64_t timeout_end = (uint64_t)-1;
+		uint16_t state, new_flags;
+		/* Always set the did-join and terminated flags in the end. */
+		new_flags = (PROCESS_FDIDJOIN | PROCESS_FTERMINATED);
+		if (timeout_microseconds != (uint64_t)-1) {
+			timeout_end = DeeThread_GetTimeMicroSeconds();
+			timeout_end += timeout_microseconds;
+		}
+		if (timeout_microseconds != 0 &&
+		    DeeThread_CheckInterrupt())
+			goto err;
+		/* Wait for the process to terminate. */
+		while (ATOMIC_FETCHOR(self->p_state, PROCESS_FDETACHING) &
+		       PROCESS_FDETACHING) {
+			uint64_t now;
+			/* Idly wait for another process also in the process of joining this process. */
+			if (timeout_microseconds == 0)
+				return 1; /* Timeout */
+			if (DeeThread_Sleep(1000))
+				goto err; /* Error (interrupt delivery) */
+			now = DeeThread_GetTimeMicroSeconds();
+			if (now >= timeout_end)
+				return 1; /* Timeout */
+			/* Update the remaining timeout. */
+			timeout_microseconds = timeout_end - now;
+		}
+		/* Check for case: The process was joined in the mean time. */
+		if (self->p_state & PROCESS_FDIDJOIN)
+			goto done_join;
+		/* Check for case: The process has terminated, but was never ~actually~ detached. */
+		if ((self->p_state & (PROCESS_FTERMINATED | PROCESS_FDETACHED)) ==
+		    PROCESS_FTERMINATED)
+			goto done_join;
+		if (!(self->p_state & PROCESS_FSTARTED)) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Process %k has not been started",
+			                self);
+			goto err;
+		}
+		if (self->p_state & PROCESS_FDETACHED) {
+			/* Special case: The process was detached, but not joined. */
+			ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Cannot join process %k after being detached",
+			                self);
+			goto err;
+		}
+		/* Do the actual wait! */
+		result = wait_for_process(self,
+		                          self->p_pid,
+		                          timeout_microseconds);
+		if (result != 0)
+			goto done;
+done_join:
+		/* Delete the detaching-flag and set the detached-flag. */
+		do {
+			state = ATOMIC_READ(self->p_state);
+		} while (!ATOMIC_CMPXCH_WEAK(self->p_state, state,
+		                             (state & ~PROCESS_FDETACHING) | new_flags));
+	}
+	*proc_result = self->p_status;
+done:
+	return result;
+err:
+	return -1;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_join(Process *self, size_t argc, DeeObject **argv) {
+	int error, result;
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_join_name))
 		goto err;
-	/* TODO */
-	ipc_unimplemented();
+	error = process_dojoin(self, &result, (uint64_t)-1);
+	if unlikely(error < 0)
+		goto err;
+	result = WIFEXITED(result) ? WEXITSTATUS(result) : 1;
+	return DeeInt_NewUInt((unsigned int)result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_tryjoin(Process *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_tryjoin_name))
+	int error, result;
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_join_name))
 		goto err;
-	/* TODO */
-	ipc_unimplemented();
+	error = process_dojoin(self, &result, 0);
+	if unlikely(error < 0)
+		goto err;
+	if (result == 0)
+		return_none;
+	result = WIFEXITED(result) ? WEXITSTATUS(result) : 1;
+	return DeeInt_NewUInt((unsigned int)result);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_timedjoin(Process *self, size_t argc, DeeObject **argv) {
+	int error, result;
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64d:" S_Process_function_timedjoin_name, &timeout))
 		goto err;
-	/* NOTE: wait() w/ timeout can be implemented with `signalfd()':
-	 * >> pid_t waitpid_timeout(pid_t pid, struct timespec *tmo, int *status) {
-	 * >>     pid_t result;
-	 * >>     result = waitpid(pid, status, WNOHANG);
-	 * >>     if (result == 0) {
-	 * >>         int fd;
-	 * >>         struct pollfd pfd[1];
-	 * >>         sigset_t ss, old_ss;
-	 * >>         sigemptyset(&ss);
-	 * >>         sigaddset(&ss, SIGCHLD);
-	 * >>         // Create a signalfd to wait for SIGCHLD
-	 * >>         // NOTE: Also set the `SFD_NONBLOCK' flag so us reading
-	 * >>         //       from the descriptor in order to clear it will
-	 * >>         //       not block.
-	 * >>         fd = signalfd(-1, &ss, SFD_CLOEXEC | SFD_NONBLOCK);
-	 * >>         // Prevent SIGCHLD from triggering a signal handler, and
-	 * >>         // ensure that it is always able to handle the signal.
-	 * >>         sigprocmask(SIG_BLOCK, &ss, &old_ss);
-	 * >>         pfd[0].fd     = fd;
-	 * >>         pfd[0].events = POLLIN;
-	 * >>         for (;;) {
-	 * >>             // With our signalfd connected, try once again
-	 * >>             // if the given process has already terminated.
-	 * >>             // If it has, we wouldn't receive SIGCHLD
-	 * >>             result = waitpid(pid, status, WNOHANG);
-	 * >>             if (result != 0)
-	 * >>                 break;
-	 * >>             // TODO: Starting with the second iteration, read from `signalfd()',
-	 * >>             //       since there may be other processes that could be dying
-	 * >>             //       while we're waiting for ours.
-	 * >>             // Poll (with timeout) the signalfd, which will become
-	 * >>             // readable once our process got a SIGCHLD from a dying child
-	 * >>             // TODO: Account for lost `tmo' during multiple iterations.
-	 * >>             ppoll(pfd, 1, tmo, NULL);
-	 * >>         }
-	 * >>         // Restore the old signal mask.
-	 * >>         sigprocmask(SIG_SETMASK, &old_ss, NULL);
-	 * >>     }
-	 * >>     return result;
-	 * >> }
-	 * >> 
-	 */
-
-	/* TODO */
-	ipc_unimplemented();
+	error = process_dojoin(self, &result, timeout);
+	if unlikely(error < 0)
+		goto err;
+	if (result == 0)
+		return_none;
+	result = WIFEXITED(result) ? WEXITSTATUS(result) : 1;
+	return DeeInt_NewUInt((unsigned int)result);
 err:
 	return NULL;
 }
@@ -980,11 +1165,31 @@ process_isachild(Process *self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_hasterminated(Process *self) {
-	if (self == &this_process)
-		return_false;
-	/* TODO */
-	ipc_unimplemented();
-	return NULL;
+	int error;
+	uint16_t state;
+	if (self->p_state & PROCESS_FTERMINATED)
+		goto yes;
+	if (!(self->p_state & PROCESS_FSTARTED))
+		goto nope;
+	if (self->p_state & PROCESS_FDIDJOIN)
+		goto yes;
+	if (ATOMIC_FETCHOR(self->p_state, PROCESS_FDETACHING) & PROCESS_FDETACHING)
+		goto nope;
+	error = tryjoinpid(self->p_pid, &self->p_status);
+	if (error <= 0) {
+		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
+		goto nope;
+	}
+	/* Delete the detaching-flag and set the detached-flag. */
+	do {
+		state = ATOMIC_READ(self->p_state);
+	} while (!ATOMIC_CMPXCH_WEAK(self->p_state, state,
+	                             (state & ~PROCESS_FDETACHING) |
+	                             (PROCESS_FDIDJOIN | PROCESS_FTERMINATED)));
+yes:
+	return_true;
+nope:
+	return_false;
 }
 
 

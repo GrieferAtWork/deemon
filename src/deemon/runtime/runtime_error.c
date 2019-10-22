@@ -35,11 +35,9 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
-#ifndef CONFIG_NO_STDIO
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
-#endif /* !CONFIG_NO_STDIO */
 
 DECL_BEGIN
 
@@ -999,7 +997,6 @@ err_file_not_found_ob(DeeObject *__restrict filename) {
 	                       filename);
 }
 
-#ifndef CONFIG_NO_STDIO
 #ifdef CONFIG_HOST_WINDOWS
 INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
 err_system_error_code(char const *__restrict function,
@@ -1014,8 +1011,7 @@ INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
 err_system_error(char const *__restrict function) {
 	return err_system_error_code(function, GetLastError());
 }
-#endif
-#endif /* !CONFIG_NO_STDIO */
+#endif /* CONFIG_HOST_WINDOWS */
 
 
 

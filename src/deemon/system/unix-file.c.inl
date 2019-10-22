@@ -18,11 +18,6 @@
  */
 #ifndef GUARD_DEEMON_SYSTEM_UNIX_FILE_C_INL
 #define GUARD_DEEMON_SYSTEM_UNIX_FILE_C_INL 1
-#define _LARGEFILE64_SOURCE    1
-#define _FILE_OFFSET_BITS      64
-#define _BSD_SOURCE            1
-#define _XOPEN_SOURCE          500
-#define _XOPEN_SOURCE_EXTENDED 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -35,26 +30,12 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/limits.h>
 #include <hybrid/minmax.h>
 
 #include <string.h>
-
-#ifdef _MSC_VER
-typedef int      off_t;
-typedef __int64  off64_t;
-typedef dssize_t ssize_t;
-#define ftruncate64(x, len) _chsize_s(x, len)
-#define ftruncate(x, len)   _chsize(x, len)
-#define fdatasync(x)        _commit(x)
-#include <io.h>
-#else /* _MSC_VER */
-#include <unistd.h>
-#endif /* !_MSC_VER */
-
-#include <errno.h>
-#include <fcntl.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -88,7 +69,7 @@ PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
 PRIVATE ATTR_COLD int DCALL error_file_io(SystemFile *__restrict self) {
 	if (self->sf_handle == DSYSFD_INVALID)
 		return err_file_closed();
-	return DeeError_SysThrowf(&DeeError_FSError, errno,
+	return DeeError_SysThrowf(&DeeError_FSError, Dee_GetErrno(),
 	                          "I/O Operation failed");
 }
 
@@ -301,6 +282,18 @@ done:
 #define SHARED_FLAGS   (PRIVATE_SHARED_FLAGS_A) /* Options with which we share bits. */
 #define NOSHAR_FLAGS   (PRIVATE_NOSHAR_FLAGS_A) /* Options with which we don't share bits. */
 
+#ifndef O_RDONLY
+#define O_RDONLY 0
+#endif /* !O_RDONLY */
+
+#ifndef O_WRONLY
+#define O_WRONLY 0
+#endif /* !O_WRONLY */
+
+#ifndef O_RDWR
+#define O_RDWR 0
+#endif /* !O_RDWR */
+
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
@@ -397,24 +390,28 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 		goto err;
 
 	DBG_ALIGNMENT_DISABLE();
-#ifdef __USE_LARGEFILE64
+#ifdef CONFIG_HAVE_open64
 	fd = open64(utf8_filename, used_oflags, mode);
-#else /* __USE_LARGEFILE64 */
+#else /* CONFIG_HAVE_open64 */
 	fd  = open(utf8_filename, used_oflags, mode);
-#endif /* !__USE_LARGEFILE64 */
+#endif /* !CONFIG_HAVE_open64 */
 	DBG_ALIGNMENT_ENABLE();
-#ifdef _WIO_DEFINED
+#if defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)
 	if (fd < 0) { /* Re-try in wide-character mode if supported by the host. */
 		wchar_t *str = (wchar_t *)DeeString_AsWide(filename);
 		if unlikely(!str)
 			goto err;
 		DBG_ALIGNMENT_DISABLE();
-		fd = _wopen(str, used_oflags, mode);
+#ifdef CONFIG_HAVE_wopen64
+		fd = wopen64(str, used_oflags, mode);
+#else /* CONFIG_HAVE_wopen64 */
+		fd = wopen(str, used_oflags, mode);
+#endif /* !CONFIG_HAVE_wopen64 */
 		DBG_ALIGNMENT_ENABLE();
 	}
-#endif /* _WIO_DEFINED */
+#endif /* CONFIG_HAVE_wopen64 || CONFIG_HAVE_wopen */
 	if (fd < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		/* Handle file-already-exists. */
 		if (error == EEXIST && (oflags & OPEN_FEXCL))
 			return ITER_DONE;
@@ -445,7 +442,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 #ifdef ETXTBSY
 		    || error == ETXTBSY
 #endif /* ETXTBSY */
-		) {
+		    ) {
 			DeeError_SysThrowf(&DeeError_ReadOnlyFile, error,
 			                   "Cannot open directory %r for writing", filename);
 		} else
@@ -466,7 +463,9 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	Dee_Incref(filename);
 	return (DREF DeeObject *)result;
 err_fd:
+#ifdef CONFIG_HAVE_close
 	close(fd);
+#endif /* CONFIG_HAVE_close */
 err:
 	return NULL;
 }
@@ -487,17 +486,6 @@ err:
 	return NULL;
 }
 
-#ifndef STDIN_FILENO
-#define STDIN_FILENO 0
-#endif /* !STDIN_FILENO */
-
-#ifndef STDOUT_FILENO
-#define STDOUT_FILENO 1
-#endif /* !STDOUT_FILENO */
-
-#ifndef STDERR_FILENO
-#define STDERR_FILENO 2
-#endif /* !STDERR_FILENO */
 
 
 PRIVATE SystemFile sysf_std[] = {
@@ -515,9 +503,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 sysfile_read(SystemFile *__restrict self,
              void *__restrict buffer, size_t bufsize,
              dioflag_t flags) {
+#ifdef CONFIG_HAVE_read
 	/* TODO: Use `select()' to check if reading will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's writef() function */
-	ssize_t result;
+	Dee_ssize_t result;
 	DBG_ALIGNMENT_DISABLE();
 	result = read((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
@@ -526,15 +515,20 @@ sysfile_read(SystemFile *__restrict self,
 		result = -1;
 	}
 	return (dssize_t)result;
+#else /* CONFIG_HAVE_read */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_READ);
+#endif /* !CONFIG_HAVE_read */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer, size_t bufsize,
               dioflag_t flags) {
+#ifdef CONFIG_HAVE_write
 	/* TODO: Use `select()' to check if writing will block for `Dee_FILEIO_FNONBLOCKING' */
 	/* TODO: Use KOS's writef() function */
-	ssize_t result;
+	Dee_ssize_t result;
 	DBG_ALIGNMENT_DISABLE();
 	result = write((int)self->sf_handle, buffer, bufsize);
 	DBG_ALIGNMENT_ENABLE();
@@ -543,38 +537,43 @@ sysfile_write(SystemFile *__restrict self,
 		result = -1;
 	}
 	return (dssize_t)result;
+#else /* CONFIG_HAVE_write */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_WRITE);
+#endif /* !CONFIG_HAVE_write */
 }
 
 PRIVATE doff_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
+#if defined(CONFIG_HAVE_lseek) || defined(CONFIG_HAVE_lseek64)
 	doff_t result;
 	DBG_ALIGNMENT_DISABLE();
-#ifdef __USE_LARGEFILE64
-	result = lseek64((int)self->sf_handle, (off64_t)off, whence);
-#else /* __USE_LARGEFILE64 */
+#ifdef CONFIG_HAVE_lseek64
+	result = lseek64((int)self->sf_handle, (int64_t)off, whence);
+#else /* CONFIG_HAVE_lseek64 */
 	result = lseek((int)self->sf_handle, (off_t)off, whence);
-#endif /* !__USE_LARGEFILE64 */
+#endif /* !CONFIG_HAVE_lseek64 */
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(result < 0) {
 		error_file_io(self);
 		result = -1;
 	}
 	return result;
+#else /* CONFIG_HAVE_lseek || CONFIG_HAVE_lseek64 */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_SEEK);
+#endif /* !CONFIG_HAVE_lseek && !CONFIG_HAVE_lseek64 */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
-#if !defined(CONFIG_NO_FDATASYNC) && \
-    (defined(CONFIG_HAVE_FDATASYNC) || defined(fdatasync) || \
-     defined(__USE_POSIX199309) || defined(__USE_UNIX98))
+#if defined(CONFIG_HAVE_fdatasync)
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(fdatasync((int)self->sf_handle) < 0) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
-#elif !defined(CONFIG_NO_FSYNC) && \
-      (defined(CONFIG_HAVE_FSYNC) || defined(fsync) || \
-       defined(_POSIX_FSYNC))
+#elif defined(CONFIG_HAVE_fsync)
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(fsync((int)self->sf_handle) < 0) {
 		DBG_ALIGNMENT_ENABLE();
@@ -590,23 +589,18 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self)
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	int result;
-#if !defined(CONFIG_NO_FTRUNCATE) && \
-    (defined(CONFIG_HAVE_FTRUNCATE) || defined(ftruncate) || defined(ftruncate64) || \
-     defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || \
-     defined(__USE_XOPEN2K))
+#if defined(CONFIG_HAVE_ftruncate) || defined(CONFIG_HAVE_ftruncate64)
 	/* Use ftruncate() */
 	DBG_ALIGNMENT_DISABLE();
-#if defined(__USE_LARGEFILE64) || defined(ftruncate64)
-	result = ftruncate64((int)self->sf_handle, (off64_t)size);
-#else /* __USE_LARGEFILE64 || ftruncate64 */
+#ifdef CONFIG_HAVE_ftruncate64
+	result = ftruncate64((int)self->sf_handle, (int64_t)size);
+#else /* CONFIG_HAVE_ftruncate64 */
 	result = ftruncate((int)self->sf_handle, (off_t)size);
-#endif /* !__USE_LARGEFILE64 && !ftruncate64 */
+#endif /* !CONFIG_HAVE_ftruncate64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result)
 		error_file_io(self);
-#elif !defined(CONFIG_NO_TRUNCATE) && \
-      (defined(CONFIG_HAVE_TRUNCATE) || defined(truncate) || defined(truncate64) || \
-       defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))
+#elif defined(CONFIG_HAVE_truncate) || defined(CONFIG_HAVE_truncate64)
 	/* Use truncate() */
 	DREF DeeObject *filename;
 	char *utf8_filename;
@@ -619,19 +613,18 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 		return -1;
 	}
 	DBG_ALIGNMENT_DISABLE();
-#if defined(__USE_LARGEFILE64) || defined(truncate64)
+#ifdef CONFIG_HAVE_truncate64
 	result = truncate64(utf8_filename, (off64_t)size);
-#else
+#else /* CONFIG_HAVE_truncate64 */
 	result = truncate(utf8_filename, (off64_t)size);
-#endif
+#endif /* !CONFIG_HAVE_truncate64 */
 	DBG_ALIGNMENT_ENABLE();
 	Dee_Decref(filename);
 	if (result)
 		error_file_io(self);
 #else
-	DeeError_Throwf(&DeeError_NotImplemented,
-	                "Truncating files is not supported by the host");
-	result = -1;
+	result = err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                    FILE_OPERATOR_TRUNC);
 #endif
 	return result;
 }
@@ -639,10 +632,12 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_close(SystemFile *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_close
 	if unlikely(close((int)self->sf_ownhandle)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
+#endif /* CONFIG_HAVE_close */
 	DBG_ALIGNMENT_ENABLE();
 	self->sf_handle    = DSYSFD_INVALID;
 	self->sf_ownhandle = DSYSFD_INVALID;
@@ -655,7 +650,7 @@ sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
 	result = DeeSystemFile_Fileno((DeeObject *)self);
-	if unlikely(!result)
+	if unlikely(result == DSYSFD_INVALID)
 		return NULL;
 	return DeeInt_NewInt((int)result);
 }
@@ -663,6 +658,7 @@ sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
+#ifdef CONFIG_HAVE_isatty
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":isatty"))
 		goto err;
@@ -672,18 +668,22 @@ sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
 	if (result)
 		return_true;
 	/* Check our whitelist of errors that indicate not-a-tty. */
-	result = errno;
+	result = Dee_GetErrno();
 	if (result == EINVAL
 #ifdef ENOTTY
-	    ||
-	    result == ENOTTY
+	    || result == ENOTTY
 #endif /* ENOTTY */
-	) {
+	    ) {
 		return_false;
 	}
 	error_file_io(self);
 err:
 	return NULL;
+#else /* CONFIG_HAVE_isatty */
+	if (DeeArg_Unpack(argc, argv, ":isatty"))
+		goto err;
+	return_false;
+#endif /* !CONFIG_HAVE_isatty */
 }
 
 PRIVATE struct type_method sysfile_methods[] = {
@@ -707,11 +707,13 @@ PRIVATE struct type_getset sysfile_getsets[] = {
 
 PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
+#ifdef CONFIG_HAVE_close
 	if ((int)self->sf_ownhandle >= 0) {
 		DBG_ALIGNMENT_DISABLE();
 		close((int)self->sf_ownhandle);
 		DBG_ALIGNMENT_ENABLE();
 	}
+#endif /* CONFIG_HAVE_close */
 	Dee_XDecref(self->sf_filename);
 }
 
@@ -720,13 +722,11 @@ sysfile_class_sync(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;
-#if !defined(CONFIG_NO_SYNC) && \
-    (defined(CONFIG_HAVE_SYNC) || defined(sync) || \
-     defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))
+#ifdef CONFIG_HAVE_sync
 	DBG_ALIGNMENT_DISABLE();
 	sync();
 	DBG_ALIGNMENT_ENABLE();
-#endif
+#endif /* CONFIG_HAVE_sync */
 	return_none;
 }
 

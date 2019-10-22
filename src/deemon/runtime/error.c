@@ -27,6 +27,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
+#include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
@@ -36,9 +37,7 @@
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#elif defined(CONFIG_HOST_UNIX)
-#include <signal.h>
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 
 #include "strings.h"
@@ -101,12 +100,18 @@ DeeError_Display(char const *reason,
 		reason = "Unhandled exception\n";
 	/* TODO: Use a `dformatprinter' here, and stop relying on stdio!
 	 *       Also: When printing string objects, print them as UTF-8! */
+#if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
 	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_fwrite
 	fwrite(reason, sizeof(char), strlen(reason), stderr);
+#else /* CONFIG_HAVE_fwrite */
+	fprintf(stderr, "%s", reason);
+#endif /* !CONFIG_HAVE_fwrite */
 	fprintf(stderr, ">> %s: %s\n",
 	        Dee_TYPE(error)->tp_name,
 	        DeeString_STR(error_str));
 	DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
 	DEE_DPRINT(reason);
 	DEE_DPRINT(">> ");
 	DEE_DPRINT(Dee_TYPE(error)->tp_name);
@@ -118,14 +123,18 @@ DeeError_Display(char const *reason,
 		error_str = (DeeStringObject *)DeeObject_Repr(traceback);
 		if unlikely(!error_str) {
 			DEE_DPRINT("Failed to print traceback\n");
+#if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
 			DBG_ALIGNMENT_DISABLE();
 			fprintf(stderr, "Failed to print traceback\n");
 			DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
 			goto handle_error;
 		}
+#if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
 		DBG_ALIGNMENT_DISABLE();
 		fprintf(stderr, "%s\n", DeeString_STR(error_str));
 		DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
 		DEE_DPRINT(DeeString_STR(error_str));
 		DEE_DPRINT("\n");
 		Dee_Decref(error_str);

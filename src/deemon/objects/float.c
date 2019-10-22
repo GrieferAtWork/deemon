@@ -31,8 +31,8 @@
 #include <deemon/string.h>
 #include <deemon/util/cache.h>
 
-#include <float.h>
-#include <stdlib.h> /* `strtod' */
+#include <float.h> /* FIXME: This needs a feature check! */
+#include <stdlib.h> /* `strtod()'; FIXME: This needs a feature check! */
 
 #include "../runtime/strings.h"
 

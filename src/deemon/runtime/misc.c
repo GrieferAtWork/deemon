@@ -53,7 +53,6 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "runtime_error.h"

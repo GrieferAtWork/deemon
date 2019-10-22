@@ -33,15 +33,10 @@
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* _Exit(), abort() */
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
-
-#ifndef CONFIG_NO_STDIO
-#ifndef NDEBUG
-#include <stdlib.h>
-#endif /* !NDEBUG */
-#endif /* !CONFIG_NO_STDIO */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -2245,21 +2240,11 @@ fatal_invalid_except(DeeObject *__restrict return_value,
 	            "For details, see the C documentation of `DeeCMethod_CallFunc'",
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
 	BREAKPOINT();
-#ifndef CONFIG_NO_STDIO
-#if !defined(CONFIG_NO__Exit) && \
-    (defined(CONFIG_HAVE__Exit) || \
-     defined(__USE_ISOC99) || defined(_Exit) || defined(___Exit_defined))
-	_Exit(1);
-#elif !defined(CONFIG_NO__exit) && \
-      (defined(_MSC_VER) || defined(CONFIG_HAVE__exit) || \
-       defined(_exit) || defined(___exit_defined))
-	_exit(1);
-#else
-	ASSERT(0);
-#endif
-#endif
-	for (;;) {
-	}
+#ifdef CONFIG_HAVE__Exit
+	_Exit(EXIT_FAILURE);
+#else /* CONFIG_HAVE__Exit */
+	abort();
+#endif /* !CONFIG_HAVE__Exit */
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL

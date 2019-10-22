@@ -32,18 +32,12 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/limits.h>
 #include <hybrid/minmax.h>
 
-#include <stdio.h>
 #include <string.h>
-#ifdef _MSC_VER
-#include <io.h>
-#endif
-#if defined(__unix__) || defined(__unix) || defined(unix)
-#include <unistd.h>
-#endif
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -163,7 +157,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */debug_file_methods,
+		/* .tp_methods       = */ debug_file_methods,
 		/* .tp_getsets       = */ NULL,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
@@ -182,7 +176,8 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 	/* .ft_ungetc = */ NULL,
 	/* .ft_putc   = */ NULL
 };
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
+
 
 PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t fd, /*String*/ DeeObject *filename,
@@ -213,6 +208,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL error_file_io(SystemFile *__restrict self
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_OpenString(char const *__restrict filename,
                    int oflags, int UNUSED(mode)) {
+#if defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64)
 	char modbuf[16], *iter = modbuf;
 	DREF SystemFile *result;
 	FILE *fp;
@@ -238,7 +234,11 @@ DeeFile_OpenString(char const *__restrict filename,
 	}
 	*iter = '\0';
 	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_fopen64
+	fp = fopen64(filename, modbuf);
+#else /* CONFIG_HAVE_fopen64 */
 	fp = fopen(filename, modbuf);
+#endif /* !CONFIG_HAVE_fopen64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (!fp) {
 		/* Handle file-not-found / already exists cases. */
@@ -266,7 +266,13 @@ err_unsupported_mode:
 err_fp_result:
 	DeeObject_FREE(result);
 err_fp:
+#ifdef CONFIG_HAVE_fclose
 	fclose(fp);
+#endif /* CONFIG_HAVE_fclose */
+#else /* CONFIG_HAVE_fopen || CONFIG_HAVE_fopen64 */
+	DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                "Unsupported function `fopen()'");
+#endif /* !CONFIG_HAVE_fopen && !CONFIG_HAVE_fopen64 */
 	return NULL;
 }
 
@@ -298,16 +304,16 @@ PRIVATE SystemFile sysf_std[] = {
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stdout },
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stderr }
 #ifdef CONFIG_HOST_WINDOWS
-    ,
+	,
 	{ FILE_OBJECT_HEAD_INIT(&DebugFile_Type), NULL }
-#endif
+#endif /* CONFIG_HOST_WINDOWS */
 };
 PUBLIC ATTR_RETNONNULL
 DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
  ASSERT(id <= DEE_STDERR);
  return &sysf_std[id];
 }
-#else
+#else /* CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD */
 PRIVATE uint8_t sysf_std_closed = 0;
 PRIVATE SystemFile sysf_std[] = {
 	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL },
@@ -326,15 +332,24 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 	result = &sysf_std[id];
 	if unlikely(!result->sf_handle) {
 		FILE *new_file;
-#if defined(_MSC_VER) || defined(__CRT_DOS)
+#ifdef CONFIG_HAVE___iob_func
 		new_file = (__iob_func() + id);
-#else
+#else /* CONFIG_HAVE___iob_func */
 		switch (id) {
-		case DEE_STDIN: new_file = stdin; break;
-		case DEE_STDOUT: new_file = stdout; break;
-		default: new_file = stderr; break;
+
+		case DEE_STDIN:
+			new_file = stdin;
+			break;
+
+		case DEE_STDOUT:
+			new_file = stdout;
+			break;
+
+		default:
+			new_file = stderr;
+			break;
 		}
-#endif
+#endif /* !CONFIG_HAVE___iob_func */
 		DeeFile_LockWrite(result);
 		/* Make sure not to re-open an std-file that was already closed. */
 		if (!(sysf_std_closed & (1 << id))) {
@@ -348,7 +363,7 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 #if !defined(_MSC_VER) && !defined(__linux__) && !defined(__KOS__)
 			if (!result->sf_handle)
 #endif
-#endif
+#endif /* !CONFIG_NO_THREADS */
 			{
 				result->sf_handle    = new_file;
 #if 1 /* Without this, close() on standard descriptors would \
@@ -361,7 +376,7 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 	}
 	return (DeeObject *)result;
 }
-#endif
+#endif /* !CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD */
 
 
 
@@ -370,8 +385,9 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 PRIVATE dssize_t DCALL
 sysfile_read(SystemFile *__restrict self, void *__restrict buffer,
              size_t bufsize, dioflag_t UNUSED(flags)) {
+#if defined(CONFIG_HAVE_fread)
 	size_t result;
-	if (!self->sf_handle)
+	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)fread(buffer, 1, bufsize, (FILE *)self->sf_handle);
@@ -381,14 +397,19 @@ sysfile_read(SystemFile *__restrict self, void *__restrict buffer,
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (dssize_t)result;
+#else /* CONFIG_HAVE_fread */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_READ);
+#endif /* !CONFIG_HAVE_fread */
 }
 
 PRIVATE dssize_t DCALL
 sysfile_write(SystemFile *__restrict self,
               void const *__restrict buffer,
               size_t bufsize, dioflag_t UNUSED(flags)) {
+#ifdef CONFIG_HAVE_fwrite
 	size_t result;
-	if (!self->sf_handle)
+	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
 	DBG_ALIGNMENT_DISABLE();
 	result = (size_t)fwrite(buffer, 1, bufsize, (FILE *)self->sf_handle);
@@ -398,34 +419,28 @@ sysfile_write(SystemFile *__restrict self,
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (dssize_t)result;
+#else /* CONFIG_HAVE_fwrite */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_WRITE);
+#endif /* !CONFIG_HAVE_fwrite */
 }
 
 PRIVATE doff_t DCALL
 sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	doff_t result;
-	if (!self->sf_handle)
+	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
-#ifdef _MSC_VER
+#if defined(CONFIG_HAVE_fseeko64) && defined(CONFIG_HAVE_ftello64)
 	DBG_ALIGNMENT_DISABLE();
-	if (_fseeki64((FILE *)self->sf_handle, (long long)off, whence)) {
+	if (fseeko64((FILE *)self->sf_handle, (long long)off, whence)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
-	result = _ftelli64((FILE *)self->sf_handle);
+	result = ftello64((FILE *)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
 	if (result == -1)
 		return error_file_io(self);
-#elif defined(__USE_LARGEFILE64) && !defined(__CYGWIN__)
-	DBG_ALIGNMENT_DISABLE();
-	if (fseeko64((FILE *)self->sf_handle, (off64_t)off, whence)) {
-		DBG_ALIGNMENT_ENABLE();
-		return error_file_io(self);
-	}
-	result = (doff_t)ftello64((FILE *)self->sf_handle);
-	DBG_ALIGNMENT_ENABLE();
-	if (result == -1)
-		return error_file_io(self);
-#elif defined(__USE_LARGEFILE) || defined(__USE_XOPEN2K)
+#elif defined(CONFIG_HAVE_fseeko) && defined(CONFIG_HAVE_ftello)
 	DBG_ALIGNMENT_DISABLE();
 	if (fseeko((FILE *)self->sf_handle, (off64_t)off, whence)) {
 		DBG_ALIGNMENT_ENABLE();
@@ -435,7 +450,7 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	DBG_ALIGNMENT_ENABLE();
 	if (result == -1)
 		return error_file_io(self);
-#else
+#elif defined(CONFIG_HAVE_fseek) && defined(CONFIG_HAVE_ftell)
 	DBG_ALIGNMENT_DISABLE();
 	if (fseek((FILE *)self->sf_handle, (long)off, whence)) {
 		DBG_ALIGNMENT_ENABLE();
@@ -445,75 +460,91 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	DBG_ALIGNMENT_ENABLE();
 	if ((long)result == -1L)
 		return error_file_io(self);
+#else
+	result = err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                    FILE_OPERATOR_SEEK);
 #endif
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
-	if (!self->sf_handle)
+	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
 	DBG_ALIGNMENT_DISABLE();
+#if defined(CONFIG_HAVE_fflush) && defined(CONFIG_HAVE_ferror)
 	if (fflush((FILE *)self->sf_handle) &&
 	    ferror((FILE *)self->sf_handle)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
+#elif defined(CONFIG_HAVE_fflush)
+	fflush((FILE *)self->sf_handle);
+#endif
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
-	if (!self->sf_handle)
+	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
-#ifdef _MSC_VER
+#ifdef CONFIG_HAVE_fftruncate64
 	DBG_ALIGNMENT_DISABLE();
-	if (_chsize_s(fileno((FILE *)self->sf_handle), (long long)size)) {
+	if (fftruncate64((FILE *)self->sf_handle, size)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
-#elif defined(__unix__) && defined(__USE_LARGEFILE64) && !defined(__CYGWIN__)
+#elif defined(CONFIG_HAVE_fftruncate)
 	DBG_ALIGNMENT_DISABLE();
-	if (ftruncate64(fileno((FILE *)self->sf_handle), (off64_t)size)) {
+	if (fftruncate64((FILE *)self->sf_handle, (uint32_t)size)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
-#elif defined(__unix__)
+#elif defined(CONFIG_HAVE_fileno) && \
+     (defined(CONFIG_HAVE_ftruncate) || defined(CONFIG_HAVE_ftruncate64))
+	int fd;
 	DBG_ALIGNMENT_DISABLE();
-	if (ftruncate(fileno((FILE *)self->sf_handle), (off_t)size)) {
+	fd = fileno((FILE *)self->sf_handle);
+#ifdef CONFIG_HAVE_ftruncate64
+	if (ftruncate64(fd, size))
+#else /* CONFIG_HAVE_ftruncate64 */
+	if (ftruncate(fd, size))
+#endif /* !CONFIG_HAVE_ftruncate64 */
+	{
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
 #else
-	err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
-	                           OPERATOR_TRUNC);
-	return -1;
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_TRUNC);
 #endif
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_close(SystemFile *__restrict self) {
-	if (!self->sf_handle)
+	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
 	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_fclose
 	if (self->sf_ownhandle &&
 	    fclose((FILE *)self->sf_ownhandle)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}
+#endif /* CONFIG_HAVE_fclose */
 	DBG_ALIGNMENT_ENABLE();
 #ifndef CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD
 	if (self >= sysf_std && self < COMPILER_ENDOF(sysf_std)) {
 		/* Make sure not to re-open this file later. */
 		sysf_std_closed |= 1 << (self - sysf_std);
 	}
-#endif
+#endif /* !CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD */
 	self->sf_ownhandle = NULL;
 	self->sf_handle    = NULL;
 	return 0;
@@ -521,64 +552,100 @@ sysfile_close(SystemFile *__restrict self) {
 
 PRIVATE int DCALL
 sysfile_getc(SystemFile *__restrict self, dioflag_t UNUSED(flags)) {
+#if defined(CONFIG_HAVE_fgetc) || defined(CONFIG_HAVE_fread)
 	int result;
-	if (!self->sf_handle) {
+	if unlikely(!self->sf_handle) {
 		error_file_closed(self);
 		return GETC_ERR;
 	}
 	DBG_ALIGNMENT_DISABLE();
-	result = getc((FILE *)self->sf_handle);
+#ifdef CONFIG_HAVE_fgetc
+	result = fgetc((FILE *)self->sf_handle);
+#else /* CONFIG_HAVE_fgetc */
+	{
+		unsigned char chr;
+		if (!fread(&chr, sizeof(chr), 1, (FILE *)self->sf_handle))
+			result = EOF;
+		else {
+			result = (int)(unsigned int)chr;
+		}
+	}
+#endif /* !CONFIG_HAVE_fgetc */
+#if defined(CONFIG_HAVE_ferror) || EOF != GETC_EOF
 	if (result == EOF) {
+#ifdef CONFIG_HAVE_ferror
 		if (ferror((FILE *)self->sf_handle)) {
 			DBG_ALIGNMENT_ENABLE();
 			error_file_io(self);
 			return GETC_ERR;
 		}
+#endif /* CONFIG_HAVE_ferror */
+#if EOF != GETC_EOF
 		DBG_ALIGNMENT_ENABLE();
 		return GETC_EOF;
+#endif
 	}
+#endif /* CONFIG_HAVE_ferror || EOF != GETC_EOF */
 	DBG_ALIGNMENT_ENABLE();
 	return result;
+#else /* CONFIG_HAVE_fgetc || CONFIG_HAVE_fread */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_GETC);
+#endif /* !CONFIG_HAVE_fgetc && !CONFIG_HAVE_fread */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_ungetc(SystemFile *__restrict self, int ch) {
+#if defined(CONFIG_HAVE_ungetc)
 	int result;
-	if (!self->sf_handle) {
+	if unlikely(!self->sf_handle) {
 		error_file_closed(self);
 		return GETC_ERR;
 	}
-#if EOF == GETC_EOF
-	DBG_ALIGNMENT_DISABLE();
-	result = ungetc(ch, (FILE *)self->sf_handle);
-	DBG_ALIGNMENT_ENABLE();
-	if (result != EOF)
-		result = 0;
-	return result;
-#else
 	DBG_ALIGNMENT_DISABLE();
 	result = ungetc(ch, (FILE *)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
 	return result == EOF ? GETC_EOF : 0;
-#endif
+#else /* CONFIG_HAVE_ungetc */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_UNGETC);
+#endif /* !CONFIG_HAVE_ungetc */
 }
 
 PRIVATE int DCALL
 sysfile_putc(SystemFile *__restrict self, int ch,
              dioflag_t UNUSED(flags)) {
-	if (!self->sf_handle) {
+#if defined(CONFIG_HAVE_fputc) || defined(CONFIG_HAVE_fwrite)
+#ifndef CONFIG_HAVE_fputc
+	unsigned char chr;
+#endif /* !CONFIG_HAVE_fputc */
+	if unlikely(!self->sf_handle) {
 		error_file_closed(self);
 		return GETC_ERR;
 	}
 	DBG_ALIGNMENT_DISABLE();
-	if (putc(ch, (FILE *)self->sf_handle) == EOF &&
-	    ferror((FILE *)self->sf_handle)) {
-		DBG_ALIGNMENT_ENABLE();
-		error_file_io(self);
-		return GETC_ERR;
+#ifdef CONFIG_HAVE_fputc
+	if (fputc(ch, (FILE *)self->sf_handle) == EOF)
+#else /* CONFIG_HAVE_fputc */
+	chr = (unsigned char)(unsigned int)ch;
+	if (fwrite(&chr, sizeof(chr), 1, (FILE *)self->sf_handle) == 0)
+#endif /* !CONFIG_HAVE_fputc */
+	{
+#ifdef CONFIG_HAVE_ferror
+		if (ferror((FILE *)self->sf_handle)) {
+			DBG_ALIGNMENT_ENABLE();
+			error_file_io(self);
+			return GETC_ERR;
+		}
+#endif /* CONFIG_HAVE_ferror */
+		return GETC_EOF;
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
+#else /* CONFIG_HAVE_fputc || CONFIG_HAVE_fwrite */
+	return err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
+	                                  FILE_OPERATOR_PUTC);
+#endif /* !CONFIG_HAVE_fputc && !CONFIG_HAVE_fwrite */
 }
 
 INTERN dsysfd_t DCALL
@@ -620,7 +687,7 @@ sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
 	if (!DeeArg_Unpack(argc, argv, ":fileno"))
 		DeeSystemFile_Fileno((DeeObject *)self);
 	return NULL;
-#else
+#else /* CONFIG_DONT_EXPOSE_FILENO */
 	dsysfd_t result;
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
@@ -628,29 +695,34 @@ sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
 	if unlikely(!result)
 		return NULL;
 	return DeeInt_NewUIntptr((uintptr_t)result);
-#endif
+#endif /* !CONFIG_DONT_EXPOSE_FILENO */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isatty"))
-		return NULL;
-	if (!self->sf_handle) {
+	if unlikely(DeeArg_Unpack(argc, argv, ":isatty"))
+		goto err;
+	if unlikely(!self->sf_handle) {
 		error_file_closed(self);
-		return NULL;
+		goto err;
 	}
 	/* General-purpose: Assume that the standard streams are connected to a TTY */
 	return_bool(self->sf_handle == stdin ||
 	            self->sf_handle == stdout ||
 	            self->sf_handle == stderr);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_flush(SystemFile *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":flush") ||
-	    sysfile_sync(self))
-		return NULL;
+	if unlikely(DeeArg_Unpack(argc, argv, ":flush"))
+		goto err;
+	if unlikely(sysfile_sync(self))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 struct mode_name {
@@ -679,6 +751,7 @@ PRIVATE struct mode_name const mode_names[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_setbuf(SystemFile *self, size_t argc, DeeObject **argv) {
+#ifdef CONFIG_HAVE_setvbuf
 	int mode;
 	char const *mode_iter;
 	DeeObject *file;
@@ -733,7 +806,7 @@ sysfile_setbuf(SystemFile *self, size_t argc, DeeObject **argv) {
 	}
 again_setbuf:
 	DeeFile_LockWrite(self);
-	if (!self->sf_handle) {
+	if unlikely(!self->sf_handle) {
 		error_file_closed(self);
 		DeeFile_LockEndWrite(self);
 		return NULL;
@@ -756,6 +829,10 @@ err_invalid_mode:
 	                "Unrecognized buffer mode `%s'",
 	                mode_str);
 err:
+#else /* CONFIG_HAVE_setvbuf */
+	DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                "Unsupported function `setvbuf()'");
+#endif /* !CONFIG_HAVE_setvbuf */
 	return NULL;
 }
 
@@ -797,11 +874,14 @@ PRIVATE struct type_member sysfile_members[] = {
 
 PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
+#ifdef CONFIG_HAVE_fclose
+	fclose(fp);
 	if (self->sf_ownhandle) {
 		DBG_ALIGNMENT_DISABLE();
 		fclose((FILE *)self->sf_ownhandle);
 		DBG_ALIGNMENT_ENABLE();
 	}
+#endif /* CONFIG_HAVE_fclose */
 	Dee_XDecref(self->sf_filename);
 }
 
@@ -811,9 +891,11 @@ sysfile_class_sync(DeeObject *__restrict UNUSED(self),
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;
 	/* Flush all streams. */
+#ifdef CONFIG_HAVE_fflush
 	DBG_ALIGNMENT_DISABLE();
 	fflush(NULL);
 	DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_fflush */
 	return_none;
 }
 

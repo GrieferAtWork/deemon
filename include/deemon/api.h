@@ -21,9 +21,54 @@
 #ifndef __KOS__
 #define __NO_KOS_SYSTEM_HEADERS__ 1
 #endif /* !__KOS__ */
+
+/* Try to expose various UNIX features in headers.
+ * These are always enabled, so that `deemon/system-features.h'
+ * is always correct, so-long as this header is #included before
+ * any system header is #included. */
 #ifndef _ATFILE_SOURCE
 #define _ATFILE_SOURCE 1
 #endif /* !_ATFILE_SOURCE */
+#ifndef _KOS_SOURCE
+#define _KOS_SOURCE 1
+#endif /* !_KOS_SOURCE */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif /* !_GNU_SOURCE */
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 700
+#endif /* !_XOPEN_SOURCE */
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif /* !_POSIX_C_SOURCE */
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE 1
+#endif /* !_LARGEFILE_SOURCE */
+#ifndef _LARGEFILE64_SOURCE
+#define _LARGEFILE64_SOURCE 1
+#endif /* !_LARGEFILE64_SOURCE */
+#ifndef _CTYPE_MACRO_SOURCE
+#define _CTYPE_MACRO_SOURCE 1
+#endif /* !_CTYPE_MACRO_SOURCE */
+#ifndef _TIME64_SOURCE
+#define _TIME64_SOURCE 1
+#endif /* !_TIME64_SOURCE */
+#ifndef _BSD_SOURCE
+#define _BSD_SOURCE 1
+#endif /* !_BSD_SOURCE */
+#ifndef _SVID_SOURCE
+#define _SVID_SOURCE 1
+#endif /* !_SVID_SOURCE */
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE 1
+#endif /* !_DEFAULT_SOURCE */
+#ifndef _XOPEN_SOURCE_EXTENDED
+#define _XOPEN_SOURCE_EXTENDED 1
+#endif /* !_XOPEN_SOURCE_EXTENDED */
+#ifndef _DOS_SOURCE
+#define _DOS_SOURCE 1
+#endif /* !_DOS_SOURCE */
+
 
 /* Expose definitions that don't comply with the deemon C symbol namespace.
  * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'. */
@@ -112,9 +157,9 @@ DECL_BEGIN
 #if !defined(CONFIG_TRACE_REFCHANGES) && !defined(CONFIG_NO_TRACE_REFCHANGES)
 #if !defined(NDEBUG) && 0
 #define CONFIG_TRACE_REFCHANGES 1
-#else
+#else /* !NDEBUG */
 #define CONFIG_NO_TRACE_REFCHANGES 1 
-#endif
+#endif /* NDEBUG */
 #endif /* !CONFIG_TRACE_REFCHANGES && !CONFIG_NO_TRACE_REFCHANGES */
 
 #if !defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_BADREFCNT_CHECKS)
@@ -161,7 +206,9 @@ DECL_BEGIN
     defined(_WIN32_WCE) || defined(WIN32_WCE)
 #define CONFIG_HOST_WINDOWS 1
 #endif /* Windows... */
-#if defined(__unix__) || defined(__unix) || defined(unix)
+#if defined(__unix__) || defined(__unix) || defined(unix) || \
+    defined(__lunix__) || defined(__lunix) || defined(lunix) || \
+    defined(__KOS__)
 #define CONFIG_HOST_UNIX 1
 #endif /* Unix... */
 

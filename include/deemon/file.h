@@ -22,18 +22,17 @@
 #include "api.h"
 
 #include "object.h"
+#ifndef __INTELLISENSE__
+#include "system-features.h" /* For `SEEK_*' constants. */
+#endif /* !__INTELLISENSE__ */
 
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
 
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-#ifndef CONFIG_NO_STDIO
-#include <stdio.h> /* For `SEEK_*' constants. */
-#endif             /* !CONFIG_NO_STDIO */
+#include <stdarg.h>  /* va_list */
+#include <stdbool.h> /* bool */
+#include <stddef.h>  /* NULL */
 
 #ifndef SEEK_SET
 #define SEEK_SET 0
@@ -208,9 +207,7 @@ struct Dee_filetype_object {
  * >> ...
  * >> print file;           // DeeFile_Type
  * >> print type file;      // DeeFileType_Type
- * >> print type type file; // DeeType_Type
- * >>
- */
+ * >> print type type file; // DeeType_Type */
 DDATDEF DeeTypeObject DeeFileType_Type;
 #define DeeFileType_Check(ob)      DeeObject_InstanceOf(ob, &DeeFileType_Type)
 #define DeeFileType_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeFileType_Type)
@@ -329,8 +326,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_sysfd_t DCALL DeeFile_Fileno(DeeObject *__restr
  * >>     Dee_Incref(arg);
  * >> }
  * >> ... // Operate on a filename string `arg'
- * >> Dee_Decref(arg);
- */
+ * >> Dee_Decref(arg); */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeFile_Filename(DeeObject *__restrict self);
 

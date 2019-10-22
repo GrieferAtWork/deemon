@@ -38,7 +38,7 @@
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/atomic.h>
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 #include "../runtime/runtime_error.h"
 
@@ -657,8 +657,6 @@ type_member_set(struct type_member *desc,
 		}
 	}	return 0;
 
-
-
 	{
 		union {
 			int8_t s8;
@@ -677,41 +675,49 @@ type_member_set(struct type_member *desc,
 			goto err;
 		WRITE(FIELD(uint8_t), data.u8);
 		break;
+
 	case STRUCT_INT8:
 		if (DeeObject_AsInt8(value, &data.s8))
 			goto err;
 		WRITE(FIELD(int8_t), data.s8);
 		break;
+
 	case STRUCT_UNSIGNED | STRUCT_INT16:
 		if (DeeObject_AsUInt16(value, &data.u16))
 			goto err;
 		WRITE(FIELD(uint16_t), data.u16);
 		break;
+
 	case STRUCT_INT16:
 		if (DeeObject_AsInt16(value, &data.s16))
 			goto err;
 		WRITE(FIELD(int16_t), data.s16);
 		break;
+
 	case STRUCT_UNSIGNED | STRUCT_INT32:
 		if (DeeObject_AsUInt32(value, &data.u32))
 			goto err;
 		WRITE(FIELD(uint32_t), data.u32);
 		break;
+
 	case STRUCT_INT32:
 		if (DeeObject_AsInt32(value, &data.s32))
 			goto err;
 		WRITE(FIELD(int32_t), data.s32);
 		break;
+
 	case STRUCT_UNSIGNED | STRUCT_INT64:
 		if (DeeObject_AsUInt64(value, &data.u64))
 			goto err;
 		WRITE(FIELD(uint64_t), data.u64);
 		break;
+
 	case STRUCT_INT64:
 		if (DeeObject_AsInt64(value, &data.s64))
 			goto err;
 		WRITE(FIELD(int64_t), data.s64);
 		break;
+
 	case STRUCT_UNSIGNED | STRUCT_INT128:
 		if (DeeObject_AsUInt128(value, &data.u128))
 			goto err;
@@ -723,6 +729,7 @@ type_member_set(struct type_member *desc,
 		COMPILER_WRITE_BARRIER();
 #endif /* !CONFIG_NO_THREADS */
 		break;
+
 	case STRUCT_INT128:
 		if (DeeObject_AsInt128(value, &data.s128))
 			goto err;

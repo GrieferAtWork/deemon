@@ -33,14 +33,17 @@
 #define BUILTIN_ALIAS(name,alt,flags) BUILTIN(name,---,flags)
 #endif
 
+#include <deemon/compiler/compiler.h>
+
+#include <deemon/HashSet.h>
 #include <deemon/api.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/callable.h>
 #include <deemon/cell.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
-#include <deemon/compiler/compiler.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -57,8 +60,6 @@
 #include <deemon/property.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
-#include <deemon/bytes.h>
-#include <deemon/HashSet.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/thread.h>

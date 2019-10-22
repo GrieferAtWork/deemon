@@ -53,10 +53,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef CONFIG_NO_BADREFCNT_CHECKS
-#include <stdlib.h>
-#endif /* CONFIG_NO_BADREFCNT_CHECKS */
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

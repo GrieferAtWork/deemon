@@ -39,9 +39,15 @@
 #ifndef CONFIG_NO_THREADS
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
 #ifndef CONFIG_HOST_WINDOWS
-#ifndef CONFIG_NO_SEMAPHORE_H
-#include <semaphore.h>
-#endif /* !CONFIG_NO_SEMAPHORE_H */
+#include "system-features.h"
+#if defined(CONFIG_HAVE_SEMAPHORE_H) && \
+    defined(CONFIG_HAVE_sem_init) && \
+    defined(CONFIG_HAVE_sem_post) && \
+    defined(CONFIG_HAVE_sem_wait) && \
+    defined(CONFIG_HAVE_sem_trywait) && \
+    defined(CONFIG_HAVE_sem_timedwait)
+#define CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T 1
+#endif /* Semaphore... */
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
 #ifdef CONFIG_THREADS_PTHREAD
@@ -345,7 +351,7 @@ struct Dee_thread_object {
 	 * communicate thread termination. */
 #ifdef CONFIG_HOST_WINDOWS
 	void                     *t_join; /* HANDLE */
-#elif !defined(CONFIG_NO_SEMAPHORE_H)
+#elif defined(CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T)
 	sem_t                     t_join;
 #else
 	unsigned int              t_join;

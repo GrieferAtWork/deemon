@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/gc.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h> /* sscanf() */
 
 #include <hybrid/host.h>
 
@@ -42,12 +43,12 @@
 #if (CONFIG_OBJECT_SLAB_STATS+0) == 0
 #undef CONFIG_OBJECT_SLAB_STATS
 #define CONFIG_NO_OBJECT_SLAB_STATS 1
-#endif
+#endif /* CONFIG_OBJECT_SLAB_STATS == 0 */
 #elif !defined(CONFIG_NO_OBJECT_SLAB_STATS)
 #ifdef NDEBUG
 #define CONFIG_NO_OBJECT_SLAB_STATS 1
-#endif
-#endif
+#endif /* !NDEBUG */
+#endif /* CONFIG_OBJECT_SLAB_STATS... */
 
 
 #ifndef CONFIG_NO_OBJECT_SLABS
@@ -57,25 +58,17 @@
 #endif
 #ifndef CONFIG_NO_OBJECT_SLABS
 #ifdef CONFIG_HOST_WINDOWS
+#define USE_WINDOWS_VIRTUALALLOC 1
 #include <Windows.h>
 #else /* CONFIG_HOST_WINDOWS */
-#ifndef __NO_has_include
-/* Check for dependencies, but default to assuming
- * that we have everything which we might need. */
-#if !__has_include(<sys/mman.h>)
+#include <deemon/system-features.h>
+#if !defined(CONFIG_HAVE_SYS_MMAN_H) || !defined(CONFIG_HAVE_mmap)
+#define CONFIG_NO_OBJECT_SLABS 1
+#elif !defined(MAP_ANONYMOUS) && !defined(MAP_ANON) && !defined(CONFIG_HAVE_open)
 #define CONFIG_NO_OBJECT_SLABS 1
 #endif
-#if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
-#if !__has_include(<sys/fcntl.h>)
-#define CONFIG_NO_OBJECT_SLABS 1
-#endif
-#endif
-#endif /* __NO_has_include */
 #ifndef CONFIG_NO_OBJECT_SLABS
-#include <sys/mman.h>
-#if !defined(MAP_ANONYMOUS) && !defined(MAP_ANON)
-#include <fcntl.h>
-#endif
+#define USE_UNIX_MMAP 1
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 #endif /* !CONFIG_HOST_WINDOWS */
 
@@ -84,7 +77,7 @@
 
 #ifndef PAGESIZE
 #define PAGESIZE 4096
-#endif
+#endif /* !PAGESIZE */
 
 #ifndef __SIZEOF_POINTER__
 #if defined(__x86_64__)
@@ -336,11 +329,11 @@ PUBLIC void DCALL DeeSlab_ResetStat(void) {
 INTERN void DCALL DeeSlab_Finalize(void) {
 	if (slab_config.sc_heap_start == (uintptr_t)-1)
 		return;
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef USE_WINDOWS_VIRTUALALLOC
 	VirtualFree((LPVOID)slab_config.sc_heap_start,
 	            (SIZE_T)(slab_config.sc_heap_end - slab_config.sc_heap_start),
 	            MEM_DECOMMIT);
-#elif defined(CONFIG_HOST_UNIX)
+#elif defined(USE_UNIX_MMAP)
 	munmap((void *)slab_config.sc_heap_start,
 	       (size_t)(slab_config.sc_heap_end - slab_config.sc_heap_start));
 #else
@@ -361,6 +354,8 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 		 * used. */
 #if Dee_SLAB_COUNT == 5
 		memset(sizes, 0, sizeof(sizes));
+		/* FIXME: We're not checking if sscanf() really exists!
+		 *        There needs to be a fallback for when it doesn't exist! */
 		sscanf(config,
 		       "%u,%u,%u,%u,%u",
 		       (unsigned int *)&sizes[0],
@@ -383,14 +378,14 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 		goto disable_slabs;
 	{
 		void *slab_memory;
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef USE_WINDOWS_VIRTUALALLOC
 		slab_memory = VirtualAlloc(NULL,
 		                           total,
 		                           MEM_COMMIT | MEM_RESERVE,
 		                           PAGE_READWRITE);
 		if (!slab_memory)
 			goto disable_slabs;
-#elif defined(CONFIG_HOST_UNIX)
+#elif defined(USE_UNIX_MMAP)
 #if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
 #define MAP_ANONYMOUS MAP_ANON
 #endif /* !MAP_ANONYMOUS && MAP_ANON */

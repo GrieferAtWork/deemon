@@ -61,10 +61,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 make_absolute(DeeObject *__restrict path);
 
 #ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE4(a,b,c,d) ((d)<<24|(c)<<16|(b)<<8|(a))
-#else
-#define ENCODE4(a,b,c,d) ((d)|(c)<<8|(b)<<16|(a)<<24)
-#endif
+#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
+#else /* CONFIG_LITTLE_ENDIAN */
+#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
+#endif /* !CONFIG_LITTLE_ENDIAN */
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 nt_FixUncPath(DeeObject *__restrict filename) {
@@ -141,22 +141,22 @@ PUBLIC WUNUSED bool DCALL nt_IsFileNotFound(DWORD error) {
 		 *      invalid-path / file-not-found errors. */
 #ifdef ERROR_FILE_NOT_FOUND
 	case ERROR_FILE_NOT_FOUND:
-#endif
+#endif /* ERROR_FILE_NOT_FOUND */
 #ifdef ERROR_PATH_NOT_FOUND
 	case ERROR_PATH_NOT_FOUND:
-#endif
+#endif /* ERROR_PATH_NOT_FOUND */
 #ifdef ERROR_INVALID_DRIVE
 	case ERROR_INVALID_DRIVE:
-#endif
+#endif /* ERROR_INVALID_DRIVE */
 #ifdef ERROR_BAD_NETPATH
 	case ERROR_BAD_NETPATH:
-#endif
+#endif /* ERROR_BAD_NETPATH */
 #ifdef ERROR_BAD_PATHNAME
 	case ERROR_BAD_PATHNAME:
-#endif
+#endif /* ERROR_BAD_PATHNAME */
 #ifdef ERROR_INVALID_NAME
 	case ERROR_INVALID_NAME:
-#endif
+#endif /* ERROR_INVALID_NAME */
 		return true;
 	default: break;
 	}
@@ -167,49 +167,49 @@ PUBLIC WUNUSED bool DCALL nt_IsAccessDenied(DWORD error) {
 	switch (error) {
 #ifdef ERROR_ACCESS_DENIED
 	case ERROR_ACCESS_DENIED:
-#endif
+#endif /* ERROR_ACCESS_DENIED */
 #ifdef ERROR_CANT_ACCESS_FILE
 	case ERROR_CANT_ACCESS_FILE:
-#endif
+#endif /* ERROR_CANT_ACCESS_FILE */
 #ifdef ERROR_CTX_WINSTATION_ACCESS_DENIED
 	case ERROR_CTX_WINSTATION_ACCESS_DENIED:
-#endif
+#endif /* ERROR_CTX_WINSTATION_ACCESS_DENIED */
 #ifdef ERROR_DS_DRA_ACCESS_DENIED
 	case ERROR_DS_DRA_ACCESS_DENIED:
-#endif
+#endif /* ERROR_DS_DRA_ACCESS_DENIED */
 #ifdef ERROR_DS_INSUFF_ACCESS_RIGHTS
 	case ERROR_DS_INSUFF_ACCESS_RIGHTS:
-#endif
+#endif /* ERROR_DS_INSUFF_ACCESS_RIGHTS */
 #ifdef ERROR_EA_ACCESS_DENIED
 	case ERROR_EA_ACCESS_DENIED:
-#endif
+#endif /* ERROR_EA_ACCESS_DENIED */
 #ifdef ERROR_HV_ACCESS_DENIED
 	case ERROR_HV_ACCESS_DENIED:
-#endif
+#endif /* ERROR_HV_ACCESS_DENIED */
 #ifdef ERROR_NETWORK_ACCESS_DENIED
 	case ERROR_NETWORK_ACCESS_DENIED:
-#endif
+#endif /* ERROR_NETWORK_ACCESS_DENIED */
 #ifdef ERROR_NO_ADMIN_ACCESS_POINT
 	case ERROR_NO_ADMIN_ACCESS_POINT:
-#endif
+#endif /* ERROR_NO_ADMIN_ACCESS_POINT */
 #ifdef ERROR_VHD_PARENT_VHD_ACCESS_DENIED
 	case ERROR_VHD_PARENT_VHD_ACCESS_DENIED:
-#endif
+#endif /* ERROR_VHD_PARENT_VHD_ACCESS_DENIED */
 #ifdef ERROR_ACCESS_DISABLED_BY_POLICY
 	case ERROR_ACCESS_DISABLED_BY_POLICY:
-#endif
+#endif /* ERROR_ACCESS_DISABLED_BY_POLICY */
 #ifdef ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY
 	case ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY:
-#endif
+#endif /* ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY */
 #ifdef ERROR_ACCESS_DISABLED_WEBBLADE
 	case ERROR_ACCESS_DISABLED_WEBBLADE:
-#endif
+#endif /* ERROR_ACCESS_DISABLED_WEBBLADE */
 #ifdef ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER
 	case ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER:
-#endif
+#endif /* ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER */
 #ifdef ERROR_CANT_ACCESS_DOMAIN_INFO
 	case ERROR_CANT_ACCESS_DOMAIN_INFO:
-#endif
+#endif /* ERROR_CANT_ACCESS_DOMAIN_INFO */
 		return true;
 	default: break;
 	}

@@ -89,6 +89,7 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
                                               struct TPPKeyword **pkeyword_entry);
 
 /* TPP isn't exported by deemon, so we configure it to only be used internally. */
+#define TPP_assert                              Dee_ASSERT
 #define TPPFUN                                  INTDEF
 #define TPP(x)                                  x
 #define TPPCALL                                 DCALL

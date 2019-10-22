@@ -46,8 +46,7 @@
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 
-#include <limits.h>
-#include <math.h>
+#include <math.h> /* FIXME: This needs a feature check! */
 #include <string.h>
 
 #include "../runtime/runtime_error.h"

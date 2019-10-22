@@ -163,7 +163,7 @@ DDATDEF DeeTypeObject             DeeError_FileClosed;
  * Note that this type is final, meaning that
  * user-classes cannot be further derived from it.
  * Additionally, this type of error is used by the builtin implementation
- * of `exit()' when deemon was built with `CONFIG_NO_STDLIB'. */
+ * of `exit()' when deemon was built with support for a native exit function. */
 DDATDEF DeeTypeObject DeeError_AppExit;
 struct Dee_appexit_object {
 	Dee_OBJECT_HEAD

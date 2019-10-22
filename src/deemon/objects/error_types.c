@@ -33,13 +33,9 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h>
 
 #include "../runtime/strings.h"
-
-#include <assert.h>
-#ifndef CONFIG_NO_STDLIB
-#include <stdlib.h> /* EXIT_FAILURE */
-#endif /* !CONFIG_NO_STDLIB */
 
 DECL_BEGIN
 
@@ -750,19 +746,16 @@ INIT_CUSTOM_ERROR("FileClosed", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_FS
 
 
 
-
-
-
 PRIVATE int DCALL
 appexit_init(struct appexit_object *__restrict self,
              size_t argc, DeeObject **argv) {
-#ifdef EXIT_FAILURE
+	int result;
 	self->ae_exitcode = EXIT_FAILURE;
-#else /* EXIT_FAILURE */
-	self->ae_exitcode = 1;
-#endif /* !EXIT_FAILURE */
 	/* Read the exitcode from arguments. */
-	return DeeArg_Unpack(argc, argv, "|d:appexit", &self->ae_exitcode);
+	result = DeeArg_Unpack(argc, argv,
+	                       "|d:appexit",
+	                       &self->ae_exitcode);
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -783,7 +776,8 @@ appexit_repr(struct appexit_object *__restrict self) {
 }
 
 PRIVATE struct type_member appexit_members[] = {
-	TYPE_MEMBER_FIELD("exitcode", STRUCT_CONST | STRUCT_INT, offsetof(struct appexit_object, ae_exitcode)),
+	TYPE_MEMBER_FIELD("exitcode", STRUCT_CONST | STRUCT_INT,
+	                  offsetof(struct appexit_object, ae_exitcode)),
 	TYPE_MEMBER_END
 };
 
@@ -804,50 +798,42 @@ err:
 }
 
 PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
-#if !defined(CONFIG_NO_STDLIB) && 1
+#ifdef CONFIG_HAVE__Exit
+#ifdef CONFIG_HAVE_exit
 	if (run_atexit)
 		exit(exitcode);
-#if !defined(CONFIG_NO__Exit) && \
-    (defined(CONFIG_HAVE__Exit) ||   \
-     defined(_Exit) || defined(__USE_ISOC99))
+#endif /* CONFIG_HAVE_exit */
 	_Exit(exitcode);
-#elif !defined(CONFIG_NO__exit) && \
-      (defined(_MSC_VER) || defined(CONFIG_HAVE__exit) || defined(_exit))
-	_exit(exitcode);
-#else
-	/* Fallback: Discard all registered callbacks and use the regular exit() */
-	Dee_RunAtExit(DEE_RUNATEXIT_FDONTRUN);
-	exit(exitcode);
-#endif
-	for (;;) {
-	}
-#else /* !CONFIG_NO_STDLIB */
+#else /* CONFIG_HAVE__Exit */
 	/* If callbacks aren't supposed to be executed, discard
 	 * all of them and prevent the addition of new ones. */
 	if (!run_atexit)
 		Dee_RunAtExit(DEE_RUNATEXIT_FDONTRUN);
+#ifdef CONFIG_HAVE_exit
+	exit(exitcode);
+#else /* CONFIG_HAVE_exit */
 	/* No stdlib support. Instead, we must throw an AppExit error. */
 	{
 		struct appexit_object *error;
 		error = DeeObject_MALLOC(struct appexit_object);
-		if unlikely(!error)
-			goto err;
-		/* Initialize the appexit error. */
-		error->ae_exitcode = exitcode;
-		DeeObject_Init(error, &DeeError_AppExit);
-		/* Throw the appexit error. */
-		DeeError_Throw((DeeObject *)error);
-		Dee_Decref(error);
-err:
-		return -1;
+		if likely(error) {
+			/* Initialize the appexit error. */
+			error->ae_exitcode = exitcode;
+			DeeObject_Init(error, &DeeError_AppExit);
+			/* Throw the appexit error. */
+			DeeError_Throw((DeeObject *)error);
+			Dee_Decref(error);
+		}
 	}
-#endif /* CONFIG_NO_STDLIB */
+	return -1;
+#endif /* !CONFIG_HAVE_exit */
+#endif /* !CONFIG_HAVE__Exit */
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 appexit_class_exit(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
-	int exitcode    = EXIT_FAILURE;
+	int exitcode = EXIT_FAILURE;
 	bool run_atexit = true;
 	if (DeeArg_Unpack(argc, argv, "|db:exit", &exitcode, &run_atexit))
 		goto err;

@@ -38,8 +38,6 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 
-#include <limits.h>
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 #include "seq/each.h"

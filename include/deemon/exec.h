@@ -100,13 +100,9 @@ DDATDEF uint64_t DCALL DeeExec_GetTimestamp(void);
 
 
 /* High-level functionality for registering at-exit hooks.
- * When executed, at-exit callbacks are run in order of execution.
- * NOTE: This function makes use of libC's `atexit()' function.
- *       When deemon was built with `CONFIG_NO_STDLIB', this
- *       function always throws an error and returns -1.
+ * When executed, at-exit callbacks are run in order of being registered.
+ * NOTE: This function makes use of libC's `atexit()' function (if available).
  * @param args: A tuple object the is used to invoke `callback'
- * @throw NotImplemented: Deemon was built with `CONFIG_NO_STDLIB'
- * @throw RuntimeError: `Dee_RunAtExit()' had already been invoked.
  * @return:  0: Successfully registered the given callback.
  * @return: -1: An error occurred or atexit() can no longer be used
  *              because `Dee_RunAtExit()' is being, or had been called. */

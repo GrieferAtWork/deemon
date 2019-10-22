@@ -28,10 +28,10 @@ DECL_BEGIN
 
 #ifndef STRING2
 #define STRING2(name, str) INTDEF DeeObject name;
-#endif
+#endif /* !STRING2 */
 #ifndef STRING
 #define STRING(str) STRING2(str_##str, #str)
-#endif
+#endif /* !STRING */
 
 STRING(Signal)
 STRING(Error)

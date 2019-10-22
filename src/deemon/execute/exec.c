@@ -32,6 +32,7 @@
 #include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/atomic.h>
 
@@ -44,10 +45,7 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 #include <deemon/tuple.h>
-
-#include <stdlib.h>
 #endif /* !CONFIG_NO_STDLIB */
-
 
 /* Pull in some header to form artificial dependencies in order
  * to force the timestamp of the builtin `deemon' module from being
@@ -458,7 +456,9 @@ PRIVATE struct atexit_entry *atexit_list = NULL;
 
 #define ATEXIT_FNORMAL 0x0000 /* Normal atexit flags. */
 #define ATEXIT_FDIDRUN 0x0001 /* `atexit_callback' has been executed. */
+#ifdef CONFIG_HAVE_atexit
 #define ATEXIT_FDIDREG 0x0002 /* `atexit_callback' was registered using `atexit()' */
+#endif /* CONFIG_HAVE_atexit */
 /* [lock(atexit_lock)] Set of `ATEXIT_F*' */
 PRIVATE uint16_t atexit_mode = ATEXIT_FNORMAL;
 
@@ -527,6 +527,13 @@ PRIVATE void __LIBCCALL atexit_callback(void) {
 	Dee_RunAtExit(DEE_RUNATEXIT_FRUNALL);
 }
 
+/* High-level functionality for registering at-exit hooks.
+ * When executed, at-exit callbacks are run in order of being registered.
+ * NOTE: This function makes use of libC's `atexit()' function (if available).
+ * @param args: A tuple object the is used to invoke `callback'
+ * @return:  0: Successfully registered the given callback.
+ * @return: -1: An error occurred or atexit() can no longer be used
+ *              because `Dee_RunAtExit()' is being, or had been called. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 Dee_AtExit(DeeObject *callback, DeeObject *args) {
 	struct atexit_entry *new_list;
@@ -543,8 +550,9 @@ again:
 		goto err;
 	}
 	/* Allocate more entries. */
-	new_list = (struct atexit_entry *)Dee_TryRealloc(atexit_list, (atexit_size + 1) *
-	                                                              sizeof(struct atexit_entry));
+	new_list = (struct atexit_entry *)Dee_TryRealloc(atexit_list,
+	                                                 (atexit_size + 1) *
+	                                                 sizeof(struct atexit_entry));
 	if unlikely(!new_list) {
 		size_t old_size = atexit_size;
 		rwlock_endwrite(&atexit_lock);
@@ -554,12 +562,14 @@ again:
 	}
 	atexit_list = new_list;
 	new_list += atexit_size++;
+#ifdef CONFIG_HAVE_atexit
 	/* If the atexit-callback hasn't been registered yet, do that now. */
 	if (!(atexit_mode & ATEXIT_FDIDREG)) {
 		/* Don't bother handling errors returned by `atexit()'... */
 		atexit(&atexit_callback);
 		atexit_mode |= ATEXIT_FDIDREG;
 	}
+#endif /* CONFIG_HAVE_atexit */
 
 	/* Initialize the new callback entry. */
 	Dee_Incref(callback);

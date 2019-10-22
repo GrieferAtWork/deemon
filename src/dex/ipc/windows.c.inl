@@ -957,6 +957,12 @@ again:
 		if ((self->p_state & (PROCESS_FTERMINATED | PROCESS_FDETACHED)) ==
 		    PROCESS_FTERMINATED)
 			goto done_join;
+		if (!(self->p_state & PROCESS_FSTARTED)) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Process %k has not been started",
+			                self);
+			goto err;
+		}
 		if (self->p_state & PROCESS_FDETACHED) {
 			/* Special case: The process was detached, but not joined. */
 			ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);

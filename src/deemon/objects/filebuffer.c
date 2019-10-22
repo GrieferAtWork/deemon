@@ -31,18 +31,9 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* atexit() */
 
 #include <string.h>
-
-#ifndef CONFIG_NO_STDLIB
-#include <stdlib.h> /* atexit() */
-#endif /* !CONFIG_NO_STDLIB */
-
-#if !defined(CONFIG_HOST_WINDOWS) && \
-    !defined(CONFIG_HOST_UNIX) && \
-    !defined(CONFIG_NO_STDIO)
-#include <stdio.h>
-#endif /* !... */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -75,9 +66,9 @@ PRIVATE DEFINE_RWLOCK(buffer_ttys_lock);
 #define buffer_ttys_lock_enter() (void)0
 #define buffer_ttys_lock_leave() (void)0
 #endif /* !CONFIG_NO_THREADS */
-#ifndef CONFIG_NO_STDLIB
+#ifdef CONFIG_HAVE_atexit
 PRIVATE bool atexit_registered = false;
-#endif /* !CONFIG_NO_STDLIB */
+#endif /* CONFIG_HAVE_atexit */
 
 /* Add/Remove a given buffer from the TTY-buffer chain. */
 PRIVATE NONNULL((1)) void DCALL buffer_addtty(Buffer *__restrict self);
@@ -99,7 +90,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_ungetc_nolock(Buffer *__restrict s
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_trunc_nolock(Buffer *__restrict self, dpos_t new_size);
 
 
-#ifndef CONFIG_NO_STDLIB
+#ifdef CONFIG_HAVE_atexit
 PRIVATE void atexit_flushall(void) {
 	for (;;) {
 		DREF Buffer *buffer;
@@ -137,19 +128,19 @@ PRIVATE void atexit_flushall(void) {
 		Dee_Decref(buffer);
 	}
 }
-#endif /* !CONFIG_NO_STDLIB */
+#endif /* CONFIG_HAVE_atexit */
 
 PRIVATE NONNULL((1)) void DCALL
 buffer_addtty(Buffer *__restrict self) {
 	buffer_ttys_lock_enter();
-#ifndef CONFIG_NO_STDLIB
+#ifdef CONFIG_HAVE_atexit
 	if (!atexit_registered) {
 		/* NOTE: If atexit() fails, there's nothing we could do about it,
 		 *       so we won't even bother to handle any errors it may return. */
 		atexit(&atexit_flushall);
 		atexit_registered = true;
 	}
-#endif /* !CONFIG_NO_STDLIB */
+#endif /* CONFIG_HAVE_atexit */
 	if (!self->fb_ttych.fbl_pself) {
 		self->fb_ttych.fbl_pself = &buffer_ttys;
 		if ((self->fb_ttych.fbl_next = buffer_ttys) != NULL)
@@ -403,7 +394,7 @@ err:
 /* Synchronize unwritten data of all interactive TTY devices.
  * NOTE: The first time a TTY device is changed, this function
  *       is added to the `atexit()' chain unless deemon was
- *       built with the CONFIG_NO_STDLIB option enabled. */
+ *       built with the CONFIG_HAVE_atexit option disabled. */
 PUBLIC int DCALL DeeFileBuffer_SyncTTYs(void) {
 	int result = 0;
 	for (;;) {

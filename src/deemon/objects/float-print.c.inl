@@ -23,7 +23,7 @@
 
 #include <deemon/format.h>
 
-#include <math.h>
+#include <math.h> /* FIXME: This needs a feature check! */
 
 #ifdef PRINT_LONG_DOUBLE
 #define FLOAT_TYPE  long double

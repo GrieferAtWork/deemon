@@ -1169,6 +1169,9 @@
       <Filter>src</Filter>
     </None>
     <None Include="..\cpp.hint" />
+    <None Include="..\include\deemon\system-features.h">
+      <Filter>include\deemon</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

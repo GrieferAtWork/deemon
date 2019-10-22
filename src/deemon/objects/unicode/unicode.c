@@ -36,28 +36,14 @@
 
 #include <hybrid/minmax.h>
 
-#include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/atomic.h>
 #endif /* !CONFIG_NO_THREADS */
-
-#if 0
-#ifdef CONFIG_HOST_WINDOWS
-#    include <Windows.h>
-#else /* CONFIG_HOST_WINDOWS */
-#    include <locale.h>
-#    include <wchar.h>
-#ifndef CONFIG_NO_STDIO
-#    include <stdio.h>
-#endif /* !CONFIG_NO_STDIO */
-#endif /* !CONFIG_HOST_WINDOWS */
-#endif
 
 DECL_BEGIN
 

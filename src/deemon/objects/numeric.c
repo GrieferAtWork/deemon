@@ -29,7 +29,7 @@
 
 #include <hybrid/byteswap.h>
 
-#include <math.h>
+#include <math.h> /* FIXME: This needs a feature check! */
 
 #include "../runtime/strings.h"
 

@@ -25,24 +25,48 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* CONFIG_HOST_WINDOWS */
 
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
+#include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/sched/yield.h>
 
 DECL_BEGIN
+
+
+
+#ifdef CONFIG_HOST_WINDOWS
+typedef union {
+	struct {
+		/* Use our own structure so it gets aligned by 64 bits,
+		 * and `Offset' can be assigned directly, without some
+		 * sh1tty wrapper code. */
+		uintptr_t Internal;
+		uintptr_t InternalHigh;
+#ifdef CONFIG_LITTLE_ENDIAN
+		uint64_t  Offset;
+#else /* CONFIG_LITTLE_ENDIAN */
+		uint32_t  Offset;
+		uint32_t  OffsetHigh;
+#endif /* !CONFIG_LITTLE_ENDIAN */
+	}   me;
+	OVERLAPPED    ms;
+} my_OVERLAPPED;
+#endif /* CONFIG_HOST_WINDOWS */
+
 
 /*[[[deemon
 import * from _dexutils;
@@ -267,11 +291,15 @@ gii("AT_THIS_STACK");
 
 
 PRIVATE ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
-err_unsupported(char const *__restrict name) {
- return DeeError_Throwf(&DeeError_UnsupportedAPI,
-                        "Unsupported function `%s'",
-                         name);
-}
+err_unsupported(char const *__restrict name);
+#undef NEED_ERR_UNSUPPORTED
+
+PRIVATE WUNUSED DREF /*String*/ DeeObject *DCALL
+libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
+#undef NEED_GET_DFD_FILENAME
+
+
+
 
 #if defined(EINTR) && !defined(__INTELLISENSE__)
 #define EINTR_LABEL(again)        again:
@@ -425,42 +453,49 @@ err_unsupported(char const *__restrict name) {
 
 
 #if defined(ENOSYS) && defined(ENOTSUP) && defined(EOPNOTSUPP)
+#define NEED_ERR_UNSUPPORTED 1
 #define HANDLE_ENOSYS(error, err_label, name)                               \
 	if ((error) == ENOSYS || (error) == ENOTSUP || (error) == EOPNOTSUPP) { \
 		err_unsupported(name);                                              \
 		goto err_label;                                                     \
 	}
 #elif defined(ENOSYS) && defined(ENOTSUP)
+#define NEED_ERR_UNSUPPORTED 1
 #define HANDLE_ENOSYS(error, err_label, name)      \
 	if ((error) == ENOSYS || (error) == ENOTSUP) { \
 		err_unsupported(name);                     \
 		goto err_label;                            \
 	}
 #elif defined(ENOSYS) && defined(EOPNOTSUPP)
+#define NEED_ERR_UNSUPPORTED 1
 #define HANDLE_ENOSYS(error, err_label, name)         \
 	if ((error) == ENOSYS || (error) == EOPNOTSUPP) { \
 		err_unsupported(name);                        \
 		goto err_label;                               \
 	}
 #elif defined(ENOTSUP) && defined(EOPNOTSUPP)
+#define NEED_ERR_UNSUPPORTED 1
 #define HANDLE_ENOSYS(error, err_label, name)          \
 	if ((error) == ENOTSUP || (error) == EOPNOTSUPP) { \
 		err_unsupported(name);                         \
 		goto err_label;                                \
 	}
 #elif defined(EOPNOTSUPP)
+#define NEED_ERR_UNSUPPORTED 1
 #define HANDLE_ENOSYS(error, err_label, name) \
 	if ((error) == EOPNOTSUPP) {              \
 		err_unsupported(name);                \
 		goto err_label;                       \
 	}
 #elif defined(ENOTSUP)
+#define NEED_ERR_UNSUPPORTED 1
 #define HANDLE_ENOSYS(error, err_label, name) \
 	if ((error) == ENOTSUP) {                 \
 		err_unsupported(name);                \
 		goto err_label;                       \
 	}
 #elif defined(ENOSYS)
+#define NEED_ERR_UNSUPPORTED 1
 #define HANDLE_ENOSYS(error, err_label, name) \
 	if ((error) == ENOSYS) {                  \
 		err_unsupported(name);                \
@@ -473,7 +508,7 @@ err_unsupported(char const *__restrict name) {
 
 
 
-#if defined(HAVE_WOPEN) || defined(__DEEMON__)
+#if defined(CONFIG_HAVE_wopen64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("open","filename:c:wchar_t[],oflags:u,mode:u=0644->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -502,34 +537,8 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(dwchar_t const *filename, unsigned int oflags, unsigned int mode)
 //[[[end]]]
-{
-	int result;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	result = wopen(filename, (int)oflags, (int)mode);
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = errno;
-		HANDLE_EINTR(result, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %ls could not be found", filename)
-		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File %ls already exists", filename)
-		HANDLE_EACCES(result, err, "Failed to access %ls", filename)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %ls for writing", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %ls", filename)
-		HANDLE_ENOSYS(result, err, "open")
-		DeeError_SysThrowf(&DeeError_FSError, result,
-		                   "Failed to open %ls", filename);
-		goto err;
-	}
-	return DeeInt_NewUInt((unsigned int)result);
-err:
-	return NULL;
-}
 #endif
-
-#if !defined(HAVE_WOPEN) || defined(__DEEMON__)
+#if !defined(CONFIG_HAVE_wopen64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("open","filename:c:char[],oflags:u,mode:u=0644->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_open_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -558,51 +567,52 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char const *filename, unsigned int oflags, unsigned int mode)
 //[[[end]]]
+#endif
 {
-#ifdef HAVE_FILEIO
+#if defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_open64)
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_OPEN64
+#ifdef CONFIG_HAVE_wopen64
+#define OPEN_PRINTF_FILENAME "%ls"
+	result = wopen64(filename, (int)oflags, (int)mode);
+#else /* CONFIG_HAVE_wopen64 */
+#define OPEN_PRINTF_FILENAME "%s"
 	result = open64(filename, (int)oflags, (int)mode);
-#else
-	result = open(filename, (int)oflags, (int)mode);
-#endif
+#endif /* !CONFIG_HAVE_wopen64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = errno;
+		result = Dee_GetErrno();
 		HANDLE_EINTR(result, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
-		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File %s already exists", filename)
-		HANDLE_EACCES(result, err, "Failed to access %s", filename)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %s for writing", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " OPEN_PRINTF_FILENAME " could not be found", filename)
+		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File " OPEN_PRINTF_FILENAME " already exists", filename)
+		HANDLE_EACCES(result, err, "Failed to access " OPEN_PRINTF_FILENAME, filename)
+		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory " OPEN_PRINTF_FILENAME " for writing", filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " OPEN_PRINTF_FILENAME, filename)
 		HANDLE_ENOSYS(result, err, "open")
 		DeeError_SysThrowf(&DeeError_FSError, result,
-		                   "Failed to open %s", filename);
+		                   "Failed to open " OPEN_PRINTF_FILENAME,
+		                   filename);
 		goto err;
 	}
 	return DeeInt_NewUInt((unsigned int)result);
 err:
-	return NULL;
-#else
+#else /* CONFIG_HAVE_wopen64 || CONFIG_HAVE_open64 */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)filename;
 	(void)oflags;
 	(void)mode;
 	err_unsupported("open");
+#endif /* !CONFIG_HAVE_wopen64 && !CONFIG_HAVE_open64 */
 	return NULL;
-#endif
 }
-#endif
 
 
 
 
-#if defined(HAVE_WCREAT) || defined(HAVE_WOPEN) || \
-    defined(HAVE_WCREAT64) || defined(HAVE_WOPEN64) || \
-    defined(__DEEMON__)
+#if defined(CONFIG_HAVE_wcreat64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("creat","filename:c:wchar_t[],mode:u=0644->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(dwchar_t const *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -630,54 +640,8 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(dwchar_t const *filename, unsigned int mode)
 //[[[end]]]
-{
-#if defined(HAVE_FILEIO) && (defined(HAVE_CREAT) || \
-                             (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC)))
-	int result;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_WCREAT64
-	result = wcreat64(filename, (int)mode);
-#elif defined(HAVE_WCREAT)
-	result = wcreat(filename, (int)mode);
-#elif defined(O_WRONLY) && defined(HAVE_WOPEN64)
-	result = wopen64(filename, O_CREAT | O_WRONLY | O_TRUNC, (int)mode);
-#elif defined(O_WRONLY)
-	result = wopen(filename, O_CREAT | O_WRONLY | O_TRUNC, (int)mode);
-#elif defined(HAVE_WOPEN64)
-	result = wopen64(filename, O_CREAT | O_RDWR | O_TRUNC, (int)mode);
-#else
-	result = wopen(filename, O_CREAT | O_RDWR | O_TRUNC, (int)mode);
 #endif
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = errno;
-		HANDLE_EINTR(result, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %ls could not be found", filename)
-		HANDLE_EACCES(result, err, "Failed to access %ls", filename)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %ls for writing", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %ls", filename)
-		HANDLE_ENOSYS(result, err, "creat")
-		DeeError_SysThrowf(&DeeError_FSError, result,
-		                   "Failed to open %ls", filename);
-		goto err;
-	}
-	return DeeInt_NewUInt((unsigned int)result);
-err:
-	return NULL;
-#else
-	(void)filename;
-	(void)mode;
-	err_unsupported("creat");
-	return NULL;
-#endif
-}
-#endif
-
-#if !(defined(HAVE_WCREAT) || defined(HAVE_WOPEN) || \
-     defined(HAVE_WCREAT64) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
+#if !defined(CONFIG_HAVE_wcreat64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("creat","filename:c:char[],mode:u=0644->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_creat_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -705,51 +669,45 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char const *filename, unsigned int mode)
 //[[[end]]]
+#endif
 {
-#if defined(HAVE_FILEIO) && (defined(HAVE_CREAT) || \
-                             (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC)))
+#if defined(CONFIG_HAVE_wcreat64) || defined(CONFIG_HAVE_creat64)
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_CREAT64
+#ifdef CONFIG_HAVE_wcreat64
+#define CREAT_PRINTF_FILENAME "%ls"
+	result = wcreat64(filename, (int)mode);
+#else /* CONFIG_HAVE_wcreat64 */
+#define CREAT_PRINTF_FILENAME "%s"
 	result = creat64(filename, (int)mode);
-#elif defined(HAVE_CREAT)
-	result = creat(filename, (int)mode);
-#elif defined(O_WRONLY) && defined(HAVE_OPEN64)
-	result = open64(filename, O_CREAT | O_WRONLY | O_TRUNC, (int)mode);
-#elif defined(O_WRONLY)
-	result = open(filename, O_CREAT | O_WRONLY | O_TRUNC, (int)mode);
-#elif defined(HAVE_OPEN64)
-	result = open64(filename, O_CREAT | O_RDWR | O_TRUNC, (int)mode);
-#else
-	result = open(filename, O_CREAT | O_RDWR | O_TRUNC, (int)mode);
-#endif
+#endif /* !CONFIG_HAVE_wcreat64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = errno;
+		result = Dee_GetErrno();
 		HANDLE_EINTR(result, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
-		HANDLE_EACCES(result, err, "Failed to access %s", filename)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory %s for writing", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " CREAT_PRINTF_FILENAME " could not be found", filename)
+		HANDLE_EACCES(result, err, "Failed to access " CREAT_PRINTF_FILENAME, filename)
+		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory " CREAT_PRINTF_FILENAME " for writing", filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " CREAT_PRINTF_FILENAME, filename)
 		HANDLE_ENOSYS(result, err, "creat")
 		DeeError_SysThrowf(&DeeError_FSError, result,
-		                   "Failed to open %s", filename);
+		                   "Failed to open " CREAT_PRINTF_FILENAME,
+		                   filename);
 		goto err;
 	}
 	return DeeInt_NewUInt((unsigned int)result);
 err:
-	return NULL;
-#else
+#else /* CONFIG_HAVE_wcreat64 || CONFIG_HAVE_creat64 */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)filename;
 	(void)mode;
 	err_unsupported("creat");
+#endif /* !CONFIG_HAVE_wcreat64 && !CONFIG_HAVE_creat64 */
 	return NULL;
-#endif
 }
-#endif
 
 
 
@@ -775,7 +733,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject *buf)
 //[[[end]]]
 {
-#ifdef HAVE_FILEIO
+#ifdef CONFIG_HAVE_read
 	DeeBuffer buffer;
 	Dee_ssize_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FWRITABLE))
@@ -787,7 +745,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject 
 	result_value = (Dee_ssize_t)read(fd, buffer.bb_base, buffer.bb_size);
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -798,11 +756,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject 
 	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 	return DeeInt_NewSSize(result_value);
 err:
-#else
+#else /* CONFIG_HAVE_read */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	(void)buf;
 	err_unsupported("read");
-#endif
+#endif /* !CONFIG_HAVE_read */
 	return NULL;
 }
 
@@ -828,7 +787,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject *buf)
 //[[[end]]]
 {
-#ifdef HAVE_FILEIO
+#ifdef CONFIG_HAVE_write
 	DeeBuffer buffer;
 	Dee_ssize_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
@@ -840,7 +799,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject
 	result_value = (Dee_ssize_t)write(fd, buffer.bb_base, buffer.bb_size);
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -850,18 +809,20 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject
 	}
 	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
 	return DeeInt_NewSSize(result_value);
-#else
+#else /* CONFIG_HAVE_write */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	(void)buf;
 	err_unsupported("write");
-#endif
+#endif /* !CONFIG_HAVE_write */
 err:
 	return NULL;
 }
 
 
 
-#if defined(HAVE_PREAD64) || defined(__DEEMON__)
+#if defined(CONFIG_HAVE_pread64) || \
+    (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pread","fd:d,buf:obj:buffer,offset:I64d->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -884,35 +845,9 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *buf, int64_t offset)
 //[[[end]]]
-{
-	DeeBuffer buffer;
-	Dee_ssize_t result_value;
-	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FWRITABLE))
-		goto err;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	result_value = (Dee_ssize_t)pread64(fd, buffer.bb_base, buffer.bb_size, offset);
-	DBG_ALIGNMENT_ENABLE();
-	if (result_value < 0) {
-		int error = errno;
-		HANDLE_EINTR(error, again)
-		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
-		HANDLE_ENOSYS(error, err, "pread")
-		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to read from %d", fd);
-		goto err;
-	}
-	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
-	return DeeInt_NewSSize(result_value);
-err:
-	return NULL;
-}
 #endif
-
-#if !defined(HAVE_PREAD64) || defined(__DEEMON__)
+#if !(defined(CONFIG_HAVE_pread64) || \
+      (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pread","fd:d,buf:obj:buffer,offset:I32d->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -935,8 +870,10 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject *buf, int32_t offset)
 //[[[end]]]
+#endif
 {
-#ifdef HAVE_PREAD
+#if defined(CONFIG_HAVE_pread64) || defined(CONFIG_HAVE_pread) || \
+    (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
 	DeeBuffer buffer;
 	Dee_ssize_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FWRITABLE))
@@ -945,10 +882,55 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
+#if defined(CONFIG_HAVE_pread64)
+	result_value = (Dee_ssize_t)pread64(fd, buffer.bb_base, buffer.bb_size, offset);
+#elif !defined(CONFIG_HAVE__get_osfhandle) || !defined(CONFIG_HOST_WINDOWS)
 	result_value = (Dee_ssize_t)pread(fd, buffer.bb_base, buffer.bb_size, offset);
+#else
+	{
+		HANDLE h;
+		h = (HANDLE)_get_osfhandle(fd);
+		if (h == INVALID_HANDLE_VALUE )
+			result_value = -1;
+		else {
+			DWORD bytes_written;
+			my_OVERLAPPED overlapped;
+#if __SIZEOF_SIZE_T__ > 4
+			if unlikely(buffer.bb_size > UINT32_MAX)
+				buffer.bb_size = UINT32_MAX;
+#endif /* __SIZEOF_SIZE_T__ > 4 */
+again_ReadFile:
+			memset(&overlapped, 0, sizeof(overlapped));
+#ifdef CONFIG_LITTLE_ENDIAN
+			overlapped.me.Offset = (uint64_t)offset;
+#else /* CONFIG_LITTLE_ENDIAN */
+			overlapped.me.Offset = (uint32_t)(uint64_t)offset;
+			overlapped.me.OffsetHigh = (uint32_t)((uint64_t)offset >> 32);
+#endif /* !CONFIG_LITTLE_ENDIAN */
+			if unlikely(!ReadFile(h, buffer.bb_base,
+			                      (DWORD)buffer.bb_size,
+			                      &bytes_written,
+			                      (LPOVERLAPPED)&overlapped)) {
+				DWORD error = GetLastError();
+				DBG_ALIGNMENT_ENABLE();
+				if (error == ERROR_OPERATION_ABORTED) {
+					if (DeeThread_CheckInterrupt())
+						goto err;
+					DBG_ALIGNMENT_DISABLE();
+					goto again_ReadFile;
+				}
+				DeeError_SysThrowf(&DeeError_FSError, error,
+				                   "Failed to read from %d", fd);
+				goto err;
+			}
+			DBG_ALIGNMENT_ENABLE();
+			result_value = (dssize_t)bytes_written;
+		}
+	}
+#endif
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 		HANDLE_ENOSYS(error, err, "pread")
@@ -960,17 +942,19 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject
 	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 	return DeeInt_NewSSize(result_value);
 err:
-#else
+#else /* Supported */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	(void)buf;
 	(void)offset;
-	err_unsupported("pread");
-#endif
+	err_unsupported("pwrite");
+#endif /* !Supported */
 	return NULL;
 }
-#endif
 
-#if defined(HAVE_PWRITE64) || defined(__DEEMON__)
+
+#if defined(CONFIG_HAVE_pwrite64) || \
+    defined(CONFIG_HAVE__get_osfhandle) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pwrite","fd:d,buf:obj:buffer,offset:I64d->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -993,35 +977,8 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *buf, int64_t offset)
 //[[[end]]]
-{
-	DeeBuffer buffer;
-	Dee_ssize_t result_value;
-	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
-		goto err;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	result_value = (Dee_ssize_t)pwrite64(fd, buffer.bb_base, buffer.bb_size, offset);
-	DBG_ALIGNMENT_ENABLE();
-	if (result_value < 0) {
-		int error = errno;
-		HANDLE_EINTR(error, again)
-		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
-		HANDLE_ENOSYS(error, err, "pwrite")
-		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to write to %d", fd);
-		goto err;
-	}
-	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
-	return DeeInt_NewSSize(result_value);
-err:
-	return NULL;
-}
 #endif
-
-#if !defined(HAVE_PWRITE64) || defined(__DEEMON__)
+#if !(defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE__get_osfhandle)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pwrite","fd:d,buf:obj:buffer,offset:I32d->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -1044,42 +1001,90 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObject *buf, int32_t offset)
 //[[[end]]]
+#endif
 {
-#ifdef HAVE_PWRITE
+#if defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE_pwrite) || \
+    (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
 	DeeBuffer buffer;
 	Dee_ssize_t result_value;
-	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FREADONLY))
+	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
+#if defined(CONFIG_HAVE_pwrite64)
+	result_value = (Dee_ssize_t)pwrite64(fd, buffer.bb_base, buffer.bb_size, offset);
+#elif !defined(CONFIG_HAVE__get_osfhandle) || !defined(CONFIG_HOST_WINDOWS)
 	result_value = (Dee_ssize_t)pwrite(fd, buffer.bb_base, buffer.bb_size, offset);
+#else
+	{
+		HANDLE h;
+		h = (HANDLE)_get_osfhandle(fd);
+		if (h == INVALID_HANDLE_VALUE )
+			result_value = -1;
+		else {
+			DWORD bytes_written;
+			my_OVERLAPPED overlapped;
+#if __SIZEOF_SIZE_T__ > 4
+			if unlikely(buffer.bb_size > UINT32_MAX)
+				buffer.bb_size = UINT32_MAX;
+#endif /* __SIZEOF_SIZE_T__ > 4 */
+again_WriteFile:
+			memset(&overlapped, 0, sizeof(overlapped));
+#ifdef CONFIG_LITTLE_ENDIAN
+			overlapped.me.Offset = (uint64_t)offset;
+#else /* CONFIG_LITTLE_ENDIAN */
+			overlapped.me.Offset = (uint32_t)(uint64_t)offset;
+			overlapped.me.OffsetHigh = (uint32_t)((uint64_t)offset >> 32);
+#endif /* !CONFIG_LITTLE_ENDIAN */
+			if unlikely(!WriteFile(h, buffer.bb_base,
+			                      (DWORD)buffer.bb_size,
+			                      &bytes_written,
+			                      (LPOVERLAPPED)&overlapped)) {
+				DWORD error = GetLastError();
+				DBG_ALIGNMENT_ENABLE();
+				if (error == ERROR_OPERATION_ABORTED) {
+					if (DeeThread_CheckInterrupt())
+						goto err;
+					DBG_ALIGNMENT_DISABLE();
+					goto again_WriteFile;
+				}
+				DeeError_SysThrowf(&DeeError_FSError, error,
+				                   "Failed to write from %d", fd);
+				goto err;
+			}
+			DBG_ALIGNMENT_ENABLE();
+			result_value = (dssize_t)bytes_written;
+		}
+	}
+#endif
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
-		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
+		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 		HANDLE_ENOSYS(error, err, "pwrite")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to write to %d", fd);
+		                   "Failed to write from %d", fd);
 		goto err;
 	}
-	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
+	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 	return DeeInt_NewSSize(result_value);
 err:
-#else
+#else /* Supported */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	(void)buf;
 	(void)offset;
 	err_unsupported("pwrite");
-#endif
+#endif /* !Supported */
 	return NULL;
 }
-#endif
 
-#if defined(HAVE_LSEEK64) || defined(__DEEMON__)
+
+#if defined(CONFIG_HAVE_lseek64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("lseek","fd:d,off:I64d,whence:d->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int64_t off, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -1102,30 +1107,8 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int64_t off, int whence)
 //[[[end]]]
-{
-	int64_t result;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	result = lseek64(fd, off, whence);
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		int error = errno;
-		HANDLE_EINTR(error, again)
-		HANDLE_ENOSYS(error, err, "lseek")
-		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to seek %d", fd);
-		goto err;
-	}
-	return DeeInt_NewS64(result);
-err:
-	return NULL;
-}
 #endif
-
-#if !defined(HAVE_LSEEK64) || defined(__DEEMON__)
+#if !defined(CONFIG_HAVE_lseek64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("lseek","fd:d,off:I32d,whence:d->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t off, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -1148,17 +1131,26 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t off, int whence)
 //[[[end]]]
+#endif
 {
-#ifdef HAVE_FILEIO
+#if defined(CONFIG_HAVE_lseek64) || defined(CONFIG_HAVE_lseek)
+#ifdef CONFIG_HAVE_lseek64
+	int64_t result;
+#else /* CONFIG_HAVE_lseek64 */
 	int32_t result;
+#endif /* CONFIG_HAVE_lseek64 */
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_lseek64
+	result = lseek64(fd, off, whence);
+#else /* CONFIG_HAVE_lseek64 */
 	result = lseek(fd, off, whence);
+#endif /* !CONFIG_HAVE_lseek64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "lseek")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1166,17 +1158,18 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t o
 		                   "Failed to seek %d", fd);
 		goto err;
 	}
-	return DeeInt_NewS32(result);
+	return DeeInt_NewS64(result);
 err:
-#else
+#else /* CONFIG_HAVE_lseek64 || CONFIG_HAVE_lseek */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	(void)off;
 	(void)whence;
 	err_unsupported("lseek");
-#endif
+#endif /* !CONFIG_HAVE_lseek64 && !CONFIG_HAVE_lseek */
 	return NULL;
 }
-#endif
+
 
 /*[[[deemon import("_dexutils").gw("close","fd:d"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_close_f_impl(int fd);
@@ -1199,16 +1192,16 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_close_f_impl(int fd)
 //[[[end]]]
 {
-	int result;
-#ifdef HAVE_FILEIO
+#ifdef CONFIG_HAVE_close
+	int error;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	result = close(fd);
+	error = close(fd);
 	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		int error = errno;
+	if (error < 0) {
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "close")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1218,10 +1211,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_close_f_impl(int fd)
 	}
 	return_none;
 err:
-#else
+#else /* CONFIG_HAVE_close */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	err_unsupported("close");
-#endif
+#endif /* !CONFIG_HAVE_close */
 	return NULL;
 }
 
@@ -1248,7 +1242,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fsync_f_impl(int fd)
 //[[[end]]]
 {
 	int result;
-#ifdef HAVE_FSYNC
+#ifdef CONFIG_HAVE_fsync
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
@@ -1256,7 +1250,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fsync_f_impl(int fd)
 	result = fsync(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fsync")
@@ -1266,10 +1260,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fsync_f_impl(int fd)
 	}
 	return_none;
 err:
-#else
+#else /* CONFIG_HAVE_fsync */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	err_unsupported("fsync");
-#endif
+#endif /* !CONFIG_HAVE_fsync */
 	return NULL;
 }
 
@@ -1294,7 +1289,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef HAVE_FDATASYNC
+#ifdef CONFIG_HAVE_fdatasync
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
@@ -1303,7 +1298,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd)
 	result = fdatasync(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fdatasync")
@@ -1313,10 +1308,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd)
 	}
 	return_none;
 err:
-#else
+#else /* CONFIG_HAVE_fdatasync */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	err_unsupported("fdatasync");
-#endif
+#endif /* !CONFIG_HAVE_fdatasync */
 	return NULL;
 }
 
@@ -1339,7 +1335,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_getpid_f_impl(void)
 //[[[end]]]
 {
-#ifdef HAVE_GETPID
+#ifdef CONFIG_HAVE_getpid
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
@@ -1348,7 +1344,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_getpid_f_impl(void)
 	result = getpid();
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		if (error != 0) {
 			HANDLE_EINTR(error, again)
 			HANDLE_ENOSYS(error, err, "getpid")
@@ -1360,11 +1356,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_getpid_f_impl(void)
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
-#else
+#else /* CONFIG_HAVE_getpid */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)command;
 	err_unsupported("getpid");
 	return NULL;
-#endif
+#endif /* !CONFIG_HAVE_getpid */
 }
 
 
@@ -1390,7 +1387,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_umask_f_impl(int mask)
 //[[[end]]]
 {
-#ifdef HAVE_UMASK
+#ifdef CONFIG_HAVE_umask
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
@@ -1399,7 +1396,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_umask_f_impl(int mask)
 	result = umask(mask);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "umask")
 		DeeError_SysThrowf(&DeeError_SystemError, error,
@@ -1408,10 +1405,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_umask_f_impl(int mask)
 	}
 	return DeeInt_NewInt(result);
 err:
-#else
+#else /* CONFIG_HAVE_umask */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)mask;
 	err_unsupported("umask");
-#endif
+#endif /* !CONFIG_HAVE_umask */
 	return NULL;
 }
 
@@ -1439,7 +1437,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef HAVE_DUP
+#ifdef CONFIG_HAVE_dup
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
@@ -1448,7 +1446,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup_f_impl(int fd)
 	result = dup(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "dup")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1458,10 +1456,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup_f_impl(int fd)
 	}
 	return DeeInt_NewInt(result);
 err:
-#else
+#else /* CONFIG_HAVE_dup */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	err_unsupported("dup");
-#endif
+#endif /* !CONFIG_HAVE_dup */
 	return NULL;
 }
 
@@ -1490,7 +1489,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int newfd)
 //[[[end]]]
 {
-#ifdef HAVE_DUP2
+#ifdef CONFIG_HAVE_dup2
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
@@ -1499,7 +1498,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int new
 	result = dup2(oldfd, newfd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "dup2")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
@@ -1509,11 +1508,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int new
 	}
 	return DeeInt_NewInt(result);
 err:
-#else
+#else /* CONFIG_HAVE_dup2 */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)oldfd;
 	(void)newfd;
 	err_unsupported("dup2");
-#endif
+#endif /* !CONFIG_HAVE_dup2 */
 	return NULL;
 }
 
@@ -1543,34 +1543,37 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int newfd, int flags)
 //[[[end]]]
 {
-#if defined(HAVE_DUP3) || defined(_MSC_VER)
+#if defined(CONFIG_HAVE_dup3) || \
+    (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
 	int result;
-#ifndef HAVE_DUP3
+#ifndef CONFIG_HAVE_dup3
 	if (flags & ~O_CLOEXEC) {
-		errno = EINVAL;
+		Dee_SetErrno(EINVAL);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid flags for dup3 %#x",
 		                flags);
 		goto err;
 	}
-#endif /* !HAVE_DUP3 */
+#endif /* !CONFIG_HAVE_dup3 */
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_DUP3
+#ifdef CONFIG_HAVE_dup3
 	result = dup3(oldfd, newfd, flags);
-#else /* HAVE_DUP3 */
+#else /* CONFIG_HAVE_dup3 */
 	result = dup2(oldfd, newfd);
 	if (result >= 0) {
 		SetHandleInformation((HANDLE)(uintptr_t)_get_osfhandle(result),
 		                     HANDLE_FLAG_INHERIT,
-		                     (flags & O_CLOEXEC) ? 0 : HANDLE_FLAG_INHERIT);
+		                     (flags & O_CLOEXEC)
+		                     ? 0
+		                     : HANDLE_FLAG_INHERIT);
 	}
-#endif /* !HAVE_DUP3 */
+#endif /* !CONFIG_HAVE_dup3 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "dup3")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
@@ -1582,6 +1585,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int new
 	return DeeInt_NewInt(result);
 err:
 #else /* HAVE_DUP3 || _MSC_VER */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)oldfd;
 	(void)newfd;
 	(void)flags;
@@ -1614,7 +1618,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_isatty_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef HAVE_ISATTY
+#ifdef CONFIG_HAVE_isatty
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
@@ -1623,7 +1627,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_isatty_f_impl(int fd)
 	result = isatty(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "isatty")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1639,10 +1643,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_isatty_f_impl(int fd)
 	}
 	return_bool_(result != 0);
 err:
-#else
+#else /* CONFIG_HAVE_isatty */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	err_unsupported("isatty");
-#endif
+#endif /* !CONFIG_HAVE_isatty */
 	return NULL;
 }
 
@@ -1676,28 +1681,29 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_system_f_impl(/*utf-8*/ char const *command)
 //[[[end]]]
 {
-#ifdef HAVE_SYSTEM
+#ifdef CONFIG_HAVE_system
 	int result;
 #ifdef EINTR
 again:
-#endif
+#endif /* EINTR */
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	result = system(command);
 	DBG_ALIGNMENT_ENABLE();
 #ifdef EINTR
-	if (result < 0 && errno == EINTR)
+	if (result < 0 && Dee_GetErrno() == EINTR)
 		goto again;
 #endif /* EINTR */
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
-#else
+#else /* CONFIG_HAVE_system */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)command;
 	err_unsupported("system");
 	return NULL;
-#endif
+#endif /* !CONFIG_HAVE_system */
 }
 
 
@@ -1729,10 +1735,11 @@ libposix_errno_get_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":errno.getter"))
 		goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
-	return DeeInt_NewInt(errno);
-#else
+	return DeeInt_NewInt(Dee_GetErrno());
+#else /* CONFIG_HAVE_ERRNO_H */
+#define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("errno");
-#endif
+#endif /* !CONFIG_HAVE_ERRNO_H */
 err:
 	return NULL;
 }
@@ -1742,11 +1749,12 @@ libposix_errno_del_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":errno.delete"))
 		goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
-	errno = 0;
+	Dee_SetErrno(0);
 	return_none;
-#else
+#else /* CONFIG_HAVE_ERRNO_H */
+#define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("errno");
-#endif
+#endif /* !CONFIG_HAVE_ERRNO_H */
 err:
 	return NULL;
 }
@@ -1757,11 +1765,12 @@ libposix_errno_set_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "d:errno.setter", &value))
 		goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
-	errno = value;
+	Dee_SetErrno(value);
 	return_none;
-#else
+#else /* CONFIG_HAVE_ERRNO_H */
+#define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("errno");
-#endif
+#endif /* !CONFIG_HAVE_ERRNO_H */
 err:
 	return NULL;
 }
@@ -1829,25 +1838,25 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_exit_f_impl(int exitcode)
 }
 
 
-/*[[[deemon import("_dexutils").gw("_exit","exitcode:d"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix__exit_f_impl(int exitcode);
-PRIVATE WUNUSED DREF DeeObject *DCALL libposix__exit_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBPOSIX__EXIT_DEF { "_exit", (DeeObject *)&libposix__exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)") },
-#define LIBPOSIX__EXIT_DEF_DOC(doc) { "_exit", (DeeObject *)&libposix__exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libposix__exit, libposix__exit_f);
+/*[[[deemon import("_dexutils").gw("_Exit","exitcode:d"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix__Exit_f_impl(int exitcode);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix__Exit_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBPOSIX__EXIT_DEF { "_Exit", (DeeObject *)&libposix__Exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)") },
+#define LIBPOSIX__EXIT_DEF_DOC(doc) { "_Exit", (DeeObject *)&libposix__Exit, MODSYM_FNORMAL, DOC("(exitcode:?Dint)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libposix__Exit, libposix__Exit_f);
 #ifndef LIBPOSIX_KWDS_EXITCODE_DEFINED
 #define LIBPOSIX_KWDS_EXITCODE_DEFINED 1
 PRIVATE DEFINE_KWLIST(libposix_kwds_exitcode, { K(exitcode), KEND });
 #endif /* !LIBPOSIX_KWDS_EXITCODE_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL libposix__exit_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix__Exit_f(size_t argc, DeeObject **argv, DeeObject *kw) {
 	int exitcode;
-	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_exitcode, "d:_exit", &exitcode))
+	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_exitcode, "d:_Exit", &exitcode))
 	    goto err;
-	return libposix__exit_f_impl(exitcode);
+	return libposix__Exit_f_impl(exitcode);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix__exit_f_impl(int exitcode)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix__Exit_f_impl(int exitcode)
 //[[[end]]]
 {
 	Dee_Exit(exitcode, false);
@@ -1876,10 +1885,28 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_abort_f_impl(void)
 }
 
 
+/* Figure out how we want to implement `truncate()' */
+#if defined(CONFIG_HAVE_wtruncate64)
+#define TRUNCATE_IMPL_WTRUNCATE64 1
+#elif defined(CONFIG_HAVE_wtruncate)
+#define TRUNCATE_IMPL_WTRUNCATE 1
+#elif defined(CONFIG_HAVE_truncate64)
+#define TRUNCATE_IMPL_TRUNCATE64 1
+#elif defined(CONFIG_HAVE_truncate)
+#define TRUNCATE_IMPL_TRUNCATE 1
+#elif defined(CONFIG_HAVE_wopen64) && defined(CONFIG_HAVE_ftruncate64) && defined(CONFIG_HAVE_close)
+#define TRUNCATE_IMPL_WOPEN_FTRUNCATE64 1
+#elif defined(CONFIG_HAVE_wopen64) && defined(CONFIG_HAVE_ftruncate) && defined(CONFIG_HAVE_close)
+#define TRUNCATE_IMPL_WOPEN_FTRUNCATE 1
+#elif defined(CONFIG_HAVE_open64) && defined(CONFIG_HAVE_ftruncate64) && defined(CONFIG_HAVE_close)
+#define TRUNCATE_IMPL_OPEN_FTRUNCATE64 1
+#elif defined(CONFIG_HAVE_open64) && defined(CONFIG_HAVE_ftruncate) && defined(CONFIG_HAVE_close)
+#define TRUNCATE_IMPL_OPEN_FTRUNCATE 1
+#else
+#define TRUNCATE_IMPL_UNSUPPORTED 1
+#endif
 
-#if (defined(HAVE_FILEIO) && defined(HAVE_FTRUNCATE64)) || \
-     defined(HAVE_WTRUNCATE64) || defined(HAVE_TRUNCATE64) || defined(__DEEMON__)
-#if defined(HAVE_WTRUNCATE64) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64) || defined(__DEEMON__)
+#if defined(TRUNCATE_IMPL_WTRUNCATE64) || defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:wchar_t[],len:I64d"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *filename, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -1907,119 +1934,9 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *filename, int64_t len)
 //[[[end]]]
-{
-	int result;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_WTRUNCATE64
-	result = wtruncate64(filename, len);
-#else
-	{
-#ifdef HAVE_WOPEN64
-		int fd = result = wopen64(filename, O_RDWR);
-#else
-		int fd = result = wopen(filename, O_RDWR);
-#endif
-		if (fd >= 0) {
-			result = ftruncate64(fd, len);
-			close(fd);
-		}
-	}
-#endif
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = errno;
-		HANDLE_EINTR(result, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %ls could not be found", filename)
-		HANDLE_ENOSYS(result, err, "truncate")
-		HANDLE_EACCES(result, err, "Failed to access %ls", filename)
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %ls: Invalid size %I64d", filename, len)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory %ls", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %ls", filename)
-		DeeError_SysThrowf(&DeeError_SystemError, result,
-		                   "Failed to truncate %ls", filename);
-		goto err;
-	}
-	return_none;
-err:
-	return NULL;
-}
-#endif
-
-#if !(defined(HAVE_WTRUNCATE64) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("truncate","filename:c:char[],len:I64d"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *filename, int64_t len);
-PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
-#define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libposix_truncate, libposix_truncate_f);
-#ifndef LIBPOSIX_KWDS_FILENAME_LEN_DEFINED
-#define LIBPOSIX_KWDS_FILENAME_LEN_DEFINED 1
-PRIVATE DEFINE_KWLIST(libposix_kwds_filename_len, { K(filename), K(len), KEND });
-#endif /* !LIBPOSIX_KWDS_FILENAME_LEN_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	int64_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_filename_len, "oI64d:truncate", &filename, &len))
-	    goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-	    goto err;
-	return libposix_truncate_f_impl(filename_str,len);
-err:
-	return NULL;
-}
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *filename, int64_t len)
-//[[[end]]]
-{
-	int result;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_TRUNCATE64
-	result = truncate64(filename, len);
-#else
-	{
-#ifdef HAVE_OPEN64
-		int fd = result = open64(filename, O_RDWR);
-#else
-		int fd = result = open(filename, O_RDWR);
-#endif
-		if (fd >= 0) {
-			result = ftruncate64(fd, len);
-			close(fd);
-		}
-	}
-#endif
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = errno;
-		HANDLE_EINTR(result, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
-		HANDLE_ENOSYS(result, err, "truncate")
-		HANDLE_EACCES(result, err, "Failed to access %s", filename)
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %s: Invalid size %I64d", filename, len)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory %s", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to truncate %s", filename);
-		goto err;
-	}
-	return_none;
-err:
-	return NULL;
-}
-#endif
-#endif
-
-#if !((defined(HAVE_FILEIO) && defined(HAVE_FTRUNCATE64)) || \
-       defined(HAVE_WTRUNCATE64) || defined(HAVE_TRUNCATE64)) || defined(__DEEMON__)
-#if defined(HAVE_WTRUNCATE) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64) || defined(__DEEMON__)
+#endif /* TRUNCATE_IMPL_WTRUNCATE64 || TRUNCATE_IMPL_WOPEN_FTRUNCATE64 */
+#if (!(defined(TRUNCATE_IMPL_WTRUNCATE64) || defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE64)) && \
+      (defined(TRUNCATE_IMPL_WTRUNCATE) || defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE))) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:wchar_t[],len:I32d"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *filename, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -2047,49 +1964,41 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(dwchar_t const *filename, int32_t len)
 //[[[end]]]
-{
-#ifdef HAVE_FILEIO
-	int result;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_WTRUNCATE
-	result = wtruncate(filename, len);
-#else
-	{
-		int fd = result = wopen(filename, O_RDWR);
-		if (fd >= 0) {
-			result = ftruncate(fd, len);
-			close(fd);
-		}
-	}
-#endif
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		int error = errno;
-		HANDLE_EINTR(error, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %ls could not be found", filename)
-		HANDLE_ENOSYS(result, err, "truncate")
-		HANDLE_EACCES(result, err, "Failed to access %ls", filename)
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %ls: Invalid size %I32d", filename, len)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory %ls", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %ls", filename)
-		DeeError_SysThrowf(&DeeError_SystemError, error, "Failed to truncate %ls", filename);
-		goto err;
-	}
-	return_none;
+#endif /* TRUNCATE_IMPL_WTRUNCATE || TRUNCATE_IMPL_WOPEN_FTRUNCATE */
+#if (!(defined(TRUNCATE_IMPL_WTRUNCATE64) || defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE64) || \
+       defined(TRUNCATE_IMPL_WTRUNCATE) || defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE)) && \
+      (defined(TRUNCATE_IMPL_TRUNCATE64) || defined(TRUNCATE_IMPL_OPEN_FTRUNCATE64))) || defined(__DEEMON__)
+/*[[[deemon import("_dexutils").gw("truncate","filename:c:char[],len:I64d"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *filename, int64_t len);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBPOSIX_TRUNCATE_DEF { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)") },
+#define LIBPOSIX_TRUNCATE_DEF_DOC(doc) { "truncate", (DeeObject *)&libposix_truncate, MODSYM_FNORMAL, DOC("(filename:?Dstring,len:?Dint)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libposix_truncate, libposix_truncate_f);
+#ifndef LIBPOSIX_KWDS_FILENAME_LEN_DEFINED
+#define LIBPOSIX_KWDS_FILENAME_LEN_DEFINED 1
+PRIVATE DEFINE_KWLIST(libposix_kwds_filename_len, { K(filename), K(len), KEND });
+#endif /* !LIBPOSIX_KWDS_FILENAME_LEN_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	/*utf-8*/ char const *filename_str;
+	DeeStringObject *filename;
+	int64_t len;
+	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_filename_len, "oI64d:truncate", &filename, &len))
+	    goto err;
+	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
+	    goto err;
+	filename_str = DeeString_AsUtf8((DeeObject *)filename);
+	if unlikely(!filename_str)
+	    goto err;
+	return libposix_truncate_f_impl(filename_str,len);
 err:
-#else
-	(void)fd;
-	(void)len;
-	err_unsupported("truncate");
-#endif
 	return NULL;
 }
-#endif
-
-#if !(defined(HAVE_WTRUNCATE) || defined(HAVE_WOPEN) || defined(HAVE_WOPEN64)) || defined(__DEEMON__)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *filename, int64_t len)
+//[[[end]]]
+#endif /* TRUNCATE_IMPL_TRUNCATE64 || TRUNCATE_IMPL_OPEN_FTRUNCATE64 */
+#if (!(defined(TRUNCATE_IMPL_WTRUNCATE64) || defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE64) || \
+       defined(TRUNCATE_IMPL_WTRUNCATE) || defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE) || \
+       defined(TRUNCATE_IMPL_TRUNCATE64) || defined(TRUNCATE_IMPL_OPEN_FTRUNCATE64))) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate","filename:c:char[],len:I32d"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *filename, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -2117,50 +2026,70 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char const *filename, int32_t len)
 //[[[end]]]
+#endif /* TRUNCATE_IMPL_TRUNCATE || TRUNCATE_IMPL_WOPEN_TRUNCATE */
 {
-#ifdef HAVE_FILEIO
+#ifdef TRUNCATE_IMPL_UNSUPPORTED
+#define NEED_ERR_UNSUPPORTED 1
+	(void)fd;
+	(void)len;
+	err_unsupported("truncate");
+#else /* TRUNCATE_IMPL_UNSUPPORTED */
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_TRUNCATE
+#if defined(TRUNCATE_IMPL_WTRUNCATE64)
+	result = wtruncate64(filename, len);
+#elif defined(TRUNCATE_IMPL_WTRUNCATE)
+	result = wtruncate(filename, len);
+#elif defined(TRUNCATE_IMPL_TRUNCATE64)
+	result = truncate64(filename, len);
+#elif defined(TRUNCATE_IMPL_TRUNCATE)
 	result = truncate(filename, len);
-#else
+#else /* Single-call */
 	{
-		int fd = result = open(filename, O_RDWR);
+#if defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE) || \
+    defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE64)
+		int fd = wopen64(filename, O_RDWR);
+#else
+		int fd = open64(filename, O_RDWR);
+#endif
+		result = fd;
 		if (fd >= 0) {
+#if defined(TRUNCATE_IMPL_OPEN_FTRUNCATE64) || \
+    defined(TRUNCATE_IMPL_WOPEN_FTRUNCATE64)
+			result = ftruncate64(fd, len);
+#else
 			result = ftruncate(fd, len);
+#endif
 			close(fd);
 		}
 	}
-#endif
+#endif /* FD-wrapped */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
-		HANDLE_EINTR(error, again)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
+		result = Dee_GetErrno();
+		HANDLE_EINTR(result, again)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %ls could not be found", filename)
 		HANDLE_ENOSYS(result, err, "truncate")
-		HANDLE_EACCES(result, err, "Failed to access %s", filename)
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %s: Invalid size %I32d", filename, len)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory %s", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
-		DeeError_SysThrowf(&DeeError_SystemError, error, "Failed to truncate %s", filename);
+		HANDLE_EACCES(result, err, "Failed to access %ls", filename)
+		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %ls: Invalid size %I64d", filename, len)
+		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory %ls", filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %ls", filename)
+		DeeError_SysThrowf(&DeeError_SystemError, result,
+		                   "Failed to truncate %ls", filename);
 		goto err;
 	}
 	return_none;
 err:
-#else
-	(void)fd;
-	(void)len;
-	err_unsupported("truncate");
-#endif
+#endif /* !TRUNCATE_IMPL_UNSUPPORTED */
 	return NULL;
 }
-#endif
-#endif
 
-#if defined(HAVE_FTRUNCATE64) || defined(__DEEMON__)
+
+
+#if defined(CONFIG_HAVE_ftruncate64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("ftruncate","fd:d,len:I64d"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -2182,30 +2111,8 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int64_t len)
 //[[[end]]]
-{
-	int result;
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	result = ftruncate64(fd, len);
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		int error = errno;
-		HANDLE_EINTR(error, again)
-		HANDLE_ENOSYS(result, err, "ftruncate")
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %d: Invalid size %I64d", fd, len)
-		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_SystemError, error, "Failed to truncate %d", fd);
-		goto err;
-	}
-	return_none;
-err:
-	return NULL;
-}
-#endif
-
-#if !defined(HAVE_FTRUNCATE64) || defined(__DEEMON__)
+#endif /* CONFIG_HAVE_ftruncate64 */
+#if !defined(CONFIG_HAVE_ftruncate64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("ftruncate","fd:d,len:I32d"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -2227,35 +2134,71 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int32_t len)
 //[[[end]]]
+#endif /* !CONFIG_HAVE_ftruncate64 */
 {
-#ifdef HAVE_FILEIO
+#if defined(CONFIG_HAVE_ftruncate) || defined(CONFIG_HAVE_ftruncate64)
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_ftruncate64
+	result = ftruncate64(fd, len);
+#else /* CONFIG_HAVE_ftruncate64 */
 	result = ftruncate(fd, len);
+#endif /* !CONFIG_HAVE_ftruncate64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = errno;
+		int error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(result, err, "ftruncate")
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %d: Invalid size %I32d", fd, len)
+		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %d: Invalid size %I64d", fd, len)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		DeeError_SysThrowf(&DeeError_SystemError, error, "Failed to truncate %d", fd);
 		goto err;
 	}
 	return_none;
 err:
-#else
+#else /* CONFIG_HAVE_ftruncate || CONFIG_HAVE_ftruncate64 */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	(void)len;
 	err_unsupported("ftruncate");
-#endif
+#endif /* !CONFIG_HAVE_ftruncate && !CONFIG_HAVE_ftruncate64 */
 	return NULL;
 }
-#endif
 
+
+#if defined(CONFIG_HAVE_waccess) || defined(__DEEMON__)
+/*[[[deemon import("_dexutils").gw("access","filename:c:wchar_t[],how:d->?Dbool"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(dwchar_t const *filename, int how);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBPOSIX_ACCESS_DEF { "access", (DeeObject *)&libposix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
+#define LIBPOSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&libposix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libposix_access, libposix_access_f);
+#ifndef LIBPOSIX_KWDS_FILENAME_HOW_DEFINED
+#define LIBPOSIX_KWDS_FILENAME_HOW_DEFINED 1
+PRIVATE DEFINE_KWLIST(libposix_kwds_filename_how, { K(filename), K(how), KEND });
+#endif /* !LIBPOSIX_KWDS_FILENAME_HOW_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	dwchar_t const *filename_str;
+	DeeStringObject *filename;
+	int how;
+	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_filename_how, "od:access", &filename, &how))
+	    goto err;
+	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
+	    goto err;
+	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
+	if unlikely(!filename_str)
+	    goto err;
+	return libposix_access_f_impl(filename_str,how);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(dwchar_t const *filename, int how)
+//[[[end]]]
+#endif /* CONFIG_HAVE_waccess */
+#if !defined(CONFIG_HAVE_waccess) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("access","filename:c:char[],how:d->?Dbool"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL libposix_access_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -2283,17 +2226,24 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char const *filename, int how)
 //[[[end]]]
+#endif /* !CONFIG_HAVE_waccess */
 {
-#ifdef HAVE_ACCESS
+#ifdef CONFIG_HAVE_access
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_waccess
+#define ACCESS_PRINTF_FILENAME "%ls"
+	result = waccess(filename, how);
+#else /* CONFIG_HAVE_waccess */
+#define ACCESS_PRINTF_FILENAME "%s"
 	result = access(filename, how);
+#endif /* !CONFIG_HAVE_waccess */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = errno;
+		result = Dee_GetErrno();
 		HANDLE_EINTR(result, again)
 #ifdef EACCES
 		if (result == EACCES)
@@ -2302,27 +2252,27 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char c
 			return_false;
 		HANDLE_ENOSYS(result, err, "access")
 		HANDLE_EINVAL(result, err, "Invalid access mode %d", how)
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to %s", filename)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
+		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to " ACCESS_PRINTF_FILENAME, filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " ACCESS_PRINTF_FILENAME " could not be found", filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " ACCESS_PRINTF_FILENAME, filename)
 		DeeError_SysThrowf(&DeeError_SystemError, result,
-		                   "Failed to check access to %s",
+		                   "Failed to check access to " ACCESS_PRINTF_FILENAME,
 		                   filename);
 		goto err;
-#else
+#else /* EACCES */
 		return_false;
-#endif
+#endif /* !EACCES */
 	}
 	return_true;
 err:
-#else
+#else /* CONFIG_HAVE_access */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)filename;
 	(void)how;
 	err_unsupported("access");
-#endif
+#endif /* !CONFIG_HAVE_access */
 	return NULL;
 }
-
 
 
 /*[[[deemon import("_dexutils").gw("euidaccess","filename:c:char[],how:d->?Dbool"); ]]]*/
@@ -2353,20 +2303,16 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ char const *filename, int how)
 //[[[end]]]
 {
-#if defined(HAVE_EUIDACCESS) || defined(HAVE_EACCESS)
+#ifdef CONFIG_HAVE_euidaccess
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-#ifdef HAVE_EUIDACCESS
 	result = euidaccess(filename, how);
-#else
-	result = eaccess(filename, how);
-#endif
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = errno;
+		result = Dee_GetErrno();
 		HANDLE_EINTR(result, again)
 #ifdef EACCES
 		if (result == EACCES)
@@ -2374,25 +2320,30 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ ch
 		if (result == EINVAL)
 			return_false;
 		HANDLE_ENOSYS(result, err, "euidaccess")
-		HANDLE_EINVAL(result, err, "Invalid access mode %d", how)
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to %s", filename)
+		HANDLE_EINVAL(result, err, "Invalid euidaccess mode %d", how)
+		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check euidaccess to %s", filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to check access to %s", filename);
+		DeeError_SysThrowf(&DeeError_SystemError, result,
+		                   "Failed to check euidaccess to %s",
+		                   filename);
 		goto err;
-#else
+#else /* EACCES */
 		return_false;
-#endif
+#endif /* !EACCES */
 	}
 	return_true;
 err:
-#else
+#else /* CONFIG_HAVE_euidaccess */
+#define NEED_ERR_UNSUPPORTED 1
 	(void)filename;
 	(void)how;
 	err_unsupported("euidaccess");
-#endif
+#endif /* !CONFIG_HAVE_euidaccess */
 	return NULL;
 }
+
+
 
 
 /*[[[deemon import("_dexutils").gw("faccessat","dfd:d,filename:c:char[],how:d,atflags:d->?Dbool"); ]]]*/
@@ -2425,7 +2376,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*utf-8*/ char const *filename, int how, int atflags)
 //[[[end]]]
 {
-#ifdef HAVE_FACCESSAT
+#ifdef CONFIG_HAVE_faccessat
 	int result;
 	EINTR_LABEL(again)
 	if (DeeThread_CheckInterrupt())
@@ -2434,7 +2385,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*ut
 	result = faccessat(dfd, filename, how, atflags);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = errno;
+		result = Dee_GetErrno();
 		HANDLE_EINTR(result, again)
 #ifdef EACCES
 		if (result == EACCES)
@@ -2449,19 +2400,51 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*ut
 		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
 		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to check access to %d:%s", dfd, filename);
 		goto err;
-#else
+#else /* EACCES */
 		return_false;
-#endif
+#endif /* !EACCES */
 	}
 	return_true;
+#else /* CONFIG_HAVE_faccessat */
+	DREF DeeObject *result;
+	DREF DeeObject *fullname;
+#define NEED_GET_DFD_FILENAME 1
+	fullname = libposix_get_dfd_filename(dfd, filename, atflags);
+	if unlikely(!fullname)
+		goto err;
+#ifdef AT_EACCESS
+	if (atflags & AT_EACCESS) {
+		char *ufullname;
+		ufullname = DeeString_AsUtf8(fullname);
+		if unlikely(!ufullname)
+			result = NULL;
+		else {
+			result = libposix_euidaccess_f_impl(ufullname, how);
+		}
+	} else
+#endif /* AT_EACCESS */
+	{
+#ifdef CONFIG_HAVE_waccess
+		dwchar_t *wfullname;
+		wfullname = DeeString_AsWide(fullname);
+		if unlikely(!wfullname)
+			result = NULL;
+		else {
+			result = libposix_access_f_impl(wfullname, how);
+		}
+#else /* CONFIG_HAVE_waccess */
+		char *ufullname;
+		ufullname = DeeString_AsUtf8(fullname);
+		if unlikely(!ufullname)
+			result = NULL;
+		else {
+			result = libposix_access_f_impl(ufullname, how);
+		}
+#endif /* !CONFIG_HAVE_waccess */
+	}
+	Dee_Decref(fullname);
+#endif /* !CONFIG_HAVE_faccessat */
 err:
-#else
-	(void)dfd;
-	(void)filename;
-	(void)how;
-	(void)atflags;
-	err_unsupported("faccessat");
-#endif
 	return NULL;
 }
 
@@ -2483,7 +2466,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe_f_impl(void)
 //[[[end]]]
 {
-#ifdef HAVE_PIPE
+#ifdef CONFIG_HAVE_pipe
 	DREF DeeObject *result;
 	int error;
 	int fds[2];
@@ -2494,7 +2477,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe_f_impl(void)
 	error = pipe(fds);
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
-		error = errno;
+		error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
@@ -2512,7 +2495,7 @@ err_fds:
 	close(fds[0]);
 	DBG_ALIGNMENT_ENABLE();
 err:
-#elif defined(_MSC_VER)
+#elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 	DREF DeeObject *result;
 	HANDLE hRead, hWrite;
 	int fds[2];
@@ -2551,12 +2534,12 @@ err_fds:
 	close(fds[0]);
 	goto err;
 err_hWritefds0_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, errno,
+	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
 	                   "Failed to create pipe");
 	close(fds[0]);
 	goto err_hWrite;
 err_hWritehRead_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, errno,
+	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
 	                   "Failed to create pipe");
 	goto err_hWritehRead;
 err_hWritehRead_nterror:
@@ -2569,6 +2552,7 @@ err_hWrite:
 	DBG_ALIGNMENT_ENABLE();
 err:
 #else
+#define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("pipe");
 #endif
 	return NULL;
@@ -2596,9 +2580,9 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 //[[[end]]]
 {
-#if defined(HAVE_PIPE2) ||                                        \
-(defined(HAVE_PIPE) && defined(HAVE_FCNTL) && defined(F_SETFD) && \
- defined(FD_CLOEXEC) && defined(O_CLOEXEC) && (!defined(O_NONBLOCK) || defined(F_SETFL)))
+#if defined(CONFIG_HAVE_pipe2) ||                                           \
+   (defined(CONFIG_HAVE_pipe) && defined(HAVE_FCNTL) && defined(F_SETFD) && \
+    defined(FD_CLOEXEC) && defined(O_CLOEXEC) && (!defined(O_NONBLOCK) || defined(F_SETFL)))
 	DREF DeeObject *result;
 	int error;
 	int fds[2];
@@ -2611,11 +2595,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 #else /* HAVE_PIPE2 */
 #ifdef O_NONBLOCK
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
-#else
+#else /* O_NONBLOCK */
 	if (oflags & ~(O_CLOEXEC))
-#endif
+#endif /* !O_NONBLOCK */
 	{
-		errno = EINVAL;
+		Dee_SetErrno(EINVAL);
 		DBG_ALIGNMENT_ENABLE();
 		return_none;
 	}
@@ -2638,12 +2622,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 			if unlikely(error < 0)
 				goto err_fds_errno;
 		}
-#endif
+#endif /* O_NONBLOCK */
 	}
 #endif /* !HAVE_PIPE2 */
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
-		error = errno;
+		error = Dee_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
@@ -2658,7 +2642,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 #ifndef HAVE_PIPE2
 err_fds_errno:
 #ifdef EINTR
-	if (errno == EINTR) {
+	if (Dee_GetErrno() == EINTR) {
 		DBG_ALIGNMENT_DISABLE();
 		close(fds[1]);
 		close(fds[0]);
@@ -2673,12 +2657,12 @@ err_fds:
 	close(fds[0]);
 	DBG_ALIGNMENT_ENABLE();
 err:
-#elif defined(_MSC_VER)
+#elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 	DREF DeeObject *result;
 	HANDLE hRead, hWrite;
 	int fds[2];
 	if (oflags & ~(O_CLOEXEC)) {
-		errno = EINVAL;
+		Dee_SetErrno(EINVAL);
 		return_none;
 	}
 again:
@@ -2717,12 +2701,12 @@ err_fds:
 	close(fds[0]);
 	goto err;
 err_hWritefds0_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, errno,
+	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
 	                   "Failed to create pipe");
 	close(fds[0]);
 	goto err_hWrite;
 err_hWritehRead_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, errno,
+	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
 	                   "Failed to create pipe");
 	goto err_hWritehRead;
 err_hWritehRead_nterror:
@@ -2735,6 +2719,7 @@ err_hWrite:
 	DBG_ALIGNMENT_ENABLE();
 err:
 #else
+#define NEED_ERR_UNSUPPORTED 1
 	(void)oflags;
 	err_unsupported("pipe2");
 #endif
@@ -2743,94 +2728,30 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("fchownat","dfd:d,filename:c:char[],owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:d->?Dint"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags);
-PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBPOSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint") },
-#define LIBPOSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(libposix_fchownat, libposix_fchownat_f);
-#ifndef LIBPOSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED
-#define LIBPOSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED 1
-PRIVATE DEFINE_KWLIST(libposix_kwds_dfd_filename_owner_group_atflags, { K(dfd), K(filename), K(owner), K(group), K(atflags), KEND });
-#endif /* !LIBPOSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED */
-PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int dfd;
-	/*utf-8*/ char const *filename_str;
-	DeeStringObject *filename;
-	DeeObject *owner;
-	DeeObject *group;
-	int atflags;
-	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_dfd_filename_owner_group_atflags, "doood:fchownat", &dfd, &filename, &owner, &group, &atflags))
+/*[[[deemon import("_dexutils").gw("sync",""); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_sync_f_impl(void);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_sync_f(size_t argc, DeeObject **argv);
+#define LIBPOSIX_SYNC_DEF { "sync", (DeeObject *)&libposix_sync, MODSYM_FNORMAL, DOC("()") },
+#define LIBPOSIX_SYNC_DEF_DOC(doc) { "sync", (DeeObject *)&libposix_sync, MODSYM_FNORMAL, DOC("()\n" doc) },
+PRIVATE DEFINE_CMETHOD(libposix_sync, libposix_sync_f);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_sync_f(size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":sync"))
 	    goto err;
-	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
-	    goto err;
-	filename_str = DeeString_AsUtf8((DeeObject *)filename);
-	if unlikely(!filename_str)
-	    goto err;
-	return libposix_fchownat_f_impl(dfd,filename_str,owner,group,atflags);
+	return libposix_sync_f_impl();
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_sync_f_impl(void)
 //[[[end]]]
 {
-#ifdef HAVE_FCHOWNAT
-	uid_t owner_uid;
-	gid_t group_gid;
-	int result;
-	if (DeeInt_Check(owner)) {
-		if (DeeObject_AsUINT(owner, &owner_uid))
-			goto err;
-	} else {
-		owner = DeeObject_CallAttrString(FS_MODULE, "User", 1, (DeeObject **)&owner);
-		if unlikely(!owner)
-			goto err;
-		result = DeeObject_AsUINT(owner, &owner_uid);
-		Dee_Decref(owner);
-		if unlikely(result)
-			goto err;
-	}
-	if (DeeInt_Check(group)) {
-		if (DeeObject_AsUINT(group, &group_gid))
-			goto err;
-	} else {
-		group = DeeObject_CallAttrString(FS_MODULE, "Group", 1, (DeeObject **)&group);
-		if unlikely(!group)
-			goto err;
-		result = DeeObject_AsUINT(group, &group_gid);
-		Dee_Decref(group);
-		if unlikely(result)
-			goto err;
-	}
-	EINTR_LABEL(again)
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	result = fchownat(dfd, filename, owner_uid, group_gid, atflags);
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		result = errno;
-		HANDLE_EINTR(result, again)
-		HANDLE_ENOSYS(result, err, "fchownat")
-		HANDLE_EINVAL(result, err, "Invalid at-flags")
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change ownership of %d:%s", dfd, filename)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
-		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change ownership of %d:%s", dfd, filename);
-		goto err;
-	}
-	return DeeInt_NewInt(result);
-err:
-#else
-	(void)dfd;
-	(void)filename;
-	(void)owner;
-	(void)group;
-	(void)atflags;
-	err_unsupported("fchownat");
-#endif
-	return NULL;
+#ifdef CONFIG_HAVE_sync
+	sync();
+	return_none;
+#else /* CONFIG_HAVE_sync */
+	/* deemon.File.System.sync(); */
+	return DeeObject_CallAttrString((DeeObject *)&DeeSystemFile_Type,
+	                                "sync", 0, NULL);
+#endif /* !CONFIG_HAVE_sync */
 }
 
 
@@ -2944,6 +2865,193 @@ DEFINE_LIBFS_FORWARD_WRAPPER_S(S_ISSOCK)
 
 #undef DEFINE_LIBFS_FORWARD_WRAPPER_S
 #undef DEFINE_LIBFS_FORWARD_WRAPPER
+
+
+/*[[[deemon import("_dexutils").gw("fchownat","dfd:d,filename:c:char[],owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:d->?Dint"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBPOSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint") },
+#define LIBPOSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&libposix_fchownat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,owner:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint,atflags:?Dint)->?Dint\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libposix_fchownat, libposix_fchownat_f);
+#ifndef LIBPOSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED
+#define LIBPOSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED 1
+PRIVATE DEFINE_KWLIST(libposix_kwds_dfd_filename_owner_group_atflags, { K(dfd), K(filename), K(owner), K(group), K(atflags), KEND });
+#endif /* !LIBPOSIX_KWDS_DFD_FILENAME_OWNER_GROUP_ATFLAGS_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchownat_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	int dfd;
+	/*utf-8*/ char const *filename_str;
+	DeeStringObject *filename;
+	DeeObject *owner;
+	DeeObject *group;
+	int atflags;
+	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_dfd_filename_owner_group_atflags, "doood:fchownat", &dfd, &filename, &owner, &group, &atflags))
+	    goto err;
+	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
+	    goto err;
+	filename_str = DeeString_AsUtf8((DeeObject *)filename);
+	if unlikely(!filename_str)
+	    goto err;
+	return libposix_fchownat_f_impl(dfd,filename_str,owner,group,atflags);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf-8*/ char const *filename, DeeObject *owner, DeeObject *group, int atflags)
+//[[[end]]]
+{
+#ifdef CONFIG_HAVE_fchownat
+	uid_t owner_uid;
+	gid_t group_gid;
+	int result;
+	if (DeeInt_Check(owner)) {
+		if (DeeObject_AsUINT(owner, &owner_uid))
+			goto err;
+	} else {
+		owner = DeeObject_CallAttrString(FS_MODULE, "User", 1, (DeeObject **)&owner);
+		if unlikely(!owner)
+			goto err;
+		result = DeeObject_AsUINT(owner, &owner_uid);
+		Dee_Decref(owner);
+		if unlikely(result)
+			goto err;
+	}
+	if (DeeInt_Check(group)) {
+		if (DeeObject_AsUINT(group, &group_gid))
+			goto err;
+	} else {
+		group = DeeObject_CallAttrString(FS_MODULE, "Group", 1, (DeeObject **)&group);
+		if unlikely(!group)
+			goto err;
+		result = DeeObject_AsUINT(group, &group_gid);
+		Dee_Decref(group);
+		if unlikely(result)
+			goto err;
+	}
+	EINTR_LABEL(again)
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	DBG_ALIGNMENT_DISABLE();
+	result = fchownat(dfd, filename, owner_uid, group_gid, atflags);
+	DBG_ALIGNMENT_ENABLE();
+	if (result < 0) {
+		result = Dee_GetErrno();
+		HANDLE_EINTR(result, again)
+		HANDLE_ENOSYS(result, err, "fchownat")
+		HANDLE_EINVAL(result, err, "Invalid at-flags")
+		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change ownership of %d:%s", dfd, filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
+		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
+		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change ownership of %d:%s", dfd, filename);
+		goto err;
+	}
+	return DeeInt_NewInt(result);
+#else /* CONFIG_HAVE_fchownat */
+#define NEED_GET_DFD_FILENAME 1
+	DREF DeeObject *func;
+	DREF DeeObject *result;
+	DREF DeeObject *args[3];
+	args[0] = libposix_get_dfd_filename(dfd, filename, atflags);
+	if unlikely(!args[0])
+		goto err;
+	func = libposix_getfs_chown_f(0, NULL);
+	if unlikely(!func)
+		result = NULL;
+	else {
+		args[1] = owner;
+		args[2] = group;
+		result = DeeObject_Call(func, 3, args);
+		Dee_Decref(func);
+	}
+	Dee_Decref(args[0]);
+	return result;
+#endif /* !CONFIG_HAVE_fchownat */
+err:
+	return NULL;
+}
+
+
+/*[[[deemon import("_dexutils").gw("fchmodat","dfd:d,filename:c:char[],mode:u,atflags:d->?Dint"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchmodat_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBPOSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&libposix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint") },
+#define LIBPOSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&libposix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,mode:?Dint,atflags:?Dint)->?Dint\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libposix_fchmodat, libposix_fchmodat_f);
+#ifndef LIBPOSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED
+#define LIBPOSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED 1
+PRIVATE DEFINE_KWLIST(libposix_kwds_dfd_filename_mode_atflags, { K(dfd), K(filename), K(mode), K(atflags), KEND });
+#endif /* !LIBPOSIX_KWDS_DFD_FILENAME_MODE_ATFLAGS_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_fchmodat_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	int dfd;
+	/*utf-8*/ char const *filename_str;
+	DeeStringObject *filename;
+	unsigned int mode;
+	int atflags;
+	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_dfd_filename_mode_atflags, "doud:fchmodat", &dfd, &filename, &mode, &atflags))
+	    goto err;
+	if (DeeObject_AssertTypeExact(filename, &DeeString_Type))
+	    goto err;
+	filename_str = DeeString_AsUtf8((DeeObject *)filename);
+	if unlikely(!filename_str)
+	    goto err;
+	return libposix_fchmodat_f_impl(dfd,filename_str,mode,atflags);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchmodat_f_impl(int dfd, /*utf-8*/ char const *filename, unsigned int mode, int atflags)
+//[[[end]]]
+{
+#ifdef CONFIG_HAVE_fchmodat
+	int result;
+	EINTR_LABEL(again)
+	if (DeeThread_CheckInterrupt())
+		goto err;
+	DBG_ALIGNMENT_DISABLE();
+	result = fchmodat(dfd, filename, mode, atflags);
+	DBG_ALIGNMENT_ENABLE();
+	if (result < 0) {
+		result = Dee_GetErrno();
+		HANDLE_EINTR(result, again)
+		HANDLE_ENOSYS(result, err, "fchmodat")
+		HANDLE_EINVAL(result, err, "Invalid at-flags")
+		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change access mode of %d:%s", dfd, filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
+		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
+		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change access mode of %d:%s", dfd, filename);
+		goto err;
+	}
+	return DeeInt_NewInt(result);
+#else /* CONFIG_HAVE_fchmodat */
+#define NEED_GET_DFD_FILENAME 1
+	DREF DeeObject *func;
+	DREF DeeObject *result;
+	DREF DeeObject *args[2];
+	args[0] = libposix_get_dfd_filename(dfd, filename, atflags);
+	if unlikely(!args[0])
+		goto err;
+	func = libposix_getfs_chmod_f(0, NULL);
+	if unlikely(!func)
+		result = NULL;
+	else {
+		args[1] = DeeInt_NewUInt(mode);
+		if unlikely(!args[1])
+			result = NULL;
+		else {
+			result = DeeObject_Call(func, 2, args);
+			Dee_Decref(args[1]);
+		}
+		Dee_Decref(func);
+	}
+	Dee_Decref(args[0]);
+	return result;
+#endif /* !CONFIG_HAVE_fchmodat */
+err:
+	return NULL;
+}
+
+
+
+
 
 
 /*[[[deemon import("_dexutils").gw("getenv","varname:?Dstring->?Dstring"); ]]]*/
@@ -3148,6 +3256,32 @@ err:
 
 
 
+
+#ifdef NEED_ERR_UNSUPPORTED
+#undef NEED_ERR_UNSUPPORTED
+PRIVATE ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
+err_unsupported(char const *__restrict name) {
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "Unsupported function `%s'",
+	                       name);
+}
+#endif /* NEED_ERR_UNSUPPORTED */
+
+#ifdef NEED_GET_DFD_FILENAME
+#undef NEED_GET_DFD_FILENAME
+PRIVATE WUNUSED DREF /*String*/ DeeObject *DCALL
+libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) {
+	(void)dfd;
+	(void)filename;
+	(void)atflags;
+	/* TODO: `joinpath(frealpath(dfd), filename)' */
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+#endif /* NEED_GET_DFD_FILENAME */
+
+
+
 PRIVATE char const *import_table[] = {
 	/* NOTE: Indices in this table must match those used by `*_MODULE' macros! */
 	"fs", /* #define FS_MODULE   DEX.d_imports[0] */
@@ -3191,7 +3325,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBPOSIX_EUIDACCESS_DEF
 	LIBPOSIX_FACCESSAT_DEF
 	LIBPOSIX_FCHOWNAT_DEF
-	/* TODO: fchmodat() */
+	LIBPOSIX_FCHMODAT_DEF
 	/* TODO: chflags() */
 	/* TODO: lchflags() */
 	/* TODO: chroot() */
@@ -3200,7 +3334,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: major() */
 	/* TODO: minor() */
 	/* TODO: mkdev() */
-	/* TODO: sync() */
+	LIBPOSIX_SYNC_DEF
 	/* TODO: utime() */
 	/* TODO: pathconf() */
 	/* TODO: fpathconf() */
@@ -3246,6 +3380,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: execve() */
 	/* TODO: execvp() */
 	/* TODO: execvpe() */
+	/* TODO: fexecve() */
 	/* TODO: cwait() */
 	/* TODO: spawnl() */
 	/* TODO: spawnle() */
@@ -3376,12 +3511,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Application exit control */
 	LIBPOSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before #exit (Same as :deemon:Error.AppExit.atexit)")
 	LIBPOSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking #atexit callbacks\n"
-	                      "Termination is done using the C $exit or $_exit functions, if available. However if these "
+	                      "Termination is done using the C $exit or $_Exit functions, if available. However if these "
 	                      "functions are not provided by the host, an :AppExit error is thrown instead\n"
 	                      "When no @exitcode is given, the host's default default value of #EXIT_FAILURE, or $1 is used\n"
 	                      "This function never returns normally")
 	LIBPOSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking #atexit callbacks (s.a. #exit)")
-	LIBPOSIX_ABORT_DEF_DOC("Same as #_exit when passing #EXIT_FAILURE")
+	LIBPOSIX_ABORT_DEF_DOC("Same as #_Exit when passing #EXIT_FAILURE")
 
 	/* stat.st_mode bits. */
 	DEFINE_LIBFS_ALIAS_S(S_IFMT, "->?Dint\n")
@@ -3436,7 +3571,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBPOSIX_O_CLOEXEC_DEF
 #ifdef O_CLOEXEC /* Alias */
 	{ "O_NOINHERIT", (DeeObject *)&libposix_O_CLOEXEC, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Alias for #O_CLOEXEC" },
-#endif
+#endif /* O_CLOEXEC */
 	LIBPOSIX_O_TEMPORARY_DEF
 	LIBPOSIX_O_SHORT_LIVED_DEF
 	LIBPOSIX_O_OBTAIN_DIR_DEF
@@ -3446,7 +3581,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBPOSIX_O_NONBLOCK_DEF
 #ifdef O_NONBLOCK /* Alias */
 	{ "O_NDELAY", (DeeObject *)&libposix_O_NONBLOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, "Alias for #O_NDELAY" },
-#endif
+#endif /* O_NONBLOCK */
 	LIBPOSIX_O_SYNC_DEF
 	LIBPOSIX_O_RSYNC_DEF
 	LIBPOSIX_O_DSYNC_DEF
