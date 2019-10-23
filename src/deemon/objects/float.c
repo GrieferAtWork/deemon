@@ -29,10 +29,9 @@
 #include <deemon/numeric.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/util/cache.h>
-
-#include <float.h> /* FIXME: This needs a feature check! */
-#include <stdlib.h> /* `strtod()'; FIXME: This needs a feature check! */
+#include <hybrid/floatcore.h>
 
 #include "../runtime/strings.h"
 
@@ -104,7 +103,7 @@ float_ctor(Float *__restrict self,
 	/* Skip leading space. */
 	while (DeeUni_IsSpace(*str))
 		++str;
-	self->f_value = strtod(str, &str);
+	self->f_value = strtod(str, &str); /* FIXME: This needs a feature check! */
 	/* Skip trailing space. */
 	while (DeeUni_IsSpace(*str))
 		++str;
@@ -263,23 +262,33 @@ DEFINE_INT15(float_max_10_exp, DBL_MAX_10_EXP);
 DEFINE_INT15(float_dig, DBL_DIG);
 DEFINE_INT15(float_mant_dig, DBL_MANT_DIG);
 DEFINE_FLOAT(float_epsilon, DBL_EPSILON);
+
 #ifdef _DBL_RADIX
 DEFINE_INT15(float_radix, _DBL_RADIX);
 #elif defined(DBL_RADIX)
 DEFINE_INT15(float_radix, DBL_RADIX);
 #elif defined(__DBL_RADIX__)
 DEFINE_INT15(float_radix, __DBL_RADIX__);
-#else
+#elif defined(FLT_RADIX)
 DEFINE_INT15(float_radix, FLT_RADIX);
+#elif defined(__FLT_RADIX__)
+DEFINE_INT15(float_radix, __FLT_RADIX__);
+#else
+DEFINE_INT15(float_radix, 2);
 #endif
+
 #ifdef _DBL_ROUNDS
 DEFINE_INT15(float_rounds, _DBL_ROUNDS);
 #elif defined(DBL_ROUNDS)
 DEFINE_INT15(float_rounds, DBL_ROUNDS);
 #elif defined(__DBL_ROUNDS__)
 DEFINE_INT15(float_rounds, __DBL_ROUNDS__);
-#else
+#elif defined(FLT_ROUNDS)
 DEFINE_INT15(float_rounds, FLT_ROUNDS);
+#elif defined(__FLT_ROUNDS__)
+DEFINE_INT15(float_rounds, __FLT_ROUNDS__);
+#else
+DEFINE_INT15(float_rounds, 1);
 #endif
 
 PRIVATE struct type_member float_class_members[] = {
@@ -341,7 +350,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */float_class_members
+	/* .tp_class_members = */ float_class_members
 };
 
 DECL_END

@@ -134,8 +134,9 @@ local kos = "defined(__KOS__)";
 local msvc = "defined(_MSC_VER)";
 local stdc = "1";
 
-header("io.h", msvc);
-header("process.h", msvc);
+header("io.h", addparen(msvc) + " || " + addparen(kos));
+header("direct.h", addparen(msvc) + " || " + addparen(kos));
+header("process.h", addparen(msvc) + " || " + addparen(kos));
 header("sys/stat.h", addparen(msvc) + " || " + addparen(unix));
 header("fcntl.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/fcntl.h", addparen(linux) + " || " + addparen(kos));
@@ -157,6 +158,10 @@ header("semaphore.h", addparen(linux) + " || " + addparen(kos));
 header("time.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/time.h", addparen(linux) + " || " + addparen(kos));
 header("sys/mman.h", addparen(linux) + " || " + addparen(kos));
+header("sys/wait.h", unix);
+header("wait.h", addparen(linux) + " || " + addparen(kos));
+header("sys/signalfd.h", addparen(linux) + " || " + addparen(kos));
+header("float.h", addparen(msvc) + " || " + addparen(kos));
 
 include_known_headers();
 
@@ -188,6 +193,12 @@ func("_wspawnvp", msvc);
 func("_wspawnvpe", msvc);
 
 func("_cwait", msvc);
+func("wait", unix);
+func("waitpid", unix);
+func("wait4", addparen(linux) + " || " + addparen(kos));
+func("waitid", addparen(linux) + " || " + addparen(kos));
+func("sigprocmask", unix);
+func("detach", kos + " && __KOS_VERSION__ >= 300");
 
 func("system", stdc);
 func("_wsystem", msvc);
@@ -213,6 +224,9 @@ func("lseek", unix);
 func("lseek64", "defined(__USE_LARGEFILE64)");
 func("_lseek", msvc);
 func("_lseeki64", msvc);
+
+func("chdir", unix);
+func("_chdir", msvc);
 
 print "#if",msvc;
 print "#define F_OK     0";
@@ -348,14 +362,24 @@ func("strerror", stdc);
 #ifdef CONFIG_NO_IO_H
 #undef CONFIG_HAVE_IO_H
 #elif !defined(CONFIG_HAVE_IO_H) && \
-      (__has_include(<io.h>) || (defined(__NO_has_include) && defined(_MSC_VER)))
+      (__has_include(<io.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       defined(__KOS__))))
 #define CONFIG_HAVE_IO_H 1
+#endif
+
+#ifdef CONFIG_NO_DIRECT_H
+#undef CONFIG_HAVE_DIRECT_H
+#elif !defined(CONFIG_HAVE_DIRECT_H) && \
+      (__has_include(<direct.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       defined(__KOS__))))
+#define CONFIG_HAVE_DIRECT_H 1
 #endif
 
 #ifdef CONFIG_NO_PROCESS_H
 #undef CONFIG_HAVE_PROCESS_H
 #elif !defined(CONFIG_HAVE_PROCESS_H) && \
-      (__has_include(<process.h>) || (defined(__NO_has_include) && defined(_MSC_VER)))
+      (__has_include(<process.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       defined(__KOS__))))
 #define CONFIG_HAVE_PROCESS_H 1
 #endif
 
@@ -532,9 +556,46 @@ func("strerror", stdc);
 #define CONFIG_HAVE_SYS_MMAN_H 1
 #endif
 
+#ifdef CONFIG_NO_SYS_WAIT_H
+#undef CONFIG_HAVE_SYS_WAIT_H
+#elif !defined(CONFIG_HAVE_SYS_WAIT_H) && \
+      (__has_include(<sys/wait.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_SYS_WAIT_H 1
+#endif
+
+#ifdef CONFIG_NO_WAIT_H
+#undef CONFIG_HAVE_WAIT_H
+#elif !defined(CONFIG_HAVE_WAIT_H) && \
+      (__has_include(<wait.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_WAIT_H 1
+#endif
+
+#ifdef CONFIG_NO_SYS_SIGNALFD_H
+#undef CONFIG_HAVE_SYS_SIGNALFD_H
+#elif !defined(CONFIG_HAVE_SYS_SIGNALFD_H) && \
+      (__has_include(<sys/signalfd.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_SYS_SIGNALFD_H 1
+#endif
+
+#ifdef CONFIG_NO_FLOAT_H
+#undef CONFIG_HAVE_FLOAT_H
+#elif !defined(CONFIG_HAVE_FLOAT_H) && \
+      (__has_include(<float.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       defined(__KOS__))))
+#define CONFIG_HAVE_FLOAT_H 1
+#endif
+
 #ifdef CONFIG_HAVE_IO_H
 #include <io.h>
 #endif /* CONFIG_HAVE_IO_H */
+
+#ifdef CONFIG_HAVE_DIRECT_H
+#include <direct.h>
+#endif /* CONFIG_HAVE_DIRECT_H */
 
 #ifdef CONFIG_HAVE_PROCESS_H
 #include <process.h>
@@ -623,6 +684,22 @@ func("strerror", stdc);
 #ifdef CONFIG_HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif /* CONFIG_HAVE_SYS_MMAN_H */
+
+#ifdef CONFIG_HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif /* CONFIG_HAVE_SYS_WAIT_H */
+
+#ifdef CONFIG_HAVE_WAIT_H
+#include <wait.h>
+#endif /* CONFIG_HAVE_WAIT_H */
+
+#ifdef CONFIG_HAVE_SYS_SIGNALFD_H
+#include <sys/signalfd.h>
+#endif /* CONFIG_HAVE_SYS_SIGNALFD_H */
+
+#ifdef CONFIG_HAVE_FLOAT_H
+#include <float.h>
+#endif /* CONFIG_HAVE_FLOAT_H */
 
 #ifdef CONFIG_NO__Exit
 #undef CONFIG_HAVE__Exit
@@ -809,6 +886,53 @@ func("strerror", stdc);
 #define CONFIG_HAVE__cwait 1
 #endif
 
+#ifdef CONFIG_NO_wait
+#undef CONFIG_HAVE_wait
+#elif !defined(CONFIG_HAVE_wait) && \
+      (defined(wait) || (defined(__linux__) || defined(__linux) || defined(linux) || \
+       defined(__unix__) || defined(__unix) || defined(unix)))
+#define CONFIG_HAVE_wait 1
+#endif
+
+#ifdef CONFIG_NO_waitpid
+#undef CONFIG_HAVE_waitpid
+#elif !defined(CONFIG_HAVE_waitpid) && \
+      (defined(waitpid) || (defined(__linux__) || defined(__linux) || defined(linux) || \
+       defined(__unix__) || defined(__unix) || defined(unix)))
+#define CONFIG_HAVE_waitpid 1
+#endif
+
+#ifdef CONFIG_NO_wait4
+#undef CONFIG_HAVE_wait4
+#elif !defined(CONFIG_HAVE_wait4) && \
+      (defined(wait4) || ((defined(__linux__) || defined(__linux) || defined(linux)) || \
+       defined(__KOS__)))
+#define CONFIG_HAVE_wait4 1
+#endif
+
+#ifdef CONFIG_NO_waitid
+#undef CONFIG_HAVE_waitid
+#elif !defined(CONFIG_HAVE_waitid) && \
+      (defined(waitid) || ((defined(__linux__) || defined(__linux) || defined(linux)) || \
+       defined(__KOS__)))
+#define CONFIG_HAVE_waitid 1
+#endif
+
+#ifdef CONFIG_NO_sigprocmask
+#undef CONFIG_HAVE_sigprocmask
+#elif !defined(CONFIG_HAVE_sigprocmask) && \
+      (defined(sigprocmask) || (defined(__linux__) || defined(__linux) || defined(linux) || \
+       defined(__unix__) || defined(__unix) || defined(unix)))
+#define CONFIG_HAVE_sigprocmask 1
+#endif
+
+#ifdef CONFIG_NO_detach
+#undef CONFIG_HAVE_detach
+#elif !defined(CONFIG_HAVE_detach) && \
+      (defined(detach) || (defined(__KOS__) && __KOS_VERSION__ >= 300))
+#define CONFIG_HAVE_detach 1
+#endif
+
 #ifdef CONFIG_NO_system
 #undef CONFIG_HAVE_system
 #else
@@ -944,6 +1068,21 @@ func("strerror", stdc);
 #elif !defined(CONFIG_HAVE__lseeki64) && \
       (defined(_lseeki64) || defined(_MSC_VER))
 #define CONFIG_HAVE__lseeki64 1
+#endif
+
+#ifdef CONFIG_NO_chdir
+#undef CONFIG_HAVE_chdir
+#elif !defined(CONFIG_HAVE_chdir) && \
+      (defined(chdir) || (defined(__linux__) || defined(__linux) || defined(linux) || \
+       defined(__unix__) || defined(__unix) || defined(unix)))
+#define CONFIG_HAVE_chdir 1
+#endif
+
+#ifdef CONFIG_NO__chdir
+#undef CONFIG_HAVE__chdir
+#elif !defined(CONFIG_HAVE__chdir) && \
+      (defined(_chdir) || defined(_MSC_VER))
+#define CONFIG_HAVE__chdir 1
 #endif
 
 #if defined(_MSC_VER)
@@ -1856,6 +1995,11 @@ func("strerror", stdc);
 #define ftruncate64 _chsize_s
 #endif /* ftruncate64 = _chsize_s */
 
+#if defined(CONFIG_HAVE__chdir) && !defined(CONFIG_HAVE_chdir)
+#define CONFIG_HAVE_chdir 1
+#define chdir _chdir
+#endif /* chdir = _chdir */
+
 #if defined(CONFIG_HAVE__getpid) && !defined(CONFIG_HAVE_getpid)
 #define CONFIG_HAVE_getpid 1
 #define getpid _getpid
@@ -2487,6 +2631,12 @@ func("strerror", stdc);
 #endif /* pause = select */
 
 
+#if defined(_MSC_VER) || defined(__USE_DOS)
+#define EXEC_STRING_VECTOR_TYPE char const *const *
+#else /* _MSC_VER || __USE_DOS */
+#define EXEC_STRING_VECTOR_TYPE char *const *
+#endif /* !_MSC_VER && !__USE_DOS */
+
 #ifndef EXIT_SUCCESS
 #define EXIT_SUCCESS 0
 #endif /* !EXIT_SUCCESS */
@@ -2509,6 +2659,7 @@ func("strerror", stdc);
 #endif /* _MSC_VER */
 
 #ifdef CONFIG_HAVE_ERRNO_H
+#define CONFIG_HAVE_errno 1
 #define Dee_GetErrno()  errno
 #define Dee_SetErrno(v) (errno=(v))
 #else /* CONFIG_HAVE_ERRNO_H */

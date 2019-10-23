@@ -1384,31 +1384,25 @@ done:
 		Dee_DumpReferenceLeaks();
 #endif /* CONFIG_TRACE_REFCHANGES */
 		DBG_ALIGNMENT_DISABLE();
-#if !defined(NDEBUG) && defined(_DEBUG)
-#if defined(_MSC_VER) || defined(__CRT_DOS)
+#ifdef _CRTDBG_MAP_ALLOC
+#ifdef CONFIG_HOST_WINDOWS
+		if (!IsDebuggerPresent())
+#endif /* CONFIG_HOST_WINDOWS */
 		{
-#if !defined(_MSC_VER) || defined(_DLL)
-			extern ATTR_DLLIMPORT int(ATTR_CDECL _CrtDumpMemoryLeaks)(void);
-#else /* !_MSC_VER || _DLL */
-			extern int(ATTR_CDECL _CrtDumpMemoryLeaks)(void);
-#endif /* _MSC_VER && !_DLL */
-			if (!IsDebuggerPresent()) {
-				_Dee_dprint("");
-				if (_Dee_dprint_enabled) {
-					_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-					_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-					_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-					_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
-					_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-					_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-				}
+			_Dee_dprint("");
+			if (_Dee_dprint_enabled) {
+				_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+				_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+				_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+				_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+				_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+				_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
 			}
-			if ((_CrtDumpMemoryLeaks)())
-				BREAKPOINT();
-			DEE_CHECKMEMORY();
 		}
-#endif /* _MSC_VER || __CRT_DOS */
-#endif /* !NDEBUG && _DEBUG */
+		if ((_CrtDumpMemoryLeaks)())
+			BREAKPOINT();
+		DEE_CHECKMEMORY();
+#endif /* _CRTDBG_MAP_ALLOC */
 	}
 	return result;
 err_no_input:

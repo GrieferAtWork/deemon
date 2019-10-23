@@ -184,6 +184,8 @@ for (local x: names) {
 #define IMM_EQ_N2       OPERAND_CLASS_IMM_EQ_N2
 //[[[end]]]
 
+#undef FF0
+
 #define FNORMAL    ASM_OVERLOAD_FNORMAL
 #define FPUSH      ASM_OVERLOAD_FPUSH
 #define FPREFIX    ASM_OVERLOAD_FPREFIX

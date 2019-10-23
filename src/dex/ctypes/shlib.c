@@ -68,7 +68,7 @@ typedef struct {
 #ifndef CONFIG_NO_SHLIB
 #ifndef CONFIG_NO_CFUNCTION
 	DREF DeeSTypeObject *sh_vfunptr; /* [0..1][lock(WRITE_ONCE)] void-function pointer type. */
-	cc_t                 sh_defcc;   /* [const] Default calling convention. */
+	ctypes_cc_t                 sh_defcc;   /* [const] Default calling convention. */
 #endif /* !CONFIG_NO_CFUNCTION */
 #endif /* !CONFIG_NO_SHLIB */
 } Shlib;
@@ -314,7 +314,7 @@ shlib_getattr(Shlib *self,
 	if (!result_type) {
 		DREF DeeSTypeObject *new_type;
 		result_type = (DREF DeeSTypeObject *)DeeSType_CFunction(&DeeCInt_Type,
-		                                                        (cc_t)((unsigned int)self->sh_defcc |
+		                                                        (ctypes_cc_t)((unsigned int)self->sh_defcc |
 		                                                               (unsigned int)CC_FVARARGS),
 		                                                        0, NULL, true);
 		if unlikely(!result_type)

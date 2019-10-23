@@ -162,17 +162,17 @@ stype_fini(DeeSTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_dofunc(DeeSTypeObject *self, size_t argc,
-             DeeObject **argv, cc_t cc_flags) {
+             DeeObject **argv, ctypes_cc_t cc_flags) {
 	DeeSTypeObject **argv_types;
 	size_t i;
-	cc_t cc = (cc_t)((unsigned int)CC_DEFAULT |
-	                 (unsigned int)cc_flags);
+	ctypes_cc_t cc = (ctypes_cc_t)((unsigned int)CC_DEFAULT |
+	                               (unsigned int)cc_flags);
 	if (argc && DeeString_Check(argv[0])) {
 		--argc, ++argv;
 		cc = cc_lookup(DeeString_STR(argv[-1]));
 		if unlikely(cc == CC_INVALID)
 			goto err;
-		cc = (cc_t)((unsigned int)cc |
+		cc = (ctypes_cc_t)((unsigned int)cc |
 		            (unsigned int)cc_flags);
 	}
 	argv_types = (DeeSTypeObject **)Dee_Malloc(argc * sizeof(DeeSTypeObject *));
@@ -194,7 +194,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_func(DeeSTypeObject *self, size_t argc, DeeObject **argv) {
-	return stype_dofunc(self, argc, argv, (cc_t)0);
+	return stype_dofunc(self, argc, argv, (ctypes_cc_t)0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

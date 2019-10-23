@@ -764,24 +764,24 @@ DeeSType_Array(DeeSTypeObject *__restrict self, size_t num_items);
 
 
 #ifndef CONFIG_NO_CFUNCTION
-typedef ffi_abi cc_t;
+typedef ffi_abi ctypes_cc_t;
 #define CC_DEFAULT     FFI_DEFAULT_ABI
-#define CC_MTYPE     ((cc_t)0x7fff) /* MASK: The actual FFI type. */
-#define CC_FVARARGS  ((cc_t)0x8000) /* FLAG: Variable-length argument list. */
-#define CC_INVALID   ((cc_t)-1)
+#define CC_MTYPE     ((ctypes_cc_t)0x7fff) /* MASK: The actual FFI type. */
+#define CC_FVARARGS  ((ctypes_cc_t)0x8000) /* FLAG: Variable-length argument list. */
+#define CC_INVALID   ((ctypes_cc_t)-1)
 #else /* !CONFIG_NO_CFUNCTION */
-typedef int cc_t;
+typedef int ctypes_cc_t;
 #define CC_DEFAULT     0
 #define CC_INVALID   (-1)
-#define CC_FVARARGS  ((cc_t)0x8000) /* FLAG: Variable-length argument list. */
+#define CC_FVARARGS  ((ctypes_cc_t)0x8000) /* FLAG: Variable-length argument list. */
 #endif /* CONFIG_NO_CFUNCTION */
 
 /* Convert a calling convention to/from its name.
  * @return: CC_INVALID: The given `name' was not recognized.
  * @return: NULL:       The given `cc' was not recognized. */
-INTDEF WUNUSED NONNULL((1)) cc_t DCALL cc_lookup(char const *__restrict name);
-INTDEF WUNUSED NONNULL((1)) cc_t DCALL cc_trylookup(char const *__restrict name);
-INTDEF WUNUSED char const *DCALL cc_getname(cc_t cc);
+INTDEF WUNUSED NONNULL((1)) ctypes_cc_t DCALL cc_lookup(char const *__restrict name);
+INTDEF WUNUSED NONNULL((1)) ctypes_cc_t DCALL cc_trylookup(char const *__restrict name);
+INTDEF WUNUSED char const *DCALL cc_getname(ctypes_cc_t cc);
 
 
 struct cfunction_type_object {
@@ -792,7 +792,7 @@ struct cfunction_type_object {
 	dhash_t                            ft_hash;    /* [const] A pre-calculated hash used by `struct stype_cfunction' */
 	size_t                             ft_argc;    /* [const] Amount of function argument types. */
 	DREF DeeSTypeObject              **ft_argv;    /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
-	cc_t                               ft_cc;      /* [const] The calling convention used by this function. */
+	ctypes_cc_t                               ft_cc;      /* [const] The calling convention used by this function. */
 	ffi_type                          *ft_ffi_return_type; /* [1..1] Raw return type. */
 	ffi_type                         **ft_ffi_arg_type_v;  /* [1..1][0..ob_argc][owned] Raw argument types. */
 	ffi_cif                            ft_ffi_cif;         /* cif object to call the function. */
@@ -833,7 +833,7 @@ INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
  */
 INTDEF WUNUSED NONNULL((1)) DREF DeeCFunctionTypeObject *DCALL
 DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
-                   cc_t calling_convention, size_t argc,
+                   ctypes_cc_t calling_convention, size_t argc,
                    DeeSTypeObject **argv, bool inherit_argv);
 
 

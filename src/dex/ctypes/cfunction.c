@@ -41,20 +41,20 @@ DECL_BEGIN
 
 
 #ifdef CONFIG_NO_CFUNCTION
-INTERN WUNUSED NONNULL((1)) cc_t DCALL
+INTERN WUNUSED NONNULL((1)) ctypes_cc_t DCALL
 cc_trylookup(char const *__restrict UNUSED(name)) {
 	return CC_INVALID;
 }
 
 INTERN WUNUSED char const *DCALL
-cc_getname(cc_t UNUSED(cc)) {
+cc_getname(ctypes_cc_t UNUSED(cc)) {
 	return NULL;
 }
 #else /* CONFIG_NO_CFUNCTION */
 
 struct cc_entry {
 	char name[12];
-	cc_t cc;
+	ctypes_cc_t cc;
 };
 
 PRIVATE struct cc_entry const cc_db[] = {
@@ -82,7 +82,7 @@ PRIVATE struct cc_entry const cc_db[] = {
 };
 
 
-INTERN WUNUSED NONNULL((1)) cc_t DCALL
+INTERN WUNUSED NONNULL((1)) ctypes_cc_t DCALL
 cc_trylookup(char const *__restrict name) {
 	size_t i;
 	/* Search for a calling convention matching the given name. */
@@ -94,7 +94,7 @@ cc_trylookup(char const *__restrict name) {
 }
 
 INTERN WUNUSED char const *DCALL
-cc_getname(cc_t cc) {
+cc_getname(ctypes_cc_t cc) {
 	size_t i;
 	/* Search for the database entry for the given CC. */
 	for (i = 0; i < COMPILER_LENOF(cc_db); ++i) {
@@ -116,7 +116,7 @@ stype_ffitype(DeeSTypeObject *__restrict self) {
 
 #endif /* !CONFIG_NO_CFUNCTION */
 
-INTERN WUNUSED NONNULL((1)) cc_t DCALL
+INTERN WUNUSED NONNULL((1)) ctypes_cc_t DCALL
 cc_lookup(char const *__restrict name) {
 #ifdef CONFIG_NO_CFUNCTION
 	DeeError_Throwf(&DeeError_ValueError,
@@ -124,7 +124,7 @@ cc_lookup(char const *__restrict name) {
 	                name);
 	return CC_INVALID;
 #else /* CONFIG_NO_CFUNCTION */
-	cc_t result = cc_trylookup(name);
+	ctypes_cc_t result = cc_trylookup(name);
 	if (result == CC_INVALID) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Unrecognized calling convention %q",
@@ -222,7 +222,7 @@ INTERN DeeCFunctionTypeObject DeeCFunction_Type = {
 #ifndef CONFIG_NO_CFUNCTION
 PRIVATE WUNUSED DREF DeeObject *DCALL
 generate_function_name(DeeSTypeObject *__restrict return_type,
-                       cc_t calling_convention, size_t argc,
+                       ctypes_cc_t calling_convention, size_t argc,
                        DeeSTypeObject **__restrict argv) {
 	size_t i;
 	char const *cc_name;
@@ -290,7 +290,7 @@ union argument {
 
 PRIVATE WUNUSED DREF DeeCFunctionTypeObject *DCALL
 cfunctiontype_new(DeeSTypeObject *__restrict return_type,
-                  cc_t calling_convention, size_t argc,
+                  ctypes_cc_t calling_convention, size_t argc,
                   DeeSTypeObject **__restrict argv,
                   dhash_t function_hash, bool inherit_argv) {
 	DREF DeeCFunctionTypeObject *result;
@@ -449,7 +449,7 @@ again:
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 cfunction_hashof(DeeSTypeObject *__restrict return_type,
-                 cc_t calling_convention, size_t argc,
+                 ctypes_cc_t calling_convention, size_t argc,
                  DeeSTypeObject **__restrict argv) {
 	dhash_t result;
 	size_t i;
@@ -462,7 +462,7 @@ cfunction_hashof(DeeSTypeObject *__restrict return_type,
 PRIVATE bool DCALL
 cfunction_equals(DeeCFunctionTypeObject *__restrict self,
                  DeeSTypeObject *__restrict return_type,
-                 cc_t calling_convention, size_t argc,
+                 ctypes_cc_t calling_convention, size_t argc,
                  DeeSTypeObject **__restrict argv) {
 	size_t i;
 	if (self->ft_orig != return_type)
@@ -486,7 +486,7 @@ nope:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeCFunctionTypeObject *DCALL
 DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
-                   cc_t calling_convention, size_t argc,
+                   ctypes_cc_t calling_convention, size_t argc,
                    DeeSTypeObject **argv, bool inherit_argv) {
 #ifdef CONFIG_NO_CFUNCTION
 	(void)return_type;

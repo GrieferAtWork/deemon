@@ -81,8 +81,12 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #define _CRT_NONSTDC_NO_WARNINGS 1
 
-#if defined(_MSC_VER) && !defined(NDEBUG)
-#define _CRTDBG_MAP_ALLOC 1
+#include <stddef.h>
+
+#if (defined(_MSC_VER) || __has_include(<crtdbg.h>) || \
+    (defined(__NO_has_include) && defined(__KOS_SYSTEM_HEADERS__))) && \
+    !defined(NDEBUG)
+#define _CRTDBG_MAP_ALLOC 1 /* Enable debug-malloc */
 #endif /* _MSC_VER && !NDEBUG */
 
 #define DEE_VERSION_API      200
@@ -98,11 +102,10 @@
 
 #ifdef __CC__
 #include <stdarg.h>
-#include <stddef.h>
 
-#if defined(_CRTDBG_MAP_ALLOC) && !defined(__KOS_SYSTEM_HEADERS__)
+#ifdef _CRTDBG_MAP_ALLOC
 #include <crtdbg.h>
-#endif
+#endif /* _CRTDBG_MAP_ALLOC */
 #endif /* __CC__ */
 
 #ifdef _MSC_VER

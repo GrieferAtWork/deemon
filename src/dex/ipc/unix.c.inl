@@ -26,70 +26,28 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
-#include <deemon/error.h>
 #include <deemon/bytes.h>
 #include <deemon/dict.h>
+#include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
-#include <deemon/tuple.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
+#include <deemon/tuple.h>
 #include <deemon/util/rwlock.h>
+
 #include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
 
+#include <stdarg.h>
+
 #include "libipc.h"
 #include "strings.h"
-
-#ifdef CONFIG_HAVE_PROCESS_H
-#include <process.h>
-#endif /* CONFIG_HAVE_PROCESS_H */
-
-#ifdef CONFIG_HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* CONFIG_HAVE_UNISTD_H */
-
-#ifdef CONFIG_HAVE_ERRNO_H
-#include <errno.h>
-#endif /* CONFIG_HAVE_ERRNO_H */
-
-#ifdef CONFIG_HAVE_IO_H
-#include <io.h>
-#endif /* CONFIG_HAVE_IO_H */
-
-#ifdef CONFIG_HAVE_DIRECT_H
-#include <direct.h>
-#endif /* CONFIG_HAVE_DIRECT_H */
-
-#ifdef CONFIG_HAVE_SCHED_H
-#include <sched.h>
-#endif /* CONFIG_HAVE_SCHED_H */
-
-#ifdef CONFIG_HAVE_SIGNAL_H
-#include <signal.h>
-#endif /* CONFIG_HAVE_SIGNAL_H */
-
-#ifdef CONFIG_HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif /* CONFIG_HAVE_SYS_STAT_H */
-
-#ifdef CONFIG_HAVE_SYS_WAIT_H
-#include <sys/wait.h>
-#endif /* CONFIG_HAVE_SYS_WAIT_H */
-
-#ifdef CONFIG_HAVE_WAIT_H
-#include <wait.h>
-#endif /* CONFIG_HAVE_WAIT_H */
-
-#ifdef CONFIG_HAVE_SYS_SIGNALFD_H
-#include <sys/signalfd.h>
-#endif /* CONFIG_HAVE_SYS_SIGNALFD_H */
-
-#include <stdarg.h>
 
 #ifdef SIGKILL
 #define TERMINATE_SIGNAL SIGKILL
@@ -103,46 +61,16 @@
 #error "No termination signal recognized"
 #endif
 
-#ifdef CONFIG_NO_WAITPID
-#undef CONFIG_HAVE_WAITPID
-#elif !defined(CONFIG_HAVE_WAITPID) && \
-      (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix))
-#define CONFIG_HAVE_WAITPID 1
-#endif
-
-#ifdef CONFIG_NO_WAIT4
-#undef CONFIG_HAVE_WAIT4
-#elif !defined(CONFIG_HAVE_WAIT4) && \
-      (defined(__USE_MISC))
-#define CONFIG_HAVE_WAIT4 1
-#endif
-
-
-#ifdef CONFIG_NO_VFORK
-#undef CONFIG_HAVE_VFORK
-#elif !defined(CONFIG_HAVE_VFORK) && \
-      (defined(__USE_MISC) || (defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)))
-#define CONFIG_HAVE_VFORK 1
-#endif
-
-#ifdef CONFIG_NO_SIGPROCMASK
-#undef CONFIG_HAVE_SIGPROCMASK
-#elif !defined(CONFIG_HAVE_SIGPROCMASK) && \
-      (defined(__unix__) || defined(__unix) || defined(unix) || \
-       defined(__USE_POSIX))
-#define CONFIG_HAVE_SIGPROCMASK 1
-#endif
 
 /**/
 #include "generic-cmdline.c.inl"
 
 DECL_BEGIN
 
-#ifdef CONFIG_HAVE_WAITPID
+#ifdef CONFIG_HAVE_waitpid
 #define joinpid(pid, pexit_status)    waitpid(pid, pexit_status, 0)
 #define tryjoinpid(pid, pexit_status) waitpid(pid, pexit_status, WNOHANG)
-#elif defined(CONFIG_HAVE_WAIT4)
+#elif defined(CONFIG_HAVE_wait4)
 #define joinpid(pid, pexit_status)    wait4(pid, pexit_status, 0, NULL)
 #define tryjoinpid(pid, pexit_status) wait4(pid, pexit_status, WNOHANG, NULL)
 #elif defined(__INTELLISENSE__)
@@ -166,9 +94,9 @@ int kill(pid_t pid, int signo);
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* __INTELLISENSE__ */
 
-#ifndef CONFIG_HAVE_VFORK
+#ifndef CONFIG_HAVE_vfork
 #define vfork()  fork()
-#endif /* !CONFIG_HAVE_VFORK */
+#endif /* !CONFIG_HAVE_vfork */
 
 #ifndef STDIN_FILENO
 #define STDIN_FILENO 0
@@ -182,21 +110,11 @@ int kill(pid_t pid, int signo);
 #define STDERR_FILENO 2
 #endif /* !STDERR_FILENO */
 
-#if !defined(CONFIG_NO__Exit) && \
-    (defined(CONFIG_HAVE__Exit) ||   \
-     defined(_Exit) || defined(__USE_ISOC99))
+#ifdef CONFIG_HAVE__Exit
 #define EXIT_AFTER_FORK  _Exit
-#elif !defined(CONFIG_NO__exit) && \
-      (defined(_MSC_VER) || defined(CONFIG_HAVE__exit) || defined(_exit))
-#define EXIT_AFTER_FORK  _exit
-#else
+#else /* CONFIG_HAVE__Exit */
 #define EXIT_AFTER_FORK  exit
-#endif
-
-#if !defined(CONFIG_NO_DETACH) && !defined(CONFIG_HAVE_DETACH) && \
-    ((defined(__KOS__) && __KOS_VERSION__ >= 300))
-#define CONFIG_HAVE_DETACH 1
-#endif
+#endif /* !CONFIG_HAVE__Exit */
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
@@ -654,23 +572,29 @@ process_do_spawn(char const *used_exe, char *const *used_argv,
 		/* Actually execute the new process. */
 		if (search_path) {
 			if (used_envp) {
-				execvpe(used_exe, used_argv, used_envp);
+				execvpe(used_exe,
+				        (EXEC_STRING_VECTOR_TYPE)used_argv,
+				        (EXEC_STRING_VECTOR_TYPE)used_envp);
 			} else {
-				execvp(used_exe, used_argv);
+				execvp(used_exe,
+				       (EXEC_STRING_VECTOR_TYPE)used_argv);
 			}
 		} else {
 			if (used_envp) {
-				execve(used_exe, used_argv, used_envp);
+				execve(used_exe,
+				       (EXEC_STRING_VECTOR_TYPE)used_argv,
+				       (EXEC_STRING_VECTOR_TYPE)used_envp);
 			} else {
-				execv(used_exe, used_argv);
+				execv(used_exe,
+				      (EXEC_STRING_VECTOR_TYPE)used_argv);
 			}
 		}
 child_error:
-#ifdef errno
-		EXIT_AFTER_FORK(EXIT_FAILURE + errno);
-#else /* errno */
+#ifdef CONFIG_HAVE_errno
+		EXIT_AFTER_FORK(EXIT_FAILURE + Dee_GetErrno());
+#else /* CONFIG_HAVE_errno */
 		EXIT_AFTER_FORK(EXIT_FAILURE);
-#endif /* !errno */
+#endif /* !CONFIG_HAVE_errno */
 	}
 	return cpid;
 }
@@ -846,9 +770,9 @@ process_detach(Process *self, size_t argc, DeeObject **argv) {
 		ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
 		return_false;
 	}
-#ifdef CONFIG_HAVE_DETACH
+#ifdef CONFIG_HAVE_detach
 	detach(self->p_pid);
-#endif /* CONFIG_HAVE_DETACH */
+#endif /* CONFIG_HAVE_detach */
 	/* Set the detached-flag and unset the detaching-flag. */
 	do {
 		state = ATOMIC_READ(self->p_state);
@@ -953,7 +877,7 @@ again:
 		result = joinpid(pid, &self->p_status);
 	else {
 #if defined(CONFIG_HAVE_SYS_SIGNALFD_H) && \
-    defined(CONFIG_HAVE_SIGPROCMASK)
+    defined(CONFIG_HAVE_sigprocmask)
 		/* The complicated: a custom timeout. */
 		/* NOTE: wait() w/ timeout can be implemented with `signalfd()':
 		 * >> pid_t waitpid_timeout(pid_t pid, struct timespec *tmo, int *status) {
@@ -2271,10 +2195,10 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 process_fini(Process *__restrict self) {
-#ifdef CONFIG_HAVE_DETACH
+#ifdef CONFIG_HAVE_detach
 	if ((self->p_state & (PROCESS_FSTARTED | PROCESS_FDETACHED)) == PROCESS_FSTARTED)
 		detach(self->p_pid);
-#endif /* CONFIG_HAVE_DETACH */
+#endif /* CONFIG_HAVE_detach */
 	Dee_XDecref(self->p_std[0]);
 	Dee_XDecref(self->p_std[1]);
 	Dee_XDecref(self->p_std[2]);
