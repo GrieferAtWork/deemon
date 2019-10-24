@@ -83,6 +83,11 @@
 
 #include <stddef.h>
 
+#ifndef __has_include
+#define __NO_has_include 1
+#define __has_include(x) 0
+#endif /* !__has_include */
+
 #if (defined(_MSC_VER) || __has_include(<crtdbg.h>) || \
     (defined(__NO_has_include) && defined(__KOS_SYSTEM_HEADERS__))) && \
     !defined(NDEBUG)
