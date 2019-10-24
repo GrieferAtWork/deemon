@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_DEEMON_EXECUTE_DEC_C
 #define GUARD_DEEMON_EXECUTE_DEC_C 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/dec.h>
@@ -52,6 +50,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -67,31 +66,19 @@
 #include <hybrid/unaligned.h>
 
 #include <stdarg.h>
-#include <string.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#else /* CONFIG_HOST_WINDOWS */
-#include <sys/stat.h>
-
-#include <time.h>
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* CONFIG_HOST_WINDOWS */
 
 #include "../runtime/runtime_error.h"
 
 DECL_BEGIN
 
-#ifndef __USE_GNU
+#ifndef CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
 #ifdef CONFIG_HOST_WINDOWS
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */

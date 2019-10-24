@@ -93,8 +93,9 @@ bytes_find(Bytes *self, size_t argc,
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:find", &find_ob, &start, &end) ||
-	    get_needle(&needle, find_ob))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:find", &find_ob, &start, &end))
+		return NULL;
+	if (get_needle(&needle, find_ob))
 		return NULL;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -207,8 +208,9 @@ bytes_index(Bytes *self, size_t argc,
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:index", &find_ob, &start, &end) ||
-	    get_needle(&needle, find_ob))
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:index", &find_ob, &start, &end))
+		return NULL;
+	if (get_needle(&needle, find_ob))
 		return NULL;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
@@ -384,9 +386,10 @@ bytes_contains_f(Bytes *self, size_t argc,
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:contains", &find_ob, &start, &end) ||
-	    get_needle(&needle, find_ob))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:contains", &find_ob, &start, &end))
+		goto err;
+	if (get_needle(&needle, find_ob))
+		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
@@ -395,6 +398,8 @@ bytes_contains_f(Bytes *self, size_t argc,
 	                    end - start,
 	                    needle.n_data,
 	                    needle.n_size) != NULL);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1703,9 +1708,10 @@ bytes_parition(Bytes *self, size_t argc,
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:partition", &find_ob, &start, &end) ||
-	    get_needle(&needle, find_ob))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:partition", &find_ob, &start, &end))
+		goto err;
+	if (get_needle(&needle, find_ob))
+		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
@@ -1719,6 +1725,8 @@ bytes_parition(Bytes *self, size_t argc,
 	                            DeeBytes_DATA(self) + start,
 	                            end,
 	                            needle.n_size);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1727,9 +1735,10 @@ bytes_caseparition(Bytes *self, size_t argc,
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casepartition", &find_ob, &start, &end) ||
-	    get_needle(&needle, find_ob))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casepartition", &find_ob, &start, &end))
+		goto err;
+	if (get_needle(&needle, find_ob))
+		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
@@ -1743,6 +1752,8 @@ bytes_caseparition(Bytes *self, size_t argc,
 	                            DeeBytes_DATA(self) + start,
 	                            end,
 	                            needle.n_size);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1751,9 +1762,10 @@ bytes_rparition(Bytes *self, size_t argc,
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rpartition", &find_ob, &start, &end) ||
-	    get_needle(&needle, find_ob))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rpartition", &find_ob, &start, &end))
+		goto err;
+	if (get_needle(&needle, find_ob))
+		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
@@ -1767,6 +1779,8 @@ bytes_rparition(Bytes *self, size_t argc,
 	                            DeeBytes_DATA(self) + start,
 	                            end,
 	                            needle.n_size);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1775,9 +1789,10 @@ bytes_caserparition(Bytes *self, size_t argc,
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserpartition", &find_ob, &start, &end) ||
-	    get_needle(&needle, find_ob))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserpartition", &find_ob, &start, &end))
+		goto err;
+	if (get_needle(&needle, find_ob))
+		goto err;
 	if (end > DeeBytes_SIZE(self))
 		end = DeeBytes_SIZE(self);
 	if (start >= end)
@@ -1791,6 +1806,8 @@ bytes_caserparition(Bytes *self, size_t argc,
 	                            DeeBytes_DATA(self) + start,
 	                            end,
 	                            needle.n_size);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3350,8 +3367,11 @@ bytes_partitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:partitionmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:partitionmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \
@@ -3417,8 +3437,11 @@ bytes_rpartitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:rpartitionmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:rpartitionmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \
@@ -3485,8 +3508,11 @@ bytes_casepartitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:casepartitionmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:casepartitionmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \
@@ -3552,8 +3578,11 @@ bytes_caserpartitionmatch(Bytes *self, size_t argc, DeeObject **argv) {
 	uint8_t *scan_str, *match_start, *match_end;
 	size_t scan_len;
 	Needle s_open, s_clos;
-	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserpartitionmatch", &s_open_ob, &s_clos_ob, &start, &end) ||
-	    get_needle(&s_open, s_open_ob) || get_needle(&s_clos, s_clos_ob))
+	if (DeeArg_Unpack(argc, argv, "oo|IdId:caserpartitionmatch", &s_open_ob, &s_clos_ob, &start, &end))
+		goto err;
+	if (get_needle(&s_open, s_open_ob))
+		goto err;
+	if (get_needle(&s_clos, s_clos_ob))
 		goto err;
 #define SET_BYTES(a, b, c)                                       \
 	do {                                                         \

@@ -49,6 +49,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -262,19 +263,20 @@ DECL_END
 
 
 
-
 DECL_BEGIN
 
-#ifndef __USE_GNU
-#define memrchr  dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
- uint8_t *iter = (uint8_t *)p+n;
- while (iter != (uint8_t *)p) {
-  if (*--iter == c) return iter;
- }
- return NULL;
-}
-#endif /* !__USE_GNU */
+#ifndef CONFIG_HAVE_memrchr
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
+
+#ifndef CONFIG_HAVE_strnlen
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+
+
+
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 64

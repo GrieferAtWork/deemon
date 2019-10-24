@@ -67,6 +67,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_strnlen
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+
+
+
 #ifdef CONFIG_HAVE_waitpid
 #define joinpid(pid, pexit_status)    waitpid(pid, pexit_status, 0)
 #define tryjoinpid(pid, pexit_status) waitpid(pid, pexit_status, WNOHANG)

@@ -866,7 +866,7 @@ sequence_should_use_getitem(DeeTypeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_repr(DeeObject *__restrict self) {
 	bool is_first;
-	DREF DeeObject *Iterator, *elem;
+	DREF DeeObject *iterator, *elem;
 	struct unicode_printer p = UNICODE_PRINTER_INIT;
 	if (sequence_should_use_getitem(Dee_TYPE(self))) {
 		size_t i, size;
@@ -911,13 +911,13 @@ seq_repr(DeeObject *__restrict self) {
 		}
 	} else {
 do_try_iterators:
-		Iterator = DeeObject_IterSelf(self);
-		if unlikely(!Iterator)
+		iterator = DeeObject_IterSelf(self);
+		if unlikely(!iterator)
 			goto err;
 		if unlikely(UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
 			goto err1;
 		is_first = true;
-		while (ITER_ISOK(elem = DeeObject_IterNext(Iterator))) {
+		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 			if (unicode_printer_printf(&p, "%s%r", is_first ? "" : ", ", elem) < 0)
 				goto err2;
 			is_first = false;
@@ -930,7 +930,7 @@ do_try_iterators:
 		if unlikely((is_first ? unicode_printer_putascii(&p, '}')
 		                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
 			goto err1;
-		Dee_Decref(Iterator);
+		Dee_Decref(iterator);
 	}
 done:
 	return unicode_printer_pack(&p);
@@ -940,7 +940,7 @@ err_elem:
 err2:
 	Dee_Decref(elem);
 err1:
-	Dee_Decref(Iterator);
+	Dee_Decref(iterator);
 err:
 	unicode_printer_fini(&p);
 	return NULL;

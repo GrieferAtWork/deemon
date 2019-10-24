@@ -26,13 +26,13 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* strnlen() */
 
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
 
 #include <stdarg.h>
 #include <stddef.h>
-#include <string.h>
 
 #ifndef PP_CAT2
 #define PP_PRIVATE_CAT2(a,b)   a##b
@@ -75,6 +75,11 @@
 #endif /* !__SIZEOF_LONG__ */
 
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_strnlen
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
 
 STATIC_ASSERT(sizeof(int) == __SIZEOF_INT__);
 STATIC_ASSERT(sizeof(void *) == __SIZEOF_POINTER__);

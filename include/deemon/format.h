@@ -20,10 +20,13 @@
 #define GUARD_DEEMON_FORMAT_H 1
 
 #include "api.h"
-#include "object.h"
-#include <stddef.h>
-#include <stdarg.h>
+
 #include <hybrid/typecore.h>
+
+#include <stdarg.h>
+#include <stddef.h>
+
+#include "object.h"
 
 DECL_BEGIN
 

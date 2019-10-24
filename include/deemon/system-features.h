@@ -88,7 +88,7 @@ function header_featnam(name) {
 		.replace(".", "_").replace("-", "_")
 		.replace("/", "_").upper();
 }
-function header(name, default_requirements = "") {
+function header_nostdinc(name, default_requirements = "") {
 	default_requirements = addparen(default_requirements);
 	if (default_requirements in ["", "0"]) {
 		default_requirements = "__has_include(<{}>)".format({ name });
@@ -96,13 +96,17 @@ function header(name, default_requirements = "") {
 		if (default_requirements != "1")
 			default_requirements = "__has_include(<{}>) || (defined(__NO_has_include) && {})".format({ name, default_requirements });
 	}
-	known_headers.append(name);
 	local featnam = header_featnam(name);
 	feature(featnam, default_requirements);
 }
+function header(name, default_requirements = "") {
+	known_headers.append(name);
+	header_nostdinc(name, default_requirements);
+}
 
-function func(name, default_requirements = "") {
-	if (default_requirements != "1") {
+
+function func(name, default_requirements = "", check_defined = true) {
+	if (default_requirements != "1" && check_defined) {
 		default_requirements = addparen(default_requirements);
 		if (default_requirements !in ["", "0"])
 			default_requirements = " || " + default_requirements;
@@ -161,7 +165,11 @@ header("sys/mman.h", addparen(linux) + " || " + addparen(kos));
 header("sys/wait.h", unix);
 header("wait.h", addparen(linux) + " || " + addparen(kos));
 header("sys/signalfd.h", addparen(linux) + " || " + addparen(kos));
-header("float.h", addparen(msvc) + " || " + addparen(kos));
+header_nostdinc("dlfcn.h", unix);
+header_nostdinc("float.h", stdc);
+header_nostdinc("limits.h", stdc);
+header("ctype.h", stdc);
+header("string.h", stdc);
 
 include_known_headers();
 
@@ -198,7 +206,7 @@ func("waitpid", unix);
 func("wait4", addparen(linux) + " || " + addparen(kos));
 func("waitid", addparen(linux) + " || " + addparen(kos));
 func("sigprocmask", unix);
-func("detach", kos + " && __KOS_VERSION__ >= 300");
+func("detach", kos + " && defined(__USE_KOS) && __KOS_VERSION__ >= 300");
 
 func("system", stdc);
 func("_wsystem", msvc);
@@ -357,6 +365,27 @@ func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)
 
 func("abort", stdc);
 func("strerror", stdc);
+
+func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)");
+func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)");
+func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)");
+
+func("_memicmp", msvc);
+func("memcasecmp", "defined(__USE_KOS)");
+func("memrchr", "defined(__USE_GNU)");
+func("strnlen", "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
+
+// NOTE: The GNU-variant of memmem() returns the start of the haystack
+//       when `needle_length == 0', however for this case, deemon requires
+//       that `NULL' be returned, as deemon considers an empty string not
+//       to be contained ~in-between two other characters~
+// KOS provides this behavior when given the `_MEMMEM_EMPTY_NEEDLE_SOURCE' option,
+// which report back an ACK in the form of `__USE_MEMMEM_EMPTY_NEEDLE_NULL'
+func("memmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+func("memrmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+
+func("tolower", "defined(CONFIG_HAVE_CTYPE_H)");
+func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 
 ]]]*/
 #ifdef CONFIG_NO_IO_H
@@ -581,12 +610,37 @@ func("strerror", stdc);
 #define CONFIG_HAVE_SYS_SIGNALFD_H 1
 #endif
 
+#ifdef CONFIG_NO_DLFCN_H
+#undef CONFIG_HAVE_DLFCN_H
+#elif !defined(CONFIG_HAVE_DLFCN_H) && \
+      (__has_include(<dlfcn.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_DLFCN_H 1
+#endif
+
 #ifdef CONFIG_NO_FLOAT_H
 #undef CONFIG_HAVE_FLOAT_H
-#elif !defined(CONFIG_HAVE_FLOAT_H) && \
-      (__has_include(<float.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
-       defined(__KOS__))))
+#else
 #define CONFIG_HAVE_FLOAT_H 1
+#endif
+
+#ifdef CONFIG_NO_LIMITS_H
+#undef CONFIG_HAVE_LIMITS_H
+#else
+#define CONFIG_HAVE_LIMITS_H 1
+#endif
+
+#ifdef CONFIG_NO_CTYPE_H
+#undef CONFIG_HAVE_CTYPE_H
+#else
+#define CONFIG_HAVE_CTYPE_H 1
+#endif
+
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#else
+#define CONFIG_HAVE_STRING_H 1
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -697,9 +751,13 @@ func("strerror", stdc);
 #include <sys/signalfd.h>
 #endif /* CONFIG_HAVE_SYS_SIGNALFD_H */
 
-#ifdef CONFIG_HAVE_FLOAT_H
-#include <float.h>
-#endif /* CONFIG_HAVE_FLOAT_H */
+#ifdef CONFIG_HAVE_CTYPE_H
+#include <ctype.h>
+#endif /* CONFIG_HAVE_CTYPE_H */
+
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h>
+#endif /* CONFIG_HAVE_STRING_H */
 
 #ifdef CONFIG_NO__Exit
 #undef CONFIG_HAVE__Exit
@@ -929,7 +987,8 @@ func("strerror", stdc);
 #ifdef CONFIG_NO_detach
 #undef CONFIG_HAVE_detach
 #elif !defined(CONFIG_HAVE_detach) && \
-      (defined(detach) || (defined(__KOS__) && __KOS_VERSION__ >= 300))
+      (defined(detach) || (defined(__KOS__) && defined(__USE_KOS) && __KOS_VERSION__ \
+       >= 300))
 #define CONFIG_HAVE_detach 1
 #endif
 
@@ -1835,6 +1894,84 @@ func("strerror", stdc);
 #else
 #define CONFIG_HAVE_strerror 1
 #endif
+
+#ifdef CONFIG_NO_dlopen
+#undef CONFIG_HAVE_dlopen
+#elif !defined(CONFIG_HAVE_dlopen) && \
+      (defined(dlopen) || defined(CONFIG_HAVE_DLFCN_H))
+#define CONFIG_HAVE_dlopen 1
+#endif
+
+#ifdef CONFIG_NO_dlclose
+#undef CONFIG_HAVE_dlclose
+#elif !defined(CONFIG_HAVE_dlclose) && \
+      (defined(dlclose) || defined(CONFIG_HAVE_DLFCN_H))
+#define CONFIG_HAVE_dlclose 1
+#endif
+
+#ifdef CONFIG_NO_dlsym
+#undef CONFIG_HAVE_dlsym
+#elif !defined(CONFIG_HAVE_dlsym) && \
+      (defined(dlsym) || defined(CONFIG_HAVE_DLFCN_H))
+#define CONFIG_HAVE_dlsym 1
+#endif
+
+#ifdef CONFIG_NO__memicmp
+#undef CONFIG_HAVE__memicmp
+#elif !defined(CONFIG_HAVE__memicmp) && \
+      (defined(_memicmp) || defined(_MSC_VER))
+#define CONFIG_HAVE__memicmp 1
+#endif
+
+#ifdef CONFIG_NO_memcasecmp
+#undef CONFIG_HAVE_memcasecmp
+#elif !defined(CONFIG_HAVE_memcasecmp) && \
+      (defined(memcasecmp) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcasecmp 1
+#endif
+
+#ifdef CONFIG_NO_memrchr
+#undef CONFIG_HAVE_memrchr
+#elif !defined(CONFIG_HAVE_memrchr) && \
+      (defined(memrchr) || defined(__USE_GNU))
+#define CONFIG_HAVE_memrchr 1
+#endif
+
+#ifdef CONFIG_NO_strnlen
+#undef CONFIG_HAVE_strnlen
+#elif !defined(CONFIG_HAVE_strnlen) && \
+      (defined(strnlen) || (defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && \
+       !defined(__KOS_SYSTEM_HEADERS__))))
+#define CONFIG_HAVE_strnlen 1
+#endif
+
+#ifdef CONFIG_NO_memmem
+#undef CONFIG_HAVE_memmem
+#elif !defined(CONFIG_HAVE_memmem) && \
+      (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memmem 1
+#endif
+
+#ifdef CONFIG_NO_memrmem
+#undef CONFIG_HAVE_memrmem
+#elif !defined(CONFIG_HAVE_memrmem) && \
+      (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memrmem 1
+#endif
+
+#ifdef CONFIG_NO_tolower
+#undef CONFIG_HAVE_tolower
+#elif !defined(CONFIG_HAVE_tolower) && \
+      (defined(tolower) || defined(CONFIG_HAVE_CTYPE_H))
+#define CONFIG_HAVE_tolower 1
+#endif
+
+#ifdef CONFIG_NO_toupper
+#undef CONFIG_HAVE_toupper
+#elif !defined(CONFIG_HAVE_toupper) && \
+      (defined(toupper) || defined(CONFIG_HAVE_CTYPE_H))
+#define CONFIG_HAVE_toupper 1
+#endif
 //[[[end]]]
 
 
@@ -2666,5 +2803,80 @@ func("strerror", stdc);
 #define Dee_GetErrno()  0
 #define Dee_SetErrno(v) (void)0
 #endif /* !CONFIG_HAVE_ERRNO_H */
+
+
+#if !defined(CONFIG_HAVE_memcasecmp) && defined(CONFIG_HAVE__memicmp)
+#define CONFIG_HAVE_memcasecmp 1
+#define memcasecmp _memicmp
+#endif /* memcasecmp = _memicmp */
+
+#ifndef CONFIG_HAVE_tolower
+#define CONFIG_HAVE_tolower 1
+#define tolower(ch) ((ch) >= 'A' && (ch) <= 'Z' ? ((ch) + ('a' - 'A')) : (ch))
+#endif /* !CONFIG_HAVE_tolower */
+
+#ifndef CONFIG_HAVE_toupper
+#define CONFIG_HAVE_toupper 1
+#define toupper(ch) ((ch) >= 'a' && (ch) <= 'z' ? ((ch) - ('a' - 'A')) : (ch))
+#endif /* !CONFIG_HAVE_toupper */
+
+
+
+
+
+#define DeeSystem_DEFINE_memrchr(name)                            \
+	LOCAL void *name(void const *__restrict p, int c, size_t n) { \
+		uint8_t *iter = (uint8_t *)p + n;                         \
+		while (iter != (uint8_t *)p) {                            \
+			if (*--iter == c)                                     \
+				return iter;                                      \
+		}                                                         \
+		return NULL;                                              \
+	}
+
+#define DeeSystem_DEFINE_memmem(name)                                                        \
+	LOCAL void *name(void const *__restrict haystack, size_t haystack_length,                \
+	                 void const *__restrict needle, size_t needle_length) {                  \
+		uint8_t *candidate;                                                                  \
+		uint8_t marker;                                                                      \
+		if unlikely(!needle_length || needle_length > haystack_length)                       \
+			return NULL;                                                                     \
+		haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;                 \
+		while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) { \
+			if (memcmp(candidate, needle, needle_length) == 0)                               \
+				return (void *)candidate;                                                    \
+			++candidate;                                                                     \
+			haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;           \
+			haystack        = (void const *)candidate;                                       \
+		}                                                                                    \
+		return NULL;                                                                         \
+	}
+
+#define DeeSystem_DEFINE_memrmem(name)                                             \
+	LOCAL void *name(void const *__restrict haystack, size_t haystack_length,      \
+	                 void const *__restrict needle, size_t needle_length) {        \
+		void const *candidate;                                                     \
+		uint8_t marker;                                                            \
+		if unlikely(!needle_length || needle_length > haystack_length)             \
+			return NULL;                                                           \
+		haystack_length -= needle_length - 1;                                      \
+		marker = *(uint8_t *)needle;                                               \
+		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) { \
+			if (memcmp(candidate, needle, needle_length) == 0)                     \
+				return (void *)candidate;                                          \
+			haystack_length = (uintptr_t)candidate - (uintptr_t)haystack;          \
+		}                                                                          \
+		return NULL;                                                               \
+	}
+
+#define DeeSystem_DEFINE_strnlen(name)                              \
+	LOCAL size_t name(char const *__restrict str, size_t maxlen) {  \
+		size_t result;                                              \
+		for (result = 0; maxlen && *str; --maxlen, ++str, ++result) \
+			;                                                       \
+		return result;                                              \
+	}
+
+
 
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H */

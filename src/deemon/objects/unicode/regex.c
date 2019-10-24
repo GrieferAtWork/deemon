@@ -18,29 +18,22 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_REGEX_C
 #define GUARD_DEEMON_OBJECTS_UNICODE_REGEX_C 1
-#define _GNU_SOURCE 1 /* memrchr */
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* memrchr() */
 
 #include <string.h>
 
 DECL_BEGIN
 
-#ifndef __USE_GNU
-#define memrchr  dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
+#ifndef CONFIG_HAVE_memrchr
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
 
 struct match_count {

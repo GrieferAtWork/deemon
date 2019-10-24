@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
@@ -67,13 +68,11 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#else /* CONFIG_HOST_WINDOWS */
-#include <sys/stat.h>
+#endif /* CONFIG_HOST_WINDOWS */
 
-#include <errno.h>
+#ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
-#include <unistd.h>
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* CONFIG_HAVE_LIMITS_H */
 
 #if defined(CONFIG_HOST_WINDOWS) && !defined(__CYGWIN__)
 /* NOTE: Don't use LoadLibrary() on cygwin. It does some crazy hacking
@@ -81,12 +80,10 @@
  *       not interfere with it by bypassing its mechanisms. */
 #define USE_LOADLIBRARY 1
 #else /* Windows... */
+#ifdef CONFIG_HAVE_DLFCN_H
 #include <dlfcn.h>
+#endif /* CONFIG_HAVE_DLFCN_H */
 #endif /* Unix... */
-
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
 
 #ifndef __USE_KOS
 #define strend(x) ((x) + strlen(x))
@@ -102,18 +99,16 @@
 #else
 #   define PATH_MAX 260
 #endif
-#endif
+#endif /* !PATH_MAX */
 
 DECL_BEGIN
 
 
 INTDEF struct module_symbol empty_module_buckets[];
 
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
+#ifdef CONFIG_HAVE_memcasecmp
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#else
+#else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
 LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
@@ -124,19 +119,12 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	}
 	return true;
 }
-#endif
+#endif /* !CONFIG_HAVE_memcasecmp */
 
-#ifndef __USE_GNU
+#ifndef CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
 
 #ifdef CONFIG_HOST_WINDOWS

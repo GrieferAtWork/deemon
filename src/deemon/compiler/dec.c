@@ -34,6 +34,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memrchr(), memmem() */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -43,47 +44,19 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#else /* CONFIG_HOST_WINDOWS */
-#include <unistd.h>
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
 
-#ifndef __USE_GNU
+#ifndef CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
-/* linux's memmem() doesn't do what we need it to do. - We
- * need it to return `NULL' when `needle_length' is 0
- * Additionally, there has never been a point where
- * it was working entirely flawless. */
-#if !defined(__USE_KOS) || !defined(__USE_GNU)
+#ifndef CONFIG_HAVE_memmem
 #define memmem dee_memmem
-LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
-                       void const *__restrict needle, size_t needle_length) {
-	uint8_t *candidate;
-	uint8_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
-	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
-		if (memcmp(candidate, needle, needle_length) == 0)
-			return (void *)candidate;
-		++candidate;
-		haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
-		haystack        = (void const *)candidate;
-	}
-	return NULL;
-}
-#endif /* !__KOS__ || !__USE_GNU */
+DeeSystem_DEFINE_memmem(dee_memmem)
+#endif /* !CONFIG_HAVE_memmem */
 
 
 INTERN struct dec_writer current_dec;

@@ -34,15 +34,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-
-#ifndef CONFIG_NO_CTYPE
-#include <ctype.h>
-#else /* !CONFIG_NO_CTYPE */
-#define tolower(x) DeeUni_ToLower(x)
-#define toupper(x) DeeUni_ToUpper(x)
-#endif /* CONFIG_NO_CTYPE */
-
-#include <string.h>
+#include <deemon/system-features.h> /* memmem(), tolower(), toupper(), ... */
 
 DECL_BEGIN
 
@@ -248,17 +240,12 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_HAVE_memrchr
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef __USE_GNU
-#define memrchr dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == (uint8_t)c)
-			return iter;
-	}
-	return NULL;
-}
 #define rawmemchr dee_rawmemchr
 LOCAL void *dee_rawmemchr(void const *__restrict p, int c) {
 	uint8_t *haystack = (uint8_t *)p;
@@ -268,41 +255,22 @@ LOCAL void *dee_rawmemchr(void const *__restrict p, int c) {
 	}
 	return haystack;
 }
-
-#ifndef _MSC_VER
-#define strnlen dee_strnlen
-LOCAL size_t dee_strnlen(char const *__restrict str, size_t maxlen) {
-	size_t result;
-	for (result = 0; maxlen && *str; --maxlen, ++str, ++result)
-		;
-	return result;
-}
-#endif /* !_MSC_VER */
 #endif /* !__USE_GNU */
 
-/* linux's memmem() doesn't do what we need it to do. - We
- * need it to return `NULL' when `needle_length' is 0
- * Additionally, there has never been a point where
- * it was working entirely flawless. */
-#if !defined(__USE_KOS) || !defined(__USE_GNU)
+#ifndef CONFIG_HAVE_strnlen
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+
+#ifndef CONFIG_HAVE_memmem
 #define memmem dee_memmem
-LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
-                       void const *__restrict needle, size_t needle_length) {
-	uint8_t *candidate;
-	uint8_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
-	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
-		if (memcmp(candidate, needle, needle_length) == 0)
-			return (void *)candidate;
-		++candidate;
-		haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
-		haystack        = (void const *)candidate;
-	}
-	return NULL;
-}
-#endif /* !__KOS__ || !__USE_GNU */
+DeeSystem_DEFINE_memmem(dee_memmem)
+#endif /* !CONFIG_HAVE_memmem */
+
+#ifndef CONFIG_HAVE_memrmem
+#define memrmem dee_memrmem
+DeeSystem_DEFINE_memrmem(dee_memrmem)
+#endif /* !CONFIG_HAVE_memrmem */
 
 
 #ifndef __USE_KOS
@@ -447,24 +415,6 @@ LOCAL void *dee_memrev(void *__restrict buf, size_t n) {
 }
 
 #endif /* !__USE_KOS */
-
-#define memrmem dee_memrmem
-LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_len,
-                        void const *__restrict needle, size_t needle_len) {
-	void const *candidate;
-	uint8_t marker;
-	if unlikely(!needle_len || needle_len > haystack_len)
-		return NULL;
-	haystack_len -= needle_len - 1, marker = *(uint8_t *)needle;
-	while ((candidate = memrchr(haystack, marker, haystack_len)) != NULL) {
-		if (memcmp(candidate, needle, needle_len) == 0)
-			return (void *)candidate;
-		if unlikely(candidate == haystack)
-			break;
-		haystack_len = (uintptr_t)candidate - (uintptr_t)haystack;
-	}
-	return NULL;
-}
 
 #define memxrchr dee_memxrchr
 LOCAL void *dee_memxrchr(void const *__restrict p, int c, size_t n) {
@@ -1247,7 +1197,10 @@ capi_memmem(size_t argc, DeeObject **argv) {
 		void const *candidate;
 		uint8_t marker;
 		result = NULL;
-		if unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len)
+			result = a.ptr;
+		else if unlikely(!needle_len > haystack_len)
+			;
 		else {
 			haystack_len -= needle_len;
 			marker = *b.p8;
@@ -1304,7 +1257,10 @@ capi_memcasemem(size_t argc, DeeObject **argv) {
 		uint8_t marker1;
 		uint8_t marker2;
 		result = NULL;
-		if unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len)
+			result = a.ptr;
+		else if unlikely(!needle_len > haystack_len)
+			;
 		else {
 			haystack_len -= needle_len;
 			marker1 = (uint8_t)tolower(*b.p8);
@@ -1365,7 +1321,10 @@ capi_memrmem(size_t argc, DeeObject **argv) {
 		void const *candidate;
 		uint8_t marker;
 		result = NULL;
-		if unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len)
+			result = a.p8 + haystack_len;
+		else if unlikely(!needle_len > haystack_len)
+			;
 		else {
 			haystack_len -= needle_len - 1;
 			marker = *(uint8_t *)b.ptr;
@@ -1422,7 +1381,10 @@ capi_memcasermem(size_t argc, DeeObject **argv) {
 		uint8_t marker1;
 		uint8_t marker2;
 		result = NULL;
-		if unlikely(!needle_len || needle_len > haystack_len);
+		if unlikely(!needle_len)
+			result = a.p8 + haystack_len;
+		else if unlikely(!needle_len > haystack_len)
+			;
 		else {
 			haystack_len -= needle_len - 1;
 			marker1 = (uint8_t)tolower(*(uint8_t *)b.ptr);

@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_STRING_C
 #define GUARD_DEEMON_OBJECTS_STRING_C 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1 /* memmem() */
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -35,6 +33,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/thread.h>
+#include <deemon/system-features.h> /* memmem() */
 #include <deemon/util/cache.h>
 
 #include <hybrid/minmax.h>
@@ -79,29 +78,10 @@ PUBLIC NONNULL((1)) void
 	utf_free(self);
 }
 
-/* linux's memmem() doesn't do what we need it to do. - We
- * need it to return `NULL' when `needle_length' is 0
- * Additionally, there has never been a point where
- * it was working entirely flawless. */
-#if !defined(__USE_KOS) || !defined(__USE_GNU)
-#define memmem  dee_memmem
-LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
-                       void const *__restrict needle, size_t needle_length) {
-	uint8_t *candidate;
-	uint8_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
-	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
-		if (memcmp(candidate, needle, needle_length) == 0)
-			return (void *)candidate;
-		++candidate;
-		haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
-		haystack        = (void const *)candidate;
-	}
-	return NULL;
-}
-#endif /* !__KOS__ || !__USE_GNU */
+#ifndef CONFIG_HAVE_memmem
+#define memmem dee_memmem
+DeeSystem_DEFINE_memmem(dee_memmem)
+#endif /* !CONFIG_HAVE_memmem */
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_ascii_printer_release)(struct ascii_printer *__restrict self, size_t datalen) {

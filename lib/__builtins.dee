@@ -297,7 +297,7 @@ local __objects = deemon.List {
 	/* 0x00ed */ fs.link,
 	/* 0x00ee */ opt_win32.GetModuleFileName, /* __builtin_fs_win32modulename */
 	/* 0x00ef */ posix.exit,
-	/* 0x00f0 */ posix._exit,
+	/* 0x00f0 */ posix._Exit,
 	/* 0x00f1 */ posix.abort,
 	/* 0x00f2 */ posix.atexit,
 	/* 0x00f3 */ rt.YieldFunction,

@@ -28,7 +28,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#include <string.h> /* strlen() */
 
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"

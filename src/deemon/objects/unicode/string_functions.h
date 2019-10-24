@@ -18,24 +18,18 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_H
 #define GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_H 1
-#define _KOS_SOURCE 1 /* memchrb/w/l, memrchrb/w/l, etc... */
-#define _GNU_SOURCE 1 /* memrchr */
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* memrchr(), memmem(), ... */
 #include <deemon/util/string.h>
 
 #include <hybrid/minmax.h>
 
 #include <stddef.h>
-#include <string.h>
-
-#ifndef CONFIG_NO_CTYPE
-#include <ctype.h> /* FIXME: This needs a feature check (if it's even required...) */
-#endif /* !CONFIG_NO_CTYPE */
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
@@ -59,41 +53,20 @@ DECL_BEGIN
 #define UNICODE_CR     13 /* '\r' */
 #define UNICODE_LF     10 /* '\n' */
 
-#ifndef __USE_GNU
-#define memrchr  dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
+#ifndef CONFIG_HAVE_memrchr
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
-/* linux's memmem() doesn't do what we need it to do. - We
- * need it to return `NULL' when `needle_length' is 0
- * Additionally, there has never been a point where
- * it was working entirely flawless. */
-#if !defined(__USE_KOS) || !defined(__USE_GNU)
-#define memmem  dee_memmem
-LOCAL void *dee_memmem(void const *__restrict haystack, size_t haystack_length,
-                       void const *__restrict needle, size_t needle_length) {
-	uint8_t *candidate;
-	uint8_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;
-	while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) {
-		if (memcmp(candidate, needle, needle_length) == 0)
-			return (void *)candidate;
-		++candidate;
-		haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;
-		haystack        = (void const *)candidate;
-	}
-	return NULL;
-}
-#endif /* !__KOS__ || !__USE_GNU */
+#ifndef CONFIG_HAVE_memmem
+#define memmem dee_memmem
+DeeSystem_DEFINE_memmem(dee_memmem)
+#endif /* !CONFIG_HAVE_memmem */
+
+#ifndef CONFIG_HAVE_memrmem
+#define memrmem dee_memrmem
+DeeSystem_DEFINE_memrmem(dee_memrmem)
+#endif /* !CONFIG_HAVE_memrmem */
 
 #ifndef __USE_KOS
 #define memmoveb(dst, src, n) memmove(dst, src, (n)*1)
@@ -183,21 +156,6 @@ LOCAL uint32_t *dee_memrchrl(uint32_t const *__restrict p, uint32_t c, size_t n)
 #define MEMEQL(a, b, s) (memcmp(a, b, (s)*4) == 0)
 #endif /* !__USE_KOS */
 
-#define memrmem  dee_memrmem
-LOCAL void *dee_memrmem(void const *__restrict haystack, size_t haystack_length,
-                        void const *__restrict needle, size_t needle_length) {
-	void const *candidate;
-	uint8_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= needle_length - 1, marker = *(uint8_t *)needle;
-	while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) {
-		if (MEMEQB(candidate, needle, needle_length))
-			return (void *)candidate;
-		haystack_length = (uintptr_t)candidate - (uintptr_t)haystack;
-	}
-	return NULL;
-}
 #define memmemb(haystack, haystack_length, needle, needle_length) \
 	((uint8_t *)memmem(haystack, haystack_length, needle, needle_length))
 #define memrmemb(haystack, haystack_length, needle, needle_length) \
@@ -705,8 +663,8 @@ dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 		uint8_t lhs = *a;
 		uint8_t rhs = *b;
 		if (lhs != rhs) {
-			lhs = (uint8_t)DeeUni_ToLower(lhs);
-			rhs = (uint8_t)DeeUni_ToLower(rhs);
+			lhs = (uint8_t)tolower(lhs);
+			rhs = (uint8_t)tolower(rhs);
 			if (lhs != rhs)
 				return false;
 		}
@@ -719,9 +677,9 @@ dee_memasciicaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 LOCAL uint8_t *DCALL
 dee_memasciicasechr(uint8_t const *__restrict haystack,
                     uint8_t needle, size_t haystack_length) {
-	needle = (uint8_t)DeeUni_ToLower(needle);
+	needle = (uint8_t)tolower(needle);
 	while (haystack_length--) {
-		if ((uint8_t)DeeUni_ToLower(*haystack) == needle)
+		if ((uint8_t)tolower(*haystack) == needle)
 			return (uint8_t *)haystack;
 		++haystack;
 	}
@@ -732,9 +690,9 @@ LOCAL uint8_t *DCALL
 dee_memasciicaserchr(uint8_t const *__restrict haystack,
                      uint8_t needle, size_t haystack_length) {
 	uint8_t *iter = (uint8_t *)haystack + haystack_length;
-	needle        = (uint8_t)DeeUni_ToLower(needle);
+	needle        = (uint8_t)tolower(needle);
 	while (iter-- != (uint8_t *)haystack) {
-		if ((uint8_t)DeeUni_ToLower(*iter) == needle)
+		if ((uint8_t)tolower(*iter) == needle)
 			return iter;
 	}
 	return NULL;
@@ -748,7 +706,7 @@ dee_memasciicasemem(uint8_t const *haystack, size_t haystack_length,
 	if unlikely(!needle_length || needle_length > haystack_length)
 		return NULL;
 	haystack_length -= needle_length - 1;
-	marker = (uint8_t)DeeUni_ToLower(*needle);
+	marker = (uint8_t)tolower(*needle);
 	while ((candidate = dee_memasciicasechr(haystack, marker, haystack_length)) != NULL) {
 		if (dee_memasciicaseeq(candidate, needle, needle_length))
 			return candidate;
@@ -766,7 +724,7 @@ dee_memasciicasermem(uint8_t const *haystack, size_t haystack_length,
 	uint8_t marker;
 	if unlikely(!needle_length || needle_length > haystack_length)
 		return NULL;
-	marker = (uint8_t)DeeUni_ToLower(*needle);
+	marker = (uint8_t)tolower(*needle);
 	haystack_length -= needle_length - 1;
 	while ((candidate = dee_memasciicaserchr(haystack, marker, haystack_length)) != NULL) {
 		if (dee_memasciicaseeq(candidate, needle, needle_length))
@@ -784,8 +742,8 @@ LOCAL int dee_memasciicasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
 		uint8_t lhs = *a;
 		uint8_t rhs = *b;
 		if (lhs != rhs) {
-			lhs = (uint8_t)DeeUni_ToLower(lhs);
-			rhs = (uint8_t)DeeUni_ToLower(rhs);
+			lhs = (uint8_t)tolower(lhs);
+			rhs = (uint8_t)tolower(rhs);
 			if (lhs != rhs)
 				return (int)lhs - (int)rhs;
 		}
@@ -800,14 +758,16 @@ LOCAL int dee_memasciicasecmp(uint8_t const *a, uint8_t const *b, size_t s) {
 
 #define STRCASEEQ(a, b) dee_strcaseeq(a, b)
 LOCAL bool DCALL dee_strcaseeq(char const *a, char const *b) {
-	while (*a && DeeUni_ToLower(*a) == DeeUni_ToLower(*b))
-		++a, ++b;
+	while (*a && tolower(*a) == tolower(*b)) {
+		++a;
+		++b;
+	}
 	return !*b;
 }
 
 LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 	while (length--) {
-		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
+		if (tolower(*a) != tolower(*b))
 			return false;
 		++a, ++b;
 	}
@@ -861,7 +821,7 @@ LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_compareb, uint8_t, )
 DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_comparew, uint16_t, )
 DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_comparel, uint32_t, )
-DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_asciicasecompareb, uint8_t, (uint8_t)DeeUni_ToLower)
+DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_asciicasecompareb, uint8_t, (uint8_t)tolower)
 #undef DEFINE_FUZZY_COMPARE_FUNCTION
 
 #define DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(name, T)                               \

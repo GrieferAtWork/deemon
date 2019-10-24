@@ -19,8 +19,6 @@
 #ifndef GUARD_DEX_FS_PATH_C
 #define GUARD_DEX_FS_PATH_C 1
 #define DEE_SOURCE 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1
 
 #include "libfs.h"
 /**/
@@ -30,10 +28,9 @@
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* memrchr() */
 
 #include <hybrid/minmax.h>
-
-#include <string.h>
 
 DECL_BEGIN
 
@@ -52,17 +49,10 @@ DECL_BEGIN
 #endif /* !CONFIG_HOST_WINDOWS */
 
 
-#ifndef __USE_GNU
+#ifndef CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_pathhead(DeeObject *__restrict path) {

@@ -20,6 +20,7 @@
 #define GUARD_DEEMON_ALLOC_H 1
 
 #include "api.h"
+
 #ifdef __CC__
 #include <hybrid/typecore.h>
 
@@ -28,15 +29,34 @@
 #include <stdint.h>
 #include <string.h>
 
+/* Figure out how to get alloca() (if it is even available) */
+#ifdef CONFIG_NO_alloca
+#undef CONFIG_HAVE_alloca
+#else /* CONFIG_NO_alloca */
 #ifndef alloca
-#if defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__)
-#include <malloc.h>
+#ifdef Dee_Alloca
+#define alloca  Dee_Alloca
 #elif defined(__GNUC__) || __has_builtin(__builtin_alloca)
 #define alloca(x) __builtin_alloca(x)
-#elif !defined(__NO_has_include) && __has_include(<alloca.h>)
+#elif __has_include(<alloca.h>)
 #include <alloca.h>
+#elif defined(_MSC_VER) && (defined(__NO_has_include) || __has_include(<malloc.h>))
+#include <malloc.h>
+#ifndef alloca
+#define alloca  _alloca
+#endif /* !alloca */
+#else
+#include <hybrid/__alloca.h>
+#if defined(__hybrid_alloca) && !defined(alloca)
+#define alloca(x) __hybrid_alloca(x)
+#endif /* __hybrid_alloca && !alloca */
 #endif
 #endif /* !alloca */
+#ifdef alloca
+#define CONFIG_HAVE_alloca 1
+#endif /* alloca */
+#endif /* !CONFIG_NO_alloca */
+
 #endif /* __CC__ */
 
 DECL_BEGIN
@@ -646,25 +666,7 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 
 
 
-
-
-
-/* A hybrid between alloca and malloc, using alloca for
- * small allocations, but malloc() for larger ones.
- * NOTE: In all cases, 'Dee_AFree()' should be used to clean up a
- *       pointer previously allocated using 'Dee_AMalloc()' and
- *       friends. */
-#if defined(CONFIG_NO_AMALLOC) || defined(CONFIG_NO_ALLOCA) || \
-  (!defined(alloca) && !defined(CONFIG_HAVE_ALLOCA)) || \
-   !defined(NO_DBG_ALIGNMENT)
-#define Dee_AMalloc(s)    Dee_Malloc(s)
-#define Dee_ACalloc(s)    Dee_Calloc(s)
-#define Dee_ATryMalloc(s) Dee_TryMalloc(s)
-#define Dee_ATryCalloc(s) Dee_TryCalloc(s)
-#define Dee_AFree(p)      Dee_Free(p)
-#define Dee_XAFree(p)     Dee_Free(p)
-#else /* !alloca */
-#ifndef Dee_Alloca
+#if !defined(Dee_Alloca) && defined(CONFIG_HAVE_alloca)
 #ifdef NO_DBG_ALIGNMENT
 #define Dee_Alloca(x)     alloca(x)
 #else /* NO_DBG_ALIGNMENT */
@@ -674,8 +676,22 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 }
 #define Dee_Alloca(x) (DBG_ALIGNMENT_DISABLE(), DeeDbg_AllocaCleanup(alloca(x)))
 #endif /* !NO_DBG_ALIGNMENT */
-#endif /* !Dee_Alloca */
+#endif /* !Dee_Alloca && CONFIG_HAVE_alloca */
 
+
+/* A hybrid between alloca and malloc, using alloca for
+ * small allocations, but malloc() for larger ones.
+ * NOTE: In all cases, 'Dee_AFree()' should be used to clean up a
+ *       pointer previously allocated using 'Dee_AMalloc()' and
+ *       friends. */
+#if !defined(Dee_Alloca) || !defined(NO_DBG_ALIGNMENT)
+#define Dee_AMalloc(s)    Dee_Malloc(s)
+#define Dee_ACalloc(s)    Dee_Calloc(s)
+#define Dee_ATryMalloc(s) Dee_TryMalloc(s)
+#define Dee_ATryCalloc(s) Dee_TryCalloc(s)
+#define Dee_AFree(p)      Dee_Free(p)
+#define Dee_XAFree(p)     Dee_Free(p)
+#else /* !Dee_Alloca || !NO_DBG_ALIGNMENT */
 
 #ifdef __SIZEOF_POINTER__
 /* WARNING: This makes amalloc() unsuitable for floating point allocations. */
@@ -1020,7 +1036,7 @@ LOCAL void (DCALL Dee_XAFree)(void *p) {
 			(void)DEE_AMALLOC_SKEW_ALLOCA((void *)(p), _s_ - DEE_AMALLOC_ALIGN); \
 		}                                                                        \
 	} __WHILE0
-#endif /* alloca */
+#endif /* Dee_Alloca && NO_DBG_ALIGNMENT */
 #endif /* __CC__ */
 
 DECL_END

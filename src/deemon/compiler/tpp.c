@@ -19,9 +19,6 @@
 #ifndef GUARD_DEEMON_COMPILER_TPP_C
 #define GUARD_DEEMON_COMPILER_TPP_C 1
 #define TPP_SYMARRAY_SIZE 1
-#define _KOS_SOURCE 1 /* `memcasecmp' */
-#define _DOS_SOURCE 1 /* `isascii' / `toascii' */
-#define _GNU_SOURCE 1 /* `memrchr' */
 
 #include <deemon/compiler/compiler.h>
 
@@ -137,7 +134,7 @@ INTERN struct TPPKeyword TPPKeyword_Empty = {
 	/* .k_next  = */ NULL,
 	/* .k_macro = */ NULL,
 	/* .k_rare  = */ NULL,
-	/* .k_id    = */TOK_KEYWORD_BEGIN,
+	/* .k_id    = */ TOK_KEYWORD_BEGIN,
 #if __SIZEOF_POINTER__ > __SIZEOF_INT__
 	/* .k_pad   = */ { 0 },
 #endif

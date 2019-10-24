@@ -30,15 +30,20 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* strnlen() */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
 #include <stddef.h>
-#include <string.h>
 
 #include "runtime_error.h"
 
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_strnlen
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
 
 #if defined(__x86_64__) || defined(__VA_LIST_IS_ARRAY)
 #define CONFIG_VA_LIST_IS_ARRAY 1

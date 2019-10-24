@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_EXECUTE_INTERACTIVE_MODULE_C
 #define GUARD_DEEMON_EXECUTE_INTERACTIVE_MODULE_C 1
-#define _GNU_SOURCE 1 /* memrchr() */
 
 #include <deemon/compiler/compiler.h>
 
@@ -60,19 +59,10 @@ DECL_BEGIN
 #define SEP_S            "/"
 #define ISSEP(x) ((x) == '/')
 #define ISABS(x) ((x)[0] == '/')
-
-#ifndef __USE_GNU
+#ifndef CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
-
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 #endif /* !CONFIG_HOST_WINDOWS */
 
 

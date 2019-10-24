@@ -937,18 +937,20 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "memmem", (DeeObject *)&ctypes_memmem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Search for the first memory block in @haystack+@haystack_size that is equal to @needle+@needle_size "
-	      "such that ${memcmp(candidate,needle,needle_size) == 0} and return a pointer to its starting "
+	      "such that ${memcmp(candidate, needle, needle_size) == 0} and return a pointer to its starting "
 	      "location in @haystack\n"
-	      "If no such memory block exists, return a NULL-pointer instead") },
+	      "If no such memory block exists, or @needle_size is $0, return a NULL-pointer instead") },
 	{ "memcasemem", (DeeObject *)&ctypes_memcasemem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :memmem, but perform case-insensitive comparisons, using :memcasecmp instead of :memcmp") },
 	{ "memrmem", (DeeObject *)&ctypes_memrmem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memmem, but in case more than 1 match exists, return a pointer to the last, rather than the first") },
+	      "Same as :memmem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
+	      "When @needle_size is $0, always return a NULL-pointer") },
 	{ "memcasermem", (DeeObject *)&ctypes_memcasermem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first") },
+	      "Same as :memcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
+	      "When @needle_size is $0, always return a NULL-pointer") },
 	{ "memrev", (DeeObject *)&ctypes_memrev, MODSYM_FNORMAL,
 	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "Reverse the order of bytes in the given @buf+@size, such that upon return its first "

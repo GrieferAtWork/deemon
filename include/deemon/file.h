@@ -22,9 +22,6 @@
 #include "api.h"
 
 #include "object.h"
-#ifndef __INTELLISENSE__
-#include "system-features.h" /* For `SEEK_*' constants. */
-#endif /* !__INTELLISENSE__ */
 
 #ifndef CONFIG_NO_THREADS
 #include "util/rwlock.h"
@@ -33,6 +30,17 @@
 #include <stdarg.h>  /* va_list */
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
+
+#ifndef __INTELLISENSE__
+#ifdef CONFIG_NO_STDIO_H
+#undef CONFIG_HAVE_STDIO_H
+#else /* CONFIG_NO_STDIO_H */
+#define CONFIG_HAVE_STDIO_H 1
+#endif /* !CONFIG_NO_STDIO_H */
+#ifdef CONFIG_HAVE_STDIO_H
+#include <stdio.h>
+#endif /* CONFIG_HAVE_STDIO_H */
+#endif /* !__INTELLISENSE__ */
 
 #ifndef SEEK_SET
 #define SEEK_SET 0

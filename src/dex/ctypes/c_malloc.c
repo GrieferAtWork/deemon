@@ -32,24 +32,14 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-
-#include <stdlib.h>
-#include <string.h>
+#include <deemon/system-features.h> /* strnlen() */
 
 DECL_BEGIN
 
-
-#ifndef __USE_GNU
-#ifndef _MSC_VER
+#ifndef CONFIG_HAVE_strnlen
 #define strnlen dee_strnlen
-LOCAL size_t dee_strnlen(char const *__restrict str, size_t maxlen) {
-	size_t result;
-	for (result = 0; maxlen && *str; --maxlen, ++str, ++result)
-		;
-	return result;
-}
-#endif /* !_MSC_VER */
-#endif /* !__USE_GNU */
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
 
 
 INTERN WUNUSED DREF DeeObject *DCALL

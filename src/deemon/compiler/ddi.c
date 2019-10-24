@@ -32,22 +32,15 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 
-#include <stdlib.h> /* `qsort()' */
-#include <string.h> /* `memrchr()' */
+#include <stdlib.h> /* `qsort()'; TODO: Add a feature check for this! */
+#include <deemon/system-features.h> /* `memrchr()' */
 
 DECL_BEGIN
 
-#ifndef __USE_GNU
+#ifndef CONFIG_HAVE_memrchr
 #define memrchr dee_memrchr
-LOCAL void *dee_memrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter != (uint8_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* !__USE_GNU */
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
 
 #define ddi current_assembler.a_ddi
 /* Replace all symbols in checkpoints with load addresses. */

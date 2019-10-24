@@ -29,11 +29,15 @@
 #include <deemon/numeric.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* CONFIG_HAVE_FLOAT_H */
 #include <deemon/util/cache.h>
 #include <hybrid/floatcore.h>
 
 #include "../runtime/strings.h"
+
+#ifdef CONFIG_HAVE_FLOAT_H
+#include <float.h>
+#endif /* CONFIG_HAVE_FLOAT_H */
 
 DECL_BEGIN
 
@@ -226,7 +230,7 @@ float_hash(Float *__restrict self) {
 
 
 #define DEFINE_FLOAT_CMP(name, op)                              \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                               \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                       \
 	name(Float *__restrict self, DeeObject *__restrict other) { \
 		double other_val;                                       \
 		if (DeeObject_AsDouble(other, &other_val))              \

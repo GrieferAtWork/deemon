@@ -33,12 +33,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#ifndef CONFIG_HAVE_UNICODE_H
-#if !defined(CONFIG_NO_UNICODE_H) && defined(__KOS__) && (__KOS_VERSION__ >= 400) && \
-    (defined(__NO_has_include) || __has_include(<unicode.h>))
+#ifdef CONFIG_NO_UNICODE_H
+#undef CONFIG_HAVE_UNICODE_H
+#elif !defined(CONFIG_HAVE_UNICODE_H) && \
+      (__has_include(<unicode.h>) || (defined(__NO_has_include) && \
+      (defined(__KOS__) && __KOS_VERSION__ >= 400)))
 #define CONFIG_HAVE_UNICODE_H 1
 #endif
-#endif /* !CONFIG_HAVE_UNICODE_H */
 
 #ifdef CONFIG_HAVE_UNICODE_H
 #include <unicode.h>

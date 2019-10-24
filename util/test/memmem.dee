@@ -1,0 +1,76 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2019 Griefer@Work                                            *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement in the product documentation would be  *
+ *    appreciated but is not required.                                        *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+class marker {}
+
+
+function t(x, w) {
+	assert w("") !in x;
+	assert x.find(w("")) == -1;
+	assert x.rfind(w("")) == -1;
+	assert (try x.index(w("")) catch (...) marker) === marker;
+	assert (try x.rindex(w("")) catch (...) marker) === marker;
+	assert x.find(w("a")) == 0;
+	assert x.find(w("b")) == 1;
+	assert x.find(w("c")) == 2;
+	assert x.find(w("d")) == 3;
+	assert x.find(w("ab")) == 0;
+	assert x.find(w("bc")) == 1;
+	assert x.find(w("cd")) == 2;
+	assert x.find(w("abc")) == 0;
+	assert x.find(w("bcd")) == 1;
+	assert x.find(w("abcd")) == 0;
+	assert x.rfind(w("d")) == 3;
+	assert x.rfind(w("c")) == 2;
+	assert x.rfind(w("b")) == 1;
+	assert x.rfind(w("a")) == 0;
+	assert x.rfind(w("ab")) == 0;
+	assert x.rfind(w("bc")) == 1;
+	assert x.rfind(w("cd")) == 2;
+	assert x.rfind(w("abc")) == 0;
+	assert x.rfind(w("bcd")) == 1;
+	assert x.rfind(w("abcd")) == 0;
+	assert x.partition(w(""))[0] === x;
+	assert x.partition(w(""))[1] == "";
+	assert x.partition(w(""))[2] == "";
+	assert x.rpartition(w(""))[0] === x;
+	assert x.rpartition(w(""))[1] == "";
+	assert x.rpartition(w(""))[2] == "";
+	assert x.casepartition(w(""))[0] === x;
+	assert x.casepartition(w(""))[1] == "";
+	assert x.casepartition(w(""))[2] == "";
+	assert x.caserpartition(w(""))[0] === x;
+	assert x.caserpartition(w(""))[1] == "";
+	assert x.caserpartition(w(""))[2] == "";
+	assert x.split(w("")) == { x };
+	assert x.casesplit(w("")) == { x };
+	assert x.findall(w("")) == { };
+	assert x.casefindall(w("")) == { };
+}
+
+t("abcd", [](x) -> x);
+/* string function cannot be used with Bytes arguments, since
+ * raw Bytes cannot be implicitly converted into strings (since
+ * their encoding is unknown) */
+//t("abcd", [](x) -> x.bytes());
+t("abcd".bytes(), [](x) -> x);
+t("abcd".bytes(), [](x) -> x.bytes());
+
+
