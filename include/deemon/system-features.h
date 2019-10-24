@@ -2852,21 +2852,21 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 		return NULL;                                                                         \
 	}
 
-#define DeeSystem_DEFINE_memrmem(name)                                             \
-	LOCAL void *name(void const *__restrict haystack, size_t haystack_length,      \
-	                 void const *__restrict needle, size_t needle_length) {        \
-		void const *candidate;                                                     \
-		uint8_t marker;                                                            \
-		if unlikely(!needle_length || needle_length > haystack_length)             \
-			return NULL;                                                           \
-		haystack_length -= needle_length - 1;                                      \
-		marker = *(uint8_t *)needle;                                               \
-		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) { \
-			if (memcmp(candidate, needle, needle_length) == 0)                     \
-				return (void *)candidate;                                          \
-			haystack_length = (uintptr_t)candidate - (uintptr_t)haystack;          \
-		}                                                                          \
-		return NULL;                                                               \
+#define DeeSystem_DEFINE_memrmem(name)                                              \
+	LOCAL void *name(void const *__restrict haystack, size_t haystack_length,       \
+	                 void const *__restrict needle, size_t needle_length) {         \
+		void const *candidate;                                                      \
+		uint8_t marker;                                                             \
+		if unlikely(!needle_length || needle_length > haystack_length)              \
+			return NULL;                                                            \
+		haystack_length -= needle_length - 1;                                       \
+		marker = *(uint8_t *)needle;                                                \
+		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) {  \
+			if (memcmp(candidate, needle, needle_length) == 0)                      \
+				return (void *)candidate;                                           \
+			haystack_length = (size_t)((uint8_t *)candidate - (uint8_t *)haystack); \
+		}                                                                           \
+		return NULL;                                                                \
 	}
 
 #define DeeSystem_DEFINE_strnlen(name)                              \
