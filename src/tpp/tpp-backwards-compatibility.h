@@ -21,7 +21,7 @@
 
 #ifndef TPP
 #define TPP(x) TPP_##x
-#endif
+#endif /* !TPP */
 
 #include "tpp.h"
 
@@ -30,7 +30,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 /* Old token names. */
 #define TPP_TOK_EOF            TPP(TOK_EOF)
@@ -101,7 +101,7 @@ extern "C" {
 typedef TPP(tok_t) TPPTokenID;
 #define TPPTokenID_IS_KEYWORD      TPP_ISKEYWORD
 #define TPPTokenID_IS_USER_KEYWORD TPP_ISUSERKEYWORD
-#define TPPTokenID_IS_INT(id)    ((id) == TPP_TOK_INT || (id) == TPP_TOK_CHR)
+#define TPPTokenID_IS_INT(id)      ((id) == TPP_TOK_INT || (id) == TPP_TOK_CHR)
 
 typedef TPP(int_t) TPPInteger;
 typedef TPP(int_t) TPPUInteger;
@@ -219,16 +219,14 @@ typedef struct TPPWarnings TPPWarningsObject;
 #  define l_counter          l_counter
 typedef struct TPPLexer TPPLexerObject;
 
-
-
-#define TPPLexer_FastDefine(self,name,code) \
- (assert(TPPLexer_Current == (self)),TPPLexer_Define(name,strlen(name),code,strlen(code)) ? 0 : -1)
-
-
+#define TPPLexer_FastDefine(self, name, code)                \
+	(assert(TPPLexer_Current == (self)),                     \
+	 TPPLexer_Define(name, strlen(name), code, strlen(code)) \
+	 ? 0                                                     \
+	 : -1)
 
 #ifdef __cplusplus
 }
-#endif
-
+#endif /* __cplusplus */
 
 #endif /* !GUARD_TPP_BACKWARDS_COMPATIBILITY_H */
