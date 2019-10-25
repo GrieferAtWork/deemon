@@ -18,9 +18,7 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_OPERATOR_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_OPERATOR_C 1
-#define _KOS_SOURCE 1
 
-#include <deemon/HashSet.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bytes.h>
@@ -28,6 +26,7 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
+#include <deemon/hashset.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/object.h>

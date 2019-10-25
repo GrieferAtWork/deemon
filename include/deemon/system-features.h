@@ -166,12 +166,14 @@ header("sys/mman.h", addparen(linux) + " || " + addparen(kos));
 header("sys/wait.h", unix);
 header("wait.h", addparen(linux) + " || " + addparen(kos));
 header("sys/signalfd.h", addparen(linux) + " || " + addparen(kos));
-header_nostdinc("dlfcn.h", unix);
-header_nostdinc("float.h", stdc);
-header_nostdinc("limits.h", stdc);
 header("ctype.h", stdc);
 header("string.h", stdc);
 header("wchar.h", stdc);
+
+header_nostdinc("dlfcn.h", unix);
+header_nostdinc("float.h", stdc);
+header_nostdinc("limits.h", stdc);
+header_nostdinc("link.h", stdc);
 
 include_known_headers();
 
@@ -461,6 +463,8 @@ var("_doserrno", msvc);
 // NOTE: Other config features used in deemon source files:
 //    - CONFIG_NO_RTLD_LOCAL / CONFIG_HAVE_RTLD_LOCAL
 //    - CONFIG_NO_RTLD_GLOBAL / CONFIG_HAVE_RTLD_GLOBAL
+//    - CONFIG_NO_RTLD_LAZY / CONFIG_HAVE_RTLD_LAZY
+//    - CONFIG_NO_RTLD_NOW / CONFIG_HAVE_RTLD_NOW
 
 ]]]*/
 #ifdef CONFIG_NO_IO_H

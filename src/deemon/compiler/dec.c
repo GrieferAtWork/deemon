@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_DEC_C
 #define GUARD_DEEMON_COMPILER_DEC_C 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1
 
 #include <deemon/api.h>
 
@@ -43,7 +41,7 @@
 #include <string.h>
 
 #ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
+#include <Windows.h> /* TODO: This, as well as the unlink() below need some better configure checks */
 #endif /* CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN

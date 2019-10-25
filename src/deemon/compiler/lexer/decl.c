@@ -19,7 +19,6 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_DECL_C
 #define GUARD_DEEMON_COMPILER_LEXER_DECL_C 1
 
-#include <deemon/HashSet.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bool.h>
@@ -30,6 +29,7 @@
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>

@@ -24,7 +24,7 @@
 #include "libcollections.h"
 /**/
 
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>

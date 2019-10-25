@@ -19,7 +19,6 @@
 #ifndef GUARD_DEX_FS_WINDOWS_C_INL
 #define GUARD_DEX_FS_WINDOWS_C_INL 1
 #define DEE_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include "libfs.h"
 /**/

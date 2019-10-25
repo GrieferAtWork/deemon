@@ -18,10 +18,8 @@
  */
 #ifdef __INTELLISENSE__
 #define EXEC_SAFE 1
-#define _KOS_SOURCE 1
 #endif
 
-#include <deemon/HashSet.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -33,6 +31,7 @@
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>

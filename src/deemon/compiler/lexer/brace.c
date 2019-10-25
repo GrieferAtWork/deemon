@@ -19,7 +19,7 @@
 #ifndef GUARD_DEEMON_COMPILER_LEXER_BRACE_C
 #define GUARD_DEEMON_COMPILER_LEXER_BRACE_C 1
 
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>

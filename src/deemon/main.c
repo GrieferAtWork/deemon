@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_MAIN_C
 #define GUARD_MAIN_C 1
-#define _GNU_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
@@ -40,18 +38,17 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* strend() */
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/system-features.h> /* strend() */
 
-#include <assert.h>
 #include <stdio.h>
 #include <string.h>
 
 #ifndef CONFIG_NO_STDLIB
 #include <stdlib.h> /* EXIT_SUCCESS, EXIT_FAILURE */
-#endif /* !CONFIG_NO_STDLIB */
+#endif              /* !CONFIG_NO_STDLIB */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
@@ -60,10 +57,10 @@
 #undef chdir
 #include <direct.h> /* chdir() */
 #define chdir _chdir
-#else /* _MSC_VER */
+#else               /* _MSC_VER */
 #include <unistd.h> /* chdir() */
-#endif /* !_MSC_VER */
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif              /* !_MSC_VER */
+#endif              /* !CONFIG_HOST_WINDOWS */
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"

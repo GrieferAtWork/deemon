@@ -18,11 +18,9 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_UTIL_C
 #define GUARD_DEEMON_COMPILER_ASM_UTIL_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
-#include <deemon/HashSet.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/asm.h>
@@ -34,6 +32,7 @@
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>

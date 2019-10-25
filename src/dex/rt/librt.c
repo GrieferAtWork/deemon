@@ -24,7 +24,7 @@
 
 #include <deemon/compiler/compiler.h>
 
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/instancemethod.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>

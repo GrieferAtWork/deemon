@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_USERDB_C
 #define GUARD_DEEMON_COMPILER_ASM_USERDB_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/compiler/assembler.h>

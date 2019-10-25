@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C
 #define GUARD_DEEMON_COMPILER_ASM_ASSEMBER_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
@@ -42,7 +41,6 @@
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 
-#include <assert.h>
 #include <string.h>
 
 #include "../../runtime/builtin.h"

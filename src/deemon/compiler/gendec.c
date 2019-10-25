@@ -18,13 +18,11 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_GENDEC_C
 #define GUARD_DEEMON_COMPILER_GENDEC_C 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1
 
 #include <deemon/api.h>
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/arg.h>
 #include <deemon/cell.h>
 #include <deemon/class.h>

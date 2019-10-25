@@ -18,9 +18,8 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENFASTER_C
 #define GUARD_DEEMON_COMPILER_ASM_GENFASTER_C 1
-#define _KOS_SOURCE 1
 
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/api.h>
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>

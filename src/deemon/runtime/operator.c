@@ -18,9 +18,8 @@
  */
 #ifndef GUARD_DEEMON_RUNTIME_OPERATOR_C
 #define GUARD_DEEMON_RUNTIME_OPERATOR_C 1
-#define _KOS_SOURCE 1
 
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>

@@ -38,7 +38,9 @@ struct Dee_unicode_printer;
 #ifdef CONFIG_HOST_WINDOWS
 #define DEE_SYSTEM_NOCASE_FS 1
 #define DeeSystem_SEP      '\\'
+#define DeeSystem_ALTSEP   '/'
 #define DeeSystem_SEP_S    "\\"
+#define DeeSystem_ALTSEP_S "/"
 #define DeeSystem_IsSep(x) ((x) == '\\' || (x) == '/')
 #define DeeSystem_IsAbs(x) ((x)[0] && (x)[1] == ':')
 #else /* CONFIG_HOST_WINDOWS */
@@ -128,6 +130,25 @@ DFUNDEF NONNULL((2)) int DCALL DeeNTSystem_VThrowLastErrorf(DeeTypeObject *tp, c
 DFUNDEF int DCALL nt_ThrowLastError(void);
 DFUNDEF int DCALL nt_ThrowError(__ULONG32_TYPE__ dwError);
 #endif /* CONFIG_HOST_WINDOWS */
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Figure out how to implement the shared library system API */
+#undef DeeSystem_DlOpen_USE_LOADLIBRARY
+#undef DeeSystem_DlOpen_USE_DLFCN
+#undef DeeSystem_DlOpen_USE_STUB
+#if (defined(__CYGWIN__) || defined(__CYGWIN32__)) && \
+    (defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym))
+#define DeeSystem_DlOpen_USE_DLFCN 1
+#elif defined(CONFIG_HOST_WINDOWS)
+#define DeeSystem_DlOpen_USE_LOADLIBRARY 1
+#elif defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym)
+#define DeeSystem_DlOpen_USE_DLFCN 1
+#else
+#define DeeSystem_DlOpen_USE_STUB 1
+#endif
+#endif /* CONFIG_BUILDING_DEEMON */
+
 
 /* Required file extension for shared libraries. */
 #ifdef CONFIG_SHLIB_EXTENSION

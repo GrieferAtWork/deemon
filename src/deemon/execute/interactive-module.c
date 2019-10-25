@@ -32,6 +32,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system.h> /* DeeSystem_SEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
@@ -48,19 +49,13 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_HOST_WINDOWS
-#define SEP      '\\'
-#define ISSEP(x) ((x) == '\\' || (x) == '/')
-#else /* CONFIG_HOST_WINDOWS */
-#define SEP      '/'
-#define ISSEP(x) ((x) == '/')
-
+#ifndef DeeSystem_ALTSEP
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr 1
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DeeSystem_ALTSEP */
 
 
 
@@ -1040,16 +1035,16 @@ imod_init(InteractiveModule *__restrict self,
 			size_t size = DeeString_SIZE(source_pathname);
 			char *name_end, *name_start;
 			name_end = name + size;
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DeeSystem_ALTSEP
 			name_start = name_end;
-			while (name_start != name && !ISSEP(name_start[-1]))
+			while (name_start != name && !DeeSystem_IsSep(name_start[-1]))
 				--name_start;
-#else /* CONFIG_HOST_WINDOWS */
-			name_start = (char *)memrchr(name, SEP, size);
+#else /* DeeSystem_ALTSEP */
+			name_start = (char *)memrchr(name, DeeSystem_SEP, size);
 			if (!name_start)
 				name_start = name - 1;
 			++name_start;
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DeeSystem_ALTSEP */
 			/* Get rid of a file extension in the module name. */
 			while (name_end != name_start && name_end[-1] != '.')
 				--name_end;

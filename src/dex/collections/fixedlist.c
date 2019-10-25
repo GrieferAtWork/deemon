@@ -41,7 +41,7 @@
 #include <hybrid/atomic.h>
 
 /*
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/instancemethod.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>

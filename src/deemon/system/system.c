@@ -33,6 +33,10 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
+#ifdef CONFIG_HAVE_DLFCN_H
+#include <dlfcn.h>
+#endif /* CONFIG_HAVE_DLFCN_H */
+
 #ifndef PATH_MAX
 #ifdef PATHMAX
 #   define PATH_MAX PATHMAX
@@ -145,9 +149,9 @@ next:
 	 *       that is apart of the `fs' DEX implementation file: `fs/path.c'
 	 *       If a bug is found in this code, it should be fixed here, as
 	 *       well as within the DEX source file. */
-#if DeeSystem_SEP != '/'
-	case '/':
-#endif
+#ifdef DeeSystem_ALTSEP
+	case DeeSystem_ALTSEP:
+#endif /* DeeSystem_ALTSEP */
 	case DeeSystem_SEP:
 	case '\0': {
 		char const *sep_loc;
@@ -358,9 +362,11 @@ err:
 		DBG_ALIGNMENT_ENABLE();
 		/* Increase the buffer and try again. */
 #if defined(CONFIG_HAVE_errno) && defined(ERANGE)
-		if (DeeSystem_GetErrno() != ERANGE) {
-			DeeError_Throwf(&DeeError_SystemError,
-			                "Failed to determine the current working directory");
+		int error = DeeSystem_GetErrno();
+		if (error != ERANGE) {
+			DBG_ALIGNMENT_ENABLE();
+			DeeError_SysThrowf(&DeeError_SystemError, error,
+			                   "Failed to determine the current working directory");
 			goto err_release;
 		}
 #endif /* CONFIG_HAVE_errno && ERANGE */
@@ -412,12 +418,13 @@ err:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!getcwd(buffer, bufsize + 1)) {
-		DBG_ALIGNMENT_ENABLE();
 		/* Increase the buffer and try again. */
 #if defined(CONFIG_HAVE_errno) && defined(ERANGE)
-		if (DeeSystem_GetErrno() != ERANGE) {
-			DeeError_Throwf(&DeeError_SystemError,
-			                "Failed to determine the current working directory");
+		int error = DeeSystem_GetErrno();
+		if (error != ERANGE) {
+			DBG_ALIGNMENT_ENABLE();
+			DeeError_SysThrowf(&DeeError_SystemError, error,
+			                   "Failed to determine the current working directory");
 			goto err_release;
 		}
 #endif /* CONFIG_HAVE_errno && ERANGE */
@@ -427,8 +434,8 @@ err:
 			goto err_release;
 		DBG_ALIGNMENT_DISABLE();
 	}
-	DBG_ALIGNMENT_ENABLE();
 	bufsize = strlen(buffer);
+	DBG_ALIGNMENT_ENABLE();
 	if (!include_trailing_sep) {
 		while (bufsize && DeeSystem_IsSep(buffer[bufsize - 1]))
 			--bufsize;
@@ -463,10 +470,15 @@ err:
 #endif /* DeeSystem_PrintPwd_USE_GETCWD */
 #ifdef DeeSystem_PrintPwd_USE_GETENV
 	size_t pwdlen;
-	char const *pwd = getenv("PWD");
+	char const *pwd;
+	DBG_ALIGNMENT_DISABLE();
+	pwd = getenv("PWD");
+	DBG_ALIGNMENT_ENABLE();
 	if (!pwd)
 		pwd = "";
+	DBG_ALIGNMENT_DISABLE();
 	pwdlen = strlen(pwd);
+	DBG_ALIGNMENT_ENABLE();
 	while (pwdlen && DeeSystem_IsSep(pwd[pwdlen - 1]))
 		--pwdlen;
 	if unlikely(!pwdlen) {
@@ -504,21 +516,12 @@ err:
 DECL_END
 
 
-/* Figure out how to implement the shared library system API */
-#undef DeeSystem_DlOpen_USE_LOADLIBRARY
-#undef DeeSystem_DlOpen_USE_DLFCN
-#undef DeeSystem_DlOpen_USE_STUB
-#if (defined(__CYGWIN__) || defined(__CYGWIN32__)) && \
-    (defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym))
-#define DeeSystem_DlOpen_USE_DLFCN 1
-#elif defined(CONFIG_HOST_WINDOWS)
-#define DeeSystem_DlOpen_USE_LOADLIBRARY 1
-#elif defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym)
-#define DeeSystem_DlOpen_USE_DLFCN 1
-#else
-#define DeeSystem_DlOpen_USE_STUB 1
-#endif
-
+#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+#ifdef _WIN32_WCE
+#undef GetProcAddress
+#define GetProcAddress GetProcAddressA
+#endif /* _WIN32_WCE */
+#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
 
 #if defined(DeeSystem_DlOpen_USE_DLFCN) && defined(CONFIG_HAVE_DLFCN_H)
 #include <dlfcn.h>
@@ -569,11 +572,15 @@ again:
 	if unlikely(!lpFilename)
 		goto err;
 again_loadlib:
+	DBG_ALIGNMENT_DISABLE();
 	hResult = LoadLibraryW(lpFilename);
+	DBG_ALIGNMENT_ENABLE();
 	if (!hResult) {
 		DWORD dwError;
 		hResult = (HMODULE)DEESYSTEM_DLOPEN_FAILED;
+		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
 				goto err;
@@ -591,10 +598,14 @@ again_loadlib:
 				goto err;
 			}
 			/* Try to load the library once again. */
+			DBG_ALIGNMENT_DISABLE();
 			hResult = LoadLibraryW(lpFilename);
+			DBG_ALIGNMENT_ENABLE();
 			Dee_Decref(unc_filename);
 			if (!hResult) {
+				DBG_ALIGNMENT_DISABLE();
 				dwError = GetLastError();
+				DBG_ALIGNMENT_ENABLE();
 				if (DeeNTSystem_IsIntr(dwError)) {
 					if (DeeThread_CheckInterrupt())
 						goto err;
@@ -634,7 +645,9 @@ PUBLIC WUNUSED void *DCALL
 DeeSystem_DlOpenString(/*utf-8*/ char const *filename) {
 #ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
 	HMODULE hResult;
+	DBG_ALIGNMENT_DISABLE();
 	hResult = LoadLibraryA(filename);
+	DBG_ALIGNMENT_ENABLE();
 	if (!hResult) {
 		/* Try to convert `filename' into its wide-character form,
 		 * then use `DeeSystem_DlOpen()' to load the library. */
@@ -652,9 +665,11 @@ done:
 
 #ifdef DeeSystem_DlOpen_USE_DLFCN
 	void *result;
+	DBG_ALIGNMENT_DISABLE();
 	result = dlopen(filenames,
 	                USED_DLOPEN_SCOPE |
 	                USED_DLOPEN_BIND);
+	DBG_ALIGNMENT_ENABLE();
 	if unlikely(!result)
 		result = DEESYSTEM_DLOPEN_FAILED;
 	return result;
@@ -673,12 +688,16 @@ PUBLIC WUNUSED void *DCALL
 DeeSystem_DlSym(void *handle, char const *symbol_name) {
 #ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
 	FARPROC result;
+	DBG_ALIGNMENT_DISABLE();
 	result = GetProcAddress((HMODULE)handle, symbol_name);
+	DBG_ALIGNMENT_ENABLE();
 	return *(void **)&result;
 #endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
 #ifdef DeeSystem_DlOpen_USE_DLFCN
 	void *result;
+	DBG_ALIGNMENT_DISABLE();
 	result = dlsym(handle, symbol_name);
+	DBG_ALIGNMENT_ENABLE();
 	return result;
 #endif /* DeeSystem_DlOpen_USE_DLFCN */
 #ifdef DeeSystem_DlOpen_USE_STUB
@@ -691,11 +710,15 @@ DeeSystem_DlSym(void *handle, char const *symbol_name) {
 /* Close a given shared library */
 PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 #ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+	DBG_ALIGNMENT_DISABLE();
 	FreeLibrary((HMODULE)handle);
+	DBG_ALIGNMENT_ENABLE();
 #endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
 #ifdef DeeSystem_DlOpen_USE_DLFCN
 #ifdef CONFIG_HAVE_dlclose
+	DBG_ALIGNMENT_DISABLE();
 	dlclose(handle);
+	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HAVE_dlclose */
 #endif /* DeeSystem_DlOpen_USE_DLFCN */
 }

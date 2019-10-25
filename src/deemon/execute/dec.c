@@ -24,7 +24,7 @@
 #include <deemon/object.h>
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
@@ -68,6 +68,9 @@
 
 #include <stdarg.h>
 
+/* TODO: <Windows.h> is currently needed because of the mtime sub-system.
+ *       However, the mtime sub-system itself has to be changed to make
+ *       use of the new configure system as well! */
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */

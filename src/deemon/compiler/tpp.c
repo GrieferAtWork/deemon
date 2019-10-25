@@ -35,7 +35,6 @@
 #include <deemon/module.h>
 #include <deemon/string.h>
 
-#include <stdlib.h>
 #include <string.h>
 
 #ifdef _MSC_VER

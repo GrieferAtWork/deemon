@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_AST_C
 #define GUARD_DEEMON_COMPILER_AST_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
@@ -33,7 +32,6 @@
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
-#include <assert.h>
 #include <stddef.h>
 #include <stdint.h>
 

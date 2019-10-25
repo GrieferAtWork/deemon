@@ -20,7 +20,6 @@
 #define GUARD_DEX_TIME_LIBTIME_C 1
 #define CONFIG_BUILDING_LIBTIME 1
 #define DEE_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include "libtime.h"
 

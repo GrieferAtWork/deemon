@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_DDI_C
 #define GUARD_DEEMON_COMPILER_DDI_C 1
-#define _GNU_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/code.h>
@@ -27,13 +25,13 @@
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* `memrchr()' */
 #include <deemon/util/bytewriter.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 
 #include <stdlib.h> /* `qsort()'; TODO: Add a feature check for this! */
-#include <deemon/system-features.h> /* `memrchr()' */
 
 DECL_BEGIN
 

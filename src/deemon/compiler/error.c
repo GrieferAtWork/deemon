@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ERROR_C
 #define GUARD_DEEMON_COMPILER_ERROR_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
@@ -38,7 +37,6 @@
 #include <deemon/traceback.h>
 #include <deemon/util/cache.h>
 
-#include <assert.h>
 #include <stdarg.h>
 
 DECL_BEGIN

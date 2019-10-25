@@ -18,11 +18,9 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_PARSEASM_C
 #define GUARD_DEEMON_COMPILER_ASM_PARSEASM_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
-#include <deemon/HashSet.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bool.h>
@@ -32,6 +30,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
@@ -39,7 +38,7 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
-#include <limits.h>
+#include <stdint.h> /* UINT16_MAX, ... */
 #include <string.h>
 
 #include "../../runtime/strings.h"

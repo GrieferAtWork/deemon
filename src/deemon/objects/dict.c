@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_DICT_C
 #define GUARD_DEEMON_OBJECTS_DICT_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>

@@ -18,15 +18,12 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_ASSIGN_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_ASSIGN_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/object.h>
-
-#include <assert.h>
 
 DECL_BEGIN
 

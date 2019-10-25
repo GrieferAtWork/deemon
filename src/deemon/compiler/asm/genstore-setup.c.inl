@@ -20,7 +20,7 @@
 #ifdef __INTELLISENSE__
 #include "genstore.c"
 //#define ENTER 1
-#endif
+#endif /* __INTELLISENSE__ */
 
 #ifndef ENTER
 #define LEAVE 1

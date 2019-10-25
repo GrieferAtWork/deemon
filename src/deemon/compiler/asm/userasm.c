@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_USERASM_C
 #define GUARD_DEEMON_COMPILER_ASM_USERASM_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
@@ -30,9 +29,9 @@
 #include <deemon/error.h>
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
-#include <deemon/HashSet.h>
 #include <deemon/bool.h>
 #include <deemon/dict.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
@@ -44,12 +43,11 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
-#include <limits.h>
+#include <stdint.h> /* UINT8_MAX, ... */
 #include <string.h>
 
 #include "../../runtime/strings.h"
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
-
 
 DECL_BEGIN
 

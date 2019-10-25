@@ -19,7 +19,6 @@
 #ifndef GUARD_DEX_CTYPES_BUILTINS_C
 #define GUARD_DEX_CTYPES_BUILTINS_C 1
 #define DEE_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include "libctypes.h"
 /**/

@@ -858,9 +858,11 @@ DDATDEF DeeTypeObject DeeInteractiveModule_Type;
  *       a fallback that calls a global symbol of the module, rather
  *       than a native symbol:
  * >> static int (*padd)(int x, int y) = NULL;
- * >> if (!padd) *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE,"add");
+ * >> if (!padd)
+ * >>     *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
  * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
- * >> if (!padd) return DeeObject_CallAttrStringf(IMPORTED_MODULE,"add","dd",x,y);
+ * >> if (!padd)
+ * >>     return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
  * >> return DeeInt_New((*padd)(x,y)); */
 DFUNDEF WUNUSED NONNULL((1, 2)) void *DCALL

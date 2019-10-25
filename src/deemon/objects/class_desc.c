@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_OBJECTS_CLASS_DESC_C
 #define GUARD_DEEMON_OBJECTS_CLASS_DESC_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/instancemethod.h>
 #include <deemon/alloc.h>

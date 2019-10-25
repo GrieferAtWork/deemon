@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_DEEMON_EXECUTE_DEX_C
 #define GUARD_DEEMON_EXECUTE_DEX_C 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1 /* dl_iterate_phdr */
 
 #include <deemon/api.h>
 #include <deemon/dex.h>
@@ -34,6 +32,7 @@
 #include <deemon/gc.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+#include <deemon/system.h> /* DeeSystem_Dl* */
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -49,59 +48,17 @@
 
 #include "../runtime/runtime_error.h"
 
-#if defined(CONFIG_HOST_WINDOWS) && !defined(__CYGWIN__)
-/* NOTE: Don't use LoadLibrary() on cygwin. It does some crazy hacking
- *       to get fork() working properly with dynamic linking, so better
- *       not interfere with it by bypassing its mechanisms. */
-#define USE_LOADLIBRARY 1
+#ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#else
+#endif /* CONFIG_HOST_WINDOWS */
 
-#if defined(CONFIG_NO_LINK_H) || defined(CONFIG_HOST_WINDOWS)
-#undef CONFIG_HAVE_LINK_H
-#elif !defined(CONFIG_HAVE_LINK_H) && !defined(__KOS__)
-#ifdef __NO_has_include
-#define CONFIG_HAVE_LINK_H 1
-#elif __has_include(<link.h>)
-#define CONFIG_HAVE_LINK_H 1
-#endif
-#endif /* CONFIG_NO_LINK_H... */
+#ifdef CONFIG_HAVE_DLFCN_H
+#include <dlfcn.h>
+#endif /* CONFIG_HAVE_DLFCN_H */
 
 #ifdef CONFIG_HAVE_LINK_H
 #include <link.h>
-#ifndef __USE_GNU
-#undef CONFIG_HAVE_LINK_H
-#endif /* !__USE_GNU */
 #endif /* CONFIG_HAVE_LINK_H */
-
-#ifndef CONFIG_HAVE_LINK_H
-#if defined(__KOS__) && __KOS_VERSION__ >= 300 && __KOS_VERSION__ < 400
-/* KOS Mk3 */
-#ifdef CONFIG_NO_KOS_DL_H
-#undef CONFIG_HAVE_KOS_DL_H
-#elif !defined(CONFIG_HAVE_KOS_DL_H)
-#ifdef __NO_has_include
-#define CONFIG_HAVE_KOS_DL_H 1
-#elif __has_include(<kos/dl.h>)
-#define CONFIG_HAVE_KOS_DL_H 1
-#endif
-#endif
-#ifdef CONFIG_HAVE_KOS_DL_H
-#include <kos/dl.h>
-#endif /* CONFIG_HAVE_KOS_DL_H */
-#endif /* __KOS__ */
-#endif /* !CONFIG_HAVE_LINK_H */
-
-#ifndef CONFIG_HAVE_KOS_DL_H
-/* ... */
-#endif /* !CONFIG_HAVE_KOS_DL_H */
-#include <dlfcn.h>
-#endif
-
-#ifdef _WIN32_WCE
-#undef  GetProcAddress
-#define GetProcAddress GetProcAddressA
-#endif /* _WIN32_WCE */
 
 DECL_BEGIN
 
@@ -118,16 +75,9 @@ dex_load_handle(DeeDexObject *__restrict self,
 	DREF DeeModuleObject **imports;
 	size_t symcount, glbcount, impcount;
 	uint16_t symi, bucket_mask;
-#ifdef USE_LOADLIBRARY
-	DBG_ALIGNMENT_DISABLE();
-	descriptor = (struct dex *)GetProcAddress((HMODULE)handle, "DEX");
+	descriptor = (struct dex *)DeeSystem_DlSym(handle, "DEX");
 	if (!descriptor)
-		descriptor = (struct dex *)GetProcAddress((HMODULE)handle, "_DEX");
-#else /* USE_LOADLIBRARY */
-	descriptor = (struct dex *)dlsym(handle, "DEX");
-	if (!descriptor)
-		descriptor = (struct dex *)dlsym(handle, "_DEX");
-#endif /* !USE_LOADLIBRARY */
+		descriptor = (struct dex *)DeeSystem_DlSym(handle, "_DEX");
 	DBG_ALIGNMENT_ENABLE();
 	if (!descriptor) {
 		DeeError_Throwf(&DeeError_RuntimeError,
@@ -262,13 +212,7 @@ err_imp_elem:
 err_imp:
 	Dee_Free(imports);
 err:
-	DBG_ALIGNMENT_DISABLE();
-#ifdef USE_LOADLIBRARY
-	FreeLibrary((HMODULE)handle);
-#else /* USE_LOADLIBRARY */
-	dlclose(handle);
-#endif /* !USE_LOADLIBRARY */
-	DBG_ALIGNMENT_ENABLE();
+	DeeSystem_DlClose(handle);
 	return -1;
 }
 
@@ -280,9 +224,11 @@ err:
  *       a fallback that calls a global symbol of the module, rather
  *       than a native symbol:
  * >> static int (*padd)(int x, int y) = NULL;
- * >> if (!padd) *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE,"add");
+ * >> if (!padd)
+ * >>     *(void **)&padd = DeeModule_GetNativeSymbol(IMPORTED_MODULE, "add");
  * >> // Fallback: Invoke a member attribute `add' if the native symbol doesn't exist.
- * >> if (!padd) return DeeObject_CallAttrStringf(IMPORTED_MODULE,"add","dd",x,y);
+ * >> if (!padd)
+ * >>     return DeeObject_CallAttrStringf(IMPORTED_MODULE, "add", "dd", x, y);
  * >> // Invoke the native symbol.
  * >> return DeeInt_New((*padd)(x,y)); */
 PUBLIC WUNUSED NONNULL((1, 2)) void *DCALL
@@ -293,9 +239,8 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	if (!DeeDex_Check(self) || !(me->d_module.mo_flags & MODULE_FDIDLOAD))
 		return NULL;
-#ifdef USE_LOADLIBRARY
 	DBG_ALIGNMENT_DISABLE();
-	result = GetProcAddress((HMODULE)me->d_handle, name);
+	result = DeeSystem_DlSym(me->d_handle, name);
 	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
 		/* Try again after inserting an underscore. */
@@ -303,7 +248,7 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 		    ((uintptr_t)(name - 1) & ~(PAGESIZE - 1)) &&
 		    name[-1] == '_') {
 			DBG_ALIGNMENT_DISABLE();
-			result = GetProcAddress((HMODULE)me->d_handle, name - 1);
+			result = DeeSystem_DlSym(me->d_handle, name - 1);
 			DBG_ALIGNMENT_ENABLE();
 		} else {
 			char *temp_name;
@@ -312,50 +257,20 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 			Dee_AMallocNoFail(temp_name, (namelen + 2) * sizeof(char));
 #else /* Dee_AMallocNoFail */
 			temp_name = (char *)Dee_AMalloc((namelen + 2) * sizeof(char));
-			if unlikely(!temp_name)
+			if unlikely(!temp_name) {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 				return NULL; /* ... Technically not correct, but if memory has gotten
 				              *     this low, that's the last or the user's problems. */
+			}
 #endif /* !Dee_AMallocNoFail */
 			memcpy(temp_name + 1, name, (namelen + 1) * sizeof(char));
 			temp_name[0] = '_';
 			DBG_ALIGNMENT_DISABLE();
-			result = GetProcAddress((HMODULE)me->d_handle, temp_name);
+			result = DeeSystem_DlSym(me->d_handle, temp_name);
 			DBG_ALIGNMENT_ENABLE();
 			Dee_AFree(temp_name);
 		}
 	}
-#else /* USE_LOADLIBRARY */
-	DBG_ALIGNMENT_DISABLE();
-	result = dlsym(me->d_handle, name);
-	DBG_ALIGNMENT_ENABLE();
-	if (!result) {
-		/* Try again after inserting an underscore. */
-		if (((uintptr_t)(name) & ~(PAGESIZE - 1)) ==
-		    ((uintptr_t)(name - 1) & ~(PAGESIZE - 1)) &&
-		    name[-1] == '_') {
-			DBG_ALIGNMENT_DISABLE();
-			result = dlsym(me->d_handle, name - 1);
-			DBG_ALIGNMENT_ENABLE();
-		} else {
-			char *temp_name;
-			size_t namelen = strlen(name);
-#ifdef Dee_AMallocNoFail
-			Dee_AMallocNoFail(temp_name, (namelen + 2) * sizeof(char));
-#else /* Dee_AMallocNoFail */
-			temp_name = (char *)Dee_AMalloc((namelen + 2) * sizeof(char));
-			if unlikely(!temp_name)
-				return NULL; /* ... Technically not correct, but if memory has gotten
-				              *     this low, that's the last or the user's problems. */
-#endif /* !Dee_AMallocNoFail */
-			memcpy(temp_name + 1, name, (namelen + 1) * sizeof(char));
-			temp_name[0] = '_';
-			DBG_ALIGNMENT_DISABLE();
-			result = dlsym(me->d_handle, temp_name);
-			DBG_ALIGNMENT_ENABLE();
-			Dee_AFree(temp_name);
-		}
-	}
-#endif /* !USE_LOADLIBRARY */
 	return result;
 }
 
@@ -504,11 +419,7 @@ dex_fini(DeeDexObject *__restrict self) {
 		 * XXX: Only do this for caches apart of this module's static binary image? */
 		membercache_clear((size_t)-1);
 		DBG_ALIGNMENT_DISABLE();
-#ifdef USE_LOADLIBRARY
-		FreeLibrary((HMODULE)self->d_handle);
-#else /* USE_LOADLIBRARY */
-		dlclose(self->d_handle);
-#endif /* !USE_LOADLIBRARY */
+		DeeSystem_DlClose(self->d_handle);
 		DBG_ALIGNMENT_ENABLE();
 	}
 }
@@ -576,63 +487,38 @@ PUBLIC DeeTypeObject DeeDex_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+DECL_END
 
+
+#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY /* Windows */
+#define DeeModule_FromStaticPointer_USE_GETMODULEHANDLEEX 1
+#elif defined(DeeSystem_DlOpen_USE_DLFCN) && defined(CONFIG_HAVE_LINK_H) /* linux + ELF */
+#define DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR 1
+#elif defined(DeeSystem_DlOpen_USE_DLFCN) && defined(CONFIG_HAVE_KOS_DL_H) /* KOS Mk3 + ELF */
+#define DeeModule_FromStaticPointer_USE_XDLMODULE_INFO 1
+#elif defined(DeeSystem_DlOpen_USE_DLFCN) && defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
+#define DeeModule_FromStaticPointer_USE_DLGETHANDLE 1
+#else /* XXX: Further support? */
+#define DeeModule_FromStaticPointer_USE_STUB 1
+#endif
+
+
+DECL_BEGIN
+
+#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
 #ifdef _MSC_VER
-extern IMAGE_DOS_HEADER __ImageBase;
+extern /*IMAGE_DOS_HEADER*/ int __ImageBase;
 #define HINST_THISCOMPONENT ((HINSTANCE)&__ImageBase)
 #else /* _MSC_VER */
 /* XXX: This only works when deemon is the primary
  *      binary, but not if it was loaded as a DLL! */
 #define HINST_THISCOMPONENT   GetModuleHandleW(NULL)
 #endif /* !_MSC_VER */
+#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
 
-#ifdef USE_LOADLIBRARY /* Windows */
 
-/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
- * try to determine which DEX module (if not the deemon core itself) was used to declare
- * a structure located at that pointer, and return a reference to that module.
- * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
- * instead, but don't throw an error.
- * When deemon has been built with `CONFIG_NO_DEX', this function will always return
- * a reference to the builtin `deemon' module.
- * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
- *                contains a static memory segment of which `ptr' is apart of.
- * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
- *                as a module, or points to a heap/stack segment.
- *                No matter the case, no error is thrown for this, meaning that
- *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr) {
-	HMODULE hTypeModule;
-	DBG_ALIGNMENT_DISABLE();
-	if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
-	                       GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-	                       (LPCWSTR)ptr, &hTypeModule)) {
-		DeeDexObject *iter;
-		DBG_ALIGNMENT_ENABLE();
-		rwlock_read(&dex_lock);
-		for (iter = dex_chain; iter; iter = iter->d_next) {
-			if ((HMODULE)iter->d_handle != hTypeModule)
-				continue;
-			Dee_Incref((DeeModuleObject *)iter);
-			rwlock_endread(&dex_lock);
-			return (DREF DeeObject *)iter;
-		}
-		rwlock_endread(&dex_lock);
-		DBG_ALIGNMENT_DISABLE();
-		if (hTypeModule == HINST_THISCOMPONENT) {
-			/* Type is declared as part of the builtin `deemon' module. */
-			DBG_ALIGNMENT_ENABLE();
-			Dee_Incref(&deemon_module);
-			return (DREF DeeObject *)DeeModule_GetDeemon();
-		}
-		DBG_ALIGNMENT_ENABLE();
-	}
-	return NULL;
-}
 
-#elif defined(CONFIG_HAVE_LINK_H) /* linux + ELF */
-
+#ifdef DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR
 PRIVATE WUNUSED DREF DeeObject *DCALL
 DeeModule_FromElfLoadAddr(ElfW(Addr) addr) {
 	DeeDexObject *iter;
@@ -686,6 +572,9 @@ iter_modules_callback(struct dl_phdr_info *info,
 	}
 	return 0;
 }
+#endif /* DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR */
+
+
 
 /* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
  * try to determine which DEX module (if not the deemon core itself) was used to declare
@@ -702,31 +591,46 @@ iter_modules_callback(struct dl_phdr_info *info,
  *                the caller must decide on how to handle this. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeModule_FromStaticPointer(void const *ptr) {
+
+#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+	HMODULE hTypeModule;
+	DBG_ALIGNMENT_DISABLE();
+	if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+	                       GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+	                       (LPCWSTR)ptr, &hTypeModule)) {
+		DeeDexObject *iter;
+		DBG_ALIGNMENT_ENABLE();
+		rwlock_read(&dex_lock);
+		for (iter = dex_chain; iter; iter = iter->d_next) {
+			if ((HMODULE)iter->d_handle != hTypeModule)
+				continue;
+			Dee_Incref((DeeModuleObject *)iter);
+			rwlock_endread(&dex_lock);
+			return (DREF DeeObject *)iter;
+		}
+		rwlock_endread(&dex_lock);
+		DBG_ALIGNMENT_DISABLE();
+		if (hTypeModule == HINST_THISCOMPONENT) {
+			/* Type is declared as part of the builtin `deemon' module. */
+			DBG_ALIGNMENT_ENABLE();
+			Dee_Incref(&deemon_module);
+			return (DREF DeeObject *)DeeModule_GetDeemon();
+		}
+		DBG_ALIGNMENT_ENABLE();
+	}
+	return NULL;
+#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+
+#ifdef DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR
 	struct iter_modules_data data;
 	data.search_ptr = ptr;
 	data.search_res = NULL;
 	/* Enumerate all loaded modules. */
 	dl_iterate_phdr(&iter_modules_callback, (void *)&data);
 	return data.search_res;
-}
+#endif /* DeeModule_FromStaticPointer_USE_DL_ITERATE_PHDR */
 
-#elif defined(CONFIG_HAVE_KOS_DL_H) /* KOS Mk3 + ELF */
-
-/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
- * try to determine which DEX module (if not the deemon core itself) was used to declare
- * a structure located at that pointer, and return a reference to that module.
- * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
- * instead, but don't throw an error.
- * When deemon has been built with `CONFIG_NO_DEX', this function will always return
- * a reference to the builtin `deemon' module.
- * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
- *                contains a static memory segment of which `ptr' is apart of.
- * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
- *                as a module, or points to a heap/stack segment.
- *                No matter the case, no error is thrown for this, meaning that
- *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr) {
+#ifdef DeeModule_FromStaticPointer_USE_XDLMODULE_INFO
 	struct module_basic_info info;
 	DeeDexObject *iter;
 	rwlock_read(&dex_lock);
@@ -762,25 +666,9 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		}
 	}
 	return NULL;
-}
+#endif /* DeeModule_FromStaticPointer_USE_XDLMODULE_INFO */
 
-#elif defined(__KOS_VERSION__) && __KOS_VERSION__ >= 400
-
-/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
- * try to determine which DEX module (if not the deemon core itself) was used to declare
- * a structure located at that pointer, and return a reference to that module.
- * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
- * instead, but don't throw an error.
- * When deemon has been built with `CONFIG_NO_DEX', this function will always return
- * a reference to the builtin `deemon' module.
- * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
- *                contains a static memory segment of which `ptr' is apart of.
- * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
- *                as a module, or points to a heap/stack segment.
- *                No matter the case, no error is thrown for this, meaning that
- *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr) {
+#ifdef DeeModule_FromStaticPointer_USE_DLGETHANDLE
 	/* KOS Mk4 changed up the dynlib API somewhat, such that we
 	 * need a different way of translating module pointers.
 	 * In Mk4, this is done by:
@@ -827,34 +715,19 @@ DeeModule_FromStaticPointer(void const *ptr) {
 		return result;
 	}
 	return NULL;
-}
+#endif /* DeeModule_FromStaticPointer_USE_DLGETHANDLE */
 
-#else
-
-/* Given a static pointer `ptr' (as in: a pointer to some statically allocated structure),
- * try to determine which DEX module (if not the deemon core itself) was used to declare
- * a structure located at that pointer, and return a reference to that module.
- * If this proves to be impossible, or if `ptr' is an invalid pointer, return `NULL'
- * instead, but don't throw an error.
- * When deemon has been built with `CONFIG_NO_DEX', this function will always return
- * a reference to the builtin `deemon' module.
- * @return: * :   A pointer to the dex module (or to `DeeModule_GetDeemon()') that
- *                contains a static memory segment of which `ptr' is apart of.
- * @return: NULL: Either `ptr' is an invalid pointer, part of a library not loaded
- *                as a module, or points to a heap/stack segment.
- *                No matter the case, no error is thrown for this, meaning that
- *                the caller must decide on how to handle this. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeModule_FromStaticPointer(void const *ptr) {
-	/* XXX: Further support? */
+#ifdef DeeModule_FromStaticPointer_USE_STUB
 	(void)ptr;
 	return NULL;
+#endif /* DeeModule_FromStaticPointer_USE_STUB */
 }
 
-#endif
 
 DECL_END
+
 #else /* !CONFIG_NO_DEX */
+
 DECL_BEGIN
 
 /* Return the export address of a native symbol exported from a dex `self'.
@@ -896,6 +769,7 @@ DeeModule_FromStaticPointer(void const *UNUSED(ptr)) {
 }
 
 DECL_END
+
 #endif /* CONFIG_NO_DEX */
 
 #endif /* !GUARD_DEEMON_EXECUTE_DEX_C */

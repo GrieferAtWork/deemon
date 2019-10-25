@@ -18,13 +18,6 @@
  */
 #ifndef GUARD_DEEMON_RUNTIME_THREAD_C
 #define GUARD_DEEMON_RUNTIME_THREAD_C 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1 /* pthread_setname_np() */
-#define _DEFAULT_SOURCE 1 /* `pthread_suspend()' */
-//#define _POSIX_C_SOURCE 199309L /* sigaction() */
-#define _POSIX_C_SOURCE 199506L /* pthread_kill() */
-#define _XOPEN_SOURCE   500     /* pthread_kill() */
-
 
 /* I have yet to find a pthread_suspend() implementation that
  * forces the system to acknowledge thread suspension synchronously,
@@ -104,16 +97,16 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/system-features.h>
 #include <deemon/util/cache.h>
 #include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
-#include <hybrid/sched/yield.h>
 #include <hybrid/overflow.h>
+#include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <string.h>

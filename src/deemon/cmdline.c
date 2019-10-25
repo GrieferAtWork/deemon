@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_CMDLINE_C
 #define GUARD_CMDLINE_C 1
-#define _GNU_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include "cmdline.h"
 

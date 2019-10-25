@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_RUNTIME_BUILD_VALUE_C
 #define GUARD_DEEMON_RUNTIME_BUILD_VALUE_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/api.h>
 #include <deemon/arg.h>

@@ -18,9 +18,8 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_TRAITS_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_TRAITS_C 1
-#define _KOS_SOURCE 1
 
-#include <deemon/HashSet.h>
+#include <deemon/hashset.h>
 #include <deemon/api.h>
 #include <deemon/bool.h>
 #include <deemon/cell.h>

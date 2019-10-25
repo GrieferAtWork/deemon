@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_EXECUTE_EXEC_C
 #define GUARD_DEEMON_EXECUTE_EXEC_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -31,8 +30,8 @@
 #include <deemon/module.h>
 #include <deemon/notify.h>
 #include <deemon/object.h>
-#include <deemon/thread.h>
 #include <deemon/system-features.h>
+#include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
 

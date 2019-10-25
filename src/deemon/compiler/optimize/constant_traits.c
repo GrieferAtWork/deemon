@@ -18,11 +18,9 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_CONSTANT_TRAITS_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_CONSTANT_TRAITS_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
-#include <deemon/HashSet.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
@@ -33,6 +31,7 @@
 #include <deemon/dec.h>
 #include <deemon/dict.h>
 #include <deemon/float.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>

@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_LEXER_IMPORT_C
 #define GUARD_DEEMON_COMPILER_LEXER_IMPORT_C 1
-#define _GNU_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>

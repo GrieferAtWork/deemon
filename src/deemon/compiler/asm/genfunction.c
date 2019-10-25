@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENFUNCTION_C
 #define GUARD_DEEMON_COMPILER_ASM_GENFUNCTION_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 

@@ -18,7 +18,6 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_MODGEN_C
 #define GUARD_DEEMON_COMPILER_ASM_MODGEN_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/compiler/compiler.h>
 
@@ -30,6 +29,7 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/gc.h>
+#include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 
@@ -38,7 +38,6 @@
 #include <deemon/error.h>
 #endif /* !CONFIG_NO_DEC */
 
-#include <deemon/module.h>
 #include <hybrid/atomic.h>
 
 #include <string.h>

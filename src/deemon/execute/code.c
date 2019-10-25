@@ -18,8 +18,6 @@
  */
 #ifndef GUARD_DEEMON_EXECUTE_CODE_C
 #define GUARD_DEEMON_EXECUTE_CODE_C 1
-#define _KOS_SOURCE 1
-#define _GNU_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -55,6 +53,7 @@
 #include <Windows.h>
 #undef THIS
 #else /* CONFIG_HOST_WINDOWS */
+/* TODO: This stuff is here for mman(), but needs to be subjegated to configure tests! */
 #include <sys/mman.h>
 
 #include <fcntl.h>

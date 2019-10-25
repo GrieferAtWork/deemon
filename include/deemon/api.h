@@ -74,6 +74,7 @@
 #endif /* !_MEMMEM_EMPTY_NEEDLE_NULL_SOURCE */
 
 
+
 /* Expose definitions that don't comply with the deemon C symbol namespace.
  * That namespace being anything matching `dee_*', `DEE_*', `Dee*' or `_Dee*'. */
 #if !defined(DEE_SOURCE) && defined(CONFIG_BUILDING_DEEMON)

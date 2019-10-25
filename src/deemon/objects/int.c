@@ -27,7 +27,6 @@
  *       before being adjusted to fit deemon's runtime. */
 #ifndef GUARD_DEEMON_OBJECTS_INT_C
 #define GUARD_DEEMON_OBJECTS_INT_C 1
-#define _KOS_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>

@@ -18,9 +18,7 @@
  */
 #ifndef GUARD_DEEMON_COMPILER_ASM_GENCALL_C
 #define GUARD_DEEMON_COMPILER_ASM_GENCALL_C 1
-#define _KOS_SOURCE 1
 
-#include <deemon/HashSet.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/bool.h>
@@ -31,6 +29,7 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/traits.h>
 #include <deemon/dict.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
