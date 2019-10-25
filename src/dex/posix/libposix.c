@@ -39,6 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -584,7 +585,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_open_f_impl(/*utf-8*/ char con
 #endif /* !CONFIG_HAVE_wopen64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " OPEN_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_EEXIST_IF(result, oflags & OPEN_FEXCL, err, "File " OPEN_PRINTF_FILENAME " already exists", filename)
@@ -686,7 +687,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_creat_f_impl(/*utf-8*/ char co
 #endif /* !CONFIG_HAVE_wcreat64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " CREAT_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_EACCES(result, err, "Failed to access " CREAT_PRINTF_FILENAME, filename)
@@ -745,7 +746,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_read_f_impl(int fd, DeeObject 
 	result_value = (Dee_ssize_t)read(fd, buffer.bb_base, buffer.bb_size);
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -799,7 +800,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_write_f_impl(int fd, DeeObject
 	result_value = (Dee_ssize_t)write(fd, buffer.bb_base, buffer.bb_size);
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -890,7 +891,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pread_f_impl(int fd, DeeObject
 	{
 		HANDLE h;
 		h = (HANDLE)_get_osfhandle(fd);
-		if (h == INVALID_HANDLE_VALUE )
+		if (h == INVALID_HANDLE_VALUE)
 			result_value = -1;
 		else {
 			DWORD bytes_written;
@@ -913,7 +914,7 @@ again_ReadFile:
 			                      (LPOVERLAPPED)&overlapped)) {
 				DWORD error = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				if (error == ERROR_OPERATION_ABORTED) {
+				if (DeeNTSystem_IsIntr(error)) {
 					if (DeeThread_CheckInterrupt())
 						goto err;
 					DBG_ALIGNMENT_DISABLE();
@@ -930,7 +931,7 @@ again_ReadFile:
 #endif
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 		HANDLE_ENOSYS(error, err, "pread")
@@ -1021,7 +1022,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pwrite_f_impl(int fd, DeeObjec
 	{
 		HANDLE h;
 		h = (HANDLE)_get_osfhandle(fd);
-		if (h == INVALID_HANDLE_VALUE )
+		if (h == INVALID_HANDLE_VALUE)
 			result_value = -1;
 		else {
 			DWORD bytes_written;
@@ -1044,7 +1045,7 @@ again_WriteFile:
 			                      (LPOVERLAPPED)&overlapped)) {
 				DWORD error = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				if (error == ERROR_OPERATION_ABORTED) {
+				if (DeeNTSystem_IsIntr(error)) {
 					if (DeeThread_CheckInterrupt())
 						goto err;
 					DBG_ALIGNMENT_DISABLE();
@@ -1061,7 +1062,7 @@ again_WriteFile:
 #endif
 	DBG_ALIGNMENT_ENABLE();
 	if (result_value < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FWRITABLE);
 		HANDLE_ENOSYS(error, err, "pwrite")
@@ -1150,7 +1151,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_lseek_f_impl(int fd, int32_t o
 #endif /* !CONFIG_HAVE_lseek64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "lseek")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1201,7 +1202,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_close_f_impl(int fd)
 	error = close(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "close")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1250,7 +1251,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fsync_f_impl(int fd)
 	result = fsync(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fsync")
@@ -1298,7 +1299,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fdatasync_f_impl(int fd)
 	result = fdatasync(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fdatasync")
@@ -1344,7 +1345,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_getpid_f_impl(void)
 	result = getpid();
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		if (error != 0) {
 			HANDLE_EINTR(error, again)
 			HANDLE_ENOSYS(error, err, "getpid")
@@ -1396,7 +1397,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_umask_f_impl(int mask)
 	result = umask(mask);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "umask")
 		DeeError_SysThrowf(&DeeError_SystemError, error,
@@ -1446,7 +1447,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup_f_impl(int fd)
 	result = dup(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "dup")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1498,7 +1499,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup2_f_impl(int oldfd, int new
 	result = dup2(oldfd, newfd);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "dup2")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
@@ -1548,7 +1549,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int new
 	int result;
 #ifndef CONFIG_HAVE_dup3
 	if (flags & ~O_CLOEXEC) {
-		Dee_SetErrno(EINVAL);
+		DeeSystem_SetErrno(EINVAL);
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid flags for dup3 %#x",
 		                flags);
@@ -1573,7 +1574,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_dup3_f_impl(int oldfd, int new
 #endif /* !CONFIG_HAVE_dup3 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "dup3")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
@@ -1627,7 +1628,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_isatty_f_impl(int fd)
 	result = isatty(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "isatty")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
@@ -1692,7 +1693,7 @@ again:
 	result = system(command);
 	DBG_ALIGNMENT_ENABLE();
 #ifdef EINTR
-	if (result < 0 && Dee_GetErrno() == EINTR)
+	if (result < 0 && DeeSystem_GetErrno() == EINTR)
 		goto again;
 #endif /* EINTR */
 	return DeeInt_NewInt(result);
@@ -1735,7 +1736,7 @@ libposix_errno_get_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":errno.getter"))
 		goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
-	return DeeInt_NewInt(Dee_GetErrno());
+	return DeeInt_NewInt(DeeSystem_GetErrno());
 #else /* CONFIG_HAVE_ERRNO_H */
 #define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("errno");
@@ -1749,7 +1750,7 @@ libposix_errno_del_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":errno.delete"))
 		goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
-	Dee_SetErrno(0);
+	DeeSystem_SetErrno(0);
 	return_none;
 #else /* CONFIG_HAVE_ERRNO_H */
 #define NEED_ERR_UNSUPPORTED 1
@@ -1765,7 +1766,7 @@ libposix_errno_set_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, "d:errno.setter", &value))
 		goto err;
 #ifdef CONFIG_HAVE_ERRNO_H
-	Dee_SetErrno(value);
+	DeeSystem_SetErrno(value);
 	return_none;
 #else /* CONFIG_HAVE_ERRNO_H */
 #define NEED_ERR_UNSUPPORTED 1
@@ -2069,7 +2070,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_truncate_f_impl(/*utf-8*/ char
 #endif /* FD-wrapped */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %ls could not be found", filename)
 		HANDLE_ENOSYS(result, err, "truncate")
@@ -2149,7 +2150,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_ftruncate_f_impl(int fd, int32
 #endif /* !CONFIG_HAVE_ftruncate64 */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(result, err, "ftruncate")
 		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %d: Invalid size %I64d", fd, len)
@@ -2243,7 +2244,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_access_f_impl(/*utf-8*/ char c
 #endif /* !CONFIG_HAVE_waccess */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 #ifdef EACCES
 		if (result == EACCES)
@@ -2312,7 +2313,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_euidaccess_f_impl(/*utf-8*/ ch
 	result = euidaccess(filename, how);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 #ifdef EACCES
 		if (result == EACCES)
@@ -2385,7 +2386,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_faccessat_f_impl(int dfd, /*ut
 	result = faccessat(dfd, filename, how, atflags);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 #ifdef EACCES
 		if (result == EACCES)
@@ -2477,7 +2478,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe_f_impl(void)
 	error = pipe(fds);
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
-		error = Dee_GetErrno();
+		error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
@@ -2506,7 +2507,7 @@ again:
 	if (!CreatePipe(&hRead, &hWrite, NULL, 0)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_OPERATION_ABORTED)
+		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
 		DeeError_SysThrowf(&DeeError_SystemError, dwError,
 		                   "Failed to create pipe");
@@ -2534,12 +2535,12 @@ err_fds:
 	close(fds[0]);
 	goto err;
 err_hWritefds0_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
+	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                   "Failed to create pipe");
 	close(fds[0]);
 	goto err_hWrite;
 err_hWritehRead_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
+	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                   "Failed to create pipe");
 	goto err_hWritehRead;
 err_hWritehRead_nterror:
@@ -2599,7 +2600,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 	if (oflags & ~(O_CLOEXEC))
 #endif /* !O_NONBLOCK */
 	{
-		Dee_SetErrno(EINVAL);
+		DeeSystem_SetErrno(EINVAL);
 		DBG_ALIGNMENT_ENABLE();
 		return_none;
 	}
@@ -2627,7 +2628,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 #endif /* !HAVE_PIPE2 */
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
-		error = Dee_GetErrno();
+		error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again)
 		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
@@ -2642,7 +2643,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_pipe2_f_impl(int oflags)
 #ifndef HAVE_PIPE2
 err_fds_errno:
 #ifdef EINTR
-	if (Dee_GetErrno() == EINTR) {
+	if (DeeSystem_GetErrno() == EINTR) {
 		DBG_ALIGNMENT_DISABLE();
 		close(fds[1]);
 		close(fds[0]);
@@ -2662,7 +2663,7 @@ err:
 	HANDLE hRead, hWrite;
 	int fds[2];
 	if (oflags & ~(O_CLOEXEC)) {
-		Dee_SetErrno(EINVAL);
+		DeeSystem_SetErrno(EINVAL);
 		return_none;
 	}
 again:
@@ -2672,7 +2673,7 @@ again:
 	if (!CreatePipe(&hRead, &hWrite, NULL, 0)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_OPERATION_ABORTED)
+		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
 		DeeError_SysThrowf(&DeeError_SystemError, dwError,
 		                   "Failed to create pipe");
@@ -2701,12 +2702,12 @@ err_fds:
 	close(fds[0]);
 	goto err;
 err_hWritefds0_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
+	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                   "Failed to create pipe");
 	close(fds[0]);
 	goto err_hWrite;
 err_hWritehRead_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, Dee_GetErrno(),
+	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                   "Failed to create pipe");
 	goto err_hWritehRead;
 err_hWritehRead_nterror:
@@ -2933,7 +2934,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchownat_f_impl(int dfd, /*utf
 	result = fchownat(dfd, filename, owner_uid, group_gid, atflags);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 		HANDLE_ENOSYS(result, err, "fchownat")
 		HANDLE_EINVAL(result, err, "Invalid at-flags")
@@ -3009,7 +3010,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_fchmodat_f_impl(int dfd, /*utf
 	result = fchmodat(dfd, filename, mode, atflags);
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
-		result = Dee_GetErrno();
+		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again)
 		HANDLE_ENOSYS(result, err, "fchmodat")
 		HANDLE_EINVAL(result, err, "Invalid at-flags")

@@ -21,21 +21,6 @@
 #ifndef DEE_SOURCE
 #define DEE_SOURCE 1
 #endif /* !DEE_SOURCE */
-#ifndef _KOS_SOURCE
-#define _KOS_SOURCE     1
-#endif /* !_KOS_SOURCE */
-#ifndef _BSD_SOURCE
-#define _BSD_SOURCE     1
-#endif /* !_BSD_SOURCE */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE     1
-#endif /* !_GNU_SOURCE */
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200809L
-#endif /* !_POSIX_C_SOURCE */
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE   500
-#endif /* !_XOPEN_SOURCE */
 
 #include "libfs.h"
 /**/
@@ -47,6 +32,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h> /* strend() */
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -57,11 +43,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef __USE_KOS
-#ifndef strend
-#define strend(str) ((str) + strlen(str))
-#endif /* !strend */
-#endif /* !__USE_KOS */
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
+#define strend(x) ((x) + strlen(x))
+#endif /* !CONFIG_HAVE_strend */
 
 DECL_BEGIN
 

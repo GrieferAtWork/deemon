@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* strend() */
 
 /**/
 #include "libdisasm.h"
@@ -39,9 +40,10 @@
 
 #include <string.h>
 
-#ifndef __USE_KOS
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
 #define strend(x) ((x) + strlen(x))
-#endif
+#endif /* !CONFIG_HAVE_strend */
 
 DECL_BEGIN
 

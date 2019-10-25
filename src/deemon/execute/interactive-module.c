@@ -49,17 +49,14 @@
 DECL_BEGIN
 
 #ifdef CONFIG_HOST_WINDOWS
-#define CONFIG_NOCASE_FS 1
-#define SEP              '\\'
-#define SEP_S            "\\"
+#define SEP      '\\'
 #define ISSEP(x) ((x) == '\\' || (x) == '/')
-#define ISABS(x) ((x)[0] && (x)[1] == ':')
 #else /* CONFIG_HOST_WINDOWS */
-#define SEP              '/'
-#define SEP_S            "/"
+#define SEP      '/'
 #define ISSEP(x) ((x) == '/')
-#define ISABS(x) ((x)[0] == '/')
+
 #ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr 1
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */

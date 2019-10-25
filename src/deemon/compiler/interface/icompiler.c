@@ -39,6 +39,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
+#include <deemon/system-features.h> /* strend() */
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
@@ -49,9 +50,10 @@
 
 DECL_BEGIN
 
-#ifndef __USE_KOS
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
 #define strend(x) ((x) + strlen(x))
-#endif /* !__USE_KOS */
+#endif /* !CONFIG_HAVE_strend */
 
 #ifdef CONFIG_AST_IS_STRUCT
 DECLARE_STRUCT_CACHE(ast, struct ast)

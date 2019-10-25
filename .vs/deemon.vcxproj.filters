@@ -1172,6 +1172,15 @@
     <None Include="..\include\deemon\system-features.h">
       <Filter>include\deemon</Filter>
     </None>
+    <None Include="..\include\deemon\system.h">
+      <Filter>include\deemon</Filter>
+    </None>
+    <None Include="..\src\deemon\system\system-nt.c.inl">
+      <Filter>src\deemon\system</Filter>
+    </None>
+    <None Include="..\src\deemon\system\system-unix.c.inl">
+      <Filter>src\deemon\system</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

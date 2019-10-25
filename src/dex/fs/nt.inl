@@ -41,6 +41,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system.h>
 
 #include <string.h>
 
@@ -50,10 +51,6 @@
 #undef GetProcAddress
 #define GetProcAddress GetProcAddressA
 #endif /* _WIN32_WCE */
-
-#ifndef __USE_KOS
-#define strend(str) ((str) + strlen(str))
-#endif /* !__USE_KOS */
 
 DECL_BEGIN
 
@@ -142,9 +139,9 @@ nt_SetCurrentDirectory(DeeObject *__restrict lpPathName) {
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	result = SetCurrentDirectoryW(wname);
-	if (!result && nt_IsUncError(GetLastError())) {
+	if (!result && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpPathName = nt_FixUncPath(lpPathName);
+		lpPathName = DeeNTSystem_FixUncPath(lpPathName);
 		if unlikely(!lpPathName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpPathName);
@@ -184,9 +181,9 @@ nt_GetFileAttributesEx(DeeObject *__restrict lpFileName,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	result = GetFileAttributesExW(wname, fInfoLevelId, lpFileInformation);
-	if (!result && nt_IsUncError(GetLastError())) {
+	if (!result && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpFileName = nt_FixUncPath(lpFileName);
+		lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
@@ -223,9 +220,9 @@ nt_GetFileAttributes(DeeObject *__restrict lpFileName,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	*presult = GetFileAttributesW(wname);
-	if ((*presult == INVALID_FILE_ATTRIBUTES) && nt_IsUncError(GetLastError())) {
+	if ((*presult == INVALID_FILE_ATTRIBUTES) && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpFileName = nt_FixUncPath(lpFileName);
+		lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
@@ -264,9 +261,9 @@ nt_SetFileAttributes(DeeObject *__restrict lpFileName,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = SetFileAttributesW(wname, dwFileAttributes);
-	if (!error && nt_IsUncError(GetLastError())) {
+	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpFileName = nt_FixUncPath(lpFileName);
+		lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
@@ -304,9 +301,9 @@ nt_CreateDirectory(DeeObject *__restrict lpPathName,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = CreateDirectoryW(wname, lpSecurityAttributes);
-	if (!error && nt_IsUncError(GetLastError())) {
+	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpPathName = nt_FixUncPath(lpPathName);
+		lpPathName = DeeNTSystem_FixUncPath(lpPathName);
 		if unlikely(!lpPathName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpPathName);
@@ -343,9 +340,9 @@ nt_RemoveDirectory(DeeObject *__restrict lpPathName) {
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = RemoveDirectoryW(wname);
-	if (!error && nt_IsUncError(GetLastError())) {
+	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpPathName = nt_FixUncPath(lpPathName);
+		lpPathName = DeeNTSystem_FixUncPath(lpPathName);
 		if unlikely(!lpPathName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpPathName);
@@ -382,9 +379,9 @@ nt_DeleteFile(DeeObject *__restrict lpFileName) {
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = DeleteFileW(wname);
-	if (!error && nt_IsUncError(GetLastError())) {
+	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpFileName = nt_FixUncPath(lpFileName);
+		lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 		if unlikely(!lpFileName)
 			goto err;
 		wname = (LPWSTR)DeeString_AsWide(lpFileName);
@@ -425,12 +422,12 @@ nt_MoveFile(DeeObject *__restrict lpExistingFileName,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = MoveFileW(wExistingFileName, wNewFileName);
-	if (!error && nt_IsUncError(GetLastError())) {
+	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpExistingFileName = nt_FixUncPath(lpExistingFileName);
+		lpExistingFileName = DeeNTSystem_FixUncPath(lpExistingFileName);
 		if unlikely(!lpExistingFileName)
 			goto err;
-		lpNewFileName = nt_FixUncPath(lpNewFileName);
+		lpNewFileName = DeeNTSystem_FixUncPath(lpNewFileName);
 		if unlikely(!lpNewFileName)
 			goto err_existing;
 		wExistingFileName = (LPWSTR)DeeString_AsWide(lpExistingFileName);
@@ -475,12 +472,12 @@ nt_CreateHardLink(DeeObject *__restrict lpFileName,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = CreateHardLinkW(wFileName, wExistingFileName, lpSecurityAttributes);
-	if (!error && nt_IsUncError(GetLastError())) {
+	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpFileName = nt_FixUncPath(lpFileName);
+		lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 		if unlikely(!lpFileName)
 			goto err;
-		lpExistingFileName = nt_FixUncPath(lpExistingFileName);
+		lpExistingFileName = DeeNTSystem_FixUncPath(lpExistingFileName);
 		if unlikely(!lpExistingFileName)
 			goto err_filename;
 		wFileName = (LPWSTR)DeeString_AsWide(lpFileName);
@@ -548,12 +545,12 @@ nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	error = (*callback)(wSymlinkFileName, wTargetFileName, dwFlags);
-	if (!error && nt_IsUncError(GetLastError())) {
+	if (!error && DeeNTSystem_IsUncError(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
-		lpSymlinkFileName = nt_FixUncPath(lpSymlinkFileName);
+		lpSymlinkFileName = DeeNTSystem_FixUncPath(lpSymlinkFileName);
 		if unlikely(!lpSymlinkFileName)
 			goto err;
-		lpTargetFileName = nt_FixUncPath(lpTargetFileName);
+		lpTargetFileName = DeeNTSystem_FixUncPath(lpTargetFileName);
 		if unlikely(!lpTargetFileName)
 			goto err_filename;
 		wSymlinkFileName = (LPWSTR)DeeString_AsWide(lpSymlinkFileName);

@@ -33,10 +33,12 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system.h>
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_DEX
@@ -66,28 +68,18 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/string.h>
 
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
-
 #ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
 #endif /* CONFIG_HAVE_LIMITS_H */
 
-#if defined(CONFIG_HOST_WINDOWS) && !defined(__CYGWIN__)
-/* NOTE: Don't use LoadLibrary() on cygwin. It does some crazy hacking
- *       to get fork() working properly with dynamic linking, so better
- *       not interfere with it by bypassing its mechanisms. */
-#define USE_LOADLIBRARY 1
-#else /* Windows... */
-#ifdef CONFIG_HAVE_DLFCN_H
-#include <dlfcn.h>
-#endif /* CONFIG_HAVE_DLFCN_H */
-#endif /* Unix... */
+#ifdef CONFIG_HOST_WINDOWS
+#include <Windows.h>
+#endif /* CONFIG_HOST_WINDOWS */
 
-#ifndef __USE_KOS
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
 #define strend(x) ((x) + strlen(x))
-#endif /* !__USE_KOS */
+#endif /* !CONFIG_HAVE_strend */
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
@@ -106,291 +98,48 @@ DECL_BEGIN
 
 INTDEF struct module_symbol empty_module_buckets[];
 
-#ifdef CONFIG_HAVE_memcasecmp
-#define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#else /* CONFIG_HAVE_memcasecmp */
-#define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
-	while (s--) {
-		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
-			return false;
-		++a;
-		++b;
-	}
-	return true;
-}
+#define SEP   DeeSystem_SEP
+#define SEP_S DeeSystem_SEP_S
+#define ISSEP DeeSystem_IsSep
+#define ISABS DeeSystem_IsAbs
+
+#ifdef DEE_SYSTEM_NOCASE_FS
+#ifndef CONFIG_HAVE_memcasecmp
+#define CONFIG_HAVE_memcasecmp 1
+#define memcasecmp dee_memcasecmp
+DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 #endif /* !CONFIG_HAVE_memcasecmp */
+#endif /* DEE_SYSTEM_NOCASE_FS */
 
 #ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr 1
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 
+#ifdef DEE_SYSTEM_NOCASE_FS
+#define fs_memcmp memcasecmp
+#define fs_hashobj(ob)    DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashstr(s)     Dee_HashCaseStr(s)
+#define fs_hashutf8(s, n) Dee_HashCaseUtf8(s, n)
+#define fs_hashmodname_equals(mod, hash) 1
 #ifdef CONFIG_HOST_WINDOWS
-#define CONFIG_NOCASE_FS 1
-#define SEP              '\\'
-#define SEP_S            "\\"
-#define ISSEP(x) ((x) == '\\' || (x) == '/')
-#define ISABS(x) ((x)[0] && (x)[1] == ':')
+#define fs_hashmodpath(mod) ((mod)->mo_pathhash)
+#define fs_hashmodpath_equals(mod, hash) ((mod)->mo_pathhash == (hash))
 #else /* CONFIG_HOST_WINDOWS */
-#define SEP              '/'
-#define SEP_S            "/"
-#define ISSEP(x) ((x) == '/')
-#define ISABS(x) ((x)[0] == '/')
+#define fs_hashmodpath(mod) DeeString_HashCase((DeeObject *)(mod)->mo_path)
+#define fs_hashmodpath_equals(mod, hash) 1
 #endif /* !CONFIG_HOST_WINDOWS */
-
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
-print_pwd(struct unicode_printer *__restrict printer) {
-#ifdef CONFIG_HOST_WINDOWS
-	LPWSTR buffer;
-	DWORD new_bufsize, bufsize = 256;
-	buffer = unicode_printer_alloc_wchar(printer, bufsize);
-	if unlikely(!buffer)
-		goto err;
-again:
-	DBG_ALIGNMENT_DISABLE();
-	new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
-	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!new_bufsize) {
-		nt_ThrowLastError();
-		goto err_release;
-	}
-	if (new_bufsize > bufsize) {
-		LPWSTR new_buffer;
-		/* Increase the buffer and try again. */
-		new_buffer = unicode_printer_resize_wchar(printer, buffer, new_bufsize);
-		if unlikely(!new_buffer)
-			goto err_release;
-		bufsize = new_bufsize;
-		goto again;
-	}
-	if unlikely(unicode_printer_confirm_wchar(printer, buffer, new_bufsize) < 0)
-		goto err;
-	if ((!printer->up_length ||
-	     UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1) != SEP) &&
-	    unicode_printer_putascii(printer, SEP))
-		goto err;
-	return 0;
-err_release:
-	unicode_printer_free_wchar(printer, buffer);
-err:
-	return -1;
-#else
-	char *buffer, *new_buffer;
-	size_t bufsize = 256;
-	buffer         = unicode_printer_alloc_utf8(printer, bufsize);
-	if unlikely(!buffer)
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	while (!getcwd(buffer, bufsize + 1)) {
-		DBG_ALIGNMENT_ENABLE();
-		/* Increase the buffer and try again. */
-		if (errno != ERANGE) {
-			DeeError_Throwf(&DeeError_SystemError,
-			                "Failed to determine the current working directory");
-			goto err_release;
-		}
-		bufsize *= 2;
-		new_buffer = unicode_printer_resize_utf8(printer, buffer, bufsize);
-		if unlikely(!new_buffer)
-			goto err_release;
-		DBG_ALIGNMENT_DISABLE();
-	}
-	DBG_ALIGNMENT_ENABLE();
-	bufsize = strlen(buffer);
-	if unlikely(unicode_printer_confirm_utf8(printer, buffer, bufsize) < 0)
-		goto err;
-	/* Make sure there is a trailing slash */
-	if ((!printer->up_length ||
-	     UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1) != SEP) &&
-	    unicode_printer_putascii(printer, SEP))
-		goto err;
-	return 0;
-err_release:
-	unicode_printer_free_utf8(printer, buffer);
-err:
-	return -1;
-#endif
-}
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-make_absolute(DeeObject *__restrict path) {
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	char *iter, *begin, *end, *flush_start, *flush_end, ch;
-	begin = DeeString_AsUtf8(path);
-	if unlikely(!begin)
-		goto err;
-	end = begin + WSTR_LENGTH(begin);
-	/* Strip leading space. */
-	begin = utf8_skipspace(begin, end);
-	if (!ISABS(begin)) {
-		/* Print the current working directory when the given path isn't absolute. */
-		if unlikely(print_pwd(&printer) < 0)
-			goto err;
-#ifdef CONFIG_HOST_WINDOWS
-		/* Handle drive-relative paths. */
-		if (ISSEP(begin[0]) && UNICODE_PRINTER_LENGTH(&printer)) {
-			size_t index = 0;
-			/* This sep must exist because it was printed by `print_pwd()' */
-			while ((++index, UNICODE_PRINTER_GETCHAR(&printer, index - 1) != SEP))
-				;
-			unicode_printer_truncate(&printer, index);
-			/* Strip leading slashes. */
-			for (;;) {
-				begin = utf8_skipspace(begin, end);
-				if (begin >= end)
-					break;
-				if (!ISSEP(*begin))
-					break;
-				++begin;
-			}
-		}
-#endif /* CONFIG_HOST_WINDOWS */
-	}
-	iter = flush_start = begin;
-	ASSERTF(*end == '\0',
-	        "path = %r\n"
-	        "end = %p(%q)\n",
-	        path, end, end);
-next:
-	ch = *iter++;
-	switch (ch) {
-
-	/* NOTE: The following part has been mirrored in `fs_pathexpand'
-	 *       that is apart of the `fs' DEX implementation file: `fs/path.c'
-	 *       If a bug is found in this code, it should be fixed here, as
-	 *       well as within the DEX source file. */
-#if SEP != '/'
-	case '/':
-#endif
-	case SEP:
-	case '\0': {
-		char const *sep_loc;
-		bool did_print_sep;
-		sep_loc = flush_end = iter - 1;
-		/* Skip multiple slashes and whitespace following a path separator. */
-		for (;;) {
-			iter = utf8_skipspace(iter, end);
-			if (iter >= end)
-				break;
-			if (!ISSEP(*iter))
-				break;
-			++iter;
-		}
-		flush_end = utf8_skipspace_rev(flush_end, flush_start);
-		/* Analyze the last path portion for being a special name (`.' or `..') */
-		if (flush_end[-1] == '.') {
-			if (flush_end[-2] == '.' && flush_end - 2 == flush_start) {
-				dssize_t new_end;
-				size_t printer_length;
-				/* Parent-directory-reference. */
-				/* Delete the last directory that was written. */
-				if (!printer.up_buffer)
-					goto do_flush_after_sep;
-				printer_length = printer.up_length;
-				if (!printer_length)
-					goto do_flush_after_sep;
-				if (UNICODE_PRINTER_GETCHAR(&printer, printer_length - 1) == SEP)
-					--printer_length;
-				new_end = unicode_printer_memrchr(&printer, SEP, 0, printer_length);
-				if (new_end < 0)
-					goto do_flush_after_sep;
-				++new_end;
-				/* Truncate the valid length of the printer to after the previous slash. */
-				printer.up_length = (size_t)new_end;
-				unicode_printer_truncate(&printer, (size_t)new_end);
-				goto done_flush;
-			} else if (flush_end[-3] == SEP && flush_end - 3 >= flush_start) {
-				/* Parent-directory-reference. */
-				char *new_end;
-				new_end = (char *)memrchr(flush_start, SEP,
-				                          (size_t)((flush_end - 3) - flush_start));
-				if (!new_end)
-					goto done_flush;
-				flush_end = new_end + 1; /* Include the previous sep in this flush. */
-				if (unicode_printer_print(&printer, flush_start,
-				                          (size_t)(flush_end - flush_start)) < 0)
-					goto err;
-				goto done_flush;
-			} else if (flush_end - 1 == flush_start) {
-				/* Self-directory-reference. */
-done_flush:
-				flush_start = iter;
-				goto done_flush_nostart;
-			} else if (flush_end[-2] == SEP &&
-			           flush_end - 2 >= flush_start) {
-				/* Self-directory-reference. */
-				flush_end -= 2;
-			}
-		}
-do_flush_after_sep:
-		/* Check if we need to fix anything */
-		if (flush_end == iter - 1
-#ifdef CONFIG_HOST_WINDOWS
-		    && (*sep_loc == SEP || iter == end + 1)
-#endif /* CONFIG_HOST_WINDOWS */
-		    ) {
-			goto done_flush_nostart;
-		}
-		/* If we can already include a slash in this part, do so. */
-		did_print_sep = false;
-		if (sep_loc == flush_end
-#ifdef CONFIG_HOST_WINDOWS
-		    && (*sep_loc == SEP)
-#endif /* !CONFIG_HOST_WINDOWS */
-		    ) {
-			++flush_end;
-			did_print_sep = true;
-		}
-		/* Flush everything prior to the path. */
-		ASSERT(flush_end >= flush_start);
-		if (unicode_printer_print(&printer, flush_start,
-		                          (size_t)(flush_end - flush_start)) < 0)
-			goto err;
-		flush_start = iter;
-		if (did_print_sep)
-			; /* The slash has already been been printed: `foo/ bar' */
-		else if (sep_loc == iter - 1
-#ifdef CONFIG_HOST_WINDOWS
-		         && (!*sep_loc || *sep_loc == SEP)
-#endif /* !CONFIG_HOST_WINDOWS */
-		         ) {
-			--flush_start; /* The slash will be printed as part of the next flush: `foo /bar' */
-		} else {
-			/* The slash must be printed explicitly: `foo / bar' */
-			if (unicode_printer_putascii(&printer, SEP) < 0)
-				goto err;
-		}
-done_flush_nostart:
-		if (iter == end + 1)
-			goto done;
-		goto next;
-	}
-	default: goto next;
-	}
-done:
-	--iter;
-	/* Print the remainder. */
-	if (iter > flush_start) {
-
-		/* Check for special case: The printer was never used.
-		 * If this is the case, we can simply re-return the given path. */
-		if (!UNICODE_PRINTER_LENGTH(&printer)) {
-			unicode_printer_fini(&printer);
-			return_reference_(path);
-		}
-		/* Actually print the remainder. */
-		if (unicode_printer_print(&printer, flush_start,
-		                          (size_t)(iter - flush_start)) < 0)
-			goto err;
-	}
-	/* Pack everything together. */
-	return unicode_printer_pack(&printer);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
+#else /* DEE_SYSTEM_NOCASE_FS */
+#define fs_memcmp         memcmp
+#define fs_hashobj(ob)    DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#define fs_hashstr(s)     Dee_HashStr(s)
+#define fs_hashutf8(s, n) Dee_HashUtf8(s, n)
+#define fs_hashmodpath(mod) DeeString_HASH((DeeObject *)(mod)->mo_path)
+#define fs_hashmodname_equals(mod, hash) (DeeString_HASH((mod)->mo_name) == (hash))
+#define fs_hashmodpath_equals(mod, hash) (DeeString_HASH((mod)->mo_path) == (hash))
+#endif /* !DEE_SYSTEM_NOCASE_FS */
 
 
 /* Begin loading the given module.
@@ -747,21 +496,10 @@ find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 		while (result) {
 			ASSERTF(result->mo_path, "All modules found in the file cache must have a path assigned");
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_path, &DeeString_Type);
-			if (/**/
-#ifdef CONFIG_HOST_WINDOWS
-			    result->mo_pathhash == hash &&
-#elif !defined(CONFIG_NOCASE_FS)
-			    DeeString_HASH(result->mo_path) == hash &&
-#endif
+			if (fs_hashmodpath_equals(result, hash) &&
 			    DeeString_SIZE(result->mo_path) == DeeString_SIZE(module_file) &&
-#ifdef CONFIG_NOCASE_FS
-			    MEMCASEEQ(DeeString_STR(result->mo_path), DeeString_STR(module_file),
-			              DeeString_SIZE(module_file) * sizeof(char))
-#else /* CONFIG_NOCASE_FS */
-			    memcmp(DeeString_STR(result->mo_path), DeeString_STR(module_file),
-			           DeeString_SIZE(module_file) * sizeof(char)) == 0
-#endif /* !CONFIG_NOCASE_FS */
-			    ) {
+			    fs_memcmp(DeeString_STR(result->mo_path), DeeString_STR(module_file),
+			              DeeString_SIZE(module_file) * sizeof(char)) == 0) {
 				break; /* Found it! */
 			}
 			result = result->mo_next;
@@ -772,11 +510,7 @@ find_file_module(DeeStringObject *__restrict module_file, dhash_t hash) {
 
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
 find_glob_module(DeeStringObject *__restrict module_name) {
-#ifdef CONFIG_NOCASE_FS
-	dhash_t hash = DeeString_HashCase((DeeObject *)module_name);
-#else /* CONFIG_NOCASE_FS */
-	dhash_t hash = DeeString_Hash((DeeObject *)module_name);
-#endif /* !CONFIG_NOCASE_FS */
+	dhash_t hash = fs_hashobj(module_name);
 	DeeModuleObject *result = NULL;
 #ifndef CONFIG_NO_THREADS
 	ASSERT(rwlock_reading(&modules_glob_lock));
@@ -785,22 +519,12 @@ find_glob_module(DeeStringObject *__restrict module_name) {
 		result = modules_glob_v[hash % modules_glob_a].mb_list;
 		while (result) {
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
-			if (/**/
-#ifndef CONFIG_NOCASE_FS
-			    DeeString_HASH(result->mo_name) == hash &&
-#endif /* !CONFIG_NOCASE_FS */
+			if (fs_hashmodname_equals(result, hash) &&
 			    /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
 			    DeeString_SIZE(result->mo_name) == DeeString_SIZE(module_name) &&
-#ifdef CONFIG_NOCASE_FS
-			    MEMCASEEQ(DeeString_STR(result->mo_name), DeeString_STR(module_name),
-			              DeeString_SIZE(module_name) * sizeof(char))
-#else /* CONFIG_NOCASE_FS */
-			    memcmp(DeeString_STR(result->mo_name), DeeString_STR(module_name),
-			           DeeString_SIZE(module_name) * sizeof(char)) == 0
-#endif /* !CONFIG_NOCASE_FS */
-			    ) {
+			    fs_memcmp(DeeString_STR(result->mo_name), DeeString_STR(module_name),
+			              DeeString_SIZE(module_name) * sizeof(char)) == 0)
 				break; /* Found it! */
-			}
 			result = result->mo_globnext;
 		}
 	}
@@ -836,13 +560,7 @@ do_alloc_new_vector:
 			ASSERTF(iter->mo_path, "All modules found in the file cache must have a path assigned");
 			ASSERT_OBJECT_TYPE_EXACT(iter->mo_path, &DeeString_Type);
 			/* Re-hash this entry. */
-#ifdef CONFIG_HOST_WINDOWS
-			dst = &new_vector[iter->mo_pathhash % new_size];
-#elif defined(CONFIG_NOCASE_FS)
-			dst = &new_vector[DeeString_HashCase((DeeObject *)iter->mo_path) % new_size];
-#else
-			dst = &new_vector[DeeString_HASH((DeeObject *)iter->mo_path) % new_size];
-#endif
+			dst = &new_vector[fs_hashmodpath(iter) % new_size];
 			if ((iter->mo_next = dst->mb_list) != NULL)
 				iter->mo_next->mo_pself = &iter->mo_next;
 			iter->mo_pself = &dst->mb_list;
@@ -885,11 +603,7 @@ do_alloc_new_vector:
 			next = iter->mo_globnext;
 			ASSERT_OBJECT_TYPE_EXACT(iter->mo_name, &DeeString_Type);
 			/* Re-hash this entry. */
-#ifdef CONFIG_NOCASE_FS
-			dst = &new_vector[DeeString_HashCase((DeeObject *)iter->mo_name) % new_size];
-#else /* CONFIG_NOCASE_FS */
-			dst = &new_vector[DeeString_HASH((DeeObject *)iter->mo_name) % new_size];
-#endif /* !CONFIG_NOCASE_FS */
+			dst = &new_vector[fs_hashobj(iter->mo_name) % new_size];
 			if ((iter->mo_globnext = dst->mb_list) != NULL)
 				iter->mo_globnext->mo_globpself = &iter->mo_globnext;
 			iter->mo_globpself = &dst->mb_list;
@@ -919,13 +633,7 @@ add_file_module(DeeModuleObject *__restrict self) {
 		return false;
 	ASSERT(modules_a);
 	/* Insert the module into the table. */
-#ifdef CONFIG_HOST_WINDOWS
-	hash = self->mo_pathhash;
-#elif defined(CONFIG_NOCASE_FS)
-	hash = DeeString_HashCase((DeeObject *)self->mo_path);
-#else
-	hash = DeeString_Hash((DeeObject *)self->mo_path);
-#endif
+	hash = fs_hashmodpath(self);
 	bucket = &modules_v[hash % modules_a];
 	if ((self->mo_next = bucket->mb_list) != NULL)
 		self->mo_next->mo_pself = &self->mo_next;
@@ -951,11 +659,7 @@ add_glob_module(DeeModuleObject *__restrict self) {
 		return false;
 	ASSERT(modules_glob_a);
 	/* Insert the module into the table. */
-#ifdef CONFIG_NOCASE_FS
-	hash = DeeString_HashCase((DeeObject *)self->mo_name);
-#else /* CONFIG_NOCASE_FS */
-	hash = DeeString_Hash((DeeObject *)self->mo_name);
-#endif /* !CONFIG_NOCASE_FS */
+	hash = fs_hashobj((DeeObject *)self->mo_name);
 	bucket = &modules_glob_v[hash % modules_glob_a];
 	if ((self->mo_globnext = bucket->mb_list) != NULL)
 		self->mo_globnext->mo_globpself = &self->mo_globnext;
@@ -1022,7 +726,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 	dhash_t hash;
 	ASSERT_OBJECT_TYPE(source_pathname, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_OPT(module_global_name, &DeeString_Type);
-	module_path_ob = (DREF DeeStringObject *)make_absolute(source_pathname);
+	module_path_ob = (DREF DeeStringObject *)DeeSystem_MakeAbsolute(source_pathname);
 	if unlikely(!module_path_ob)
 		goto err;
 
@@ -1544,15 +1248,9 @@ DeeModule_DoGet(char const *__restrict name,
 		while (result) {
 			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
 			if (DeeString_SIZE(result->mo_name) == size &&
-#ifdef CONFIG_NOCASE_FS
 			    /* TODO: This comparison doesn't work for mixed LATIN-1/UTF-8 strings */
-			    MEMCASEEQ(DeeString_STR(result->mo_name), name,
-			              size * sizeof(char))
-#else /* CONFIG_NOCASE_FS */
-			    memcmp(DeeString_STR(result->mo_name), name,
-			           size * sizeof(char)) == 0
-#endif /* !CONFIG_NOCASE_FS */
-			    ) {
+			    fs_memcmp(DeeString_STR(result->mo_name), name,
+			              size * sizeof(char)) == 0) {
 				Dee_Incref(result);
 				break; /* Found it! */
 			}
@@ -1572,12 +1270,7 @@ DeeModule_Get(DeeObject *__restrict module_name) {
 	/* TODO: Support for mixed LATIN-1/UTF-8 strings */
 	return DeeModule_DoGet(DeeString_STR(module_name),
 	                       DeeString_SIZE(module_name),
-#ifdef CONFIG_NOCASE_FS
-	                       DeeString_HashCase(module_name)
-#else /* CONFIG_NOCASE_FS */
-	                       DeeString_Hash(module_name)
-#endif /* !CONFIG_NOCASE_FS */
-	                       );
+	                       fs_hashobj(module_name));
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1585,12 +1278,7 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
                     size_t module_namesize) {
 	return DeeModule_DoGet(module_name,
 	                       module_namesize,
-#ifdef CONFIG_NOCASE_FS
-	                       Dee_HashCaseUtf8(module_name, module_namesize)
-#else /* CONFIG_NOCASE_FS */
-	                       Dee_HashUtf8(module_name, module_namesize)
-#endif /* !CONFIG_NOCASE_FS */
-	                       );
+	                       fs_hashutf8(module_name, module_namesize));
 }
 
 
@@ -1614,6 +1302,11 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
 #define Dee_MODULE_OPENINPATH_FRELMODULE   0x0001 /* The module name is relative */
 #define Dee_MODULE_OPENINPATH_FTHROWERROR  0x0002 /* Throw an error if the module isn't found. */
 
+
+#define SHEXT DeeSystem_SHEXT
+#define SHLEN COMPILER_STRLEN(DeeSystem_SHEXT)
+
+
 LOCAL WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
                         /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
@@ -1631,11 +1324,15 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	            module_global_name ? module_global_name : Dee_EmptyString,
 	            module_pathsize, module_path,
 	            module_namesize, module_name);
-#ifndef CONFIG_NO_DEC
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 6) * sizeof(char));
-#else /* !CONFIG_NO_DEC */
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5) * sizeof(char));
-#endif /* CONFIG_NO_DEC */
+#if !defined(CONFIG_NO_DEC) && !defined(CONFIG_NO_DEX)
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX(5, SHLEN) + 1) * sizeof(char));
+#elif !defined(CONFIG_NO_DEC)
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5 + 1) * sizeof(char));
+#elif !defined(CONFIG_NO_DEX)
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX(4, SHLEN) + 1) * sizeof(char));
+#else
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 4 + 1) * sizeof(char));
+#endif
 	if unlikely(!buf)
 		goto err;
 	dst = buf;
@@ -1693,12 +1390,8 @@ err_bad_module_name:
 	dst[module_namesize + 2] = 'e';
 	dst[module_namesize + 3] = 'e';
 	dst[module_namesize + 4] = '\0';
-	len                      = (size_t)(dst - buf) + module_namesize + 4;
-#ifdef CONFIG_NOCASE_FS
-	hash = Dee_HashCaseUtf8(buf, len);
-#else /* CONFIG_NOCASE_FS */
-	hash = Dee_HashUtf8(buf, len);
-#endif /* !CONFIG_NOCASE_FS */
+	len  = (size_t)(dst - buf) + module_namesize + 4;
+	hash = fs_hashutf8(buf, len);
 again_search_fs_modules:
 
 	/* Search for modules that have already been cached. */
@@ -1707,16 +1400,8 @@ again_search_fs_modules:
 		result = modules_v[hash % modules_a].mb_list;
 		for (; result; result = result->mo_next) {
 			char *utf8_path;
-#ifdef CONFIG_HOST_WINDOWS
-			if (hash != result->mo_pathhash)
+			if (fs_hashmodpath(result) != hash)
 				continue;
-#elif defined(CONFIG_NOCASE_FS)
-			if (hash != DeeString_HashCase((DeeObject *)result->mo_path))
-				continue;
-#else
-			if (hash != DeeString_Hash((DeeObject *)result->mo_path))
-				continue;
-#endif
 			utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
 			if unlikely(!utf8_path) {
 				Dee_Incref(result);
@@ -1725,13 +1410,9 @@ again_search_fs_modules:
 				if unlikely(!utf8_path)
 					goto err_buf_r;
 				if (WSTR_LENGTH(utf8_path) == len &&
-				/* TODO: Support for mixed LATIN-1/UTF-8 strings */
-#ifdef CONFIG_NOCASE_FS
-				    MEMCASEEQ(utf8_path, buf, len * sizeof(char)) /* TODO: UTF-8 case compare! */
-#else /* CONFIG_NOCASE_FS */
-				    memcmp(utf8_path, buf, len * sizeof(char)) == 0
-#endif /* !CONFIG_NOCASE_FS */
-				    ) {
+				    /* TODO: Support for mixed LATIN-1/UTF-8 strings */
+				    /* TODO: UTF-8 case compare! */
+				    fs_memcmp(utf8_path, buf, len * sizeof(char)) == 0) {
 					goto got_result_set_global;
 				}
 				Dee_Decref(result);
@@ -1739,14 +1420,10 @@ again_search_fs_modules:
 			}
 			if (WSTR_LENGTH(utf8_path) != len)
 				continue;
-				/* TODO: Support for mixed LATIN-1/UTF-8 strings */
-#ifdef CONFIG_NOCASE_FS
-			if (!MEMCASEEQ(utf8_path, buf, len * sizeof(char))) /* TODO: UTF-8 case compare! */
+			/* TODO: Support for mixed LATIN-1/UTF-8 strings */
+			/* TODO: UTF-8 case compare! */
+			if (fs_memcmp(utf8_path, buf, len * sizeof(char)) != 0)
 				continue;
-#else /* CONFIG_NOCASE_FS */
-			if (memcmp(utf8_path, buf, len * sizeof(char)) != 0)
-				continue;
-#endif /* !CONFIG_NOCASE_FS */
 			/* Found it! */
 			Dee_Incref(result);
 			rwlock_endread(&modules_lock);
@@ -1801,78 +1478,6 @@ again_find_existing_global_module:
 			}
 			goto got_result;
 		}
-#if !defined(CONFIG_NO_DEX) && 0 /* Dex modules are still cached under their real name! */
-		/* Also search for cached dex extensions. */
-		{
-			dhash_t dex_hash;
-#ifdef CONFIG_HOST_WINDOWS
-#define dex_len (len)
-			dst[module_namesize + 2] = 'l';
-			dst[module_namesize + 3] = 'l';
-#else /* CONFIG_HOST_WINDOWS */
-#define dex_len (len - 1)
-			dst[module_namesize + 1] = 's';
-			dst[module_namesize + 2] = 'o';
-			dst[module_namesize + 3] = '\0';
-#endif /* !CONFIG_HOST_WINDOWS */
-#ifdef CONFIG_NOCASE_FS
-			dex_hash = Dee_HashCaseUtf8(buf, dex_len);
-#else /* CONFIG_NOCASE_FS */
-			dex_hash                 = Dee_HashUtf8(buf, dex_len);
-#endif /* !CONFIG_NOCASE_FS */
-			result = modules_v[dex_hash % modules_a].mb_list;
-			for (; result; result = result->mo_next) {
-				char *utf8_path;
-#ifdef CONFIG_HOST_WINDOWS
-				if (dex_hash != result->mo_pathhash)
-					continue;
-#elif defined(CONFIG_NOCASE_FS)
-				if (dex_hash != DeeString_HashCase((DeeObject *)result->mo_path))
-					continue;
-#else
-				if (dex_hash != DeeString_Hash((DeeObject *)result->mo_path))
-					continue;
-#endif
-				utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
-				if unlikely(!utf8_path) {
-					Dee_Incref(result);
-					rwlock_endread(&modules_lock);
-					utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
-					if unlikely(!utf8_path)
-						goto err_buf_r;
-					if (WSTR_LENGTH(utf8_path) == dex_len &&
-#ifdef CONFIG_NOCASE_FS
-					    MEMCASEEQ(utf8_path, buf, dex_len * sizeof(char)) /* TODO: UTF-8 case compare! */
-#else /* CONFIG_NOCASE_FS */
-					    memcmp(utf8_path, buf, dex_len * sizeof(char)) == 0
-#endif /* !CONFIG_NOCASE_FS */
-					    ) {
-						goto got_result_set_global;
-					}
-					Dee_Decref(result);
-					goto again_search_fs_modules;
-				}
-				if (WSTR_LENGTH(utf8_path) != dex_len)
-					continue;
-#ifdef CONFIG_NOCASE_FS
-				if (!MEMCASEEQ(utf8_path, buf, dex_len * sizeof(char))) /* TODO: UTF-8 case compare! */
-					continue;
-#else /* CONFIG_NOCASE_FS */
-				if (memcmp(utf8_path, buf, dex_len * sizeof(char)) != 0)
-					continue;
-#endif /* !CONFIG_NOCASE_FS */
-				/* Found it! */
-				Dee_Incref(result);
-				rwlock_endread(&modules_lock);
-				goto got_result_set_global;
-			}
-#ifndef CONFIG_HOST_WINDOWS
-			dst[module_namesize + 1] = 'd';
-#endif /* !CONFIG_HOST_WINDOWS */
-			dst[module_namesize + 2] = 'e';
-			dst[module_namesize + 3] = 'e';
-		}
-#endif /* !CONFIG_NO_DEX */
 	}
 	rwlock_endread(&modules_lock);
 	if (ITER_ISOK(module_global_name)) {
@@ -2055,79 +1660,50 @@ load_module_after_dec_failure:
 	ASSERT(dst[module_namesize + 2] == 'e');
 	ASSERT(dst[module_namesize + 3] == 'e');
 	ASSERT(dst[module_namesize + 4] == '\0');
-#ifdef CONFIG_HOST_WINDOWS
-	dst[module_namesize + 2] = 'l';
-	dst[module_namesize + 3] = 'l';
-#ifdef USE_LOADLIBRARY
-	module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
-	if unlikely(!module_path_ob)
-		goto err_buf_module_name;
-#endif /* USE_LOADLIBRARY */
-#endif /* CONFIG_HOST_WINDOWS */
 	{
-#ifdef USE_LOADLIBRARY
-		HMODULE hModule;
-		{
-			LPCWSTR wPath;
-			wPath = (LPCWSTR)DeeString_AsWide((DeeObject *)module_path_ob);
-			if unlikely(!wPath)
-				goto err_buf_module_name_path;
-			hModule = LoadLibraryW(wPath);
+		void *dex_handle;
+		if (SHLEN >= 0 && SHEXT[0] != '.')
+			dst[module_namesize + 0] = SHEXT[0];
+		if (SHLEN >= 1 && SHEXT[1] != 'd')
+			dst[module_namesize + 1] = SHEXT[1];
+		if (SHLEN >= 2 && SHEXT[2] != 'e')
+			dst[module_namesize + 2] = SHEXT[2];
+		if (SHLEN >= 3 && SHEXT[3] != 'e')
+			dst[module_namesize + 3] = SHEXT[3];
+		__STATIC_IF (SHLEN >= 4) {
+			memcpy(&dst[module_namesize + 4],
+			       SHEXT + 4,
+			       ((SHLEN - 4) + 1) * sizeof(char));
 		}
-#define CLOSE_MODULE(x) FreeLibrary(x)
-		if (hModule == NULL)
-#else /* USE_LOADLIBRARY */
-		void *hModule;
-#ifndef CONFIG_HOST_WINDOWS
-		dst[module_namesize + 1] = 's';
-		dst[module_namesize + 2] = 'o';
-		dst[module_namesize + 3] = '\0';
-#endif /* !CONFIG_HOST_WINDOWS */
-		hModule = dlopen(buf,
-		                 RTLD_LOCAL |
-#ifdef RTLD_LAZY
-		                 RTLD_LAZY
-#else /* RTLD_LAZY */
-		                 RTLD_NOW
-#endif /* !RTLD_LAZY */
-		);
-#define CLOSE_MODULE(x) dlclose(x)
-		if (hModule == NULL)
-#endif /* !USE_LOADLIBRARY */
-		{
-#ifdef USE_LOADLIBRARY
-			{
-				size_t temp = DeeString_WLEN(module_path_ob);
-				DeeString_SetChar(module_path_ob, temp - 2, 'e'); /* Was `l' */
-				DeeString_SetChar(module_path_ob, temp - 1, 'e'); /* Was `l' */
+		dex_handle = DeeSystem_DlOpenString(buf);
+		if (dex_handle == DEESYSTEM_DLOPEN_FAILED) {
+			if (SHLEN >= 0 && SHEXT[0] != '.')
+				dst[module_namesize + 0] = '.';
+			if (SHLEN >= 1 && SHEXT[1] != 'd')
+				dst[module_namesize + 1] = 'd';
+			if (SHLEN >= 2 && SHEXT[2] != 'e')
+				dst[module_namesize + 2] = 'e';
+			if (SHLEN >= 3 && SHEXT[3] != 'e')
+				dst[module_namesize + 3] = 'e';
+			__STATIC_IF (SHLEN >= 4) {
+				dst[module_namesize + 4] = '\0';
 			}
-#else /* USE_LOADLIBRARY */
-#ifndef CONFIG_HOST_WINDOWS
-			dst[module_namesize + 1] = 'd';
-#endif /* !CONFIG_HOST_WINDOWS */
-			dst[module_namesize + 2] = 'e';
-			dst[module_namesize + 3] = 'e';
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
 			if unlikely(!module_path_ob)
 				goto err_buf;
-#endif /* !USE_LOADLIBRARY */
 		} else {
 			int error;
 			DeeModuleObject *existing_module;
-#ifndef USE_LOADLIBRARY
-#ifdef CONFIG_HOST_WINDOWS
-			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);
-#else /* CONFIG_HOST_WINDOWS */
-			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len - 1, STRING_ERROR_FSTRICT);
-#endif /* !CONFIG_HOST_WINDOWS */
+			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf,
+			                                                           len - (SHLEN - 4),
+			                                                           STRING_ERROR_FSTRICT);
 			if unlikely(!module_path_ob) {
-				CLOSE_MODULE(hModule);
+				DeeSystem_DlClose(dex_handle);
 				goto err_buf_module_name;
 			}
-#endif /* !USE_LOADLIBRARY */
 			result = (DREF DeeModuleObject *)DeeDex_New((DeeObject *)module_name_ob);
 			if unlikely(!result) {
-				CLOSE_MODULE(hModule);
+				DeeSystem_DlClose(dex_handle);
 				goto err_buf_module_name_path;
 			}
 			Dee_Decref_unlikely(module_name_ob);
@@ -2160,7 +1736,7 @@ set_dex_file_module_global:
 					rwlock_endwrite(&modules_glob_lock);
 					rwlock_endwrite(&modules_lock);
 					Dee_DecrefDokill(result);
-					CLOSE_MODULE(hModule);
+					DeeSystem_DlClose(dex_handle);
 					result = existing_module;
 					goto try_load_module_after_dex_failure;
 				}
@@ -2171,7 +1747,7 @@ set_dex_file_module_global:
 					/* Try to collect some memory, then try again. */
 					if (Dee_CollectMemory(1))
 						goto set_dex_file_module_global;
-					CLOSE_MODULE(hModule);
+					DeeSystem_DlClose(dex_handle);
 					goto err_buf_r;
 				}
 				add_glob_module(result);
@@ -2186,7 +1762,7 @@ set_dex_file_module:
 					Dee_Incref(existing_module);
 					rwlock_endwrite(&modules_lock);
 					Dee_DecrefDokill(result);
-					CLOSE_MODULE(hModule);
+					DeeSystem_DlClose(dex_handle);
 					result = existing_module;
 try_load_module_after_dex_failure:
 					if (DeeModule_BeginLoading(result) == 0)
@@ -2199,14 +1775,14 @@ try_load_module_after_dex_failure:
 					/* Try to collect some memory, then try again. */
 					if (Dee_CollectMemory(1))
 						goto set_dex_file_module;
-					CLOSE_MODULE(hModule);
+					DeeSystem_DlClose(dex_handle);
 					goto err_buf_r;
 				}
 				rwlock_endwrite(&modules_lock);
 			}
 load_module_after_dex_failure:
 			error = dex_load_handle((DeeDexObject *)result,
-			                        (void *)hModule,
+			                        (void *)dex_handle,
 			                        (DeeObject *)result->mo_path);
 			if unlikely(error) {
 				DeeModule_FailLoading(result);
@@ -2374,26 +1950,26 @@ err:
  * @param: options:            Compiler options detailing how a module should be loaded
  * @param: mode:               The open mode (set of `MODULE_OPENINPATH_F*')
  * Module files are attempted to be opened in the following order:
- * >> SEARCH_MODULE_FILESYSTEM_CACHE(joinpath(module_path,module_name + ".dee"));
+ * >> SEARCH_MODULE_FILESYSTEM_CACHE(joinpath(module_path, module_name + ".dee"));
  * >>#ifndef CONFIG_NO_DEC
- * >> TRY_LOAD_DEC_FILE(joinpath(module_path,"." + module_name + ".dec"));
+ * >> TRY_LOAD_DEC_FILE(joinpath(module_path, "." + module_name + ".dec"));
  * >>#endif // !CONFIG_NO_DEC
  * >>#ifndef CONFIG_NO_DEX
  * >>#ifdef CONFIG_HOST_WINDOWS
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".dll"));
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".dll"));
  * >>#else
- * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path,module_name + ".so"));
+ * >> TRY_LOAD_DEX_LIBRARY(joinpath(module_path, module_name + ".so"));
  * >>#endif
  * >>#endif // !CONFIG_NO_DEX
- * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path,module_name + ".dee"));
+ * >> TRY_LOAD_SOURCE_FILE(joinpath(module_path, module_name + ".dee"));
  * EXAMPLES:
  * >> char const *path = "/usr/lib/deemon/lib";
  * >> char const *name = "util";
  * >> // Opens:
  * >> //   - /usr/lib/deemon/lib/
- * >> DeeModule_OpenInPath(path,strlen(path),
- * >>                      name,strlen(name),
- * >>                      NULL,NULL,
+ * >> DeeModule_OpenInPath(path, strlen(path),
+ * >>                      name, strlen(name),
+ * >>                      NULL, NULL,
  * >>                      Dee_MODULE_OPENINPATH_FTHROWERROR);
  * @return: * :        The module that was imported.
  * @return: ITER_DONE: The module could not be found (only when `Dee_MODULE_OPENINPATH_FTHROWERROR' isn't set)
@@ -2450,7 +2026,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 		char *abs_utf8;
 		DREF DeeModuleObject *result;
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
-		if (print_pwd(&printer) < 0)
+		if (DeeSystem_PrintPwd(&printer, true) < 0)
 			goto err_printer;
 		if (unicode_printer_print(&printer, module_path, module_pathsize) < 0)
 			goto err_printer;
@@ -3291,82 +2867,30 @@ PUBLIC DeeListObject DeeModule_Path = {
 #endif /* !CONFIG_HOST_WINDOWS */
 
 
+
+/* Figure out how to implement `get_default_home()' */
+#undef get_default_home_USE_CONFIG_DEEMON_HOME
+#undef get_default_home_USE_GETMODULEFILENAME
+#undef get_default_home_USE_READLINK_PROC_SELF_EXE
+#undef get_default_home_USE_CWD
 #ifdef CONFIG_DEEMON_HOME
-PRIVATE DEFINE_STRING(default_deemon_home,CONFIG_DEEMON_HOME);
-#endif /* CONFIG_DEEMON_HOME */
+#define get_default_home_USE_CONFIG_DEEMON_HOME 1
+#elif defined(CONFIG_HOST_WINDOWS)
+#define get_default_home_USE_GETMODULEFILENAME 1
+#elif defined(CONFIG_HOST_UNIX)
+#define get_default_home_USE_READLINK_PROC_SELF_EXE 1
+#else
+#define get_default_home_USE_CWD 1
+#endif
 
 
-#if !defined(CONFIG_DEEMON_HOME) && \
-   (!defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HOST_UNIX))
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-unix_readlink(/*utf-8*/ char const *__restrict path) {
-	char *buffer, *new_buffer;
-	int error;
-	size_t bufsize, new_size;
-	dssize_t req_size;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	bufsize = PATH_MAX;
-	buffer  = unicode_printer_alloc_utf8(&printer, bufsize);
-	if unlikely(!buffer)
-		goto err;
-	for (;;) {
-		struct stat st;
-		if (DeeThread_CheckInterrupt())
-			goto err_buf;
-		DBG_ALIGNMENT_DISABLE();
-		req_size = readlink(path, buffer, bufsize + 1);
-		if unlikely(req_size < 0) {
-handle_error:
-			DBG_ALIGNMENT_ENABLE();
-			error = errno;
-			DeeError_SysThrowf(&DeeError_FSError, error,
-			                   "Failed to read symbolic link %q",
-			                   path);
-			goto err_buf;
-		}
-		DBG_ALIGNMENT_ENABLE();
-		if ((size_t)req_size <= bufsize)
-			break;
-		DBG_ALIGNMENT_DISABLE();
-		if (lstat(path, &st))
-			goto handle_error;
-		DBG_ALIGNMENT_ENABLE();
-		/* Ensure that this is still a symbolic link. */
-		if (!S_ISLNK(st.st_mode)) {
-			error = EINVAL;
-			goto handle_error;
-		}
-		new_size = (size_t)st.st_size;
-		if (new_size <= bufsize)
-			break; /* Shouldn't happen, but might due to race conditions? */
-		new_buffer = unicode_printer_resize_utf8(&printer, buffer, new_size);
-		if unlikely(!new_buffer)
-			goto err_buf;
-		buffer  = new_buffer;
-		bufsize = new_size;
-	}
-	/* Release unused data. */
-	if (unicode_printer_confirm_utf8(&printer, buffer, (size_t)req_size) < 0)
-		goto err_buf;
-	bufsize = UNICODE_PRINTER_LENGTH(&printer);
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) != '/')
-		--bufsize;
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) == '/')
-		--bufsize;
-	UNICODE_PRINTER_SETCHAR(&printer, bufsize, '/');
-	unicode_printer_truncate(&printer, bufsize + 1);
-	return unicode_printer_pack(&printer);
-err_buf:
-	unicode_printer_free_utf8(&printer, buffer);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-#endif /* !CONFIG_DEEMON_HOME && (!CONFIG_HOST_WINDOWS && CONFIG_HOST_UNIX) */
+#ifdef get_default_home_USE_CONFIG_DEEMON_HOME
+PRIVATE DEFINE_STRING(default_deemon_home, CONFIG_DEEMON_HOME);
+#endif /* get_default_home_USE_CONFIG_DEEMON_HOME */
 
-PRIVATE WUNUSED DREF /*String*/DeeStringObject *
-DCALL get_default_home(void) {
-	DREF DeeStringObject *result;
+
+
+PRIVATE WUNUSED DREF /*String*/DeeStringObject *DCALL get_default_home(void) {
 #ifndef CONFIG_NO_DEEMON_HOME_ENVIRON
 	char *env;
 #ifndef CONFIG_DEEMON_HOME_ENVIRON
@@ -3376,25 +2900,31 @@ DCALL get_default_home(void) {
 	env = getenv(CONFIG_DEEMON_HOME_ENVIRON);
 	DBG_ALIGNMENT_ENABLE();
 	if (env) {
+		DREF DeeStringObject *result;
 		size_t len = strlen(env);
 		if (len) {
 			DREF DeeStringObject *new_result;
 			while (len && ISSEP(env[len - 1]))
 				--len;
-			result = (DREF DeeStringObject *)DeeString_NewUtf8(env, len + 1, STRING_ERROR_FIGNORE);
+			result = (DREF DeeStringObject *)DeeString_NewUtf8(env, len + 1,
+			                                                   STRING_ERROR_FIGNORE);
 			if unlikely(!result)
 				goto err;
 			DeeString_SetChar(result, len - 1, SEP);
-			new_result = (DREF DeeStringObject *)make_absolute((DeeObject *)result);
+			new_result = (DREF DeeStringObject *)DeeSystem_MakeAbsolute((DeeObject *)result);
 			Dee_Decref(result);
 			return new_result;
 		}
 	}
 #endif /* !CONFIG_NO_DEEMON_HOME_ENVIRON */
-#ifdef CONFIG_DEEMON_HOME
+
+#ifdef get_default_home_USE_CONFIG_DEEMON_HOME
 	return_reference_((DeeStringObject *)&default_deemon_home);
-#elif defined(CONFIG_HOST_WINDOWS)
+#endif /* get_default_home_USE_CONFIG_DEEMON_HOME */
+
+#ifdef get_default_home_USE_GETMODULEFILENAME
 	{
+		DREF DeeStringObject *result;
 		DWORD dwBufSize = PATH_MAX, dwError;
 		LPWSTR lpBuffer, lpNewBuffer;
 		DREF DeeStringObject *new_result;
@@ -3414,11 +2944,10 @@ err_buffer:
 			if (!dwError) {
 				dwError = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				if (dwError == ERROR_OPERATION_ABORTED)
+				if (DeeNTSystem_IsIntr(dwError))
 					goto again_chk_intr;
 				DeeString_FreeWideBuffer(lpBuffer);
-				err_system_error_code("GetModuleFileName", dwError);
-				goto err_buffer;
+				goto fallback;
 			}
 			DBG_ALIGNMENT_ENABLE();
 			if (dwError <= dwBufSize) {
@@ -3449,15 +2978,46 @@ err_buffer:
 		result = (DREF DeeStringObject *)DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
 		if unlikely(!result)
 			goto err;
-		new_result = (DREF DeeStringObject *)make_absolute((DeeObject *)result);
+		new_result = (DREF DeeStringObject *)DeeSystem_MakeAbsolute((DeeObject *)result);
 		Dee_Decref(result);
 		return new_result;
 	}
-#elif defined(CONFIG_HOST_UNIX)
-	return (DREF DeeStringObject *)unix_readlink("/proc/self/exe");
-#else
+#endif /* get_default_home_USE_GETMODULEFILENAME */
+
+#ifdef get_default_home_USE_READLINK_PROC_SELF_EXE
+	size_t bufsize;
+	int error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	error = DeeUnixSystem_PrintlinkString(&printer, "/proc/self/exe");
+	if unlikely(error != 0) {
+		if (error < 0)
+			goto err;
+		/* Fallback... */
+bad_path:
+		unicode_printer_fini(&printer);
+		/* TODO: Check if `main:argv[0]' is an absolute filename. */
+		/* TODO: Check if `main:argv[0]' can be found in $PATH. */
+		return (DREF DeeStringObject *)DeeString_New(".");
+	}
+	bufsize = UNICODE_PRINTER_LENGTH(&printer);
+	if unlikely(!bufsize)
+		goto bad_path;
+	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) != '/')
+		--bufsize;
+	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) == '/')
+		--bufsize;
+	UNICODE_PRINTER_SETCHAR(&printer, bufsize, '/');
+	unicode_printer_truncate(&printer, bufsize + 1);
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+#endif /* get_default_home_USE_READLINK_PROC_SELF_EXE */
+fallback:
+
+	/* TODO: Check if `main:argv[0]' is an absolute filename. */
+	/* TODO: Check if `main:argv[0]' can be found in $PATH. */
 	return (DREF DeeStringObject *)DeeString_New(".");
-#endif
 err:
 	return NULL;
 }
@@ -3548,8 +3108,8 @@ PRIVATE void DCALL do_init_module_path(void) {
 				path = next_path;
 			}
 		}
-#endif /* !CONFIG_NO_DEEMON_PATH_ENVIRON */
 	}
+#endif /* !CONFIG_NO_DEEMON_PATH_ENVIRON */
 #ifdef CONFIG_DEEMON_PATH
 #define APPEND_PATH(str)                                       \
 	{                                                          \

@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system.h>
 
 #include <hybrid/atomic.h>
 
@@ -106,8 +107,8 @@ shlib_init(Shlib *__restrict self, size_t argc,
 		if unlikely(!wname)
 			goto err;
 		self->sh_lib = LoadLibraryW(wname);
-		if (!self->sh_lib && nt_IsUncError(GetLastError())) {
-			name = (DeeStringObject *)nt_FixUncPath((DeeObject *)name);
+		if (!self->sh_lib && DeeNTSystem_IsUncError(GetLastError())) {
+			name = (DeeStringObject *)DeeNTSystem_FixUncPath((DeeObject *)name);
 			if unlikely(!name)
 				goto err;
 			wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
@@ -119,7 +120,7 @@ shlib_init(Shlib *__restrict self, size_t argc,
 			Dee_Decref(name);
 			if unlikely(!self->sh_lib) {
 				DWORD error = GetLastError();
-				if (nt_IsFileNotFound(error)) {
+				if (DeeNTSystem_IsFileNotFoundError(error)) {
 					DeeError_SysThrowf(&DeeError_FileNotFound, error,
 					                   "Shared library %r could not be found",
 					                   name);

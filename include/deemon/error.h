@@ -45,7 +45,7 @@ DECL_BEGIN
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_error_object DeeErrorObject;
-typedef int32_t Dee_syserrno_t;
+typedef int Dee_syserrno_t;
 
 /* Builtin error classes. */
 DDATDEF DeeTypeObject DeeError_Signal;

@@ -52,21 +52,12 @@ PRIVATE ATTR_NOINLINE int DCALL fs_unsupported(void) {
 }
 
 INTERN WUNUSED DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
-	return fs_getcwd();
+	fs_unsupported();
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
-	return fs_getcwd();
-}
-
-INTERN int DCALL
-fs_printcwd(struct unicode_printer *__restrict UNUSED(printer)) {
-	return fs_unsupported();
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
-	fs_unsupported();
-	return NULL;
+	return fs_gethostname();
 }
 
 INTERN int DCALL
@@ -168,7 +159,7 @@ stat_fini(Stat *__restrict self) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_getxxx(DeeObject *__restrict UNUSED(self)) {
-	return fs_getcwd();
+	return fs_gethostname();
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -520,7 +511,7 @@ fs_symlink(DeeObject *__restrict UNUSED(target_text),
 
 INTERN WUNUSED DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict UNUSED(path)) {
-	return fs_getcwd();
+	return fs_gethostname();
 }
 
 #include "generic-dir.c.inl"

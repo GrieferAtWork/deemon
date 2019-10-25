@@ -2287,12 +2287,12 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 
 
 #undef CONFIG_UNICODE_PRINTER_MUSTFINI_IF_EMPTY
-#define Dee_UNICODE_PRINTER_ISEMPTY(x)     ((x)->up_buffer == NULL)
-#define Dee_UNICODE_PRINTER_LENGTH(x)      ((x)->up_length) /* Used length */
-#define Dee_UNICODE_PRINTER_BUFSIZE(x)     ((x)->up_buffer ? Dee_WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
-#define Dee_UNICODE_PRINTER_WIDTH(x)       ((x)->up_flags & Dee_UNICODE_PRINTER_FWIDTH) /* Current width */
-#define Dee_UNICODE_PRINTER_GETCHAR(x,i)    Dee_STRING_WIDTH_GETCHAR(UNICODE_PRINTER_WIDTH(x),(x)->up_buffer,i) /* Get a character */
-#define Dee_UNICODE_PRINTER_SETCHAR(x,i,v)  Dee_STRING_WIDTH_SETCHAR(UNICODE_PRINTER_WIDTH(x),(x)->up_buffer,i,v) /* Replace a character (`v' must fit into the buffer's current width) */
+#define Dee_UNICODE_PRINTER_ISEMPTY(x)       ((x)->up_buffer == NULL)
+#define Dee_UNICODE_PRINTER_LENGTH(x)        ((x)->up_length) /* Used length */
+#define Dee_UNICODE_PRINTER_BUFSIZE(x)       ((x)->up_buffer ? Dee_WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
+#define Dee_UNICODE_PRINTER_WIDTH(x)         ((x)->up_flags & Dee_UNICODE_PRINTER_FWIDTH) /* Current width */
+#define Dee_UNICODE_PRINTER_GETCHAR(x, i)    Dee_STRING_WIDTH_GETCHAR(UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i)    /* Get a character */
+#define Dee_UNICODE_PRINTER_SETCHAR(x, i, v) Dee_STRING_WIDTH_SETCHAR(UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i, v) /* Replace a character (`v' must fit into the buffer's current width) */
 
 #ifndef NDEBUG
 #define Dee_unicode_printer_truncate(self, len)                                         \

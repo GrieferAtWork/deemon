@@ -147,21 +147,12 @@ fs_setenv(DeeObject *__restrict UNUSED(name),
 }
 
 INTERN WUNUSED DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
-	return fs_getcwd();
+	fs_unsupported();
+	return NULL;
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
-	return fs_getcwd();
-}
-
-INTERN int DCALL
-fs_printcwd(struct unicode_printer *__restrict UNUSED(printer)) {
-	return fs_unsupported();
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
-	fs_unsupported();
-	return NULL;
+	return fs_gethostname();
 }
 
 INTERN int DCALL
@@ -182,7 +173,7 @@ stat_ctor(DeeObject *__restrict UNUSED(self),
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_getxxx(DeeObject *__restrict UNUSED(self)) {
-	return fs_getcwd();
+	return fs_gethostname();
 }
 
 PRIVATE struct type_getset stat_getsets[] = {
@@ -204,7 +195,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_isxxx(DeeObject *__restrict UNUSED(self),
            size_t UNUSED(argc),
            DeeObject **UNUSED(argv)) {
-	return fs_getcwd();
+	return fs_gethostname();
 }
 
 PRIVATE struct type_method stat_methods[] = {
@@ -409,7 +400,7 @@ fs_symlink(DeeObject *__restrict UNUSED(target_text),
 
 INTERN WUNUSED DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict UNUSED(path)) {
-	return fs_getcwd();
+	return fs_gethostname();
 }
 
 #ifndef __INTELLISENSE__

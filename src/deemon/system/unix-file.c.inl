@@ -69,7 +69,7 @@ PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
 PRIVATE ATTR_COLD int DCALL error_file_io(SystemFile *__restrict self) {
 	if (self->sf_handle == DSYSFD_INVALID)
 		return err_file_closed();
-	return DeeError_SysThrowf(&DeeError_FSError, Dee_GetErrno(),
+	return DeeError_SysThrowf(&DeeError_FSError, DeeSystem_GetErrno(),
 	                          "I/O Operation failed");
 }
 
@@ -81,14 +81,6 @@ DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
 	if (result == DSYSFD_INVALID)
 		error_file_io((SystemFile *)self);
 	return result;
-}
-
-PUBLIC WUNUSED DREF DeeObject *DCALL
-unix_opename(int fd) {
-	/* TODO: readlink("/proc/self/fd/%d" % self->sf_handle) */
-	(void)fd;
-	DERROR_NOTIMPLEMENTED();
-	return NULL;
 }
 
 
@@ -107,7 +99,7 @@ again:
 			err_file_closed();
 			goto done;
 		}
-		result = unix_opename(fd);
+		result = DeeSystem_GetFilenameOfFD(fd);
 		if unlikely(!result)
 			goto done;
 		/* Lazily cache the generated filename. */
@@ -411,7 +403,7 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	}
 #endif /* CONFIG_HAVE_wopen64 || CONFIG_HAVE_wopen */
 	if (fd < 0) {
-		int error = Dee_GetErrno();
+		int error = DeeSystem_GetErrno();
 		/* Handle file-already-exists. */
 		if (error == EEXIST && (oflags & OPEN_FEXCL))
 			return ITER_DONE;
@@ -668,7 +660,7 @@ sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
 	if (result)
 		return_true;
 	/* Check our whitelist of errors that indicate not-a-tty. */
-	result = Dee_GetErrno();
+	result = DeeSystem_GetErrno();
 	if (result == EINVAL
 #ifdef ENOTTY
 	    || result == ENOTTY

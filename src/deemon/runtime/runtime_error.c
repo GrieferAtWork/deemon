@@ -997,22 +997,6 @@ err_file_not_found_ob(DeeObject *__restrict filename) {
 	                       filename);
 }
 
-#ifdef CONFIG_HOST_WINDOWS
-INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
-err_system_error_code(char const *__restrict function,
-                      unsigned long last_error) {
-	DeeError_Throwf(&DeeError_SystemError,
-	                "System function `%s' failed: %lx",
-	                function, last_error);
-	return -1;
-}
-
-INTERN ATTR_NOINLINE ATTR_COLD NONNULL((1)) int DCALL
-err_system_error(char const *__restrict function) {
-	return err_system_error_code(function, GetLastError());
-}
-#endif /* CONFIG_HOST_WINDOWS */
-
 
 
 INTERN ATTR_COLD NONNULL((1)) int DCALL

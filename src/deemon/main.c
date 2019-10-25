@@ -40,8 +40,10 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h> /* strend() */
 
 #include <assert.h>
 #include <stdio.h>
@@ -66,9 +68,10 @@
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
 
-#ifndef __USE_KOS
-#define strend(s) ((s) + strlen(s))
-#endif /* !__USE_KOS */
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
+#define strend(x) ((x) + strlen(x))
+#endif /* !CONFIG_HAVE_strend */
 
 DECL_BEGIN
 
@@ -2472,10 +2475,10 @@ PRIVATE NONNULL((1)) bool DCALL os_trychdir(char *__restrict path) {
 	}
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsUncError(dwError)) {
+	if (DeeNTSystem_IsUncError(dwError)) {
 		/* Try one last time after fixing the path to be UNC-compliant. */
 		DREF DeeObject *new_path;
-		new_path = nt_FixUncPath(pathob);
+		new_path = DeeNTSystem_FixUncPath(pathob);
 		Dee_Decref(pathob);
 		if unlikely(!new_path)
 			goto err;

@@ -535,10 +535,10 @@ done:
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h   = seed ^ (n_bytes * m);
-#else
+	dhash_t h = seed ^ (n_bytes * m);
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	size_t len8 = n_bytes / 8;
 	while (len8--) {
 		dhash_t k;
@@ -583,10 +583,10 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 #ifdef seed
-	dhash_t h   = seed ^ (n_words * m);
-#else
+	dhash_t h = seed ^ (n_words * m);
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	size_t len8 = n_words / 8;
 	while (len8--) {
 		dhash_t k;
@@ -639,10 +639,10 @@ Dee_Hash2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 #ifdef seed
-	dhash_t h   = seed ^ (n_dwords * m);
-#else
+	dhash_t h = seed ^ (n_dwords * m);
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	size_t len8 = n_dwords / 8;
 	while (len8--) {
 		dhash_t k;
@@ -695,10 +695,10 @@ Dee_Hash4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h   = seed ^ (n_bytes * m);
-#else
+	dhash_t h = seed ^ (n_bytes * m);
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	size_t len8 = n_bytes / 8;
 	while (len8--) {
 		union {
@@ -754,10 +754,10 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_HashCase2Byte(uint16_t const *__restrict ptr, size_t n_words) {
 #ifdef seed
-	dhash_t h   = seed ^ (n_words * m);
-#else
+	dhash_t h = seed ^ (n_words * m);
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	size_t len8 = n_words / 8;
 	uint32_t ch;
 	while (len8--) {
@@ -827,9 +827,9 @@ PUBLIC ATTR_PURE dhash_t DCALL
 Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 #ifdef seed
 	dhash_t h   = seed ^ (n_dwords * m);
-#else
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	size_t len8 = n_dwords / 8;
 	uint32_t ch;
 	while (len8--) {
@@ -898,10 +898,10 @@ Dee_HashCase4Byte(uint32_t const *__restrict ptr, size_t n_dwords) {
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_HashUtf8(char const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h       = seed ^ (n_bytes * m); /* XXX: num_characters */
-#else
+	dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	char const *end = ptr + n_bytes;
 	uint32_t block[8];
 	for (;;) {
@@ -970,10 +970,10 @@ done:
 PUBLIC ATTR_PURE dhash_t DCALL
 Dee_HashCaseUtf8(char const *__restrict ptr, size_t n_bytes) {
 #ifdef seed
-	dhash_t h       = seed ^ (n_bytes * m); /* XXX: num_characters */
-#else
+	dhash_t h = seed ^ (n_bytes * m); /* XXX: num_characters */
+#else /* seed */
 	dhash_t h = 0;
-#endif
+#endif /* !seed */
 	char const *end = ptr + n_bytes;
 	uint32_t block[8];
 	for (;;) {

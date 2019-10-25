@@ -34,6 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
@@ -56,221 +57,6 @@ typedef DeeSystemFileObject SystemFile;
 extern ATTR_DLLIMPORT void ATTR_STDCALL OutputDebugStringA(char const *lpOutputString);
 extern ATTR_DLLIMPORT int ATTR_STDCALL IsDebuggerPresent(void);
 #endif /* !CONFIG_OUTPUTDEBUGSTRINGA_DEFINED */
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-make_absolute(DeeObject *__restrict path);
-
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-nt_FixUncPath(DeeObject *__restrict filename) {
-	DREF DeeObject *result;
-	size_t filename_size;
-	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
-	filename = make_absolute(filename);
-	if unlikely(!filename)
-		goto err;
-	filename_size = DeeString_SIZE(filename);
-	if (filename_size < 4 ||
-	    UNALIGNED_GET32((uint32_t *)DeeString_STR(filename)) != ENCODE4('\\', '\\', '.', '\\')) {
-		if (!DeeObject_IsShared(filename) &&
-		    DeeString_WIDTH(filename) == STRING_WIDTH_1BYTE) {
-			DeeString_FreeWidth(filename);
-			result = DeeString_ResizeBuffer(filename, 4 + filename_size);
-			if unlikely(!result)
-				goto err_filename;
-			memmove(DeeString_STR(result) + 4,
-			        DeeString_STR(filename),
-			        filename_size * sizeof(char));
-			/* Set the prefix. */
-			UNALIGNED_SET32((uint32_t *)DeeString_STR(result),
-			                ENCODE4('\\', '\\', '.', '\\'));
-			return result;
-		} else {
-			struct unicode_printer printer = UNICODE_PRINTER_INIT;
-			/* Prepend "\\.\". */
-			if unlikely(unicode_printer_print8(&printer, (uint8_t *)"\\\\.\\", 4) < 0)
-				goto err_printer;
-			if unlikely(unicode_printer_printstring(&printer, filename) < 0)
-				goto err_printer;
-			result = unicode_printer_pack(&printer);
-			Dee_Decref(filename);
-			return result;
-err_printer:
-			unicode_printer_fini(&printer);
-			return NULL;
-		}
-	}
-	return filename;
-err_filename:
-	Dee_Decref(filename);
-err:
-	return NULL;
-}
-
-
-PUBLIC WUNUSED bool DCALL nt_IsUncError(DWORD error) {
-	switch (error) {
-		/* TODO: Figure out the real UNC error codes. */
-#ifdef ERROR_FILE_NOT_FOUND
-	case ERROR_FILE_NOT_FOUND:
-#endif
-#ifdef ERROR_PATH_NOT_FOUND
-	case ERROR_PATH_NOT_FOUND:
-#endif
-#ifdef ERROR_ACCESS_DENIED
-	case ERROR_ACCESS_DENIED:
-#endif
-		/*case ERROR_INVALID_ACCESS:*/
-#ifdef ERROR_INVALID_DRIVE
-	case ERROR_INVALID_DRIVE:
-#endif
-		return true;
-	default: break;
-	}
-	return false;
-}
-
-PUBLIC WUNUSED bool DCALL nt_IsFileNotFound(DWORD error) {
-	switch (error) {
-		/* XXX: Check if these are all the possible
-		 *      invalid-path / file-not-found errors. */
-#ifdef ERROR_FILE_NOT_FOUND
-	case ERROR_FILE_NOT_FOUND:
-#endif /* ERROR_FILE_NOT_FOUND */
-#ifdef ERROR_PATH_NOT_FOUND
-	case ERROR_PATH_NOT_FOUND:
-#endif /* ERROR_PATH_NOT_FOUND */
-#ifdef ERROR_INVALID_DRIVE
-	case ERROR_INVALID_DRIVE:
-#endif /* ERROR_INVALID_DRIVE */
-#ifdef ERROR_BAD_NETPATH
-	case ERROR_BAD_NETPATH:
-#endif /* ERROR_BAD_NETPATH */
-#ifdef ERROR_BAD_PATHNAME
-	case ERROR_BAD_PATHNAME:
-#endif /* ERROR_BAD_PATHNAME */
-#ifdef ERROR_INVALID_NAME
-	case ERROR_INVALID_NAME:
-#endif /* ERROR_INVALID_NAME */
-		return true;
-	default: break;
-	}
-	return false;
-}
-
-PUBLIC WUNUSED bool DCALL nt_IsAccessDenied(DWORD error) {
-	switch (error) {
-#ifdef ERROR_ACCESS_DENIED
-	case ERROR_ACCESS_DENIED:
-#endif /* ERROR_ACCESS_DENIED */
-#ifdef ERROR_CANT_ACCESS_FILE
-	case ERROR_CANT_ACCESS_FILE:
-#endif /* ERROR_CANT_ACCESS_FILE */
-#ifdef ERROR_CTX_WINSTATION_ACCESS_DENIED
-	case ERROR_CTX_WINSTATION_ACCESS_DENIED:
-#endif /* ERROR_CTX_WINSTATION_ACCESS_DENIED */
-#ifdef ERROR_DS_DRA_ACCESS_DENIED
-	case ERROR_DS_DRA_ACCESS_DENIED:
-#endif /* ERROR_DS_DRA_ACCESS_DENIED */
-#ifdef ERROR_DS_INSUFF_ACCESS_RIGHTS
-	case ERROR_DS_INSUFF_ACCESS_RIGHTS:
-#endif /* ERROR_DS_INSUFF_ACCESS_RIGHTS */
-#ifdef ERROR_EA_ACCESS_DENIED
-	case ERROR_EA_ACCESS_DENIED:
-#endif /* ERROR_EA_ACCESS_DENIED */
-#ifdef ERROR_HV_ACCESS_DENIED
-	case ERROR_HV_ACCESS_DENIED:
-#endif /* ERROR_HV_ACCESS_DENIED */
-#ifdef ERROR_NETWORK_ACCESS_DENIED
-	case ERROR_NETWORK_ACCESS_DENIED:
-#endif /* ERROR_NETWORK_ACCESS_DENIED */
-#ifdef ERROR_NO_ADMIN_ACCESS_POINT
-	case ERROR_NO_ADMIN_ACCESS_POINT:
-#endif /* ERROR_NO_ADMIN_ACCESS_POINT */
-#ifdef ERROR_VHD_PARENT_VHD_ACCESS_DENIED
-	case ERROR_VHD_PARENT_VHD_ACCESS_DENIED:
-#endif /* ERROR_VHD_PARENT_VHD_ACCESS_DENIED */
-#ifdef ERROR_ACCESS_DISABLED_BY_POLICY
-	case ERROR_ACCESS_DISABLED_BY_POLICY:
-#endif /* ERROR_ACCESS_DISABLED_BY_POLICY */
-#ifdef ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY
-	case ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY:
-#endif /* ERROR_ACCESS_DISABLED_NO_SAFER_UI_BY_POLICY */
-#ifdef ERROR_ACCESS_DISABLED_WEBBLADE
-	case ERROR_ACCESS_DISABLED_WEBBLADE:
-#endif /* ERROR_ACCESS_DISABLED_WEBBLADE */
-#ifdef ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER
-	case ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER:
-#endif /* ERROR_ACCESS_DISABLED_WEBBLADE_TAMPER */
-#ifdef ERROR_CANT_ACCESS_DOMAIN_INFO
-	case ERROR_CANT_ACCESS_DOMAIN_INFO:
-#endif /* ERROR_CANT_ACCESS_DOMAIN_INFO */
-		return true;
-	default: break;
-	}
-	return false;
-}
-
-PUBLIC WUNUSED NONNULL((1)) HANDLE DCALL
-nt_CreateFile(DeeObject *__restrict lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,
-              LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition,
-              DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) {
-	HANDLE result;
-	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide(lpFileName);
-	if unlikely(!wname)
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	result = CreateFileW(wname, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
-	                     dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
-	if (result == INVALID_HANDLE_VALUE) {
-		if (nt_IsUncError(GetLastError())) {
-			/* Fix the filename and try again. */
-			DBG_ALIGNMENT_ENABLE();
-			lpFileName = nt_FixUncPath(lpFileName);
-			if unlikely(!lpFileName)
-				goto err;
-			wname = (LPWSTR)DeeString_AsWide(lpFileName);
-			if unlikely(!wname) {
-				Dee_Decref(lpFileName);
-				goto err;
-			}
-			DBG_ALIGNMENT_DISABLE();
-			result = CreateFileW(wname, dwDesiredAccess, dwShareMode, lpSecurityAttributes,
-			                     dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
-			DBG_ALIGNMENT_ENABLE();
-			Dee_Decref(lpFileName);
-		}
-	}
-	DBG_ALIGNMENT_ENABLE();
-	if unlikely(result == NULL)
-		result = INVALID_HANDLE_VALUE; /* Shouldn't happen... */
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC int DCALL nt_ThrowError(DWORD dwError) {
-	/* TODO: Translate specific error codes. */
-	return DeeError_SysThrowf(&DeeError_SystemError, dwError,
-	                          "System call failed (%lu)", dwError);
-}
-
-PUBLIC int DCALL nt_ThrowLastError(void) {
-	DWORD dwError;
-	DBG_ALIGNMENT_DISABLE();
-	dwError = GetLastError();
-	DBG_ALIGNMENT_ENABLE();
-	return nt_ThrowError(dwError);
-}
-
-
-
 
 
 INTERN dssize_t DCALL
@@ -400,7 +186,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-nt_GetFilenameOfHandle(HANDLE hHandle) {
+DeeNTSystem_GetFilenameOfHandle(HANDLE hHandle) {
 	/* TODO */
 	(void)hHandle;
 	DERROR_NOTIMPLEMENTED();
@@ -462,7 +248,7 @@ again:
 			err_file_closed();
 			goto done;
 		}
-		result = nt_GetFilenameOfHandle(hnd);
+		result = DeeNTSystem_GetFilenameOfHandle(hnd);
 		if unlikely(!result)
 			goto done;
 		/* Lazily cache the generated filename. */
@@ -590,9 +376,9 @@ check_unc_path:
 		DBG_ALIGNMENT_DISABLE();
 		error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (nt_IsUncError(error)) {
+		if (DeeNTSystem_IsUncError(error)) {
 			/* Fix UNC and try again. */
-			filename = nt_FixUncPath(filename);
+			filename = DeeNTSystem_FixUncPath(filename);
 			if unlikely(!filename)
 				goto err;
 			wname = (LPWSTR)DeeString_AsWide(filename);
@@ -610,7 +396,7 @@ check_unc_path:
 			DBG_ALIGNMENT_ENABLE();
 		}
 /*check_nt_error:*/
-		if (nt_IsFileNotFound(error) &&
+		if (DeeNTSystem_IsFileNotFoundError(error) &&
 		    !(oflags & OPEN_FCREAT))
 			return ITER_DONE;
 		/* Handle file already-exists. */
@@ -800,7 +586,7 @@ again:
 	if unlikely(!ReadFile(self->sf_handle, buffer, (DWORD)bufsize, &result, NULL)) {
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
 				return -1;
 			goto again;
@@ -940,7 +726,7 @@ done:
 	return 0;
 fallback:
 	DBG_ALIGNMENT_DISABLE();
-	if (GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeThread_CheckInterrupt())
 			return -1;
@@ -950,7 +736,7 @@ fallback:
 	/* Write as ASCII data. */
 	if (!write_all_file(self->sf_handle, buffer, bufsize)) {
 		DBG_ALIGNMENT_DISABLE();
-		if (GetLastError() == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				return -1;
@@ -1131,7 +917,7 @@ again:
 	                       &bytes_written, NULL)) {
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
 				return -1;
 			goto again;
@@ -1186,7 +972,7 @@ again:
 	                      (LPOVERLAPPED)&overlapped)) {
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
 				return -1;
 			goto again;
@@ -1223,7 +1009,7 @@ again:
 	                       (LPOVERLAPPED)&overlapped)) {
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
 				return -1;
 			goto again;
@@ -1246,7 +1032,7 @@ again:
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (error != NO_ERROR) {
-			if (error == ERROR_OPERATION_ABORTED) {
+			if (DeeNTSystem_IsIntr(error)) {
 				if (DeeThread_CheckInterrupt())
 					return -1;
 				goto again;

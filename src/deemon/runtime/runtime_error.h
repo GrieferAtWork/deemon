@@ -137,17 +137,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_read_property(struc
 INTERN ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_delete_property(struct module_object *__restrict self, char const *__restrict name);
 INTERN ATTR_COLD NONNULL((1, 2)) int DCALL err_module_cannot_write_property(struct module_object *__restrict self, char const *__restrict name);
 
-
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(char const *__restrict filename);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found_ob(DeeObject *__restrict filename);
-#ifndef CONFIG_NO_STDIO
-#ifdef CONFIG_HOST_WINDOWS
-/* Raise a system error after a call to a windows function
-* `function' failed, using `GetLastError()' as error code. */
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_system_error(char const *__restrict function);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_system_error_code(char const *__restrict function, unsigned long last_error);
-#endif /* CONFIG_HOST_WINDOWS */
-#endif /* !CONFIG_NO_STDIO */
 
 DECL_END
 

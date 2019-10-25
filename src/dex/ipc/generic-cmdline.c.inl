@@ -52,10 +52,12 @@
 #ifndef CONFIG_HAVE_LIBCMDLINE
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* strend() */
 
-#if !defined(__USE_KOS) && !defined(strend)
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
 #define strend(x) ((x) + strlen(x))
-#endif /* !__USE_KOS && !strend */
+#endif /* !CONFIG_HAVE_strend */
 #endif /* !CONFIG_HAVE_LIBCMDLINE */
 
 

@@ -54,16 +54,19 @@ DECL_BEGIN
 #define UNICODE_LF     10 /* '\n' */
 
 #ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr 1
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_memmem
-#define memmem dee_memmem
+#define CONFIG_HAVE_memmem 1
+#define memmem  dee_memmem
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
 #ifndef CONFIG_HAVE_memrmem
+#define CONFIG_HAVE_memrmem 1
 #define memrmem dee_memrmem
 DeeSystem_DEFINE_memrmem(dee_memrmem)
 #endif /* !CONFIG_HAVE_memrmem */

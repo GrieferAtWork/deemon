@@ -332,6 +332,7 @@
     <ClCompile Include="..\src\deemon\runtime\strings.c" />
     <ClCompile Include="..\src\deemon\runtime\thread.c" />
     <ClCompile Include="..\src\deemon\runtime\type_member.c" />
+    <ClCompile Include="..\src\deemon\system\system.c" />
     <ClCompile Include="..\src\deemon\system\file.c" />
   </ItemGroup>
   <ItemGroup>
@@ -339,6 +340,7 @@
     <None Include="..\cpp.hint" />
     <None Include="..\include\deemon\compiler\lexer.def" />
     <None Include="..\include\deemon\system-features.h" />
+    <None Include="..\include\deemon\system.h" />
     <None Include="..\src\deemon\compiler\asm\genstore-setup.c.inl" />
     <None Include="..\src\deemon\compiler\asm\userdb.def" />
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">
@@ -424,7 +426,9 @@ ml64.exe /c /Cx /Fo "$(IntermediateOutputPath)\deemon-exec-altstack-x86_64.obj" 
     <None Include="..\src\deemon\runtime\slab-impl.c.inl" />
     <None Include="..\src\deemon\runtime\slab.c.inl" />
     <None Include="..\src\deemon\system\generic-file.c.inl" />
+    <None Include="..\src\deemon\system\system-nt.c.inl" />
     <None Include="..\src\deemon\system\stdio-file.c.inl" />
+    <None Include="..\src\deemon\system\system-unix.c.inl" />
     <None Include="..\src\deemon\system\unix-file.c.inl" />
     <None Include="..\src\deemon\system\win-file.c.inl" />
     <None Include="..\util\doc-server.dee" />

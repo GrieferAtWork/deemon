@@ -34,6 +34,8 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* strend() */
+#include <deemon/system.h>
 #include <deemon/tuple.h>
 
 #ifndef CONFIG_NO_THREADS
@@ -49,9 +51,10 @@
 
 #include "../time/libtime.h"
 
-#ifndef __USE_KOS
-#define strend(str) ((str) + strlen(str))
-#endif /* !__USE_KOS */
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
+#define strend(x) ((x) + strlen(x))
+#endif /* !CONFIG_HAVE_strend */
 
 #ifndef PATH_MAX
 #ifdef PATHMAX
@@ -149,529 +152,6 @@ INTDEF int APIENTRY
 nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
                       DeeObject *__restrict lpTargetFileName,
                       DWORD dwFlags);
-
-
-
-
-LOCAL bool DCALL nt_IsBusy(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_CURRENT_DIRECTORY
-	case ERROR_CURRENT_DIRECTORY:
-#endif /* !ERROR_CURRENT_DIRECTORY */
-#ifdef ERROR_BUSY
-	case ERROR_BUSY:
-#endif /* !ERROR_BUSY */
-#ifdef ERROR_NETWORK_BUSY
-	case ERROR_NETWORK_BUSY:
-#endif /* !ERROR_NETWORK_BUSY */
-#ifdef ERROR_DEVICE_SUPPORT_IN_PROGRESS
-	case ERROR_DEVICE_SUPPORT_IN_PROGRESS:
-#endif /* !ERROR_DEVICE_SUPPORT_IN_PROGRESS */
-#ifdef DXGI_ERROR_MODE_CHANGE_IN_PROGRESS
-	case DXGI_ERROR_MODE_CHANGE_IN_PROGRESS:
-#endif /* !DXGI_ERROR_MODE_CHANGE_IN_PROGRESS */
-#ifdef ERROR_CLUSTER_BACKUP_IN_PROGRESS
-	case ERROR_CLUSTER_BACKUP_IN_PROGRESS:
-#endif /* !ERROR_CLUSTER_BACKUP_IN_PROGRESS */
-#ifdef ERROR_CLUSTER_DATABASE_TRANSACTION_IN_PROGRESS
-	case ERROR_CLUSTER_DATABASE_TRANSACTION_IN_PROGRESS:
-#endif /* !ERROR_CLUSTER_DATABASE_TRANSACTION_IN_PROGRESS */
-#ifdef ERROR_CLUSTER_JOIN_IN_PROGRESS
-	case ERROR_CLUSTER_JOIN_IN_PROGRESS:
-#endif /* !ERROR_CLUSTER_JOIN_IN_PROGRESS */
-#ifdef ERROR_CLUSTER_NODE_DRAIN_IN_PROGRESS
-	case ERROR_CLUSTER_NODE_DRAIN_IN_PROGRESS:
-#endif /* !ERROR_CLUSTER_NODE_DRAIN_IN_PROGRESS */
-#ifdef ERROR_DS_DOMAIN_RENAME_IN_PROGRESS
-	case ERROR_DS_DOMAIN_RENAME_IN_PROGRESS:
-#endif /* !ERROR_DS_DOMAIN_RENAME_IN_PROGRESS */
-#ifdef ERROR_DS_PDC_OPERATION_IN_PROGRESS
-	case ERROR_DS_PDC_OPERATION_IN_PROGRESS:
-#endif /* !ERROR_DS_PDC_OPERATION_IN_PROGRESS */
-#ifdef ERROR_FTP_TRANSFER_IN_PROGRESS
-	case ERROR_FTP_TRANSFER_IN_PROGRESS:
-#endif /* !ERROR_FTP_TRANSFER_IN_PROGRESS */
-#ifdef ERROR_GRAPHICS_OPM_SESSION_TYPE_CHANGE_IN_PROGRESS
-	case ERROR_GRAPHICS_OPM_SESSION_TYPE_CHANGE_IN_PROGRESS:
-#endif /* !ERROR_GRAPHICS_OPM_SESSION_TYPE_CHANGE_IN_PROGRESS */
-#ifdef ERROR_GRAPHICS_SESSION_TYPE_CHANGE_IN_PROGRESS
-	case ERROR_GRAPHICS_SESSION_TYPE_CHANGE_IN_PROGRESS:
-#endif /* !ERROR_GRAPHICS_SESSION_TYPE_CHANGE_IN_PROGRESS */
-#ifdef ERROR_JOURNAL_DELETE_IN_PROGRESS
-	case ERROR_JOURNAL_DELETE_IN_PROGRESS:
-#endif /* !ERROR_JOURNAL_DELETE_IN_PROGRESS */
-#ifdef ERROR_LOG_ARCHIVE_IN_PROGRESS
-	case ERROR_LOG_ARCHIVE_IN_PROGRESS:
-#endif /* !ERROR_LOG_ARCHIVE_IN_PROGRESS */
-#ifdef ERROR_LOG_FULL_HANDLER_IN_PROGRESS
-	case ERROR_LOG_FULL_HANDLER_IN_PROGRESS:
-#endif /* !ERROR_LOG_FULL_HANDLER_IN_PROGRESS */
-#ifdef ERROR_NDIS_RESET_IN_PROGRESS
-	case ERROR_NDIS_RESET_IN_PROGRESS:
-#endif /* !ERROR_NDIS_RESET_IN_PROGRESS */
-#ifdef ERROR_OPERATION_IN_PROGRESS
-	case ERROR_OPERATION_IN_PROGRESS:
-#endif /* !ERROR_OPERATION_IN_PROGRESS */
-#ifdef ERROR_OPLOCK_BREAK_IN_PROGRESS
-	case ERROR_OPLOCK_BREAK_IN_PROGRESS:
-#endif /* !ERROR_OPLOCK_BREAK_IN_PROGRESS */
-#ifdef ERROR_RUNLEVEL_SWITCH_IN_PROGRESS
-	case ERROR_RUNLEVEL_SWITCH_IN_PROGRESS:
-#endif /* !ERROR_RUNLEVEL_SWITCH_IN_PROGRESS */
-#ifdef ERROR_SERVER_SHUTDOWN_IN_PROGRESS
-	case ERROR_SERVER_SHUTDOWN_IN_PROGRESS:
-#endif /* !ERROR_SERVER_SHUTDOWN_IN_PROGRESS */
-#ifdef ERROR_SHUTDOWN_IN_PROGRESS
-	case ERROR_SHUTDOWN_IN_PROGRESS:
-#endif /* !ERROR_SHUTDOWN_IN_PROGRESS */
-#ifdef ERROR_TIERING_VOLUME_DISMOUNT_IN_PROGRESS
-	case ERROR_TIERING_VOLUME_DISMOUNT_IN_PROGRESS:
-#endif /* !ERROR_TIERING_VOLUME_DISMOUNT_IN_PROGRESS */
-#ifdef ERROR_TRANSACTION_FREEZE_IN_PROGRESS
-	case ERROR_TRANSACTION_FREEZE_IN_PROGRESS:
-#endif /* !ERROR_TRANSACTION_FREEZE_IN_PROGRESS */
-#ifdef ERROR_VOLMGR_TRANSACTION_IN_PROGRESS
-	case ERROR_VOLMGR_TRANSACTION_IN_PROGRESS:
-#endif /* !ERROR_VOLMGR_TRANSACTION_IN_PROGRESS */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-LOCAL bool DCALL nt_IsExists(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_FILE_EXISTS
-	case ERROR_FILE_EXISTS:
-#endif /* !ERROR_FILE_EXISTS */
-#ifdef ERROR_ALREADY_EXISTS
-	case ERROR_ALREADY_EXISTS:
-#endif /* !ERROR_ALREADY_EXISTS */
-#ifdef ERROR_ALIAS_EXISTS
-	case ERROR_ALIAS_EXISTS:
-#endif /* !ERROR_ALIAS_EXISTS */
-#ifdef ERROR_OBJECT_NAME_EXISTS
-	case ERROR_OBJECT_NAME_EXISTS:
-#endif /* !ERROR_OBJECT_NAME_EXISTS */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-LOCAL bool DCALL nt_IsNotDir(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_DIRECTORY
-	case ERROR_DIRECTORY:
-#endif /* !ERROR_DIRECTORY */
-#ifdef ERROR_PATH_NOT_FOUND
-	case ERROR_PATH_NOT_FOUND:
-#endif /* !ERROR_PATH_NOT_FOUND */
-#ifdef ERROR_INVALID_DRIVE
-	case ERROR_INVALID_DRIVE:
-#endif /* !ERROR_INVALID_DRIVE */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-LOCAL bool DCALL nt_IsNotEmpty(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_DIR_NOT_EMPTY
-	case ERROR_DIR_NOT_EMPTY:
-#endif /* !ERROR_DIR_NOT_EMPTY */
-#ifdef ERROR_NOT_EMPTY
-	case ERROR_NOT_EMPTY:
-#endif /* !ERROR_NOT_EMPTY */
-#ifdef ERROR_TXF_DIR_NOT_EMPTY
-	case ERROR_TXF_DIR_NOT_EMPTY:
-#endif /* !ERROR_TXF_DIR_NOT_EMPTY */
-#ifdef ERROR_VOLMGR_DISK_NOT_EMPTY
-	case ERROR_VOLMGR_DISK_NOT_EMPTY:
-#endif /* !ERROR_VOLMGR_DISK_NOT_EMPTY */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-LOCAL bool DCALL nt_IsBadf(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_INVALID_HANDLE
-	case ERROR_INVALID_HANDLE:
-#endif /* !ERROR_INVALID_HANDLE */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-LOCAL bool DCALL nt_IsXDev(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_NOT_SAME_DEVICE
-	case ERROR_NOT_SAME_DEVICE:
-#endif /* !ERROR_NOT_SAME_DEVICE */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-LOCAL bool DCALL nt_IsBadAlloc(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_OUTOFMEMORY
-	case ERROR_OUTOFMEMORY:
-#endif /* !ERROR_OUTOFMEMORY */
-#ifdef ERROR_NOT_ENOUGH_SERVER_MEMORY
-	case ERROR_NOT_ENOUGH_SERVER_MEMORY:
-#endif /* !ERROR_NOT_ENOUGH_SERVER_MEMORY */
-#ifdef ERROR_IPSEC_IKE_OUT_OF_MEMORY
-	case ERROR_IPSEC_IKE_OUT_OF_MEMORY:
-#endif /* !ERROR_IPSEC_IKE_OUT_OF_MEMORY */
-#ifdef E_OUTOFMEMORY
-	case E_OUTOFMEMORY:
-#endif /* !E_OUTOFMEMORY */
-#ifdef CO_E_INIT_MEMORY_ALLOCATOR
-	case CO_E_INIT_MEMORY_ALLOCATOR:
-#endif /* !CO_E_INIT_MEMORY_ALLOCATOR */
-#ifdef STG_E_INSUFFICIENTMEMORY
-	case STG_E_INSUFFICIENTMEMORY:
-#endif /* !STG_E_INSUFFICIENTMEMORY */
-#ifdef NTE_NO_MEMORY
-	case NTE_NO_MEMORY:
-#endif /* !NTE_NO_MEMORY */
-#ifdef SEC_E_INSUFFICIENT_MEMORY
-	case SEC_E_INSUFFICIENT_MEMORY:
-#endif /* !SEC_E_INSUFFICIENT_MEMORY */
-#ifdef OSS_OUT_MEMORY
-	case OSS_OUT_MEMORY:
-#endif /* !OSS_OUT_MEMORY */
-#ifdef CRYPT_E_ASN1_MEMORY
-	case CRYPT_E_ASN1_MEMORY:
-#endif /* !CRYPT_E_ASN1_MEMORY */
-#ifdef SCARD_E_NO_MEMORY
-	case SCARD_E_NO_MEMORY:
-#endif /* !SCARD_E_NO_MEMORY */
-#ifdef ERROR_GRAPHICS_NO_VIDEO_MEMORY
-	case ERROR_GRAPHICS_NO_VIDEO_MEMORY:
-#endif /* !ERROR_GRAPHICS_NO_VIDEO_MEMORY */
-#ifdef TPMAPI_E_OUT_OF_MEMORY
-	case TPMAPI_E_OUT_OF_MEMORY:
-#endif /* !TPMAPI_E_OUT_OF_MEMORY */
-#ifdef TBSIMP_E_OUT_OF_MEMORY
-	case TBSIMP_E_OUT_OF_MEMORY:
-#endif /* !TBSIMP_E_OUT_OF_MEMORY */
-#ifdef ERROR_HV_INSUFFICIENT_MEMORY
-	case ERROR_HV_INSUFFICIENT_MEMORY:
-#endif /* !ERROR_HV_INSUFFICIENT_MEMORY */
-#ifdef E_MBN_SMS_MEMORY_FULL
-	case E_MBN_SMS_MEMORY_FULL:
-#endif /* !E_MBN_SMS_MEMORY_FULL */
-#ifdef DXGI_ERROR_REMOTE_OUTOFMEMORY
-	case DXGI_ERROR_REMOTE_OUTOFMEMORY:
-#endif /* !DXGI_ERROR_REMOTE_OUTOFMEMORY */
-#ifdef UCEERR_MEMORYFAILURE
-	case UCEERR_MEMORYFAILURE:
-#endif /* !UCEERR_MEMORYFAILURE */
-#if defined(DNS_ERROR_NO_MEMORY) && DNS_ERROR_NO_MEMORY != ERROR_OUTOFMEMORY
-	case DNS_ERROR_NO_MEMORY:
-#endif /* !ERROR_OUTOFMEMORY */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-LOCAL bool DCALL nt_IsUnsupported(DWORD dwError) {
-	switch (dwError) {
-
-#ifdef ERROR_NOT_SUPPORTED
-	case ERROR_NOT_SUPPORTED:
-#endif /* !ERROR_NOT_SUPPORTED */
-#ifdef ERROR_INVALID_FUNCTION
-	case ERROR_INVALID_FUNCTION:
-#endif /* !ERROR_INVALID_FUNCTION */
-#ifdef ERROR_ATOMIC_LOCKS_NOT_SUPPORTED
-	case ERROR_ATOMIC_LOCKS_NOT_SUPPORTED:
-#endif /* !ERROR_ATOMIC_LOCKS_NOT_SUPPORTED */
-#ifdef ERROR_EAS_NOT_SUPPORTED
-	case ERROR_EAS_NOT_SUPPORTED:
-#endif /* !ERROR_EAS_NOT_SUPPORTED */
-#ifdef ERROR_DEVICE_FEATURE_NOT_SUPPORTED
-	case ERROR_DEVICE_FEATURE_NOT_SUPPORTED:
-#endif /* !ERROR_DEVICE_FEATURE_NOT_SUPPORTED */
-#ifdef ERROR_FILE_LEVEL_TRIM_NOT_SUPPORTED
-	case ERROR_FILE_LEVEL_TRIM_NOT_SUPPORTED:
-#endif /* !ERROR_FILE_LEVEL_TRIM_NOT_SUPPORTED */
-#ifdef ERROR_RESIDENT_FILE_NOT_SUPPORTED
-	case ERROR_RESIDENT_FILE_NOT_SUPPORTED:
-#endif /* !ERROR_RESIDENT_FILE_NOT_SUPPORTED */
-#ifdef ERROR_DIRECTORY_NOT_SUPPORTED
-	case ERROR_DIRECTORY_NOT_SUPPORTED:
-#endif /* !ERROR_DIRECTORY_NOT_SUPPORTED */
-#ifdef ERROR_UNSUPPORTED_COMPRESSION
-	case ERROR_UNSUPPORTED_COMPRESSION:
-#endif /* !ERROR_UNSUPPORTED_COMPRESSION */
-#ifdef ERROR_CARDBUS_NOT_SUPPORTED
-	case ERROR_CARDBUS_NOT_SUPPORTED:
-#endif /* !ERROR_CARDBUS_NOT_SUPPORTED */
-#ifdef ERROR_NOT_SUPPORTED_ON_SBS
-	case ERROR_NOT_SUPPORTED_ON_SBS:
-#endif /* !ERROR_NOT_SUPPORTED_ON_SBS */
-#ifdef ERROR_SYMLINK_NOT_SUPPORTED
-	case ERROR_SYMLINK_NOT_SUPPORTED:
-#endif /* !ERROR_SYMLINK_NOT_SUPPORTED */
-#ifdef ERROR_INSTALL_LANGUAGE_UNSUPPORTED
-	case ERROR_INSTALL_LANGUAGE_UNSUPPORTED:
-#endif /* !ERROR_INSTALL_LANGUAGE_UNSUPPORTED */
-#ifdef ERROR_UNSUPPORTED_TYPE
-	case ERROR_UNSUPPORTED_TYPE:
-#endif /* !ERROR_UNSUPPORTED_TYPE */
-#ifdef ERROR_INSTALL_PLATFORM_UNSUPPORTED
-	case ERROR_INSTALL_PLATFORM_UNSUPPORTED:
-#endif /* !ERROR_INSTALL_PLATFORM_UNSUPPORTED */
-#ifdef ERROR_PATCH_PACKAGE_UNSUPPORTED
-	case ERROR_PATCH_PACKAGE_UNSUPPORTED:
-#endif /* !ERROR_PATCH_PACKAGE_UNSUPPORTED */
-#ifdef ERROR_PATCH_REMOVAL_UNSUPPORTED
-	case ERROR_PATCH_REMOVAL_UNSUPPORTED:
-#endif /* !ERROR_PATCH_REMOVAL_UNSUPPORTED */
-#ifdef RPC_S_PROTSEQ_NOT_SUPPORTED
-	case RPC_S_PROTSEQ_NOT_SUPPORTED:
-#endif /* !RPC_S_PROTSEQ_NOT_SUPPORTED */
-#ifdef RPC_S_UNSUPPORTED_TRANS_SYN
-	case RPC_S_UNSUPPORTED_TRANS_SYN:
-#endif /* !RPC_S_UNSUPPORTED_TRANS_SYN */
-#ifdef RPC_S_UNSUPPORTED_TYPE
-	case RPC_S_UNSUPPORTED_TYPE:
-#endif /* !RPC_S_UNSUPPORTED_TYPE */
-#ifdef RPC_S_UNSUPPORTED_NAME_SYNTAX
-	case RPC_S_UNSUPPORTED_NAME_SYNTAX:
-#endif /* !RPC_S_UNSUPPORTED_NAME_SYNTAX */
-#ifdef RPC_S_CANNOT_SUPPORT
-	case RPC_S_CANNOT_SUPPORT:
-#endif /* !RPC_S_CANNOT_SUPPORT */
-#ifdef RPC_S_UNSUPPORTED_AUTHN_LEVEL
-	case RPC_S_UNSUPPORTED_AUTHN_LEVEL:
-#endif /* !RPC_S_UNSUPPORTED_AUTHN_LEVEL */
-#ifdef ERROR_METAFILE_NOT_SUPPORTED
-	case ERROR_METAFILE_NOT_SUPPORTED:
-#endif /* !ERROR_METAFILE_NOT_SUPPORTED */
-#ifdef ERROR_TRANSFORM_NOT_SUPPORTED
-	case ERROR_TRANSFORM_NOT_SUPPORTED:
-#endif /* !ERROR_TRANSFORM_NOT_SUPPORTED */
-#ifdef ERROR_CLIPPING_NOT_SUPPORTED
-	case ERROR_CLIPPING_NOT_SUPPORTED:
-#endif /* !ERROR_CLIPPING_NOT_SUPPORTED */
-#ifdef PEERDIST_ERROR_CONTENTINFO_VERSION_UNSUPPORTED
-	case PEERDIST_ERROR_CONTENTINFO_VERSION_UNSUPPORTED:
-#endif /* !PEERDIST_ERROR_CONTENTINFO_VERSION_UNSUPPORTED */
-#ifdef PEERDIST_ERROR_VERSION_UNSUPPORTED
-	case PEERDIST_ERROR_VERSION_UNSUPPORTED:
-#endif /* !PEERDIST_ERROR_VERSION_UNSUPPORTED */
-#ifdef ERROR_NOT_SUPPORTED_IN_APPCONTAINER
-	case ERROR_NOT_SUPPORTED_IN_APPCONTAINER:
-#endif /* !ERROR_NOT_SUPPORTED_IN_APPCONTAINER */
-#ifdef ERROR_NO_SUPPORTING_DRIVES
-	case ERROR_NO_SUPPORTING_DRIVES:
-#endif /* !ERROR_NO_SUPPORTING_DRIVES */
-#ifdef ERROR_OFFLOAD_READ_FLT_NOT_SUPPORTED
-	case ERROR_OFFLOAD_READ_FLT_NOT_SUPPORTED:
-#endif /* !ERROR_OFFLOAD_READ_FLT_NOT_SUPPORTED */
-#ifdef ERROR_OFFLOAD_WRITE_FLT_NOT_SUPPORTED
-	case ERROR_OFFLOAD_WRITE_FLT_NOT_SUPPORTED:
-#endif /* !ERROR_OFFLOAD_WRITE_FLT_NOT_SUPPORTED */
-#ifdef ERROR_OFFLOAD_READ_FILE_NOT_SUPPORTED
-	case ERROR_OFFLOAD_READ_FILE_NOT_SUPPORTED:
-#endif /* !ERROR_OFFLOAD_READ_FILE_NOT_SUPPORTED */
-#ifdef ERROR_OFFLOAD_WRITE_FILE_NOT_SUPPORTED
-	case ERROR_OFFLOAD_WRITE_FILE_NOT_SUPPORTED:
-#endif /* !ERROR_OFFLOAD_WRITE_FILE_NOT_SUPPORTED */
-#ifdef ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED
-	case ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED:
-#endif /* !ERROR_CLUSTER_RESTYPE_NOT_SUPPORTED */
-#ifdef ERROR_CLUSTER_RESOURCE_CONTAINS_UNSUPPORTED_DIFF_AREA_FOR_SHARED_VOLUMES
-	case ERROR_CLUSTER_RESOURCE_CONTAINS_UNSUPPORTED_DIFF_AREA_FOR_SHARED_VOLUMES:
-#endif /* !ERROR_CLUSTER_RESOURCE_CONTAINS_UNSUPPORTED_DIFF_AREA_FOR_SHARED_VOLUMES */
-#ifdef ERROR_VOLUME_NOT_SUPPORT_EFS
-	case ERROR_VOLUME_NOT_SUPPORT_EFS:
-#endif /* !ERROR_VOLUME_NOT_SUPPORT_EFS */
-#ifdef ERROR_EFS_VERSION_NOT_SUPPORT
-	case ERROR_EFS_VERSION_NOT_SUPPORT:
-#endif /* !ERROR_EFS_VERSION_NOT_SUPPORT */
-#ifdef ERROR_CS_ENCRYPTION_UNSUPPORTED_SERVER
-	case ERROR_CS_ENCRYPTION_UNSUPPORTED_SERVER:
-#endif /* !ERROR_CS_ENCRYPTION_UNSUPPORTED_SERVER */
-#ifdef ERROR_IMPLICIT_TRANSACTION_NOT_SUPPORTED
-	case ERROR_IMPLICIT_TRANSACTION_NOT_SUPPORTED:
-#endif /* !ERROR_IMPLICIT_TRANSACTION_NOT_SUPPORTED */
-#ifdef ERROR_TRANSACTIONS_UNSUPPORTED_REMOTE
-	case ERROR_TRANSACTIONS_UNSUPPORTED_REMOTE:
-#endif /* !ERROR_TRANSACTIONS_UNSUPPORTED_REMOTE */
-#ifdef ERROR_TRANSACTED_MAPPING_UNSUPPORTED_REMOTE
-	case ERROR_TRANSACTED_MAPPING_UNSUPPORTED_REMOTE:
-#endif /* !ERROR_TRANSACTED_MAPPING_UNSUPPORTED_REMOTE */
-#ifdef ERROR_OPERATION_NOT_SUPPORTED_IN_TRANSACTION
-	case ERROR_OPERATION_NOT_SUPPORTED_IN_TRANSACTION:
-#endif /* !ERROR_OPERATION_NOT_SUPPORTED_IN_TRANSACTION */
-#ifdef ERROR_DS_AUTH_METHOD_NOT_SUPPORTED
-	case ERROR_DS_AUTH_METHOD_NOT_SUPPORTED:
-#endif /* !ERROR_DS_AUTH_METHOD_NOT_SUPPORTED */
-#ifdef ERROR_DS_NOT_SUPPORTED
-	case ERROR_DS_NOT_SUPPORTED:
-#endif /* !ERROR_DS_NOT_SUPPORTED */
-#ifdef ERROR_DS_DRA_NOT_SUPPORTED
-	case ERROR_DS_DRA_NOT_SUPPORTED:
-#endif /* !ERROR_DS_DRA_NOT_SUPPORTED */
-#ifdef ERROR_DS_NOT_SUPPORTED_SORT_ORDER
-	case ERROR_DS_NOT_SUPPORTED_SORT_ORDER:
-#endif /* !ERROR_DS_NOT_SUPPORTED_SORT_ORDER */
-#ifdef ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER
-	case ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER:
-#endif /* !ERROR_NOT_SUPPORTED_ON_STANDARD_SERVER */
-#ifdef DNS_ERROR_UNSUPPORTED_ALGORITHM
-	case DNS_ERROR_UNSUPPORTED_ALGORITHM:
-#endif /* !DNS_ERROR_UNSUPPORTED_ALGORITHM */
-#ifdef DNS_ERROR_KSP_DOES_NOT_SUPPORT_PROTECTION
-	case DNS_ERROR_KSP_DOES_NOT_SUPPORT_PROTECTION:
-#endif /* !DNS_ERROR_KSP_DOES_NOT_SUPPORT_PROTECTION */
-#ifdef WSAENOPROTOOPT
-	case WSAENOPROTOOPT:
-#endif /* !WSAENOPROTOOPT */
-#ifdef WSAEPROTONOSUPPORT
-	case WSAEPROTONOSUPPORT:
-#endif /* !WSAEPROTONOSUPPORT */
-#ifdef WSAESOCKTNOSUPPORT
-	case WSAESOCKTNOSUPPORT:
-#endif /* !WSAESOCKTNOSUPPORT */
-#ifdef WSAEOPNOTSUPP
-	case WSAEOPNOTSUPP:
-#endif /* !WSAEOPNOTSUPP */
-#ifdef WSAEPFNOSUPPORT
-	case WSAEPFNOSUPPORT:
-#endif /* !WSAEPFNOSUPPORT */
-#ifdef WSAEAFNOSUPPORT
-	case WSAEAFNOSUPPORT:
-#endif /* !WSAEAFNOSUPPORT */
-#ifdef WSAVERNOTSUPPORTED
-	case WSAVERNOTSUPPORTED:
-#endif /* !WSAVERNOTSUPPORTED */
-#ifdef ERROR_IPSEC_IKE_UNSUPPORTED_ID
-	case ERROR_IPSEC_IKE_UNSUPPORTED_ID:
-#endif /* !ERROR_IPSEC_IKE_UNSUPPORTED_ID */
-#ifdef ERROR_IPSEC_IKE_PEER_DOESNT_SUPPORT_MOBIKE
-	case ERROR_IPSEC_IKE_PEER_DOESNT_SUPPORT_MOBIKE:
-#endif /* !ERROR_IPSEC_IKE_PEER_DOESNT_SUPPORT_MOBIKE */
-#ifdef ERROR_EVT_FILTER_UNSUPPORTEDOP
-	case ERROR_EVT_FILTER_UNSUPPORTEDOP:
-#endif /* !ERROR_EVT_FILTER_UNSUPPORTEDOP */
-#ifdef ERROR_MRM_UNSUPPORTED_DIRECTORY_TYPE
-	case ERROR_MRM_UNSUPPORTED_DIRECTORY_TYPE:
-#endif /* !ERROR_MRM_UNSUPPORTED_DIRECTORY_TYPE */
-#ifdef ERROR_MRM_UNSUPPORTED_PROFILE_TYPE
-	case ERROR_MRM_UNSUPPORTED_PROFILE_TYPE:
-#endif /* !ERROR_MRM_UNSUPPORTED_PROFILE_TYPE */
-#ifdef ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_MERGE
-	case ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_MERGE:
-#endif /* !ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_MERGE */
-#ifdef ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_LOAD_UNLOAD_PRI_FILE
-	case ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_LOAD_UNLOAD_PRI_FILE:
-#endif /* !ERROR_MRM_UNSUPPORTED_FILE_TYPE_FOR_LOAD_UNLOAD_PRI_FILE */
-#ifdef ERROR_MCA_UNSUPPORTED_MCCS_VERSION
-	case ERROR_MCA_UNSUPPORTED_MCCS_VERSION:
-#endif /* !ERROR_MCA_UNSUPPORTED_MCCS_VERSION */
-#ifdef ERROR_MCA_UNSUPPORTED_COLOR_TEMPERATURE
-	case ERROR_MCA_UNSUPPORTED_COLOR_TEMPERATURE:
-#endif /* !ERROR_MCA_UNSUPPORTED_COLOR_TEMPERATURE */
-#ifdef ERROR_HASH_NOT_SUPPORTED
-	case ERROR_HASH_NOT_SUPPORTED:
-#endif /* !ERROR_HASH_NOT_SUPPORTED */
-#ifdef ERROR_GPIO_VERSION_NOT_SUPPORTED
-	case ERROR_GPIO_VERSION_NOT_SUPPORTED:
-#endif /* !ERROR_GPIO_VERSION_NOT_SUPPORTED */
-#ifdef RO_E_UNSUPPORTED_FROM_MTA
-	case RO_E_UNSUPPORTED_FROM_MTA:
-#endif /* !RO_E_UNSUPPORTED_FROM_MTA */
-#ifdef CO_E_NOT_SUPPORTED
-	case CO_E_NOT_SUPPORTED:
-#endif /* !CO_E_NOT_SUPPORTED */
-#ifdef OLE_E_ADVISENOTSUPPORTED
-	case OLE_E_ADVISENOTSUPPORTED:
-#endif /* !OLE_E_ADVISENOTSUPPORTED */
-#ifdef CACHE_S_FORMATETC_NOTSUPPORTED
-	case CACHE_S_FORMATETC_NOTSUPPORTED:
-#endif /* !CACHE_S_FORMATETC_NOTSUPPORTED */
-#ifdef SCHED_E_UNSUPPORTED_ACCOUNT_OPTION
-	case SCHED_E_UNSUPPORTED_ACCOUNT_OPTION:
-#endif /* !SCHED_E_UNSUPPORTED_ACCOUNT_OPTION */
-#ifdef NTE_NOT_SUPPORTED
-	case NTE_NOT_SUPPORTED:
-#endif /* !NTE_NOT_SUPPORTED */
-#ifdef NTE_HMAC_NOT_SUPPORTED
-	case NTE_HMAC_NOT_SUPPORTED:
-#endif /* !NTE_HMAC_NOT_SUPPORTED */
-#ifdef SEC_E_UNSUPPORTED_FUNCTION
-	case SEC_E_UNSUPPORTED_FUNCTION:
-#endif /* !SEC_E_UNSUPPORTED_FUNCTION */
-#ifdef SEC_E_QOP_NOT_SUPPORTED
-	case SEC_E_QOP_NOT_SUPPORTED:
-#endif /* !SEC_E_QOP_NOT_SUPPORTED */
-#ifdef SEC_E_STRONG_CRYPTO_NOT_SUPPORTED
-	case SEC_E_STRONG_CRYPTO_NOT_SUPPORTED:
-#endif /* !SEC_E_STRONG_CRYPTO_NOT_SUPPORTED */
-#ifdef SEC_E_UNSUPPORTED_PREAUTH
-	case SEC_E_UNSUPPORTED_PREAUTH:
-#endif /* !SEC_E_UNSUPPORTED_PREAUTH */
-#ifdef SEC_E_NO_S4U_PROT_SUPPORT
-	case SEC_E_NO_S4U_PROT_SUPPORT:
-#endif /* !SEC_E_NO_S4U_PROT_SUPPORT */
-#ifdef OSS_INDEFINITE_NOT_SUPPORTED
-	case OSS_INDEFINITE_NOT_SUPPORTED:
-#endif /* !OSS_INDEFINITE_NOT_SUPPORTED */
-#ifdef CERTSRV_E_KEY_ATTESTATION_NOT_SUPPORTED
-	case CERTSRV_E_KEY_ATTESTATION_NOT_SUPPORTED:
-#endif /* !CERTSRV_E_KEY_ATTESTATION_NOT_SUPPORTED */
-#ifdef CERTSRV_E_UNSUPPORTED_CERT_TYPE
-	case CERTSRV_E_UNSUPPORTED_CERT_TYPE:
-#endif /* !CERTSRV_E_UNSUPPORTED_CERT_TYPE */
-#ifdef SPAPI_E_REMOTE_REQUEST_UNSUPPORTED
-	case SPAPI_E_REMOTE_REQUEST_UNSUPPORTED:
-#endif /* !SPAPI_E_REMOTE_REQUEST_UNSUPPORTED */
-#ifdef SCARD_E_READER_UNSUPPORTED
-	case SCARD_E_READER_UNSUPPORTED:
-#endif /* !SCARD_E_READER_UNSUPPORTED */
-#ifdef SCARD_E_CARD_UNSUPPORTED
-	case SCARD_E_CARD_UNSUPPORTED:
-#endif /* !SCARD_E_CARD_UNSUPPORTED */
-#ifdef SCARD_E_UNSUPPORTED_FEATURE
-	case SCARD_E_UNSUPPORTED_FEATURE:
-#endif /* !SCARD_E_UNSUPPORTED_FEATURE */
-#ifdef SCARD_W_UNSUPPORTED_CARD
-	case SCARD_W_UNSUPPORTED_CARD:
-#endif /* !SCARD_W_UNSUPPORTED_CARD */
-		return true;
-
-	default: break;
-	}
-	return false;
-}
-
-
 
 
 #if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
@@ -1088,7 +568,7 @@ again_setenv:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (nt_IsBadAlloc(dwError)) {
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
 			if (Dee_CollectMemory(1))
 				goto again_setenv;
 		} else {
@@ -1126,7 +606,7 @@ again:
 			buffer = new_buffer;
 			goto again;
 		}
-		if (nt_IsBadAlloc(error)) {
+		if (DeeNTSystem_IsBadAllocError(error)) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err_result;
@@ -1294,108 +774,6 @@ err_path_crossdev2(int error,
 
 
 
-PRIVATE ATTR_COLD int DCALL err_getcwd(DWORD dwError) {
-	if (nt_IsAccessDenied(dwError)) {
-		return DeeError_SysThrowf(&DeeError_FileAccessError, dwError,
-		                          "Permission to read a part of the current "
-		                          "working directory's path was denied");
-	} else if (nt_IsFileNotFound(dwError)) {
-		return DeeError_SysThrowf(&DeeError_FileNotFound, dwError,
-		                          "The current working directory has been unlinked");
-	}
-	return DeeError_SysThrowf(&DeeError_FSError, dwError,
-	                          "Failed to retrieve the current working directory");
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-fs_printcwd(struct unicode_printer *__restrict printer) {
-	LPWSTR buffer;
-	DWORD new_bufsize, bufsize = PATH_MAX;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	buffer = unicode_printer_alloc_wchar(printer, bufsize);
-	if unlikely(!buffer)
-		goto err;
-again:
-	DBG_ALIGNMENT_DISABLE();
-	new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
-	if unlikely(!new_bufsize) {
-		DWORD dwError;
-		dwError = GetLastError();
-		DBG_ALIGNMENT_ENABLE();
-		if (nt_IsBadAlloc(dwError)) {
-			if (Dee_CollectMemory(1))
-				goto again;
-		} else {
-			err_getcwd(dwError);
-		}
-		goto err_release;
-	}
-	DBG_ALIGNMENT_ENABLE();
-	if (new_bufsize > bufsize) {
-		LPWSTR new_buffer;
-		/* Increase the buffer and try again. */
-		new_buffer = unicode_printer_resize_wchar(printer, buffer, new_bufsize);
-		if unlikely(!new_buffer)
-			goto err_release;
-		buffer  = new_buffer;
-		bufsize = new_bufsize;
-		goto again;
-	}
-	if (unicode_printer_confirm_wchar(printer, buffer, new_bufsize) < 0)
-		goto err;
-	return 0;
-err_release:
-	unicode_printer_free_wchar(printer, buffer);
-err:
-	return -1;
-}
-
-
-INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
-	LPWSTR buffer, new_buffer;
-	DWORD bufsize = PATH_MAX, new_bufsize;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	buffer = DeeString_NewWideBuffer(bufsize);
-	if unlikely(!buffer)
-		goto err;
-	for (;;) {
-again:
-		DBG_ALIGNMENT_DISABLE();
-		new_bufsize = GetCurrentDirectoryW(bufsize + 1, buffer);
-		if (!new_bufsize) {
-			DWORD dwError;
-			dwError = GetLastError();
-			DBG_ALIGNMENT_ENABLE();
-			if (nt_IsBadAlloc(dwError)) {
-				if (Dee_CollectMemory(1))
-					goto again;
-			} else {
-				err_getcwd(dwError);
-			}
-			goto err_result;
-		}
-		DBG_ALIGNMENT_ENABLE();
-		if (new_bufsize <= bufsize)
-			break;
-		/* Resize to fit. */
-		new_buffer = DeeString_ResizeWideBuffer(buffer, new_bufsize);
-		if unlikely(!new_buffer)
-			goto err_result;
-		buffer  = new_buffer;
-		bufsize = new_bufsize;
-	}
-	buffer = DeeString_TruncateWideBuffer(buffer, new_bufsize);
-	return DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
-err_result:
-	DeeString_FreeWideBuffer(buffer);
-err:
-	return NULL;
-}
-
-
-
 INTERN WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path) {
 	int result;
 	if (DeeThread_CheckInterrupt())
@@ -1405,7 +783,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path) {
 			HANDLE fd; /* Support for descriptor-based chdir() */
 			if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
 				goto err;
-			path = nt_GetFilenameOfHandle(fd);
+			path = DeeNTSystem_GetFilenameOfHandle(fd);
 			if unlikely(!path)
 				goto err;
 			result = fs_chdir(path);
@@ -1432,12 +810,12 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (nt_IsBadAlloc(dwError)) {
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
 		}
-		if (nt_IsNotDir(dwError))
+		if (DeeNTSystem_IsNotDir(dwError))
 			goto do_throw_not_dir;
 		if (dwError == ERROR_ACCESS_DENIED) {
 			DWORD dwAttributes;
@@ -1451,9 +829,9 @@ do_throw_not_dir:
 				goto err;
 			}
 		}
-		if (nt_IsFileNotFound(dwError)) {
+		if (DeeNTSystem_IsFileNotFoundError(dwError)) {
 			err_path_not_found(dwError, path);
-		} else if (nt_IsAccessDenied(dwError)) {
+		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 			err_path_no_access(dwError, path);
 		} else {
 			DeeError_SysThrowf(&DeeError_FSError, dwError,
@@ -2318,7 +1696,7 @@ again:
 	if (DeeString_Check(path)) {
 		int error;
 		WIN32_FILE_ATTRIBUTE_DATA attrib;
-		fd = nt_CreateFile(path, FILE_READ_ATTRIBUTES | READ_CONTROL,
+		fd = DeeNTSystem_CreateFile(path, FILE_READ_ATTRIBUTES | READ_CONTROL,
 		                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
 		                   (flags & DOSTAT_FLSTAT ? /* In lstat()-mode, open a reparse point.
 		                                             * NOTE: If the file isn't a reparse
@@ -2329,7 +1707,7 @@ again:
 		if (fd == INVALID_HANDLE_VALUE) {
 			/* Try again, but leave out READ_CONTROL access permissions.
 			 * NOTE: `READ_CONTROL' is normally required by the `st_uid' / `st_gid' fields. */
-			fd = nt_CreateFile(path, FILE_READ_ATTRIBUTES,
+			fd = DeeNTSystem_CreateFile(path, FILE_READ_ATTRIBUTES,
 			                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
 			                   (flags & DOSTAT_FLSTAT ? /* In lstat()-mode, open a reparse point.
 			                                             * NOTE: If the file isn't a reparse
@@ -2449,22 +1827,22 @@ err_nt:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if ((flags & DOSTAT_FTRY) && nt_IsFileNotFound((DWORD)error))
+	if ((flags & DOSTAT_FTRY) && DeeNTSystem_IsFileNotFoundError((DWORD)error))
 		return 1; /* File not found. */
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again;
-	} else if (nt_IsNotDir((DWORD)error)) {
+	} else if (DeeNTSystem_IsNotDir((DWORD)error)) {
 		if (flags & DOSTAT_FTRY)
 			return 1;
 		err_path_no_dir((DWORD)error, path);
-	} else if (nt_IsAccessDenied((DWORD)error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_path_no_access((DWORD)error, path);
-	} else if (nt_IsFileNotFound((DWORD)error)) {
+	} else if (DeeNTSystem_IsFileNotFoundError((DWORD)error)) {
 		if (flags & DOSTAT_FTRY)
 			return 1;
 		err_path_not_found((DWORD)error, path);
-	} else if (nt_IsBadf((DWORD)error)) {
+	} else if (DeeNTSystem_IsBadF((DWORD)error)) {
 		err_handle_closed((DWORD)error, path);
 	} else {
 		DeeError_SysThrowf(&DeeError_FSError, (DWORD)error,
@@ -3104,7 +2482,7 @@ stat_class_isexe(DeeObject *__restrict UNUSED(self),
 			HANDLE fd; /* Support for descriptor-based isexe() */
 			if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
 				goto err;
-			path = nt_GetFilenameOfHandle(fd);
+			path = DeeNTSystem_GetFilenameOfHandle(fd);
 		} else {
 			path = DeeFile_Filename(path);
 		}
@@ -3234,7 +2612,7 @@ get_pathhandle_wrattr(DeeObject *__restrict path,
 	int result;
 	if (DeeString_Check(path)) {
 again:
-		*phandle = nt_CreateFile(path, FILE_WRITE_ATTRIBUTES,
+		*phandle = DeeNTSystem_CreateFile(path, FILE_WRITE_ATTRIBUTES,
 		                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		                         NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
 		if (*phandle == INVALID_HANDLE_VALUE) {
@@ -3242,14 +2620,14 @@ again:
 			DBG_ALIGNMENT_DISABLE();
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (nt_IsBadAlloc(dwError)) {
+			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
-			} else if (nt_IsNotDir(dwError)) {
+			} else if (DeeNTSystem_IsNotDir(dwError)) {
 				err_path_no_dir(dwError, path);
-			} else if (nt_IsFileNotFound(dwError)) {
+			} else if (DeeNTSystem_IsFileNotFoundError(dwError)) {
 				err_file_not_found(dwError, path);
-			} else if (nt_IsAccessDenied(dwError)) {
+			} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 				err_file_no_write_access(dwError, path);
 			} else {
 				DeeError_SysThrowf(&DeeError_FSError, dwError,
@@ -3336,14 +2714,14 @@ again:
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (nt_IsBadAlloc(dwError)) {
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
 			if (Dee_CollectMemory(1))
 				goto again;
-		} else if (nt_IsBadf(dwError)) {
+		} else if (DeeNTSystem_IsBadF(dwError)) {
 			err_handle_closed(dwError, path);
-		} else if (nt_IsAccessDenied(dwError)) {
+		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
 			err_chtime_no_access(dwError, path);
-		} else if (nt_IsUnsupported(dwError)) {
+		} else if (DeeNTSystem_IsUnsupportedError(dwError)) {
 			DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
 			                   "The filesystem hosting the path %r does "
 			                   "not support the changing of time stamps",
@@ -3374,7 +2752,7 @@ fs_chmod(DeeObject *__restrict path,
 			HANDLE fd; /* Support for descriptor-based chmod() */
 			if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
 				goto err;
-			path = nt_GetFilenameOfHandle(fd);
+			path = DeeNTSystem_GetFilenameOfHandle(fd);
 		} else {
 			path = DeeFile_Filename(path);
 		}
@@ -3413,12 +2791,12 @@ err_nt:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again;
-	} else if (nt_IsAccessDenied((DWORD)error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_chattr_no_access((DWORD)error, path);
-	} else if (nt_IsUnsupported((DWORD)error)) {
+	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
 		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
 		                   "The filesystem hosting the path %r does "
 		                   "not support the changing of NT attributes",
@@ -3448,7 +2826,7 @@ fs_chattr_np(DeeObject *__restrict path,
 			HANDLE fd; /* Support for descriptor-based chmod() */
 			if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
 				goto err;
-			path = nt_GetFilenameOfHandle(fd);
+			path = DeeNTSystem_GetFilenameOfHandle(fd);
 		} else {
 			path = DeeFile_Filename(path);
 		}
@@ -3469,12 +2847,12 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again;
-	} else if (nt_IsAccessDenied((DWORD)error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_chattr_no_access((DWORD)error, path);
-	} else if (nt_IsUnsupported((DWORD)error)) {
+	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
 		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
 		                   "The filesystem hosting the path %r does "
 		                   "not support the changing of NT attributes",
@@ -3531,16 +2909,16 @@ err_nt:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again;
-	} else if (nt_IsAccessDenied((DWORD)error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_path_no_write_access((DWORD)error, path);
-	} else if (nt_IsExists((DWORD)error)) {
+	} else if (DeeNTSystem_IsExists((DWORD)error)) {
 		err_path_exists((DWORD)error, path);
-	} else if (nt_IsNotDir((DWORD)error)) {
+	} else if (DeeNTSystem_IsNotDir((DWORD)error)) {
 		err_path_no_dir((DWORD)error, path);
-	} else if (nt_IsUnsupported((DWORD)error)) {
+	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
 		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
 		                   "The filesystem hosting the path %r does "
 		                   "not support the creation of directories",
@@ -3556,17 +2934,17 @@ err:
 
 PRIVATE ATTR_COLD int DCALL
 handle_rmdir_error(DWORD error, DeeObject *__restrict path) {
-	if (nt_IsNotEmpty(error))
+	if (DeeNTSystem_IsNotEmpty(error))
 		return err_path_not_empty(error, path);
-	if (nt_IsAccessDenied(error))
+	if (DeeNTSystem_IsAccessDeniedError(error))
 		return err_path_no_write_access(error, path);
-	if (nt_IsBusy(error))
+	if (DeeNTSystem_IsBusy(error))
 		return err_path_busy(error, path);
-	if (nt_IsFileNotFound(error))
+	if (DeeNTSystem_IsFileNotFoundError(error))
 		return err_path_not_found(error, path);
-	if (nt_IsNotDir(error))
+	if (DeeNTSystem_IsNotDir(error))
 		return err_path_no_dir(error, path);
-	if (nt_IsUnsupported(error)) {
+	if (DeeNTSystem_IsUnsupportedError(error)) {
 		return DeeError_SysThrowf(&DeeError_UnsupportedAPI, error,
 		                          "The filesystem hosting the path %r does "
 		                          "not support the removal of directories",
@@ -3593,7 +2971,7 @@ err_nt:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again;
 	}
@@ -3614,15 +2992,15 @@ handle_unlink_error(DWORD error, DeeObject *__restrict path) {
 		if (temp == 0 && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY))
 			return err_path_is_dir(error, path);
 	}
-	if (nt_IsAccessDenied(error))
+	if (DeeNTSystem_IsAccessDeniedError(error))
 		return err_path_no_write_access(error, path);
-	if (nt_IsBusy(error))
+	if (DeeNTSystem_IsBusy(error))
 		return err_path_busy(error, path);
-	if (nt_IsNotDir(error))
+	if (DeeNTSystem_IsNotDir(error))
 		return err_path_no_dir(error, path);
-	if (nt_IsFileNotFound(error))
+	if (DeeNTSystem_IsFileNotFoundError(error))
 		return err_path_not_found(error, path);
-	if (nt_IsUnsupported(error)) {
+	if (DeeNTSystem_IsUnsupportedError(error)) {
 		return DeeError_SysThrowf(&DeeError_UnsupportedAPI, error,
 		                          "The filesystem hosting the path %r "
 		                          "does not support unlinking files",
@@ -3665,7 +3043,7 @@ again_rmdir:
 			DBG_ALIGNMENT_DISABLE();
 			error = (int)GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (nt_IsBadAlloc((DWORD)error)) {
+			if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 				if (Dee_CollectMemory(1))
 					goto again_rmdir;
 				goto err;
@@ -3676,14 +3054,14 @@ again_rmdir:
 		DBG_ALIGNMENT_DISABLE();
 		error = (int)GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (nt_IsBadAlloc((DWORD)error)) {
+		if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 			if (Dee_CollectMemory(1))
 				goto again_getattr;
 			goto err;
 		}
 		error = ERROR_ACCESS_DENIED;
 	}
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again_deletefile;
 		goto err;
@@ -3713,14 +3091,14 @@ again:
 		error = nt_RemoveDirectory(path);
 		if (error <= 0)
 			return error;
-		if (nt_IsBadAlloc((DWORD)error)) {
+		if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 			if (Dee_CollectMemory(1))
 				goto again;
 			goto err;
 		}
 		handle_rmdir_error((DWORD)error, path);
 	}
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again;
 		goto err;
@@ -3741,7 +3119,7 @@ fs_rename(DeeObject *__restrict existing_path,
 			HANDLE fd; /* Support for descriptor-based rename() */
 			if (DeeObject_AsUIntptr(existing_path, (uintptr_t *)&fd))
 				goto err;
-			existing_path = nt_GetFilenameOfHandle(fd);
+			existing_path = DeeNTSystem_GetFilenameOfHandle(fd);
 		} else {
 			existing_path = DeeFile_Filename(existing_path);
 		}
@@ -3764,33 +3142,33 @@ err_nt:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again_movefile;
-	} else if (nt_IsAccessDenied((DWORD)error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_path_no_access2((DWORD)error, existing_path, new_path);
-	} else if (nt_IsBusy((DWORD)error)) {
+	} else if (DeeNTSystem_IsBusy((DWORD)error)) {
 		DeeError_SysThrowf(&DeeError_BusyFile, (DWORD)error,
 		                   "Path %r or %r cannot be accessed because it is already in use",
 		                   existing_path, new_path);
-	} else if (nt_IsNotDir((DWORD)error)) {
+	} else if (DeeNTSystem_IsNotDir((DWORD)error)) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Cannot rename path %r to %r which is a sub-directory of the old",
 		                existing_path, new_path);
-	} else if (nt_IsFileNotFound((DWORD)error)) {
+	} else if (DeeNTSystem_IsFileNotFoundError((DWORD)error)) {
 		err_path_not_found2((DWORD)error, existing_path, new_path);
-	} else if (nt_IsNotEmpty((DWORD)error) || nt_IsExists((DWORD)error)) {
+	} else if (DeeNTSystem_IsNotEmpty((DWORD)error) || DeeNTSystem_IsExists((DWORD)error)) {
 		err_path_exists((DWORD)error, new_path);
-	} else if (nt_IsNotDir((DWORD)error)) {
+	} else if (DeeNTSystem_IsNotDir((DWORD)error)) {
 		DeeError_SysThrowf(&DeeError_NoDirectory, (DWORD)error,
 		                   "Some part of the path %r or %r is not a directory",
 		                   existing_path, new_path);
-	} else if (nt_IsUnsupported((DWORD)error)) {
+	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
 		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
 		                   "The filesystem hosting the paths %r and %r "
 		                   "does not support renaming of files",
 		                   existing_path, new_path);
-	} else if (nt_IsXDev((DWORD)error)) {
+	} else if (DeeNTSystem_IsXDev((DWORD)error)) {
 		err_path_crossdev2((DWORD)error, existing_path, new_path);
 	} else {
 		DeeError_SysThrowf(&DeeError_FSError, (DWORD)error,
@@ -3819,18 +3197,18 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again;
-	} else if (nt_IsAccessDenied((DWORD)error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_path_no_access2((DWORD)error, existing_path, new_path);
-	} else if (nt_IsExists((DWORD)error)) {
+	} else if (DeeNTSystem_IsExists((DWORD)error)) {
 		err_path_exists((DWORD)error, new_path);
-	} else if (nt_IsFileNotFound((DWORD)error)) {
+	} else if (DeeNTSystem_IsFileNotFoundError((DWORD)error)) {
 		err_path_not_found2((DWORD)error, existing_path, new_path);
-	} else if (nt_IsXDev((DWORD)error)) {
+	} else if (DeeNTSystem_IsXDev((DWORD)error)) {
 		err_path_crossdev2((DWORD)error, existing_path, new_path);
-	} else if (nt_IsUnsupported((DWORD)error)) {
+	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
 		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
 		                   "The filesystem hosting the paths %r and %r "
 		                   "does not support creation of hardlinks",
@@ -3931,15 +3309,15 @@ err_nt:
 		DeeError_SysThrowf(&DeeError_UnsupportedAPI, error,
 		                   "The operating system has restricted "
 		                   "access to symlink functionality");
-	} else if (nt_IsAccessDenied(error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError(error)) {
 		err_path_no_access(error, link_path);
-	} else if (nt_IsExists(error)) {
+	} else if (DeeNTSystem_IsExists(error)) {
 		err_path_exists(error, link_path);
-	} else if (nt_IsFileNotFound(error)) {
+	} else if (DeeNTSystem_IsFileNotFoundError(error)) {
 		err_path_not_found(error, link_path);
-	} else if (nt_IsNotDir(error)) {
+	} else if (DeeNTSystem_IsNotDir(error)) {
 		err_path_no_dir(error, link_path);
-	} else if (nt_IsUnsupported(error)) {
+	} else if (DeeNTSystem_IsUnsupportedError(error)) {
 		DeeError_SysThrowf(&DeeError_UnsupportedAPI, error,
 		                   "The filesystem hosting the path %r "
 		                   "does not support creation of symbolic links",
@@ -3991,7 +3369,7 @@ fs_readlink(DeeObject *__restrict path) {
 	bool owns_linkfd;
 	if (DeeString_Check(path)) {
 again_createfile:
-		link_fd = nt_CreateFile(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
+		link_fd = DeeNTSystem_CreateFile(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
 		                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
 		if unlikely(!link_fd)
 			goto err;
@@ -4038,13 +3416,13 @@ again_createfile:
 			DBG_ALIGNMENT_DISABLE();
 			continue;
 		}
-		if (nt_IsAccessDenied(error)) {
+		if (DeeNTSystem_IsAccessDeniedError(error)) {
 			err_path_no_access(error, path);
 		} else if (error == ERROR_NOT_A_REPARSE_POINT) {
 			DeeError_SysThrowf(&DeeError_NoLink, error,
 			                   "Path %r is not a symbolic link",
 			                   path);
-		} else if (nt_IsUnsupported(error)) {
+		} else if (DeeNTSystem_IsUnsupportedError(error)) {
 			DeeError_SysThrowf(&DeeError_UnsupportedAPI, error,
 			                   "The filesystem hosting the path %r does "
 			                   "not support reading symbolic links",
@@ -4094,16 +3472,16 @@ err_nt_createfile:
 	DBG_ALIGNMENT_DISABLE();
 	error = (int)GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (nt_IsBadAlloc((DWORD)error)) {
+	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
 		if (Dee_CollectMemory(1))
 			goto again_createfile;
-	} else if (nt_IsNotDir((DWORD)error)) {
+	} else if (DeeNTSystem_IsNotDir((DWORD)error)) {
 		err_path_no_dir((DWORD)error, path);
-	} else if (nt_IsAccessDenied((DWORD)error)) {
+	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_path_no_access((DWORD)error, path);
-	} else if (nt_IsFileNotFound((DWORD)error)) {
+	} else if (DeeNTSystem_IsFileNotFoundError((DWORD)error)) {
 		err_path_not_found((DWORD)error, path);
-	} else if (nt_IsBadf((DWORD)error)) {
+	} else if (DeeNTSystem_IsBadF((DWORD)error)) {
 		err_handle_closed((DWORD)error, path);
 	} else {
 		DeeError_SysThrowf(&DeeError_FSError, (DWORD)error,
@@ -4227,7 +3605,7 @@ read_filename:
 				goto iter_done;
 			}
 			rwlock_endwrite(&self->d_lock);
-			if (nt_IsBadAlloc(dwError)) {
+			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
 				goto err;
@@ -4256,7 +3634,7 @@ read_filename:
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(dwError != ERROR_NO_MORE_FILES) {
 			rwlock_endwrite(&self->d_lock);
-			if (nt_IsBadAlloc(dwError)) {
+			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
 				goto err;
@@ -4284,9 +3662,9 @@ err:
 
 PRIVATE ATTR_COLD int DCALL
 err_handle_opendir(DWORD error, DeeObject *__restrict path) {
-	if (nt_IsFileNotFound(error))
+	if (DeeNTSystem_IsFileNotFoundError(error))
 		return err_path_not_found(error, path);
-	if (nt_IsNotDir(error))
+	if (DeeNTSystem_IsNotDir(error))
 		return err_path_no_dir(error, path);
 	return DeeError_SysThrowf(&DeeError_FSError, error,
 	                          "Failed to open directory %r",
@@ -4432,7 +3810,7 @@ dir_ctor(Dir *__restrict self,
 		HANDLE fd; /* Support for descriptor-based dir() */
 		if (DeeObject_AsUIntptr((DeeObject *)self->d_path, (uintptr_t *)&fd))
 			goto err;
-		self->d_path = (DREF DeeStringObject *)nt_GetFilenameOfHandle(fd);
+		self->d_path = (DREF DeeStringObject *)DeeNTSystem_GetFilenameOfHandle(fd);
 		if unlikely(!self->d_path)
 			goto err;
 	} else {
@@ -4599,7 +3977,7 @@ read_filename:
 				goto iter_done;
 			}
 			rwlock_endwrite(&self->q_iter.d_lock);
-			if (nt_IsBadAlloc(dwError)) {
+			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
 				goto err;
@@ -4628,7 +4006,7 @@ read_filename:
 		DBG_ALIGNMENT_ENABLE();
 		if unlikely(dwError != ERROR_NO_MORE_FILES) {
 			rwlock_endwrite(&self->q_iter.d_lock);
-			if (nt_IsBadAlloc(dwError)) {
+			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again;
 				goto err;
@@ -4763,7 +4141,7 @@ again_wname:
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError != ERROR_NO_MORE_FILES) {
 			DREF DeeObject *query_path;
-			if (nt_IsBadAlloc(dwError)) {
+			if (DeeNTSystem_IsBadAllocError(dwError)) {
 				if (Dee_CollectMemory(1))
 					goto again_wname;
 				goto err;

@@ -51,6 +51,7 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -76,6 +77,7 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr 1
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
@@ -2986,15 +2988,12 @@ done:
 
 
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-make_absolute(DeeObject *__restrict path);
-
 INTERN WUNUSED NONNULL((1)) uint64_t DCALL
 DecTime_Lookup(DeeObject *__restrict filename) {
 	uint64_t result;
 	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
 	/* Ensure that we are using an absolute, fixed path. */
-	filename = make_absolute(filename);
+	filename = DeeSystem_MakeAbsolute(filename);
 	if unlikely(!filename)
 		return (uint64_t)-1;
 	/* Consult the cache before asking the OS. */

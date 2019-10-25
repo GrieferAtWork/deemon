@@ -598,7 +598,7 @@ process_do_spawn(char const *used_exe, char *const *used_argv,
 		}
 child_error:
 #ifdef CONFIG_HAVE_errno
-		EXIT_AFTER_FORK(EXIT_FAILURE + Dee_GetErrno());
+		EXIT_AFTER_FORK(EXIT_FAILURE + DeeSystem_GetErrno());
 #else /* CONFIG_HAVE_errno */
 		EXIT_AFTER_FORK(EXIT_FAILURE);
 #endif /* !CONFIG_HAVE_errno */

@@ -48,7 +48,6 @@ typedef struct stat_object DeeStatObject;
 
 /* Get/Set the current working directory. */
 INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL fs_getcwd(void);
-INTDEF WUNUSED NONNULL((1)) int DCALL fs_printcwd(struct unicode_printer *__restrict printer);
 INTDEF WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path);
 
 /* Return a temporary directory, such as `/tmp' */

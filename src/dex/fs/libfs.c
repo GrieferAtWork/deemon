@@ -36,6 +36,7 @@
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/objmethod.h>
+#include <deemon/system.h>
 #include <deemon/seq.h>
 
 DECL_BEGIN
@@ -325,6 +326,16 @@ f_libfs_gettmp(size_t argc, DeeObject **argv) {
 	return fs_gettmp();
 }
 
+INTERN WUNUSED DREF DeeObject *DCALL fs_getcwd(void) {
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	if (DeeSystem_PrintPwd(&printer, false))
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_libfs_getcwd(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":getcwd"))
@@ -595,7 +606,7 @@ f_libfs_nt_fixunc(size_t argc, DeeObject **argv, DeeObject *kw) {
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:fixunc_np", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
 		return NULL;
-	return nt_FixUncPath(path);
+	return DeeNTSystem_FixUncPath(path);
 }
 
 PRIVATE DEFINE_KWCMETHOD(libfs_fixunc_np, &f_libfs_nt_fixunc);

@@ -28,6 +28,7 @@
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system.h>
 #include <deemon/system-features.h> /* memrchr() */
 
 #include <hybrid/minmax.h>
@@ -872,7 +873,7 @@ fs_pathexpand(DeeObject *__restrict path, uint16_t options,
 #endif /* !CONFIG_HOST_WINDOWS */
 		{
 			/* Print the current working directory when the given path isn't absolute. */
-			if (fs_printcwd(&printer))
+			if (DeeSystem_PrintPwd(&printer, false))
 				goto err;
 #ifdef CONFIG_HOST_WINDOWS
 			/* Handle drive-relative paths. */
@@ -1061,8 +1062,7 @@ print_env:
 #endif
 	case SEP:
 	case '\0': {
-		/* NOTE: The following part has been copied from `make_absolute' found
-		 *       in deemon's core implementation file: `execute/modpath.c'
+		/* NOTE: The following part has been copied from `DeeSystem_MakeAbsolute'
 		 *       If a bug is found in this code, it should be fixed here, as
 		 *       well as within the core. */
 		char const *sep_loc;

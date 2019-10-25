@@ -24,7 +24,9 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/string.h>
+#include <deemon/system.h> /* DeeNTSystem_IsIntr() */
 #include <deemon/thread.h>
+
 #include <hybrid/atomic.h>
 
 #include <Windows.h>
@@ -245,7 +247,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			DeeError_SysThrowf(&DeeError_SystemError, dwError,
 			                   "Failed to lookup module name");

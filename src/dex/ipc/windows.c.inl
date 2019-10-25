@@ -38,6 +38,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -319,7 +320,7 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 			result = (DREF DeeStringObject *)DeeString_PackWideBuffer(buffer, STRING_ERROR_FREPLAC);
 			if unlikely(!result)
 				goto err;
-			fixed_result = (DREF DeeStringObject *)nt_FixUncPath((DeeObject *)result);
+			fixed_result = (DREF DeeStringObject *)DeeNTSystem_FixUncPath((DeeObject *)result);
 			if unlikely(!fixed_result) {
 err_result:
 				Dee_DecrefDokill(result);
@@ -373,7 +374,7 @@ err_result:
 		}
 		/* The creation failed. - Check if this is due to a file-
 		 * not-found error, or because because of some other error. */
-		if (!nt_IsFileNotFound(error) && !nt_IsAccessDenied(error)) {
+		if (!DeeNTSystem_IsFileNotFoundError(error) && !DeeNTSystem_IsAccessDeniedError(error)) {
 			nt_ThrowError(error);
 			goto err_buffer;
 		}
@@ -443,7 +444,7 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 		DBG_ALIGNMENT_ENABLE();
 		/* The creation failed. - Check if this is due to a file-
 		 * not-found error, or because because of some other error. */
-		if (!nt_IsFileNotFound(error) && !nt_IsAccessDenied(error)) {
+		if (!DeeNTSystem_IsFileNotFoundError(error) && !DeeNTSystem_IsAccessDeniedError(error)) {
 			nt_ThrowError(error);
 			goto err_buffer;
 		}
@@ -794,8 +795,8 @@ save_final_exe:
 		DWORD error                     = GetLastError();
 		DREF DeeStringObject *fixed_exe = NULL;
 		DBG_ALIGNMENT_ENABLE();
-		if (nt_IsUncError(error)) {
-			final_exe = (DREF DeeStringObject *)nt_FixUncPath((DeeObject *)exe);
+		if (DeeNTSystem_IsUncError(error)) {
+			final_exe = (DREF DeeStringObject *)DeeNTSystem_FixUncPath((DeeObject *)exe);
 			if unlikely(!final_exe)
 				goto done_cmdline_copy;
 			wExe = (LPWSTR)DeeString_AsWide((DeeObject *)final_exe);
@@ -813,7 +814,7 @@ save_final_exe:
 			DBG_ALIGNMENT_ENABLE();
 			fixed_exe = final_exe;
 		}
-		if (nt_IsFileNotFound(error) || nt_IsAccessDenied(error)) {
+		if (DeeNTSystem_IsFileNotFoundError(error) || DeeNTSystem_IsAccessDeniedError(error)) {
 			/* Append %PATHEXT% to the executable name, and try again. */
 			final_exe = nt_CreateProcessExt(wExe, WSTR_LENGTH(wExe),
 			                                wCmdLineCopy, NULL, NULL, TRUE,
@@ -2168,7 +2169,7 @@ process_init(Process *__restrict self,
 			HANDLE fd;
 			if (DeeObject_AsUIntptr((DeeObject *)exe, (uintptr_t *)&fd))
 				goto err;
-			exe = (DREF DeeStringObject *)nt_GetFilenameOfHandle(fd);
+			exe = (DREF DeeStringObject *)DeeNTSystem_GetFilenameOfHandle(fd);
 		} else {
 			exe = (DREF DeeStringObject *)DeeFile_Filename((DeeObject *)exe);
 		}

@@ -25,12 +25,13 @@
 #if defined(CONFIG_HOST_WINDOWS) || defined(__DEEMON__)
 
 #include <deemon/alloc.h>
-#include <deemon/dex.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/dex.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -252,7 +253,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = CloseHandle(hObject);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED)
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError()))
 		goto again;
 	DBG_ALIGNMENT_ENABLE();
 	return_bool_(bResult);
@@ -307,7 +308,7 @@ again:
 	                     dwDesiredAccess,
 	                     bInheritHandle,
 	                     dwOptions)) {
-		if (GetLastError() == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
 			goto again;
 		}
@@ -380,7 +381,7 @@ again:
 	                      dwFlagsAndAttributes,
 	                      hTemplateFile);
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
-		if (GetLastError() == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
 			goto again;
 		}
@@ -439,7 +440,7 @@ again:
 	               (DWORD)buffer.bb_size,
 	               &dwNumberOfBytesWritten,
 	               NULL)) {
-		if (GetLastError() == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
 			goto again;
 		}
@@ -501,7 +502,7 @@ again:
 	              (DWORD)buffer.bb_size,
 	              &dwNumberOfBytesRead,
 	              NULL)) {
-		if (GetLastError() == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
 			goto again;
 		}
@@ -554,7 +555,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	(void)lpSecurityAttributes; /* TODO */
 	bResult = CreateDirectoryW(lpPathName, NULL);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -597,7 +598,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = RemoveDirectoryW(lpPathName);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -640,7 +641,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = DeleteFileW(lpFileName);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -677,7 +678,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetEndOfFile(hFile);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -721,7 +722,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileAttributesW(lpFileName, dwFileAttributes);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -772,7 +773,7 @@ again:
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (error != NO_ERROR) {
-			if (error == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(error))
 				goto again;
 			DBG_ALIGNMENT_ENABLE();
 			return_none;
@@ -826,7 +827,7 @@ again:
 	                      &ftLastAccessTime.ft,
 	                      &ftLastWriteTime.ft);
 	if (!bResult) {
-		if (GetLastError() == ERROR_OPERATION_ABORTED) {
+		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
 			goto again;
 		}
@@ -888,7 +889,7 @@ again:
 	                      lpCreationTime ? &ftCreationTime.ft : NULL,
 	                      lpLastAccessTime ? &ftLastAccessTime.ft : NULL,
 	                      lpLastWriteTime ? &ftLastWriteTime.ft : NULL);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -928,7 +929,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileValidData(hFile, ValidDataLength);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -969,7 +970,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			if (dwError != 0)
 				return_none;
@@ -1039,7 +1040,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			if (dwError != 0)
 				return_none;
@@ -1111,7 +1112,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = (*pSetDllDirectoryW)(lpPathName);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -1162,7 +1163,7 @@ again:
 	                            &dwBytesPerSector,
 	                            &dwNumberOfFreeClusters,
 	                            &dwTotalNumberOfClusters);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -1223,7 +1224,7 @@ again:
 	if (!bResult) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_OPERATION_ABORTED)
+		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
 		return_none;
 	}
@@ -1276,7 +1277,7 @@ again:
 	uResult = GetDriveTypeW(lpRootPathName);
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (dwError == ERROR_OPERATION_ABORTED)
+	if (DeeNTSystem_IsIntr(dwError))
 		goto again;
 	if (dwError != NO_ERROR)
 		return_none;
@@ -1323,7 +1324,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			DeeString_FreeWideBuffer(lpBuffer);
 			return_none;
@@ -1385,7 +1386,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			if (dwError != 0)
 				return_none;
@@ -1441,7 +1442,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			if (dwError != 0)
 				return_none;
@@ -1495,7 +1496,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			if (dwError != 0)
 				return_none;
@@ -1570,7 +1571,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			if (dwError != 0)
 				return_none;
@@ -1626,7 +1627,7 @@ again:
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError == ERROR_OPERATION_ABORTED)
+			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
 			if (dwError != 0)
 				return_none;
@@ -1681,7 +1682,7 @@ again:
 	if (dwType == FILE_TYPE_UNKNOWN) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_OPERATION_ABORTED)
+		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
 		if (dwError != NO_ERROR)
 			return_none;
@@ -1725,7 +1726,7 @@ again:
 	if (dwSizeLow == INVALID_FILE_SIZE) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_OPERATION_ABORTED)
+		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
 		if (dwError != NO_ERROR)
 			return_none;
@@ -1775,7 +1776,7 @@ again:
 	if (dwResult == INVALID_FILE_ATTRIBUTES) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_OPERATION_ABORTED)
+		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
 		if (dwError != NO_ERROR)
 			return_none;
@@ -1823,7 +1824,7 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileAttributesW(lpFileName,
 	                             dwFileAttributes);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}
@@ -1871,7 +1872,7 @@ again:
 	if (dwSizeLow == INVALID_FILE_SIZE) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_OPERATION_ABORTED)
+		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
 		if (dwError != NO_ERROR)
 			return_none;
@@ -1912,7 +1913,7 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = FlushFileBuffers(hFile);
-	if (!bResult && GetLastError() == ERROR_OPERATION_ABORTED) {
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		goto again;
 	}

@@ -1238,7 +1238,7 @@ PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(
 		        (unsigned long)GetLastError());
 #else /* CONFIG_HOST_WINDOWS */
 		fprintf(stderr, "Failed to lazily allocate the thread-self descriptor: %d\n",
-		        (int)Dee_GetErrno());
+		        (int)DeeSystem_GetErrno());
 #endif /* !CONFIG_HOST_WINDOWS */
 #endif /* CONFIG_HAVE_fprintf && CONFIG_HAVE_stderr */
 		abort();
@@ -1269,12 +1269,12 @@ PRIVATE void suspend_signal_handler(int UNUSED(signo)) {
 	while (caller->t_suspended) {
 #ifdef CONFIG_HAVE_pause
 		/* Must preserve errno for the caller. */
-		int old_error = Dee_GetErrno();
+		int old_error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_DISABLE();
 		/* FIXME: Soft-lock: `t_suspended' is decremented before we call into `pause()'! */
 		pause();
 		DBG_ALIGNMENT_ENABLE();
-		Dee_SetErrno(old_error);
+		DeeSystem_SetErrno(old_error);
 #endif /* CONFIG_HAVE_pause */
 	}
 #endif /* USE_SUSPEND_SIGNALS */
@@ -1648,7 +1648,7 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		} else
 #elif defined(CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T)
 		if unlikely(sem_init(&me->t_join, 0, 0)) {
-			error = Dee_GetErrno();
+			error = DeeSystem_GetErrno();
 		} else
 #endif
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
@@ -2064,7 +2064,7 @@ again:
 			}
 			if unlikely(error != 0) {
 				ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
-				error = Dee_GetErrno();
+				error = DeeSystem_GetErrno();
 				/* Don't throw an error on busy/timeout. */
 #ifdef ETIMEDOUT /* Returned by `sem_timedwait' */
 				if (error == ETIMEDOUT)
@@ -3541,7 +3541,7 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeThread_CheckInterrupt())
 			goto err;
-		if (Dee_GetErrno() == EINTR) {
+		if (DeeSystem_GetErrno() == EINTR) {
 			memcpy(&sleep_time, &rem, sizeof(struct timespec));
 			goto again;
 		}

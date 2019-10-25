@@ -104,13 +104,14 @@ function header(name, default_requirements = "") {
 	header_nostdinc(name, default_requirements);
 }
 
-
+#define var  func
 function func(name, default_requirements = "", check_defined = true) {
 	if (default_requirements != "1" && check_defined) {
 		default_requirements = addparen(default_requirements);
 		if (default_requirements !in ["", "0"])
 			default_requirements = " || " + default_requirements;
-		default_requirements = "defined({}){}".format({ name, default_requirements });
+		default_requirements = "defined({}) || defined(__{}_defined){}"
+			.format({ name, name, default_requirements });
 	}
 	feature(name, default_requirements);
 }
@@ -170,6 +171,7 @@ header_nostdinc("float.h", stdc);
 header_nostdinc("limits.h", stdc);
 header("ctype.h", stdc);
 header("string.h", stdc);
+header("wchar.h", stdc);
 
 include_known_headers();
 
@@ -219,8 +221,6 @@ func("open", unix);
 func("_open", msvc);
 func("_wopen", msvc);
 func("open64", "defined(__USE_LARGEFILE64)");
-func("_get_osfhandle", msvc);
-func("_open_osfhandle", msvc);
 
 func("read", unix);
 func("_read", msvc);
@@ -235,6 +235,35 @@ func("_lseeki64", msvc);
 
 func("chdir", unix);
 func("_chdir", msvc);
+
+func("readlink", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
+func("freadlinkat", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat)");
+
+func("stat", "defined(CONFIG_HAVE_SYS_STAT_H)");
+func("fstat", "defined(CONFIG_HAVE_SYS_STAT_H)");
+func("lstat", "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
+func("stat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)");
+func("fstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)");
+func("lstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
+func("fstatat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+func("fstatat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)");
+
+func("mkdir", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+func("_mkdir", msvc);
+func("chmod", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+func("mkfifo", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+func("lchmod", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
+func("fchmodat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+func("mkdirat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+func("mkfifoat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+func("fchmod", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_POSIX)");
+func("mknod", "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))");
+func("mknodat", "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)) && defined(__USE_ATFILE)");
+func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)");
+func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)");
+func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)");
+
 
 print "#if",msvc;
 print "#define F_OK     0";
@@ -269,7 +298,7 @@ func("_commit", msvc);
 func("getpid", unix);
 func("_getpid", msvc);
 
-func("umask", unix);
+func("umask", "defined(CONFIG_HAVE_SYS_STAT_H)");
 func("_umask", msvc);
 
 func("dup", unix);
@@ -282,6 +311,15 @@ func("dup3", "defined(__USE_GNU)");
 
 func("isatty", unix);
 func("_isatty", msvc);
+
+func("getcwd", unix);
+func("_getcwd", msvc);
+func("wgetcwd");
+func("_wgetcwd", "defined(_WDIRECT_DEFINED)");
+
+func("getenv", stdc);
+
+func("wcslen", stdc);
 
 func("truncate", addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8)");
 func("truncate64", "defined(__USE_LARGEFILE64) && (" + addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))");
@@ -373,6 +411,7 @@ func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)");
 func("_memicmp", msvc);
 func("memcasecmp", "defined(__USE_KOS)");
 func("memrchr", "defined(__USE_GNU)");
+func("rawmemchr", "defined(__USE_GNU)");
 func("strnlen", "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
 // NOTE: The GNU-variant of memmem() returns the start of the haystack
@@ -384,8 +423,44 @@ func("strnlen", "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_
 func("memmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
 func("memrmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
 
+func("rawmemrchr", "defined(__USE_KOS)");
+func("memend", "defined(__USE_KOS)");
+func("memrend", "defined(__USE_KOS)");
+func("memlen", "defined(__USE_KOS)");
+func("memrlen", "defined(__USE_KOS)");
+func("rawmemlen", "defined(__USE_KOS)");
+func("rawmemrlen", "defined(__USE_KOS)");
+func("memcasemem", "defined(__USE_KOS)");
+func("memrev", "defined(__USE_KOS)");
+func("memcasermem", "", check_defined: false);
+func("strend", "defined(__USE_KOS)");
+func("strnend", "defined(__USE_KOS)");
+
+func("memxend", "defined(__USE_STRING_XCHR)");
+func("memxlen", "defined(__USE_STRING_XCHR)");
+func("memxchr", "defined(__USE_STRING_XCHR)");
+func("rawmemxchr", "defined(__USE_STRING_XCHR)");
+func("rawmemxlen", "defined(__USE_STRING_XCHR)");
+func("memxrchr");
+func("memxrend");
+func("memxrlen");
+func("rawmemxrchr");
+func("rawmemxrlen");
+
 func("tolower", "defined(CONFIG_HAVE_CTYPE_H)");
 func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
+
+// CRT-specific functions
+func("_dosmaperr", msvc + " || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr))", check_defined: false);
+func("errno_nt2kos", "defined(__CRT_HAVE_errno_nt2kos)", check_defined: false);
+func("_get_osfhandle", msvc);
+func("_open_osfhandle", msvc);
+var("_doserrno", msvc);
+
+
+// NOTE: Other config features used in deemon source files:
+//    - CONFIG_NO_RTLD_LOCAL / CONFIG_HAVE_RTLD_LOCAL
+//    - CONFIG_NO_RTLD_GLOBAL / CONFIG_HAVE_RTLD_GLOBAL
 
 ]]]*/
 #ifdef CONFIG_NO_IO_H
@@ -643,6 +718,12 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #define CONFIG_HAVE_STRING_H 1
 #endif
 
+#ifdef CONFIG_NO_WCHAR_H
+#undef CONFIG_HAVE_WCHAR_H
+#else
+#define CONFIG_HAVE_WCHAR_H 1
+#endif
+
 #ifdef CONFIG_HAVE_IO_H
 #include <io.h>
 #endif /* CONFIG_HAVE_IO_H */
@@ -759,18 +840,23 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #include <string.h>
 #endif /* CONFIG_HAVE_STRING_H */
 
+#ifdef CONFIG_HAVE_WCHAR_H
+#include <wchar.h>
+#endif /* CONFIG_HAVE_WCHAR_H */
+
 #ifdef CONFIG_NO__Exit
 #undef CONFIG_HAVE__Exit
 #elif !defined(CONFIG_HAVE__Exit) && \
-      (defined(_Exit) || defined(__USE_ISOC99))
+      (defined(_Exit) || defined(___Exit_defined) || defined(__USE_ISOC99))
 #define CONFIG_HAVE__Exit 1
 #endif
 
 #ifdef CONFIG_NO__exit
 #undef CONFIG_HAVE__exit
 #elif !defined(CONFIG_HAVE__exit) && \
-      (defined(_exit) || (defined(_MSC_VER) || (defined(__linux__) || defined(__linux) || \
-       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))
+      (defined(_exit) || defined(___exit_defined) || (defined(_MSC_VER) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
 #define CONFIG_HAVE__exit 1
 #endif
 
@@ -789,206 +875,211 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #ifdef CONFIG_NO_execv
 #undef CONFIG_HAVE_execv
 #elif !defined(CONFIG_HAVE_execv) && \
-      (defined(execv) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(execv) || defined(__execv_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_execv 1
 #endif
 
 #ifdef CONFIG_NO_execve
 #undef CONFIG_HAVE_execve
 #elif !defined(CONFIG_HAVE_execve) && \
-      (defined(execve) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(execve) || defined(__execve_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_execve 1
 #endif
 
 #ifdef CONFIG_NO_execvp
 #undef CONFIG_HAVE_execvp
 #elif !defined(CONFIG_HAVE_execvp) && \
-      (defined(execvp) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(execvp) || defined(__execvp_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_execvp 1
 #endif
 
 #ifdef CONFIG_NO_execvpe
 #undef CONFIG_HAVE_execvpe
 #elif !defined(CONFIG_HAVE_execvpe) && \
-      (defined(execvpe) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(execvpe) || defined(__execvpe_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_execvpe 1
 #endif
 
 #ifdef CONFIG_NO_fexecve
 #undef CONFIG_HAVE_fexecve
 #elif !defined(CONFIG_HAVE_fexecve) && \
-      (defined(fexecve) || defined(__USE_XOPEN2K8))
+      (defined(fexecve) || defined(__fexecve_defined) || defined(__USE_XOPEN2K8))
 #define CONFIG_HAVE_fexecve 1
 #endif
 
 #ifdef CONFIG_NO__execv
 #undef CONFIG_HAVE__execv
 #elif !defined(CONFIG_HAVE__execv) && \
-      (defined(_execv) || defined(_MSC_VER))
+      (defined(_execv) || defined(___execv_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__execv 1
 #endif
 
 #ifdef CONFIG_NO__execve
 #undef CONFIG_HAVE__execve
 #elif !defined(CONFIG_HAVE__execve) && \
-      (defined(_execve) || defined(_MSC_VER))
+      (defined(_execve) || defined(___execve_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__execve 1
 #endif
 
 #ifdef CONFIG_NO__execvp
 #undef CONFIG_HAVE__execvp
 #elif !defined(CONFIG_HAVE__execvp) && \
-      (defined(_execvp) || defined(_MSC_VER))
+      (defined(_execvp) || defined(___execvp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__execvp 1
 #endif
 
 #ifdef CONFIG_NO__execvpe
 #undef CONFIG_HAVE__execvpe
 #elif !defined(CONFIG_HAVE__execvpe) && \
-      (defined(_execvpe) || defined(_MSC_VER))
+      (defined(_execvpe) || defined(___execvpe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__execvpe 1
 #endif
 
 #ifdef CONFIG_NO__wexecv
 #undef CONFIG_HAVE__wexecv
 #elif !defined(CONFIG_HAVE__wexecv) && \
-      (defined(_wexecv) || defined(_MSC_VER))
+      (defined(_wexecv) || defined(___wexecv_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wexecv 1
 #endif
 
 #ifdef CONFIG_NO__wexecve
 #undef CONFIG_HAVE__wexecve
 #elif !defined(CONFIG_HAVE__wexecve) && \
-      (defined(_wexecve) || defined(_MSC_VER))
+      (defined(_wexecve) || defined(___wexecve_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wexecve 1
 #endif
 
 #ifdef CONFIG_NO__wexecvp
 #undef CONFIG_HAVE__wexecvp
 #elif !defined(CONFIG_HAVE__wexecvp) && \
-      (defined(_wexecvp) || defined(_MSC_VER))
+      (defined(_wexecvp) || defined(___wexecvp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wexecvp 1
 #endif
 
 #ifdef CONFIG_NO__wexecvpe
 #undef CONFIG_HAVE__wexecvpe
 #elif !defined(CONFIG_HAVE__wexecvpe) && \
-      (defined(_wexecvpe) || defined(_MSC_VER))
+      (defined(_wexecvpe) || defined(___wexecvpe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wexecvpe 1
 #endif
 
 #ifdef CONFIG_NO__spawnv
 #undef CONFIG_HAVE__spawnv
 #elif !defined(CONFIG_HAVE__spawnv) && \
-      (defined(_spawnv) || defined(_MSC_VER))
+      (defined(_spawnv) || defined(___spawnv_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__spawnv 1
 #endif
 
 #ifdef CONFIG_NO__spawnve
 #undef CONFIG_HAVE__spawnve
 #elif !defined(CONFIG_HAVE__spawnve) && \
-      (defined(_spawnve) || defined(_MSC_VER))
+      (defined(_spawnve) || defined(___spawnve_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__spawnve 1
 #endif
 
 #ifdef CONFIG_NO__spawnvp
 #undef CONFIG_HAVE__spawnvp
 #elif !defined(CONFIG_HAVE__spawnvp) && \
-      (defined(_spawnvp) || defined(_MSC_VER))
+      (defined(_spawnvp) || defined(___spawnvp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__spawnvp 1
 #endif
 
 #ifdef CONFIG_NO__spawnvpe
 #undef CONFIG_HAVE__spawnvpe
 #elif !defined(CONFIG_HAVE__spawnvpe) && \
-      (defined(_spawnvpe) || defined(_MSC_VER))
+      (defined(_spawnvpe) || defined(___spawnvpe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__spawnvpe 1
 #endif
 
 #ifdef CONFIG_NO__wspawnv
 #undef CONFIG_HAVE__wspawnv
 #elif !defined(CONFIG_HAVE__wspawnv) && \
-      (defined(_wspawnv) || defined(_MSC_VER))
+      (defined(_wspawnv) || defined(___wspawnv_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wspawnv 1
 #endif
 
 #ifdef CONFIG_NO__wspawnve
 #undef CONFIG_HAVE__wspawnve
 #elif !defined(CONFIG_HAVE__wspawnve) && \
-      (defined(_wspawnve) || defined(_MSC_VER))
+      (defined(_wspawnve) || defined(___wspawnve_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wspawnve 1
 #endif
 
 #ifdef CONFIG_NO__wspawnvp
 #undef CONFIG_HAVE__wspawnvp
 #elif !defined(CONFIG_HAVE__wspawnvp) && \
-      (defined(_wspawnvp) || defined(_MSC_VER))
+      (defined(_wspawnvp) || defined(___wspawnvp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wspawnvp 1
 #endif
 
 #ifdef CONFIG_NO__wspawnvpe
 #undef CONFIG_HAVE__wspawnvpe
 #elif !defined(CONFIG_HAVE__wspawnvpe) && \
-      (defined(_wspawnvpe) || defined(_MSC_VER))
+      (defined(_wspawnvpe) || defined(___wspawnvpe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wspawnvpe 1
 #endif
 
 #ifdef CONFIG_NO__cwait
 #undef CONFIG_HAVE__cwait
 #elif !defined(CONFIG_HAVE__cwait) && \
-      (defined(_cwait) || defined(_MSC_VER))
+      (defined(_cwait) || defined(___cwait_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__cwait 1
 #endif
 
 #ifdef CONFIG_NO_wait
 #undef CONFIG_HAVE_wait
 #elif !defined(CONFIG_HAVE_wait) && \
-      (defined(wait) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(wait) || defined(__wait_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_wait 1
 #endif
 
 #ifdef CONFIG_NO_waitpid
 #undef CONFIG_HAVE_waitpid
 #elif !defined(CONFIG_HAVE_waitpid) && \
-      (defined(waitpid) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(waitpid) || defined(__waitpid_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_waitpid 1
 #endif
 
 #ifdef CONFIG_NO_wait4
 #undef CONFIG_HAVE_wait4
 #elif !defined(CONFIG_HAVE_wait4) && \
-      (defined(wait4) || ((defined(__linux__) || defined(__linux) || defined(linux)) || \
-       defined(__KOS__)))
+      (defined(wait4) || defined(__wait4_defined) || ((defined(__linux__) || defined(__linux) || \
+       defined(linux)) || defined(__KOS__)))
 #define CONFIG_HAVE_wait4 1
 #endif
 
 #ifdef CONFIG_NO_waitid
 #undef CONFIG_HAVE_waitid
 #elif !defined(CONFIG_HAVE_waitid) && \
-      (defined(waitid) || ((defined(__linux__) || defined(__linux) || defined(linux)) || \
-       defined(__KOS__)))
+      (defined(waitid) || defined(__waitid_defined) || ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__)))
 #define CONFIG_HAVE_waitid 1
 #endif
 
 #ifdef CONFIG_NO_sigprocmask
 #undef CONFIG_HAVE_sigprocmask
 #elif !defined(CONFIG_HAVE_sigprocmask) && \
-      (defined(sigprocmask) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(sigprocmask) || defined(__sigprocmask_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_sigprocmask 1
 #endif
 
 #ifdef CONFIG_NO_detach
 #undef CONFIG_HAVE_detach
 #elif !defined(CONFIG_HAVE_detach) && \
-      (defined(detach) || (defined(__KOS__) && defined(__USE_KOS) && __KOS_VERSION__ \
-       >= 300))
+      (defined(detach) || defined(__detach_defined) || (defined(__KOS__) && defined(__USE_KOS) && \
+       __KOS_VERSION__ >= 300))
 #define CONFIG_HAVE_detach 1
 #endif
 
@@ -1001,147 +1092,333 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #ifdef CONFIG_NO__wsystem
 #undef CONFIG_HAVE__wsystem
 #elif !defined(CONFIG_HAVE__wsystem) && \
-      (defined(_wsystem) || defined(_MSC_VER))
+      (defined(_wsystem) || defined(___wsystem_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wsystem 1
 #endif
 
 #ifdef CONFIG_NO_creat
 #undef CONFIG_HAVE_creat
 #elif !defined(CONFIG_HAVE_creat) && \
-      (defined(creat) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(creat) || defined(__creat_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_creat 1
 #endif
 
 #ifdef CONFIG_NO__creat
 #undef CONFIG_HAVE__creat
 #elif !defined(CONFIG_HAVE__creat) && \
-      (defined(_creat) || defined(_MSC_VER))
+      (defined(_creat) || defined(___creat_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__creat 1
 #endif
 
 #ifdef CONFIG_NO__wcreat
 #undef CONFIG_HAVE__wcreat
 #elif !defined(CONFIG_HAVE__wcreat) && \
-      (defined(_wcreat) || defined(_MSC_VER))
+      (defined(_wcreat) || defined(___wcreat_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wcreat 1
 #endif
 
 #ifdef CONFIG_NO_open
 #undef CONFIG_HAVE_open
 #elif !defined(CONFIG_HAVE_open) && \
-      (defined(open) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(open) || defined(__open_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_open 1
 #endif
 
 #ifdef CONFIG_NO__open
 #undef CONFIG_HAVE__open
 #elif !defined(CONFIG_HAVE__open) && \
-      (defined(_open) || defined(_MSC_VER))
+      (defined(_open) || defined(___open_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__open 1
 #endif
 
 #ifdef CONFIG_NO__wopen
 #undef CONFIG_HAVE__wopen
 #elif !defined(CONFIG_HAVE__wopen) && \
-      (defined(_wopen) || defined(_MSC_VER))
+      (defined(_wopen) || defined(___wopen_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wopen 1
 #endif
 
 #ifdef CONFIG_NO_open64
 #undef CONFIG_HAVE_open64
 #elif !defined(CONFIG_HAVE_open64) && \
-      (defined(open64) || defined(__USE_LARGEFILE64))
+      (defined(open64) || defined(__open64_defined) || defined(__USE_LARGEFILE64))
 #define CONFIG_HAVE_open64 1
-#endif
-
-#ifdef CONFIG_NO__get_osfhandle
-#undef CONFIG_HAVE__get_osfhandle
-#elif !defined(CONFIG_HAVE__get_osfhandle) && \
-      (defined(_get_osfhandle) || defined(_MSC_VER))
-#define CONFIG_HAVE__get_osfhandle 1
-#endif
-
-#ifdef CONFIG_NO__open_osfhandle
-#undef CONFIG_HAVE__open_osfhandle
-#elif !defined(CONFIG_HAVE__open_osfhandle) && \
-      (defined(_open_osfhandle) || defined(_MSC_VER))
-#define CONFIG_HAVE__open_osfhandle 1
 #endif
 
 #ifdef CONFIG_NO_read
 #undef CONFIG_HAVE_read
 #elif !defined(CONFIG_HAVE_read) && \
-      (defined(read) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(read) || defined(__read_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_read 1
 #endif
 
 #ifdef CONFIG_NO__read
 #undef CONFIG_HAVE__read
 #elif !defined(CONFIG_HAVE__read) && \
-      (defined(_read) || defined(_MSC_VER))
+      (defined(_read) || defined(___read_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__read 1
 #endif
 
 #ifdef CONFIG_NO_write
 #undef CONFIG_HAVE_write
 #elif !defined(CONFIG_HAVE_write) && \
-      (defined(write) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(write) || defined(__write_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_write 1
 #endif
 
 #ifdef CONFIG_NO__write
 #undef CONFIG_HAVE__write
 #elif !defined(CONFIG_HAVE__write) && \
-      (defined(_write) || defined(_MSC_VER))
+      (defined(_write) || defined(___write_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__write 1
 #endif
 
 #ifdef CONFIG_NO_lseek
 #undef CONFIG_HAVE_lseek
 #elif !defined(CONFIG_HAVE_lseek) && \
-      (defined(lseek) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(lseek) || defined(__lseek_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_lseek 1
 #endif
 
 #ifdef CONFIG_NO_lseek64
 #undef CONFIG_HAVE_lseek64
 #elif !defined(CONFIG_HAVE_lseek64) && \
-      (defined(lseek64) || defined(__USE_LARGEFILE64))
+      (defined(lseek64) || defined(__lseek64_defined) || defined(__USE_LARGEFILE64))
 #define CONFIG_HAVE_lseek64 1
 #endif
 
 #ifdef CONFIG_NO__lseek
 #undef CONFIG_HAVE__lseek
 #elif !defined(CONFIG_HAVE__lseek) && \
-      (defined(_lseek) || defined(_MSC_VER))
+      (defined(_lseek) || defined(___lseek_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__lseek 1
 #endif
 
 #ifdef CONFIG_NO__lseeki64
 #undef CONFIG_HAVE__lseeki64
 #elif !defined(CONFIG_HAVE__lseeki64) && \
-      (defined(_lseeki64) || defined(_MSC_VER))
+      (defined(_lseeki64) || defined(___lseeki64_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__lseeki64 1
 #endif
 
 #ifdef CONFIG_NO_chdir
 #undef CONFIG_HAVE_chdir
 #elif !defined(CONFIG_HAVE_chdir) && \
-      (defined(chdir) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(chdir) || defined(__chdir_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_chdir 1
 #endif
 
 #ifdef CONFIG_NO__chdir
 #undef CONFIG_HAVE__chdir
 #elif !defined(CONFIG_HAVE__chdir) && \
-      (defined(_chdir) || defined(_MSC_VER))
+      (defined(_chdir) || defined(___chdir_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__chdir 1
+#endif
+
+#ifdef CONFIG_NO_readlink
+#undef CONFIG_HAVE_readlink
+#elif !defined(CONFIG_HAVE_readlink) && \
+      (defined(readlink) || defined(__readlink_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
+#define CONFIG_HAVE_readlink 1
+#endif
+
+#ifdef CONFIG_NO_freadlinkat
+#undef CONFIG_HAVE_freadlinkat
+#elif !defined(CONFIG_HAVE_freadlinkat) && \
+      (defined(freadlinkat) || defined(__freadlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat)))
+#define CONFIG_HAVE_freadlinkat 1
+#endif
+
+#ifdef CONFIG_NO_stat
+#undef CONFIG_HAVE_stat
+#elif !defined(CONFIG_HAVE_stat) && \
+      (defined(stat) || defined(__stat_defined) || defined(CONFIG_HAVE_SYS_STAT_H))
+#define CONFIG_HAVE_stat 1
+#endif
+
+#ifdef CONFIG_NO_fstat
+#undef CONFIG_HAVE_fstat
+#elif !defined(CONFIG_HAVE_fstat) && \
+      (defined(fstat) || defined(__fstat_defined) || defined(CONFIG_HAVE_SYS_STAT_H))
+#define CONFIG_HAVE_fstat 1
+#endif
+
+#ifdef CONFIG_NO_lstat
+#undef CONFIG_HAVE_lstat
+#elif !defined(CONFIG_HAVE_lstat) && \
+      (defined(lstat) || defined(__lstat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
+#define CONFIG_HAVE_lstat 1
+#endif
+
+#ifdef CONFIG_NO_stat64
+#undef CONFIG_HAVE_stat64
+#elif !defined(CONFIG_HAVE_stat64) && \
+      (defined(stat64) || defined(__stat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_LARGEFILE64)))
+#define CONFIG_HAVE_stat64 1
+#endif
+
+#ifdef CONFIG_NO_fstat64
+#undef CONFIG_HAVE_fstat64
+#elif !defined(CONFIG_HAVE_fstat64) && \
+      (defined(fstat64) || defined(__fstat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_LARGEFILE64)))
+#define CONFIG_HAVE_fstat64 1
+#endif
+
+#ifdef CONFIG_NO_lstat64
+#undef CONFIG_HAVE_lstat64
+#elif !defined(CONFIG_HAVE_lstat64) && \
+      (defined(lstat64) || defined(__lstat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))))
+#define CONFIG_HAVE_lstat64 1
+#endif
+
+#ifdef CONFIG_NO_fstatat
+#undef CONFIG_HAVE_fstatat
+#elif !defined(CONFIG_HAVE_fstatat) && \
+      (defined(fstatat) || defined(__fstatat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_fstatat 1
+#endif
+
+#ifdef CONFIG_NO_fstatat64
+#undef CONFIG_HAVE_fstatat64
+#elif !defined(CONFIG_HAVE_fstatat64) && \
+      (defined(fstatat64) || defined(__fstatat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)))
+#define CONFIG_HAVE_fstatat64 1
+#endif
+
+#ifdef CONFIG_NO_mkdir
+#undef CONFIG_HAVE_mkdir
+#elif !defined(CONFIG_HAVE_mkdir) && \
+      (defined(mkdir) || defined(__mkdir_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_mkdir 1
+#endif
+
+#ifdef CONFIG_NO__mkdir
+#undef CONFIG_HAVE__mkdir
+#elif !defined(CONFIG_HAVE__mkdir) && \
+      (defined(_mkdir) || defined(___mkdir_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__mkdir 1
+#endif
+
+#ifdef CONFIG_NO_chmod
+#undef CONFIG_HAVE_chmod
+#elif !defined(CONFIG_HAVE_chmod) && \
+      (defined(chmod) || defined(__chmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_chmod 1
+#endif
+
+#ifdef CONFIG_NO_mkfifo
+#undef CONFIG_HAVE_mkfifo
+#elif !defined(CONFIG_HAVE_mkfifo) && \
+      (defined(mkfifo) || defined(__mkfifo_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_mkfifo 1
+#endif
+
+#ifdef CONFIG_NO_lchmod
+#undef CONFIG_HAVE_lchmod
+#elif !defined(CONFIG_HAVE_lchmod) && \
+      (defined(lchmod) || defined(__lchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_MISC)))
+#define CONFIG_HAVE_lchmod 1
+#endif
+
+#ifdef CONFIG_NO_fchmodat
+#undef CONFIG_HAVE_fchmodat
+#elif !defined(CONFIG_HAVE_fchmodat) && \
+      (defined(fchmodat) || defined(__fchmodat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_fchmodat 1
+#endif
+
+#ifdef CONFIG_NO_mkdirat
+#undef CONFIG_HAVE_mkdirat
+#elif !defined(CONFIG_HAVE_mkdirat) && \
+      (defined(mkdirat) || defined(__mkdirat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_mkdirat 1
+#endif
+
+#ifdef CONFIG_NO_mkfifoat
+#undef CONFIG_HAVE_mkfifoat
+#elif !defined(CONFIG_HAVE_mkfifoat) && \
+      (defined(mkfifoat) || defined(__mkfifoat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_mkfifoat 1
+#endif
+
+#ifdef CONFIG_NO_fchmod
+#undef CONFIG_HAVE_fchmod
+#elif !defined(CONFIG_HAVE_fchmod) && \
+      (defined(fchmod) || defined(__fchmod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_POSIX)))
+#define CONFIG_HAVE_fchmod 1
+#endif
+
+#ifdef CONFIG_NO_mknod
+#undef CONFIG_HAVE_mknod
+#elif !defined(CONFIG_HAVE_mknod) && \
+      (defined(mknod) || defined(__mknod_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))))
+#define CONFIG_HAVE_mknod 1
+#endif
+
+#ifdef CONFIG_NO_mknodat
+#undef CONFIG_HAVE_mknodat
+#elif !defined(CONFIG_HAVE_mknodat) && \
+      (defined(mknodat) || defined(__mknodat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)) && defined(__USE_ATFILE)))
+#define CONFIG_HAVE_mknodat 1
+#endif
+
+#ifdef CONFIG_NO_utimensat
+#undef CONFIG_HAVE_utimensat
+#elif !defined(CONFIG_HAVE_utimensat) && \
+      (defined(utimensat) || defined(__utimensat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_utimensat 1
+#endif
+
+#ifdef CONFIG_NO_utimensat64
+#undef CONFIG_HAVE_utimensat64
+#elif !defined(CONFIG_HAVE_utimensat64) && \
+      (defined(utimensat64) || defined(__utimensat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_ATFILE) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_utimensat64 1
+#endif
+
+#ifdef CONFIG_NO_futimens
+#undef CONFIG_HAVE_futimens
+#elif !defined(CONFIG_HAVE_futimens) && \
+      (defined(futimens) || defined(__futimens_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_XOPEN2K8)))
+#define CONFIG_HAVE_futimens 1
+#endif
+
+#ifdef CONFIG_NO_futimens64
+#undef CONFIG_HAVE_futimens64
+#elif !defined(CONFIG_HAVE_futimens64) && \
+      (defined(futimens64) || defined(__futimens64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_XOPEN2K8) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_futimens64 1
 #endif
 
 #if defined(_MSC_VER)
@@ -1154,248 +1431,297 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #ifdef CONFIG_NO_access
 #undef CONFIG_HAVE_access
 #elif !defined(CONFIG_HAVE_access) && \
-      (defined(access) || ((defined(CONFIG_HAVE_UNISTD_H) || !defined(_MSC_VER)) && \
-       defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)))
+      (defined(access) || defined(__access_defined) || ((defined(CONFIG_HAVE_UNISTD_H) || \
+       !defined(_MSC_VER)) && defined(F_OK) && defined(X_OK) && defined(W_OK) && \
+       defined(R_OK)))
 #define CONFIG_HAVE_access 1
 #endif
 
 #ifdef CONFIG_NO_euidaccess
 #undef CONFIG_HAVE_euidaccess
 #elif !defined(CONFIG_HAVE_euidaccess) && \
-      (defined(euidaccess) || (defined(F_OK) && defined(X_OK) && defined(W_OK) && \
-       defined(R_OK) && defined(__USE_GNU)))
+      (defined(euidaccess) || defined(__euidaccess_defined) || (defined(F_OK) && \
+       defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)))
 #define CONFIG_HAVE_euidaccess 1
 #endif
 
 #ifdef CONFIG_NO_eaccess
 #undef CONFIG_HAVE_eaccess
 #elif !defined(CONFIG_HAVE_eaccess) && \
-      (defined(eaccess) || (defined(F_OK) && defined(X_OK) && defined(W_OK) && \
-       defined(R_OK) && defined(__USE_GNU)))
+      (defined(eaccess) || defined(__eaccess_defined) || (defined(F_OK) && defined(X_OK) && \
+       defined(W_OK) && defined(R_OK) && defined(__USE_GNU)))
 #define CONFIG_HAVE_eaccess 1
 #endif
 
 #ifdef CONFIG_NO_faccessat
 #undef CONFIG_HAVE_faccessat
 #elif !defined(CONFIG_HAVE_faccessat) && \
-      (defined(faccessat) || (defined(F_OK) && defined(X_OK) && defined(W_OK) && \
-       defined(R_OK) && defined(__USE_ATFILE)))
+      (defined(faccessat) || defined(__faccessat_defined) || (defined(F_OK) && \
+       defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)))
 #define CONFIG_HAVE_faccessat 1
 #endif
 
 #ifdef CONFIG_NO__access
 #undef CONFIG_HAVE__access
 #elif !defined(CONFIG_HAVE__access) && \
-      (defined(_access) || defined(_MSC_VER))
+      (defined(_access) || defined(___access_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__access 1
 #endif
 
 #ifdef CONFIG_NO__waccess
 #undef CONFIG_HAVE__waccess
 #elif !defined(CONFIG_HAVE__waccess) && \
-      (defined(_waccess) || defined(_MSC_VER))
+      (defined(_waccess) || defined(___waccess_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__waccess 1
 #endif
 
 #ifdef CONFIG_NO_fchownat
 #undef CONFIG_HAVE_fchownat
 #elif !defined(CONFIG_HAVE_fchownat) && \
-      (defined(fchownat) || defined(__USE_ATFILE))
+      (defined(fchownat) || defined(__fchownat_defined) || defined(__USE_ATFILE))
 #define CONFIG_HAVE_fchownat 1
 #endif
 
 #ifdef CONFIG_NO_pread
 #undef CONFIG_HAVE_pread
 #elif !defined(CONFIG_HAVE_pread) && \
-      (defined(pread) || (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)))
+      (defined(pread) || defined(__pread_defined) || (defined(__USE_UNIX98) || \
+       defined(__USE_XOPEN2K8)))
 #define CONFIG_HAVE_pread 1
 #endif
 
 #ifdef CONFIG_NO_pwrite
 #undef CONFIG_HAVE_pwrite
 #elif !defined(CONFIG_HAVE_pwrite) && \
-      (defined(pwrite) || (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)))
+      (defined(pwrite) || defined(__pwrite_defined) || (defined(__USE_UNIX98) || \
+       defined(__USE_XOPEN2K8)))
 #define CONFIG_HAVE_pwrite 1
 #endif
 
 #ifdef CONFIG_NO_pread64
 #undef CONFIG_HAVE_pread64
 #elif !defined(CONFIG_HAVE_pread64) && \
-      (defined(pread64) || (defined(__USE_LARGEFILE64) && (defined(__USE_UNIX98) || \
-       defined(__USE_XOPEN2K8))))
+      (defined(pread64) || defined(__pread64_defined) || (defined(__USE_LARGEFILE64) && \
+       (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))))
 #define CONFIG_HAVE_pread64 1
 #endif
 
 #ifdef CONFIG_NO_pwrite64
 #undef CONFIG_HAVE_pwrite64
 #elif !defined(CONFIG_HAVE_pwrite64) && \
-      (defined(pwrite64) || (defined(__USE_LARGEFILE64) && (defined(__USE_UNIX98) || \
-       defined(__USE_XOPEN2K8))))
+      (defined(pwrite64) || defined(__pwrite64_defined) || (defined(__USE_LARGEFILE64) && \
+       (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))))
 #define CONFIG_HAVE_pwrite64 1
 #endif
 
 #ifdef CONFIG_NO_close
 #undef CONFIG_HAVE_close
 #elif !defined(CONFIG_HAVE_close) && \
-      (defined(close) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(close) || defined(__close_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_close 1
 #endif
 
 #ifdef CONFIG_NO__close
 #undef CONFIG_HAVE__close
 #elif !defined(CONFIG_HAVE__close) && \
-      (defined(_close) || defined(_MSC_VER))
+      (defined(_close) || defined(___close_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__close 1
 #endif
 
 #ifdef CONFIG_NO_sync
 #undef CONFIG_HAVE_sync
 #elif !defined(CONFIG_HAVE_sync) && \
-      (defined(sync) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(sync) || defined(__sync_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_sync 1
 #endif
 
 #ifdef CONFIG_NO_fsync
 #undef CONFIG_HAVE_fsync
 #elif !defined(CONFIG_HAVE_fsync) && \
-      (defined(fsync) || ((defined(_POSIX_FSYNC) && _POSIX_FSYNC+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && \
-       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
-       defined(__unix) || defined(unix)))))
+      (defined(fsync) || defined(__fsync_defined) || ((defined(_POSIX_FSYNC) && \
+       _POSIX_FSYNC+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))))
 #define CONFIG_HAVE_fsync 1
 #endif
 
 #ifdef CONFIG_NO_fdatasync
 #undef CONFIG_HAVE_fdatasync
 #elif !defined(CONFIG_HAVE_fdatasync) && \
-      (defined(fdatasync) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(fdatasync) || defined(__fdatasync_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_fdatasync 1
 #endif
 
 #ifdef CONFIG_NO__commit
 #undef CONFIG_HAVE__commit
 #elif !defined(CONFIG_HAVE__commit) && \
-      (defined(_commit) || defined(_MSC_VER))
+      (defined(_commit) || defined(___commit_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__commit 1
 #endif
 
 #ifdef CONFIG_NO_getpid
 #undef CONFIG_HAVE_getpid
 #elif !defined(CONFIG_HAVE_getpid) && \
-      (defined(getpid) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(getpid) || defined(__getpid_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_getpid 1
 #endif
 
 #ifdef CONFIG_NO__getpid
 #undef CONFIG_HAVE__getpid
 #elif !defined(CONFIG_HAVE__getpid) && \
-      (defined(_getpid) || defined(_MSC_VER))
+      (defined(_getpid) || defined(___getpid_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__getpid 1
 #endif
 
 #ifdef CONFIG_NO_umask
 #undef CONFIG_HAVE_umask
 #elif !defined(CONFIG_HAVE_umask) && \
-      (defined(umask) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(umask) || defined(__umask_defined) || defined(CONFIG_HAVE_SYS_STAT_H))
 #define CONFIG_HAVE_umask 1
 #endif
 
 #ifdef CONFIG_NO__umask
 #undef CONFIG_HAVE__umask
 #elif !defined(CONFIG_HAVE__umask) && \
-      (defined(_umask) || defined(_MSC_VER))
+      (defined(_umask) || defined(___umask_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__umask 1
 #endif
 
 #ifdef CONFIG_NO_dup
 #undef CONFIG_HAVE_dup
 #elif !defined(CONFIG_HAVE_dup) && \
-      (defined(dup) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(dup) || defined(__dup_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_dup 1
 #endif
 
 #ifdef CONFIG_NO__dup
 #undef CONFIG_HAVE__dup
 #elif !defined(CONFIG_HAVE__dup) && \
-      (defined(_dup) || defined(_MSC_VER))
+      (defined(_dup) || defined(___dup_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__dup 1
 #endif
 
 #ifdef CONFIG_NO_dup2
 #undef CONFIG_HAVE_dup2
 #elif !defined(CONFIG_HAVE_dup2) && \
-      (defined(dup2) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(dup2) || defined(__dup2_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_dup2 1
 #endif
 
 #ifdef CONFIG_NO__dup2
 #undef CONFIG_HAVE__dup2
 #elif !defined(CONFIG_HAVE__dup2) && \
-      (defined(_dup2) || defined(_MSC_VER))
+      (defined(_dup2) || defined(___dup2_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__dup2 1
 #endif
 
 #ifdef CONFIG_NO_dup3
 #undef CONFIG_HAVE_dup3
 #elif !defined(CONFIG_HAVE_dup3) && \
-      (defined(dup3) || defined(__USE_GNU))
+      (defined(dup3) || defined(__dup3_defined) || defined(__USE_GNU))
 #define CONFIG_HAVE_dup3 1
 #endif
 
 #ifdef CONFIG_NO_isatty
 #undef CONFIG_HAVE_isatty
 #elif !defined(CONFIG_HAVE_isatty) && \
-      (defined(isatty) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(isatty) || defined(__isatty_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
 #define CONFIG_HAVE_isatty 1
 #endif
 
 #ifdef CONFIG_NO__isatty
 #undef CONFIG_HAVE__isatty
 #elif !defined(CONFIG_HAVE__isatty) && \
-      (defined(_isatty) || defined(_MSC_VER))
+      (defined(_isatty) || defined(___isatty_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__isatty 1
+#endif
+
+#ifdef CONFIG_NO_getcwd
+#undef CONFIG_HAVE_getcwd
+#elif !defined(CONFIG_HAVE_getcwd) && \
+      (defined(getcwd) || defined(__getcwd_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
+#define CONFIG_HAVE_getcwd 1
+#endif
+
+#ifdef CONFIG_NO__getcwd
+#undef CONFIG_HAVE__getcwd
+#elif !defined(CONFIG_HAVE__getcwd) && \
+      (defined(_getcwd) || defined(___getcwd_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__getcwd 1
+#endif
+
+#ifdef CONFIG_NO_wgetcwd
+#undef CONFIG_HAVE_wgetcwd
+#elif !defined(CONFIG_HAVE_wgetcwd) && \
+      (defined(wgetcwd) || defined(__wgetcwd_defined))
+#define CONFIG_HAVE_wgetcwd 1
+#endif
+
+#ifdef CONFIG_NO__wgetcwd
+#undef CONFIG_HAVE__wgetcwd
+#elif !defined(CONFIG_HAVE__wgetcwd) && \
+      (defined(_wgetcwd) || defined(___wgetcwd_defined) || defined(_WDIRECT_DEFINED))
+#define CONFIG_HAVE__wgetcwd 1
+#endif
+
+#ifdef CONFIG_NO_getenv
+#undef CONFIG_HAVE_getenv
+#else
+#define CONFIG_HAVE_getenv 1
+#endif
+
+#ifdef CONFIG_NO_wcslen
+#undef CONFIG_HAVE_wcslen
+#else
+#define CONFIG_HAVE_wcslen 1
 #endif
 
 #ifdef CONFIG_NO_truncate
 #undef CONFIG_HAVE_truncate
 #elif !defined(CONFIG_HAVE_truncate) && \
-      (defined(truncate) || ((defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)) || defined(__USE_XOPEN_EXTENDED) || \
-       defined(__USE_XOPEN2K8)))
+      (defined(truncate) || defined(__truncate_defined) || ((defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8)))
 #define CONFIG_HAVE_truncate 1
 #endif
 
 #ifdef CONFIG_NO_truncate64
 #undef CONFIG_HAVE_truncate64
 #elif !defined(CONFIG_HAVE_truncate64) && \
-      (defined(truncate64) || (defined(__USE_LARGEFILE64) && ((defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix)) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))))
+      (defined(truncate64) || defined(__truncate64_defined) || (defined(__USE_LARGEFILE64) && \
+       ((defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix)) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))))
 #define CONFIG_HAVE_truncate64 1
 #endif
 
 #ifdef CONFIG_NO_ftruncate
 #undef CONFIG_HAVE_ftruncate
 #elif !defined(CONFIG_HAVE_ftruncate) && \
-      (defined(ftruncate) || ((defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)) || defined(__USE_POSIX199309) || \
-       defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K)))
+      (defined(ftruncate) || defined(__ftruncate_defined) || ((defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)) || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || \
+       defined(__USE_XOPEN2K)))
 #define CONFIG_HAVE_ftruncate 1
 #endif
 
 #ifdef CONFIG_NO_ftruncate64
 #undef CONFIG_HAVE_ftruncate64
 #elif !defined(CONFIG_HAVE_ftruncate64) && \
-      (defined(ftruncate64) || (defined(__USE_LARGEFILE64) && ((defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix)) || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || \
+      (defined(ftruncate64) || defined(__ftruncate64_defined) || (defined(__USE_LARGEFILE64) && \
+       ((defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix)) || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || \
        defined(__USE_XOPEN2K))))
 #define CONFIG_HAVE_ftruncate64 1
 #endif
@@ -1403,483 +1729,506 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #ifdef CONFIG_NO__chsize
 #undef CONFIG_HAVE__chsize
 #elif !defined(CONFIG_HAVE__chsize) && \
-      (defined(_chsize) || defined(_MSC_VER))
+      (defined(_chsize) || defined(___chsize_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__chsize 1
 #endif
 
 #ifdef CONFIG_NO__chsize_s
 #undef CONFIG_HAVE__chsize_s
 #elif !defined(CONFIG_HAVE__chsize_s) && \
-      (defined(_chsize_s) || defined(_MSC_VER))
+      (defined(_chsize_s) || defined(___chsize_s_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__chsize_s 1
 #endif
 
 #ifdef CONFIG_NO_getpgid
 #undef CONFIG_HAVE_getpgid
 #elif !defined(CONFIG_HAVE_getpgid) && \
-      (defined(getpgid) || (defined(_POSIX_JOB_CONTROL) && _POSIX_JOB_CONTROL+0 != 0))
+      (defined(getpgid) || defined(__getpgid_defined) || (defined(_POSIX_JOB_CONTROL) && \
+       _POSIX_JOB_CONTROL+0 != 0))
 #define CONFIG_HAVE_getpgid 1
 #endif
 
 #ifdef CONFIG_NO_setpgid
 #undef CONFIG_HAVE_setpgid
 #elif !defined(CONFIG_HAVE_setpgid) && \
-      (defined(setpgid) || (defined(_POSIX_JOB_CONTROL) && _POSIX_JOB_CONTROL+0 != 0))
+      (defined(setpgid) || defined(__setpgid_defined) || (defined(_POSIX_JOB_CONTROL) && \
+       _POSIX_JOB_CONTROL+0 != 0))
 #define CONFIG_HAVE_setpgid 1
 #endif
 
 #ifdef CONFIG_NO_setreuid
 #undef CONFIG_HAVE_setreuid
 #elif !defined(CONFIG_HAVE_setreuid) && \
-      (defined(setreuid) || ((defined(_POSIX_SAVED_IDS) && _POSIX_SAVED_IDS+0 \
-       != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || defined(__linux) || \
-       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))))
+      (defined(setreuid) || defined(__setreuid_defined) || ((defined(_POSIX_SAVED_IDS) && \
+       _POSIX_SAVED_IDS+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))))
 #define CONFIG_HAVE_setreuid 1
 #endif
 
 #ifdef CONFIG_NO_nice
 #undef CONFIG_HAVE_nice
 #elif !defined(CONFIG_HAVE_nice) && \
-      (defined(nice) || (defined(__USE_MISC) || defined(__USE_XOPEN) || ((defined(_POSIX_PRIORITY_SCHEDULING) && \
-       _POSIX_PRIORITY_SCHEDULING+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && \
-       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
-       defined(__unix) || defined(unix))))))
+      (defined(nice) || defined(__nice_defined) || (defined(__USE_MISC) || defined(__USE_XOPEN) || \
+       ((defined(_POSIX_PRIORITY_SCHEDULING) && _POSIX_PRIORITY_SCHEDULING+0 != \
+       0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))))
 #define CONFIG_HAVE_nice 1
 #endif
 
 #ifdef CONFIG_NO_mmap
 #undef CONFIG_HAVE_mmap
 #elif !defined(CONFIG_HAVE_mmap) && \
-      (defined(mmap) || ((defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES+0 \
-       != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || defined(__linux) || \
-       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))))
+      (defined(mmap) || defined(__mmap_defined) || ((defined(_POSIX_MAPPED_FILES) && \
+       _POSIX_MAPPED_FILES+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))))
 #define CONFIG_HAVE_mmap 1
 #endif
 
 #ifdef CONFIG_NO_mmap64
 #undef CONFIG_HAVE_mmap64
 #elif !defined(CONFIG_HAVE_mmap64) && \
-      (defined(mmap64) || (defined(__USE_LARGEFILE64) && ((defined(_POSIX_MAPPED_FILES) && \
-       _POSIX_MAPPED_FILES+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && (defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix))))))
+      (defined(mmap64) || defined(__mmap64_defined) || (defined(__USE_LARGEFILE64) && \
+       ((defined(_POSIX_MAPPED_FILES) && _POSIX_MAPPED_FILES+0 != 0) || (!defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))))
 #define CONFIG_HAVE_mmap64 1
 #endif
 
 #ifdef CONFIG_NO_pipe
 #undef CONFIG_HAVE_pipe
 #elif !defined(CONFIG_HAVE_pipe) && \
-      (defined(pipe) || (defined(CONFIG_HAVE_UNISTD_H) || (defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix))))
+      (defined(pipe) || defined(__pipe_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_pipe 1
 #endif
 
 #ifdef CONFIG_NO_pipe2
 #undef CONFIG_HAVE_pipe2
 #elif !defined(CONFIG_HAVE_pipe2) && \
-      (defined(pipe2) || defined(__USE_GNU))
+      (defined(pipe2) || defined(__pipe2_defined) || defined(__USE_GNU))
 #define CONFIG_HAVE_pipe2 1
 #endif
 
 #ifdef CONFIG_NO__pipe
 #undef CONFIG_HAVE__pipe
 #elif !defined(CONFIG_HAVE__pipe) && \
-      (defined(_pipe) || defined(_MSC_VER))
+      (defined(_pipe) || defined(___pipe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__pipe 1
 #endif
 
 #ifdef CONFIG_NO_usleep
 #undef CONFIG_HAVE_usleep
 #elif !defined(CONFIG_HAVE_usleep) && \
-      (defined(usleep) || ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || \
-       defined(__USE_MISC)))
+      (defined(usleep) || defined(__usleep_defined) || ((defined(__USE_XOPEN_EXTENDED) && \
+       !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)))
 #define CONFIG_HAVE_usleep 1
 #endif
 
 #ifdef CONFIG_NO_nanosleep
 #undef CONFIG_HAVE_nanosleep
 #elif !defined(CONFIG_HAVE_nanosleep) && \
-      (defined(nanosleep) || (defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)))
+      (defined(nanosleep) || defined(__nanosleep_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX199309)))
 #define CONFIG_HAVE_nanosleep 1
 #endif
 
 #ifdef CONFIG_NO_nanosleep64
 #undef CONFIG_HAVE_nanosleep64
 #elif !defined(CONFIG_HAVE_nanosleep64) && \
-      (defined(nanosleep64) || (defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && \
-       defined(__USE_TIME64)))
+      (defined(nanosleep64) || defined(__nanosleep64_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX199309) && defined(__USE_TIME64)))
 #define CONFIG_HAVE_nanosleep64 1
 #endif
 
 #ifdef CONFIG_NO_fork
 #undef CONFIG_HAVE_fork
 #elif !defined(CONFIG_HAVE_fork) && \
-      (defined(fork) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(fork) || defined(__fork_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_fork 1
 #endif
 
 #ifdef CONFIG_NO_vfork
 #undef CONFIG_HAVE_vfork
 #elif !defined(CONFIG_HAVE_vfork) && \
-      (defined(vfork) || ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || \
-       defined(__USE_MISC)))
+      (defined(vfork) || defined(__vfork_defined) || ((defined(__USE_XOPEN_EXTENDED) && \
+       !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)))
 #define CONFIG_HAVE_vfork 1
 #endif
 
 #ifdef CONFIG_NO_fchown
 #undef CONFIG_HAVE_fchown
 #elif !defined(CONFIG_HAVE_fchown) && \
-      (defined(fchown) || (defined(CONFIG_HAVE_UNISTD_H) || (defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix))))
+      (defined(fchown) || defined(__fchown_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_fchown 1
 #endif
 
 #ifdef CONFIG_NO_fchdir
 #undef CONFIG_HAVE_fchdir
 #elif !defined(CONFIG_HAVE_fchdir) && \
-      (defined(fchdir) || (defined(CONFIG_HAVE_UNISTD_H) || (defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix))))
+      (defined(fchdir) || defined(__fchdir_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_fchdir 1
 #endif
 
 #ifdef CONFIG_NO_pause
 #undef CONFIG_HAVE_pause
 #elif !defined(CONFIG_HAVE_pause) && \
-      (defined(pause) || (defined(__linux__) || defined(__linux) || defined(linux) || \
-       defined(__unix__) || defined(__unix) || defined(unix)))
+      (defined(pause) || defined(__pause_defined) || (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix)))
 #define CONFIG_HAVE_pause 1
 #endif
 
 #ifdef CONFIG_NO_select
 #undef CONFIG_HAVE_select
 #elif !defined(CONFIG_HAVE_select) && \
-      (defined(select) || (defined(CONFIG_HAVE_SYS_SELECT_H) && (defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix))))
+      (defined(select) || defined(__select_defined) || (defined(CONFIG_HAVE_SYS_SELECT_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_select 1
 #endif
 
 #ifdef CONFIG_NO___iob_func
 #undef CONFIG_HAVE___iob_func
 #elif !defined(CONFIG_HAVE___iob_func) && \
-      (defined(__iob_func) || (defined(_MSC_VER) || defined(____iob_func_defined)))
+      (defined(__iob_func) || defined(____iob_func_defined) || (defined(_MSC_VER) || \
+       defined(____iob_func_defined)))
 #define CONFIG_HAVE___iob_func 1
 #endif
 
 #ifdef CONFIG_NO_fseek
 #undef CONFIG_HAVE_fseek
 #elif !defined(CONFIG_HAVE_fseek) && \
-      (defined(fseek) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fseek) || defined(__fseek_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fseek 1
 #endif
 
 #ifdef CONFIG_NO_ftell
 #undef CONFIG_HAVE_ftell
 #elif !defined(CONFIG_HAVE_ftell) && \
-      (defined(ftell) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(ftell) || defined(__ftell_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_ftell 1
 #endif
 
 #ifdef CONFIG_NO_fseek64
 #undef CONFIG_HAVE_fseek64
 #elif !defined(CONFIG_HAVE_fseek64) && \
-      (defined(fseek64) || (defined(CONFIG_HAVE_STDIO_H) && 0))
+      (defined(fseek64) || defined(__fseek64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       0))
 #define CONFIG_HAVE_fseek64 1
 #endif
 
 #ifdef CONFIG_NO_ftell64
 #undef CONFIG_HAVE_ftell64
 #elif !defined(CONFIG_HAVE_ftell64) && \
-      (defined(ftell64) || (defined(CONFIG_HAVE_STDIO_H) && 0))
+      (defined(ftell64) || defined(__ftell64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       0))
 #define CONFIG_HAVE_ftell64 1
 #endif
 
 #ifdef CONFIG_NO_fseeko
 #undef CONFIG_HAVE_fseeko
 #elif !defined(CONFIG_HAVE_fseeko) && \
-      (defined(fseeko) || (defined(CONFIG_HAVE_STDIO_H) && (defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix))))
+      (defined(fseeko) || defined(__fseeko_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_fseeko 1
 #endif
 
 #ifdef CONFIG_NO_ftello
 #undef CONFIG_HAVE_ftello
 #elif !defined(CONFIG_HAVE_ftello) && \
-      (defined(ftello) || (defined(CONFIG_HAVE_STDIO_H) && (defined(__linux__) || \
-       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
-       defined(unix))))
+      (defined(ftello) || defined(__ftello_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_ftello 1
 #endif
 
 #ifdef CONFIG_NO_fseeko64
 #undef CONFIG_HAVE_fseeko64
 #elif !defined(CONFIG_HAVE_fseeko64) && \
-      (defined(fseeko64) || (defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)))
+      (defined(fseeko64) || defined(__fseeko64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(__USE_LARGEFILE64)))
 #define CONFIG_HAVE_fseeko64 1
 #endif
 
 #ifdef CONFIG_NO_ftello64
 #undef CONFIG_HAVE_ftello64
 #elif !defined(CONFIG_HAVE_ftello64) && \
-      (defined(ftello64) || (defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)))
+      (defined(ftello64) || defined(__ftello64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(__USE_LARGEFILE64)))
 #define CONFIG_HAVE_ftello64 1
 #endif
 
 #ifdef CONFIG_NO__fseeki64
 #undef CONFIG_HAVE__fseeki64
 #elif !defined(CONFIG_HAVE__fseeki64) && \
-      (defined(_fseeki64) || (defined(CONFIG_HAVE_STDIO_H) && defined(_MSC_VER)))
+      (defined(_fseeki64) || defined(___fseeki64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__fseeki64 1
 #endif
 
 #ifdef CONFIG_NO__ftelli64
 #undef CONFIG_HAVE__ftelli64
 #elif !defined(CONFIG_HAVE__ftelli64) && \
-      (defined(_ftelli64) || (defined(CONFIG_HAVE_STDIO_H) && defined(_MSC_VER)))
+      (defined(_ftelli64) || defined(___ftelli64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__ftelli64 1
 #endif
 
 #ifdef CONFIG_NO_fflush
 #undef CONFIG_HAVE_fflush
 #elif !defined(CONFIG_HAVE_fflush) && \
-      (defined(fflush) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fflush) || defined(__fflush_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fflush 1
 #endif
 
 #ifdef CONFIG_NO_ferror
 #undef CONFIG_HAVE_ferror
 #elif !defined(CONFIG_HAVE_ferror) && \
-      (defined(ferror) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(ferror) || defined(__ferror_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_ferror 1
 #endif
 
 #ifdef CONFIG_NO_fclose
 #undef CONFIG_HAVE_fclose
 #elif !defined(CONFIG_HAVE_fclose) && \
-      (defined(fclose) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fclose) || defined(__fclose_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fclose 1
 #endif
 
 #ifdef CONFIG_NO_fileno
 #undef CONFIG_HAVE_fileno
 #elif !defined(CONFIG_HAVE_fileno) && \
-      (defined(fileno) || (defined(CONFIG_HAVE_STDIO_H) && !defined(_MSC_VER)))
+      (defined(fileno) || defined(__fileno_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       !defined(_MSC_VER)))
 #define CONFIG_HAVE_fileno 1
 #endif
 
 #ifdef CONFIG_NO__fileno
 #undef CONFIG_HAVE__fileno
 #elif !defined(CONFIG_HAVE__fileno) && \
-      (defined(_fileno) || (defined(CONFIG_HAVE_STDIO_H) && defined(_MSC_VER)))
+      (defined(_fileno) || defined(___fileno_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__fileno 1
 #endif
 
 #ifdef CONFIG_NO_fftruncate
 #undef CONFIG_HAVE_fftruncate
 #elif !defined(CONFIG_HAVE_fftruncate) && \
-      (defined(fftruncate) || defined(__USE_KOS))
+      (defined(fftruncate) || defined(__fftruncate_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_fftruncate 1
 #endif
 
 #ifdef CONFIG_NO_fftruncate64
 #undef CONFIG_HAVE_fftruncate64
 #elif !defined(CONFIG_HAVE_fftruncate64) && \
-      (defined(fftruncate64) || (defined(__USE_KOS) && defined(__USE_LARGEFILE64)))
+      (defined(fftruncate64) || defined(__fftruncate64_defined) || (defined(__USE_KOS) && \
+       defined(__USE_LARGEFILE64)))
 #define CONFIG_HAVE_fftruncate64 1
 #endif
 
 #ifdef CONFIG_NO_getc
 #undef CONFIG_HAVE_getc
 #elif !defined(CONFIG_HAVE_getc) && \
-      (defined(getc) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(getc) || defined(__getc_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_getc 1
 #endif
 
 #ifdef CONFIG_NO_fgetc
 #undef CONFIG_HAVE_fgetc
 #elif !defined(CONFIG_HAVE_fgetc) && \
-      (defined(fgetc) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fgetc) || defined(__fgetc_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fgetc 1
 #endif
 
 #ifdef CONFIG_NO_putc
 #undef CONFIG_HAVE_putc
 #elif !defined(CONFIG_HAVE_putc) && \
-      (defined(putc) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(putc) || defined(__putc_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_putc 1
 #endif
 
 #ifdef CONFIG_NO_fputc
 #undef CONFIG_HAVE_fputc
 #elif !defined(CONFIG_HAVE_fputc) && \
-      (defined(fputc) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fputc) || defined(__fputc_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fputc 1
 #endif
 
 #ifdef CONFIG_NO_fread
 #undef CONFIG_HAVE_fread
 #elif !defined(CONFIG_HAVE_fread) && \
-      (defined(fread) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fread) || defined(__fread_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fread 1
 #endif
 
 #ifdef CONFIG_NO_fwrite
 #undef CONFIG_HAVE_fwrite
 #elif !defined(CONFIG_HAVE_fwrite) && \
-      (defined(fwrite) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fwrite) || defined(__fwrite_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fwrite 1
 #endif
 
 #ifdef CONFIG_NO_ungetc
 #undef CONFIG_HAVE_ungetc
 #elif !defined(CONFIG_HAVE_ungetc) && \
-      (defined(ungetc) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(ungetc) || defined(__ungetc_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_ungetc 1
 #endif
 
 #ifdef CONFIG_NO_setvbuf
 #undef CONFIG_HAVE_setvbuf
 #elif !defined(CONFIG_HAVE_setvbuf) && \
-      (defined(setvbuf) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(setvbuf) || defined(__setvbuf_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_setvbuf 1
 #endif
 
 #ifdef CONFIG_NO_fopen
 #undef CONFIG_HAVE_fopen
 #elif !defined(CONFIG_HAVE_fopen) && \
-      (defined(fopen) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fopen) || defined(__fopen_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fopen 1
 #endif
 
 #ifdef CONFIG_NO_fopen64
 #undef CONFIG_HAVE_fopen64
 #elif !defined(CONFIG_HAVE_fopen64) && \
-      (defined(fopen64) || (defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)))
+      (defined(fopen64) || defined(__fopen64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       defined(__USE_LARGEFILE64)))
 #define CONFIG_HAVE_fopen64 1
 #endif
 
 #ifdef CONFIG_NO_fprintf
 #undef CONFIG_HAVE_fprintf
 #elif !defined(CONFIG_HAVE_fprintf) && \
-      (defined(fprintf) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(fprintf) || defined(__fprintf_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_fprintf 1
 #endif
 
 #ifdef CONFIG_NO_stdin
 #undef CONFIG_HAVE_stdin
 #elif !defined(CONFIG_HAVE_stdin) && \
-      (defined(stdin) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(stdin) || defined(__stdin_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_stdin 1
 #endif
 
 #ifdef CONFIG_NO_stdout
 #undef CONFIG_HAVE_stdout
 #elif !defined(CONFIG_HAVE_stdout) && \
-      (defined(stdout) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(stdout) || defined(__stdout_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_stdout 1
 #endif
 
 #ifdef CONFIG_NO_stderr
 #undef CONFIG_HAVE_stderr
 #elif !defined(CONFIG_HAVE_stderr) && \
-      (defined(stderr) || defined(CONFIG_HAVE_STDIO_H))
+      (defined(stderr) || defined(__stderr_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_stderr 1
 #endif
 
 #ifdef CONFIG_NO_sem_init
 #undef CONFIG_HAVE_sem_init
 #elif !defined(CONFIG_HAVE_sem_init) && \
-      (defined(sem_init) || defined(CONFIG_HAVE_SEMAPHORE_H))
+      (defined(sem_init) || defined(__sem_init_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
 #define CONFIG_HAVE_sem_init 1
 #endif
 
 #ifdef CONFIG_NO_sem_destroy
 #undef CONFIG_HAVE_sem_destroy
 #elif !defined(CONFIG_HAVE_sem_destroy) && \
-      (defined(sem_destroy) || defined(CONFIG_HAVE_SEMAPHORE_H))
+      (defined(sem_destroy) || defined(__sem_destroy_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
 #define CONFIG_HAVE_sem_destroy 1
 #endif
 
 #ifdef CONFIG_NO_sem_wait
 #undef CONFIG_HAVE_sem_wait
 #elif !defined(CONFIG_HAVE_sem_wait) && \
-      (defined(sem_wait) || defined(CONFIG_HAVE_SEMAPHORE_H))
+      (defined(sem_wait) || defined(__sem_wait_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
 #define CONFIG_HAVE_sem_wait 1
 #endif
 
 #ifdef CONFIG_NO_sem_trywait
 #undef CONFIG_HAVE_sem_trywait
 #elif !defined(CONFIG_HAVE_sem_trywait) && \
-      (defined(sem_trywait) || defined(CONFIG_HAVE_SEMAPHORE_H))
+      (defined(sem_trywait) || defined(__sem_trywait_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
 #define CONFIG_HAVE_sem_trywait 1
 #endif
 
 #ifdef CONFIG_NO_sem_post
 #undef CONFIG_HAVE_sem_post
 #elif !defined(CONFIG_HAVE_sem_post) && \
-      (defined(sem_post) || defined(CONFIG_HAVE_SEMAPHORE_H))
+      (defined(sem_post) || defined(__sem_post_defined) || defined(CONFIG_HAVE_SEMAPHORE_H))
 #define CONFIG_HAVE_sem_post 1
 #endif
 
 #ifdef CONFIG_NO_sem_timedwait
 #undef CONFIG_HAVE_sem_timedwait
 #elif !defined(CONFIG_HAVE_sem_timedwait) && \
-      (defined(sem_timedwait) || (defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)))
+      (defined(sem_timedwait) || defined(__sem_timedwait_defined) || (defined(CONFIG_HAVE_SEMAPHORE_H) && \
+       defined(__USE_XOPEN2K)))
 #define CONFIG_HAVE_sem_timedwait 1
 #endif
 
 #ifdef CONFIG_NO_sem_timedwait64
 #undef CONFIG_HAVE_sem_timedwait64
 #elif !defined(CONFIG_HAVE_sem_timedwait64) && \
-      (defined(sem_timedwait64) || (defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && \
-       defined(__USE_TIME64)))
+      (defined(sem_timedwait64) || defined(__sem_timedwait64_defined) || (defined(CONFIG_HAVE_SEMAPHORE_H) && \
+       defined(__USE_XOPEN2K) && defined(__USE_TIME64)))
 #define CONFIG_HAVE_sem_timedwait64 1
 #endif
 
 #ifdef CONFIG_NO_pthread_suspend
 #undef CONFIG_HAVE_pthread_suspend
 #elif !defined(CONFIG_HAVE_pthread_suspend) && \
-      (defined(pthread_suspend) || (defined(CONFIG_HAVE_PTHREAD_H) && 0))
+      (defined(pthread_suspend) || defined(__pthread_suspend_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
+       0))
 #define CONFIG_HAVE_pthread_suspend 1
 #endif
 
 #ifdef CONFIG_NO_pthread_continue
 #undef CONFIG_HAVE_pthread_continue
 #elif !defined(CONFIG_HAVE_pthread_continue) && \
-      (defined(pthread_continue) || (defined(CONFIG_HAVE_PTHREAD_H) && 0))
+      (defined(pthread_continue) || defined(__pthread_continue_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
+       0))
 #define CONFIG_HAVE_pthread_continue 1
 #endif
 
 #ifdef CONFIG_NO_pthread_suspend_np
 #undef CONFIG_HAVE_pthread_suspend_np
 #elif !defined(CONFIG_HAVE_pthread_suspend_np) && \
-      (defined(pthread_suspend_np) || (defined(CONFIG_HAVE_PTHREAD_H) && 0))
+      (defined(pthread_suspend_np) || defined(__pthread_suspend_np_defined) || \
+       (defined(CONFIG_HAVE_PTHREAD_H) && 0))
 #define CONFIG_HAVE_pthread_suspend_np 1
 #endif
 
 #ifdef CONFIG_NO_pthread_unsuspend_np
 #undef CONFIG_HAVE_pthread_unsuspend_np
 #elif !defined(CONFIG_HAVE_pthread_unsuspend_np) && \
-      (defined(pthread_unsuspend_np) || (defined(CONFIG_HAVE_PTHREAD_H) && 0))
+      (defined(pthread_unsuspend_np) || defined(__pthread_unsuspend_np_defined) || \
+       (defined(CONFIG_HAVE_PTHREAD_H) && 0))
 #define CONFIG_HAVE_pthread_unsuspend_np 1
 #endif
 
 #ifdef CONFIG_NO_pthread_setname
 #undef CONFIG_HAVE_pthread_setname
 #elif !defined(CONFIG_HAVE_pthread_setname) && \
-      (defined(pthread_setname) || (defined(CONFIG_HAVE_PTHREAD_H) && 0))
+      (defined(pthread_setname) || defined(__pthread_setname_defined) || (defined(CONFIG_HAVE_PTHREAD_H) && \
+       0))
 #define CONFIG_HAVE_pthread_setname 1
 #endif
 
 #ifdef CONFIG_NO_pthread_setname_np
 #undef CONFIG_HAVE_pthread_setname_np
 #elif !defined(CONFIG_HAVE_pthread_setname_np) && \
-      (defined(pthread_setname_np) || (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)))
+      (defined(pthread_setname_np) || defined(__pthread_setname_np_defined) || \
+       (defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)))
 #define CONFIG_HAVE_pthread_setname_np 1
 #endif
 
@@ -1898,50 +2247,57 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #ifdef CONFIG_NO_dlopen
 #undef CONFIG_HAVE_dlopen
 #elif !defined(CONFIG_HAVE_dlopen) && \
-      (defined(dlopen) || defined(CONFIG_HAVE_DLFCN_H))
+      (defined(dlopen) || defined(__dlopen_defined) || defined(CONFIG_HAVE_DLFCN_H))
 #define CONFIG_HAVE_dlopen 1
 #endif
 
 #ifdef CONFIG_NO_dlclose
 #undef CONFIG_HAVE_dlclose
 #elif !defined(CONFIG_HAVE_dlclose) && \
-      (defined(dlclose) || defined(CONFIG_HAVE_DLFCN_H))
+      (defined(dlclose) || defined(__dlclose_defined) || defined(CONFIG_HAVE_DLFCN_H))
 #define CONFIG_HAVE_dlclose 1
 #endif
 
 #ifdef CONFIG_NO_dlsym
 #undef CONFIG_HAVE_dlsym
 #elif !defined(CONFIG_HAVE_dlsym) && \
-      (defined(dlsym) || defined(CONFIG_HAVE_DLFCN_H))
+      (defined(dlsym) || defined(__dlsym_defined) || defined(CONFIG_HAVE_DLFCN_H))
 #define CONFIG_HAVE_dlsym 1
 #endif
 
 #ifdef CONFIG_NO__memicmp
 #undef CONFIG_HAVE__memicmp
 #elif !defined(CONFIG_HAVE__memicmp) && \
-      (defined(_memicmp) || defined(_MSC_VER))
+      (defined(_memicmp) || defined(___memicmp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__memicmp 1
 #endif
 
 #ifdef CONFIG_NO_memcasecmp
 #undef CONFIG_HAVE_memcasecmp
 #elif !defined(CONFIG_HAVE_memcasecmp) && \
-      (defined(memcasecmp) || defined(__USE_KOS))
+      (defined(memcasecmp) || defined(__memcasecmp_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_memcasecmp 1
 #endif
 
 #ifdef CONFIG_NO_memrchr
 #undef CONFIG_HAVE_memrchr
 #elif !defined(CONFIG_HAVE_memrchr) && \
-      (defined(memrchr) || defined(__USE_GNU))
+      (defined(memrchr) || defined(__memrchr_defined) || defined(__USE_GNU))
 #define CONFIG_HAVE_memrchr 1
+#endif
+
+#ifdef CONFIG_NO_rawmemchr
+#undef CONFIG_HAVE_rawmemchr
+#elif !defined(CONFIG_HAVE_rawmemchr) && \
+      (defined(rawmemchr) || defined(__rawmemchr_defined) || defined(__USE_GNU))
+#define CONFIG_HAVE_rawmemchr 1
 #endif
 
 #ifdef CONFIG_NO_strnlen
 #undef CONFIG_HAVE_strnlen
 #elif !defined(CONFIG_HAVE_strnlen) && \
-      (defined(strnlen) || (defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && \
-       !defined(__KOS_SYSTEM_HEADERS__))))
+      (defined(strnlen) || defined(__strnlen_defined) || (defined(__USE_XOPEN2K8) || \
+       defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))))
 #define CONFIG_HAVE_strnlen 1
 #endif
 
@@ -1959,18 +2315,206 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #define CONFIG_HAVE_memrmem 1
 #endif
 
+#ifdef CONFIG_NO_rawmemrchr
+#undef CONFIG_HAVE_rawmemrchr
+#elif !defined(CONFIG_HAVE_rawmemrchr) && \
+      (defined(rawmemrchr) || defined(__rawmemrchr_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_rawmemrchr 1
+#endif
+
+#ifdef CONFIG_NO_memend
+#undef CONFIG_HAVE_memend
+#elif !defined(CONFIG_HAVE_memend) && \
+      (defined(memend) || defined(__memend_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memend 1
+#endif
+
+#ifdef CONFIG_NO_memrend
+#undef CONFIG_HAVE_memrend
+#elif !defined(CONFIG_HAVE_memrend) && \
+      (defined(memrend) || defined(__memrend_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memrend 1
+#endif
+
+#ifdef CONFIG_NO_memlen
+#undef CONFIG_HAVE_memlen
+#elif !defined(CONFIG_HAVE_memlen) && \
+      (defined(memlen) || defined(__memlen_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memlen 1
+#endif
+
+#ifdef CONFIG_NO_memrlen
+#undef CONFIG_HAVE_memrlen
+#elif !defined(CONFIG_HAVE_memrlen) && \
+      (defined(memrlen) || defined(__memrlen_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memrlen 1
+#endif
+
+#ifdef CONFIG_NO_rawmemlen
+#undef CONFIG_HAVE_rawmemlen
+#elif !defined(CONFIG_HAVE_rawmemlen) && \
+      (defined(rawmemlen) || defined(__rawmemlen_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_rawmemlen 1
+#endif
+
+#ifdef CONFIG_NO_rawmemrlen
+#undef CONFIG_HAVE_rawmemrlen
+#elif !defined(CONFIG_HAVE_rawmemrlen) && \
+      (defined(rawmemrlen) || defined(__rawmemrlen_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_rawmemrlen 1
+#endif
+
+#ifdef CONFIG_NO_memcasemem
+#undef CONFIG_HAVE_memcasemem
+#elif !defined(CONFIG_HAVE_memcasemem) && \
+      (defined(memcasemem) || defined(__memcasemem_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcasemem 1
+#endif
+
+#ifdef CONFIG_NO_memrev
+#undef CONFIG_HAVE_memrev
+#elif !defined(CONFIG_HAVE_memrev) && \
+      (defined(memrev) || defined(__memrev_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memrev 1
+#endif
+
+#ifdef CONFIG_NO_memcasermem
+#undef CONFIG_HAVE_memcasermem
+#elif 0
+#define CONFIG_HAVE_memcasermem 1
+#endif
+
+#ifdef CONFIG_NO_strend
+#undef CONFIG_HAVE_strend
+#elif !defined(CONFIG_HAVE_strend) && \
+      (defined(strend) || defined(__strend_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strend 1
+#endif
+
+#ifdef CONFIG_NO_strnend
+#undef CONFIG_HAVE_strnend
+#elif !defined(CONFIG_HAVE_strnend) && \
+      (defined(strnend) || defined(__strnend_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strnend 1
+#endif
+
+#ifdef CONFIG_NO_memxend
+#undef CONFIG_HAVE_memxend
+#elif !defined(CONFIG_HAVE_memxend) && \
+      (defined(memxend) || defined(__memxend_defined) || defined(__USE_STRING_XCHR))
+#define CONFIG_HAVE_memxend 1
+#endif
+
+#ifdef CONFIG_NO_memxlen
+#undef CONFIG_HAVE_memxlen
+#elif !defined(CONFIG_HAVE_memxlen) && \
+      (defined(memxlen) || defined(__memxlen_defined) || defined(__USE_STRING_XCHR))
+#define CONFIG_HAVE_memxlen 1
+#endif
+
+#ifdef CONFIG_NO_memxchr
+#undef CONFIG_HAVE_memxchr
+#elif !defined(CONFIG_HAVE_memxchr) && \
+      (defined(memxchr) || defined(__memxchr_defined) || defined(__USE_STRING_XCHR))
+#define CONFIG_HAVE_memxchr 1
+#endif
+
+#ifdef CONFIG_NO_rawmemxchr
+#undef CONFIG_HAVE_rawmemxchr
+#elif !defined(CONFIG_HAVE_rawmemxchr) && \
+      (defined(rawmemxchr) || defined(__rawmemxchr_defined) || defined(__USE_STRING_XCHR))
+#define CONFIG_HAVE_rawmemxchr 1
+#endif
+
+#ifdef CONFIG_NO_rawmemxlen
+#undef CONFIG_HAVE_rawmemxlen
+#elif !defined(CONFIG_HAVE_rawmemxlen) && \
+      (defined(rawmemxlen) || defined(__rawmemxlen_defined) || defined(__USE_STRING_XCHR))
+#define CONFIG_HAVE_rawmemxlen 1
+#endif
+
+#ifdef CONFIG_NO_memxrchr
+#undef CONFIG_HAVE_memxrchr
+#elif !defined(CONFIG_HAVE_memxrchr) && \
+      (defined(memxrchr) || defined(__memxrchr_defined))
+#define CONFIG_HAVE_memxrchr 1
+#endif
+
+#ifdef CONFIG_NO_memxrend
+#undef CONFIG_HAVE_memxrend
+#elif !defined(CONFIG_HAVE_memxrend) && \
+      (defined(memxrend) || defined(__memxrend_defined))
+#define CONFIG_HAVE_memxrend 1
+#endif
+
+#ifdef CONFIG_NO_memxrlen
+#undef CONFIG_HAVE_memxrlen
+#elif !defined(CONFIG_HAVE_memxrlen) && \
+      (defined(memxrlen) || defined(__memxrlen_defined))
+#define CONFIG_HAVE_memxrlen 1
+#endif
+
+#ifdef CONFIG_NO_rawmemxrchr
+#undef CONFIG_HAVE_rawmemxrchr
+#elif !defined(CONFIG_HAVE_rawmemxrchr) && \
+      (defined(rawmemxrchr) || defined(__rawmemxrchr_defined))
+#define CONFIG_HAVE_rawmemxrchr 1
+#endif
+
+#ifdef CONFIG_NO_rawmemxrlen
+#undef CONFIG_HAVE_rawmemxrlen
+#elif !defined(CONFIG_HAVE_rawmemxrlen) && \
+      (defined(rawmemxrlen) || defined(__rawmemxrlen_defined))
+#define CONFIG_HAVE_rawmemxrlen 1
+#endif
+
 #ifdef CONFIG_NO_tolower
 #undef CONFIG_HAVE_tolower
 #elif !defined(CONFIG_HAVE_tolower) && \
-      (defined(tolower) || defined(CONFIG_HAVE_CTYPE_H))
+      (defined(tolower) || defined(__tolower_defined) || defined(CONFIG_HAVE_CTYPE_H))
 #define CONFIG_HAVE_tolower 1
 #endif
 
 #ifdef CONFIG_NO_toupper
 #undef CONFIG_HAVE_toupper
 #elif !defined(CONFIG_HAVE_toupper) && \
-      (defined(toupper) || defined(CONFIG_HAVE_CTYPE_H))
+      (defined(toupper) || defined(__toupper_defined) || defined(CONFIG_HAVE_CTYPE_H))
 #define CONFIG_HAVE_toupper 1
+#endif
+
+#ifdef CONFIG_NO__dosmaperr
+#undef CONFIG_HAVE__dosmaperr
+#elif !defined(CONFIG_HAVE__dosmaperr) && \
+      (defined(_MSC_VER) || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr)))
+#define CONFIG_HAVE__dosmaperr 1
+#endif
+
+#ifdef CONFIG_NO_errno_nt2kos
+#undef CONFIG_HAVE_errno_nt2kos
+#elif !defined(CONFIG_HAVE_errno_nt2kos) && \
+      (defined(__CRT_HAVE_errno_nt2kos))
+#define CONFIG_HAVE_errno_nt2kos 1
+#endif
+
+#ifdef CONFIG_NO__get_osfhandle
+#undef CONFIG_HAVE__get_osfhandle
+#elif !defined(CONFIG_HAVE__get_osfhandle) && \
+      (defined(_get_osfhandle) || defined(___get_osfhandle_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__get_osfhandle 1
+#endif
+
+#ifdef CONFIG_NO__open_osfhandle
+#undef CONFIG_HAVE__open_osfhandle
+#elif !defined(CONFIG_HAVE__open_osfhandle) && \
+      (defined(_open_osfhandle) || defined(___open_osfhandle_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__open_osfhandle 1
+#endif
+
+#ifdef CONFIG_NO__doserrno
+#undef CONFIG_HAVE__doserrno
+#elif !defined(CONFIG_HAVE__doserrno) && \
+      (defined(_doserrno) || defined(___doserrno_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__doserrno 1
 #endif
 //[[[end]]]
 
@@ -2162,6 +2706,16 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #define isatty _isatty
 #endif /* isatty = _isatty */
 
+#if defined(CONFIG_HAVE__getcwd) && !defined(CONFIG_HAVE_getcwd)
+#define CONFIG_HAVE_getcwd 1
+#define getcwd _getcwd
+#endif /* getcwd = _getcwd */
+
+#if defined(CONFIG_HAVE__wgetcwd) && !defined(CONFIG_HAVE_wgetcwd)
+#define CONFIG_HAVE_wgetcwd 1
+#define wgetcwd _wgetcwd
+#endif /* wgetcwd = _wgetcwd */
+
 #if defined(CONFIG_HAVE__access) && !defined(CONFIG_HAVE_access)
 #define CONFIG_HAVE_access 1
 #define access _access
@@ -2191,6 +2745,11 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 #define CONFIG_HAVE_pipe 1
 #define pipe(fds) _pipe(fds, 4096, O_BINARY)
 #endif /* pipe = _pipe */
+
+#if defined(CONFIG_HAVE__mkdir) && !defined(CONFIG_HAVE_mkdir)
+#define CONFIG_HAVE_mkdir 1
+#define mkdir(name, mode) _mkdir(name)
+#endif /* mkdir = _mkdir */
 
 #if defined(CONFIG_HAVE__fseeki64) && !defined(CONFIG_HAVE_fseeko64)
 #define CONFIG_HAVE_fseeko64 1
@@ -2797,11 +3356,11 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 
 #ifdef CONFIG_HAVE_ERRNO_H
 #define CONFIG_HAVE_errno 1
-#define Dee_GetErrno()  errno
-#define Dee_SetErrno(v) (errno=(v))
+#define DeeSystem_GetErrno()  errno
+#define DeeSystem_SetErrno(v) (errno=(v))
 #else /* CONFIG_HAVE_ERRNO_H */
-#define Dee_GetErrno()  0
-#define Dee_SetErrno(v) (void)0
+#define DeeSystem_GetErrno()  0
+#define DeeSystem_SetErrno(v) (void)0
 #endif /* !CONFIG_HAVE_ERRNO_H */
 
 
@@ -2875,6 +3434,232 @@ func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
 		for (result = 0; maxlen && *str; --maxlen, ++str, ++result) \
 			;                                                       \
 		return result;                                              \
+	}
+
+#define DeeSystem_DEFINE_wcslen(name)                   \
+	LOCAL size_t name(dwchar_t const *__restrict str) { \
+		size_t result;                                  \
+		for (result = 0; *str; ++str, ++result)         \
+			;                                           \
+		return result;                                  \
+	}
+
+#define DeeSystem_DEFINE_rawmemchr(name)                \
+	LOCAL void *name(void const *__restrict p, int c) { \
+		uint8_t *haystack = (uint8_t *)p;               \
+		for (;; ++haystack) {                           \
+			if (*haystack == (uint8_t)c)                \
+				break;                                  \
+		}                                               \
+		return haystack;                                \
+	}
+
+#define DeeSystem_DEFINE_rawmemrchr(name)               \
+	LOCAL void *name(void const *__restrict p, int c) { \
+		uint8_t *haystack = (uint8_t *)p;               \
+		for (;;) {                                      \
+			if (*--haystack == (uint8_t)c)              \
+				break;                                  \
+		}                                               \
+		return haystack;                                \
+	}
+
+#define DeeSystem_DEFINE_memend(name)                             \
+	LOCAL void *name(void const *p, int byte, size_t num_bytes) { \
+		uint8_t *haystack = (uint8_t *)p;                         \
+		for (; num_bytes--; ++haystack) {                         \
+			if (*haystack == (uint8_t)byte)                       \
+				break;                                            \
+		}                                                         \
+		return haystack;                                          \
+	}
+
+#define DeeSystem_DEFINE_memxend(name)                            \
+	LOCAL void *name(void const *p, int byte, size_t num_bytes) { \
+		uint8_t *haystack = (uint8_t *)p;                         \
+		for (; num_bytes--; ++haystack) {                         \
+			if (*haystack != (uint8_t)byte)                       \
+				break;                                            \
+		}                                                         \
+		return haystack;                                          \
+	}
+
+#define DeeSystem_DEFINE_memrend(name)                            \
+	LOCAL void *name(void const *p, int byte, size_t num_bytes) { \
+		uint8_t *haystack = (uint8_t *)p;                         \
+		haystack += num_bytes;                                    \
+		while (num_bytes--) {                                     \
+			if (*--haystack == (uint8_t)byte)                     \
+				break;                                            \
+		}                                                         \
+		return haystack;                                          \
+	}
+
+#define DeeSystem_DEFINE_memlen(name)                                          \
+	LOCAL size_t name(void const *p, int byte, size_t num_bytes) {             \
+		return (size_t)((uintptr_t)memend(p, byte, num_bytes) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_memxlen(name)                                          \
+	LOCAL size_t name(void const *p, int byte, size_t num_bytes) {              \
+		return (size_t)((uintptr_t)memxend(p, byte, num_bytes) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_memrlen(name)                                          \
+	LOCAL size_t name(void const *p, int byte, size_t num_bytes) {              \
+		return (size_t)((uintptr_t)memrend(p, byte, num_bytes) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_rawmemlen(name)                               \
+	LOCAL size_t name(void const *p, int byte) {                       \
+		return (size_t)((uintptr_t)rawmemchr(p, byte) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_rawmemrlen(name)                               \
+	LOCAL size_t name(void const *p, int byte) {                        \
+		return (size_t)((uintptr_t)rawmemrchr(p, byte) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_memxchr(name)                            \
+	LOCAL void *name(void const *__restrict p, int c, size_t n) { \
+		uint8_t *haystack = (uint8_t *)p;                         \
+		for (; n--; ++haystack) {                                 \
+			if (*haystack != (uint8_t)c)                          \
+				return haystack;                                  \
+		}                                                         \
+		return NULL;                                              \
+	}
+
+#define DeeSystem_DEFINE_rawmemxchr(name)               \
+	LOCAL void *name(void const *__restrict p, int c) { \
+		uint8_t *haystack = (uint8_t *)p;               \
+		for (;; ++haystack) {                           \
+			if (*haystack != (uint8_t)c)                \
+				break;                                  \
+		}                                               \
+		return haystack;                                \
+	}
+
+#define DeeSystem_DEFINE_rawmemxlen(name)                               \
+	LOCAL size_t name(void const *p, int byte) {                        \
+		return (size_t)((uintptr_t)rawmemxchr(p, byte) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_memcasecmp(name)                    \
+	LOCAL int name(void const *a, void const *b, size_t n) { \
+		uint8_t *pa = (uint8_t *)a, *pb = (uint8_t *)b;      \
+		uint8_t av, bv;                                      \
+		av = bv = 0;                                         \
+		while (n-- &&                                        \
+		       (((av = *pa++) == (bv = *pb++)) ||            \
+		        (av = tolower(av), bv = tolower(bv),         \
+		         av == bv)))                                 \
+			;                                                \
+		return (int)av - (int)bv;                            \
+	}
+
+#define DeeSystem_DEFINE_memcasemem(name)                                               \
+	LOCAL void *name(void const *__restrict haystack, size_t haystack_len,              \
+	                 void const *__restrict needle, size_t needle_len) {                \
+		void const *candidate;                                                          \
+		uint8_t marker1, marker2;                                                       \
+		if                                                                              \
+			unlikely(!needle_len || needle_len > haystack_len)                          \
+		return NULL;                                                                    \
+		haystack_len -= needle_len;                                                     \
+		marker1 = (uint8_t)tolower(*(uint8_t *)needle);                                 \
+		marker2 = (uint8_t)toupper(*(uint8_t *)needle);                                 \
+		while ((candidate = memchr(haystack, marker1, haystack_len)) != NULL ||         \
+		       (candidate = memchr(haystack, marker2, haystack_len)) != NULL) {         \
+			if (memcasecmp(candidate, needle, needle_len) == 0)                         \
+				return (void *)candidate;                                               \
+			haystack_len = ((uintptr_t)haystack + haystack_len) - (uintptr_t)candidate; \
+			haystack     = (void const *)((uintptr_t)candidate + 1);                    \
+		}                                                                               \
+		return NULL;                                                                    \
+	}
+
+
+#define DeeSystem_DEFINE_memrev(name)                  \
+	LOCAL void *name(void *__restrict buf, size_t n) { \
+		uint8_t *iter, *end;                           \
+		end = (iter = (uint8_t *)buf) + n;             \
+		while (iter < end) {                           \
+			uint8_t temp = *iter;                      \
+			*iter++      = *--end;                     \
+			*end         = temp;                       \
+		}                                              \
+		return buf;                                    \
+	}
+
+#define DeeSystem_DEFINE_memxrchr(name)                           \
+	LOCAL void *name(void const *__restrict p, int c, size_t n) { \
+		uint8_t *haystack = (uint8_t *)p + n;                     \
+		while (n--) {                                             \
+			if (*--haystack != (uint8_t)c)                        \
+				return haystack;                                  \
+		}                                                         \
+		return NULL;                                              \
+	}
+
+#define DeeSystem_DEFINE_memxrend(name)                           \
+	LOCAL void *name(void const *p, int byte, size_t num_bytes) { \
+		uint8_t *haystack = (uint8_t *)p;                         \
+		haystack += num_bytes;                                    \
+		while (num_bytes--) {                                     \
+			if (*--haystack != (uint8_t)byte)                     \
+				break;                                            \
+		}                                                         \
+		return haystack;                                          \
+	}
+
+#define DeeSystem_DEFINE_memxrlen(name)                                          \
+	LOCAL size_t name(void const *p, int byte, size_t num_bytes) {               \
+		return (size_t)((uintptr_t)memxrend(p, byte, num_bytes) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_rawmemxrchr(name)              \
+	LOCAL void *name(void const *__restrict p, int c) { \
+		uint8_t *haystack = (uint8_t *)p;               \
+		for (;;) {                                      \
+			if (*--haystack != (uint8_t)c)              \
+				break;                                  \
+		}                                               \
+		return haystack;                                \
+	}
+
+#define DeeSystem_DEFINE_rawmemxrlen(name)                               \
+	LOCAL size_t name(void const *p, int byte) {                         \
+		return (size_t)((uintptr_t)rawmemxrchr(p, byte) - (uintptr_t)p); \
+	}
+
+#define DeeSystem_DEFINE_memcasermem(name)                                                     \
+	LOCAL void *_##name##_memlowerrchr(void const *__restrict p, uint8_t c, size_t n) {        \
+		uint8_t *iter = (uint8_t *)p + n;                                                      \
+		while (iter-- != (uint8_t *)p) {                                                       \
+			if ((uint8_t)tolower(*iter) == c)                                                  \
+				return iter;                                                                   \
+		}                                                                                      \
+		return NULL;                                                                           \
+	}                                                                                          \
+	LOCAL void *name(void const *__restrict haystack, size_t haystack_len,                     \
+	                 void const *__restrict needle, size_t needle_len) {                       \
+		void const *candidate;                                                                 \
+		uint8_t marker;                                                                        \
+		if                                                                                     \
+			unlikely(!needle_len || needle_len > haystack_len)                                 \
+		return NULL;                                                                           \
+		haystack_len -= needle_len;                                                            \
+		marker = (uint8_t)tolower(*(uint8_t *)needle);                                         \
+		while ((candidate = _##name##_memlowerrchr(haystack, marker, haystack_len)) != NULL) { \
+			if (memcasecmp(candidate, needle, needle_len) == 0)                                \
+				return (void *)candidate;                                                      \
+			if                                                                                 \
+				unlikely(candidate == haystack)                                                \
+			break;                                                                             \
+			haystack_len = (((uintptr_t)candidate) - 1) - (uintptr_t)haystack;                 \
+		}                                                                                      \
+		return NULL;                                                                           \
 	}
 
 

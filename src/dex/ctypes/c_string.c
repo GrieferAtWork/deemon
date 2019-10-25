@@ -38,6 +38,173 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_memrchr
+#define CONFIG_HAVE_memrchr 1
+#define memrchr dee_memrchr
+DeeSystem_DEFINE_memrchr(dee_memrchr)
+#endif /* !CONFIG_HAVE_memrchr */
+
+#ifndef CONFIG_HAVE_rawmemchr
+#define CONFIG_HAVE_rawmemchr 1
+#define rawmemchr dee_rawmemchr
+DeeSystem_DEFINE_rawmemchr(dee_rawmemchr)
+#endif /* !CONFIG_HAVE_rawmemchr */
+
+#ifndef CONFIG_HAVE_strnlen
+#define CONFIG_HAVE_strnlen 1
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+
+#ifndef CONFIG_HAVE_memmem
+#define CONFIG_HAVE_memmem 1
+#define memmem dee_memmem
+DeeSystem_DEFINE_memmem(dee_memmem)
+#endif /* !CONFIG_HAVE_memmem */
+
+#ifndef CONFIG_HAVE_memrmem
+#define CONFIG_HAVE_memrmem 1
+#define memrmem dee_memrmem
+DeeSystem_DEFINE_memrmem(dee_memrmem)
+#endif /* !CONFIG_HAVE_memrmem */
+
+#ifndef CONFIG_HAVE_rawmemrchr
+#define CONFIG_HAVE_rawmemrchr 1
+#define rawmemrchr dee_rawmemrchr
+DeeSystem_DEFINE_rawmemrchr(dee_rawmemrchr)
+#endif /* !CONFIG_HAVE_rawmemrchr */
+
+#ifndef CONFIG_HAVE_memend
+#define CONFIG_HAVE_memend 1
+#define memend dee_memend
+DeeSystem_DEFINE_memend(dee_memend)
+#endif /* !CONFIG_HAVE_memend */
+
+#ifndef CONFIG_HAVE_memxend
+#define CONFIG_HAVE_memxend 1
+#define memxend dee_memxend
+DeeSystem_DEFINE_memxend(dee_memxend)
+#endif /* !CONFIG_HAVE_memxend */
+
+#ifndef CONFIG_HAVE_memrend
+#define CONFIG_HAVE_memrend 1
+#define memrend dee_memrend
+DeeSystem_DEFINE_memrend(dee_memrend)
+#endif /* !CONFIG_HAVE_memrend */
+
+#ifndef CONFIG_HAVE_memlen
+#define CONFIG_HAVE_memlen 1
+#define memlen dee_memlen
+DeeSystem_DEFINE_memlen(dee_memlen)
+#endif /* !CONFIG_HAVE_memlen */
+
+#ifndef CONFIG_HAVE_memxlen
+#define CONFIG_HAVE_memxlen 1
+#define memxlen dee_memxlen
+DeeSystem_DEFINE_memxlen(dee_memxlen)
+#endif /* !CONFIG_HAVE_memxlen */
+
+#ifndef CONFIG_HAVE_memrlen
+#define CONFIG_HAVE_memrlen 1
+#define memrlen dee_memrlen
+DeeSystem_DEFINE_memrlen(dee_memrlen)
+#endif /* !CONFIG_HAVE_memrlen */
+
+#ifndef CONFIG_HAVE_rawmemlen
+#define CONFIG_HAVE_rawmemlen 1
+#define rawmemlen dee_rawmemlen
+DeeSystem_DEFINE_rawmemlen(dee_rawmemlen)
+#endif /* !CONFIG_HAVE_rawmemlen */
+
+#ifndef CONFIG_HAVE_rawmemrlen
+#define CONFIG_HAVE_rawmemrlen 1
+#define rawmemrlen dee_rawmemrlen
+DeeSystem_DEFINE_rawmemrlen(dee_rawmemrlen)
+#endif /* !CONFIG_HAVE_rawmemrlen */
+
+#ifndef CONFIG_HAVE_memxchr
+#define CONFIG_HAVE_memxchr 1
+#define memxchr dee_memxchr
+DeeSystem_DEFINE_memxchr(dee_memxchr)
+#endif /* !CONFIG_HAVE_memxchr */
+
+#ifndef CONFIG_HAVE_rawmemxchr
+#define CONFIG_HAVE_rawmemxchr 1
+#define rawmemxchr dee_rawmemxchr
+DeeSystem_DEFINE_rawmemxchr(dee_rawmemxchr)
+#endif /* !CONFIG_HAVE_rawmemxchr */
+
+#ifndef CONFIG_HAVE_rawmemxlen
+#define CONFIG_HAVE_rawmemxlen 1
+#define rawmemxlen dee_rawmemxlen
+DeeSystem_DEFINE_rawmemxlen(dee_rawmemxlen)
+#endif /* !CONFIG_HAVE_rawmemxlen */
+
+#ifndef CONFIG_HAVE_memcasecmp
+#define CONFIG_HAVE_memcasecmp 1
+#define memcasecmp dee_memcasecmp
+DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
+#endif /* !CONFIG_HAVE_memcasecmp */
+
+#ifndef CONFIG_HAVE_memcasemem
+#define CONFIG_HAVE_memcasemem 1
+#define memcasemem dee_memcasemem
+DeeSystem_DEFINE_memcasemem(dee_memcasemem)
+#endif /* !CONFIG_HAVE_memcasemem */
+
+#ifndef CONFIG_HAVE_memrev
+#define CONFIG_HAVE_memrev 1
+#define memrev dee_memrev
+DeeSystem_DEFINE_memrev(dee_memrev)
+#endif /* !CONFIG_HAVE_memrev */
+
+#ifndef CONFIG_HAVE_memxrchr
+#define CONFIG_HAVE_memxrchr 1
+#define memxrchr dee_memxrchr
+DeeSystem_DEFINE_memxrchr(dee_memxrchr)
+#endif /* !CONFIG_HAVE_memxrchr */
+
+#ifndef CONFIG_HAVE_memxrend
+#define CONFIG_HAVE_memxrend 1
+#define memxrend dee_memxrend
+DeeSystem_DEFINE_memxrend(dee_memxrend)
+#endif /* !CONFIG_HAVE_memxrend */
+
+#ifndef CONFIG_HAVE_memxrlen
+#define CONFIG_HAVE_memxrlen 1
+#define memxrlen dee_memxrlen
+DeeSystem_DEFINE_memxrlen(dee_memxrlen)
+#endif /* !CONFIG_HAVE_memxrlen */
+
+#ifndef CONFIG_HAVE_rawmemxrchr
+#define CONFIG_HAVE_rawmemxrchr 1
+#define rawmemxrchr dee_rawmemxrchr
+DeeSystem_DEFINE_rawmemxrchr(dee_rawmemxrchr)
+#endif /* !CONFIG_HAVE_rawmemxrchr */
+
+#ifndef CONFIG_HAVE_rawmemxrlen
+#define CONFIG_HAVE_rawmemxrlen 1
+#define rawmemxrlen dee_rawmemxrlen
+DeeSystem_DEFINE_rawmemxrlen(dee_rawmemxrlen)
+#endif /* !CONFIG_HAVE_rawmemxrlen */
+
+#ifndef CONFIG_HAVE_memcasermem
+#define CONFIG_HAVE_memcasermem 1
+#define memcasermem dee_memcasermem
+DeeSystem_DEFINE_memcasermem(dee_memcasermem)
+#endif /* !CONFIG_HAVE_memcasermem */
+
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
+#define strend(x) ((x) + strlen(x))
+#endif /* !CONFIG_HAVE_strend */
+
+#ifndef CONFIG_HAVE_strnend
+#define CONFIG_HAVE_strnend 1
+#define strnend(x, maxlen) ((x) + strnlen(x, maxlen))
+#endif /* !CONFIG_HAVE_strnend */
+
+
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_memcpy(size_t argc, DeeObject **argv) {
 	DREF DeeObject *ob_dst, *ob_src;
@@ -239,258 +406,6 @@ capi_mempmove(size_t argc, DeeObject **argv) {
 err:
 	return NULL;
 }
-
-#ifndef CONFIG_HAVE_memrchr
-#define memrchr dee_memrchr
-DeeSystem_DEFINE_memrchr(dee_memrchr)
-#endif /* !CONFIG_HAVE_memrchr */
-
-#ifndef __USE_GNU
-#define rawmemchr dee_rawmemchr
-LOCAL void *dee_rawmemchr(void const *__restrict p, int c) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (;; ++haystack) {
-		if (*haystack == (uint8_t)c)
-			break;
-	}
-	return haystack;
-}
-#endif /* !__USE_GNU */
-
-#ifndef CONFIG_HAVE_strnlen
-#define strnlen dee_strnlen
-DeeSystem_DEFINE_strnlen(strnlen)
-#endif /* !CONFIG_HAVE_strnlen */
-
-#ifndef CONFIG_HAVE_memmem
-#define memmem dee_memmem
-DeeSystem_DEFINE_memmem(dee_memmem)
-#endif /* !CONFIG_HAVE_memmem */
-
-#ifndef CONFIG_HAVE_memrmem
-#define memrmem dee_memrmem
-DeeSystem_DEFINE_memrmem(dee_memrmem)
-#endif /* !CONFIG_HAVE_memrmem */
-
-
-#ifndef __USE_KOS
-#define rawmemrchr dee_rawmemrchr
-LOCAL void *dee_rawmemrchr(void const *__restrict p, int c) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (;;) {
-		if (*--haystack == (uint8_t)c)
-			break;
-	}
-	return haystack;
-}
-
-#define memend dee_memend
-LOCAL void *dee_memend(void const *p, int byte, size_t num_bytes) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (; num_bytes--; ++haystack) {
-		if (*haystack == (uint8_t)byte)
-			break;
-	}
-	return haystack;
-}
-
-#define memxend dee_memxend
-LOCAL void *dee_memxend(void const *p, int byte, size_t num_bytes) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (; num_bytes--; ++haystack) {
-		if (*haystack != (uint8_t)byte)
-			break;
-	}
-	return haystack;
-}
-
-#define memrend dee_memrend
-LOCAL void *dee_memrend(void const *p, int byte, size_t num_bytes) {
-	uint8_t *haystack = (uint8_t *)p;
-	haystack += num_bytes;
-	while (num_bytes--) {
-		if (*--haystack == (uint8_t)byte)
-			break;
-	}
-	return haystack;
-}
-
-#define memlen dee_memlen
-LOCAL size_t dee_memlen(void const *p, int byte, size_t num_bytes) {
-	return (size_t)((uintptr_t)memend(p, byte, num_bytes) - (uintptr_t)p);
-}
-
-#define memxlen dee_memxlen
-LOCAL size_t dee_memxlen(void const *p, int byte, size_t num_bytes) {
-	return (size_t)((uintptr_t)memxend(p, byte, num_bytes) - (uintptr_t)p);
-}
-
-#define memrlen dee_memrlen
-LOCAL size_t dee_memrlen(void const *p, int byte, size_t num_bytes) {
-	return (size_t)((uintptr_t)memrend(p, byte, num_bytes) - (uintptr_t)p);
-}
-
-#define rawmemlen dee_rawmemlen
-LOCAL size_t dee_rawmemlen(void const *p, int byte) {
-	return (size_t)((uintptr_t)rawmemchr(p, byte) - (uintptr_t)p);
-}
-
-#define rawmemrlen dee_rawmemrlen
-LOCAL size_t dee_rawmemrlen(void const *p, int byte) {
-	return (size_t)((uintptr_t)rawmemrchr(p, byte) - (uintptr_t)p);
-}
-
-#define memxchr dee_memxchr
-LOCAL void *dee_memxchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (; n--; ++haystack) {
-		if (*haystack != (uint8_t)c)
-			return haystack;
-	}
-	return NULL;
-}
-
-#define rawmemxchr dee_rawmemxchr
-LOCAL void *dee_rawmemxchr(void const *__restrict p, int c) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (;; ++haystack) {
-		if (*haystack != (uint8_t)c)
-			break;
-	}
-	return haystack;
-}
-
-#define rawmemxlen dee_rawmemxlen
-LOCAL size_t dee_rawmemxlen(void const *p, int byte) {
-	return (size_t)((uintptr_t)rawmemxchr(p, byte) - (uintptr_t)p);
-}
-
-#if defined(_MSC_VER) || defined(__USE_DOS) || defined(__CRT_DOS)
-#define memcasecmp _memicmp
-#else /* _MSC_VER || __USE_DOS || __CRT_DOS */
-#define memcasecmp dee_memcasecmp
-LOCAL int dee_memcasecmp(void const *a, void const *b, size_t n) {
-	uint8_t *pa = (uint8_t *)a, *pb = (uint8_t *)b;
-	uint8_t av, bv;
-	av = bv = 0;
-	while (n-- &&
-	       (((av = *pa++) == (bv = *pb++)) ||
-	        (av = tolower(av), bv = tolower(bv),
-	         av == bv)))
-		;
-	return (int)av - (int)bv;
-}
-#endif /* !_MSC_VER && !__USE_DOS && !__CRT_DOS */
-
-#define memcasemem dee_memcasemem
-LOCAL void *dee_memcasemem(void const *__restrict haystack, size_t haystack_len,
-                           void const *__restrict needle, size_t needle_len) {
-	void const *candidate;
-	uint8_t marker1, marker2;
-	if unlikely(!needle_len || needle_len > haystack_len)
-		return NULL;
-	haystack_len -= needle_len;
-	marker1 = (uint8_t)tolower(*(uint8_t *)needle);
-	marker2 = (uint8_t)toupper(*(uint8_t *)needle);
-	while ((candidate = memchr(haystack, marker1, haystack_len)) != NULL ||
-	       (candidate = memchr(haystack, marker2, haystack_len)) != NULL) {
-		if (memcasecmp(candidate, needle, needle_len) == 0)
-			return (void *)candidate;
-		haystack_len = ((uintptr_t)haystack + haystack_len) - (uintptr_t)candidate;
-		haystack     = (void const *)((uintptr_t)candidate + 1);
-	}
-	return NULL;
-}
-
-#define memrev dee_memrev
-LOCAL void *dee_memrev(void *__restrict buf, size_t n) {
-	uint8_t *iter, *end;
-	end = (iter = (uint8_t *)buf) + n;
-	while (iter < end) {
-		uint8_t temp = *iter;
-		*iter++      = *--end;
-		*end         = temp;
-	}
-	return buf;
-}
-
-#endif /* !__USE_KOS */
-
-#define memxrchr dee_memxrchr
-LOCAL void *dee_memxrchr(void const *__restrict p, int c, size_t n) {
-	uint8_t *haystack = (uint8_t *)p + n;
-	while (n--) {
-		if (*--haystack != (uint8_t)c)
-			return haystack;
-	}
-	return NULL;
-}
-
-#define memxrend dee_memxrend
-LOCAL void *dee_memxrend(void const *p, int byte, size_t num_bytes) {
-	uint8_t *haystack = (uint8_t *)p;
-	haystack += num_bytes;
-	while (num_bytes--) {
-		if (*--haystack != (uint8_t)byte)
-			break;
-	}
-	return haystack;
-}
-
-#define memxrlen dee_memxrlen
-LOCAL size_t dee_memxrlen(void const *p, int byte, size_t num_bytes) {
-	return (size_t)((uintptr_t)memxrend(p, byte, num_bytes) - (uintptr_t)p);
-}
-
-#define rawmemxrchr dee_rawmemxrchr
-LOCAL void *dee_rawmemxrchr(void const *__restrict p, int c) {
-	uint8_t *haystack = (uint8_t *)p;
-	for (;;) {
-		if (*--haystack != (uint8_t)c)
-			break;
-	}
-	return haystack;
-}
-
-#define rawmemxrlen dee_rawmemxrlen
-LOCAL size_t dee_rawmemxrlen(void const *p, int byte) {
-	return (size_t)((uintptr_t)rawmemxrchr(p, byte) - (uintptr_t)p);
-}
-
-LOCAL void *dee_memlowerrchr(void const *__restrict p, uint8_t c, size_t n) {
-	uint8_t *iter = (uint8_t *)p + n;
-	while (iter-- != (uint8_t *)p) {
-#ifdef CONFIG_NO_CTYPE
-		if ((uint8_t)DeeUni_ToLower(*iter) == c)
-			return iter;
-#else /* CONFIG_NO_CTYPE */
-		if ((uint8_t)tolower(*iter) == c)
-			return iter;
-#endif /* !CONFIG_NO_CTYPE */
-	}
-	return NULL;
-}
-
-#define memcasermem dee_memcasermem
-LOCAL void *dee_memcasermem(void const *__restrict haystack, size_t haystack_len,
-                            void const *__restrict needle, size_t needle_len) {
-	void const *candidate;
-	uint8_t marker;
-	if unlikely(!needle_len || needle_len > haystack_len)
-		return NULL;
-	haystack_len -= needle_len;
-	marker = (uint8_t)tolower(*(uint8_t *)needle);
-	while ((candidate = dee_memlowerrchr(haystack, marker, haystack_len)) != NULL) {
-		if (memcasecmp(candidate, needle, needle_len) == 0)
-			return (void *)candidate;
-		if unlikely(candidate == haystack)
-			break;
-		haystack_len = (((uintptr_t)candidate) - 1) - (uintptr_t)haystack;
-	}
-	return NULL;
-}
-
-
 
 
 
@@ -1454,14 +1369,6 @@ capi_memrev(size_t argc, DeeObject **argv) {
 err:
 	return NULL;
 }
-
-
-
-#ifndef __USE_KOS
-#define strend(s)       ((s) + strlen(s))
-#define strnend(s, len) ((s) + strnlen(s, len))
-#endif /* !__USE_KOS */
-
 
 INTERN WUNUSED DREF DeeObject *DCALL
 capi_strlen(size_t argc, DeeObject **argv) {
