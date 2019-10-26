@@ -98,6 +98,9 @@ PRIVATE char const *missing_features[] = {
 #ifdef posix_close_USE_STUB
 	"close",
 #endif /* posix_close_USE_STUB */
+#ifdef posix_umask_USE_STUB
+	"umask",
+#endif /* posix_umask_USE_STUB */
 #ifdef posix_dup_USE_STUB
 	"dup",
 #endif /* posix_dup_USE_STUB */

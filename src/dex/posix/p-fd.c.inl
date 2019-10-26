@@ -64,6 +64,16 @@ print "/" "**" "/";
 //[[[end]]]
 
 
+/* Figure out how to implement `umask()' */
+#undef posix_umask_USE_UMASK
+#undef posix_umask_USE_STUB
+#ifdef CONFIG_HAVE_umask
+#define posix_umask_USE_UMASK 1
+#else /* CONFIG_HAVE_umask2 */
+#define posix_umask_USE_STUB 1
+#endif /* !CONFIG_HAVE_umask2 */
+
+
 /* Figure out how to implement `dup()' */
 #undef posix_dup_USE_DUP
 #undef posix_dup_USE_STUB
@@ -204,28 +214,27 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_umask_f_impl(int mask)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_umask
-	int result;
-EINTR_LABEL(again)
+#ifdef posix_umask_USE_UMASK
+	DREF DeeObject *result;
+	int oldmask;
 	DBG_ALIGNMENT_DISABLE();
-	result = umask(mask);
+	oldmask = umask(mask);
 	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
-		HANDLE_ENOSYS(error, err, "umask")
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed set umask");
-		goto err;
+	result = DeeInt_NewInt(oldmask);
+	if unlikely(!result) {
+		DBG_ALIGNMENT_DISABLE();
+		umask(oldmask);
+		DBG_ALIGNMENT_ENABLE();
 	}
-	return DeeInt_NewInt(result);
-err:
-#else /* CONFIG_HAVE_umask */
+	return NULL;
+#endif /* posix_umask_USE_UMASK */
+
+#ifdef posix_umask_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)mask;
 	posix_err_unsupported("umask");
-#endif /* !CONFIG_HAVE_umask */
 	return NULL;
+#endif /* posix_umask_USE_STUB */
 }
 
 
