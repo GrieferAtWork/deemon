@@ -82,10 +82,10 @@ struct class_attribute;
  *    NOTE: optional whitespace may _NOT_ appear between individual strings
  *        "<START_OF_LINE>(" ("," ~~ (
  *            ["<ARGUMENT_NAME>"]
- *            ["?" | "!" | "!!"]                  // Optional / Varargs / Kwds indicators
- *            [":" ["|" ~~ "<ARGUMENT_TYPE>"...]] // Type defaults to "object" (encoded as "?O")
+ *            ["?" | "!" | "!!"]           // Optional / Varargs / Kwds indicators
+ *            [":" "<ARGUMENT_TYPE>"]      // Type defaults to "object" (encoded as "?O")
  *            ["=" ["<ARGUMENT_DEFAULT>"]]
- *        )...) ")" ["->" ["|" ~~ "<RETURN_TYPE>"...]] "<END_OF_LINE>"
+ *        )...) ")" ["->" "<RETURN_TYPE>"] "<END_OF_LINE>"
  *    
  *    CONTENT-SPECIFIC:
  *      - When encountered in a function-doc, it contains information about the function's intended invocation
@@ -146,10 +146,10 @@ struct class_attribute;
  *            ["=" "<ARGUMENT_DEFAULT>"]          // Default value (not allowed for optional, varargs, or Kwds arguments)
  *        )...) ")"]
  *        "->"    // Like seen in the "->" pattern
- *            (["|" ~~ "<RETURN_TYPE>"...] | // Operator return type
+ *            ("<RETURN_TYPE>" |  // Operator return type
  *             // NOTE: The following 2 may only be used when no parameter list was given before
- *             "!D" |                        // Indicator that the operator gets deleted (intended for `operator str = del;')
- *             "!S"                          // Indicator that the operator is explicitly inherited (intended for `this = super;')
+ *             "!D" |             // Indicator that the operator gets deleted (intended for `operator str = del;')
+ *             "!S"               // Indicator that the operator is explicitly inherited (intended for `this = super;')
  *             )
  *        "<END_OF_LINE>"
  *    With this, operator declarations are split into 3 sections:
@@ -260,6 +260,7 @@ struct class_attribute;
  *                         e.g.: `?S?Dstring' --- `{string...}'
  *   ?S<TYPE>          --- A generic Sequence expression for <TYPE>
  *                         e.g.: `?S?Dstring' --- `{string...}'
+ *   ?R<EXPR>]         --- Referring to the result of a given <EXPR> can take on (yes: the trailing `]' is intended)
  *   ?Q<EXPR>]         --- Referring to the types which a given <EXPR> can take on (yes: the trailing `]' is intended)
  *
  *   In all of the aforementioned encodings, <NAME> is encoded as follows:
@@ -282,36 +283,37 @@ struct class_attribute;
  *   
  *   <EXPR>     --- Where `<EXPR>' contains the actual expression, which is encoded as follows:
  *
- *   
  *   <EXPR> ::= "!" (
  *       INTEGER_LITERAL |          // 1234 (decimal), 0x12/0X12 (hex), 012 (oct) or 0b10/0B10 (bin)
  *       FLOAT_LITERAL |            // 1.0  (decimal followed by a `.'; prevent ambiguity with decimal-operator)
- *       "P" <NAME> |               // Pfoo (where `foo' is en-/decoded the same way a <NAME> would)
- *       "N"                        // The none builtin constant
  *       "t"                        // The true builtin constant
  *       "f"                        // The false builtin constant
- *       "#" <NAME>                 // Referring to a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
- *       "VA" <NAME>                // Referring to another argument <DECODED_NAME>
- *       "D" <NAME>                 // Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
- *       "U" <NAME>                 // Referring to an undefined/private symbol (in expressions, `none' is used, but if produced as result, it's name is used; getattr() also extends ontop of it)
- *       "G" <NAME>                 // Referring to a global symbol exported from the associated module
- *       "E" <NAME> ":" <NAME>      // Referring to an external symbol (import("<DECODED_FIRST_NAME>").<DECODED_SECOND_NAME>)
- *       "M" <NAME>                 // Referring to a module  (import("<DECODED_NAME>"))
- *       "T<N>" ((EXPR)... * <N>) | // TUPLE(EXPR * <N>)   A Tuple of <N> (encoded as a decimal) elements
- *       "L<N>" ((EXPR)... * <N>) | // LIST(EXPR * <N>)    A List of <N> (encoded as a decimal) elements
- *       "S<N>" ((EXPR)... * <N>) | // HASHSET(EXPR * <N>) A Set of <N> (encoded as a decimal) elements
- *       "H<N>" ((EXPR)... * <N>) | // DICT(EXPR * <N>)    A Dict of <N> (encoded as a decimal) elements (every first is a key, every second is the associated value)
  *       "A" EXPR EXPR |            // FIRST_EXPR.operator . (SECOND_EXPR)
+ *       "A" <NAME>                 // Referring to another argument <DECODED_NAME>
  *       "B" EXPR EXPR |            // boundattr(FIRST_EXPR,SECOND_EXPR)
+ *       "B" <NAME>                 // Referring to true/false indicative of the is-bound state of another argument <DECODED_NAME>
  *       "C" EXPR |                 // copy(EXPR)
- *       "X" EXPR |                 // deepcopy(EXPR)
- *       "W" EXPR |                 // #(EXPR)
- *       "!!!" EXPR |               // !(EXPR)
+ *       "D" <NAME>                 // Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
+ *       "E" <NAME> ":" <NAME>      // Referring to an external symbol (import("<DECODED_FIRST_NAME>").<DECODED_SECOND_NAME>)
+ *       "G" <NAME>                 // Referring to a global symbol exported from the associated module
+ *       "H<N>" ((EXPR)... * <N>) | // DICT(EXPR * <N>)    A Dict of <N> (encoded as a decimal) elements (every first is a key, every second is the associated value)
  *       "I" EXPR EXPR EXPR |       // FIRST_EXPR ? SECOND_EXPR : THIRD_EXPR  (Non-syntax errors encountered within the dead branch are ignored)
- *       "O" EXPR |                 // type(EXPR)
  *       "K" EXPR |                 // str(EXPR)
- *       "R" EXPR |                 // repr(EXPR)
+ *       "L<N>" ((EXPR)... * <N>) | // LIST(EXPR * <N>)    A List of <N> (encoded as a decimal) elements
+ *       "M" <NAME>                 // Referring to a module  (import("<DECODED_NAME>"))
+ *       "N"                        // The none builtin constant
+ *       "O" EXPR |                 // type(EXPR)
+ *       "P" <NAME> |               // Pfoo (where `foo' is en-/decoded the same way a <NAME> would)
  *       "Q" EXPR |                 // EXPR.operator hash()
+ *       "R" EXPR |                 // repr(EXPR)
+ *       "S" EXPR EXPR |            // FIRST_EXPR is SECOND_EXPR
+ *       "S<N>" ((EXPR)... * <N>) | // HASHSET(EXPR * <N>) A Set of <N> (encoded as a decimal) elements
+ *       "T<N>" ((EXPR)... * <N>) | // TUPLE(EXPR * <N>)   A Tuple of <N> (encoded as a decimal) elements
+ *       "U" <NAME>                 // Referring to an undefined/private symbol (in expressions, `none' is used, but if produced as result, it's name is used; getattr() also extends ontop of it)
+ *       "W" EXPR |                 // #(EXPR)
+ *       "X" EXPR |                 // deepcopy(EXPR)
+ *       "#" <NAME>                 // Referring to a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
+ *       "!!!" EXPR |               // !(EXPR)
  *       "+" EXPR |                 // +EXPR
  *       "-" EXPR |                 // -EXPR
  *       "-" INTEGER_LITERAL |      // -INTEGER_LITERAL

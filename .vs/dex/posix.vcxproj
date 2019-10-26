@@ -67,6 +67,19 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\dex\posix\p-access.c.inl" />
+    <None Include="..\..\src\dex\posix\p-errno.c.inl" />
+    <None Include="..\..\src\dex\posix\p-exit.c.inl" />
+    <None Include="..\..\src\dex\posix\p-fd.c.inl" />
+    <None Include="..\..\src\dex\posix\p-fs.c.inl" />
+    <None Include="..\..\src\dex\posix\p-open.c.inl" />
+    <None Include="..\..\src\dex\posix\p-pipe.c.inl" />
+    <None Include="..\..\src\dex\posix\p-readwrite.c.inl" />
+    <None Include="..\..\src\dex\posix\p-sched.c.inl" />
+    <None Include="..\..\src\dex\posix\p-sync.c.inl" />
+    <None Include="..\..\src\dex\posix\p-truncate.c.inl" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\..\src\dex\posix\libposix.c" />
   </ItemGroup>
   <ItemGroup>

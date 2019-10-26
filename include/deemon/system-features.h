@@ -225,6 +225,147 @@ func("open", unix);
 func("_open", msvc);
 func("_wopen", msvc);
 func("open64", "defined(__USE_LARGEFILE64)");
+func("fcntl", "(defined(CONFIG_HAVE_FCNTL_H) || defined(CONFIG_HAVE_SYS_FCNTL_H)) && " + addparen(unix));
+constant("F_SETFD");
+constant("F_SETFL");
+constant("FD_CLOEXEC");
+constant("O_BINARY");
+constant("__O_BINARY");
+constant("_O_BINARY");
+constant("__O_RAW");
+constant("_O_RAW");
+constant("O_RAW");
+constant("O_SHORT_LIVED");
+constant("__O_SHORT_LIVED");
+constant("_O_SHORT_LIVED");
+constant("O_SEQUENTIAL");
+constant("__O_SEQUENTIAL");
+constant("_O_SEQUENTIAL");
+constant("O_RANDOM");
+constant("__O_RANDOM");
+constant("_O_RANDOM");
+constant("O_PATH");
+constant("__O_PATH");
+constant("_O_PATH");
+constant("O_NOATIME");
+constant("__O_NOATIME");
+constant("_O_NOATIME");
+constant("O_NOCTTY");
+constant("__O_NOCTTY");
+constant("_O_NOCTTY");
+constant("O_TEXT");
+constant("__O_TEXT");
+constant("_O_TEXT");
+constant("O_WTEXT");
+constant("__O_WTEXT");
+constant("_O_WTEXT");
+constant("O_U16TEXT");
+constant("__O_U16TEXT");
+constant("_O_U16TEXT");
+constant("O_U8TEXT");
+constant("__O_U8TEXT");
+constant("_O_U8TEXT");
+constant("O_TEMPORARY");
+constant("__O_TEMPORARY");
+constant("_O_TEMPORARY");
+constant("O_OBTAIN_DIR");
+constant("__O_OBTAIN_DIR");
+constant("_O_OBTAIN_DIR");
+constant("O_CREAT");
+constant("__O_CREAT");
+constant("_O_CREAT");
+constant("O_TRUNC");
+constant("__O_TRUNC");
+constant("_O_TRUNC");
+constant("O_RDONLY");
+constant("__O_RDONLY");
+constant("_O_RDONLY");
+constant("O_WRONLY");
+constant("__O_WRONLY");
+constant("_O_WRONLY");
+constant("O_RDWR");
+constant("__O_RDWR");
+constant("_O_RDWR");
+constant("O_ACCMODE");
+constant("__O_ACCMODE");
+constant("_O_ACCMODE");
+constant("O_CLOEXEC");
+constant("__O_NOINHERIT");
+constant("_O_NOINHERIT");
+constant("O_NOINHERIT");
+constant("__O_CLOEXEC");
+constant("_O_CLOEXEC");
+constant("O_EXCL");
+constant("__O_EXCL");
+constant("_O_EXCL");
+constant("O_APPEND");
+constant("__O_APPEND");
+constant("_O_APPEND");
+constant("O_NONBLOCK");
+constant("__O_NONBLOCK");
+constant("_O_NONBLOCK");
+constant("__O_NDELAY");
+constant("_O_NDELAY");
+constant("O_NDELAY");
+constant("O_RSYNC");
+constant("__O_RSYNC");
+constant("_O_RSYNC");
+constant("O_SYNC");
+constant("__O_SYNC");
+constant("_O_SYNC");
+constant("O_DSYNC");
+constant("__O_DSYNC");
+constant("_O_DSYNC");
+constant("O_ASYNC");
+constant("__O_ASYNC");
+constant("_O_ASYNC");
+constant("O_DIRECT");
+constant("__O_DIRECT");
+constant("_O_DIRECT");
+constant("O_LARGEFILE");
+constant("__O_LARGEFILE");
+constant("_O_LARGEFILE");
+constant("O_DIRECTORY");
+constant("__O_DIRECTORY");
+constant("_O_DIRECTORY");
+constant("O_NOFOLLOW");
+constant("__O_NOFOLLOW");
+constant("_O_NOFOLLOW");
+constant("O_TMPFILE");
+constant("__O_TMPFILE");
+constant("_O_TMPFILE");
+constant("O_CLOFORK");
+constant("__O_CLOFORK");
+constant("_O_CLOFORK");
+constant("O_SYMLINK");
+constant("__O_SYMLINK");
+constant("_O_SYMLINK");
+constant("O_DOSPATH");
+constant("__O_DOSPATH");
+constant("_O_DOSPATH");
+constant("O_SHLOCK");
+constant("__O_SHLOCK");
+constant("_O_SHLOCK");
+constant("O_EXLOCK");
+constant("__O_EXLOCK");
+constant("_O_EXLOCK");
+constant("O_XATTR");
+constant("__O_XATTR");
+constant("_O_XATTR");
+constant("O_EXEC");
+constant("__O_EXEC");
+constant("_O_EXEC");
+constant("O_SEARCH");
+constant("__O_SEARCH");
+constant("_O_SEARCH");
+constant("O_TTY_INIT");
+constant("__O_TTY_INIT");
+constant("_O_TTY_INIT");
+constant("O_NOLINKS");
+constant("__O_NOLINKS");
+constant("_O_NOLINKS");
+
+
 
 func("read", unix);
 func("_read", msvc);
@@ -448,6 +589,8 @@ func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)
 
 func("abort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
 func("strerror", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
+func("strerror_s", "defined(__USE_KOS)");
+func("strerrorname_s", "defined(__USE_KOS)");
 
 func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)");
 func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)");
@@ -494,6 +637,11 @@ func("rawmemxrlen");
 
 func("tolower", "defined(CONFIG_HAVE_CTYPE_H)");
 func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
+func("islower", "defined(CONFIG_HAVE_CTYPE_H)");
+func("isupper", "defined(CONFIG_HAVE_CTYPE_H)");
+func("isdigit", "defined(CONFIG_HAVE_CTYPE_H)");
+func("isalpha", "defined(CONFIG_HAVE_CTYPE_H)");
+func("isalnum", "defined(CONFIG_HAVE_CTYPE_H)");
 
 // CRT-specific functions
 func("_dosmaperr", msvc + " || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr))", check_defined: false);
@@ -1198,6 +1346,981 @@ var("_doserrno", msvc);
 #elif !defined(CONFIG_HAVE_open64) && \
       (defined(open64) || defined(__open64_defined) || defined(__USE_LARGEFILE64))
 #define CONFIG_HAVE_open64 1
+#endif
+
+#ifdef CONFIG_NO_fcntl
+#undef CONFIG_HAVE_fcntl
+#elif !defined(CONFIG_HAVE_fcntl) && \
+      (defined(fcntl) || defined(__fcntl_defined) || ((defined(CONFIG_HAVE_FCNTL_H) || \
+       defined(CONFIG_HAVE_SYS_FCNTL_H)) && (defined(__linux__) || defined(__linux) || \
+       defined(linux) || defined(__unix__) || defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_fcntl 1
+#endif
+
+#ifdef CONFIG_NO_F_SETFD
+#undef CONFIG_HAVE_F_SETFD
+#elif !defined(CONFIG_HAVE_F_SETFD) && \
+      (defined(F_SETFD) || defined(__F_SETFD_defined))
+#define CONFIG_HAVE_F_SETFD 1
+#endif
+
+#ifdef CONFIG_NO_F_SETFL
+#undef CONFIG_HAVE_F_SETFL
+#elif !defined(CONFIG_HAVE_F_SETFL) && \
+      (defined(F_SETFL) || defined(__F_SETFL_defined))
+#define CONFIG_HAVE_F_SETFL 1
+#endif
+
+#ifdef CONFIG_NO_FD_CLOEXEC
+#undef CONFIG_HAVE_FD_CLOEXEC
+#elif !defined(CONFIG_HAVE_FD_CLOEXEC) && \
+      (defined(FD_CLOEXEC) || defined(__FD_CLOEXEC_defined))
+#define CONFIG_HAVE_FD_CLOEXEC 1
+#endif
+
+#ifdef CONFIG_NO_O_BINARY
+#undef CONFIG_HAVE_O_BINARY
+#elif !defined(CONFIG_HAVE_O_BINARY) && \
+      (defined(O_BINARY) || defined(__O_BINARY_defined))
+#define CONFIG_HAVE_O_BINARY 1
+#endif
+
+#ifdef CONFIG_NO___O_BINARY
+#undef CONFIG_HAVE___O_BINARY
+#elif !defined(CONFIG_HAVE___O_BINARY) && \
+      (defined(__O_BINARY) || defined(____O_BINARY_defined))
+#define CONFIG_HAVE___O_BINARY 1
+#endif
+
+#ifdef CONFIG_NO__O_BINARY
+#undef CONFIG_HAVE__O_BINARY
+#elif !defined(CONFIG_HAVE__O_BINARY) && \
+      (defined(_O_BINARY) || defined(___O_BINARY_defined))
+#define CONFIG_HAVE__O_BINARY 1
+#endif
+
+#ifdef CONFIG_NO___O_RAW
+#undef CONFIG_HAVE___O_RAW
+#elif !defined(CONFIG_HAVE___O_RAW) && \
+      (defined(__O_RAW) || defined(____O_RAW_defined))
+#define CONFIG_HAVE___O_RAW 1
+#endif
+
+#ifdef CONFIG_NO__O_RAW
+#undef CONFIG_HAVE__O_RAW
+#elif !defined(CONFIG_HAVE__O_RAW) && \
+      (defined(_O_RAW) || defined(___O_RAW_defined))
+#define CONFIG_HAVE__O_RAW 1
+#endif
+
+#ifdef CONFIG_NO_O_RAW
+#undef CONFIG_HAVE_O_RAW
+#elif !defined(CONFIG_HAVE_O_RAW) && \
+      (defined(O_RAW) || defined(__O_RAW_defined))
+#define CONFIG_HAVE_O_RAW 1
+#endif
+
+#ifdef CONFIG_NO_O_SHORT_LIVED
+#undef CONFIG_HAVE_O_SHORT_LIVED
+#elif !defined(CONFIG_HAVE_O_SHORT_LIVED) && \
+      (defined(O_SHORT_LIVED) || defined(__O_SHORT_LIVED_defined))
+#define CONFIG_HAVE_O_SHORT_LIVED 1
+#endif
+
+#ifdef CONFIG_NO___O_SHORT_LIVED
+#undef CONFIG_HAVE___O_SHORT_LIVED
+#elif !defined(CONFIG_HAVE___O_SHORT_LIVED) && \
+      (defined(__O_SHORT_LIVED) || defined(____O_SHORT_LIVED_defined))
+#define CONFIG_HAVE___O_SHORT_LIVED 1
+#endif
+
+#ifdef CONFIG_NO__O_SHORT_LIVED
+#undef CONFIG_HAVE__O_SHORT_LIVED
+#elif !defined(CONFIG_HAVE__O_SHORT_LIVED) && \
+      (defined(_O_SHORT_LIVED) || defined(___O_SHORT_LIVED_defined))
+#define CONFIG_HAVE__O_SHORT_LIVED 1
+#endif
+
+#ifdef CONFIG_NO_O_SEQUENTIAL
+#undef CONFIG_HAVE_O_SEQUENTIAL
+#elif !defined(CONFIG_HAVE_O_SEQUENTIAL) && \
+      (defined(O_SEQUENTIAL) || defined(__O_SEQUENTIAL_defined))
+#define CONFIG_HAVE_O_SEQUENTIAL 1
+#endif
+
+#ifdef CONFIG_NO___O_SEQUENTIAL
+#undef CONFIG_HAVE___O_SEQUENTIAL
+#elif !defined(CONFIG_HAVE___O_SEQUENTIAL) && \
+      (defined(__O_SEQUENTIAL) || defined(____O_SEQUENTIAL_defined))
+#define CONFIG_HAVE___O_SEQUENTIAL 1
+#endif
+
+#ifdef CONFIG_NO__O_SEQUENTIAL
+#undef CONFIG_HAVE__O_SEQUENTIAL
+#elif !defined(CONFIG_HAVE__O_SEQUENTIAL) && \
+      (defined(_O_SEQUENTIAL) || defined(___O_SEQUENTIAL_defined))
+#define CONFIG_HAVE__O_SEQUENTIAL 1
+#endif
+
+#ifdef CONFIG_NO_O_RANDOM
+#undef CONFIG_HAVE_O_RANDOM
+#elif !defined(CONFIG_HAVE_O_RANDOM) && \
+      (defined(O_RANDOM) || defined(__O_RANDOM_defined))
+#define CONFIG_HAVE_O_RANDOM 1
+#endif
+
+#ifdef CONFIG_NO___O_RANDOM
+#undef CONFIG_HAVE___O_RANDOM
+#elif !defined(CONFIG_HAVE___O_RANDOM) && \
+      (defined(__O_RANDOM) || defined(____O_RANDOM_defined))
+#define CONFIG_HAVE___O_RANDOM 1
+#endif
+
+#ifdef CONFIG_NO__O_RANDOM
+#undef CONFIG_HAVE__O_RANDOM
+#elif !defined(CONFIG_HAVE__O_RANDOM) && \
+      (defined(_O_RANDOM) || defined(___O_RANDOM_defined))
+#define CONFIG_HAVE__O_RANDOM 1
+#endif
+
+#ifdef CONFIG_NO_O_PATH
+#undef CONFIG_HAVE_O_PATH
+#elif !defined(CONFIG_HAVE_O_PATH) && \
+      (defined(O_PATH) || defined(__O_PATH_defined))
+#define CONFIG_HAVE_O_PATH 1
+#endif
+
+#ifdef CONFIG_NO___O_PATH
+#undef CONFIG_HAVE___O_PATH
+#elif !defined(CONFIG_HAVE___O_PATH) && \
+      (defined(__O_PATH) || defined(____O_PATH_defined))
+#define CONFIG_HAVE___O_PATH 1
+#endif
+
+#ifdef CONFIG_NO__O_PATH
+#undef CONFIG_HAVE__O_PATH
+#elif !defined(CONFIG_HAVE__O_PATH) && \
+      (defined(_O_PATH) || defined(___O_PATH_defined))
+#define CONFIG_HAVE__O_PATH 1
+#endif
+
+#ifdef CONFIG_NO_O_NOATIME
+#undef CONFIG_HAVE_O_NOATIME
+#elif !defined(CONFIG_HAVE_O_NOATIME) && \
+      (defined(O_NOATIME) || defined(__O_NOATIME_defined))
+#define CONFIG_HAVE_O_NOATIME 1
+#endif
+
+#ifdef CONFIG_NO___O_NOATIME
+#undef CONFIG_HAVE___O_NOATIME
+#elif !defined(CONFIG_HAVE___O_NOATIME) && \
+      (defined(__O_NOATIME) || defined(____O_NOATIME_defined))
+#define CONFIG_HAVE___O_NOATIME 1
+#endif
+
+#ifdef CONFIG_NO__O_NOATIME
+#undef CONFIG_HAVE__O_NOATIME
+#elif !defined(CONFIG_HAVE__O_NOATIME) && \
+      (defined(_O_NOATIME) || defined(___O_NOATIME_defined))
+#define CONFIG_HAVE__O_NOATIME 1
+#endif
+
+#ifdef CONFIG_NO_O_NOCTTY
+#undef CONFIG_HAVE_O_NOCTTY
+#elif !defined(CONFIG_HAVE_O_NOCTTY) && \
+      (defined(O_NOCTTY) || defined(__O_NOCTTY_defined))
+#define CONFIG_HAVE_O_NOCTTY 1
+#endif
+
+#ifdef CONFIG_NO___O_NOCTTY
+#undef CONFIG_HAVE___O_NOCTTY
+#elif !defined(CONFIG_HAVE___O_NOCTTY) && \
+      (defined(__O_NOCTTY) || defined(____O_NOCTTY_defined))
+#define CONFIG_HAVE___O_NOCTTY 1
+#endif
+
+#ifdef CONFIG_NO__O_NOCTTY
+#undef CONFIG_HAVE__O_NOCTTY
+#elif !defined(CONFIG_HAVE__O_NOCTTY) && \
+      (defined(_O_NOCTTY) || defined(___O_NOCTTY_defined))
+#define CONFIG_HAVE__O_NOCTTY 1
+#endif
+
+#ifdef CONFIG_NO_O_TEXT
+#undef CONFIG_HAVE_O_TEXT
+#elif !defined(CONFIG_HAVE_O_TEXT) && \
+      (defined(O_TEXT) || defined(__O_TEXT_defined))
+#define CONFIG_HAVE_O_TEXT 1
+#endif
+
+#ifdef CONFIG_NO___O_TEXT
+#undef CONFIG_HAVE___O_TEXT
+#elif !defined(CONFIG_HAVE___O_TEXT) && \
+      (defined(__O_TEXT) || defined(____O_TEXT_defined))
+#define CONFIG_HAVE___O_TEXT 1
+#endif
+
+#ifdef CONFIG_NO__O_TEXT
+#undef CONFIG_HAVE__O_TEXT
+#elif !defined(CONFIG_HAVE__O_TEXT) && \
+      (defined(_O_TEXT) || defined(___O_TEXT_defined))
+#define CONFIG_HAVE__O_TEXT 1
+#endif
+
+#ifdef CONFIG_NO_O_WTEXT
+#undef CONFIG_HAVE_O_WTEXT
+#elif !defined(CONFIG_HAVE_O_WTEXT) && \
+      (defined(O_WTEXT) || defined(__O_WTEXT_defined))
+#define CONFIG_HAVE_O_WTEXT 1
+#endif
+
+#ifdef CONFIG_NO___O_WTEXT
+#undef CONFIG_HAVE___O_WTEXT
+#elif !defined(CONFIG_HAVE___O_WTEXT) && \
+      (defined(__O_WTEXT) || defined(____O_WTEXT_defined))
+#define CONFIG_HAVE___O_WTEXT 1
+#endif
+
+#ifdef CONFIG_NO__O_WTEXT
+#undef CONFIG_HAVE__O_WTEXT
+#elif !defined(CONFIG_HAVE__O_WTEXT) && \
+      (defined(_O_WTEXT) || defined(___O_WTEXT_defined))
+#define CONFIG_HAVE__O_WTEXT 1
+#endif
+
+#ifdef CONFIG_NO_O_U16TEXT
+#undef CONFIG_HAVE_O_U16TEXT
+#elif !defined(CONFIG_HAVE_O_U16TEXT) && \
+      (defined(O_U16TEXT) || defined(__O_U16TEXT_defined))
+#define CONFIG_HAVE_O_U16TEXT 1
+#endif
+
+#ifdef CONFIG_NO___O_U16TEXT
+#undef CONFIG_HAVE___O_U16TEXT
+#elif !defined(CONFIG_HAVE___O_U16TEXT) && \
+      (defined(__O_U16TEXT) || defined(____O_U16TEXT_defined))
+#define CONFIG_HAVE___O_U16TEXT 1
+#endif
+
+#ifdef CONFIG_NO__O_U16TEXT
+#undef CONFIG_HAVE__O_U16TEXT
+#elif !defined(CONFIG_HAVE__O_U16TEXT) && \
+      (defined(_O_U16TEXT) || defined(___O_U16TEXT_defined))
+#define CONFIG_HAVE__O_U16TEXT 1
+#endif
+
+#ifdef CONFIG_NO_O_U8TEXT
+#undef CONFIG_HAVE_O_U8TEXT
+#elif !defined(CONFIG_HAVE_O_U8TEXT) && \
+      (defined(O_U8TEXT) || defined(__O_U8TEXT_defined))
+#define CONFIG_HAVE_O_U8TEXT 1
+#endif
+
+#ifdef CONFIG_NO___O_U8TEXT
+#undef CONFIG_HAVE___O_U8TEXT
+#elif !defined(CONFIG_HAVE___O_U8TEXT) && \
+      (defined(__O_U8TEXT) || defined(____O_U8TEXT_defined))
+#define CONFIG_HAVE___O_U8TEXT 1
+#endif
+
+#ifdef CONFIG_NO__O_U8TEXT
+#undef CONFIG_HAVE__O_U8TEXT
+#elif !defined(CONFIG_HAVE__O_U8TEXT) && \
+      (defined(_O_U8TEXT) || defined(___O_U8TEXT_defined))
+#define CONFIG_HAVE__O_U8TEXT 1
+#endif
+
+#ifdef CONFIG_NO_O_TEMPORARY
+#undef CONFIG_HAVE_O_TEMPORARY
+#elif !defined(CONFIG_HAVE_O_TEMPORARY) && \
+      (defined(O_TEMPORARY) || defined(__O_TEMPORARY_defined))
+#define CONFIG_HAVE_O_TEMPORARY 1
+#endif
+
+#ifdef CONFIG_NO___O_TEMPORARY
+#undef CONFIG_HAVE___O_TEMPORARY
+#elif !defined(CONFIG_HAVE___O_TEMPORARY) && \
+      (defined(__O_TEMPORARY) || defined(____O_TEMPORARY_defined))
+#define CONFIG_HAVE___O_TEMPORARY 1
+#endif
+
+#ifdef CONFIG_NO__O_TEMPORARY
+#undef CONFIG_HAVE__O_TEMPORARY
+#elif !defined(CONFIG_HAVE__O_TEMPORARY) && \
+      (defined(_O_TEMPORARY) || defined(___O_TEMPORARY_defined))
+#define CONFIG_HAVE__O_TEMPORARY 1
+#endif
+
+#ifdef CONFIG_NO_O_OBTAIN_DIR
+#undef CONFIG_HAVE_O_OBTAIN_DIR
+#elif !defined(CONFIG_HAVE_O_OBTAIN_DIR) && \
+      (defined(O_OBTAIN_DIR) || defined(__O_OBTAIN_DIR_defined))
+#define CONFIG_HAVE_O_OBTAIN_DIR 1
+#endif
+
+#ifdef CONFIG_NO___O_OBTAIN_DIR
+#undef CONFIG_HAVE___O_OBTAIN_DIR
+#elif !defined(CONFIG_HAVE___O_OBTAIN_DIR) && \
+      (defined(__O_OBTAIN_DIR) || defined(____O_OBTAIN_DIR_defined))
+#define CONFIG_HAVE___O_OBTAIN_DIR 1
+#endif
+
+#ifdef CONFIG_NO__O_OBTAIN_DIR
+#undef CONFIG_HAVE__O_OBTAIN_DIR
+#elif !defined(CONFIG_HAVE__O_OBTAIN_DIR) && \
+      (defined(_O_OBTAIN_DIR) || defined(___O_OBTAIN_DIR_defined))
+#define CONFIG_HAVE__O_OBTAIN_DIR 1
+#endif
+
+#ifdef CONFIG_NO_O_CREAT
+#undef CONFIG_HAVE_O_CREAT
+#elif !defined(CONFIG_HAVE_O_CREAT) && \
+      (defined(O_CREAT) || defined(__O_CREAT_defined))
+#define CONFIG_HAVE_O_CREAT 1
+#endif
+
+#ifdef CONFIG_NO___O_CREAT
+#undef CONFIG_HAVE___O_CREAT
+#elif !defined(CONFIG_HAVE___O_CREAT) && \
+      (defined(__O_CREAT) || defined(____O_CREAT_defined))
+#define CONFIG_HAVE___O_CREAT 1
+#endif
+
+#ifdef CONFIG_NO__O_CREAT
+#undef CONFIG_HAVE__O_CREAT
+#elif !defined(CONFIG_HAVE__O_CREAT) && \
+      (defined(_O_CREAT) || defined(___O_CREAT_defined))
+#define CONFIG_HAVE__O_CREAT 1
+#endif
+
+#ifdef CONFIG_NO_O_TRUNC
+#undef CONFIG_HAVE_O_TRUNC
+#elif !defined(CONFIG_HAVE_O_TRUNC) && \
+      (defined(O_TRUNC) || defined(__O_TRUNC_defined))
+#define CONFIG_HAVE_O_TRUNC 1
+#endif
+
+#ifdef CONFIG_NO___O_TRUNC
+#undef CONFIG_HAVE___O_TRUNC
+#elif !defined(CONFIG_HAVE___O_TRUNC) && \
+      (defined(__O_TRUNC) || defined(____O_TRUNC_defined))
+#define CONFIG_HAVE___O_TRUNC 1
+#endif
+
+#ifdef CONFIG_NO__O_TRUNC
+#undef CONFIG_HAVE__O_TRUNC
+#elif !defined(CONFIG_HAVE__O_TRUNC) && \
+      (defined(_O_TRUNC) || defined(___O_TRUNC_defined))
+#define CONFIG_HAVE__O_TRUNC 1
+#endif
+
+#ifdef CONFIG_NO_O_RDONLY
+#undef CONFIG_HAVE_O_RDONLY
+#elif !defined(CONFIG_HAVE_O_RDONLY) && \
+      (defined(O_RDONLY) || defined(__O_RDONLY_defined))
+#define CONFIG_HAVE_O_RDONLY 1
+#endif
+
+#ifdef CONFIG_NO___O_RDONLY
+#undef CONFIG_HAVE___O_RDONLY
+#elif !defined(CONFIG_HAVE___O_RDONLY) && \
+      (defined(__O_RDONLY) || defined(____O_RDONLY_defined))
+#define CONFIG_HAVE___O_RDONLY 1
+#endif
+
+#ifdef CONFIG_NO__O_RDONLY
+#undef CONFIG_HAVE__O_RDONLY
+#elif !defined(CONFIG_HAVE__O_RDONLY) && \
+      (defined(_O_RDONLY) || defined(___O_RDONLY_defined))
+#define CONFIG_HAVE__O_RDONLY 1
+#endif
+
+#ifdef CONFIG_NO_O_WRONLY
+#undef CONFIG_HAVE_O_WRONLY
+#elif !defined(CONFIG_HAVE_O_WRONLY) && \
+      (defined(O_WRONLY) || defined(__O_WRONLY_defined))
+#define CONFIG_HAVE_O_WRONLY 1
+#endif
+
+#ifdef CONFIG_NO___O_WRONLY
+#undef CONFIG_HAVE___O_WRONLY
+#elif !defined(CONFIG_HAVE___O_WRONLY) && \
+      (defined(__O_WRONLY) || defined(____O_WRONLY_defined))
+#define CONFIG_HAVE___O_WRONLY 1
+#endif
+
+#ifdef CONFIG_NO__O_WRONLY
+#undef CONFIG_HAVE__O_WRONLY
+#elif !defined(CONFIG_HAVE__O_WRONLY) && \
+      (defined(_O_WRONLY) || defined(___O_WRONLY_defined))
+#define CONFIG_HAVE__O_WRONLY 1
+#endif
+
+#ifdef CONFIG_NO_O_RDWR
+#undef CONFIG_HAVE_O_RDWR
+#elif !defined(CONFIG_HAVE_O_RDWR) && \
+      (defined(O_RDWR) || defined(__O_RDWR_defined))
+#define CONFIG_HAVE_O_RDWR 1
+#endif
+
+#ifdef CONFIG_NO___O_RDWR
+#undef CONFIG_HAVE___O_RDWR
+#elif !defined(CONFIG_HAVE___O_RDWR) && \
+      (defined(__O_RDWR) || defined(____O_RDWR_defined))
+#define CONFIG_HAVE___O_RDWR 1
+#endif
+
+#ifdef CONFIG_NO__O_RDWR
+#undef CONFIG_HAVE__O_RDWR
+#elif !defined(CONFIG_HAVE__O_RDWR) && \
+      (defined(_O_RDWR) || defined(___O_RDWR_defined))
+#define CONFIG_HAVE__O_RDWR 1
+#endif
+
+#ifdef CONFIG_NO_O_ACCMODE
+#undef CONFIG_HAVE_O_ACCMODE
+#elif !defined(CONFIG_HAVE_O_ACCMODE) && \
+      (defined(O_ACCMODE) || defined(__O_ACCMODE_defined))
+#define CONFIG_HAVE_O_ACCMODE 1
+#endif
+
+#ifdef CONFIG_NO___O_ACCMODE
+#undef CONFIG_HAVE___O_ACCMODE
+#elif !defined(CONFIG_HAVE___O_ACCMODE) && \
+      (defined(__O_ACCMODE) || defined(____O_ACCMODE_defined))
+#define CONFIG_HAVE___O_ACCMODE 1
+#endif
+
+#ifdef CONFIG_NO__O_ACCMODE
+#undef CONFIG_HAVE__O_ACCMODE
+#elif !defined(CONFIG_HAVE__O_ACCMODE) && \
+      (defined(_O_ACCMODE) || defined(___O_ACCMODE_defined))
+#define CONFIG_HAVE__O_ACCMODE 1
+#endif
+
+#ifdef CONFIG_NO_O_CLOEXEC
+#undef CONFIG_HAVE_O_CLOEXEC
+#elif !defined(CONFIG_HAVE_O_CLOEXEC) && \
+      (defined(O_CLOEXEC) || defined(__O_CLOEXEC_defined))
+#define CONFIG_HAVE_O_CLOEXEC 1
+#endif
+
+#ifdef CONFIG_NO___O_NOINHERIT
+#undef CONFIG_HAVE___O_NOINHERIT
+#elif !defined(CONFIG_HAVE___O_NOINHERIT) && \
+      (defined(__O_NOINHERIT) || defined(____O_NOINHERIT_defined))
+#define CONFIG_HAVE___O_NOINHERIT 1
+#endif
+
+#ifdef CONFIG_NO__O_NOINHERIT
+#undef CONFIG_HAVE__O_NOINHERIT
+#elif !defined(CONFIG_HAVE__O_NOINHERIT) && \
+      (defined(_O_NOINHERIT) || defined(___O_NOINHERIT_defined))
+#define CONFIG_HAVE__O_NOINHERIT 1
+#endif
+
+#ifdef CONFIG_NO_O_NOINHERIT
+#undef CONFIG_HAVE_O_NOINHERIT
+#elif !defined(CONFIG_HAVE_O_NOINHERIT) && \
+      (defined(O_NOINHERIT) || defined(__O_NOINHERIT_defined))
+#define CONFIG_HAVE_O_NOINHERIT 1
+#endif
+
+#ifdef CONFIG_NO___O_CLOEXEC
+#undef CONFIG_HAVE___O_CLOEXEC
+#elif !defined(CONFIG_HAVE___O_CLOEXEC) && \
+      (defined(__O_CLOEXEC) || defined(____O_CLOEXEC_defined))
+#define CONFIG_HAVE___O_CLOEXEC 1
+#endif
+
+#ifdef CONFIG_NO__O_CLOEXEC
+#undef CONFIG_HAVE__O_CLOEXEC
+#elif !defined(CONFIG_HAVE__O_CLOEXEC) && \
+      (defined(_O_CLOEXEC) || defined(___O_CLOEXEC_defined))
+#define CONFIG_HAVE__O_CLOEXEC 1
+#endif
+
+#ifdef CONFIG_NO_O_EXCL
+#undef CONFIG_HAVE_O_EXCL
+#elif !defined(CONFIG_HAVE_O_EXCL) && \
+      (defined(O_EXCL) || defined(__O_EXCL_defined))
+#define CONFIG_HAVE_O_EXCL 1
+#endif
+
+#ifdef CONFIG_NO___O_EXCL
+#undef CONFIG_HAVE___O_EXCL
+#elif !defined(CONFIG_HAVE___O_EXCL) && \
+      (defined(__O_EXCL) || defined(____O_EXCL_defined))
+#define CONFIG_HAVE___O_EXCL 1
+#endif
+
+#ifdef CONFIG_NO__O_EXCL
+#undef CONFIG_HAVE__O_EXCL
+#elif !defined(CONFIG_HAVE__O_EXCL) && \
+      (defined(_O_EXCL) || defined(___O_EXCL_defined))
+#define CONFIG_HAVE__O_EXCL 1
+#endif
+
+#ifdef CONFIG_NO_O_APPEND
+#undef CONFIG_HAVE_O_APPEND
+#elif !defined(CONFIG_HAVE_O_APPEND) && \
+      (defined(O_APPEND) || defined(__O_APPEND_defined))
+#define CONFIG_HAVE_O_APPEND 1
+#endif
+
+#ifdef CONFIG_NO___O_APPEND
+#undef CONFIG_HAVE___O_APPEND
+#elif !defined(CONFIG_HAVE___O_APPEND) && \
+      (defined(__O_APPEND) || defined(____O_APPEND_defined))
+#define CONFIG_HAVE___O_APPEND 1
+#endif
+
+#ifdef CONFIG_NO__O_APPEND
+#undef CONFIG_HAVE__O_APPEND
+#elif !defined(CONFIG_HAVE__O_APPEND) && \
+      (defined(_O_APPEND) || defined(___O_APPEND_defined))
+#define CONFIG_HAVE__O_APPEND 1
+#endif
+
+#ifdef CONFIG_NO_O_NONBLOCK
+#undef CONFIG_HAVE_O_NONBLOCK
+#elif !defined(CONFIG_HAVE_O_NONBLOCK) && \
+      (defined(O_NONBLOCK) || defined(__O_NONBLOCK_defined))
+#define CONFIG_HAVE_O_NONBLOCK 1
+#endif
+
+#ifdef CONFIG_NO___O_NONBLOCK
+#undef CONFIG_HAVE___O_NONBLOCK
+#elif !defined(CONFIG_HAVE___O_NONBLOCK) && \
+      (defined(__O_NONBLOCK) || defined(____O_NONBLOCK_defined))
+#define CONFIG_HAVE___O_NONBLOCK 1
+#endif
+
+#ifdef CONFIG_NO__O_NONBLOCK
+#undef CONFIG_HAVE__O_NONBLOCK
+#elif !defined(CONFIG_HAVE__O_NONBLOCK) && \
+      (defined(_O_NONBLOCK) || defined(___O_NONBLOCK_defined))
+#define CONFIG_HAVE__O_NONBLOCK 1
+#endif
+
+#ifdef CONFIG_NO___O_NDELAY
+#undef CONFIG_HAVE___O_NDELAY
+#elif !defined(CONFIG_HAVE___O_NDELAY) && \
+      (defined(__O_NDELAY) || defined(____O_NDELAY_defined))
+#define CONFIG_HAVE___O_NDELAY 1
+#endif
+
+#ifdef CONFIG_NO__O_NDELAY
+#undef CONFIG_HAVE__O_NDELAY
+#elif !defined(CONFIG_HAVE__O_NDELAY) && \
+      (defined(_O_NDELAY) || defined(___O_NDELAY_defined))
+#define CONFIG_HAVE__O_NDELAY 1
+#endif
+
+#ifdef CONFIG_NO_O_NDELAY
+#undef CONFIG_HAVE_O_NDELAY
+#elif !defined(CONFIG_HAVE_O_NDELAY) && \
+      (defined(O_NDELAY) || defined(__O_NDELAY_defined))
+#define CONFIG_HAVE_O_NDELAY 1
+#endif
+
+#ifdef CONFIG_NO_O_RSYNC
+#undef CONFIG_HAVE_O_RSYNC
+#elif !defined(CONFIG_HAVE_O_RSYNC) && \
+      (defined(O_RSYNC) || defined(__O_RSYNC_defined))
+#define CONFIG_HAVE_O_RSYNC 1
+#endif
+
+#ifdef CONFIG_NO___O_RSYNC
+#undef CONFIG_HAVE___O_RSYNC
+#elif !defined(CONFIG_HAVE___O_RSYNC) && \
+      (defined(__O_RSYNC) || defined(____O_RSYNC_defined))
+#define CONFIG_HAVE___O_RSYNC 1
+#endif
+
+#ifdef CONFIG_NO__O_RSYNC
+#undef CONFIG_HAVE__O_RSYNC
+#elif !defined(CONFIG_HAVE__O_RSYNC) && \
+      (defined(_O_RSYNC) || defined(___O_RSYNC_defined))
+#define CONFIG_HAVE__O_RSYNC 1
+#endif
+
+#ifdef CONFIG_NO_O_SYNC
+#undef CONFIG_HAVE_O_SYNC
+#elif !defined(CONFIG_HAVE_O_SYNC) && \
+      (defined(O_SYNC) || defined(__O_SYNC_defined))
+#define CONFIG_HAVE_O_SYNC 1
+#endif
+
+#ifdef CONFIG_NO___O_SYNC
+#undef CONFIG_HAVE___O_SYNC
+#elif !defined(CONFIG_HAVE___O_SYNC) && \
+      (defined(__O_SYNC) || defined(____O_SYNC_defined))
+#define CONFIG_HAVE___O_SYNC 1
+#endif
+
+#ifdef CONFIG_NO__O_SYNC
+#undef CONFIG_HAVE__O_SYNC
+#elif !defined(CONFIG_HAVE__O_SYNC) && \
+      (defined(_O_SYNC) || defined(___O_SYNC_defined))
+#define CONFIG_HAVE__O_SYNC 1
+#endif
+
+#ifdef CONFIG_NO_O_DSYNC
+#undef CONFIG_HAVE_O_DSYNC
+#elif !defined(CONFIG_HAVE_O_DSYNC) && \
+      (defined(O_DSYNC) || defined(__O_DSYNC_defined))
+#define CONFIG_HAVE_O_DSYNC 1
+#endif
+
+#ifdef CONFIG_NO___O_DSYNC
+#undef CONFIG_HAVE___O_DSYNC
+#elif !defined(CONFIG_HAVE___O_DSYNC) && \
+      (defined(__O_DSYNC) || defined(____O_DSYNC_defined))
+#define CONFIG_HAVE___O_DSYNC 1
+#endif
+
+#ifdef CONFIG_NO__O_DSYNC
+#undef CONFIG_HAVE__O_DSYNC
+#elif !defined(CONFIG_HAVE__O_DSYNC) && \
+      (defined(_O_DSYNC) || defined(___O_DSYNC_defined))
+#define CONFIG_HAVE__O_DSYNC 1
+#endif
+
+#ifdef CONFIG_NO_O_ASYNC
+#undef CONFIG_HAVE_O_ASYNC
+#elif !defined(CONFIG_HAVE_O_ASYNC) && \
+      (defined(O_ASYNC) || defined(__O_ASYNC_defined))
+#define CONFIG_HAVE_O_ASYNC 1
+#endif
+
+#ifdef CONFIG_NO___O_ASYNC
+#undef CONFIG_HAVE___O_ASYNC
+#elif !defined(CONFIG_HAVE___O_ASYNC) && \
+      (defined(__O_ASYNC) || defined(____O_ASYNC_defined))
+#define CONFIG_HAVE___O_ASYNC 1
+#endif
+
+#ifdef CONFIG_NO__O_ASYNC
+#undef CONFIG_HAVE__O_ASYNC
+#elif !defined(CONFIG_HAVE__O_ASYNC) && \
+      (defined(_O_ASYNC) || defined(___O_ASYNC_defined))
+#define CONFIG_HAVE__O_ASYNC 1
+#endif
+
+#ifdef CONFIG_NO_O_DIRECT
+#undef CONFIG_HAVE_O_DIRECT
+#elif !defined(CONFIG_HAVE_O_DIRECT) && \
+      (defined(O_DIRECT) || defined(__O_DIRECT_defined))
+#define CONFIG_HAVE_O_DIRECT 1
+#endif
+
+#ifdef CONFIG_NO___O_DIRECT
+#undef CONFIG_HAVE___O_DIRECT
+#elif !defined(CONFIG_HAVE___O_DIRECT) && \
+      (defined(__O_DIRECT) || defined(____O_DIRECT_defined))
+#define CONFIG_HAVE___O_DIRECT 1
+#endif
+
+#ifdef CONFIG_NO__O_DIRECT
+#undef CONFIG_HAVE__O_DIRECT
+#elif !defined(CONFIG_HAVE__O_DIRECT) && \
+      (defined(_O_DIRECT) || defined(___O_DIRECT_defined))
+#define CONFIG_HAVE__O_DIRECT 1
+#endif
+
+#ifdef CONFIG_NO_O_LARGEFILE
+#undef CONFIG_HAVE_O_LARGEFILE
+#elif !defined(CONFIG_HAVE_O_LARGEFILE) && \
+      (defined(O_LARGEFILE) || defined(__O_LARGEFILE_defined))
+#define CONFIG_HAVE_O_LARGEFILE 1
+#endif
+
+#ifdef CONFIG_NO___O_LARGEFILE
+#undef CONFIG_HAVE___O_LARGEFILE
+#elif !defined(CONFIG_HAVE___O_LARGEFILE) && \
+      (defined(__O_LARGEFILE) || defined(____O_LARGEFILE_defined))
+#define CONFIG_HAVE___O_LARGEFILE 1
+#endif
+
+#ifdef CONFIG_NO__O_LARGEFILE
+#undef CONFIG_HAVE__O_LARGEFILE
+#elif !defined(CONFIG_HAVE__O_LARGEFILE) && \
+      (defined(_O_LARGEFILE) || defined(___O_LARGEFILE_defined))
+#define CONFIG_HAVE__O_LARGEFILE 1
+#endif
+
+#ifdef CONFIG_NO_O_DIRECTORY
+#undef CONFIG_HAVE_O_DIRECTORY
+#elif !defined(CONFIG_HAVE_O_DIRECTORY) && \
+      (defined(O_DIRECTORY) || defined(__O_DIRECTORY_defined))
+#define CONFIG_HAVE_O_DIRECTORY 1
+#endif
+
+#ifdef CONFIG_NO___O_DIRECTORY
+#undef CONFIG_HAVE___O_DIRECTORY
+#elif !defined(CONFIG_HAVE___O_DIRECTORY) && \
+      (defined(__O_DIRECTORY) || defined(____O_DIRECTORY_defined))
+#define CONFIG_HAVE___O_DIRECTORY 1
+#endif
+
+#ifdef CONFIG_NO__O_DIRECTORY
+#undef CONFIG_HAVE__O_DIRECTORY
+#elif !defined(CONFIG_HAVE__O_DIRECTORY) && \
+      (defined(_O_DIRECTORY) || defined(___O_DIRECTORY_defined))
+#define CONFIG_HAVE__O_DIRECTORY 1
+#endif
+
+#ifdef CONFIG_NO_O_NOFOLLOW
+#undef CONFIG_HAVE_O_NOFOLLOW
+#elif !defined(CONFIG_HAVE_O_NOFOLLOW) && \
+      (defined(O_NOFOLLOW) || defined(__O_NOFOLLOW_defined))
+#define CONFIG_HAVE_O_NOFOLLOW 1
+#endif
+
+#ifdef CONFIG_NO___O_NOFOLLOW
+#undef CONFIG_HAVE___O_NOFOLLOW
+#elif !defined(CONFIG_HAVE___O_NOFOLLOW) && \
+      (defined(__O_NOFOLLOW) || defined(____O_NOFOLLOW_defined))
+#define CONFIG_HAVE___O_NOFOLLOW 1
+#endif
+
+#ifdef CONFIG_NO__O_NOFOLLOW
+#undef CONFIG_HAVE__O_NOFOLLOW
+#elif !defined(CONFIG_HAVE__O_NOFOLLOW) && \
+      (defined(_O_NOFOLLOW) || defined(___O_NOFOLLOW_defined))
+#define CONFIG_HAVE__O_NOFOLLOW 1
+#endif
+
+#ifdef CONFIG_NO_O_TMPFILE
+#undef CONFIG_HAVE_O_TMPFILE
+#elif !defined(CONFIG_HAVE_O_TMPFILE) && \
+      (defined(O_TMPFILE) || defined(__O_TMPFILE_defined))
+#define CONFIG_HAVE_O_TMPFILE 1
+#endif
+
+#ifdef CONFIG_NO___O_TMPFILE
+#undef CONFIG_HAVE___O_TMPFILE
+#elif !defined(CONFIG_HAVE___O_TMPFILE) && \
+      (defined(__O_TMPFILE) || defined(____O_TMPFILE_defined))
+#define CONFIG_HAVE___O_TMPFILE 1
+#endif
+
+#ifdef CONFIG_NO__O_TMPFILE
+#undef CONFIG_HAVE__O_TMPFILE
+#elif !defined(CONFIG_HAVE__O_TMPFILE) && \
+      (defined(_O_TMPFILE) || defined(___O_TMPFILE_defined))
+#define CONFIG_HAVE__O_TMPFILE 1
+#endif
+
+#ifdef CONFIG_NO_O_CLOFORK
+#undef CONFIG_HAVE_O_CLOFORK
+#elif !defined(CONFIG_HAVE_O_CLOFORK) && \
+      (defined(O_CLOFORK) || defined(__O_CLOFORK_defined))
+#define CONFIG_HAVE_O_CLOFORK 1
+#endif
+
+#ifdef CONFIG_NO___O_CLOFORK
+#undef CONFIG_HAVE___O_CLOFORK
+#elif !defined(CONFIG_HAVE___O_CLOFORK) && \
+      (defined(__O_CLOFORK) || defined(____O_CLOFORK_defined))
+#define CONFIG_HAVE___O_CLOFORK 1
+#endif
+
+#ifdef CONFIG_NO__O_CLOFORK
+#undef CONFIG_HAVE__O_CLOFORK
+#elif !defined(CONFIG_HAVE__O_CLOFORK) && \
+      (defined(_O_CLOFORK) || defined(___O_CLOFORK_defined))
+#define CONFIG_HAVE__O_CLOFORK 1
+#endif
+
+#ifdef CONFIG_NO_O_SYMLINK
+#undef CONFIG_HAVE_O_SYMLINK
+#elif !defined(CONFIG_HAVE_O_SYMLINK) && \
+      (defined(O_SYMLINK) || defined(__O_SYMLINK_defined))
+#define CONFIG_HAVE_O_SYMLINK 1
+#endif
+
+#ifdef CONFIG_NO___O_SYMLINK
+#undef CONFIG_HAVE___O_SYMLINK
+#elif !defined(CONFIG_HAVE___O_SYMLINK) && \
+      (defined(__O_SYMLINK) || defined(____O_SYMLINK_defined))
+#define CONFIG_HAVE___O_SYMLINK 1
+#endif
+
+#ifdef CONFIG_NO__O_SYMLINK
+#undef CONFIG_HAVE__O_SYMLINK
+#elif !defined(CONFIG_HAVE__O_SYMLINK) && \
+      (defined(_O_SYMLINK) || defined(___O_SYMLINK_defined))
+#define CONFIG_HAVE__O_SYMLINK 1
+#endif
+
+#ifdef CONFIG_NO_O_DOSPATH
+#undef CONFIG_HAVE_O_DOSPATH
+#elif !defined(CONFIG_HAVE_O_DOSPATH) && \
+      (defined(O_DOSPATH) || defined(__O_DOSPATH_defined))
+#define CONFIG_HAVE_O_DOSPATH 1
+#endif
+
+#ifdef CONFIG_NO___O_DOSPATH
+#undef CONFIG_HAVE___O_DOSPATH
+#elif !defined(CONFIG_HAVE___O_DOSPATH) && \
+      (defined(__O_DOSPATH) || defined(____O_DOSPATH_defined))
+#define CONFIG_HAVE___O_DOSPATH 1
+#endif
+
+#ifdef CONFIG_NO__O_DOSPATH
+#undef CONFIG_HAVE__O_DOSPATH
+#elif !defined(CONFIG_HAVE__O_DOSPATH) && \
+      (defined(_O_DOSPATH) || defined(___O_DOSPATH_defined))
+#define CONFIG_HAVE__O_DOSPATH 1
+#endif
+
+#ifdef CONFIG_NO_O_SHLOCK
+#undef CONFIG_HAVE_O_SHLOCK
+#elif !defined(CONFIG_HAVE_O_SHLOCK) && \
+      (defined(O_SHLOCK) || defined(__O_SHLOCK_defined))
+#define CONFIG_HAVE_O_SHLOCK 1
+#endif
+
+#ifdef CONFIG_NO___O_SHLOCK
+#undef CONFIG_HAVE___O_SHLOCK
+#elif !defined(CONFIG_HAVE___O_SHLOCK) && \
+      (defined(__O_SHLOCK) || defined(____O_SHLOCK_defined))
+#define CONFIG_HAVE___O_SHLOCK 1
+#endif
+
+#ifdef CONFIG_NO__O_SHLOCK
+#undef CONFIG_HAVE__O_SHLOCK
+#elif !defined(CONFIG_HAVE__O_SHLOCK) && \
+      (defined(_O_SHLOCK) || defined(___O_SHLOCK_defined))
+#define CONFIG_HAVE__O_SHLOCK 1
+#endif
+
+#ifdef CONFIG_NO_O_EXLOCK
+#undef CONFIG_HAVE_O_EXLOCK
+#elif !defined(CONFIG_HAVE_O_EXLOCK) && \
+      (defined(O_EXLOCK) || defined(__O_EXLOCK_defined))
+#define CONFIG_HAVE_O_EXLOCK 1
+#endif
+
+#ifdef CONFIG_NO___O_EXLOCK
+#undef CONFIG_HAVE___O_EXLOCK
+#elif !defined(CONFIG_HAVE___O_EXLOCK) && \
+      (defined(__O_EXLOCK) || defined(____O_EXLOCK_defined))
+#define CONFIG_HAVE___O_EXLOCK 1
+#endif
+
+#ifdef CONFIG_NO__O_EXLOCK
+#undef CONFIG_HAVE__O_EXLOCK
+#elif !defined(CONFIG_HAVE__O_EXLOCK) && \
+      (defined(_O_EXLOCK) || defined(___O_EXLOCK_defined))
+#define CONFIG_HAVE__O_EXLOCK 1
+#endif
+
+#ifdef CONFIG_NO_O_XATTR
+#undef CONFIG_HAVE_O_XATTR
+#elif !defined(CONFIG_HAVE_O_XATTR) && \
+      (defined(O_XATTR) || defined(__O_XATTR_defined))
+#define CONFIG_HAVE_O_XATTR 1
+#endif
+
+#ifdef CONFIG_NO___O_XATTR
+#undef CONFIG_HAVE___O_XATTR
+#elif !defined(CONFIG_HAVE___O_XATTR) && \
+      (defined(__O_XATTR) || defined(____O_XATTR_defined))
+#define CONFIG_HAVE___O_XATTR 1
+#endif
+
+#ifdef CONFIG_NO__O_XATTR
+#undef CONFIG_HAVE__O_XATTR
+#elif !defined(CONFIG_HAVE__O_XATTR) && \
+      (defined(_O_XATTR) || defined(___O_XATTR_defined))
+#define CONFIG_HAVE__O_XATTR 1
+#endif
+
+#ifdef CONFIG_NO_O_EXEC
+#undef CONFIG_HAVE_O_EXEC
+#elif !defined(CONFIG_HAVE_O_EXEC) && \
+      (defined(O_EXEC) || defined(__O_EXEC_defined))
+#define CONFIG_HAVE_O_EXEC 1
+#endif
+
+#ifdef CONFIG_NO___O_EXEC
+#undef CONFIG_HAVE___O_EXEC
+#elif !defined(CONFIG_HAVE___O_EXEC) && \
+      (defined(__O_EXEC) || defined(____O_EXEC_defined))
+#define CONFIG_HAVE___O_EXEC 1
+#endif
+
+#ifdef CONFIG_NO__O_EXEC
+#undef CONFIG_HAVE__O_EXEC
+#elif !defined(CONFIG_HAVE__O_EXEC) && \
+      (defined(_O_EXEC) || defined(___O_EXEC_defined))
+#define CONFIG_HAVE__O_EXEC 1
+#endif
+
+#ifdef CONFIG_NO_O_SEARCH
+#undef CONFIG_HAVE_O_SEARCH
+#elif !defined(CONFIG_HAVE_O_SEARCH) && \
+      (defined(O_SEARCH) || defined(__O_SEARCH_defined))
+#define CONFIG_HAVE_O_SEARCH 1
+#endif
+
+#ifdef CONFIG_NO___O_SEARCH
+#undef CONFIG_HAVE___O_SEARCH
+#elif !defined(CONFIG_HAVE___O_SEARCH) && \
+      (defined(__O_SEARCH) || defined(____O_SEARCH_defined))
+#define CONFIG_HAVE___O_SEARCH 1
+#endif
+
+#ifdef CONFIG_NO__O_SEARCH
+#undef CONFIG_HAVE__O_SEARCH
+#elif !defined(CONFIG_HAVE__O_SEARCH) && \
+      (defined(_O_SEARCH) || defined(___O_SEARCH_defined))
+#define CONFIG_HAVE__O_SEARCH 1
+#endif
+
+#ifdef CONFIG_NO_O_TTY_INIT
+#undef CONFIG_HAVE_O_TTY_INIT
+#elif !defined(CONFIG_HAVE_O_TTY_INIT) && \
+      (defined(O_TTY_INIT) || defined(__O_TTY_INIT_defined))
+#define CONFIG_HAVE_O_TTY_INIT 1
+#endif
+
+#ifdef CONFIG_NO___O_TTY_INIT
+#undef CONFIG_HAVE___O_TTY_INIT
+#elif !defined(CONFIG_HAVE___O_TTY_INIT) && \
+      (defined(__O_TTY_INIT) || defined(____O_TTY_INIT_defined))
+#define CONFIG_HAVE___O_TTY_INIT 1
+#endif
+
+#ifdef CONFIG_NO__O_TTY_INIT
+#undef CONFIG_HAVE__O_TTY_INIT
+#elif !defined(CONFIG_HAVE__O_TTY_INIT) && \
+      (defined(_O_TTY_INIT) || defined(___O_TTY_INIT_defined))
+#define CONFIG_HAVE__O_TTY_INIT 1
+#endif
+
+#ifdef CONFIG_NO_O_NOLINKS
+#undef CONFIG_HAVE_O_NOLINKS
+#elif !defined(CONFIG_HAVE_O_NOLINKS) && \
+      (defined(O_NOLINKS) || defined(__O_NOLINKS_defined))
+#define CONFIG_HAVE_O_NOLINKS 1
+#endif
+
+#ifdef CONFIG_NO___O_NOLINKS
+#undef CONFIG_HAVE___O_NOLINKS
+#elif !defined(CONFIG_HAVE___O_NOLINKS) && \
+      (defined(__O_NOLINKS) || defined(____O_NOLINKS_defined))
+#define CONFIG_HAVE___O_NOLINKS 1
+#endif
+
+#ifdef CONFIG_NO__O_NOLINKS
+#undef CONFIG_HAVE__O_NOLINKS
+#elif !defined(CONFIG_HAVE__O_NOLINKS) && \
+      (defined(_O_NOLINKS) || defined(___O_NOLINKS_defined))
+#define CONFIG_HAVE__O_NOLINKS 1
 #endif
 
 #ifdef CONFIG_NO_read
@@ -2580,6 +3703,20 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_strerror 1
 #endif
 
+#ifdef CONFIG_NO_strerror_s
+#undef CONFIG_HAVE_strerror_s
+#elif !defined(CONFIG_HAVE_strerror_s) && \
+      (defined(strerror_s) || defined(__strerror_s_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strerror_s 1
+#endif
+
+#ifdef CONFIG_NO_strerrorname_s
+#undef CONFIG_HAVE_strerrorname_s
+#elif !defined(CONFIG_HAVE_strerrorname_s) && \
+      (defined(strerrorname_s) || defined(__strerrorname_s_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strerrorname_s 1
+#endif
+
 #ifdef CONFIG_NO_dlopen
 #undef CONFIG_HAVE_dlopen
 #elif !defined(CONFIG_HAVE_dlopen) && \
@@ -2816,6 +3953,41 @@ var("_doserrno", msvc);
 #elif !defined(CONFIG_HAVE_toupper) && \
       (defined(toupper) || defined(__toupper_defined) || defined(CONFIG_HAVE_CTYPE_H))
 #define CONFIG_HAVE_toupper 1
+#endif
+
+#ifdef CONFIG_NO_islower
+#undef CONFIG_HAVE_islower
+#elif !defined(CONFIG_HAVE_islower) && \
+      (defined(islower) || defined(__islower_defined) || defined(CONFIG_HAVE_CTYPE_H))
+#define CONFIG_HAVE_islower 1
+#endif
+
+#ifdef CONFIG_NO_isupper
+#undef CONFIG_HAVE_isupper
+#elif !defined(CONFIG_HAVE_isupper) && \
+      (defined(isupper) || defined(__isupper_defined) || defined(CONFIG_HAVE_CTYPE_H))
+#define CONFIG_HAVE_isupper 1
+#endif
+
+#ifdef CONFIG_NO_isdigit
+#undef CONFIG_HAVE_isdigit
+#elif !defined(CONFIG_HAVE_isdigit) && \
+      (defined(isdigit) || defined(__isdigit_defined) || defined(CONFIG_HAVE_CTYPE_H))
+#define CONFIG_HAVE_isdigit 1
+#endif
+
+#ifdef CONFIG_NO_isalpha
+#undef CONFIG_HAVE_isalpha
+#elif !defined(CONFIG_HAVE_isalpha) && \
+      (defined(isalpha) || defined(__isalpha_defined) || defined(CONFIG_HAVE_CTYPE_H))
+#define CONFIG_HAVE_isalpha 1
+#endif
+
+#ifdef CONFIG_NO_isalnum
+#undef CONFIG_HAVE_isalnum
+#elif !defined(CONFIG_HAVE_isalnum) && \
+      (defined(isalnum) || defined(__isalnum_defined) || defined(CONFIG_HAVE_CTYPE_H))
+#define CONFIG_HAVE_isalnum 1
 #endif
 
 #ifdef CONFIG_NO__dosmaperr
@@ -3227,378 +4399,554 @@ var("_doserrno", msvc);
 /* Configure O_* flags for `open()' */
 
 /* Set optional flags to no-ops */
-#ifndef O_BINARY
-#ifdef __O_BINARY
+#ifndef CONFIG_HAVE_O_BINARY
+#ifdef CONFIG_HAVE___O_BINARY
+#define CONFIG_HAVE_O_BINARY 1
 #define O_BINARY __O_BINARY
-#elif defined(_O_BINARY)
+#elif defined(CONFIG_HAVE__O_BINARY)
+#define CONFIG_HAVE_O_BINARY 1
 #define O_BINARY _O_BINARY
-#elif defined(__O_RAW)
+#elif defined(CONFIG_HAVE___O_RAW)
+#define CONFIG_HAVE_O_BINARY 1
 #define O_BINARY __O_RAW
-#elif defined(_O_RAW)
+#elif defined(CONFIG_HAVE__O_RAW)
+#define CONFIG_HAVE_O_BINARY 1
 #define O_BINARY _O_RAW
-#elif defined(O_RAW)
+#elif defined(CONFIG_HAVE_O_RAW)
+#define CONFIG_HAVE_O_BINARY 1
 #define O_BINARY O_RAW
 #else
 #define O_BINARY 0
 #endif
-#endif /* !O_BINARY */
+#elif !defined(O_BINARY)
+#define O_BINARY O_BINARY
+#endif /* !CONFIG_HAVE_O_BINARY */
 
-#ifndef O_SHORT_LIVED
-#ifdef __O_SHORT_LIVED
+#ifndef CONFIG_HAVE_O_SHORT_LIVED
+#ifdef CONFIG_HAVE___O_SHORT_LIVED
+#define CONFIG_HAVE_O_SHORT_LIVED 1
 #define O_SHORT_LIVED __O_SHORT_LIVED
-#elif defined(_O_SHORT_LIVED)
+#elif defined(CONFIG_HAVE__O_SHORT_LIVED)
+#define CONFIG_HAVE_O_SHORT_LIVED 1
 #define O_SHORT_LIVED _O_SHORT_LIVED
 #else
 #define O_SHORT_LIVED 0
 #endif
-#endif /* !O_SHORT_LIVED */
+#elif !defined(O_SHORT_LIVED)
+#define O_SHORT_LIVED O_SHORT_LIVED
+#endif /* !CONFIG_HAVE_O_SHORT_LIVED */
 
-#ifndef O_SEQUENTIAL
-#ifdef __O_SEQUENTIAL
+#ifndef CONFIG_HAVE_O_SEQUENTIAL
+#ifdef CONFIG_HAVE___O_SEQUENTIAL
+#define CONFIG_HAVE_O_SEQUENTIAL 1
 #define O_SEQUENTIAL __O_SEQUENTIAL
-#elif defined(_O_SEQUENTIAL)
+#elif defined(CONFIG_HAVE__O_SEQUENTIAL)
+#define CONFIG_HAVE_O_SEQUENTIAL 1
 #define O_SEQUENTIAL _O_SEQUENTIAL
 #else
 #define O_SEQUENTIAL 0
 #endif
-#endif /* !O_SEQUENTIAL */
+#elif !defined(O_SEQUENTIAL)
+#define O_SEQUENTIAL O_SEQUENTIAL
+#endif /* !CONFIG_HAVE_O_SEQUENTIAL */
 
-#ifndef O_RANDOM
-#ifdef __O_RANDOM
+#ifndef CONFIG_HAVE_O_RANDOM
+#ifdef CONFIG_HAVE___O_RANDOM
+#define CONFIG_HAVE_O_RANDOM 1
 #define O_RANDOM __O_RANDOM
-#elif defined(_O_RANDOM)
+#elif defined(CONFIG_HAVE__O_RANDOM)
+#define CONFIG_HAVE_O_RANDOM 1
 #define O_RANDOM _O_RANDOM
 #else
 #define O_RANDOM 0
 #endif
-#endif /* !O_RANDOM */
+#elif !defined(O_RANDOM)
+#define O_RANDOM O_RANDOM
+#endif /* !CONFIG_HAVE_O_RANDOM */
 
-#ifndef O_PATH
-#ifdef __O_PATH
+#ifndef CONFIG_HAVE_O_PATH
+#ifdef CONFIG_HAVE___O_PATH
+#define CONFIG_HAVE_O_PATH 1
 #define O_PATH __O_PATH
-#elif defined(_O_PATH)
+#elif defined(CONFIG_HAVE__O_PATH)
+#define CONFIG_HAVE_O_PATH 1
 #define O_PATH _O_PATH
 #else
 #define O_PATH 0
 #endif
-#endif /* !O_PATH */
+#elif !defined(O_PATH)
+#define O_PATH O_PATH
+#endif /* !CONFIG_HAVE_O_PATH */
 
-#ifndef O_NOATIME
-#ifdef __O_NOATIME
+#ifndef CONFIG_HAVE_O_NOATIME
+#ifdef CONFIG_HAVE___O_NOATIME
+#define CONFIG_HAVE_O_NOATIME 1
 #define O_NOATIME __O_NOATIME
-#elif defined(_O_NOATIME)
+#elif defined(CONFIG_HAVE__O_NOATIME)
+#define CONFIG_HAVE_O_NOATIME 1
 #define O_NOATIME _O_NOATIME
 #else
 #define O_NOATIME 0
 #endif
-#endif /* !O_NOATIME */
+#elif !defined(O_NOATIME)
+#define O_NOATIME O_NOATIME
+#endif /* !CONFIG_HAVE_O_NOATIME */
 
-#ifndef O_NOCTTY
-#ifdef __O_NOCTTY
+#ifndef CONFIG_HAVE_O_NOCTTY
+#ifdef CONFIG_HAVE___O_NOCTTY
+#define CONFIG_HAVE_O_NOCTTY 1
 #define O_NOCTTY __O_NOCTTY
-#elif defined(_O_NOCTTY)
+#elif defined(CONFIG_HAVE__O_NOCTTY)
+#define CONFIG_HAVE_O_NOCTTY 1
 #define O_NOCTTY _O_NOCTTY
 #else
 #define O_NOCTTY 0
 #endif
-#endif /* !O_NOCTTY */
+#elif !defined(O_NOCTTY)
+#define O_NOCTTY O_NOCTTY
+#endif /* !CONFIG_HAVE_O_NOCTTY */
 
 
-#ifndef O_TEXT
-#ifdef __O_TEXT
+#ifndef CONFIG_HAVE_O_TEXT
+#ifdef CONFIG_HAVE___O_TEXT
+#define CONFIG_HAVE_O_TEXT 1
 #define O_TEXT __O_TEXT
-#elif defined(_O_TEXT)
+#elif defined(CONFIG_HAVE__O_TEXT)
+#define CONFIG_HAVE_O_TEXT 1
 #define O_TEXT _O_TEXT
 #endif
-#endif /* !O_TEXT */
+#elif !defined(O_TEXT)
+#define O_TEXT O_TEXT
+#endif /* !CONFIG_HAVE_O_TEXT */
 
-#ifndef O_WTEXT
-#ifdef __O_WTEXT
+#ifndef CONFIG_HAVE_O_WTEXT
+#ifdef CONFIG_HAVE___O_WTEXT
+#define CONFIG_HAVE_O_WTEXT 1
 #define O_WTEXT __O_WTEXT
-#elif defined(_O_WTEXT)
+#elif defined(CONFIG_HAVE__O_WTEXT)
+#define CONFIG_HAVE_O_WTEXT 1
 #define O_WTEXT _O_WTEXT
 #endif
-#endif /* !O_WTEXT */
+#elif !defined(O_WTEXT)
+#define O_WTEXT O_WTEXT
+#endif /* !CONFIG_HAVE_O_WTEXT */
 
-#ifndef O_U16TEXT
-#ifdef __O_U16TEXT
+#ifndef CONFIG_HAVE_O_U16TEXT
+#ifdef CONFIG_HAVE___O_U16TEXT
+#define CONFIG_HAVE_O_U16TEXT 1
 #define O_U16TEXT __O_U16TEXT
-#elif defined(_O_U16TEXT)
+#elif defined(CONFIG_HAVE__O_U16TEXT)
+#define CONFIG_HAVE_O_U16TEXT 1
 #define O_U16TEXT _O_U16TEXT
 #endif
-#endif /* !O_U16TEXT */
+#elif !defined(O_U16TEXT)
+#define O_U16TEXT O_U16TEXT
+#endif /* !CONFIG_HAVE_O_U16TEXT */
 
-#ifndef O_U8TEXT
-#ifdef __O_U8TEXT
+#ifndef CONFIG_HAVE_O_U8TEXT
+#ifdef CONFIG_HAVE___O_U8TEXT
+#define CONFIG_HAVE_O_U8TEXT 1
 #define O_U8TEXT __O_U8TEXT
-#elif defined(_O_U8TEXT)
+#elif defined(CONFIG_HAVE__O_U8TEXT)
+#define CONFIG_HAVE_O_U8TEXT 1
 #define O_U8TEXT _O_U8TEXT
 #endif
-#endif /* !O_U8TEXT */
+#elif !defined(O_U8TEXT)
+#define O_U8TEXT O_U8TEXT
+#endif /* !CONFIG_HAVE_O_U8TEXT */
 
-#ifndef O_TEMPORARY
-#ifdef __O_TEMPORARY
+#ifndef CONFIG_HAVE_O_TEMPORARY
+#ifdef CONFIG_HAVE___O_TEMPORARY
+#define CONFIG_HAVE_O_TEMPORARY 1
 #define O_TEMPORARY __O_TEMPORARY
-#elif defined(_O_TEMPORARY)
+#elif defined(CONFIG_HAVE__O_TEMPORARY)
+#define CONFIG_HAVE_O_TEMPORARY 1
 #define O_TEMPORARY _O_TEMPORARY
 #endif
-#endif /* !O_TEMPORARY */
+#elif !defined(O_TEMPORARY)
+#define O_TEMPORARY O_TEMPORARY
+#endif /* !CONFIG_HAVE_O_TEMPORARY */
 
-#ifndef O_OBTAIN_DIR
-#ifdef __O_OBTAIN_DIR
+#ifndef CONFIG_HAVE_O_OBTAIN_DIR
+#ifdef CONFIG_HAVE___O_OBTAIN_DIR
+#define CONFIG_HAVE_O_OBTAIN_DIR 1
 #define O_OBTAIN_DIR __O_OBTAIN_DIR
-#elif defined(_O_OBTAIN_DIR)
+#elif defined(CONFIG_HAVE__O_OBTAIN_DIR)
+#define CONFIG_HAVE_O_OBTAIN_DIR 1
 #define O_OBTAIN_DIR _O_OBTAIN_DIR
 #endif
-#endif /* !O_OBTAIN_DIR */
+#elif !defined(O_OBTAIN_DIR)
+#define O_OBTAIN_DIR O_OBTAIN_DIR
+#endif /* !CONFIG_HAVE_O_OBTAIN_DIR */
 
-#ifndef O_CREAT
-#ifdef __O_CREAT
+#ifndef CONFIG_HAVE_O_CREAT
+#ifdef CONFIG_HAVE___O_CREAT
+#define CONFIG_HAVE_O_CREAT 1
 #define O_CREAT __O_CREAT
-#elif defined(_O_CREAT)
+#elif defined(CONFIG_HAVE__O_CREAT)
+#define CONFIG_HAVE_O_CREAT 1
 #define O_CREAT _O_CREAT
 #endif
-#endif /* !O_CREAT */
+#elif !defined(O_CREAT)
+#define O_CREAT O_CREAT
+#endif /* !CONFIG_HAVE_O_CREAT */
 
-#ifndef O_TRUNC
-#ifdef __O_TRUNC
+#ifndef CONFIG_HAVE_O_TRUNC
+#ifdef CONFIG_HAVE___O_TRUNC
+#define CONFIG_HAVE_O_TRUNC 1
 #define O_TRUNC __O_TRUNC
-#elif defined(_O_TRUNC)
+#elif defined(CONFIG_HAVE__O_TRUNC)
+#define CONFIG_HAVE_O_TRUNC 1
 #define O_TRUNC _O_TRUNC
 #endif
-#endif /* !O_TRUNC */
+#elif !defined(O_TRUNC)
+#define O_TRUNC O_TRUNC
+#endif /* !CONFIG_HAVE_O_TRUNC */
 
-#ifndef O_RDONLY
-#ifdef __O_RDONLY
+#ifndef CONFIG_HAVE_O_RDONLY
+#ifdef CONFIG_HAVE___O_RDONLY
+#define CONFIG_HAVE_O_RDONLY 1
 #define O_RDONLY __O_RDONLY
-#elif defined(_O_RDONLY)
+#elif defined(CONFIG_HAVE__O_RDONLY)
+#define CONFIG_HAVE_O_RDONLY 1
 #define O_RDONLY _O_RDONLY
 #endif
-#endif /* !O_RDONLY */
+#elif !defined(O_RDONLY)
+#define O_RDONLY O_RDONLY
+#endif /* !CONFIG_HAVE_O_RDONLY */
 
-#ifndef O_WRONLY
-#ifdef __O_WRONLY
+#ifndef CONFIG_HAVE_O_WRONLY
+#ifdef CONFIG_HAVE___O_WRONLY
+#define CONFIG_HAVE_O_WRONLY 1
 #define O_WRONLY __O_WRONLY
-#elif defined(_O_WRONLY)
+#elif defined(CONFIG_HAVE__O_WRONLY)
+#define CONFIG_HAVE_O_WRONLY 1
 #define O_WRONLY _O_WRONLY
 #endif
-#endif /* !O_WRONLY */
+#elif !defined(O_WRONLY)
+#define O_WRONLY O_WRONLY
+#endif /* !CONFIG_HAVE_O_WRONLY */
 
-#ifndef O_RDWR
-#ifdef __O_RDWR
+#ifndef CONFIG_HAVE_O_RDWR
+#ifdef CONFIG_HAVE___O_RDWR
+#define CONFIG_HAVE_O_RDWR 1
 #define O_RDWR __O_RDWR
-#elif defined(_O_RDWR)
+#elif defined(CONFIG_HAVE__O_RDWR)
+#define CONFIG_HAVE_O_RDWR 1
 #define O_RDWR _O_RDWR
 #endif
-#endif /* !O_RDWR */
+#elif !defined(O_RDWR)
+#define O_RDWR O_RDWR
+#endif /* !CONFIG_HAVE_O_RDWR */
 
-#ifndef O_ACCMODE
-#ifdef __O_ACCMODE
+#ifndef CONFIG_HAVE_O_ACCMODE
+#ifdef CONFIG_HAVE___O_ACCMODE
+#define CONFIG_HAVE_O_ACCMODE 1
 #define O_ACCMODE __O_ACCMODE
-#elif defined(_O_ACCMODE)
+#elif defined(CONFIG_HAVE__O_ACCMODE)
+#define CONFIG_HAVE_O_ACCMODE 1
 #define O_ACCMODE _O_ACCMODE
 #elif 0 /* The combination might overlap with something else... */
-#define O_ACCMODE (O_RDONLY|O_WRONLY|O_RDWR)
+#define CONFIG_HAVE_O_ACCMODE 1
+#define O_ACCMODE (O_RDONLY | O_WRONLY | O_RDWR)
 #endif
-#endif /* !O_ACCMODE */
+#elif !defined(O_ACCMODE)
+#define O_ACCMODE O_ACCMODE
+#endif /* !CONFIG_HAVE_O_ACCMODE */
 
-#ifndef O_CLOEXEC
-#ifdef __O_NOINHERIT
+#ifndef CONFIG_HAVE_O_CLOEXEC
+#ifdef CONFIG_HAVE___O_NOINHERIT
+#define CONFIG_HAVE_O_CLOEXEC 1
 #define O_CLOEXEC __O_NOINHERIT
-#elif defined(_O_NOINHERIT)
+#elif defined(CONFIG_HAVE__O_NOINHERIT)
+#define CONFIG_HAVE_O_CLOEXEC 1
 #define O_CLOEXEC _O_NOINHERIT
-#elif defined(O_NOINHERIT)
+#elif defined(CONFIG_HAVE_O_NOINHERIT)
+#define CONFIG_HAVE_O_CLOEXEC 1
 #define O_CLOEXEC O_NOINHERIT
-#elif defined(__O_CLOEXEC)
+#elif defined(CONFIG_HAVE___O_CLOEXEC)
+#define CONFIG_HAVE_O_CLOEXEC 1
 #define O_CLOEXEC __O_CLOEXEC
-#elif defined(_O_CLOEXEC)
+#elif defined(CONFIG_HAVE__O_CLOEXEC)
+#define CONFIG_HAVE_O_CLOEXEC 1
 #define O_CLOEXEC _O_CLOEXEC
 #endif
-#endif /* !O_CLOEXEC */
+#elif !defined(O_CLOEXEC)
+#define O_CLOEXEC O_CLOEXEC
+#endif /* !CONFIG_HAVE_O_CLOEXEC */
 
-#ifndef O_EXCL
-#ifdef __O_EXCL
+#ifndef CONFIG_HAVE_O_EXCL
+#ifdef CONFIG_HAVE___O_EXCL
+#define CONFIG_HAVE_O_EXCL 1
 #define O_EXCL __O_EXCL
-#elif defined(_O_EXCL)
+#elif defined(CONFIG_HAVE__O_EXCL)
+#define CONFIG_HAVE_O_EXCL 1
 #define O_EXCL _O_EXCL
 #endif
-#endif /* !O_EXCL */
+#elif !defined(O_EXCL)
+#define O_EXCL O_EXCL
+#endif /* !CONFIG_HAVE_O_EXCL */
 
-#ifndef O_APPEND
-#ifdef __O_APPEND
+#ifndef CONFIG_HAVE_O_APPEND
+#ifdef CONFIG_HAVE___O_APPEND
+#define CONFIG_HAVE_O_APPEND 1
 #define O_APPEND __O_APPEND
-#elif defined(_O_APPEND)
+#elif defined(CONFIG_HAVE__O_APPEND)
+#define CONFIG_HAVE_O_APPEND 1
 #define O_APPEND _O_APPEND
 #endif
-#endif /* !O_APPEND */
+#elif !defined(O_APPEND)
+#define O_APPEND O_APPEND
+#endif /* !CONFIG_HAVE_O_APPEND */
 
-#ifndef O_NONBLOCK
-#ifdef __O_NONBLOCK
+#ifndef CONFIG_HAVE_O_NONBLOCK
+#ifdef CONFIG_HAVE___O_NONBLOCK
+#define CONFIG_HAVE_O_NONBLOCK 1
 #define O_NONBLOCK __O_NONBLOCK
-#elif defined(_O_NONBLOCK)
+#elif defined(CONFIG_HAVE__O_NONBLOCK)
+#define CONFIG_HAVE_O_NONBLOCK 1
 #define O_NONBLOCK _O_NONBLOCK
-#elif defined(__O_NDELAY)
+#elif defined(CONFIG_HAVE___O_NDELAY)
+#define CONFIG_HAVE_O_NONBLOCK 1
 #define O_NONBLOCK __O_NDELAY
-#elif defined(_O_NDELAY)
+#elif defined(CONFIG_HAVE__O_NDELAY)
+#define CONFIG_HAVE_O_NONBLOCK 1
 #define O_NONBLOCK _O_NDELAY
-#elif defined(O_NDELAY)
+#elif defined(CONFIG_HAVE_O_NDELAY)
+#define CONFIG_HAVE_O_NONBLOCK 1
 #define O_NONBLOCK O_NDELAY
 #endif
-#endif /* !O_NONBLOCK */
+#elif !defined(O_NONBLOCK)
+#define O_NONBLOCK O_NONBLOCK
+#endif /* !CONFIG_HAVE_O_NONBLOCK */
 
-#ifndef O_RSYNC
-#ifdef __O_RSYNC
+#ifndef CONFIG_HAVE_O_RSYNC
+#ifdef CONFIG_HAVE___O_RSYNC
+#define CONFIG_HAVE_O_RSYNC 1
 #define O_RSYNC __O_RSYNC
-#elif defined(_O_RSYNC)
+#elif defined(CONFIG_HAVE__O_RSYNC)
+#define CONFIG_HAVE_O_RSYNC 1
 #define O_RSYNC _O_RSYNC
 #endif
-#endif /* !O_RSYNC */
+#elif !defined(O_RSYNC)
+#define O_RSYNC O_RSYNC
+#endif /* !CONFIG_HAVE_O_RSYNC */
 
-#ifndef O_SYNC
-#ifdef __O_SYNC
+#ifndef CONFIG_HAVE_O_SYNC
+#ifdef CONFIG_HAVE___O_SYNC
+#define CONFIG_HAVE_O_SYNC 1
 #define O_SYNC __O_SYNC
-#elif defined(_O_SYNC)
+#elif defined(CONFIG_HAVE__O_SYNC)
+#define CONFIG_HAVE_O_SYNC 1
 #define O_SYNC _O_SYNC
 #endif
-#endif /* !O_SYNC */
+#elif !defined(O_SYNC)
+#define O_SYNC O_SYNC
+#endif /* !CONFIG_HAVE_O_SYNC */
 
-#ifndef O_DSYNC
-#ifdef __O_DSYNC
+#ifndef CONFIG_HAVE_O_DSYNC
+#ifdef CONFIG_HAVE___O_DSYNC
+#define CONFIG_HAVE_O_DSYNC 1
 #define O_DSYNC __O_DSYNC
-#elif defined(_O_DSYNC)
+#elif defined(CONFIG_HAVE__O_DSYNC)
+#define CONFIG_HAVE_O_DSYNC 1
 #define O_DSYNC _O_DSYNC
 #endif
-#endif /* !O_DSYNC */
+#elif !defined(O_DSYNC)
+#define O_DSYNC O_DSYNC
+#endif /* !CONFIG_HAVE_O_DSYNC */
 
-#ifndef O_ASYNC
-#ifdef __O_ASYNC
+#ifndef CONFIG_HAVE_O_ASYNC
+#ifdef CONFIG_HAVE___O_ASYNC
+#define CONFIG_HAVE_O_ASYNC 1
 #define O_ASYNC __O_ASYNC
-#elif defined(_O_ASYNC)
+#elif defined(CONFIG_HAVE__O_ASYNC)
+#define CONFIG_HAVE_O_ASYNC 1
 #define O_ASYNC _O_ASYNC
 #endif
-#endif /* !O_ASYNC */
+#elif !defined(O_ASYNC)
+#define O_ASYNC O_ASYNC
+#endif /* !CONFIG_HAVE_O_ASYNC */
 
-#ifndef O_DIRECT
-#ifdef __O_DIRECT
+#ifndef CONFIG_HAVE_O_DIRECT
+#ifdef CONFIG_HAVE___O_DIRECT
+#define CONFIG_HAVE_O_DIRECT 1
 #define O_DIRECT __O_DIRECT
-#elif defined(_O_DIRECT)
+#elif defined(CONFIG_HAVE__O_DIRECT)
+#define CONFIG_HAVE_O_DIRECT 1
 #define O_DIRECT _O_DIRECT
 #endif
 #endif /* O_DIRECT */
 
-#ifndef O_LARGEFILE
-#ifdef __O_LARGEFILE
+#ifndef CONFIG_HAVE_O_LARGEFILE
+#ifdef CONFIG_HAVE___O_LARGEFILE
+#define CONFIG_HAVE_O_LARGEFILE 1
 #define O_LARGEFILE __O_LARGEFILE
-#elif defined(_O_LARGEFILE)
+#elif defined(CONFIG_HAVE__O_LARGEFILE)
+#define CONFIG_HAVE_O_LARGEFILE 1
 #define O_LARGEFILE _O_LARGEFILE
 #endif
-#endif /* !O_LARGEFILE */
+#elif !defined(O_LARGEFILE)
+#define O_LARGEFILE O_LARGEFILE
+#endif /* !CONFIG_HAVE_O_LARGEFILE */
 
-#ifndef O_DIRECTORY
-#ifdef __O_DIRECTORY
+#ifndef CONFIG_HAVE_O_DIRECTORY
+#ifdef CONFIG_HAVE___O_DIRECTORY
+#define CONFIG_HAVE_O_DIRECTORY 1
 #define O_DIRECTORY __O_DIRECTORY
-#elif defined(_O_DIRECTORY)
+#elif defined(CONFIG_HAVE__O_DIRECTORY)
+#define CONFIG_HAVE_O_DIRECTORY 1
 #define O_DIRECTORY _O_DIRECTORY
 #endif
-#endif /* !O_DIRECTORY */
+#elif !defined(O_DIRECTORY)
+#define O_DIRECTORY O_DIRECTORY
+#endif /* !CONFIG_HAVE_O_DIRECTORY */
 
-#ifndef O_NOFOLLOW
-#ifdef __O_NOFOLLOW
+#ifndef CONFIG_HAVE_O_NOFOLLOW
+#ifdef CONFIG_HAVE___O_NOFOLLOW
+#define CONFIG_HAVE_O_NOFOLLOW 1
 #define O_NOFOLLOW __O_NOFOLLOW
-#elif defined(_O_NOFOLLOW)
+#elif defined(CONFIG_HAVE__O_NOFOLLOW)
+#define CONFIG_HAVE_O_NOFOLLOW 1
 #define O_NOFOLLOW _O_NOFOLLOW
 #endif
-#endif /* !O_NOFOLLOW */
+#elif !defined(O_NOFOLLOW)
+#define O_NOFOLLOW O_NOFOLLOW
+#endif /* !CONFIG_HAVE_O_NOFOLLOW */
 
-#ifndef O_TMPFILE
-#ifdef __O_TMPFILE
+#ifndef CONFIG_HAVE_O_TMPFILE
+#ifdef CONFIG_HAVE___O_TMPFILE
+#define CONFIG_HAVE_O_TMPFILE 1
 #define O_TMPFILE __O_TMPFILE
-#elif defined(_O_TMPFILE)
+#elif defined(CONFIG_HAVE__O_TMPFILE)
+#define CONFIG_HAVE_O_TMPFILE 1
 #define O_TMPFILE _O_TMPFILE
 #endif
-#endif /* !O_TMPFILE */
+#elif !defined(O_TMPFILE)
+#define O_TMPFILE O_TMPFILE
+#endif /* !CONFIG_HAVE_O_TMPFILE */
 
-#ifndef O_CLOFORK
-#ifdef __O_CLOFORK
+#ifndef CONFIG_HAVE_O_CLOFORK
+#ifdef CONFIG_HAVE___O_CLOFORK
+#define CONFIG_HAVE_O_CLOFORK 1
 #define O_CLOFORK __O_CLOFORK
-#elif defined(_O_CLOFORK)
+#elif defined(CONFIG_HAVE__O_CLOFORK)
+#define CONFIG_HAVE_O_CLOFORK 1
 #define O_CLOFORK _O_CLOFORK
 #endif
-#endif /* !O_CLOFORK */
+#elif !defined(O_CLOFORK)
+#define O_CLOFORK O_CLOFORK
+#endif /* !CONFIG_HAVE_O_CLOFORK */
 
-#ifndef O_SYMLINK
-#ifdef __O_SYMLINK
+#ifndef CONFIG_HAVE_O_SYMLINK
+#ifdef CONFIG_HAVE___O_SYMLINK
+#define CONFIG_HAVE_O_SYMLINK 1
 #define O_SYMLINK __O_SYMLINK
-#elif defined(_O_SYMLINK)
+#elif defined(CONFIG_HAVE__O_SYMLINK)
+#define CONFIG_HAVE_O_SYMLINK 1
 #define O_SYMLINK _O_SYMLINK
 #endif
-#endif /* !O_SYMLINK */
+#elif !defined(O_SYMLINK)
+#define O_SYMLINK O_SYMLINK
+#endif /* !CONFIG_HAVE_O_SYMLINK */
 
-#ifndef O_DOSPATH
-#ifdef __O_DOSPATH
+#ifndef CONFIG_HAVE_O_DOSPATH
+#ifdef CONFIG_HAVE___O_DOSPATH
+#define CONFIG_HAVE_O_DOSPATH 1
 #define O_DOSPATH __O_DOSPATH
-#elif defined(_O_DOSPATH)
+#elif defined(CONFIG_HAVE__O_DOSPATH)
+#define CONFIG_HAVE_O_DOSPATH 1
 #define O_DOSPATH _O_DOSPATH
-#elif defined(_MSC_VER)
+#elif defined(CONFIG_HAVE__MSC_VER)
 #define O_DOSPATH 0
 #endif
-#endif /* !O_DOSPATH */
+#elif !defined(O_DOSPATH)
+#define O_DOSPATH O_DOSPATH
+#endif /* !CONFIG_HAVE_O_DOSPATH */
 
-#ifndef O_SHLOCK
-#ifdef __O_SHLOCK
+#ifndef CONFIG_HAVE_O_SHLOCK
+#ifdef CONFIG_HAVE___O_SHLOCK
+#define CONFIG_HAVE_O_SHLOCK 1
 #define O_SHLOCK __O_SHLOCK
-#elif defined(_O_SHLOCK)
+#elif defined(CONFIG_HAVE__O_SHLOCK)
+#define CONFIG_HAVE_O_SHLOCK 1
 #define O_SHLOCK _O_SHLOCK
 #endif
-#endif /* !O_SHLOCK */
+#elif !defined(O_SHLOCK)
+#define O_SHLOCK O_SHLOCK
+#endif /* !CONFIG_HAVE_O_SHLOCK */
 
-#ifndef O_EXLOCK
-#ifdef __O_EXLOCK
+#ifndef CONFIG_HAVE_O_EXLOCK
+#ifdef CONFIG_HAVE___O_EXLOCK
+#define CONFIG_HAVE_O_EXLOCK 1
 #define O_EXLOCK __O_EXLOCK
-#elif defined(_O_EXLOCK)
+#elif defined(CONFIG_HAVE__O_EXLOCK)
+#define CONFIG_HAVE_O_EXLOCK 1
 #define O_EXLOCK _O_EXLOCK
 #endif
-#endif /* !O_EXLOCK */
+#elif !defined(O_EXLOCK)
+#define O_EXLOCK O_EXLOCK
+#endif /* !CONFIG_HAVE_O_EXLOCK */
 
-#ifndef O_XATTR
-#ifdef __O_XATTR
+#ifndef CONFIG_HAVE_O_XATTR
+#ifdef CONFIG_HAVE___O_XATTR
+#define CONFIG_HAVE_O_XATTR 1
 #define O_XATTR __O_XATTR
-#elif defined(_O_XATTR)
+#elif defined(CONFIG_HAVE__O_XATTR)
+#define CONFIG_HAVE_O_XATTR 1
 #define O_XATTR _O_XATTR
 #endif
-#endif /* !O_XATTR */
+#elif !defined(O_XATTR)
+#define O_XATTR O_XATTR
+#endif /* !CONFIG_HAVE_O_XATTR */
 
-#ifndef O_EXEC
-#ifdef __O_EXEC
+#ifndef CONFIG_HAVE_O_EXEC
+#ifdef CONFIG_HAVE___O_EXEC
+#define CONFIG_HAVE_O_EXEC 1
 #define O_EXEC __O_EXEC
-#elif defined(_O_EXEC)
+#elif defined(CONFIG_HAVE__O_EXEC)
+#define CONFIG_HAVE_O_EXEC 1
 #define O_EXEC _O_EXEC
 #endif
-#endif /* !O_EXEC */
+#elif !defined(O_EXEC)
+#define O_EXEC O_EXEC
+#endif /* !CONFIG_HAVE_O_EXEC */
 
-#ifndef O_SEARCH
-#ifdef __O_SEARCH
+#ifndef CONFIG_HAVE_O_SEARCH
+#ifdef CONFIG_HAVE___O_SEARCH
+#define CONFIG_HAVE_O_SEARCH 1
 #define O_SEARCH __O_SEARCH
-#elif defined(_O_SEARCH)
+#elif defined(CONFIG_HAVE__O_SEARCH)
+#define CONFIG_HAVE_O_SEARCH 1
 #define O_SEARCH _O_SEARCH
 #endif
-#endif /* !O_SEARCH */
+#elif !defined(O_SEARCH)
+#define O_SEARCH O_SEARCH
+#endif /* !CONFIG_HAVE_O_SEARCH */
 
-#ifndef O_TTY_INIT
-#ifdef __O_TTY_INIT
+#ifndef CONFIG_HAVE_O_TTY_INIT
+#ifdef CONFIG_HAVE___O_TTY_INIT
+#define CONFIG_HAVE_O_TTY_INIT 1
 #define O_TTY_INIT __O_TTY_INIT
-#elif defined(_O_TTY_INIT)
+#elif defined(CONFIG_HAVE__O_TTY_INIT)
+#define CONFIG_HAVE_O_TTY_INIT 1
 #define O_TTY_INIT _O_TTY_INIT
 #endif
-#endif /* !O_TTY_INIT */
+#elif !defined(O_TTY_INIT)
+#define O_TTY_INIT O_TTY_INIT
+#endif /* !CONFIG_HAVE_O_TTY_INIT */
 
-#ifndef O_NOLINKS
-#ifdef __O_NOLINKS
+#ifndef CONFIG_HAVE_O_NOLINKS
+#ifdef CONFIG_HAVE___O_NOLINKS
+#define CONFIG_HAVE_O_NOLINKS 1
 #define O_NOLINKS __O_NOLINKS
-#elif defined(_O_NOLINKS)
+#elif defined(CONFIG_HAVE__O_NOLINKS)
+#define CONFIG_HAVE_O_NOLINKS 1
 #define O_NOLINKS _O_NOLINKS
 #endif
-#endif /* !O_NOLINKS */
+#elif !defined(O_NOLINKS)
+#define O_NOLINKS O_NOLINKS
+#endif /* !CONFIG_HAVE_O_NOLINKS */
 
 #if defined(CONFIG_HAVE_open64) && !defined(CONFIG_HAVE_open)
 #define CONFIG_HAVE_open 1
@@ -3780,6 +5128,31 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_toupper 1
 #define toupper(ch) ((ch) >= 'a' && (ch) <= 'z' ? ((ch) - ('a' - 'A')) : (ch))
 #endif /* !CONFIG_HAVE_toupper */
+
+#ifndef CONFIG_HAVE_isupper
+#define CONFIG_HAVE_isupper 1
+#define isupper(ch) ((ch) >= 'A' && (ch) <= 'Z')
+#endif /* !CONFIG_HAVE_isupper */
+
+#ifndef CONFIG_HAVE_islower
+#define CONFIG_HAVE_islower 1
+#define islower(ch) ((ch) >= 'a' && (ch) <= 'z')
+#endif /* !CONFIG_HAVE_islower */
+
+#ifndef CONFIG_HAVE_isalpha
+#define CONFIG_HAVE_isalpha 1
+#define isalpha(ch) (islower(ch) || isupper(ch))
+#endif /* !CONFIG_HAVE_isalpha */
+
+#ifndef CONFIG_HAVE_isdigit
+#define CONFIG_HAVE_isdigit 1
+#define isdigit(ch) ((ch) >= '0' && (ch) <= '9')
+#endif /* !CONFIG_HAVE_isdigit */
+
+#ifndef CONFIG_HAVE_isalnum
+#define CONFIG_HAVE_isalnum 1
+#define isalnum(ch) (isalpha(ch) || isdigit(ch))
+#endif /* !CONFIG_HAVE_isalnum */
 
 
 
@@ -4107,7 +5480,18 @@ local errno_names = {
 	"ELOOP",
 	"EPERM",
 	"EACCES",
-	"EROFS"
+	"EEXIST",
+	"EROFS",
+	"ENXIO",
+	"EISDIR",
+	"ETXTBSY",
+	"ENOSYS",
+	"ENOTSUP",
+	"EOPNOTSUPP",
+	"EBADF",
+	"EINVAL",
+	"EFBIG",
+	"ENOMEM",
 };
 
 for (local x: errno_names) {
@@ -4221,11 +5605,66 @@ for (local x: [1:n+1]) {
 #else /* EACCES */
 #define DeePrivateSystem_IF_HAVE_EACCES(tt, ff) ff
 #endif /* !EACCES */
+#ifdef EEXIST
+#define DeePrivateSystem_IF_HAVE_EEXIST(tt, ff) tt
+#else /* EEXIST */
+#define DeePrivateSystem_IF_HAVE_EEXIST(tt, ff) ff
+#endif /* !EEXIST */
 #ifdef EROFS
 #define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) tt
 #else /* EROFS */
 #define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) ff
 #endif /* !EROFS */
+#ifdef ENXIO
+#define DeePrivateSystem_IF_HAVE_ENXIO(tt, ff) tt
+#else /* ENXIO */
+#define DeePrivateSystem_IF_HAVE_ENXIO(tt, ff) ff
+#endif /* !ENXIO */
+#ifdef EISDIR
+#define DeePrivateSystem_IF_HAVE_EISDIR(tt, ff) tt
+#else /* EISDIR */
+#define DeePrivateSystem_IF_HAVE_EISDIR(tt, ff) ff
+#endif /* !EISDIR */
+#ifdef ETXTBSY
+#define DeePrivateSystem_IF_HAVE_ETXTBSY(tt, ff) tt
+#else /* ETXTBSY */
+#define DeePrivateSystem_IF_HAVE_ETXTBSY(tt, ff) ff
+#endif /* !ETXTBSY */
+#ifdef ENOSYS
+#define DeePrivateSystem_IF_HAVE_ENOSYS(tt, ff) tt
+#else /* ENOSYS */
+#define DeePrivateSystem_IF_HAVE_ENOSYS(tt, ff) ff
+#endif /* !ENOSYS */
+#ifdef ENOTSUP
+#define DeePrivateSystem_IF_HAVE_ENOTSUP(tt, ff) tt
+#else /* ENOTSUP */
+#define DeePrivateSystem_IF_HAVE_ENOTSUP(tt, ff) ff
+#endif /* !ENOTSUP */
+#ifdef EOPNOTSUPP
+#define DeePrivateSystem_IF_HAVE_EOPNOTSUPP(tt, ff) tt
+#else /* EOPNOTSUPP */
+#define DeePrivateSystem_IF_HAVE_EOPNOTSUPP(tt, ff) ff
+#endif /* !EOPNOTSUPP */
+#ifdef EBADF
+#define DeePrivateSystem_IF_HAVE_EBADF(tt, ff) tt
+#else /* EBADF */
+#define DeePrivateSystem_IF_HAVE_EBADF(tt, ff) ff
+#endif /* !EBADF */
+#ifdef EINVAL
+#define DeePrivateSystem_IF_HAVE_EINVAL(tt, ff) tt
+#else /* EINVAL */
+#define DeePrivateSystem_IF_HAVE_EINVAL(tt, ff) ff
+#endif /* !EINVAL */
+#ifdef EFBIG
+#define DeePrivateSystem_IF_HAVE_EFBIG(tt, ff) tt
+#else /* EFBIG */
+#define DeePrivateSystem_IF_HAVE_EFBIG(tt, ff) ff
+#endif /* !EFBIG */
+#ifdef ENOMEM
+#define DeePrivateSystem_IF_HAVE_ENOMEM(tt, ff) tt
+#else /* ENOMEM */
+#define DeePrivateSystem_IF_HAVE_ENOMEM(tt, ff) ff
+#endif /* !ENOMEM */
 #define DeePrivateSystem_IF_E1(errno, e1, ...) \
 	do {                                       \
 		if ((errno) == e1) {                   \

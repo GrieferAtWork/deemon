@@ -743,10 +743,12 @@ DFUNDEF WUNUSED DREF DeeObject *
 #define DeeInt_AsIntptr(self, result)  DeeInt_AsS(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(intptr_t *, result))
 #define DeeInt_AsUIntptr(self, result) DeeInt_AsU(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(uintptr_t *, result))
 
-#define DeeInt_TryAsSSize(self, val)   DeeInt_TryAsS(__SIZEOF_SIZE_T__, self, val)
-#define DeeInt_TryAsSize(self, val)    DeeInt_TryAsU(__SIZEOF_SIZE_T__, self, val)
-#define DeeInt_TryAsIntptr(self, val)  DeeInt_TryAsS(__SIZEOF_POINTER__, self, val)
-#define DeeInt_TryAsUIntptr(self, val) DeeInt_TryAsU(__SIZEOF_POINTER__, self, val)
+#define DeeInt_TryAsSSize(self, val)   DeeInt_TryAsS(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(Dee_ssize_t *, val))
+#define DeeInt_TryAsSize(self, val)    DeeInt_TryAsU(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(size_t *, val))
+#define DeeInt_TryAsInt(self, val)     DeeInt_TryAsS(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(int *, val))
+#define DeeInt_TryAsUInt(self, val)    DeeInt_TryAsS(__SIZEOF_INT__, self, DEE_REQUIRES_TYPE(unsigned int *, val))
+#define DeeInt_TryAsIntptr(self, val)  DeeInt_TryAsS(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(intptr_t *, val))
+#define DeeInt_TryAsUIntptr(self, val) DeeInt_TryAsU(__SIZEOF_POINTER__, self, DEE_REQUIRES_TYPE(uintptr_t *, val))
 
 
 
