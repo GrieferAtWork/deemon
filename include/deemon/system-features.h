@@ -5489,6 +5489,7 @@ local errno_names = {
 	"EINVAL",
 	"EFBIG",
 	"ENOMEM",
+	"ENOTTY",
 };
 
 for (local x: errno_names) {
@@ -5662,6 +5663,11 @@ for (local x: [1:n+1]) {
 #else /* ENOMEM */
 #define DeePrivateSystem_IF_HAVE_ENOMEM(tt, ff) ff
 #endif /* !ENOMEM */
+#ifdef ENOTTY
+#define DeePrivateSystem_IF_HAVE_ENOTTY(tt, ff) tt
+#else /* ENOTTY */
+#define DeePrivateSystem_IF_HAVE_ENOTTY(tt, ff) ff
+#endif /* !ENOTTY */
 #define DeePrivateSystem_IF_E1(errno, e1, ...) \
 	do {                                       \
 		if ((errno) == e1) {                   \

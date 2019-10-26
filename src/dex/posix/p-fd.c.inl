@@ -64,6 +64,16 @@ print "/" "**" "/";
 //[[[end]]]
 
 
+/* Figure out how to implement `isatty()' */
+#undef posix_isatty_USE_ISATTY
+#undef posix_isatty_USE_STUB
+#ifdef CONFIG_HAVE_isatty
+#define posix_isatty_USE_ISATTY 1
+#else /* CONFIG_HAVE_isatty2 */
+#define posix_isatty_USE_STUB 1
+#endif /* !CONFIG_HAVE_isatty2 */
+
+
 /* Figure out how to implement `umask()' */
 #undef posix_umask_USE_UMASK
 #undef posix_umask_USE_STUB
@@ -155,35 +165,35 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_isatty_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_isatty
+#ifdef posix_isatty_USE_ISATTY
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 	result = isatty(fd);
-	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
 		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
-		HANDLE_ENOSYS(error, err, "isatty")
-		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		if (error != EINVAL
-#ifdef ENOTTY
-		    && error != ENOTTY
-#endif /* ENOTTY */
-		    ) {
-			DeeError_SysThrowf(&DeeError_SystemError, error,
-			                   "Failed to check isatty for %d", fd);
-		}
+		DBG_ALIGNMENT_ENABLE();
+		DeeSystem_IF_E2(error, EINVAL, ENOTTY, return_false);
+		HANDLE_EINTR(error, again, err);
+		HANDLE_ENOSYS(error, err, "isatty");
+		HANDLE_EBADF(error, err, "Invalid handle %d", fd);
+		DeeError_SysThrowf(&DeeError_SystemError, error,
+		                   "Failed to check isatty for %d",
+		                   fd);
 		goto err;
 	}
-	return_bool_(result != 0);
+	DBG_ALIGNMENT_ENABLE();
+	return_true;
 err:
-#else /* CONFIG_HAVE_isatty */
+	return NULL;
+#endif /* posix_isatty_USE_ISATTY */
+
+#ifdef posix_isatty_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	posix_err_unsupported("isatty");
-#endif /* !CONFIG_HAVE_isatty */
 	return NULL;
+#endif /* !posix_isatty_USE_STUB */
 }
 
 
