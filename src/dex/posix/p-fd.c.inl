@@ -25,6 +25,44 @@
 
 DECL_BEGIN
 
+/*[[[deemon
+import * from deemon;
+import * from _dexutils;
+MODULE_NAME = "posix";
+local orig_stdout = File.stdout;
+
+include("p-fd-constants.def");
+
+local allDecls = [];
+
+function fgii(name, doc = none) {
+	allDecls.append(name);
+	gii(name, doc: doc);
+}
+
+fgii("STDIN_FILENO");
+fgii("STDOUT_FILENO");
+fgii("STDERR_FILENO");
+
+
+File.stdout = orig_stdout;
+print "#define POSIX_FD_DEFS \\";
+for (local x: allDecls) {
+	print "\tPOSIX_",;
+	print x,;
+	print "_DEF \\";
+}
+print "/" "**" "/";
+
+]]]*/
+#include "p-fd-constants.def"
+#define POSIX_FD_DEFS \
+	POSIX_STDIN_FILENO_DEF \
+	POSIX_STDOUT_FILENO_DEF \
+	POSIX_STDERR_FILENO_DEF \
+/**/
+//[[[end]]]
+
 
 
 

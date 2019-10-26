@@ -383,6 +383,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking #atexit callbacks (s.a. #exit)"))
 	D(POSIX_ABORT_DEF_DOC("Same as #_Exit when passing #EXIT_FAILURE"))
 
+	/* *_FILENO values */
+	D(POSIX_FD_DEFS)
+
 	/* O_* and AT_* values */
 	D(POSIX_OPEN_DEFS)
 
