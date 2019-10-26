@@ -32,6 +32,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system.h> /* DeeSystem_Unlink() */
 #include <deemon/system-features.h> /* memrchr(), memmem() */
 
 #include <hybrid/byteorder.h>
@@ -39,10 +40,6 @@
 #include <hybrid/unaligned.h>
 
 #include <string.h>
-
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h> /* TODO: This, as well as the unlink() below need some better configure checks */
-#endif /* CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
 
@@ -739,21 +736,12 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 		Dee_Decref(output_fp);
 		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
-
 		if (result) {
 			/* Delete the DEC file, considering that we've failed to do write to it. */
-#ifdef CONFIG_HOST_WINDOWS
-			LPWSTR wname = (LPWSTR)DeeString_AsWide(dec_filename);
-			if likely(wname)
-				DeleteFileW(wname);
-			else {
-				DeleteFileA(DeeString_STR(dec_filename));
+			if (DeeSystem_Unlink(dec_filename, false) < 0) {
 				if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
 					goto err_filename;
 			}
-#else /* CONFIG_HOST_WINDOWS */
-			unlink(DeeString_STR(dec_filename));
-#endif /* !CONFIG_HOST_WINDOWS */
 		}
 		ASSERT_OBJECT_TYPE_EXACT(dec_filename, &DeeString_Type);
 	} else {

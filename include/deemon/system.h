@@ -63,6 +63,25 @@ DeeSystem_PrintPwd(struct Dee_unicode_printer *__restrict printer,
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename);
 
+/* Return the current UTC realtime in microseconds since 01.01.1970T00:00:00+00:00 */
+DFUNDEF WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void);
+
+/* Return the last modified timestamp of `filename'
+ * > uses the same format as `DeeSystem_GetWalltime()' */
+DFUNDEF WUNUSED uint64_t DCALL
+DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename);
+
+/* Try to unlink() the given `filename'
+ * WARNING: When `filename' is an empty directory, it is system-specific if
+ *          that directory will be removed or not (basically, this function
+ *          may be implemented using the STD-C `remove()' function)
+ * NOTE:    Even upon error, there exists a chance that the file was deleted.
+ * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error' is `false')
+ * @return: 0 : The unlink() operation was successful
+ * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error' is `false') */
+DFUNDEF WUNUSED int DCALL
+DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
+                 bool throw_exception_on_error);
 
 #ifdef CONFIG_HOST_WINDOWS
 typedef __ULONG32_TYPE__ DeeNT_DWORD;

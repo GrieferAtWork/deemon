@@ -473,6 +473,9 @@
     <ClCompile Include="..\src\deemon\system\file.c">
       <Filter>src\deemon\system</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\deemon\system\system.c">
+      <Filter>src\deemon\system</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\deemon\runtime\gc.c">
       <Filter>src\deemon\runtime</Filter>
     </ClCompile>

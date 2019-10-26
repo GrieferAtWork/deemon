@@ -724,6 +724,472 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 }
 
 
+
+
+
+
+#ifdef CONFIG_BIG_ENDIAN
+#define FILETIME_GET64(x) (((x) << 32)|((x) >> 32))
+#else /* CONFIG_BIG_ENDIAN */
+#define FILETIME_GET64(x) (x)
+#endif /* !CONFIG_BIG_ENDIAN */
+
+/* A couple of helper macros taken from the libtime DEX. */
+#define time_yer2day(x)     (((146097 * (x)) / 400) /*-1*/)
+#define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
+#define MILLISECONDS_PER_SECOND      UINT64_C(1000)
+#define SECONDS_PER_MINUTE           UINT64_C(60)
+#define MINUTES_PER_HOUR             UINT64_C(60)
+#define HOURS_PER_DAY                UINT64_C(24)
+#define MICROSECONDS_PER_SECOND (MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND)
+#define MICROSECONDS_PER_MINUTE (MICROSECONDS_PER_SECOND * SECONDS_PER_MINUTE)
+#define MICROSECONDS_PER_HOUR   (MICROSECONDS_PER_MINUTE * MINUTES_PER_HOUR)
+#define MICROSECONDS_PER_DAY    (MICROSECONDS_PER_HOUR * HOURS_PER_DAY)
+
+
+
+/* Figure out how to implement `DeeSystem_GetLastModified()' */
+#undef DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX
+#undef DeeSystem_GetLastModified_USE_STAT
+#undef DeeSystem_GetLastModified_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX 1
+#elif defined(CONFIG_HAVE_stat) || defined(CONFIG_HAVE_stat64)
+#define DeeSystem_GetLastModified_USE_STAT 1
+#else
+#define DeeSystem_GetLastModified_USE_STUB 1
+#endif
+
+
+/* Figure out how to implement `DeeSystem_GetWalltime()' */
+#undef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
+#undef DeeSystem_GetWalltime_USE_TIME
+#undef DeeSystem_GetWalltime_USE_STUB
+#undef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
+#undef DeeSystem_GetWalltime_USE_GETTIMEOFDAY64
+#undef DeeSystem_GetWalltime_USE_GETTIMEOFDAY
+#undef DeeSystem_GetWalltime_USE_CLOCK_GETTIME64
+#undef DeeSystem_GetWalltime_USE_CLOCK_GETTIME
+#undef DeeSystem_GetWalltime_USE_TIME64
+#undef DeeSystem_GetWalltime_USE_TIME
+#undef DeeSystem_GetWalltime_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME 1
+#elif defined(CONFIG_HAVE_gettimeofday64)
+#define DeeSystem_GetWalltime_USE_GETTIMEOFDAY64 1
+#elif defined(CONFIG_HAVE_gettimeofday)
+#define DeeSystem_GetWalltime_USE_GETTIMEOFDAY 1
+#elif defined(CONFIG_HAVE_clock_gettime64) && defined(CONFIG_HAVE_CLOCK_REALTIME)
+#define DeeSystem_GetWalltime_USE_CLOCK_GETTIME64 1
+#elif defined(CONFIG_HAVE_clock_gettime) && defined(CONFIG_HAVE_CLOCK_REALTIME)
+#define DeeSystem_GetWalltime_USE_CLOCK_GETTIME 1
+#elif defined(CONFIG_HAVE_time64)
+#define DeeSystem_GetWalltime_USE_TIME64 1
+#elif defined(CONFIG_HAVE_time)
+#define DeeSystem_GetWalltime_USE_TIME 1
+#else
+#define DeeSystem_GetWalltime_USE_STUB 1
+#endif
+
+
+
+
+#if defined(DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX) || \
+    defined(DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME)
+#define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
+PRIVATE uint64_t DCALL
+nt_getunixfiletime(uint64_t filetime) {
+	uint64_t result;
+	SYSTEMTIME systime;
+	/* System-time only has millisecond-precision, so we copy over that part. */
+	result = (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND)) %
+	         MICROSECONDS_PER_MILLISECOND;
+	DBG_ALIGNMENT_DISABLE();
+	FileTimeToSystemTime((LPFILETIME)&filetime, &systime);
+	SystemTimeToTzSpecificLocalTime(NULL, &systime, &systime);
+	SystemTimeToFileTime(&systime, (LPFILETIME)&filetime);
+	DBG_ALIGNMENT_ENABLE();
+	/* Copy over millisecond information and everything above. */
+	result += (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND));
+	/* Window's filetime started counting on 01.01.1601. */
+	return result - (time_yer2day(1970) - time_yer2day(1601)) * MICROSECONDS_PER_DAY;
+}
+#endif /* DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX || DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
+
+
+/* Return the last modified timestamp of `filename'
+ * > uses the same format as `DeeSystem_GetWalltime()' */
+PUBLIC WUNUSED uint64_t DCALL
+DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
+#ifdef DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX
+	WIN32_FILE_ATTRIBUTE_DATA attrib;
+	LPWSTR wname;
+	wname = (LPWSTR)DeeString_AsWide(filename);
+	if unlikely(!wname)
+		return (uint64_t)-1;
+	DBG_ALIGNMENT_DISABLE();
+	if (!GetFileAttributesExW(wname, GetFileExInfoStandard, &attrib)) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return nt_getunixfiletime((uint64_t)attrib.ftLastWriteTime.dwLowDateTime |
+	                          (uint64_t)attrib.ftLastWriteTime.dwHighDateTime << 32);
+#endif /* DeeSystem_GetLastModified_USE_GETFILEATTRIBUTESEX */
+
+#ifdef DeeSystem_GetLastModified_USE_STAT
+	uint64_t result;
+#ifdef CONFIG_HAVE_stat64
+	struct stat64 st;
+#else /* CONFIG_HAVE_stat64 */
+	struct stat st;
+#endif /* !CONFIG_HAVE_stat64 */
+	char const *utf8_name;
+	utf8_name = DeeString_AsUtf8(filename);
+	if unlikely(!utf8_name)
+		return (uint64_t)-1;
+	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_stat64
+	if (stat64(utf8_name, &st))
+#else /* CONFIG_HAVE_stat64 */
+	if (stat(utf8_name, &st))
+#endif /* !CONFIG_HAVE_stat64 */
+	{
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	result = (uint64_t)st.st_mtime * MICROSECONDS_PER_SECOND;
+	/* Check if we can get more precision out of this */
+#ifdef CONFIG_HAVE_STAT_HAVE_ST_NSEC
+	result += st.st_mtimensec / 1000;
+#elif defined(CONFIG_HAVE_STAT_HAVE_ST_TIM)
+	result += st.st_mtim.tv_nsec / 1000;
+#elif defined(CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC)
+	result += st.st_mtimespec.tv_nsec / 1000;
+#endif
+
+	return result;
+#endif /* DeeSystem_GetLastModified_USE_STAT */
+
+#ifdef DeeSystem_GetLastModified_USE_STUB
+	(void)filename;
+	return 0;
+#endif /* DeeSystem_GetLastModified_USE_STUB */
+}
+
+
+
+/* Return the current UTC realtime in microseconds since 01.01.1970T00:00:00+00:00 */
+PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
+#ifdef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
+	uint64_t filetime;
+	DBG_ALIGNMENT_DISABLE();
+	GetSystemTimePreciseAsFileTime((LPFILETIME)&filetime);
+	DBG_ALIGNMENT_ENABLE();
+	return nt_getunixfiletime(filetime);
+#endif /* DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
+
+	/* TODO: clock_gettime() */
+
+#ifdef DeeSystem_GetWalltime_USE_GETTIMEOFDAY64
+	struct timeval64 tv;
+	DBG_ALIGNMENT_DISABLE();
+	if (gettimeofday64(&tv, NULL)) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + tv.tv_usec;
+#endif /* DeeSystem_GetWalltime_USE_GETTIMEOFDAY64 */
+
+#ifdef DeeSystem_GetWalltime_USE_GETTIMEOFDAY
+	struct timeval tv;
+	DBG_ALIGNMENT_DISABLE();
+	if (gettimeofday(&tv, NULL)) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + tv.tv_usec;
+#endif /* DeeSystem_GetWalltime_USE_GETTIMEOFDAY */
+
+#ifdef DeeSystem_GetWalltime_USE_CLOCK_GETTIME64
+	struct timespec64 ts;
+	DBG_ALIGNMENT_DISABLE();
+	if (clock_gettime64(CLOCK_REALTIME, &ts)) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + (tv.tv_nsec / 1000);
+#endif /* DeeSystem_GetWalltime_USE_CLOCK_GETTIME64 */
+
+#ifdef DeeSystem_GetWalltime_USE_CLOCK_GETTIME
+	struct timespec ts;
+	DBG_ALIGNMENT_DISABLE();
+	if (clock_gettime(CLOCK_REALTIME, &ts)) {
+		DBG_ALIGNMENT_ENABLE();
+		return 0;
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return (uint64_t)tv.tv_sec * MICROSECONDS_PER_SECOND + (tv.tv_nsec / 1000);
+#endif /* DeeSystem_GetWalltime_USE_CLOCK_GETTIME */
+
+#ifdef DeeSystem_GetWalltime_USE_TIME64
+	time64_t now;
+	DBG_ALIGNMENT_DISABLE();
+	now = time64(NULL);
+	DBG_ALIGNMENT_ENABLE();
+	return (uint64_t)now * MICROSECONDS_PER_SECOND;
+#endif /* DeeSystem_GetWalltime_USE_TIME64 */
+
+#ifdef DeeSystem_GetWalltime_USE_TIME
+	time_t now;
+	DBG_ALIGNMENT_DISABLE();
+	now = time(NULL);
+	DBG_ALIGNMENT_ENABLE();
+	return (uint64_t)now * MICROSECONDS_PER_SECOND;
+#endif /* DeeSystem_GetWalltime_USE_TIME */
+
+#ifdef DeeSystem_GetWalltime_USE_STUB
+	return 0;
+#endif /* DeeSystem_GetWalltime_USE_STUB */
+}
+
+
+
+
+/* Figure out how to implement `DeeSystem_Unlink()' */
+#undef DeeSystem_Unlink_USE_DELETEFILE
+#undef DeeSystem_Unlink_WUNLINK
+#undef DeeSystem_Unlink_UNLINK
+#undef DeeSystem_Unlink_WREMOVE
+#undef DeeSystem_Unlink_REMOVE
+#undef DeeSystem_Unlink_STUB
+#if defined(CONFIG_HOST_WINDOWS) && 0
+#define DeeSystem_Unlink_USE_DELETEFILE 1
+#elif defined(CONFIG_HAVE_wunlink) && 0
+#define DeeSystem_Unlink_WUNLINK 1
+#elif defined(CONFIG_HAVE_unlink)
+#define DeeSystem_Unlink_UNLINK 1
+#elif defined(CONFIG_HAVE_wremove)
+#define DeeSystem_Unlink_WREMOVE 1
+#elif defined(CONFIG_HAVE_remove)
+#define DeeSystem_Unlink_REMOVE 1
+#else
+#define DeeSystem_Unlink_STUB 1
+#endif
+
+
+
+/* Try to unlink() the given `filename'
+ * @return: 1 : The unlink() operation failed (only returned when `throw_exception_on_error' is `false')
+ * @return: 0 : The unlink() operation was successful
+ * @return: -1: An error occurred (may still be returned, even when `throw_exception_on_error' is `false') */
+PUBLIC WUNUSED int DCALL
+DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
+                 bool throw_exception_on_error) {
+#ifdef DeeSystem_Unlink_USE_DELETEFILE
+	DWORD dwError;
+	LPWSTR wname;
+	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
+	wname = (LPWSTR)DeeString_AsWide(filename);
+	if unlikely(!wname) {
+		/* Since unlink() is a cleanup operation,
+		 * try hard to comply, even after an error! */
+		if (DeleteFileA(DeeString_STR(filename))) {
+			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
+				return 0;
+		}
+		return -1;
+	}
+again_deletefile:
+	if (DeleteFileW(wname))
+		return 0;
+	dwError = GetLastError();
+	if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt()) {
+			/* Try hard to delete the file... (even after an interrupt) */
+			DeleteFileW(wname);
+			return -1;
+		}
+		goto again_deletefile;
+	}
+	if (DeeNTSystem_IsUncError(dwError)) {
+		BOOL bOk;
+		DREF DeeStringObject *unc_filename;
+		/* Try again with a UNC filename. */
+		unc_filename = (DREF DeeStringObject *)DeeNTSystem_FixUncPath(filename);
+		if unlikely(!unc_filename)
+			return -1;
+		wname = (LPWSTR)DeeString_AsWide(filename);
+		if unlikely(!wname) {
+			/* No point in trying to use DeleteFileA() here.
+			 * It doesn't work for UNC paths to begin with... */
+			Dee_Decref(unc_filename);
+			return -1;
+		}
+again_deletefile2:
+		if (DeleteFileW(wname)) {
+			Dee_Decref(unc_filename);
+			return 0; /* Success! */
+		}
+		dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt()) {
+				/* Try hard to delete the file... (even after an interrupt) */
+				DeleteFileW(wname);
+				Dee_Decref(unc_filename);
+				return -1;
+			}
+			goto again_deletefile2;
+		}
+		Dee_Decref(unc_filename);
+	}
+	/* Can't delete the file, no matter what I try...  :( */
+	if (!throw_exception_on_error)
+		return 1;
+	DeeNTSystem_ThrowErrorf(NULL, dwError,
+	                        "Failed to delete file %r",
+	                        filename);
+	return -1;
+#endif /* DeeSystem_Unlink_USE_DELETEFILE */
+
+#if defined(DeeSystem_Unlink_WUNLINK) || defined(DeeSystem_Unlink_WREMOVE) || \
+    defined(DeeSystem_Unlink_UNLINK) || defined(DeeSystem_Unlink_REMOVE)
+#if defined(DeeSystem_Unlink_WUNLINK) || defined(DeeSystem_Unlink_WREMOVE)
+	dwchar_t *wname;
+	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
+	wname = DeeString_AsWide(filename);
+	if unlikely(!wname) {
+#if defined(CONFIG_HAVE_unlink) || defined(CONFIG_HAVE_remove)
+		/* Since unlink() is a cleanup operation,
+		 * try hard to comply, even after an error! */
+#ifdef CONFIG_HAVE_unlink
+		if (unlink(DeeString_STR(filename)))
+#else /* CONFIG_HAVE_unlink */
+		if (remove(DeeString_STR(filename)))
+#endif /* !CONFIG_HAVE_unlink */
+		{
+			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
+				return 0;
+		}
+#endif /* CONFIG_HAVE_unlink || CONFIG_HAVE_remove */
+		return -1;
+	}
+#if defined(CONFIG_HAVE_errno) && defined(EINTR)
+again_deletefile:
+#endif /* CONFIG_HAVE_errno && EINTR */
+#ifdef DeeSystem_Unlink_WUNLINK
+	if (wunlink(wname))
+		return 0;
+#else /* DeeSystem_Unlink_WUNLINK */
+	if (wremove(wname))
+		return 0;
+#endif /* !DeeSystem_Unlink_WUNLINK */
+#if defined(CONFIG_HAVE_errno) && defined(EINTR)
+	if (DeeSystem_GetErrno() == EINTR) {
+		if (DeeThread_CheckInterrupt()) {
+			/* Try hard to delete the file... (even after an interrupt) */
+#ifdef DeeSystem_Unlink_WUNLINK
+			wunlink(wname);
+#else /* DeeSystem_Unlink_WUNLINK */
+			wremove(wname);
+#endif /* !DeeSystem_Unlink_WUNLINK */
+			return -1;
+		}
+		goto again_deletefile;
+	}
+#endif /* CONFIG_HAVE_errno && EINTR */
+#endif /* DeeSystem_Unlink_WUNLINK || DeeSystem_Unlink_WREMOVE */
+
+#if defined(DeeSystem_Unlink_UNLINK) || defined(DeeSystem_Unlink_REMOVE)
+	char const *utf8_name;
+	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
+	utf8_name = DeeString_AsUtf8(filename);
+	if unlikely(!utf8_name) {
+		/* Since unlink() is a cleanup operation,
+		 * try hard to comply, even after an error! */
+#ifdef DeeSystem_Unlink_UNLINK
+		if (unlink(DeeString_STR(filename)))
+#else /* CONFIG_HAVE_unlink */
+		if (remove(DeeString_STR(filename)))
+#endif /* !CONFIG_HAVE_unlink */
+		{
+			if (DeeError_Handled(ERROR_HANDLED_NORMAL))
+				return 0;
+		}
+		return -1;
+	}
+#if defined(CONFIG_HAVE_errno) && defined(EINTR)
+again_deletefile:
+#endif /* CONFIG_HAVE_errno && EINTR */
+#ifdef DeeSystem_Unlink_UNLINK
+	if (unlink(utf8_name))
+		return 0;
+#else /* DeeSystem_Unlink_UNLINK */
+	if (remove(utf8_name))
+		return 0;
+#endif /* !DeeSystem_Unlink_UNLINK */
+#if defined(CONFIG_HAVE_errno) && defined(EINTR)
+	if (DeeSystem_GetErrno() == EINTR) {
+		if (DeeThread_CheckInterrupt()) {
+			/* Try hard to delete the file... (even after an interrupt) */
+#ifdef DeeSystem_Unlink_UNLINK
+			unlink(utf8_name);
+#else /* DeeSystem_Unlink_UNLINK */
+			remove(utf8_name);
+#endif /* !DeeSystem_Unlink_UNLINK */
+			return -1;
+		}
+		goto again_deletefile;
+	}
+#endif /* CONFIG_HAVE_errno && EINTR */
+#endif /* DeeSystem_Unlink_WUNLINK || DeeSystem_Unlink_WREMOVE */
+	/* Can't delete the file, no matter what I try...  :( */
+	if (!throw_exception_on_error)
+		return 1;
+	{
+		int error = DeeSystem_GetErrno();
+		DeeSystem_IF_E4(error, ENOENT, ENOTDIR, ENAMETOOLONG, ELOOP, {
+			return DeeError_SysThrowf(&DeeError_FileNotFound, error,
+			                          "Cannot delete missing file %r",
+			                          filename);
+		});
+		DeeSystem_IF_E2(error, EPERM, EACCES, {
+			return DeeError_SysThrowf(&DeeError_FileAccessError, error,
+			                          "Not allowed to delete file %r",
+			                          filename);
+		});
+		DeeSystem_IF_E1(error, EROFS, {
+			return DeeError_SysThrowf(&DeeError_ReadOnlyFile, error,
+			                          "Cannot delete file %r on read-only filesystem",
+			                          filename);
+		});
+		DeeError_SysThrowf(&DeeError_SystemError, error,
+		                   "Failed to delete file %r",
+		                   filename);
+	}
+	return -1;
+#endif /* DeeSystem_Unlink_WUNLINK || DeeSystem_Unlink_WREMOVE || \
+          DeeSystem_Unlink_UNLINK || DeeSystem_Unlink_REMOVE */
+
+#ifdef DeeSystem_Unlink_STUB
+	if (!throw_exception_on_error)
+		return 1;
+	DeeError_SysThrowf(&DeeError_SystemError,
+	                   DeeSystem_GetErrno(),
+	                   "Failed to delete file %r",
+	                   filename);
+	return -1;
+#endif /* DeeSystem_Unlink_STUB */
+
+}
+
+
+
+
 DECL_END
 
 #ifndef __INTELLISENSE__

@@ -681,9 +681,6 @@ DecFile_LoadDDI(DecFile *__restrict self,
 INTDEF WUNUSED NONNULL((1)) uint64_t DCALL
 DecTime_Lookup(DeeObject *__restrict filename);
 
-/* Return the current time (in microseconds since 01.01.1970) (never fails). */
-INTDEF WUNUSED uint64_t DCALL DecTime_Now(void);
-
 /* Try to free up memory from the dec time-cache. */
 INTDEF size_t DCALL DecTime_ClearCache(size_t max_clear);
 

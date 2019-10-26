@@ -24,7 +24,6 @@
 #include <deemon/object.h>
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/asm.h>
@@ -39,6 +38,7 @@
 #include <deemon/file.h>
 #include <deemon/float.h>
 #include <deemon/gc.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
@@ -68,9 +68,6 @@
 
 #include <stdarg.h>
 
-/* TODO: <Windows.h> is currently needed because of the mtime sub-system.
- *       However, the mtime sub-system itself has to be changed to make
- *       use of the new configure system as well! */
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
@@ -85,25 +82,18 @@ DECL_BEGIN
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
-#ifdef CONFIG_HOST_WINDOWS
-/* Use libc functions for case-insensitive UTF-8 string compare when available. */
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#else
-#define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
-	while (s--) {
-		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
-			return false;
-		++a;
-		++b;
-	}
-	return true;
-}
-#endif
-#endif /* CONFIG_HOST_WINDOWS */
+#ifdef DEE_SYSTEM_NOCASE_FS
+#ifndef CONFIG_HAVE_memcasecmp
+#define CONFIG_HAVE_memcasecmp 1
+#define memcasecmp dee_memcasecmp
+DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
+#endif /* !CONFIG_HAVE_memcasecmp */
+#define fs_memcmp      memcasecmp
+#define fs_hashobj(ob) DeeString_HashCase((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#else /* DEE_SYSTEM_NOCASE_FS */
+#define fs_memcmp      memcmp
+#define fs_hashobj(ob) DeeString_Hash((DeeObject *)Dee_REQUIRES_OBJECT(ob))
+#endif /* !DEE_SYSTEM_NOCASE_FS */
 
 
 
@@ -832,12 +822,6 @@ DecFile_Strtab(DecFile *__restrict self) {
 
 
 
-#ifdef CONFIG_HOST_WINDOWS
-#define SEP '\\'
-#else /* CONFIG_HOST_WINDOWS */
-#define SEP '/'
-#endif /* !CONFIG_HOST_WINDOWS */
-
 #ifdef CONFIG_LITTLE_ENDIAN
 #define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
 #else /* CONFIG_LITTLE_ENDIAN */
@@ -867,11 +851,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 			goto done; /* Unlikely, but allowed. */
 		reader = depmap->i_map;
 		while (module_pathlen &&
-		       module_pathstr[module_pathlen - 1] != '/'
-#ifdef CONFIG_HOST_WINDOWS
-		       && module_pathstr[module_pathlen - 1] != '\\'
-#endif /* !CONFIG_HOST_WINDOWS */
-		       ) {
+		       !DeeSystem_IsSep(module_pathstr[module_pathlen - 1])) {
 			--module_pathlen;
 		}
 		strtab = (char *)(self->df_base + LESWAP32(hdr->e_stroff));
@@ -937,13 +917,8 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		goto err;
 	module_pathlen = WSTR_LENGTH(module_pathstr);
 	while (module_pathlen &&
-	       module_pathstr[module_pathlen - 1] != '/'
-#ifdef CONFIG_HOST_WINDOWS
-	       && module_pathstr[module_pathlen - 1] != '\\'
-#endif /* CONFIG_HOST_WINDOWS */
-	       ) {
+	       !DeeSystem_IsSep(module_pathstr[module_pathlen - 1]))
 		--module_pathlen;
-	}
 	impmap  = (Dec_Strmap *)(self->df_base + LESWAP32(hdr->e_impoff));
 	importc = UNALIGNED_GETLE16((uint16_t *)&impmap->i_len);
 	importv = (DREF DeeModuleObject **)Dee_Malloc(importc * sizeof(DREF DeeModuleObject *));
@@ -2704,95 +2679,28 @@ done:
 	return result;
 }
 
-#ifdef CONFIG_BIG_ENDIAN
-#define FILETIME_GET64(x) (((x) << 32)|((x) >> 32))
-#else /* CONFIG_BIG_ENDIAN */
-#define FILETIME_GET64(x)   (x)
-#endif /* !CONFIG_BIG_ENDIAN */
-
-/* A couple of helper macros taken from the libtime DEX. */
-#define time_yer2day(x)     (((146097 * (x)) / 400) /*-1*/)
-#define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
-#define MILLISECONDS_PER_SECOND      UINT64_C(1000)
-#define SECONDS_PER_MINUTE           UINT64_C(60)
-#define MINUTES_PER_HOUR             UINT64_C(60)
-#define HOURS_PER_DAY                UINT64_C(24)
-#define MICROSECONDS_PER_SECOND (MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND)
-#define MICROSECONDS_PER_MINUTE (MICROSECONDS_PER_SECOND * SECONDS_PER_MINUTE)
-#define MICROSECONDS_PER_HOUR   (MICROSECONDS_PER_MINUTE * MINUTES_PER_HOUR)
-#define MICROSECONDS_PER_DAY    (MICROSECONDS_PER_HOUR * HOURS_PER_DAY)
-
-#ifdef CONFIG_HOST_WINDOWS
-#define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
-PRIVATE uint64_t DCALL
-nt_getunixfiletime(uint64_t filetime) {
-	uint64_t result;
-	SYSTEMTIME systime;
-	/* System-time only has millisecond-precision, so we copy over that part. */
-	result = (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND)) %
-	         MICROSECONDS_PER_MILLISECOND;
-	DBG_ALIGNMENT_DISABLE();
-	FileTimeToSystemTime((LPFILETIME)&filetime, &systime);
-	SystemTimeToTzSpecificLocalTime(NULL, &systime, &systime);
-	SystemTimeToFileTime(&systime, (LPFILETIME)&filetime);
-	DBG_ALIGNMENT_ENABLE();
-	/* Copy over millisecond information and everything above. */
-	result += (FILETIME_GET64(filetime) / (FILETIME_PER_SECONDS / MICROSECONDS_PER_SECOND));
-	/* Window's filetime started counting on 01.01.1601. */
-	return result - (time_yer2day(1970) - time_yer2day(1601)) * MICROSECONDS_PER_DAY;
-}
-#endif /* CONFIG_HOST_WINDOWS */
-
-PRIVATE WUNUSED NONNULL((1)) uint64_t DCALL
-os_mtime_for(DeeObject *__restrict filename) {
-#ifdef CONFIG_HOST_WINDOWS
-	WIN32_FILE_ATTRIBUTE_DATA attrib;
-	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide(filename);
-	if unlikely(!wname)
-		return (uint64_t)-1;
-	DBG_ALIGNMENT_DISABLE();
-	if (!GetFileAttributesExW(wname, GetFileExInfoStandard, &attrib)) {
-		DBG_ALIGNMENT_ENABLE();
-		return 0;
-	}
-	DBG_ALIGNMENT_ENABLE();
-	return nt_getunixfiletime((uint64_t)attrib.ftLastWriteTime.dwLowDateTime |
-	                          (uint64_t)attrib.ftLastWriteTime.dwHighDateTime << 32);
-#else /* CONFIG_HOST_WINDOWS */
-	struct stat st;
-	DBG_ALIGNMENT_DISABLE();
-	if (stat(DeeString_STR(filename), &st)) {
-		DBG_ALIGNMENT_ENABLE();
-		return 0;
-	}
-	DBG_ALIGNMENT_ENABLE();
-	return (uint64_t)st.st_mtime * MICROSECONDS_PER_SECOND;
-#endif /* !CONFIG_HOST_WINDOWS */
-}
-
 
 struct mtime_entry {
 	DREF DeeStringObject *me_file; /* [0..1] Absolute, normalized filename.
 	                                *  NOTE: When NULL, then this entry is unused. */
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_NOCASE_FS
 	dhash_t               me_casehash; /* Case-insensitive hash for `me_file' */
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DEE_SYSTEM_NOCASE_FS */
 	uint64_t              me_mtim; /* Last-modified time of `me_file' */
 };
 
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_NOCASE_FS
 #define MTIME_ENTRY_HASH(x) ((x)->me_casehash)
-#else /* CONFIG_HOST_WINDOWS */
+#else /* DEE_SYSTEM_NOCASE_FS */
 #define MTIME_ENTRY_HASH(x) DeeString_HASH((x)->me_file)
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !DEE_SYSTEM_NOCASE_FS */
 
 struct mtime_cache {
 	size_t              mc_size; /* [lock(mc_lock)] Amount of cache entires currently in use. */
 	size_t              mc_mask; /* [lock(d_lock)] Allocated hash-vector size -1 / hash-mask. */
 	struct mtime_entry *mc_list; /* [1..mc_mask+1][lock(mc_lock)]
-	                              *  [owned_if(!= empty_mtime_items)]
-	                              *   Filename -> last-modified mappings. */
+	                              * [owned_if(!= empty_mtime_items)]
+	                              * Filename -> last-modified mappings. */
 #ifndef CONFIG_NO_THREADS
 	rwlock_t            mc_lock; /* Lock for synchronizing access to the cache. */
 #endif /* !CONFIG_NO_THREADS */
@@ -2808,7 +2716,7 @@ PRIVATE struct mtime_entry empty_mtime_items[1] = { { NULL, 0 } };
 PRIVATE struct mtime_cache mtime_cache = {
 	/* .mc_size = */ 0,
 	/* .mc_mask = */ 0,
-	/* .mc_list = */empty_mtime_items
+	/* .mc_list = */ empty_mtime_items
 #ifndef CONFIG_NO_THREADS
 	,
 	/* .mc_lock = */ RWLOCK_INIT
@@ -2852,14 +2760,8 @@ mtime_cache_lookup(DeeObject *__restrict path,
                    uint64_t *__restrict presult) {
 	bool result = false;
 	dhash_t i, perturb;
-#ifdef CONFIG_HOST_WINDOWS
-	dhash_t hash = DeeString_HashCase(path);
-#else /* CONFIG_HOST_WINDOWS */
-	dhash_t hash = DeeString_Hash(path);
-#endif /* !CONFIG_HOST_WINDOWS */
-#ifndef CONFIG_NO_THREADS
+	dhash_t hash = fs_hashobj(path);
 	rwlock_read(&mtime_cache.mc_lock);
-#endif /* !CONFIG_NO_THREADS */
 	perturb = i = MCACHE_HASHST(hash);
 	for (;; i = MCACHE_HASHNX(i, perturb), MCACHE_HASHPT(perturb)) {
 		struct mtime_entry *item = MCACHE_HASHIT(i);
@@ -2870,17 +2772,10 @@ mtime_cache_lookup(DeeObject *__restrict path,
 		if (DeeString_SIZE(item->me_file) !=
 		    DeeString_SIZE(path))
 			continue; /* Differing lengths. */
-#ifdef CONFIG_HOST_WINDOWS
-		if (!MEMCASEEQ(DeeString_STR(item->me_file),
-		               DeeString_STR(path),
-		               DeeString_SIZE(path) * sizeof(char)))
+		if (fs_memcmp(DeeString_STR(item->me_file),
+		              DeeString_STR(path),
+		              DeeString_SIZE(path) * sizeof(char)) != 0)
 			continue; /* Differing strings. */
-#else /* CONFIG_HOST_WINDOWS */
-		if (memcmp(DeeString_STR(item->me_file),
-		           DeeString_STR(path),
-		           DeeString_SIZE(path) * sizeof(char)) != 0)
-			continue; /* Differing strings. */
-#endif /* !CONFIG_HOST_WINDOWS */
 		/* Found it! */
 		*presult = item->me_mtim;
 		result   = true;
@@ -2936,11 +2831,7 @@ mtime_cache_insert(DeeObject *__restrict path,
                    uint64_t value) {
 	size_t mask;
 	dhash_t i, perturb, hash;
-#ifdef CONFIG_HOST_WINDOWS
-	hash = DeeString_HashCase(path);
-#else /* CONFIG_HOST_WINDOWS */
-	hash = DeeString_Hash(path);
-#endif /* !CONFIG_HOST_WINDOWS */
+	hash = fs_hashobj(path);
 	rwlock_write(&mtime_cache.mc_lock);
 again:
 	mask    = mtime_cache.mc_mask;
@@ -2952,9 +2843,9 @@ again:
 				break; /* Rehash the table and try again. */
 			/* Not found. - Use this empty slot. */
 			item->me_file = (DREF DeeStringObject *)path;
-#ifdef CONFIG_HOST_WINDOWS
+#ifdef DEE_SYSTEM_NOCASE_FS
 			item->me_casehash = hash;
-#endif /* CONFIG_HOST_WINDOWS */
+#endif /* DEE_SYSTEM_NOCASE_FS */
 			item->me_mtim = value;
 			Dee_Incref(path);
 			++mtime_cache.mc_size;
@@ -2968,17 +2859,10 @@ again:
 		if (DeeString_SIZE(item->me_file) !=
 		    DeeString_SIZE(path))
 			continue; /* Differing lengths. */
-#ifdef CONFIG_HOST_WINDOWS
-		if (MEMCASEEQ(DeeString_STR(item->me_file),
+		if (fs_memcmp(DeeString_STR(item->me_file),
 		              DeeString_STR(path),
-		              DeeString_SIZE(path) * sizeof(char)))
+		              DeeString_SIZE(path) * sizeof(char)) != 0)
 			continue; /* Differing strings. */
-#else /* CONFIG_HOST_WINDOWS */
-		if (memcmp(DeeString_STR(item->me_file),
-		           DeeString_STR(path),
-		           DeeString_SIZE(path) * sizeof(char)) != 0)
-			continue; /* Differing strings. */
-#endif /* !CONFIG_HOST_WINDOWS */
 		/* The item already exists. (Can happen due to race conditions) */
 		goto done;
 	}
@@ -3001,7 +2885,7 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 		return (uint64_t)-1;
 	/* Consult the cache before asking the OS. */
 	if (!mtime_cache_lookup(filename, &result)) {
-		result = os_mtime_for(filename);
+		result = DeeSystem_GetLastModified(filename);
 		/* Add the new information to the cache. */
 		if likely(result != (uint64_t)-1)
 			mtime_cache_insert(filename, result);
@@ -3014,24 +2898,6 @@ DecTime_Lookup(DeeObject *__restrict filename) {
 	return result;
 }
 
-
-INTERN WUNUSED uint64_t DCALL DecTime_Now(void) {
-#ifdef CONFIG_HOST_WINDOWS
-	uint64_t filetime;
-	DBG_ALIGNMENT_DISABLE();
-	GetSystemTimePreciseAsFileTime((LPFILETIME)&filetime);
-	DBG_ALIGNMENT_ENABLE();
-	return nt_getunixfiletime(filetime);
-#else /* CONFIG_HOST_WINDOWS */
-	/* TODO: clock_gettime() */
-	/* TODO: gettimeofday() */
-	time_t now;
-	DBG_ALIGNMENT_DISABLE();
-	now = time(NULL);
-	DBG_ALIGNMENT_ENABLE();
-	return (uint64_t)now * MICROSECONDS_PER_SECOND;
-#endif /* !CONFIG_HOST_WINDOWS */
-}
 
 DECL_END
 #endif /* !CONFIG_NO_DEC */

@@ -332,8 +332,8 @@
     <ClCompile Include="..\src\deemon\runtime\strings.c" />
     <ClCompile Include="..\src\deemon\runtime\thread.c" />
     <ClCompile Include="..\src\deemon\runtime\type_member.c" />
-    <ClCompile Include="..\src\deemon\system\system.c" />
     <ClCompile Include="..\src\deemon\system\file.c" />
+    <ClCompile Include="..\src\deemon\system\system.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\.clang-format" />

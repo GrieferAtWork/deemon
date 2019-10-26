@@ -2898,7 +2898,7 @@ PRIVATE struct type_method thread_methods[] = {
 	      "@throw ValueError @this thread was never started\n"
 	      "@throw SystemError Failed to join @this thread for some reason\n"
 	      "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	      "@return The return value of @this thead\n"
+	      "@return The return value of @this thread\n"
 	      "Joins @this thread and returns the return value of its main function\n"
 	      "In the event") },
 	{ "tryjoin", &thread_tryjoin,
@@ -3489,8 +3489,42 @@ PRIVATE struct type_member thread_members[] = {
 };
 
 
-PUBLIC WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
+/* Figure out how to implement `DeeThread_Sleep()' */
 #ifdef CONFIG_HOST_WINDOWS
+#define DeeThread_Sleep_USE_SLEEPEX 1
+#elif defined(CONFIG_HAVE_nanosleep64) || defined(CONFIG_HAVE_nanosleep)
+#define DeeThread_Sleep_USE_NANOSLEEP 1
+#elif defined(CONFIG_HAVE_usleep)
+#define DeeThread_Sleep_USE_USLEEP 1
+#elif defined(CONFIG_HAVE_select) || defined(CONFIG_HAVE_select64)
+#define DeeThread_Sleep_USE_SELECT 1
+#elif defined(CONFIG_HAVE_pselect) || defined(CONFIG_HAVE_pselect64)
+#define DeeThread_Sleep_USE_PSELECT 1
+#else
+#define DeeThread_Sleep_USE_STUB 1
+#endif
+
+
+/* A couple of helper macros taken from the libtime DEX. */
+#define time_yer2day(x)     (((146097 * (x)) / 400) /*-1*/)
+#define MICROSECONDS_PER_MILLISECOND UINT64_C(1000)
+#define MILLISECONDS_PER_SECOND      UINT64_C(1000)
+#define SECONDS_PER_MINUTE           UINT64_C(60)
+#define MINUTES_PER_HOUR             UINT64_C(60)
+#define HOURS_PER_DAY                UINT64_C(24)
+#define MICROSECONDS_PER_SECOND (MICROSECONDS_PER_MILLISECOND * MILLISECONDS_PER_SECOND)
+#define MICROSECONDS_PER_MINUTE (MICROSECONDS_PER_SECOND * SECONDS_PER_MINUTE)
+#define MICROSECONDS_PER_HOUR   (MICROSECONDS_PER_MINUTE * MINUTES_PER_HOUR)
+#define MICROSECONDS_PER_DAY    (MICROSECONDS_PER_HOUR * HOURS_PER_DAY)
+
+#ifdef DeeThread_Sleep_USE_USLEEP
+#ifndef CONFIG_HAVE_useconds_t
+#define useconds_t uint64_t
+#endif /* !CONFIG_HAVE_useconds_t */
+#endif /* DeeThread_Sleep_USE_USLEEP */
+
+PUBLIC WUNUSED int (DCALL DeeThread_Sleep)(uint64_t microseconds) {
+#ifdef DeeThread_Sleep_USE_SLEEPEX
 	uint64_t end_time;
 	end_time = DeeThread_GetTimeMicroSeconds() + microseconds;
 	if (DeeThread_CheckInterrupt())
@@ -3512,7 +3546,11 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
-#elif defined(CONFIG_HAVE_nanosleep) || defined(CONFIG_HAVE_nanosleep64)
+err:
+	return -1;
+#endif /* DeeThread_Sleep_USE_SLEEPEX */
+
+#ifdef DeeThread_Sleep_USE_NANOSLEEP
 #ifdef CONFIG_HAVE_nanosleep64
 	struct timespec64 sleep_time, rem;
 	sleep_time.tv_sec  = (time64_t)(microseconds / 1000000);
@@ -3521,8 +3559,6 @@ again:
 	sleep_time.tv_sec  = (time_t)(microseconds / 1000000);
 #endif /* !CONFIG_HAVE_nanosleep64 */
 	sleep_time.tv_nsec = (long)(microseconds % 1000000) * 1000;
-	if (DeeThread_CheckInterrupt())
-		goto err;
 again:
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_nanosleep64
@@ -3534,34 +3570,114 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeThread_CheckInterrupt())
 			goto err;
+#ifdef EINTR
 		if (DeeSystem_GetErrno() == EINTR) {
 			memcpy(&sleep_time, &rem, sizeof(struct timespec));
 			goto again;
 		}
+#endif /* EINTR */
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
-#elif defined(CONFIG_HAVE_usleep) && 0 /* TODO */
-#elif defined(CONFIG_HAVE_select) && 0 /* TODO */
-#elif defined(CONFIG_HAVE_pselect) && 0 /* TODO */
-#else
+err:
+	return -1;
+#endif /* DeeThread_Sleep_USE_NANOSLEEP */
+
+#ifdef DeeThread_Sleep_USE_USLEEP
+again:
+	DBG_ALIGNMENT_DISABLE();
+	if (usleep((useconds_t)microseconds)) {
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
+#ifdef EINTR
+		if (DeeSystem_GetErrno() == EINTR)
+			goto again;
+#endif /* EINTR */
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return 0;
+err:
+	return -1;
+#endif /* DeeThread_Sleep_USE_USLEEP */
+
+#ifdef DeeThread_Sleep_USE_SELECT
+#ifdef CONFIG_HAVE_select64
+	struct timeval64 tv;
+#else /* CONFIG_HAVE_select64 */
+	struct timeval tv;
+#endif /* !CONFIG_HAVE_select64 */
+	tv.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
+	tv.tv_usec = microseconds % MICROSECONDS_PER_SECOND;
+	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_select64
+	if (select64(0, NULL, NULL, NULL, &tv))
+#else /* CONFIG_HAVE_select64 */
+	if (select(0, NULL, NULL, NULL, &tv))
+#endif /* !CONFIG_HAVE_select64 */
+	{
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
+#ifdef EINTR
+		if (DeeSystem_GetErrno() == EINTR)
+			goto again;
+#endif /* EINTR */
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return 0;
+err:
+	return -1;
+#endif /* DeeThread_Sleep_USE_SELECT */
+
+#ifdef DeeThread_Sleep_USE_PSELECT
+#ifdef CONFIG_HAVE_pselect64
+	struct timespec64 ts;
+#else /* CONFIG_HAVE_pselect64 */
+	struct timespec ts;
+#endif /* !CONFIG_HAVE_pselect64 */
+	ts.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
+	ts.tv_nsec = (microseconds % MICROSECONDS_PER_SECOND) * 1000;
+	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_pselect64
+	if (pselect64(0, NULL, NULL, NULL, &ts, NULL))
+#else /* CONFIG_HAVE_pselect64 */
+	if (pselect(0, NULL, NULL, NULL, &ts, NULL))
+#endif /* !CONFIG_HAVE_pselect64 */
+	{
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
+#ifdef EINTR
+		if (DeeSystem_GetErrno() == EINTR)
+			goto again;
+#endif /* EINTR */
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return 0;
+err:
+	return -1;
+#endif /* DeeThread_Sleep_USE_PSELECT */
+
+#ifdef DeeThread_Sleep_USE_STUB
 	if (DeeThread_CheckInterrupt())
 		goto err;
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "The host does not implement a way of sleeping");
-#endif
 err:
 	return -1;
+#endif /* DeeThread_Sleep_USE_STUB */
 }
 
 PUBLIC void DCALL
 DeeThread_SleepNoInterrupt(uint64_t microseconds) {
-#ifdef CONFIG_HOST_WINDOWS
-	/* XXX: More precision? */
-	DBG_ALIGNMENT_DISABLE();
+#ifdef DeeThread_Sleep_USE_SLEEPEX
+	uint64_t end_time;
+	end_time = DeeThread_GetTimeMicroSeconds() + microseconds;
 	SleepEx((DWORD)(microseconds / 1000), TRUE);
-	DBG_ALIGNMENT_ENABLE();
-#elif defined(CONFIG_HAVE_nanosleep) || defined(CONFIG_HAVE_nanosleep64)
+#endif /* DeeThread_Sleep_USE_SLEEPEX */
+
+#ifdef DeeThread_Sleep_USE_NANOSLEEP
 #ifdef CONFIG_HAVE_nanosleep64
 	struct timespec64 sleep_time;
 	sleep_time.tv_sec  = (time64_t)(microseconds / 1000000);
@@ -3577,10 +3693,51 @@ DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 	nanosleep(&sleep_time, NULL);
 #endif /* !CONFIG_HAVE_nanosleep64 */
 	DBG_ALIGNMENT_ENABLE();
-#else
+#endif /* DeeThread_Sleep_USE_NANOSLEEP */
+
+#ifdef DeeThread_Sleep_USE_USLEEP
+	DBG_ALIGNMENT_DISABLE();
+	usleep((useconds_t)microseconds);
+	DBG_ALIGNMENT_ENABLE();
+#endif /* DeeThread_Sleep_USE_USLEEP */
+
+#ifdef DeeThread_Sleep_USE_SELECT
+#ifdef CONFIG_HAVE_select64
+	struct timeval64 tv;
+#else /* CONFIG_HAVE_select64 */
+	struct timeval tv;
+#endif /* !CONFIG_HAVE_select64 */
+	tv.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
+	tv.tv_usec = microseconds % MICROSECONDS_PER_SECOND;
+	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_select64
+	select64(0, NULL, NULL, NULL, &tv);
+#else /* CONFIG_HAVE_select64 */
+	select(0, NULL, NULL, NULL, &tv);
+#endif /* !CONFIG_HAVE_select64 */
+	DBG_ALIGNMENT_ENABLE();
+#endif /* DeeThread_Sleep_USE_SELECT */
+
+#ifdef DeeThread_Sleep_USE_PSELECT
+#ifdef CONFIG_HAVE_pselect64
+	struct timespec64 ts;
+#else /* CONFIG_HAVE_pselect64 */
+	struct timespec ts;
+#endif /* !CONFIG_HAVE_pselect64 */
+	ts.tv_sec  = microseconds / MICROSECONDS_PER_SECOND;
+	ts.tv_nsec = (microseconds % MICROSECONDS_PER_SECOND) * 1000;
+	DBG_ALIGNMENT_DISABLE();
+#ifdef CONFIG_HAVE_pselect64
+	pselect64(0, NULL, NULL, NULL, &ts, NULL);
+#else /* CONFIG_HAVE_pselect64 */
+	pselect(0, NULL, NULL, NULL, &ts, NULL);
+#endif /* !CONFIG_HAVE_pselect64 */
+	DBG_ALIGNMENT_ENABLE();
+#endif /* DeeThread_Sleep_USE_PSELECT */
+
+#ifdef DeeThread_Sleep_USE_STUB
 	(void)microseconds;
-	/* Unsupported */
-#endif
+#endif /* DeeThread_Sleep_USE_STUB */
 }
 
 #ifndef CONFIG_NO_THREADS

@@ -33,12 +33,14 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/string.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/host.h>
 #include <hybrid/unaligned.h>
 
 #include <stdint.h>
@@ -49,69 +51,173 @@
 
 
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
+
+#ifndef __USER_LABEL_PREFIX__
 #ifdef CONFIG_HOST_WINDOWS
+#define __USER_LABEL_PREFIX__ _
+#else /* CONFIG_HOST_WINDOWS */
+#define __USER_LABEL_PREFIX__ /* nothing */
+#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !__USER_LABEL_PREFIX__ */
+
+
+#undef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
+#undef EXEC_ALTSTACK_ALLOC_USE_MMAP
+#undef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+#undef EXEC_ALTSTACK_ALLOC_USE_STUB
+#ifdef CONFIG_HOST_WINDOWS
+#define EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC 1
+#elif (defined(CONFIG_HAVE_mmap) || defined(CONFIG_HAVE_mmap64)) && \
+      (defined(CONFIG_HAVE_MAP_ANONYMOUS) || defined(CONFIG_HAVE_open))
+#define EXEC_ALTSTACK_ALLOC_USE_MMAP 1
+#elif 1
+#define EXEC_ALTSTACK_ALLOC_USE_MALLOC 1
+#else
+#define EXEC_ALTSTACK_ALLOC_USE_STUB 1
+#endif
+
+
+/* Figure out how we're going to implement the inline assembly portion. */
+#undef EXEC_ALTSTACK_ASM_USE_EXTERNAL
+#undef EXEC_ALTSTACK_ASM_USE_GCC
+#undef EXEC_ALTSTACK_ASM_USE_MSVC
+#undef EXEC_ALTSTACK_ASM_USE_STUB
+#if defined(EXEC_ALTSTACK_ALLOC_USE_STUB)
+#define EXEC_ALTSTACK_ASM_USE_STUB 1
+#elif defined(_MSC_VER) && defined(__x86_64__)
+#define EXEC_ALTSTACK_ASM_USE_EXTERNAL 1 /* The x86_64+msvc version is implemented in `asm/altstack-x86_64.S' */
+#elif defined(__COMPILER_HAVE_GCC_ASM) && \
+     (defined(__x86_64__) || defined(__i386__))
+#define EXEC_ALTSTACK_ASM_USE_GCC 1
+#elif defined(_MSC_VER) && defined(__i386__)
+#define EXEC_ALTSTACK_ASM_USE_MSVC 1
+#else
+#define EXEC_ALTSTACK_ASM_USE_STUB 1
+#endif
+
+/* If we can't implement the assembly, no need to implement the allocators. */
+#ifdef EXEC_ALTSTACK_ASM_USE_STUB
+#undef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
+#undef EXEC_ALTSTACK_ALLOC_USE_MMAP
+#undef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+#undef EXEC_ALTSTACK_ALLOC_USE_STUB
+#define EXEC_ALTSTACK_ALLOC_USE_STUB 1
+#endif /* EXEC_ALTSTACK_ASM_USE_STUB */
+
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
 #include <Windows.h>
 #undef THIS
-#else /* CONFIG_HOST_WINDOWS */
-/* TODO: This stuff is here for mman(), but needs to be subjegated to configure tests! */
-#include <sys/mman.h>
-
-#include <fcntl.h>
-#include <unistd.h>
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* !EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
 
 
-#if defined(_MSC_VER) && defined(__x86_64__)
-/* The x86_64,msvc version is implemented in `asm/altstack-x86_64.S' */
-#define CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY 1
-#endif /* _MSC_VER && __x86_64__ */
+/* When the exec-altstack functions are defined externally, we need
+ * to make the stack allocator functions visible to them, so in that
+ * case we must declare then as INTERN, rather than PRIVATE */
+#ifdef EXEC_ALTSTACK_ASM_USE_EXTERNAL
+#define STACK_ALLOCATOR_DECL INTERN
+#else /* EXEC_ALTSTACK_ASM_USE_EXTERNAL */
+#define STACK_ALLOCATOR_DECL PRIVATE
+#endif /* !EXEC_ALTSTACK_ASM_USE_EXTERNAL */
+
+
+/* Substitute some features. */
+#ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
+
+#ifndef CONFIG_HAVE_MAP_PRIVATE
+#define CONFIG_HAVE_MAP_PRIVATE 1
+#define MAP_PRIVATE 0
+#endif /* !CONFIG_HAVE_MAP_PRIVATE */
+
+#ifndef CONFIG_HAVE_MAP_GROWSUP
+#define CONFIG_HAVE_MAP_GROWSUP 1
+#define MAP_GROWSUP 0
+#endif /* !CONFIG_HAVE_MAP_GROWSUP */
+
+#ifndef CONFIG_HAVE_MAP_GROWSDOWN
+#define CONFIG_HAVE_MAP_GROWSDOWN 1
+#define MAP_GROWSDOWN 0
+#endif /* !CONFIG_HAVE_MAP_GROWSDOWN */
+
+#ifndef CONFIG_HAVE_MAP_FILE
+#define CONFIG_HAVE_MAP_FILE 1
+#define MAP_FILE 0
+#endif /* !CONFIG_HAVE_MAP_FILE */
+
+#ifndef CONFIG_HAVE_MAP_STACK
+#define CONFIG_HAVE_MAP_STACK 1
+#define MAP_STACK 0
+#endif /* !CONFIG_HAVE_MAP_STACK */
+
+#ifndef CONFIG_HAVE_PROT_READ
+#define CONFIG_HAVE_PROT_READ 1
+#define PROT_READ 0
+#endif /* !CONFIG_HAVE_PROT_READ */
+
+#ifndef CONFIG_HAVE_PROT_WRITE
+#define CONFIG_HAVE_PROT_WRITE 1
+#define PROT_WRITE 0
+#endif /* !CONFIG_HAVE_PROT_WRITE */
+
+#ifndef CONFIG_HAVE_MAP_UNINITIALIZED
+#define CONFIG_HAVE_MAP_UNINITIALIZED 1
+#define MAP_UNINITIALIZED 0
+#endif /* !CONFIG_HAVE_MAP_UNINITIALIZED */
+
+#ifndef CONFIG_HAVE_mmap
+#define CONFIG_HAVE_mmap 1
+#define mmap  mmap64
+#endif /* !CONFIG_HAVE_mmap */
+
+#ifdef __ARCH_STACK_GROWS_DOWNWARDS
+#define MMAP_STACK_FLAGS MAP_GROWSDOWN
+#else /* __ARCH_STACK_GROWS_DOWNWARDS */
+#define MMAP_STACK_FLAGS MAP_GROWSUP
+#endif /* !__ARCH_STACK_GROWS_DOWNWARDS */
+
+#endif /* EXEC_ALTSTACK_ALLOC_USE_MMAP */
+
+
 
 DECL_BEGIN
 
+/************************************************************************/
+/* STACK ALLOCATOR FUNCTIONS                                            */
+/************************************************************************/
+#ifndef EXEC_ALTSTACK_ALLOC_USE_STUB
 
-#ifdef CONFIG_HOST_WINDOWS
-#define ALTSTACK_ALLOC_FAILED   NULL
-#elif defined(MAP_FAILED)
-#define ALTSTACK_ALLOC_FAILED   MAP_FAILED
-#else
+/* Figure out the error return value for `[try]alloc_altstack()' */
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
+#define ALTSTACK_ALLOC_FAILED NULL
+#elif defined(EXEC_ALTSTACK_ALLOC_USE_MMAP)
+#ifdef MAP_FAILED
+#define ALTSTACK_ALLOC_FAILED MAP_FAILED
+#else /* MAP_FAILED */
 #define ALTSTACK_ALLOC_FAILED ((void *)-1)
+#endif /* !MAP_FAILED */
+#elif defined(EXEC_ALTSTACK_ALLOC_USE_MALLOC)
+#define ALTSTACK_ALLOC_FAILED NULL
+#else
+#define ALTSTACK_ALLOC_FAILED NULL
 #endif
 
-PRIVATE void *DCALL tryalloc_altstack(void) {
-#ifdef CONFIG_HOST_WINDOWS
+LOCAL void *DCALL tryalloc_altstack(void) {
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
 	return VirtualAlloc(NULL,
 	                    DEE_EXEC_ALTSTACK_SIZE,
 	                    MEM_COMMIT | MEM_RESERVE,
 	                    PAGE_READWRITE);
-#else /* CONFIG_HOST_WINDOWS */
-#ifndef MAP_ANONYMOUS
-#ifdef MAP_ANON
-#define MAP_ANONYMOUS MAP_ANON
-#endif /* MAP_ANON */
-#endif /* !MAP_ANONYMOUS */
-#ifndef MAP_PRIVATE
-#define MAP_PRIVATE 0
-#endif /* !MAP_PRIVATE */
-#ifndef MAP_GROWSDOWN
-#define MAP_GROWSDOWN 0
-#endif /* !MAP_GROWSDOWN */
-#ifndef MAP_FILE
-#define MAP_FILE 0
-#endif /* !MAP_FILE */
-#ifndef MAP_STACK
-#define MAP_STACK 0
-#endif /* !MAP_STACK */
-#ifndef MAP_UNINITIALIZED
-#define MAP_UNINITIALIZED 0
-#endif /* !MAP_UNINITIALIZED */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
 #ifdef MAP_ANONYMOUS
 	return mmap(NULL,
 	            DEE_EXEC_ALTSTACK_SIZE,
 	            PROT_READ | PROT_WRITE,
-	            MAP_ANONYMOUS | MAP_PRIVATE | MAP_GROWSDOWN |
-	            MAP_STACK | MAP_UNINITIALIZED,
-	            -1,
-	            0);
+	            MAP_ANONYMOUS | MAP_PRIVATE |
+	            MMAP_STACK_FLAGS | MAP_STACK |
+	            MAP_UNINITIALIZED,
+	            -1, 0);
 #else /* MAP_ANONYMOUS */
 	void *result;
 	int fd = open("/dev/null", O_RDONLY);
@@ -120,36 +226,48 @@ PRIVATE void *DCALL tryalloc_altstack(void) {
 	result = mmap(NULL,
 	              DEE_EXEC_ALTSTACK_SIZE,
 	              PROT_READ | PROT_WRITE,
-	              MAP_FILE | MAP_PRIVATE | MAP_GROWSDOWN | MAP_STACK,
-	              fd,
-	              0);
+	              MAP_FILE | MAP_PRIVATE |
+	              MMAP_STACK_FLAGS | MAP_STACK,
+	              fd, 0);
+#ifdef CONFIG_HAVE_close
 	close(fd);
+#endif /* CONFIG_HAVE_close */
 	return result;
 #endif /* !MAP_ANONYMOUS */
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_MMAP */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+	return Dee_TryMalloc(DEE_EXEC_ALTSTACK_SIZE);
+#endif /* EXEC_ALTSTACK_ALLOC_USE_MALLOC */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
+	return ALTSTACK_ALLOC_FAILED;
+#endif /* EXEC_ALTSTACK_ALLOC_USE_STUB */
 }
 
-#ifdef CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY
-INTERN void DCALL free_altstack(void *stack)
-#else /* CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY */
-PRIVATE void DCALL free_altstack(void *stack)
-#endif /* !CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY */
-{
-#ifdef CONFIG_HOST_WINDOWS
+STACK_ALLOCATOR_DECL void DCALL free_altstack(void *stack) {
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC
 	VirtualFree(stack, DEE_EXEC_ALTSTACK_SIZE, MEM_RELEASE);
-#else /* CONFIG_HOST_WINDOWS */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_VIRTUALALLOC */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_MMAP
+#ifdef CONFIG_HAVE_munmap
 	munmap(stack, DEE_EXEC_ALTSTACK_SIZE);
-#endif /* !CONFIG_HOST_WINDOWS */
+#else /* CONFIG_HAVE_munmap */
+	(void)stack;
+#endif /* !CONFIG_HAVE_munmap */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_MMAP */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_MALLOC
+	Dee_Free(stack);
+#endif /* EXEC_ALTSTACK_ALLOC_USE_MALLOC */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
+	(void)stack;
+#endif /* EXEC_ALTSTACK_ALLOC_USE_STUB */
 }
 
-
-
-#ifdef CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY
-INTERN void *DCALL alloc_altstack(void)
-#else /* CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY */
-PRIVATE void *DCALL alloc_altstack(void)
-#endif /* !CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY */
-{
+STACK_ALLOCATOR_DECL void *DCALL alloc_altstack(void) {
 	void *result;
 again:
 	result = tryalloc_altstack();
@@ -160,22 +278,22 @@ again:
 	}
 	return result;
 }
+#endif /* !EXEC_ALTSTACK_ALLOC_USE_STUB */
 
 
 
-#ifndef CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY
-#ifndef __USER_LABEL_PREFIX__
-#ifdef CONFIG_HOST_WINDOWS
-#define __USER_LABEL_PREFIX__ _
-#else /* CONFIG_HOST_WINDOWS */
-#define __USER_LABEL_PREFIX__ /* nothing */
-#endif /* !CONFIG_HOST_WINDOWS */
-#endif /* !__USER_LABEL_PREFIX__ */
 
 
+
+/************************************************************************/
+/* ALT-STACK EXECUTION FUNCTIONS                                        */
+/************************************************************************/
+#ifndef EXEC_ALTSTACK_ASM_USE_EXTERNAL
+
+/* GCC */
+#ifdef EXEC_ALTSTACK_ASM_USE_GCC
 #ifdef __x86_64__
 #define WRAP_SYMBOL(s) PP_STR(__USER_LABEL_PREFIX__) #s
-#ifdef __COMPILER_HAVE_GCC_ASM
 #define CALL_WITH_STACK(result, func, frame, new_stack)                     \
 	__asm__("push{q} {%%rbp|rbp}\n\t"                                       \
 	        "mov{q}  {%%rsp, %%rbp|rbp, rsp}\n\t"                           \
@@ -188,27 +306,12 @@ again:
 	        : "c" (frame)                                                   \
 	        , "r" (new_stack)                                               \
 	        : "memory", "cc")
-#else
-#define CALL_WITH_STACK(result, func, frame, new_stack) \
-	__asm {                                             \
-		__asm PUSH RBX                                  \
-		__asm MOV  RAX, new_stack                       \
-		__asm MOV  RCX, frame                           \
-		__asm MOV  RBX, RSP                             \
-		__asm LEA  RSP, [RAX + DEE_EXEC_ALTSTACK_SIZE]  \
-		__asm CALL func                                 \
-		__asm MOV  RSP, RBX                             \
-		__asm POP  RBX                                  \
-		__asm MOV  result, RAX                          \
-	}
-#endif
 #elif defined(__i386__)
 #ifdef CONFIG_HOST_WINDOWS
 #define WRAP_SYMBOL(s) "@" #s "@4"
 #else /* CONFIG_HOST_WINDOWS */
 #define WRAP_SYMBOL(s) PP_STR(__USER_LABEL_PREFIX__) #s
 #endif /* !CONFIG_HOST_WINDOWS */
-#ifdef __COMPILER_HAVE_GCC_ASM
 #define CALL_WITH_STACK(result, func, frame, new_stack)                     \
 	__asm__("push{l} {%%ebp|ebp}\n\t"                                       \
 	        "mov{l}  {%%esp, %%ebp|ebp, esp}\n\t"                           \
@@ -221,7 +324,27 @@ again:
 	        : "c" (frame)                                                   \
 	        , "r" (new_stack)                                               \
 	        : "memory", "cc")
-#else /* __COMPILER_HAVE_GCC_ASM */
+#else /* Arch... */
+#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_GCC 1' above)"
+#endif /* !Arch... */
+#endif /* EXEC_ALTSTACK_ASM_USE_GCC */
+
+/* MSVC */
+#ifdef EXEC_ALTSTACK_ASM_USE_MSVC
+#ifdef __x86_64__
+#define CALL_WITH_STACK(result, func, frame, new_stack) \
+	__asm {                                             \
+		__asm PUSH RBX                                  \
+		__asm MOV  RAX, new_stack                       \
+		__asm MOV  RCX, frame                           \
+		__asm MOV  RBX, RSP                             \
+		__asm LEA  RSP, [RAX + DEE_EXEC_ALTSTACK_SIZE]  \
+		__asm CALL func                                 \
+		__asm MOV  RSP, RBX                             \
+		__asm POP  RBX                                  \
+		__asm MOV  result, RAX                          \
+	}
+#elif defined(__i386__)
 #define CALL_WITH_STACK(result, func, frame, new_stack) \
 	__asm {                                             \
 		__asm PUSH EBX                                  \
@@ -234,14 +357,21 @@ again:
 		__asm POP  EBX                                  \
 		__asm MOV  result, EAX                          \
 	}
-#endif /* !__COMPILER_HAVE_GCC_ASM */
 #else /* Arch... */
-#error "Unsupported Architecture. - Please disable `CONFIG_HAVE_EXEC_ALTSTACK'"
+#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_MSVC 1' above)"
 #endif /* !Arch... */
+#endif /* EXEC_ALTSTACK_ASM_USE_MSVC */
 
 
-DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+
+
+
+/* Implement the actual altstack call functions. */
+PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
+#ifdef EXEC_ALTSTACK_ASM_USE_STUB
+	return DeeCode_ExecFrameFast(frame);
+#else /* EXEC_ALTSTACK_ASM_USE_STUB */
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
 	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
@@ -249,10 +379,14 @@ DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
 	CALL_WITH_STACK(result, DeeCode_ExecFrameFast, frame, new_stack);
 	free_altstack(new_stack);
 	return result;
+#endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
 }
 
-DFUNDEF NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
+#ifdef EXEC_ALTSTACK_ASM_USE_STUB
+	return DeeCode_ExecFrameSafe(frame);
+#else /* EXEC_ALTSTACK_ASM_USE_STUB */
 	DREF DeeObject *result;
 	void *new_stack = alloc_altstack();
 	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
@@ -260,16 +394,16 @@ DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
 	CALL_WITH_STACK(result, DeeCode_ExecFrameSafe, frame, new_stack);
 	free_altstack(new_stack);
 	return result;
+#endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
 }
-#endif /* !CONFIG_EXEC_ALTSTACK_USES_EXTERNAL_ASSEMBLY */
+#endif /* !EXEC_ALTSTACK_ASM_USE_EXTERNAL */
 
 DECL_END
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 
 
+
 DECL_BEGIN
-
-
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 trigger_breakpoint(struct code_frame *__restrict frame) {
@@ -883,7 +1017,7 @@ PRIVATE struct type_getset code_getsets[] = {
 	      "Access to the default values of arguments") },
 	/* Code-specific RTTI fields don't have leading/trailing underscores,
 	 * because they don't need to match the ABI also provided by numerous
-	 * other types (such as `function', `objmethod', etc.) */
+	 * other types (such as `Function', `ObjMethod', etc.) */
 	{ "statics",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
 	  DOC("->?S?O\n"

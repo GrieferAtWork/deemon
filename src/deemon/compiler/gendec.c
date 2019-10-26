@@ -47,7 +47,6 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
-
 DECL_BEGIN
 
 #define SC_HEADER     (&current_dec.dw_sec_defl[DEC_SECTION_HEADER])

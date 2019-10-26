@@ -25,13 +25,11 @@
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* `memrchr()' */
+#include <deemon/system-features.h> /* memrchr(), qsort() */
 #include <deemon/util/bytewriter.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
-
-#include <stdlib.h> /* `qsort()'; TODO: Add a feature check for this! */
 
 DECL_BEGIN
 
@@ -40,6 +38,14 @@ DECL_BEGIN
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
+
+#ifndef CONFIG_HAVE_qsort
+#define CONFIG_HAVE_qsort 1
+#define qsort   dee_qsort
+DeeSystem_DEFINE_qsort(dee_qsort)
+#endif /* !CONFIG_HAVE_qsort */
+
+
 
 #define ddi current_assembler.a_ddi
 /* Replace all symbols in checkpoints with load addresses. */
@@ -274,8 +280,6 @@ xddi_putsymbol(struct bytewriter *__restrict writer,
 err:
 	return -1;
 }
-
-
 
 
 INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {

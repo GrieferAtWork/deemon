@@ -104,7 +104,9 @@ function header(name, default_requirements = "") {
 	header_nostdinc(name, default_requirements);
 }
 
-#define var  func
+#define var      func
+#define typ      func
+#define constant func
 function func(name, default_requirements = "", check_defined = true) {
 	if (default_requirements != "1" && check_defined) {
 		default_requirements = addparen(default_requirements);
@@ -217,7 +219,7 @@ func("_wsystem", msvc);
 
 func("creat", unix);
 func("_creat", msvc);
-func("_wcreat", msvc);
+func("_wcreat", "defined(_WIO_DEFINED)");
 
 func("open", unix);
 func("_open", msvc);
@@ -249,10 +251,15 @@ func("fstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)")
 func("lstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
 func("fstatat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 func("fstatat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)");
+feature("STAT_HAVE_ST_NSEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC)"); // syscall_ulong_t st_[acm]timensec
+feature("STAT_HAVE_ST_TIM", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIM)"); // struct timespec st_[acm]tim
+feature("STAT_HAVE_ST_TIMESPEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)"); // struct timespec st_[acm]timespec
 
 func("mkdir", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 func("_mkdir", msvc);
 func("chmod", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+func("_chmod", msvc);
+func("_wchmod", "defined(_WIO_DEFINED)");
 func("mkfifo", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 func("lchmod", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
 func("fchmodat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
@@ -265,6 +272,20 @@ func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
 func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)");
 func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)");
 func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)");
+
+func("time", "defined(CONFIG_HAVE_TIME_H)");
+func("time64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_TIME64)");
+func("clock_gettime", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
+func("clock_gettime64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)");
+constant("CLOCK_REALTIME", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
+func("gettimeofday", "defined(CONFIG_HAVE_SYS_TIME_H)");
+func("gettimeofday64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)");
+func("utimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)");
+func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)");
+func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)");
+func("lutimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)");
+func("futimesat", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU)");
+func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)");
 
 
 print "#if",msvc;
@@ -280,7 +301,7 @@ func("euidaccess", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R
 func("eaccess", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)");
 func("faccessat", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)");
 func("_access", msvc);
-func("_waccess", msvc);
+func("_waccess", "defined(_WIO_DEFINED)");
 
 func("fchownat", "defined(__USE_ATFILE)");
 
@@ -319,9 +340,19 @@ func("_getcwd", msvc);
 func("wgetcwd");
 func("_wgetcwd", "defined(_WDIRECT_DEFINED)");
 
-func("getenv", stdc);
+func("unlink", unix);
+func("_unlink", "defined(_CRT_DIRECTORY_DEFINED)");
+func("remove", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
+func("_wunlink", "defined(_WIO_DEFINED)");
+func("_wremove", "defined(_WSTDIO_DEFINED)");
+func("rename", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
+func("_wrename", "defined(_WIO_DEFINED)");
 
-func("wcslen", stdc);
+func("getenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
+
+func("wcslen", "defined(CONFIG_HAVE_WCHAR_H) && " + addparen(stdc));
+
+func("qsort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
 
 func("truncate", addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8)");
 func("truncate64", "defined(__USE_LARGEFILE64) && (" + addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))");
@@ -337,12 +368,24 @@ func("nice", "defined(__USE_MISC) || defined(__USE_XOPEN) || (" + isenabled("_PO
 
 func("mmap", isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
 func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))");
+func("munmap", "CONFIG_HAVE_mmap");
+constant("MAP_ANONYMOUS");
+constant("MAP_ANON");
+constant("MAP_PRIVATE");
+constant("MAP_GROWSUP");
+constant("MAP_GROWSDOWN");
+constant("MAP_FILE");
+constant("MAP_STACK");
+constant("MAP_UNINITIALIZED");
+constant("PROT_READ");
+constant("PROT_WRITE");
 
 func("pipe", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
 func("pipe2", "defined(__USE_GNU)");
 func("_pipe", msvc);
 
-func("usleep", "(defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)");
+func("usleep", "defined(CONFIG_HAVE_UNISTD_H) && ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC))");
+typ("useconds_t", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN) || defined(__USE_XOPEN2K))");
 func("nanosleep", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
 func("nanosleep64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)");
 
@@ -403,8 +446,8 @@ func("pthread_unsuspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0");
 func("pthread_setname", "defined(CONFIG_HAVE_PTHREAD_H) && 0");
 func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)");
 
-func("abort", stdc);
-func("strerror", stdc);
+func("abort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
+func("strerror", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
 
 func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)");
 func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)");
@@ -689,6 +732,24 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_SYS_SIGNALFD_H 1
 #endif
 
+#ifdef CONFIG_NO_CTYPE_H
+#undef CONFIG_HAVE_CTYPE_H
+#else
+#define CONFIG_HAVE_CTYPE_H 1
+#endif
+
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#else
+#define CONFIG_HAVE_STRING_H 1
+#endif
+
+#ifdef CONFIG_NO_WCHAR_H
+#undef CONFIG_HAVE_WCHAR_H
+#else
+#define CONFIG_HAVE_WCHAR_H 1
+#endif
+
 #ifdef CONFIG_NO_DLFCN_H
 #undef CONFIG_HAVE_DLFCN_H
 #elif !defined(CONFIG_HAVE_DLFCN_H) && \
@@ -710,22 +771,10 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_LIMITS_H 1
 #endif
 
-#ifdef CONFIG_NO_CTYPE_H
-#undef CONFIG_HAVE_CTYPE_H
+#ifdef CONFIG_NO_LINK_H
+#undef CONFIG_HAVE_LINK_H
 #else
-#define CONFIG_HAVE_CTYPE_H 1
-#endif
-
-#ifdef CONFIG_NO_STRING_H
-#undef CONFIG_HAVE_STRING_H
-#else
-#define CONFIG_HAVE_STRING_H 1
-#endif
-
-#ifdef CONFIG_NO_WCHAR_H
-#undef CONFIG_HAVE_WCHAR_H
-#else
-#define CONFIG_HAVE_WCHAR_H 1
+#define CONFIG_HAVE_LINK_H 1
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -1118,7 +1167,7 @@ var("_doserrno", msvc);
 #ifdef CONFIG_NO__wcreat
 #undef CONFIG_HAVE__wcreat
 #elif !defined(CONFIG_HAVE__wcreat) && \
-      (defined(_wcreat) || defined(___wcreat_defined) || defined(_MSC_VER))
+      (defined(_wcreat) || defined(___wcreat_defined) || defined(_WIO_DEFINED))
 #define CONFIG_HAVE__wcreat 1
 #endif
 
@@ -1303,6 +1352,27 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_fstatat64 1
 #endif
 
+#ifdef CONFIG_NO_STAT_HAVE_ST_NSEC
+#undef CONFIG_HAVE_STAT_HAVE_ST_NSEC
+#elif !defined(CONFIG_HAVE_STAT_HAVE_ST_NSEC) && \
+      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC))
+#define CONFIG_HAVE_STAT_HAVE_ST_NSEC 1
+#endif
+
+#ifdef CONFIG_NO_STAT_HAVE_ST_TIM
+#undef CONFIG_HAVE_STAT_HAVE_ST_TIM
+#elif !defined(CONFIG_HAVE_STAT_HAVE_ST_TIM) && \
+      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIM))
+#define CONFIG_HAVE_STAT_HAVE_ST_TIM 1
+#endif
+
+#ifdef CONFIG_NO_STAT_HAVE_ST_TIMESPEC
+#undef CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC
+#elif !defined(CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC) && \
+      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
+#define CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC 1
+#endif
+
 #ifdef CONFIG_NO_mkdir
 #undef CONFIG_HAVE_mkdir
 #elif !defined(CONFIG_HAVE_mkdir) && \
@@ -1326,6 +1396,20 @@ var("_doserrno", msvc);
        (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
        defined(__unix) || defined(unix))))
 #define CONFIG_HAVE_chmod 1
+#endif
+
+#ifdef CONFIG_NO__chmod
+#undef CONFIG_HAVE__chmod
+#elif !defined(CONFIG_HAVE__chmod) && \
+      (defined(_chmod) || defined(___chmod_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__chmod 1
+#endif
+
+#ifdef CONFIG_NO__wchmod
+#undef CONFIG_HAVE__wchmod
+#elif !defined(CONFIG_HAVE__wchmod) && \
+      (defined(_wchmod) || defined(___wchmod_defined) || defined(_WIO_DEFINED))
+#define CONFIG_HAVE__wchmod 1
 #endif
 
 #ifdef CONFIG_NO_mkfifo
@@ -1425,6 +1509,107 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_futimens64 1
 #endif
 
+#ifdef CONFIG_NO_time
+#undef CONFIG_HAVE_time
+#elif !defined(CONFIG_HAVE_time) && \
+      (defined(time) || defined(__time_defined) || defined(CONFIG_HAVE_TIME_H))
+#define CONFIG_HAVE_time 1
+#endif
+
+#ifdef CONFIG_NO_time64
+#undef CONFIG_HAVE_time64
+#elif !defined(CONFIG_HAVE_time64) && \
+      (defined(time64) || defined(__time64_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_TIME64)))
+#define CONFIG_HAVE_time64 1
+#endif
+
+#ifdef CONFIG_NO_clock_gettime
+#undef CONFIG_HAVE_clock_gettime
+#elif !defined(CONFIG_HAVE_clock_gettime) && \
+      (defined(clock_gettime) || defined(__clock_gettime_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX199309)))
+#define CONFIG_HAVE_clock_gettime 1
+#endif
+
+#ifdef CONFIG_NO_clock_gettime64
+#undef CONFIG_HAVE_clock_gettime64
+#elif !defined(CONFIG_HAVE_clock_gettime64) && \
+      (defined(clock_gettime64) || defined(__clock_gettime64_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX199309) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_clock_gettime64 1
+#endif
+
+#ifdef CONFIG_NO_CLOCK_REALTIME
+#undef CONFIG_HAVE_CLOCK_REALTIME
+#elif !defined(CONFIG_HAVE_CLOCK_REALTIME) && \
+      (defined(CLOCK_REALTIME) || defined(__CLOCK_REALTIME_defined) || (defined(CONFIG_HAVE_TIME_H) && \
+       defined(__USE_POSIX199309)))
+#define CONFIG_HAVE_CLOCK_REALTIME 1
+#endif
+
+#ifdef CONFIG_NO_gettimeofday
+#undef CONFIG_HAVE_gettimeofday
+#elif !defined(CONFIG_HAVE_gettimeofday) && \
+      (defined(gettimeofday) || defined(__gettimeofday_defined) || defined(CONFIG_HAVE_SYS_TIME_H))
+#define CONFIG_HAVE_gettimeofday 1
+#endif
+
+#ifdef CONFIG_NO_gettimeofday64
+#undef CONFIG_HAVE_gettimeofday64
+#elif !defined(CONFIG_HAVE_gettimeofday64) && \
+      (defined(gettimeofday64) || defined(__gettimeofday64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_TIME64)))
+#define CONFIG_HAVE_gettimeofday64 1
+#endif
+
+#ifdef CONFIG_NO_utimes
+#undef CONFIG_HAVE_utimes
+#elif !defined(CONFIG_HAVE_utimes) && \
+      (defined(utimes) || defined(__utimes_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_MISC)))
+#define CONFIG_HAVE_utimes 1
+#endif
+
+#ifdef CONFIG_NO_utimes64
+#undef CONFIG_HAVE_utimes64
+#elif !defined(CONFIG_HAVE_utimes64) && \
+      (defined(utimes64) || defined(__utimes64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_MISC) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_utimes64 1
+#endif
+
+#ifdef CONFIG_NO_lutimes
+#undef CONFIG_HAVE_lutimes
+#elif !defined(CONFIG_HAVE_lutimes) && \
+      (defined(lutimes) || defined(__lutimes_defined) || defined(CONFIG_HAVE_SYS_TIME_H))
+#define CONFIG_HAVE_lutimes 1
+#endif
+
+#ifdef CONFIG_NO_lutimes64
+#undef CONFIG_HAVE_lutimes64
+#elif !defined(CONFIG_HAVE_lutimes64) && \
+      (defined(lutimes64) || defined(__lutimes64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_TIME64)))
+#define CONFIG_HAVE_lutimes64 1
+#endif
+
+#ifdef CONFIG_NO_futimesat
+#undef CONFIG_HAVE_futimesat
+#elif !defined(CONFIG_HAVE_futimesat) && \
+      (defined(futimesat) || defined(__futimesat_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_GNU)))
+#define CONFIG_HAVE_futimesat 1
+#endif
+
+#ifdef CONFIG_NO_futimesat64
+#undef CONFIG_HAVE_futimesat64
+#elif !defined(CONFIG_HAVE_futimesat64) && \
+      (defined(futimesat64) || defined(__futimesat64_defined) || (defined(CONFIG_HAVE_SYS_TIME_H) && \
+       defined(__USE_GNU) && defined(__USE_TIME64)))
+#define CONFIG_HAVE_futimesat64 1
+#endif
+
 #if defined(_MSC_VER)
 #define F_OK     0
 #define X_OK     1 /* Not supported? */
@@ -1475,7 +1660,7 @@ var("_doserrno", msvc);
 #ifdef CONFIG_NO__waccess
 #undef CONFIG_HAVE__waccess
 #elif !defined(CONFIG_HAVE__waccess) && \
-      (defined(_waccess) || defined(___waccess_defined) || defined(_MSC_VER))
+      (defined(_waccess) || defined(___waccess_defined) || defined(_WIO_DEFINED))
 #define CONFIG_HAVE__waccess 1
 #endif
 
@@ -1680,16 +1865,76 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE__wgetcwd 1
 #endif
 
+#ifdef CONFIG_NO_unlink
+#undef CONFIG_HAVE_unlink
+#elif !defined(CONFIG_HAVE_unlink) && \
+      (defined(unlink) || defined(__unlink_defined) || (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix)))
+#define CONFIG_HAVE_unlink 1
+#endif
+
+#ifdef CONFIG_NO__unlink
+#undef CONFIG_HAVE__unlink
+#elif !defined(CONFIG_HAVE__unlink) && \
+      (defined(_unlink) || defined(___unlink_defined) || defined(_CRT_DIRECTORY_DEFINED))
+#define CONFIG_HAVE__unlink 1
+#endif
+
+#ifdef CONFIG_NO_remove
+#undef CONFIG_HAVE_remove
+#elif !defined(CONFIG_HAVE_remove) && \
+      (defined(remove) || defined(__remove_defined) || defined(CONFIG_HAVE_STDIO_H))
+#define CONFIG_HAVE_remove 1
+#endif
+
+#ifdef CONFIG_NO__wunlink
+#undef CONFIG_HAVE__wunlink
+#elif !defined(CONFIG_HAVE__wunlink) && \
+      (defined(_wunlink) || defined(___wunlink_defined) || defined(_WIO_DEFINED))
+#define CONFIG_HAVE__wunlink 1
+#endif
+
+#ifdef CONFIG_NO__wremove
+#undef CONFIG_HAVE__wremove
+#elif !defined(CONFIG_HAVE__wremove) && \
+      (defined(_wremove) || defined(___wremove_defined) || defined(_WSTDIO_DEFINED))
+#define CONFIG_HAVE__wremove 1
+#endif
+
+#ifdef CONFIG_NO_rename
+#undef CONFIG_HAVE_rename
+#elif !defined(CONFIG_HAVE_rename) && \
+      (defined(rename) || defined(__rename_defined) || defined(CONFIG_HAVE_STDIO_H))
+#define CONFIG_HAVE_rename 1
+#endif
+
+#ifdef CONFIG_NO__wrename
+#undef CONFIG_HAVE__wrename
+#elif !defined(CONFIG_HAVE__wrename) && \
+      (defined(_wrename) || defined(___wrename_defined) || defined(_WIO_DEFINED))
+#define CONFIG_HAVE__wrename 1
+#endif
+
 #ifdef CONFIG_NO_getenv
 #undef CONFIG_HAVE_getenv
-#else
+#elif !defined(CONFIG_HAVE_getenv) && \
+      (defined(getenv) || defined(__getenv_defined) || defined(CONFIG_HAVE_STDLIB_H))
 #define CONFIG_HAVE_getenv 1
 #endif
 
 #ifdef CONFIG_NO_wcslen
 #undef CONFIG_HAVE_wcslen
-#else
+#elif !defined(CONFIG_HAVE_wcslen) && \
+      (defined(wcslen) || defined(__wcslen_defined) || defined(CONFIG_HAVE_WCHAR_H))
 #define CONFIG_HAVE_wcslen 1
+#endif
+
+#ifdef CONFIG_NO_qsort
+#undef CONFIG_HAVE_qsort
+#elif !defined(CONFIG_HAVE_qsort) && \
+      (defined(qsort) || defined(__qsort_defined) || defined(CONFIG_HAVE_STDLIB_H))
+#define CONFIG_HAVE_qsort 1
 #endif
 
 #ifdef CONFIG_NO_truncate
@@ -1800,6 +2045,83 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_mmap64 1
 #endif
 
+#ifdef CONFIG_NO_munmap
+#undef CONFIG_HAVE_munmap
+#elif !defined(CONFIG_HAVE_munmap) && \
+      (defined(munmap) || defined(__munmap_defined) || CONFIG_HAVE_mmap)
+#define CONFIG_HAVE_munmap 1
+#endif
+
+#ifdef CONFIG_NO_MAP_ANONYMOUS
+#undef CONFIG_HAVE_MAP_ANONYMOUS
+#elif !defined(CONFIG_HAVE_MAP_ANONYMOUS) && \
+      (defined(MAP_ANONYMOUS) || defined(__MAP_ANONYMOUS_defined))
+#define CONFIG_HAVE_MAP_ANONYMOUS 1
+#endif
+
+#ifdef CONFIG_NO_MAP_ANON
+#undef CONFIG_HAVE_MAP_ANON
+#elif !defined(CONFIG_HAVE_MAP_ANON) && \
+      (defined(MAP_ANON) || defined(__MAP_ANON_defined))
+#define CONFIG_HAVE_MAP_ANON 1
+#endif
+
+#ifdef CONFIG_NO_MAP_PRIVATE
+#undef CONFIG_HAVE_MAP_PRIVATE
+#elif !defined(CONFIG_HAVE_MAP_PRIVATE) && \
+      (defined(MAP_PRIVATE) || defined(__MAP_PRIVATE_defined))
+#define CONFIG_HAVE_MAP_PRIVATE 1
+#endif
+
+#ifdef CONFIG_NO_MAP_GROWSUP
+#undef CONFIG_HAVE_MAP_GROWSUP
+#elif !defined(CONFIG_HAVE_MAP_GROWSUP) && \
+      (defined(MAP_GROWSUP) || defined(__MAP_GROWSUP_defined))
+#define CONFIG_HAVE_MAP_GROWSUP 1
+#endif
+
+#ifdef CONFIG_NO_MAP_GROWSDOWN
+#undef CONFIG_HAVE_MAP_GROWSDOWN
+#elif !defined(CONFIG_HAVE_MAP_GROWSDOWN) && \
+      (defined(MAP_GROWSDOWN) || defined(__MAP_GROWSDOWN_defined))
+#define CONFIG_HAVE_MAP_GROWSDOWN 1
+#endif
+
+#ifdef CONFIG_NO_MAP_FILE
+#undef CONFIG_HAVE_MAP_FILE
+#elif !defined(CONFIG_HAVE_MAP_FILE) && \
+      (defined(MAP_FILE) || defined(__MAP_FILE_defined))
+#define CONFIG_HAVE_MAP_FILE 1
+#endif
+
+#ifdef CONFIG_NO_MAP_STACK
+#undef CONFIG_HAVE_MAP_STACK
+#elif !defined(CONFIG_HAVE_MAP_STACK) && \
+      (defined(MAP_STACK) || defined(__MAP_STACK_defined))
+#define CONFIG_HAVE_MAP_STACK 1
+#endif
+
+#ifdef CONFIG_NO_MAP_UNINITIALIZED
+#undef CONFIG_HAVE_MAP_UNINITIALIZED
+#elif !defined(CONFIG_HAVE_MAP_UNINITIALIZED) && \
+      (defined(MAP_UNINITIALIZED) || defined(__MAP_UNINITIALIZED_defined))
+#define CONFIG_HAVE_MAP_UNINITIALIZED 1
+#endif
+
+#ifdef CONFIG_NO_PROT_READ
+#undef CONFIG_HAVE_PROT_READ
+#elif !defined(CONFIG_HAVE_PROT_READ) && \
+      (defined(PROT_READ) || defined(__PROT_READ_defined))
+#define CONFIG_HAVE_PROT_READ 1
+#endif
+
+#ifdef CONFIG_NO_PROT_WRITE
+#undef CONFIG_HAVE_PROT_WRITE
+#elif !defined(CONFIG_HAVE_PROT_WRITE) && \
+      (defined(PROT_WRITE) || defined(__PROT_WRITE_defined))
+#define CONFIG_HAVE_PROT_WRITE 1
+#endif
+
 #ifdef CONFIG_NO_pipe
 #undef CONFIG_HAVE_pipe
 #elif !defined(CONFIG_HAVE_pipe) && \
@@ -1826,9 +2148,17 @@ var("_doserrno", msvc);
 #ifdef CONFIG_NO_usleep
 #undef CONFIG_HAVE_usleep
 #elif !defined(CONFIG_HAVE_usleep) && \
-      (defined(usleep) || defined(__usleep_defined) || ((defined(__USE_XOPEN_EXTENDED) && \
-       !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)))
+      (defined(usleep) || defined(__usleep_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC))))
 #define CONFIG_HAVE_usleep 1
+#endif
+
+#ifdef CONFIG_NO_useconds_t
+#undef CONFIG_HAVE_useconds_t
+#elif !defined(CONFIG_HAVE_useconds_t) && \
+      (defined(useconds_t) || defined(__useconds_t_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       (defined(__USE_XOPEN) || defined(__USE_XOPEN2K))))
+#define CONFIG_HAVE_useconds_t 1
 #endif
 
 #ifdef CONFIG_NO_nanosleep
@@ -2238,13 +2568,15 @@ var("_doserrno", msvc);
 
 #ifdef CONFIG_NO_abort
 #undef CONFIG_HAVE_abort
-#else
+#elif !defined(CONFIG_HAVE_abort) && \
+      (defined(abort) || defined(__abort_defined) || defined(CONFIG_HAVE_STDLIB_H))
 #define CONFIG_HAVE_abort 1
 #endif
 
 #ifdef CONFIG_NO_strerror
 #undef CONFIG_HAVE_strerror
-#else
+#elif !defined(CONFIG_HAVE_strerror) && \
+      (defined(strerror) || defined(__strerror_defined) || defined(CONFIG_HAVE_STRING_H))
 #define CONFIG_HAVE_strerror 1
 #endif
 
@@ -2524,7 +2856,7 @@ var("_doserrno", msvc);
 
 
 
-/* Substitue some known function aliases */
+/* Substitute some known function aliases */
 #if defined(CONFIG_HAVE__exit) && !defined(CONFIG_HAVE__Exit)
 #define CONFIG_HAVE__Exit 1
 #define _Exit(exit_code) _exit(exit_code)
@@ -2629,6 +2961,41 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_creat 1
 #define creat _creat
 #endif /* creat = _creat */
+
+#if defined(CONFIG_HAVE__chmod) && !defined(CONFIG_HAVE_chmod)
+#define CONFIG_HAVE_chmod 1
+#define chmod _chmod
+#endif /* chmod = _chmod */
+
+#if defined(CONFIG_HAVE__unlink) && !defined(CONFIG_HAVE_unlink)
+#define CONFIG_HAVE_unlink 1
+#define unlink _unlink
+#endif /* unlink = _unlink */
+
+#if defined(CONFIG_HAVE__wunlink) && !defined(CONFIG_HAVE_wunlink)
+#define CONFIG_HAVE_wunlink 1
+#define wunlink _wunlink
+#endif /* wunlink = _wunlink */
+
+#if defined(CONFIG_HAVE__remove) && !defined(CONFIG_HAVE_remove)
+#define CONFIG_HAVE_remove 1
+#define remove _remove
+#endif /* remove = _remove */
+
+#if defined(CONFIG_HAVE__wremove) && !defined(CONFIG_HAVE_wremove)
+#define CONFIG_HAVE_wremove 1
+#define wremove _wremove
+#endif /* wremove = _wremove */
+
+#if defined(CONFIG_HAVE__rename) && !defined(CONFIG_HAVE_rename)
+#define CONFIG_HAVE_rename 1
+#define rename _rename
+#endif /* rename = _rename */
+
+#if defined(CONFIG_HAVE__wrename) && !defined(CONFIG_HAVE_wrename)
+#define CONFIG_HAVE_wrename 1
+#define wrename _wrename
+#endif /* wrename = _wrename */
 
 #if defined(CONFIG_HAVE__wopen) && !defined(CONFIG_HAVE_wopen)
 #define CONFIG_HAVE_wopen 1
@@ -2834,6 +3201,17 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_putc 1
 #define putc fputc
 #endif /* putc = fputc */
+
+#if defined(CONFIG_HAVE_MAP_ANON) && !defined(CONFIG_HAVE_MAP_ANONYMOUS)
+#define CONFIG_HAVE_MAP_ANONYMOUS 1
+#define MAP_ANONYMOUS MAP_ANON
+#endif /* MAP_ANONYMOUS = MAP_ANON */
+
+#if defined(CONFIG_HAVE_MAP_ANONYMOUS) && !defined(CONFIG_HAVE_MAP_ANON)
+#define CONFIG_HAVE_MAP_ANON 1
+#define MAP_ANON MAP_ANONYMOUS
+#endif /* MAP_ANON = MAP_ANONYMOUS */
+
 
 
 /* Configure O_* flags for `open()' */
@@ -3666,6 +4044,253 @@ var("_doserrno", msvc);
 		return NULL;                                                                           \
 	}
 
+#define DeeSystem_DEFINE_qsort(name)                                                \
+	LOCAL void _##name##_swapmemory(uint8_t *a, uint8_t *b,                         \
+	                                size_t num_bytes) {                             \
+		size_t i;                                                                   \
+		for (i = 0; i < num_bytes; ++i) {                                           \
+			uint8_t temp;                                                           \
+			temp = a[i];                                                            \
+			a[i] = b[i];                                                            \
+			b[i] = temp;                                                            \
+		}                                                                           \
+	}                                                                               \
+	LOCAL void name(void *base, size_t count, size_t size,                          \
+	                int (*compare)(void const *a, void const *b)) {                 \
+		size_t i, j;                                                                \
+		/* Not actually quick-sort, but this function's only used as fallback       \
+		 * when the linked libc doesn't offer a real qsort function, so it's ok! */ \
+		for (i = 0; i < count; ++i) {                                               \
+			for (j = i; j < count; ++j) {                                           \
+				uint8_t *a = (uint8_t *)base + j * size;                            \
+				uint8_t *b = (uint8_t *)base + i * size;                            \
+				if ((*compare)(a, b) < 0)                                           \
+					_##name##_swapmemory(a, b, size);                               \
+			}                                                                       \
+		}                                                                           \
+	}
+
+
+
+
+/* errno classification helper macros */
+
+/*[[[deemon
+import * from deemon;
+import * from util;
+local n = 4;
+
+local errno_names = {
+	"ENOENT",
+	"ENOTDIR",
+	"ENAMETOOLONG",
+	"ELOOP",
+	"EPERM",
+	"EACCES",
+	"EROFS"
+};
+
+for (local x: errno_names) {
+	print "#ifdef",x;
+	print "#define DeePrivateSystem_IF_HAVE_",;
+	print x,;
+	print "(tt, ff) tt";
+	print "#else /" "*", x, "*" "/";
+	print "#define DeePrivateSystem_IF_HAVE_",;
+	print x,;
+	print "(tt, ff) ff";
+	print "#endif /" "* !",;
+	print x,"*" "/";
+}
+
+
+function printMacro(text) {
+	local longest_line_length = 0;
+	local lines = List(text.splitlines(false));
+	for (local x: lines) {
+		x = #x.expandtabs(4);
+		if (longest_line_length < x)
+			longest_line_length = x;
+	}
+	for (local i, x: enumerate(lines)) {
+		print x,;
+		if (i == #lines - 1) {
+			print;
+		} else {
+			x = #x.expandtabs(4);
+			print " " * (longest_line_length - x),;
+			print " \\";
+		}
+	}
+}
+
+for (local x: [1:n+1]) {
+	File.Writer fp;
+	fp << "#define DeePrivateSystem_IF_E" << x << "(errno, ";
+	fp << ", ".join(for (local i: [:x]) "e" + (i + 1));
+	fp << ", ...)\n";
+	fp << "	do {\n";
+	fp << "		if (";
+	fp << " || ".join(for (local i: [:x]) "(errno) == e" + (i + 1));
+	fp << ") {\n";
+	fp << "			__VA_ARGS__;\n";
+	fp << "		}\n";
+	fp << "	} __WHILE0";
+	printMacro(fp.string);
+}
+
+function printIfElseSelection(fp, prefix, checked, unchecked) {
+	if (!unchecked) {
+		if (!checked) {
+			fp << "(void)0";
+		} else {
+			fp << "DeePrivateSystem_IF_E" << #checked << "(errno, "
+				<< ", ".join(checked) << ", __VA_ARGS__)";
+		}
+	} else {
+		local first = unchecked[0];
+		local other = List(unchecked[1:]);
+		fp << "DeePrivateSystem_IF_HAVE_##" << first << "(\n";
+		fp << prefix << "\t";
+		printIfElseSelection(fp, prefix + "\t", checked + { first }, other);
+		fp << "," << "\n";
+		fp << prefix << "\t";
+		printIfElseSelection(fp, prefix + "\t", checked, other);
+		fp << ")";
+	}
+}
+
+for (local x: [1:n+1]) {
+	File.Writer fp;
+	fp << "#define DeeSystem_IF_E" << x << "(errno, ";
+	fp << ", ".join(for (local i: [:x]) "e" + (i + 1));
+	fp << ", ...)\n";
+	fp << "\t";
+	printIfElseSelection(fp, "\t", [], List(for (local i: [:x]) "e" + (i + 1)));
+	printMacro(fp.string);
+}
+
+]]]*/
+#ifdef ENOENT
+#define DeePrivateSystem_IF_HAVE_ENOENT(tt, ff) tt
+#else /* ENOENT */
+#define DeePrivateSystem_IF_HAVE_ENOENT(tt, ff) ff
+#endif /* !ENOENT */
+#ifdef ENOTDIR
+#define DeePrivateSystem_IF_HAVE_ENOTDIR(tt, ff) tt
+#else /* ENOTDIR */
+#define DeePrivateSystem_IF_HAVE_ENOTDIR(tt, ff) ff
+#endif /* !ENOTDIR */
+#ifdef ENAMETOOLONG
+#define DeePrivateSystem_IF_HAVE_ENAMETOOLONG(tt, ff) tt
+#else /* ENAMETOOLONG */
+#define DeePrivateSystem_IF_HAVE_ENAMETOOLONG(tt, ff) ff
+#endif /* !ENAMETOOLONG */
+#ifdef ELOOP
+#define DeePrivateSystem_IF_HAVE_ELOOP(tt, ff) tt
+#else /* ELOOP */
+#define DeePrivateSystem_IF_HAVE_ELOOP(tt, ff) ff
+#endif /* !ELOOP */
+#ifdef EPERM
+#define DeePrivateSystem_IF_HAVE_EPERM(tt, ff) tt
+#else /* EPERM */
+#define DeePrivateSystem_IF_HAVE_EPERM(tt, ff) ff
+#endif /* !EPERM */
+#ifdef EACCES
+#define DeePrivateSystem_IF_HAVE_EACCES(tt, ff) tt
+#else /* EACCES */
+#define DeePrivateSystem_IF_HAVE_EACCES(tt, ff) ff
+#endif /* !EACCES */
+#ifdef EROFS
+#define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) tt
+#else /* EROFS */
+#define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) ff
+#endif /* !EROFS */
+#define DeePrivateSystem_IF_E1(errno, e1, ...) \
+	do {                                       \
+		if ((errno) == e1) {                   \
+			__VA_ARGS__;                       \
+		}                                      \
+	} __WHILE0
+#define DeePrivateSystem_IF_E2(errno, e1, e2, ...) \
+	do {                                           \
+		if ((errno) == e1 || (errno) == e2) {      \
+			__VA_ARGS__;                           \
+		}                                          \
+	} __WHILE0
+#define DeePrivateSystem_IF_E3(errno, e1, e2, e3, ...)         \
+	do {                                                       \
+		if ((errno) == e1 || (errno) == e2 || (errno) == e3) { \
+			__VA_ARGS__;                                       \
+		}                                                      \
+	} __WHILE0
+#define DeePrivateSystem_IF_E4(errno, e1, e2, e3, e4, ...)                      \
+	do {                                                                        \
+		if ((errno) == e1 || (errno) == e2 || (errno) == e3 || (errno) == e4) { \
+			__VA_ARGS__;                                                        \
+		}                                                                       \
+	} __WHILE0
+#define DeeSystem_IF_E1(errno, e1, ...)                 \
+	DeePrivateSystem_IF_HAVE_##e1(                      \
+		DeePrivateSystem_IF_E1(errno, e1, __VA_ARGS__), \
+		(void)0)
+#define DeeSystem_IF_E2(errno, e1, e2, ...)                     \
+	DeePrivateSystem_IF_HAVE_##e1(                              \
+		DeePrivateSystem_IF_HAVE_##e2(                          \
+			DeePrivateSystem_IF_E2(errno, e1, e2, __VA_ARGS__), \
+			DeePrivateSystem_IF_E1(errno, e1, __VA_ARGS__)),    \
+		DeePrivateSystem_IF_HAVE_##e2(                          \
+			DeePrivateSystem_IF_E1(errno, e2, __VA_ARGS__),     \
+			(void)0))
+#define DeeSystem_IF_E3(errno, e1, e2, e3, ...)                         \
+	DeePrivateSystem_IF_HAVE_##e1(                                      \
+		DeePrivateSystem_IF_HAVE_##e2(                                  \
+			DeePrivateSystem_IF_HAVE_##e3(                              \
+				DeePrivateSystem_IF_E3(errno, e1, e2, e3, __VA_ARGS__), \
+				DeePrivateSystem_IF_E2(errno, e1, e2, __VA_ARGS__)),    \
+			DeePrivateSystem_IF_HAVE_##e3(                              \
+				DeePrivateSystem_IF_E2(errno, e1, e3, __VA_ARGS__),     \
+				DeePrivateSystem_IF_E1(errno, e1, __VA_ARGS__))),       \
+		DeePrivateSystem_IF_HAVE_##e2(                                  \
+			DeePrivateSystem_IF_HAVE_##e3(                              \
+				DeePrivateSystem_IF_E2(errno, e2, e3, __VA_ARGS__),     \
+				DeePrivateSystem_IF_E1(errno, e2, __VA_ARGS__)),        \
+			DeePrivateSystem_IF_HAVE_##e3(                              \
+				DeePrivateSystem_IF_E1(errno, e3, __VA_ARGS__),         \
+				(void)0)))
+#define DeeSystem_IF_E4(errno, e1, e2, e3, e4, ...)                             \
+	DeePrivateSystem_IF_HAVE_##e1(                                              \
+		DeePrivateSystem_IF_HAVE_##e2(                                          \
+			DeePrivateSystem_IF_HAVE_##e3(                                      \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E4(errno, e1, e2, e3, e4, __VA_ARGS__), \
+					DeePrivateSystem_IF_E3(errno, e1, e2, e3, __VA_ARGS__)),    \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E3(errno, e1, e2, e4, __VA_ARGS__),     \
+					DeePrivateSystem_IF_E2(errno, e1, e2, __VA_ARGS__))),       \
+			DeePrivateSystem_IF_HAVE_##e3(                                      \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E3(errno, e1, e3, e4, __VA_ARGS__),     \
+					DeePrivateSystem_IF_E2(errno, e1, e3, __VA_ARGS__)),        \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E2(errno, e1, e4, __VA_ARGS__),         \
+					DeePrivateSystem_IF_E1(errno, e1, __VA_ARGS__)))),          \
+		DeePrivateSystem_IF_HAVE_##e2(                                          \
+			DeePrivateSystem_IF_HAVE_##e3(                                      \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E3(errno, e2, e3, e4, __VA_ARGS__),     \
+					DeePrivateSystem_IF_E2(errno, e2, e3, __VA_ARGS__)),        \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E2(errno, e2, e4, __VA_ARGS__),         \
+					DeePrivateSystem_IF_E1(errno, e2, __VA_ARGS__))),           \
+			DeePrivateSystem_IF_HAVE_##e3(                                      \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E2(errno, e3, e4, __VA_ARGS__),         \
+					DeePrivateSystem_IF_E1(errno, e3, __VA_ARGS__)),            \
+				DeePrivateSystem_IF_HAVE_##e4(                                  \
+					DeePrivateSystem_IF_E1(errno, e4, __VA_ARGS__),             \
+					(void)0))))
+//[[[end]]]
 
 
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H */
