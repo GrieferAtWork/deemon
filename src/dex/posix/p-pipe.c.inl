@@ -281,16 +281,15 @@ EINTR_LABEL(again)
 #ifdef posix_pipe2_USE_PIPE_FCNTL
 handle_system_error_fds:
 #ifdef CONFIG_HAVE_close
-	DBG_ALIGNMENT_DISABLE();
 	error = DeeSystem_GetErrno();
 	close(fds[1]);
 	close(fds[0]);
-	DBG_ALIGNMENT_ENABLE();
 	DeeSystem_SetErrno(error);
 #endif /* CONFIG_HAVE_close */
 #endif /* posix_pipe2_USE_PIPE_FCNTL */
 handle_system_error:
 	error = DeeSystem_GetErrno();
+	DBG_ALIGNMENT_ENABLE();
 	HANDLE_EINTR(error, again, err)
 	HANDLE_ENOSYS(error, err, "pipe2")
 	HANDLE_EINVAL(error, err, "Invalid oflags for pipe2 %#x", oflags)
@@ -304,9 +303,15 @@ err:
 	DREF DeeObject *result;
 	HANDLE hRead, hWrite;
 	int fds[2];
-	if (oflags & ~(O_CLOEXEC)) {
-		DeeSystem_SetErrno(EINVAL);
-		return_none;
+#ifdef CONFIG_HAVE_O_CLOEXEC
+	if (oflags & ~(O_CLOEXEC))
+#else /* CONFIG_HAVE_O_CLOEXEC */
+	if (oflags != 0)
+#endif /* !CONFIG_HAVE_O_CLOEXEC */
+	{
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Invalid oflags for pipe2 %#x", oflags);
+		goto err;
 	}
 again:
 	DBG_ALIGNMENT_DISABLE();
@@ -322,7 +327,10 @@ again:
 		                   "Failed to create pipe");
 		goto err;
 	}
-	if (!(oflags & O_CLOEXEC)) {
+#ifdef CONFIG_HAVE_O_CLOEXEC
+	if (!(oflags & O_CLOEXEC))
+#endif /* CONFIG_HAVE_O_CLOEXEC */
+	{
 		if (!SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
 			goto err_hWritehRead_nterror;
 		if (!SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))

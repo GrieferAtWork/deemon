@@ -95,6 +95,18 @@ PRIVATE char const *missing_features[] = {
 #ifdef posix_creat_USE_STUB
 	"creat",
 #endif /* posix_creat_USE_STUB */
+#ifdef posix_close_USE_STUB
+	"close",
+#endif /* posix_close_USE_STUB */
+#ifdef posix_dup_USE_STUB
+	"dup",
+#endif /* posix_dup_USE_STUB */
+#ifdef posix_dup2_USE_STUB
+	"dup2",
+#endif /* posix_dup2_USE_STUB */
+#ifdef posix_dup3_USE_STUB
+	"dup3",
+#endif /* posix_dup3_USE_STUB */
 #ifndef CONFIG_HAVE_errno
 	"errno",
 #endif /* CONFIG_HAVE_errno */

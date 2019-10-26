@@ -64,6 +64,39 @@ print "/" "**" "/";
 //[[[end]]]
 
 
+/* Figure out how to implement `dup3()' */
+#undef posix_dup3_USE_DUP3
+#undef posix_dup3_USE_DUP2
+#undef posix_dup3_USE_DUP2_FCNTL
+#undef posix_dup3_USE_DUP2_SETHANDLEINFORMATION
+#undef posix_dup3_USE_STUB
+#if defined(CONFIG_HAVE_dup3)
+#define posix_dup3_USE_DUP3 1
+#elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(posix_dup2_USE_STUB)
+#define posix_dup3_USE_DUP2 1
+#elif defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_fcntl) && \
+    (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
+    (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL))
+#define posix_dup3_USE_DUP2_FCNTL 1
+#elif defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE__get_osfhandle) && \
+      defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_O_CLOEXEC)
+#define posix_dup3_USE_DUP2_SETHANDLEINFORMATION 1
+#else
+#define posix_dup3_USE_STUB 1
+#endif
+
+
+
+/* Figure out how to implement `close()' */
+#undef posix_close_USE_CLOSE
+#undef posix_close_USE_STUB
+#ifdef CONFIG_HAVE_close
+#define posix_close_USE_CLOSE 1
+#else /* CONFIG_HAVE_close */
+#define posix_close_USE_STUB 1
+#endif /* !CONFIG_HAVE_close */
+
+
 
 
 
@@ -313,53 +346,153 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags)
 //[[[end]]]
 {
-#if defined(CONFIG_HAVE_dup3) || \
-    (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
-	int result;
-#ifndef CONFIG_HAVE_dup3
-	if (oflags & ~O_CLOEXEC) {
+
+#if defined(posix_dup3_USE_DUP3) || \
+    defined(posix_dup3_USE_DUP2_FCNTL) || \
+    defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION)
+	DREF DeeObject *result;
+	int error;
+EINTR_LABEL(again)
+	DBG_ALIGNMENT_DISABLE();
+
+#ifdef posix_dup3_USE_DUP3
+	error = dup3(oldfd, newfd, oflags);
+	if unlikely(error < 0)
+		goto handle_system_error;
+#endif /* posix_dup3_USE_DUP3 */
+
+#if defined(posix_dup3_USE_DUP2_FCNTL) || \
+    defined(posix_dup3_USE_DUP2_SETHANDLEINFORMATION)
+	/* Validate the given `oflags' */
+#if defined(CONFIG_HAVE_O_NONBLOCK) && defined(CONFIG_HAVE_O_CLOEXEC)
+	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
+#elif defined(CONFIG_HAVE_O_NONBLOCK)
+	if (oflags & ~(O_NONBLOCK))
+#else
+	if (oflags & ~(O_CLOEXEC))
+#endif
+	{
 		DeeSystem_SetErrno(EINVAL);
+		goto handle_system_error;
+	}
+	error = dup2(oldfd, newfd);
+	if (error < 0)
+		goto handle_system_error;
+
+#ifdef posix_dup3_USE_DUP2_FCNTL
+	/* Apply O_CLOEXEC */
+#ifdef CONFIG_HAVE_O_CLOEXEC
+	if (oflags & O_CLOEXEC) {
+		error = fcntl(newfd, F_SETFD, FD_CLOEXEC);
+		if unlikely(error < 0)
+			goto handle_system_error_nfd;
+	}
+#endif /* CONFIG_HAVE_O_CLOEXEC */
+
+	/* Apply O_NONBLOCK */
+#ifdef CONFIG_HAVE_O_NONBLOCK
+	if (oflags & O_NONBLOCK) {
+		error = fcntl(newfd, F_SETFL, O_NONBLOCK);
+		if unlikely(error < 0)
+			goto handle_system_error_nfd;
+	}
+#endif /* CONFIG_HAVE_O_NONBLOCK */
+#endif /* posix_dup3_USE_DUP2_FCNTL */
+
+#ifdef posix_dup3_USE_DUP2_SETHANDLEINFORMATION
+#ifdef CONFIG_HAVE_O_CLOEXEC
+	{
+		HANDLE hNewFd;
+again_setinfo:
+		hNewFd = (HANDLE)(uintptr_t)_get_osfhandle(newfd);
+		if (hNewFd == INVALID_HANDLE_VALUE) {
+#ifdef CONFIG_HAVE_close
+			close(newfd);
+#endif /* CONFIG_HAVE_close */
+			DBG_ALIGNMENT_ENABLE();
+			DeeError_Throwf(&DeeError_FileClosed, "Invalid fd %d", newfd);
+			goto err;
+		}
+		if (!SetHandleInformation(hNewFd,
+		                          HANDLE_FLAG_INHERIT,
+		                          (oflags & O_CLOEXEC)
+		                          ? 0
+		                          : HANDLE_FLAG_INHERIT)) {
+			DWORD dwError;
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err;
+				DBG_ALIGNMENT_DISABLE();
+				goto again_setinfo;
+			}
+#ifdef CONFIG_HAVE_close
+			DBG_ALIGNMENT_DISABLE();
+			close(newfd);
+			DBG_ALIGNMENT_ENABLE();
+#endif /* CONFIG_HAVE_close */
+			DeeNTSystem_ThrowErrorf(NULL, dwError,
+			                        "Failed to set handle information for handle %p",
+			                        hNewFd);
+			goto err;
+		}
+	}
+#endif /* CONFIG_HAVE_O_CLOEXEC */
+#endif /* posix_dup3_USE_DUP2_SETHANDLEINFORMATION */
+#endif /* posix_dup3_USE_DUP2_FCNTL || posix_dup3_USE_DUP2_SETHANDLEINFORMATION */
+
+	DBG_ALIGNMENT_ENABLE();
+	result = DeeInt_NewInt(newfd);
+#ifdef CONFIG_HAVE_close
+	if unlikely(!result) {
+		DBG_ALIGNMENT_DISABLE();
+		close(newfd);
+		DBG_ALIGNMENT_ENABLE();
+	}
+#endif /* CONFIG_HAVE_close */
+	return result;
+
+#ifdef posix_dup3_USE_DUP2_FCNTL
+handle_system_error_nfd:
+#ifdef CONFIG_HAVE_close
+	error = DeeSystem_GetErrno();
+	close(newfd);
+	DeeSystem_SetErrno(error);
+#endif /* CONFIG_HAVE_close */
+#endif /* posix_dup3_USE_DUP2_FCNTL */
+handle_system_error:
+	error = DeeSystem_GetErrno();
+	DBG_ALIGNMENT_ENABLE();
+	HANDLE_EINTR(error, again, err)
+	HANDLE_ENOSYS(error, err, "dup3")
+	HANDLE_EBADF(error, err, "Invalid fd %d", oldfd)
+	HANDLE_EINVAL(error, err, "Invalid oflags for dup3 %#x", oflags)
+	DeeError_SysThrowf(&DeeError_SystemError, error,
+	                   "Failed to duplicate file descriptor %d into %d",
+	                   oldfd, newfd);
+err:
+	return NULL;
+#endif /* posix_dup3_USE_DUP3 || posix_dup3_USE_DUP2_FCNTL */
+
+#ifdef posix_dup3_USE_DUP2
+	if unlikely(oflags != 0) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "Invalid oflags for dup3 %#x",
 		                oflags);
-		goto err;
+		return NULL;
 	}
-#endif /* !CONFIG_HAVE_dup3 */
-EINTR_LABEL(again)
-	DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_dup3
-	result = dup3(oldfd, newfd, oflags);
-#else /* CONFIG_HAVE_dup3 */
-	result = dup2(oldfd, newfd);
-	if (result >= 0) {
-		SetHandleInformation((HANDLE)(uintptr_t)_get_osfhandle(result),
-		                     HANDLE_FLAG_INHERIT,
-		                     (oflags & O_CLOEXEC)
-		                     ? 0
-		                     : HANDLE_FLAG_INHERIT);
-	}
-#endif /* !CONFIG_HAVE_dup3 */
-	DBG_ALIGNMENT_ENABLE();
-	if (result < 0) {
-		int error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
-		HANDLE_ENOSYS(error, err, "dup3")
-		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
-		HANDLE_EINVAL(error, err, "Invalid oflags for dup3 %#x", oflags)
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to dup %d", oldfd);
-		goto err;
-	}
-	return DeeInt_NewInt(result);
-err:
-#else /* HAVE_DUP3 || _MSC_VER */
+	return posix_dup2_f_impl(oldfd, newfd);
+#endif /* posix_dup3_USE_DUP2 */
+
+#ifdef posix_dup3_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)oldfd;
 	(void)newfd;
 	(void)oflags;
 	posix_err_unsupported("dup3");
-#endif /* !HAVE_DUP3 && !_MSC_VER */
 	return NULL;
+#endif /* posix_dup3_USE_STUB */
 }
 
 
@@ -391,7 +524,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_close_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_close
+#ifdef posix_close_USE_CLOSE
 	int error;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -408,12 +541,15 @@ EINTR_LABEL(again)
 	}
 	return_none;
 err:
-#else /* CONFIG_HAVE_close */
+	return NULL;
+#endif /* posix_close_USE_CLOSE */
+
+#ifdef posix_close_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	posix_err_unsupported("close");
-#endif /* !CONFIG_HAVE_close */
 	return NULL;
+#endif /* posix_close_USE_STUB */
 }
 
 
