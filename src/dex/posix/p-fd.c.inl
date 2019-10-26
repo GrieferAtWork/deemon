@@ -64,6 +64,16 @@ print "/" "**" "/";
 //[[[end]]]
 
 
+/* Figure out how to implement `dup()' */
+#undef posix_dup_USE_DUP
+#undef posix_dup_USE_STUB
+#ifdef CONFIG_HAVE_dup
+#define posix_dup_USE_DUP 1
+#else /* CONFIG_HAVE_dup2 */
+#define posix_dup_USE_STUB 1
+#endif /* !CONFIG_HAVE_dup2 */
+
+
 /* Figure out how to implement `dup2()' */
 #undef posix_dup2_USE_DUP2
 #undef posix_dup2_USE_STUB
@@ -246,7 +256,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_dup
+#ifdef posix_dup_USE_DUP
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -263,12 +273,15 @@ EINTR_LABEL(again)
 	}
 	return DeeInt_NewInt(result);
 err:
-#else /* CONFIG_HAVE_dup */
+	return NULL;
+#endif /* posix_dup_USE_DUP */
+
+#ifdef posix_dup_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	posix_err_unsupported("dup");
-#endif /* !CONFIG_HAVE_dup */
 	return NULL;
+#endif /* !posix_dup_USE_STUB */
 }
 
 
