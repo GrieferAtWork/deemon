@@ -95,7 +95,16 @@ local converter_map: {string: (string, string, string) | string} = {
 		("dwchar_t const *","{}_str")),
 	"c:bool"       : ("b", "?Dbool",   "bool"),
 	"nt:DWORD"     : ("I32u", "?Dint", "DWORD"),
-	"nt:HANDLE"    : ("Iu", "?Dint",   "HANDLE"),
+	"unix:fd"      : ("o", "?X2?Dint?DFile", "DeeObject *",
+		"\t{obj}_fd = DeeUnixSystem_GetFD({obj});\n"
+		"\tif unlikely({obj}_fd == -1)\n"
+		"\t    goto err;\n",
+		("int", "{}_fd")),
+	"nt:HANDLE"    : ("o", "?X3?Dint?DFile?Ewin32:HANDLE", "DeeObject *",
+		"\th{obj} = (HANDLE)DeeNTSystem_GetHandle({obj});\n"
+		"\tif unlikely(h{obj} == INVALID_HANDLE_VALUE)\n"
+		"\t    goto err;\n",
+		("HANDLE", "h{}")),
 	"nt:LPCSTR"    : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
 		"\t    goto err;\n"

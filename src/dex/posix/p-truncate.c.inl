@@ -241,22 +241,26 @@ err:
 /* TOOD: Use the p_xxx_USE_XXX notation for ftruncate() */
 
 #if defined(CONFIG_HAVE_ftruncate64) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("ftruncate", "fd:d,len:I64d", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("ftruncate", "fd:unix:fd,len:I64d", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_ftruncate_f_impl(int fd, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)") },
-#define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)\n" doc) },
+#define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)") },
+#define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, posix_ftruncate_f);
 #ifndef POSIX_KWDS_FD_LEN_DEFINED
 #define POSIX_KWDS_FD_LEN_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_len, { K(fd), K(len), KEND });
 #endif /* !POSIX_KWDS_FD_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	int64_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "dI64d:ftruncate", &fd, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "oI64d:ftruncate", &fd, &len))
 	    goto err;
-	return posix_ftruncate_f_impl(fd, len);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_ftruncate_f_impl(fd_fd, len);
 err:
 	return NULL;
 }
@@ -264,22 +268,26 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_ftruncate_f_impl(int fd, int64_t 
 //[[[end]]]
 #endif /* CONFIG_HAVE_ftruncate64 */
 #if !defined(CONFIG_HAVE_ftruncate64) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("ftruncate", "fd:d,len:I32d", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("ftruncate", "fd:unix:fd,len:I32d", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_ftruncate_f_impl(int fd, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)") },
-#define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?Dint,len:?Dint)\n" doc) },
+#define POSIX_FTRUNCATE_DEF { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)") },
+#define POSIX_FTRUNCATE_DEF_DOC(doc) { "ftruncate", (DeeObject *)&posix_ftruncate, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,len:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_ftruncate, posix_ftruncate_f);
 #ifndef POSIX_KWDS_FD_LEN_DEFINED
 #define POSIX_KWDS_FD_LEN_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_len, { K(fd), K(len), KEND });
 #endif /* !POSIX_KWDS_FD_LEN_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	int32_t len;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "dI32d:ftruncate", &fd, &len))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "oI32d:ftruncate", &fd, &len))
 	    goto err;
-	return posix_ftruncate_f_impl(fd, len);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_ftruncate_f_impl(fd_fd, len);
 err:
 	return NULL;
 }

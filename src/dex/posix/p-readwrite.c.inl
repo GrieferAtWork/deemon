@@ -94,23 +94,27 @@ typedef union {
 /************************************************************************/
 /* read()                                                               */
 /************************************************************************/
-/*[[[deemon import("_dexutils").gw("read", "fd:d,buf:obj:buffer=Dee_None,count:Iud=-1->?X2?Dint?DBytes", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("read", "fd:unix:fd,buf:obj:buffer=Dee_None,count:Iud=-1->?X2?Dint?DBytes", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_read_f_impl(int fd, DeeObject *buf, size_t count);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_READ_DEF { "read", (DeeObject *)&posix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes=!N,count:?Dint=!-1)->?X2?Dint?DBytes") },
-#define POSIX_READ_DEF_DOC(doc) { "read", (DeeObject *)&posix_read, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes=!N,count:?Dint=!-1)->?X2?Dint?DBytes\n" doc) },
+#define POSIX_READ_DEF { "read", (DeeObject *)&posix_read, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes=!N,count:?Dint=!-1)->?X2?Dint?DBytes") },
+#define POSIX_READ_DEF_DOC(doc) { "read", (DeeObject *)&posix_read, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes=!N,count:?Dint=!-1)->?X2?Dint?DBytes\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_read, posix_read_f);
 #ifndef POSIX_KWDS_FD_BUF_COUNT_DEFINED
 #define POSIX_KWDS_FD_BUF_COUNT_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_count, { K(fd), K(buf), K(count), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_COUNT_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	DeeObject *buf = Dee_None;
 	size_t count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "d|oId:read", &fd, &buf, &count))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "o|oId:read", &fd, &buf, &count))
 	    goto err;
-	return posix_read_f_impl(fd, buf, count);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_read_f_impl(fd_fd, buf, count);
 err:
 	return NULL;
 }
@@ -166,23 +170,27 @@ err:
 /* write()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("write", "fd:d,buf:obj:buffer,count:Iud=-1->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("write", "fd:unix:fd,buf:obj:buffer,count:Iud=-1->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,count:?Dint=!-1)->?Dint") },
-#define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
+#define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },
+#define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_write, posix_write_f);
 #ifndef POSIX_KWDS_FD_BUF_COUNT_DEFINED
 #define POSIX_KWDS_FD_BUF_COUNT_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_count, { K(fd), K(buf), K(count), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_COUNT_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	DeeObject *buf;
 	size_t count = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "do|Id:write", &fd, &buf, &count))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "oo|Id:write", &fd, &buf, &count))
 	    goto err;
-	return posix_write_f_impl(fd, buf, count);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_write_f_impl(fd_fd, buf, count);
 err:
 	return NULL;
 }
@@ -231,23 +239,27 @@ err:
 
 #if defined(CONFIG_HAVE_pread64) || \
     (defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("pread", "fd:d,buf:obj:buffer,offset:I64d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("pread", "fd:unix:fd,buf:obj:buffer,offset:I64d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pread_f_impl(int fd, DeeObject *buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_PREAD_DEF { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
-#define POSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
+#define POSIX_PREAD_DEF { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint") },
+#define POSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_pread, posix_pread_f);
 #ifndef POSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define POSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_offset, { K(fd), K(buf), K(offset), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_OFFSET_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	DeeObject *buf;
 	int64_t offset;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI64d:pread", &fd, &buf, &offset))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "ooI64d:pread", &fd, &buf, &offset))
 	    goto err;
-	return posix_pread_f_impl(fd, buf, offset);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_pread_f_impl(fd_fd, buf, offset);
 err:
 	return NULL;
 }
@@ -256,23 +268,27 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pread_f_impl(int fd, DeeObject *b
 #endif
 #if !(defined(CONFIG_HAVE_pread64) || \
       (defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS))) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("pread", "fd:d,buf:obj:buffer,offset:I32d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("pread", "fd:unix:fd,buf:obj:buffer,offset:I32d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pread_f_impl(int fd, DeeObject *buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_PREAD_DEF { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
-#define POSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
+#define POSIX_PREAD_DEF { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint") },
+#define POSIX_PREAD_DEF_DOC(doc) { "pread", (DeeObject *)&posix_pread, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_pread, posix_pread_f);
 #ifndef POSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define POSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_offset, { K(fd), K(buf), K(offset), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_OFFSET_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	DeeObject *buf;
 	int32_t offset;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI32d:pread", &fd, &buf, &offset))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "ooI32d:pread", &fd, &buf, &offset))
 	    goto err;
-	return posix_pread_f_impl(fd, buf, offset);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_pread_f_impl(fd_fd, buf, offset);
 err:
 	return NULL;
 }
@@ -368,23 +384,27 @@ err:
 
 #if defined(CONFIG_HAVE_pwrite64) || \
     defined(CONFIG_HAVE_get_osfhandle) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("pwrite", "fd:d,buf:obj:buffer,offset:I64d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("pwrite", "fd:unix:fd,buf:obj:buffer,offset:I64d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pwrite_f_impl(int fd, DeeObject *buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_PWRITE_DEF { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
-#define POSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
+#define POSIX_PWRITE_DEF { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint") },
+#define POSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_pwrite, posix_pwrite_f);
 #ifndef POSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define POSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_offset, { K(fd), K(buf), K(offset), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_OFFSET_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	DeeObject *buf;
 	int64_t offset;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI64d:pwrite", &fd, &buf, &offset))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "ooI64d:pwrite", &fd, &buf, &offset))
 	    goto err;
-	return posix_pwrite_f_impl(fd, buf, offset);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_pwrite_f_impl(fd_fd, buf, offset);
 err:
 	return NULL;
 }
@@ -392,23 +412,27 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pwrite_f_impl(int fd, DeeObject *
 //[[[end]]]
 #endif
 #if !(defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE_get_osfhandle)) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("pwrite", "fd:d,buf:obj:buffer,offset:I32d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("pwrite", "fd:unix:fd,buf:obj:buffer,offset:I32d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pwrite_f_impl(int fd, DeeObject *buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_PWRITE_DEF { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint") },
-#define POSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?Dint,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
+#define POSIX_PWRITE_DEF { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint") },
+#define POSIX_PWRITE_DEF_DOC(doc) { "pwrite", (DeeObject *)&posix_pwrite, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,offset:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_pwrite, posix_pwrite_f);
 #ifndef POSIX_KWDS_FD_BUF_OFFSET_DEFINED
 #define POSIX_KWDS_FD_BUF_OFFSET_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_buf_offset, { K(fd), K(buf), K(offset), KEND });
 #endif /* !POSIX_KWDS_FD_BUF_OFFSET_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	DeeObject *buf;
 	int32_t offset;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI32d:pwrite", &fd, &buf, &offset))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "ooI32d:pwrite", &fd, &buf, &offset))
 	    goto err;
-	return posix_pwrite_f_impl(fd, buf, offset);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_pwrite_f_impl(fd_fd, buf, offset);
 err:
 	return NULL;
 }
@@ -503,23 +527,27 @@ err:
 /************************************************************************/
 
 #if defined(CONFIG_HAVE_lseek64) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("lseek", "fd:d,off:I64d,whence:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("lseek", "fd:unix:fd,off:I64d,whence:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t off, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint") },
-#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint\n" doc) },
+#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,off:?Dint,whence:?Dint)->?Dint") },
+#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,off:?Dint,whence:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFF_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFF_WHENCE_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_off_whence, { K(fd), K(off), K(whence), KEND });
 #endif /* !POSIX_KWDS_FD_OFF_WHENCE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	int64_t off;
 	int whence;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_off_whence, "dI64dd:lseek", &fd, &off, &whence))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_off_whence, "oI64dd:lseek", &fd, &off, &whence))
 	    goto err;
-	return posix_lseek_f_impl(fd, off, whence);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_lseek_f_impl(fd_fd, off, whence);
 err:
 	return NULL;
 }
@@ -527,23 +555,27 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t off,
 //[[[end]]]
 #endif
 #if !defined(CONFIG_HAVE_lseek64) || defined(__DEEMON__)
-/*[[[deemon import("_dexutils").gw("lseek", "fd:d,off:I32d,whence:d->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("lseek", "fd:unix:fd,off:I32d,whence:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t off, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint") },
-#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?Dint,off:?Dint,whence:?Dint)->?Dint\n" doc) },
+#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,off:?Dint,whence:?Dint)->?Dint") },
+#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,off:?Dint,whence:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFF_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFF_WHENCE_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_off_whence, { K(fd), K(off), K(whence), KEND });
 #endif /* !POSIX_KWDS_FD_OFF_WHENCE_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
+	int fd_fd;
+	DeeObject *fd;
 	int32_t off;
 	int whence;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_off_whence, "dI32dd:lseek", &fd, &off, &whence))
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_off_whence, "oI32dd:lseek", &fd, &off, &whence))
 	    goto err;
-	return posix_lseek_f_impl(fd, off, whence);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_lseek_f_impl(fd_fd, off, whence);
 err:
 	return NULL;
 }

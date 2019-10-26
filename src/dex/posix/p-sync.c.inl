@@ -67,21 +67,25 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
 /* fsync()                                                              */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("fsync", "fd:d", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("fsync", "fd:unix:fd", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_FSYNC_DEF { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?Dint)") },
-#define POSIX_FSYNC_DEF_DOC(doc) { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?Dint)\n" doc) },
+#define POSIX_FSYNC_DEF { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },
+#define POSIX_FSYNC_DEF_DOC(doc) { "fsync", (DeeObject *)&posix_fsync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fsync, posix_fsync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsync_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "d:fsync", &fd))
+	int fd_fd;
+	DeeObject *fd;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:fsync", &fd))
 	    goto err;
-	return posix_fsync_f_impl(fd);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_fsync_f_impl(fd_fd);
 err:
 	return NULL;
 }
@@ -121,21 +125,25 @@ err:
 /* fdatasync()                                                          */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("fdatasync", "fd:d", libname: "posix"); ]]]*/
+/*[[[deemon import("_dexutils").gw("fdatasync", "fd:unix:fd", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_FDATASYNC_DEF { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?Dint)") },
-#define POSIX_FDATASYNC_DEF_DOC(doc) { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?Dint)\n" doc) },
+#define POSIX_FDATASYNC_DEF { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)") },
+#define POSIX_FDATASYNC_DEF_DOC(doc) { "fdatasync", (DeeObject *)&posix_fdatasync, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fdatasync, posix_fdatasync_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { K(fd), KEND });
 #endif /* !POSIX_KWDS_FD_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fdatasync_f(size_t argc, DeeObject **argv, DeeObject *kw) {
-	int fd;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "d:fdatasync", &fd))
+	int fd_fd;
+	DeeObject *fd;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:fdatasync", &fd))
 	    goto err;
-	return posix_fdatasync_f_impl(fd);
+	fd_fd = DeeUnixSystem_GetFD(fd);
+	if unlikely(fd_fd == -1)
+	    goto err;
+	return posix_fdatasync_f_impl(fd_fd);
 err:
 	return NULL;
 }
