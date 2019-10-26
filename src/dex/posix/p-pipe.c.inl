@@ -41,18 +41,20 @@ DECL_BEGIN
 
 /* Figure out how to implement `pipe2()' */
 #undef p_pipe2_USE_PIPE2
+#undef p_pipe2_USE_PIPE_FCNTL
 #undef p_pipe2_USE_CREATEPIPE
 #undef p_pipe2_USE_PIPE
 #undef p_pipe2_USE_STUB
 #if defined(CONFIG_HAVE_pipe2)
 #define p_pipe2_USE_PIPE2 1
+#elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(p_pipe_USE_STUB)
+#define p_pipe2_USE_PIPE 1
 #elif (defined(CONFIG_HAVE_pipe) && defined(CONFIG_HAVE_fcntl) && \
-       defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC) && \
-       defined(O_CLOEXEC) && (!defined(O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
+     (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
+     (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
+#define p_pipe2_USE_PIPE_FCNTL 1
 #elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define p_pipe2_USE_CREATEPIPE 1
-#elif !defined(O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(p_pipe_USE_STUB)
-#define p_pipe2_USE_PIPE 1
 #else
 #define p_pipe2_USE_STUB 1
 #endif
@@ -215,72 +217,85 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags)
 	int fds[2];
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
+
 #ifdef p_pipe2_USE_PIPE2
 	error = pipe2(fds, oflags);
-#else /* p_pipe2_USE_PIPE2 */
-#ifdef O_NONBLOCK
+	if unlikely(error < 0)
+		goto handle_system_error;
+#endif /* p_pipe2_USE_PIPE2 */
+
+#ifdef p_pipe2_USE_PIPE_FCNTL
+	/* Validate the given `oflags' */
+#if defined(CONFIG_HAVE_O_NONBLOCK) && defined(CONFIG_HAVE_O_CLOEXEC)
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
-#else /* O_NONBLOCK */
+#elif defined(CONFIG_HAVE_O_NONBLOCK)
+	if (oflags & ~(O_NONBLOCK))
+#else
 	if (oflags & ~(O_CLOEXEC))
-#endif /* !O_NONBLOCK */
+#endif
 	{
 		DeeSystem_SetErrno(EINVAL);
 		DBG_ALIGNMENT_ENABLE();
-		return_none;
+		goto handle_system_error;
 	}
 	error = pipe(fds);
-	if (error >= 0) {
-		if (oflags & O_CLOEXEC) {
-			error = fcntl(fds[0], F_SETFD, FD_CLOEXEC);
-			if unlikely(error < 0)
-				goto err_fds_errno;
-			error = fcntl(fds[1], F_SETFD, FD_CLOEXEC);
-			if unlikely(error < 0)
-				goto err_fds_errno;
-		}
-#ifdef O_NONBLOCK
-		if (oflags & O_NONBLOCK) {
-			error = fcntl(fds[0], F_SETFL, O_NONBLOCK);
-			if unlikely(error < 0)
-				goto err_fds_errno;
-			error = fcntl(fds[1], F_SETFL, O_NONBLOCK);
-			if unlikely(error < 0)
-				goto err_fds_errno;
-		}
-#endif /* O_NONBLOCK */
+	if (error < 0)
+		goto handle_system_error;
+	/* Apply O_CLOEXEC */
+#ifdef CONFIG_HAVE_O_CLOEXEC
+	if (oflags & O_CLOEXEC) {
+		error = fcntl(fds[0], F_SETFD, FD_CLOEXEC);
+		if unlikely(error < 0)
+			goto handle_system_error_fds;
+		error = fcntl(fds[1], F_SETFD, FD_CLOEXEC);
+		if unlikely(error < 0)
+			goto handle_system_error_fds;
 	}
-#endif /* !p_pipe2_USE_PIPE2 */
+#endif /* CONFIG_HAVE_O_CLOEXEC */
+
+	/* Apply O_NONBLOCK */
+#ifdef CONFIG_HAVE_O_NONBLOCK
+	if (oflags & O_NONBLOCK) {
+		error = fcntl(fds[0], F_SETFL, O_NONBLOCK);
+		if unlikely(error < 0)
+			goto handle_system_error_fds;
+		error = fcntl(fds[1], F_SETFL, O_NONBLOCK);
+		if unlikely(error < 0)
+			goto handle_system_error_fds;
+	}
+#endif /* CONFIG_HAVE_O_NONBLOCK */
+#endif /* p_pipe2_USE_PIPE_FCNTL */
+
 	DBG_ALIGNMENT_ENABLE();
-	if (error < 0) {
-		error = DeeSystem_GetErrno();
-		HANDLE_EINTR(error, again, err)
-		HANDLE_ENOSYS(error, err, "pipe")
-		/* TODO: Other errors */
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to create pipe");
-		goto err;
-	}
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-	if unlikely(!result)
-		goto err_fds;
-	return result;
-#ifndef HAVE_PIPE2
-err_fds_errno:
-#ifdef EINTR
-	if (DeeSystem_GetErrno() == EINTR) {
+#ifdef CONFIG_HAVE_close
+	if unlikely(!result) {
 		DBG_ALIGNMENT_DISABLE();
 		close(fds[1]);
 		close(fds[0]);
 		DBG_ALIGNMENT_ENABLE();
-		goto again;
 	}
-#endif /* EINTR */
-#endif /* !HAVE_PIPE2 */
-err_fds:
+#endif /* CONFIG_HAVE_close */
+	return result;
+
+#ifdef p_pipe2_USE_PIPE_FCNTL
+handle_system_error_fds:
+#ifdef CONFIG_HAVE_close
 	DBG_ALIGNMENT_DISABLE();
+	error = DeeSystem_GetErrno();
 	close(fds[1]);
 	close(fds[0]);
 	DBG_ALIGNMENT_ENABLE();
+	DeeSystem_SetErrno(error);
+#endif /* CONFIG_HAVE_close */
+#endif /* p_pipe2_USE_PIPE_FCNTL */
+handle_system_error:
+	error = DeeSystem_GetErrno();
+	HANDLE_EINTR(error, again, err)
+	HANDLE_ENOSYS(error, err, "pipe2")
+	HANDLE_EINVAL(error, err, "Invalid oflags for pipe2 %#x", oflags)
+	DeeError_SysThrowf(&DeeError_SystemError, error,
+	                   "Failed to create pipe");
 err:
 	return NULL;
 #endif /* p_pipe2_USE_PIPE2 || p_pipe2_USE_PIPE_FCNTL */
@@ -294,14 +309,15 @@ err:
 		return_none;
 	}
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (!CreatePipe(&hRead, &hWrite, NULL, 0)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError))
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
+		}
 		DeeError_SysThrowf(&DeeError_SystemError, dwError,
 		                   "Failed to create pipe");
 		goto err;
@@ -320,26 +336,29 @@ again:
 	if unlikely(fds[1] < 0)
 		goto err_hWritefds0_errno;
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
-	if unlikely(!result)
-		goto err_fds;
+#ifdef CONFIG_HAVE_close
+	if unlikely(!result) {
+		DBG_ALIGNMENT_DISABLE();
+		close(fds[1]);
+		close(fds[0]);
+		DBG_ALIGNMENT_ENABLE();
+	}
+#endif /* CONFIG_HAVE_close */
 	return result;
-err_fds:
-	DBG_ALIGNMENT_DISABLE();
-	close(fds[1]);
-	close(fds[0]);
-	goto err;
 err_hWritefds0_errno:
 	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                   "Failed to create pipe");
+#ifdef CONFIG_HAVE_close
 	close(fds[0]);
+#endif /* CONFIG_HAVE_close */
 	goto err_hWrite;
 err_hWritehRead_errno:
 	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
 	                   "Failed to create pipe");
 	goto err_hWritehRead;
 err_hWritehRead_nterror:
-	DeeError_SysThrowf(&DeeError_SystemError, GetLastError(),
-	                   "Failed to create pipe");
+	DeeNTSystem_ThrowLastErrorf(&DeeError_SystemError,
+	                            "Failed to create pipe");
 err_hWritehRead:
 	CloseHandle(hRead);
 err_hWrite:
