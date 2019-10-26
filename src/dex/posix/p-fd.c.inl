@@ -64,6 +64,16 @@ print "/" "**" "/";
 //[[[end]]]
 
 
+/* Figure out how to implement `dup2()' */
+#undef posix_dup2_USE_DUP2
+#undef posix_dup2_USE_STUB
+#ifdef CONFIG_HAVE_dup2
+#define posix_dup2_USE_DUP2 1
+#else /* CONFIG_HAVE_dup2 */
+#define posix_dup2_USE_STUB 1
+#endif /* !CONFIG_HAVE_dup2 */
+
+
 /* Figure out how to implement `dup3()' */
 #undef posix_dup3_USE_DUP3
 #undef posix_dup3_USE_DUP2
@@ -290,14 +300,14 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup2_f_impl(int oldfd, int newfd)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_dup2
+#ifdef posix_dup2_USE_DUP2
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 	result = dup2(oldfd, newfd);
-	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		int error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "dup2")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
@@ -305,15 +315,19 @@ EINTR_LABEL(again)
 		                   "Failed to dup %d", oldfd);
 		goto err;
 	}
+	DBG_ALIGNMENT_ENABLE();
 	return DeeInt_NewInt(result);
 err:
-#else /* CONFIG_HAVE_dup2 */
+	return NULL;
+#endif /* posix_dup2_USE_DUP2 */
+
+#ifdef posix_dup2_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)oldfd;
 	(void)newfd;
 	posix_err_unsupported("dup2");
-#endif /* !CONFIG_HAVE_dup2 */
 	return NULL;
+#endif /* !posix_dup2_USE_STUB */
 }
 
 
