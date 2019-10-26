@@ -34,6 +34,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system.h> /* DeeUnixSystem_GetFD() */
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
@@ -687,18 +688,18 @@ again:
 	}
 	/* Load std file handles */
 	if (procin) {
-		used_stdin = (int)DeeFile_Fileno(procin);
-		if (used_stdin == (int)DSYSFD_INVALID)
+		used_stdin = DeeUnixSystem_GetFD(procin);
+		if unlikely(used_stdin == -1)
 			goto done_procenv_envp;
 	}
 	if (procout) {
-		used_stdout = (int)DeeFile_Fileno(procout);
-		if (used_stdout == (int)DSYSFD_INVALID)
+		used_stdout = DeeUnixSystem_GetFD(procout);
+		if unlikely(used_stdout == -1)
 			goto done_procenv_envp;
 	}
 	if (procerr) {
-		used_stderr = (int)DeeFile_Fileno(procerr);
-		if (used_stderr == (int)DSYSFD_INVALID)
+		used_stderr = DeeUnixSystem_GetFD(procerr);
+		if unlikely(used_stderr == -1)
 			goto done_procenv_envp;
 	}
 

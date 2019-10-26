@@ -19,7 +19,7 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"from","import","Sequence","deemon","operator","final","local")
+#pragma push_macro(undef, "from", "import", "Sequence", "deemon", "operator", "final", "local")
 from "util" import
 	__builtin_avg = "avg",
 	__builtin_all = "all",
@@ -62,5 +62,5 @@ final local __builtin_seq_at = (Sequence from deemon).operator . ("at");
 final local __builtin_seq_reversed = (Sequence from deemon).operator . ("reversed");
 final local __builtin_seq_sorted = (Sequence from deemon).operator . ("sorted");
 final local __builtin_seq_segments = (Sequence from deemon).operator . ("segments");
-#pragma pop_macro("from","util","import","Sequence","deemon","operator","final","local")
+#pragma pop_macro("from", "util", "import", "Sequence", "deemon", "operator", "final", "local")
 

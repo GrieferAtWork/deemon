@@ -86,6 +86,35 @@ DeeSystem_Unlink(/*String*/ DeeObject *__restrict filename,
 #ifdef CONFIG_HOST_WINDOWS
 typedef __ULONG32_TYPE__ DeeNT_DWORD;
 
+/* Retrieve the Windows handle associated with a given object.
+ * The translation is done by performing the following:
+ * >> #ifdef DeeSysFS_IS_HANDLE
+ * >> if (DeeFile_Check(ob))
+ * >>     return DeeFile_GetSysFD(ob);
+ * >> #endif
+ * >> #ifdef DeeSysFS_IS_INT
+ * >> if (DeeFile_Check(ob))
+ * >>     return get_osfhandle(DeeFile_GetSysFD(ob));
+ * >> #endif
+ * >> if (DeeInt_Check(ob))
+ * >>     return get_osfhandle(DeeInt_AsInt(ob));
+ * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_HANDLE_GETSET)); catch (AttributeError);
+ * >> try return get_osfhandle(DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_INT_GETSET))); catch (AttributeError);
+ * >> return get_osfhandle(DeeObject_AsInt(ob));
+ * Note that both msvc, as well as cygwin define `get_osfhandle()' as one
+ * of the available functions, meaning that in both scenarios we are able
+ * to get access to the underlying HANDLE. However, should deemon ever be
+ * linked against a windows libc without this function, then only the
+ * `DeeSysFD_HANDLE_GETSET' variant will be usable.
+ * @return: * :                   Success (the actual handle value)
+ * @return: INVALID_HANDLE_VALUE: Error (handle translation failed)
+ *                                In case the actual handle value stored inside
+ *                                of `ob' was `INVALID_HANDLE_VALUE', then an
+ *                                `DeeError_FileClosed' error is thrown. */
+DFUNDEF WUNUSED /*HANDLE*/ void *DCALL
+DeeNTSystem_GetHandle(DeeObject *__restrict ob);
+
+
 /* Fix the given filename and extend it to an absolute UNC path. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename);
@@ -244,6 +273,28 @@ DFUNDEF WUNUSED int DCALL DeeUnixSystem_Printlink(struct Dee_unicode_printer *__
 DFUNDEF WUNUSED int DCALL DeeUnixSystem_PrintlinkString(struct Dee_unicode_printer *__restrict printer, /*utf-8*/ char const *filename);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_Readlink(/*String*/ DeeObject *__restrict filename);
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_ReadlinkString(/*utf-8*/ char const *filename);
+
+/* Retrieve the unix FD associated with a given object.
+ * The translation is done by performing the following:
+ * >> #ifdef DeeSysFS_IS_INT
+ * >> if (DeeFile_Check(ob))
+ * >>     return DeeFile_GetSysFD(ob);
+ * >> #endif
+ * >> if (DeeInt_Check(ob))
+ * >>     return DeeInt_AsInt(ob);
+ * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_INT_GETSET)); catch (AttributeError);
+ * >> return DeeObject_AsInt(ob);
+ * Note that both msvc, as well as cygwin define `get_osfhandle()' as one
+ * of the available functions, meaning that in both scenarios we are able
+ * to get access to the underlying HANDLE. However, should deemon ever be
+ * linked against a windows libc without this function, then only the
+ * `DeeSysFD_HANDLE_GETSET' variant will be usable.
+ * @return: * : Success (the actual handle value)
+ * @return: -1: Error (handle translation failed)
+ *              In case the actual handle value stored inside of `ob'
+ *              was `-1', then an `DeeError_FileClosed' error is thrown. */
+DFUNDEF WUNUSED int DCALL
+DeeUnixSystem_GetFD(DeeObject *__restrict ob);
 
 
 

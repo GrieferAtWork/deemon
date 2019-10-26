@@ -65,8 +65,8 @@ open_fd(DeeFileTypeObject *__restrict fType, int fd) {
 		goto done;
 	/* Fill in the system file. */
 	result->sf_filename  = NULL;
-	result->sf_handle    = (Dee_sysfd_t)fd;
-	result->sf_ownhandle = (Dee_sysfd_t)fd; /* Inherit */
+	result->sf_handle    = (DeeSysFD)fd;
+	result->sf_ownhandle = (DeeSysFD)fd; /* Inherit */
 	DeeLFileObject_Init(result, fType);
 done:
 	return result;

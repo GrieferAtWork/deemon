@@ -272,7 +272,7 @@ local __objects = deemon.List {
 	/* 0x00d4 */ ctypes.strspn,
 	/* 0x00d5 */ ctypes.strstr,
 	/* 0x00d6 */ ctypes.strtok,
-	/* 0x00d7 */ ctypes.strerror,
+	/* 0x00d7 */ posix.strerror,
 	/* 0x00d8 */ ctypes.strlen,
 	/* 0x00d9 */ ctypes.strnlen,
 	/* 0x00da */ ctypes.malloc,

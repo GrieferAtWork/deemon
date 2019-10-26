@@ -23,6 +23,7 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/int.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h>
@@ -1226,6 +1227,79 @@ again_deletefile:
 	return -1;
 #endif /* DeeSystem_Unlink_STUB */
 
+}
+
+
+
+
+#ifndef GETATTR_fileno
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
+#define GETATTR_fileno(ob) DeeObject_GetAttr(ob, &str_getsysfd)
+#else /* DeeSysFD_GETSET && DeeSysFS_IS_FILE */
+#define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, DeeSysFD_INT_GETSET)
+#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_FILE */
+#endif /* !GETATTR_fileno */
+
+
+/* Retrieve the unix FD associated with a given object.
+ * The translation is done by performing the following:
+ * >> #ifdef DeeSysFS_IS_INT
+ * >> if (DeeFile_Check(ob))
+ * >>     return DeeFile_GetSysFD(ob);
+ * >> #endif
+ * >> if (DeeInt_Check(ob))
+ * >>     return DeeInt_AsInt(ob);
+ * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_INT_GETSET)); catch (AttributeError);
+ * >> return DeeObject_AsInt(ob);
+ * Note that both msvc, as well as cygwin define `get_osfhandle()' as one
+ * of the available functions, meaning that in both scenarios we are able
+ * to get access to the underlying HANDLE. However, should deemon ever be
+ * linked against a windows libc without this function, then only the
+ * `DeeSysFD_HANDLE_GETSET' variant will be usable.
+ * @return: * : Success (the actual handle value)
+ * @return: -1: Error (handle translation failed)
+ *              In case the actual handle value stored inside of `ob'
+ *              was `-1', then an `DeeError_FileClosed' error is thrown. */
+PUBLIC WUNUSED int DCALL
+DeeUnixSystem_GetFD(DeeObject *__restrict ob) {
+	int error, result;
+	DREF DeeObject *attr;
+#ifdef DeeSysFS_IS_INT
+	STATIC_ASSERT(DeeSysFD_INVALID == -1);
+	if (DeeFile_Check(ob))
+		return (int)DeeFile_GetSysFD(ob);
+#endif /* DeeSysFS_IS_INT */
+	if (DeeInt_Check(ob)) {
+		error = DeeInt_AsInt(ob, &result);
+		if unlikely(error)
+			goto err;
+		if unlikely(result == -1)
+			goto err_fd_minus_one;
+		return result;
+	}
+	attr = GETATTR_fileno(ob);
+	if unlikely(!attr)
+		goto err;
+	if (attr) {
+		error = DeeObject_AsInt(attr, &result);
+		Dee_Decref(attr);
+	} else {
+		if (!DeeError_Catch(&DeeError_AttributeError) &&
+		    !DeeError_Catch(&DeeError_NotImplemented))
+			goto err;
+		/* Fallback: Convert an `int'-object into a unix file descriptor. */
+		error = DeeObject_AsInt(ob, &result);
+	}
+	if unlikely(error)
+		goto err;
+	if unlikely(result == -1)
+		goto err_fd_minus_one;
+	return result;
+err_fd_minus_one:
+	DeeError_Throwf(&DeeError_FileClosed,
+	                "Invalid file descriptor -1");
+err:
+	return -1;
 }
 
 

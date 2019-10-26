@@ -221,9 +221,12 @@ process_clear(Process *__restrict self) {
 PRIVATE HANDLE DCALL
 get_stdhandle_for_process(DeeObject *procfd, int stdnum) {
 	HANDLE result;
-	result = procfd
-	         ? DeeFile_Fileno(procfd)
-	         : ((DeeSystemFileObject *)DeeFile_DefaultStd(stdnum))->sf_handle;
+	if (procfd) {
+		result = (HANDLE)DeeNTSystem_GetHandle(procfd);
+	} else {
+		result = ((DeeSystemFileObject *)DeeFile_DefaultStd(stdnum))->sf_handle;
+		ASSERT(result != INVALID_HANDLE_VALUE); /* XXX: Does this always hold up? */
+	}
 	if (result != INVALID_HANDLE_VALUE) {
 		/* Make the handle inheritable. */
 		DBG_ALIGNMENT_DISABLE();

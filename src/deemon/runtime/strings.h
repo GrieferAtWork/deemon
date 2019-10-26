@@ -129,12 +129,10 @@ STRING(__kwds__)
 STRING(__module__)
 STRING(first)
 STRING(last)
-#ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
-STRING(fileno)
-#define STR_FILENO DeeString_STR(&str_fileno)
-#else
-#define STR_FILENO "fileno"
-#endif
+
+#ifdef DeeSysFD_GETSET
+STRING2(str_getsysfd, DeeSysFD_GETSET)
+#endif /* DeeSysFD_GETSET */
 
 STRING(size)
 STRING(filename)

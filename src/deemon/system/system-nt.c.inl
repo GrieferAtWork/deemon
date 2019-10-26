@@ -29,13 +29,16 @@
 #include <deemon/error.h>
 #include <deemon/error_types.h>
 #include <deemon/file.h>
+#include <deemon/int.h>
 #include <deemon/string.h>
-#include <deemon/system.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 
 #include <hybrid/unaligned.h>
 
 #include <Windows.h>
+
+#include "../runtime/strings.h"
 
 DECL_BEGIN
 
@@ -44,6 +47,142 @@ DECL_BEGIN
 #else /* CONFIG_LITTLE_ENDIAN */
 #define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
 #endif /* !CONFIG_LITTLE_ENDIAN */
+
+
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_HANDLE)
+#define GETATTR_osfhandle(ob) DeeObject_GetAttr(ob, &str_getsysfd)
+#else /* DeeSysFD_GETSET && DeeSysFS_IS_HANDLE */
+#define GETATTR_osfhandle(ob) DeeObject_GetAttrString(ob, DeeSysFD_HANDLE_GETSET)
+#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_HANDLE */
+
+#ifndef GETATTR_fileno
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
+#define GETATTR_fileno(ob) DeeObject_GetAttr(ob, &str_getsysfd)
+#else /* DeeSysFD_GETSET && DeeSysFS_IS_FILE */
+#define GETATTR_fileno(ob) DeeObject_GetAttrString(ob, DeeSysFD_INT_GETSET)
+#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_FILE */
+#endif /* !GETATTR_fileno */
+
+
+/* Retrieve the Windows handle associated with a given object.
+ * The translation is done by performing the following:
+ * >> #ifdef DeeSysFS_IS_HANDLE
+ * >> if (DeeFile_Check(ob))
+ * >>     return DeeFile_GetSysFD(ob);
+ * >> #endif
+ * >> #ifdef DeeSysFS_IS_INT
+ * >> if (DeeFile_Check(ob))
+ * >>     return get_osfhandle(DeeFile_GetSysFD(ob));
+ * >> #endif
+ * >> if (DeeInt_Check(ob))
+ * >>     return get_osfhandle(DeeInt_AsInt(ob));
+ * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_HANDLE_GETSET)); catch (AttributeError);
+ * >> try return get_osfhandle(DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_INT_GETSET))); catch (AttributeError);
+ * >> return get_osfhandle(DeeObject_AsInt(ob));
+ * Note that both msvc, as well as cygwin define `get_osfhandle()' as one
+ * of the available functions, meaning that in both scenarios we are able
+ * to get access to the underlying HANDLE. However, should deemon ever be
+ * linked against a windows libc without this function, then only the
+ * `DeeSysFD_HANDLE_GETSET' variant will be usable.
+ * @return: * :                   Success (the actual handle value)
+ * @return: INVALID_HANDLE_VALUE: Error (handle translation failed)
+ *                                In case the actual handle value stored inside
+ *                                of `ob' was `INVALID_HANDLE_VALUE', then an
+ *                                `DeeError_FileClosed' error is thrown. */
+PUBLIC WUNUSED /*HANDLE*/ void *DCALL
+DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
+	DREF DeeObject *attr;
+#if defined(DeeSysFS_IS_HANDLE) || \
+   (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle))
+	if (DeeFile_Check(ob)) {
+		DeeSysFD sysfd;
+		sysfd = DeeFile_GetSysFD(ob);
+		if (sysfd == DeeSysFD_INVALID)
+			return INVALID_HANDLE_VALUE;
+#ifdef DeeSysFS_IS_HANDLE
+		return (void *)(HANDLE)sysfd;
+#endif /* DeeSysFS_IS_HANDLE */
+
+#if defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)
+		{
+			HANDLE hResult;
+			hResult = (HANDLE)get_osfhandle(sysfd);
+			if unlikely(hResult == INVALID_HANDLE_VALUE) {
+				DeeError_Throwf(&DeeError_FileClosed,
+				                "File descriptor %d bound by %r was closed",
+				                sysfd, ob);
+			}
+			return (void *)hResult;
+		}
+#endif /* DeeSysFS_IS_INT && CONFIG_HAVE_get_osfhandle */
+	}
+#endif /* DeeSysFS_IS_HANDLE || DeeSysFS_IS_INT */
+
+#ifdef CONFIG_HAVE_get_osfhandle
+	if (DeeInt_Check(ob)) {
+		HANDLE hResult;
+		int fd;
+		if (DeeInt_AsInt(ob, &fd))
+			return INVALID_HANDLE_VALUE;
+		hResult = (HANDLE)get_osfhandle(fd);
+		if unlikely(hResult == INVALID_HANDLE_VALUE) {
+			DeeError_Throwf(&DeeError_FileClosed,
+			                "File descriptor %d was closed",
+			                fd);
+		}
+		return (void *)hResult;
+	}
+#endif /* CONFIG_HAVE_get_osfhandle */
+
+	attr = GETATTR_osfhandle(ob);
+	if (attr) {
+		HANDLE hResult;
+		int error;
+		error = DeeObject_AsUIntptr(attr, (uintptr_t *)&hResult);
+		Dee_Decref(attr);
+		if unlikely(error)
+			goto err;
+		if unlikely(hResult == INVALID_HANDLE_VALUE) {
+			DeeError_Throwf(&DeeError_FileClosed,
+			                "Handle pointed-to by %r was closed",
+			                ob);
+		}
+		return hResult;
+	}
+
+#ifdef CONFIG_HAVE_get_osfhandle
+	if (!DeeError_Catch(&DeeError_AttributeError) &&
+	    !DeeError_Catch(&DeeError_NotImplemented))
+		goto err;
+	{
+		HANDLE hResult;
+		int fd, error;
+		attr = GETATTR_fileno(ob);
+		if (attr) {
+			error = DeeObject_AsInt(attr, &fd);
+			Dee_Decref(attr);
+		} else {
+			if (!DeeError_Catch(&DeeError_AttributeError) &&
+			    !DeeError_Catch(&DeeError_NotImplemented))
+				goto err;
+			/* Fallback: Convert an `int'-object into a unix file descriptor. */
+			error = DeeObject_AsInt(ob, &fd);
+		}
+		if unlikely(error)
+			goto err;
+		hResult = (HANDLE)get_osfhandle(fd);
+		if unlikely(hResult == INVALID_HANDLE_VALUE) {
+			DeeError_Throwf(&DeeError_FileClosed,
+			                "File descriptor %d bound by %r was closed",
+			                fd, ob);
+		}
+		return (void *)hResult;
+	}
+#endif /* CONFIG_HAVE_get_osfhandle */
+
+err:
+	return INVALID_HANDLE_VALUE;
+}
 
 
 

@@ -646,7 +646,8 @@ func("isalnum", "defined(CONFIG_HAVE_CTYPE_H)");
 // CRT-specific functions
 func("_dosmaperr", msvc + " || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr))", check_defined: false);
 func("errno_nt2kos", "defined(__CRT_HAVE_errno_nt2kos)", check_defined: false);
-func("_get_osfhandle", msvc);
+func("_get_osfhandle", msvc + " || defined(__CYGWIN__) || defined(__CYGWIN32__)");
+func("get_osfhandle", "defined(__CYGWIN__) || defined(__CYGWIN32__)");
 func("_open_osfhandle", msvc);
 var("_doserrno", msvc);
 
@@ -4007,8 +4008,17 @@ var("_doserrno", msvc);
 #ifdef CONFIG_NO__get_osfhandle
 #undef CONFIG_HAVE__get_osfhandle
 #elif !defined(CONFIG_HAVE__get_osfhandle) && \
-      (defined(_get_osfhandle) || defined(___get_osfhandle_defined) || defined(_MSC_VER))
+      (defined(_get_osfhandle) || defined(___get_osfhandle_defined) || (defined(_MSC_VER) || \
+       defined(__CYGWIN__) || defined(__CYGWIN32__)))
 #define CONFIG_HAVE__get_osfhandle 1
+#endif
+
+#ifdef CONFIG_NO_get_osfhandle
+#undef CONFIG_HAVE_get_osfhandle
+#elif !defined(CONFIG_HAVE_get_osfhandle) && \
+      (defined(get_osfhandle) || defined(__get_osfhandle_defined) || (defined(__CYGWIN__) || \
+       defined(__CYGWIN32__)))
+#define CONFIG_HAVE_get_osfhandle 1
 #endif
 
 #ifdef CONFIG_NO__open_osfhandle
@@ -5013,6 +5023,10 @@ var("_doserrno", msvc);
 #endif /* !O_WRONLY */
 #endif /* wcreat64 = wopen64 */
 
+#if !defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HAVE__get_osfhandle)
+#define CONFIG_HAVE_get_osfhandle 1
+#define get_osfhandle _get_osfhandle
+#endif /* get_osfhandle = _get_osfhandle */
 
 #if defined(CONFIG_HAVE_pthread_suspend_np) && !defined(CONFIG_HAVE_pthread_suspend)
 #define CONFIG_HAVE_pthread_suspend 1
@@ -5753,6 +5767,15 @@ for (local x: [1:n+1]) {
 					DeePrivateSystem_IF_E1(errno, e4, __VA_ARGS__),             \
 					(void)0))))
 //[[[end]]]
+
+
+#ifdef GUARD_DEEMON_FILE_H
+#if (defined(DeeSysFS_IS_INT) && !defined(CONFIG_HAVE_close)) || \
+    (defined(DeeSysFS_IS_FILE) && !defined(CONFIG_HAVE_fclose))
+#undef DeeSysFD_Close
+#define DeeSysFD_Close(x) (void)0
+#endif /* !CONFIG_HAVE_close */
+#endif /* GUARD_DEEMON_FILE_H */
 
 
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H */

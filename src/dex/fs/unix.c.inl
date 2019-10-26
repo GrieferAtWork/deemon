@@ -49,6 +49,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system.h>
 #include <deemon/system-features.h>
 
 #include "_res.h"
@@ -466,8 +467,8 @@ INTERN WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path) {
 			if (DeeObject_AsInt(path, &fd))
 				goto err;
 		} else {
-			fd = (int)DeeFile_Fileno(path);
-			if unlikely(fd == (int)DSYSFD_INVALID) {
+			fd = DeeUnixSystem_GetFD(path);
+			if unlikely(fd == -1) {
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented))
 					goto try_filename;
@@ -665,8 +666,8 @@ Stat_Init(STRUCT_STAT *__restrict self,
 			if (DeeObject_AsInt(path, &fd))
 				goto err;
 		} else {
-			fd = (int)DeeFile_Fileno(path);
-			if unlikely(fd == (int)DSYSFD_INVALID) {
+			fd = DeeUnixSystem_GetFD(path);
+			if unlikely(fd == -1) {
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented)) {
 					/* Try the file's filename. */

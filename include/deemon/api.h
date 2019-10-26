@@ -220,8 +220,9 @@ DECL_BEGIN
 #define CONFIG_HOST_WINDOWS 1
 #endif /* Windows... */
 #if defined(__unix__) || defined(__unix) || defined(unix) || \
-    defined(__lunix__) || defined(__lunix) || defined(lunix) || \
-    defined(__KOS__)
+    defined(__linux__) || defined(__linux) || defined(linux) || \
+    defined(__KOS__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
+    defined(__DragonFly__)
 #define CONFIG_HOST_UNIX 1
 #endif /* Unix... */
 

@@ -118,7 +118,7 @@ print "/" "**" "/";
     (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
     (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL))
 #define posix_dup3_USE_DUP2_FCNTL 1
-#elif defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE__get_osfhandle) && \
+#elif defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE_get_osfhandle) && \
       defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_O_CLOEXEC)
 #define posix_dup3_USE_DUP2_SETHANDLEINFORMATION 1
 #else
@@ -450,7 +450,7 @@ EINTR_LABEL(again)
 	{
 		HANDLE hNewFd;
 again_setinfo:
-		hNewFd = (HANDLE)(uintptr_t)_get_osfhandle(newfd);
+		hNewFd = (HANDLE)(uintptr_t)get_osfhandle(newfd);
 		if (hNewFd == INVALID_HANDLE_VALUE) {
 #ifdef CONFIG_HAVE_close
 			close(newfd);

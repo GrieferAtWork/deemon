@@ -208,7 +208,7 @@ DeeUnixSystem_ReadlinkString(/*utf-8*/ char const *filename) {
 #undef DeeSystem_GetFilenameOfFD_USE_NT_HANDLE
 #undef DeeSystem_GetFilenameOfFD_USE_PROCFS
 #undef DeeSystem_GetFilenameOfFD_USE_STUB
-#if defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE__get_osfhandle)
+#if defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_get_osfhandle)
 #define DeeSystem_GetFilenameOfFD_USE_NT_HANDLE 1
 #elif !defined(DeeUnixSystem_Readlink_USE_STUB)
 #define DeeSystem_GetFilenameOfFD_USE_PROCFS 1
@@ -229,7 +229,7 @@ DeeSystem_GetFilenameOfFD(int fd) {
 #ifdef DeeSystem_GetFilenameOfFD_USE_NT_HANDLE
 	HANDLE h;
 	DREF DeeObject *result;
-	h = (HANDLE)_get_osfhandle(fd);
+	h = (HANDLE)get_osfhandle(fd);
 	if (h == INVALID_HANDLE_VALUE) {
 		err_GetFilenameOfFD_BADF(fd);
 		return NULL;

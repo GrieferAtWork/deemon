@@ -43,7 +43,7 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 open_file_for_copy(DeeObject *__restrict name, int oflags, int mode) {
-	dsysfd_t fd;
+	DeeSysFD fd;
 	/* Default case: The name is a string, meaning we need to open a file. */
 	if (DeeString_Check(name))
 		return DeeFile_Open(name, oflags, mode);

@@ -104,59 +104,95 @@ struct Dee_file_object {
 };
 
 /* The underlying system file descriptor type. */
-#ifdef CONFIG_HOST_WINDOWS
-#define Dee_SYSFD_SIZEOF    __SIZEOF_POINTER__
-#define Dee_SYSFD_CLOSE(x) CloseHandle(x)
-#ifdef INVALID_HANDLE_VALUE
-#define Dee_SYSFD_INVALID  INVALID_HANDLE_VALUE
-#else /* INVALID_HANDLE_VALUE */
-#define Dee_SYSFD_INVALID  ((Dee_sysfd_t)-1)
-#endif /* !INVALID_HANDLE_VALUE */
-#if defined(_WINNT_) || defined(__wtypes_h__) || defined(__wtypesbase_h__)
-typedef HANDLE Dee_sysfd_t;
-#else /* _WINNT_ || __wtypes_h__ || __wtypesbase_h__ */
-typedef void  *Dee_sysfd_t;
-#endif /* !_WINNT_ && !__wtypes_h__ && !__wtypesbase_h__ */
+/* When `CONFIG_HOST_WINDOWS' is defined:
+ *     HANDLE
+ * else: When at least one of [`read', `write', [<some-other-functions-using-fds>]] exist:
+ *     int
+ * else: When `FILE' is defined in `<stdio.h>':
+ *     `FILE *' (stored as a `void *')
+ * else:
+ *     int
+ */
+#undef DeeSysFS_IS_HANDLE /* Window's `HANDLE' */
+#undef DeeSysFS_IS_INT    /* Unix's `int' */
+#undef DeeSysFS_IS_FILE   /* Stdio's `FILE *' */
+#if defined(CONFIG_HOST_WINDOWS)
+#define DeeSysFS_IS_HANDLE 1
 #elif defined(CONFIG_HOST_UNIX)
-#define Dee_SYSFD_SIZEOF    __SIZEOF_INT__
-#define Dee_SYSFD_SIGNED    1
-#define Dee_SYSFD_INVALID  (-1)
-typedef int    Dee_sysfd_t; /* File descriptor number. */
-#define Dee_SYSFD_CLOSE(x) close(x)
-#elif !defined(CONFIG_NO_STDIO)
-#define CONFIG_NATIVE_STD_FILES_ARE_BUFFERED  1 /* Config: The native STD streams are already buffered */
-#define CONFIG_FILENO_DENY_ARBITRARY_INTEGERS 1
-#define Dee_SYSFD_SIZEOF    __SIZEOF_POINTER__
-#define Dee_SYSFD_INVALID  (NULL)
-typedef FILE  *Dee_sysfd_t;
-#define Dee_SYSFD_CLOSE(x) fclose(x)
-#else
-#define CONFIG_NATIVE_STD_FILES_ARE_BUFFERED  1 /* They're not, but this option prevents the creation
-                                                 * of additional buffers that wouldn't do anything. */
-#define Dee_SYSFD_CLOSE(x) (void)0
-#define Dee_SYSFD_SIGNED    1
-#define Dee_SYSFD_INVALID  (-1)
-#define Dee_SYSFD_SIZEOF    __SIZEOF_INT__
-typedef int    Dee_sysfd_t; /* placeholder. - Always -1 */
-#endif
+/* If we're being hosted by a known UNIX system, then we don't
+ * have to include <deemon/system-features.h> in order to figure
+ * out that int-based file descriptors are being used! */
+#define DeeSysFS_IS_INT 1
+#else /* Known-Host-OS... */
+/* Fallback: use `system-features.h' to figure out what's going on! */
+#include "system-features.h"
 
-#ifdef DEE_SOURCE
-#define DSYSFD_SIZEOF  Dee_SYSFD_SIZEOF
-#define DSYSFD_CLOSE   Dee_SYSFD_CLOSE
-#define DSYSFD_INVALID Dee_SYSFD_INVALID
-#ifdef Dee_SYSFD_SIGNED
-#define DSYSFD_SIGNED    1
-#endif /* Dee_SYSFD_SIGNED */
-typedef Dee_sysfd_t dsysfd_t;
-#endif /* DEE_SOURCE */
+#if defined(CONFIG_HAVE_read) || defined(CONFIG_HAVE_write) || \
+    defined(CONFIG_HAVE_open) || defined(CONFIG_HAVE_open64) || \
+    defined(CONFIG_HAVE_creat) || defined(CONFIG_HAVE_creat64) || \
+    defined(CONFIG_HAVE_close) || defined(CONFIG_HAVE_lseek) || \
+    defined(CONFIG_HAVE_lseek64)
+/* Check if there are any fd-based functions available */
+#define DeeSysFS_IS_INT 1
+#elif defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64) || \
+      defined(CONFIG_HAVE_fread) || defined(CONFIG_HAVE_fwrite) || \
+      defined(CONFIG_HAVE_fgetc) || defined(CONFIG_HAVE_fputc)
+/* Check if there are any FILE-based functions available */
+#define DeeSysFS_IS_FILE 1
+#else /* FILE-based I/O mechanism */
+/* Fallback: Just assume FD-based file I/O (even though at this point
+ *           it's most likely that no I/O at all is supported, which
+ *           will cause the deemon sources to stub out most APIs...) */
+#define DeeSysFS_IS_INT 1
+#endif /* Unknown I/O mechanism */
+
+#endif /* Unknown-Host-OS... */
+
+#define DeeSysFD_HANDLE_GETSET  "osfhandle_np"
+#define DeeSysFD_INT_GETSET     "fileno_np"
+
+#ifdef DeeSysFS_IS_HANDLE
+#define DeeSysFD_Close(x) CloseHandle(x)
+#undef  DeeSysFD_SIGNED
+#define DeeSysFD_SIZE    __SIZEOF_POINTER__
+#define DeeSysFD_INVALID ((DeeSysFD)-1l)
+#define DeeSysFD_GETSET  DeeSysFD_HANDLE_GETSET
+typedef void *DeeSysFD;
+#endif /* DeeSysFS_IS_HANDLE */
+
+#ifdef DeeSysFS_IS_INT
+#if !defined(GUARD_DEEMON_SYSTEM_FEATURES_H) || defined(CONFIG_HAVE_close)
+#define DeeSysFD_Close(x) close(x)
+#endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H || CONFIG_HAVE_close */
+#define DeeSysFD_SIGNED  1
+#define DeeSysFD_SIZE    __SIZEOF_INT__
+#define DeeSysFD_INVALID (-1)
+#define DeeSysFD_GETSET  DeeSysFD_INT_GETSET
+typedef int DeeSysFD;
+#endif /* DeeSysFS_IS_INT */
+
+#ifdef DeeSysFS_IS_FILE
+#if !defined(GUARD_DEEMON_SYSTEM_FEATURES_H) || defined(CONFIG_HAVE_fclose)
+#define DeeSysFD_Close(x) fclose(x)
+#endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H || CONFIG_HAVE_fclose */
+#define DeeSysFD_SIGNED  0
+#define DeeSysFD_SIZE    __SIZEOF_POINTER__
+#define DeeSysFD_INVALID NULL
+typedef void *DeeSysFD; /* FILE * */
+#endif /* DeeSysFS_IS_FILE */
+
+
+#ifndef DeeSysFD_Close
+#define DeeSysFD_Close(x) (void)0
+#endif /* !DeeSysFD_Close */
 
 
 #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
-#ifdef DSYSFD_SIGNED
-#define DeeObject_AsFd(self, result) DeeObject_AsXUInt(DSYSFD_SIZEOF, self, result)
-#else /* DSYSFD_SIGNED */
-#define DeeObject_AsFd(self, result) DeeObject_AsXInt(DSYSFD_SIZEOF, self, result)
-#endif /* !DSYSFD_SIGNED */
+#ifdef DeeSysFD_SIGNED
+#define DeeObject_AsFd(self, result) DeeObject_AsXUInt(DeeSysFD_SIZE, self, result)
+#else /* DeeSysFD_SIGNED */
+#define DeeObject_AsFd(self, result) DeeObject_AsXInt(DeeSysFD_SIZE, self, result)
+#endif /* !DeeSysFD_SIGNED */
 #endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
 
 
@@ -300,22 +336,17 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restri
  * @return: < 0 : An error occurred. */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
 
-/* Return the system file descriptor of the given file, or throws
- * an error and returns `DSYSFD_INVALID' if the file was closed,
+/* Return the system file descriptor of the given file, or throw
+ * an error and return `DeeSysFD_INVALID' if the file was closed,
  * or doesn't refer to a file carrying a descriptor.
- * NOTE: This function automatically asserts that `self'
- *       is a `file', throwing a TypeError if it isn't.
- * #ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
- * NOTE: As a fallback, this function invokes `self.fileno()',
- *       expecting an integer (or int-castable) to be returned,
- *       which is then converted to a system file descriptor.
- *       If the casted value is equal to `DSYSFD_INVALID', a
- *       `FileClosed' will be raised automatically, thus
- *       ensuring that the function never returns that value
- *       without throwing an error, and always returns that
- *       value when an error was thrown.
- * #endif */
-DFUNDEF WUNUSED NONNULL((1)) Dee_sysfd_t DCALL DeeFile_Fileno(DeeObject *__restrict self);
+ * Note that this function queries the `DeeSysFD_GETSET' attribute
+ * of the given object, and always fails if `DeeSysFD_GETSET' isn't
+ * defined for the configuration used when deemon was built.
+ * NOTE: This function doesn't require that `self' actually be
+ *       derived from a `deemon.File'!
+ * @return: * :               The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
+ * @return: DeeSysFD_INVALID: An error occurred. */
+DFUNDEF WUNUSED NONNULL((1)) DeeSysFD DCALL DeeFile_GetSysFD(DeeObject *__restrict self);
 
 /* Retrieve and return the filename used to open the given file.
  * NOTE: This function automatically asserts that `self'
@@ -480,7 +511,7 @@ extern DREF DeeObject *const DeeFile_DefaultStddbg;
 /* Return the underlying file descriptor for `self', that must be
  * an instance of `DeeSystemFile_Type' (or one of its sub-classes)
  * WARNING: The caller is required not to pass objects nothing matching `DeeSystemFile_Check' */
-INTDEF WUNUSED NONNULL((1)) Dee_sysfd_t DCALL DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DeeSysFD DCALL DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -521,7 +552,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSystemFile_Filename(/*Syste
  *       when either `close()' is invoked, or when the file is destroyed.
  *       Otherwise, the function will inherit the given `fd' upon success.  */
 DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL
-DeeFile_OpenFd(Dee_sysfd_t fd, /*String*/ DeeObject *filename,
+DeeFile_OpenFd(DeeSysFD fd, /*String*/ DeeObject *filename,
                int oflags, bool inherit_fd);
 
 

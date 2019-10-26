@@ -46,7 +46,7 @@ DECL_BEGIN
 typedef DeeSystemFileObject SystemFile;
 
 PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
-DeeFile_OpenFd(dsysfd_t fd,
+DeeFile_OpenFd(DeeSysFD fd,
                /*String*/ DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
 	SystemFile *result;
@@ -54,7 +54,7 @@ DeeFile_OpenFd(dsysfd_t fd,
 	if unlikely(!result)
 		goto done;
 	result->sf_handle    = fd;
-	result->sf_ownhandle = inherit_fd ? fd : (dsysfd_t)-1; /* Inherit. */
+	result->sf_ownhandle = inherit_fd ? fd : (DeeSysFD)-1; /* Inherit. */
 	result->sf_filename  = filename;
 	Dee_XIncref(filename);
 	DeeLFileObject_Init(result, &DeeSystemFile_Type);
@@ -68,18 +68,18 @@ PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
 }
 
 PRIVATE ATTR_COLD int DCALL error_file_io(SystemFile *__restrict self) {
-	if (self->sf_handle == DSYSFD_INVALID)
+	if (self->sf_handle == (DeeSysFD)-1)
 		return err_file_closed();
 	return DeeError_SysThrowf(&DeeError_FSError, DeeSystem_GetErrno(),
 	                          "I/O Operation failed");
 }
 
-INTERN dsysfd_t DCALL
+INTERN DeeSysFD DCALL
 DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
-	dsysfd_t result;
+	DeeSysFD result;
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
-	result = (dsysfd_t)((SystemFile *)self)->sf_handle;
-	if (result == DSYSFD_INVALID)
+	result = (DeeSysFD)((SystemFile *)self)->sf_handle;
+	if (result == (DeeSysFD)-1)
 		error_file_io((SystemFile *)self);
 	return result;
 }
@@ -450,8 +450,8 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	if unlikely(!result)
 		goto err_fd;
 	DeeLFileObject_Init(result, &DeeFSFile_Type);
-	result->sf_handle    = (dsysfd_t)fd;
-	result->sf_ownhandle = (dsysfd_t)fd; /* Inherit stream. */
+	result->sf_handle    = (DeeSysFD)fd;
+	result->sf_ownhandle = (DeeSysFD)fd; /* Inherit stream. */
 	result->sf_filename  = filename;
 	Dee_Incref(filename);
 	return (DREF DeeObject *)result;
@@ -632,29 +632,25 @@ sysfile_close(SystemFile *__restrict self) {
 	}
 #endif /* CONFIG_HAVE_close */
 	DBG_ALIGNMENT_ENABLE();
-	self->sf_handle    = DSYSFD_INVALID;
-	self->sf_ownhandle = DSYSFD_INVALID;
+	self->sf_handle    = (DeeSysFD)-1;
+	self->sf_ownhandle = (DeeSysFD)-1;
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
-	dsysfd_t result;
-	if (DeeArg_Unpack(argc, argv, ":fileno"))
-		return NULL;
+sysfile_fileno(SystemFile *__restrict self) {
+	DeeSysFD result;
 	result = DeeSystemFile_Fileno((DeeObject *)self);
-	if unlikely(result == DSYSFD_INVALID)
+	if unlikely(result == (DeeSysFD)-1)
 		return NULL;
 	return DeeInt_NewInt((int)result);
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
+sysfile_isatty(SystemFile *__restrict self) {
 #ifdef CONFIG_HAVE_isatty
 	int result;
-	if (DeeArg_Unpack(argc, argv, ":isatty"))
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	result = isatty((int)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
@@ -673,28 +669,21 @@ sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
 err:
 	return NULL;
 #else /* CONFIG_HAVE_isatty */
-	if (DeeArg_Unpack(argc, argv, ":isatty"))
-		goto err;
+	(void)self;
 	return_false;
 #endif /* !CONFIG_HAVE_isatty */
 }
 
-PRIVATE struct type_method sysfile_methods[] = {
-	{ STR_FILENO,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_fileno,
-	  DOC("->?Dint") },
-	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_isatty,
-	  DOC("->?Dbool") },
-	/* TODO: dup_np() */
-	/* TODO: dup2_np() */
-	{ NULL }
-};
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
+#define STR_fileno DeeString_STR(&str_getsysfd)
+#else /* DeeSysFD_GETSET && DeeSysFS_IS_FILE */
+#define STR_fileno DeeSysFD_INT_GETSET
+#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_FILE */
 
 PRIVATE struct type_getset sysfile_getsets[] = {
-	{ "filename",
-	  &DeeSystemFile_Filename, NULL, NULL,
-	  DOC("->?Dstring") },
+	{ STR_fileno, (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_fileno, NULL, NULL, DOC("->?Dint") },
+	{ DeeString_STR(&str_isatty), (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_isatty, NULL, NULL, DOC("->?Dbool") },
+	{ "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
 	{ NULL }
 };
 
@@ -768,7 +757,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */ sysfile_methods,
+		/* .tp_methods       = */ NULL,
 		/* .tp_getsets       = */ sysfile_getsets,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ sysfile_class_methods,

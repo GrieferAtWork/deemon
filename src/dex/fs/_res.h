@@ -57,6 +57,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)\n"                                                     \
 	    "(fp:?DFile)\n"                                                         \
 	    "(fd:?Dint)\n"                                                          \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                                \
 	    "@interrupt\n"                                                          \
 	    "@throw FileNotFound The given @path or @fp could not be found\n"       \
 	    "@throw SystemError Failed to query file information for some reason\n" \
@@ -72,6 +73,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)\n"                                                     \
 	    "(fp:?DFile)\n"                                                         \
 	    "(fd:?Dint)\n"                                                          \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                                \
 	    "@interrupt\n"                                                          \
 	    "@throw FileNotFound The given @path or @fp could not be found\n"       \
 	    "@throw SystemError Failed to query file information for some reason\n" \
@@ -169,6 +171,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                                          \
 	    "(fp:?DFile)->?Dbool\n"                                              \
 	    "(fd:?Dint)->?Dbool\n"                                               \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                             \
 	    "@interrupt\n"                                                       \
 	    "Taking the same arguments as the constructor of :stat, "            \
 	    "check if the referred file exists, or if the given file described " \
@@ -178,6 +181,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                               \
 	    "(fp:?DFile)->?Dbool\n"                                   \
 	    "(fd:?Dint)->?Dbool\n"                                    \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
 	    "@interrupt\n"                                            \
 	    "Taking the same arguments as the constructor of :stat, " \
 	    "check if the passed parameters refer to an existing directory")
@@ -186,6 +190,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                               \
 	    "(fp:?DFile)->?Dbool\n"                                   \
 	    "(fd:?Dint)->?Dbool\n"                                    \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
 	    "@interrupt\n"                                            \
 	    "Taking the same arguments as the constructor of :stat, " \
 	    "check if the passed parameters refer to an existing character device")
@@ -194,6 +199,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                               \
 	    "(fp:?DFile)->?Dbool\n"                                   \
 	    "(fd:?Dint)->?Dbool\n"                                    \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
 	    "@interrupt\n"                                            \
 	    "Taking the same arguments as the constructor of :stat, " \
 	    "check if the passed parameters refer to an existing block device")
@@ -202,6 +208,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                               \
 	    "(fp:?DFile)->?Dbool\n"                                   \
 	    "(fd:?Dint)->?Dbool\n"                                    \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
 	    "@interrupt\n"                                            \
 	    "Taking the same arguments as the constructor of :stat, " \
 	    "check if the passed parameters refer to an existing regular file")
@@ -210,6 +217,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                               \
 	    "(fp:?DFile)->?Dbool\n"                                   \
 	    "(fd:?Dint)->?Dbool\n"                                    \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
 	    "@interrupt\n"                                            \
 	    "Taking the same arguments as the constructor of :stat, " \
 	    "check if the passed parameters refer to an existing pipe")
@@ -218,6 +226,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                               \
 	    "(fp:?DFile)->?Dbool\n"                                   \
 	    "(fd:?Dint)->?Dbool\n"                                    \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
 	    "@interrupt\n"                                            \
 	    "Taking the same arguments as the constructor of :stat, " \
 	    "check if the passed parameters refer to an existing symbolic link")
@@ -226,6 +235,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                               \
 	    "(fp:?DFile)->?Dbool\n"                                   \
 	    "(fd:?Dint)->?Dbool\n"                                    \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
 	    "@interrupt\n"                                            \
 	    "Taking the same arguments as the constructor of :stat, " \
 	    "check if the passed parameters refer to an existing socket")
@@ -234,6 +244,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                                         \
 	    "(fp:?DFile)->?Dbool\n"                                             \
 	    "(fd:?Dint)->?Dbool\n"                                              \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                            \
 	    "@interrupt\n"                                                      \
 	    "Taking the same arguments as the constructor of "                  \
 	    ":stat, check if the passed parameters refer to a hidden file. "    \
@@ -245,6 +256,7 @@ DECL_BEGIN
 	DOC("(path:?Dstring)->?Dbool\n"                                           \
 	    "(fp:?DFile)->?Dbool\n"                                               \
 	    "(fd:?Dint)->?Dbool\n"                                                \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                              \
 	    "@interrupt\n"                                                        \
 	    "Taking the same arguments as the constructor of "                    \
 	    ":stat, check if the passed parameters refer to an executable file. " \

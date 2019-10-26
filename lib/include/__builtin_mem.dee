@@ -19,7 +19,7 @@
 #pragma once
 #include "__stddef.dee"
 
-#pragma push_macro(undef,"from","ctypes","import")
+#pragma push_macro(undef, "from", "ctypes", "posix", "import")
 from ctypes import
 	__builtin_memcpy = "memcpy",
 	__builtin_mempcpy = "mempcpy",
@@ -50,7 +50,6 @@ from ctypes import
 	__builtin_strspn = "strspn",
 	__builtin_strstr = "strstr",
 	__builtin_strtok = "strtok",
-	__builtin_strerror = "strerror",
 	__builtin_strlen = "strlen",
 	__builtin_strnlen = "strnlen",
 	__builtin_strdup = "strdup",
@@ -58,4 +57,7 @@ from ctypes import
 	__builtin_strncat = "strncat",
 	__builtin_memset = "memset"
 ;
-#pragma pop_macro("from","ctypes","import")
+from posix import
+	__builtin_strerror = "strerror"
+;
+#pragma pop_macro("from", "ctypes", "posix", "import")

@@ -230,7 +230,7 @@ err:
 /************************************************************************/
 
 #if defined(CONFIG_HAVE_pread64) || \
-    (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS)) || defined(__DEEMON__)
+    (defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pread", "fd:d,buf:obj:buffer,offset:I64d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pread_f_impl(int fd, DeeObject *buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -255,7 +255,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pread_f_impl(int fd, DeeObject *b
 //[[[end]]]
 #endif
 #if !(defined(CONFIG_HAVE_pread64) || \
-      (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))) || defined(__DEEMON__)
+      (defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS))) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pread", "fd:d,buf:obj:buffer,offset:I32d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pread_f_impl(int fd, DeeObject *buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -281,7 +281,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pread_f_impl(int fd, DeeObject *b
 #endif
 {
 #if defined(CONFIG_HAVE_pread64) || defined(CONFIG_HAVE_pread) || \
-    (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
+    (defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
 	DeeBuffer buffer;
 	Dee_ssize_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FWRITABLE))
@@ -290,12 +290,12 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #if defined(CONFIG_HAVE_pread64)
 	result_value = (Dee_ssize_t)pread64(fd, buffer.bb_base, buffer.bb_size, offset);
-#elif !defined(CONFIG_HAVE__get_osfhandle) || !defined(CONFIG_HOST_WINDOWS)
+#elif !defined(CONFIG_HAVE_get_osfhandle) || !defined(CONFIG_HOST_WINDOWS)
 	result_value = (Dee_ssize_t)pread(fd, buffer.bb_base, buffer.bb_size, offset);
 #else
 	{
 		HANDLE h;
-		h = (HANDLE)_get_osfhandle(fd);
+		h = (HANDLE)get_osfhandle(fd);
 		if (h == INVALID_HANDLE_VALUE)
 			result_value = -1;
 		else {
@@ -367,7 +367,7 @@ err:
 /************************************************************************/
 
 #if defined(CONFIG_HAVE_pwrite64) || \
-    defined(CONFIG_HAVE__get_osfhandle) || defined(__DEEMON__)
+    defined(CONFIG_HAVE_get_osfhandle) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pwrite", "fd:d,buf:obj:buffer,offset:I64d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pwrite_f_impl(int fd, DeeObject *buf, int64_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -391,7 +391,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pwrite_f_impl(int fd, DeeObject *buf, int64_t offset)
 //[[[end]]]
 #endif
-#if !(defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE__get_osfhandle)) || defined(__DEEMON__)
+#if !(defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE_get_osfhandle)) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("pwrite", "fd:d,buf:obj:buffer,offset:I32d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pwrite_f_impl(int fd, DeeObject *buf, int32_t offset);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -417,7 +417,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pwrite_f_impl(int fd, DeeObject *
 #endif
 {
 #if defined(CONFIG_HAVE_pwrite64) || defined(CONFIG_HAVE_pwrite) || \
-    (defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
+    (defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
 	DeeBuffer buffer;
 	Dee_ssize_t result_value;
 	if (DeeObject_GetBuf(buf, &buffer, Dee_BUFFER_FWRITABLE))
@@ -426,12 +426,12 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #if defined(CONFIG_HAVE_pwrite64)
 	result_value = (Dee_ssize_t)pwrite64(fd, buffer.bb_base, buffer.bb_size, offset);
-#elif !defined(CONFIG_HAVE__get_osfhandle) || !defined(CONFIG_HOST_WINDOWS)
+#elif !defined(CONFIG_HAVE_get_osfhandle) || !defined(CONFIG_HOST_WINDOWS)
 	result_value = (Dee_ssize_t)pwrite(fd, buffer.bb_base, buffer.bb_size, offset);
 #else
 	{
 		HANDLE h;
-		h = (HANDLE)_get_osfhandle(fd);
+		h = (HANDLE)get_osfhandle(fd);
 		if (h == INVALID_HANDLE_VALUE)
 			result_value = -1;
 		else {

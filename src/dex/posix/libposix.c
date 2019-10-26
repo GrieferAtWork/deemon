@@ -349,11 +349,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(readlink, "(path:?Dstring)->?Dstring\n(fp:?DFile)->?Dstring\n(fd:?Dint)->?Dstring\n")
 	DEFINE_LIBFS_ALIAS_ALT("fopendir", opendir, "dir", "(fp:?DFile)\n(fd:?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fstat", stat, "(fp:?DFile)\n(fd:?Dint)\n")
+	DEFINE_LIBFS_ALIAS_S_ALT("fstatat", stat, "(dfd:?Dint,path:?Dstring,atflags=!0)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchdir", chdir, "(fp:?DFile)\n(fd:?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchmod", chmod, "(fp:?DFile,mode:?X2?Dstring?Dint)\n"
 	                                          "(fd:?Dint,mode:?X2?Dstring?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchown", chown, "(fp:?DFile,user:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint)\n"
 	                                          "(fd:?Dint,user:?X3?Efs:user?Dstring?Dint,group:?X3?Efs:group?Dstring?Dint)\n")
+
 
 	/* stat.st_mode bits. */
 	DEFINE_LIBFS_ALIAS_S(S_IFMT, "->?Dint\n")

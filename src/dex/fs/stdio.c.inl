@@ -33,6 +33,8 @@
 #include <deemon/seq.h>
 #include <deemon/thread.h>
 
+#include "_res.h"
+
 /* Everything we can do originates from these 2 files. */
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,7 +142,7 @@ stat_ctor(Stat *__restrict self,
           size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "o:stat", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_tp_name, &path))
 		goto err;
 	self->st_file = file_open(path, "r");
 	if unlikely(!self->st_file)
@@ -191,24 +193,24 @@ stat_return_false(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset stat_getsets[] = {
-	{ "st_dev", &stat_getxxx, NULL, NULL, S_Stat_getset_st_dev_doc },
-	{ "st_ino", &stat_getxxx, NULL, NULL, S_Stat_getset_st_ino_doc },
-	{ "st_mode", &stat_getxxx, NULL, NULL, S_Stat_getset_st_mode_doc },
-	{ "st_nlink", &stat_getxxx, NULL, NULL, S_Stat_getset_st_nlink_doc },
-	{ "st_uid", &stat_getxxx, NULL, NULL, S_Stat_getset_st_uid_doc },
-	{ "st_gid", &stat_getxxx, NULL, NULL, S_Stat_getset_st_gid_doc },
-	{ "st_rdev", &stat_getxxx, NULL, NULL, S_Stat_getset_st_rdev_doc },
-	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, S_Stat_getset_st_size_doc },
-	{ "st_atime", &stat_getxxx, NULL, NULL, S_Stat_getset_st_atime_doc },
-	{ "st_mtime", &stat_getxxx, NULL, NULL, S_Stat_getset_st_mtime_doc },
-	{ "st_ctime", &stat_getxxx, NULL, NULL, S_Stat_getset_st_ctime_doc },
-	{ "isdir", &stat_return_false, NULL, NULL, S_Stat_getset_isdir_doc },
-	{ "ischr", &stat_return_false, NULL, NULL, S_Stat_getset_ischr_doc },
-	{ "isblk", &stat_return_false, NULL, NULL, S_Stat_getset_isblk_doc },
-	{ "isreg", &stat_return_true, NULL, NULL, S_Stat_getset_isreg_doc },
-	{ "isfifo", &stat_return_false, NULL, NULL, S_Stat_getset_isfifo_doc },
-	{ "islnk", &stat_return_false, NULL, NULL, S_Stat_getset_islnk_doc },
-	{ "issock", &stat_return_false, NULL, NULL, S_Stat_getset_issock_doc },
+	{ S_Stat_getset_st_dev_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_dev_doc },
+	{ S_Stat_getset_st_ino_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_ino_doc },
+	{ S_Stat_getset_st_mode_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_mode_doc },
+	{ S_Stat_getset_st_nlink_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_nlink_doc },
+	{ S_Stat_getset_st_uid_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_uid_doc },
+	{ S_Stat_getset_st_gid_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_gid_doc },
+	{ S_Stat_getset_st_rdev_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_rdev_doc },
+	{ S_Stat_getset_st_size_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, S_Stat_getset_st_size_doc },
+	{ S_Stat_getset_st_atime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_atime_doc },
+	{ S_Stat_getset_st_mtime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_mtime_doc },
+	{ S_Stat_getset_st_ctime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_ctime_doc },
+	{ S_Stat_getset_isdir_name, &stat_return_false, NULL, NULL, S_Stat_getset_isdir_doc },
+	{ S_Stat_getset_ischr_name, &stat_return_false, NULL, NULL, S_Stat_getset_ischr_doc },
+	{ S_Stat_getset_isblk_name, &stat_return_false, NULL, NULL, S_Stat_getset_isblk_doc },
+	{ S_Stat_getset_isreg_name, &stat_return_true, NULL, NULL, S_Stat_getset_isreg_doc },
+	{ S_Stat_getset_isfifo_name, &stat_return_false, NULL, NULL, S_Stat_getset_isfifo_doc },
+	{ S_Stat_getset_islnk_name, &stat_return_false, NULL, NULL, S_Stat_getset_islnk_doc },
+	{ S_Stat_getset_issock_name, &stat_return_false, NULL, NULL, S_Stat_getset_issock_doc },
 	{ NULL }
 };
 
@@ -217,7 +219,7 @@ stat_class_exists(DeeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "o:exists", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_exists_name, &path))
 		goto err;
 	error = file_exists(path);
 	if unlikely(error < 0)
@@ -232,7 +234,7 @@ stat_class_isreg(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	int error;
-	if (DeeArg_Unpack(argc, argv, "o:isreg", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isreg_name, &path))
 		goto err;
 	error = file_exists(path);
 	if unlikely(error < 0)
@@ -243,36 +245,36 @@ err:
 }
 
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                        \
-	funnam(DeeObject *__restrict UNUSED(self),           \
-	       size_t argc, DeeObject **argv) {   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                \
+	funnam(DeeObject *UNUSED(self),                      \
+	       size_t argc, DeeObject **argv) {              \
 		DeeObject *path;                                 \
 		if (DeeArg_Unpack(argc, argv, "o:" name, &path)) \
 			return NULL;                                 \
 		return_;                                         \
 	}
-DEFINE_STATIC_QUERY(stat_class_isdir, "isdir", return_false)
-DEFINE_STATIC_QUERY(stat_class_ischr, "ischr", return_false)
-DEFINE_STATIC_QUERY(stat_class_isblk, "isblk", return_false)
-DEFINE_STATIC_QUERY(stat_class_isfifo, "isfifo", return_false)
-DEFINE_STATIC_QUERY(stat_class_islnk, "islnk", return_false)
-DEFINE_STATIC_QUERY(stat_class_issock, "issock", return_false)
-DEFINE_STATIC_QUERY(stat_class_ishidden, "ishidden", return_false)
-DEFINE_STATIC_QUERY(stat_class_isexe, "isexe", return_false)
+DEFINE_STATIC_QUERY(stat_class_isdir, S_Stat_class_function_isdir_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_ischr, S_Stat_class_function_ischr_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isblk, S_Stat_class_function_isblk_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isfifo, S_Stat_class_function_isfifo_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_islnk, S_Stat_class_function_islnk_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_issock, S_Stat_class_function_issock_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_ishidden, S_Stat_class_function_ishidden_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isexe, S_Stat_class_function_isexe_name, return_false)
 #undef DEFINE_STATIC_QUERY
 
 
 PRIVATE struct type_method stat_class_methods[] = {
-	{ "exists", &stat_class_exists, S_Stat_class_function_exists_doc },
-	{ "isdir", &stat_class_isdir, DeeStat_class_isdir_doc },
-	{ "ischr", &stat_class_ischr, DeeStat_class_ischr_doc },
-	{ "isblk", &stat_class_isblk, DeeStat_class_isblk_doc },
-	{ "isreg", &stat_class_isreg, DeeStat_class_isreg_doc },
-	{ "isfifo", &stat_class_isfifo, DeeStat_class_isfifo_doc },
-	{ "islnk", &stat_class_islnk, DeeStat_class_islnk_doc },
-	{ "issock", &stat_class_issock, DeeStat_class_issock_doc },
-	{ "ishidden", &stat_class_ishidden, DeeStat_class_ishidden_doc },
-	{ "isexe", &stat_class_isexe, DeeStat_class_isexe_doc },
+	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
+	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
+	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },
+	{ S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc },
+	{ S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc },
+	{ S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc },
+	{ S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc },
+	{ S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc },
+	{ S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc },
+	{ S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc },
 	{ NULL }
 };
 

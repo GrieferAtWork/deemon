@@ -103,20 +103,15 @@ PRIVATE WUNUSED DREF DeeObject *DCALL debugfile_get(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-debugfile_isatty(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isatty"))
-		return NULL;
+debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
 	/* Considering its purpose, always act as though debug_file
 	 * is a TTY device, just so automatic buffer interfaces will
 	 * act as line-oriented buffers. */
 	return_true;
 }
 
-PRIVATE struct type_method debug_file_methods[] = {
-	{ DeeString_STR(&str_isatty),
-	  &debugfile_isatty,
-	  DOC("->?Dbool") },
+PRIVATE struct type_getset debug_file_getsets[] = {
+	{ DeeString_STR(&str_isatty), &debugfile_isatty, NULL, NULL, DOC("->?Dbool") },
 	{ NULL }
 };
 
@@ -157,8 +152,8 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */ debug_file_methods,
-		/* .tp_getsets       = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ debug_file_getsets,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
@@ -180,7 +175,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 
 
 PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
-DeeFile_OpenFd(dsysfd_t fd, /*String*/ DeeObject *filename,
+DeeFile_OpenFd(DeeSysFD fd, /*String*/ DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
 	SystemFile *result;
 	result = DeeObject_MALLOC(SystemFile);
@@ -648,7 +643,7 @@ sysfile_putc(SystemFile *__restrict self, int ch,
 #endif /* !CONFIG_HAVE_fputc && !CONFIG_HAVE_fwrite */
 }
 
-INTERN dsysfd_t DCALL
+INTERN DeeSysFD DCALL
 DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 #if 1
 #define CONFIG_DONT_EXPOSE_FILENO 1
@@ -660,9 +655,9 @@ DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 	                "The host does not implement a safe way of using fileno()");
 	return NULL;
 #else
-	dsysfd_t result;
+	DeeSysFD result;
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
-	result = (dsysfd_t)((SystemFile *)self)->sf_handle;
+	result = (DeeSysFD)((SystemFile *)self)->sf_handle;
 	if (result == NULL)
 		error_file_closed((SystemFile *)self);
 	return result;
@@ -682,26 +677,7 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
-#ifdef CONFIG_DONT_EXPOSE_FILENO
-	if (!DeeArg_Unpack(argc, argv, ":fileno"))
-		DeeSystemFile_Fileno((DeeObject *)self);
-	return NULL;
-#else /* CONFIG_DONT_EXPOSE_FILENO */
-	dsysfd_t result;
-	if (DeeArg_Unpack(argc, argv, ":fileno"))
-		return NULL;
-	result = DeeSystemFile_Fileno((DeeObject *)self);
-	if unlikely(!result)
-		return NULL;
-	return DeeInt_NewUIntptr((uintptr_t)result);
-#endif /* !CONFIG_DONT_EXPOSE_FILENO */
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
-	if unlikely(DeeArg_Unpack(argc, argv, ":isatty"))
-		goto err;
+sysfile_isatty(SystemFile *self) {
 	if unlikely(!self->sf_handle) {
 		error_file_closed(self);
 		goto err;
@@ -837,12 +813,6 @@ err:
 }
 
 PRIVATE struct type_method sysfile_methods[] = {
-	{ STR_FILENO,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_fileno,
-	  DOC("->?Dint") },
-	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_isatty,
-	  DOC("->?Dbool") },
 	{ "flush",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_flush,
 	  DOC("()\n"
@@ -860,6 +830,9 @@ sysfile_getfile(SystemFile *__restrict self) {
 }
 
 PRIVATE struct type_getset sysfile_getsets[] = {
+	{ DeeString_STR(&str_isatty),
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_isatty, NULL, NULL,
+	  DOC("->?Dbool") },
 	{ "file",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sysfile_getfile, NULL, NULL,
 	  DOC("->?DFile\n"

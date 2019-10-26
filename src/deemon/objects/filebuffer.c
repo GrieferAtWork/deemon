@@ -1462,33 +1462,31 @@ err_closed_unlock:
 	return NULL;
 }
 
-#ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
+#ifdef DeeSysFD_GETSET
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-buffer_fileno(Buffer *self, size_t argc, DeeObject **argv) {
+buffer_getsysfd(Buffer *__restrict self) {
 	DREF DeeObject *file, *result;
-	buf_write(self);
+	buf_read(self);
 	file = self->fb_file;
 	if unlikely(!file)
 		goto err_closed_unlock;
 	Dee_Incref(file);
-	buf_endwrite(self);
+	buf_endread(self);
 	/* Forward the to contained file. */
-	result = DeeObject_CallAttr(file, &str_fileno, argc, argv);
+	result = DeeObject_GetAttr(file, &str_getsysfd);
 	Dee_Decref(file);
 	return result;
 err_closed_unlock:
-	buf_endwrite(self);
+	buf_endread(self);
 	err_buffer_closed();
 /*err:*/
 	return NULL;
 }
-#endif
+#endif /* DeeSysFD_GETSET */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-buffer_isatty(Buffer *self, size_t argc, DeeObject **argv) {
+buffer_isatty(Buffer *__restrict self) {
 	int error;
-	if (DeeArg_Unpack(argc, argv, ":isatty"))
-		goto err;
 	buf_write(self);
 	/* Determine if the buffer points to a TTY. */
 	error = buffer_determine_isatty(self);
@@ -1587,22 +1585,6 @@ PRIVATE struct type_method buffer_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&buffer_size,
 	  DOC("->?Dint\n"
 	      "Forward to the $size function of the file being buffered") },
-#ifndef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
-	{ DeeString_STR(&str_fileno),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&buffer_fileno,
-	  DOC("->?Dint\n"
-	      "@throw AttributeError The file being buffered does not implement a member function $fileno\n"
-	      "Forward to the $fileno function of the file being buffered") },
-#endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
-	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&buffer_isatty,
-	  DOC("->?Dbool\n"
-	      "Forward to the $isatty function of the file being buffered\n"
-	      "Note that in order to implement auto-buffering, file buffers are allowed to "
-	      "cache the return value of ${this.file.isatty()}, furthermore allowing this "
-	      "function to simply return that cached value, in other words meaning that "
-	      "any side-effects caused by the underlying $isatty may not come into effect "
-	      "following repeated calls") },
 	{ "flush",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&buffer_flush,
 	  DOC("()\n"
@@ -1672,10 +1654,26 @@ err_closed_unlock:
 
 
 PRIVATE struct type_getset buffer_getsets[] = {
+#ifdef DeeSysFD_GETSET
+	{ DeeString_STR(&str_getsysfd),
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&buffer_getsysfd, NULL, NULL,
+	  DOC("->?Dint\n"
+	      "@throw AttributeError The file being buffered does not implement a member function $" DeeSysFD_GETSET "\n"
+	      "Forward to the $" DeeSysFD_GETSET " getset of the file being buffered") },
+#endif /* DeeSysFD_GETSET */
 	{ "file",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_getfile, NULL, NULL,
 	  DOC("->?DFile\n"
 	      "Returns the file that is being buffered") },
+	{ DeeString_STR(&str_isatty),
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&buffer_isatty, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Forward to the $isatty property of the file being buffered\n"
+	      "Note that in order to implement auto-buffering, file buffers are allowed to "
+	      "cache the return value of ${this.file.isatty}, furthermore allowing this "
+	      "property to simply return that cached value, in other words meaning that "
+	      "any side-effects caused by the underlying $isatty may not come into effect "
+	      "following repeated calls") },
 	{ "filename",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&buffer_filename, NULL, NULL,
 	  DOC("->?Dstring\n"
@@ -1789,10 +1787,10 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */buffer_methods,
-		/* .tp_getsets       = */buffer_getsets,
+		/* .tp_methods       = */ buffer_methods,
+		/* .tp_getsets       = */ buffer_getsets,
 		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */buffer_class_methods,
+		/* .tp_class_methods = */ buffer_class_methods,
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},

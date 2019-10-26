@@ -143,9 +143,9 @@ public:
 	bool(isatty)() const {
 		return throw_if_negative(DeeFile_IsAtty(*this)) != 0;
 	}
-	dsysfd_t(fileno)() const {
-		dsysfd_t result = DeeFile_Fileno(*this);
-		if unlikely(result == DSYSFD_INVALID)
+	DeeSysFD (getsysfd)() const {
+		DeeSysFD result = DeeFile_GetSysFD(*this);
+		if unlikely(result == DeeSysFD_INVALID)
 			throw_last_deemon_exception();
 		return result;
 	}
@@ -252,7 +252,7 @@ public:
 			return inherit(maybenull((DeeObject *)NULL));
 		return inherit(result);
 	}
-	static File(openfd)(dsysfd_t fd, /*String*/ DeeObject *filename = NULL, int oflags = OPEN_FRDONLY, bool inherit_fd = true) {
+	static File(openfd)(DeeSysFD fd, /*String*/ DeeObject *filename = NULL, int oflags = OPEN_FRDONLY, bool inherit_fd = true) {
 		return inherit(DeeFile_OpenFd(fd, filename, oflags, inherit_fd));
 	}
 	static File(open_object)(DeeObject *__restrict data_owner, void const *data, size_t data_size) {

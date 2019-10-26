@@ -43,11 +43,11 @@ PRIVATE ATTR_NOINLINE int DCALL fs_unsupported(void) {
 	                       fs_unsupported_message);
 }
 
-INTERN dsysfd_t DCALL
+INTERN DeeSysFD DCALL
 DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
 	(void)self;
-	return (dsysfd_t)DeeError_Throwf(&DeeError_FileClosed,
+	return (DeeSysFD)DeeError_Throwf(&DeeError_FileClosed,
 	                                 fs_unsupported_message);
 }
 
@@ -60,7 +60,7 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 }
 
 PUBLIC WUNUSED DREF /*FSFile*/ DeeObject *DCALL
-DeeFile_OpenFd(dsysfd_t UNUSED(fd),
+DeeFile_OpenFd(DeeSysFD UNUSED(fd),
                /*String*/ DeeObject *UNUSED(filename),
                int UNUSED(oflags), bool UNUSED(inherit_fd)) {
 	fs_unsupported();

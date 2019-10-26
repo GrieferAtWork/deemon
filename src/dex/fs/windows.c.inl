@@ -1673,11 +1673,20 @@ PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_nttype_info(void) {
 	return err_no_info("NT Type");
 }
 
-#define DOSTAT_FNORMAL 0x00
+#define DOSTAT_FNORMAL   0x00
 #define DOSTAT_FTRY      0x01
 #define DOSTAT_FLSTAT    0x02
 #define DOSTAT_FNOEXINFO 0x04
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+form_path_from_dfd_and_filename(DeeObject *dfd,
+                                DeeObject *filename) {
+	(void)dfd;
+	(void)filename;
+	/* TODO */
+	DERROR_NOTIMPLEMENTED();
+	return NULL;
+}
 
 /* @return:  1: `try_stat' was true and the given `path' could not be found.
  * @return:  0: Successfully did a stat() in the given `path'.
@@ -1685,7 +1694,8 @@ PRIVATE ATTR_NOINLINE ATTR_COLD int DCALL err_no_nttype_info(void) {
  * @param: flags: Set of `DOSTAT_F*' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Stat_Init(Stat *__restrict self,
-          DeeObject *__restrict path,
+          DeeObject *path,
+          DeeObject *arg2,
           uint16_t flags) {
 	HANDLE fd;
 	int error;
@@ -1694,30 +1704,46 @@ again:
 		goto err;
 	self->s_hand  = INVALID_HANDLE_VALUE; /* If inherited, set later. */
 	self->s_ftype = FILE_TYPE_UNKNOWN;    /* Lazily initialized. */
+	if (arg2) {
+		/* `path = dfd; arg2 = dfd_relative_path;' */
+		path = form_path_from_dfd_and_filename(path, arg2);
+		if unlikely(!path)
+			goto err;
+		error = Stat_Init(self, path, NULL, flags);
+		Dee_Decref(path);
+		return error;
+	}
 	if (DeeString_Check(path)) {
 		int error;
 		WIN32_FILE_ATTRIBUTE_DATA attrib;
 		fd = DeeNTSystem_CreateFile(path, FILE_READ_ATTRIBUTES | READ_CONTROL,
-		                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-		                   (flags & DOSTAT_FLSTAT ? /* In lstat()-mode, open a reparse point.
-		                                             * NOTE: If the file isn't a reparse
-		                                             *       point, the flag is ignored ;) */
-		                    (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
-		                                          : (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS)),
-		                   NULL);
+		                            FILE_SHARE_READ | FILE_SHARE_WRITE |
+		                            FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+		                            /* In lstat()-mode, open a reparse point.
+		                             * NOTE: If the file isn't a reparse
+		                             *       point, the flag is ignored ;) */
+		                            (flags & DOSTAT_FLSTAT ? (FILE_ATTRIBUTE_NORMAL |
+		                                                      FILE_FLAG_BACKUP_SEMANTICS |
+		                                                      FILE_FLAG_OPEN_REPARSE_POINT)
+		                                                   : (FILE_ATTRIBUTE_NORMAL |
+		                                                      FILE_FLAG_BACKUP_SEMANTICS)),
+		                            NULL);
 		if (fd == INVALID_HANDLE_VALUE) {
 			/* Try again, but leave out READ_CONTROL access permissions.
 			 * NOTE: `READ_CONTROL' is normally required by the `st_uid' / `st_gid' fields. */
 			fd = DeeNTSystem_CreateFile(path, FILE_READ_ATTRIBUTES,
-			                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
-			                   (flags & DOSTAT_FLSTAT ? /* In lstat()-mode, open a reparse point.
-			                                             * NOTE: If the file isn't a reparse
-			                                             *       point, the flag is ignored ;) */
-			                    (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT)
-			                                          : (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS)),
-			                   NULL);
+			                            FILE_SHARE_READ | FILE_SHARE_WRITE |
+			                            FILE_SHARE_DELETE, NULL, OPEN_EXISTING,
+			                            /* In lstat()-mode, open a reparse point.
+			                             * NOTE: If the file isn't a reparse
+			                             *       point, the flag is ignored ;) */
+			                            (flags & DOSTAT_FLSTAT ? (FILE_ATTRIBUTE_NORMAL |
+			                                                      FILE_FLAG_BACKUP_SEMANTICS |
+			                                                      FILE_FLAG_OPEN_REPARSE_POINT)
+			                                                   : (FILE_ATTRIBUTE_NORMAL |
+			                                                      FILE_FLAG_BACKUP_SEMANTICS)),
+			                            NULL);
 		}
-
 		if (fd == NULL)
 			goto err;
 		if (fd != INVALID_HANDLE_VALUE) {
@@ -1772,30 +1798,20 @@ done:
 		                 STAT_FNONLINK | STAT_FNOFILEID);
 		goto done;
 	}
-	if (!DeeInt_Check(path)) {
-		fd = DeeFile_Fileno(path);
-		if (fd == INVALID_HANDLE_VALUE) {
-			if (DeeError_Catch(&DeeError_AttributeError) ||
-			    DeeError_Catch(&DeeError_NotImplemented))
-				goto try_filename;
+	fd = DeeNTSystem_GetHandle(path);
+	if (fd == INVALID_HANDLE_VALUE) {
+		if (!DeeError_Catch(&DeeError_AttributeError) &&
+		    !DeeError_Catch(&DeeError_NotImplemented) &&
+		    !DeeError_Catch(&DeeError_FileClosed))
 			goto err;
-		}
-		/* Retrieve information by handle. */
-		DBG_ALIGNMENT_DISABLE();
-		if (GetFileInformationByHandle(fd, &self->s_info))
-			goto ok_user_fd;
-		DBG_ALIGNMENT_ENABLE();
-		/* Didn't work... (Try the filename) */
-try_filename:
+		/* Try to use the filename of the given object. */
 		path = DeeFile_Filename(path);
 		if unlikely(!path)
 			goto err;
-		error = Stat_Init(self, path, flags);
+		error = Stat_Init(self, path, NULL, flags);
 		Dee_Decref(path);
 		return error;
 	}
-	if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
-		goto err;
 	/* Retrieve information by handle. */
 	DBG_ALIGNMENT_DISABLE();
 	if (GetFileInformationByHandle(fd, &self->s_info)) {
@@ -1892,19 +1908,19 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_ctor(DeeStatObject *__restrict self,
           size_t argc, DeeObject **argv) {
-	DeeObject *path;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_tp_name, &path))
+	DeeObject *path, *arg2 = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_tp_name, &path, &arg2))
 		return -1;
-	return Stat_Init(&self->st_stat, path, DOSTAT_FNORMAL);
+	return Stat_Init(&self->st_stat, path, arg2, DOSTAT_FNORMAL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
            size_t argc, DeeObject **argv) {
-	DeeObject *path;
-	if (DeeArg_Unpack(argc, argv, "o:" S_LStat_tp_name, &path))
+	DeeObject *path, *arg2 = NULL;
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_LStat_tp_name, &path, &arg2))
 		return -1;
-	return Stat_Init(&self->st_stat, path, DOSTAT_FLSTAT);
+	return Stat_Init(&self->st_stat, path, arg2, DOSTAT_FLSTAT);
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2157,21 +2173,24 @@ PRIVATE struct type_getset stat_getsets[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_exists(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_exists_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_exists_name, &path, &arg2))
 		goto err;
-	if (DeeString_Check(path)) {
+	if (DeeString_Check(path) && !arg2) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
 		if unlikely(error < 0)
 			goto err;
 		return_bool(!error);
 	}
-	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
+	error = Stat_Init(&buf, path, arg2,
+	                  self == (DeeObject *)&DeeLStat_Type
+	                  ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT
+	                  : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2184,14 +2203,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_isdir(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isdir_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_isdir_name, &path, &arg2))
 		goto err;
-	if (DeeString_Check(path)) {
+	if (DeeString_Check(path) && !arg2) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
 		if unlikely(error < 0)
@@ -2199,7 +2218,10 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject **argv) {
 		if (!error)
 			return_bool(attr & FILE_ATTRIBUTE_DIRECTORY);
 	}
-	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
+	error = Stat_Init(&buf, path, arg2,
+	                  self == (DeeObject *)&DeeLStat_Type
+	                  ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT
+	                  : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2213,14 +2235,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_ischr(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_ischr_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_ischr_name, &path, &arg2))
 		goto err;
-	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
+	error = Stat_Init(&buf, path, arg2,
+	                  self == (DeeObject *)&DeeLStat_Type
+	                  ? DOSTAT_FTRY | DOSTAT_FLSTAT
+	                  : DOSTAT_FTRY);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2238,14 +2263,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_isblk(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isblk_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_isblk_name, &path, &arg2))
 		goto err;
-	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
+	error = Stat_Init(&buf, path, arg2,
+	                  self == (DeeObject *)&DeeLStat_Type
+	                  ? DOSTAT_FTRY | DOSTAT_FLSTAT
+	                  : DOSTAT_FTRY);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2263,14 +2291,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_isreg(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isreg_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_isreg_name, &path, &arg2))
 		goto err;
-	if (DeeString_Check(path)) {
+	if (DeeString_Check(path) && !arg2) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
 		if unlikely(error < 0)
@@ -2284,7 +2312,10 @@ stat_class_isreg(DeeObject *self, size_t argc, DeeObject **argv) {
 			                      FILE_ATTRIBUTE_REPARSE_POINT)));
 	}
 do_normal_stat:
-	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
+	error = Stat_Init(&buf, path, arg2,
+	                  self == (DeeObject *)&DeeLStat_Type
+	                  ? DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT
+	                  : DOSTAT_FTRY | DOSTAT_FNOEXINFO);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2300,14 +2331,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_isfifo(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isfifo_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_isfifo_name, &path, &arg2))
 		goto err;
-	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
+	error = Stat_Init(&buf, path, arg2,
+	                  self == (DeeObject *)&DeeLStat_Type
+	                  ? DOSTAT_FTRY | DOSTAT_FLSTAT
+	                  : DOSTAT_FTRY);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2322,14 +2356,14 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_islnk(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_islnk_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_islnk_name, &path, &arg2))
 		goto err;
-	if (DeeString_Check(path)) {
+	if (DeeString_Check(path) && !arg2) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
 		if unlikely(error < 0)
@@ -2337,7 +2371,10 @@ stat_class_islnk(DeeObject *__restrict UNUSED(self),
 		if (!error)
 			return_bool(attr & FILE_ATTRIBUTE_REPARSE_POINT);
 	}
-	error = Stat_Init(&buf, path, DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT);
+	error = Stat_Init(&buf, path, arg2,
+	                  DOSTAT_FTRY |
+	                  DOSTAT_FNOEXINFO |
+	                  DOSTAT_FLSTAT);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2352,14 +2389,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_issock(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_issock_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_issock_name, &path, &arg2))
 		goto err;
-	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
+	error = Stat_Init(&buf, path, arg2,
+	                  self == (DeeObject *)&DeeLStat_Type
+	                  ? DOSTAT_FTRY | DOSTAT_FLSTAT
+	                  : DOSTAT_FTRY);
 	if unlikely(error < 0)
 		goto err;
 	if (error > 0)
@@ -2373,14 +2413,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_class_ishidden(DeeObject *self, size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_ishidden_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_ishidden_name, &path, &arg2))
 		goto err;
-	if (DeeString_Check(path)) {
+	if (DeeString_Check(path) && !arg2) {
 		DWORD attr; /* Do a quick attribute query. */
 		error = nt_GetFileAttributes(path, &attr);
 		if unlikely(error < 0)
@@ -2392,7 +2432,7 @@ stat_class_ishidden(DeeObject *self, size_t argc, DeeObject **argv) {
 			return_bool(attr & FILE_ATTRIBUTE_HIDDEN);
 	}
 do_normal_stat:
-	error = Stat_Init(&buf, path,
+	error = Stat_Init(&buf, path, arg2,
 	                  self == (DeeObject *)&DeeLStat_Type
 	                  ? (DOSTAT_FTRY | DOSTAT_FNOEXINFO | DOSTAT_FLSTAT)
 	                  : (DOSTAT_FTRY | DOSTAT_FNOEXINFO));
@@ -2456,18 +2496,23 @@ is_exe_filename(DeeObject *__restrict path) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_isexe(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
-	DeeObject *path;
+	DeeObject *path, *arg2 = NULL;
 	bool result;
-	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isexe_name, &path))
+	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_isexe_name, &path, &arg2))
 		goto err;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeInt_Check(path))
-		return_false;
-	if (DeeString_Check(path)) {
+	if unlikely(arg2) {
+		path = form_path_from_dfd_and_filename(path, arg2);
+		if unlikely(!path)
+			goto err;
+		result = is_exe_filename(path);
+		Dee_Decref(path);
+	} else if (DeeString_Check(path)) {
 		result = is_exe_filename(path);
 	} else {
 		if (DeeInt_Check(path)) {
+			/* TODO: Solve the confusion of HANDLE vs. int-fd on windows! */
 			HANDLE fd; /* Support for descriptor-based isexe() */
 			if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
 				goto err;
@@ -2601,9 +2646,13 @@ get_pathhandle_wrattr(DeeObject *__restrict path,
 	int result;
 	if (DeeString_Check(path)) {
 again:
-		*phandle = DeeNTSystem_CreateFile(path, FILE_WRITE_ATTRIBUTES,
-		                         FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		                         NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+		*phandle = DeeNTSystem_CreateFile(path,
+		                                  FILE_WRITE_ATTRIBUTES,
+		                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		                                  NULL,
+		                                  OPEN_EXISTING,
+		                                  FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
+		                                  NULL);
 		if (*phandle == INVALID_HANDLE_VALUE) {
 			DWORD dwError;
 			DBG_ALIGNMENT_DISABLE();
@@ -2629,11 +2678,8 @@ again:
 			goto err;
 		return 1;
 	}
-	/* Convert an integer to a handle. */
-	if (DeeInt_Check(path))
-		return DeeObject_AsUIntptr(path, (uintptr_t *)phandle);
 	/* Load the file number of a file stream. */
-	*phandle = DeeFile_Fileno(path);
+	*phandle = DeeNTSystem_GetHandle(path);
 	if (*phandle != INVALID_HANDLE_VALUE)
 		return 0;
 	if (!DeeError_Catch(&DeeError_AttributeError) &&
@@ -3351,29 +3397,31 @@ typedef struct _REPARSE_DATA_BUFFER {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict path) {
 	PREPARSE_DATA_BUFFER buffer;
-	HANDLE link_fd;
+	HANDLE hLink;
 	DREF DeeObject *result;
 	DWORD bufsiz, buflen, error;
 	LPWSTR linkstr_begin, linkstr_end;
 	bool owns_linkfd;
 	if (DeeString_Check(path)) {
 again_createfile:
-		link_fd = DeeNTSystem_CreateFile(path, FILE_READ_ATTRIBUTES, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, NULL,
-		                        OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL);
-		if unlikely(!link_fd)
+		hLink = DeeNTSystem_CreateFile(path,
+		                               FILE_READ_ATTRIBUTES,
+		                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		                               NULL,
+		                               OPEN_EXISTING,
+		                               FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+		                               NULL);
+		if unlikely(!hLink)
 			goto err;
-		if unlikely(link_fd == INVALID_HANDLE_VALUE)
+		if unlikely(hLink == INVALID_HANDLE_VALUE)
 			goto err_nt_createfile;
 		owns_linkfd = true;
-	} else if (DeeInt_Check(path)) {
-		if (DeeObject_AsUIntptr(path, (uintptr_t *)&link_fd))
-			goto err;
-		owns_linkfd = false;
 	} else {
-		link_fd = DeeFile_Fileno(path);
-		if (link_fd == DSYSFD_INVALID) {
+		hLink = (HANDLE)DeeNTSystem_GetHandle(path);
+		if (hLink == INVALID_HANDLE_VALUE) {
 			if (!DeeError_Catch(&DeeError_AttributeError) &&
-			    !DeeError_Catch(&DeeError_NotImplemented))
+			    !DeeError_Catch(&DeeError_NotImplemented) &&
+			    !DeeError_Catch(&DeeError_FileClosed))
 				goto err;
 			/* Use the filename of a file. */
 			path = DeeFile_Filename(path);
@@ -3391,7 +3439,7 @@ again_createfile:
 		goto err_fd;
 	/* Read symbolic link data. */
 	DBG_ALIGNMENT_DISABLE();
-	while (!DeviceIoControl(link_fd, FSCTL_GET_REPARSE_POINT,
+	while (!DeviceIoControl(hLink, FSCTL_GET_REPARSE_POINT,
 	                        NULL, 0, buffer, bufsiz, &buflen, NULL)) {
 		error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
@@ -3424,7 +3472,7 @@ again_createfile:
 		goto err_buffer;
 	}
 	if (owns_linkfd)
-		CloseHandle(link_fd);
+		CloseHandle(hLink);
 	DBG_ALIGNMENT_ENABLE();
 	/* Interpret the read data. */
 	switch (buffer->ReparseTag) {
@@ -3484,7 +3532,7 @@ err_buffer:
 err_fd:
 	if (owns_linkfd) {
 		DBG_ALIGNMENT_DISABLE();
-		CloseHandle(link_fd);
+		CloseHandle(hLink);
 		DBG_ALIGNMENT_ENABLE();
 	}
 	goto err;

@@ -109,20 +109,15 @@ PRIVATE WUNUSED DREF DeeObject *DCALL debugfile_get(void) {
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-debugfile_isatty(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isatty"))
-		return NULL;
+debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
 	/* Considering its purpose, always act as though debug_file
 	 * is a TTY device, just so automatic buffer interfaces will
 	 * act as line-oriented buffers. */
 	return_true;
 }
 
-PRIVATE struct type_method debug_file_methods[] = {
-	{ DeeString_STR(&str_isatty),
-	  &debugfile_isatty,
-	  DOC("->?Dbool") },
+PRIVATE struct type_getset debug_file_getsets[] = {
+	{ DeeString_STR(&str_isatty), &debugfile_isatty, NULL, NULL, DOC("->?Dbool") },
 	{ NULL }
 };
 
@@ -164,8 +159,8 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */debug_file_methods,
-		/* .tp_getsets       = */ NULL,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ debug_file_getsets,
 		/* .tp_members       = */ NULL,
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
@@ -185,7 +180,7 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 };
 
 PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
-DeeFile_OpenFd(dsysfd_t fd, /*String*/ DeeObject *filename,
+DeeFile_OpenFd(DeeSysFD fd, /*String*/ DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {
 	SystemFile *result;
 	result = DeeObject_MALLOC(SystemFile);
@@ -214,11 +209,11 @@ PRIVATE ATTR_COLD int DCALL error_file_io(SystemFile *__restrict self) {
 	                       "I/O Operation failed");
 }
 
-INTERN WUNUSED NONNULL((1)) dsysfd_t DCALL
+INTERN WUNUSED NONNULL((1)) DeeSysFD DCALL
 DeeSystemFile_Fileno(/*FileSystem*/ DeeObject *__restrict self) {
-	dsysfd_t result;
+	DeeSysFD result;
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
-	result = (dsysfd_t)((SystemFile *)self)->sf_handle;
+	result = (DeeSysFD)((SystemFile *)self)->sf_handle;
 	if (result == INVALID_HANDLE_VALUE)
 		error_file_io((SystemFile *)self);
 	return result;
@@ -1099,10 +1094,8 @@ sysfile_close(SystemFile *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
-	dsysfd_t result;
-	if (DeeArg_Unpack(argc, argv, ":fileno"))
-		return NULL;
+sysfile_osfhandle(SystemFile *__restrict self) {
+	DeeSysFD result;
 	result = DeeSystemFile_Fileno((DeeObject *)self);
 	if unlikely(!result)
 		return NULL;
@@ -1110,10 +1103,8 @@ sysfile_fileno(SystemFile *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_isatty(SystemFile *self, size_t argc, DeeObject **argv) {
+sysfile_isatty(SystemFile *__restrict self) {
 	DWORD result;
-	if (DeeArg_Unpack(argc, argv, ":isatty"))
-		goto err;
 	result = nt_sysfile_gettype(self);
 	if unlikely(result == FILE_TYPE_UNKNOWN)
 		goto err;
@@ -1122,17 +1113,15 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_method sysfile_methods[] = {
-	{ STR_FILENO,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_fileno,
-	  DOC("->?Dint") },
-	{ DeeString_STR(&str_isatty),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_isatty,
-	  DOC("->?Dbool") },
-	{ NULL }
-};
+#if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_HANDLE)
+#define STR_osfhandle DeeString_STR(&str_getsysfd)
+#else /* DeeSysFD_GETSET && DeeSysFS_IS_HANDLE */
+#define STR_osfhandle DeeSysFD_HANDLE_GETSET
+#endif /* !DeeSysFD_GETSET || !DeeSysFS_IS_HANDLE */
 
 PRIVATE struct type_getset sysfile_getsets[] = {
+	{ STR_osfhandle, (DREF DeeObject * (DCALL *)(DeeObject *))&sysfile_osfhandle, NULL, NULL, DOC("->?Dint") },
+	{ DeeString_STR(&str_isatty), (DREF DeeObject *(DCALL *)(DeeObject *))&sysfile_isatty, NULL, NULL, DOC("->?Dbool") },
 	{ "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
 	{ NULL }
 };
@@ -1212,10 +1201,10 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */sysfile_methods,
-		/* .tp_getsets       = */sysfile_getsets,
+		/* .tp_methods       = */ NULL,
+		/* .tp_getsets       = */ sysfile_getsets,
 		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */sysfile_class_methods,
+		/* .tp_class_methods = */ sysfile_class_methods,
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},

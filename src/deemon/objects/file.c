@@ -566,8 +566,8 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFile_IsAtty(DeeObject *__restrict self) {
 	DREF DeeObject *result_ob;
 	int result;
-	/* Very simply: Just call the `isatty()' member function. */
-	result_ob = DeeObject_CallAttr(self, &str_isatty, 0, NULL);
+	/* Very simply: Just lookup the `isatty' property. */
+	result_ob = DeeObject_GetAttr(self, &str_isatty);
 	if unlikely(!result_ob)
 		goto err_call;
 	result = DeeObject_Bool(result_ob);
@@ -576,7 +576,7 @@ DeeFile_IsAtty(DeeObject *__restrict self) {
 err_call:
 	/* Check if we can handle attribute/not-implement errors that
 	 * could be interpreted as indicative of this not being a tty.
-	 * Fun fact: The way that isatty() is implemented on linux (and KOS ;) ),
+	 * Fun fact: The way that `isatty' is implemented on linux (and KOS ;) ),
 	 *           is by invoking an fcntl() that is only allowed for TTY file
 	 *           descriptors, then checking if errno was set, meaning that
 	 *           even linux does something similar to this, just on a
@@ -587,25 +587,26 @@ err_call:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1)) dsysfd_t DCALL
-DeeFile_Fileno(DeeObject *__restrict self) {
-#ifdef CONFIG_FILENO_DENY_ARBITRARY_INTEGERS
-	if (DeeObject_AssertType(self, (DeeTypeObject *)&DeeSystemFile_Type))
-		goto err;
-	return DeeSystemFile_Fileno(self);
-#else /* CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
+/* Return the system file descriptor of the given file, or throw
+ * an error and return `DeeSysFD_INVALID' if the file was closed,
+ * or doesn't refer to a file carrying a descriptor.
+ * Note that this function queries the `DeeSysFD_GETSET' attribute
+ * of the given object, and always fails if `DeeSysFD_GETSET' isn't
+ * defined for the configuration used when deemon was built.
+ * NOTE: This function doesn't require that `self' actually be
+ *       derived from a `deemon.File'!
+ * @return: * :               The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
+ * @return: DeeSysFD_INVALID: An error occurred. */
+PUBLIC WUNUSED NONNULL((1)) DeeSysFD DCALL
+DeeFile_GetSysFD(DeeObject *__restrict self) {
+#ifdef DeeSysFD_GETSET
 	DREF DeeObject *result_ob;
-	dsysfd_t result;
+	DeeSysFD result;
 	/* Special case: If the file is a system-file,  */
 	if (DeeObject_InstanceOf(self, (DeeTypeObject *)&DeeSystemFile_Type))
 		return DeeSystemFile_Fileno(self);
-#if 0 /* Types like `socket' aren't drived from files, but implement fileno() */
-	/* Check that it's a file at all. */
-	if (DeeObject_AssertType(self, (DeeTypeObject *)&DeeFile_Type))
-		goto err;
-#endif
 	/* Callback: Call a `fileno()' member function. */
-	result_ob = DeeObject_CallAttr(self, &str_fileno, 0, NULL);
+	result_ob = DeeObject_GetAttr(self, &str_getsysfd);
 	if unlikely(!result_ob)
 		goto err;
 	/* Cast the member function's return value to an integer. */
@@ -616,8 +617,12 @@ DeeFile_Fileno(DeeObject *__restrict self) {
 err_result_ob:
 	Dee_Decref(result_ob);
 err:
-	return DSYSFD_INVALID;
-#endif /* !CONFIG_FILENO_DENY_ARBITRARY_INTEGERS */
+	return DeeSysFD_INVALID;
+#else /* DeeSysFD_GETSET */
+	DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                "System file descriptors cannot be bound to objects");
+	return DeeSysFD_INVALID;
+#endif /* DeeSysFD_GETSET */
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
