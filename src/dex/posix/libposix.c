@@ -89,6 +89,12 @@ PRIVATE char const *missing_features[] = {
 #ifdef p_strerrorname_USE_STUB
 	"strerrorname",
 #endif /*p_strerrorname_USE_STUB */
+#ifdef posix_open_USE_STUB
+	"open",
+#endif /* posix_open_USE_STUB */
+#ifdef posix_creat_USE_STUB
+	"creat",
+#endif /* posix_creat_USE_STUB */
 #ifndef CONFIG_HAVE_errno
 	"errno",
 #endif /* CONFIG_HAVE_errno */

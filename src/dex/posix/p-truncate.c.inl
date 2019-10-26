@@ -34,13 +34,13 @@ DECL_BEGIN
 #define p_truncate_USE_TRUNCATE64 1
 #elif defined(CONFIG_HAVE_truncate)
 #define p_truncate_USE_TRUNCATE 1
-#elif defined(CONFIG_HAVE_wopen64) && defined(CONFIG_HAVE_ftruncate64) && defined(CONFIG_HAVE_close)
+#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64)
 #define p_truncate_USE_WOPEN_FTRUNCATE64 1
-#elif defined(CONFIG_HAVE_wopen64) && defined(CONFIG_HAVE_ftruncate) && defined(CONFIG_HAVE_close)
+#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate)
 #define p_truncate_USE_WOPEN_FTRUNCATE 1
-#elif defined(CONFIG_HAVE_open64) && defined(CONFIG_HAVE_ftruncate64) && defined(CONFIG_HAVE_close)
+#elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate64)
 #define p_truncate_USE_OPEN_FTRUNCATE64 1
-#elif defined(CONFIG_HAVE_open64) && defined(CONFIG_HAVE_ftruncate) && defined(CONFIG_HAVE_close)
+#elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate)
 #define p_truncate_USE_OPEN_FTRUNCATE 1
 #else
 #define p_truncate_USE_STUB 1
@@ -190,9 +190,17 @@ EINTR_LABEL(again)
 	{
 #if defined(p_truncate_USE_WOPEN_FTRUNCATE) || \
     defined(p_truncate_USE_WOPEN_FTRUNCATE64)
+#ifdef CONFIG_HAVE_wopen64
 		int fd = wopen64(filename, O_RDWR);
+#else /* CONFIG_HAVE_wopen64 */
+		int fd = wopen(filename, O_RDWR);
+#endif /* !CONFIG_HAVE_wopen64 */
 #else
+#ifdef CONFIG_HAVE_open64
 		int fd = open64(filename, O_RDWR);
+#else /* CONFIG_HAVE_open64 */
+		int fd = open(filename, O_RDWR);
+#endif /* !CONFIG_HAVE_open64 */
 #endif
 		result = fd;
 		if (fd >= 0) {
@@ -202,7 +210,9 @@ EINTR_LABEL(again)
 #else
 			result = ftruncate(fd, len);
 #endif
+#ifdef CONFIG_HAVE_close
 			close(fd);
+#endif /* CONFIG_HAVE_close */
 		}
 	}
 #endif /* FD-wrapped */

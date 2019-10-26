@@ -4958,13 +4958,9 @@ var("_doserrno", msvc);
 #define creat creat64
 #endif /* creat = creat64 */
 
-#if defined(CONFIG_HAVE_open) && !defined(CONFIG_HAVE_open64)
+#if defined(CONFIG_HAVE_open) && !defined(CONFIG_HAVE_open64) && defined(CONFIG_HAVE_O_LARGEFILE)
 #define CONFIG_HAVE_open64 1
-#ifdef O_LARGEFILE
 #define open64(filename, oflags, ...) open(filename, (oflags) | O_LARGEFILE, ##__VA_ARGS__)
-#else /* O_LARGEFILE */
-#define open64 open
-#endif /* !O_LARGEFILE */
 #endif /* open64 = open */
 
 #if defined(CONFIG_HAVE_open) && !defined(CONFIG_HAVE_creat) && \
@@ -4987,17 +4983,17 @@ var("_doserrno", msvc);
 #endif /* !O_WRONLY */
 #endif /* creat64 = open64 */
 
-#if defined(CONFIG_HAVE_wopen) && !defined(CONFIG_HAVE_wopen64)
+#if defined(CONFIG_HAVE_wopen) && !defined(CONFIG_HAVE_wopen64) && defined(CONFIG_HAVE_O_LARGEFILE)
 #define CONFIG_HAVE_wopen64 1
-#ifdef O_LARGEFILE
 #define wopen64(filename, oflags, ...) wopen(filename, (oflags) | O_LARGEFILE, ##__VA_ARGS__)
-#else /* O_LARGEFILE */
-#define wopen64 wopen
-#endif /* !O_LARGEFILE */
 #endif /* wopen64 = wopen */
 
-#if defined(CONFIG_HAVE_wopen) && !defined(CONFIG_HAVE_wcreat) && \
-   (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
+#ifndef CONFIG_HAVE_wcreat
+#if defined(CONFIG_HAVE_wcreat64)
+#define CONFIG_HAVE_wcreat 1
+#define wcreat wcreat64 /* wcreat = wcreat64 */
+#elif defined(CONFIG_HAVE_wopen) && \
+     (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
 #define CONFIG_HAVE_wcreat 1
 #ifdef O_WRONLY
 #define wcreat(filename, mode) wopen(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
@@ -5005,8 +5001,9 @@ var("_doserrno", msvc);
 #define wcreat(filename, mode) wopen(filename, O_CREAT | O_RDWR | O_TRUNC, mode)
 #endif /* !O_WRONLY */
 #endif /* wcreat = wopen */
+#endif /* !CONFIG_HAVE_wcreat */
 
-#if defined(CONFIG_HAVE_wopen64) && !defined(CONFIG_HAVE_wcreat64) && \
+#if defined(CONFIG_HAVE_wopen64) && \
    (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
 #define CONFIG_HAVE_wcreat64 1
 #ifdef O_WRONLY

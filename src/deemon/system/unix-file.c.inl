@@ -30,6 +30,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system.h>
 #include <deemon/system-features.h>
 
 #include <hybrid/limits.h>
