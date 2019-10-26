@@ -244,7 +244,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject **argv
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_open_f_impl(filename_str,oflags,mode);
+	return posix_open_f_impl(filename_str, oflags, mode);
 err:
 	return NULL;
 }
@@ -274,7 +274,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_open_f(size_t argc, DeeObject **argv
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_open_f_impl(filename_str,oflags,mode);
+	return posix_open_f_impl(filename_str, oflags, mode);
 err:
 	return NULL;
 }
@@ -364,7 +364,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject **arg
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_creat_f_impl(filename_str,mode);
+	return posix_creat_f_impl(filename_str, mode);
 err:
 	return NULL;
 }
@@ -393,7 +393,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_creat_f(size_t argc, DeeObject **arg
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_creat_f_impl(filename_str,mode);
+	return posix_creat_f_impl(filename_str, mode);
 err:
 	return NULL;
 }

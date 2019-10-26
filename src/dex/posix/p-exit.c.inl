@@ -83,7 +83,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_atexit_f(size_t argc, DeeObject **ar
 	DeeObject *args = Dee_EmptyTuple;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_callback_args, "o|o:atexit", &callback, &args))
 	    goto err;
-	return posix_atexit_f_impl(callback,args);
+	return posix_atexit_f_impl(callback, args);
 err:
 	return NULL;
 }

@@ -110,7 +110,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_read_f(size_t argc, DeeObject **argv
 	size_t count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "d|oId:read", &fd, &buf, &count))
 	    goto err;
-	return posix_read_f_impl(fd,buf,count);
+	return posix_read_f_impl(fd, buf, count);
 err:
 	return NULL;
 }
@@ -182,7 +182,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject **arg
 	size_t count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_count, "do|Id:write", &fd, &buf, &count))
 	    goto err;
-	return posix_write_f_impl(fd,buf,count);
+	return posix_write_f_impl(fd, buf, count);
 err:
 	return NULL;
 }
@@ -247,7 +247,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **arg
 	int64_t offset;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI64d:pread", &fd, &buf, &offset))
 	    goto err;
-	return posix_pread_f_impl(fd,buf,offset);
+	return posix_pread_f_impl(fd, buf, offset);
 err:
 	return NULL;
 }
@@ -272,7 +272,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pread_f(size_t argc, DeeObject **arg
 	int32_t offset;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI32d:pread", &fd, &buf, &offset))
 	    goto err;
-	return posix_pread_f_impl(fd,buf,offset);
+	return posix_pread_f_impl(fd, buf, offset);
 err:
 	return NULL;
 }
@@ -384,7 +384,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **ar
 	int64_t offset;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI64d:pwrite", &fd, &buf, &offset))
 	    goto err;
-	return posix_pwrite_f_impl(fd,buf,offset);
+	return posix_pwrite_f_impl(fd, buf, offset);
 err:
 	return NULL;
 }
@@ -408,7 +408,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_pwrite_f(size_t argc, DeeObject **ar
 	int32_t offset;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_buf_offset, "doI32d:pwrite", &fd, &buf, &offset))
 	    goto err;
-	return posix_pwrite_f_impl(fd,buf,offset);
+	return posix_pwrite_f_impl(fd, buf, offset);
 err:
 	return NULL;
 }
@@ -519,7 +519,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject **arg
 	int whence;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_off_whence, "dI64dd:lseek", &fd, &off, &whence))
 	    goto err;
-	return posix_lseek_f_impl(fd,off,whence);
+	return posix_lseek_f_impl(fd, off, whence);
 err:
 	return NULL;
 }
@@ -543,7 +543,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject **arg
 	int whence;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_off_whence, "dI32dd:lseek", &fd, &off, &whence))
 	    goto err;
-	return posix_lseek_f_impl(fd,off,whence);
+	return posix_lseek_f_impl(fd, off, whence);
 err:
 	return NULL;
 }

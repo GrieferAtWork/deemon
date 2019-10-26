@@ -69,7 +69,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_truncate_f_impl(filename_str,len);
+	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
 }
@@ -99,7 +99,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_truncate_f_impl(filename_str,len);
+	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
 }
@@ -130,7 +130,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_truncate_f_impl(filename_str,len);
+	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
 }
@@ -161,7 +161,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_truncate_f_impl(filename_str,len);
+	return posix_truncate_f_impl(filename_str, len);
 err:
 	return NULL;
 }
@@ -256,7 +256,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 	int64_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "dI64d:ftruncate", &fd, &len))
 	    goto err;
-	return posix_ftruncate_f_impl(fd,len);
+	return posix_ftruncate_f_impl(fd, len);
 err:
 	return NULL;
 }
@@ -279,7 +279,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_ftruncate_f(size_t argc, DeeObject *
 	int32_t len;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd_len, "dI32d:ftruncate", &fd, &len))
 	    goto err;
-	return posix_ftruncate_f_impl(fd,len);
+	return posix_ftruncate_f_impl(fd, len);
 err:
 	return NULL;
 }

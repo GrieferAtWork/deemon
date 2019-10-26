@@ -167,7 +167,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject **
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_fchownat_f_impl(dfd,filename_str,owner,group,atflags);
+	return posix_fchownat_f_impl(dfd, filename_str, owner, group, atflags);
 err:
 	return NULL;
 }
@@ -274,7 +274,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject **
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_fchmodat_f_impl(dfd,filename_str,mode,atflags);
+	return posix_fchmodat_f_impl(dfd, filename_str, mode, atflags);
 err:
 	return NULL;
 }
@@ -392,7 +392,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_setenv_f(size_t argc, DeeObject **ar
 	bool override = true;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_varname_value_override, "oo|b:setenv", &varname, &value, &override))
 	    goto err;
-	return posix_setenv_f_impl(varname,value,override);
+	return posix_setenv_f_impl(varname, value, override);
 err:
 	return NULL;
 }

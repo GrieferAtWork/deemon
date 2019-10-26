@@ -90,7 +90,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject **ar
 	filename_str = (dwchar_t const *)DeeString_AsWide((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_access_f_impl(filename_str,how);
+	return posix_access_f_impl(filename_str, how);
 err:
 	return NULL;
 }
@@ -119,7 +119,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject **ar
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_access_f_impl(filename_str,how);
+	return posix_access_f_impl(filename_str, how);
 err:
 	return NULL;
 }
@@ -193,7 +193,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject 
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_euidaccess_f_impl(filename_str,how);
+	return posix_euidaccess_f_impl(filename_str, how);
 err:
 	return NULL;
 }
@@ -264,7 +264,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *
 	filename_str = DeeString_AsUtf8((DeeObject *)filename);
 	if unlikely(!filename_str)
 	    goto err;
-	return posix_faccessat_f_impl(dfd,filename_str,how,atflags);
+	return posix_faccessat_f_impl(dfd, filename_str, how, atflags);
 err:
 	return NULL;
 }

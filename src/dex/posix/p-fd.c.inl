@@ -250,7 +250,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject **argv
 	int newfd;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newfd, "dd:dup2", &oldfd, &newfd))
 	    goto err;
-	return posix_dup2_f_impl(oldfd,newfd);
+	return posix_dup2_f_impl(oldfd, newfd);
 err:
 	return NULL;
 }
@@ -290,51 +290,51 @@ err:
 /* dup3()                                                               */
 /************************************************************************/
 
-/*[[[deemon import("_dexutils").gw("dup3", "oldfd:d,newfd:d,flags:d->?Dint", libname: "posix"); ]]]*/
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int flags);
+/*[[[deemon import("_dexutils").gw("dup3", "oldfd:d,newfd:d,oflags:d->?Dint", libname: "posix"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_DUP3_DEF { "dup3", (DeeObject *)&posix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint,flags:?Dint)->?Dint") },
-#define POSIX_DUP3_DEF_DOC(doc) { "dup3", (DeeObject *)&posix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint,flags:?Dint)->?Dint\n" doc) },
+#define POSIX_DUP3_DEF { "dup3", (DeeObject *)&posix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint,oflags:?Dint)->?Dint") },
+#define POSIX_DUP3_DEF_DOC(doc) { "dup3", (DeeObject *)&posix_dup3, MODSYM_FNORMAL, DOC("(oldfd:?Dint,newfd:?Dint,oflags:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_dup3, posix_dup3_f);
-#ifndef POSIX_KWDS_OLDFD_NEWFD_FLAGS_DEFINED
-#define POSIX_KWDS_OLDFD_NEWFD_FLAGS_DEFINED 1
-PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd_flags, { K(oldfd), K(newfd), K(flags), KEND });
-#endif /* !POSIX_KWDS_OLDFD_NEWFD_FLAGS_DEFINED */
+#ifndef POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED
+#define POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED 1
+PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newfd_oflags, { K(oldfd), K(newfd), K(oflags), KEND });
+#endif /* !POSIX_KWDS_OLDFD_NEWFD_OFLAGS_DEFINED */
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject **argv, DeeObject *kw) {
 	int oldfd;
 	int newfd;
-	int flags;
-	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newfd_flags, "ddd:dup3", &oldfd, &newfd, &flags))
+	int oflags;
+	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newfd_oflags, "ddd:dup3", &oldfd, &newfd, &oflags))
 	    goto err;
-	return posix_dup3_f_impl(oldfd,newfd,flags);
+	return posix_dup3_f_impl(oldfd, newfd, oflags);
 err:
 	return NULL;
 }
-FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int flags)
+FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_dup3_f_impl(int oldfd, int newfd, int oflags)
 //[[[end]]]
 {
 #if defined(CONFIG_HAVE_dup3) || \
     (defined(CONFIG_HAVE_dup2) && defined(CONFIG_HAVE__get_osfhandle) && defined(CONFIG_HOST_WINDOWS))
 	int result;
 #ifndef CONFIG_HAVE_dup3
-	if (flags & ~O_CLOEXEC) {
+	if (oflags & ~O_CLOEXEC) {
 		DeeSystem_SetErrno(EINVAL);
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Invalid flags for dup3 %#x",
-		                flags);
+		                "Invalid oflags for dup3 %#x",
+		                oflags);
 		goto err;
 	}
 #endif /* !CONFIG_HAVE_dup3 */
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef CONFIG_HAVE_dup3
-	result = dup3(oldfd, newfd, flags);
+	result = dup3(oldfd, newfd, oflags);
 #else /* CONFIG_HAVE_dup3 */
 	result = dup2(oldfd, newfd);
 	if (result >= 0) {
 		SetHandleInformation((HANDLE)(uintptr_t)_get_osfhandle(result),
 		                     HANDLE_FLAG_INHERIT,
-		                     (flags & O_CLOEXEC)
+		                     (oflags & O_CLOEXEC)
 		                     ? 0
 		                     : HANDLE_FLAG_INHERIT);
 	}
@@ -345,7 +345,7 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "dup3")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
-		HANDLE_EINVAL(error, err, "Invalid flags for dup3 %#x", flags)
+		HANDLE_EINVAL(error, err, "Invalid oflags for dup3 %#x", oflags)
 		DeeError_SysThrowf(&DeeError_SystemError, error,
 		                   "Failed to dup %d", oldfd);
 		goto err;
@@ -356,7 +356,7 @@ err:
 #define NEED_ERR_UNSUPPORTED 1
 	(void)oldfd;
 	(void)newfd;
-	(void)flags;
+	(void)oflags;
 	posix_err_unsupported("dup3");
 #endif /* !HAVE_DUP3 && !_MSC_VER */
 	return NULL;
