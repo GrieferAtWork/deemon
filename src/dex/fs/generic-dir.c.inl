@@ -45,8 +45,8 @@ PRIVATE struct type_member diriter_members[] = {
 
 INTERN DeeTypeObject DeeDirIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "dir.Iterator",
-	/* .tp_doc      = */ DeeDirIterator_TP_DOC,
+	/* .tp_name     = */ S_DirIterator_tp_name,
+	/* .tp_doc      = */ S_DirIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -120,8 +120,8 @@ PRIVATE struct type_member dir_class_members[] = {
 
 INTERN DeeTypeObject DeeDir_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "dir",
-	/* .tp_doc      = */ DeeDir_TP_DOC,
+	/* .tp_name     = */ S_Dir_tp_name,
+	/* .tp_doc      = */ S_Dir_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -167,8 +167,8 @@ INTERN DeeTypeObject DeeDir_Type = {
 
 INTERN DeeTypeObject DeeQueryIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "query.Iterator",
-	/* .tp_doc      = */ DeeQueryIterator_TP_DOC,
+	/* .tp_name     = */ S_QueryIterator_tp_name,
+	/* .tp_doc      = */ S_QueryIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -230,8 +230,8 @@ PRIVATE struct type_seq query_seq = {
 
 INTERN DeeTypeObject DeeQuery_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "query",
-	/* .tp_doc      = */ DeeQuery_TP_DOC,
+	/* .tp_name     = */ S_Query_tp_name,
+	/* .tp_doc      = */ S_Query_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

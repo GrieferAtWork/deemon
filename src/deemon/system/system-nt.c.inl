@@ -45,6 +45,8 @@ DECL_BEGIN
 #define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
 #endif /* !CONFIG_LITTLE_ENDIAN */
 
+
+
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 	DREF DeeObject *result;
@@ -1557,6 +1559,127 @@ PUBLIC int DCALL nt_ThrowLastError(void) {
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
 	return nt_ThrowError(dwError);
+}
+
+
+PUBLIC WUNUSED /*String*/ DREF DeeObject *DCALL
+DeeNTSystem_GetFilenameOfHandle(HANDLE hHandle) {
+	/* TODO */
+	(void)hHandle;
+	DERROR_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
+/* Wrapper for the `FormatMessageW()' system call.
+ * @return: * :        The formatted message.
+ * @return: NULL:      A deemon callback failed and an error was thrown.
+ * @return: ITER_DONE: The system call failed (See GetLastError()). */
+DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
+                          DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
+                          /* va_list * */ void *Arguments) {
+	int error;
+	DWORD dwLastError;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	error = DeeNTSystem_PrintFormatMessage(&printer, dwFlags, lpSource,
+	                                       dwMessageId, dwLanguageId, Arguments);
+	if (error == 0)
+		return unicode_printer_pack(&printer);
+	/* Preserve LastError during `unicode_printer_fini()' */
+	dwLastError = GetLastError();
+	unicode_printer_fini(&printer);
+	SetLastError(dwLastError);
+	if (error < 0)
+		return NULL;
+	return ITER_DONE;
+}
+
+/* @return: 1:  The system call failed (See GetLastError())
+ * @return: 0:  Successfully printed the message.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+DFUNDEF WUNUSED int DCALL
+DeeNTSystem_PrintFormatMessage(struct Dee_unicode_printer *__restrict printer,
+                               DeeNT_DWORD dwFlags, void const *lpSource,
+                               DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
+                               /* va_list * */ void *Arguments) {
+	LPWSTR buffer, newBuffer;
+	DWORD dwNewBufsize, dwBufsize = 128;
+	buffer = unicode_printer_alloc_wchar(printer, dwBufsize);
+	if unlikely(!buffer)
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	dwNewBufsize = FormatMessageW(dwFlags,
+	                              lpSource,
+	                              dwMessageId,
+	                              dwLanguageId,
+	                              buffer,
+	                              dwBufsize,
+	                              (va_list *)Arguments);
+	DBG_ALIGNMENT_ENABLE();
+	if unlikely(!dwNewBufsize) {
+		DWORD dwError;
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsBadAllocError(dwError)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+		} else {
+			/* MSDN says that this string cannot exceed 32*1024
+			 * >> So if it does, treat it as a failure of translating the message... */
+			if (dwBufsize > 32 * 1024) {
+				unicode_printer_free_wchar(printer, buffer);
+				return 1;
+			}
+			dwBufsize *= 2;
+			newBuffer = unicode_printer_resize_wchar(printer, buffer, dwBufsize);
+			if unlikely(!newBuffer)
+				goto err_release;
+			buffer = newBuffer;
+			goto again;
+		}
+		goto err_release;
+	}
+	if (dwNewBufsize > dwBufsize) {
+		LPWSTR new_buffer;
+		/* Increase the buffer and try again. */
+		new_buffer = unicode_printer_resize_wchar(printer, buffer, dwNewBufsize);
+		if unlikely(!new_buffer)
+			goto err_release;
+		dwBufsize = dwNewBufsize;
+		goto again;
+	}
+	/* Trim all trailing space characters */
+	while (dwNewBufsize) {
+		if (!DeeUni_IsSpace(buffer[dwNewBufsize - 1]))
+			break;
+		--dwNewBufsize;
+	}
+	if unlikely(unicode_printer_confirm_wchar(printer, buffer, dwNewBufsize) < 0)
+		goto err;
+	return 0;
+err_release:
+	unicode_printer_free_wchar(printer, buffer);
+err:
+	return -1;
+}
+
+/* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error message.
+ * When no error message exists, return an empty string.
+ * @return: * :   The error message. (or an empty string)
+ * @return: NULL: A deemon callback failed and an error was thrown. */
+PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeNTSystem_FormatErrorMessage(DeeNT_DWORD dwError) {
+	DREF /*String*/ DeeObject *result;
+	result = DeeNTSystem_FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError,
+	                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	                                   NULL);
+	if (result == ITER_DONE) {
+		result = Dee_EmptyString;
+		Dee_Incref(Dee_EmptyString);
+	}
+	return result;
 }
 
 

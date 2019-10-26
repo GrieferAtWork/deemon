@@ -24,15 +24,16 @@
 
 #include "libfs.h"
 /**/
-
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/tuple.h>
 #include <deemon/system-features.h> /* strend() */
+#include <deemon/tuple.h>
+
+#include "_res.h"
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -260,8 +261,8 @@ PRIVATE struct type_member env_members[] = {
 
 INTERN DeeTypeObject DeeEnvIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "environ.Iterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ S_EnvIterator_tp_name,
+	/* .tp_doc      = */ S_EnvIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

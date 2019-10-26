@@ -78,6 +78,7 @@
     <ClCompile Include="..\..\src\dex\_jit\yieldfunction.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\dex\_jit\_res.h" />
     <ClInclude Include="..\..\src\dex\_jit\libjit.h" />
   </ItemGroup>
   <ItemGroup>

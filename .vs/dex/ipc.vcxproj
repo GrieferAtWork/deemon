@@ -82,8 +82,8 @@
     <ClCompile Include="..\..\src\dex\ipc\libipc.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\dex\ipc\_res.h" />
     <ClInclude Include="..\..\src\dex\ipc\libipc.h" />
-    <ClInclude Include="..\..\src\dex\ipc\strings.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A7E9B388-A71B-48FE-8DD4-D92910EC2D79}</ProjectGuid>

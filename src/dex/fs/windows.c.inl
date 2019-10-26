@@ -37,6 +37,8 @@
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
+#include "_res.h"
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
@@ -325,8 +327,8 @@ PRIVATE struct type_member env_members[] = {
 
 INTERN DeeTypeObject DeeEnvIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "env.Iterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ S_EnvIterator_tp_name,
+	/* .tp_doc      = */ S_EnvIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1338,8 +1340,8 @@ err:
 }
 
 PRIVATE struct type_getset user_class_getsets[] = {
-	{ "name", &default_user_get_name, NULL, NULL, DeeUser_static_name_doc },
-	{ "home", &default_user_get_home, NULL, NULL, DeeUser_static_home_doc },
+	{ S_User_class_getset_name_name, &default_user_get_name, NULL, NULL, S_User_class_getset_name_doc },
+	{ S_User_class_getset_home_name, &default_user_get_home, NULL, NULL, S_User_class_getset_home_doc },
 	{ "domain_np", &default_user_get_domain, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Alias for :gethostname") },
@@ -1476,8 +1478,8 @@ err:
 }
 
 PRIVATE struct type_getset user_getsets[] = {
-	{ "name", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_name, NULL, NULL, DeeUser_name_doc },
-	{ "home", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_home, NULL, NULL, DeeUser_home_doc },
+	{ S_User_getset_name_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_name, NULL, NULL, S_User_getset_name_doc },
+	{ S_User_getset_home_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_home, NULL, NULL, S_User_getset_home_doc },
 	{ "domain_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&user_get_domain, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "@throw SystemError Failed to retrieve the domain\n"
@@ -1891,7 +1893,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_ctor(DeeStatObject *__restrict self,
           size_t argc, DeeObject **argv) {
 	DeeObject *path;
-	if (DeeArg_Unpack(argc, argv, "o:stat", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_tp_name, &path))
 		return -1;
 	return Stat_Init(&self->st_stat, path, DOSTAT_FNORMAL);
 }
@@ -1900,7 +1902,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
            size_t argc, DeeObject **argv) {
 	DeeObject *path;
-	if (DeeArg_Unpack(argc, argv, "o:lstat", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_LStat_tp_name, &path))
 		return -1;
 	return Stat_Init(&self->st_stat, path, DOSTAT_FLSTAT);
 }
@@ -1989,29 +1991,32 @@ stat_get_mode(DeeStatObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_nlink(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNONLINK) {
-		err_no_link_info();
-		return NULL;
-	}
+	if unlikely(self->st_stat.s_valid & STAT_FNONLINK)
+		goto err_nolink;
 	return DeeInt_NewU32(self->st_stat.s_info.nNumberOfLinks);
+err_nolink:
+	err_no_link_info();
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_uid(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) {
-		err_no_uid_info();
-		return NULL;
-	}
+	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
+		goto err_nouid;
 	return nt_NewUserDescriptorFromHandleOwner(self->st_stat.s_hand, SE_FILE_OBJECT);
+err_nouid:
+	err_no_uid_info();
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_gid(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE) {
-		err_no_gid_info();
-		return NULL;
-	}
+	if unlikely(self->st_stat.s_hand == INVALID_HANDLE_VALUE)
+		goto err_nogid;
 	return nt_NewUserDescriptorFromHandleGroup(self->st_stat.s_hand, SE_FILE_OBJECT);
+err_nogid:
+	err_no_gid_info();
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2022,39 +2027,86 @@ stat_get_rdev(DeeStatObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_size(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOSIZE) {
-		err_no_size_info();
-		return NULL;
-	}
+	if unlikely(self->st_stat.s_valid & STAT_FNOSIZE)
+		goto err_nosize;
 	return DeeInt_NewU64(((uint64_t)self->st_stat.s_info.nFileSizeHigh << 32) |
 	                     ((uint64_t)self->st_stat.s_info.nFileSizeLow));
+err_nosize:
+	err_no_size_info();
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_atime(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
-		err_no_time_info();
-		return NULL;
-	}
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
+		goto err_notime;
 	return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastAccessTime);
+err_notime:
+	err_no_time_info();
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_mtime(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
-		err_no_time_info();
-		return NULL;
-	}
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
+		goto err_notime;
 	return DeeTime_NewFiletime(&self->st_stat.s_info.ftLastWriteTime);
+err_notime:
+	err_no_time_info();
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_get_ctime(DeeStatObject *__restrict self) {
-	if unlikely(self->st_stat.s_valid & STAT_FNOTIME) {
-		err_no_time_info();
-		return NULL;
-	}
+	if unlikely(self->st_stat.s_valid & STAT_FNOTIME)
+		goto err_notime;
 	return DeeTime_NewFiletime(&self->st_stat.s_info.ftCreationTime);
+err_notime:
+	err_no_time_info();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isdir(DeeStatObject *__restrict self) {
+	if (self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		return_true;
+	return_false;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_ischr(DeeStatObject *__restrict self) {
+	if (!(self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
+		return_false;
+	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_CHAR);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isblk(DeeStatObject *__restrict self) {
+	if (!(self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
+		return_false;
+	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_DISK);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isreg(DeeStatObject *__restrict self) {
+	return_bool(!(self->st_stat.s_info.dwFileAttributes &
+	              (FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY |
+	               FILE_ATTRIBUTE_REPARSE_POINT)));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_isfifo(DeeStatObject *__restrict self) {
+	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_PIPE);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_islnk(DeeStatObject *__restrict self) {
+	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_PIPE);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_issock(DeeStatObject *__restrict self) {
+	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_REMOTE);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2070,98 +2122,36 @@ stat_getnttype_np(DeeStatObject *__restrict self) {
 	return DeeInt_NewU32(result);
 }
 
-
 PRIVATE struct type_getset stat_getsets[] = {
-	{ "st_dev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL, DeeStat_st_dev_doc },
-	{ "st_ino", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL, DeeStat_st_ino_doc },
-	{ "st_mode", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL, DeeStat_st_mode_doc },
-	{ "st_nlink", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_nlink, NULL, NULL, DeeStat_st_nlink_doc },
-	{ "st_uid", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_uid, NULL, NULL, DeeStat_st_uid_doc },
-	{ "st_gid", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_gid, NULL, NULL, DeeStat_st_gid_doc },
-	{ "st_rdev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_rdev, NULL, NULL, DeeStat_st_rdev_doc },
-	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
-	{ "st_atime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_atime, NULL, NULL, DeeStat_st_atime_doc },
-	{ "st_mtime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mtime, NULL, NULL, DeeStat_st_mtime_doc },
-	{ "st_ctime", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ctime, NULL, NULL, DeeStat_st_ctime_doc },
+	{ S_Stat_getset_st_dev_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_dev, NULL, NULL, S_Stat_getset_st_dev_doc },
+	{ S_Stat_getset_st_ino_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ino, NULL, NULL, S_Stat_getset_st_ino_doc },
+	{ S_Stat_getset_st_mode_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mode, NULL, NULL, S_Stat_getset_st_mode_doc },
+	{ S_Stat_getset_st_nlink_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_nlink, NULL, NULL, S_Stat_getset_st_nlink_doc },
+	{ S_Stat_getset_st_uid_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_uid, NULL, NULL, S_Stat_getset_st_uid_doc },
+	{ S_Stat_getset_st_gid_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_gid, NULL, NULL, S_Stat_getset_st_gid_doc },
+	{ S_Stat_getset_st_rdev_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_rdev, NULL, NULL, S_Stat_getset_st_rdev_doc },
+	{ S_Stat_getset_st_size_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, S_Stat_getset_st_size_doc },
+	{ S_Stat_getset_st_atime_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_atime, NULL, NULL, S_Stat_getset_st_atime_doc },
+	{ S_Stat_getset_st_mtime_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_mtime, NULL, NULL, S_Stat_getset_st_mtime_doc },
+	{ S_Stat_getset_st_ctime_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_ctime, NULL, NULL, S_Stat_getset_st_ctime_doc },
+	{ S_Stat_getset_isdir_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isdir, NULL, NULL, S_Stat_getset_isdir_doc },
+	{ S_Stat_getset_ischr_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_ischr, NULL, NULL, S_Stat_getset_ischr_doc },
+	{ S_Stat_getset_isblk_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isblk, NULL, NULL, S_Stat_getset_isblk_doc },
+	{ S_Stat_getset_isreg_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isreg, NULL, NULL, S_Stat_getset_isreg_doc },
+	{ S_Stat_getset_isfifo_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_isfifo, NULL, NULL, S_Stat_getset_isfifo_doc },
+	{ S_Stat_getset_islnk_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_islnk, NULL, NULL, S_Stat_getset_islnk_doc },
+	{ S_Stat_getset_issock_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_issock, NULL, NULL, S_Stat_getset_issock_doc },
 
 	/* Non-portable NT extensions. */
 	{ "ntattr_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getntattr_np, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "Non-portable windows extension for retrieveing the NT attributes of the stat-file, those "
+	      "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
 	      "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers") },
 	{ "nttype_np", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_getnttype_np, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this stat-file does not contain valid NT-type information\n"
-	      "Non-portable windows extension for retrieveing the NT type of this stat-file, that "
+	      "Non-portable windows extension for retrieving the NT type of this stat-file, that "
 	      "type being one of the `FILE_TYPE_*' constants found in windows system headers") },
-	{ NULL }
-};
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_isdir(DeeStatObject *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isdir"))
-		return NULL;
-	if (self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		return_true;
-	return_false;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_ischr(DeeStatObject *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":ischr"))
-		return NULL;
-	if (!(self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
-		return_false;
-	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_CHAR);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_isblk(DeeStatObject *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isblk"))
-		return NULL;
-	if (!(self->st_stat.s_info.dwFileAttributes & FILE_ATTRIBUTE_DEVICE))
-		return_false;
-	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_DISK);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_isreg(DeeStatObject *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isreg"))
-		return NULL;
-	return_bool(!(self->st_stat.s_info.dwFileAttributes &
-	              (FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY |
-	               FILE_ATTRIBUTE_REPARSE_POINT)));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_isfifo(DeeStatObject *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":isfifo"))
-		return NULL;
-	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_PIPE);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_islnk(DeeStatObject *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":islnk"))
-		return NULL;
-	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_PIPE);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_issock(DeeStatObject *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":issock"))
-		return NULL;
-	return_bool(stat_get_nttype(&self->st_stat, true) == FILE_TYPE_REMOTE);
-}
-
-PRIVATE struct type_method stat_methods[] = {
-	{ "isdir", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isdir, DeeStat_isdir_doc },
-	{ "ischr", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_ischr, DeeStat_ischr_doc },
-	{ "isblk", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isblk, DeeStat_isblk_doc },
-	{ "isreg", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isreg, DeeStat_isreg_doc },
-	{ "isfifo", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_isfifo, DeeStat_isfifo_doc },
-	{ "islnk", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_islnk, DeeStat_islnk_doc },
-	{ "issock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stat_issock, DeeStat_issock_doc },
 	{ NULL }
 };
 
@@ -2172,7 +2162,7 @@ stat_class_exists(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:exists", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_exists_name, &path))
 		goto err;
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
@@ -2199,7 +2189,7 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:isdir", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isdir_name, &path))
 		goto err;
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
@@ -2228,7 +2218,7 @@ stat_class_ischr(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:ischr", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_ischr_name, &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
 	if unlikely(error < 0)
@@ -2253,7 +2243,7 @@ stat_class_isblk(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:isblk", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isblk_name, &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
 	if unlikely(error < 0)
@@ -2278,7 +2268,7 @@ stat_class_isreg(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:isreg", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isreg_name, &path))
 		goto err;
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
@@ -2315,7 +2305,7 @@ stat_class_isfifo(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:isfifo", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isfifo_name, &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
 	if unlikely(error < 0)
@@ -2337,7 +2327,7 @@ stat_class_islnk(DeeObject *__restrict UNUSED(self),
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:islnk", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_islnk_name, &path))
 		goto err;
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
@@ -2367,7 +2357,7 @@ stat_class_issock(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:issock", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_issock_name, &path))
 		goto err;
 	error = Stat_Init(&buf, path, self == (DeeObject *)&DeeLStat_Type ? DOSTAT_FTRY | DOSTAT_FLSTAT : DOSTAT_FTRY);
 	if unlikely(error < 0)
@@ -2388,7 +2378,7 @@ stat_class_ishidden(DeeObject *self, size_t argc, DeeObject **argv) {
 	Stat buf;
 	if (DeeThread_CheckInterrupt())
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:ishidden", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_ishidden_name, &path))
 		goto err;
 	if (DeeString_Check(path)) {
 		DWORD attr; /* Do a quick attribute query. */
@@ -2468,7 +2458,7 @@ stat_class_isexe(DeeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject **argv) {
 	DeeObject *path;
 	bool result;
-	if (DeeArg_Unpack(argc, argv, "o:isexe", &path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isexe_name, &path))
 		goto err;
 	if (DeeThread_CheckInterrupt())
 		goto err;
@@ -2496,23 +2486,23 @@ err:
 }
 
 PRIVATE struct type_method stat_class_methods[] = {
-	{ "exists", &stat_class_exists, DeeStat_class_exists_doc },
-	{ "isdir", &stat_class_isdir, DeeStat_class_isdir_doc },
-	{ "ischr", &stat_class_ischr, DeeStat_class_ischr_doc },
-	{ "isblk", &stat_class_isblk, DeeStat_class_isblk_doc },
-	{ "isreg", &stat_class_isreg, DeeStat_class_isreg_doc },
-	{ "isfifo", &stat_class_isfifo, DeeStat_class_isfifo_doc },
-	{ "islnk", &stat_class_islnk, DeeStat_class_islnk_doc },
-	{ "issock", &stat_class_issock, DeeStat_class_issock_doc },
-	{ "ishidden", &stat_class_ishidden, DeeStat_class_ishidden_doc },
-	{ "isexe", &stat_class_isexe, DeeStat_class_isexe_doc },
+	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
+	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
+	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },
+	{ S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc },
+	{ S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc },
+	{ S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc },
+	{ S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc },
+	{ S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc },
+	{ S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc },
+	{ S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc },
 	{ NULL }
 };
 
 INTERN DeeTypeObject DeeStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "stat",
-	/* .tp_doc      = */ DeeStat_TP_DOC,
+	/* .tp_name     = */ S_Stat_tp_name,
+	/* .tp_doc      = */ S_Stat_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2546,7 +2536,7 @@ INTERN DeeTypeObject DeeStat_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ stat_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ stat_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ stat_class_methods,
@@ -2556,8 +2546,8 @@ INTERN DeeTypeObject DeeStat_Type = {
 
 INTERN DeeTypeObject DeeLStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "lstat",
-	/* .tp_doc      = */ DeeLStat_TP_DOC,
+	/* .tp_name     = */ S_LStat_tp_name,
+	/* .tp_doc      = */ S_LStat_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3742,8 +3732,8 @@ PRIVATE struct type_member diriter_members[] = {
 
 INTERN DeeTypeObject DeeDirIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "dir.Iterator",
-	/* .tp_doc      = */ DeeDirIterator_TP_DOC,
+	/* .tp_name     = */ S_DirIterator_tp_name,
+	/* .tp_doc      = */ S_DirIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3801,7 +3791,7 @@ dir_copy(Dir *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dir_ctor(Dir *__restrict self,
          size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, "o:dir", &self->d_path))
+	if (DeeArg_Unpack(argc, argv, "o:" S_Dir_tp_name, &self->d_path))
 		goto err;
 	if (DeeString_Check(self->d_path)) {
 		Dee_Incref(self->d_path);
@@ -3841,8 +3831,8 @@ PRIVATE struct type_member dir_class_members[] = {
 
 INTERN DeeTypeObject DeeDir_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "dir",
-	/* .tp_doc      = */ DeeDir_TP_DOC,
+	/* .tp_name     = */ S_Dir_tp_name,
+	/* .tp_doc      = */ S_Dir_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -4034,8 +4024,8 @@ err:
 
 INTERN DeeTypeObject DeeQueryIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "query.Iterator",
-	/* .tp_doc      = */ DeeQueryIterator_TP_DOC,
+	/* .tp_name     = */ S_QueryIterator_tp_name,
+	/* .tp_doc      = */ S_QueryIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -4181,8 +4171,8 @@ PRIVATE struct type_seq query_seq = {
 
 INTERN DeeTypeObject DeeQuery_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "query",
-	/* .tp_doc      = */ DeeQuery_TP_DOC,
+	/* .tp_name     = */ S_Query_tp_name,
+	/* .tp_doc      = */ S_Query_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

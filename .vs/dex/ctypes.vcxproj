@@ -86,6 +86,7 @@
     <ClCompile Include="..\..\src\dex\ctypes\struct.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\dex\ctypes\_res.h" />
     <ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
     <ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\ffi.h" />
     <ClInclude Include="..\..\src\dex\ctypes\ffi\libffi_msvc\fficonfig.h" />

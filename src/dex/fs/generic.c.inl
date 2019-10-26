@@ -30,6 +30,8 @@
 #include <deemon/error.h>
 #include <deemon/seq.h>
 
+#include "_res.h"
+
 DECL_BEGIN
 
 PRIVATE char const fs_unsupported_message[] = "A filesystem is not supported";
@@ -71,8 +73,8 @@ PRIVATE struct type_member env_members[] = {
 
 INTERN DeeTypeObject DeeEnvIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "env.Iterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ S_EnvIterator_tp_name,
+	/* .tp_doc      = */ S_EnvIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -177,78 +179,67 @@ stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset stat_getsets[] = {
-	{ "st_dev", &stat_getxxx, NULL, NULL, DeeStat_st_dev_doc },
-	{ "st_ino", &stat_getxxx, NULL, NULL, DeeStat_st_ino_doc },
-	{ "st_mode", &stat_getxxx, NULL, NULL, DeeStat_st_mode_doc },
-	{ "st_nlink", &stat_getxxx, NULL, NULL, DeeStat_st_nlink_doc },
-	{ "st_uid", &stat_getxxx, NULL, NULL, DeeStat_st_uid_doc },
-	{ "st_gid", &stat_getxxx, NULL, NULL, DeeStat_st_gid_doc },
-	{ "st_rdev", &stat_getxxx, NULL, NULL, DeeStat_st_rdev_doc },
-	{ "st_size", &stat_getxxx, NULL, NULL, DeeStat_st_size_doc },
-	{ "st_atime", &stat_getxxx, NULL, NULL, DeeStat_st_atime_doc },
-	{ "st_mtime", &stat_getxxx, NULL, NULL, DeeStat_st_mtime_doc },
-	{ "st_ctime", &stat_getxxx, NULL, NULL, DeeStat_st_ctime_doc },
-	{ NULL }
-};
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-stat_isxxx(DeeObject *__restrict UNUSED(self),
-           size_t UNUSED(argc),
-           DeeObject **UNUSED(argv)) {
-	return fs_gethostname();
-}
-
-PRIVATE struct type_method stat_methods[] = {
-	{ "isdir", &stat_isxxx, DeeStat_isdir_doc },
-	{ "ischr", &stat_isxxx, DeeStat_ischr_doc },
-	{ "isblk", &stat_isxxx, DeeStat_isblk_doc },
-	{ "isreg", &stat_isxxx, DeeStat_isreg_doc },
-	{ "isfifo", &stat_isxxx, DeeStat_isfifo_doc },
-	{ "islnk", &stat_isxxx, DeeStat_islnk_doc },
-	{ "issock", &stat_isxxx, DeeStat_issock_doc },
+	{ S_Stat_getset_st_dev_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_dev_doc },
+	{ S_Stat_getset_st_ino_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_ino_doc },
+	{ S_Stat_getset_st_mode_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_mode_doc },
+	{ S_Stat_getset_st_nlink_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_nlink_doc },
+	{ S_Stat_getset_st_uid_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_uid_doc },
+	{ S_Stat_getset_st_gid_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_gid_doc },
+	{ S_Stat_getset_st_rdev_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_rdev_doc },
+	{ S_Stat_getset_st_size_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_size_doc },
+	{ S_Stat_getset_st_atime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_atime_doc },
+	{ S_Stat_getset_st_mtime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_mtime_doc },
+	{ S_Stat_getset_st_ctime_name, &stat_getxxx, NULL, NULL, S_Stat_getset_st_ctime_doc },
+	{ S_Stat_getset_isdir_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isdir_doc },
+	{ S_Stat_getset_ischr_name, &stat_getxxx, NULL, NULL, S_Stat_getset_ischr_doc },
+	{ S_Stat_getset_isblk_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isblk_doc },
+	{ S_Stat_getset_isreg_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isreg_doc },
+	{ S_Stat_getset_isfifo_name, &stat_getxxx, NULL, NULL, S_Stat_getset_isfifo_doc },
+	{ S_Stat_getset_islnk_name, &stat_getxxx, NULL, NULL, S_Stat_getset_islnk_doc },
+	{ S_Stat_getset_issock_name, &stat_getxxx, NULL, NULL, S_Stat_getset_issock_doc },
 	{ NULL }
 };
 
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                        \
-	funnam(DeeObject *__restrict UNUSED(self),           \
-	       size_t argc, DeeObject **argv) {   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                \
+	funnam(DeeObject *UNUSED(self),                      \
+	       size_t argc, DeeObject **argv) {              \
 		DeeObject *path;                                 \
 		if (DeeArg_Unpack(argc, argv, "o:" name, &path)) \
 			return NULL;                                 \
 		return_;                                         \
 	}
-DEFINE_STATIC_QUERY(stat_class_exists, "exists", return_false)
-DEFINE_STATIC_QUERY(stat_class_isdir, "isdir", return_false)
-DEFINE_STATIC_QUERY(stat_class_ischr, "ischr", return_false)
-DEFINE_STATIC_QUERY(stat_class_isblk, "isblk", return_false)
-DEFINE_STATIC_QUERY(stat_class_isreg, "isreg", return_false)
-DEFINE_STATIC_QUERY(stat_class_isfifo, "isfifo", return_false)
-DEFINE_STATIC_QUERY(stat_class_islnk, "islnk", return_false)
-DEFINE_STATIC_QUERY(stat_class_issock, "issock", return_false)
-DEFINE_STATIC_QUERY(stat_class_ishidden, "ishidden", return_false)
-DEFINE_STATIC_QUERY(stat_class_isexe, "isexe", return_false)
+DEFINE_STATIC_QUERY(stat_class_exists, S_Stat_class_function_exists_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isdir, S_Stat_class_function_isdir_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_ischr, S_Stat_class_function_ischr_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isblk, S_Stat_class_function_isblk_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isreg, S_Stat_class_function_isreg_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isfifo, S_Stat_class_function_isfifo_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_islnk, S_Stat_class_function_islnk_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_issock, S_Stat_class_function_issock_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_ishidden, S_Stat_class_function_ishidden_name, return_false)
+DEFINE_STATIC_QUERY(stat_class_isexe, S_Stat_class_function_isexe_name, return_false)
 #undef DEFINE_STATIC_QUERY
 
 
 PRIVATE struct type_method stat_class_methods[] = {
-	{ "exists", &stat_class_exists, DeeStat_class_exists_doc },
-	{ "isdir", &stat_class_isdir, DeeStat_class_isdir_doc },
-	{ "ischr", &stat_class_ischr, DeeStat_class_ischr_doc },
-	{ "isblk", &stat_class_isblk, DeeStat_class_isblk_doc },
-	{ "isreg", &stat_class_isreg, DeeStat_class_isreg_doc },
-	{ "isfifo", &stat_class_isfifo, DeeStat_class_isfifo_doc },
-	{ "islnk", &stat_class_islnk, DeeStat_class_islnk_doc },
-	{ "issock", &stat_class_issock, DeeStat_class_issock_doc },
-	{ "ishidden", &stat_class_ishidden, DeeStat_class_ishidden_doc },
-	{ "isexe", &stat_class_isexe, DeeStat_class_isexe_doc },
+	{ S_Stat_class_function_exists_name, &stat_class_exists, S_Stat_class_function_exists_doc },
+	{ S_Stat_class_function_isdir_name, &stat_class_isdir, S_Stat_class_function_isdir_doc },
+	{ S_Stat_class_function_ischr_name, &stat_class_ischr, S_Stat_class_function_ischr_doc },
+	{ S_Stat_class_function_isblk_name, &stat_class_isblk, S_Stat_class_function_isblk_doc },
+	{ S_Stat_class_function_isreg_name, &stat_class_isreg, S_Stat_class_function_isreg_doc },
+	{ S_Stat_class_function_isfifo_name, &stat_class_isfifo, S_Stat_class_function_isfifo_doc },
+	{ S_Stat_class_function_islnk_name, &stat_class_islnk, S_Stat_class_function_islnk_doc },
+	{ S_Stat_class_function_issock_name, &stat_class_issock, S_Stat_class_function_issock_doc },
+	{ S_Stat_class_function_ishidden_name, &stat_class_ishidden, S_Stat_class_function_ishidden_doc },
+	{ S_Stat_class_function_isexe_name, &stat_class_isexe, S_Stat_class_function_isexe_doc },
 	{ NULL }
 };
 
 INTERN DeeTypeObject DeeStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "stat",
-	/* .tp_doc      = */ DeeStat_TP_DOC,
+	/* .tp_name     = */ S_Stat_tp_name,
+	/* .tp_doc      = */ S_Stat_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -282,7 +273,7 @@ INTERN DeeTypeObject DeeStat_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ stat_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ stat_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ stat_class_methods,
@@ -292,8 +283,8 @@ INTERN DeeTypeObject DeeStat_Type = {
 
 INTERN DeeTypeObject DeeLStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "lstat",
-	/* .tp_doc      = */ DeeLStat_TP_DOC,
+	/* .tp_name     = */ S_LStat_tp_name,
+	/* .tp_doc      = */ S_LStat_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

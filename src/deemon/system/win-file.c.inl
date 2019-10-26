@@ -184,15 +184,6 @@ PRIVATE DeeFileTypeObject DebugFile_Type = {
 	/* .ft_putc   = */ NULL
 };
 
-
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeNTSystem_GetFilenameOfHandle(HANDLE hHandle) {
-	/* TODO */
-	(void)hHandle;
-	DERROR_NOTIMPLEMENTED();
-	return NULL;
-}
-
 PUBLIC WUNUSED DREF /*SystemFile*/ DeeObject *DCALL
 DeeFile_OpenFd(dsysfd_t fd, /*String*/ DeeObject *filename,
                int UNUSED(oflags), bool inherit_fd) {

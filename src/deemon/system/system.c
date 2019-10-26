@@ -681,6 +681,47 @@ done:
 #endif /* DeeSystem_DlOpen_USE_STUB */
 }
 
+/* Try to get a human-readable description on what went wrong during a call
+ * to `DeeSystem_DlOpen[String]()' that caused `DEESYSTEM_DLOPEN_FAILED' to
+ * be returned.
+ * @return: * :        The human-readable error description
+ * @return: NULL:      A deemon callback failed and an error was thrown.
+ * @return: ITER_DONE: No description is available. */
+PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
+#ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
+	DREF /*String*/ DeeObject *result;
+	DWORD dwError = GetLastError();
+	if (dwError == 0)
+		return ITER_DONE;
+	result = DeeNTSystem_FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError,
+	                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+	                                   NULL);
+	return result;
+#endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+
+#ifdef DeeSystem_DlOpen_USE_DLFCN
+#ifdef CONFIG_HAVE_dlerror
+	char *message;
+	DREF /*String*/ DeeObject *result;
+	DBG_ALIGNMENT_DISABLE();
+	message = dlerror();
+	DBG_ALIGNMENT_ENABLE();
+	if (!message)
+		return ITER_DONE;
+	result = DeeString_NewUtf8(message, strlen(message),
+	                           STRING_ERROR_FIGNORE);
+	return result;
+#else /* CONFIG_HAVE_dlerror */
+	return ITER_DONE;
+#endif /* !CONFIG_HAVE_dlerror */
+#endif /* DeeSystem_DlOpen_USE_DLFCN */
+
+#ifdef DeeSystem_DlOpen_USE_STUB
+	return ITER_DONE;
+#endif /* DeeSystem_DlOpen_USE_STUB */
+}
+
+
 
 /* Lookup a symbol within a given shared library
  * Returns `NULL' if the symbol could not be found */

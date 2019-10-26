@@ -67,6 +67,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\dex\files\_res.h" />
     <ClInclude Include="..\..\src\dex\files\libfiles.h" />
   </ItemGroup>
   <ItemGroup>

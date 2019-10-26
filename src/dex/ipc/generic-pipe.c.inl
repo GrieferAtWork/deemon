@@ -28,8 +28,8 @@
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 
+#include "_res.h"
 #include "libipc.h"
-#include "strings.h"
 
 DECL_BEGIN
 
@@ -63,7 +63,7 @@ PRIVATE struct type_member pipe_class_members[] = {
 };
 
 PRIVATE struct type_method pipe_class_methods[] = {
-	{ S_Pipe_function_new_name, &pipe_class_new, DOC(S_Pipe_function_new_doc) },
+	{ S_Pipe_function_new_name, &pipe_class_new, S_Pipe_function_new_doc },
 	{ NULL }
 };
 
@@ -71,7 +71,7 @@ INTERN DeeFileTypeObject DeePipe_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ S_Pipe_tp_name,
-		/* .tp_doc      = */ DOC(S_Pipe_tp_doc),
+		/* .tp_doc      = */ S_Pipe_tp_doc,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
@@ -129,7 +129,7 @@ INTERN DeeFileTypeObject DeePipeReader_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ S_PipeReader_tp_name,
-		/* .tp_doc      = */ DOC(S_PipeReader_tp_doc),
+		/* .tp_doc      = */ S_PipeReader_tp_doc,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
@@ -187,7 +187,7 @@ INTERN DeeFileTypeObject DeePipeWriter_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ S_PipeWriter_tp_name,
-		/* .tp_doc      = */ DOC(S_PipeWriter_tp_doc),
+		/* .tp_doc      = */ S_PipeWriter_tp_doc,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,

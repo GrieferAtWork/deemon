@@ -37,8 +37,6 @@
 
 #include <stdbool.h>
 
-#include "libfs-doc.h"
-
 DECL_BEGIN
 
 struct ascii_printer;

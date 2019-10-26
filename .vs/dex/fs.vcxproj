@@ -67,7 +67,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\dex\fs\libfs-doc.h" />
+    <ClInclude Include="..\..\src\dex\fs\_res.h" />
     <ClInclude Include="..\..\src\dex\fs\libfs.h" />
   </ItemGroup>
   <ItemGroup>

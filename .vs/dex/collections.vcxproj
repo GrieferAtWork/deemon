@@ -74,6 +74,7 @@
     <ClCompile Include="..\..\src\dex\collections\uset.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\dex\collections\_res.h" />
     <ClInclude Include="..\..\src\dex\collections\libcollections.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

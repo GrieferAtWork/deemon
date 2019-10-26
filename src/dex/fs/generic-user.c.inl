@@ -23,6 +23,8 @@
 #include "generic.c.inl"
 #endif
 
+#include "_res.h"
+
 INTERN WUNUSED DREF DeeObject *DCALL
 fs_gethome(bool try_get) {
 	if (!try_get)
@@ -53,8 +55,8 @@ fs_printuser(struct unicode_printer *__restrict UNUSED(printer), bool try_get) {
 
 INTERN DeeTypeObject DeeUser_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "User",
-	/* .tp_doc      = */ NULL,
+	/* .tp_name     = */ S_User_tp_name,
+	/* .tp_doc      = */ S_User_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

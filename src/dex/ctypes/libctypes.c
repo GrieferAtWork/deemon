@@ -52,20 +52,6 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
 
-#ifdef CONFIG_NO_ERRNO_H
-#undef CONFIG_HAVE_ERRNO_H
-#elif !defined(CONFIG_HAVE_ERRNO_H)
-#ifdef __NO_has_include
-#define CONFIG_HAVE_ERRNO_H 1
-#elif __has_include(<errno.h>)
-#define CONFIG_HAVE_ERRNO_H 1
-#endif
-#endif
-
-#ifdef CONFIG_HAVE_ERRNO_H
-#include <errno.h>
-#endif /* CONFIG_HAVE_ERRNO_H */
-
 #include <string.h>
 
 DECL_BEGIN
@@ -536,69 +522,6 @@ PRIVATE DEFINE_CMETHOD(ctypes_strfry, capi_strfry);
 //PRIVATE DEFINE_CMETHOD(ctypes_strsep,capi_strsep);
 //PRIVATE DEFINE_CMETHOD(ctypes_strtok_r,capi_strtok_r);
 
-#ifdef CONFIG_HAVE_ERRNO_H
-PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_errno_get(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
-	return DeeInt_NewInt(errno);
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_errno_del(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
-	errno = 0;
-	return_none;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_errno_set(size_t argc, DeeObject **argv) {
-	int newval;
-	if (DeeArg_Unpack(argc, argv, "d:errno.setter", &newval))
-		goto err;
-	errno = newval;
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE DEFINE_CMETHOD(ctypes_errno_get, capi_errno_get);
-PRIVATE DEFINE_CMETHOD(ctypes_errno_del, capi_errno_del);
-PRIVATE DEFINE_CMETHOD(ctypes_errno_set, capi_errno_set);
-
-#else /* CONFIG_HAVE_ERRNO_H */
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_errno_access(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
-	DeeError_Throwf(&DeeError_UnsupportedAPI, "No errno support");
-	return NULL;
-}
-
-PRIVATE DEFINE_CMETHOD(ctypes_errno_access, capi_errno_access);
-#define ctypes_errno_get ctypes_errno_access
-#define ctypes_errno_del ctypes_errno_access
-#define ctypes_errno_set ctypes_errno_access
-#endif /* !CONFIG_HAVE_ERRNO_H */
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-capi_strerror(size_t argc, DeeObject **argv) {
-#if !defined(CONFIG_HAVE_ERRNO_H) || defined(CONFIG_NO_STRERROR)
-	int no;
-	if (DeeArg_Unpack(argc, argv, "|d:strerror", &no))
-		goto err;
-	return_none;
-#else
-	int no = errno;
-	char *name;
-	if (DeeArg_Unpack(argc, argv, "|d:strerror", &no))
-		goto err;
-	name = strerror(no);
-	if (name)
-		return DeeString_New(name);
-#endif
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE DEFINE_CMETHOD(ctypes_strerror, capi_strerror);
 
 
 
@@ -717,32 +640,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(x:?Guint64_t)->?Guint64_t\n"
 	      "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
 
-	/* <errno.h> - style accessors.
-	 * XXX: the `posix` dex also exports an identical field, however by us also
-	 *      exporting our own variant, an incompatibility is created where the
-	 *      following code will create an ambiguous symbol warning:
-	 *   >> import * from ctypes;
-	 *   >> import * from posix;
-	 *   >> 
-	 *   >> print errno; // Ambiguous
-	 * Maybe this shouldn't even be considered a bug, since it can easily be fixed by
-	 * adding an explicit import `import errno from posix' or `import errno from ctypes',
-	 * especially considering that both actually have their own implementations...
-	 * Alternatively, we could remove `errno` from ctypes (I think it really only belongs
-	 * into posix, because even though STDC defines <errno.h>, it is posix that adds all
-	 * of the different error values onto it, with STDC only defining EDOM, EILSEQ, and
-	 * maybe a hand full of others)
-	 */
-	{ "errno", (DeeObject *)&ctypes_errno_get, MODSYM_FPROPERTY,
-	  DOC("->?Dint\nAccess the system's errno runtime variable") },
-	{ NULL, (DeeObject *)&ctypes_errno_del }, /* PROPERTY.DELETE */
-	{ NULL, (DeeObject *)&ctypes_errno_set }, /* PROPERTY.SETTER */
-	{ "strerror", (DeeObject *)&ctypes_strerror, MODSYM_FNORMAL,
-	  DOC("(errno?:?Dint)->?X2?Dstring?N\n"
-	      "Return the name of a given @errno (which defaults to #errno), "
-	      "or return :none if the error doesn't have an associated name") },
-
-
 	/* <string.h> & <stdlib.h> - style ctypes functions */
 	{ "malloc", (DeeObject *)&ctypes_malloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
@@ -765,7 +662,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@throw NoMemory Insufficient memory to allocate @size bytes\n"
 	      "Given a heap-pointer previously allocated using either :malloc, :calloc or "
 	      "a prior call to :realloc, change its size to @size, either releasing then "
-	      "unused trialing memory resulting from the difference between its old size "
+	      "unused trailing memory resulting from the difference between its old size "
 	      "and a smaller, newer size, or try to extend it if its new size is larger "
 	      "than its own, in which case a collision with another block located at the "
 	      "location where the extension attempt was made will result in an entirely "
@@ -1126,10 +1023,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "strfry", (DeeObject *)&ctypes_strfry, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "xor all characters within @str with $42, implementing _very_ simplistic encryption") },
-	//    { "strsep",      (DeeObject *)&ctypes_strsep, MODSYM_FNORMAL,
-	//      DOC("TODO") },
-	//    { "strtok_r",    (DeeObject *)&ctypes_strtok_r, MODSYM_FNORMAL,
-	//      DOC("TODO") },
+	/*{ "strsep", (DeeObject *)&ctypes_strsep, MODSYM_FNORMAL,
+	  DOC("TODO") },
+	{ "strtok_r", (DeeObject *)&ctypes_strtok_r, MODSYM_FNORMAL,
+	  DOC("TODO") },*/
 	{ NULL }
 };
 
@@ -1194,7 +1091,7 @@ libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
 #endif /* !CONFIG_NO_CFUNCTION */
 	}
 }
-#endif
+#endif /* !NDEBUG */
 
 INTDEF bool DCALL clear_void_pointer(void);
 PRIVATE bool DCALL

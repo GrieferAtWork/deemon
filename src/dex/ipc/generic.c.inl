@@ -19,26 +19,25 @@
 #ifndef GUARD_DEX_IPC_GENERIC_C_INL
 #define GUARD_DEX_IPC_GENERIC_C_INL 1
 #define DEE_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
-#include <deemon/list.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
-#include <deemon/tuple.h>
 #include <deemon/int.h>
+#include <deemon/list.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
+#include <deemon/tuple.h>
 
+#include "_res.h"
 #include "libipc.h"
-#include "strings.h"
 
 /**/
 #include "generic-cmdline.c.inl"
@@ -173,24 +172,12 @@ err:
 
 
 PRIVATE struct type_method process_methods[] = {
-	{ S_Process_function_start_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_start,
-	  DOC(S_Process_function_start_doc) },
-	{ S_Process_function_join_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_join,
-	  DOC(S_Process_function_join_doc) },
-	{ S_Process_function_tryjoin_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_tryjoin,
-	  DOC(S_Process_function_tryjoin_doc) },
-	{ S_Process_function_timedjoin_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_timedjoin,
-	  DOC(S_Process_function_timedjoin_doc) },
-	{ S_Process_function_detach_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detach,
-	  DOC(S_Process_function_detach_doc) },
-	{ S_Process_function_terminate_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminate,
-	  DOC(S_Process_function_terminate_doc) },
+	{ S_Process_function_start_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_start, S_Process_function_start_doc },
+	{ S_Process_function_join_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_join, S_Process_function_join_doc },
+	{ S_Process_function_tryjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_tryjoin, S_Process_function_tryjoin_doc },
+	{ S_Process_function_timedjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_timedjoin, S_Process_function_timedjoin_doc },
+	{ S_Process_function_detach_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detach, S_Process_function_detach_doc },
+	{ S_Process_function_terminate_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminate, S_Process_function_terminate_doc },
 	{ NULL }
 };
 
@@ -479,75 +466,59 @@ err:
 
 
 PRIVATE struct type_getset process_getsets[] = {
-	{ S_Process_getset_hasstarted_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_hasstarted, NULL, NULL,
-	  DOC(S_Process_getset_hasstarted_doc) },
-	{ S_Process_getset_wasdetached_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_wasdetached, NULL, NULL,
-	  DOC(S_Process_getset_wasdetached_doc) },
-	{ S_Process_getset_hasterminated_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_wasterminated, NULL, NULL,
-	  DOC(S_Process_getset_hasterminated_doc) },
-	{ S_Process_getset_isachild_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_isachild, NULL, NULL,
-	  DOC(S_Process_getset_isachild_doc) },
-	{ S_Process_getset_id_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *))&process_id, NULL, NULL,
-	  DOC(S_Process_getset_id_doc) },
-	{ S_Process_getset_threads_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL,
-	  DOC(S_Process_getset_threads_doc) },
-	{ S_Process_getset_files_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files, NULL, NULL,
-	  DOC(S_Process_getset_files_doc) },
 	{ S_Process_getset_stdin_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdin,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdin,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stdin,
-	  DOC(S_Process_getset_stdin_doc) },
+	  S_Process_getset_stdin_doc },
 	{ S_Process_getset_stdout_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stdout,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stdout,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stdout,
-	  DOC(S_Process_getset_stdout_doc) },
+	  S_Process_getset_stdout_doc },
 	{ S_Process_getset_stderr_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_stderr,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_stderr,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_stderr,
-	  DOC(S_Process_getset_stderr_doc) },
+	  S_Process_getset_stderr_doc },
 	{ S_Process_getset_pwd_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_pwd,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_pwd,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_pwd,
-	  DOC(S_Process_getset_pwd_doc) },
+	  S_Process_getset_pwd_doc },
 	{ S_Process_getset_exe_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_exe,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_exe,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_exe,
-	  DOC(S_Process_getset_exe_doc) },
+	  S_Process_getset_exe_doc },
 	{ S_Process_getset_cmdline_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_cmdline,
-	  DOC(S_Process_getset_cmdline_doc) },
+	  S_Process_getset_cmdline_doc },
 	{ S_Process_getset_argv_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_argv,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline, /* Same thing! */
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_argv,
-	  DOC(S_Process_getset_argv_doc) },
+	  S_Process_getset_argv_doc },
 	{ S_Process_getset_cmd_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_cmdline,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_cmdline,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_cmdline,
-	  DOC(S_Process_getset_cmd_doc) },
+	  S_Process_getset_cmd_doc },
 	{ S_Process_getset_environ_name,
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_environ,
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_environ,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_environ,
-	  DOC(S_Process_getset_environ_doc) },
-	{ S_Process_getset_memory_name,
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_memory, NULL, NULL,
-	  DOC(S_Process_getset_memory_doc) },
+	  S_Process_getset_environ_doc },
+	{ S_Process_getset_hasstarted_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_hasstarted, NULL, NULL, S_Process_getset_hasstarted_doc },
+	{ S_Process_getset_wasdetached_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_wasdetached, NULL, NULL, S_Process_getset_wasdetached_doc },
+	{ S_Process_getset_hasterminated_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_wasterminated, NULL, NULL, S_Process_getset_hasterminated_doc },
+	{ S_Process_getset_isachild_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_isachild, NULL, NULL, S_Process_getset_isachild_doc },
+	{ S_Process_getset_id_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_id, NULL, NULL, S_Process_getset_id_doc },
+	{ S_Process_getset_threads_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL, S_Process_getset_threads_doc },
+	{ S_Process_getset_files_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files, NULL, NULL, S_Process_getset_files_doc },
+	{ S_Process_getset_memory_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_memory, NULL, NULL, S_Process_getset_memory_doc },
 	{ NULL }
 };
 
@@ -557,15 +528,13 @@ PRIVATE struct type_getset process_getsets[] = {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 process_class_self(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_self_name))
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_class_function_self_name))
 		return NULL;
 	return_reference_((DeeObject *)&this_process);
 }
 
 PRIVATE struct type_method process_class_methods[] = {
-	{ S_Process_function_self_name,
-	  &process_class_self,
-	  DOC(S_Process_function_self_doc) },
+	{ S_Process_class_function_self_name, &process_class_self, S_Process_class_function_self_doc },
 	{ NULL }
 };
 
@@ -591,7 +560,7 @@ err:
 INTERN DeeTypeObject DeeProcess_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ S_Process_tp_name,
-	/* .tp_doc      = */ DOC(S_Process_tp_doc),
+	/* .tp_doc      = */ S_Process_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -638,7 +607,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 INTERN DeeTypeObject DeeProcEnumIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ S_ProcEnumIterator_tp_name,
-	/* .tp_doc      = */ DOC(S_ProcEnumIterator_tp_doc),
+	/* .tp_doc      = */ S_ProcEnumIterator_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -688,7 +657,7 @@ PRIVATE struct type_member enumproc_class_members[] = {
 INTERN DeeTypeObject DeeProcEnum_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ S_ProcEnum_tp_name,
-	/* .tp_doc      = */ DOC(S_ProcEnum_tp_doc),
+	/* .tp_doc      = */ S_ProcEnum_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

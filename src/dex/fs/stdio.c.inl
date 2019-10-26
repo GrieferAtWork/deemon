@@ -180,47 +180,35 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED DREF DeeObject *DCALL
+stat_return_true(DeeObject *__restrict UNUSED(self)) {
+	return_true;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+stat_return_false(DeeObject *__restrict UNUSED(self)) {
+	return_false;
+}
+
 PRIVATE struct type_getset stat_getsets[] = {
-	{ "st_dev", &stat_getxxx, NULL, NULL, DeeStat_st_dev_doc },
-	{ "st_ino", &stat_getxxx, NULL, NULL, DeeStat_st_ino_doc },
-	{ "st_mode", &stat_getxxx, NULL, NULL, DeeStat_st_mode_doc },
-	{ "st_nlink", &stat_getxxx, NULL, NULL, DeeStat_st_nlink_doc },
-	{ "st_uid", &stat_getxxx, NULL, NULL, DeeStat_st_uid_doc },
-	{ "st_gid", &stat_getxxx, NULL, NULL, DeeStat_st_gid_doc },
-	{ "st_rdev", &stat_getxxx, NULL, NULL, DeeStat_st_rdev_doc },
-	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, DeeStat_st_size_doc },
-	{ "st_atime", &stat_getxxx, NULL, NULL, DeeStat_st_atime_doc },
-	{ "st_mtime", &stat_getxxx, NULL, NULL, DeeStat_st_mtime_doc },
-	{ "st_ctime", &stat_getxxx, NULL, NULL, DeeStat_st_ctime_doc },
-	{ NULL }
-};
-
-
-#define DEFINE_STATIC_QUERY(funnam, name, return_)     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                      \
-	funnam(DeeObject *__restrict UNUSED(self),         \
-	       size_t argc, DeeObject **argv) { \
-		if (DeeArg_Unpack(argc, argv, ":" name))       \
-			return NULL;                               \
-		return_;                                       \
-	}
-DEFINE_STATIC_QUERY(stat_isdir, "isdir", return_false)
-DEFINE_STATIC_QUERY(stat_ischr, "ischr", return_false)
-DEFINE_STATIC_QUERY(stat_isblk, "isblk", return_false)
-DEFINE_STATIC_QUERY(stat_isreg, "isreg", return_true)
-DEFINE_STATIC_QUERY(stat_isfifo, "isfifo", return_false)
-DEFINE_STATIC_QUERY(stat_islnk, "islnk", return_false)
-DEFINE_STATIC_QUERY(stat_issock, "issock", return_false)
-#undef DEFINE_STATIC_QUERY
-
-PRIVATE struct type_method stat_methods[] = {
-	{ "isdir", &stat_isdir, DeeStat_isdir_doc },
-	{ "ischr", &stat_ischr, DeeStat_ischr_doc },
-	{ "isblk", &stat_isblk, DeeStat_isblk_doc },
-	{ "isreg", &stat_isreg, DeeStat_isreg_doc },
-	{ "isfifo", &stat_isfifo, DeeStat_isfifo_doc },
-	{ "islnk", &stat_islnk, DeeStat_islnk_doc },
-	{ "issock", &stat_issock, DeeStat_issock_doc },
+	{ "st_dev", &stat_getxxx, NULL, NULL, S_Stat_getset_st_dev_doc },
+	{ "st_ino", &stat_getxxx, NULL, NULL, S_Stat_getset_st_ino_doc },
+	{ "st_mode", &stat_getxxx, NULL, NULL, S_Stat_getset_st_mode_doc },
+	{ "st_nlink", &stat_getxxx, NULL, NULL, S_Stat_getset_st_nlink_doc },
+	{ "st_uid", &stat_getxxx, NULL, NULL, S_Stat_getset_st_uid_doc },
+	{ "st_gid", &stat_getxxx, NULL, NULL, S_Stat_getset_st_gid_doc },
+	{ "st_rdev", &stat_getxxx, NULL, NULL, S_Stat_getset_st_rdev_doc },
+	{ "st_size", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stat_get_size, NULL, NULL, S_Stat_getset_st_size_doc },
+	{ "st_atime", &stat_getxxx, NULL, NULL, S_Stat_getset_st_atime_doc },
+	{ "st_mtime", &stat_getxxx, NULL, NULL, S_Stat_getset_st_mtime_doc },
+	{ "st_ctime", &stat_getxxx, NULL, NULL, S_Stat_getset_st_ctime_doc },
+	{ "isdir", &stat_return_false, NULL, NULL, S_Stat_getset_isdir_doc },
+	{ "ischr", &stat_return_false, NULL, NULL, S_Stat_getset_ischr_doc },
+	{ "isblk", &stat_return_false, NULL, NULL, S_Stat_getset_isblk_doc },
+	{ "isreg", &stat_return_true, NULL, NULL, S_Stat_getset_isreg_doc },
+	{ "isfifo", &stat_return_false, NULL, NULL, S_Stat_getset_isfifo_doc },
+	{ "islnk", &stat_return_false, NULL, NULL, S_Stat_getset_islnk_doc },
+	{ "issock", &stat_return_false, NULL, NULL, S_Stat_getset_issock_doc },
 	{ NULL }
 };
 
@@ -275,7 +263,7 @@ DEFINE_STATIC_QUERY(stat_class_isexe, "isexe", return_false)
 
 
 PRIVATE struct type_method stat_class_methods[] = {
-	{ "exists", &stat_class_exists, DeeStat_class_exists_doc },
+	{ "exists", &stat_class_exists, S_Stat_class_function_exists_doc },
 	{ "isdir", &stat_class_isdir, DeeStat_class_isdir_doc },
 	{ "ischr", &stat_class_ischr, DeeStat_class_ischr_doc },
 	{ "isblk", &stat_class_isblk, DeeStat_class_isblk_doc },
@@ -325,7 +313,7 @@ INTERN DeeTypeObject DeeStat_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ stat_methods,
+	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ stat_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ stat_class_methods,

@@ -296,10 +296,10 @@ print "#define R_OK     4";
 print "#endif /" "*",msvc,"*" "/";
 print;
 
-func("access", "(defined(CONFIG_HAVE_UNISTD_H) || !" + addparen(msvc) + ") && defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)");
 func("euidaccess", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)");
 func("eaccess", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)");
 func("faccessat", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)");
+func("access", "(defined(CONFIG_HAVE_UNISTD_H) || !" + addparen(msvc) + ") && defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)");
 func("_access", msvc);
 func("_waccess", "defined(_WIO_DEFINED)");
 
@@ -1617,15 +1617,6 @@ var("_doserrno", msvc);
 #define R_OK     4
 #endif /* defined(_MSC_VER) */
 
-#ifdef CONFIG_NO_access
-#undef CONFIG_HAVE_access
-#elif !defined(CONFIG_HAVE_access) && \
-      (defined(access) || defined(__access_defined) || ((defined(CONFIG_HAVE_UNISTD_H) || \
-       !defined(_MSC_VER)) && defined(F_OK) && defined(X_OK) && defined(W_OK) && \
-       defined(R_OK)))
-#define CONFIG_HAVE_access 1
-#endif
-
 #ifdef CONFIG_NO_euidaccess
 #undef CONFIG_HAVE_euidaccess
 #elif !defined(CONFIG_HAVE_euidaccess) && \
@@ -1648,6 +1639,15 @@ var("_doserrno", msvc);
       (defined(faccessat) || defined(__faccessat_defined) || (defined(F_OK) && \
        defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)))
 #define CONFIG_HAVE_faccessat 1
+#endif
+
+#ifdef CONFIG_NO_access
+#undef CONFIG_HAVE_access
+#elif !defined(CONFIG_HAVE_access) && \
+      (defined(access) || defined(__access_defined) || ((defined(CONFIG_HAVE_UNISTD_H) || \
+       !defined(_MSC_VER)) && defined(F_OK) && defined(X_OK) && defined(W_OK) && \
+       defined(R_OK)))
+#define CONFIG_HAVE_access 1
 #endif
 
 #ifdef CONFIG_NO__access
@@ -3212,6 +3212,16 @@ var("_doserrno", msvc);
 #define MAP_ANON MAP_ANONYMOUS
 #endif /* MAP_ANON = MAP_ANONYMOUS */
 
+#ifndef CONFIG_HAVE_environ
+#ifdef CONFIG_HAVE__environ
+#define CONFIG_HAVE_environ 1
+#define environ    _environ
+#elif defined(CONFIG_HAVE___environ)
+#define CONFIG_HAVE_environ 1
+#define environ   __environ
+#endif /* environ = __environ */
+#endif /* !CONFIG_HAVE_environ*/
+
 
 
 /* Configure O_* flags for `open()' */
@@ -3735,6 +3745,16 @@ var("_doserrno", msvc);
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 #endif /* _MSC_VER */
+
+#ifndef EOK
+#ifdef ENOERR
+#define EOK ENOERR
+#elif defined(ENOERROR)
+#define EOK ENOERROR
+#else
+#define EOK 0
+#endif
+#endif
 
 #ifdef CONFIG_HAVE_ERRNO_H
 #define CONFIG_HAVE_errno 1

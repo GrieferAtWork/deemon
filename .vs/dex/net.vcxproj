@@ -73,6 +73,7 @@
     <ClCompile Include="..\..\src\dex\net\socket.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\dex\net\_res.h" />
     <ClInclude Include="..\..\src\dex\net\libnet.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

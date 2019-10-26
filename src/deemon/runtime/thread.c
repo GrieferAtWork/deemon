@@ -3447,7 +3447,7 @@ PRIVATE struct type_getset thread_getsets[] = {
 	{ "isrunning",
 	  &thread_isrunning, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this thread is current running (i.e. #wasstarted, but hasn't #hasterminated)") },
+	      "Returns :true if @this thread is current running (i.e. #hasstarted, but hasn't #hasterminated)") },
 	{ "hasstarted",
 	  &thread_hasstarted, NULL, NULL,
 	  DOC("->?Dbool\n"

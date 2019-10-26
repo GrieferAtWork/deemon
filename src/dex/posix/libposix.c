@@ -1735,12 +1735,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 libposix_errno_get_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":errno.getter"))
 		goto err;
-#ifdef CONFIG_HAVE_ERRNO_H
+#ifdef CONFIG_HAVE_errno
 	return DeeInt_NewInt(DeeSystem_GetErrno());
-#else /* CONFIG_HAVE_ERRNO_H */
+#else /* CONFIG_HAVE_errno */
 #define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("errno");
-#endif /* !CONFIG_HAVE_ERRNO_H */
+#endif /* !CONFIG_HAVE_errno */
 err:
 	return NULL;
 }
@@ -1749,13 +1749,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 libposix_errno_del_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":errno.delete"))
 		goto err;
-#ifdef CONFIG_HAVE_ERRNO_H
-	DeeSystem_SetErrno(0);
+#ifdef CONFIG_HAVE_errno
+	DeeSystem_SetErrno(EOK);
 	return_none;
-#else /* CONFIG_HAVE_ERRNO_H */
+#else /* CONFIG_HAVE_errno */
 #define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("errno");
-#endif /* !CONFIG_HAVE_ERRNO_H */
+#endif /* !CONFIG_HAVE_errno */
 err:
 	return NULL;
 }
@@ -1765,13 +1765,13 @@ libposix_errno_set_f(size_t argc, DeeObject **argv) {
 	int value;
 	if (DeeArg_Unpack(argc, argv, "d:errno.setter", &value))
 		goto err;
-#ifdef CONFIG_HAVE_ERRNO_H
+#ifdef CONFIG_HAVE_errno
 	DeeSystem_SetErrno(value);
 	return_none;
-#else /* CONFIG_HAVE_ERRNO_H */
+#else /* CONFIG_HAVE_errno */
 #define NEED_ERR_UNSUPPORTED 1
 	err_unsupported("errno");
-#endif /* !CONFIG_HAVE_ERRNO_H */
+#endif /* !CONFIG_HAVE_errno */
 err:
 	return NULL;
 }
@@ -1779,6 +1779,73 @@ err:
 PRIVATE DEFINE_CMETHOD(libposix_errno_get, &libposix_errno_get_f);
 PRIVATE DEFINE_CMETHOD(libposix_errno_del, &libposix_errno_del_f);
 PRIVATE DEFINE_CMETHOD(libposix_errno_set, &libposix_errno_set_f);
+
+/* Figure out how to implement `libposix_strerror()' */
+#undef libposix_strerror_USE_STRERROR_S
+#undef libposix_strerror_USE_SYS_ERRLIST
+#undef libposix_strerror_USE_STRERROR
+#undef libposix_strerror_USE_STUB
+#if !defined(CONFIG_HAVE_errno)
+#define libposix_strerror_USE_STUB 1
+#elif defined(CONFIG_HAVE_strerror_s)
+#define libposix_strerror_USE_STRERROR_S 1
+#elif defined(CONFIG_HAVE__sys_errlist) && defined(CONFIG_HAVE__sys_nerr)
+#define libposix_strerror_USE_SYS_ERRLIST 1
+#elif defined(CONFIG_HAVE_strerror)
+#define libposix_strerror_USE_STRERROR 1
+#else
+#define libposix_strerror_USE_STUB 1
+#endif
+
+
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_strerror_f_impl(int errnum);
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_strerror_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBPOSIX_STRERROR_DEF { "strerror", (DeeObject *)&libposix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?DString") },
+#define LIBPOSIX_STRERROR_DEF_DOC(doc) { "strerror", (DeeObject *)&libposix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?DString\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libposix_strerror, libposix_strerror_f);
+#ifndef LIBPOSIX_KWDS_ERRNUM_DEFINED
+#define LIBPOSIX_KWDS_ERRNUM_DEFINED 1
+PRIVATE DEFINE_KWLIST(libposix_kwds_errnum, { K(errnum), KEND });
+#endif /* !LIBPOSIX_KWDS_ERRNUM_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libposix_strerror_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	int errnum = DeeSystem_GetErrno();
+	if (DeeArg_UnpackKw(argc, argv, kw, libposix_kwds_errnum, "|d:strerror", &errnum))
+	    goto err;
+	return libposix_strerror_f_impl(errnum);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libposix_strerror_f_impl(int errnum) {
+#ifdef libposix_strerror_USE_STRERROR_S
+	{
+		char const *text;
+		text = strerror_s(errnum);
+		if (text)
+			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
+	}
+#endif /* libposix_strerror_USE_STRERROR_S */
+
+#ifdef libposix_strerror_USE_SYS_ERRLIST
+	if (errnum >= 0 && errnum < _sys_nerr) {
+		char const *text;
+		text = (char const *)_sys_errlist[errnum];
+		if (text)
+			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
+	}
+#endif /* libposix_strerror_USE_SYS_ERRLIST */
+
+#ifdef libposix_strerror_USE_STRERROR
+	{
+		char *text;
+		text = strerror(errnum);
+		if (text)
+			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
+	}
+#endif /* libposix_strerror_USE_STRERROR */
+
+	return_none;
+}
+
 
 
 /*[[[deemon import("_dexutils").gw("atexit","callback:?DCallable,args:?DTuple=Dee_EmptyTuple"); ]]]*/
@@ -3781,7 +3848,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Read/write the C errno thread-local variable") },
 	{ NULL, (DeeObject *)&libposix_errno_del, MODSYM_FNORMAL },
 	{ NULL, (DeeObject *)&libposix_errno_set, MODSYM_FNORMAL },
-	/* TODO: strerror() */
+	LIBPOSIX_STRERROR_DEF_DOC("Return the name of a given @errnum (which defaults to #errno), "
+	                          "or return :none if the error doesn't have an associated name")
 
 	{ NULL }
 };

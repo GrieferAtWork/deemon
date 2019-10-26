@@ -131,7 +131,34 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
                        /*HANDLE*/ void *hTemplateFile);
 
 /* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hHandle);
+DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hHandle);
+
+/* Wrapper for the `FormatMessageW()' system call.
+ * @return: * :        The formatted message.
+ * @return: NULL:      A deemon callback failed and an error was thrown.
+ * @return: ITER_DONE: The system call failed (See GetLastError()). */
+DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
+                          DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
+                          /* va_list * */ void *Arguments);
+
+/* @return: 1:  The system call failed (See GetLastError())
+ * @return: 0:  Successfully printed the message.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+DFUNDEF WUNUSED int DCALL
+DeeNTSystem_PrintFormatMessage(struct Dee_unicode_printer *__restrict printer,
+                               DeeNT_DWORD dwFlags, void const *lpSource,
+                               DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
+                               /* va_list * */ void *Arguments);
+
+/* Convenience wrapper around `DeeNTSystem_FormatMessage()' for getting error message.
+ * When no error message exists, return an empty string.
+ * @return: * :   The error message. (or an empty string)
+ * @return: NULL: A deemon callback failed and an error was thrown. */
+DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeNTSystem_FormatErrorMessage(DeeNT_DWORD dwError);
+
 
 /* Throw NT system errors, given an error code as returned by `GetLastError()'
  * When no error code is given, `GetLastError()' is called internally.
@@ -191,6 +218,14 @@ DFUNDEF WUNUSED void *DCALL DeeSystem_DlOpenString(/*utf-8*/ char const *filenam
 /* Lookup a symbol within a given shared library
  * Returns `NULL' if the symbol could not be found */
 DFUNDEF WUNUSED void *DCALL DeeSystem_DlSym(void *handle, char const *symbol_name);
+
+/* Try to get a human-readable description on what went wrong during a call
+ * to `DeeSystem_DlOpen[String]()' that caused `DEESYSTEM_DLOPEN_FAILED' to
+ * be returned, or `DeeSystem_DlSym()' to have caused `NULL' to be returned.
+ * @return: * :        The human-readable error description
+ * @return: NULL:      A deemon callback failed and an error was thrown.
+ * @return: ITER_DONE: No description is available. */
+DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void);
 
 /* Close a given shared library */
 DFUNDEF void DCALL DeeSystem_DlClose(void *handle);

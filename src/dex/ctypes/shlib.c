@@ -41,40 +41,18 @@
 
 #include <string.h>
 
-#ifndef CONFIG_NO_SHLIB
-#if defined(CONFIG_HOST_WINDOWS) && !defined(__CYGWIN__)
-#define USE_LOADLIBRARY 1
-#include <Windows.h>
-#elif !defined(CONFIG_NO_DLFCN) && \
-      (defined(CONFIG_HOST_UNIX) || defined(CONFIG_HAVE_DLFCN))
-#define USE_DLFCN 1
-#include <dlfcn.h>
-#include <errno.h>
-#else
-#define CONFIG_NO_SHLIB 1
-#endif
-#endif /* !CONFIG_NO_SHLIB */
-
-
 DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-#ifdef USE_LOADLIBRARY
-	HMODULE              sh_lib;     /* [1..1] Shared library handle. */
-#elif defined(USE_DLFCN)
 	void                *sh_lib;     /* [1..1] Shared library handle. */
-#endif
-#ifndef CONFIG_NO_SHLIB
 #ifndef CONFIG_NO_CFUNCTION
 	DREF DeeSTypeObject *sh_vfunptr; /* [0..1][lock(WRITE_ONCE)] void-function pointer type. */
-	ctypes_cc_t                 sh_defcc;   /* [const] Default calling convention. */
+	ctypes_cc_t          sh_defcc;   /* [const] Default calling convention. */
 #endif /* !CONFIG_NO_CFUNCTION */
-#endif /* !CONFIG_NO_SHLIB */
 } Shlib;
 
 
-#ifndef CONFIG_NO_SHLIB
 PRIVATE int DCALL
 shlib_init(Shlib *__restrict self, size_t argc,
            DREF DeeObject **argv) {
@@ -100,54 +78,31 @@ shlib_init(Shlib *__restrict self, size_t argc,
 #endif /* !CONFIG_NO_CFUNCTION */
 	}
 
-#ifdef USE_LOADLIBRARY
-	{
-		LPWSTR wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
-		if unlikely(!wname)
+	self->sh_lib = DeeSystem_DlOpen((DeeObject *)name);
+	if unlikely(!self->sh_lib)
+		goto err;
+	if unlikely(self->sh_lib == DEESYSTEM_DLOPEN_FAILED) {
+#ifdef DeeSystem_DlOpen_USE_STUB
+#define DLOPEN_ERROR_TYPE  &DeeError_UnsupportedAPI
+#else /* DeeSystem_DlOpen_USE_STUB */
+#define DLOPEN_ERROR_TYPE  &DeeError_SystemError
+#endif /* !DeeSystem_DlOpen_USE_STUB */
+		DREF DeeStringObject *message;
+		message = (DREF DeeStringObject *)DeeSystem_DlError();
+		if unlikely(!message)
 			goto err;
-		self->sh_lib = LoadLibraryW(wname);
-		if (!self->sh_lib && DeeNTSystem_IsUncError(GetLastError())) {
-			name = (DeeStringObject *)DeeNTSystem_FixUncPath((DeeObject *)name);
-			if unlikely(!name)
-				goto err;
-			wname = (LPWSTR)DeeString_AsWide((DeeObject *)name);
-			if unlikely(!wname) {
-				Dee_Decref(name);
-				goto err;
-			}
-			self->sh_lib = LoadLibraryW(wname);
-			Dee_Decref(name);
-			if unlikely(!self->sh_lib) {
-				DWORD error = GetLastError();
-				if (DeeNTSystem_IsFileNotFoundError(error)) {
-					DeeError_SysThrowf(&DeeError_FileNotFound, error,
-					                   "Shared library %r could not be found",
-					                   name);
-				} else {
-					DeeError_SysThrowf(&DeeError_SystemError, error,
-					                   "Failed to open shared library %r",
-					                   name);
-				}
-				goto err;
-			}
+		if (message == (DREF DeeStringObject *)ITER_DONE) {
+			DeeError_Throwf(DLOPEN_ERROR_TYPE,
+			                "Failed to open shared library %r (%r)",
+			                name, message);
+		} else {
+			DeeError_Throwf(DLOPEN_ERROR_TYPE,
+			                "Failed to open shared library %r",
+			                name);
 		}
-	}
-#elif defined(USE_DLFCN)
-	self->sh_lib = dlopen(DeeString_STR(name),
-	                      RTLD_LOCAL |
-#ifdef RTLD_LAZY
-	                      RTLD_LAZY
-#else /* RTLD_LAZY */
-	                      RTLD_NOW
-#endif /* !RTLD_LAZY */
-	                      );
-	if (!self->sh_lib) {
-		DeeError_SysThrowf(&DeeError_SystemError, errno,
-		                   "Failed to open shared library %r",
-		                   name);
+		Dee_Decref(message);
 		goto err;
 	}
-#endif
 	return 0;
 err:
 	return -1;
@@ -158,50 +113,15 @@ shlib_fini(Shlib *__restrict self) {
 #ifndef CONFIG_NO_CFUNCTION
 	Dee_XDecref((DeeObject *)self->sh_vfunptr);
 #endif /* !CONFIG_NO_CFUNCTION */
-#ifdef USE_LOADLIBRARY
-	FreeLibrary(self->sh_lib);
-#elif defined(USE_DLFCN)
-	dlclose(self->sh_lib);
-#endif
+	DeeSystem_DlClose(self->sh_lib);
 }
+
 #ifndef CONFIG_NO_CFUNCTION
 PRIVATE NONNULL((1, 2)) void DCALL
 shlib_visit(Shlib *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit((DeeObject *)self->sh_vfunptr);
 }
 #endif /* !CONFIG_NO_CFUNCTION */
-
-#ifdef _WIN32_WCE
-#undef  GetProcAddress
-#define GetProcAddress GetProcAddressA
-#endif /* _WIN32_WCE */
-
-PRIVATE void *DCALL
-shlib_dlsym(Shlib *__restrict self,
-            char const *__restrict name) {
-#ifdef USE_LOADLIBRARY
-	void *result;
-	*(FARPROC *)&result = GetProcAddress(self->sh_lib, name);
-	return result;
-#elif defined(USE_DLFCN)
-	void *result = dlsym(self->sh_lib, name);
-#if defined(__i386__) || defined(__x86_64__) || 1
-	if (!result) {
-		size_t name_len = strlen(name);
-		char *name_copy = (char *)Dee_ATryMalloc((name_len + 2) * sizeof(char));
-		if unlikely(!name_copy)
-			goto done;
-		memcpy(name_copy + 1, name, (name_len + 1) * sizeof(char));
-		name_copy[0] = '_';
-		/* Lookup after inserting a leading underscore. */
-		result = dlsym(self->sh_lib, name_copy);
-		Dee_AFree(name_copy);
-	}
-done:
-#endif /* __i386__ || __x86_64__ */
-	return result;
-#endif
-}
 
 
 #ifndef CONFIG_NO_THREADS
@@ -247,17 +167,26 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-shlib_getitem(Shlib *self,
-              DeeObject *name) {
+shlib_getitem(Shlib *self, DeeObject *name) {
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
 	void *symaddr;
+	char const *utf8_name;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	symaddr = shlib_dlsym(self, DeeString_STR(name));
+	utf8_name = DeeString_AsUtf8(name);
+	if unlikely(!utf8_name)
+		goto err;
+	symaddr = DeeSystem_DlSym(self->sh_lib, utf8_name);
 	if unlikely(!symaddr) {
+		DREF DeeObject *message;
+		message = DeeSystem_DlError();
+		if unlikely(!message)
+			goto err;
 		DeeError_Throwf(&DeeError_KeyError,
-		                "No export named %r", name);
+		                "No export named %r (%r)",
+		                name, message);
+		Dee_Decref(message);
 		goto err;
 	}
 	result_type = get_void_pointer();
@@ -279,9 +208,13 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 shlib_contains(Shlib *self,
                DeeObject *name) {
 	void *symaddr;
+	char const *utf8_name;
 	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
-	symaddr = shlib_dlsym(self, DeeString_STR(name));
+	utf8_name = DeeString_AsUtf8(name);
+	if unlikely(!utf8_name)
+		goto err;
+	symaddr = DeeSystem_DlSym(self->sh_lib, utf8_name);
 	return_bool_(symaddr != NULL);
 err:
 	return NULL;
@@ -293,10 +226,21 @@ shlib_getattr(Shlib *self,
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
 	void *symaddr;
-	symaddr = shlib_dlsym(self, DeeString_STR(name));
+	char const *utf8_name;
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	utf8_name = DeeString_AsUtf8(name);
+	if unlikely(!utf8_name)
+		goto err;
+	symaddr = DeeSystem_DlSym(self->sh_lib, utf8_name);
 	if unlikely(!symaddr) {
-		DeeError_Throwf(&DeeError_AttributeError,
-		                "No export named %r", name);
+		DREF DeeObject *message;
+		message = DeeSystem_DlError();
+		if unlikely(!message)
+			goto err;
+		DeeError_Throwf(&DeeError_KeyError,
+		                "No export named %r (%r)",
+		                name, message);
+		Dee_Decref(message);
 		goto err;
 	}
 #ifdef CONFIG_NO_CFUNCTION
@@ -378,28 +322,6 @@ err:
 	return NULL;
 }
 
-#else /* !CONFIG_NO_SHLIB */
-
-PRIVATE void DCALL err_shlib_unsupported(void) {
-	DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                "Shared libraries are not supported by the host");
-}
-
-INTERN bool DCALL clear_void_pointer(void) {
-	return false;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-shlib_base(Shlib *self, size_t argc,
-           DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":base"))
-		goto err;
-	err_shlib_unsupported();
-err:
-	return NULL;
-}
-
-#endif /* CONFIG_NO_SHLIB */
 
 
 PRIVATE struct type_method shlib_methods[] = {
@@ -422,22 +344,14 @@ INTERN DeeTypeObject DeeShlib_Type = {
 				/* .tp_ctor      = */ NULL,
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
-#ifndef CONFIG_NO_SHLIB
 				/* .tp_any_ctor  = */ (void *)&shlib_init,
-#else /* !CONFIG_NO_SHLIB */
-				/* .tp_any_ctor  = */ NULL,
-#endif /* CONFIG_NO_SHLIB */
 				/* .tp_free      = */ NULL,
 				{
 					/* ..tp_alloc.tp_instance_size = */sizeof(Shlib)
 				}
 			}
 		},
-#ifndef CONFIG_NO_SHLIB
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&shlib_fini,
-#else /* !CONFIG_NO_SHLIB */
-		/* .tp_dtor        = */ NULL,
-#endif /* CONFIG_NO_SHLIB */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -447,25 +361,17 @@ INTERN DeeTypeObject DeeShlib_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-#if !defined(CONFIG_NO_SHLIB) && !defined(CONFIG_NO_CFUNCTION)
+#ifndef CONFIG_NO_CFUNCTION
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&shlib_visit,
-#else /* !CONFIG_NO_SHLIB && !CONFIG_NO_CFUNCTION */
+#else /* !CONFIG_NO_CFUNCTION */
 	/* .tp_visit         = */ NULL,
-#endif /* CONFIG_NO_SHLIB || CONFIG_NO_CFUNCTION */
+#endif /* CONFIG_NO_CFUNCTION */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
-#ifndef CONFIG_NO_SHLIB
 	/* .tp_seq           = */ &shlib_seq,
-#else /* !CONFIG_NO_SHLIB */
-	/* .tp_seq           = */ NULL,
-#endif /* CONFIG_NO_SHLIB */
 	/* .tp_iter_next     = */ NULL,
-#ifndef CONFIG_NO_SHLIB
 	/* .tp_attr          = */ &shlib_attr,
-#else /* !CONFIG_NO_SHLIB */
-	/* .tp_attr          = */ NULL,
-#endif /* CONFIG_NO_SHLIB */
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ shlib_methods,

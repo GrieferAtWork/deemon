@@ -50,7 +50,7 @@
 #include <tlhelp32.h>
 #include <wchar.h>
 
-#include "strings.h"
+#include "_res.h"
 
 DECL_BEGIN
 
@@ -2131,14 +2131,14 @@ PRIVATE struct type_getset process_getsets[] = {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_class_self(DeeObject *UNUSED(self),
                    size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_self_name))
+	if (DeeArg_Unpack(argc, argv, ":" S_Process_class_function_self_name))
 		return NULL;
 	return_reference_((DeeObject *)&this_process);
 }
 
 PRIVATE struct type_method process_class_methods[] = {
-	{ S_Process_function_self_name, &process_class_self,
-	  DOC(S_Process_function_self_doc) },
+	{ S_Process_class_function_self_name, &process_class_self,
+	  DOC(S_Process_class_function_self_doc) },
 	{ NULL }
 };
 
