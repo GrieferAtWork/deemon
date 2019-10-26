@@ -27,36 +27,36 @@ DECL_BEGIN
 
 
 /* Figure out how to implement `pipe()' */
-#undef p_pipe_USE_PIPE
-#undef p_pipe_USE_CREATEPIPE
-#undef p_pipe_USE_STUB
+#undef posix_pipe_USE_PIPE
+#undef posix_pipe_USE_CREATEPIPE
+#undef posix_pipe_USE_STUB
 #if defined(CONFIG_HAVE_pipe) || defined(CONFIG_HAVE_pipe2)
-#define p_pipe_USE_PIPE 1
+#define posix_pipe_USE_PIPE 1
 #elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
-#define p_pipe_USE_CREATEPIPE 1
+#define posix_pipe_USE_CREATEPIPE 1
 #else
-#define p_pipe_USE_STUB 1
+#define posix_pipe_USE_STUB 1
 #endif
 
 
 /* Figure out how to implement `pipe2()' */
-#undef p_pipe2_USE_PIPE2
-#undef p_pipe2_USE_PIPE_FCNTL
-#undef p_pipe2_USE_CREATEPIPE
-#undef p_pipe2_USE_PIPE
-#undef p_pipe2_USE_STUB
+#undef posix_pipe2_USE_PIPE2
+#undef posix_pipe2_USE_PIPE_FCNTL
+#undef posix_pipe2_USE_CREATEPIPE
+#undef posix_pipe2_USE_PIPE
+#undef posix_pipe2_USE_STUB
 #if defined(CONFIG_HAVE_pipe2)
-#define p_pipe2_USE_PIPE2 1
-#elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(p_pipe_USE_STUB)
-#define p_pipe2_USE_PIPE 1
-#elif (defined(CONFIG_HAVE_pipe) && defined(CONFIG_HAVE_fcntl) && \
-     (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
-     (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL)))
-#define p_pipe2_USE_PIPE_FCNTL 1
+#define posix_pipe2_USE_PIPE2 1
+#elif !defined(CONFIG_HAVE_O_CLOEXEC) && !defined(O_NONBLOCK) && !defined(posix_pipe_USE_STUB)
+#define posix_pipe2_USE_PIPE 1
+#elif defined(CONFIG_HAVE_pipe) && defined(CONFIG_HAVE_fcntl) && \
+    (!defined(CONFIG_HAVE_O_CLOEXEC) || (defined(CONFIG_HAVE_F_SETFD) && defined(CONFIG_HAVE_FD_CLOEXEC))) && \
+    (!defined(CONFIG_HAVE_O_NONBLOCK) || defined(CONFIG_HAVE_F_SETFL))
+#define posix_pipe2_USE_PIPE_FCNTL 1
 #elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
-#define p_pipe2_USE_CREATEPIPE 1
+#define posix_pipe2_USE_CREATEPIPE 1
 #else
-#define p_pipe2_USE_STUB 1
+#define posix_pipe2_USE_STUB 1
 #endif
 
 
@@ -82,7 +82,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe_f_impl(void)
 //[[[end]]]
 {
-#ifdef p_pipe_USE_PIPE
+#ifdef posix_pipe_USE_PIPE
 	DREF DeeObject *result;
 	int error;
 	int fds[2];
@@ -114,9 +114,9 @@ err_fds:
 	DBG_ALIGNMENT_ENABLE();
 err:
 	return NULL;
-#endif /* p_pipe_USE_PIPE */
+#endif /* posix_pipe_USE_PIPE */
 
-#ifdef p_pipe_USE_CREATEPIPE
+#ifdef posix_pipe_USE_CREATEPIPE
 	DREF DeeObject *result;
 	HANDLE hRead, hWrite;
 	int fds[2];
@@ -173,13 +173,13 @@ err_hWrite:
 	DBG_ALIGNMENT_ENABLE();
 err:
 	return NULL;
-#endif /* p_pipe_USE_CREATEPIPE */
+#endif /* posix_pipe_USE_CREATEPIPE */
 
-#ifdef p_pipe_USE_STUB
+#ifdef posix_pipe_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	posix_err_unsupported("pipe");
 	return NULL;
-#endif /* p_pipe_USE_STUB */
+#endif /* posix_pipe_USE_STUB */
 }
 
 
@@ -211,20 +211,20 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_pipe2_f_impl(int oflags)
 //[[[end]]]
 {
-#if defined(p_pipe2_USE_PIPE2) || defined(p_pipe2_USE_PIPE_FCNTL)
+#if defined(posix_pipe2_USE_PIPE2) || defined(posix_pipe2_USE_PIPE_FCNTL)
 	DREF DeeObject *result;
 	int error;
 	int fds[2];
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 
-#ifdef p_pipe2_USE_PIPE2
+#ifdef posix_pipe2_USE_PIPE2
 	error = pipe2(fds, oflags);
 	if unlikely(error < 0)
 		goto handle_system_error;
-#endif /* p_pipe2_USE_PIPE2 */
+#endif /* posix_pipe2_USE_PIPE2 */
 
-#ifdef p_pipe2_USE_PIPE_FCNTL
+#ifdef posix_pipe2_USE_PIPE_FCNTL
 	/* Validate the given `oflags' */
 #if defined(CONFIG_HAVE_O_NONBLOCK) && defined(CONFIG_HAVE_O_CLOEXEC)
 	if (oflags & ~(O_CLOEXEC | O_NONBLOCK))
@@ -264,7 +264,7 @@ EINTR_LABEL(again)
 			goto handle_system_error_fds;
 	}
 #endif /* CONFIG_HAVE_O_NONBLOCK */
-#endif /* p_pipe2_USE_PIPE_FCNTL */
+#endif /* posix_pipe2_USE_PIPE_FCNTL */
 
 	DBG_ALIGNMENT_ENABLE();
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
@@ -278,7 +278,7 @@ EINTR_LABEL(again)
 #endif /* CONFIG_HAVE_close */
 	return result;
 
-#ifdef p_pipe2_USE_PIPE_FCNTL
+#ifdef posix_pipe2_USE_PIPE_FCNTL
 handle_system_error_fds:
 #ifdef CONFIG_HAVE_close
 	DBG_ALIGNMENT_DISABLE();
@@ -288,7 +288,7 @@ handle_system_error_fds:
 	DBG_ALIGNMENT_ENABLE();
 	DeeSystem_SetErrno(error);
 #endif /* CONFIG_HAVE_close */
-#endif /* p_pipe2_USE_PIPE_FCNTL */
+#endif /* posix_pipe2_USE_PIPE_FCNTL */
 handle_system_error:
 	error = DeeSystem_GetErrno();
 	HANDLE_EINTR(error, again, err)
@@ -298,9 +298,9 @@ handle_system_error:
 	                   "Failed to create pipe");
 err:
 	return NULL;
-#endif /* p_pipe2_USE_PIPE2 || p_pipe2_USE_PIPE_FCNTL */
+#endif /* posix_pipe2_USE_PIPE2 || posix_pipe2_USE_PIPE_FCNTL */
 
-#ifdef p_pipe2_USE_CREATEPIPE
+#ifdef posix_pipe2_USE_CREATEPIPE
 	DREF DeeObject *result;
 	HANDLE hRead, hWrite;
 	int fds[2];
@@ -366,19 +366,24 @@ err_hWrite:
 	DBG_ALIGNMENT_ENABLE();
 err:
 	return NULL;
-#endif /* p_pipe2_USE_CREATEPIPE */
+#endif /* posix_pipe2_USE_CREATEPIPE */
 
-#ifdef p_pipe2_USE_PIPE
-	(void)oflags;
+#ifdef posix_pipe2_USE_PIPE
+	if unlikely(oflags != 0) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Invalid oflags for pipe2 %#x",
+		                oflags);
+		return NULL;
+	}
 	return posix_pipe_f_impl();
-#endif /* p_pipe2_USE_PIPE */
+#endif /* posix_pipe2_USE_PIPE */
 
-#ifdef p_pipe2_USE_STUB
+#ifdef posix_pipe2_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)oflags;
 	posix_err_unsupported("pipe2");
 	return NULL;
-#endif /* p_pipe2_USE_STUB */
+#endif /* posix_pipe2_USE_STUB */
 }
 
 
