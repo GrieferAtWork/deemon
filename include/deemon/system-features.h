@@ -651,6 +651,7 @@ func("get_osfhandle", "defined(__CYGWIN__) || defined(__CYGWIN32__)");
 func("_open_osfhandle", msvc);
 var("errno", "defined(CONFIG_HAVE_ERRNO_H)");
 var("_doserrno", msvc);
+var("doserrno");
 
 
 // NOTE: Other config features used in deemon source files:
@@ -4042,6 +4043,13 @@ var("_doserrno", msvc);
       (defined(_doserrno) || defined(___doserrno_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__doserrno 1
 #endif
+
+#ifdef CONFIG_NO_doserrno
+#undef CONFIG_HAVE_doserrno
+#elif !defined(CONFIG_HAVE_doserrno) && \
+      (defined(doserrno) || defined(__doserrno_defined))
+#define CONFIG_HAVE_doserrno 1
+#endif
 //[[[end]]]
 
 
@@ -5099,6 +5107,11 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE_pause 1
 #define pause() select(0, NULL, NULL, NULL, NULL)
 #endif /* pause = select */
+
+#if !defined(CONFIG_HAVE_doserrno) && defined(CONFIG_HAVE__doserrno)
+#define CONFIG_HAVE_doserrno 1
+#define doserrno _doserrno
+#endif /* doserrno = _doserrno */
 
 
 #if defined(_MSC_VER) || defined(__USE_DOS)

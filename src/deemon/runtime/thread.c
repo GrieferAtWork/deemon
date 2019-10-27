@@ -98,6 +98,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
+#include <deemon/system-error.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -1223,6 +1224,7 @@ PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(
 	if likely(result)
 		return result;
 	/* Lazily create the thread-self descriptor. */
+	DeeSystemError_Push();
 	result = allocate_thread_self();
 	if unlikely(!result) {
 #if defined(CONFIG_HAVE_fprintf) && defined(CONFIG_HAVE_stderr)
@@ -1242,6 +1244,7 @@ PUBLIC WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self(
 	DBG_ALIGNMENT_ENABLE();
 	add_running_thread(result);
 	sys_threadstartup(result);
+	DeeSystemError_Pop();
 	return result;
 }
 
@@ -1297,9 +1300,10 @@ INTERN WUNUSED NONNULL((1)) int
 	struct thread_interrupt *next;
 	/* Check: Is there an interrupt present for our thread, or are interrupt disabled? */
 	if ((self->t_state & (THREAD_STATE_INTERRUPTING | THREAD_STATE_INTERRUPTED)) == 0)
-		return 0;
+		goto done_nopop;
 	if ((self->t_state & THREAD_STATE_NOINTERRUPT))
-		return 0;
+		goto done_nopop;
+	DeeSystemError_Push();
 	for (;;) {
 		COMPILER_READ_BARRIER();
 		if (self->t_state & THREAD_STATE_INTERRUPTED)
@@ -1307,7 +1311,7 @@ INTERN WUNUSED NONNULL((1)) int
 		/* The interrupting-flag may get unset if construction is aborted
 		 * for some reason by the other end (e.g. allocation failure) */
 		if (!(self->t_state & THREAD_STATE_INTERRUPTING))
-			return 0;
+			goto done;
 		/* Assume that the interrupt object is currently being constructed,
 		 * meaning the best thing we can do is to switch threads and let it
 		 * continue being created. */
@@ -1316,8 +1320,9 @@ INTERN WUNUSED NONNULL((1)) int
 next_interrupt:
 	/* Atomically set the interrupting-flag to start processing the signal. */
 	while (ATOMIC_FETCHOR(self->t_state, THREAD_STATE_INTERRUPTING) &
-	       THREAD_STATE_INTERRUPTING)
+	       THREAD_STATE_INTERRUPTING) {
 		SCHED_YIELD();
+	}
 	/* Pop one interrupt descriptor. */
 	interrupt_main = self->t_interrupt.ti_intr; /* Inherit */
 	interrupt_args = self->t_interrupt.ti_args; /* Inherit */
@@ -1361,7 +1366,7 @@ next_interrupt:
 		if (!callback_result)
 			goto err;
 		Dee_Decref(callback_result);
-		return 0;
+		goto done;
 	}
 	if (interrupt_main) {
 throw_main:
@@ -1369,6 +1374,7 @@ throw_main:
 		DeeError_Throw(interrupt_main);
 		Dee_Decref(interrupt_main);
 err:
+		DeeSystemError_Break();
 		return -1;
 	}
 #ifndef CONFIG_NO_KEYBOARD_INTERRUPT
@@ -1380,7 +1386,7 @@ err:
 		/* try to consume one keyboard interrupt. */
 		do {
 			if ((count = ATOMIC_READ(keyboard_interrupt_counter)) == 0)
-				return 0;
+				goto done;
 		} while (!ATOMIC_CMPXCH_WEAK(keyboard_interrupt_counter, count, count - 1));
 		keyboard_interrupt = DeeObject_MALLOC(DeeSignalObject);
 		if unlikely(!keyboard_interrupt)
@@ -1391,6 +1397,9 @@ err:
 		goto err;
 	}
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
+done:
+	DeeSystemError_Pop();
+done_nopop:
 	return 0;
 }
 
@@ -1699,6 +1708,7 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 #ifndef CONFIG_THREADS_PTHREAD
 #ifdef CONFIG_HOST_WINDOWS
 	DBG_ALIGNMENT_DISABLE();
+	DeeSystemError_Push();
 	QueueUserAPC(&dummy_apc_func, me->t_thread, 0);
 	/* Also try to interrupt synchronous I/O, meaning calls like `ReadFile()'.
 	 * Sadly, we must manually check if that functionality is even available... */
@@ -1713,6 +1723,7 @@ DeeThread_Wake(/*Thread*/ DeeObject *__restrict self) {
 		if (ptr != (void *)ITER_DONE)
 			(*ptr)(me->t_thread);
 	}
+	DeeSystemError_Pop();
 	DBG_ALIGNMENT_ENABLE();
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !CONFIG_THREADS_PTHREAD */

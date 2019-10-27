@@ -1184,6 +1184,9 @@
     <None Include="..\src\deemon\system\system-unix.c.inl">
       <Filter>src\deemon\system</Filter>
     </None>
+    <None Include="..\include\deemon\system-error.h">
+      <Filter>include\deemon</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">
