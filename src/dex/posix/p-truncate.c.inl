@@ -179,23 +179,29 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char co
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #if defined(p_truncate_USE_WTRUNCATE64)
+#define TRUNCATE_PRINTF_FILENAME "%lq"
 	result = wtruncate64(filename, len);
 #elif defined(p_truncate_USE_WTRUNCATE)
+#define TRUNCATE_PRINTF_FILENAME "%lq"
 	result = wtruncate(filename, len);
 #elif defined(p_truncate_USE_TRUNCATE64)
+#define TRUNCATE_PRINTF_FILENAME "%q"
 	result = truncate64(filename, len);
 #elif defined(p_truncate_USE_TRUNCATE)
+#define TRUNCATE_PRINTF_FILENAME "%q"
 	result = truncate(filename, len);
 #else /* Single-call */
 	{
 #if defined(p_truncate_USE_WOPEN_FTRUNCATE) || \
     defined(p_truncate_USE_WOPEN_FTRUNCATE64)
+#define TRUNCATE_PRINTF_FILENAME "%lq"
 #ifdef CONFIG_HAVE_wopen64
 		int fd = wopen64(filename, O_RDWR);
 #else /* CONFIG_HAVE_wopen64 */
 		int fd = wopen(filename, O_RDWR);
 #endif /* !CONFIG_HAVE_wopen64 */
 #else
+#define TRUNCATE_PRINTF_FILENAME "%q"
 #ifdef CONFIG_HAVE_open64
 		int fd = open64(filename, O_RDWR);
 #else /* CONFIG_HAVE_open64 */
@@ -220,14 +226,15 @@ EINTR_LABEL(again)
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again, err)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %ls could not be found", filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " TRUNCATE_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_ENOSYS(result, err, "truncate")
-		HANDLE_EACCES(result, err, "Failed to access %ls", filename)
-		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate %ls: Invalid size %I64d", filename, len)
-		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory %ls", filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %ls", filename)
+		HANDLE_EACCES(result, err, "Failed to access " TRUNCATE_PRINTF_FILENAME, filename)
+		HANDLE_EFBIG_EINVAL(result, err, "Cannot truncate " TRUNCATE_PRINTF_FILENAME ": Invalid size %I64d", filename, len)
+		HANDLE_ENXIO_EISDIR(result, err, "Cannot truncate directory " TRUNCATE_PRINTF_FILENAME, filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " TRUNCATE_PRINTF_FILENAME, filename)
 		DeeError_SysThrowf(&DeeError_SystemError, result,
-		                   "Failed to truncate %ls", filename);
+		                   "Failed to truncate " TRUNCATE_PRINTF_FILENAME,
+		                   filename);
 		goto err;
 	}
 	return_none;

@@ -171,10 +171,10 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(/*utf-8*/ char cons
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_access_USE_WACCESS
-#define ACCESS_PRINTF_FILENAME "%ls"
+#define ACCESS_PRINTF_FILENAME "%lq"
 	result = waccess(filename, how);
 #else /* posix_access_USE_WACCESS */
-#define ACCESS_PRINTF_FILENAME "%s"
+#define ACCESS_PRINTF_FILENAME "%q"
 	result = access(filename, how);
 #endif /* !posix_access_USE_WACCESS */
 	DBG_ALIGNMENT_ENABLE();

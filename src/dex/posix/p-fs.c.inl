@@ -211,11 +211,11 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(result, again, err)
 		HANDLE_ENOSYS(result, err, "fchownat")
 		HANDLE_EINVAL(result, err, "Invalid at-flags")
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change ownership of %d:%s", dfd, filename)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
+		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change ownership of %d:%q", dfd, filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%q could not be found", dfd, filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%q", dfd, filename)
 		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change ownership of %d:%s", dfd, filename);
+		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change ownership of %d:%q", dfd, filename);
 		goto err;
 	}
 	return DeeInt_NewInt(result);
@@ -292,11 +292,11 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(result, again, err)
 		HANDLE_ENOSYS(result, err, "fchmodat")
 		HANDLE_EINVAL(result, err, "Invalid at-flags")
-		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change access mode of %d:%s", dfd, filename)
-		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
-		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
+		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to change access mode of %d:%q", dfd, filename)
+		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%q could not be found", dfd, filename)
+		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%q", dfd, filename)
 		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change access mode of %d:%s", dfd, filename);
+		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change access mode of %d:%q", dfd, filename);
 		goto err;
 	}
 	return DeeInt_NewInt(result);

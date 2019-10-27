@@ -127,7 +127,7 @@ STATIC_ASSERT(sizeof(long) == __SIZEOF_LONG__);
 #define LENGTH_SIZE PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_POINTER__))
 #define LENGTH_HH   PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_CHAR__))
 #define LENGTH_H    PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_SHORT__))
-#define LENGTH_l    PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_LONG__))
+#define LENGTH_l   (PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_LONG__)) | 0x100)
 #ifdef __SIZEOF_LONG_LONG__
 #define LENGTH_LL   PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_LONG_LONG__))
 #else
@@ -347,7 +347,7 @@ PRIVATE uint32_t const null32[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
 LOCAL WUNUSED NONNULL((1)) size_t DCALL
 strnlen16(uint16_t const *__restrict str, size_t maxlen) {
 	uint16_t const *end = str;
-	while (maxlen-- && *end++)
+	for (; maxlen && *end; --maxlen, ++end)
 		;
 	return (size_t)(end - str);
 }
@@ -355,7 +355,7 @@ strnlen16(uint16_t const *__restrict str, size_t maxlen) {
 LOCAL WUNUSED NONNULL((1)) size_t DCALL
 strnlen32(uint32_t const *__restrict str, size_t maxlen) {
 	uint32_t const *end = str;
-	while (maxlen-- && *end++)
+	for (; maxlen && *end; --maxlen, ++end)
 		;
 	return (size_t)(end - str);
 }
@@ -693,6 +693,10 @@ nextfmt:
 		string = va_arg(args, char *);
 		if (!(flags & F_HASPREC))
 			precision = (size_t)-1;
+#if __SIZEOF_WCHAR_T__ != __SIZEOF_LONG__
+		if (length & 0x100)
+			length = PP_CAT2(LENGTH_I, PP_MUL8(__SIZEOF_WCHAR_T__));
+#endif /* __SIZEOF_WCHAR_T__ != __SIZEOF_LONG__ */
 		switch (LENGTH_IXSIZEOF(length)) {
 
 		default: /* UTF-8 */

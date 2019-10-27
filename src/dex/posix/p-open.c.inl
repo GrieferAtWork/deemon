@@ -287,7 +287,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_open_f_impl(/*utf-8*/ char const 
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 #ifdef posix_open_USE_WOPEN
-#define OPEN_PRINTF_FILENAME "%ls"
+#define OPEN_PRINTF_FILENAME "%lq"
 #ifdef CONFIG_HAVE_wopen64
 	result = wopen64(filename, (int)oflags, (int)mode);
 #else /* CONFIG_HAVE_wopen64 */
@@ -296,7 +296,7 @@ EINTR_LABEL(again)
 #endif /* posix_open_USE_WOPEN */
 
 #ifdef posix_open_USE_OPEN
-#define OPEN_PRINTF_FILENAME "%s"
+#define OPEN_PRINTF_FILENAME "%q"
 #ifdef CONFIG_HAVE_open64
 	result = open64(filename, (int)oflags, (int)mode);
 #else /* CONFIG_HAVE_open64 */
@@ -407,7 +407,7 @@ EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 
 #ifdef posix_creat_USE_WCREAT
-#define CREAT_PRINTF_FILENAME "%ls"
+#define CREAT_PRINTF_FILENAME "%lq"
 #ifdef CONFIG_HAVE_wcreat64
 	result = wcreat64(filename, (int)mode);
 #else /* CONFIG_HAVE_wcreat64 */
@@ -416,7 +416,7 @@ EINTR_LABEL(again)
 #endif /* posix_creat_USE_WCREAT */
 
 #ifdef posix_creat_USE_CREAT
-#define CREAT_PRINTF_FILENAME "%s"
+#define CREAT_PRINTF_FILENAME "%q"
 #ifdef CONFIG_HAVE_creat64
 	result = creat64(filename, (int)mode);
 #else /* CONFIG_HAVE_creat64 */
