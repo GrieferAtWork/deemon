@@ -401,13 +401,14 @@ dex_fini(DeeDexObject *__restrict self) {
 			struct dex_notification *hooks;
 			/* Uninstall notification hooks. */
 			hooks = self->d_dex->d_notify;
-			if (hooks)
+			if (hooks) {
 				for (; hooks->dn_name; ++hooks) {
 					DeeNotify_EndListen((uint16_t)hooks->dn_class,
 					                    (DeeObject *)hooks->dn_name,
 					                    hooks->dn_callback,
 					                    hooks->dn_arg);
 				}
+			}
 #endif /* !CONFIG_NO_NOTIFICATIONS */
 			if (self->d_dex->d_fini)
 				(*self->d_dex->d_fini)(self);
@@ -418,9 +419,23 @@ dex_fini(DeeDexObject *__restrict self) {
 		 * in the global chain of active membercaches.
 		 * XXX: Only do this for caches apart of this module's static binary image? */
 		membercache_clear((size_t)-1);
+#if 0
+		/* FIXME: Work-around for preventing DEX modules being unloaded
+		 *        while objects referring to statically defined types inside
+		 *        still exist.
+		 *        The proper way to fix this would be to use a GC-like mechanism
+		 *        for this that delays the actual DEX unloading until no objects
+		 *        exist that are apart of, or use types from the DEX.
+		 *        Note that for this, we must also change the ruling that objects
+		 *        pointing to other objects don't have to implement GC-visit if it
+		 *        is known that none of those objects are ever GC objects. With this
+		 *        change, _all_ objects have to implement GC-visit! (though we could
+		 *        add a type-flag to indicate that pointed-to objects can never form
+		 *        a ~conventional~ loop) */
 		DBG_ALIGNMENT_DISABLE();
 		DeeSystem_DlClose(self->d_handle);
 		DBG_ALIGNMENT_ENABLE();
+#endif
 	}
 }
 
