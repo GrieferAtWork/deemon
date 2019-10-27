@@ -181,7 +181,9 @@ DeeError_VThrowf(DeeTypeObject *__restrict tp,
 	if unlikely(!argv[0])
 		goto err;
 	/* Pack the constructor argument tuple. */
-	error_ob = DeeObject_New(tp, 1, argv);
+	error_ob = DeeType_Check(tp)
+	           ? DeeObject_New(tp, 1, argv)
+	           : DeeObject_Call((DeeObject *)tp, 1, argv);
 	Dee_Decref(argv[0]);
 	if unlikely(!error_ob)
 		goto err;

@@ -1638,7 +1638,7 @@ err_access:
 		                   existing_path, new_path);
 	} else if (error == EINVAL) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Cannot rename path %r to %r which is a sub-directory of the old",
+		                "Cannot rename path %r to %r which is a sub-directory of the old path",
 		                existing_path, new_path);
 	} else if (error == ENOENT) {
 		err_path_not_found2(error, existing_path, new_path);

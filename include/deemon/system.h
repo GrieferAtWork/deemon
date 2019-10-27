@@ -144,6 +144,8 @@ DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsXDev(/*DWORD*/ DeeNT_DWORD dwError);
 DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsUnsupportedError(/*DWORD*/ DeeNT_DWORD dwError);
 DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError);
 DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);
 
 /* Translate a given `dwError' into the appropriate `errno' error code.
  * If the translation failed, return a fallback value.

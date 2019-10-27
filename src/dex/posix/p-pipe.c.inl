@@ -310,7 +310,8 @@ err:
 #endif /* !CONFIG_HAVE_O_CLOEXEC */
 	{
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Invalid oflags for pipe2 %#x", oflags);
+		                "Invalid oflags for pipe2 %#x",
+		                oflags);
 		goto err;
 	}
 again:

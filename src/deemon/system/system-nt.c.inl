@@ -30,6 +30,7 @@
 #include <deemon/error_types.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
@@ -1004,6 +1005,79 @@ DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError) {
 	return false;
 }
 
+PUBLIC WUNUSED bool DCALL
+DeeNTSystem_IsInvalidArgument(/*DWORD*/ DeeNT_DWORD dwError) {
+	switch (dwError) {
+
+#ifdef ERROR_BAD_USERNAME
+	case ERROR_BAD_USERNAME:
+#endif /* ERROR_BAD_USERNAME */
+#ifdef ERROR_EA_LIST_INCONSISTENT
+	case ERROR_EA_LIST_INCONSISTENT:
+#endif /* ERROR_EA_LIST_INCONSISTENT */
+#ifdef ERROR_INVALID_ADDRESS
+	case ERROR_INVALID_ADDRESS:
+#endif /* ERROR_INVALID_ADDRESS */
+#ifdef ERROR_INVALID_EA_NAME
+	case ERROR_INVALID_EA_NAME:
+#endif /* ERROR_INVALID_EA_NAME */
+#ifdef ERROR_INVALID_SIGNAL_NUMBER
+	case ERROR_INVALID_SIGNAL_NUMBER:
+#endif /* ERROR_INVALID_SIGNAL_NUMBER */
+#ifdef ERROR_META_EXPANSION_TOO_LONG
+	case ERROR_META_EXPANSION_TOO_LONG:
+#endif /* ERROR_META_EXPANSION_TOO_LONG */
+#ifdef ERROR_NONE_MAPPED
+	case ERROR_NONE_MAPPED:
+#endif /* ERROR_NONE_MAPPED */
+#ifdef ERROR_NO_TOKEN
+	case ERROR_NO_TOKEN:
+#endif /* ERROR_NO_TOKEN */
+#ifdef ERROR_SECTOR_NOT_FOUND
+	case ERROR_SECTOR_NOT_FOUND:
+#endif /* ERROR_SECTOR_NOT_FOUND */
+#ifdef ERROR_SEEK
+	case ERROR_SEEK:
+#endif /* ERROR_SEEK */
+#ifdef ERROR_THREAD_1_INACTIVE
+	case ERROR_THREAD_1_INACTIVE:
+#endif /* ERROR_THREAD_1_INACTIVE */
+#ifdef ERROR_INVALID_ACCESS
+	case ERROR_INVALID_ACCESS:
+#endif /* ERROR_INVALID_ACCESS */
+#ifdef ERROR_INVALID_DATA
+	case ERROR_INVALID_DATA:
+#endif /* ERROR_INVALID_DATA */
+#ifdef ERROR_INVALID_PARAMETER
+	case ERROR_INVALID_PARAMETER:
+#endif /* ERROR_INVALID_PARAMETER */
+#ifdef ERROR_NEGATIVE_SEEK
+	case ERROR_NEGATIVE_SEEK:
+#endif /* ERROR_NEGATIVE_SEEK */
+#ifdef ERROR_INVALID_FUNCTION
+	case ERROR_INVALID_FUNCTION:
+#endif /* ERROR_INVALID_FUNCTION */
+		return true;
+
+	default: break;
+	}
+	return false;
+}
+
+PUBLIC WUNUSED bool DCALL
+DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError) {
+	switch (dwError) {
+
+#ifdef ERROR_NOT_A_REPARSE_POINT
+	case ERROR_NOT_A_REPARSE_POINT:
+#endif /* ERROR_NOT_A_REPARSE_POINT */
+		return true;
+
+	default: break;
+	}
+	return false;
+}
+
 
 
 /* Figure out how to implement `DeeNTSystem_TranslateErrno()' */
@@ -1639,6 +1713,10 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 	if (DeeNTSystem_IsUnsupportedError(dwError))
 		return ENOSYS;
 #endif /* ENOSYS */
+#ifdef EINVAL
+	if (DeeNTSystem_IsInvalidArgument(dwError))
+		return EINVAL;
+#endif /* EINVAL */
 	/* Fallback `EACCES' */
 #undef HAVE_RETURN
 #if defined(NT2ERRNO_SRC_CYGWIN) || defined(NT2ERRNO_SRC_MSVC)
@@ -1681,12 +1759,45 @@ DeeNTSystem_VThrowErrorf(DeeTypeObject *tp,
 			tp = &DeeError_FileClosed;
 		else if (DeeNTSystem_IsAccessDeniedError(dwError))
 			tp = &DeeError_FileAccessError;
+		else if (DeeNTSystem_IsBadAllocError(dwError))
+			tp = &DeeError_NoMemory;
+		else if (DeeNTSystem_IsUnsupportedError(dwError))
+			tp = &DeeError_UnsupportedAPI;
+		else if (DeeNTSystem_IsInvalidArgument(dwError))
+			tp = &DeeError_ValueError;
 		else {
+			char const *fs_error_name = NULL;
+			/* Special handling for error types that are implemented by the `fs' module. */
+			if (DeeNTSystem_IsBusy(dwError))
+				fs_error_name = "BusyFile";
+			else if (DeeNTSystem_IsNotDir(dwError))
+				fs_error_name = "NoDirectory";
+			else if (DeeNTSystem_IsNotEmpty(dwError))
+				fs_error_name = "NotEmpty";
+			else if (DeeNTSystem_IsXDev(dwError))
+				fs_error_name = "CrossDevice";
+			else if (DeeNTSystem_IsNoLink(dwError))
+				fs_error_name = "NoLink";
+			if (fs_error_name) {
+				int result;
+				DREF DeeTypeObject *fs_error_type;
+				fs_error_type = (DREF DeeTypeObject *)DeeModule_GetExtern("fs", fs_error_name);
+				if unlikely(!fs_error_type)
+					return -1;
+				result = DeeNTSystem_VThrowErrorf(fs_error_type,
+				                                  dwError,
+				                                  format,
+				                                  args);
+				Dee_Decref(fs_error_type);
+				return result;
+			}
+			/* Fallback: Just use a SystemError */
 			tp = &DeeError_SystemError;
 		}
 	}
 	/* Check for error types derived from `errors.SystemError' */
-	if (DeeType_IsInherited(tp, &DeeError_SystemError)) {
+	if (DeeType_Check(tp) &&
+	    DeeType_IsInherited(tp, &DeeError_SystemError)) {
 		DREF DeeSystemErrorObject *error;
 		DREF DeeStringObject *message;
 		error = (DREF DeeSystemErrorObject *)DeeObject_MALLOC(DeeSystemErrorObject);

@@ -3177,9 +3177,9 @@ err_nt:
 		DeeError_SysThrowf(&DeeError_BusyFile, (DWORD)error,
 		                   "Path %r or %r cannot be accessed because it is already in use",
 		                   existing_path, new_path);
-	} else if (DeeNTSystem_IsNotDir((DWORD)error)) {
+	} else if ((DWORD)error == ERROR_SHARING_VIOLATION) {
 		DeeError_Throwf(&DeeError_ValueError,
-		                "Cannot rename path %r to %r which is a sub-directory of the old",
+		                "Cannot rename path %r to %r which is a sub-directory of the old path",
 		                existing_path, new_path);
 	} else if (DeeNTSystem_IsFileNotFoundError((DWORD)error)) {
 		err_path_not_found2((DWORD)error, existing_path, new_path);
@@ -3445,7 +3445,7 @@ again_createfile:
 		}
 		if (DeeNTSystem_IsAccessDeniedError(error)) {
 			err_path_no_access(error, path);
-		} else if (error == ERROR_NOT_A_REPARSE_POINT) {
+		} else if (DeeNTSystem_IsNoLink(error)) {
 			DeeError_SysThrowf(&DeeError_NoLink, error,
 			                   "Path %r is not a symbolic link",
 			                   path);

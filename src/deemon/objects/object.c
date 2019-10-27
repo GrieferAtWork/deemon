@@ -64,6 +64,10 @@ PRIVATE void DCALL free_reftracker(struct Dee_reftracker *__restrict self);
 
 typedef DeeTypeObject Type;
 
+/* Assert the typing of an object (raising an `Error.TypeError' if the type wasn't expected)
+ * HINT: When `required_type' isn't a type-object, these functions throw an error!
+ * @return: -1: The object doesn't match the required typing.
+ * @return:  0: The object matches the required typing. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AssertType)(DeeObject *self, DeeTypeObject *required_type) {
 	if (DeeObject_InstanceOf(self, required_type))
@@ -79,6 +83,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 
 
+/* Returns the class of `self', automatically
+ * dereferencing super-objects and other wrappers.
+ * Beyond that, this function returns the same as `Dee_TYPE()' */
 PUBLIC WUNUSED ATTR_RETNONNULL NONNULL((1)) DeeTypeObject *DCALL
 DeeObject_Class(DeeObject *__restrict self) {
 	DeeTypeObject *result;
@@ -90,6 +97,9 @@ DeeObject_Class(DeeObject *__restrict self) {
 }
 
 
+/* Return true if `test_type' is equal to, or derived from `inherited_type'
+ * NOTE: When `inherited_type' is not a type, this function simply returns `false'
+ * >> return inherited_type.baseof(test_type); */
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsInherited(DeeTypeObject *test_type,
                     DeeTypeObject *inherited_type) {
