@@ -76,7 +76,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{323F9211-EBD2-4EC6-A83F-5B27CFFDA4FD}</ProjectGuid>
-    <RootNamespace>process</RootNamespace>
+    <RootNamespace>disassembler</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'" Label="Configuration">

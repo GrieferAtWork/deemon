@@ -74,7 +74,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BF7DFE52-274E-45EA-B9C9-3BC1F42E7C8F}</ProjectGuid>
-    <RootNamespace>time</RootNamespace>
+    <RootNamespace>math</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'" Label="Configuration">

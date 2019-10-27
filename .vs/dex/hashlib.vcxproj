@@ -74,7 +74,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{D2ACD173-EA49-4031-92ED-A69D25649B1A}</ProjectGuid>
-    <RootNamespace>process</RootNamespace>
+    <RootNamespace>hashlib</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'" Label="Configuration">

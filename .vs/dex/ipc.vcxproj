@@ -87,7 +87,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A7E9B388-A71B-48FE-8DD4-D92910EC2D79}</ProjectGuid>
-    <RootNamespace>process</RootNamespace>
+    <RootNamespace>ipc</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'" Label="Configuration">

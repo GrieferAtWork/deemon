@@ -75,7 +75,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{CB66189C-3DDC-4F98-9621-D203A2751067}</ProjectGuid>
-    <RootNamespace>fs</RootNamespace>
+    <RootNamespace>xml</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-GCC|Win32'" Label="Configuration">
