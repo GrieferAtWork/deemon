@@ -105,8 +105,7 @@ local converter_map: {string: (string, string, string) | string} = {
 		"\t\tgoto err;\n",
 		("int", "{}_fd")),
 	"nt:HANDLE"    : ("o", "?X3?Dint?DFile?Ewin32:HANDLE", "DeeObject *",
-		"\th{obj} = (HANDLE)DeeNTSystem_GetHandle({obj});\n"
-		"\tif unlikely(h{obj} == INVALID_HANDLE_VALUE)\n"
+		"\tif (DeeNTSystem_TryGetHandle({obj}, (void **)&h{obj}))\n"
 		"\t\tgoto err;\n",
 		("HANDLE", "h{}")),
 	"nt:LPCSTR"    : ("o", "?Dstring", "DeeStringObject *",
@@ -397,6 +396,8 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 					r = z;
 					if (z.isnumeric(0) || (#z >= 2 && z[0] == "-" && z.isnumeric(1)))
 						r = "!" + z;
+					else if (z.issymbol())
+						r = "!G" + z;
 					else {
 						/* TODO: Support for string constants! */
 					}
@@ -461,7 +462,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 				print alt_format.format({ x }),;
 				if (z) {
 					print " =", z,;
-					z = "";
+					z = "(" + conv + ")Dee_None";
 				}
 				print ";";
 			}
@@ -522,8 +523,19 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		if ("?" in y)
 			continue;
 		local d = get_converter(y);
-		if (#d >= 4)
-			print d[3].format({ "obj" : x }),;
+		if (#d >= 4) {
+			if (z) {
+				print "\tif (!DeeNone_Check(",;
+				print x,;
+				print ")) {";
+				local text = d[3].format({ "obj" : x });
+				print "\t",;
+				print text.replace("\n", "\n\t").rstrip("\t"),;
+				print "\t}";
+			} else {
+				print d[3].format({ "obj" : x }),;
+			}
+		}
 	}
 	print "\treturn", user_impl_name,;
 	print "(",;

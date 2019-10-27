@@ -114,6 +114,15 @@ typedef __ULONG32_TYPE__ DeeNT_DWORD;
 DFUNDEF WUNUSED /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandle(DeeObject *__restrict ob);
 
+/* Similar to `DeeNTSystem_GetHandle()', but allow `ob' to refer to INVALID_HANDLE_VALUE,
+ * instead of unconditionally throwing an `DeeError_FileClosed' error when such a handle
+ * value is encountered.
+ * @return: 0:  Success (the handle value was stored in `*pHandle', and is allowed to be `INVALID_HANDLE_VALUE')
+ * @return: -1: Error (a deemon error was thrown; s.a. `DeeError_Throw()') */
+DFUNDEF WUNUSED int DCALL
+DeeNTSystem_TryGetHandle(DeeObject *__restrict ob,
+                         /*PHANDLE*/ void **pHandle);
+
 /* Fix the given filename and extend it to an absolute UNC path. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename);
@@ -340,6 +349,8 @@ DeeUnixSystem_GetFD(DeeObject *__restrict ob);
 #ifndef __NO_builtin_expect
 #define DeeSystem_PrintPwd(printer, include_trailing_sep) \
 	__builtin_expect(DeeSystem_PrintPwd(printer, include_trailing_sep), 0)
+#define DeeNTSystem_TryGetHandle(ob, pHandle) \
+	__builtin_expect(DeeNTSystem_TryGetHandle(ob, pHandle), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

@@ -202,6 +202,83 @@ err:
 }
 
 
+/* Similar to `DeeNTSystem_GetHandle()', but allow `ob' to refer to INVALID_HANDLE_VALUE,
+ * instead of unconditionally throwing an `DeeError_FileClosed' error when such a handle
+ * value is encountered.
+ * @return: 0:  Success (the handle value was stored in `*pHandle', and is allowed to be `INVALID_HANDLE_VALUE')
+ * @return: -1: Error (a deemon error was thrown; s.a. `DeeError_Throw()') */
+PUBLIC WUNUSED int
+(DCALL DeeNTSystem_TryGetHandle)(DeeObject *__restrict ob,
+                                 /*PHANDLE*/ void **pHandle) {
+	DREF DeeObject *attr;
+#if defined(DeeSysFS_IS_HANDLE) || \
+   (defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle))
+	if (DeeFile_Check(ob)) {
+		DeeSysFD sysfd;
+		sysfd = DeeFile_GetSysFD(ob);
+		if (sysfd == DeeSysFD_INVALID) {
+			if (!DeeError_Catch(&DeeError_FileClosed))
+				goto err;
+			*pHandle = INVALID_HANDLE_VALUE;
+			return 0;
+		}
+#ifdef DeeSysFS_IS_HANDLE
+		*pHandle = (void *)(HANDLE)sysfd;
+		return 0;
+#endif /* DeeSysFS_IS_HANDLE */
+
+#if defined(DeeSysFS_IS_INT) && defined(CONFIG_HAVE_get_osfhandle)
+		*pHandle = (void *)(HANDLE)get_osfhandle(sysfd);
+		return 0;
+#endif /* DeeSysFS_IS_INT && CONFIG_HAVE_get_osfhandle */
+	}
+#endif /* DeeSysFS_IS_HANDLE || DeeSysFS_IS_INT */
+
+#ifdef CONFIG_HAVE_get_osfhandle
+	if (DeeInt_Check(ob)) {
+		int fd;
+		if (DeeInt_AsInt(ob, &fd))
+			goto err;
+		*pHandle = (void *)(HANDLE)get_osfhandle(fd);
+		return 0;
+	}
+#endif /* CONFIG_HAVE_get_osfhandle */
+
+	attr = GETATTR_osfhandle(ob);
+	if (attr) {
+		int result;
+		result = DeeObject_AsUIntptr(attr, (uintptr_t *)pHandle);
+		Dee_Decref(attr);
+		return result;
+	}
+
+#ifdef CONFIG_HAVE_get_osfhandle
+	if (DeeError_Catch(&DeeError_AttributeError) ||
+	    DeeError_Catch(&DeeError_NotImplemented)) {
+		int fd, error;
+		attr = GETATTR_fileno(ob);
+		if (attr) {
+			error = DeeObject_AsInt(attr, &fd);
+			Dee_Decref(attr);
+		} else {
+			if (!DeeError_Catch(&DeeError_AttributeError) &&
+			    !DeeError_Catch(&DeeError_NotImplemented))
+				goto err;
+			/* Fallback: Convert an `int'-object into a unix file descriptor. */
+			error = DeeObject_AsInt(ob, &fd);
+		}
+		if unlikely(error)
+			goto err;
+		*pHandle = (void *)(HANDLE)get_osfhandle(fd);
+		return 0;
+	}
+#endif /* CONFIG_HAVE_get_osfhandle */
+
+err:
+	return -1;
+}
+
+
 
 PUBLIC WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {

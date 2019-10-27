@@ -1691,7 +1691,7 @@ load_module_after_dec_failure:
 			dst[module_namesize + 2] = SHEXT[2];
 		if (SHLEN >= 3 && SHEXT[3] != 'e')
 			dst[module_namesize + 3] = SHEXT[3];
-		__STATIC_IF (SHLEN >= 4) {
+		__STATIC_IF (SHLEN > 4) {
 			memcpy(&dst[module_namesize + 4],
 			       SHEXT + 4,
 			       ((SHLEN - 4) + 1) * sizeof(char));
@@ -1706,7 +1706,7 @@ load_module_after_dec_failure:
 				dst[module_namesize + 2] = 'e';
 			if (SHLEN >= 3 && SHEXT[3] != 'e')
 				dst[module_namesize + 3] = 'e';
-			__STATIC_IF (SHLEN >= 4) {
+			__STATIC_IF (SHLEN > 4) {
 				dst[module_namesize + 4] = '\0';
 			}
 			module_path_ob = (DREF DeeStringObject *)DeeString_NewUtf8(buf, len, STRING_ERROR_FSTRICT);

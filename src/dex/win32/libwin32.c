@@ -77,105 +77,261 @@ DECL_BEGIN
 
 /*[[[deemon
 import * from _dexutils;
+import * from deemon;
+local orig_stdout = File.stdout;
+local allDecls = [];
 include("constants.def");
-gii("FILE_READ_DATA");
-gii("FILE_LIST_DIRECTORY");
-gii("FILE_WRITE_DATA");
-gii("FILE_ADD_FILE");
-gii("FILE_APPEND_DATA");
-gii("FILE_ADD_SUBDIRECTORY");
-gii("FILE_CREATE_PIPE_INSTANCE");
-gii("FILE_READ_EA");
-gii("FILE_WRITE_EA");
-gii("FILE_EXECUTE");
-gii("FILE_TRAVERSE");
-gii("FILE_DELETE_CHILD");
-gii("FILE_READ_ATTRIBUTES");
-gii("FILE_WRITE_ATTRIBUTES");
-gii("FILE_ALL_ACCESS");
-gii("FILE_GENERIC_READ");
-gii("FILE_GENERIC_WRITE");
-gii("FILE_GENERIC_EXECUTE");
-gii("FILE_SHARE_READ");
-gii("FILE_SHARE_WRITE");
-gii("FILE_SHARE_DELETE");
-gii("FILE_ATTRIBUTE_READONLY");
-gii("FILE_ATTRIBUTE_HIDDEN");
-gii("FILE_ATTRIBUTE_SYSTEM");
-gii("FILE_ATTRIBUTE_DIRECTORY");
-gii("FILE_ATTRIBUTE_ARCHIVE");
-gii("FILE_ATTRIBUTE_DEVICE");
-gii("FILE_ATTRIBUTE_NORMAL");
-gii("FILE_ATTRIBUTE_TEMPORARY");
-gii("FILE_ATTRIBUTE_SPARSE_FILE");
-gii("FILE_ATTRIBUTE_REPARSE_POINT");
-gii("FILE_ATTRIBUTE_COMPRESSED");
-gii("FILE_ATTRIBUTE_OFFLINE");
-gii("FILE_ATTRIBUTE_NOT_CONTENT_INDEXED");
-gii("FILE_ATTRIBUTE_ENCRYPTED");
-gii("FILE_ATTRIBUTE_INTEGRITY_STREAM");
-gii("FILE_ATTRIBUTE_VIRTUAL");
-gii("FILE_ATTRIBUTE_NO_SCRUB_DATA");
-gii("FILE_ATTRIBUTE_EA");
-gii("FILE_NOTIFY_CHANGE_FILE_NAME");
-gii("FILE_NOTIFY_CHANGE_DIR_NAME");
-gii("FILE_NOTIFY_CHANGE_ATTRIBUTES");
-gii("FILE_NOTIFY_CHANGE_SIZE");
-gii("FILE_NOTIFY_CHANGE_LAST_WRITE");
-gii("FILE_NOTIFY_CHANGE_LAST_ACCESS");
-gii("FILE_NOTIFY_CHANGE_CREATION");
-gii("FILE_NOTIFY_CHANGE_SECURITY");
-gii("FILE_ACTION_ADDED");
-gii("FILE_ACTION_REMOVED");
-gii("FILE_ACTION_MODIFIED");
-gii("FILE_ACTION_RENAMED_OLD_NAME");
-gii("FILE_ACTION_RENAMED_NEW_NAME");
-gii("FILE_CASE_SENSITIVE_SEARCH");
-gii("FILE_CASE_PRESERVED_NAMES");
-gii("FILE_UNICODE_ON_DISK");
-gii("FILE_PERSISTENT_ACLS");
-gii("FILE_FILE_COMPRESSION");
-gii("FILE_VOLUME_QUOTAS");
-gii("FILE_SUPPORTS_SPARSE_FILES");
-gii("FILE_SUPPORTS_REPARSE_POINTS");
-gii("FILE_SUPPORTS_REMOTE_STORAGE");
-gii("FILE_VOLUME_IS_COMPRESSED");
-gii("FILE_SUPPORTS_OBJECT_IDS");
-gii("FILE_SUPPORTS_ENCRYPTION");
-gii("FILE_NAMED_STREAMS");
-gii("FILE_READ_ONLY_VOLUME");
-gii("FILE_SEQUENTIAL_WRITE_ONCE");
-gii("FILE_SUPPORTS_TRANSACTIONS");
-gii("FILE_SUPPORTS_HARD_LINKS");
-gii("FILE_SUPPORTS_EXTENDED_ATTRIBUTES");
-gii("FILE_SUPPORTS_OPEN_BY_FILE_ID");
-gii("FILE_SUPPORTS_USN_JOURNAL");
-gii("FILE_SUPPORTS_INTEGRITY_STREAMS");
-gii("CREATE_NEW");
-gii("CREATE_ALWAYS");
-gii("OPEN_EXISTING");
-gii("OPEN_ALWAYS");
-gii("TRUNCATE_EXISTING");
-gii("FILE_BEGIN");
-gii("FILE_CURRENT");
-gii("FILE_END");
 
-gii("FILE_TYPE_UNKNOWN");
-gii("FILE_TYPE_DISK");
-gii("FILE_TYPE_CHAR");
-gii("FILE_TYPE_PIPE");
-gii("FILE_TYPE_REMOTE");
+function wgii(name) {
+	allDecls.append(name);
+	gii(name);
+}
 
-gii("DRIVE_UNKNOWN");
-gii("DRIVE_NO_ROOT_DIR");
-gii("DRIVE_REMOVABLE");
-gii("DRIVE_FIXED");
-gii("DRIVE_REMOTE");
-gii("DRIVE_CDROM");
-gii("DRIVE_RAMDISK");
+wgii("FILE_READ_DATA");
+wgii("FILE_LIST_DIRECTORY");
+wgii("FILE_WRITE_DATA");
+wgii("FILE_ADD_FILE");
+wgii("FILE_APPEND_DATA");
+wgii("FILE_ADD_SUBDIRECTORY");
+wgii("FILE_CREATE_PIPE_INSTANCE");
+wgii("FILE_READ_EA");
+wgii("FILE_WRITE_EA");
+wgii("FILE_EXECUTE");
+wgii("FILE_TRAVERSE");
+wgii("FILE_DELETE_CHILD");
+wgii("FILE_READ_ATTRIBUTES");
+wgii("FILE_WRITE_ATTRIBUTES");
+wgii("FILE_ALL_ACCESS");
+wgii("FILE_GENERIC_READ");
+wgii("FILE_GENERIC_WRITE");
+wgii("FILE_GENERIC_EXECUTE");
+wgii("FILE_SHARE_READ");
+wgii("FILE_SHARE_WRITE");
+wgii("FILE_SHARE_DELETE");
+wgii("FILE_ATTRIBUTE_READONLY");
+wgii("FILE_ATTRIBUTE_HIDDEN");
+wgii("FILE_ATTRIBUTE_SYSTEM");
+wgii("FILE_ATTRIBUTE_DIRECTORY");
+wgii("FILE_ATTRIBUTE_ARCHIVE");
+wgii("FILE_ATTRIBUTE_DEVICE");
+wgii("FILE_ATTRIBUTE_NORMAL");
+wgii("FILE_ATTRIBUTE_TEMPORARY");
+wgii("FILE_ATTRIBUTE_SPARSE_FILE");
+wgii("FILE_ATTRIBUTE_REPARSE_POINT");
+wgii("FILE_ATTRIBUTE_COMPRESSED");
+wgii("FILE_ATTRIBUTE_OFFLINE");
+wgii("FILE_ATTRIBUTE_NOT_CONTENT_INDEXED");
+wgii("FILE_ATTRIBUTE_ENCRYPTED");
+wgii("FILE_ATTRIBUTE_INTEGRITY_STREAM");
+wgii("FILE_ATTRIBUTE_VIRTUAL");
+wgii("FILE_ATTRIBUTE_NO_SCRUB_DATA");
+wgii("FILE_ATTRIBUTE_EA");
+wgii("FILE_NOTIFY_CHANGE_FILE_NAME");
+wgii("FILE_NOTIFY_CHANGE_DIR_NAME");
+wgii("FILE_NOTIFY_CHANGE_ATTRIBUTES");
+wgii("FILE_NOTIFY_CHANGE_SIZE");
+wgii("FILE_NOTIFY_CHANGE_LAST_WRITE");
+wgii("FILE_NOTIFY_CHANGE_LAST_ACCESS");
+wgii("FILE_NOTIFY_CHANGE_CREATION");
+wgii("FILE_NOTIFY_CHANGE_SECURITY");
+wgii("FILE_ACTION_ADDED");
+wgii("FILE_ACTION_REMOVED");
+wgii("FILE_ACTION_MODIFIED");
+wgii("FILE_ACTION_RENAMED_OLD_NAME");
+wgii("FILE_ACTION_RENAMED_NEW_NAME");
+wgii("FILE_CASE_SENSITIVE_SEARCH");
+wgii("FILE_CASE_PRESERVED_NAMES");
+wgii("FILE_UNICODE_ON_DISK");
+wgii("FILE_PERSISTENT_ACLS");
+wgii("FILE_FILE_COMPRESSION");
+wgii("FILE_VOLUME_QUOTAS");
+wgii("FILE_SUPPORTS_SPARSE_FILES");
+wgii("FILE_SUPPORTS_REPARSE_POINTS");
+wgii("FILE_SUPPORTS_REMOTE_STORAGE");
+wgii("FILE_VOLUME_IS_COMPRESSED");
+wgii("FILE_SUPPORTS_OBJECT_IDS");
+wgii("FILE_SUPPORTS_ENCRYPTION");
+wgii("FILE_NAMED_STREAMS");
+wgii("FILE_READ_ONLY_VOLUME");
+wgii("FILE_SEQUENTIAL_WRITE_ONCE");
+wgii("FILE_SUPPORTS_TRANSACTIONS");
+wgii("FILE_SUPPORTS_HARD_LINKS");
+wgii("FILE_SUPPORTS_EXTENDED_ATTRIBUTES");
+wgii("FILE_SUPPORTS_OPEN_BY_FILE_ID");
+wgii("FILE_SUPPORTS_USN_JOURNAL");
+wgii("FILE_SUPPORTS_INTEGRITY_STREAMS");
+wgii("CREATE_NEW");
+wgii("CREATE_ALWAYS");
+wgii("OPEN_EXISTING");
+wgii("OPEN_ALWAYS");
+wgii("TRUNCATE_EXISTING");
+wgii("FILE_BEGIN");
+wgii("FILE_CURRENT");
+wgii("FILE_END");
+
+wgii("FILE_TYPE_UNKNOWN");
+wgii("FILE_TYPE_DISK");
+wgii("FILE_TYPE_CHAR");
+wgii("FILE_TYPE_PIPE");
+wgii("FILE_TYPE_REMOTE");
+
+wgii("DRIVE_UNKNOWN");
+wgii("DRIVE_NO_ROOT_DIR");
+wgii("DRIVE_REMOVABLE");
+wgii("DRIVE_FIXED");
+wgii("DRIVE_REMOTE");
+wgii("DRIVE_CDROM");
+wgii("DRIVE_RAMDISK");
+
+wgii("PAGE_EXECUTE_READ");
+wgii("PAGE_EXECUTE_READWRITE");
+wgii("PAGE_EXECUTE_WRITECOPY");
+wgii("PAGE_READONLY");
+wgii("PAGE_READWRITE");
+wgii("PAGE_WRITECOPY");
+wgii("SEC_COMMIT");
+wgii("SEC_IMAGE");
+wgii("SEC_IMAGE_NO_EXECUTE");
+wgii("SEC_LARGE_PAGES");
+wgii("SEC_NOCACHE");
+wgii("SEC_RESERVE");
+wgii("SEC_WRITECOMBINE");
+
+wgii("FILE_MAP_WRITE");
+wgii("FILE_MAP_READ");
+wgii("FILE_MAP_ALL_ACCESS");
+wgii("FILE_MAP_COPY");
+wgii("FILE_MAP_EXECUTE");
+wgii("FILE_MAP_LARGE_PAGES");
+wgii("FILE_MAP_TARGETS_INVALID");
+
+File.stdout = orig_stdout;
+print "#define LIBWIN32_CONSTANTS_DEFS \\";
+for (local x: allDecls) {
+	print "\tLIBWIN32_",;
+	print x,;
+	print "_DEF \\";
+}
+print "/" "**" "/";
+
 
 ]]]*/
 #include "constants.def"
+#define LIBWIN32_CONSTANTS_DEFS \
+	LIBWIN32_FILE_READ_DATA_DEF \
+	LIBWIN32_FILE_LIST_DIRECTORY_DEF \
+	LIBWIN32_FILE_WRITE_DATA_DEF \
+	LIBWIN32_FILE_ADD_FILE_DEF \
+	LIBWIN32_FILE_APPEND_DATA_DEF \
+	LIBWIN32_FILE_ADD_SUBDIRECTORY_DEF \
+	LIBWIN32_FILE_CREATE_PIPE_INSTANCE_DEF \
+	LIBWIN32_FILE_READ_EA_DEF \
+	LIBWIN32_FILE_WRITE_EA_DEF \
+	LIBWIN32_FILE_EXECUTE_DEF \
+	LIBWIN32_FILE_TRAVERSE_DEF \
+	LIBWIN32_FILE_DELETE_CHILD_DEF \
+	LIBWIN32_FILE_READ_ATTRIBUTES_DEF \
+	LIBWIN32_FILE_WRITE_ATTRIBUTES_DEF \
+	LIBWIN32_FILE_ALL_ACCESS_DEF \
+	LIBWIN32_FILE_GENERIC_READ_DEF \
+	LIBWIN32_FILE_GENERIC_WRITE_DEF \
+	LIBWIN32_FILE_GENERIC_EXECUTE_DEF \
+	LIBWIN32_FILE_SHARE_READ_DEF \
+	LIBWIN32_FILE_SHARE_WRITE_DEF \
+	LIBWIN32_FILE_SHARE_DELETE_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_READONLY_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_HIDDEN_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_SYSTEM_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_DIRECTORY_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_ARCHIVE_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_DEVICE_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_NORMAL_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_TEMPORARY_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_SPARSE_FILE_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_REPARSE_POINT_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_COMPRESSED_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_OFFLINE_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_NOT_CONTENT_INDEXED_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_ENCRYPTED_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_INTEGRITY_STREAM_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_VIRTUAL_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_NO_SCRUB_DATA_DEF \
+	LIBWIN32_FILE_ATTRIBUTE_EA_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_FILE_NAME_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_DIR_NAME_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_ATTRIBUTES_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_SIZE_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_LAST_WRITE_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_LAST_ACCESS_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_CREATION_DEF \
+	LIBWIN32_FILE_NOTIFY_CHANGE_SECURITY_DEF \
+	LIBWIN32_FILE_ACTION_ADDED_DEF \
+	LIBWIN32_FILE_ACTION_REMOVED_DEF \
+	LIBWIN32_FILE_ACTION_MODIFIED_DEF \
+	LIBWIN32_FILE_ACTION_RENAMED_OLD_NAME_DEF \
+	LIBWIN32_FILE_ACTION_RENAMED_NEW_NAME_DEF \
+	LIBWIN32_FILE_CASE_SENSITIVE_SEARCH_DEF \
+	LIBWIN32_FILE_CASE_PRESERVED_NAMES_DEF \
+	LIBWIN32_FILE_UNICODE_ON_DISK_DEF \
+	LIBWIN32_FILE_PERSISTENT_ACLS_DEF \
+	LIBWIN32_FILE_FILE_COMPRESSION_DEF \
+	LIBWIN32_FILE_VOLUME_QUOTAS_DEF \
+	LIBWIN32_FILE_SUPPORTS_SPARSE_FILES_DEF \
+	LIBWIN32_FILE_SUPPORTS_REPARSE_POINTS_DEF \
+	LIBWIN32_FILE_SUPPORTS_REMOTE_STORAGE_DEF \
+	LIBWIN32_FILE_VOLUME_IS_COMPRESSED_DEF \
+	LIBWIN32_FILE_SUPPORTS_OBJECT_IDS_DEF \
+	LIBWIN32_FILE_SUPPORTS_ENCRYPTION_DEF \
+	LIBWIN32_FILE_NAMED_STREAMS_DEF \
+	LIBWIN32_FILE_READ_ONLY_VOLUME_DEF \
+	LIBWIN32_FILE_SEQUENTIAL_WRITE_ONCE_DEF \
+	LIBWIN32_FILE_SUPPORTS_TRANSACTIONS_DEF \
+	LIBWIN32_FILE_SUPPORTS_HARD_LINKS_DEF \
+	LIBWIN32_FILE_SUPPORTS_EXTENDED_ATTRIBUTES_DEF \
+	LIBWIN32_FILE_SUPPORTS_OPEN_BY_FILE_ID_DEF \
+	LIBWIN32_FILE_SUPPORTS_USN_JOURNAL_DEF \
+	LIBWIN32_FILE_SUPPORTS_INTEGRITY_STREAMS_DEF \
+	LIBWIN32_CREATE_NEW_DEF \
+	LIBWIN32_CREATE_ALWAYS_DEF \
+	LIBWIN32_OPEN_EXISTING_DEF \
+	LIBWIN32_OPEN_ALWAYS_DEF \
+	LIBWIN32_TRUNCATE_EXISTING_DEF \
+	LIBWIN32_FILE_BEGIN_DEF \
+	LIBWIN32_FILE_CURRENT_DEF \
+	LIBWIN32_FILE_END_DEF \
+	LIBWIN32_FILE_TYPE_UNKNOWN_DEF \
+	LIBWIN32_FILE_TYPE_DISK_DEF \
+	LIBWIN32_FILE_TYPE_CHAR_DEF \
+	LIBWIN32_FILE_TYPE_PIPE_DEF \
+	LIBWIN32_FILE_TYPE_REMOTE_DEF \
+	LIBWIN32_DRIVE_UNKNOWN_DEF \
+	LIBWIN32_DRIVE_NO_ROOT_DIR_DEF \
+	LIBWIN32_DRIVE_REMOVABLE_DEF \
+	LIBWIN32_DRIVE_FIXED_DEF \
+	LIBWIN32_DRIVE_REMOTE_DEF \
+	LIBWIN32_DRIVE_CDROM_DEF \
+	LIBWIN32_DRIVE_RAMDISK_DEF \
+	LIBWIN32_PAGE_EXECUTE_READ_DEF \
+	LIBWIN32_PAGE_EXECUTE_READWRITE_DEF \
+	LIBWIN32_PAGE_EXECUTE_WRITECOPY_DEF \
+	LIBWIN32_PAGE_READONLY_DEF \
+	LIBWIN32_PAGE_READWRITE_DEF \
+	LIBWIN32_PAGE_WRITECOPY_DEF \
+	LIBWIN32_SEC_COMMIT_DEF \
+	LIBWIN32_SEC_IMAGE_DEF \
+	LIBWIN32_SEC_IMAGE_NO_EXECUTE_DEF \
+	LIBWIN32_SEC_LARGE_PAGES_DEF \
+	LIBWIN32_SEC_NOCACHE_DEF \
+	LIBWIN32_SEC_RESERVE_DEF \
+	LIBWIN32_SEC_WRITECOMBINE_DEF \
+	LIBWIN32_FILE_MAP_WRITE_DEF \
+	LIBWIN32_FILE_MAP_READ_DEF \
+	LIBWIN32_FILE_MAP_ALL_ACCESS_DEF \
+	LIBWIN32_FILE_MAP_COPY_DEF \
+	LIBWIN32_FILE_MAP_EXECUTE_DEF \
+	LIBWIN32_FILE_MAP_LARGE_PAGES_DEF \
+	LIBWIN32_FILE_MAP_TARGETS_INVALID_DEF \
+/**/
 //[[[end]]]
 
 
@@ -281,18 +437,15 @@ handle_hash(DeeHandleObject *__restrict self) {
 	return Dee_HashPointer(self->ho_handle);
 }
 
-#define DEFINE_HANDLE_COMPARE(name, op)                     \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL   \
-	name(DeeHandleObject *self, DeeObject *some_object) {   \
-		HANDLE hOtherHandle;                                \
-		hOtherHandle = DeeNTSystem_GetHandle(some_object);  \
-		if unlikely(hOtherHandle == INVALID_HANDLE_VALUE) { \
-			if (!DeeError_Catch(&DeeError_FileClosed))      \
-				goto err;                                   \
-		}                                                   \
-		return_bool(self->ho_handle op hOtherHandle);       \
-	err:                                                    \
-		return NULL;                                        \
+#define DEFINE_HANDLE_COMPARE(name, op)                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL         \
+	name(DeeHandleObject *self, DeeObject *some_object) {         \
+		HANDLE hOtherHandle;                                      \
+		if (DeeNTSystem_TryGetHandle(some_object, &hOtherHandle)) \
+			goto err;                                             \
+		return_bool(self->ho_handle op hOtherHandle);             \
+	err:                                                          \
+		return NULL;                                              \
 	}
 DEFINE_HANDLE_COMPARE(handle_eq, ==)
 DEFINE_HANDLE_COMPARE(handle_ne, !=)
@@ -449,8 +602,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f(size_t argc, DeeObj
 	DeeObject *hObject;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hObject, "o:CloseHandle", &hObject))
 		goto err;
-	hhObject = (HANDLE)DeeNTSystem_GetHandle(hObject);
-	if unlikely(hhObject == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hObject, (void **)&hhObject))
 		goto err;
 	return libwin32_CloseHandle_f_impl(hhObject);
 err:
@@ -486,8 +638,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f_impl(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwOptions);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_DUPLICATEHANDLE_DEF { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=DUPLICATE_SAME_ACCESS)->?X2?GHANDLE?N") },
-#define LIBWIN32_DUPLICATEHANDLE_DEF_DOC(doc) { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=DUPLICATE_SAME_ACCESS)->?X2?GHANDLE?N\n" doc) },
+#define LIBWIN32_DUPLICATEHANDLE_DEF { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?X2?GHANDLE?N") },
+#define LIBWIN32_DUPLICATEHANDLE_DEF_DOC(doc) { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?X2?GHANDLE?N\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_DuplicateHandle, libwin32_DuplicateHandle_f);
 #ifndef LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED
 #define LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED 1
@@ -505,14 +657,11 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, De
 	DWORD dwOptions = DUPLICATE_SAME_ACCESS;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hSourceProcessHandle_hSourceHandle_hTargetProcessHandle_dwDesiredAccess_bInheritHandle_dwOptions, "ooo|I32ubI32u:DuplicateHandle", &hSourceProcessHandle, &hSourceHandle, &hTargetProcessHandle, &dwDesiredAccess, &bInheritHandle, &dwOptions))
 		goto err;
-	hhSourceProcessHandle = (HANDLE)DeeNTSystem_GetHandle(hSourceProcessHandle);
-	if unlikely(hhSourceProcessHandle == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hSourceProcessHandle, (void **)&hhSourceProcessHandle))
 		goto err;
-	hhSourceHandle = (HANDLE)DeeNTSystem_GetHandle(hSourceHandle);
-	if unlikely(hhSourceHandle == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hSourceHandle, (void **)&hhSourceHandle))
 		goto err;
-	hhTargetProcessHandle = (HANDLE)DeeNTSystem_GetHandle(hTargetProcessHandle);
-	if unlikely(hhTargetProcessHandle == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hTargetProcessHandle, (void **)&hhTargetProcessHandle))
 		goto err;
 	return libwin32_DuplicateHandle_f_impl(hhSourceProcessHandle, hhSourceHandle, hhTargetProcessHandle, dwDesiredAccess, bInheritHandle, dwOptions);
 err:
@@ -563,8 +712,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f_impl(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, DeeObject *lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_CREATEFILE_DEF { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwDesiredAccess:?Dint=FILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=OPEN_EXISTING,dwFlagsAndAttributes:?Dint=FILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?X2?GHANDLE?N") },
-#define LIBWIN32_CREATEFILE_DEF_DOC(doc) { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwDesiredAccess:?Dint=FILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=OPEN_EXISTING,dwFlagsAndAttributes:?Dint=FILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?X2?GHANDLE?N\n" doc) },
+#define LIBWIN32_CREATEFILE_DEF { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?X2?GHANDLE?N") },
+#define LIBWIN32_CREATEFILE_DEF_DOC(doc) { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?X2?GHANDLE?N\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFile, libwin32_CreateFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED 1
@@ -579,7 +728,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObje
 	DWORD dwCreationDisposition = OPEN_EXISTING;
 	DWORD dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
 	HANDLE hhTemplateFile = 0;
-	DeeObject *hTemplateFile;
+	DeeObject *hTemplateFile = (DeeObject *)Dee_None;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwDesiredAccess_dwShareMode_lpSecurityAttributes_dwCreationDisposition_dwFlagsAndAttributes_hTemplateFile, "o|I32uI32uoI32uI32uo:CreateFile", &lpFileName, &dwDesiredAccess, &dwShareMode, &lpSecurityAttributes, &dwCreationDisposition, &dwFlagsAndAttributes, &hTemplateFile))
 		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
@@ -587,9 +736,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObje
 	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
 	if unlikely(!lpFileName_str)
 		goto err;
-	hhTemplateFile = (HANDLE)DeeNTSystem_GetHandle(hTemplateFile);
-	if unlikely(hhTemplateFile == INVALID_HANDLE_VALUE)
-		goto err;
+	if (!DeeNone_Check(hTemplateFile)) {
+		if (DeeNTSystem_TryGetHandle(hTemplateFile, (void **)&hhTemplateFile))
+			goto err;
+	}
 	return libwin32_CreateFile_f_impl(lpFileName_str, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hhTemplateFile);
 err:
 	return NULL;
@@ -650,8 +800,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f(size_t argc, DeeObjec
 	DeeObject *lpOverlapped = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpBuffer_lpOverlapped, "oo|o:WriteFile", &hFile, &lpBuffer, &lpOverlapped))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_WriteFile_f_impl(hhFile, lpBuffer, lpOverlapped);
 err:
@@ -716,8 +865,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f(size_t argc, DeeObject
 	DeeObject *lpOverlapped = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpBuffer_lpOverlapped, "oo|o:ReadFile", &hFile, &lpBuffer, &lpOverlapped))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_ReadFile_f_impl(hhFile, lpBuffer, lpOverlapped);
 err:
@@ -905,8 +1053,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f(size_t argc, DeeOb
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:SetEndOfFile", &hFile))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_SetEndOfFile_f_impl(hhFile);
 err:
@@ -979,8 +1126,8 @@ err:
 /*[[[deemon import("_dexutils").gw("SetFilePointer", "hFile:nt:HANDLE,lDistanceToMove:I64d,dwMoveMethod:nt:DWORD=FILE_BEGIN->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f_impl(HANDLE hFile, int64_t lDistanceToMove, DWORD dwMoveMethod);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_SETFILEPOINTER_DEF { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=FILE_BEGIN)->?Dint") },
-#define LIBWIN32_SETFILEPOINTER_DEF_DOC(doc) { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=FILE_BEGIN)->?Dint\n" doc) },
+#define LIBWIN32_SETFILEPOINTER_DEF { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint") },
+#define LIBWIN32_SETFILEPOINTER_DEF_DOC(doc) { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFilePointer, libwin32_SetFilePointer_f);
 #ifndef LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED
 #define LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED 1
@@ -993,8 +1140,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, Dee
 	DWORD dwMoveMethod = FILE_BEGIN;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lDistanceToMove_dwMoveMethod, "oI64d|I32u:SetFilePointer", &hFile, &lDistanceToMove, &dwMoveMethod))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_SetFilePointer_f_impl(hhFile, lDistanceToMove, dwMoveMethod);
 err:
@@ -1056,8 +1202,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f(size_t argc, DeeObj
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:GetFileTime", &hFile))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_GetFileTime_f_impl(hhFile);
 err:
@@ -1117,8 +1262,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f(size_t argc, DeeObj
 	DeeObject *lpLastWriteTime = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpCreationTime_lpLastAccessTime_lpLastWriteTime, "o|ooo:SetFileTime", &hFile, &lpCreationTime, &lpLastAccessTime, &lpLastWriteTime))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_SetFileTime_f_impl(hhFile, lpCreationTime, lpLastAccessTime, lpLastWriteTime);
 err:
@@ -1173,8 +1317,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, D
 	uint64_t ValidDataLength;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_ValidDataLength, "oI64u:SetFileValidData", &hFile, &ValidDataLength))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_SetFileValidData_f_impl(hhFile, ValidDataLength);
 err:
@@ -1568,8 +1711,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, 
 	DeeObject *hModule;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hModule, "o:GetModuleFileName", &hModule))
 		goto err;
-	hhModule = (HANDLE)DeeNTSystem_GetHandle(hModule);
-	if unlikely(hhModule == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hModule, (void **)&hhModule))
 		goto err;
 	return libwin32_GetModuleFileName_f_impl(hhModule);
 err:
@@ -1941,8 +2083,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f(size_t argc, DeeObj
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:GetFileType", &hFile))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_GetFileType_f_impl(hhFile);
 err:
@@ -1990,8 +2131,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f(size_t argc, DeeObj
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:GetFileSize", &hFile))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_GetFileSize_f_impl(hhFile);
 err:
@@ -2187,8 +2327,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f(size_t argc, D
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:FlushFileBuffers", &hFile))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_FlushFileBuffers_f_impl(hhFile);
 err:
@@ -2231,8 +2370,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f(size_t
 	DWORD dwFlags = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_dwFlags, "o|I32u:GetFinalPathNameByHandle", &hFile, &dwFlags))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_GetFinalPathNameByHandle_f_impl(hhFile, dwFlags);
 err:
@@ -2283,8 +2421,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f(size_t argc
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:GetFilenameOfHandle", &hFile))
 		goto err;
-	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
-	if unlikely(hhFile == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
 		goto err;
 	return libwin32_GetFilenameOfHandle_f_impl(hhFile);
 err:
@@ -2353,8 +2490,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f(size_t argc, 
 	DeeObject *lpv;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpv, "oo:GetMappedFileName", &hProcess, &lpv))
 		goto err;
-	hhProcess = (HANDLE)DeeNTSystem_GetHandle(hProcess);
-	if unlikely(hhProcess == INVALID_HANDLE_VALUE)
+	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
 		goto err;
 	if (DeeCTypes_GetPointer(lpv, &lpv_ptr))
 		goto err;
@@ -2382,6 +2518,261 @@ system_error:
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("MapViewOfFile",
+     "hFileMappingObject:nt:HANDLE"
+    ",dwDesiredAccess:nt:DWORD"
+    ",dwFileOffset:I64u"
+    ",dwNumberOfBytesToMap:Iu"
+    "->?X2?Aptr?Ectypes:void?N"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f_impl(HANDLE hFileMappingObject, DWORD dwDesiredAccess, uint64_t dwFileOffset, size_t dwNumberOfBytesToMap);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBWIN32_MAPVIEWOFFILE_DEF { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint,dwFileOffset:?Dint,dwNumberOfBytesToMap:?Dint)->?X2?Aptr?Ectypes:void?N") },
+#define LIBWIN32_MAPVIEWOFFILE_DEF_DOC(doc) { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint,dwFileOffset:?Dint,dwNumberOfBytesToMap:?Dint)->?X2?Aptr?Ectypes:void?N\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_MapViewOfFile, libwin32_MapViewOfFile_f);
+#ifndef LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED
+#define LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOffset_dwNumberOfBytesToMap, { K(hFileMappingObject), K(dwDesiredAccess), K(dwFileOffset), K(dwNumberOfBytesToMap), KEND });
+#endif /* !LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	HANDLE hhFileMappingObject;
+	DeeObject *hFileMappingObject;
+	DWORD dwDesiredAccess;
+	uint64_t dwFileOffset;
+	size_t dwNumberOfBytesToMap;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOffset_dwNumberOfBytesToMap, "oI32uI64uIu:MapViewOfFile", &hFileMappingObject, &dwDesiredAccess, &dwFileOffset, &dwNumberOfBytesToMap))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hFileMappingObject, (void **)&hhFileMappingObject))
+		goto err;
+	return libwin32_MapViewOfFile_f_impl(hhFileMappingObject, dwDesiredAccess, dwFileOffset, dwNumberOfBytesToMap);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f_impl(HANDLE hFileMappingObject, DWORD dwDesiredAccess, uint64_t dwFileOffset, size_t dwNumberOfBytesToMap)
+//[[[end]]]
+{
+	DREF DeeObject *result;
+	LPVOID pResult;
+again:
+	pResult = MapViewOfFile(hFileMappingObject,
+	                        dwDesiredAccess,
+	                        (DWORD)(dwFileOffset >> 32),
+	                        (DWORD)(dwFileOffset),
+	                        dwNumberOfBytesToMap);
+	if (pResult == NULL) {
+		DWORD dwError;
+		dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		return_none;
+	}
+	result = DeeCTypes_CreateVoidPointer(pResult);
+	if unlikely(!result) {
+		DWORD dwError;
+		dwError = GetLastError();
+		UnmapViewOfFile(pResult);
+		SetLastError(dwError);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("UnmapViewOfFile", "lpBaseAddress:c:ptr->?Dbool"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *lpBaseAddress);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBWIN32_UNMAPVIEWOFFILE_DEF { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)->?Dbool") },
+#define LIBWIN32_UNMAPVIEWOFFILE_DEF_DOC(doc) { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)->?Dbool\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_UnmapViewOfFile, libwin32_UnmapViewOfFile_f);
+#ifndef LIBWIN32_KWDS_LPBASEADDRESS_DEFINED
+#define LIBWIN32_KWDS_LPBASEADDRESS_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpBaseAddress, { K(lpBaseAddress), KEND });
+#endif /* !LIBWIN32_KWDS_LPBASEADDRESS_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	void *lpBaseAddress_ptr;
+	DeeObject *lpBaseAddress;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpBaseAddress, "o:UnmapViewOfFile", &lpBaseAddress))
+		goto err;
+	if (DeeCTypes_GetPointer(lpBaseAddress, &lpBaseAddress_ptr))
+		goto err;
+	return libwin32_UnmapViewOfFile_f_impl(lpBaseAddress_ptr);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *lpBaseAddress)
+//[[[end]]]
+{
+	BOOL bOk;
+	bOk = UnmapViewOfFile((LPCVOID)lpBaseAddress);
+	return_bool(bOk);
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("CreateFileMapping",
+     "hFile:nt:HANDLE"
+    ",lpFileMappingAttributes:?GSECURITY_ATTRIBUTES=NULL"
+    ",flProtect:nt:DWORD=PAGE_READONLY"
+    ",dwMaximumSize:I64u=0"
+    ",lpName:nt:LPCWSTR=NULL"
+    "->?X2?GHANDLE?N"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f_impl(HANDLE hFile, DeeObject *lpFileMappingAttributes, DWORD flProtect, uint64_t dwMaximumSize, LPCWSTR lpName);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBWIN32_CREATEFILEMAPPING_DEF { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?X2?GHANDLE?N") },
+#define LIBWIN32_CREATEFILEMAPPING_DEF_DOC(doc) { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?X2?GHANDLE?N\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFileMapping, libwin32_CreateFileMapping_f);
+#ifndef LIBWIN32_KWDS_HFILE_LPFILEMAPPINGATTRIBUTES_FLPROTECT_DWMAXIMUMSIZE_LPNAME_DEFINED
+#define LIBWIN32_KWDS_HFILE_LPFILEMAPPINGATTRIBUTES_FLPROTECT_DWMAXIMUMSIZE_LPNAME_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hFile_lpFileMappingAttributes_flProtect_dwMaximumSize_lpName, { K(hFile), K(lpFileMappingAttributes), K(flProtect), K(dwMaximumSize), K(lpName), KEND });
+#endif /* !LIBWIN32_KWDS_HFILE_LPFILEMAPPINGATTRIBUTES_FLPROTECT_DWMAXIMUMSIZE_LPNAME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	HANDLE hhFile;
+	DeeObject *hFile;
+	DeeObject *lpFileMappingAttributes = NULL;
+	DWORD flProtect = PAGE_READONLY;
+	uint64_t dwMaximumSize = 0;
+	LPCWSTR lpName_str = NULL;
+	DeeStringObject *lpName = (DeeStringObject *)Dee_None;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpFileMappingAttributes_flProtect_dwMaximumSize_lpName, "o|oI32uI64uo:CreateFileMapping", &hFile, &lpFileMappingAttributes, &flProtect, &dwMaximumSize, &lpName))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hFile, (void **)&hhFile))
+		goto err;
+	if (!DeeNone_Check(lpName)) {
+		if (DeeObject_AssertTypeExact(lpName, &DeeString_Type))
+			goto err;
+		lpName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpName);
+		if unlikely(!lpName_str)
+			goto err;
+	}
+	return libwin32_CreateFileMapping_f_impl(hhFile, lpFileMappingAttributes, flProtect, dwMaximumSize, lpName_str);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f_impl(HANDLE hFile, DeeObject *lpFileMappingAttributes, DWORD flProtect, uint64_t dwMaximumSize, LPCWSTR lpName)
+//[[[end]]]
+{
+	DREF DeeObject *result;
+	HANDLE hResult;
+again:
+	(void)lpFileMappingAttributes; /* TODO */
+	hResult = CreateFileMappingW(hFile,
+	                             NULL,
+	                             flProtect,
+	                             (DWORD)(dwMaximumSize >> 32),
+	                             (DWORD)(dwMaximumSize),
+	                             lpName);
+	if (hResult == NULL) {
+		DWORD dwError;
+		dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		return_none;
+	}
+	result = libwin32_CreateHandle(hResult);
+	if unlikely(!result) {
+		DWORD dwError;
+		dwError = GetLastError();
+		CloseHandle(hResult);
+		SetLastError(dwError);
+	}
+	return result;
+err:
+	return NULL;
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("GetCurrentProcess", "->?GHANDLE"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f_impl(void);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f(size_t argc, DeeObject **argv);
+#define LIBWIN32_GETCURRENTPROCESS_DEF { "GetCurrentProcess", (DeeObject *)&libwin32_GetCurrentProcess, MODSYM_FNORMAL, DOC("->?GHANDLE") },
+#define LIBWIN32_GETCURRENTPROCESS_DEF_DOC(doc) { "GetCurrentProcess", (DeeObject *)&libwin32_GetCurrentProcess, MODSYM_FNORMAL, DOC("->?GHANDLE\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentProcess, libwin32_GetCurrentProcess_f);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f(size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":GetCurrentProcess"))
+		goto err;
+	return libwin32_GetCurrentProcess_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f_impl(void)
+//[[[end]]]
+{
+	return libwin32_CreateHandle(GetCurrentProcess());
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("GetCurrentThread", "->?GHANDLE"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f_impl(void);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f(size_t argc, DeeObject **argv);
+#define LIBWIN32_GETCURRENTTHREAD_DEF { "GetCurrentThread", (DeeObject *)&libwin32_GetCurrentThread, MODSYM_FNORMAL, DOC("->?GHANDLE") },
+#define LIBWIN32_GETCURRENTTHREAD_DEF_DOC(doc) { "GetCurrentThread", (DeeObject *)&libwin32_GetCurrentThread, MODSYM_FNORMAL, DOC("->?GHANDLE\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentThread, libwin32_GetCurrentThread_f);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f(size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":GetCurrentThread"))
+		goto err;
+	return libwin32_GetCurrentThread_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f_impl(void)
+//[[[end]]]
+{
+	return libwin32_CreateHandle(GetCurrentThread());
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("GetCurrentProcessId", "->?Dint"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f_impl(void);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f(size_t argc, DeeObject **argv);
+#define LIBWIN32_GETCURRENTPROCESSID_DEF { "GetCurrentProcessId", (DeeObject *)&libwin32_GetCurrentProcessId, MODSYM_FNORMAL, DOC("->?Dint") },
+#define LIBWIN32_GETCURRENTPROCESSID_DEF_DOC(doc) { "GetCurrentProcessId", (DeeObject *)&libwin32_GetCurrentProcessId, MODSYM_FNORMAL, DOC("->?Dint\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentProcessId, libwin32_GetCurrentProcessId_f);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f(size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":GetCurrentProcessId"))
+		goto err;
+	return libwin32_GetCurrentProcessId_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f_impl(void)
+//[[[end]]]
+{
+	return DeeInt_NewU32(GetCurrentProcessId());
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("GetCurrentThreadId", "->?Dint"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f(size_t argc, DeeObject **argv);
+#define LIBWIN32_GETCURRENTTHREADID_DEF { "GetCurrentThreadId", (DeeObject *)&libwin32_GetCurrentThreadId, MODSYM_FNORMAL, DOC("->?Dint") },
+#define LIBWIN32_GETCURRENTTHREADID_DEF_DOC(doc) { "GetCurrentThreadId", (DeeObject *)&libwin32_GetCurrentThreadId, MODSYM_FNORMAL, DOC("->?Dint\n" doc) },
+PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentThreadId, libwin32_GetCurrentThreadId_f);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f(size_t argc, DeeObject **argv) {
+	if (DeeArg_Unpack(argc, argv, ":GetCurrentThreadId"))
+		goto err;
+	return libwin32_GetCurrentThreadId_f_impl();
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void)
+//[[[end]]]
+{
+	return DeeInt_NewU32(GetCurrentThreadId());
 }
 
 
@@ -2444,6 +2835,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: STD_OUTPUT_HANDLE */
 	/* TODO: STD_ERROR_HANDLE */
 
+	/* Memory functions */
+	LIBWIN32_MAPVIEWOFFILE_DEF
+	LIBWIN32_UNMAPVIEWOFFILE_DEF
+	LIBWIN32_CREATEFILEMAPPING_DEF
+
+	/* Process control */
+	LIBWIN32_GETCURRENTPROCESS_DEF
+	LIBWIN32_GETCURRENTTHREAD_DEF
+	LIBWIN32_GETCURRENTPROCESSID_DEF
+	LIBWIN32_GETCURRENTTHREADID_DEF
+
 	/* Filesystem functions */
 	LIBWIN32_REMOVEDIRECTORY_DEF
 	LIBWIN32_CREATEDIRECTORY_DEF
@@ -2458,100 +2860,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module (s.a. #GetLastError)")
 	LIBWIN32_GETMAPPEDFILENAME_DEF
 
-	/* Constant flags. */
-	LIBWIN32_FILE_READ_DATA_DEF
-	LIBWIN32_FILE_LIST_DIRECTORY_DEF
-	LIBWIN32_FILE_WRITE_DATA_DEF
-	LIBWIN32_FILE_ADD_FILE_DEF
-	LIBWIN32_FILE_APPEND_DATA_DEF
-	LIBWIN32_FILE_ADD_SUBDIRECTORY_DEF
-	LIBWIN32_FILE_CREATE_PIPE_INSTANCE_DEF
-	LIBWIN32_FILE_READ_EA_DEF
-	LIBWIN32_FILE_WRITE_EA_DEF
-	LIBWIN32_FILE_EXECUTE_DEF
-	LIBWIN32_FILE_TRAVERSE_DEF
-	LIBWIN32_FILE_DELETE_CHILD_DEF
-	LIBWIN32_FILE_READ_ATTRIBUTES_DEF
-	LIBWIN32_FILE_WRITE_ATTRIBUTES_DEF
-	LIBWIN32_FILE_ALL_ACCESS_DEF
-	LIBWIN32_FILE_GENERIC_READ_DEF
-	LIBWIN32_FILE_GENERIC_WRITE_DEF
-	LIBWIN32_FILE_GENERIC_EXECUTE_DEF
-	LIBWIN32_FILE_SHARE_READ_DEF
-	LIBWIN32_FILE_SHARE_WRITE_DEF
-	LIBWIN32_FILE_SHARE_DELETE_DEF
-	LIBWIN32_FILE_ATTRIBUTE_READONLY_DEF
-	LIBWIN32_FILE_ATTRIBUTE_HIDDEN_DEF
-	LIBWIN32_FILE_ATTRIBUTE_SYSTEM_DEF
-	LIBWIN32_FILE_ATTRIBUTE_DIRECTORY_DEF
-	LIBWIN32_FILE_ATTRIBUTE_ARCHIVE_DEF
-	LIBWIN32_FILE_ATTRIBUTE_DEVICE_DEF
-	LIBWIN32_FILE_ATTRIBUTE_NORMAL_DEF
-	LIBWIN32_FILE_ATTRIBUTE_TEMPORARY_DEF
-	LIBWIN32_FILE_ATTRIBUTE_SPARSE_FILE_DEF
-	LIBWIN32_FILE_ATTRIBUTE_REPARSE_POINT_DEF
-	LIBWIN32_FILE_ATTRIBUTE_COMPRESSED_DEF
-	LIBWIN32_FILE_ATTRIBUTE_OFFLINE_DEF
-	LIBWIN32_FILE_ATTRIBUTE_NOT_CONTENT_INDEXED_DEF
-	LIBWIN32_FILE_ATTRIBUTE_ENCRYPTED_DEF
-	LIBWIN32_FILE_ATTRIBUTE_INTEGRITY_STREAM_DEF
-	LIBWIN32_FILE_ATTRIBUTE_VIRTUAL_DEF
-	LIBWIN32_FILE_ATTRIBUTE_NO_SCRUB_DATA_DEF
-	LIBWIN32_FILE_ATTRIBUTE_EA_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_FILE_NAME_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_DIR_NAME_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_ATTRIBUTES_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_SIZE_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_LAST_WRITE_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_LAST_ACCESS_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_CREATION_DEF
-	LIBWIN32_FILE_NOTIFY_CHANGE_SECURITY_DEF
-	LIBWIN32_FILE_ACTION_ADDED_DEF
-	LIBWIN32_FILE_ACTION_REMOVED_DEF
-	LIBWIN32_FILE_ACTION_MODIFIED_DEF
-	LIBWIN32_FILE_ACTION_RENAMED_OLD_NAME_DEF
-	LIBWIN32_FILE_ACTION_RENAMED_NEW_NAME_DEF
-	LIBWIN32_FILE_CASE_SENSITIVE_SEARCH_DEF
-	LIBWIN32_FILE_CASE_PRESERVED_NAMES_DEF
-	LIBWIN32_FILE_UNICODE_ON_DISK_DEF
-	LIBWIN32_FILE_PERSISTENT_ACLS_DEF
-	LIBWIN32_FILE_FILE_COMPRESSION_DEF
-	LIBWIN32_FILE_VOLUME_QUOTAS_DEF
-	LIBWIN32_FILE_SUPPORTS_SPARSE_FILES_DEF
-	LIBWIN32_FILE_SUPPORTS_REPARSE_POINTS_DEF
-	LIBWIN32_FILE_SUPPORTS_REMOTE_STORAGE_DEF
-	LIBWIN32_FILE_VOLUME_IS_COMPRESSED_DEF
-	LIBWIN32_FILE_SUPPORTS_OBJECT_IDS_DEF
-	LIBWIN32_FILE_SUPPORTS_ENCRYPTION_DEF
-	LIBWIN32_FILE_NAMED_STREAMS_DEF
-	LIBWIN32_FILE_READ_ONLY_VOLUME_DEF
-	LIBWIN32_FILE_SEQUENTIAL_WRITE_ONCE_DEF
-	LIBWIN32_FILE_SUPPORTS_TRANSACTIONS_DEF
-	LIBWIN32_FILE_SUPPORTS_HARD_LINKS_DEF
-	LIBWIN32_FILE_SUPPORTS_EXTENDED_ATTRIBUTES_DEF
-	LIBWIN32_FILE_SUPPORTS_OPEN_BY_FILE_ID_DEF
-	LIBWIN32_FILE_SUPPORTS_USN_JOURNAL_DEF
-	LIBWIN32_FILE_SUPPORTS_INTEGRITY_STREAMS_DEF
-	LIBWIN32_CREATE_NEW_DEF
-	LIBWIN32_CREATE_ALWAYS_DEF
-	LIBWIN32_OPEN_EXISTING_DEF
-	LIBWIN32_OPEN_ALWAYS_DEF
-	LIBWIN32_TRUNCATE_EXISTING_DEF
-	LIBWIN32_FILE_BEGIN_DEF
-	LIBWIN32_FILE_CURRENT_DEF
-	LIBWIN32_FILE_END_DEF
-	LIBWIN32_FILE_TYPE_UNKNOWN_DEF
-	LIBWIN32_FILE_TYPE_DISK_DEF
-	LIBWIN32_FILE_TYPE_CHAR_DEF
-	LIBWIN32_FILE_TYPE_PIPE_DEF
-	LIBWIN32_FILE_TYPE_REMOTE_DEF
-	LIBWIN32_DRIVE_UNKNOWN_DEF
-	LIBWIN32_DRIVE_NO_ROOT_DIR_DEF
-	LIBWIN32_DRIVE_REMOVABLE_DEF
-	LIBWIN32_DRIVE_FIXED_DEF
-	LIBWIN32_DRIVE_REMOTE_DEF
-	LIBWIN32_DRIVE_CDROM_DEF
-	LIBWIN32_DRIVE_RAMDISK_DEF
+	/* Include Windows constants. */
+	LIBWIN32_CONSTANTS_DEFS
 
 	{ NULL }
 };
