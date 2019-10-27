@@ -161,7 +161,29 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 
 /* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
 DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
-DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hHandle);
+DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile);
+
+/* Same as `DeeNTSystem_GetFilenameOfHandle()', but return `ITER_DONE' rather than
+ * throwing a SystemError when `DeeNTSystem_PrintFilenameOfHandle()' returns `1' */
+DFUNDEF WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeNTSystem_TryGetFilenameOfHandle(/*HANDLE*/ void *hFile);
+
+/* @return: 1:  The system call failed (See GetLastError()).
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+DFUNDEF WUNUSED int DCALL
+DeeNTSystem_PrintFilenameOfHandle(struct Dee_unicode_printer *__restrict printer,
+                                  /*HANDLE*/ void *hFile);
+
+/* Wrapper for the `GetFinalPathNameByHandle()' system call.
+ * @return: 2:  Unsupported.
+ * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+DFUNDEF WUNUSED int DCALL
+DeeNTSystem_PrintFinalPathNameByHandle(struct Dee_unicode_printer *__restrict printer,
+                                       /*HANDLE*/ void *hFile,
+                                       /*DWORD*/ DeeNT_DWORD dwFlags);
 
 /* Wrapper for the `FormatMessageW()' system call.
  * @return: * :        The formatted message.
@@ -263,6 +285,11 @@ DFUNDEF void DCALL DeeSystem_DlClose(void *handle);
 /* Determine the filename from a file descriptor, as returned by `open()'
  * If the host doesn't support FD-based file descriptors, throw an error. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeSystem_GetFilenameOfFD(int fd);
+
+/* @return: 0:  Success.
+ * @return: -1: Error. */
+DFUNDEF WUNUSED int DCALL
+DeeSystem_PrintFilenameOfFD(struct Dee_unicode_printer *__restrict printer, int fd);
 
 /* Read the contexts of the given link.
  * If the host doesn't support symbolic links, throw an error.

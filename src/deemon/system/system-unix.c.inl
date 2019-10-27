@@ -66,7 +66,7 @@ DECL_BEGIN
  * @return: -1 / NULL:     Error.
  * @return: 1 / ITER_DONE: The specified file isn't a symbolic link. */
 PUBLIC WUNUSED int DCALL
-DeeUnixSystem_Printlink(struct Dee_unicode_printer *__restrict printer,
+DeeUnixSystem_Printlink(struct unicode_printer *__restrict printer,
                         /*String*/ DeeObject *__restrict filename) {
 #ifdef DeeUnixSystem_Readlink_USE_WINDOWS
 	/* TODO */
@@ -94,7 +94,7 @@ DeeUnixSystem_Printlink(struct Dee_unicode_printer *__restrict printer,
 }
 
 PUBLIC WUNUSED int DCALL
-DeeUnixSystem_PrintlinkString(struct Dee_unicode_printer *__restrict printer,
+DeeUnixSystem_PrintlinkString(struct unicode_printer *__restrict printer,
                               /*utf-8*/ char const *filename) {
 #ifdef DeeUnixSystem_Readlink_USE_WINDOWS
 	/* TODO */
@@ -102,6 +102,13 @@ DeeUnixSystem_PrintlinkString(struct Dee_unicode_printer *__restrict printer,
 	(void)filename;
 	return 1;
 #endif /* DeeUnixSystem_Readlink_USE_WINDOWS */
+
+#ifdef DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT
+	/* TODO */
+	(void)printer;
+	(void)filename;
+	return 1;
+#endif /* DEEUNIXSYSTEM_READLINK_USE_FREADLINKAT */
 
 #ifdef DeeUnixSystem_Readlink_USE_READLINK
 	char *buffer, *new_buffer;
@@ -205,52 +212,68 @@ DeeUnixSystem_ReadlinkString(/*utf-8*/ char const *filename) {
 
 
 /* Figure out how to implement `DeeSystem_GetFilenameOfFD()' */
-#undef DeeSystem_GetFilenameOfFD_USE_NT_HANDLE
-#undef DeeSystem_GetFilenameOfFD_USE_PROCFS
-#undef DeeSystem_GetFilenameOfFD_USE_STUB
+#undef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
+#undef DeeSystem_PrintFilenameOfFD_USE_PROCFS
+#undef DeeSystem_PrintFilenameOfFD_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_get_osfhandle)
-#define DeeSystem_GetFilenameOfFD_USE_NT_HANDLE 1
+#define DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE 1
 #elif !defined(DeeUnixSystem_Readlink_USE_STUB)
-#define DeeSystem_GetFilenameOfFD_USE_PROCFS 1
+#define DeeSystem_PrintFilenameOfFD_USE_PROCFS 1
 #else
-#define DeeSystem_GetFilenameOfFD_USE_STUB 1
+#define DeeSystem_PrintFilenameOfFD_USE_STUB 1
 #endif
 
-#ifdef DeeSystem_GetFilenameOfFD_USE_NT_HANDLE
+/* Determine the filename from a file descriptor, as returned by `open()'
+ * If the host doesn't support FD-based file descriptors, throw an error. */
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeSystem_GetFilenameOfFD(int fd) {
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	if (DeeSystem_PrintFilenameOfFD(&printer, fd))
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+
+#ifdef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
 PRIVATE ATTR_COLD int DCALL
-err_GetFilenameOfFD_BADF(int fd) {
+err_PrintFilenameOfFD_BADF(int fd) {
 	return DeeError_SysThrowf(&DeeError_SystemError, EBADF,
 	                          "Bad file descriptor %d", fd);
 }
-#endif /* DeeSystem_GetFilenameOfFD_USE_NT_HANDLE */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE */
 
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSystem_GetFilenameOfFD(int fd) {
-#ifdef DeeSystem_GetFilenameOfFD_USE_NT_HANDLE
+/* @return: 0:  Success.
+ * @return: -1: Error. */
+PUBLIC WUNUSED int DCALL
+DeeSystem_PrintFilenameOfFD(struct unicode_printer *__restrict printer, int fd) {
+#ifdef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
+	int result;
 	HANDLE h;
-	DREF DeeObject *result;
 	h = (HANDLE)get_osfhandle(fd);
 	if (h == INVALID_HANDLE_VALUE) {
-		err_GetFilenameOfFD_BADF(fd);
-		return NULL;
+		err_PrintFilenameOfFD_BADF(fd);
+		result = -1;
+	} else {
+		result = DeeNTSystem_PrintFilenameOfHandle(printer, (void *)h);
 	}
-	result = DeeNTSystem_GetFilenameOfHandle((void *)h);
 	return result;
-#endif /* DeeSystem_GetFilenameOfFD_USE_NT_HANDLE */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE */
 
-#ifdef DeeSystem_GetFilenameOfFD_USE_PROCFS
-	DREF DeeObject *result;
+#ifdef DeeSystem_PrintFilenameOfFD_USE_PROCFS
 	char buf[64];
 	Dee_sprintf(buf, "/proc/self/fd/%d", fd);
-	result = DeeUnixSystem_ReadlinkString(buf);
-	return result;
-#endif /* DeeSystem_GetFilenameOfFD_USE_PROCFS */
+	return DeeUnixSystem_PrintlinkString(printer, buf);
+#endif /* DeeSystem_PrintFilenameOfFD_USE_PROCFS */
 
-#ifdef DeeSystem_GetFilenameOfFD_USE_STUB
-	DeeError_Throwf(&DeeError_UnsupportedAPI,
-	                "Unsupported function: GetFilenameOfFD");
-	return NULL;
-#endif /* DeeSystem_GetFilenameOfFD_USE_STUB */
+#ifdef DeeSystem_PrintFilenameOfFD_USE_STUB
+	(void)printer;
+	(void)fd;
+	return DeeError_Throwf(&DeeError_UnsupportedAPI,
+	                       "Unsupported function: GetFilenameOfFD");
+#endif /* DeeSystem_PrintFilenameOfFD_USE_STUB */
 }
 
 

@@ -33,14 +33,33 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
+#include <deemon/thread.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
 
 #include <Windows.h>
 
 #include "../runtime/strings.h"
 
+#ifndef PATH_MAX
+#ifdef PATHMAX
+#   define PATH_MAX PATHMAX
+#elif defined(MAX_PATH)
+#   define PATH_MAX MAX_PATH
+#elif defined(MAXPATH)
+#   define PATH_MAX MAXPATH
+#else
+#   define PATH_MAX 260
+#endif
+#endif /* !PATH_MAX */
+
 DECL_BEGIN
+
+#ifdef _WIN32_WCE
+#undef GetProcAddress
+#define GetProcAddress GetProcAddressA
+#endif /* _WIN32_WCE */
 
 #ifdef CONFIG_LITTLE_ENDIAN
 #define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
@@ -1699,13 +1718,186 @@ PUBLIC int DCALL nt_ThrowLastError(void) {
 }
 
 
+/* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
 PUBLIC WUNUSED /*String*/ DREF DeeObject *DCALL
-DeeNTSystem_GetFilenameOfHandle(HANDLE hHandle) {
-	/* TODO */
-	(void)hHandle;
-	DERROR_NOTIMPLEMENTED();
+DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile) {
+	int error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	error = DeeNTSystem_PrintFilenameOfHandle(&printer, hFile);
+	if unlikely(error != 0) {
+		if (error > 0) {
+			DeeNTSystem_ThrowLastErrorf(NULL,
+			                            "Failed to print path of HANDLE %p",
+			                            hFile);
+		}
+		goto err;
+	}
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
 	return NULL;
 }
+
+/* Same as `DeeNTSystem_GetFilenameOfHandle()', but return `ITER_DONE' rather than
+ * throwing a SystemError when `DeeNTSystem_PrintFilenameOfHandle()' returns `1' */
+PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL
+DeeNTSystem_TryGetFilenameOfHandle(/*HANDLE*/ void *hFile) {
+	int error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	error = DeeNTSystem_PrintFilenameOfHandle(&printer, hFile);
+	if unlikely(error != 0) {
+		if (error > 0) {
+			unicode_printer_fini(&printer);
+			return ITER_DONE;
+		}
+		goto err;
+	}
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+
+
+typedef DWORD (WINAPI *LPGETFINALPATHNAMEBYHANDLEW)(HANDLE hFile, LPWSTR lpszFilePath,
+                                                    DWORD cchFilePath, DWORD dwFlags);
+PRIVATE LPGETFINALPATHNAMEBYHANDLEW pdyn_GetFinalPathNameByHandleW = NULL;
+PRIVATE WCHAR const wKernel32[]    = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
+PRIVATE WCHAR const wKernel32Dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
+
+/* Wrapper for the `GetFinalPathNameByHandle()' system call.
+ * @return: 2:  Unsupported.
+ * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+PUBLIC WUNUSED int DCALL
+DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printer,
+                                       /*HANDLE*/ void *hFile,
+                                       /*DWORD*/ DeeNT_DWORD dwFlags) {
+	LPWSTR lpNewBuffer, lpBuffer;
+	DWORD dwNewBufSize, dwBufSize;
+	if (!pdyn_GetFinalPathNameByHandleW) {
+		/* Try to load `GetFinalPathNameByHandleW()' */
+		HMODULE hKernel32;
+		hKernel32 = GetModuleHandleW(wKernel32);
+		if (!hKernel32)
+			hKernel32 = LoadLibraryW(wKernel32Dll);
+		if (!hKernel32)
+			ATOMIC_WRITE(*(void **)&pdyn_GetFinalPathNameByHandleW, (void *)-1);
+		else {
+			LPGETFINALPATHNAMEBYHANDLEW func;
+			func = (LPGETFINALPATHNAMEBYHANDLEW)GetProcAddress(hKernel32, "GetFinalPathNameByHandleW");
+			if (!func)
+				*(void **)&func = (void *)-1;
+			ATOMIC_WRITE(pdyn_GetFinalPathNameByHandleW, func);
+		}
+	}
+	if (*(void **)&pdyn_GetFinalPathNameByHandleW == (void *)-1)
+		return 2;
+	/* Make use of `GetFinalPathNameByHandleW()' */
+	dwBufSize = PATH_MAX;
+	lpBuffer = unicode_printer_alloc_wchar(printer, dwBufSize);
+	if unlikely(!lpBuffer)
+		goto err;
+	for (;;) {
+		dwNewBufSize = (*pdyn_GetFinalPathNameByHandleW)((HANDLE)hFile,
+		                                                 lpBuffer,
+		                                                 dwBufSize,
+		                                                 dwFlags);
+		if unlikely(!dwNewBufSize) {
+			DWORD dwError;
+			dwError = GetLastError();
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_lpBuffer;
+				continue;
+			}
+			unicode_printer_free_wchar(printer, lpBuffer);
+			SetLastError(dwError);
+			return 1;
+		}
+		if (dwNewBufSize <= dwBufSize)
+			break;
+		--dwNewBufSize; /* This would include the trailing NUL-character */
+		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, dwNewBufSize);
+		if unlikely(!lpNewBuffer) {
+err_lpBuffer:
+			unicode_printer_free_wchar(printer, lpBuffer);
+			goto err;
+		}
+		dwBufSize = dwNewBufSize;
+	}
+	if (unicode_printer_confirm_wchar(printer, lpBuffer, dwNewBufSize) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+/* @return: 1:  The system call failed (See GetLastError()).
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+PUBLIC WUNUSED int DCALL
+DeeNTSystem_PrintFilenameOfHandle(struct unicode_printer *__restrict printer,
+                                  /*HANDLE*/ void *hFile) {
+	int error;
+	size_t length;
+	length = UNICODE_PRINTER_LENGTH(printer);
+	error = DeeNTSystem_PrintFinalPathNameByHandle(printer, hFile, 0);
+	if (error == 0) {
+		size_t newLength;
+		/* Try to get rid of the \\?\ prefix */
+		newLength = UNICODE_PRINTER_LENGTH(printer);
+		if (newLength >= length + 6 &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 0) == '\\' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 1) == '\\' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 2) == '?' &&
+		    UNICODE_PRINTER_GETCHAR(printer, length + 3) == '\\') {
+			if (DeeUni_IsAlpha(UNICODE_PRINTER_GETCHAR(printer, length + 4))) {
+				size_t drive_end = length + 5;
+				for (;;) {
+					uint32_t ch;
+					ch = UNICODE_PRINTER_GETCHAR(printer, drive_end);
+					if (ch == ':')
+						break;
+					if (!DeeUni_IsAlpha(ch))
+						goto not_a_drive_prefix;
+					++drive_end;
+				}
+				/* This is a r"\\?\<DRIVE_LETTER(S)>:"-like prefix */
+				unicode_printer_memmove(printer, length, length + 4,
+				                        (newLength - length) - 4);
+				unicode_printer_truncate(printer, newLength - 4);
+				return 0;
+			}
+not_a_drive_prefix:
+			/* Check for r"\\?\UNC\<SERVER>\<SHARE>"-like prefixes.
+			 * These then have to be converted into r"\\<SERVER>\<SHARE>",
+			 * so we can simply delete the r"?\UNC\" portion. */
+			if (UNICODE_PRINTER_GETCHAR(printer, length + 4) == 'U' &&
+			    UNICODE_PRINTER_GETCHAR(printer, length + 5) == 'N' &&
+			    UNICODE_PRINTER_GETCHAR(printer, length + 6) == 'C' &&
+			    UNICODE_PRINTER_GETCHAR(printer, length + 7) == '\\') {
+				unicode_printer_memmove(printer, length + 2, length + 8,
+				                        (newLength - length) - 6);
+				unicode_printer_truncate(printer, newLength - 6);
+				return 0;
+			}
+		}
+		return 0;
+	}
+	if (error != 2)
+		return error; /* Error (-1) or System error (1) */
+	/* GetFinalPathNameByHandle() isn't supported (try to emulate it) */
+	/* TODO: GetMappedFileName(MapViewOfFile(CreateFileMapping(fd))); */
+	(void)printer;
+	(void)hFile;
+	DERROR_NOTIMPLEMENTED();
+/*err:*/
+	return -1;
+}
+
 
 
 /* Wrapper for the `FormatMessageW()' system call.
@@ -1736,13 +1928,13 @@ DeeNTSystem_FormatMessage(DeeNT_DWORD dwFlags, void const *lpSource,
  * @return: 0:  Successfully printed the message.
  * @return: -1: A deemon callback failed and an error was thrown. */
 DFUNDEF WUNUSED int DCALL
-DeeNTSystem_PrintFormatMessage(struct Dee_unicode_printer *__restrict printer,
+DeeNTSystem_PrintFormatMessage(struct unicode_printer *__restrict printer,
                                DeeNT_DWORD dwFlags, void const *lpSource,
                                DeeNT_DWORD dwMessageId, DeeNT_DWORD dwLanguageId,
                                /* va_list * */ void *Arguments) {
 	LPWSTR buffer, newBuffer;
-	DWORD dwNewBufsize, dwBufsize = 128;
-	buffer = unicode_printer_alloc_wchar(printer, dwBufsize);
+	DWORD dwNewBufsize, dwBufSize = 128;
+	buffer = unicode_printer_alloc_wchar(printer, dwBufSize);
 	if unlikely(!buffer)
 		goto err;
 again:
@@ -1752,7 +1944,7 @@ again:
 	                              dwMessageId,
 	                              dwLanguageId,
 	                              buffer,
-	                              dwBufsize,
+	                              dwBufSize,
 	                              (va_list *)Arguments);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(!dwNewBufsize) {
@@ -1765,12 +1957,12 @@ again:
 		} else {
 			/* MSDN says that this string cannot exceed 32*1024
 			 * >> So if it does, treat it as a failure of translating the message... */
-			if (dwBufsize > 32 * 1024) {
+			if (dwBufSize > 32 * 1024) {
 				unicode_printer_free_wchar(printer, buffer);
 				return 1;
 			}
-			dwBufsize *= 2;
-			newBuffer = unicode_printer_resize_wchar(printer, buffer, dwBufsize);
+			dwBufSize *= 2;
+			newBuffer = unicode_printer_resize_wchar(printer, buffer, dwBufSize);
 			if unlikely(!newBuffer)
 				goto err_release;
 			buffer = newBuffer;
@@ -1778,13 +1970,13 @@ again:
 		}
 		goto err_release;
 	}
-	if (dwNewBufsize > dwBufsize) {
+	if (dwNewBufsize > dwBufSize) {
 		LPWSTR new_buffer;
 		/* Increase the buffer and try again. */
 		new_buffer = unicode_printer_resize_wchar(printer, buffer, dwNewBufsize);
 		if unlikely(!new_buffer)
 			goto err_release;
-		dwBufsize = dwNewBufsize;
+		dwBufSize = dwNewBufsize;
 		goto again;
 	}
 	/* Trim all trailing space characters */
