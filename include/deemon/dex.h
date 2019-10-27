@@ -110,13 +110,14 @@ struct Dee_dex {
 };
 
 struct Dee_dex_object {
-	DeeModuleObject    d_module; /* The underlying module. */
-	struct Dee_dex    *d_dex;    /* [1..1][const_if(MODULE_FDIDLOAD)] The dex definition table exported by this extension.
-	                              * NOTE: This pointer is apart of the extension's static address space. */
-	void              *d_handle; /* [?..?][const_if(MODULE_FDIDLOAD)] System-specific library handle. */
-	DeeDexObject     **d_pself;  /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
-	DREF DeeDexObject *d_next;   /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
-	                              * During finalization, extensions are unloaded in reverse order. */
+	DeeModuleObject    d_module;       /* The underlying module. */
+	struct Dee_dex    *d_dex;          /* [1..1][const_if(MODULE_FDIDLOAD)] The dex definition table exported by this extension.
+	                                    * NOTE: This pointer is apart of the extension's static address space. */
+	void              *d_handle;       /* [?..?][const_if(MODULE_FDIDLOAD)] System-specific library handle. */
+	DeeDexObject     **d_pself;        /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
+	DREF DeeDexObject *d_next;         /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
+	                                    * During finalization, extensions are unloaded in reverse order. */
+	char const *const *d_import_names; /* [1..1|SENTINEL([0..0])][0..1] NULL-terminated vector of other imported modules. */
 };
 
 DDATDEF DeeTypeObject DeeDex_Type;

@@ -69,7 +69,7 @@ dex_load_handle(DeeDexObject *__restrict self,
                 void *handle,
                 DeeObject *__restrict input_file) {
 	struct module_symbol *modsym;
-	struct dex_symbol *symbols;
+	struct dex_symbol const *symbols;
 	struct dex *descriptor;
 	DREF DeeObject **globals;
 	DREF DeeModuleObject **imports;
@@ -89,10 +89,10 @@ dex_load_handle(DeeDexObject *__restrict self,
 	self->d_dex    = descriptor;
 	/* Load the extension's import vector. */
 	impcount = 0, imports = NULL;
-	if (descriptor->d_import_names &&
-	    *descriptor->d_import_names) {
+	if (descriptor->d_import_names && *descriptor->d_import_names) {
 		size_t i;
 		char **names = (char **)descriptor->d_import_names;
+		self->d_import_names = (char const *const *)names;
 		while (*names)
 			++impcount, ++names;
 		if unlikely(impcount > UINT16_MAX) {
@@ -162,7 +162,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 		goto err_glob;
 	/* Set the symbol table and global variable vector. */
 	for (symi = 0; symi < (uint16_t)glbcount; ++symi) {
-		struct dex_symbol *sym = &symbols[symi];
+		struct dex_symbol const *sym = &symbols[symi];
 		dhash_t i, perturb, hash;
 		ASSERT(sym->ds_name);
 		ASSERTF(!sym->ds_obj || DeeObject_DoCheck(sym->ds_obj),
@@ -413,6 +413,11 @@ dex_fini(DeeDexObject *__restrict self) {
 			if (self->d_dex->d_fini)
 				(*self->d_dex->d_fini)(self);
 		}
+		/* Restore the import name list, thus allowing the module to be re-loaded.
+		 * FIXME: Same problem with this, as with `DeeSystem_DlClose()': There may
+		 *        still be components alive that are referencing the DEX! */
+		self->d_dex->d_import_names = self->d_import_names;
+
 		/* Must clear membercaches that may have been loaded by
 		 * this extension before unloading the associated library.
 		 * If we don't do this before, dangling points may be left
