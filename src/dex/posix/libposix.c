@@ -115,7 +115,34 @@ PRIVATE char const *missing_features[] = {
 #endif /* posix_dup3_USE_STUB */
 #ifndef CONFIG_HAVE_errno
 	"errno",
-#endif /* CONFIG_HAVE_errno */
+#endif /* !CONFIG_HAVE_errno */
+#ifdef posix_fsync_USE_STUB
+	"fsync",
+#endif /* posix_fsync_USE_STUB */
+#ifdef posix_fdatasync_USE_STUB
+	"fdatasync",
+#endif /* posix_fdatasync_USE_STUB */
+#ifdef posix_system_USE_STUB
+	"system",
+#endif /* posix_system_USE_STUB */
+#ifdef posix_getpid_USE_STUB
+	"getpid",
+#endif /* posix_getpid_USE_STUB */
+#ifdef posix_read_USE_STUB
+	"read",
+#endif /* posix_read_USE_STUB */
+#ifdef posix_lseek_USE_STUB
+	"lseek",
+#endif /* posix_lseek_USE_STUB */
+#ifdef posix_write_USE_STUB
+	"write",
+#endif /* posix_write_USE_STUB */
+#ifdef posix_pread_USE_STUB
+	"pread",
+#endif /* posix_pread_USE_STUB */
+#ifdef posix_pwrite_USE_STUB
+	"pwrite",
+#endif /* posix_pwrite_USE_STUB */
 	NULL
 };
 
@@ -140,7 +167,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_CREAT_DEF)
 	D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
 	                     "When @buf is given, return the actual number of read bytes. "
-	                     "Otherwise read into a new :Bytes object that is then returned"))
+	                     "Otherwise, read into a new :Bytes object that is then returned"))
 	D(POSIX_WRITE_DEF_DOC("Write up to @count bytes from @buf, returning the actual number of bytes written"))
 	D(POSIX_LSEEK_DEF)
 	D(POSIX_FSYNC_DEF)

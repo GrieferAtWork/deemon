@@ -19,9 +19,11 @@
 #ifndef GUARD_DEX_POSIX_LIBPOSIX_H
 #define GUARD_DEX_POSIX_LIBPOSIX_H 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/exec.h>
