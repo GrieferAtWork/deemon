@@ -205,6 +205,10 @@ wgii("FILE_MAP_EXECUTE");
 wgii("FILE_MAP_LARGE_PAGES");
 wgii("FILE_MAP_TARGETS_INVALID");
 
+wgii("STD_INPUT_HANDLE");
+wgii("STD_OUTPUT_HANDLE");
+wgii("STD_ERROR_HANDLE");
+
 File.stdout = orig_stdout;
 print "#define LIBWIN32_CONSTANTS_DEFS \\";
 for (local x: allDecls) {
@@ -331,6 +335,9 @@ print "/" "**" "/";
 	LIBWIN32_FILE_MAP_EXECUTE_DEF \
 	LIBWIN32_FILE_MAP_LARGE_PAGES_DEF \
 	LIBWIN32_FILE_MAP_TARGETS_INVALID_DEF \
+	LIBWIN32_STD_INPUT_HANDLE_DEF \
+	LIBWIN32_STD_OUTPUT_HANDLE_DEF \
+	LIBWIN32_STD_ERROR_HANDLE_DEF \
 /**/
 //[[[end]]]
 
@@ -3059,6 +3066,111 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void
 
 
 
+/*[[[deemon import("_dexutils").gw("GetStdHandle", "nStdHandle:nt:DWORD->?GHANDLE"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f_impl(DWORD nStdHandle);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBWIN32_GETSTDHANDLE_DEF { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint)->?GHANDLE") },
+#define LIBWIN32_GETSTDHANDLE_DEF_DOC(doc) { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint)->?GHANDLE\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetStdHandle, libwin32_GetStdHandle_f);
+#ifndef LIBWIN32_KWDS_NSTDHANDLE_DEFINED
+#define LIBWIN32_KWDS_NSTDHANDLE_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_nStdHandle, { K(nStdHandle), KEND });
+#endif /* !LIBWIN32_KWDS_NSTDHANDLE_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	DWORD nStdHandle;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_nStdHandle, "I32u:GetStdHandle", &nStdHandle))
+		goto err;
+	return libwin32_GetStdHandle_f_impl(nStdHandle);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f_impl(DWORD nStdHandle)
+//[[[end]]]
+{
+	HANDLE hResult;
+	DBG_ALIGNMENT_DISABLE();
+again:
+	hResult = GetStdHandle(nStdHandle);
+	if unlikely(!hResult || hResult == INVALID_HANDLE_VALUE) {
+		DWORD dwError = GetLastError();
+		SetLastError(NO_ERROR);
+		if (DeeNTSystem_IsIntr(dwError)) {
+			DBG_ALIGNMENT_ENABLE();
+check_interrupt:
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		hResult = GetStdHandle(nStdHandle);
+		if (!hResult || hResult == INVALID_HANDLE_VALUE) {
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (dwError != NO_ERROR) {
+				if (DeeNTSystem_IsIntr(dwError))
+					goto check_interrupt;
+				RETURN_ERROR(dwError,
+				             "Failed to get STD handle %I32u",
+				             nStdHandle);
+			}
+		}
+	}
+	DBG_ALIGNMENT_ENABLE();
+	return libwin32_CreateHandle(hResult);
+err:
+	return NULL;
+}
+
+
+
+/*[[[deemon import("_dexutils").gw("SetStdHandle", "nStdHandle:nt:DWORD,hHandle:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f_impl(DWORD nStdHandle, HANDLE hHandle);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBWIN32_SETSTDHANDLE_DEF { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_SETSTDHANDLE_DEF_DOC(doc) { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_SetStdHandle, libwin32_SetStdHandle_f);
+#ifndef LIBWIN32_KWDS_NSTDHANDLE_HHANDLE_DEFINED
+#define LIBWIN32_KWDS_NSTDHANDLE_HHANDLE_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_nStdHandle_hHandle, { K(nStdHandle), K(hHandle), KEND });
+#endif /* !LIBWIN32_KWDS_NSTDHANDLE_HHANDLE_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	DWORD nStdHandle;
+	HANDLE hhHandle;
+	DeeObject *hHandle;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_nStdHandle_hHandle, "I32uo:SetStdHandle", &nStdHandle, &hHandle))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hHandle, (void **)&hhHandle))
+		goto err;
+	return libwin32_SetStdHandle_f_impl(nStdHandle, hhHandle);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f_impl(DWORD nStdHandle, HANDLE hHandle)
+//[[[end]]]
+{
+	BOOL bOk;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	bOk = SetStdHandle(nStdHandle, hHandle);
+	if (!bOk) {
+		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to set STD handle %I32u to %p",
+		                      nStdHandle, hHandle);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	RETURN_SUCCESS_OR_TRUE;
+err:
+	return NULL;
+}
+
+
+
 
 
 
@@ -3120,11 +3232,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	                                     "${GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile)))} workaround "
 	                                     "that is required on Windows XP, and always tries to return a canonically "
 	                                     "correct filename without any $\"\\\\.\\\"-like prefix")
-	/* TODO: GetStdHandle */
-	/* TODO: SetStdHandle */
-	/* TODO: STD_INPUT_HANDLE */
-	/* TODO: STD_OUTPUT_HANDLE */
-	/* TODO: STD_ERROR_HANDLE */
+
+	/* STD handle control */
+	LIBWIN32_GETSTDHANDLE_DEF
+	LIBWIN32_SETSTDHANDLE_DEF
 
 	/* Memory functions */
 	LIBWIN32_MAPVIEWOFFILE_DEF
