@@ -30,6 +30,7 @@
 #include <deemon/error_types.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
+#include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
@@ -93,6 +94,8 @@ DECL_BEGIN
  * >> if (DeeFile_Check(ob))
  * >>     return get_osfhandle(DeeFile_GetSysFD(ob));
  * >> #endif
+ * >> if (DeeNone_Check(ob))
+ * >>     return (void *)(HANDLE)NULL;
  * >> if (DeeInt_Check(ob))
  * >>     return get_osfhandle(DeeInt_AsInt(ob));
  * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_HANDLE_GETSET)); catch (AttributeError);
@@ -152,6 +155,9 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 		return (void *)hResult;
 	}
 #endif /* CONFIG_HAVE_get_osfhandle */
+
+	if (DeeNone_Check(ob))
+		return (void *)(HANDLE)NULL;
 
 	attr = GETATTR_osfhandle(ob);
 	if (attr) {
@@ -243,6 +249,11 @@ PUBLIC WUNUSED int
 		return 0;
 	}
 #endif /* CONFIG_HAVE_get_osfhandle */
+
+	if (DeeNone_Check(ob)) {
+		*pHandle = (void *)(HANDLE)NULL;
+		return 0;
+	}
 
 	attr = GETATTR_osfhandle(ob);
 	if (attr) {

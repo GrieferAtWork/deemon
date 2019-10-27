@@ -540,6 +540,22 @@ done:
 }
 
 
+#if 1
+#define ERROR_OR_BOOL ""
+#define RETURN_ERROR(dwError, ...)                           \
+	do {                                                     \
+		DeeNTSystem_ThrowErrorf(NULL, dwError, __VA_ARGS__); \
+		return NULL;                                         \
+	} __WHILE0
+#define RETURN_ERROR_OR_FALSE  RETURN_ERROR
+#define RETURN_SUCCESS_OR_TRUE return_none
+#else
+#define ERROR_OR_BOOL "->?Dbool"
+#define RETURN_ERROR(dwError, ...)          return_none
+#define RETURN_ERROR_OR_FALSE(dwError, ...) return_false
+#define RETURN_SUCCESS_OR_TRUE              return_true
+#endif
+
 
 
 
@@ -587,11 +603,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f_impl(DWORD dwEr
 	return_none;
 }
 
-/*[[[deemon import("_dexutils").gw("CloseHandle", "hObject:nt:HANDLE->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("CloseHandle", "hObject:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f_impl(HANDLE hObject);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_CLOSEHANDLE_DEF { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)->?Dbool") },
-#define LIBWIN32_CLOSEHANDLE_DEF_DOC(doc) { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)->?Dbool\n" doc) },
+#define LIBWIN32_CLOSEHANDLE_DEF { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_CLOSEHANDLE_DEF_DOC(doc) { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CloseHandle, libwin32_CloseHandle_f);
 #ifndef LIBWIN32_KWDS_HOBJECT_DEFINED
 #define LIBWIN32_KWDS_HOBJECT_DEFINED 1
@@ -615,14 +631,20 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f_impl(HANDLE hObj
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = CloseHandle(hObject);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to close handle %p",
+		                      hObject);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
@@ -680,16 +702,27 @@ again:
 	                     &hResult,
 	                     dwDesiredAccess,
 	                     bInheritHandle,
-	                     dwOptions) ||
-	    hResult == INVALID_HANDLE_VALUE) {
-		if (DeeNTSystem_IsIntr(GetLastError())) {
+	                     dwOptions)) {
+		DWORD dwError;
+		dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		return_none;
+		RETURN_ERROR(dwError,
+		             "Failed to duplicate handle "
+		             "(hSourceProcessHandle: %p, "
+		             "hSourceHandle: %p, "
+		             "hTargetProcessHandle: %p, "
+		             "dwDesiredAccess: %#I32x, "
+		             "bInheritHandle: %d, "
+		             "dwOptions: %#I32x)",
+		             hSourceProcessHandle, hSourceHandle,
+		             hTargetProcessHandle, dwDesiredAccess,
+		             bInheritHandle, dwOptions);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = libwin32_CreateHandle(hResult);
@@ -760,14 +793,20 @@ again:
 	                      dwFlagsAndAttributes,
 	                      hTemplateFile);
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
-		if (DeeNTSystem_IsIntr(GetLastError())) {
+		DWORD dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		return_none;
+		RETURN_ERROR(dwError,
+		             "Failed to open file %lq (dwDesiredAccess: %#I32x, dwShareMode: %#I32x, "
+		             "dwCreationDisposition: %#I32x, dwFlagsAndAttributes: %#I32x, hTemplateFile: %p)",
+		             lpFileName, dwDesiredAccess, dwShareMode,
+		             dwCreationDisposition, dwFlagsAndAttributes,
+		             hTemplateFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = libwin32_CreateHandle(hResult);
@@ -822,19 +861,19 @@ again:
 	               (DWORD)buffer.bb_size,
 	               &dwNumberOfBytesWritten,
 	               NULL)) {
-		if (DeeNTSystem_IsIntr(GetLastError())) {
+		DWORD dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		result = Dee_None;
-		Dee_Incref(Dee_None);
-	} else {
-		DBG_ALIGNMENT_ENABLE();
-		result = DeeInt_NewU32((uint32_t)dwNumberOfBytesWritten);
+		DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FREADONLY);
+		RETURN_ERROR(dwError, "Failed to write to file %p", hFile);
 	}
+	DBG_ALIGNMENT_ENABLE();
+	result = DeeInt_NewU32((uint32_t)dwNumberOfBytesWritten);
 	DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FREADONLY);
 	return result;
 err:
@@ -887,19 +926,19 @@ again:
 	              (DWORD)buffer.bb_size,
 	              &dwNumberOfBytesRead,
 	              NULL)) {
-		if (DeeNTSystem_IsIntr(GetLastError())) {
+		DWORD dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		result = Dee_None;
-		Dee_Incref(Dee_None);
-	} else {
-		DBG_ALIGNMENT_ENABLE();
-		result = DeeInt_NewU32((uint32_t)dwNumberOfBytesRead);
+		DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FWRITABLE);
+		RETURN_ERROR(dwError, "Failed to read from file %p", hFile);
 	}
+	DBG_ALIGNMENT_ENABLE();
+	result = DeeInt_NewU32((uint32_t)dwNumberOfBytesRead);
 	DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FWRITABLE);
 	return result;
 err:
@@ -907,11 +946,11 @@ err:
 }
 
 
-/*[[[deemon import("_dexutils").gw("CreateDirectory", "lpPathName:nt:LPCWSTR,lpSecurityAttributes:?GSECURITY_ATTRIBUTES=NULL->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("CreateDirectory", "lpPathName:nt:LPCWSTR,lpSecurityAttributes:?GSECURITY_ATTRIBUTES=NULL" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f_impl(LPCWSTR lpPathName, DeeObject *lpSecurityAttributes);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_CREATEDIRECTORY_DEF { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?Dbool") },
-#define LIBWIN32_CREATEDIRECTORY_DEF_DOC(doc) { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?Dbool\n" doc) },
+#define LIBWIN32_CREATEDIRECTORY_DEF { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)") },
+#define LIBWIN32_CREATEDIRECTORY_DEF_DOC(doc) { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateDirectory, libwin32_CreateDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED 1
@@ -940,23 +979,29 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	(void)lpSecurityAttributes; /* TODO */
 	bResult = CreateDirectoryW(lpPathName, NULL);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to create directory %lq",
+		                      lpPathName);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
 
-/*[[[deemon import("_dexutils").gw("RemoveDirectory", "lpPathName:nt:LPCWSTR->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("RemoveDirectory", "lpPathName:nt:LPCWSTR" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f_impl(LPCWSTR lpPathName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_REMOVEDIRECTORY_DEF { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)->?Dbool") },
-#define LIBWIN32_REMOVEDIRECTORY_DEF_DOC(doc) { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)->?Dbool\n" doc) },
+#define LIBWIN32_REMOVEDIRECTORY_DEF { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)") },
+#define LIBWIN32_REMOVEDIRECTORY_DEF_DOC(doc) { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_RemoveDirectory, libwin32_RemoveDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_DEFINED 1
@@ -983,23 +1028,29 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f_impl(LPCWSTR
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = RemoveDirectoryW(lpPathName);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to remove directory %lq",
+		                      lpPathName);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
 
-/*[[[deemon import("_dexutils").gw("DeleteFile", "lpFileName:nt:LPCWSTR->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("DeleteFile", "lpFileName:nt:LPCWSTR" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f_impl(LPCWSTR lpFileName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_DELETEFILE_DEF { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dbool") },
-#define LIBWIN32_DELETEFILE_DEF_DOC(doc) { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dbool\n" doc) },
+#define LIBWIN32_DELETEFILE_DEF { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)") },
+#define LIBWIN32_DELETEFILE_DEF_DOC(doc) { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_DeleteFile, libwin32_DeleteFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED 1
@@ -1026,23 +1077,29 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f_impl(LPCWSTR lpFi
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = DeleteFileW(lpFileName);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to delete file %lq",
+		                      lpFileName);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
 
-/*[[[deemon import("_dexutils").gw("SetEndOfFile", "hFile:nt:HANDLE->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("SetEndOfFile", "hFile:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_SETENDOFFILE_DEF { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dbool") },
-#define LIBWIN32_SETENDOFFILE_DEF_DOC(doc) { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dbool\n" doc) },
+#define LIBWIN32_SETENDOFFILE_DEF { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_SETENDOFFILE_DEF_DOC(doc) { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetEndOfFile, libwin32_SetEndOfFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED 1
@@ -1066,23 +1123,30 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f_impl(HANDLE hFi
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetEndOfFile(hFile);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
-		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+	if (!bResult) {
+		DWORD dwError;
+		dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to truncate file %p",
+		                      hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
 
-/*[[[deemon import("_dexutils").gw("SetFileAttributesW", "lpFileName:nt:LPCWSTR,dwFileAttributes:nt:DWORD->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("SetFileAttributesW", "lpFileName:nt:LPCWSTR,dwFileAttributes:nt:DWORD" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f_impl(LPCWSTR lpFileName, DWORD dwFileAttributes);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_SETFILEATTRIBUTESW_DEF { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)->?Dbool") },
-#define LIBWIN32_SETFILEATTRIBUTESW_DEF_DOC(doc) { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)->?Dbool\n" doc) },
+#define LIBWIN32_SETFILEATTRIBUTESW_DEF { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)") },
+#define LIBWIN32_SETFILEATTRIBUTESW_DEF_DOC(doc) { "SetFileAttributesW", (DeeObject *)&libwin32_SetFileAttributesW, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributesW, libwin32_SetFileAttributesW_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED 1
@@ -1110,14 +1174,20 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f_impl(LPCW
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileAttributesW(lpFileName, dwFileAttributes);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to set file attribute of %lq to %#I32x",
+		                      lpFileName, dwFileAttributes);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
@@ -1161,16 +1231,18 @@ again:
 	                          &lDistanceToMoveHigh,
 	                          dwMoveMethod);
 	if unlikely(dwResult == INVALID_SET_FILE_POINTER) {
-		DWORD error = GetLastError();
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error != NO_ERROR) {
-			if (DeeNTSystem_IsIntr(error)) {
+		if (dwError != NO_ERROR) {
+			if (DeeNTSystem_IsIntr(dwError)) {
 				if (DeeThread_CheckInterrupt())
 					goto err;
 				goto again;
 			}
 			DBG_ALIGNMENT_ENABLE();
-			return_none;
+			RETURN_ERROR(dwError,
+			             "Failed to seek file %p (offset: %I64d, whence: %I32u)",
+			             hFile, lDistanceToMove, dwMoveMethod);
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1222,14 +1294,17 @@ again:
 	                      &ftLastAccessTime.ft,
 	                      &ftLastWriteTime.ft);
 	if (!bResult) {
-		if (DeeNTSystem_IsIntr(GetLastError())) {
+		DWORD dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
-		return_none;
+		RETURN_ERROR(dwError,
+		             "Failed to lookup file times of %p",
+		             hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return DeeTuple_Newf(DEE_FMT_UINT64
@@ -1244,11 +1319,11 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("SetFileTime", "hFile:nt:HANDLE,lpCreationTime:?Dint=NULL,lpLastAccessTime:?Dint=NULL,lpLastWriteTime:?Dint=NULL->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("SetFileTime", "hFile:nt:HANDLE,lpCreationTime:?Dint=NULL,lpLastAccessTime:?Dint=NULL,lpLastWriteTime:?Dint=NULL" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f_impl(HANDLE hFile, DeeObject *lpCreationTime, DeeObject *lpLastAccessTime, DeeObject *lpLastWriteTime);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_SETFILETIME_DEF { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)->?Dbool") },
-#define LIBWIN32_SETFILETIME_DEF_DOC(doc) { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)->?Dbool\n" doc) },
+#define LIBWIN32_SETFILETIME_DEF { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)") },
+#define LIBWIN32_SETFILETIME_DEF_DOC(doc) { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileTime, libwin32_SetFileTime_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED 1
@@ -1287,25 +1362,31 @@ again:
 	                      lpCreationTime ? &ftCreationTime.ft : NULL,
 	                      lpLastAccessTime ? &ftLastAccessTime.ft : NULL,
 	                      lpLastWriteTime ? &ftLastWriteTime.ft : NULL);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to set file times for %p",
+		                      hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
 
 
 
-/*[[[deemon import("_dexutils").gw("SetFileValidData", "hFile:nt:HANDLE,ValidDataLength:I64u->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("SetFileValidData", "hFile:nt:HANDLE,ValidDataLength:I64u" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f_impl(HANDLE hFile, uint64_t ValidDataLength);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_SETFILEVALIDDATA_DEF { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)->?Dbool") },
-#define LIBWIN32_SETFILEVALIDDATA_DEF_DOC(doc) { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)->?Dbool\n" doc) },
+#define LIBWIN32_SETFILEVALIDDATA_DEF { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)") },
+#define LIBWIN32_SETFILEVALIDDATA_DEF_DOC(doc) { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileValidData, libwin32_SetFileValidData_f);
 #ifndef LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED
 #define LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED 1
@@ -1330,14 +1411,20 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f_impl(HANDLE
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileValidData(hFile, ValidDataLength);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to set valid file data for %p to %I64u",
+		                      hFile, ValidDataLength);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
@@ -1376,8 +1463,8 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != 0)
-				return_none;
+			if (dwError != NO_ERROR)
+				RETURN_ERROR(dwError, "Failed to determine TEMPPATH");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
@@ -1429,7 +1516,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void)
 	}
 	if (pGetDllDirectoryW == (LPGETDLLDIRECTORYW)(void *)(uintptr_t)-1) {
 		SetLastError(ERROR_INVALID_FUNCTION);
-		return_none;
+		RETURN_ERROR(ERROR_INVALID_FUNCTION,
+		             "Unsupported function `GetDllDirectoryW()'");
 	}
 
 	lpBuffer = DeeString_NewWideBuffer(dwBufSize);
@@ -1447,8 +1535,8 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != 0)
-				return_none;
+			if (dwError != NO_ERROR)
+				RETURN_ERROR(dwError, "Failed to determine the DLL Directory");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
@@ -1468,11 +1556,11 @@ err:
 	return NULL;
 }
 
-/*[[[deemon import("_dexutils").gw("SetDllDirectory", "lpPathName:nt:LPCWSTR->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("SetDllDirectory", "lpPathName:nt:LPCWSTR" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR lpPathName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_SETDLLDIRECTORY_DEF { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)->?Dbool") },
-#define LIBWIN32_SETDLLDIRECTORY_DEF_DOC(doc) { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)->?Dbool\n" doc) },
+#define LIBWIN32_SETDLLDIRECTORY_DEF { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)") },
+#define LIBWIN32_SETDLLDIRECTORY_DEF_DOC(doc) { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetDllDirectory, libwin32_SetDllDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_DEFINED 1
@@ -1510,19 +1598,26 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR
 	}
 	if (pSetDllDirectoryW == (LPSETDLLDIRECTORYW)(void *)(uintptr_t)-1) {
 		SetLastError(ERROR_INVALID_FUNCTION);
-		return_none;
+		RETURN_ERROR(ERROR_INVALID_FUNCTION,
+		             "Unsupported function `SetDllDirectoryW()'");
 	}
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = (*pSetDllDirectoryW)(lpPathName);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to set DLL Directory to %lq",
+		                      lpPathName);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
@@ -1566,11 +1661,17 @@ again:
 	                            &dwBytesPerSector,
 	                            &dwNumberOfFreeClusters,
 	                            &dwTotalNumberOfClusters);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR(dwError,
+		             "Failed to determine free disk space for %lq",
+		             lpRootPathName);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return DeeTuple_Newf(DEE_FMT_UINT32
@@ -1632,7 +1733,9 @@ again:
 				goto err;
 			goto again;
 		}
-		return_none;
+		RETURN_ERROR(dwError,
+		             "Failed to determine free disk space for %lq",
+		             lpDirectoryName);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return DeeTuple_Newf(DEE_FMT_UINT64
@@ -1679,15 +1782,20 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	SetLastError(NO_ERROR);
 	uResult = GetDriveTypeW(lpRootPathName);
-	dwError = GetLastError();
-	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsIntr(dwError)) {
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+	if (uResult == DRIVE_UNKNOWN) {
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (dwError != NO_ERROR) {
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err;
+				goto again;
+			}
+			RETURN_ERROR(dwError,
+			             "Failed to determine drive type of %lq",
+			             lpRootPathName);
+		}
 	}
-	if (dwError != NO_ERROR)
-		return_none;
 	return DeeInt_NewUInt(uResult);
 err:
 	return NULL;
@@ -1740,7 +1848,9 @@ again:
 			if (DeeNTSystem_IsBufferTooSmall(dwError))
 				goto do_increase_buffer;
 			DeeString_FreeWideBuffer(lpBuffer);
-			return_none;
+			RETURN_ERROR(dwError,
+			             "Failed to determine name of module %p",
+			             hModule);
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize) {
@@ -1803,8 +1913,8 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != 0)
-				return_none;
+			if (dwError != NO_ERROR)
+				RETURN_ERROR(dwError, "Failed to determine the system directory");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
@@ -1860,8 +1970,8 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != 0)
-				return_none;
+			if (dwError != NO_ERROR)
+				RETURN_ERROR(dwError, "Failed to determine the Windows directory");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
@@ -1915,8 +2025,8 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != 0)
-				return_none;
+			if (dwError != NO_ERROR)
+				RETURN_ERROR(dwError, "Failed to determine the System-Windows directory");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
@@ -1973,7 +2083,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl
 	}
 	if (pGetSystemWow64DirectoryW == (PGET_SYSTEM_WOW64_DIRECTORY_W)(void *)(uintptr_t)-1) {
 		SetLastError(ERROR_INVALID_FUNCTION);
-		return_none;
+		RETURN_ERROR(ERROR_INVALID_FUNCTION,
+		             "Unsupported function: `GetSystemWow64DirectoryW'");
 	}
 
 	lpBuffer = DeeString_NewWideBuffer(dwBufSize);
@@ -1991,8 +2102,8 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != 0)
-				return_none;
+			if (dwError != NO_ERROR)
+				RETURN_ERROR(dwError, "Failed to determine the SystemWow64 directory");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
@@ -2063,8 +2174,8 @@ again:
 					goto err_result;
 				goto again;
 			}
-			if (dwError != 0)
-				return_none;
+			if (dwError != NO_ERROR)
+				RETURN_ERROR(dwError, "Failed to query logical drive strings");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
@@ -2137,7 +2248,7 @@ again:
 			if (DeeNTSystem_IsBufferTooSmall(dwError))
 				goto do_increase_buffer;
 			DeeString_FreeWideBuffer(lpBuffer);
-			return_none;
+			RETURN_ERROR(dwError, "Failed to query the DOS devices for %lq", lpDeviceName);
 		}
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize) {
@@ -2210,7 +2321,7 @@ again:
 			goto again;
 		}
 		if (dwError != NO_ERROR)
-			return_none;
+			RETURN_ERROR(dwError, "Failed to determine the typing of handle %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return DeeInt_NewU32((uint32_t)dwType);
@@ -2258,7 +2369,7 @@ again:
 			goto again;
 		}
 		if (dwError != NO_ERROR)
-			return_none;
+			RETURN_ERROR(dwError, "Failed to determine the size of file %p", hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return DeeInt_NewU64((uint64_t)dwSizeLow |
@@ -2309,7 +2420,7 @@ again:
 			goto again;
 		}
 		if (dwError != NO_ERROR)
-			return_none;
+			RETURN_ERROR(dwError, "Failed to determine the attributes of %lq", lpFileName);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return DeeInt_NewU32((uint32_t)dwResult);
@@ -2319,11 +2430,11 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("SetFileAttributes", "lpFileName:nt:LPCWSTR,dwFileAttributes:nt:DWORD->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("SetFileAttributes", "lpFileName:nt:LPCWSTR,dwFileAttributes:nt:DWORD" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f_impl(LPCWSTR lpFileName, DWORD dwFileAttributes);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_SETFILEATTRIBUTES_DEF { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)->?Dbool") },
-#define LIBWIN32_SETFILEATTRIBUTES_DEF_DOC(doc) { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)->?Dbool\n" doc) },
+#define LIBWIN32_SETFILEATTRIBUTES_DEF { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)") },
+#define LIBWIN32_SETFILEATTRIBUTES_DEF_DOC(doc) { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributes, libwin32_SetFileAttributes_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED 1
@@ -2352,14 +2463,20 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileAttributesW(lpFileName,
 	                             dwFileAttributes);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to set attributes of file %lq to %#I32x",
+		                      lpFileName, dwFileAttributes);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
@@ -2406,7 +2523,7 @@ again:
 			goto again;
 		}
 		if (dwError != NO_ERROR)
-			return_none;
+			RETURN_ERROR(dwError, "Failed to determine the compressed size of %lq", lpFileName);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return DeeInt_NewU64((uint64_t)dwSizeLow |
@@ -2417,11 +2534,11 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("FlushFileBuffers", "hFile:nt:HANDLE->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("FlushFileBuffers", "hFile:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_FLUSHFILEBUFFERS_DEF { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dbool") },
-#define LIBWIN32_FLUSHFILEBUFFERS_DEF_DOC(doc) { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dbool\n" doc) },
+#define LIBWIN32_FLUSHFILEBUFFERS_DEF { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_FLUSHFILEBUFFERS_DEF_DOC(doc) { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_FlushFileBuffers, libwin32_FlushFileBuffers_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED 1
@@ -2445,14 +2562,20 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f_impl(HANDLE
 again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = FlushFileBuffers(hFile);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+	if (!bResult) {
+		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeThread_CheckInterrupt())
-			goto err;
-		goto again;
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to flush buffers of file %p",
+		                      hFile);
 	}
 	DBG_ALIGNMENT_ENABLE();
-	return_bool_(bResult);
+	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
 }
@@ -2503,7 +2626,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f_imp
 	return unicode_printer_pack(&printer);
 system_error:
 	unicode_printer_fini(&printer);
-	return_none;
+	RETURN_ERROR(GetLastError(),
+	             "Failed to determine the filename of handle %p",
+	             hFile);
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
@@ -2537,11 +2662,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f_impl(HAN
 {
 	DREF DeeObject *result;
 	result = DeeNTSystem_TryGetFilenameOfHandle((void *)hFile);
-	if (result == ITER_DONE) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
-	}
-	return result;
+	if (result != ITER_DONE)
+		return result;
+	RETURN_ERROR(GetLastError(),
+	             "Failed to determine the filename of handle %p",
+	             hFile);
 }
 
 
@@ -2569,11 +2694,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f_impl(DWOR
 {
 	DREF DeeObject *result;
 	result = DeeNTSystem_FormatErrorMessage(dwError);
-	if (result == ITER_DONE) {
-		result = Dee_None;
-		Dee_Incref(Dee_None);
-	}
-	return result;
+	if (result != ITER_DONE)
+		return result;
+	RETURN_ERROR(GetLastError(),
+	             "Failed to format the message for error %#lx",
+	             dwError);
 }
 
 
@@ -2619,7 +2744,9 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f_impl(HANDL
 	return unicode_printer_pack(&printer);
 system_error:
 	unicode_printer_fini(&printer);
-	return_none;
+	RETURN_ERROR(GetLastError(),
+	             "Failed to determine the mapped filename of address %p in process %p",
+	             lpv, hProcess);
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
@@ -2675,7 +2802,11 @@ again:
 				goto err;
 			goto again;
 		}
-		return_none;
+		RETURN_ERROR(dwError,
+		             "Failed to map a view of %p into memory "
+		             "(dwDesiredAccess: %#I32x, dwFileOffset: %I64u, dwNumberOfBytesToMap: %Iu)",
+		             hFileMappingObject, dwDesiredAccess,
+		             dwFileOffset, dwNumberOfBytesToMap);
 	}
 	result = DeeCTypes_CreateVoidPointer(pResult);
 	if unlikely(!result) {
@@ -2691,11 +2822,11 @@ err:
 
 
 
-/*[[[deemon import("_dexutils").gw("UnmapViewOfFile", "lpBaseAddress:c:ptr->?Dbool"); ]]]*/
+/*[[[deemon import("_dexutils").gw("UnmapViewOfFile", "lpBaseAddress:c:ptr" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *lpBaseAddress);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_UNMAPVIEWOFFILE_DEF { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)->?Dbool") },
-#define LIBWIN32_UNMAPVIEWOFFILE_DEF_DOC(doc) { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)->?Dbool\n" doc) },
+#define LIBWIN32_UNMAPVIEWOFFILE_DEF { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)") },
+#define LIBWIN32_UNMAPVIEWOFFILE_DEF_DOC(doc) { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_UnmapViewOfFile, libwin32_UnmapViewOfFile_f);
 #ifndef LIBWIN32_KWDS_LPBASEADDRESS_DEFINED
 #define LIBWIN32_KWDS_LPBASEADDRESS_DEFINED 1
@@ -2716,8 +2847,22 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *l
 //[[[end]]]
 {
 	BOOL bOk;
+again:
 	bOk = UnmapViewOfFile((LPCVOID)lpBaseAddress);
-	return_bool(bOk);
+	if (!bOk) {
+		DWORD dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "failed to unmap view of file at %p",
+		                      lpBaseAddress);
+	}
+	RETURN_SUCCESS_OR_TRUE;
+err:
+	return NULL;
 }
 
 
@@ -2782,7 +2927,10 @@ again:
 				goto err;
 			goto again;
 		}
-		return_none;
+		RETURN_ERROR(dwError,
+		             "Failed to create file mapping for %p "
+		             "(flProtect: %#I32x, dwMaximumSize: %I64u, lpName: %lq)",
+		             hFile, flProtect, dwMaximumSize, lpName);
 	}
 	result = libwin32_CreateHandle(hResult);
 	if unlikely(!result) {
@@ -2908,24 +3056,24 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Handle-related functions. */
 	LIBWIN32_CLOSEHANDLE_DEF
-	LIBWIN32_CREATEFILE_DEF_DOC("Returns :none upon error (s.a. #GetLastError)")
-	LIBWIN32_DUPLICATEHANDLE_DEF_DOC("Returns :none upon error (s.a. #GetLastError)")
-	LIBWIN32_READFILE_DEF_DOC("Returns :none upon error, or dwNumberOfBytesRead upon success (s.a. #GetLastError)")
-	LIBWIN32_WRITEFILE_DEF_DOC("Returns :none upon error, or dwNumberOfBytesWritten upon success (s.a. #GetLastError)")
+	LIBWIN32_CREATEFILE_DEF
+	LIBWIN32_DUPLICATEHANDLE_DEF
+	LIBWIN32_READFILE_DEF_DOC("Returns dwNumberOfBytesRead")
+	LIBWIN32_WRITEFILE_DEF_DOC("Returns dwNumberOfBytesWritten")
 	LIBWIN32_SETENDOFFILE_DEF
-	LIBWIN32_SETFILEPOINTER_DEF_DOC("Returns :none upon error, or the new stream position upon success (s.a. #GetLastError)")
-	LIBWIN32_GETFILETIME_DEF_DOC("Returns a tuple (CreationTime,LastAccessTime,LastWriteTime) for the given @hFile")
+	LIBWIN32_SETFILEPOINTER_DEF_DOC("Returns the new stream position")
+	LIBWIN32_GETFILETIME_DEF_DOC("Returns a tuple (CreationTime, LastAccessTime, LastWriteTime) for the given @hFile")
 	LIBWIN32_SETFILETIME_DEF
 	LIBWIN32_SETFILEVALIDDATA_DEF
-	LIBWIN32_GETDISKFREESPACE_DEF_DOC("Returns :none upon error, or a tuple (uSectorsPerCluster,uBytesPerSector,uNumberOfFreeClusters,uTotalNumberOfClusters) (s.a. #GetLastError)")
-	LIBWIN32_GETDISKFREESPACEEX_DEF_DOC("Returns :none upon error, or a tuple (uFreeBytesAvailableToCaller,uTotalNumberOfBytes,uTotalNumberOfFreeBytes) (s.a. #GetLastError)")
-	LIBWIN32_GETTEMPPATH_DEF_DOC("Returns :none upon error, or a string containing a temporary path (s.a. #GetLastError)")
-	LIBWIN32_GETDLLDIRECTORY_DEF_DOC("Returns :none upon error, or a string describing the windows DLL directory (s.a. #GetLastError)")
+	LIBWIN32_GETDISKFREESPACE_DEF_DOC("Returns a tuple (uSectorsPerCluster, uBytesPerSector, uNumberOfFreeClusters, uTotalNumberOfClusters)")
+	LIBWIN32_GETDISKFREESPACEEX_DEF_DOC("Returns a tuple (uFreeBytesAvailableToCaller, uTotalNumberOfBytes, uTotalNumberOfFreeBytes)")
+	LIBWIN32_GETTEMPPATH_DEF_DOC("Returns a string containing a temporary path")
+	LIBWIN32_GETDLLDIRECTORY_DEF_DOC("Returns a string describing the windows DLL directory")
 	LIBWIN32_SETDLLDIRECTORY_DEF_DOC("Set the windows DLL directory, as used when loading dynamic libraries, and as returned by #GetDllDirectory")
-	LIBWIN32_GETFILETYPE_DEF_DOC("Return one of `FILE_TYPE_*' or :none upon error (s.a. #GetLastError)")
-	LIBWIN32_GETFILESIZE_DEF_DOC("Return the size of the given @hFile or :none upon error (s.a. #GetLastError)")
-	LIBWIN32_GETDRIVETYPE_DEF_DOC("Returns the type of drive of @lpRootPathName (one of `DRIVE_*'), or :none upon error (s.a. #GetLastError)")
-	LIBWIN32_GETFILEATTRIBUTES_DEF_DOC("Returns attributes for @lpFileName (set of `FILE_ATTRIBUTE_*'), or :none upon error (s.a. #GetLastError)")
+	LIBWIN32_GETFILETYPE_DEF_DOC("Return one of `FILE_TYPE_*'")
+	LIBWIN32_GETFILESIZE_DEF_DOC("Return the size of the given @hFile")
+	LIBWIN32_GETDRIVETYPE_DEF_DOC("Returns the type of drive of @lpRootPathName (one of `DRIVE_*')")
+	LIBWIN32_GETFILEATTRIBUTES_DEF_DOC("Returns attributes for @lpFileName (set of `FILE_ATTRIBUTE_*')")
 	LIBWIN32_SETFILEATTRIBUTES_DEF_DOC("Set attributes for @lpFileName to @dwFileAttributes (set of `FILE_ATTRIBUTE_*')")
 	LIBWIN32_GETCOMPRESSEDFILESIZE_DEF
 	LIBWIN32_FLUSHFILEBUFFERS_DEF
@@ -2944,7 +3092,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_MAPVIEWOFFILE_DEF
 	LIBWIN32_UNMAPVIEWOFFILE_DEF
 	LIBWIN32_CREATEFILEMAPPING_DEF
-	LIBWIN32_QUERYDOSDEVICE_DEF
 
 	/* Process control */
 	LIBWIN32_GETCURRENTPROCESS_DEF
@@ -2956,14 +3103,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_REMOVEDIRECTORY_DEF
 	LIBWIN32_CREATEDIRECTORY_DEF
 	LIBWIN32_DELETEFILE_DEF
-	LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC("Returns :none upon error, the windows system directory ($\"C:\\\\Windows\\\\system32\") (s.a. #GetLastError)")
-	LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC("Returns :none upon error, the windows system directory ($\"C:\\\\Windows\") (s.a. #GetLastError)")
-	LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC("Returns :none upon error, the system windows directory ($\"C:\\\\Windows\") (s.a. #GetLastError)")
-	LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC("Returns :none upon error, the windows SysWOW64 directory ($\"C:\\\\Windows\\\\SysWOW64\") (s.a. #GetLastError)")
-	LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC("Returns :none upon error, or a $\"\\0\"-separated list of all of the known system drives ($\"C:\\\\;D:\\\\;E:\\\\\") (s.a. #GetLastError)")
+	LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC("Returns the windows system directory ($\"C:\\\\Windows\\\\system32\")")
+	LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC("Returns the windows system directory ($\"C:\\\\Windows\")")
+	LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC("Returns the system windows directory ($\"C:\\\\Windows\")")
+	LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC("Returns the windows SysWOW64 directory ($\"C:\\\\Windows\\\\SysWOW64\")")
+	LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC("Returns a list of known system drives ($({ r\"C:\\\", r\"D:\\\", r\"E:\\\" }))")
+	LIBWIN32_QUERYDOSDEVICE_DEF_DOC("Returns a list of DOS devices mounted under the given drive (which should be one of #GetLogicalDriveStrings)")
 
 	/* DLL functions */
-	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module (s.a. #GetLastError)")
+	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module")
 	LIBWIN32_GETMAPPEDFILENAME_DEF
 
 	/* Include Windows constants. */

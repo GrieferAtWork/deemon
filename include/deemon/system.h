@@ -96,6 +96,8 @@ typedef __ULONG32_TYPE__ DeeNT_DWORD;
  * >> if (DeeFile_Check(ob))
  * >>     return get_osfhandle(DeeFile_GetSysFD(ob));
  * >> #endif
+ * >> if (DeeNone_Check(ob))
+ * >>     return (void *)(HANDLE)NULL;
  * >> if (DeeInt_Check(ob))
  * >>     return get_osfhandle(DeeInt_AsInt(ob));
  * >> try return DeeObject_AsInt(DeeObject_GetAttr(ob, DeeSysFD_HANDLE_GETSET)); catch (AttributeError);
