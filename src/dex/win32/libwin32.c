@@ -2629,14 +2629,14 @@ err:
 
 /*[[[deemon import("_dexutils").gw("MapViewOfFile",
      "hFileMappingObject:nt:HANDLE"
-    ",dwDesiredAccess:nt:DWORD"
-    ",dwFileOffset:I64u"
-    ",dwNumberOfBytesToMap:Iu"
+    ",dwDesiredAccess:nt:DWORD=FILE_MAP_READ"
+    ",dwFileOffset:I64u=0"
+    ",dwNumberOfBytesToMap:Iu=0"
     "->?X2?Aptr?Ectypes:void?N"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f_impl(HANDLE hFileMappingObject, DWORD dwDesiredAccess, uint64_t dwFileOffset, size_t dwNumberOfBytesToMap);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define LIBWIN32_MAPVIEWOFFILE_DEF { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint,dwFileOffset:?Dint,dwNumberOfBytesToMap:?Dint)->?X2?Aptr?Ectypes:void?N") },
-#define LIBWIN32_MAPVIEWOFFILE_DEF_DOC(doc) { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint,dwFileOffset:?Dint,dwNumberOfBytesToMap:?Dint)->?X2?Aptr?Ectypes:void?N\n" doc) },
+#define LIBWIN32_MAPVIEWOFFILE_DEF { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?X2?Aptr?Ectypes:void?N") },
+#define LIBWIN32_MAPVIEWOFFILE_DEF_DOC(doc) { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?X2?Aptr?Ectypes:void?N\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_MapViewOfFile, libwin32_MapViewOfFile_f);
 #ifndef LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED
 #define LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED 1
@@ -2645,10 +2645,10 @@ PRIVATE DEFINE_KWLIST(libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOff
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f(size_t argc, DeeObject **argv, DeeObject *kw) {
 	HANDLE hhFileMappingObject;
 	DeeObject *hFileMappingObject;
-	DWORD dwDesiredAccess;
-	uint64_t dwFileOffset;
-	size_t dwNumberOfBytesToMap;
-	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOffset_dwNumberOfBytesToMap, "oI32uI64uIu:MapViewOfFile", &hFileMappingObject, &dwDesiredAccess, &dwFileOffset, &dwNumberOfBytesToMap))
+	DWORD dwDesiredAccess = FILE_MAP_READ;
+	uint64_t dwFileOffset = 0;
+	size_t dwNumberOfBytesToMap = 0;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFileMappingObject_dwDesiredAccess_dwFileOffset_dwNumberOfBytesToMap, "o|I32uI64uIu:MapViewOfFile", &hFileMappingObject, &dwDesiredAccess, &dwFileOffset, &dwNumberOfBytesToMap))
 		goto err;
 	if (DeeNTSystem_TryGetHandle(hFileMappingObject, (void **)&hhFileMappingObject))
 		goto err;
