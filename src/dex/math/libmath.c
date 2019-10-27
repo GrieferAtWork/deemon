@@ -31,27 +31,13 @@
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/objmethod.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/typecore.h>
 
 #include <limits.h>
 #include <math.h>
-
-#ifdef CONFIG_NO_ERRNO_H
-#undef CONFIG_HAVE_ERRNO_H
-#elif !defined(CONFIG_HAVE_ERRNO_H)
-#ifdef __NO_has_include
-#define CONFIG_HAVE_ERRNO_H 1
-#elif __has_include(<errno.h>)
-#define CONFIG_HAVE_ERRNO_H 1
-#endif
-#endif
-
-#ifdef CONFIG_HAVE_ERRNO_H
-#include <errno.h>
-#endif /* CONFIG_HAVE_ERRNO_H */
-
 
 DECL_BEGIN
 
@@ -70,19 +56,9 @@ DECL_BEGIN
 #endif
 
 
-#ifdef CONFIG_HAVE_ERRNO_H
+#ifdef CONFIG_HAVE_errno
 
-#ifndef EOK
-#ifdef ENOERR
-#define EOK ENOERR
-#elif defined(ENOERROR)
-#define EOK ENOERROR
-#else
-#define EOK 0
-#endif
-#endif
-
-#define SET_OK()  errno = EOK
+#define SET_OK()  DeeSystem_SetErrno(EOK)
 PRIVATE ATTR_COLD int DCALL err_domain(void) {
 	return DeeError_Throwf(&DeeError_ValueError, "math domain error");
 }
@@ -96,7 +72,7 @@ PRIVATE ATTR_COLD int DCALL err_math(int e) {
 }
 
 LOCAL int DCALL math_checkerr(double x) {
-	int e = errno;
+	int e = DeeSystem_GetErrno();
 	if (e == EDOM)
 		return err_domain();
 	if (e == ERANGE) {
@@ -110,7 +86,7 @@ LOCAL int DCALL math_checkerr(double x) {
 }
 
 LOCAL int DCALL math_checkerr_i(int x) {
-	int e = errno;
+	int e = DeeSystem_GetErrno();
 	if (e == EDOM)
 		return err_domain();
 	if (e == ERANGE) {
@@ -122,11 +98,11 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	}
 	return 0;
 }
-#else /* CONFIG_HAVE_ERRNO_H */
+#else /* CONFIG_HAVE_errno */
 #define SET_OK()           0
 #define math_checkerr(x)   0
 #define math_checkerr_i(x) 0
-#endif /* !CONFIG_HAVE_ERRNO_H */
+#endif /* !CONFIG_HAVE_errno */
 
 
 #define DEFINE_MATH_CONVERSION_1(name)                 \
@@ -204,12 +180,12 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	}                                                       \
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 
-#ifndef CONFIG_HAVE_ERRNO_H
+#ifndef CONFIG_HAVE_errno
 #undef DEFINE_MATH_CONVERSION_1_E
 #undef DEFINE_MATH_CONVERSION_2_E
 #define DEFINE_MATH_CONVERSION_1_E DEFINE_MATH_CONVERSION_1
 #define DEFINE_MATH_CONVERSION_2_E DEFINE_MATH_CONVERSION_2
-#endif /* !CONFIG_HAVE_ERRNO_H */
+#endif /* !CONFIG_HAVE_errno */
 
 DEFINE_MATH_CONVERSION_1(sin)
 DEFINE_MATH_CONVERSION_1(cos)

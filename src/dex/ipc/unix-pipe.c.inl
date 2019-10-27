@@ -19,7 +19,6 @@
 #ifndef GUARD_DEX_IPC_UNIX_PIPE_C_INL
 #define GUARD_DEX_IPC_UNIX_PIPE_C_INL 1
 #define DEE_SOURCE 1
-#define _KOS_SOURCE 1
 
 #include "libipc.h"
 /**/
@@ -31,27 +30,12 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <string.h>
 
 #include "_res.h"
-
-#ifdef CONFIG_HAVE_UNISTD_H
-#include <unistd.h>
-#endif /* CONFIG_HAVE_UNISTD_H */
-
-#ifdef CONFIG_HAVE_ERRNO_H
-#include <errno.h>
-#endif /* CONFIG_HAVE_ERRNO_H */
-
-
-#ifdef CONFIG_HAVE_IO_H
-#include <io.h>
-#define pipe(fds) _pipe(fds, 4096, 0)
-#endif /* CONFIG_HAVE_IO_H */
-
-
 
 DECL_BEGIN
 

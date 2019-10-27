@@ -649,6 +649,7 @@ func("errno_nt2kos", "defined(__CRT_HAVE_errno_nt2kos)", check_defined: false);
 func("_get_osfhandle", msvc + " || defined(__CYGWIN__) || defined(__CYGWIN32__)");
 func("get_osfhandle", "defined(__CYGWIN__) || defined(__CYGWIN32__)");
 func("_open_osfhandle", msvc);
+var("errno", "defined(CONFIG_HAVE_ERRNO_H)");
 var("_doserrno", msvc);
 
 
@@ -4028,6 +4029,13 @@ var("_doserrno", msvc);
 #define CONFIG_HAVE__open_osfhandle 1
 #endif
 
+#ifdef CONFIG_NO_errno
+#undef CONFIG_HAVE_errno
+#elif !defined(CONFIG_HAVE_errno) && \
+      (defined(errno) || defined(__errno_defined) || defined(CONFIG_HAVE_ERRNO_H))
+#define CONFIG_HAVE_errno 1
+#endif
+
 #ifdef CONFIG_NO__doserrno
 #undef CONFIG_HAVE__doserrno
 #elif !defined(CONFIG_HAVE__doserrno) && \
@@ -5130,14 +5138,13 @@ var("_doserrno", msvc);
 #endif
 #endif
 
-#ifdef CONFIG_HAVE_ERRNO_H
-#define CONFIG_HAVE_errno 1
+#ifdef CONFIG_HAVE_errno
 #define DeeSystem_GetErrno()  errno
 #define DeeSystem_SetErrno(v) (errno=(v))
-#else /* CONFIG_HAVE_ERRNO_H */
+#else /* CONFIG_HAVE_errno */
 #define DeeSystem_GetErrno()  0
 #define DeeSystem_SetErrno(v) (void)0
-#endif /* !CONFIG_HAVE_ERRNO_H */
+#endif /* !CONFIG_HAVE_errno */
 
 
 #if !defined(CONFIG_HAVE_memcasecmp) && defined(CONFIG_HAVE__memicmp)
