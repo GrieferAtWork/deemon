@@ -3056,6 +3056,8 @@ err_buffer:
 				DBG_ALIGNMENT_ENABLE();
 				if (DeeNTSystem_IsIntr(dwError))
 					goto again_chk_intr;
+				if (DeeNTSystem_IsBufferTooSmall(dwError))
+					goto do_increase_buffer;
 				DeeString_FreeWideBuffer(lpBuffer);
 				goto fallback;
 			}
@@ -3070,6 +3072,7 @@ err_buffer:
 					break;
 			}
 			/* Increase buffer size. */
+do_increase_buffer:
 			dwBufSize *= 2;
 			lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
 			if unlikely(!lpNewBuffer)

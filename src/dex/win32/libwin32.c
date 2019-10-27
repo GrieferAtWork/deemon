@@ -1737,6 +1737,8 @@ again:
 					goto err_buffer;
 				goto again;
 			}
+			if (DeeNTSystem_IsBufferTooSmall(dwError))
+				goto do_increase_buffer;
 			DeeString_FreeWideBuffer(lpBuffer);
 			return_none;
 		}
@@ -1751,6 +1753,7 @@ again:
 				break;
 		}
 		/* Increase buffer size. */
+do_increase_buffer:
 		dwBufSize *= 2;
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
 		if unlikely(!lpNewBuffer)
@@ -2010,13 +2013,28 @@ err:
 }
 
 
+PRIVATE DEFINE_STRING(str_nul, "\0");
+
+/* Split a given `str' at each instance of a NUL-character,
+ * returning the sequence of resulting strings. */
+PRIVATE DREF DeeObject *DCALL
+split_nul_string(/*inherit(always)*/ DREF DeeObject *str) {
+	DREF DeeObject *result;
+	DeeObject *argv[1];
+	if unlikely(!str)
+		return NULL;
+	argv[0] = (DeeObject *)&str_nul;
+	result = DeeObject_CallAttrString(str, "split", 1, argv);
+	Dee_Decref(str);
+	return result;
+}
 
 
-/*[[[deemon import("_dexutils").gw("GetLogicalDriveStrings", "->?X2?Dstring?N"); ]]]*/
+/*[[[deemon import("_dexutils").gw("GetLogicalDriveStrings", "->?X2?S?Dstring?N"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject **argv);
-#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("->?X2?Dstring?N") },
-#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC(doc) { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("->?X2?Dstring?N\n" doc) },
+#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("->?X2?S?Dstring?N") },
+#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC(doc) { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("->?X2?S?Dstring?N\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetLogicalDriveStrings, libwin32_GetLogicalDriveStrings_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetLogicalDriveStrings"))
@@ -2058,9 +2076,96 @@ again:
 		lpBuffer  = lpNewBuffer;
 		dwBufSize = dwError;
 	}
+	/* Trim trailing NUL-characters */
+	while (dwError && lpBuffer[dwError - 1] == '\0')
+		--dwError;
 	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
-	return DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC);
+	return split_nul_string(DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC));
 err_result:
+	DeeString_FreeWideBuffer(lpBuffer);
+err:
+	return NULL;
+}
+
+
+
+
+/*[[[deemon import("_dexutils").gw("QueryDosDevice", "lpDeviceName:nt:LPCWSTR->?X2?S?Dstring?N"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f_impl(LPCWSTR lpDeviceName);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBWIN32_QUERYDOSDEVICE_DEF { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FNORMAL, DOC("(lpDeviceName:?Dstring)->?X2?S?Dstring?N") },
+#define LIBWIN32_QUERYDOSDEVICE_DEF_DOC(doc) { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FNORMAL, DOC("(lpDeviceName:?Dstring)->?X2?S?Dstring?N\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_QueryDosDevice, libwin32_QueryDosDevice_f);
+#ifndef LIBWIN32_KWDS_LPDEVICENAME_DEFINED
+#define LIBWIN32_KWDS_LPDEVICENAME_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpDeviceName, { K(lpDeviceName), KEND });
+#endif /* !LIBWIN32_KWDS_LPDEVICENAME_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	LPCWSTR lpDeviceName_str;
+	DeeStringObject *lpDeviceName;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpDeviceName, "o:QueryDosDevice", &lpDeviceName))
+		goto err;
+	if (DeeObject_AssertTypeExact(lpDeviceName, &DeeString_Type))
+		goto err;
+	lpDeviceName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpDeviceName);
+	if unlikely(!lpDeviceName_str)
+		goto err;
+	return libwin32_QueryDosDevice_f_impl(lpDeviceName_str);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f_impl(LPCWSTR lpDeviceName)
+//[[[end]]]
+{
+	LPWSTR lpBuffer, lpNewBuffer;
+	DWORD dwBufSize = PATH_MAX, dwError;
+	lpBuffer        = DeeString_NewWideBuffer(dwBufSize);
+	if unlikely(!lpBuffer)
+		goto err;
+again:
+	for (;;) {
+		DBG_ALIGNMENT_DISABLE();
+		dwError = QueryDosDeviceW(lpDeviceName, lpBuffer, dwBufSize + 1);
+		if (!dwError) {
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_buffer;
+				goto again;
+			}
+			if (DeeNTSystem_IsBufferTooSmall(dwError))
+				goto do_increase_buffer;
+			DeeString_FreeWideBuffer(lpBuffer);
+			return_none;
+		}
+		DBG_ALIGNMENT_ENABLE();
+		if (dwError <= dwBufSize) {
+			if (dwError < dwBufSize)
+				break;
+			DBG_ALIGNMENT_DISABLE();
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (!DeeNTSystem_IsBufferTooSmall(dwError))
+				break;
+		}
+		/* Increase buffer size. */
+do_increase_buffer:
+		dwBufSize *= 2;
+		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
+		if unlikely(!lpNewBuffer)
+			goto err_buffer;
+		lpBuffer = lpNewBuffer;
+	}
+	/* The last character is always a NUL */
+	if (dwError)
+		--dwError;
+	/* Trim trailing NUL-characters */
+	while (dwError && lpBuffer[dwError - 1] == '\0')
+		--dwError;
+	lpBuffer = DeeString_TruncateWideBuffer(lpBuffer, dwError);
+	return split_nul_string(DeeString_PackWideBuffer(lpBuffer, STRING_ERROR_FREPLAC));
+err_buffer:
 	DeeString_FreeWideBuffer(lpBuffer);
 err:
 	return NULL;
@@ -2839,6 +2944,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_MAPVIEWOFFILE_DEF
 	LIBWIN32_UNMAPVIEWOFFILE_DEF
 	LIBWIN32_CREATEFILEMAPPING_DEF
+	LIBWIN32_QUERYDOSDEVICE_DEF
 
 	/* Process control */
 	LIBWIN32_GETCURRENTPROCESS_DEF

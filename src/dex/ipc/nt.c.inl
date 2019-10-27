@@ -249,6 +249,8 @@ again:
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeNTSystem_IsIntr(dwError))
 				goto again;
+			if (DeeNTSystem_IsBufferTooSmall(dwError))
+				goto do_increase_buffer;
 			DeeError_SysThrowf(&DeeError_SystemError, dwError,
 			                   "Failed to lookup module name");
 			goto err_buffer;
@@ -264,6 +266,7 @@ again:
 				break;
 		}
 		/* Increase buffer size. */
+do_increase_buffer:
 		dwBufSize *= 2;
 		lpNewBuffer = DeeString_ResizeWideBuffer(lpBuffer, dwBufSize);
 		if unlikely(!lpNewBuffer)
