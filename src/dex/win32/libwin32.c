@@ -363,7 +363,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeOb
 PRIVATE DEFINE_CMETHOD(libwin32_GetLastError, libwin32_GetLastError_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetLastError"))
-	    goto err;
+		goto err;
 	return libwin32_GetLastError_f_impl();
 err:
 	return NULL;
@@ -387,7 +387,7 @@ PRIVATE DEFINE_KWLIST(libwin32_kwds_dwErrCode, { K(dwErrCode), KEND });
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f(size_t argc, DeeObject **argv, DeeObject *kw) {
 	DWORD dwErrCode;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_dwErrCode, "I32u:SetLastError", &dwErrCode))
-	    goto err;
+		goto err;
 	return libwin32_SetLastError_f_impl(dwErrCode);
 err:
 	return NULL;
@@ -413,10 +413,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f(size_t argc, DeeObj
 	HANDLE hhObject;
 	DeeObject *hObject;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hObject, "o:CloseHandle", &hObject))
-	    goto err;
+		goto err;
 	hhObject = (HANDLE)DeeNTSystem_GetHandle(hObject);
 	if unlikely(hhObject == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_CloseHandle_f_impl(hhObject);
 err:
 	return NULL;
@@ -426,12 +426,14 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f_impl(HANDLE hObj
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = CloseHandle(hObject);
-	if (!bResult && DeeNTSystem_IsIntr(GetLastError()))
+	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
+	}
 	DBG_ALIGNMENT_ENABLE();
 	return_bool_(bResult);
 err:
@@ -467,16 +469,16 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, De
 	bool bInheritHandle = true;
 	DWORD dwOptions = DUPLICATE_SAME_ACCESS;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hSourceProcessHandle_hSourceHandle_hTargetProcessHandle_dwDesiredAccess_bInheritHandle_dwOptions, "ooo|I32ubI32u:DuplicateHandle", &hSourceProcessHandle, &hSourceHandle, &hTargetProcessHandle, &dwDesiredAccess, &bInheritHandle, &dwOptions))
-	    goto err;
+		goto err;
 	hhSourceProcessHandle = (HANDLE)DeeNTSystem_GetHandle(hSourceProcessHandle);
 	if unlikely(hhSourceProcessHandle == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	hhSourceHandle = (HANDLE)DeeNTSystem_GetHandle(hSourceHandle);
 	if unlikely(hhSourceHandle == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	hhTargetProcessHandle = (HANDLE)DeeNTSystem_GetHandle(hTargetProcessHandle);
 	if unlikely(hhTargetProcessHandle == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_DuplicateHandle_f_impl(hhSourceProcessHandle, hhSourceHandle, hhTargetProcessHandle, dwDesiredAccess, bInheritHandle, dwOptions);
 err:
 	return NULL;
@@ -487,8 +489,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f_impl(HANDLE 
 	HANDLE hResult;
 	DREF DeeObject *result;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (!DuplicateHandle(hSourceProcessHandle,
 	                     hSourceHandle,
@@ -500,6 +500,8 @@ again:
 	    hResult == INVALID_HANDLE_VALUE) {
 		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -544,15 +546,15 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObje
 	HANDLE hhTemplateFile = 0;
 	DeeObject *hTemplateFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwDesiredAccess_dwShareMode_lpSecurityAttributes_dwCreationDisposition_dwFlagsAndAttributes_hTemplateFile, "o|I32uI32uoI32uI32uo:CreateFile", &lpFileName, &dwDesiredAccess, &dwShareMode, &lpSecurityAttributes, &dwCreationDisposition, &dwFlagsAndAttributes, &hTemplateFile))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
 	if unlikely(!lpFileName_str)
-	    goto err;
+		goto err;
 	hhTemplateFile = (HANDLE)DeeNTSystem_GetHandle(hTemplateFile);
 	if unlikely(hhTemplateFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_CreateFile_f_impl(lpFileName_str, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hhTemplateFile);
 err:
 	return NULL;
@@ -563,8 +565,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f_impl(LPCWSTR lpFi
 	HANDLE hResult;
 	DREF DeeObject *result;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	(void)lpSecurityAttributes; /* TODO */
 	hResult = CreateFileW(lpFileName,
@@ -577,6 +577,8 @@ again:
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
 		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -612,10 +614,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f(size_t argc, DeeObjec
 	DeeObject *lpBuffer;
 	DeeObject *lpOverlapped = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpBuffer_lpOverlapped, "oo|o:WriteFile", &hFile, &lpBuffer, &lpOverlapped))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_WriteFile_f_impl(hhFile, lpBuffer, lpOverlapped);
 err:
 	return NULL;
@@ -629,8 +631,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f_impl(HANDLE hFile,
 	if (DeeObject_GetBuf(lpBuffer, &buffer, Dee_BUFFER_FREADONLY))
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	(void)lpOverlapped; /* TODO */
 	if (!WriteFile(hFile,
@@ -640,6 +640,8 @@ again:
 	               NULL)) {
 		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -678,10 +680,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f(size_t argc, DeeObject
 	DeeObject *lpBuffer;
 	DeeObject *lpOverlapped = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpBuffer_lpOverlapped, "oo|o:ReadFile", &hFile, &lpBuffer, &lpOverlapped))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_ReadFile_f_impl(hhFile, lpBuffer, lpOverlapped);
 err:
 	return NULL;
@@ -695,8 +697,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f_impl(HANDLE hFile, 
 	if (DeeObject_GetBuf(lpBuffer, &buffer, Dee_BUFFER_FWRITABLE))
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	(void)lpOverlapped; /* TODO */
 	if (!ReadFile(hFile,
@@ -706,6 +706,8 @@ again:
 	              NULL)) {
 		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -737,12 +739,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f(size_t argc, De
 	DeeStringObject *lpPathName;
 	DeeObject *lpSecurityAttributes = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpPathName_lpSecurityAttributes, "o|o:CreateDirectory", &lpPathName, &lpSecurityAttributes))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpPathName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpPathName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpPathName);
 	if unlikely(!lpPathName_str)
-	    goto err;
+		goto err;
 	return libwin32_CreateDirectory_f_impl(lpPathName_str, lpSecurityAttributes);
 err:
 	return NULL;
@@ -752,13 +754,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f_impl(LPCWSTR
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	(void)lpSecurityAttributes; /* TODO */
 	bResult = CreateDirectoryW(lpPathName, NULL);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -781,12 +783,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f(size_t argc, De
 	LPCWSTR lpPathName_str;
 	DeeStringObject *lpPathName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpPathName, "o:RemoveDirectory", &lpPathName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpPathName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpPathName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpPathName);
 	if unlikely(!lpPathName_str)
-	    goto err;
+		goto err;
 	return libwin32_RemoveDirectory_f_impl(lpPathName_str);
 err:
 	return NULL;
@@ -796,12 +798,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f_impl(LPCWSTR
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = RemoveDirectoryW(lpPathName);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -824,12 +826,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f(size_t argc, DeeObje
 	LPCWSTR lpFileName_str;
 	DeeStringObject *lpFileName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName, "o:DeleteFile", &lpFileName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
 	if unlikely(!lpFileName_str)
-	    goto err;
+		goto err;
 	return libwin32_DeleteFile_f_impl(lpFileName_str);
 err:
 	return NULL;
@@ -839,12 +841,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f_impl(LPCWSTR lpFi
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = DeleteFileW(lpFileName);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -867,10 +869,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f(size_t argc, DeeOb
 	HANDLE hhFile;
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:SetEndOfFile", &hFile))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_SetEndOfFile_f_impl(hhFile);
 err:
 	return NULL;
@@ -880,12 +882,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f_impl(HANDLE hFi
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetEndOfFile(hFile);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -909,12 +911,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f(size_t argc,
 	DeeStringObject *lpFileName;
 	DWORD dwFileAttributes;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwFileAttributes, "oI32u:SetFileAttributesW", &lpFileName, &dwFileAttributes))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
 	if unlikely(!lpFileName_str)
-	    goto err;
+		goto err;
 	return libwin32_SetFileAttributesW_f_impl(lpFileName_str, dwFileAttributes);
 err:
 	return NULL;
@@ -924,12 +926,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributesW_f_impl(LPCW
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileAttributesW(lpFileName, dwFileAttributes);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -955,10 +957,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, Dee
 	int64_t lDistanceToMove;
 	DWORD dwMoveMethod = FILE_BEGIN;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lDistanceToMove_dwMoveMethod, "oI64d|I32u:SetFilePointer", &hFile, &lDistanceToMove, &dwMoveMethod))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_SetFilePointer_f_impl(hhFile, lDistanceToMove, dwMoveMethod);
 err:
 	return NULL;
@@ -970,8 +972,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f_impl(HANDLE h
 	LONG lDistanceToMoveLow;
 	LONG lDistanceToMoveHigh;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	lDistanceToMoveLow  = (LONG)(lDistanceToMove);
 	lDistanceToMoveHigh = (LONG)(lDistanceToMove >> 32);
 	DBG_ALIGNMENT_DISABLE();
@@ -983,8 +983,11 @@ again:
 		DWORD error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (error != NO_ERROR) {
-			if (DeeNTSystem_IsIntr(error))
+			if (DeeNTSystem_IsIntr(error)) {
+				if (DeeThread_CheckInterrupt())
+					goto err;
 				goto again;
+			}
 			DBG_ALIGNMENT_ENABLE();
 			return_none;
 		}
@@ -1017,10 +1020,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f(size_t argc, DeeObj
 	HANDLE hhFile;
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:GetFileTime", &hFile))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_GetFileTime_f_impl(hhFile);
 err:
 	return NULL;
@@ -1033,8 +1036,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f_impl(HANDLE hFil
 	ALIGNED_FILETIME ftLastAccessTime;
 	ALIGNED_FILETIME ftLastWriteTime;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = GetFileTime(hFile,
 	                      &ftCreationTime.ft,
@@ -1043,6 +1044,8 @@ again:
 	if (!bResult) {
 		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -1078,10 +1081,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f(size_t argc, DeeObj
 	DeeObject *lpLastAccessTime = NULL;
 	DeeObject *lpLastWriteTime = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_lpCreationTime_lpLastAccessTime_lpLastWriteTime, "o|ooo:SetFileTime", &hFile, &lpCreationTime, &lpLastAccessTime, &lpLastWriteTime))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_SetFileTime_f_impl(hhFile, lpCreationTime, lpLastAccessTime, lpLastWriteTime);
 err:
 	return NULL;
@@ -1100,8 +1103,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f_impl(HANDLE hFil
 	if (lpLastWriteTime && DeeObject_AsUInt64(lpLastWriteTime, &ftLastWriteTime.u64))
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileTime(hFile,
 	                      lpCreationTime ? &ftCreationTime.ft : NULL,
@@ -1109,6 +1110,8 @@ again:
 	                      lpLastWriteTime ? &ftLastWriteTime.ft : NULL);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1134,10 +1137,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, D
 	DeeObject *hFile;
 	uint64_t ValidDataLength;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile_ValidDataLength, "oI64u:SetFileValidData", &hFile, &ValidDataLength))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_SetFileValidData_f_impl(hhFile, ValidDataLength);
 err:
 	return NULL;
@@ -1147,12 +1150,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f_impl(HANDLE
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileValidData(hFile, ValidDataLength);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1170,7 +1173,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f(size_t argc, DeeObj
 PRIVATE DEFINE_CMETHOD(libwin32_GetTempPath, libwin32_GetTempPath_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetTempPath"))
-	    goto err;
+		goto err;
 	return libwin32_GetTempPath_f_impl();
 err:
 	return NULL;
@@ -1184,16 +1187,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f_impl(void)
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_result;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetTempPathW(dwBufSize + 1, lpBuffer);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_result;
 				goto again;
+			}
 			if (dwError != 0)
 				return_none;
 		}
@@ -1223,7 +1227,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, De
 PRIVATE DEFINE_CMETHOD(libwin32_GetDllDirectory, libwin32_GetDllDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetDllDirectory"))
-	    goto err;
+		goto err;
 	return libwin32_GetDllDirectory_f_impl();
 err:
 	return NULL;
@@ -1254,16 +1258,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void)
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_result;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = (*pGetDllDirectoryW)(dwBufSize + 1, lpBuffer);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_result;
 				goto again;
+			}
 			if (dwError != 0)
 				return_none;
 		}
@@ -1299,12 +1304,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f(size_t argc, De
 	LPCWSTR lpPathName_str;
 	DeeStringObject *lpPathName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpPathName, "o:SetDllDirectory", &lpPathName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpPathName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpPathName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpPathName);
 	if unlikely(!lpPathName_str)
-	    goto err;
+		goto err;
 	return libwin32_SetDllDirectory_f_impl(lpPathName_str);
 err:
 	return NULL;
@@ -1330,12 +1335,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR
 		return_none;
 	}
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = (*pSetDllDirectoryW)(lpPathName);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1358,12 +1363,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f(size_t argc, D
 	LPCWSTR lpRootPathName_str;
 	DeeStringObject *lpRootPathName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpRootPathName, "o:GetDiskFreeSpace", &lpRootPathName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpRootPathName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpRootPathName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpRootPathName);
 	if unlikely(!lpRootPathName_str)
-	    goto err;
+		goto err;
 	return libwin32_GetDiskFreeSpace_f_impl(lpRootPathName_str);
 err:
 	return NULL;
@@ -1377,8 +1382,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f_impl(LPCWST
 	DWORD dwNumberOfFreeClusters;
 	DWORD dwTotalNumberOfClusters;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = GetDiskFreeSpaceW(lpRootPathName,
 	                            &dwSectorsPerCluster,
@@ -1387,6 +1390,8 @@ again:
 	                            &dwTotalNumberOfClusters);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1418,12 +1423,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpaceEx_f(size_t argc,
 	LPCWSTR lpDirectoryName_str;
 	DeeStringObject *lpDirectoryName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpDirectoryName, "o:GetDiskFreeSpaceEx", &lpDirectoryName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpDirectoryName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpDirectoryName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpDirectoryName);
 	if unlikely(!lpDirectoryName_str)
-	    goto err;
+		goto err;
 	return libwin32_GetDiskFreeSpaceEx_f_impl(lpDirectoryName_str);
 err:
 	return NULL;
@@ -1436,8 +1441,6 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpaceEx_f_impl(LPCW
 	ULARGE_INTEGER uTotalNumberOfBytes;
 	ULARGE_INTEGER uTotalNumberOfFreeBytes;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = GetDiskFreeSpaceExW(lpDirectoryName,
 	                              &uFreeBytesAvailableToCaller,
@@ -1446,8 +1449,11 @@ again:
 	if (!bResult) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError))
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
+		}
 		return_none;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1476,12 +1482,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDriveType_f(size_t argc, DeeOb
 	LPCWSTR lpRootPathName_str;
 	DeeStringObject *lpRootPathName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpRootPathName, "o:GetDriveType", &lpRootPathName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpRootPathName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpRootPathName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpRootPathName);
 	if unlikely(!lpRootPathName_str)
-	    goto err;
+		goto err;
 	return libwin32_GetDriveType_f_impl(lpRootPathName_str);
 err:
 	return NULL;
@@ -1492,15 +1498,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDriveType_f_impl(LPCWSTR lp
 	UINT uResult;
 	DWORD dwError;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	SetLastError(NO_ERROR);
 	uResult = GetDriveTypeW(lpRootPathName);
 	dwError = GetLastError();
 	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsIntr(dwError))
+	if (DeeNTSystem_IsIntr(dwError)) {
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
+	}
 	if (dwError != NO_ERROR)
 		return_none;
 	return DeeInt_NewUInt(uResult);
@@ -1525,10 +1532,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, 
 	HANDLE hhModule;
 	DeeObject *hModule;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hModule, "o:GetModuleFileName", &hModule))
-	    goto err;
+		goto err;
 	hhModule = (HANDLE)DeeNTSystem_GetHandle(hModule);
 	if unlikely(hhModule == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_GetModuleFileName_f_impl(hhModule);
 err:
 	return NULL;
@@ -1542,16 +1549,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDL
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_buffer;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetModuleFileNameW((HMODULE)hModule, lpBuffer, dwBufSize + 1);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_buffer;
 				goto again;
+			}
 			DeeString_FreeWideBuffer(lpBuffer);
 			return_none;
 		}
@@ -1590,7 +1598,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc,
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemDirectory, libwin32_GetSystemDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetSystemDirectory"))
-	    goto err;
+		goto err;
 	return libwin32_GetSystemDirectory_f_impl();
 err:
 	return NULL;
@@ -1604,16 +1612,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f_impl(void
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_result;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetSystemDirectoryW(lpBuffer, dwBufSize + 1);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_result;
 				goto again;
+			}
 			if (dwError != 0)
 				return_none;
 		}
@@ -1646,7 +1655,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc
 PRIVATE DEFINE_CMETHOD(libwin32_GetWindowsDirectory, libwin32_GetWindowsDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetWindowsDirectory"))
-	    goto err;
+		goto err;
 	return libwin32_GetWindowsDirectory_f_impl();
 err:
 	return NULL;
@@ -1660,16 +1669,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f_impl(voi
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_result;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetWindowsDirectoryW(lpBuffer, dwBufSize + 1);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_result;
 				goto again;
+			}
 			if (dwError != 0)
 				return_none;
 		}
@@ -1700,7 +1710,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWindowsDirectory, libwin32_GetSystemWindowsDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetSystemWindowsDirectory"))
-	    goto err;
+		goto err;
 	return libwin32_GetSystemWindowsDirectory_f_impl();
 err:
 	return NULL;
@@ -1714,16 +1724,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f_im
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_result;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetSystemWindowsDirectoryW(lpBuffer, dwBufSize + 1);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_result;
 				goto again;
+			}
 			if (dwError != 0)
 				return_none;
 		}
@@ -1756,7 +1767,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t 
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWow64Directory, libwin32_GetSystemWow64Directory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetSystemWow64Directory"))
-	    goto err;
+		goto err;
 	return libwin32_GetSystemWow64Directory_f_impl();
 err:
 	return NULL;
@@ -1772,7 +1783,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl
 		DBG_ALIGNMENT_DISABLE();
 #ifndef GET_SYSTEM_WOW64_DIRECTORY_NAME_W_A
 #define GET_SYSTEM_WOW64_DIRECTORY_NAME_W_A "GetSystemWow64DirectoryW"
-#endif
+#endif /* !GET_SYSTEM_WOW64_DIRECTORY_NAME_W_A */
 		new_pGetSystemWow64DirectoryW = (PGET_SYSTEM_WOW64_DIRECTORY_W)GetProcAddress(GetModuleHandle(TEXT("KERNEL32")),
 		                                                                              GET_SYSTEM_WOW64_DIRECTORY_NAME_W_A);
 		DBG_ALIGNMENT_ENABLE();
@@ -1789,16 +1800,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_result;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = (*pGetSystemWow64DirectoryW)(lpBuffer, dwBufSize + 1);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_result;
 				goto again;
+			}
 			if (dwError != 0)
 				return_none;
 		}
@@ -1831,7 +1843,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t a
 PRIVATE DEFINE_CMETHOD(libwin32_GetLogicalDriveStrings, libwin32_GetLogicalDriveStrings_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetLogicalDriveStrings"))
-	    goto err;
+		goto err;
 	return libwin32_GetLogicalDriveStrings_f_impl();
 err:
 	return NULL;
@@ -1845,16 +1857,17 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(
 	if unlikely(!lpBuffer)
 		goto err;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err_result;
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLogicalDriveStringsW(dwBufSize + 1, lpBuffer);
 		if (!dwError) {
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsIntr(dwError))
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_result;
 				goto again;
+			}
 			if (dwError != 0)
 				return_none;
 		}
@@ -1892,10 +1905,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f(size_t argc, DeeObj
 	HANDLE hhFile;
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:GetFileType", &hFile))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_GetFileType_f_impl(hhFile);
 err:
 	return NULL;
@@ -1905,15 +1918,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f_impl(HANDLE hFil
 {
 	DWORD dwType;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	dwType = GetFileType(hFile);
 	if (dwType == FILE_TYPE_UNKNOWN) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError))
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
+		}
 		if (dwError != NO_ERROR)
 			return_none;
 	}
@@ -1940,10 +1954,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f(size_t argc, DeeObj
 	HANDLE hhFile;
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:GetFileSize", &hFile))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_GetFileSize_f_impl(hhFile);
 err:
 	return NULL;
@@ -1953,15 +1967,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f_impl(HANDLE hFil
 {
 	DWORD dwSizeLow, dwSizeHigh;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	dwSizeLow = GetFileSize(hFile, &dwSizeHigh);
 	if (dwSizeLow == INVALID_FILE_SIZE) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError))
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
+		}
 		if (dwError != NO_ERROR)
 			return_none;
 	}
@@ -1988,12 +2003,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileAttributes_f(size_t argc, 
 	LPCWSTR lpFileName_str;
 	DeeStringObject *lpFileName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName, "o:GetFileAttributes", &lpFileName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
 	if unlikely(!lpFileName_str)
-	    goto err;
+		goto err;
 	return libwin32_GetFileAttributes_f_impl(lpFileName_str);
 err:
 	return NULL;
@@ -2003,15 +2018,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileAttributes_f_impl(LPCWS
 {
 	DWORD dwResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	dwResult = GetFileAttributesW(lpFileName);
 	if (dwResult == INVALID_FILE_ATTRIBUTES) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError))
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
+		}
 		if (dwError != NO_ERROR)
 			return_none;
 	}
@@ -2038,12 +2054,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f(size_t argc, 
 	DeeStringObject *lpFileName;
 	DWORD dwFileAttributes;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName_dwFileAttributes, "oI32u:SetFileAttributes", &lpFileName, &dwFileAttributes))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
 	if unlikely(!lpFileName_str)
-	    goto err;
+		goto err;
 	return libwin32_SetFileAttributes_f_impl(lpFileName_str, dwFileAttributes);
 err:
 	return NULL;
@@ -2053,13 +2069,13 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f_impl(LPCWS
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileAttributesW(lpFileName,
 	                             dwFileAttributes);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -2084,12 +2100,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCompressedFileSize_f(size_t ar
 	LPCWSTR lpFileName_str;
 	DeeStringObject *lpFileName;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpFileName, "o:GetCompressedFileSize", &lpFileName))
-	    goto err;
+		goto err;
 	if (DeeObject_AssertTypeExact(lpFileName, &DeeString_Type))
-	    goto err;
+		goto err;
 	lpFileName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpFileName);
 	if unlikely(!lpFileName_str)
-	    goto err;
+		goto err;
 	return libwin32_GetCompressedFileSize_f_impl(lpFileName_str);
 err:
 	return NULL;
@@ -2099,15 +2115,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCompressedFileSize_f_impl(L
 {
 	DWORD dwSizeLow, dwSizeHigh;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	dwSizeLow = GetCompressedFileSizeW(lpFileName, &dwSizeHigh);
 	if (dwSizeLow == INVALID_FILE_SIZE) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsIntr(dwError))
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
 			goto again;
+		}
 		if (dwError != NO_ERROR)
 			return_none;
 	}
@@ -2134,10 +2151,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f(size_t argc, D
 	HANDLE hhFile;
 	DeeObject *hFile;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hFile, "o:FlushFileBuffers", &hFile))
-	    goto err;
+		goto err;
 	hhFile = (HANDLE)DeeNTSystem_GetHandle(hFile);
 	if unlikely(hhFile == INVALID_HANDLE_VALUE)
-	    goto err;
+		goto err;
 	return libwin32_FlushFileBuffers_f_impl(hhFile);
 err:
 	return NULL;
@@ -2147,12 +2164,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f_impl(HANDLE
 {
 	BOOL bResult;
 again:
-	if (DeeThread_CheckInterrupt())
-		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	bResult = FlushFileBuffers(hFile);
 	if (!bResult && DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
+		if (DeeThread_CheckInterrupt())
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
