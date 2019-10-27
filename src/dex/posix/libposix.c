@@ -91,9 +91,11 @@ PRIVATE char const *missing_features[] = {
 #endif /*p_strerrorname_USE_STUB */
 #ifdef posix_open_USE_STUB
 	"open",
+	"_open",
 #endif /* posix_open_USE_STUB */
 #ifdef posix_creat_USE_STUB
 	"creat",
+	"_creat",
 #endif /* posix_creat_USE_STUB */
 #ifdef posix_close_USE_STUB
 	"close",
@@ -169,8 +171,14 @@ PRIVATE char const *import_table[] = {
 PRIVATE struct dex_symbol symbols[] = {
 
 	/* File control */
-	D(POSIX_OPEN_DEF)
-	D(POSIX_CREAT_DEF)
+	D(POSIX_OPEN_DEF_DOC("Open a given @filename using @oflags (a set of ${O_*} flags), and @mode (describing "
+	                     "the posix permissions to apply to a newly created file when #O_CREAT is given)"))
+	D(POSIX__OPEN_DEF_DOC("Same as #open, but whereas #open will automatically set the #O_OBTAIN_DIR and #O_BINARY "
+	                      "flags on platforms that define them in order to better standartize behavior of this "
+	                      "function on those system, this function will not make any changes to the given @oflags"))
+	D(POSIX_CREAT_DEF_DOC("Create a new file (same as ${open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)})"))
+	D(POSIX__CREAT_DEF_DOC("Same as #creat, but on systems that define #O_BINARY, that flag is also passed "
+	                       "via the internal @oflags list eventually passed to #open (or rather #_open)"))
 	D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
 	                     "When @buf is given, return the actual number of read bytes. "
 	                     "Otherwise, read into a new :Bytes object that is then returned"))
