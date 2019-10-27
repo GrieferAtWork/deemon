@@ -93,6 +93,21 @@ local converter_map: {string: (string, string, string) | string} = {
 		"\tif unlikely(!{obj}_str)\n"
 		"\t\tgoto err;\n",
 		("dwchar_t const *","{}_str")),
+	"c:ptr"        : ("o", "?Aptr?Ectypes:void", "DeeObject *",
+		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
+		"\t\tgoto err;\n"
+		"\t{{\n"
+		"\t\tint {obj}_ptr_attrib_temp;\n"
+		"\t\tDREF DeeObject *{obj}_ptr_attrib;\n"
+		"\t\t{obj}_ptr_attrib = DeeObject_GetAttrString({obj}, \"__ptr__\");\n"
+		"\t\tif unlikely(!{obj}_ptr_attrib)\n"
+		"\t\t\tgoto err;\n"
+		"\t\t{obj}_ptr_attrib_temp = DeeObject_AsUIntptr({obj}_ptr_attrib, (uintptr_t *)&{obj}_ptr);\n"
+		"\t\tDee_Decref({obj}_ptr_attrib);\n"
+		"\t\tif unlikely({obj}_ptr_attrib_temp)\n"
+		"\t\t\tgoto err;\n"
+		"\t}}\n",
+		("void *","{}_ptr")),
 	"c:bool"       : ("b", "?Dbool",   "bool"),
 	"nt:DWORD"     : ("I32u", "?Dint", "DWORD"),
 	"unix:fd"      : ("o", "?X2?Dint?DFile", "DeeObject *",

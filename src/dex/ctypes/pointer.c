@@ -36,8 +36,8 @@
 DECL_BEGIN
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-pointer_str(DeePointerTypeObject *__restrict UNUSED(tp_self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+pointer_str(DeePointerTypeObject *UNUSED(tp_self),
             union pointer *self) {
 	union pointer value;
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
@@ -45,8 +45,8 @@ pointer_str(DeePointerTypeObject *__restrict UNUSED(tp_self),
 	return DeeString_Newf("%p", value.ptr);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-pointer_repr(DeePointerTypeObject *__restrict tp_self,
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+pointer_repr(DeePointerTypeObject *tp_self,
              union pointer *self) {
 	union pointer value;
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
@@ -54,8 +54,8 @@ pointer_repr(DeePointerTypeObject *__restrict tp_self,
 	return DeeString_Newf("(%k)%p", tp_self, value.ptr);
 }
 
-PRIVATE int DCALL
-pointer_bool(DeePointerTypeObject *__restrict UNUSED(tp_self),
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+pointer_bool(DeePointerTypeObject *UNUSED(tp_self),
              union pointer *self) {
 	union pointer value;
 	CTYPES_FAULTPROTECT(value.ptr = self->ptr,
@@ -64,10 +64,10 @@ pointer_bool(DeePointerTypeObject *__restrict UNUSED(tp_self),
 }
 
 #define DEFINE_POINTER_COMPARE(name, op)                          \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                 \
-	name(DeePointerTypeObject *__restrict tp_self,                \
+	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL         \
+	name(DeePointerTypeObject *tp_self,                           \
 	     union pointer *self,                                     \
-	     DeeObject *__restrict other) {                           \
+	     DeeObject *other) {                                      \
 		union pointer value;                                      \
 		if (DeeObject_AsPointer(other, tp_self->pt_orig, &value)) \
 			return NULL;                                          \
@@ -91,8 +91,8 @@ PRIVATE struct stype_cmp pointer_cmp = {
 };
 
 
-PRIVATE int DCALL
-pointer_init(DeePointerTypeObject *__restrict tp_self,
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+pointer_init(DeePointerTypeObject *tp_self,
              union pointer *self,
              size_t argc, DeeObject **argv) {
 	DeeObject *arg;
@@ -155,9 +155,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-pointer_assign(DeePointerTypeObject *__restrict tp_self,
-               union pointer *self, DeeObject *__restrict arg) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+pointer_assign(DeePointerTypeObject *tp_self,
+               union pointer *self, DeeObject *arg) {
 	union pointer value;
 	if (DeeObject_AsPointer(arg, tp_self->pt_orig, &value))
 		goto err;
@@ -167,8 +167,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-pointer_call(DeePointerTypeObject *__restrict tp_self,
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+pointer_call(DeePointerTypeObject *tp_self,
              union pointer *self, size_t argc,
              DeeObject **argv) {
 	union pointer ptr;
@@ -176,7 +176,7 @@ pointer_call(DeePointerTypeObject *__restrict tp_self,
 	return DeeStruct_Call(tp_self->pt_orig, ptr.ptr, argc, argv);
 }
 
-PRIVATE WUNUSED DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct lvalue_object *DCALL
 pointer_get_deref(struct pointer_object *__restrict self) {
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *type;
@@ -198,8 +198,8 @@ err_r:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-pointer_set_deref(struct pointer_object *__restrict self,
-                  DeeObject *__restrict value) {
+pointer_set_deref(struct pointer_object *self,
+                  DeeObject *value) {
 	return DeeStruct_Assign(((DeePointerTypeObject *)Dee_TYPE(self))->pt_orig,
 	                        self->p_ptr.ptr, value);
 }
@@ -216,6 +216,15 @@ PRIVATE struct type_getset pointer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&pointer_set_deref,
 	  DOC("->?GLValue\nGet/clear/set the dereferenced memory location of @this pointer") },
 	{ NULL }
+};
+
+PRIVATE struct type_member pointer_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__ptr__", STRUCT_UINTPTR_T, offsetof(struct pointer_object, p_ptr),
+	                      "ABI interface for other libraries to determine if some given object "
+	                      "can be accessed as a pointer. Modules that wish to accept pointer "
+	                      "object should try to access a $\"__ptr__\" attribute of the given "
+	                      "object and interpret that attribute's value as :Numeric"),
+	TYPE_MEMBER_END
 };
 
 
@@ -281,7 +290,7 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 			/* .tp_methods       = */ NULL,
 #endif /* CONFIG_NO_DEEMON_100_COMPAT */
 			/* .tp_getsets       = */ pointer_getsets,
-			/* .tp_members       = */ NULL,
+			/* .tp_members       = */ pointer_members,
 			/* .tp_class_methods = */ NULL,
 			/* .tp_class_getsets = */ NULL,
 			/* .tp_class_members = */ NULL
