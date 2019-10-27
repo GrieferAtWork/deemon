@@ -595,6 +595,7 @@ func("strerrorname_s", "defined(__USE_KOS)");
 func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)");
 func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)");
 func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)");
+func("dlmodulename", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)");
 
 func("_memicmp", msvc);
 func("memcasecmp", "defined(__USE_KOS)");
@@ -3741,6 +3742,14 @@ var("doserrno");
 #define CONFIG_HAVE_dlsym 1
 #endif
 
+#ifdef CONFIG_NO_dlmodulename
+#undef CONFIG_HAVE_dlmodulename
+#elif !defined(CONFIG_HAVE_dlmodulename) && \
+      (defined(dlmodulename) || defined(__dlmodulename_defined) || (defined(CONFIG_HAVE_DLFCN_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_dlmodulename 1
+#endif
+
 #ifdef CONFIG_NO__memicmp
 #undef CONFIG_HAVE__memicmp
 #elif !defined(CONFIG_HAVE__memicmp) && \
@@ -5811,6 +5820,21 @@ for (local x: [1:n+1]) {
 #define DeeSysFD_Close(x) (void)0
 #endif /* !CONFIG_HAVE_close */
 #endif /* GUARD_DEEMON_FILE_H */
+
+
+#ifdef CONFIG_BUILDING_DEEMON
+/* Figure out how to implement the shared library system API */
+#undef DeeSystem_DlOpen_USE_LOADLIBRARY
+#undef DeeSystem_DlOpen_USE_DLFCN
+#undef DeeSystem_DlOpen_USE_STUB
+#if defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym)
+#define DeeSystem_DlOpen_USE_DLFCN 1
+#elif defined(CONFIG_HOST_WINDOWS)
+#define DeeSystem_DlOpen_USE_LOADLIBRARY 1
+#else
+#define DeeSystem_DlOpen_USE_STUB 1
+#endif
+#endif /* CONFIG_BUILDING_DEEMON */
 
 
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H */

@@ -253,24 +253,6 @@ DFUNDEF int DCALL nt_ThrowError(__ULONG32_TYPE__ dwError);
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-#ifdef CONFIG_BUILDING_DEEMON
-/* Figure out how to implement the shared library system API */
-#undef DeeSystem_DlOpen_USE_LOADLIBRARY
-#undef DeeSystem_DlOpen_USE_DLFCN
-#undef DeeSystem_DlOpen_USE_STUB
-#if (defined(__CYGWIN__) || defined(__CYGWIN32__)) && \
-    (defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym))
-#define DeeSystem_DlOpen_USE_DLFCN 1
-#elif defined(CONFIG_HOST_WINDOWS)
-#define DeeSystem_DlOpen_USE_LOADLIBRARY 1
-#elif defined(CONFIG_HAVE_dlopen) && defined(CONFIG_HAVE_dlsym)
-#define DeeSystem_DlOpen_USE_DLFCN 1
-#else
-#define DeeSystem_DlOpen_USE_STUB 1
-#endif
-#endif /* CONFIG_BUILDING_DEEMON */
-
-
 /* Required file extension for shared libraries. */
 #ifdef CONFIG_SHLIB_EXTENSION
 #define DeeSystem_SHEXT  CONFIG_SHLIB_EXTENSION
