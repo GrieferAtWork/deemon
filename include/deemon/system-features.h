@@ -4214,11 +4214,6 @@ var("_doserrno", msvc);
 #define fsync _commit
 #endif /* fsync = _commit */
 
-#if defined(CONFIG_HAVE__commit) && !defined(CONFIG_HAVE_fdatasync)
-#define CONFIG_HAVE_fdatasync 1
-#define fdatasync _commit
-#endif /* fdatasync = _commit */
-
 #if defined(CONFIG_HAVE__chsize) && !defined(CONFIG_HAVE_ftruncate)
 #define CONFIG_HAVE_ftruncate 1
 #define ftruncate _chsize
@@ -4289,10 +4284,10 @@ var("_doserrno", msvc);
 #define euidaccess eaccess
 #endif /* euidaccess = eaccess */
 
-#if defined(CONFIG_HAVE_vfork) && !defined(CONFIG_HAVE_fork)
-#define CONFIG_HAVE_fork 1
-#define fork vfork
-#endif /* fork = vfork */
+#if defined(CONFIG_HAVE_fork) && !defined(CONFIG_HAVE_vfork)
+#define CONFIG_HAVE_vfork 1
+#define vfork fork
+#endif /* vfork = fork */
 
 #if defined(CONFIG_HAVE__pipe) && !defined(CONFIG_HAVE_pipe)
 #define CONFIG_HAVE_pipe 1
@@ -4403,6 +4398,26 @@ var("_doserrno", msvc);
 #define environ   __environ
 #endif /* environ = __environ */
 #endif /* !CONFIG_HAVE_environ*/
+
+#if !defined(CONFIG_HAVE_execv) && defined(CONFIG_HAVE_execve) && defined(CONFIG_HAVE_environ)
+#define CONFIG_HAVE_execv 1
+#define execv(path, argv) execve(path, argv, environ)
+#endif /* execv = execve */
+
+#if !defined(CONFIG_HAVE_execvp) && defined(CONFIG_HAVE_execvpe) && defined(CONFIG_HAVE_environ)
+#define CONFIG_HAVE_execpv 1
+#define execvp(path, argv) execvpe(path, argv, environ)
+#endif /* execvp = execvpe */
+
+#if !defined(CONFIG_HAVE_wexecv) && defined(CONFIG_HAVE_wexecve) && defined(CONFIG_HAVE_environ)
+#define CONFIG_HAVE_wexecv 1
+#define wexecv(path, argv) wexecve(path, argv, environ)
+#endif /* wexecv = wexecve */
+
+#if !defined(CONFIG_HAVE_wexecvp) && defined(CONFIG_HAVE_wexecvpe) && defined(CONFIG_HAVE_environ)
+#define CONFIG_HAVE_wexecpv 1
+#define wexecvp(path, argv) wexecvpe(path, argv, environ)
+#endif /* wexecvp = wexecvpe */
 
 
 

@@ -74,50 +74,50 @@ local converter_map: {string: (string, string, string) | string} = {
 	"obj:buffer"   : ("o", "?DBytes",  "DeeObject *"),
 	"obj:int"      : ("o", "?Dint",    "DeeIntObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeInt_Type))\n"
-		"\t    goto err;\n"),
+		"\t\tgoto err;\n"),
 	"obj:string"   : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
-		"\t    goto err;\n"),
+		"\t\tgoto err;\n"),
 	"obj:callable" : ("o", "?DCallable", "DeeObject *"),
 	"c:char[]"  : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
-		"\t    goto err;\n"
+		"\t\tgoto err;\n"
 		"\t{obj}_str = DeeString_AsUtf8((DeeObject *){obj});\n"
 		"\tif unlikely(!{obj}_str)\n"
-		"\t    goto err;\n",
+		"\t\tgoto err;\n",
 		("/*utf-8*/ char const *", "{}_str")),
 	"c:wchar_t[]"  : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
-		"\t    goto err;\n"
+		"\t\tgoto err;\n"
 		"\t{obj}_str = (dwchar_t const *)DeeString_AsWide((DeeObject *){obj});\n"
 		"\tif unlikely(!{obj}_str)\n"
-		"\t    goto err;\n",
+		"\t\tgoto err;\n",
 		("dwchar_t const *","{}_str")),
 	"c:bool"       : ("b", "?Dbool",   "bool"),
 	"nt:DWORD"     : ("I32u", "?Dint", "DWORD"),
 	"unix:fd"      : ("o", "?X2?Dint?DFile", "DeeObject *",
 		"\t{obj}_fd = DeeUnixSystem_GetFD({obj});\n"
 		"\tif unlikely({obj}_fd == -1)\n"
-		"\t    goto err;\n",
+		"\t\tgoto err;\n",
 		("int", "{}_fd")),
 	"nt:HANDLE"    : ("o", "?X3?Dint?DFile?Ewin32:HANDLE", "DeeObject *",
 		"\th{obj} = (HANDLE)DeeNTSystem_GetHandle({obj});\n"
 		"\tif unlikely(h{obj} == INVALID_HANDLE_VALUE)\n"
-		"\t    goto err;\n",
+		"\t\tgoto err;\n",
 		("HANDLE", "h{}")),
 	"nt:LPCSTR"    : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
-		"\t    goto err;\n"
+		"\t\tgoto err;\n"
 		"\t{obj}_str = (LPCSTR)DeeString_AsUtf8((DeeObject *){obj});\n"
 		"\tif unlikely(!{obj}_str)\n"
-		"\t    goto err;\n",
+		"\t\tgoto err;\n",
 		("LPCSTR", "{}_str")),
 	"nt:LPCWSTR"   : ("o", "?Dstring", "DeeStringObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeString_Type))\n"
-		"\t    goto err;\n"
+		"\t\tgoto err;\n"
 		"\t{obj}_str = (LPCWSTR)DeeString_AsWide((DeeObject *){obj});\n"
 		"\tif unlikely(!{obj}_str)\n"
-		"\t    goto err;\n",
+		"\t\tgoto err;\n",
 		("LPCWSTR", "{}_str")),
 };
 
@@ -512,7 +512,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		}
 	}
 	print "))";
-	print "\t    goto err;";
+	print "\t\tgoto err;";
 	/* Invoke check functions. */
 	for (local x, y, z: arg_data) {
 		if ("?" in y)

@@ -522,17 +522,19 @@ DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self,
 	ASSERT(result->b_buffer.bb_base == result->b_data);
 	ASSERT(result->b_buffer.bb_size == result->b_size);
 	ASSERT(num_bytes <= result->b_size);
-	result = (DREF Bytes *)DeeObject_TryRealloc(result,
-	                                            COMPILER_OFFSETOF(Bytes, b_data) +
-	                                            num_bytes);
-	if unlikely(!result) {
-		result         = (DREF Bytes *)self;
-		result->b_size = result->b_buffer.bb_size = num_bytes;
-		return (DREF DeeObject *)result;
+	if (num_bytes != result->b_size) {
+		result = (DREF Bytes *)DeeObject_TryRealloc(result,
+		                                            COMPILER_OFFSETOF(Bytes, b_data) +
+		                                            num_bytes);
+		if unlikely(!result) {
+			result         = (DREF Bytes *)self;
+			result->b_size = result->b_buffer.bb_size = num_bytes;
+			return (DREF DeeObject *)result;
+		}
+		result->b_orig           = (DREF DeeObject *)result;
+		result->b_buffer.bb_base = result->b_base = result->b_data;
+		result->b_buffer.bb_size = result->b_size = num_bytes;
 	}
-	result->b_orig           = (DREF DeeObject *)result;
-	result->b_buffer.bb_base = result->b_base = result->b_data;
-	result->b_buffer.bb_size = result->b_size = num_bytes;
 	return (DREF DeeObject *)result;
 }
 

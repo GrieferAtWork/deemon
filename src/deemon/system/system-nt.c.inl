@@ -151,10 +151,8 @@ DeeNTSystem_GetHandle(DeeObject *__restrict ob) {
 	}
 
 #ifdef CONFIG_HAVE_get_osfhandle
-	if (!DeeError_Catch(&DeeError_AttributeError) &&
-	    !DeeError_Catch(&DeeError_NotImplemented))
-		goto err;
-	{
+	if (DeeError_Catch(&DeeError_AttributeError) ||
+	    DeeError_Catch(&DeeError_NotImplemented)) {
 		HANDLE hResult;
 		int fd, error;
 		attr = GETATTR_fileno(ob);
