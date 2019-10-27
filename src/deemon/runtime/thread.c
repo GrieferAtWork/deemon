@@ -3683,8 +3683,6 @@ err:
 PUBLIC void DCALL
 DeeThread_SleepNoInterrupt(uint64_t microseconds) {
 #ifdef DeeThread_Sleep_USE_SLEEPEX
-	uint64_t end_time;
-	end_time = DeeThread_GetTimeMicroSeconds() + microseconds;
 	SleepEx((DWORD)(microseconds / 1000), TRUE);
 #endif /* DeeThread_Sleep_USE_SLEEPEX */
 

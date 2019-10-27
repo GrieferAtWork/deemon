@@ -1700,7 +1700,6 @@ DeeNTSystem_VThrowErrorf(DeeTypeObject *tp,
 			result = -1;
 			goto done;
 		}
-		DeeNTSystem_TranslateErrno(dwError);
 		error->e_message    = message; /* Inherit reference */
 		error->e_inner      = NULL;
 		error->se_errno     = DeeNTSystem_TranslateErrno(dwError);

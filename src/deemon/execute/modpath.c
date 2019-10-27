@@ -1346,11 +1346,11 @@ DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t mod
 	            module_pathsize, module_path,
 	            module_namesize, module_name);
 #if !defined(CONFIG_NO_DEC) && !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX(5, SHLEN) + 1) * sizeof(char));
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX((size_t)5, (size_t)SHLEN) + 1) * sizeof(char));
 #elif !defined(CONFIG_NO_DEC)
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 5 + 1) * sizeof(char));
 #elif !defined(CONFIG_NO_DEX)
-	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX(4, SHLEN) + 1) * sizeof(char));
+	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + MAX((size_t)4, (size_t)SHLEN) + 1) * sizeof(char));
 #else
 	buf = (char *)Dee_AMalloc((module_pathsize + 1 + module_namesize + 4 + 1) * sizeof(char));
 #endif

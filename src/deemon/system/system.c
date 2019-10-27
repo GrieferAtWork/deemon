@@ -667,7 +667,7 @@ done:
 #ifdef DeeSystem_DlOpen_USE_DLFCN
 	void *result;
 	DBG_ALIGNMENT_DISABLE();
-	result = dlopen(filenames,
+	result = dlopen(filename,
 	                USED_DLOPEN_SCOPE |
 	                USED_DLOPEN_BIND);
 	DBG_ALIGNMENT_ENABLE();

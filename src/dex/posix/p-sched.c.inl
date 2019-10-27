@@ -123,7 +123,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char cons
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
+#ifdef posix_system_USE_WSYSTEM
 	result = wsystem(command);
+#else /* posix_system_USE_WSYSTEM */
+	result = system(command);
+#endif /* !posix_system_USE_WSYSTEM */
 	DBG_ALIGNMENT_ENABLE();
 	HANDLE_EINTR(DeeSystem_GetErrno(), again, err)
 	return DeeInt_NewInt(result);
