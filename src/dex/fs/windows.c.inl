@@ -1815,7 +1815,6 @@ done:
 	/* Retrieve information by handle. */
 	DBG_ALIGNMENT_DISABLE();
 	if (GetFileInformationByHandle(fd, &self->s_info)) {
-ok_user_fd:
 		DBG_ALIGNMENT_ENABLE();
 		/* Immediately load the file type if the descriptor was given by the user. */
 		if (flags & DOSTAT_FNOEXINFO) {
