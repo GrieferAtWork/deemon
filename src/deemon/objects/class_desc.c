@@ -195,9 +195,9 @@ done:
 }
 
 #define DEFINE_COTI_COMPARE(name, op)                                                        \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                            \
-	name(ClassOperatorTableIterator *__restrict self,                                        \
-	     ClassOperatorTableIterator *__restrict other) {                                     \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                    \
+	name(ClassOperatorTableIterator *self,                                                   \
+	     ClassOperatorTableIterator *other) {                                                \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &ClassOperatorTableIterator_Type)) \
 			goto err;                                                                        \
 		return_bool(COTI_GETITER(self) op COTI_GETITER(other));                              \
@@ -230,7 +230,9 @@ PRIVATE struct type_getset coti_getsets[] = {
 };
 
 PRIVATE struct type_member coti_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__class__", STRUCT_OBJECT, offsetof(ClassOperatorTableIterator, co_desc), "->?Ert:ClassDescriptor"),
+	TYPE_MEMBER_FIELD_DOC("__class__", STRUCT_OBJECT,
+	                      offsetof(ClassOperatorTableIterator, co_desc),
+	                      "->?Ert:ClassDescriptor"),
 	TYPE_MEMBER_END
 };
 
@@ -272,8 +274,8 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */coti_getsets,
-	/* .tp_members       = */coti_members,
+	/* .tp_getsets       = */ coti_getsets,
+	/* .tp_members       = */ coti_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -777,7 +779,7 @@ ca_getisclassns(ClassAttribute *__restrict self) {
 
 struct attr_flag_entry {
 	uint16_t fe_flag;
-	char fe_name[14];
+	char     fe_name[14];
 };
 
 PRIVATE struct attr_flag_entry const class_attribute_flags_db[] = {
@@ -794,7 +796,7 @@ ca_getflags(ClassAttribute *__restrict self) {
 	unsigned int i;
 	uint16_t flags;
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	flags                        = self->ca_attr->ca_flag;
+	flags = self->ca_attr->ca_flag;
 	for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
 		char const *name;
 		if (!(flags & class_attribute_flags_db[i].fe_flag))
