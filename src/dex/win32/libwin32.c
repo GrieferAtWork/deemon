@@ -27,6 +27,7 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/ctypes-abi.h>
 #include <deemon/dex.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
@@ -2355,19 +2356,8 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f(size_t argc, 
 	hhProcess = (HANDLE)DeeNTSystem_GetHandle(hProcess);
 	if unlikely(hhProcess == INVALID_HANDLE_VALUE)
 		goto err;
-	if (DeeObject_AssertTypeExact(lpv, &DeeString_Type))
+	if (DeeCTypes_GetPointer(lpv, &lpv_ptr))
 		goto err;
-	{
-		int lpv_ptr_attrib_temp;
-		DREF DeeObject *lpv_ptr_attrib;
-		lpv_ptr_attrib = DeeObject_GetAttrString(lpv, "__ptr__");
-		if unlikely(!lpv_ptr_attrib)
-			goto err;
-		lpv_ptr_attrib_temp = DeeObject_AsUIntptr(lpv_ptr_attrib, (uintptr_t *)&lpv_ptr);
-		Dee_Decref(lpv_ptr_attrib);
-		if unlikely(lpv_ptr_attrib_temp)
-			goto err;
-	}
 	return libwin32_GetMappedFileName_f_impl(hhProcess, lpv_ptr);
 err:
 	return NULL;

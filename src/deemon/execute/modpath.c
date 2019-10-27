@@ -529,6 +529,29 @@ find_glob_module(DeeStringObject *__restrict module_name) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
+find_glob_module_str(/*utf-8*/ char const *__restrict module_name_str,
+                     size_t module_name_len) {
+	dhash_t hash = fs_hashutf8(module_name_str, module_name_len);
+	DeeModuleObject *result = NULL;
+#ifndef CONFIG_NO_THREADS
+	ASSERT(rwlock_reading(&modules_glob_lock));
+#endif /* !CONFIG_NO_THREADS */
+	if (modules_glob_a) {
+		result = modules_glob_v[hash % modules_glob_a].mb_list;
+		while (result) {
+			ASSERT_OBJECT_TYPE_EXACT(result->mo_name, &DeeString_Type);
+			if (fs_hashmodname_equals(result, hash) &&
+			    DeeString_SIZE(result->mo_name) == module_name_len &&
+			    fs_memcmp(DeeString_STR(result->mo_name), module_name_str,
+			              module_name_len * sizeof(char)) == 0)
+				break; /* Found it! */
+			result = result->mo_globnext;
+		}
+	}
+	return result;
+}
+
 PRIVATE bool DCALL rehash_file_modules(void) {
 	struct module_bucket *new_vector, *biter, *bend, *dst;
 	DeeModuleObject *iter, *next;
@@ -2169,17 +2192,106 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
                            size_t module_namesize,
                            struct compiler_options *options,
                            bool throw_error) {
-	/* TODO: This function can be written to be faster */
-	DREF DeeObject *name_object, *result;
-	name_object = DeeString_NewUtf8(module_name,
-	                                module_namesize,
-	                                STRING_ERROR_FSTRICT);
-	if unlikely(!name_object)
-		return NULL;
-	result = DeeModule_OpenGlobal(name_object, options, throw_error);
-	Dee_Decref(name_object);
-	return result;
+	DREF DeeObject *module_name_ob;
+	DREF DeeObject *path;
+	DREF DeeModuleObject *result;
+	DeeListObject *paths;
+	size_t i;
+	/* First off: Check if this is a request for the builtin `deemon' module.
+	 * NOTE: This check is always done in case-sensitive mode! */
+	if (module_namesize == DeeString_SIZE(&str_deemon) &&
+	    memcmp(module_name, DeeString_STR(&str_deemon),
+	           module_namesize * sizeof(char)) == 0) {
+		/* Yes, it is. */
+		result = DeeModule_GetDeemon();
+		Dee_Incref(result);
+		goto done;
+	}
+
+	/* Search for a cache entry for this module in the global module cache. */
+	rwlock_read(&modules_glob_lock);
+	result = find_glob_module_str(module_name, module_namesize);
+	if (result) {
+		Dee_Incref(result);
+		rwlock_endread(&modules_glob_lock);
+		goto done;
+	}
+	rwlock_endread(&modules_glob_lock);
+
+	/* Construct the module name object. */
+	module_name_ob = DeeString_NewUtf8(module_name,
+	                                   module_namesize,
+	                                   STRING_ERROR_FSTRICT);
+	if unlikely(!module_name_ob)
+		goto err;
+
+	/* Default case: Must load a new module. */
+	paths = DeeModule_GetPath();
+	DeeList_LockRead(paths);
+	for (i = 0; i < DeeList_SIZE(paths); ++i) {
+		path = DeeList_GET(paths, i);
+		Dee_Incref(path);
+		DeeList_LockEndRead(paths);
+		if (DeeString_Check(path)) {
+			/*utf-8*/ char const *path_str;
+			path_str = DeeString_AsUtf8(path);
+			if unlikely(!path_str)
+				goto err_path_module_name_ob;
+			result = (DREF DeeModuleObject *)DeeModule_OpenInPath(path_str,
+			                                                      WSTR_LENGTH(path_str),
+			                                                      module_name,
+			                                                      module_namesize,
+			                                                      module_name_ob,
+			                                                      options,
+			                                                      Dee_MODULE_OPENINPATH_FNORMAL);
+			if (result != (DREF DeeModuleObject *)ITER_DONE)
+				goto done_path;
+		} else {
+			/* `path' isn't a string */
+		}
+		Dee_Decref(path);
+		DeeList_LockRead(paths);
+	}
+	DeeList_LockEndRead(paths);
+	if (!throw_error) {
+		Dee_Decref(module_name_ob);
+		return ITER_DONE;
+	}
+	err_module_not_found(module_name_ob);
+err_module_name_ob:
+	Dee_Decref(module_name_ob);
+err:
+	return NULL;
+err_path_module_name_ob:
+	Dee_Decref(path);
+	goto err_module_name_ob;
+done_path:
+	Dee_Decref(path);
+	Dee_Decref(module_name_ob);
+done:
+	return (DREF DeeObject *)result;
 }
+
+
+/* Lookup an external symbol.
+ * Convenience function (same as `DeeObject_GetAttrString(DeeModule_OpenGlobalString(...), ...)') */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetExtern(/*utf-8*/ char const *__restrict module_name,
+                    /*utf-8*/ char const *__restrict global_name) {
+	DREF DeeObject *result;
+	DREF DeeObject *extern_module;
+	extern_module = DeeModule_OpenGlobalString(module_name,
+	                                           strlen(module_name),
+	                                           NULL, true);
+	if unlikely(!extern_module)
+		goto err;
+	result = DeeObject_GetAttrString(extern_module, global_name);
+	Dee_Decref(extern_module);
+	return result;
+err:
+	return NULL;
+}
+
 
 
 

@@ -339,6 +339,7 @@
     <None Include="..\.clang-format" />
     <None Include="..\cpp.hint" />
     <None Include="..\include\deemon\compiler\lexer.def" />
+    <None Include="..\include\deemon\ctypes-abi.h" />
     <None Include="..\include\deemon\system-error.h" />
     <None Include="..\include\deemon\system-features.h" />
     <None Include="..\include\deemon\system.h" />

@@ -931,6 +931,13 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
                     size_t module_namesize);
 
 
+/* Lookup an external symbol.
+ * Convenience function (same as `DeeObject_GetAttrString(DeeModule_OpenGlobalString(...), ...)') */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_GetExtern(/*utf-8*/ char const *__restrict module_name,
+                    /*utf-8*/ char const *__restrict global_name);
+
+
 /* Open a module using a relative module name
  * `module_name' that is based off of `module_pathname'
  * NOTE: If the given `module_name' doesn't start with a `.'
