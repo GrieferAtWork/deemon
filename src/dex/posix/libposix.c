@@ -45,7 +45,7 @@ DECL_BEGIN
 
 
 
-#ifdef NEED_ERR_UNSUPPORTED
+#if defined(NEED_ERR_UNSUPPORTED) || defined(__INTELLISENSE__)
 #undef NEED_ERR_UNSUPPORTED
 PRIVATE ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
 posix_err_unsupported(char const *__restrict name) {
@@ -55,7 +55,7 @@ posix_err_unsupported(char const *__restrict name) {
 }
 #endif /* NEED_ERR_UNSUPPORTED */
 
-#ifdef NEED_GET_DFD_FILENAME
+#if defined(NEED_GET_DFD_FILENAME) || defined(__INTELLISENSE__)
 #undef NEED_GET_DFD_FILENAME
 PRIVATE WUNUSED DREF /*String*/ DeeObject *DCALL
 libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) {
@@ -143,6 +143,12 @@ PRIVATE char const *missing_features[] = {
 #ifdef posix_pwrite_USE_STUB
 	"pwrite",
 #endif /* posix_pwrite_USE_STUB */
+#ifdef posix_access_USE_STUB
+	"access",
+#endif /* posix_access_USE_STUB */
+#ifdef posix_euidaccess_USE_STUB
+	"euidaccess",
+#endif /* posix_euidaccess_USE_STUB */
 	NULL
 };
 

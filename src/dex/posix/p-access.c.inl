@@ -64,11 +64,50 @@ print "/" "**" "/";
 /**/
 //[[[end]]]
 
+/* Figure out how to implement `access()' */
+#undef posix_access_USE_WACCESS
+#undef posix_access_USE_ACCESS
+#undef posix_access_USE_STUB
+#ifdef CONFIG_HAVE_waccess
+#define posix_access_USE_WACCESS 1
+#elif defined(CONFIG_HAVE_access)
+#define posix_access_USE_ACCESS 1
+#else
+#define posix_access_USE_STUB 1
+#endif
 
-/* TODO: Reqire to use the foo_USE_XXX notational system. */
+/* Figure out how to implement `euidaccess()' */
+#undef posix_euidaccess_USE_EUIDACCESS
+#undef posix_euidaccess_USE_STUB
+#if defined(CONFIG_HAVE_euidaccess)
+#define posix_euidaccess_USE_EUIDACCESS 1
+#else
+#define posix_euidaccess_USE_STUB 1
+#endif
+
+/* Figure out how to implement `faccessat()' */
+#undef posix_faccessat_USE_FACCESSAT
+#undef posix_faccessat_USE_ACCESS
+#undef posix_faccessat_USE_STUB
+#if defined(CONFIG_HAVE_faccessat)
+#define posix_faccessat_USE_FACCESSAT 1
+#elif !defined(posix_access_USE_STUB) && \
+     (!defined(AT_EACCESS) || !defined(posix_euidaccess_USE_STUB))
+#define posix_faccessat_USE_ACCESS 1
+#else
+#define posix_faccessat_USE_STUB 1
+#endif
 
 
-#if defined(CONFIG_HAVE_waccess) || defined(__DEEMON__)
+
+
+
+
+/************************************************************************/
+/* access()                                                             */
+/************************************************************************/
+
+#if defined(posix_access_USE_WACCESS) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("access", "filename:c:wchar_t[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(dwchar_t const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -96,8 +135,8 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(dwchar_t const *filename, int how)
 //[[[end]]]
-#endif /* CONFIG_HAVE_waccess */
-#if !defined(CONFIG_HAVE_waccess) || defined(__DEEMON__)
+#endif /* posix_access_USE_WACCESS */
+#if !defined(posix_access_USE_WACCESS) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("access", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(/*utf-8*/ char const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -125,28 +164,25 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(/*utf-8*/ char const *filename, int how)
 //[[[end]]]
-#endif /* !CONFIG_HAVE_waccess */
+#endif /* !posix_access_USE_WACCESS */
 {
-#ifdef CONFIG_HAVE_access
+#if defined(posix_access_USE_WACCESS) || defined(posix_access_USE_ACCESS)
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#ifdef CONFIG_HAVE_waccess
+#ifdef posix_access_USE_WACCESS
 #define ACCESS_PRINTF_FILENAME "%ls"
 	result = waccess(filename, how);
-#else /* CONFIG_HAVE_waccess */
+#else /* posix_access_USE_WACCESS */
 #define ACCESS_PRINTF_FILENAME "%s"
 	result = access(filename, how);
-#endif /* !CONFIG_HAVE_waccess */
+#endif /* !posix_access_USE_WACCESS */
 	DBG_ALIGNMENT_ENABLE();
 	if (result < 0) {
 		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again, err)
 #ifdef EACCES
-		if (result == EACCES)
-			return_false;
-		if (result == EINVAL)
-			return_false;
+		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "access")
 		HANDLE_EINVAL(result, err, "Invalid access mode %d", how)
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to " ACCESS_PRINTF_FILENAME, filename)
@@ -161,16 +197,30 @@ EINTR_LABEL(again)
 #endif /* !EACCES */
 	}
 	return_true;
+#undef ACCESS_PRINTF_FILENAME
+#if defined(EACCES) || defined(EINTR)
 err:
-#else /* CONFIG_HAVE_access */
+	return NULL;
+#endif /* EACCES || EINTR */
+#endif /* posix_access_USE_WACCESS || posix_access_USE_ACCESS */
+
+#ifdef posix_access_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)filename;
 	(void)how;
 	posix_err_unsupported("access");
-#endif /* !CONFIG_HAVE_access */
 	return NULL;
+#endif /* posix_access_USE_STUB */
 }
 
+
+
+
+
+
+/************************************************************************/
+/* euidaccess()                                                         */
+/************************************************************************/
 
 /*[[[deemon import("_dexutils").gw("euidaccess", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_euidaccess_f_impl(/*utf-8*/ char const *filename, int how);
@@ -200,7 +250,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_euidaccess_f_impl(/*utf-8*/ char const *filename, int how)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_euidaccess
+#ifdef posix_euidaccess_USE_EUIDACCESS
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -210,10 +260,7 @@ EINTR_LABEL(again)
 		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again, err)
 #ifdef EACCES
-		if (result == EACCES)
-			return_false;
-		if (result == EINVAL)
-			return_false;
+		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "euidaccess")
 		HANDLE_EINVAL(result, err, "Invalid euidaccess mode %d", how)
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check euidaccess to %s", filename)
@@ -228,14 +275,19 @@ EINTR_LABEL(again)
 #endif /* !EACCES */
 	}
 	return_true;
+#if defined(EACCES) || defined(EINTR)
 err:
-#else /* CONFIG_HAVE_euidaccess */
+	return NULL;
+#endif /* EACCES || EINTR */
+#endif /* posix_euidaccess_USE_EUIDACCESS */
+
+#ifdef posix_euidaccess_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)filename;
 	(void)how;
 	posix_err_unsupported("euidaccess");
-#endif /* !CONFIG_HAVE_euidaccess */
 	return NULL;
+#endif /* posix_euidaccess_USE_STUB */
 }
 
 
@@ -271,7 +323,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, /*utf-8*/ char const *filename, int how, int atflags)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_faccessat
+#ifdef posix_faccessat_USE_FACCESSAT
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -281,10 +333,7 @@ EINTR_LABEL(again)
 		result = DeeSystem_GetErrno();
 		HANDLE_EINTR(result, again, err)
 #ifdef EACCES
-		if (result == EACCES)
-			return_false;
-		if (result == EINVAL)
-			return_false;
+		DeeSystem_IF_E2(result, EACCES, EINVAL, return_false);
 		HANDLE_ENOSYS(result, err, "faccessat")
 		HANDLE_EINVAL(result, err, "Invalid access-mode (%#x) or at-flags (%#x)", how, atflags)
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to %d:%s", dfd, filename)
@@ -298,7 +347,13 @@ EINTR_LABEL(again)
 #endif /* !EACCES */
 	}
 	return_true;
-#else /* CONFIG_HAVE_faccessat */
+#if defined(EACCES) || defined(EINTR)
+err:
+	return NULL;
+#endif /* EACCES || EINTR */
+#endif /* posix_faccessat_USE_FACCESSAT */
+
+#ifdef posix_faccessat_USE_ACCESS
 	DREF DeeObject *result;
 	DREF DeeObject *fullname;
 #define NEED_GET_DFD_FILENAME 1
@@ -312,33 +367,38 @@ EINTR_LABEL(again)
 		if unlikely(!ufullname)
 			result = NULL;
 		else {
-			result = libposix_euidaccess_f_impl(ufullname, how);
+			result = posix_euidaccess_f_impl(ufullname, how);
 		}
 	} else
 #endif /* AT_EACCESS */
 	{
-#ifdef CONFIG_HAVE_waccess
-		dwchar_t *wfullname;
-		wfullname = DeeString_AsWide(fullname);
-		if unlikely(!wfullname)
+#ifdef posix_access_USE_WACCESS
+		dwchar_t *str_fullname;
+		str_fullname = DeeString_AsWide(fullname);
+#else /* posix_access_USE_WACCESS */
+		char *str_fullname;
+		str_fullname = DeeString_AsUtf8(fullname);
+#endif /* !posix_access_USE_WACCESS */
+		if unlikely(!str_fullname)
 			result = NULL;
 		else {
-			result = posix_access_f_impl(wfullname, how);
+			result = posix_access_f_impl(str_fullname, how);
 		}
-#else /* CONFIG_HAVE_waccess */
-		char *ufullname;
-		ufullname = DeeString_AsUtf8(fullname);
-		if unlikely(!ufullname)
-			result = NULL;
-		else {
-			result = posix_access_f_impl(ufullname, how);
-		}
-#endif /* !CONFIG_HAVE_waccess */
 	}
 	Dee_Decref(fullname);
-#endif /* !CONFIG_HAVE_faccessat */
 err:
 	return NULL;
+#endif /* posix_faccessat_USE_ACCESS */
+
+#ifdef posix_faccessat_USE_STUB
+#define NEED_ERR_UNSUPPORTED 1
+	(void)dfd;
+	(void)filename;
+	(void)how;
+	(void)atflags;
+	posix_err_unsupported("faccessat");
+	return NULL;
+#endif /* posix_faccessat_USE_STUB */
 }
 
 
