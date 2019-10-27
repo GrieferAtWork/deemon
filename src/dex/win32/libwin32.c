@@ -52,6 +52,13 @@ DECL_BEGIN
 #endif
 #endif
 
+#undef STD_INPUT_HANDLE
+#undef STD_OUTPUT_HANDLE
+#undef STD_ERROR_HANDLE
+#define STD_INPUT_HANDLE    (-10)
+#define STD_OUTPUT_HANDLE   (-11)
+#define STD_ERROR_HANDLE    (-12)
+
 #ifndef DRIVE_UNKNOWN
 #define DRIVE_UNKNOWN       0
 #endif /* !DRIVE_UNKNOWN */
