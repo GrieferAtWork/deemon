@@ -25,6 +25,27 @@
 
 DECL_BEGIN
 
+/* Figure out how to implement `fsync()' */
+#undef posix_fsync_USE_FSYNC
+#undef posix_fsync_USE_STUB
+#ifdef CONFIG_HAVE_fsync
+#define posix_fsync_USE_FSYNC 1
+#else
+#define posix_fsync_USE_STUB 1
+#endif
+
+/* Figure out how to implement `fdatasync()' */
+#undef posix_fdatasync_USE_FDATASYNC
+#undef posix_fdatasync_USE_FSYNC
+#undef posix_fdatasync_USE_STUB
+#ifdef CONFIG_HAVE_fdatasync
+#define posix_fdatasync_USE_FDATASYNC 1
+#elif !defined(posix_fsync_USE_STUB)
+#define posix_fdatasync_USE_FSYNC 1
+#else
+#define posix_fdatasync_USE_STUB 1
+#endif
+
 
 
 
@@ -52,7 +73,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sync_f_impl(void)
 #ifdef CONFIG_HAVE_sync
 	sync();
 	return_none;
-#else /* CONFIG_HAVE_sync */
+#else  /* CONFIG_HAVE_sync */
 	/* deemon.File.System.sync(); */
 	return DeeObject_CallAttrString((DeeObject *)&DeeSystemFile_Type,
 	                                "sync", 0, NULL);
@@ -92,9 +113,9 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd)
 //[[[end]]]
 {
+#ifdef posix_fsync_USE_FSYNC
 	int result;
-#ifdef CONFIG_HAVE_fsync
-EINTR_LABEL(again)
+	EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 	result = fsync(fd);
 	DBG_ALIGNMENT_ENABLE();
@@ -109,12 +130,15 @@ EINTR_LABEL(again)
 	}
 	return_none;
 err:
-#else /* CONFIG_HAVE_fsync */
+	return NULL;
+#endif /* posix_fsync_USE_FSYNC */
+
+#ifdef posix_fsync_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	posix_err_unsupported("fsync");
-#endif /* !CONFIG_HAVE_fsync */
 	return NULL;
+#endif /* !posix_fsync_USE_STUB */
 }
 
 
@@ -150,9 +174,9 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_fdatasync
+#ifdef posix_fdatasync_USE_FDATASYNC
 	int result;
-EINTR_LABEL(again)
+	EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
 	result = fdatasync(fd);
 	DBG_ALIGNMENT_ENABLE();
@@ -167,12 +191,19 @@ EINTR_LABEL(again)
 	}
 	return_none;
 err:
-#else /* CONFIG_HAVE_fdatasync */
+	return NULL;
+#endif /* posix_fdatasync_USE_FDATASYNC */
+
+#ifdef posix_fdatasync_USE_FSYNC
+	return posix_fsync_f_impl(fd);
+#endif /* !posix_fdatasync_USE_FSYNC */
+
+#ifdef posix_fdatasync_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	posix_err_unsupported("fdatasync");
-#endif /* !CONFIG_HAVE_fdatasync */
 	return NULL;
+#endif /* !CONFIG_HAVE_fdatasync */
 }
 
 
