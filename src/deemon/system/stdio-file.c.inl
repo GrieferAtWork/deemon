@@ -848,7 +848,6 @@ PRIVATE struct type_member sysfile_members[] = {
 PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
 #ifdef CONFIG_HAVE_fclose
-	fclose(fp);
 	if (self->sf_ownhandle) {
 		DBG_ALIGNMENT_DISABLE();
 		fclose((FILE *)self->sf_ownhandle);
@@ -856,6 +855,11 @@ sysfile_fini(SystemFile *__restrict self) {
 	}
 #endif /* CONFIG_HAVE_fclose */
 	Dee_XDecref(self->sf_filename);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+sysfile_visit(SystemFile *__restrict self, dvisit_t proc, void *arg) {
+	Dee_XVisit(self->sf_filename);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -909,7 +913,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 			/* .tp_bool = */ NULL
 		},
 		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sysfile_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,

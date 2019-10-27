@@ -624,6 +624,11 @@ reader_fini(Reader *__restrict self) {
 	}
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+reader_visit(Reader *__restrict self, dvisit_t proc, void *arg) {
+	Dee_XVisit(self->r_owner);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_ctor(Reader *__restrict self) {
 	rwlock_init(&self->fo_lock);
@@ -677,7 +682,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 		                         "offsets, and not character offsets, not its preferred encoding"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_features = */ TF_HASFILEOPS | TF_NONLOOPING,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{
@@ -699,7 +704,7 @@ PUBLIC DeeFileTypeObject DeeFileReader_Type = {
 			/* .tp_bool = */ NULL
 		},
 		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&reader_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,
@@ -836,6 +841,19 @@ writer_fini(Writer *__restrict self) {
 		                                 s_str));
 	} else {
 		unicode_printer_fini(&self->w_printer);
+	}
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+writer_visit(Writer *__restrict self, dvisit_t proc, void *arg) {
+	if (self->w_string) {
+		Dee_Visit(self->w_string);
+	} else if (!self->w_printer.up_buffer) {
+	} else if ((self->w_printer.up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		Dee_Visit(COMPILER_CONTAINER_OF(self->w_printer.up_buffer,
+		                                DeeStringObject,
+		                                s_str));
+	} else {
 	}
 }
 
@@ -1598,7 +1616,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ TF_HASFILEOPS,
+		/* .tp_features = */ TF_HASFILEOPS | TF_NONLOOPING,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{
@@ -1620,7 +1638,7 @@ PUBLIC DeeFileTypeObject DeeFileWriter_Type = {
 			/* .tp_bool = */ NULL
 		},
 		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&writer_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,

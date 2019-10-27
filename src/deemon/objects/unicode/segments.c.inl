@@ -136,6 +136,11 @@ ssegiter_fini(StringSegmentsIterator *__restrict self) {
 	Dee_Decref(self->s_str);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+ssegiter_visit(StringSegmentsIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->s_str);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_bool(StringSegmentsIterator *__restrict self) {
 	return READ_PTR(self) < self->s_end;
@@ -191,7 +196,7 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -213,7 +218,7 @@ INTERN DeeTypeObject StringSegmentsIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ssegiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssegiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &ssegiter_cmp,
@@ -262,6 +267,11 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 sseg_fini(StringSegments *__restrict self) {
 	Dee_Decref(self->s_str);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+sseg_visit(StringSegments *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->s_str);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -435,7 +445,7 @@ INTERN DeeTypeObject StringSegments_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -457,7 +467,7 @@ INTERN DeeTypeObject StringSegments_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sseg_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sseg_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

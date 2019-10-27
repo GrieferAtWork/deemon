@@ -302,6 +302,11 @@ sfi_fini(StringFindIterator *__restrict self) {
 	Dee_Decref(self->sfi_find);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+sfi_visit(StringFindIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->sfi_find);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_bool(StringFindIterator *__restrict self) {
 	union dcharptr ptr;
@@ -405,7 +410,7 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -427,7 +432,7 @@ INTERN DeeTypeObject StringFindIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sfi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sfi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &sfi_cmp,
@@ -450,7 +455,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -472,7 +477,7 @@ INTERN DeeTypeObject StringCaseFindIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&scfi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sfi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &sfi_cmp,
@@ -526,6 +531,12 @@ PRIVATE NONNULL((1)) void DCALL
 sf_fini(StringFind *__restrict self) {
 	Dee_Decref(self->sf_str);
 	Dee_Decref(self->sf_needle);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+sf_visit(StringFind *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->sf_str);
+	Dee_Visit(self->sf_needle);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringFindIterator *DCALL
@@ -593,7 +604,7 @@ INTERN DeeTypeObject StringFind_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -615,7 +626,7 @@ INTERN DeeTypeObject StringFind_Type = {
 		/* .tp_bool = */ NULL  /* TODO: string.contains() */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -638,7 +649,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -660,7 +671,7 @@ INTERN DeeTypeObject StringCaseFind_Type = {
 		/* .tp_bool = */ NULL  /* TODO: string.contains() */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sf_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

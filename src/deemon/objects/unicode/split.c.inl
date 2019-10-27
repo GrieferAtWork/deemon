@@ -173,6 +173,11 @@ splititer_fini(StringSplitIterator *__restrict self) {
 	Dee_Decref(self->s_split);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+splititer_visit(StringSplitIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->s_split);
+}
+
 #ifdef CONFIG_NO_THREADS
 #define GET_SPLIT_NEXT(x) ((x)->s_next)
 #else /* CONFIG_NO_THREADS */
@@ -245,7 +250,7 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -267,8 +272,7 @@ INTERN DeeTypeObject StringSplitIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
-	                                 * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&splititer_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &splititer_cmp,
@@ -303,7 +307,7 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(StringSplitIterator)
 			}
 		},
-		/* .tp_dtor        = */ NULL,
+		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -313,8 +317,7 @@ INTERN DeeTypeObject StringCaseSplitIterator_Type = {
 		/* .tp_bool = */ NULL  /* INHERITED */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
-	                                 * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ NULL, /* INHERITED */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL, /* INHERITED */
@@ -337,6 +340,12 @@ PRIVATE NONNULL((1)) void DCALL
 split_fini(StringSplit *__restrict self) {
 	Dee_Decref(self->s_str);
 	Dee_Decref(self->s_sep);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+split_visit(StringSplit *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->s_str);
+	Dee_Visit(self->s_sep);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -452,7 +461,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -474,7 +483,7 @@ INTERN DeeTypeObject StringSplit_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&split_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -509,7 +518,7 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 				TYPE_FIXED_ALLOCATOR(StringSplit)
 			}
 		},
-		/* .tp_dtor        = */ NULL,
+		/* .tp_dtor        = */ NULL, /* INHERITED */
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -519,7 +528,7 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&split_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ NULL, /* INHERITED */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -730,7 +739,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -752,8 +761,7 @@ INTERN DeeTypeObject StringLineSplitIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&splititer_bool /* offset:`s_next' == offset:`ls_next' */
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
-	                                 * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&splititer_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &splititer_cmp, /* offset:`s_next' == offset:`ls_next' */
@@ -804,6 +812,11 @@ linesplit_fini(LineSplit *__restrict self) {
 	Dee_Decref(self->ls_str);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+linesplit_visit(LineSplit *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->ls_str);
+}
+
 STATIC_ASSERT(COMPILER_OFFSETOF(LineSplit, ls_str) ==
               COMPILER_OFFSETOF(StringSplit, s_str));
 #define linesplit_bool split_bool
@@ -820,7 +833,7 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -842,7 +855,7 @@ INTERN DeeTypeObject StringLineSplit_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&linesplit_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&linesplit_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

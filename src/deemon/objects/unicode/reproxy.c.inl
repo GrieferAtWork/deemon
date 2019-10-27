@@ -130,6 +130,12 @@ refaiter_fini(ReSequenceIterator *__restrict self) {
 	Dee_Decref(self->re_pattern);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+refaiter_visit(ReSequenceIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->re_data);
+	Dee_Visit(self->re_pattern);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_bool(ReSequenceIterator *__restrict self) {
 	struct regex_range_ptr range;
@@ -277,7 +283,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -299,7 +305,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&refaiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&refaiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &refaiter_cmp,
@@ -415,7 +421,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -437,7 +443,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&relaiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&relaiter_fini,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &relaiter_cmp,
@@ -458,6 +464,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 #define respiter_ctor    refaiter_ctor
 #define respiter_copy    refaiter_copy
 #define respiter_fini    refaiter_fini
+#define respiter_visit   refaiter_visit
 #define respiter_cmp     refaiter_cmp
 #define respiter_members refaiter_members
 
@@ -564,7 +571,7 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -586,7 +593,7 @@ INTERN DeeTypeObject ReSplitIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&respiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&respiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &respiter_cmp,
@@ -650,7 +657,8 @@ err:
 	return -1;
 }
 
-#define refa_fini refaiter_fini
+#define refa_fini  refaiter_fini
+#define refa_visit refaiter_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_bool(ReSequence *__restrict self) {
@@ -779,7 +787,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -801,7 +809,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&refa_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&refa_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -822,6 +830,7 @@ INTERN DeeTypeObject ReFindAll_Type = {
 #define rela_ctor    refa_ctor
 #define rela_init    refa_init
 #define rela_fini    refa_fini
+#define rela_visit   refa_visit
 #define rela_bool    refa_bool
 #define rela_members refa_members
 #define rela_size    refa_size
@@ -868,7 +877,7 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -890,7 +899,7 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&rela_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rela_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -908,6 +917,7 @@ INTERN DeeTypeObject ReLocateAll_Type = {
 };
 
 #define resp_fini    refa_fini
+#define resp_visit   refa_visit
 #define resp_members refa_members
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1023,7 +1033,7 @@ INTERN DeeTypeObject ReSplit_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -1045,7 +1055,7 @@ INTERN DeeTypeObject ReSplit_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&resp_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&resp_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

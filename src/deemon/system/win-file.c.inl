@@ -1137,6 +1137,11 @@ sysfile_fini(SystemFile *__restrict self) {
 	Dee_XDecref(self->sf_filename);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+sysfile_visit(SystemFile *__restrict self, dvisit_t proc, void *arg) {
+	Dee_XVisit(self->sf_filename);
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject **argv) {
@@ -1192,7 +1197,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 			/* .tp_bool = */ NULL
 		},
 		/* .tp_call          = */ NULL,
-		/* .tp_visit         = */ NULL,
+		/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&sysfile_visit,
 		/* .tp_gc            = */ NULL,
 		/* .tp_math          = */ NULL,
 		/* .tp_cmp           = */ NULL,

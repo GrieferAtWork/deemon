@@ -546,7 +546,7 @@ err:
 					TYPE_FIXED_ALLOCATOR(DictProxyIterator)                                       \
 				}                                                                                 \
 			},                                                                                    \
-			/* .tp_dtor        = */ NULL,                                                         \
+			/* .tp_dtor        = */ NULL, /* INHERITED */                                         \
 			/* .tp_assign      = */ NULL,                                                         \
 			/* .tp_move_assign = */ NULL                                                          \
 		},                                                                                        \
@@ -556,7 +556,7 @@ err:
 			/* .tp_bool = */ NULL                                                                 \
 		},                                                                                        \
 		/* .tp_call          = */ NULL,                                                           \
-		/* .tp_visit         = */ NULL,                                                           \
+		/* .tp_visit         = */ NULL, /* INHERITED */                                           \
 		/* .tp_gc            = */ NULL,                                                           \
 		/* .tp_math          = */ NULL,                                                           \
 		/* .tp_cmp           = */ NULL,                                                           \

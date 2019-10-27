@@ -2071,6 +2071,11 @@ dir_fini(Dir *__restrict self) {
 	Dee_Decref(self->d_path);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+dir_visit(Dir *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->d_path);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dir_copy(Dir *__restrict self,
          Dir *__restrict other) {
@@ -2120,7 +2125,7 @@ INTERN DeeTypeObject DeeDir_Type = {
 	/* .tp_doc      = */ S_Dir_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -2142,7 +2147,7 @@ INTERN DeeTypeObject DeeDir_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dir_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

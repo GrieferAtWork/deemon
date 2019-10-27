@@ -75,9 +75,11 @@ done:
 
 
 PRIVATE NONNULL((1)) void DCALL stringordinals_fini(StringOrdinals *__restrict self);
+PRIVATE NONNULL((1, 2)) void DCALL stringordinals_visit(StringOrdinals *__restrict self, dvisit_t proc, void *arg);
 STATIC_ASSERT(COMPILER_OFFSETOF(StringOrdinals, so_str) ==
               COMPILER_OFFSETOF(StringOrdinalsIterator, soi_str));
-#define stringordinalsiter_fini stringordinals_fini
+#define stringordinalsiter_fini  stringordinals_fini
+#define stringordinalsiter_visit stringordinals_visit
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinalsiter_ctor(StringOrdinalsIterator *__restrict self) {
@@ -169,7 +171,7 @@ INTERN DeeTypeObject StringOrdinalsIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -191,7 +193,7 @@ INTERN DeeTypeObject StringOrdinalsIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringordinalsiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&stringordinalsiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL, /* TODO */
@@ -214,6 +216,11 @@ INTERN DeeTypeObject StringOrdinalsIterator_Type = {
 PRIVATE NONNULL((1)) void DCALL
 stringordinals_fini(StringOrdinals *__restrict self) {
 	Dee_Decref(self->so_str);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+stringordinals_visit(StringOrdinals *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->so_str);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -309,7 +316,7 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -331,7 +338,7 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringordinals_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&stringordinals_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

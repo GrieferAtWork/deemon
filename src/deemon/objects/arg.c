@@ -450,6 +450,13 @@ kwds_fini(Kwds *__restrict self) {
 		Dee_XDecref(self->kw_map[i].ke_name);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+kwds_visit(Kwds *__restrict self, dvisit_t proc, void *arg) {
+	size_t i;
+	for (i = 0; i <= self->kw_mask; ++i)
+		Dee_XVisit(self->kw_map[i].ke_name);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwds_repr(Kwds *__restrict self) {
 	size_t i;
@@ -588,7 +595,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
@@ -611,7 +618,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&kwds_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&kwds_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL, /* TODO */

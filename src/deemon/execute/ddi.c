@@ -632,6 +632,11 @@ ddi_fini(DeeDDIObject *__restrict self) {
 	Dee_Decref(self->d_strtab);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+ddi_visit(DeeDDIObject *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->d_strtab);
+}
+
 PRIVATE struct type_member ddi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__strtab__", STRUCT_OBJECT, offsetof(DeeDDIObject, d_strtab), "->?Dstring"),
 	TYPE_MEMBER_END
@@ -737,7 +742,7 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ddi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &ddi_cmp,

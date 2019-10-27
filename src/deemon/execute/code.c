@@ -725,7 +725,7 @@ code_visit(DeeCodeObject *__restrict self,
 	for (i = 0; i < (uint16_t)(self->co_argc_max - self->co_argc_min); ++i)
 		Dee_XVisit(self->co_defaultv[i]);
 
-		/* Visit static variables. */
+	/* Visit static variables. */
 	rwlock_read(&self->co_static_lock);
 	for (i = 0; i < self->co_staticc; ++i)
 		Dee_Visit(self->co_staticv[i]);

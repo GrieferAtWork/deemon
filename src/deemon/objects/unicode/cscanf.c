@@ -517,10 +517,16 @@ err:
 	return NULL;
 }
 
-PRIVATE NONNULL((1)) void DCALL ssi_fini(StringScanIterator *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+ssi_fini(StringScanIterator *__restrict self) {
 	/* likely: it was probably only created for iteration,
 	 *         in which case it'll be destroyed with us. */
 	Dee_Decref_likely(self->si_scanner);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+ssi_visit(StringScanIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->si_scanner);
 }
 
 #define DEFINE_SPLITITER_CMP(name, op)                                               \
@@ -576,7 +582,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -598,8 +604,7 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
-	                                 * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ssi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &ssi_cmp,
@@ -621,10 +626,17 @@ INTERN DeeTypeObject StringScanIterator_Type = {
 
 
 
-PRIVATE NONNULL((1)) void DCALL ss_fini(StringScanner *__restrict self) {
+PRIVATE NONNULL((1)) void DCALL
+ss_fini(StringScanner *__restrict self) {
 	Dee_Decref(self->ss_data);
 	/* unlikely: it's probably a string constant */
 	Dee_Decref_unlikely(self->ss_format);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+ss_visit(StringScanner *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->ss_data);
+	Dee_Visit(self->ss_format);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF StringScanIterator *DCALL
@@ -688,7 +700,7 @@ INTERN DeeTypeObject StringScan_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -710,7 +722,7 @@ INTERN DeeTypeObject StringScan_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings. */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ss_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

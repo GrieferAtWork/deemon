@@ -161,11 +161,12 @@ DeeObjMethod_GetDoc(DeeObject *__restrict self) {
 				return result;
 		}
 		iter = tp_self->tp_methods;
-		if (iter)
+		if (iter) {
 			for (; iter->m_name; ++iter) {
 				if (iter->m_func == func)
 					return iter->m_doc;
 			}
+		}
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 	return NULL;
 }
@@ -436,20 +437,20 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 
 typedef struct {
 	OBJECT_HEAD
-	char const             *dk_start; /* [1..1][const] Iterator start position. (only
-	                                   * needed to re-create the underlying sequence) */
-	ATOMIC_DATA char const *dk_iter;  /* [1..1] Iterator position (start of next keyword name). */
-} DocKwdsIterator;
+	DREF DeeObject *dk_owner; /* [1..1][const] The owner of `dk_start'. */
+	char const     *dk_start; /* [1..1][const] Doc string. */
+} DocKwds;
 
 typedef struct {
 	OBJECT_HEAD
-	char const *dk_start; /* [1..1][const] Doc string. */
-} DocKwds;
+	DREF DocKwds           *dki_kwds; /* [1..1][const] The associated sequence. */
+	ATOMIC_DATA char const *dki_iter; /* [1..1] Iterator position (start of next keyword name). */
+} DocKwdsIterator;
 
 #ifdef CONFIG_NO_THREADS
-#define DOCKWDSITER_RDITER(self)            ((self)->dk_iter)
+#define DOCKWDSITER_RDITER(self)            ((self)->dki_iter)
 #else /* CONFIG_NO_THREADS */
-#define DOCKWDSITER_RDITER(self) ATOMIC_READ((self)->dk_iter)
+#define DOCKWDSITER_RDITER(self) ATOMIC_READ((self)->dki_iter)
 #endif /* !CONFIG_NO_THREADS */
 
 INTDEF DeeTypeObject DocKwds_Type;
@@ -465,9 +466,9 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 #endif /* !CONFIG_NO_THREADS */
 	{
 #ifndef CONFIG_NO_THREADS
-		pos = newpos = ATOMIC_READ(self->dk_iter);
+		pos = newpos = ATOMIC_READ(self->dki_iter);
 #else /* !CONFIG_NO_THREADS */
-		pos = newpos  = self->dk_iter;
+		pos = newpos  = self->dki_iter;
 #endif /* CONFIG_NO_THREADS */
 		is_escaped = false;
 		for (;; ++newpos) {
@@ -513,10 +514,10 @@ dockwdsiter_next(DocKwdsIterator *__restrict self) {
 			}
 		}
 #ifndef CONFIG_NO_THREADS
-		if (ATOMIC_CMPXCH_WEAK(self->dk_iter, pos, newpos))
+		if (ATOMIC_CMPXCH_WEAK(self->dki_iter, pos, newpos))
 			break;
 #else /* !CONFIG_NO_THREADS */
-		self->dk_iter = newpos;
+		self->dki_iter = newpos;
 #endif /* CONFIG_NO_THREADS */
 	}
 	if (pos >= name_end)
@@ -551,9 +552,20 @@ err_printer:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dockwdsiter_copy(DocKwdsIterator *__restrict self,
                  DocKwdsIterator *__restrict other) {
-	self->dk_start = other->dk_start;
-	self->dk_iter  = DOCKWDSITER_RDITER(other);
+	self->dki_kwds = other->dki_kwds;
+	self->dki_iter = DOCKWDSITER_RDITER(other);
+	Dee_Incref(self->dki_kwds);
 	return 0;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+dockwdsiter_fini(DocKwdsIterator *__restrict self) {
+	Dee_Decref(self->dki_kwds);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+dockwdsiter_visit(DocKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->dki_kwds);
 }
 
 #define DEFINE_DOCKWDSITER_COMPARE(name, op)                                      \
@@ -584,27 +596,20 @@ PRIVATE struct type_cmp dockwdsiter_cmp = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DocKwds *DCALL
-dockwdsiter_getseq(DocKwdsIterator *__restrict self) {
-	DREF DocKwds *result;
-	result = DeeObject_MALLOC(DocKwds);
-	if unlikely(!result)
-		goto done;
-	result->dk_start = self->dk_start;
-	DeeObject_Init(result, &DocKwds_Type);
-done:
-	return result;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dockwdsiter_getdocstr(DocKwdsIterator *__restrict self) {
+	return DeeString_New(self->dki_kwds->dk_start);
 }
 
 PRIVATE struct type_getset dockwdsiter_getsets[] = {
-	{ DeeString_STR(&str_seq),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dockwdsiter_getseq, NULL, NULL,
-	  DOC("->?U_DocKwds") },
+	{ "__docstr__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dockwdsiter_getdocstr, NULL, NULL,
+	  DOC("->?Dstring") },
 	{ NULL }
 };
 
 PRIVATE struct type_member dockwdsiter_members[] = {
-	TYPE_MEMBER_FIELD("__docstr__", STRUCT_CONST | STRUCT_CSTR, offsetof(DocKwdsIterator, dk_start)),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(DocKwdsIterator, dki_kwds), "->?Ert:_DocKwds"),
 	TYPE_MEMBER_END
 };
 
@@ -626,7 +631,7 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 				TYPE_FIXED_ALLOCATOR(DocKwdsIterator)
 			}
 		},
-		/* .tp_dtor        = */ NULL,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dockwdsiter_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -636,7 +641,7 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dockwdsiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &dockwdsiter_cmp,
@@ -653,9 +658,10 @@ INTERN DeeTypeObject DocKwdsIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-STATIC_ASSERT(COMPILER_OFFSETOF(DocKwdsIterator, dk_start) ==
-              COMPILER_OFFSETOF(DocKwds, dk_start));
-#define dockwds_members dockwdsiter_members
+
+STATIC_ASSERT(offsetof(DocKwds, dk_owner) == offsetof(DocKwdsIterator, dki_kwds));
+#define dockwds_fini  dockwdsiter_fini
+#define dockwds_visit dockwdsiter_visit
 
 PRIVATE WUNUSED NONNULL((1)) DREF DocKwdsIterator *DCALL
 dockwds_iter(DocKwds *__restrict self) {
@@ -665,8 +671,9 @@ dockwds_iter(DocKwds *__restrict self) {
 		goto done;
 	ASSERT(self->dk_start);
 	ASSERT(self->dk_start[0] == '(');
-	result->dk_start = self->dk_start;
-	result->dk_iter  = self->dk_start + 1;
+	Dee_Incref(self);
+	result->dki_kwds = self;
+	result->dki_iter = self->dk_start + 1;
 	DeeObject_Init(result, &DocKwdsIterator_Type);
 done:
 	return result;
@@ -684,10 +691,54 @@ PRIVATE struct type_seq dockwds_seq = {
 	/* .tp_range_set = */ NULL,
 };
 
+PRIVATE struct type_member dockwds_members[] = {
+	TYPE_MEMBER_FIELD("__docstr__", STRUCT_CONST | STRUCT_CSTR, offsetof(DocKwds, dk_start)),
+	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(DocKwds, dk_owner)),
+	TYPE_MEMBER_END
+};
+
 PRIVATE struct type_member dockwds_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &DocKwdsIterator_Type),
 	TYPE_MEMBER_END
 };
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dockwds_ctor(DocKwds *__restrict self) {
+	self->dk_owner = DeeString_New("()");
+	if unlikely(!self->dk_owner)
+		return -1;
+	self->dk_start = DeeString_STR(self->dk_owner);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dockwds_copy(DocKwds *__restrict self,
+             DocKwds *__restrict other) {
+	self->dk_owner = other->dk_owner;
+	self->dk_start = other->dk_start;
+	Dee_Incref(self->dk_owner);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+dockwds_init(DocKwds *__restrict self,
+             size_t argc, DeeObject **argv) {
+	DeeObject *text;
+	if (DeeArg_Unpack(argc, argv, "o:_DocKwds", &text))
+		goto err;
+	if (DeeObject_AssertTypeExact(text, &DeeString_Type))
+		goto err;
+	if (DeeString_STR(text)[0] != '(') {
+		return DeeError_Throwf(&DeeError_ValueError,
+		                       "The given string %r does not start with `('");
+	}
+	Dee_Incref(text);
+	self->dk_owner = text;
+	self->dk_start = DeeString_STR(text);
+	return 0;
+err:
+	return -1;
+}
 
 
 INTERN DeeTypeObject DocKwds_Type = {
@@ -701,14 +752,14 @@ INTERN DeeTypeObject DocKwds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ NULL,
-				/* .tp_copy_ctor = */ NULL,
+				/* .tp_ctor      = */ (void *)dockwds_ctor,
+				/* .tp_copy_ctor = */ (void *)dockwds_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_any_ctor  = */ (void *)dockwds_init,
 				TYPE_FIXED_ALLOCATOR(DocKwds)
 			}
 		},
-		/* .tp_dtor        = */ NULL,
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dockwds_fini,
 		/* .tp_assign      = */ NULL,
 		/* .tp_move_assign = */ NULL
 	},
@@ -718,7 +769,7 @@ INTERN DeeTypeObject DocKwds_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dockwds_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -736,9 +787,8 @@ INTERN DeeTypeObject DocKwds_Type = {
 };
 
 
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-doc_decode_kwds(char const *doc) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+doc_decode_kwds(DeeObject *owner, char const *doc) {
 	DREF DocKwds *result;
 	if (!doc)
 		goto no_kwds;
@@ -747,6 +797,8 @@ doc_decode_kwds(char const *doc) {
 	result = DeeObject_MALLOC(DocKwds);
 	if unlikely(!result)
 		goto done;
+	Dee_Incref(owner);
+	result->dk_owner = owner;
 	result->dk_start = doc;
 	DeeObject_Init(result, &DocKwds_Type);
 done:
@@ -787,7 +839,8 @@ kwobjmethod_get_func(DeeKwObjMethodObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
-	return doc_decode_kwds(DeeObjMethod_GetDoc((DeeObject *)self));
+	return doc_decode_kwds((DeeObject *)self,
+	                       DeeObjMethod_GetDoc((DeeObject *)self));
 }
 
 #define kwobjmethod_get_name       objmethod_get_name
@@ -1044,7 +1097,8 @@ clsmethod_get_doc(DeeClsMethodObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_get_kwds(DeeClsMethodObject *__restrict self) {
-	return doc_decode_kwds(DeeClsMethod_GetDoc((DeeObject *)self));
+	return doc_decode_kwds((DeeObject *)self,
+	                       DeeClsMethod_GetDoc((DeeObject *)self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1912,35 +1966,37 @@ cmethod_get_module(DeeCMethodObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	DREF DeeObject *result;
-	module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (module) {
+	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	if (mod) {
 		struct module_symbol *symbol;
 		struct type_member *member;
 		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(module, self->cm_func);
+		symbol = cmethod_getmodsym(mod, self->cm_func);
 		if (symbol) {
 			if (symbol->ss_doc) {
-				result = doc_decode_kwds(MODULE_SYMBOL_GETDOCSTR(symbol));
-				Dee_Decref(module);
+				result = doc_decode_kwds((DeeObject *)mod,
+				                         MODULE_SYMBOL_GETDOCSTR(symbol));
+				Dee_Decref(mod);
 				return result;
 			}
 		} else {
-			member = cmethod_gettypefield(module, &type, self->cm_func);
+			member = cmethod_gettypefield(mod, &type, self->cm_func);
 			if (member) {
 				if (member->m_doc) {
-					result = doc_decode_kwds(member->m_doc);
+					result = doc_decode_kwds((DeeObject *)mod,
+					                         member->m_doc);
 				} else {
 					result = Dee_EmptySeq;
 					Dee_Incref(Dee_EmptySeq);
 				}
-				Dee_Decref(module);
+				Dee_Decref(mod);
 				Dee_Decref(type);
 				return result;
 			}
 		}
-		Dee_Decref(module);
+		Dee_Decref(mod);
 	}
 	return_empty_seq;
 }
@@ -2146,7 +2202,7 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cmethod_call,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ NULL, /* TODO: Visit the associated DEX */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &clsmethod_cmp,
@@ -2211,7 +2267,7 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&kwcmethod_call,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ NULL, /* TODO: Visit the associated DEX */
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &clsmethod_cmp,

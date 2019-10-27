@@ -1004,6 +1004,11 @@ tuple_iterator_fini(TupleIterator *__restrict self) {
 	Dee_Decref(self->ti_tuple);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+tuple_iterator_visit(TupleIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->ti_tuple);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_iterator_next(TupleIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -1227,7 +1232,7 @@ INTERN DeeTypeObject DeeTupleIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&tuple_iterator_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&tuple_iterator_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &tuple_iterator_cmp,

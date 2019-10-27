@@ -2182,6 +2182,17 @@ process_fini(Process *__restrict self) {
 	Dee_XDecref(self->p_argv);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+process_visit(Process *__restrict self, dvisit_t proc, void *arg) {
+	Dee_XVisit(self->p_std[0]);
+	Dee_XVisit(self->p_std[1]);
+	Dee_XVisit(self->p_std[2]);
+	Dee_XVisit(self->p_environ);
+	Dee_XVisit(self->p_pwd);
+	Dee_XVisit(self->p_exe);
+	Dee_XVisit(self->p_argv);
+}
+
 INTERN DeeTypeObject DeeProcess_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ S_Process_tp_name,
@@ -2210,7 +2221,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&process_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,

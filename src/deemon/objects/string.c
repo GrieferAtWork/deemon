@@ -944,6 +944,11 @@ stringiter_fini(StringIterator *__restrict self) {
 	Dee_Decref(self->si_string);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+stringiter_visit(StringIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->si_string);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stringiter_next(StringIterator *__restrict self) {
 	DREF DeeObject *result;
@@ -1196,7 +1201,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 	/* .tp_doc      = */ DOC("(seq?:?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -1218,7 +1223,7 @@ INTERN DeeTypeObject StringIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringiter_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&stringiter_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &stringiter_cmp,

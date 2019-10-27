@@ -265,7 +265,7 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -287,8 +287,7 @@ INTERN DeeTypeObject BytesSplitIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&bsi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
-	                                 * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &bsi_cmp,
@@ -851,7 +850,7 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -873,8 +872,7 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&blsi_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because it only ever references strings
-	                                 * (or rather an object that can only reference strings). */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&blsi_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &blsi_cmp,

@@ -166,6 +166,11 @@ coti_fini(ClassOperatorTableIterator *__restrict self) {
 	Dee_Decref(self->co_desc);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+coti_visit(ClassOperatorTableIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->co_desc);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 coti_copy(ClassOperatorTableIterator *__restrict self,
           ClassOperatorTableIterator *__restrict other) {
@@ -235,7 +240,7 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -257,7 +262,7 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&coti_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &coti_cmp,
@@ -277,7 +282,8 @@ INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 
 STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
               COMPILER_OFFSETOF(ClassOperatorTableIterator, co_desc));
-#define cot_fini coti_fini
+#define cot_fini    coti_fini
+#define cot_visit   coti_visit
 #define cot_members coti_members
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -402,7 +408,7 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
@@ -424,7 +430,7 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cot_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cot_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -486,14 +492,17 @@ done:
 STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
               COMPILER_OFFSETOF(ClassAttribute, ca_desc));
 #define ca_fini    cot_fini
+#define ca_visit   cot_visit
 #define ca_members cot_members
 STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
               COMPILER_OFFSETOF(ClassAttributeTable, ca_desc));
 #define cat_fini    cot_fini
+#define cat_visit   cot_visit
 #define cat_members cot_members
 STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTable, co_desc) ==
               COMPILER_OFFSETOF(ClassAttributeTableIterator, ca_desc));
 #define cati_fini    cot_fini
+#define cati_visit   cot_visit
 #define cati_members cot_members
 
 STATIC_ASSERT(COMPILER_OFFSETOF(ClassOperatorTableIterator, co_desc) == COMPILER_OFFSETOF(ClassAttributeTableIterator, ca_desc));
@@ -907,7 +916,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
 		{
@@ -929,7 +938,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ca_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -952,7 +961,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeIterator_Type,
 	/* .tp_init = */ {
 		{
@@ -974,7 +983,7 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cati_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &cati_cmp,
@@ -997,7 +1006,7 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
@@ -1019,7 +1028,7 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cat_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because only ClassDescriptor is reachable, which doesn't have visit itself */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cat_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ NULL,
@@ -1065,6 +1074,25 @@ cd_fini(ClassDescriptor *__restrict self) {
 	}
 	Dee_XDecref(self->cd_name);
 	Dee_XDecref(self->cd_doc);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+cd_visit(ClassDescriptor *__restrict self, dvisit_t proc, void *arg) {
+	size_t i;
+	for (i = 0; i <= self->cd_cattr_mask; ++i) {
+		if (!self->cd_cattr_list[i].ca_name)
+			continue;
+		Dee_Visit(self->cd_cattr_list[i].ca_name);
+		Dee_XVisit(self->cd_cattr_list[i].ca_doc);
+	}
+	for (i = 0; i <= self->cd_iattr_mask; ++i) {
+		if (!self->cd_iattr_list[i].ca_name)
+			continue;
+		Dee_Visit(self->cd_iattr_list[i].ca_name);
+		Dee_XVisit(self->cd_iattr_list[i].ca_doc);
+	}
+	Dee_XVisit(self->cd_name);
+	Dee_XVisit(self->cd_doc);
 }
 
 
@@ -2020,7 +2048,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	                         "with :rt:makeclass to create custom class types at runtime"),
 	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONLOOPING,
 	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
 		{
@@ -2044,7 +2072,7 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL, /* No visit, because only string objects are referenced! */
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cd_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &cd_cmp,

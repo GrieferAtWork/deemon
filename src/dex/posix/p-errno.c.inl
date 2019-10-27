@@ -426,8 +426,8 @@ PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f);
 
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerror_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_STRERROR_DEF { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?DString") },
-#define POSIX_STRERROR_DEF_DOC(doc) { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?DString\n" doc) },
+#define POSIX_STRERROR_DEF { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring") },
+#define POSIX_STRERROR_DEF_DOC(doc) { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_strerror, posix_strerror_f);
 #ifndef POSIX_KWDS_ERRNUM_DEFINED
 #define POSIX_KWDS_ERRNUM_DEFINED 1
@@ -527,8 +527,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerrorname_f(size_t argc, DeeObject **argv, DeeObject *kw);
-#define POSIX_STRERRORNAME_DEF { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?DString") },
-#define POSIX_STRERRORNAME_DEF_DOC(doc) { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?DString\n" doc) },
+#define POSIX_STRERRORNAME_DEF { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring") },
+#define POSIX_STRERRORNAME_DEF_DOC(doc) { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_strerrorname, posix_strerrorname_f);
 #ifndef POSIX_KWDS_ERRNUM_DEFINED
 #define POSIX_KWDS_ERRNUM_DEFINED 1

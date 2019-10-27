@@ -1466,6 +1466,9 @@ module_visit(DeeModuleObject *__restrict self,
 	/* Visit the root-code object. */
 	Dee_XVisit(self->mo_root);
 
+	Dee_Visit(self->mo_name);
+	Dee_XVisit(self->mo_path);
+
 	/* Visit global variables. */
 	if (self->mo_flags & MODULE_FDIDLOAD) {
 		for (i = 0; i < self->mo_globalc; ++i)

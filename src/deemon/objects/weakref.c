@@ -46,6 +46,11 @@ ob_weakref_fini(WeakRef *__restrict self) {
 	Dee_XDecref(self->wr_del);
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+ob_weakref_visit(WeakRef *__restrict self, dvisit_t proc, void *arg) {
+	Dee_XVisit(self->wr_del);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_ctor(WeakRef *__restrict self) {
 	Dee_weakref_null(&self->wr_ref);
@@ -436,7 +441,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ob_weakref_bool
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ob_weakref_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &ob_weakref_cmp,
