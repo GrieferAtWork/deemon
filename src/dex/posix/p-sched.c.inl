@@ -45,6 +45,15 @@ DECL_BEGIN
 #define posix_system_USE_STUB 1
 #endif
 
+/* Figure out how to implement `getpid()' */
+#undef posix_getpid_USE_GETPID
+#undef posix_getpid_USE_STUB
+#ifdef CONFIG_HAVE_getpid
+#define posix_getpid_USE_GETPID 1
+#else /* CONFIG_HAVE_getpid */
+#define posix_getpid_USE_STUB 1
+#endif /* !CONFIG_HAVE_getpid */
+
 
 
 
@@ -222,6 +231,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void)
 
 
 
+
 /************************************************************************/
 /* getpid()                                                             */
 /************************************************************************/
@@ -242,7 +252,7 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void)
 //[[[end]]]
 {
-#ifdef CONFIG_HAVE_getpid
+#ifdef posix_getpid_USE_GETPID
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
@@ -261,12 +271,14 @@ EINTR_LABEL(again)
 	return DeeInt_NewInt(result);
 err:
 	return NULL;
-#else /* CONFIG_HAVE_getpid */
+#endif /* posix_getpid_USE_GETPID */
+
+#ifdef posix_getpid_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)command;
 	posix_err_unsupported("getpid");
 	return NULL;
-#endif /* !CONFIG_HAVE_getpid */
+#endif /* !posix_getpid_USE_STUB */
 }
 
 DECL_END
