@@ -670,7 +670,7 @@ again:
 		DBG_ALIGNMENT_DISABLE();
 		if (!bufsize)
 			goto done;
-		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
+		if (DeeNTSystem_IsBufferTooSmall(GetLastError())) {
 			LPWSTR tempbuf;
 			num_widechars = (DWORD)MultiByteToWideChar(CP_UTF8,
 			                                           0,

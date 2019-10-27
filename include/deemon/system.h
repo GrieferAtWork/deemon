@@ -114,7 +114,6 @@ typedef __ULONG32_TYPE__ DeeNT_DWORD;
 DFUNDEF WUNUSED /*HANDLE*/ void *DCALL
 DeeNTSystem_GetHandle(DeeObject *__restrict ob);
 
-
 /* Fix the given filename and extend it to an absolute UNC path. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename);
@@ -133,6 +132,7 @@ DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsBadF(/*DWORD*/ DeeNT_DWORD dwError);
 DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsXDev(/*DWORD*/ DeeNT_DWORD dwError);
 DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsUnsupportedError(/*DWORD*/ DeeNT_DWORD dwError);
 DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError);
+DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError);
 
 /* Translate a given `dwError' into the appropriate `errno' error code.
  * If the translation failed, return a fallback value.
@@ -184,6 +184,17 @@ DFUNDEF WUNUSED int DCALL
 DeeNTSystem_PrintFinalPathNameByHandle(struct Dee_unicode_printer *__restrict printer,
                                        /*HANDLE*/ void *hFile,
                                        /*DWORD*/ DeeNT_DWORD dwFlags);
+
+/* Wrapper for the `GetMappedFileName()' system call.
+ * @return: 2:  Unsupported.
+ * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+DFUNDEF WUNUSED int DCALL
+DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
+                                /*HANDLE*/ void *hProcess,
+                                /*LPVOID*/ void *lpv);
+
 
 /* Wrapper for the `FormatMessageW()' system call.
  * @return: * :        The formatted message.

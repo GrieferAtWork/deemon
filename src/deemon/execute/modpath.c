@@ -2954,7 +2954,7 @@ err_buffer:
 				DBG_ALIGNMENT_DISABLE();
 				dwError = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				if (dwError != ERROR_INSUFFICIENT_BUFFER)
+				if (!DeeNTSystem_IsBufferTooSmall(dwError))
 					break;
 			}
 			/* Increase buffer size. */

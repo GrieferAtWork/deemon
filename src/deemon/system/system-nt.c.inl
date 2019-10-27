@@ -896,6 +896,26 @@ DeeNTSystem_IsIntr(/*DWORD*/ DeeNT_DWORD dwError) {
 	return false;
 }
 
+PUBLIC WUNUSED bool DCALL
+DeeNTSystem_IsBufferTooSmall(/*DWORD*/ DeeNT_DWORD dwError) {
+	switch (dwError) {
+
+#ifdef ERROR_BUFFER_OVERFLOW
+	case ERROR_BUFFER_OVERFLOW:
+#endif /* ERROR_BUFFER_OVERFLOW */
+#ifdef ERROR_INSUFFICIENT_BUFFER
+	case ERROR_INSUFFICIENT_BUFFER:
+#endif /* ERROR_INSUFFICIENT_BUFFER */
+#ifdef ERROR_MORE_DATA
+	case ERROR_MORE_DATA:
+#endif /* ERROR_MORE_DATA */
+		return true;
+
+	default: break;
+	}
+	return false;
+}
+
 
 
 /* Figure out how to implement `DeeNTSystem_TranslateErrno()' */
@@ -1813,6 +1833,10 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 					goto err_lpBuffer;
 				continue;
 			}
+			if (DeeNTSystem_IsBufferTooSmall(dwError)) {
+				dwNewBufSize = dwBufSize * 2;
+				goto do_resize_buffer;
+			}
 			unicode_printer_free_wchar(printer, lpBuffer);
 			SetLastError(dwError);
 			return 1;
@@ -1820,6 +1844,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 		if (dwNewBufSize <= dwBufSize)
 			break;
 		--dwNewBufSize; /* This would include the trailing NUL-character */
+do_resize_buffer:
 		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, dwNewBufSize);
 		if unlikely(!lpNewBuffer) {
 err_lpBuffer:
@@ -1891,12 +1916,110 @@ not_a_drive_prefix:
 		return error; /* Error (-1) or System error (1) */
 	/* GetFinalPathNameByHandle() isn't supported (try to emulate it) */
 	/* TODO: GetMappedFileName(MapViewOfFile(CreateFileMapping(fd))); */
+
 	(void)printer;
 	(void)hFile;
 	DERROR_NOTIMPLEMENTED();
 /*err:*/
 	return -1;
 }
+
+
+typedef DWORD (WINAPI *LPGETMAPPEDFILENAMEW)(HANDLE hProcess, LPVOID lpv,
+                                             LPWSTR lpFilename, DWORD nSize);
+PRIVATE LPGETMAPPEDFILENAMEW pdyn_GetMappedFileNameW = NULL;
+PRIVATE WCHAR const wPsapi[]    = { 'P', 'S', 'A', 'P', 'I', 0 };
+PRIVATE WCHAR const wPsapiDll[] = { 'P', 's', 'a', 'p', 'i', '.', 'd', 'l', 'l', 0 };
+PRIVATE char const name_GetMappedFileNameW[] = "GetMappedFileNameW";
+
+/* Wrapper for the `GetMappedFileName()' system call.
+ * @return: 2:  Unsupported.
+ * @return: 1:  The system call failed (See GetLastError()).
+ * @return: 0:  Success.
+ * @return: -1: A deemon callback failed and an error was thrown. */
+PUBLIC WUNUSED int DCALL
+DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
+                                /*HANDLE*/ void *hProcess,
+                                /*LPVOID*/ void *lpv) {
+	LPWSTR lpNewBuffer, lpBuffer;
+	DWORD dwNewBufSize, dwBufSize;
+	if (pdyn_GetMappedFileNameW == NULL) {
+		LPGETMAPPEDFILENAMEW lpGetMappedFileNameW = NULL;
+		lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(GetModuleHandleW(wPsapi),
+		                                                            name_GetMappedFileNameW);
+		if (!lpGetMappedFileNameW) {
+			lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(GetModuleHandleW(wKernel32),
+			                                                            name_GetMappedFileNameW);
+		}
+		if (!lpGetMappedFileNameW) {
+			HMODULE hModule;
+			hModule = LoadLibraryW(wPsapiDll);
+			if (hModule) {
+				lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(hModule, name_GetMappedFileNameW);
+				if (!lpGetMappedFileNameW)
+					FreeLibrary(hModule);
+			}
+		}
+		if (!lpGetMappedFileNameW) {
+			HMODULE hModule;
+			hModule = LoadLibraryW(wKernel32);
+			if (hModule) {
+				lpGetMappedFileNameW = (LPGETMAPPEDFILENAMEW)GetProcAddress(hModule, name_GetMappedFileNameW);
+				if (!lpGetMappedFileNameW)
+					FreeLibrary(hModule);
+			}
+		}
+		if (!lpGetMappedFileNameW)
+			*(void **)&lpGetMappedFileNameW = (void *)-1;
+		ATOMIC_WRITE(pdyn_GetMappedFileNameW, lpGetMappedFileNameW);
+	}
+	if (*(void **)&pdyn_GetMappedFileNameW == (void *)-1)
+		return 2; /* Unsupported. */
+	/* Make use of `GetMappedFileNameW()' */
+	dwBufSize = PATH_MAX;
+	lpBuffer = unicode_printer_alloc_wchar(printer, dwBufSize);
+	if unlikely(!lpBuffer)
+		goto err;
+	for (;;) {
+		dwNewBufSize = (*pdyn_GetMappedFileNameW)((HANDLE)hProcess,
+		                                          (LPVOID)lpv,
+		                                          lpBuffer,
+		                                          dwBufSize);
+		if unlikely(!dwNewBufSize) {
+			DWORD dwError;
+			dwError = GetLastError();
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err_lpBuffer;
+				continue;
+			}
+			if (DeeNTSystem_IsBufferTooSmall(dwError)) {
+				dwNewBufSize = dwBufSize * 2;
+				goto do_resize_buffer;
+			}
+			unicode_printer_free_wchar(printer, lpBuffer);
+			SetLastError(dwError);
+			return 1;
+		}
+		if (dwNewBufSize <= dwBufSize)
+			break;
+do_resize_buffer:
+		lpNewBuffer = unicode_printer_resize_wchar(printer, lpBuffer, dwNewBufSize);
+		if unlikely(!lpNewBuffer) {
+err_lpBuffer:
+			unicode_printer_free_wchar(printer, lpBuffer);
+			goto err;
+		}
+		dwBufSize = dwNewBufSize;
+	}
+	if (unicode_printer_confirm_wchar(printer, lpBuffer, dwNewBufSize) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+
 
 
 

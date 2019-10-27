@@ -260,7 +260,7 @@ again:
 			DBG_ALIGNMENT_DISABLE();
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError != ERROR_INSUFFICIENT_BUFFER)
+			if (!DeeNTSystem_IsBufferTooSmall(dwError))
 				break;
 		}
 		/* Increase buffer size. */
@@ -315,6 +315,7 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 			DeeString_FreeWideBuffer(buffer);
 			return_empty_string;
 
+		case ERROR_BUFFER_OVERFLOW:
 		case ERROR_MORE_DATA:
 		case ERROR_INSUFFICIENT_BUFFER:
 			/* Increase the buffer size. */

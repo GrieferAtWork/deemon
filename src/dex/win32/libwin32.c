@@ -29,6 +29,7 @@
 #include <deemon/bool.h>
 #include <deemon/dex.h>
 #include <deemon/file.h>
+#include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
@@ -190,11 +191,36 @@ PRIVATE DEFINE_KWLIST(libwin32_kwds_hHandle, { K(hHandle), KEND });
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 handle_init_kw(DeeHandleObject *__restrict self,
                size_t argc, DeeObject **argv, DeeObject *kw) {
-	HANDLE hHandle = INVALID_HANDLE_VALUE;
+	DeeObject *hHandle = Dee_None;
 	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hHandle,
-	                    "|Iu:HANDLE", &hHandle))
+	                    "|o:HANDLE", &hHandle))
 		goto err;
-	self->ho_handle = hHandle;
+	if (DeeNone_Check(hHandle)) {
+		/* none/default */
+		self->ho_handle = INVALID_HANDLE_VALUE;
+	} else if (DeeInt_Check(hHandle)) {
+		/* Integer handle value */
+		if (DeeInt_AsUIntptr(hHandle, (uintptr_t *)&self->ho_handle))
+			goto err;
+	} else {
+		DREF DeeObject *ptr_attrib;
+		/* Check for ctypes pointer support */
+		ptr_attrib = DeeObject_GetAttrString(hHandle, "__ptr__");
+		if (ptr_attrib) {
+			int error;
+			error = DeeObject_AsUIntptr(ptr_attrib, (uintptr_t *)&self->ho_handle);
+			Dee_Decref(ptr_attrib);
+			if unlikely(error)
+				goto err;
+		} else {
+			if (!DeeError_Catch(&DeeError_AttributeError) &&
+			    !DeeError_Catch(&DeeError_NotImplemented))
+				goto err;
+			/* Fallback: Numeric-like -> Convert to an integer. */
+			if (DeeObject_AsUIntptr(hHandle, (uintptr_t *)&self->ho_handle))
+				goto err;
+		}
+	}
 	return 0;
 err:
 	return -1;
@@ -288,7 +314,10 @@ PRIVATE struct type_cmp handle_cmp = {
 PRIVATE DeeTypeObject DeeHandle_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "HANDLE",
-	/* .tp_doc      = */ DOC("(hHandle:?Dint=!GINVALID_HANDLE_VALUE)"),
+	/* .tp_doc      = */ DOC("(hHandle:?Dint=!GINVALID_HANDLE_VALUE)\n"
+	                         "(hHandle:?Aptr?Ectypes:void)\n"
+	                         "NOTE: Passing :none for @hHandle will also "
+	                         "initialize the HANDLE as :INVALID_HANDLE_VALUE"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -329,6 +358,11 @@ PRIVATE DeeTypeObject DeeHandle_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
+};
+
+PRIVATE DeeHandleObject Dee_INVALID_HANDLE_VALUE = {
+	Dee_OBJECT_HEAD_INIT(&DeeHandle_Type),
+	/* .ho_handle = */ INVALID_HANDLE_VALUE
 };
 
 
@@ -1570,7 +1604,7 @@ again:
 			DBG_ALIGNMENT_DISABLE();
 			dwError = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			if (dwError != ERROR_INSUFFICIENT_BUFFER)
+			if (!DeeNTSystem_IsBufferTooSmall(dwError))
 				break;
 		}
 		/* Increase buffer size. */
@@ -2224,6 +2258,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f_imp
 	}
 	return unicode_printer_pack(&printer);
 system_error:
+	unicode_printer_fini(&printer);
 	return_none;
 err:
 	unicode_printer_fini(&printer);
@@ -2300,6 +2335,67 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f_impl(DWOR
 
 
 
+/*[[[deemon import("_dexutils").gw("GetMappedFileName", "hProcess:nt:HANDLE,lpv:c:ptr->?X2?Dstring?N"); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f_impl(HANDLE hProcess, void *lpv);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f(size_t argc, DeeObject **argv, DeeObject *kw);
+#define LIBWIN32_GETMAPPEDFILENAME_DEF { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?X2?Dstring?N") },
+#define LIBWIN32_GETMAPPEDFILENAME_DEF_DOC(doc) { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?X2?Dstring?N\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_GetMappedFileName, libwin32_GetMappedFileName_f);
+#ifndef LIBWIN32_KWDS_HPROCESS_LPV_DEFINED
+#define LIBWIN32_KWDS_HPROCESS_LPV_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpv, { K(hProcess), K(lpv), KEND });
+#endif /* !LIBWIN32_KWDS_HPROCESS_LPV_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+	HANDLE hhProcess;
+	DeeObject *hProcess;
+	void *lpv_ptr;
+	DeeObject *lpv;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpv, "oo:GetMappedFileName", &hProcess, &lpv))
+		goto err;
+	hhProcess = (HANDLE)DeeNTSystem_GetHandle(hProcess);
+	if unlikely(hhProcess == INVALID_HANDLE_VALUE)
+		goto err;
+	if (DeeObject_AssertTypeExact(lpv, &DeeString_Type))
+		goto err;
+	{
+		int lpv_ptr_attrib_temp;
+		DREF DeeObject *lpv_ptr_attrib;
+		lpv_ptr_attrib = DeeObject_GetAttrString(lpv, "__ptr__");
+		if unlikely(!lpv_ptr_attrib)
+			goto err;
+		lpv_ptr_attrib_temp = DeeObject_AsUIntptr(lpv_ptr_attrib, (uintptr_t *)&lpv_ptr);
+		Dee_Decref(lpv_ptr_attrib);
+		if unlikely(lpv_ptr_attrib_temp)
+			goto err;
+	}
+	return libwin32_GetMappedFileName_f_impl(hhProcess, lpv_ptr);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f_impl(HANDLE hProcess, void *lpv)
+//[[[end]]]
+{
+	int error;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	error = DeeNTSystem_PrintMappedFileName(&printer, (void *)hProcess, lpv);
+	if (error != 0) {
+		if unlikely(error < 0)
+			goto err;
+		if (error != 1)
+			SetLastError(ERROR_INVALID_FUNCTION);
+		goto system_error;
+	}
+	return unicode_printer_pack(&printer);
+system_error:
+	unicode_printer_fini(&printer);
+	return_none;
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+
+
 
 
 
@@ -2314,6 +2410,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f_impl(DWOR
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "HANDLE", (DeeObject *)&DeeHandle_Type, MODSYM_FNORMAL },
+	{ "INVALID_HANDLE_VALUE", (DeeObject *)&Dee_INVALID_HANDLE_VALUE, MODSYM_FNORMAL },
 	/* TODO: Wrapper types for `SECURITY_ATTRIBUTES' and `OVERLAPPED' */
 	/* TODO: Wrapper types for `WIN32_FIND_DATA' */
 
@@ -2369,6 +2466,7 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* DLL functions */
 	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module (s.a. #GetLastError)")
+	LIBWIN32_GETMAPPEDFILENAME_DEF
 
 	/* Constant flags. */
 	LIBWIN32_FILE_READ_DATA_DEF

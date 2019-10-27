@@ -904,8 +904,7 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 	while (!(*my_GetUserProfileDirectoryW)((HANDLE)hToken, wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_INSUFFICIENT_BUFFER ||
-		    dwError == ERROR_MORE_DATA) {
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
 			if unlikely(!wNewBuffer)
@@ -965,8 +964,7 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 	while (!(*my_GetProfilesDirectoryW)(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_INSUFFICIENT_BUFFER ||
-		    dwError == ERROR_MORE_DATA) {
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
 			if unlikely(!wNewBuffer)
@@ -1026,8 +1024,7 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 	while (!(*my_GetDefaultUserProfileDirectoryW)(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_INSUFFICIENT_BUFFER ||
-		    dwError == ERROR_MORE_DATA) {
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
 			if unlikely(!wNewBuffer)
@@ -1086,8 +1083,7 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 	while (!(*my_GetAllUsersProfileDirectoryW)(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_INSUFFICIENT_BUFFER ||
-		    dwError == ERROR_MORE_DATA) {
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
 			if unlikely(!wNewBuffer)
@@ -1211,9 +1207,7 @@ fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 		goto err;
 	while (!GetUserNameW(wBuffer, &dwBufsize)) {
 		DWORD dwError = GetLastError();
-		if (dwError == ERROR_BUFFER_OVERFLOW ||
-		    dwError == ERROR_INSUFFICIENT_BUFFER ||
-		    dwError == ERROR_MORE_DATA) {
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);
 			if unlikely(!wNewBuffer)
@@ -1388,9 +1382,7 @@ user_get_name_and_domain(struct user_object *__restrict self,
 		DWORD dwError;
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (dwError == ERROR_BUFFER_OVERFLOW ||
-		    dwError == ERROR_INSUFFICIENT_BUFFER ||
-		    dwError == ERROR_MORE_DATA) {
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			wNewBuffer = DeeString_ResizeWideBuffer(wNameBuffer, wNameBufSize - 1);
 			if unlikely(!wNewBuffer)
 				goto err_domain_buffer;
@@ -3442,8 +3434,7 @@ again_createfile:
 	                        NULL, 0, buffer, bufsiz, &buflen, NULL)) {
 		error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (error == ERROR_INSUFFICIENT_BUFFER ||
-		    error == ERROR_MORE_DATA) {
+		if (DeeNTSystem_IsBufferTooSmall(error)) {
 			PREPARSE_DATA_BUFFER new_buffer;
 			bufsiz *= 2;
 			new_buffer = (PREPARSE_DATA_BUFFER)Dee_Realloc(buffer, bufsiz);
