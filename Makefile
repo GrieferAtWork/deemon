@@ -9,7 +9,7 @@ BLD_ROOT := $(MAKEFILE_PATH)
 SRC_ROOT := $(MAKEFILE_PATH)
 
 # Pull in the config file that gets created by ./configure
-include $(MAKEFILE_PATH)/config.mak
+include $(MAKEFILE_PATH)/config.mk
 
 CFLAGS += -I$(SRC_ROOT)/include
 CORE_CFLAGS += -DCONFIG_BUILDING_DEEMON

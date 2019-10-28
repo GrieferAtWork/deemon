@@ -937,8 +937,8 @@ fi
 #echo "    WITH_KOS_SYSTEM_HEADERS:   '$WITH_KOS_SYSTEM_HEADERS'"
 
 
-unlink "$BLD_ROOT/config.mak" > /dev/null 2>&1
-cat > "$BLD_ROOT/config.mak" <<EOF
+unlink "$BLD_ROOT/config.mk" > /dev/null 2>&1
+cat > "$BLD_ROOT/config.mk" <<EOF
 # Automatically generated file (by ./configure). - Do not edit!
 BLD_ROOT := $BLD_ROOT
 SRC_ROOT := $SRC_ROOT
@@ -966,29 +966,29 @@ CORE_LIBS := $CONFIG_CORE_LIBS
 EOF
 
 if ! [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
-	echo "DEEMON_CORE_OBJECTS += $WITH_ASSEMBLY_INTERPRETER" >> "$BLD_ROOT/config.mak"
+	echo "DEEMON_CORE_OBJECTS += $WITH_ASSEMBLY_INTERPRETER" >> "$BLD_ROOT/config.mk"
 fi
 if [[ "$WITH_KOS_SYSTEM_HEADERS" == "1" ]]; then
-	echo "CFLAGS += -I${SRC_ROOT}/include/deemon/kos-headers" >> "$BLD_ROOT/config.mak"
+	echo "CFLAGS += -I${SRC_ROOT}/include/deemon/kos-headers" >> "$BLD_ROOT/config.mk"
 fi
 if [[ "$WITH_DEX" == "0" ]]; then
-	echo "CONFIG_WITHOUT_DEX :=" >> "$BLD_ROOT/config.mak"
+	echo "CONFIG_WITHOUT_DEX :=" >> "$BLD_ROOT/config.mk"
 fi
 if ! [ -z "$WITHOUT_DEX_SPECIFIC" ]; then
 	for name in $WITHOUT_DEX_SPECIFIC; do
-		echo "CONFIG_WITHOUT_DEX_$name :=" >> "$BLD_ROOT/config.mak"
+		echo "CONFIG_WITHOUT_DEX_$name :=" >> "$BLD_ROOT/config.mk"
 	done
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CC" ]; then
-	echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$BLD_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CFLAGS" ]; then
-	echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$BLD_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LDFLAGS" ]; then
-	echo "DEX_CTYPES_LDFLAGS := $CONFIG_DEX_CTYPES_LDFLAGS" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_LDFLAGS := $CONFIG_DEX_CTYPES_LDFLAGS" >> "$BLD_ROOT/config.mk"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LIBS" ]; then
-	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$BLD_ROOT/config.mk"
 fi
 

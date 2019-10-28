@@ -1,5 +1,5 @@
 /deemon
-/config.mak
+/config.mk
 /conftest.c
 /conftest.o
 /conftest.h
