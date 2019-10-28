@@ -18,6 +18,10 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+assert "foobar" == 'foobar';
+assert "foobar" == r'foobar';
+assert r"foobar" == 'foobar';
+assert r"foobar" == r'foobar';
 
 /* Assert string search functions. */
 assert "{abc{}abc}".index("{") == 0;
