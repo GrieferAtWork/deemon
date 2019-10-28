@@ -32,7 +32,7 @@ DECL_BEGIN
 #undef posix_pipe_USE_STUB
 #if defined(CONFIG_HAVE_pipe) || defined(CONFIG_HAVE_pipe2)
 #define posix_pipe_USE_PIPE 1
-#elif defined(CONFIG_HAVE__open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
+#elif defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HOST_WINDOWS)
 #define posix_pipe_USE_CREATEPIPE 1
 #else
 #define posix_pipe_USE_STUB 1
@@ -138,10 +138,10 @@ again:
 		goto err_hWritehRead_nterror;
 	if (!SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
 		goto err_hWritehRead_nterror;
-	fds[0] = _open_osfhandle((intptr_t)(uintptr_t)hRead, O_RDONLY);
+	fds[0] = open_osfhandle((intptr_t)(uintptr_t)hRead, O_RDONLY);
 	if unlikely(fds[0] < 0)
 		goto err_hWritehRead_errno;
-	fds[1] = _open_osfhandle((intptr_t)(uintptr_t)hWrite, O_WRONLY);
+	fds[1] = open_osfhandle((intptr_t)(uintptr_t)hWrite, O_WRONLY);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(fds[1] < 0)
 		goto err_hWritefds0_errno;
@@ -337,10 +337,10 @@ again:
 		if (!SetHandleInformation(hWrite, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT))
 			goto err_hWritehRead_nterror;
 	}
-	fds[0] = _open_osfhandle((intptr_t)(uintptr_t)hRead, O_RDONLY);
+	fds[0] = open_osfhandle((intptr_t)(uintptr_t)hRead, O_RDONLY);
 	if unlikely(fds[0] < 0)
 		goto err_hWritehRead_errno;
-	fds[1] = _open_osfhandle((intptr_t)(uintptr_t)hWrite, O_WRONLY);
+	fds[1] = open_osfhandle((intptr_t)(uintptr_t)hWrite, O_WRONLY);
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(fds[1] < 0)
 		goto err_hWritefds0_errno;

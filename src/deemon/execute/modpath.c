@@ -2997,11 +2997,9 @@ PUBLIC DeeListObject DeeModule_Path = {
 
 #ifdef get_default_home_USE_DLMODULENAME
 #ifndef DLOPEN_NULL_FLAGS
-#if !defined(CONFIG_NO_RTLD_GLOBAL) && \
-    (defined(RTLD_GLOBAL) || defined(CONFIG_HAVE_RTLD_GLOBAL))
+#if defined(CONFIG_HAVE_RTLD_GLOBAL)
 #define DLOPEN_NULL_FLAGS RTLD_GLOBAL
-#elif !defined(CONFIG_NO_RTLD_LOCAL) && \
-      (defined(RTLD_LOCAL) || defined(CONFIG_HAVE_RTLD_LOCAL))
+#elif defined(CONFIG_HAVE_RTLD_LOCAL)
 #define DLOPEN_NULL_FLAGS RTLD_LOCAL
 #else
 #define DLOPEN_NULL_FLAGS 0

@@ -34,10 +34,6 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
-#ifdef CONFIG_HAVE_DLFCN_H
-#include <dlfcn.h>
-#endif /* CONFIG_HAVE_DLFCN_H */
-
 #ifndef PATH_MAX
 #ifdef PATHMAX
 #   define PATH_MAX PATHMAX
@@ -524,17 +520,11 @@ DECL_END
 #endif /* _WIN32_WCE */
 #endif /* DeeSystem_DlOpen_USE_LOADLIBRARY */
 
-#if defined(DeeSystem_DlOpen_USE_DLFCN) && defined(CONFIG_HAVE_DLFCN_H)
-#include <dlfcn.h>
-#endif /* DeeSystem_DlOpen_USE_DLFCN && CONFIG_HAVE_DLFCN_H */
-
 #ifdef DeeSystem_DlOpen_USE_DLFCN
 #ifndef USED_DLOPEN_SCOPE
-#if !defined(CONFIG_NO_RTLD_LOCAL) && \
-    (defined(RTLD_LOCAL) || defined(CONFIG_HAVE_RTLD_LOCAL))
+#if defined(CONFIG_HAVE_RTLD_LOCAL)
 #define USED_DLOPEN_SCOPE RTLD_LOCAL
-#elif !defined(CONFIG_NO_RTLD_GLOBAL) && \
-      (defined(RTLD_GLOBAL) || defined(CONFIG_HAVE_RTLD_GLOBAL))
+#elif defined(CONFIG_HAVE_RTLD_GLOBAL)
 #define USED_DLOPEN_SCOPE RTLD_GLOBAL
 #else
 #define USED_DLOPEN_SCOPE 0
@@ -542,11 +532,9 @@ DECL_END
 #endif /* !USED_DLOPEN_SCOPE */
 
 #ifndef USED_DLOPEN_BIND
-#if !defined(CONFIG_NO_RTLD_LAZY) && \
-    (defined(RTLD_LAZY) || defined(CONFIG_HAVE_RTLD_LAZY))
+#if defined(CONFIG_HAVE_RTLD_LAZY)
 #define USED_DLOPEN_BIND RTLD_LAZY
-#elif !defined(CONFIG_NO_RTLD_NOW) && \
-      (defined(RTLD_NOW) || defined(CONFIG_HAVE_RTLD_NOW))
+#elif defined(CONFIG_HAVE_RTLD_NOW)
 #define USED_DLOPEN_BIND RTLD_NOW
 #else
 #define USED_DLOPEN_BIND 0
@@ -903,11 +891,11 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 	DBG_ALIGNMENT_ENABLE();
 	result = (uint64_t)st.st_mtime * MICROSECONDS_PER_SECOND;
 	/* Check if we can get more precision out of this */
-#ifdef CONFIG_HAVE_STAT_HAVE_ST_NSEC
+#ifdef CONFIG_HAVE_STAT_ST_NSEC
 	result += st.st_mtimensec / 1000;
-#elif defined(CONFIG_HAVE_STAT_HAVE_ST_TIM)
+#elif defined(CONFIG_HAVE_STAT_ST_TIM)
 	result += st.st_mtim.tv_nsec / 1000;
-#elif defined(CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC)
+#elif defined(CONFIG_HAVE_STAT_ST_TIMESPEC)
 	result += st.st_mtimespec.tv_nsec / 1000;
 #endif
 

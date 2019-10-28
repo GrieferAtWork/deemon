@@ -26,6 +26,8 @@
 #include <stddef.h>
 
 /*[[[deemon
+import * from deemon;
+#pragma extension("-fno-character-literals")
 function addparen(x) {
 	for (;;) {
 		local nx = x.strip();
@@ -44,7 +46,7 @@ function addparen(x) {
 	}
 	return x;
 }
-function feature(name, default_requirements) {
+function feature(name, default_requirements, test = none) {
 	print "#ifdef CONFIG_NO_",;
 	print name;
 	print "#undef CONFIG_HAVE_",;
@@ -107,13 +109,18 @@ function header(name, default_requirements = "") {
 #define var      func
 #define typ      func
 #define constant func
-function func(name, default_requirements = "", check_defined = true) {
+function func(name, default_requirements = "", check_defined = 2, test = none) {
 	if (default_requirements != "1" && check_defined) {
 		default_requirements = addparen(default_requirements);
 		if (default_requirements !in ["", "0"])
 			default_requirements = " || " + default_requirements;
-		default_requirements = "defined({}) || defined(__{}_defined){}"
-			.format({ name, name, default_requirements });
+		if (check_defined !is int || check_defined >= 2) {
+			default_requirements = "defined({}) || defined(__{}_defined){}"
+				.format({ name, name, default_requirements });
+		//} else {
+		//	default_requirements = "defined({}){}"
+		//		.format({ name, default_requirements });
+		}
 	}
 	feature(name, default_requirements);
 }
@@ -137,9 +144,13 @@ function include_known_headers() {
 
 local linux = "defined(__linux__) || defined(__linux) || defined(linux)";
 local unix = linux + " || defined(__unix__) || defined(__unix) || defined(unix)";
+local cygwin = "defined(__CYGWIN__) || defined(__CYGWIN32__)";
 local kos = "defined(__KOS__)";
 local msvc = "defined(_MSC_VER)";
 local stdc = "1";
+
+//The following line is needed by the configure script.
+//BEGIN:FEATURES
 
 header("io.h", addparen(msvc) + " || " + addparen(kos));
 header("direct.h", addparen(msvc) + " || " + addparen(kos));
@@ -150,6 +161,7 @@ header("sys/fcntl.h", addparen(linux) + " || " + addparen(kos));
 header("sys/ioctl.h", unix);
 header("ioctl.h");
 header("unistd.h", unix);
+header("sys/unistd.h", cygwin);
 header("errno.h", addparen(msvc) + " || " + addparen(unix));
 header("stdio.h", stdc);
 header("stdlib.h", stdc);
@@ -171,61 +183,79 @@ header("sys/signalfd.h", addparen(linux) + " || " + addparen(kos));
 header("ctype.h", stdc);
 header("string.h", stdc);
 header("wchar.h", stdc);
+header("dlfcn.h", unix);
 
-header_nostdinc("dlfcn.h", unix);
 header_nostdinc("float.h", stdc);
 header_nostdinc("limits.h", stdc);
 header_nostdinc("link.h", stdc);
 
 include_known_headers();
 
-func("_Exit", "defined(__USE_ISOC99)");
-func("_exit", addparen(msvc) + " || " + addparen(unix));
-func("exit", stdc);
-func("atexit", stdc);
+#define functest(name, ...) \
+	func(name[:name.index("(")], __VA_ARGS__)
 
-func("execv", unix);
-func("execve", unix);
-func("execvp", unix);
-func("execvpe", unix);
-func("fexecve", "defined(__USE_XOPEN2K8)");
-func("_execv", msvc);
-func("_execve", msvc);
-func("_execvp", msvc);
-func("_execvpe", msvc);
-func("_wexecv", msvc);
-func("_wexecve", msvc);
-func("_wexecvp", msvc);
-func("_wexecvpe", msvc);
-func("_spawnv", msvc);
-func("_spawnve", msvc);
-func("_spawnvp", msvc);
-func("_spawnvpe", msvc);
-func("_wspawnv", msvc);
-func("_wspawnve", msvc);
-func("_wspawnvp", msvc);
-func("_wspawnvpe", msvc);
+func("_Exit", "defined(__USE_ISOC99)", test: "_Exit(0);");
+func("_exit", addparen(msvc) + " || " + addparen(unix), test: "_exit(0);");
+func("exit", stdc, test: "exit(0);");
+func("atexit", stdc, test: "extern void foo(void); return atexit(&foo);");
 
-func("_cwait", msvc);
-func("wait", unix);
-func("waitpid", unix);
-func("wait4", addparen(linux) + " || " + addparen(kos));
-func("waitid", addparen(linux) + " || " + addparen(kos));
-func("sigprocmask", unix);
-func("detach", kos + " && defined(__USE_KOS) && __KOS_VERSION__ >= 300");
+func("execv", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execv("a", argv);');
+func("execve", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execve("a", argv, argv);');
+func("execvp", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execvp("a", argv);');
+func("execvpe", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execvpe("a", argv, argv);');
+func("fexecve", "defined(__USE_XOPEN2K8)", test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return fexecve(42, argv, argv);');
+func("_execv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execv("a", argv);');
+func("_execve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execve("a", argv, argv);');
+func("_execvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execvp("a", argv);');
+func("_execvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execvpe("a", argv, argv);');
+func("wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecv(s, argv);");
+func("wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecve(s, argv, argv);");
+func("wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvp(s, argv);)");
+func("wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvpe(s, argv, argv);");
+func("_wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecv(s, argv);");
+func("_wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecve(s, argv, argv);");
+func("_wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvp(s, argv);");
+func("_wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvpe(s, argv, argv);");
+func("spawnv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnv(42, "a", argv);');
+func("spawnve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnve(42, "a", argv, argv);');
+func("spawnvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvp(42, "a", argv);');
+func("spawnvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvpe(42, "a", argv, argv);');
+func("_spawnv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnv(42, "a", argv);');
+func("_spawnve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnve(42, "a", argv, argv);');
+func("_spawnvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvp(42, "a", argv);');
+func("_spawnvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvpe(42, "a", argv, argv);');
+func("wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnv(42, s, argv);");
+func("wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnve(42, s, argv, argv);");
+func("wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvp(42, s, argv);");
+func("wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
+func("_wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnv(42, s, argv);");
+func("_wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnve(42, s, argv, argv);");
+func("_wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvp(42, s, argv);");
+func("_wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
 
-func("system", stdc);
-func("_wsystem", msvc);
+func("cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
+func("_cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
+func("wait", unix, test: 'int st; return wait(&st);');
+func("waitpid", unix, test: 'int st; return waitpid(42, &st, 0);');
+func("wait4", addparen(linux) + " || " + addparen(kos), test: 'int st; struct rusage ru; return wait4(42, &st, 0, &ru);');
+func("waitid", addparen(linux) + " || " + addparen(kos), test: 'siginfo_t si; return waitid(P_ALL, 42, &si, WEXITED);');
+func("sigprocmask", unix, test: "sigset_t os; return sigprocmask(SIG_SETMASK, NULL, &os);");
+functest("detach(42)", kos + " && defined(__USE_KOS) && __KOS_VERSION__ >= 300");
 
-func("creat", unix);
-func("_creat", msvc);
-func("_wcreat", "defined(_WIO_DEFINED)");
+functest('system("echo hi")', stdc);
+func("wsystem", test: "wchar_t c[] = { 'e', 'c', 'h', 'o', ' ', 'h', 'i', 0 }; return wsystem(c);");
+func("_wsystem", msvc, test: "wchar_t c[] = { 'e', 'c', 'h', 'o', ' ', 'h', 'i', 0 }; return _wsystem(c);");
 
-func("open", unix);
-func("_open", msvc);
-func("_wopen", msvc);
-func("open64", "defined(__USE_LARGEFILE64)");
-func("fcntl", "(defined(CONFIG_HAVE_FCNTL_H) || defined(CONFIG_HAVE_SYS_FCNTL_H)) && " + addparen(unix));
+functest('creat("foo.txt", 0644)', unix);
+functest('_creat("foo.txt", 0644)', msvc);
+func("_wcreat", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'a', 0 }; return _wcreat(s, 0644);");
+
+functest('open("foo.txt", O_RDONLY)', unix);
+functest('_open("foo.txt", O_RDONLY)', msvc);
+func("_wopen", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'a', 0 }; return _wopen(s, O_RDONLY);");
+functest('open64("foo.txt", O_RDONLY)', "defined(__USE_LARGEFILE64)");
+functest("fcntl(42, 7) && fcntl(42, 7, 21)", "(defined(CONFIG_HAVE_FCNTL_H) || defined(CONFIG_HAVE_SYS_FCNTL_H)) && " + addparen(unix));
+
 constant("F_SETFD");
 constant("F_SETFL");
 constant("FD_CLOEXEC");
@@ -365,151 +395,184 @@ constant("O_NOLINKS");
 constant("__O_NOLINKS");
 constant("_O_NOLINKS");
 
+constant("AT_SYMLINK_NOFOLLOW");
+constant("AT_REMOVEDIR");
+constant("AT_EACCESS");
+constant("AT_SYMLINK_FOLLOW");
+constant("AT_NO_AUTOMOUNT");
+constant("AT_EMPTY_PATH");
+constant("AT_SYMLINK_REGULAR");
+constant("AT_CHANGE_CTIME");
+//constant("AT_READLINK_REQSIZE"); // Note needed (Only used by; and also implied by `freadlinkat()')
+constant("AT_REMOVEREG");
+constant("AT_ALTPATH");
+constant("AT_DOSPATH");
+constant("AT_FDCWD");
+constant("AT_FDROOT");
+constant("AT_THIS_TASK");
+constant("AT_THIS_PROCESS");
+constant("AT_PARENT_PROCESS");
+constant("AT_GROUP_LEADER");
+constant("AT_SESSION_LEADER");
+constant("AT_DOS_DRIVEMIN");
+constant("AT_DOS_DRIVEMAX");
+functest("AT_FDDRIVE_CWD('C')", check_defined: 1);
+functest("AT_FDDRIVE_ROOT('C')", check_defined: 1);
 
 
-func("read", unix);
-func("_read", msvc);
+func("read", unix, test: 'char buf[7]; return (int)read(0, buf, 7);');
+func("_read", msvc, test: 'char buf[7]; return (int)_read(0, buf, 7);');
 
-func("write", unix);
-func("_write", msvc);
+func("write", unix, test: 'char const buf[] = "foo"; return (int)write(1, buf, 3);');
+func("_write", msvc, test: 'char const buf[] = "foo"; return (int)_write(1, buf, 3);');
 
-func("lseek", unix);
-func("lseek64", "defined(__USE_LARGEFILE64)");
-func("_lseek", msvc);
-func("_lseeki64", msvc);
+func("lseek", unix, test: "return (int)lseek(1, 0, SEEK_SET);");
+func("lseek64", "defined(__USE_LARGEFILE64)", test: "return (int)lseek64(1, 0, SEEK_SET);");
+func("_lseek", msvc, test: "return (int)_lseek(1, 0, SEEK_SET);");
+func("_lseek64", cygwin, test: "return (int)_lseek64(1, 0, SEEK_SET);");
+func("_lseeki64", msvc, test: "return (int)_lseeki64(1, 0, SEEK_SET);");
 
-func("chdir", unix);
-func("_chdir", msvc);
+functest('chdir("..")', unix);
+functest('_chdir("..")', msvc);
 
-func("readlink", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
-func("freadlinkat", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat)");
+func("readlink", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'char buf[256]; return (int)readlink("foo", buf, 256);');
+func("freadlinkat", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE)", test: 'char buf[256]; return (int)freadlinkat(AT_FDCWD, "foo", buf, 256, AT_READLINK_REQSIZE);');
 
-func("stat", "defined(CONFIG_HAVE_SYS_STAT_H)");
-func("fstat", "defined(CONFIG_HAVE_SYS_STAT_H)");
-func("lstat", "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
-func("stat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)");
-func("fstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)");
-func("lstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
-func("fstatat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
-func("fstatat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)");
-feature("STAT_HAVE_ST_NSEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC)"); // syscall_ulong_t st_[acm]timensec
-feature("STAT_HAVE_ST_TIM", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIM)"); // struct timespec st_[acm]tim
-feature("STAT_HAVE_ST_TIMESPEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)"); // struct timespec st_[acm]timespec
+func("stat", "defined(CONFIG_HAVE_SYS_STAT_H)", test: 'struct stat st; return stat("foo", &st);');
+func("fstat", "defined(CONFIG_HAVE_SYS_STAT_H)", test: 'struct stat st; return fstat(1, &st);');
+func("lstat", "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'struct stat st; return lstat("foo", &st);');
+func("stat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)", test: 'struct stat64 st; return stat64("foo", &st);');
+func("fstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)", test: 'struct stat64 st; return fstat64(1, &st);');
+func("lstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'struct stat64 st; return lstat64("foo", &st);');
+func("fstatat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct stat st; return fstatat(AT_FDCWD, "foo", &st, 0);');
+func("fstatat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)", test: 'struct stat64 st; return fstatat64(AT_FDCWD, "foo", &st, 0);');
+// syscall_ulong_t st_[acm]timensec
+feature("STAT_ST_NSEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC)", test: "struct stat st; st.st_atimensec = st.st_ctimensec = st.st_mtimensec = 0; return 0;");
+// struct timespec st_[acm]tim
+feature("STAT_ST_TIM", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIM)", test: "struct stat st; st.st_atim.tv_sec = st.st_ctim.tv_sec = st.st_mtim.tv_sec = 0; st.st_atim.tv_nsec = st.st_ctim.tv_nsec = st.st_mtim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_ctim.tv_sec + st.st_mtim.tv_sec + st.st_atim.tv_nsec + st.st_ctim.tv_nsec + st.st_mtim.tv_nsec;");
+// struct timespec st_[acm]timespec
+feature("STAT_ST_TIMESPEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_atimespec.tv_sec = st.st_ctimespec.tv_sec = st.st_mtimespec.tv_sec = 0; st.st_atimespec.tv_nsec = st.st_ctimespec.tv_nsec = st.st_mtimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_ctimespec.tv_sec + st.st_mtimespec.tv_sec + st.st_atimespec.tv_nsec + st.st_ctimespec.tv_nsec + st.st_mtimespec.tv_nsec;");
 
-func("mkdir", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
-func("_mkdir", msvc);
-func("chmod", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
-func("_chmod", msvc);
-func("_wchmod", "defined(_WIO_DEFINED)");
-func("mkfifo", "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
-func("lchmod", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
-func("fchmodat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
-func("mkdirat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
-func("mkfifoat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
-func("fchmod", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_POSIX)");
-func("mknod", "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))");
-func("mknodat", "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)) && defined(__USE_ATFILE)");
-func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
-func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)");
-func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)");
-func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)");
+functest('mkdir("foo", 0755)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+functest('_mkdir("foo")', msvc);
+func("wmkdir", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wmkdir(c, 0755);");
+func("_wmkdir", msvc, test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wmkdir(c);");
+functest('chmod("foo", 0777)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+functest('_chmod("foo", 0777)', msvc);
+func("_wchmod", "defined(_WIO_DEFINED)", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchmod(c, 0777);");
+functest('mkfifo("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
+functest('lchmod("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
+functest('fchmodat(AT_FDCWD, "foo", 0666, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+functest('mkdirat(AT_FDCWD, "foo", 0755)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+functest('fmkdirat(AT_FDCWD, "foo", 0755, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_KOS) && defined(__USE_ATFILE)");
+functest('mkfifoat(AT_FDCWD, "foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
+functest('fchmod(1, 0644)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_POSIX)");
+functest('mknod("foo", 0644, (dev_t)123)', "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED))");
+functest('mknodat(AT_FDCWD, "foo", 0644, (dev_t)123)', "defined(CONFIG_HAVE_SYS_STAT_H) && (defined(__USE_MISC) || defined(__USE_XOPEN_EXTENDED)) && defined(__USE_ATFILE)");
+func("utimensat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat(AT_FDCWD, "foo", ts, 0);');
+func("utimensat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return utimensat64(AT_FDCWD, "foo", ts, 0);');
+func("futimens", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8)", test: 'struct timespec ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens(1, ts);');
+func("futimens64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_XOPEN2K8) && defined(__USE_TIME64)", test: 'struct timespec64 ts[2]; ts[0].tv_sec = 0; ts[0].tv_nsec = 0; ts[1] = ts[0]; return futimens64(1, ts);');
 
-func("time", "defined(CONFIG_HAVE_TIME_H)");
-func("time64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_TIME64)");
-func("clock_gettime", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
-func("clock_gettime64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)");
+functest("time(NULL)", "defined(CONFIG_HAVE_TIME_H)");
+functest("time64(NULL)", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_TIME64)");
+func("clock_gettime", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)", test: "struct timespec ts; return clock_gettime(0, &ts);");
+func("clock_gettime64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)", test: "struct timespec64 ts; return clock_gettime64(0, &ts);");
 constant("CLOCK_REALTIME", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
-func("gettimeofday", "defined(CONFIG_HAVE_SYS_TIME_H)");
-func("gettimeofday64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)");
-func("utimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)");
-func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)");
-func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)");
-func("lutimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)");
-func("futimesat", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU)");
-func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)");
+func("gettimeofday", "defined(CONFIG_HAVE_SYS_TIME_H)", test: "struct timeval tv; return gettimeofday(&tv, NULL);");
+func("gettimeofday64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: "struct timeval tv; return gettimeofday64(&tv, NULL);");
+func("utimes", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes("foo", tv);');
+func("utimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_MISC) && defined(__USE_TIME64)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return utimes64("foo", tv);');
+func("lutimes", "defined(CONFIG_HAVE_SYS_TIME_H)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes("foo", tv);');
+func("lutimes64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_TIME64)", test: 'struct timeval64 tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return lutimes64("foo", tv);');
+func("futimesat", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
+func("futimesat64", "defined(CONFIG_HAVE_SYS_TIME_H) && defined(__USE_GNU) && defined(__USE_TIME64)", test: 'struct timeval tv[2]; tv[0].tv_sec = 0; tv[0].tv_usec = 0; tv[1] = tv[0]; return futimesat(AT_FDCWD, "foo", tv);');
 
 
-print "#if",msvc;
+print "#ifdef _MSC_VER";
 print "#define F_OK     0";
-print "#define X_OK     1 /* Not supported? *" "/";
+print "#define X_OK     1 // Not supported?";
 print "#define W_OK     2";
 print "#define R_OK     4";
-print "#endif /" "*",msvc,"*" "/";
+print "#endif";
 print;
 
-func("euidaccess", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)");
-func("eaccess", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)");
-func("faccessat", "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)");
-func("access", "(defined(CONFIG_HAVE_UNISTD_H) || !" + addparen(msvc) + ") && defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)");
-func("_access", msvc);
-func("_waccess", "defined(_WIO_DEFINED)");
+functest('euidaccess("foo", F_OK)', "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)");
+functest('eaccess("foo", F_OK)', "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_GNU)");
+functest('faccessat(AT_FDCWD, "foo", F_OK, 0)', "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)");
+functest('access("foo", F_OK)', "(defined(CONFIG_HAVE_UNISTD_H) || !" + addparen(msvc) + ") && defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)");
+functest('_access("foo", F_OK)', msvc);
+func("_waccess", "defined(_WIO_DEFINED)", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _waccess(c, F_OK);");
 
-func("fchownat", "defined(__USE_ATFILE)");
+functest('fchownat(AT_FDCWD, "foo", 0, 0, 0)', "defined(__USE_ATFILE)");
 
-func("pread", "defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)");
-func("pwrite", "defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)");
-func("pread64", "defined(__USE_LARGEFILE64) && (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))");
-func("pwrite64", "defined(__USE_LARGEFILE64) && (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))");
+func("pread", "defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)", test: "char buf[7]; return (int)pread(1, buf, 7, 1234);");
+func("pwrite", "defined(__USE_UNIX98) || defined(__USE_XOPEN2K8)", test: 'char const buf[] = "foo"; return (int)pwrite(1, buf, 3, 1234);');
+func("pread64", "defined(__USE_LARGEFILE64) && (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))", test: "char buf[7]; return (int)pread64(1, buf, 7, 1234);");
+func("pwrite64", "defined(__USE_LARGEFILE64) && (defined(__USE_UNIX98) || defined(__USE_XOPEN2K8))", test: 'char const buf[] = "foo"; return (int)pwrite64(1, buf, 3, 1234);');
 
-func("close", unix);
-func("_close", msvc);
+functest("close(1)", unix);
+functest("_close(1)", msvc);
 
-func("sync", unix);
-func("fsync", isenabled("_POSIX_FSYNC") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
-func("fdatasync", unix);
-func("_commit", msvc);
+functest("sync()", unix);
+functest("fsync(1)", isenabled("_POSIX_FSYNC") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
+functest("fdatasync(1)", unix);
+functest("_commit(1)", msvc);
 
-func("getpid", unix);
-func("_getpid", msvc);
+functest("getpid()", unix);
+functest("_getpid()", msvc);
 
-func("umask", "defined(CONFIG_HAVE_SYS_STAT_H)");
-func("_umask", msvc);
+functest("umask(0111)", "defined(CONFIG_HAVE_SYS_STAT_H)");
+functest("_umask(0111)", msvc);
 
-func("dup", unix);
-func("_dup", msvc);
+functest("dup(1)", unix);
+functest("_dup(1)", msvc);
 
-func("dup2", unix);
-func("_dup2", msvc);
+functest("dup2(1, 2)", unix);
+functest("_dup2(1, 2)", msvc);
 
-func("dup3", "defined(__USE_GNU)");
+functest("dup3(1, 2, 0)", "defined(__USE_GNU)");
 
-func("isatty", unix);
-func("_isatty", msvc);
+functest("isatty(1)", unix);
+functest("_isatty(1)", msvc);
 
-func("getcwd", unix);
-func("_getcwd", msvc);
-func("wgetcwd");
-func("_wgetcwd", "defined(_WDIRECT_DEFINED)");
+func("getcwd", unix, test: 'char buf[256]; return getcwd(buf, 256);');
+func("_getcwd", msvc, test: 'char buf[256]; return _getcwd(buf, 256);');
+func("wgetcwd", test: 'wchar_t buf[256]; return wgetcwd(buf, 256);');
+func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; return _wgetcwd(buf, 256);');
 
-func("unlink", unix);
-func("_unlink", "defined(_CRT_DIRECTORY_DEFINED)");
-func("remove", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("_wunlink", "defined(_WIO_DEFINED)");
-func("_wremove", "defined(_WSTDIO_DEFINED)");
-func("rename", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("_wrename", "defined(_WIO_DEFINED)");
+functest('unlink("foo.txt")', unix);
+functest('_unlink("foo.txt")', "defined(_CRT_DIRECTORY_DEFINED)");
+functest('remove("foo.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
+functest('rename("foo.txt", "bar.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
+func("wunlink", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
+func("_wunlink", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
+func("wremove", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wremove(s);");
+func("_wremove", "defined(_WSTDIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wremove(s);");
+func("wrename", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return wrename(s, t);");
+func("_wrename", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return _wrename(s, t);");
 
-func("getenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
+func("getenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: 'return getenv("PATH") ? 0 : 1;');
 
-func("wcslen", "defined(CONFIG_HAVE_WCHAR_H) && " + addparen(stdc));
+func("wcslen", "defined(CONFIG_HAVE_WCHAR_H) && " + addparen(stdc), test: "wchar_t s[] = { 'a', 'b', 'c', 0 }; return (int)wcslen(s);");
 
-func("qsort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
+func("qsort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: 'extern int cmpch(void const *a, void const *b); char buf[] = "foobar"; qsort(buf, 6, 1, &cmpch); return 0;');
 
-func("truncate", addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8)");
-func("truncate64", "defined(__USE_LARGEFILE64) && (" + addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))");
-func("ftruncate", addparen(unix) + " || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K)");
-func("ftruncate64", "defined(__USE_LARGEFILE64) && (" + addparen(unix) + " || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
-func("_chsize", msvc);
-func("_chsize_s", msvc);
+functest('truncate("foo.txt", 42)', addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8)");
+functest('truncate64("foo.txt", 42)', "defined(__USE_LARGEFILE64) && (" + addparen(unix) + " || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K8))");
+functest("ftruncate(1, 42)", addparen(unix) + " || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K)");
+functest("ftruncate64(1, 42)", "defined(__USE_LARGEFILE64) && (" + addparen(unix) + " || defined(__USE_POSIX199309) || defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))");
+functest("_chsize(1, 42)", msvc);
+functest("_chsize_s(1, 42)", msvc);
 
-func("getpgid", isenabled("_POSIX_JOB_CONTROL"));
-func("setpgid", isenabled("_POSIX_JOB_CONTROL"));
-func("setreuid", isenabled("_POSIX_SAVED_IDS") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
-func("nice", "defined(__USE_MISC) || defined(__USE_XOPEN) || (" + isenabled("_POSIX_PRIORITY_SCHEDULING") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))");
+functest("getpgid(0)", isenabled("_POSIX_JOB_CONTROL"));
+functest("setpgid(0, 0)", isenabled("_POSIX_JOB_CONTROL"));
+functest("setreuid(0, 0)", isenabled("_POSIX_SAVED_IDS") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
+functest("nice(0)", "defined(__USE_MISC) || defined(__USE_XOPEN) || (" + isenabled("_POSIX_PRIORITY_SCHEDULING") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))");
 
-func("mmap", isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")");
-func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))");
-func("munmap", "CONFIG_HAVE_mmap");
+func("mmap", isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")", test: "return mmap(NULL, 1, 0, 0, -1, 0) == (void *)0;");
+func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))", test: "return mmap64(NULL, 1, 0, 0, -1, 0) == (void *)0;");
+func("munmap", "CONFIG_HAVE_mmap", test: 'char buf[] = "foobar"; return munmap(buf, 6);');
 constant("MAP_ANONYMOUS");
 constant("MAP_ANON");
 constant("MAP_PRIVATE");
@@ -521,87 +584,97 @@ constant("MAP_UNINITIALIZED");
 constant("PROT_READ");
 constant("PROT_WRITE");
 
-func("pipe", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
-func("pipe2", "defined(__USE_GNU)");
-func("_pipe", msvc);
+func("pipe", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix), "int fds[2]; return pipe(fds);");
+func("pipe2", "defined(__USE_GNU)", "int fds[2]; return pipe2(fds, 0);");
+func("_pipe", msvc, "int fds[2]; return _pipe(fds, 4096, 0);");
 
-func("usleep", "defined(CONFIG_HAVE_UNISTD_H) && ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC))");
+functest("usleep(42)", "defined(CONFIG_HAVE_UNISTD_H) && ((defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC))");
 typ("useconds_t", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN) || defined(__USE_XOPEN2K))");
-func("nanosleep", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)");
-func("nanosleep64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)");
+func("nanosleep", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309)", test: "struct timespec ts; ts.tv_sec = 0; ts.tv_nsec = 123; return nanosleep(&ts, NULL);");
+func("nanosleep64", "defined(CONFIG_HAVE_TIME_H) && defined(__USE_POSIX199309) && defined(__USE_TIME64)", test: "struct timespec64 ts; ts.tv_sec = 0; ts.tv_nsec = 123; return nanosleep64(&ts, NULL);");
 
-func("fork", unix);
-func("vfork", "(defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)");
-func("fchown", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
-func("fchdir", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
+functest("fork()", unix);
+func("vfork", "(defined(__USE_XOPEN_EXTENDED) && !defined(__USE_XOPEN2K8)) || defined(__USE_MISC)", test: "if (vfork() == 0) for (;;); return 0;");
+functest("fchown(1, 0, 0)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
+functest("fchdir(1)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
 
-func("pause", unix);
-func("select", "defined(CONFIG_HAVE_SYS_SELECT_H) && " + addparen(unix));
+functest("pause()", unix);
+functest("select(0, NULL, NULL, NULL, NULL)", "defined(CONFIG_HAVE_SYS_SELECT_H) && " + addparen(unix));
+functest("pselect(0, NULL, NULL, NULL, (struct timespec *)0, (sigset_t *)0)", "defined(CONFIG_HAVE_SYS_SELECT_H) && " + addparen(unix));
 
-func("__iob_func", msvc + " || defined(____iob_func_defined)");
+func("__iob_func", msvc, test: "return __iob_func() == (FILE *)0;");
 
-func("fseek", "defined(CONFIG_HAVE_STDIO_H)");
-func("ftell", "defined(CONFIG_HAVE_STDIO_H)");
-func("fseek64", "defined(CONFIG_HAVE_STDIO_H) && 0");
-func("ftell64", "defined(CONFIG_HAVE_STDIO_H) && 0");
-func("fseeko", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(unix));
-func("ftello", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(unix));
-func("fseeko64", "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)");
-func("ftello64", "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)");
-func("_fseeki64", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc));
-func("_ftelli64", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc));
-func("fflush", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("ferror", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fclose", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fileno", "defined(CONFIG_HAVE_STDIO_H) && " + "!" + addparen(msvc));
-func("_fileno", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc));
-func("fftruncate", "defined(__USE_KOS)");
-func("fftruncate64", "defined(__USE_KOS) && defined(__USE_LARGEFILE64)");
-func("getc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fgetc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("putc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fputc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fread", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fwrite", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("ungetc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("setvbuf", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fopen", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("fopen64", "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)");
-func("fprintf", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("stdin", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("stdout", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
-func("stderr", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
+func("fseek", "defined(CONFIG_HAVE_STDIO_H)", test: "extern FILE *fp; return fseek(fp, 0, SEEK_SET);");
+func("ftell", "defined(CONFIG_HAVE_STDIO_H)", test: "extern FILE *fp; return ftell(fp) != 0;");
+func("fseek64", "defined(CONFIG_HAVE_STDIO_H) && 0", test: "extern FILE *fp; return fseek64(fp, 0, SEEK_SET);");
+func("ftell64", "defined(CONFIG_HAVE_STDIO_H) && 0", test: "extern FILE *fp; return ftell64(fp) != 0;");
+func("_fseek64", "defined(CONFIG_HAVE_STDIO_H) && 0", test: "extern FILE *fp; return _fseek64(fp, 0, SEEK_SET);");
+func("_ftell64", "defined(CONFIG_HAVE_STDIO_H) && 0", test: "extern FILE *fp; return _ftell64(fp) != 0;");
+func("fseeko", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(unix), test: "extern FILE *fp; return fseeko(fp, 0, SEEK_SET);");
+func("ftello", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(unix), test: "extern FILE *fp; return ftello(fp) != 0;");
+func("fseeko64", "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)", test: "extern FILE *fp; return fseeko64(fp, 0, SEEK_SET);");
+func("ftello64", "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)", test: "extern FILE *fp; return ftello64(fp) != 0;");
+func("_fseeki64", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc), test: "extern FILE *fp; return _fseeki64(fp, 0, SEEK_SET);");
+func("_ftelli64", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc), test: "extern FILE *fp; return _ftelli64(fp) != 0;");
+func("fflush", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return fflush(fp);");
+func("ferror", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return ferror(fp);");
+func("fclose", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return fclose(fp);");
+func("fileno", "defined(CONFIG_HAVE_STDIO_H) && " + "!" + addparen(msvc), test: "extern FILE *fp; return fileno(fp);");
+func("_fileno", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(msvc), test: "extern FILE *fp; return _fileno(fp);");
+func("fftruncate", "defined(__USE_KOS)", test: "extern FILE *fp; return fftruncate(fp, 0);");
+func("fftruncate64", "defined(__USE_KOS) && defined(__USE_LARGEFILE64)", test: "extern FILE *fp; return fftruncate64(fp, 0);");
+func("getc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return getc(fp);");
+func("fgetc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return fgetc(fp);");
+func("putc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return putc('!', fp);");
+func("fputc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return fputc('!', fp);");
+func("fread", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; int buf[4]; return fread(buf, sizeof(int), 4, fp) == 4;");
+func("fwrite", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: 'extern FILE *fp; char buf[] = "text"; return fwrite(buf, sizeof(char), 4, fp) == 4;');
+func("ungetc", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; return ungetc('!', fp);");
+func("setvbuf", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "extern FILE *fp; extern char buf[256]; return setvbuf(fp, buf, 0, 256);");
+constant("_IONBF");
+constant("_IOFBF");
+constant("_IOLBF");
+func("fopen", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: 'return fopen("foo.txt", "r") != (FILE *)0;');
+func("fopen64", "defined(CONFIG_HAVE_STDIO_H) && defined(__USE_LARGEFILE64)", test: 'return fopen64("foo.txt", "r") != (FILE *)0;');
+func("fprintf", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: 'extern FILE *fp; return (int)fprintf(fp, "foo = %d", 42);');
+var("stdin", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "return stdin != (FILE *)0;");
+var("stdout", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "return stdout != (FILE *)0;");
+var("stderr", "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc), test: "return stderr != (FILE *)0;");
 
-func("sem_init", "defined(CONFIG_HAVE_SEMAPHORE_H)");
-func("sem_destroy", "defined(CONFIG_HAVE_SEMAPHORE_H)");
-func("sem_wait", "defined(CONFIG_HAVE_SEMAPHORE_H)");
-func("sem_trywait", "defined(CONFIG_HAVE_SEMAPHORE_H)");
-func("sem_post", "defined(CONFIG_HAVE_SEMAPHORE_H)");
-func("sem_timedwait", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)");
-func("sem_timedwait64", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && defined(__USE_TIME64)");
+func("sem_init", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_init(&sem, 0, 0);");
+func("sem_destroy", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_destroy(&sem);");
+func("sem_wait", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_wait(&sem);");
+func("sem_trywait", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_trywait(&sem);");
+func("sem_post", "defined(CONFIG_HAVE_SEMAPHORE_H)", test: "extern sem_t sem; return sem_post(&sem);");
+func("sem_timedwait", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K)", test: "extern sem_t sem; extern struct timespec ts; return sem_timedwait(&sem, &ts);");
+func("sem_timedwait64", "defined(CONFIG_HAVE_SEMAPHORE_H) && defined(__USE_XOPEN2K) && defined(__USE_TIME64)", test: "extern sem_t sem; extern struct timespec64 ts; return sem_timedwait64(&sem, &ts);");
 
-func("pthread_suspend", "defined(CONFIG_HAVE_PTHREAD_H) && 0");
-func("pthread_continue", "defined(CONFIG_HAVE_PTHREAD_H) && 0");
-func("pthread_suspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0");
-func("pthread_unsuspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0");
-func("pthread_setname", "defined(CONFIG_HAVE_PTHREAD_H) && 0");
-func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)");
+func("pthread_suspend", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_suspend(pt);");
+func("pthread_continue", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_continue(pt);");
+func("pthread_suspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_suspend_np(pt);");
+func("pthread_unsuspend_np", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: "extern pthread_t pt; return pthread_unsuspend_np(pt);");
+func("pthread_setname", "defined(CONFIG_HAVE_PTHREAD_H) && 0", test: 'extern pthread_t pt; return pthread_setname(pt, "foothread");');
+func("pthread_setname_np", "defined(CONFIG_HAVE_PTHREAD_H) && defined(__USE_GNU)", test: 'extern pthread_t pt; return pthread_setname_np(pt, "foothread");');
 
-func("abort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc));
-func("strerror", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc));
-func("strerror_s", "defined(__USE_KOS)");
-func("strerrorname_s", "defined(__USE_KOS)");
+func("abort", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: "abort();");
+func("strerror", "defined(CONFIG_HAVE_STRING_H) && " + addparen(stdc), test: "char *p = strerror(1); return p != NULL;");
+func("strerror_s", "defined(__USE_KOS)", test: "char const *p = strerror_s(1); return p != NULL;");
+func("strerrorname_s", "defined(__USE_KOS)", test: "char const *p = strerrorname_s(1); return p != NULL;");
 
-func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)");
-func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)");
-func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)");
-func("dlmodulename", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)");
+func("dlopen", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; dl = dlopen("foo.so", 0); return dl != NULL;');
+func("dlclose", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; return dlclose(dl);');
+func("dlsym", "defined(CONFIG_HAVE_DLFCN_H)", test: 'extern void *dl; void *s = dlsym(dl, "foo"); return s != NULL;');
+func("dlmodulename", "defined(CONFIG_HAVE_DLFCN_H) && defined(__USE_KOS)", test: 'extern void *dl; char const *n = dlmodulename(dl); return n != NULL;');
+constant("RTLD_GLOBAL");
+constant("RTLD_LOCAL");
+constant("RTLD_LAZY");
+constant("RTLD_NOW");
 
-func("_memicmp", msvc);
-func("memcasecmp", "defined(__USE_KOS)");
-func("memrchr", "defined(__USE_GNU)");
-func("rawmemchr", "defined(__USE_GNU)");
-func("strnlen", "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
+functest('_memicmp("a", "A", 1)', msvc);
+functest('memcasecmp("a", "A", 1)', "defined(__USE_KOS)");
+func("memrchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = memrchr(buf, '!', 123); return p != NULL;");
+func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawmemchr(buf, '!'); return p == buf;");
+functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
 // NOTE: The GNU-variant of memmem() returns the start of the haystack
 //       when `needle_length == 0', however for this case, deemon requires
@@ -609,51 +682,60 @@ func("strnlen", "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_
 //       to be contained ~in-between two other characters~
 // KOS provides this behavior when given the `_MEMMEM_EMPTY_NEEDLE_SOURCE' option,
 // which report back an ACK in the form of `__USE_MEMMEM_EMPTY_NEEDLE_NULL'
-func("memmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-func("memrmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+// NOTE: Because we need the specific KOS-variant of this (and because the KOS variant
+//       is guarantied to report back its presence with `__USE_MEMMEM_EMPTY_NEEDLE_NULL'),
+//       we don't include these configure options as part of the autoconf testing (which
+//       we do by wrapping `func' with parenthesis so that `./configure' can't identify it
+//       as a configure test)
+(func)("memmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memrmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memcasemem", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memcasermem", "defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
 
-func("rawmemrchr", "defined(__USE_KOS)");
-func("memend", "defined(__USE_KOS)");
-func("memrend", "defined(__USE_KOS)");
-func("memlen", "defined(__USE_KOS)");
-func("memrlen", "defined(__USE_KOS)");
-func("rawmemlen", "defined(__USE_KOS)");
-func("rawmemrlen", "defined(__USE_KOS)");
-func("memcasemem", "defined(__USE_KOS)");
-func("memrev", "defined(__USE_KOS)");
-func("memcasermem", "", check_defined: false);
-func("strend", "defined(__USE_KOS)");
-func("strnend", "defined(__USE_KOS)");
+func("rawmemrchr", "defined(__USE_KOS)", test: "extern char *buf; void *p = rawmemrchr(buf, '!'); return p == buf - 1;");
+func("memend", "defined(__USE_KOS)", test: "extern char *buf; void *p = memend(buf, '!', 123); return p == buf;");
+func("memrend", "defined(__USE_KOS)", test: "extern char *buf; void *p = memrend(buf, '!', 123); return p == buf;");
+func("memlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = memlen(buf, '!', 123); return s == 0;");
+func("memrlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = memrlen(buf, '!', 123); return s == 0;");
+func("rawmemlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = rawmemlen(buf, '!'); return s == 0;");
+func("rawmemrlen", "defined(__USE_KOS)", test: "extern char *buf; size_t s = rawmemrlen(buf, '!'); return s == 0;");
+func("memrev", "defined(__USE_KOS)", test: "extern char *buf; void *p = memrev(buf, 123); return p == buf;");
+func("strend", "defined(__USE_KOS)", test: "extern char *buf; char *p = strend(buf); return p == buf + 123;");
+func("strnend", "defined(__USE_KOS)", test: "extern char *buf; char *p = strnend(buf, 3); return p == buf + 3;");
 
-func("memxend", "defined(__USE_STRING_XCHR)");
-func("memxlen", "defined(__USE_STRING_XCHR)");
-func("memxchr", "defined(__USE_STRING_XCHR)");
-func("rawmemxchr", "defined(__USE_STRING_XCHR)");
-func("rawmemxlen", "defined(__USE_STRING_XCHR)");
-func("memxrchr");
-func("memxrend");
-func("memxrlen");
-func("rawmemxrchr");
-func("rawmemxrlen");
+func("memxend", "defined(__USE_STRING_XCHR)", test: "extern char *buf; void *p = memxend(buf, '!', 123); return p == buf;");
+func("memxlen", "defined(__USE_STRING_XCHR)", test: "extern char *buf; size_t s = memxlen(buf, '!', 123); return s == 0;");
+func("memxchr", "defined(__USE_STRING_XCHR)", test: "extern char *buf; void *p = memxchr(buf, '!', 123); return p == buf;");
+func("rawmemxchr", "defined(__USE_STRING_XCHR)", test: "extern char *buf; void *p = rawmemxchr(buf, '!'); return p == buf;");
+func("rawmemxlen", "defined(__USE_STRING_XCHR)", test: "extern char *buf; size_t s = rawmemxlen(buf, '!'); return s == 0;");
+func("memxrchr", test: "extern char *buf; void *p = memxrchr(buf, '!', 123); return p != NULL;");
+func("memxrend", test: "extern char *buf; void *p = memxrend(buf, '!', 123); return p == buf;");
+func("memxrlen", test: "extern char *buf; size_t s = memxrlen(buf, '!', 123); return s == 0;");
+func("rawmemxrchr", test: "extern char *buf; void *p = rawmemxrchr(buf, '!'); return p == buf;");
+func("rawmemxrlen", test: "extern char *buf; size_t s = rawmemxrlen(buf, '!'); return s == 0;");
 
-func("tolower", "defined(CONFIG_HAVE_CTYPE_H)");
-func("toupper", "defined(CONFIG_HAVE_CTYPE_H)");
-func("islower", "defined(CONFIG_HAVE_CTYPE_H)");
-func("isupper", "defined(CONFIG_HAVE_CTYPE_H)");
-func("isdigit", "defined(CONFIG_HAVE_CTYPE_H)");
-func("isalpha", "defined(CONFIG_HAVE_CTYPE_H)");
-func("isalnum", "defined(CONFIG_HAVE_CTYPE_H)");
+functest("tolower('!')", "defined(CONFIG_HAVE_CTYPE_H)");
+functest("toupper('!')", "defined(CONFIG_HAVE_CTYPE_H)");
+functest("islower('!')", "defined(CONFIG_HAVE_CTYPE_H)");
+functest("isupper('!')", "defined(CONFIG_HAVE_CTYPE_H)");
+functest("isdigit('!')", "defined(CONFIG_HAVE_CTYPE_H)");
+functest("isalpha('!')", "defined(CONFIG_HAVE_CTYPE_H)");
+functest("isalnum('!')", "defined(CONFIG_HAVE_CTYPE_H)");
 
 // CRT-specific functions
-func("_dosmaperr", msvc + " || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr))", check_defined: false);
-func("errno_nt2kos", "defined(__CRT_HAVE_errno_nt2kos)", check_defined: false);
-func("_get_osfhandle", msvc + " || defined(__CYGWIN__) || defined(__CYGWIN32__)");
-func("get_osfhandle", "defined(__CYGWIN__) || defined(__CYGWIN32__)");
-func("_open_osfhandle", msvc);
+func("_dosmaperr", msvc + " || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr))", check_defined: false, test: "_dosmaperr(42); return 0;");
+functest("errno_nt2kos(42)", "defined(__CRT_HAVE_errno_nt2kos)", check_defined: false);
+func("_get_osfhandle", msvc + " || defined(__CYGWIN__) || defined(__CYGWIN32__)", test: "intptr_t fh = _get_osfhandle(1); return fh != -1;");
+func("get_osfhandle", "defined(__CYGWIN__) || defined(__CYGWIN32__)", test: "intptr_t fh = get_osfhandle(1); return fh != -1;");
+functest("open_osfhandle(1234, 0)");
+functest("_open_osfhandle(1234, 0)", msvc);
 var("errno", "defined(CONFIG_HAVE_ERRNO_H)");
+var("_errno");
+var("__errno");
 var("_doserrno", msvc);
 var("doserrno");
 
+//END:FEATURES
 
 // NOTE: Other config features used in deemon source files:
 //    - CONFIG_NO_RTLD_LOCAL / CONFIG_HAVE_RTLD_LOCAL
@@ -735,6 +817,14 @@ var("doserrno");
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
 #define CONFIG_HAVE_UNISTD_H 1
+#endif
+
+#ifdef CONFIG_NO_SYS_UNISTD_H
+#undef CONFIG_HAVE_SYS_UNISTD_H
+#elif !defined(CONFIG_HAVE_SYS_UNISTD_H) && \
+      (__has_include(<sys/unistd.h>) || (defined(__NO_has_include) && (defined(__CYGWIN__) || \
+       defined(__CYGWIN32__))))
+#define CONFIG_HAVE_SYS_UNISTD_H 1
 #endif
 
 #ifdef CONFIG_NO_ERRNO_H
@@ -965,6 +1055,10 @@ var("doserrno");
 #include <unistd.h>
 #endif /* CONFIG_HAVE_UNISTD_H */
 
+#ifdef CONFIG_HAVE_SYS_UNISTD_H
+#include <sys/unistd.h>
+#endif /* CONFIG_HAVE_SYS_UNISTD_H */
+
 #ifdef CONFIG_HAVE_ERRNO_H
 #include <errno.h>
 #endif /* CONFIG_HAVE_ERRNO_H */
@@ -1048,6 +1142,10 @@ var("doserrno");
 #ifdef CONFIG_HAVE_WCHAR_H
 #include <wchar.h>
 #endif /* CONFIG_HAVE_WCHAR_H */
+
+#ifdef CONFIG_HAVE_DLFCN_H
+#include <dlfcn.h>
+#endif /* CONFIG_HAVE_DLFCN_H */
 
 #ifdef CONFIG_NO__Exit
 #undef CONFIG_HAVE__Exit
@@ -1147,6 +1245,34 @@ var("doserrno");
 #define CONFIG_HAVE__execvpe 1
 #endif
 
+#ifdef CONFIG_NO_wexecv
+#undef CONFIG_HAVE_wexecv
+#elif !defined(CONFIG_HAVE_wexecv) && \
+      (defined(wexecv) || defined(__wexecv_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wexecv 1
+#endif
+
+#ifdef CONFIG_NO_wexecve
+#undef CONFIG_HAVE_wexecve
+#elif !defined(CONFIG_HAVE_wexecve) && \
+      (defined(wexecve) || defined(__wexecve_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wexecve 1
+#endif
+
+#ifdef CONFIG_NO_wexecvp
+#undef CONFIG_HAVE_wexecvp
+#elif !defined(CONFIG_HAVE_wexecvp) && \
+      (defined(wexecvp) || defined(__wexecvp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wexecvp 1
+#endif
+
+#ifdef CONFIG_NO_wexecvpe
+#undef CONFIG_HAVE_wexecvpe
+#elif !defined(CONFIG_HAVE_wexecvpe) && \
+      (defined(wexecvpe) || defined(__wexecvpe_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wexecvpe 1
+#endif
+
 #ifdef CONFIG_NO__wexecv
 #undef CONFIG_HAVE__wexecv
 #elif !defined(CONFIG_HAVE__wexecv) && \
@@ -1173,6 +1299,34 @@ var("doserrno");
 #elif !defined(CONFIG_HAVE__wexecvpe) && \
       (defined(_wexecvpe) || defined(___wexecvpe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wexecvpe 1
+#endif
+
+#ifdef CONFIG_NO_spawnv
+#undef CONFIG_HAVE_spawnv
+#elif !defined(CONFIG_HAVE_spawnv) && \
+      (defined(spawnv) || defined(__spawnv_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_spawnv 1
+#endif
+
+#ifdef CONFIG_NO_spawnve
+#undef CONFIG_HAVE_spawnve
+#elif !defined(CONFIG_HAVE_spawnve) && \
+      (defined(spawnve) || defined(__spawnve_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_spawnve 1
+#endif
+
+#ifdef CONFIG_NO_spawnvp
+#undef CONFIG_HAVE_spawnvp
+#elif !defined(CONFIG_HAVE_spawnvp) && \
+      (defined(spawnvp) || defined(__spawnvp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_spawnvp 1
+#endif
+
+#ifdef CONFIG_NO_spawnvpe
+#undef CONFIG_HAVE_spawnvpe
+#elif !defined(CONFIG_HAVE_spawnvpe) && \
+      (defined(spawnvpe) || defined(__spawnvpe_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_spawnvpe 1
 #endif
 
 #ifdef CONFIG_NO__spawnv
@@ -1203,6 +1357,34 @@ var("doserrno");
 #define CONFIG_HAVE__spawnvpe 1
 #endif
 
+#ifdef CONFIG_NO_wspawnv
+#undef CONFIG_HAVE_wspawnv
+#elif !defined(CONFIG_HAVE_wspawnv) && \
+      (defined(wspawnv) || defined(__wspawnv_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wspawnv 1
+#endif
+
+#ifdef CONFIG_NO_wspawnve
+#undef CONFIG_HAVE_wspawnve
+#elif !defined(CONFIG_HAVE_wspawnve) && \
+      (defined(wspawnve) || defined(__wspawnve_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wspawnve 1
+#endif
+
+#ifdef CONFIG_NO_wspawnvp
+#undef CONFIG_HAVE_wspawnvp
+#elif !defined(CONFIG_HAVE_wspawnvp) && \
+      (defined(wspawnvp) || defined(__wspawnvp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wspawnvp 1
+#endif
+
+#ifdef CONFIG_NO_wspawnvpe
+#undef CONFIG_HAVE_wspawnvpe
+#elif !defined(CONFIG_HAVE_wspawnvpe) && \
+      (defined(wspawnvpe) || defined(__wspawnvpe_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wspawnvpe 1
+#endif
+
 #ifdef CONFIG_NO__wspawnv
 #undef CONFIG_HAVE__wspawnv
 #elif !defined(CONFIG_HAVE__wspawnv) && \
@@ -1229,6 +1411,13 @@ var("doserrno");
 #elif !defined(CONFIG_HAVE__wspawnvpe) && \
       (defined(_wspawnvpe) || defined(___wspawnvpe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wspawnvpe 1
+#endif
+
+#ifdef CONFIG_NO_cwait
+#undef CONFIG_HAVE_cwait
+#elif !defined(CONFIG_HAVE_cwait) && \
+      (defined(cwait) || defined(__cwait_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_cwait 1
 #endif
 
 #ifdef CONFIG_NO__cwait
@@ -1294,6 +1483,13 @@ var("doserrno");
 #define CONFIG_HAVE_system 1
 #endif
 
+#ifdef CONFIG_NO_wsystem
+#undef CONFIG_HAVE_wsystem
+#elif !defined(CONFIG_HAVE_wsystem) && \
+      (defined(wsystem) || defined(__wsystem_defined))
+#define CONFIG_HAVE_wsystem 1
+#endif
+
 #ifdef CONFIG_NO__wsystem
 #undef CONFIG_HAVE__wsystem
 #elif !defined(CONFIG_HAVE__wsystem) && \
@@ -1341,7 +1537,7 @@ var("doserrno");
 #ifdef CONFIG_NO__wopen
 #undef CONFIG_HAVE__wopen
 #elif !defined(CONFIG_HAVE__wopen) && \
-      (defined(_wopen) || defined(___wopen_defined) || defined(_MSC_VER))
+      (defined(_wopen) || defined(___wopen_defined) || defined(_WIO_DEFINED))
 #define CONFIG_HAVE__wopen 1
 #endif
 
@@ -2327,6 +2523,158 @@ var("doserrno");
 #define CONFIG_HAVE__O_NOLINKS 1
 #endif
 
+#ifdef CONFIG_NO_AT_SYMLINK_NOFOLLOW
+#undef CONFIG_HAVE_AT_SYMLINK_NOFOLLOW
+#elif !defined(CONFIG_HAVE_AT_SYMLINK_NOFOLLOW) && \
+      (defined(AT_SYMLINK_NOFOLLOW) || defined(__AT_SYMLINK_NOFOLLOW_defined))
+#define CONFIG_HAVE_AT_SYMLINK_NOFOLLOW 1
+#endif
+
+#ifdef CONFIG_NO_AT_REMOVEDIR
+#undef CONFIG_HAVE_AT_REMOVEDIR
+#elif !defined(CONFIG_HAVE_AT_REMOVEDIR) && \
+      (defined(AT_REMOVEDIR) || defined(__AT_REMOVEDIR_defined))
+#define CONFIG_HAVE_AT_REMOVEDIR 1
+#endif
+
+#ifdef CONFIG_NO_AT_EACCESS
+#undef CONFIG_HAVE_AT_EACCESS
+#elif !defined(CONFIG_HAVE_AT_EACCESS) && \
+      (defined(AT_EACCESS) || defined(__AT_EACCESS_defined))
+#define CONFIG_HAVE_AT_EACCESS 1
+#endif
+
+#ifdef CONFIG_NO_AT_SYMLINK_FOLLOW
+#undef CONFIG_HAVE_AT_SYMLINK_FOLLOW
+#elif !defined(CONFIG_HAVE_AT_SYMLINK_FOLLOW) && \
+      (defined(AT_SYMLINK_FOLLOW) || defined(__AT_SYMLINK_FOLLOW_defined))
+#define CONFIG_HAVE_AT_SYMLINK_FOLLOW 1
+#endif
+
+#ifdef CONFIG_NO_AT_NO_AUTOMOUNT
+#undef CONFIG_HAVE_AT_NO_AUTOMOUNT
+#elif !defined(CONFIG_HAVE_AT_NO_AUTOMOUNT) && \
+      (defined(AT_NO_AUTOMOUNT) || defined(__AT_NO_AUTOMOUNT_defined))
+#define CONFIG_HAVE_AT_NO_AUTOMOUNT 1
+#endif
+
+#ifdef CONFIG_NO_AT_EMPTY_PATH
+#undef CONFIG_HAVE_AT_EMPTY_PATH
+#elif !defined(CONFIG_HAVE_AT_EMPTY_PATH) && \
+      (defined(AT_EMPTY_PATH) || defined(__AT_EMPTY_PATH_defined))
+#define CONFIG_HAVE_AT_EMPTY_PATH 1
+#endif
+
+#ifdef CONFIG_NO_AT_SYMLINK_REGULAR
+#undef CONFIG_HAVE_AT_SYMLINK_REGULAR
+#elif !defined(CONFIG_HAVE_AT_SYMLINK_REGULAR) && \
+      (defined(AT_SYMLINK_REGULAR) || defined(__AT_SYMLINK_REGULAR_defined))
+#define CONFIG_HAVE_AT_SYMLINK_REGULAR 1
+#endif
+
+#ifdef CONFIG_NO_AT_CHANGE_CTIME
+#undef CONFIG_HAVE_AT_CHANGE_CTIME
+#elif !defined(CONFIG_HAVE_AT_CHANGE_CTIME) && \
+      (defined(AT_CHANGE_CTIME) || defined(__AT_CHANGE_CTIME_defined))
+#define CONFIG_HAVE_AT_CHANGE_CTIME 1
+#endif
+
+#ifdef CONFIG_NO_AT_REMOVEREG
+#undef CONFIG_HAVE_AT_REMOVEREG
+#elif !defined(CONFIG_HAVE_AT_REMOVEREG) && \
+      (defined(AT_REMOVEREG) || defined(__AT_REMOVEREG_defined))
+#define CONFIG_HAVE_AT_REMOVEREG 1
+#endif
+
+#ifdef CONFIG_NO_AT_ALTPATH
+#undef CONFIG_HAVE_AT_ALTPATH
+#elif !defined(CONFIG_HAVE_AT_ALTPATH) && \
+      (defined(AT_ALTPATH) || defined(__AT_ALTPATH_defined))
+#define CONFIG_HAVE_AT_ALTPATH 1
+#endif
+
+#ifdef CONFIG_NO_AT_DOSPATH
+#undef CONFIG_HAVE_AT_DOSPATH
+#elif !defined(CONFIG_HAVE_AT_DOSPATH) && \
+      (defined(AT_DOSPATH) || defined(__AT_DOSPATH_defined))
+#define CONFIG_HAVE_AT_DOSPATH 1
+#endif
+
+#ifdef CONFIG_NO_AT_FDCWD
+#undef CONFIG_HAVE_AT_FDCWD
+#elif !defined(CONFIG_HAVE_AT_FDCWD) && \
+      (defined(AT_FDCWD) || defined(__AT_FDCWD_defined))
+#define CONFIG_HAVE_AT_FDCWD 1
+#endif
+
+#ifdef CONFIG_NO_AT_FDROOT
+#undef CONFIG_HAVE_AT_FDROOT
+#elif !defined(CONFIG_HAVE_AT_FDROOT) && \
+      (defined(AT_FDROOT) || defined(__AT_FDROOT_defined))
+#define CONFIG_HAVE_AT_FDROOT 1
+#endif
+
+#ifdef CONFIG_NO_AT_THIS_TASK
+#undef CONFIG_HAVE_AT_THIS_TASK
+#elif !defined(CONFIG_HAVE_AT_THIS_TASK) && \
+      (defined(AT_THIS_TASK) || defined(__AT_THIS_TASK_defined))
+#define CONFIG_HAVE_AT_THIS_TASK 1
+#endif
+
+#ifdef CONFIG_NO_AT_THIS_PROCESS
+#undef CONFIG_HAVE_AT_THIS_PROCESS
+#elif !defined(CONFIG_HAVE_AT_THIS_PROCESS) && \
+      (defined(AT_THIS_PROCESS) || defined(__AT_THIS_PROCESS_defined))
+#define CONFIG_HAVE_AT_THIS_PROCESS 1
+#endif
+
+#ifdef CONFIG_NO_AT_PARENT_PROCESS
+#undef CONFIG_HAVE_AT_PARENT_PROCESS
+#elif !defined(CONFIG_HAVE_AT_PARENT_PROCESS) && \
+      (defined(AT_PARENT_PROCESS) || defined(__AT_PARENT_PROCESS_defined))
+#define CONFIG_HAVE_AT_PARENT_PROCESS 1
+#endif
+
+#ifdef CONFIG_NO_AT_GROUP_LEADER
+#undef CONFIG_HAVE_AT_GROUP_LEADER
+#elif !defined(CONFIG_HAVE_AT_GROUP_LEADER) && \
+      (defined(AT_GROUP_LEADER) || defined(__AT_GROUP_LEADER_defined))
+#define CONFIG_HAVE_AT_GROUP_LEADER 1
+#endif
+
+#ifdef CONFIG_NO_AT_SESSION_LEADER
+#undef CONFIG_HAVE_AT_SESSION_LEADER
+#elif !defined(CONFIG_HAVE_AT_SESSION_LEADER) && \
+      (defined(AT_SESSION_LEADER) || defined(__AT_SESSION_LEADER_defined))
+#define CONFIG_HAVE_AT_SESSION_LEADER 1
+#endif
+
+#ifdef CONFIG_NO_AT_DOS_DRIVEMIN
+#undef CONFIG_HAVE_AT_DOS_DRIVEMIN
+#elif !defined(CONFIG_HAVE_AT_DOS_DRIVEMIN) && \
+      (defined(AT_DOS_DRIVEMIN) || defined(__AT_DOS_DRIVEMIN_defined))
+#define CONFIG_HAVE_AT_DOS_DRIVEMIN 1
+#endif
+
+#ifdef CONFIG_NO_AT_DOS_DRIVEMAX
+#undef CONFIG_HAVE_AT_DOS_DRIVEMAX
+#elif !defined(CONFIG_HAVE_AT_DOS_DRIVEMAX) && \
+      (defined(AT_DOS_DRIVEMAX) || defined(__AT_DOS_DRIVEMAX_defined))
+#define CONFIG_HAVE_AT_DOS_DRIVEMAX 1
+#endif
+
+#ifdef CONFIG_NO_AT_FDDRIVE_CWD
+#undef CONFIG_HAVE_AT_FDDRIVE_CWD
+#elif 0
+#define CONFIG_HAVE_AT_FDDRIVE_CWD 1
+#endif
+
+#ifdef CONFIG_NO_AT_FDDRIVE_ROOT
+#undef CONFIG_HAVE_AT_FDDRIVE_ROOT
+#elif 0
+#define CONFIG_HAVE_AT_FDDRIVE_ROOT 1
+#endif
+
 #ifdef CONFIG_NO_read
 #undef CONFIG_HAVE_read
 #elif !defined(CONFIG_HAVE_read) && \
@@ -2379,6 +2727,14 @@ var("doserrno");
 #define CONFIG_HAVE__lseek 1
 #endif
 
+#ifdef CONFIG_NO__lseek64
+#undef CONFIG_HAVE__lseek64
+#elif !defined(CONFIG_HAVE__lseek64) && \
+      (defined(_lseek64) || defined(___lseek64_defined) || (defined(__CYGWIN__) || \
+       defined(__CYGWIN32__)))
+#define CONFIG_HAVE__lseek64 1
+#endif
+
 #ifdef CONFIG_NO__lseeki64
 #undef CONFIG_HAVE__lseeki64
 #elif !defined(CONFIG_HAVE__lseeki64) && \
@@ -2413,7 +2769,7 @@ var("doserrno");
 #undef CONFIG_HAVE_freadlinkat
 #elif !defined(CONFIG_HAVE_freadlinkat) && \
       (defined(freadlinkat) || defined(__freadlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
-       defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat)))
+       defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE)))
 #define CONFIG_HAVE_freadlinkat 1
 #endif
 
@@ -2479,25 +2835,25 @@ var("doserrno");
 #define CONFIG_HAVE_fstatat64 1
 #endif
 
-#ifdef CONFIG_NO_STAT_HAVE_ST_NSEC
-#undef CONFIG_HAVE_STAT_HAVE_ST_NSEC
-#elif !defined(CONFIG_HAVE_STAT_HAVE_ST_NSEC) && \
+#ifdef CONFIG_NO_STAT_ST_NSEC
+#undef CONFIG_HAVE_STAT_ST_NSEC
+#elif !defined(CONFIG_HAVE_STAT_ST_NSEC) && \
       (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC))
-#define CONFIG_HAVE_STAT_HAVE_ST_NSEC 1
+#define CONFIG_HAVE_STAT_ST_NSEC 1
 #endif
 
-#ifdef CONFIG_NO_STAT_HAVE_ST_TIM
-#undef CONFIG_HAVE_STAT_HAVE_ST_TIM
-#elif !defined(CONFIG_HAVE_STAT_HAVE_ST_TIM) && \
+#ifdef CONFIG_NO_STAT_ST_TIM
+#undef CONFIG_HAVE_STAT_ST_TIM
+#elif !defined(CONFIG_HAVE_STAT_ST_TIM) && \
       (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIM))
-#define CONFIG_HAVE_STAT_HAVE_ST_TIM 1
+#define CONFIG_HAVE_STAT_ST_TIM 1
 #endif
 
-#ifdef CONFIG_NO_STAT_HAVE_ST_TIMESPEC
-#undef CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC
-#elif !defined(CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC) && \
+#ifdef CONFIG_NO_STAT_ST_TIMESPEC
+#undef CONFIG_HAVE_STAT_ST_TIMESPEC
+#elif !defined(CONFIG_HAVE_STAT_ST_TIMESPEC) && \
       (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC))
-#define CONFIG_HAVE_STAT_HAVE_ST_TIMESPEC 1
+#define CONFIG_HAVE_STAT_ST_TIMESPEC 1
 #endif
 
 #ifdef CONFIG_NO_mkdir
@@ -2514,6 +2870,20 @@ var("doserrno");
 #elif !defined(CONFIG_HAVE__mkdir) && \
       (defined(_mkdir) || defined(___mkdir_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__mkdir 1
+#endif
+
+#ifdef CONFIG_NO_wmkdir
+#undef CONFIG_HAVE_wmkdir
+#elif !defined(CONFIG_HAVE_wmkdir) && \
+      (defined(wmkdir) || defined(__wmkdir_defined))
+#define CONFIG_HAVE_wmkdir 1
+#endif
+
+#ifdef CONFIG_NO__wmkdir
+#undef CONFIG_HAVE__wmkdir
+#elif !defined(CONFIG_HAVE__wmkdir) && \
+      (defined(_wmkdir) || defined(___wmkdir_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__wmkdir 1
 #endif
 
 #ifdef CONFIG_NO_chmod
@@ -2570,6 +2940,14 @@ var("doserrno");
       (defined(mkdirat) || defined(__mkdirat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_ATFILE)))
 #define CONFIG_HAVE_mkdirat 1
+#endif
+
+#ifdef CONFIG_NO_fmkdirat
+#undef CONFIG_HAVE_fmkdirat
+#elif !defined(CONFIG_HAVE_fmkdirat) && \
+      (defined(fmkdirat) || defined(__fmkdirat_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
+       defined(__USE_KOS) && defined(__USE_ATFILE)))
+#define CONFIG_HAVE_fmkdirat 1
 #endif
 
 #ifdef CONFIG_NO_mkfifoat
@@ -2737,12 +3115,12 @@ var("doserrno");
 #define CONFIG_HAVE_futimesat64 1
 #endif
 
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
 #define F_OK     0
-#define X_OK     1 /* Not supported? */
+#define X_OK     1 // Not supported?
 #define W_OK     2
 #define R_OK     4
-#endif /* defined(_MSC_VER) */
+#endif
 
 #ifdef CONFIG_NO_euidaccess
 #undef CONFIG_HAVE_euidaccess
@@ -3015,11 +3393,32 @@ var("doserrno");
 #define CONFIG_HAVE_remove 1
 #endif
 
+#ifdef CONFIG_NO_rename
+#undef CONFIG_HAVE_rename
+#elif !defined(CONFIG_HAVE_rename) && \
+      (defined(rename) || defined(__rename_defined) || defined(CONFIG_HAVE_STDIO_H))
+#define CONFIG_HAVE_rename 1
+#endif
+
+#ifdef CONFIG_NO_wunlink
+#undef CONFIG_HAVE_wunlink
+#elif !defined(CONFIG_HAVE_wunlink) && \
+      (defined(wunlink) || defined(__wunlink_defined))
+#define CONFIG_HAVE_wunlink 1
+#endif
+
 #ifdef CONFIG_NO__wunlink
 #undef CONFIG_HAVE__wunlink
 #elif !defined(CONFIG_HAVE__wunlink) && \
       (defined(_wunlink) || defined(___wunlink_defined) || defined(_WIO_DEFINED))
 #define CONFIG_HAVE__wunlink 1
+#endif
+
+#ifdef CONFIG_NO_wremove
+#undef CONFIG_HAVE_wremove
+#elif !defined(CONFIG_HAVE_wremove) && \
+      (defined(wremove) || defined(__wremove_defined))
+#define CONFIG_HAVE_wremove 1
 #endif
 
 #ifdef CONFIG_NO__wremove
@@ -3029,11 +3428,11 @@ var("doserrno");
 #define CONFIG_HAVE__wremove 1
 #endif
 
-#ifdef CONFIG_NO_rename
-#undef CONFIG_HAVE_rename
-#elif !defined(CONFIG_HAVE_rename) && \
-      (defined(rename) || defined(__rename_defined) || defined(CONFIG_HAVE_STDIO_H))
-#define CONFIG_HAVE_rename 1
+#ifdef CONFIG_NO_wrename
+#undef CONFIG_HAVE_wrename
+#elif !defined(CONFIG_HAVE_wrename) && \
+      (defined(wrename) || defined(__wrename_defined))
+#define CONFIG_HAVE_wrename 1
 #endif
 
 #ifdef CONFIG_NO__wrename
@@ -3355,11 +3754,19 @@ var("doserrno");
 #define CONFIG_HAVE_select 1
 #endif
 
+#ifdef CONFIG_NO_pselect
+#undef CONFIG_HAVE_pselect
+#elif !defined(CONFIG_HAVE_pselect) && \
+      (defined(pselect) || defined(__pselect_defined) || (defined(CONFIG_HAVE_SYS_SELECT_H) && \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_pselect 1
+#endif
+
 #ifdef CONFIG_NO___iob_func
 #undef CONFIG_HAVE___iob_func
 #elif !defined(CONFIG_HAVE___iob_func) && \
-      (defined(__iob_func) || defined(____iob_func_defined) || (defined(_MSC_VER) || \
-       defined(____iob_func_defined)))
+      (defined(__iob_func) || defined(____iob_func_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE___iob_func 1
 #endif
 
@@ -3391,6 +3798,22 @@ var("doserrno");
       (defined(ftell64) || defined(__ftell64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
        0))
 #define CONFIG_HAVE_ftell64 1
+#endif
+
+#ifdef CONFIG_NO__fseek64
+#undef CONFIG_HAVE__fseek64
+#elif !defined(CONFIG_HAVE__fseek64) && \
+      (defined(_fseek64) || defined(___fseek64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       0))
+#define CONFIG_HAVE__fseek64 1
+#endif
+
+#ifdef CONFIG_NO__ftell64
+#undef CONFIG_HAVE__ftell64
+#elif !defined(CONFIG_HAVE__ftell64) && \
+      (defined(_ftell64) || defined(___ftell64_defined) || (defined(CONFIG_HAVE_STDIO_H) && \
+       0))
+#define CONFIG_HAVE__ftell64 1
 #endif
 
 #ifdef CONFIG_NO_fseeko
@@ -3549,6 +3972,27 @@ var("doserrno");
 #elif !defined(CONFIG_HAVE_setvbuf) && \
       (defined(setvbuf) || defined(__setvbuf_defined) || defined(CONFIG_HAVE_STDIO_H))
 #define CONFIG_HAVE_setvbuf 1
+#endif
+
+#ifdef CONFIG_NO__IONBF
+#undef CONFIG_HAVE__IONBF
+#elif !defined(CONFIG_HAVE__IONBF) && \
+      (defined(_IONBF) || defined(___IONBF_defined))
+#define CONFIG_HAVE__IONBF 1
+#endif
+
+#ifdef CONFIG_NO__IOFBF
+#undef CONFIG_HAVE__IOFBF
+#elif !defined(CONFIG_HAVE__IOFBF) && \
+      (defined(_IOFBF) || defined(___IOFBF_defined))
+#define CONFIG_HAVE__IOFBF 1
+#endif
+
+#ifdef CONFIG_NO__IOLBF
+#undef CONFIG_HAVE__IOLBF
+#elif !defined(CONFIG_HAVE__IOLBF) && \
+      (defined(_IOLBF) || defined(___IOLBF_defined))
+#define CONFIG_HAVE__IOLBF 1
 #endif
 
 #ifdef CONFIG_NO_fopen
@@ -3750,6 +4194,34 @@ var("doserrno");
 #define CONFIG_HAVE_dlmodulename 1
 #endif
 
+#ifdef CONFIG_NO_RTLD_GLOBAL
+#undef CONFIG_HAVE_RTLD_GLOBAL
+#elif !defined(CONFIG_HAVE_RTLD_GLOBAL) && \
+      (defined(RTLD_GLOBAL) || defined(__RTLD_GLOBAL_defined))
+#define CONFIG_HAVE_RTLD_GLOBAL 1
+#endif
+
+#ifdef CONFIG_NO_RTLD_LOCAL
+#undef CONFIG_HAVE_RTLD_LOCAL
+#elif !defined(CONFIG_HAVE_RTLD_LOCAL) && \
+      (defined(RTLD_LOCAL) || defined(__RTLD_LOCAL_defined))
+#define CONFIG_HAVE_RTLD_LOCAL 1
+#endif
+
+#ifdef CONFIG_NO_RTLD_LAZY
+#undef CONFIG_HAVE_RTLD_LAZY
+#elif !defined(CONFIG_HAVE_RTLD_LAZY) && \
+      (defined(RTLD_LAZY) || defined(__RTLD_LAZY_defined))
+#define CONFIG_HAVE_RTLD_LAZY 1
+#endif
+
+#ifdef CONFIG_NO_RTLD_NOW
+#undef CONFIG_HAVE_RTLD_NOW
+#elif !defined(CONFIG_HAVE_RTLD_NOW) && \
+      (defined(RTLD_NOW) || defined(__RTLD_NOW_defined))
+#define CONFIG_HAVE_RTLD_NOW 1
+#endif
+
 #ifdef CONFIG_NO__memicmp
 #undef CONFIG_HAVE__memicmp
 #elif !defined(CONFIG_HAVE__memicmp) && \
@@ -3798,6 +4270,20 @@ var("doserrno");
 #elif !defined(CONFIG_HAVE_memrmem) && \
       (defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
 #define CONFIG_HAVE_memrmem 1
+#endif
+
+#ifdef CONFIG_NO_memcasemem
+#undef CONFIG_HAVE_memcasemem
+#elif !defined(CONFIG_HAVE_memcasemem) && \
+      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memcasemem 1
+#endif
+
+#ifdef CONFIG_NO_memcasermem
+#undef CONFIG_HAVE_memcasermem
+#elif !defined(CONFIG_HAVE_memcasermem) && \
+      (defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memcasermem 1
 #endif
 
 #ifdef CONFIG_NO_rawmemrchr
@@ -3849,24 +4335,11 @@ var("doserrno");
 #define CONFIG_HAVE_rawmemrlen 1
 #endif
 
-#ifdef CONFIG_NO_memcasemem
-#undef CONFIG_HAVE_memcasemem
-#elif !defined(CONFIG_HAVE_memcasemem) && \
-      (defined(memcasemem) || defined(__memcasemem_defined) || defined(__USE_KOS))
-#define CONFIG_HAVE_memcasemem 1
-#endif
-
 #ifdef CONFIG_NO_memrev
 #undef CONFIG_HAVE_memrev
 #elif !defined(CONFIG_HAVE_memrev) && \
       (defined(memrev) || defined(__memrev_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_memrev 1
-#endif
-
-#ifdef CONFIG_NO_memcasermem
-#undef CONFIG_HAVE_memcasermem
-#elif 0
-#define CONFIG_HAVE_memcasermem 1
 #endif
 
 #ifdef CONFIG_NO_strend
@@ -4032,6 +4505,13 @@ var("doserrno");
 #define CONFIG_HAVE_get_osfhandle 1
 #endif
 
+#ifdef CONFIG_NO_open_osfhandle
+#undef CONFIG_HAVE_open_osfhandle
+#elif !defined(CONFIG_HAVE_open_osfhandle) && \
+      (defined(open_osfhandle) || defined(__open_osfhandle_defined))
+#define CONFIG_HAVE_open_osfhandle 1
+#endif
+
 #ifdef CONFIG_NO__open_osfhandle
 #undef CONFIG_HAVE__open_osfhandle
 #elif !defined(CONFIG_HAVE__open_osfhandle) && \
@@ -4044,6 +4524,20 @@ var("doserrno");
 #elif !defined(CONFIG_HAVE_errno) && \
       (defined(errno) || defined(__errno_defined) || defined(CONFIG_HAVE_ERRNO_H))
 #define CONFIG_HAVE_errno 1
+#endif
+
+#ifdef CONFIG_NO__errno
+#undef CONFIG_HAVE__errno
+#elif !defined(CONFIG_HAVE__errno) && \
+      (defined(_errno) || defined(___errno_defined))
+#define CONFIG_HAVE__errno 1
+#endif
+
+#ifdef CONFIG_NO___errno
+#undef CONFIG_HAVE___errno
+#elif !defined(CONFIG_HAVE___errno) && \
+      (defined(__errno) || defined(____errno_defined))
+#define CONFIG_HAVE___errno 1
 #endif
 
 #ifdef CONFIG_NO__doserrno
@@ -4229,6 +4723,11 @@ var("doserrno");
 #define lseek64 _lseeki64
 #endif /* lseek64 = _lseeki64 */
 
+#if defined(CONFIG_HAVE__lseek64) && !defined(CONFIG_HAVE_lseek64)
+#define CONFIG_HAVE_lseek64 1
+#define lseek64 _lseek64
+#endif /* lseek64 = _lseek64 */
+
 #if defined(CONFIG_HAVE__close) && !defined(CONFIG_HAVE_close)
 #define CONFIG_HAVE_close 1
 #define close _close
@@ -4329,15 +4828,30 @@ var("doserrno");
 #define fseeko64 _fseeki64
 #endif /* fseeko64 = _fseeki64 */
 
-#if defined(CONFIG_HAVE__ftelli64) && !defined(CONFIG_HAVE_ftello64)
-#define CONFIG_HAVE_ftello64 1
-#define ftello64 _ftelli64
-#endif /* ftello64 = _ftelli64 */
+#if defined(CONFIG_HAVE__fseek64) && !defined(CONFIG_HAVE_fseeko64)
+#define CONFIG_HAVE_fseeko64 1
+#define fseeko64 _fseek64
+#endif /* fseeko64 = _fseek64 */
+
+#if defined(CONFIG_HAVE_fseek64) && !defined(CONFIG_HAVE_fseeko64)
+#define CONFIG_HAVE_fseeko64 1
+#define fseeko64 fseek64
+#endif /* fseeko64 = fseek64 */
 
 #if defined(CONFIG_HAVE__ftelli64) && !defined(CONFIG_HAVE_ftello64)
 #define CONFIG_HAVE_ftello64 1
 #define ftello64 _ftelli64
 #endif /* ftello64 = _ftelli64 */
+
+#if defined(CONFIG_HAVE__ftell64) && !defined(CONFIG_HAVE_ftello64)
+#define CONFIG_HAVE_ftello64 1
+#define ftello64 _ftell64
+#endif /* ftello64 = _ftell64 */
+
+#if defined(CONFIG_HAVE_ftell64) && !defined(CONFIG_HAVE_ftello64)
+#define CONFIG_HAVE_ftello64 1
+#define ftello64 ftell64
+#endif /* ftello64 = ftell64 */
 
 /* Make sure that we've got both fseeko64() and ftello64(), or that we have neither! */
 #if (defined(CONFIG_HAVE_ftell) && !defined(CONFIG_HAVE_fseek)) || \
@@ -5068,6 +5582,11 @@ var("doserrno");
 #define get_osfhandle _get_osfhandle
 #endif /* get_osfhandle = _get_osfhandle */
 
+#if !defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HAVE__open_osfhandle)
+#define CONFIG_HAVE_open_osfhandle 1
+#define open_osfhandle _open_osfhandle
+#endif /* open_osfhandle = _open_osfhandle */
+
 #if defined(CONFIG_HAVE_pthread_suspend_np) && !defined(CONFIG_HAVE_pthread_suspend)
 #define CONFIG_HAVE_pthread_suspend 1
 #define pthread_suspend pthread_suspend_np
@@ -5159,6 +5678,16 @@ var("doserrno");
 #define EOK 0
 #endif
 #endif
+
+#if defined(CONFIG_HAVE__errno) && !defined(CONFIG_HAVE_errno)
+#define CONFIG_HAVE_errno 1
+#define errno _errno
+#endif /* errno = _errno */
+
+#if defined(CONFIG_HAVE___errno) && !defined(CONFIG_HAVE_errno)
+#define CONFIG_HAVE_errno 1
+#define errno __errno
+#endif /* errno = __errno */
 
 #ifdef CONFIG_HAVE_errno
 #define DeeSystem_GetErrno()  errno

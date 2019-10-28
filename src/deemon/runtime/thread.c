@@ -58,7 +58,7 @@
  * >>             // Yield to the thread we're using for testing.
  * >>             for (i = 0; i < 10; ++i)
  * >>                 pthread_yield();
- * >>             pthread_suspend(&thread);
+ * >>             pthread_suspend(thread);
  * >>             // If `pthread_suspend()' is synchronous, then `test_atomic' will no longer change.
  * >>             // This is a requirement that deemon needs in order to take advantage
  * >>             // of pthread_suspend() without having to implement its own (synchronous)
@@ -70,7 +70,7 @@
  * >>                 fprintf(stderr, "pthread_suspend() isn't synchronous\n");
  * >>                 exit(1);
  * >>             }
- * >>             pthread_resume(&thread);
+ * >>             pthread_resume(thread);
  * >>         }
  * >>         pthread_cancel(thread);
  * >>     }
@@ -119,7 +119,7 @@
 #ifdef CONFIG_THREADS_PTHREAD
 #undef USE_PTHREAD_SUSPEND
 #undef USE_SUSPEND_SIGNALS
-#if defined(CONFIG_HAVE_pthread_suspend) && defined(CONFIG_HAVE_pthread_continue)
+#if defined(CONFIG_HAVE_pthread_suspend) && defined(CONFIG_HAVE_pthread_continue) && 0
 #define USE_PTHREAD_SUSPEND 1
 #else /* CONFIG_HAVE_pthread_suspend && CONFIG_HAVE_pthread_continue */
 #define USE_SUSPEND_SIGNALS 1

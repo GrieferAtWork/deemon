@@ -52,10 +52,6 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
-#ifdef CONFIG_HAVE_DLFCN_H
-#include <dlfcn.h>
-#endif /* CONFIG_HAVE_DLFCN_H */
-
 #ifdef CONFIG_HAVE_LINK_H
 #include <link.h>
 #endif /* CONFIG_HAVE_LINK_H */

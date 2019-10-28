@@ -701,6 +701,13 @@ err:
 	return NULL;
 }
 
+#undef FILE_HAVE_SETVBUF
+#if defined(CONFIG_HAVE_setvbuf) && \
+   (defined(CONFIG_HAVE__IONBF) || defined(CONFIG_HAVE__IOFBF) || defined(CONFIG_HAVE__IOLBF))
+#define FILE_HAVE_SETVBUF 1
+#endif /* CONFIG_HAVE_setvbuf && (CONFIG_HAVE__IONBF || CONFIG_HAVE__IOFBF || CONFIG_HAVE__IOLBF) */
+
+#ifdef FILE_HAVE_SETVBUF
 struct mode_name {
 	union {
 		char     name[4]; /* Mode name. */
@@ -710,10 +717,16 @@ struct mode_name {
 };
 
 PRIVATE struct mode_name const mode_names[] = {
+#ifdef CONFIG_HAVE__IONBF
 	{ { { 'n', 'o', 'n', 'e' } }, _IONBF },
+#endif /* CONFIG_HAVE__IONBF */
+#ifdef CONFIG_HAVE__IOFBF
 	{ { { 'f', 'u', 'l', 'l' } }, _IOFBF },
+#endif /* CONFIG_HAVE__IOFBF */
+#ifdef CONFIG_HAVE__IOLBF
 	{ { { 'l', 'i', 'n', 'e' } }, _IOLBF },
 	{ { { 'a', 'u', 't', 'o' } }, _IOLBF } /* There is no such thing in STD-C */
+#endif /* CONFIG_HAVE__IOLBF */
 };
 
 #ifdef CONFIG_LITTLE_ENDIAN
@@ -724,10 +737,11 @@ PRIVATE struct mode_name const mode_names[] = {
 
 /* CASEEQ(x,'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
+#endif /* FILE_HAVE_SETVBUF */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_setbuf(SystemFile *self, size_t argc, DeeObject **argv) {
-#ifdef CONFIG_HAVE_setvbuf
+#ifdef FILE_HAVE_SETVBUF
 	int mode;
 	char const *mode_iter;
 	DeeObject *file;
@@ -805,11 +819,12 @@ err_invalid_mode:
 	                "Unrecognized buffer mode `%s'",
 	                mode_str);
 err:
-#else /* CONFIG_HAVE_setvbuf */
+	return NULL;
+#else /* FILE_HAVE_SETVBUF */
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "Unsupported function `setvbuf()'");
-#endif /* !CONFIG_HAVE_setvbuf */
 	return NULL;
+#endif /* !FILE_HAVE_SETVBUF */
 }
 
 PRIVATE struct type_method sysfile_methods[] = {

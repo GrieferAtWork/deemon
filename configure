@@ -2,18 +2,12 @@
 # Deemon Configure file
 #
 
+shopt -s extglob
+
 BLD_ROOT="$(readlink -f $(pwd))"
 SRC_ROOT="$(dirname $(readlink -f "$0"))"
 BIN_PATH=""
 BLD_PATH=""
-
-cmd() {
-	$* || {
-		local error=$?
-		echo "ERROR: Command failed '$*' -> '$error'"
-		exit $error
-	}
-}
 
 CONFIG_CROSS_PREFIX=""
 CONFIG_CC=""
@@ -55,6 +49,8 @@ WITH_LIBFFI=""
 WITH_OPTIMIZE=""
 CONFIG_PTHREAD=""
 WITH_KOS_SYSTEM_HEADERS=""
+# One of (yes, no, auto)
+PROBE_SYSTEM_FEATURES=auto
 
 
 # del_feature(MACRO_NAME)
@@ -121,7 +117,7 @@ set_dex_specific() {
 }
 
 set_with_feature() {
-	case $1 in
+	case "$1" in
 		assembly-interpreter)    WITH_ASSEMBLY_INTERPRETER="$2" ;;
 		dex)                     WITH_DEX="$2" ;;
 		dex-ctypes)              set_dex_specific "CTYPES" "$2" ;;
@@ -190,7 +186,7 @@ print_help() {
 }
 
 while [[ $# -gt 0 ]]; do
-	case $1 in
+	case "$1" in
 		--target=*)
 			## e.g. i386-kos
 			## e.g. x86_64-linux-gnu
@@ -227,6 +223,7 @@ while [[ $# -gt 0 ]]; do
 		--with-*)    set_with_feature "${1:7}" "1" ;;
 		--without-*) set_with_feature "${1:10}" "0" ;;
 		--help)      print_help; exit 1 ;;
+		--probe-system-features=*) PROBE_SYSTEM_FEATURES="$(echo "$1" | cut -d '=' -f 2)" ;;
 		*)
 			echo "Invalid argument $1 (run './configure --help' for options)"
 			exit 1
@@ -234,6 +231,7 @@ while [[ $# -gt 0 ]]; do
 	esac
 	shift
 done
+
 
 ########################################################################################
 ## Automatically configure options
@@ -248,6 +246,22 @@ if [ -z "$WITH_THREADS" ]; then WITH_THREADS="1"; fi
 if [ -z "$WITH_LIBFFI" ]; then WITH_LIBFFI="1"; fi
 
 ########################################################################################
+## Setup configure logging
+########################################################################################
+CONFIG_LOG="$BLD_PATH/config.log"
+cmd() {
+	echo "exec: $*" >> "$CONFIG_LOG"
+	$* | tee -a "$CONFIG_LOG" || {
+		local error=$?
+		echo "ERROR: Command failed '$*' -> '$error'" | tee -a "$CONFIG_LOG"
+		exit $error
+	}
+}
+unlink "$CONFIG_LOG" > /dev/null 2>&1
+
+
+
+########################################################################################
 ## Automatically determine the target from the given compiler
 ########################################################################################
 if [ -z "$TARGET" ]; then
@@ -260,7 +274,7 @@ if [ -z "$TARGET" ]; then
 		fi
 	done)
 	if [ -z "$TARGET" ]; then
-		echo "Error: Unable to determine target triplet (must manually specific '--target=...')"
+		echo "Error: Unable to determine target triplet (must manually specific '--target=...')" | tee -a "$CONFIG_LOG"
 		exit 1
 	fi
 	TARGET_IS_AUTO="yes"
@@ -344,7 +358,7 @@ if [[ "$WITH_ASSEMBLY_INTERPRETER" == "1" ]]; then
 			WITH_ASSEMBLY_INTERPRETER="$BLD_PATH/core/src/deemon/execute/asm/exec-386.o"
 			;;
 		*)
-			echo "Error: No assembly interpreter exists for this platform"
+			echo "Error: No assembly interpreter exists for this platform" | tee -a "$CONFIG_LOG"
 			exit 1
 			;;
 	esac
@@ -408,7 +422,7 @@ if [[ "$WITHOUT_DEX_SPECIFIC" == *"CTYPES"* ]]; then
 else
 	if [[ "$WITH_LIBFFI" == "1" ]]; then
 		if ! [ -f "$BLD_PATH/libffi/include/ffi.h" ]; then
-			echo "Configuring libffi (for dex.ctypes)..."
+			echo "Configuring libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
 			rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
 			cmd mkdir -p "$BLD_PATH/libffi"
 			cmd cd "$BLD_PATH/libffi"
@@ -457,7 +471,7 @@ else
 			)
 		fi
 		if ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
-			echo "Building libffi (for dex.ctypes)..."
+			echo "Building libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
 			cmd cd "$BLD_PATH/libffi"
 			cmd make -j $(grep -c ^processor /proc/cpuinfo)
 		fi
@@ -557,53 +571,6 @@ case "$TARGET" in
 		fi
 		;;
 esac
-if ! [ -z "$FEATURES" ]; then
-	CONFIG_CFLAGS="$CONFIG_CFLAGS -include $BLD_ROOT/include/deemon/config.h"
-fi
-
-
-########################################################################################
-## Print the used configuration
-########################################################################################
-echo "Paths:"
-echo "    BLD_ROOT: '$BLD_ROOT'"
-echo "    SRC_ROOT: '$SRC_ROOT'"
-echo "    BIN_PATH: '$BIN_PATH'"
-echo "    BLD_PATH: '$BLD_PATH'"
-echo "Toolchain:"
-echo "    CONFIG_CC:     '$CONFIG_CC'"
-echo "    CONFIG_DEX_CC: '$CONFIG_DEX_CC'"
-echo "    TARGET:        '$TARGET'"
-echo "    TARGET_CPU:    '$TARGET_CPU'"
-echo "    CONFIG_EXE:    '$CONFIG_EXE'"
-echo "    CONFIG_DLL:    '$CONFIG_DLL'"
-echo "Libraries:"
-echo "    CONFIG_LIBM:      '$CONFIG_LIBM'"
-echo "    CONFIG_LIBDL:     '$CONFIG_LIBDL'"
-echo "    CONFIG_LIBSOCKET: '$CONFIG_LIBSOCKET'"
-echo "Compiler flags:"
-echo "    CONFIG_CFLAGS:       '$CONFIG_CFLAGS'"
-echo "    CONFIG_LDFLAGS:      '$CONFIG_LDFLAGS'"
-echo "    CONFIG_LIBS:         '$CONFIG_LIBS'"
-echo "    CONFIG_DEX_CC:       '$CONFIG_DEX_CC'"
-echo "    CONFIG_DEX_CFLAGS:   '$CONFIG_DEX_CFLAGS'"
-echo "    CONFIG_DEX_LDFLAGS:  '$CONFIG_DEX_LDFLAGS'"
-echo "    CONFIG_DEX_LIBS:     '$CONFIG_DEX_LIBS'"
-echo "    CONFIG_CORE_CFLAGS:  '$CONFIG_CORE_CFLAGS'"
-echo "    CONFIG_CORE_LDFLAGS: '$CONFIG_CORE_LDFLAGS'"
-echo "    CONFIG_CORE_LIBS:    '$CONFIG_CORE_LIBS'"
-if [[ "$WITHOUT_DEX_SPECIFIC" != *"CTYPES"* ]]; then
-	echo "CTypes compiler flags:"
-	echo "    CONFIG_DEX_CTYPES_CC:      '$CONFIG_DEX_CTYPES_CC'"
-	echo "    CONFIG_DEX_CTYPES_CFLAGS:  '$CONFIG_DEX_CTYPES_CFLAGS'"
-	echo "    CONFIG_DEX_CTYPES_LDFLAGS: '$CONFIG_DEX_CTYPES_LDFLAGS'"
-	echo "    CONFIG_DEX_CTYPES_LIBS:    '$CONFIG_DEX_CTYPES_LIBS'"
-fi
-echo "Features:"
-echo "    FEATURES:                  '$FEATURES'"
-echo "    WITH_DEX:                  '$WITH_DEX'"
-echo "    WITH_ASSEMBLY_INTERPRETER: '$WITH_ASSEMBLY_INTERPRETER'"
-echo "    WITH_KOS_SYSTEM_HEADERS:   '$WITH_KOS_SYSTEM_HEADERS'"
 
 
 
@@ -617,7 +584,7 @@ fi
 
 mv "$BLD_ROOT/include/deemon/config.h" "$BLD_ROOT/include/deemon/config.h.old" > /dev/null 2>&1
 if ! [ -z "$FEATURES" ]; then
-	mkdir -p "$BLD_ROOT/include/deemon"
+	cmd mkdir -p "$BLD_ROOT/include/deemon"
 	cat > "$BLD_ROOT/include/deemon/config.h" <<EOF
 /* Automatically generated file (by ./configure). - Do not edit! */
 EOF
@@ -636,6 +603,248 @@ EOF
 		fi
 	done
 fi
+
+
+
+########################################################################################
+## Probe system features
+if [[ "$PROBE_SYSTEM_FEATURES" == auto ]]; then
+	# For a couple of targets, we can make use of compile-time feature probing
+	# For other targets (or for when our compile-time assuptions lead to compiler
+	# errors, we must use configure-time probing, though this adds the necessity
+	# of a config file to be generated)
+	case "$TARGET" in
+		*CYGWIN* | *Cygwin* | *cygwin* | *kos*)
+			PROBE_SYSTEM_FEATURES=no
+			;;
+## Better leave autoconf enabled on linux... (just in case)
+#		*linux*)
+#			PROBE_SYSTEM_FEATURES=no
+#			;;
+		*)
+			PROBE_SYSTEM_FEATURES=yes
+			;;
+	esac
+fi
+if [[ "$PROBE_SYSTEM_FEATURES" == yes ]]; then
+	CONFINC="$BLD_ROOT/include/deemon/config.h"
+	if ! [ -f "$CONFINC" ]; then
+		cmd mkdir -p "$BLD_ROOT/include/deemon"
+		cat > "$CONFINC" <<EOF
+/* Automatically generated file (by ./configure). - Do not edit! */
+EOF
+	fi
+	CONFTEST_H="$BLD_ROOT/conftest.h"
+	CONFTEST="$BLD_ROOT/conftest.c"
+	CONFTEST_OUT="$BLD_ROOT/conftest.o"
+	CONFTEST_MAIN="int main()"
+	cat > "$CONFTEST_H" <<EOF
+#define _ATFILE_SOURCE 1
+#define _KOS_SOURCE 1
+#define _GNU_SOURCE 1
+#define _XOPEN_SOURCE 700
+#define _POSIX_C_SOURCE 200809L
+#define _LARGEFILE_SOURCE 1
+#define _LARGEFILE64_SOURCE 1
+#define _CTYPE_MACRO_SOURCE 1
+#define _TIME64_SOURCE 1
+#define _BSD_SOURCE 1
+#define _SVID_SOURCE 1
+#define _DEFAULT_SOURCE 1
+#define _XOPEN_SOURCE_EXTENDED 1
+#define _DOS_SOURCE 1
+#define _MEMMEM_EMPTY_NEEDLE_NULL_SOURCE 1
+EOF
+	# Try to compile the current conftest
+	try_compile() {
+		echo "exec: $CONFIG_CC $CONFIG_CFLAGS -Werror -include $CONFINC -include $CONFTEST_H -c -o $CONFTEST_OUT $CONFTEST" >> "$CONFIG_LOG"
+		"$CONFIG_CC" $CONFIG_CFLAGS -Werror \
+			-include "$CONFINC" -include "$CONFTEST_H" \
+			-c -o "$CONFTEST_OUT" "$CONFTEST" >> "$CONFIG_LOG" 2>&1
+	}
+	# e.g. check_feature "STDIO_H" "header <$1>"
+	# Will write either CONFIG_HAVE_STDIO_H, or CONFIG_NO_STDIO_H
+	check_feature() {
+		echo -n "[?] Checking for $2..."
+		echo "Checking for $2..." >> "$CONFIG_LOG"
+		if try_compile; then
+			echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
+			echo -e "\r[+] Checking for $2... (yes)"
+			echo "Checking for $2... (yes)" >> "$CONFIG_LOG"
+			return 0
+		else
+			echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
+			echo -e "\r[-] Checking for $2... (no)"
+			local FPROC=$(cat "$CONFTEST")
+			FPROC="| ${FPROC//
+/
+| }"
+			cat >> "$CONFIG_LOG" <<EOF
+Checking for $2... (no)
+The failing program was:
+$FPROC
+--------------------------------------------------------------------------------
+EOF
+			return 1
+		fi
+	}
+	# e.g. check_header "stdio.h"
+	check_header() {
+		cat > "$CONFTEST" <<EOF
+#include <$1>
+$CONFTEST_MAIN{return 0;}
+EOF
+		local FN="${1^^}"
+		FN="${FN////_}"
+		FN="${FN//./_}"
+		if check_feature "$FN" "header <$1>"; then
+			echo "#include <$1>" >> "$CONFTEST_H"
+		fi
+	}
+	# e.g. check_generic "_Exit"  "_Exit(0);"
+	check_generic() {
+		cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{${2}}
+EOF
+		check_feature "$1" "$1"
+	}
+	# Check if we need to add argc/argv to conftest files
+	echo -n "Checking how to compile a simple source file..."
+	echo "Checking how to compile a simple source file..." >> "$CONFIG_LOG"
+	cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{return 0;}
+EOF
+	if ! try_compile; then
+		CONFTEST_MAIN="int main(int argc, char *argv[])"
+		cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{return 0;}
+EOF
+		if ! try_compile; then
+			echo "Cannot compile a simple source file" | tee -a "$CONFIG_LOG"
+			exit 1
+		fi
+	fi
+	echo " ('$CONFTEST_MAIN { ... }')"
+	echo "Checking how to compile a simple source file... ('$CONFTEST_MAIN { ... }')" >> "$CONFIG_LOG"
+	# Check for features
+	in_features_region=no
+	while read line; do
+		if [[ "$in_features_region" == "yes" ]]; then
+			if [[ "$line" == *"END:FEATURES"* ]]; then
+				in_features_region=no
+			else
+				case "$line" in
+				*( )header*( )\(\"* | *( )header_nostdinc*( )\(\"*)
+					line="${line#*\"}"
+					line="${line%%\"*}"
+					check_header "$line"
+					;;
+				*( )func*( )\(\"* | *( )var*( )\(\"*)
+					line="${line#*\"}"
+					n="${line%%\"*}"
+					line="${line#*\"}"
+					case "$line" in
+						*test*( ):*( )\"* )
+							t="${line#*test*( ):*( )\"}"
+							t="${t%%\"*}"
+							;;
+						*test*( ):*( )\'* )
+							t="${line#*test*( ):*( )\'}"
+							t="${t%%\'*}"
+							;;
+						*)
+							t="(void)&$n; return 0;"
+							;;
+					esac
+					check_generic "$n" "$t"
+					;;
+				*( )func*( )\(\'* | *( )var*( )\(\'*)
+					line="${line#*\'}"
+					n="${line%%\'*}"
+					line="${line#*\'}"
+					case "$line" in
+						*test*( ):*( )\"* )
+							t="${line#*test*( ):*( )\"}"
+							t="${t%%\"*}"
+							;;
+						*test*( ):*( )\'* )
+							t="${line#*test*( ):*( )\'}"
+							t="${t%%\'*}"
+							;;
+						*)
+							t="(void)&$n; return 0;"
+							;;
+					esac
+					check_generic "$n" "$t"
+					;;
+				*( )functest*( )\(\"*)
+					line="${line#*\"}"
+					t="${line%%\"*}"
+					n="${t%%\(*}"
+					t="return (int)$t;"
+					check_generic "$n" "$t"
+					;;
+				*( )functest*( )\(\'*)
+					line="${line#*\'}"
+					t="${line%%\'*}"
+					n="${t%%\(*}"
+					t="return (int)$t;"
+					check_generic "$n" "$t"
+					;;
+				*( )typ*( )\(\'*)
+					line="${line#*\'}"
+					t="${line%%\'*}"
+					n="${t%%\(*}"
+					t="$t x = ($t)123; return (int)x;"
+					check_generic "$n" "$t"
+					;;
+				*( )typ*( )\(\"*)
+					line="${line#*\"}"
+					t="${line%%\"*}"
+					n="${t%%\(*}"
+					t="$t x = ($t)123; return (int)x;"
+					check_generic "$n" "$t"
+					;;
+				*( )constant*( )\(\"*)
+					n="${line#*\"}"
+					n="${n%%\"*}"
+					t="return (int)$n;"
+					check_generic "$n" "$t"
+					;;
+				*( )constant*( )\(\'*)
+					n="${line#*\'}"
+					n="${n%%\'*}"
+					t="return (int)$n;"
+					check_generic "$n" "$t"
+					;;
+				*( )print*( )\"*)
+					line="${line#*\"}"
+					line="${line%%\"*}"
+					echo "$line" >> "$CONFTEST_H"
+					;;
+				*( )print*( )\'*)
+					line="${line#*\'}"
+					line="${line%%\'*}"
+					echo "$line" >> "$CONFTEST_H"
+					;;
+				*( )print*( )\;*)
+					echo "" >> "$CONFTEST_H"
+					;;
+				*)
+					;;
+				esac
+			fi
+		else
+			if [[ "$line" == *"BEGIN:FEATURES"* ]]; then
+				in_features_region=yes
+			fi
+		fi
+	done < "$SRC_ROOT/include/deemon/system-features.h"
+	unlink "$CONFTEST" > /dev/null 2>&1
+	unlink "$CONFTEST_H" > /dev/null 2>&1
+	unlink "$CONFTEST_OUT" > /dev/null 2>&1
+fi
+
 if [ -f "$BLD_ROOT/include/deemon/config.h.old" ]; then
 	if [ -f "$BLD_ROOT/include/deemon/config.h" ]; then
 		if cmp --silent "$BLD_ROOT/include/deemon/config.h.old" "$BLD_ROOT/include/deemon/config.h"; then
@@ -651,9 +860,59 @@ if [ -f "$BLD_ROOT/include/deemon/config.h.old" ]; then
 	fi
 fi
 
+if [ -f "$BLD_ROOT/include/deemon/config.h" ]; then
+	CONFIG_CFLAGS="$CONFIG_CFLAGS -include $BLD_ROOT/include/deemon/config.h"
+fi
+
+
+
+
+########################################################################################
+## Print the used configuration
+########################################################################################
+#echo "Paths:"
+#echo "    BLD_ROOT: '$BLD_ROOT'"
+#echo "    SRC_ROOT: '$SRC_ROOT'"
+#echo "    BIN_PATH: '$BIN_PATH'"
+#echo "    BLD_PATH: '$BLD_PATH'"
+#echo "Toolchain:"
+#echo "    CONFIG_CC:     '$CONFIG_CC'"
+#echo "    CONFIG_DEX_CC: '$CONFIG_DEX_CC'"
+#echo "    TARGET:        '$TARGET'"
+#echo "    TARGET_CPU:    '$TARGET_CPU'"
+#echo "    CONFIG_EXE:    '$CONFIG_EXE'"
+#echo "    CONFIG_DLL:    '$CONFIG_DLL'"
+#echo "Libraries:"
+#echo "    CONFIG_LIBM:      '$CONFIG_LIBM'"
+#echo "    CONFIG_LIBDL:     '$CONFIG_LIBDL'"
+#echo "    CONFIG_LIBSOCKET: '$CONFIG_LIBSOCKET'"
+#echo "Compiler flags:"
+#echo "    CONFIG_CFLAGS:       '$CONFIG_CFLAGS'"
+#echo "    CONFIG_LDFLAGS:      '$CONFIG_LDFLAGS'"
+#echo "    CONFIG_LIBS:         '$CONFIG_LIBS'"
+#echo "    CONFIG_DEX_CC:       '$CONFIG_DEX_CC'"
+#echo "    CONFIG_DEX_CFLAGS:   '$CONFIG_DEX_CFLAGS'"
+#echo "    CONFIG_DEX_LDFLAGS:  '$CONFIG_DEX_LDFLAGS'"
+#echo "    CONFIG_DEX_LIBS:     '$CONFIG_DEX_LIBS'"
+#echo "    CONFIG_CORE_CFLAGS:  '$CONFIG_CORE_CFLAGS'"
+#echo "    CONFIG_CORE_LDFLAGS: '$CONFIG_CORE_LDFLAGS'"
+#echo "    CONFIG_CORE_LIBS:    '$CONFIG_CORE_LIBS'"
+#if [[ "$WITHOUT_DEX_SPECIFIC" != *"CTYPES"* ]]; then
+#	echo "CTypes compiler flags:"
+#	echo "    CONFIG_DEX_CTYPES_CC:      '$CONFIG_DEX_CTYPES_CC'"
+#	echo "    CONFIG_DEX_CTYPES_CFLAGS:  '$CONFIG_DEX_CTYPES_CFLAGS'"
+#	echo "    CONFIG_DEX_CTYPES_LDFLAGS: '$CONFIG_DEX_CTYPES_LDFLAGS'"
+#	echo "    CONFIG_DEX_CTYPES_LIBS:    '$CONFIG_DEX_CTYPES_LIBS'"
+#fi
+#echo "Features:"
+#echo "    FEATURES:                  '$FEATURES'"
+#echo "    WITH_DEX:                  '$WITH_DEX'"
+#echo "    WITH_ASSEMBLY_INTERPRETER: '$WITH_ASSEMBLY_INTERPRETER'"
+#echo "    WITH_KOS_SYSTEM_HEADERS:   '$WITH_KOS_SYSTEM_HEADERS'"
+
 
 unlink "$BLD_ROOT/config.mak" > /dev/null 2>&1
-cmd cat > "$BLD_ROOT/config.mak" <<EOF
+cat > "$BLD_ROOT/config.mak" <<EOF
 # Automatically generated file (by ./configure). - Do not edit!
 BLD_ROOT := $BLD_ROOT
 SRC_ROOT := $SRC_ROOT
@@ -682,29 +941,29 @@ CORE_LIBS := $CONFIG_CORE_LIBS
 EOF
 
 if ! [ -z "$WITH_ASSEMBLY_INTERPRETER" ]; then
-	cmd echo "DEEMON_CORE_OBJECTS += $WITH_ASSEMBLY_INTERPRETER" >> "$BLD_ROOT/config.mak"
+	echo "DEEMON_CORE_OBJECTS += $WITH_ASSEMBLY_INTERPRETER" >> "$BLD_ROOT/config.mak"
 fi
 if [[ "$WITH_KOS_SYSTEM_HEADERS" == "1" ]]; then
-	cmd echo "CFLAGS += -I${SRC_ROOT}/include/deemon/kos-headers" >> "$BLD_ROOT/config.mak"
+	echo "CFLAGS += -I${SRC_ROOT}/include/deemon/kos-headers" >> "$BLD_ROOT/config.mak"
 fi
 if [[ "$WITH_DEX" == "0" ]]; then
-	cmd echo "CONFIG_WITHOUT_DEX :=" >> "$BLD_ROOT/config.mak"
+	echo "CONFIG_WITHOUT_DEX :=" >> "$BLD_ROOT/config.mak"
 fi
 if ! [ -z "$WITHOUT_DEX_SPECIFIC" ]; then
 	for name in $WITHOUT_DEX_SPECIFIC; do
-		cmd echo "CONFIG_WITHOUT_DEX_$name :=" >> "$BLD_ROOT/config.mak"
+		echo "CONFIG_WITHOUT_DEX_$name :=" >> "$BLD_ROOT/config.mak"
 	done
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CC" ]; then
-	cmd echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_CC := $CONFIG_DEX_CTYPES_CC" >> "$BLD_ROOT/config.mak"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_CFLAGS" ]; then
-	cmd echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_CFLAGS := $CONFIG_DEX_CTYPES_CFLAGS" >> "$BLD_ROOT/config.mak"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LDFLAGS" ]; then
-	cmd echo "DEX_CTYPES_LDFLAGS := $CONFIG_DEX_CTYPES_LDFLAGS" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_LDFLAGS := $CONFIG_DEX_CTYPES_LDFLAGS" >> "$BLD_ROOT/config.mak"
 fi
 if ! [ -z "$CONFIG_DEX_CTYPES_LIBS" ]; then
-	cmd echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$BLD_ROOT/config.mak"
+	echo "DEX_CTYPES_LIBS := $CONFIG_DEX_CTYPES_LIBS" >> "$BLD_ROOT/config.mak"
 fi
 

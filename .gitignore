@@ -1,6 +1,10 @@
 /deemon
 /config.mak
+/conftest.c
+/conftest.o
+/conftest.h
 /include/deemon/config.h
+/include/deemon/config.h.old
 /asm.S
 /input.dee
 /bin/*
