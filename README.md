@@ -46,7 +46,7 @@ make
 	- Links listed below require that you are running it locally.
 - A complete overhaul of the builtin [`string`](http://localhost:8080/modules/deemon/i:string)
 	- Full unicode support all packed together into a single string type
-	- Separation between raw data [`Bytes`](http://localhost:8080/modules/deemon/i:Bytes) and [`string`]((http://localhost:8080/modules/deemon/string))s, as well as functionality to decode/encode data and strings
+	- Separation between raw data [`Bytes`](http://localhost:8080/modules/deemon/i:Bytes) and [`string`](http://localhost:8080/modules/deemon/string)s, as well as functionality to decode/encode data and strings
 	- Builtin support for regular expressions
 	- Addition of miscellaneous functions such as [`indent()`](http://localhost:8080/modules/deemon/i:string/i:indent) or [`findmatch()`](http://localhost:8080/modules/deemon/i:string/i:findmatch) to help in situation where the old string type was struggling
 	- Addition of case-insensitive variants of many functions, such as [`casefind()`](http://localhost:8080/modules/deemon/i:string/i:casefind)
@@ -76,12 +76,12 @@ make
 	- If you look at it, it really has more in common with that of a CISC architecture, featuring admirable text compression rates, while still executing assembly as fast as possible
 - Added compiler warnings for various questionable cases (including use of reserved keywords as symbol names)
 - I actually took the time to write a copy of the entire interpreter in i386 assembly (by hand), providing a significant performance boost on 32-bit Intel machines.
-- The builtin `int` type can have arbitrary precision now, allowing operations with a practically infinite number of digits (though I'm not claiming credit for the implementation; only for the integration and new design centered around it)
+- The builtin [`int`](http://localhost:8080/modules/deemon/i:int) type can have arbitrary precision now, allowing operations with a practically infinite number of digits (though I'm not claiming credit for the implementation; only for the integration and new design centered around it)
 - Introduction of type annotations
 	- `function add(x: int, y: int): int`
 	- Mainly intended for simplified and less redundant documentation, but may also be used for other purposes
 - Addition of runtime functionality to execute strings as code
-	- `print (exec from deemon)("10 + 20");`
+	- `print ([exec from deemon](http://localhost:8080/modules/deemon/i:exec))("10 + 20");`
 	- Uses a seperate JIT compiler that directly executes source text, rather than having to preprocess, parse, assembly and link, before finally executing code.
 
 
