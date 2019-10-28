@@ -662,18 +662,15 @@ EOF
 			-include "$CONFINC" -include "$CONFTEST_H" \
 			-c -o "$CONFTEST_OUT" "$CONFTEST" >> "$CONFIG_LOG" 2>&1
 	}
-	# e.g. check_feature "STDIO_H" "header <$1>"
-	# Will write either CONFIG_HAVE_STDIO_H, or CONFIG_NO_STDIO_H
-	check_feature() {
+	# e.g. try_check_feature "STDIO_H" "header <$1>"
+	try_check_feature() {
 		echo -n "[?] Checking for $2..."
 		echo "Checking for $2..." >> "$CONFIG_LOG"
 		if try_compile; then
-			echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
 			echo -e "\r[+] Checking for $2... (yes)"
 			echo "Checking for $2... (yes)" >> "$CONFIG_LOG"
 			return 0
 		else
-			echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
 			echo -e "\r[-] Checking for $2... (no)"
 			local FPROC=$(cat "$CONFTEST")
 			FPROC="| ${FPROC//
@@ -688,6 +685,17 @@ EOF
 			return 1
 		fi
 	}
+	# e.g. check_feature "STDIO_H" "header <$1>"
+	# Will write either CONFIG_HAVE_STDIO_H, or CONFIG_NO_STDIO_H
+	check_feature() {
+		if try_check_feature "$1" "$2"; then
+			echo "#define CONFIG_HAVE_$1 1" >> "$CONFINC"
+			return 0
+		else
+			echo "#define CONFIG_NO_$1 1 /* Missing! */" >> "$CONFINC"
+			return 1
+		fi
+	}
 	# e.g. check_header "stdio.h"
 	check_header() {
 		cat > "$CONFTEST" <<EOF
@@ -699,7 +707,9 @@ EOF
 		FN="${FN//./_}"
 		if check_feature "$FN" "header <$1>"; then
 			echo "#include <$1>" >> "$CONFTEST_H"
+			return 0
 		fi
+		return 1
 	}
 	# e.g. check_generic "_Exit"  "_Exit(0);"
 	check_generic() {
@@ -707,6 +717,7 @@ EOF
 $CONFTEST_MAIN{${2}}
 EOF
 		check_feature "$1" "$1"
+		return $?
 	}
 	# Check if we need to add argc/argv to conftest files
 	echo -n "Checking how to compile a simple source file..."
@@ -816,6 +827,21 @@ EOF
 					n="${n%%\'*}"
 					t="return (int)$n;"
 					check_generic "$n" "$t"
+					;;
+				*( )constant_nonzero*( )\(\"*)
+					n="${line#*\"}"
+					n="${n%%\"*}"
+					cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{return (int)$n;}
+EOF
+					if try_check_feature "$n" "$n"; then
+						cat > "$CONFTEST" <<EOF
+$CONFTEST_MAIN{typedef int myT[$n != 0 ? 1 : -1]; extern myT foo; return foo[0];}
+EOF
+						check_feature "$n" "$n being non-zero"
+					else
+						echo "#define CONFIG_NO_$n 1 /* Missing! */" >> "$CONFINC"
+					fi
 					;;
 				*( )print*( )\"*)
 					line="${line#*\"}"
