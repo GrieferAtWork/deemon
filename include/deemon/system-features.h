@@ -455,7 +455,7 @@ func("_write", msvc, test: 'char const buf[] = "foo"; return (int)_write(1, buf,
 func("lseek", unix, test: "return (int)lseek(1, 0, SEEK_SET);");
 func("lseek64", "defined(__USE_LARGEFILE64)", test: "return (int)lseek64(1, 0, SEEK_SET);");
 func("_lseek", msvc, test: "return (int)_lseek(1, 0, SEEK_SET);");
-func("_lseek64", cygwin, test: "return (int)_lseek64(1, 0, SEEK_SET);");
+func("_lseek64", test: "return (int)_lseek64(1, 0, SEEK_SET);");
 func("_lseeki64", msvc, test: "return (int)_lseeki64(1, 0, SEEK_SET);");
 
 functest('chdir("..")', unix);
@@ -3494,8 +3494,7 @@ var("doserrno");
 #ifdef CONFIG_NO__lseek64
 #undef CONFIG_HAVE__lseek64
 #elif !defined(CONFIG_HAVE__lseek64) && \
-      (defined(_lseek64) || defined(___lseek64_defined) || (defined(__CYGWIN__) || \
-       defined(__CYGWIN32__)))
+      (defined(_lseek64) || defined(___lseek64_defined))
 #define CONFIG_HAVE__lseek64 1
 #endif
 
