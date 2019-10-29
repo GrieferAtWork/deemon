@@ -2237,7 +2237,7 @@ INTERN int (DCALL asm_gmov_varg)(struct symbol *__restrict dst, uint16_t argid,
 	if (ignore_unbound &&
 	    argid >= current_basescope->bs_argc_min &&
 	    argid < current_basescope->bs_argc_max &&
-	    current_basescope->bs_default[argid] == NULL) {
+	    current_basescope->bs_default[argid - current_basescope->bs_argc_min] == NULL) {
 		/* Check if the argument is bound, and don't do the mov if it isn't. */
 		struct asm_sym *skip_mov;
 		if (asm_gpush_bnd_arg(argid))
