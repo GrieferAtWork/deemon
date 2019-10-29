@@ -115,9 +115,8 @@ DeeUnixSystem_PrintlinkString(struct unicode_printer *__restrict printer,
 	int error;
 	size_t bufsize, new_size;
 	dssize_t req_size;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	bufsize = PATH_MAX;
-	buffer  = unicode_printer_alloc_utf8(&printer, bufsize);
+	buffer  = unicode_printer_alloc_utf8(printer, bufsize);
 	if unlikely(!buffer)
 		goto err;
 	for (;;) {
@@ -144,35 +143,33 @@ handle_error:
 		DBG_ALIGNMENT_ENABLE();
 		/* Ensure that this is still a symbolic link. */
 		if (!S_ISLNK(st.st_mode)) {
-			unicode_printer_free_utf8(&printer, buffer);
-			unicode_printer_fini(&printer);
-			return ITER_DONE;
+			unicode_printer_free_utf8(printer, buffer);
+			return 1;
 		}
 		new_size = (size_t)st.st_size;
 		if (new_size <= bufsize)
 			break; /* Shouldn't happen, but might due to race conditions? */
-		new_buffer = unicode_printer_resize_utf8(&printer, buffer, new_size);
+		new_buffer = unicode_printer_resize_utf8(printer, buffer, new_size);
 		if unlikely(!new_buffer)
 			goto err_buf;
 		buffer  = new_buffer;
 		bufsize = new_size;
 	}
 	/* Release unused data. */
-	if (unicode_printer_confirm_utf8(&printer, buffer, (size_t)req_size) < 0)
+	if (unicode_printer_confirm_utf8(printer, buffer, (size_t)req_size) < 0)
 		goto err_buf;
-	bufsize = UNICODE_PRINTER_LENGTH(&printer);
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) != '/')
+	bufsize = UNICODE_PRINTER_LENGTH(printer);
+	while (bufsize && UNICODE_PRINTER_GETCHAR(printer, bufsize - 1) != '/')
 		--bufsize;
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) == '/')
+	while (bufsize && UNICODE_PRINTER_GETCHAR(printer, bufsize - 1) == '/')
 		--bufsize;
-	UNICODE_PRINTER_SETCHAR(&printer, bufsize, '/');
-	unicode_printer_truncate(&printer, bufsize + 1);
-	return unicode_printer_pack(&printer);
+	UNICODE_PRINTER_SETCHAR(printer, bufsize, '/');
+	unicode_printer_truncate(printer, bufsize + 1);
+	return 0;
 err_buf:
-	unicode_printer_free_utf8(&printer, buffer);
+	unicode_printer_free_utf8(printer, buffer);
 err:
-	unicode_printer_fini(&printer);
-	return NULL;
+	return -1;
 #endif /* DeeUnixSystem_Readlink_USE_READLINK */
 
 #ifdef DeeUnixSystem_Readlink_USE_STUB
