@@ -18,24 +18,23 @@
  */
 
 #ifndef BUILTIN
-#error "Must `#define BUILTIN(name,object,flags)' before including this file"
-#endif
+#error "Must `#define BUILTIN(name, object, flags)' before including this file"
+#endif /* !BUILTIN */
 #ifndef BUILTIN_REUSE
 #define BUILTIN_REUSE BUILTIN
-#endif
+#endif /* !BUILTIN_REUSE */
 #ifndef BUILTIN_DOC
-#define BUILTIN_DOC(name,object,flags,doc) BUILTIN(name,object,flags)
-#endif
+#define BUILTIN_DOC(name, object, flags, doc) BUILTIN(name, object, flags)
+#endif /* !BUILTIN_DOC */
 #ifndef BUILTIN_DOC_REUSE
-#define BUILTIN_DOC_REUSE(name,object,flags,doc) BUILTIN_REUSE(name,object,flags)
-#endif
+#define BUILTIN_DOC_REUSE(name, object, flags, doc) BUILTIN_REUSE(name, object, flags)
+#endif /* !BUILTIN_DOC_REUSE */
 #ifndef BUILTIN_ALIAS
-#define BUILTIN_ALIAS(name,alt,flags) BUILTIN(name,---,flags)
-#endif
+#define BUILTIN_ALIAS(name, alt, flags) BUILTIN(name, ---, flags)
+#endif /* !BUILTIN_ALIAS */
 
 #include <deemon/compiler/compiler.h>
 
-#include <deemon/hashset.h>
 #include <deemon/api.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
@@ -48,6 +47,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
+#include <deemon/hashset.h>
 #include <deemon/instancemethod.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
@@ -133,7 +133,7 @@ BUILTIN_DOC_REUSE(gc, &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY,
  * used as compile-time immediate attribute name.
  * The proper way to access `import' would `deemon.operator . ("import")',
  * but that's pretty long compared to `deemon.import_' */
-BUILTIN_ALIAS(import_,import, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
+BUILTIN_ALIAS(import_, import, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 
 #ifndef BUILTIN_RUNTIME_DEFINED
 #define BUILTIN_RUNTIME_DEFINED 1
@@ -233,7 +233,7 @@ BUILTIN(__roloc, &rt_roloc, MODSYM_FREADONLY | MODSYM_FHIDDEN)
 /* Used to implement the `assert' keyword.
  * NOTE: This function is not marked as read-only,
  *       because user-code is allowed to override it! */
-BUILTIN(__assert, &rt_assert,MODSYM_FHIDDEN)
+BUILTIN(__assert, &rt_assert, MODSYM_FHIDDEN)
 
 /* Internal function used to implement argument count checks in
  * function taking optional arguments. */

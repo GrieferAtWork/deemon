@@ -225,39 +225,39 @@ func("_exit", addparen(msvc) + " || " + addparen(unix), test: "_exit(0);");
 func("exit", stdc, test: "exit(0);");
 func("atexit", stdc, test: "extern void foo(void); return atexit(&foo);");
 
-func("execv", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execv("a", argv);');
-func("execve", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execve("a", argv, argv);');
-func("execvp", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execvp("a", argv);');
-func("execvpe", unix, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return execvpe("a", argv, argv);');
-func("fexecve", "defined(__USE_XOPEN2K8)", test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return fexecve(42, argv, argv);');
-func("_execv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execv("a", argv);');
-func("_execve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execve("a", argv, argv);');
-func("_execvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execvp("a", argv);');
-func("_execvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _execvpe("a", argv, argv);');
-func("wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecv(s, argv);");
-func("wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecve(s, argv, argv);");
-func("wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvp(s, argv);)");
-func("wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvpe(s, argv, argv);");
+func("execv", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execv("a", argv);');
+func("_execv", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execv("a", argv);');
+func("execve", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execve("a", argv, argv);');
+func("_execve", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execve("a", argv, argv);');
+func("execvp", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execvp("a", argv);');
+func("_execvp", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvp("a", argv);');
+func("execvpe", unix, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return execvpe("a", argv, argv);');
+func("_execvpe", msvc, test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return _execvpe("a", argv, argv);');
+func("wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecv(s, argv);");
 func("_wexecv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecv(s, argv);");
+func("wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecve(s, argv, argv);");
 func("_wexecve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecve(s, argv, argv);");
+func("wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvp(s, argv);)");
 func("_wexecvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvp(s, argv);");
+func("wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return wexecvpe(s, argv, argv);");
 func("_wexecvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wexecvpe(s, argv, argv);");
-func("spawnv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnv(42, "a", argv);');
-func("spawnve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnve(42, "a", argv, argv);');
-func("spawnvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvp(42, "a", argv);');
-func("spawnvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvpe(42, "a", argv, argv);');
-func("_spawnv", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnv(42, "a", argv);');
-func("_spawnve", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnve(42, "a", argv, argv);');
-func("_spawnvp", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvp(42, "a", argv);');
-func("_spawnvpe", msvc, test: 'char *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvpe(42, "a", argv, argv);');
-func("wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnv(42, s, argv);");
-func("wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnve(42, s, argv, argv);");
-func("wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvp(42, s, argv);");
-func("wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
-func("_wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnv(42, s, argv);");
-func("_wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnve(42, s, argv, argv);");
-func("_wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvp(42, s, argv);");
-func("_wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
+func("spawnv", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnv(42, "a", argv);');
+func("_spawnv", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnv(42, "a", argv);');
+func("spawnve", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnve(42, "a", argv, argv);');
+func("_spawnve", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnve(42, "a", argv, argv);');
+func("spawnvp", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvp(42, "a", argv);');
+func("_spawnvp", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvp(42, "a", argv);');
+func("spawnvpe", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return spawnvpe(42, "a", argv, argv);');
+func("_spawnvpe", msvc, test: 'char const *argv[2]; argv[0] = "a"; argv[1] = 0; return _spawnvpe(42, "a", argv, argv);');
+func("wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnv(42, s, argv);");
+func("_wspawnv", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnv(42, s, argv);");
+func("wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnve(42, s, argv, argv);");
+func("_wspawnve", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnve(42, s, argv, argv);");
+func("wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvp(42, s, argv);");
+func("_wspawnvp", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvp(42, s, argv);");
+func("wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return wspawnvpe(42, s, argv, argv);");
+func("_wspawnvpe", msvc, test: "wchar_t s[] = { 'a', 0 }; wchar_t const *argv[2]; argv[0] = s; argv[1] = 0; return _wspawnvpe(42, s, argv, argv);");
+func("fexecve", "defined(__USE_XOPEN2K8)", test: 'char *argv[2]; argv[0] = (char *)"a"; argv[1] = 0; return fexecve(42, argv, argv);');
 
 func("cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
 func("_cwait", msvc, test: 'int st; return cwait(&st, 42, 43);');
@@ -760,6 +760,10 @@ var("_errno");
 var("__errno");
 var("_doserrno", msvc);
 var("doserrno");
+
+var("environ");
+var("_environ");
+var("__environ");
 
 //END:FEATURES
 
@@ -5315,6 +5319,27 @@ var("doserrno");
 #elif !defined(CONFIG_HAVE_doserrno) && \
       (defined(doserrno) || defined(__doserrno_defined))
 #define CONFIG_HAVE_doserrno 1
+#endif
+
+#ifdef CONFIG_NO_environ
+#undef CONFIG_HAVE_environ
+#elif !defined(CONFIG_HAVE_environ) && \
+      (defined(environ) || defined(__environ_defined))
+#define CONFIG_HAVE_environ 1
+#endif
+
+#ifdef CONFIG_NO__environ
+#undef CONFIG_HAVE__environ
+#elif !defined(CONFIG_HAVE__environ) && \
+      (defined(_environ) || defined(___environ_defined))
+#define CONFIG_HAVE__environ 1
+#endif
+
+#ifdef CONFIG_NO___environ
+#undef CONFIG_HAVE___environ
+#elif !defined(CONFIG_HAVE___environ) && \
+      (defined(__environ) || defined(____environ_defined))
+#define CONFIG_HAVE___environ 1
 #endif
 //[[[end]]]
 

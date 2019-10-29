@@ -21,9 +21,9 @@ Cs(sym)
 Cs(utf) /* TODO: Remove this */
 #ifdef CONFIG_AST_IS_STRUCT
 Cs(ast)
-#else
+#else /* CONFIG_AST_IS_STRUCT */
 Co(ast)
-#endif
+#endif /* !CONFIG_AST_IS_STRUCT */
 Co(super) /* TODO: Remove this */
 Co(float) /* TODO: Remove this */
 Co(compiler_item) /* TODO: Remove this */
