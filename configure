@@ -257,6 +257,7 @@ cmd() {
 		exit $error
 	}
 }
+mkdir -p "$BLD_PATH"
 unlink "$CONFIG_LOG" > /dev/null 2>&1
 
 
@@ -425,7 +426,7 @@ else
 			echo "Configuring libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
 			rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
 			cmd mkdir -p "$BLD_PATH/libffi"
-			cmd cd "$BLD_PATH/libffi"
+			cd "$BLD_PATH/libffi"
 			if [ -z "$LIBFFI_TARGET" ]; then
 				case "$TARGET" in
 					*-kos | *-kos-*)
@@ -472,10 +473,10 @@ else
 		fi
 		if ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
 			echo "Building libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
-			cmd cd "$BLD_PATH/libffi"
+			cd "$BLD_PATH/libffi"
 			cmd make -j $(grep -c ^processor /proc/cpuinfo)
 		fi
-		cmd cd "$BLD_PATH"
+		cd "$BLD_PATH"
 		CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
 		CONFIG_DEX_CTYPES_LDFLAGS=""
 		CONFIG_DEX_CTYPES_LIBS="${BLD_PATH}/libffi/.libs/libffi.a"
