@@ -646,32 +646,62 @@ sysfile_fileno(SystemFile *__restrict self) {
 	return DeeInt_NewInt((int)result);
 }
 
+#undef sysfile_isatty_USE_ISATTY
+#undef sysfile_isatty_USE_ISASTDFILE
+#undef sysfile_isatty_USE_RETURN_FALSE
+#if defined(CONFIG_HAVE_isatty)
+#define sysfile_isatty_USE_ISATTY 1
+#elif defined(STDIN_FILENO) || defined(STDOUT_FILENO) || defined(STDERR_FILENO)
+#define sysfile_isatty_USE_ISASTDFILE 1
+#else
+#define sysfile_isatty_USE_RETURN_FALSE 1
+#endif
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_isatty(SystemFile *__restrict self) {
-#ifdef CONFIG_HAVE_isatty
+#ifdef sysfile_isatty_USE_ISATTY
 	int result;
 	DBG_ALIGNMENT_DISABLE();
 	result = isatty((int)self->sf_handle);
 	DBG_ALIGNMENT_ENABLE();
 	if (result)
 		return_true;
+#if defined(EINVAL) || defined(ENOTTY)
 	/* Check our whitelist of errors that indicate not-a-tty. */
-	result = DeeSystem_GetErrno();
-	if (result == EINVAL
-#ifdef ENOTTY
-	    || result == ENOTTY
-#endif /* ENOTTY */
-	    ) {
-		return_false;
-	}
+	DeeSystem_IF_E2(DeeSystem_GetErrno(),
+	                EINVAL,
+	                ENOTTY,
+	                return_false);
 	error_file_io(self);
-err:
 	return NULL;
-#else /* CONFIG_HAVE_isatty */
+#else /* EINVAL || ENOTTY */
+	return_false;
+#endif /* !EINVAL && !ENOTTY */
+#endif /* sysfile_isatty_USE_ISATTY */
+
+#ifdef sysfile_isatty_USE_ISASTDFILE
+#ifdef STDIN_FILENO
+	if ((int)self->sf_handle == STDIN_FILENO)
+		goto is_an_std_file;
+#endif /* STDIN_FILENO */
+#ifdef STDOUT_FILENO
+	if ((int)self->sf_handle == STDOUT_FILENO)
+		goto is_an_std_file;
+#endif /* STDOUT_FILENO */
+#ifdef STDERR_FILENO
+	if ((int)self->sf_handle == STDERR_FILENO)
+		goto is_an_std_file;
+#endif /* STDERR_FILENO */
+	return_false;
+is_an_std_file:
+	return_true;
+#endif /* sysfile_isatty_USE_ISASTDFILE */
+
+#ifdef sysfile_isatty_USE_RETURN_FALSE
 	(void)self;
 	return_false;
-#endif /* !CONFIG_HAVE_isatty */
+#endif /* sysfile_isatty_USE_RETURN_FALSE */
 }
 
 #if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_FILE)
