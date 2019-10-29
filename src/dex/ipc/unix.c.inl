@@ -868,7 +868,7 @@ err:
  * @return:  0: Success
  * @return: -1: Error
  * */
-PRIVATE WUNUSED NONNULL((2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 wait_for_process(Process *__restrict self,
                  pid_t pid,
                  uint64_t timeout_microseconds) {
@@ -960,9 +960,6 @@ process_dojoin(Process *__restrict self,
                uint64_t timeout_microseconds) {
 	int result = 0;
 	ASSERT(proc_result);
-#ifdef EINTR
-again:
-#endif /* EINTR */
 	if (!(self->p_state & PROCESS_FDIDJOIN)) {
 		uint64_t timeout_end = (uint64_t)-1;
 		uint16_t state, new_flags;
