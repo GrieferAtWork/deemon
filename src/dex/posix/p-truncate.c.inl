@@ -34,14 +34,18 @@ DECL_BEGIN
 #define p_truncate_USE_TRUNCATE64 1
 #elif defined(CONFIG_HAVE_truncate)
 #define p_truncate_USE_TRUNCATE 1
-#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64)
+#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define p_truncate_USE_WOPEN_FTRUNCATE64 1
-#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate)
+#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define p_truncate_USE_WOPEN_FTRUNCATE 1
 #elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate64)
 #define p_truncate_USE_OPEN_FTRUNCATE64 1
 #elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate)
 #define p_truncate_USE_OPEN_FTRUNCATE 1
+#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64)
+#define p_truncate_USE_WOPEN_FTRUNCATE64 1
+#elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate)
+#define p_truncate_USE_WOPEN_FTRUNCATE 1
 #else
 #define p_truncate_USE_STUB 1
 #endif

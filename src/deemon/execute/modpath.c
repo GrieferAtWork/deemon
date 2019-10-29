@@ -3032,6 +3032,7 @@ PRIVATE WUNUSED DREF /*String*/DeeStringObject *DCALL get_default_home(void) {
 				--len;
 			result = (DREF DeeStringObject *)DeeString_NewUtf8(env, len + 1,
 			                                                   STRING_ERROR_FIGNORE);
+#define get_default_home_NEED_ERR 1
 			if unlikely(!result)
 				goto err;
 			DeeString_SetChar(result, len - 1, SEP);
@@ -3043,6 +3044,7 @@ PRIVATE WUNUSED DREF /*String*/DeeStringObject *DCALL get_default_home(void) {
 #endif /* !CONFIG_NO_DEEMON_HOME_ENVIRON */
 
 #ifdef get_default_home_USE_CONFIG_DEEMON_HOME
+#define get_default_home_NO_FALLBACK 1
 	return_reference_((DeeStringObject *)&default_deemon_home);
 #endif /* get_default_home_USE_CONFIG_DEEMON_HOME */
 
@@ -3053,6 +3055,7 @@ PRIVATE WUNUSED DREF /*String*/DeeStringObject *DCALL get_default_home(void) {
 		LPWSTR lpBuffer, lpNewBuffer;
 		DREF DeeStringObject *new_result;
 		lpBuffer = DeeString_NewWideBuffer(dwBufSize);
+#define get_default_home_NEED_ERR 1
 		if unlikely(!lpBuffer)
 			goto err;
 again_chk_intr:
@@ -3141,7 +3144,7 @@ do_increase_buffer:
 	error = DeeUnixSystem_PrintlinkString(&printer, "/proc/self/exe");
 	if unlikely(error != 0) {
 		if (error < 0)
-			goto err;
+			goto err_printer;
 		/* Fallback... */
 bad_path:
 		unicode_printer_fini(&printer);
@@ -3158,17 +3161,23 @@ bad_path:
 		--bufsize;
 	unicode_printer_truncate(&printer, bufsize + 1);
 	return unicode_printer_pack(&printer);
-err:
+err_printer:
 	unicode_printer_fini(&printer);
 	return NULL;
 #endif /* get_default_home_USE_READLINK_PROC_SELF_EXE */
+
+#ifndef get_default_home_NO_FALLBACK
 fallback:
 
 	/* TODO: Check if `main:argv[0]' is an absolute filename. */
 	/* TODO: Check if `main:argv[0]' can be found in $PATH. */
 	return (DREF DeeStringObject *)DeeString_New(".");
+#endif /* !get_default_home_NO_FALLBACK */
+
+#ifdef get_default_home_NEED_ERR
 err:
 	return NULL;
+#endif /* get_default_home_NEED_ERR */
 }
 
 

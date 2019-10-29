@@ -63,10 +63,12 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #undef DeeSystem_PrintPwd_USE_DOT
 #if defined(CONFIG_HOST_WINDOWS)
 #define DeeSystem_PrintPwd_USE_WINDOWS 1
-#elif defined(CONFIG_HAVE_wgetcwd)
+#elif defined(CONFIG_HAVE_wgetcwd) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define DeeSystem_PrintPwd_USE_WGETCWD 1
 #elif defined(CONFIG_HAVE_getcwd)
 #define DeeSystem_PrintPwd_USE_GETCWD 1
+#elif defined(CONFIG_HAVE_wgetcwd)
+#define DeeSystem_PrintPwd_USE_WGETCWD 1
 #elif defined(CONFIG_HAVE_getenv)
 #define DeeSystem_PrintPwd_USE_GETENV 1
 #elif
@@ -997,16 +999,20 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 #undef DeeSystem_Unlink_WREMOVE
 #undef DeeSystem_Unlink_REMOVE
 #undef DeeSystem_Unlink_STUB
-#if defined(CONFIG_HOST_WINDOWS) && 0
+#if defined(CONFIG_HOST_WINDOWS)
 #define DeeSystem_Unlink_USE_DELETEFILE 1
-#elif defined(CONFIG_HAVE_wunlink) && 0
+#elif defined(CONFIG_HAVE_wunlink) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define DeeSystem_Unlink_WUNLINK 1
 #elif defined(CONFIG_HAVE_unlink)
 #define DeeSystem_Unlink_UNLINK 1
-#elif defined(CONFIG_HAVE_wremove)
+#elif defined(CONFIG_HAVE_wunlink)
+#define DeeSystem_Unlink_WUNLINK 1
+#elif defined(CONFIG_HAVE_wremove) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define DeeSystem_Unlink_WREMOVE 1
 #elif defined(CONFIG_HAVE_remove)
 #define DeeSystem_Unlink_REMOVE 1
+#elif defined(CONFIG_HAVE_wremove)
+#define DeeSystem_Unlink_WREMOVE 1
 #else
 #define DeeSystem_Unlink_STUB 1
 #endif
@@ -1047,7 +1053,6 @@ again_deletefile:
 		goto again_deletefile;
 	}
 	if (DeeNTSystem_IsUncError(dwError)) {
-		BOOL bOk;
 		DREF DeeStringObject *unc_filename;
 		/* Try again with a UNC filename. */
 		unc_filename = (DREF DeeStringObject *)DeeNTSystem_FixUncPath(filename);

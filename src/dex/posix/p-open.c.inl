@@ -213,10 +213,12 @@ print "/" "**" "/";
 #undef posix_open_USE_WOPEN
 #undef posix_open_USE_OPEN
 #undef posix_open_USE_STUB
-#if defined(CONFIG_HAVE_wopen) || defined(CONFIG_HAVE_wopen64)
+#if (defined(CONFIG_HAVE_wopen) || defined(CONFIG_HAVE_wopen64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_open_USE_WOPEN 1
 #elif defined(CONFIG_HAVE_open) || defined(CONFIG_HAVE_open64)
 #define posix_open_USE_OPEN 1
+#elif defined(CONFIG_HAVE_wopen) || defined(CONFIG_HAVE_wopen64)
+#define posix_open_USE_WOPEN 1
 #else
 #define posix_open_USE_STUB 1
 #endif
@@ -225,10 +227,12 @@ print "/" "**" "/";
 #undef posix_creat_USE_WCREAT
 #undef posix_creat_USE_CREAT
 #undef posix_creat_USE_STUB
-#if defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)
+#if (defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_creat_USE_WCREAT 1
 #elif defined(CONFIG_HAVE_creat) || defined(CONFIG_HAVE_creat64)
 #define posix_creat_USE_CREAT 1
+#elif defined(CONFIG_HAVE_wcreat) || defined(CONFIG_HAVE_wcreat64)
+#define posix_creat_USE_WCREAT 1
 #else
 #define posix_creat_USE_STUB 1
 #endif

@@ -5344,6 +5344,18 @@ var("__environ");
 //[[[end]]]
 
 
+/* Figure out if we want to prefer wchar_t-functions over char-functions */
+#ifdef CONFIG_PREFER_WCHAR_FUNCTIONS
+#undef CONFIG_PREFER_CHAR_FUNCTIONS
+#elif !defined(CONFIG_PREFER_CHAR_FUNCTIONS)
+#ifdef CONFIG_HOST_WINDOWS
+#define CONFIG_PREFER_WCHAR_FUNCTIONS 1
+#else /* CONFIG_HOST_WINDOWS */
+#define CONFIG_PREFER_CHAR_FUNCTIONS 1
+#endif /* !CONFIG_HOST_WINDOWS */
+#endif
+
+
 
 /* Substitute some known function aliases */
 #if defined(CONFIG_HAVE__exit) && !defined(CONFIG_HAVE__Exit)
@@ -5609,6 +5621,11 @@ var("__environ");
 #if defined(CONFIG_HAVE__mkdir) && !defined(CONFIG_HAVE_mkdir)
 #define CONFIG_HAVE_mkdir 1
 #define mkdir(name, mode) _mkdir(name)
+#endif /* mkdir = _mkdir */
+
+#if defined(CONFIG_HAVE__wmkdir) && !defined(CONFIG_HAVE_wmkdir)
+#define CONFIG_HAVE_wmkdir 1
+#define wmkdir(name, mode) _wmkdir(name)
 #endif /* mkdir = _mkdir */
 
 #if defined(CONFIG_HAVE__fseeki64) && !defined(CONFIG_HAVE_fseeko64)

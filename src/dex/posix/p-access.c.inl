@@ -68,10 +68,12 @@ print "/" "**" "/";
 #undef posix_access_USE_WACCESS
 #undef posix_access_USE_ACCESS
 #undef posix_access_USE_STUB
-#ifdef CONFIG_HAVE_waccess
+#if defined(CONFIG_HAVE_waccess) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_access_USE_WACCESS 1
 #elif defined(CONFIG_HAVE_access)
 #define posix_access_USE_ACCESS 1
+#elif defined(CONFIG_HAVE_waccess)
+#define posix_access_USE_WACCESS 1
 #else
 #define posix_access_USE_STUB 1
 #endif

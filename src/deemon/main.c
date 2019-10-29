@@ -43,13 +43,6 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
-#include <stdio.h>
-#include <string.h>
-
-#ifndef CONFIG_NO_STDLIB
-#include <stdlib.h> /* EXIT_SUCCESS, EXIT_FAILURE */
-#endif              /* !CONFIG_NO_STDLIB */
-
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #else /* CONFIG_HOST_WINDOWS */

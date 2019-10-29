@@ -31,16 +31,22 @@ DECL_BEGIN
 #undef posix_system_USE_FORK_WEXEC
 #undef posix_system_USE_FORK_EXEC
 #undef posix_system_USE_STUB
-#if defined(CONFIG_HAVE_wsystem)
+#if defined(CONFIG_HAVE_wsystem) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define posix_system_USE_WSYSTEM 1
+#elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
+      defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit) && \
+      defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
+#define posix_system_USE_FORK_WEXEC 1
 #elif defined(CONFIG_HAVE_system)
 #define posix_system_USE_SYSTEM 1
-#elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
-      defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
-#define posix_system_USE_FORK_WEXEC 1
 #elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_execv) && \
       defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
 #define posix_system_USE_FORK_EXEC 1
+#elif defined(CONFIG_HAVE_wsystem)
+#define posix_system_USE_WSYSTEM 1
+#elif defined(CONFIG_HAVE_vfork) && defined(CONFIG_HAVE_wexecv) && \
+      defined(CONFIG_HAVE_waitpid) && defined(CONFIG_HAVE__Exit)
+#define posix_system_USE_FORK_WEXEC 1
 #else
 #define posix_system_USE_STUB 1
 #endif
