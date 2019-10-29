@@ -120,16 +120,16 @@ DECL_BEGIN
 	});
 #define HANDLE_ENOSYS(error, err_label, name)             \
 	DeeSystem_IF_E3(error, ENOSYS, ENOTSUP, EOPNOTSUPP, { \
-		posix_err_unsupported(name);                   \
+		posix_err_unsupported(name);                      \
 		goto err_label;                                   \
 	});
 
 
-PRIVATE ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
+INTDEF ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
 posix_err_unsupported(char const *__restrict name);
 #undef NEED_ERR_UNSUPPORTED
 
-PRIVATE WUNUSED DREF /*String*/ DeeObject *DCALL
+INTDEF WUNUSED DREF /*String*/ DeeObject *DCALL
 libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #undef NEED_GET_DFD_FILENAME
 

@@ -47,7 +47,7 @@ DECL_BEGIN
 
 #if defined(NEED_ERR_UNSUPPORTED) || defined(__INTELLISENSE__)
 #undef NEED_ERR_UNSUPPORTED
-PRIVATE ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
+INTERN ATTR_NOINLINE ATTR_UNUSED ATTR_COLD int DCALL
 posix_err_unsupported(char const *__restrict name) {
 	return DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                       "Unsupported function `%s'",
@@ -57,7 +57,7 @@ posix_err_unsupported(char const *__restrict name) {
 
 #if defined(NEED_GET_DFD_FILENAME) || defined(__INTELLISENSE__)
 #undef NEED_GET_DFD_FILENAME
-PRIVATE WUNUSED DREF /*String*/ DeeObject *DCALL
+INTERN WUNUSED DREF /*String*/ DeeObject *DCALL
 libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) {
 	(void)dfd;
 	(void)filename;
