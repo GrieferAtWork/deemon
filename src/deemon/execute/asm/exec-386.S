@@ -488,8 +488,9 @@ IF_USE_CFI(.cfi_rel_offset %ebp, 0)
 IF_USE_CFI(.cfi_adjust_cfa_offset 4)
 	pushl  %ebp
 IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+IF_USE_CFI(.cfi_rel_offset %ebp, 0)
 	movl   %esp, %ebp
-IF_USE_CFI(.cfi_def_cfa %ebp, 20)
+IF_USE_CFI(.cfi_def_cfa_register %ebp)
 #endif
 
 	/* Load the passed frame. */
@@ -733,7 +734,7 @@ IF_USE_CFI(.cfi_def_cfa %ebp, 20)
 	leal   LMEM(%esp), %edx
 	ASSERT_EQUAL(%edx,%ebp)
 	movl   %edx, %esp
-	IF_USE_CFI(.cfi_def_cfa %esp, 20)
+	IF_USE_CFI(.cfi_def_cfa %esp, 24)
 	leave
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 	addl   $4, %esp
@@ -775,7 +776,7 @@ IF_USE_CFI(.cfi_remember_state)
 	leal   LMEM(%esp), %edx
 	ASSERT_EQUAL(%edx,%ebp)
 	movl   %edx, %esp
-	IF_USE_CFI(.cfi_def_cfa %esp, 20)
+	IF_USE_CFI(.cfi_def_cfa %esp, 24)
 	leave
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 	addl   $4, %esp
@@ -1279,7 +1280,7 @@ exec_on_altstack:
 	IF_USE_CFI(.cfi_same_value %ebp)
 #elif !defined(NDEBUG)
 	movl   %ebp, %esp
-	IF_USE_CFI(.cfi_def_cfa %esp, 24)
+	IF_USE_CFI(.cfi_def_cfa %esp, 28)
 	popl   %ebp
 	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
 	addl   $4, %esp
@@ -3601,6 +3602,7 @@ target_instanceof:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeType_IsInherited,8)
 	ADJUST_CFA_OFFSET(-8)
+	movzbl %al, %eax
 2:	ASSERT_BELOW_EQUAL(%eax,$1)
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	incref %eax
