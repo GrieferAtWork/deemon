@@ -379,6 +379,8 @@ EXPORTS
 	DeeNTSystem_IsExists@4=_DeeNTSystem_IsExists@4
 	DeeNTSystem_IsFileNotFoundError@4=_DeeNTSystem_IsFileNotFoundError@4
 	DeeNTSystem_IsIntr@4=_DeeNTSystem_IsIntr@4
+	DeeNTSystem_IsInvalidArgument@4=_DeeNTSystem_IsInvalidArgument@4
+	DeeNTSystem_IsNoLink@4=_DeeNTSystem_IsNoLink@4
 	DeeNTSystem_IsNotDir@4=_DeeNTSystem_IsNotDir@4
 	DeeNTSystem_IsNotEmpty@4=_DeeNTSystem_IsNotEmpty@4
 	DeeNTSystem_IsUncError@4=_DeeNTSystem_IsUncError@4
