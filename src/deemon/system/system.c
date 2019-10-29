@@ -350,9 +350,10 @@ err_release:
 err:
 	return -1;
 #endif /* DeeSystem_PrintPwd_USE_WINDOWS */
+
 #ifdef DeeSystem_PrintPwd_USE_WGETCWD
 	dwchar_t *buffer, *new_buffer;
-	size_t bufsize = 256;
+	size_t bufsize = 256, buflen;
 	buffer = unicode_printer_alloc_wchar(printer, bufsize);
 	if unlikely(!buffer)
 		goto err;
@@ -376,23 +377,23 @@ err:
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	bufsize = wcslen(buffer);
+	buflen = wcslen(buffer);
 	if (!include_trailing_sep) {
-		while (bufsize && DeeSystem_IsSep(buffer[bufsize - 1]))
-			--bufsize;
+		while (buflen && DeeSystem_IsSep(buffer[buflen - 1]))
+			--buflen;
 	}
-	if unlikely(!bufsize) {
-		bufsize   = 1;
+	if unlikely(!buflen) {
+		buflen    = 1;
 		buffer[0] = '.';
 	}
-	if (include_trailing_sep && bufsize < bufsize &&
-	    !DeeSystem_IsSep(buffer[bufsize - 1])) {
-		buffer[bufsize + 0] = DeeSystem_SEP;
-		buffer[bufsize + 1] = 0;
-		++bufsize;
+	if (include_trailing_sep && buflen < bufsize &&
+	    !DeeSystem_IsSep(buffer[buflen - 1])) {
+		buffer[buflen + 0] = DeeSystem_SEP;
+		buffer[buflen + 1] = 0;
+		++buflen;
 		include_trailing_sep = false;
 	}
-	if unlikely(unicode_printer_confirm_wchar(printer, buffer, bufsize) < 0)
+	if unlikely(unicode_printer_confirm_wchar(printer, buffer, buflen) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {
@@ -409,9 +410,10 @@ err_release:
 err:
 	return -1;
 #endif /* DeeSystem_PrintPwd_USE_WGETCWD */
+
 #ifdef DeeSystem_PrintPwd_USE_GETCWD
 	char *buffer, *new_buffer;
-	size_t bufsize = 256;
+	size_t buflen, bufsize = 256;
 	buffer = unicode_printer_alloc_utf8(printer, bufsize);
 	if unlikely(!buffer)
 		goto err;
@@ -433,24 +435,24 @@ err:
 			goto err_release;
 		DBG_ALIGNMENT_DISABLE();
 	}
-	bufsize = strlen(buffer);
+	buflen = strlen(buffer);
 	DBG_ALIGNMENT_ENABLE();
 	if (!include_trailing_sep) {
-		while (bufsize && DeeSystem_IsSep(buffer[bufsize - 1]))
-			--bufsize;
+		while (buflen && DeeSystem_IsSep(buffer[buflen - 1]))
+			--buflen;
 	}
-	if unlikely(!bufsize) {
-		bufsize   = 1;
+	if unlikely(!buflen) {
+		buflen    = 1;
 		buffer[0] = '.';
 	}
-	if (include_trailing_sep && bufsize < bufsize &&
-	    !DeeSystem_IsSep(buffer[bufsize - 1])) {
-		buffer[bufsize + 0] = DeeSystem_SEP;
-		buffer[bufsize + 1] = 0;
-		++bufsize;
+	if (include_trailing_sep && buflen < bufsize &&
+	    !DeeSystem_IsSep(buffer[buflen - 1])) {
+		buffer[buflen + 0] = DeeSystem_SEP;
+		buffer[buflen + 1] = 0;
+		++buflen;
 		include_trailing_sep = false;
 	}
-	if unlikely(unicode_printer_confirm_utf8(printer, buffer, bufsize) < 0)
+	if unlikely(unicode_printer_confirm_utf8(printer, buffer, buflen) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {
@@ -467,6 +469,7 @@ err_release:
 err:
 	return -1;
 #endif /* DeeSystem_PrintPwd_USE_GETCWD */
+
 #ifdef DeeSystem_PrintPwd_USE_GETENV
 	size_t pwdlen;
 	char const *pwd;
@@ -501,6 +504,7 @@ err:
 err:
 	return -1;
 #endif /* DeeSystem_PrintPwd_USE_GETENV */
+
 #ifdef DeeSystem_PrintPwd_USE_DOT
 	dssize_t error;
 	error = unicode_printer_printutf8(printer,
