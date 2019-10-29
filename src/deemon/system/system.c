@@ -61,7 +61,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #undef DeeSystem_PrintPwd_USE_GETCWD
 #undef DeeSystem_PrintPwd_USE_GETENV
 #undef DeeSystem_PrintPwd_USE_DOT
-#if defined(CONFIG_HOST_WINDOWS)
+#if defined(CONFIG_HOST_WINDOWS) && 0
 #define DeeSystem_PrintPwd_USE_WINDOWS 1
 #elif defined(CONFIG_HAVE_wgetcwd) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define DeeSystem_PrintPwd_USE_WGETCWD 1
@@ -289,7 +289,7 @@ PUBLIC int
                            bool include_trailing_sep) {
 #ifdef DeeSystem_PrintPwd_USE_WINDOWS
 	LPWSTR buffer;
-	DWORD new_bufsize, bufsize = 256;
+	DWORD new_bufsize, bufsize = PATH_MAX;
 	buffer = unicode_printer_alloc_wchar(printer, bufsize);
 	if unlikely(!buffer)
 		goto err;
@@ -351,33 +351,54 @@ err:
 	return -1;
 #endif /* DeeSystem_PrintPwd_USE_WINDOWS */
 
+#if defined(DeeSystem_PrintPwd_USE_WGETCWD) || \
+    defined(DeeSystem_PrintPwd_USE_GETCWD)
 #ifdef DeeSystem_PrintPwd_USE_WGETCWD
-	dwchar_t *buffer, *new_buffer;
-	size_t bufsize = 256, buflen;
-	buffer = unicode_printer_alloc_wchar(printer, bufsize);
+#define IFELSE_WCHAR(wc, c) wc
+#else /* DeeSystem_PrintPwd_USE_WGETCWD */
+#define IFELSE_WCHAR(wc, c) c
+#endif /* !DeeSystem_PrintPwd_USE_WGETCWD */
+	IFELSE_WCHAR(dwchar_t, char) *buffer, *new_buffer;
+	size_t bufsize = PATH_MAX, buflen;
+	buffer = IFELSE_WCHAR(unicode_printer_alloc_wchar(printer, bufsize),
+	                      unicode_printer_alloc_utf8(printer, bufsize));
 	if unlikely(!buffer)
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	while (!wgetcwd((wchar_t *)buffer, bufsize + 1)) {
+	while (!IFELSE_WCHAR(wgetcwd((wchar_t *)buffer, bufsize + 1),
+	                     getcwd((char *)buffer, bufsize + 1))) {
 		DBG_ALIGNMENT_ENABLE();
 		/* Increase the buffer and try again. */
 #if defined(CONFIG_HAVE_errno) && defined(ERANGE)
 		int error = DeeSystem_GetErrno();
 		if (error != ERANGE) {
 			DBG_ALIGNMENT_ENABLE();
-			DeeError_SysThrowf(&DeeError_SystemError, error,
-			                   "Failed to determine the current working directory");
+			DeeSystem_IF_E1(error, EACCES, {
+				DeeError_SysThrowf(&DeeError_FileAccessError, error,
+				                   "Permission to read a part of the current "
+				                   "working directory's path was denied");
+				goto err_release;
+			});
+			DeeSystem_IF_E1(error, ENOENT, {
+				DeeError_SysThrowf(&DeeError_FileNotFound, error,
+				                   "The current working directory has been unlinked");
+				goto err_release;
+			});
+			DeeError_SysThrowf(&DeeError_FSError, error,
+			                   "Failed to retrieve the current working directory");
 			goto err_release;
 		}
 #endif /* CONFIG_HAVE_errno && ERANGE */
 		bufsize *= 2;
-		new_buffer = unicode_printer_resize_wchar(printer, buffer, bufsize);
+		new_buffer = IFELSE_WCHAR(unicode_printer_resize_wchar(printer, buffer, bufsize),
+		                          unicode_printer_resize_utf8(printer, buffer, bufsize));
 		if unlikely(!new_buffer)
 			goto err_release;
 		DBG_ALIGNMENT_DISABLE();
 	}
 	DBG_ALIGNMENT_ENABLE();
-	buflen = wcslen(buffer);
+	buflen = IFELSE_WCHAR(wcslen(buffer),
+	                      strlen(buffer));
 	if (!include_trailing_sep) {
 		while (buflen && DeeSystem_IsSep(buffer[buflen - 1]))
 			--buflen;
@@ -393,7 +414,8 @@ err:
 		++buflen;
 		include_trailing_sep = false;
 	}
-	if unlikely(unicode_printer_confirm_wchar(printer, buffer, buflen) < 0)
+	if unlikely(IFELSE_WCHAR(unicode_printer_confirm_wchar(printer, buffer, buflen),
+	                         unicode_printer_confirm_utf8(printer, buffer, buflen)) < 0)
 		goto err;
 	ASSERT(printer->up_length != 0);
 	if (include_trailing_sep) {
@@ -406,69 +428,12 @@ err:
 	}
 	return 0;
 err_release:
-	unicode_printer_free_wchar(printer, buffer);
+	IFELSE_WCHAR(unicode_printer_free_wchar(printer, buffer),
+	             unicode_printer_free_utf8(printer, buffer));
 err:
 	return -1;
-#endif /* DeeSystem_PrintPwd_USE_WGETCWD */
-
-#ifdef DeeSystem_PrintPwd_USE_GETCWD
-	char *buffer, *new_buffer;
-	size_t buflen, bufsize = 256;
-	buffer = unicode_printer_alloc_utf8(printer, bufsize);
-	if unlikely(!buffer)
-		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	while (!getcwd(buffer, bufsize + 1)) {
-		/* Increase the buffer and try again. */
-#if defined(CONFIG_HAVE_errno) && defined(ERANGE)
-		int error = DeeSystem_GetErrno();
-		if (error != ERANGE) {
-			DBG_ALIGNMENT_ENABLE();
-			DeeError_SysThrowf(&DeeError_SystemError, error,
-			                   "Failed to determine the current working directory");
-			goto err_release;
-		}
-#endif /* CONFIG_HAVE_errno && ERANGE */
-		bufsize *= 2;
-		new_buffer = unicode_printer_resize_utf8(printer, buffer, bufsize);
-		if unlikely(!new_buffer)
-			goto err_release;
-		DBG_ALIGNMENT_DISABLE();
-	}
-	buflen = strlen(buffer);
-	DBG_ALIGNMENT_ENABLE();
-	if (!include_trailing_sep) {
-		while (buflen && DeeSystem_IsSep(buffer[buflen - 1]))
-			--buflen;
-	}
-	if unlikely(!buflen) {
-		buflen    = 1;
-		buffer[0] = '.';
-	}
-	if (include_trailing_sep && buflen < bufsize &&
-	    !DeeSystem_IsSep(buffer[buflen - 1])) {
-		buffer[buflen + 0] = DeeSystem_SEP;
-		buffer[buflen + 1] = 0;
-		++buflen;
-		include_trailing_sep = false;
-	}
-	if unlikely(unicode_printer_confirm_utf8(printer, buffer, buflen) < 0)
-		goto err;
-	ASSERT(printer->up_length != 0);
-	if (include_trailing_sep) {
-		uint32_t ch;
-		ch = UNICODE_PRINTER_GETCHAR(printer, printer->up_length - 1);
-		if (!DeeSystem_IsSep(ch)) {
-			if (unicode_printer_putascii(printer, DeeSystem_SEP))
-				goto err;
-		}
-	}
-	return 0;
-err_release:
-	unicode_printer_free_utf8(printer, buffer);
-err:
-	return -1;
-#endif /* DeeSystem_PrintPwd_USE_GETCWD */
+#undef IFELSE_WCHAR
+#endif /* DeeSystem_PrintPwd_USE_WGETCWD || DeeSystem_PrintPwd_USE_GETCWD */
 
 #ifdef DeeSystem_PrintPwd_USE_GETENV
 	size_t pwdlen;
@@ -510,7 +475,7 @@ err:
 	error = unicode_printer_printutf8(printer,
 	                                  "." DeeSystem_SEP_S,
 	                                  include_trailing_sep ? 2 : 1);
-	if likely(error >= 0)
+	if likely(error > 0)
 		error = 0;
 	return (int)error;
 #endif /* DeeSystem_PrintPwd_USE_DOT */

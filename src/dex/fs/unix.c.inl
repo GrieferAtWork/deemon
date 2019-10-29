@@ -438,19 +438,6 @@ err_handle_closed(int error, DeeObject *__restrict path) {
 	                          path);
 }
 
-PRIVATE ATTR_COLD int DCALL err_getcwd(int error) {
-	if (error == EACCES) {
-		return DeeError_SysThrowf(&DeeError_FileAccessError, error,
-		                          "Permission to read a part of the current "
-		                          "working directory's path was denied");
-	} else if (error == ENOENT) {
-		return DeeError_SysThrowf(&DeeError_FileNotFound, error,
-		                          "The current working directory has been unlinked");
-	}
-	return DeeError_SysThrowf(&DeeError_FSError, error,
-	                          "Failed to retrieve the current working directory");
-}
-
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL fs_chdir(DeeObject *__restrict path) {
