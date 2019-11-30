@@ -660,17 +660,11 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 					a->ob_digit[i] = DIGIT_MASK;
 					continue;
 				}
-				if (oldval == 1) {
-					if (a->ob_size == -1) {
-						ASSERT(i == 0);
-						*pself = (DeeIntObject *)&DeeInt_Zero;
-						Dee_Incref(&DeeInt_Zero);
-						Dee_DecrefDokill(a);
-					} else if (i == ((size_t)-a->ob_size - 1)) {
-						/* XXX: Check the integer cache for a better fit for the new size. */
-						++a->ob_size;
-						ASSERT(a->ob_size < 0);
-					}
+				if (oldval == 1 && a->ob_size == -1) {
+					ASSERT(i == 0);
+					*pself = (DeeIntObject *)&DeeInt_Zero;
+					Dee_Incref(&DeeInt_Zero);
+					Dee_DecrefDokill(a);
 					goto done2;
 				}
 				a->ob_digit[i] = oldval - 1;
@@ -706,10 +700,10 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 	DREF DeeIntObject *z, *a = *pself;
 	if (!DeeObject_IsShared(a)) {
 		size_t i;
-		/* Try to do the increment in-line, thus not having to allocate a new integer. */
+		/* Try to do the decrement in-line, thus not having to allocate a new integer. */
 		if unlikely(a->ob_size == 0) {
-			*pself = (DeeIntObject *)&DeeInt_One;
-			Dee_Incref(&DeeInt_One);
+			*pself = (DeeIntObject *)&DeeInt_MinusOne;
+			Dee_Incref(&DeeInt_MinusOne);
 			Dee_DecrefDokill(a);
 			goto done2;
 		}
@@ -722,17 +716,11 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 					a->ob_digit[i] = DIGIT_MASK;
 					continue;
 				}
-				if (oldval == 1) {
-					if (a->ob_size == 1) {
-						ASSERT(i == 0);
-						*pself = (DeeIntObject *)&DeeInt_Zero;
-						Dee_Incref(&DeeInt_Zero);
-						Dee_DecrefDokill(a);
-					} else if (i == ((size_t)a->ob_size - 1)) {
-						/* XXX: Check the integer cache for a better fit for the new size. */
-						++a->ob_size;
-						ASSERT(a->ob_size < 0);
-					}
+				if (oldval == 1 && a->ob_size == 1) {
+					ASSERT(i == 0);
+					*pself = (DeeIntObject *)&DeeInt_Zero;
+					Dee_Incref(&DeeInt_Zero);
+					Dee_DecrefDokill(a);
 					goto done2;
 				}
 				a->ob_digit[i] = oldval - 1;

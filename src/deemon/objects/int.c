@@ -2975,6 +2975,25 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+int_forcecopy(DeeIntObject *self, size_t argc, DeeObject **argv) {
+	DREF DeeIntObject *result;
+	size_t int_size;
+	if (DeeArg_Unpack(argc, argv, ":__forcecopy__"))
+		goto err;
+	int_size = (size_t)self->ob_size;
+	if ((dssize_t)int_size < 0)
+		int_size = (size_t) - (dssize_t)int_size;
+	result = (DREF DeeIntObject *)DeeInt_Alloc(int_size);
+	if unlikely(!result)
+		goto err;
+	result->ob_size = self->ob_size; /* Also copy the sign */
+	memcpy(result->ob_digit, self->ob_digit, int_size * sizeof(digit));
+	return result;
+err:
+	return NULL;
+}
+
 
 PRIVATE struct type_method int_methods[] = {
 	{ "tostr",
@@ -3019,6 +3038,14 @@ PRIVATE struct type_method int_methods[] = {
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_sizeof,
 	  DOC("->?Dint") },
+	{ "__forcecopy__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_forcecopy,
+	  DOC("->?Dint\n"
+	      "Internal function to force the creation of a copy of @this "
+	      "integer without performing aliasing for known constants.\n"
+	      "This function is implementation-specific and used by tests "
+	      "in order to ensure that inplace-optimization of certain "
+	      "operators functions correctly") },
 	{ NULL }
 };
 
