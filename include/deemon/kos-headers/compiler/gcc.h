@@ -503,6 +503,18 @@
 #define __ATTR_EXTERNALLY_VISIBLE  __attribute__((__externally_visible__))
 #define __ATTR_VISIBILITY(vis)     __attribute__((__visibility__(vis)))
 
+/* Same as the *_P-less variants, however these should be used for function
+ * typedefs, since some compilers don't allow these kinds of attributes on
+ * those. */
+#define __ATTR_LEAF_P   __ATTR_LEAF
+#define __ATTR_PURE_P   __ATTR_PURE
+#define __ATTR_CONST_P  __ATTR_CONST
+
+/* Suppress warnings about `-Wsuggest-attribute=const' or `-Wsuggest-attribute=pure' */
+#define __COMPILER_IMPURE() __asm__("")
+
+
+
 #if __has_attribute(__selectany__)
 #   define __ATTR_SELECTANY        __attribute__((__selectany__))
 #else
@@ -541,7 +553,7 @@
 #   define __NO_builtin_assume     1
 #   define __builtin_assume(x)     (void)0
 #endif
-#endif
+#endif /* !__has_builtin(__builtin_assume) */
 #endif
 #if __GCC_VERSION(4,3,0) && (!defined(__GCCXML__) && \
    !defined(__clang__) && !defined(unix) && \
@@ -551,14 +563,15 @@
 #   define __COMPILER_ALIGNOF      __alignof
 #elif defined(__cplusplus)
 extern "C++" { template<class T> struct __compiler_alignof { char __x; T __y; }; }
-#   define __COMPILER_ALIGNOF(T)   (sizeof(__compiler_alignof< T >)-sizeof(T))
+#   define __COMPILER_ALIGNOF(T)   (sizeof(__compiler_alignof<__typeof__(T)>)-sizeof(T))
 #else
 #   define __COMPILER_ALIGNOF(T)   ((__SIZE_TYPE__)&((struct{ char __x; T __y; } *)0)->__y)
 #endif
 #if defined(__NO_INLINE__) && 0
 #   define __NO_ATTR_INLINE        1
 #   define __ATTR_INLINE           /* Nothing */
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__ > 199901L
+#elif defined(inline) || defined(__cplusplus) || \
+     (defined(__STDC_VERSION__) && __STDC_VERSION__ > 199901L)
 #   define __ATTR_INLINE           inline
 #elif __GCC_VERSION(2,7,0)
 #   define __ATTR_INLINE           __inline__
@@ -567,10 +580,10 @@ extern "C++" { template<class T> struct __compiler_alignof { char __x; T __y; };
 #   define __ATTR_INLINE           /* Nothing */
 #endif
 #if __GCC_VERSION(3,0,0)
-#   define __ATTR_FORCEINLINE      __inline__ __attribute__((__always_inline__))
+#   define __ATTR_FORCEINLINE      __ATTR_INLINE __attribute__((__always_inline__))
 #elif __GCC_VERSION(2,7,0)
 #   define __NO_ATTR_FORCEINLINE   1
-#   define __ATTR_FORCEINLINE      __inline__
+#   define __ATTR_FORCEINLINE      __ATTR_INLINE
 #else
 #   define __NO_ATTR_FORCEINLINE   1
 #   define __ATTR_FORCEINLINE      /* Nothing */
@@ -605,6 +618,7 @@ __extension__ typedef unsigned long long __ulonglong_t;
 #else
 #   define __restrict_arr /* Nothing */
 #endif
+#define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS 1
 #if 1
 #define __COMPILER_FLEXIBLE_ARRAY(T,x) T x[]
 #elif 1
@@ -678,9 +692,9 @@ __extension__ typedef unsigned long long __ulonglong_t;
 
 #ifdef __cplusplus
 #ifdef __INTELLISENSE__
-#   define __NULLPTR    nullptr
+#   define __NULLPTR nullptr
 #else /* __INTELLISENSE__ */
-#   define __NULLPTR          0
+#   define __NULLPTR 0
 #endif /* !__INTELLISENSE__ */
 #else /* __cplusplus */
 #   define __NULLPTR ((void *)0)

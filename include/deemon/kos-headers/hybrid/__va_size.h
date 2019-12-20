@@ -16,39 +16,28 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef __GUARD_HYBRID___ALLOCA_H
-#define __GUARD_HYBRID___ALLOCA_H 1
+#ifndef __GUARD_HYBRID___VA_SIZE_H
+#define __GUARD_HYBRID___VA_SIZE_H 1
 
 #include "../__stdinc.h"
+#include "host.h"
 
-#if defined(__GNUC__) || __has_builtin(__builtin_alloca)
-#define __hybrid_alloca(s)  __builtin_alloca(s)
-#elif defined(_MSC_VER)
+/* __VA_SIZE: Minimal size of integral type arguments in ellipsis
+ *            May be used to optimize PRI* macros from <inttypes.h>,
+ *            as well as implement a more efficient `printf()' function. */
+#ifndef __VA_SIZE
+#if defined(__x86_64__)
+#define __VA_SIZE 8
+#elif defined(__i386__)
+#define __VA_SIZE 4
+#else
 #include "typecore.h"
-__SYSDECL_BEGIN
-__NAMESPACE_INT_BEGIN
-extern __ATTR_WUNUSED __ATTR_ALLOC_SIZE((1)) void *(__cdecl _alloca)(__SIZE_TYPE__ __n_bytes);
-#pragma intrinsic(_alloca)
-__NAMESPACE_INT_END
-__SYSDECL_END
-#define __hybrid_alloca(s) (__NAMESPACE_INT_SYM _alloca)(s)
-#else /* ... */
-#if !defined(__NO_has_include) && !defined(__KOS_SYSTEM_HEADERS__)
-#if __has_include(<alloca.h>)
-#include <alloca.h>
-#define __hybrid_alloca(s)  alloca(s)
+/* The C standard implies a minimal alignment for int-types.
+ * With this in mind (and so-as not to do something wrong), assume
+ * integer alignment an all other cases */
+#define __VA_SIZE __SIZEOF_INT__
 #endif
-#endif /* !__NO_has_include && !__KOS_SYSTEM_HEADERS__ */
+#endif /* !__VA_SIZE */
 
-#ifndef __hybrid_alloca
-#if 1
-#include "typecore.h"
-__SYSDECL_BEGIN
-extern __ATTR_WUNUSED __ATTR_ALLOC_SIZE((1)) void *(alloca)(__SIZE_TYPE__ __n_bytes);
-__SYSDECL_END
-#define __hybrid_alloca(s)  (alloca)(s)
-#endif
-#endif /* !__hybrid_alloca */
-#endif /* ... */
 
-#endif /* !__GUARD_HYBRID___ALLOCA_H */
+#endif /* !__GUARD_HYBRID___VA_SIZE_H */

@@ -21,6 +21,28 @@
 
 #include "../__stdinc.h"
 
+/*
+ * ATTR_LEAF:
+ *    - Doesn't depend on any global state
+ *    - (may) dereference pointers
+ *    - (may) modify memory pointed-to by input arguments
+ *    - Example: `memcpy()'
+ * ATTR_PURE:
+ *    - Doesn't depend on any global state
+ *    - (may) dereference pointers
+ *    - Only visible side-effect is return value (therefor musn't return `void')
+ *    - Example: `memcmp()'
+ * ATTR_CONST:
+ *    - Doesn't depend on any global state
+ *    - Only visible side-effect is return value (therefor musn't return `void')
+ *    - Example: `abs()'
+ *
+ * Implications:
+ *    - ATTR_PURE / ATTR_CONST --> WUNUSED
+ *    - ATTR_CONST --> NOTHROW()
+ *
+ */
+
 #define ATTR_NOINLINE           __ATTR_NOINLINE
 #define ATTR_NORETURN           __ATTR_NORETURN
 #define ATTR_FASTCALL           __ATTR_FASTCALL
@@ -78,6 +100,7 @@
 #define COMPILER_WRITE_BARRIER        __COMPILER_WRITE_BARRIER
 #define COMPILER_IGNORE_UNINITIALIZED __COMPILER_IGNORE_UNINITIALIZED
 #define COMPILER_FLEXIBLE_ARRAY       __COMPILER_FLEXIBLE_ARRAY
+#define COMPILER_IMPURE               __COMPILER_IMPURE
 
 #ifdef __INTELLISENSE__
 #define DEFINE_PRIVATE_ALIAS(new, old)      /* nothing */

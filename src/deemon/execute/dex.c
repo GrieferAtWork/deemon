@@ -42,7 +42,7 @@
 #include <deemon/dec.h>
 #endif /* !CONFIG_NO_DEC */
 
-#include <hybrid/limits.h>
+#include <hybrid/host.h>
 
 #include <string.h>
 
@@ -55,6 +55,13 @@
 #ifdef CONFIG_HAVE_LINK_H
 #include <link.h>
 #endif /* CONFIG_HAVE_LINK_H */
+
+#ifndef __ARCH_PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#endif /* __ARCH_PAGESIZE */
+#endif /* !__ARCH_PAGESIZE_MIN */
+
 
 DECL_BEGIN
 
@@ -240,13 +247,16 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 	DBG_ALIGNMENT_ENABLE();
 	if (!result) {
 		/* Try again after inserting an underscore. */
-		if (((uintptr_t)(name) & ~(PAGESIZE - 1)) ==
-		    ((uintptr_t)(name - 1) & ~(PAGESIZE - 1)) &&
+#ifdef __ARCH_PAGESIZE_MIN
+		if (((uintptr_t)(name) & ~(__ARCH_PAGESIZE_MIN - 1)) ==
+		    ((uintptr_t)(name - 1) & ~(__ARCH_PAGESIZE_MIN - 1)) &&
 		    name[-1] == '_') {
 			DBG_ALIGNMENT_DISABLE();
 			result = DeeSystem_DlSym(me->d_handle, name - 1);
 			DBG_ALIGNMENT_ENABLE();
-		} else {
+		} else
+#endif /* __ARCH_PAGESIZE_MIN */
+		{
 			char *temp_name;
 			size_t namelen = strlen(name);
 #ifdef Dee_AMallocNoFail

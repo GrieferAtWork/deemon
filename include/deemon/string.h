@@ -27,7 +27,7 @@
 #include "alloc.h"
 #endif /* !__INTELLISENSE__ */
 
-#include <hybrid/limits.h>
+#include <hybrid/host.h>
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -704,10 +704,11 @@ DeeString_New(/*unsigned*/ char const *__restrict str);
 	((void)(hash), DeeString_New(str)) /* XXX: Take advantage of this? */
 
 
-/* Smallest, possible pagesize of the host */
-#ifndef PAGESIZE_MIN
-#define PAGESIZE_MIN PAGESIZE
-#endif /* !PAGESIZE_MIN */
+#ifndef __ARCH_PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#endif /* __ARCH_PAGESIZE */
+#endif /* !__ARCH_PAGESIZE_MIN */
 
 /* Check if `str' is the `DeeString_STR()' of a string object, and return
  * a pointer to that object, only if it being that can be guarantied.
@@ -716,7 +717,7 @@ DeeString_New(/*unsigned*/ char const *__restrict str);
  *          with statically allocated strings, as a heap implementation
  *          that doesn't fill free memory and uses a block-size field in
  *          an unfortunate location could falsely trigger a match. */
-#ifdef PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE_MIN
 LOCAL WUNUSED NONNULL((1)) DeeObject *DCALL
 DeeString_IsObject(/*unsigned*/ char const *__restrict str) {
 	DeeStringObject *base;
@@ -725,7 +726,7 @@ DeeString_IsObject(/*unsigned*/ char const *__restrict str) {
 	 * as the string pointer we were given. - Only if it is, can we
 	 * safely access the supposed string object to check if it matches
 	 * what we'd expect of a string instance. */
-	if (((uintptr_t)base & ~(PAGESIZE_MIN - 1)) == ((uintptr_t)str & ~(PAGESIZE_MIN - 1)) &&
+	if (((uintptr_t)base & ~(__ARCH_PAGESIZE_MIN - 1)) == ((uintptr_t)str & ~(__ARCH_PAGESIZE_MIN - 1)) &&
 	    ((uintptr_t)base & (sizeof(void *) - 1)) == 0) {
 		/* Most important check: Does the object type indicate that it's a string. */
 		if (base->ob_type == &DeeString_Type) {
@@ -781,11 +782,11 @@ return_new_string:
 	return result;
 }
 
-#else /* PAGESIZE_MIN */
+#else /* __ARCH_PAGESIZE_MIN */
 #define DeeString_IsObject(str)              ((DeeObject *)NULL)
 #define DeeString_NewAuto(str)               DeeString_New(str)
 #define DeeString_NewAutoWithHash(str, hash) DeeString_NewWithHash(str, hash)
-#endif /* !PAGESIZE_MIN */
+#endif /* !__ARCH_PAGESIZE_MIN */
 
 /* Construct a new string using printf-like (and deemon-enhanced) format-arguments. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DeeString_Newf(/*utf-8*/ char const *__restrict format, ...);

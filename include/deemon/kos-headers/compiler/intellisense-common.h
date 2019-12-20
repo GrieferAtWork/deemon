@@ -31,11 +31,12 @@
 
 namespace __intern {
 
-template<unsigned int uid, class T>
-struct ____intellisense_altint {
-	T __v;
+template<class __UID, bool __ALLOW_INT_OPS, class __T>
+class ____intellisense_altint {
+	__T __v;
+
 public:
-	bool operator ! () const;
+	bool operator!() const;
 	explicit operator bool() const throw();
 	explicit operator char() const throw();
 	explicit operator short() const throw();
@@ -48,63 +49,166 @@ public:
 	explicit operator unsigned int() const throw();
 	explicit operator unsigned long() const throw();
 	explicit operator unsigned long long() const throw();
-	template<class S> explicit operator S *() const throw();
-	____intellisense_altint operator + () const throw();
-	____intellisense_altint operator - () const throw();
-	____intellisense_altint operator ~ () const throw();
-	____intellisense_altint &operator ++ () throw();
-	____intellisense_altint &operator -- () throw();
-	____intellisense_altint operator ++ (int) throw();
-	____intellisense_altint operator -- (int) throw();
-	____intellisense_altint operator + (____intellisense_altint const &) const throw();
-	____intellisense_altint operator + (T) const throw();
-	____intellisense_altint operator - (____intellisense_altint const &) const throw();
-	____intellisense_altint operator - (T) const throw();
-	____intellisense_altint operator * (____intellisense_altint const &) const throw();
-	____intellisense_altint operator * (T) const throw();
-	____intellisense_altint operator / (____intellisense_altint const &) const throw();
-	____intellisense_altint operator / (T) const throw();
-	____intellisense_altint operator % (____intellisense_altint const &) const throw();
-	____intellisense_altint operator % (T) const throw();
-	____intellisense_altint operator | (____intellisense_altint const &) const throw();
-	____intellisense_altint operator | (T) const throw();
-	____intellisense_altint operator & (____intellisense_altint const &) const throw();
-	____intellisense_altint operator & (T) const throw();
-	____intellisense_altint operator ^ (____intellisense_altint const &) const throw();
-	____intellisense_altint operator ^ (T) const throw();
-	____intellisense_altint operator << (unsigned int) const throw();
-	____intellisense_altint operator >> (unsigned int) const throw();
-	____intellisense_altint &operator += (____intellisense_altint const &) throw();
-	____intellisense_altint &operator += (T) throw();
-	____intellisense_altint &operator -= (____intellisense_altint const &) throw();
-	____intellisense_altint &operator -= (T) throw();
-	____intellisense_altint &operator *= (____intellisense_altint const &) throw();
-	____intellisense_altint &operator *= (T) throw();
-	____intellisense_altint &operator /= (____intellisense_altint const &) throw();
-	____intellisense_altint &operator /= (T) throw();
-	____intellisense_altint &operator %= (____intellisense_altint const &) throw();
-	____intellisense_altint &operator %= (T) throw();
-	____intellisense_altint &operator |= (____intellisense_altint const &) throw();
-	____intellisense_altint &operator |= (T) throw();
-	____intellisense_altint &operator &= (____intellisense_altint const &) throw();
-	____intellisense_altint &operator &= (T) throw();
-	____intellisense_altint &operator ^= (____intellisense_altint const &) throw();
-	____intellisense_altint &operator ^= (T) throw();
-	____intellisense_altint &operator <<= (unsigned int) throw();
-	____intellisense_altint &operator >>= (unsigned int) throw();
-	bool operator <  (____intellisense_altint const &) const throw();
-	bool operator <= (____intellisense_altint const &) const throw();
-	bool operator == (____intellisense_altint const &) const throw();
-	bool operator != (____intellisense_altint const &) const throw();
-	bool operator >  (____intellisense_altint const &) const throw();
-	bool operator >= (____intellisense_altint const &) const throw();
+	template<class __S> explicit operator __S *() const throw();
+	____intellisense_altint operator+() const throw();
+	____intellisense_altint operator-() const throw();
+	____intellisense_altint operator~() const throw();
+	____intellisense_altint &operator++() throw();
+	____intellisense_altint &operator--() throw();
+	____intellisense_altint operator++(int) throw();
+	____intellisense_altint operator--(int) throw();
+	____intellisense_altint operator+(____intellisense_altint const &) const throw();
+	____intellisense_altint operator+(__T) const throw();
+	____intellisense_altint operator-(____intellisense_altint const &) const throw();
+	____intellisense_altint operator-(__T) const throw();
+	____intellisense_altint operator*(____intellisense_altint const &)const throw();
+	____intellisense_altint operator*(__T) const throw();
+	____intellisense_altint operator/(____intellisense_altint const &) const throw();
+	____intellisense_altint operator/(__T) const throw();
+	____intellisense_altint operator%(____intellisense_altint const &) const throw();
+	____intellisense_altint operator%(__T) const throw();
+	____intellisense_altint operator|(____intellisense_altint const &) const throw();
+	____intellisense_altint operator|(__T) const throw();
+	____intellisense_altint operator&(____intellisense_altint const &)const throw();
+	____intellisense_altint operator&(__T) const throw();
+	____intellisense_altint operator^(____intellisense_altint const &) const throw();
+	____intellisense_altint operator^(__T) const throw();
+	____intellisense_altint operator<<(unsigned int) const throw();
+	____intellisense_altint operator>>(unsigned int) const throw();
+	____intellisense_altint &operator+=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator+=(__T) throw();
+	____intellisense_altint &operator-=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator-=(__T) throw();
+	____intellisense_altint &operator*=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator*=(__T) throw();
+	____intellisense_altint &operator/=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator/=(__T) throw();
+	____intellisense_altint &operator%=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator%=(__T) throw();
+	____intellisense_altint &operator|=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator|=(__T) throw();
+	____intellisense_altint &operator&=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator&=(__T) throw();
+	____intellisense_altint &operator^=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator^=(__T) throw();
+	____intellisense_altint &operator<<=(unsigned int) throw();
+	____intellisense_altint &operator>>=(unsigned int) throw();
+	bool operator<(____intellisense_altint const &) const throw();
+	bool operator<(__T const &) const throw();
+	bool operator<=(____intellisense_altint const &) const throw();
+	bool operator<=(__T const &) const throw();
+	bool operator==(____intellisense_altint const &) const throw();
+	bool operator==(__T const &) const throw();
+	bool operator!=(____intellisense_altint const &) const throw();
+	bool operator!=(__T const &) const throw();
+	bool operator>(____intellisense_altint const &) const throw();
+	bool operator>(__T const &) const throw();
+	bool operator>=(____intellisense_altint const &) const throw();
+	bool operator>=(__T const &) const throw();
 
-	____intellisense_altint() = default;
+	____intellisense_altint()                                = default;
 	____intellisense_altint(____intellisense_altint const &) = default;
-	____intellisense_altint &operator = (____intellisense_altint const &) throw() = default;
-	template<unsigned int __uid2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__uid2, __T2> &&) throw() = default;
-	template<unsigned int __uid2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__uid2, __T2> const &) throw() = default;
-	template<class S> explicit ____intellisense_altint(S *) throw() = default;
+	____intellisense_altint &operator=(____intellisense_altint const &) throw()                                                = default;
+	template<class __UID2, bool __ALLOW_INT_OPS2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__UID2, __ALLOW_INT_OPS2, __T2> &&) throw()      = default;
+	template<class __UID2, bool __ALLOW_INT_OPS2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__UID2, __ALLOW_INT_OPS2, __T2> const &) throw() = default;
+	template<class __S> explicit ____intellisense_altint(__S *) throw()                                                            = default;
+
+	____intellisense_altint(decltype(nullptr)); /* Allow direct conversion from `0' */
+	____intellisense_altint(char) throw();
+	____intellisense_altint(short) throw();
+	____intellisense_altint(int) throw();
+	____intellisense_altint(long) throw();
+	____intellisense_altint(long long) throw();
+	____intellisense_altint(signed char) throw();
+	____intellisense_altint(unsigned char) throw();
+	____intellisense_altint(unsigned short) throw();
+	____intellisense_altint(unsigned int) throw();
+	____intellisense_altint(unsigned long) throw();
+	____intellisense_altint(unsigned long long) throw();
+#if 0
+	____intellisense_altint(wchar_t) throw();
+#endif
+#if 0
+	____intellisense_altint(char16_t) throw();
+	____intellisense_altint(char32_t) throw();
+#endif
+};
+
+template<class __UID, class __T>
+class ____intellisense_altint<__UID, false, __T> {
+	__T __v;
+
+public:
+	bool operator!() const;
+	explicit operator bool() const throw();
+	explicit operator char() const throw();
+	explicit operator short() const throw();
+	explicit operator int() const throw();
+	explicit operator long() const throw();
+	explicit operator long long() const throw();
+	explicit operator signed char() const throw();
+	explicit operator unsigned char() const throw();
+	explicit operator unsigned short() const throw();
+	explicit operator unsigned int() const throw();
+	explicit operator unsigned long() const throw();
+	explicit operator unsigned long long() const throw();
+	template<class __S> explicit operator __S *() const throw();
+	____intellisense_altint operator+() const throw();
+	____intellisense_altint operator-() const throw();
+	____intellisense_altint operator~() const throw();
+	____intellisense_altint &operator++() throw();
+	____intellisense_altint &operator--() throw();
+	____intellisense_altint operator++(int) throw();
+	____intellisense_altint operator--(int) throw();
+	____intellisense_altint operator+(____intellisense_altint const &) const throw();
+	____intellisense_altint operator+(__T) const throw();
+	____intellisense_altint operator-(____intellisense_altint const &) const throw();
+	____intellisense_altint operator-(__T) const throw();
+	____intellisense_altint operator*(____intellisense_altint const &)const throw();
+	____intellisense_altint operator*(__T) const throw();
+	____intellisense_altint operator/(____intellisense_altint const &) const throw();
+	____intellisense_altint operator/(__T) const throw();
+	____intellisense_altint operator%(____intellisense_altint const &) const throw();
+	____intellisense_altint operator%(__T) const throw();
+	____intellisense_altint operator|(____intellisense_altint const &) const throw();
+	____intellisense_altint operator|(__T) const throw();
+	____intellisense_altint operator&(____intellisense_altint const &)const throw();
+	____intellisense_altint operator&(__T) const throw();
+	____intellisense_altint operator^(____intellisense_altint const &) const throw();
+	____intellisense_altint operator^(__T) const throw();
+	____intellisense_altint operator<<(unsigned int) const throw();
+	____intellisense_altint operator>>(unsigned int) const throw();
+	____intellisense_altint &operator+=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator+=(__T) throw();
+	____intellisense_altint &operator-=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator-=(__T) throw();
+	____intellisense_altint &operator*=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator*=(__T) throw();
+	____intellisense_altint &operator/=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator/=(__T) throw();
+	____intellisense_altint &operator%=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator%=(__T) throw();
+	____intellisense_altint &operator|=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator|=(__T) throw();
+	____intellisense_altint &operator&=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator&=(__T) throw();
+	____intellisense_altint &operator^=(____intellisense_altint const &) throw();
+	____intellisense_altint &operator^=(__T) throw();
+	____intellisense_altint &operator<<=(unsigned int) throw();
+	____intellisense_altint &operator>>=(unsigned int) throw();
+	bool operator<(____intellisense_altint const &) const throw();
+	bool operator<=(____intellisense_altint const &) const throw();
+	bool operator==(____intellisense_altint const &) const throw();
+	bool operator!=(____intellisense_altint const &) const throw();
+	bool operator>(____intellisense_altint const &) const throw();
+	bool operator>=(____intellisense_altint const &) const throw();
+
+	____intellisense_altint()                                = default;
+	____intellisense_altint(____intellisense_altint const &) = default;
+	____intellisense_altint &operator=(____intellisense_altint const &) throw()                                                = default;
+	template<class __UID2, bool __ALLOW_INT_OPS2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__UID2, __ALLOW_INT_OPS2, __T2> &&) throw()      = default;
+	template<class __UID2, bool __ALLOW_INT_OPS2, class __T2> explicit ____intellisense_altint(____intellisense_altint<__UID2, __ALLOW_INT_OPS2, __T2> const &) throw() = default;
+	template<class __S> explicit ____intellisense_altint(__S *) throw()                                                            = default;
 
 	____intellisense_altint(decltype(nullptr)); /* Allow direct conversion from `0' */
 	explicit ____intellisense_altint(char) throw();
@@ -118,93 +222,100 @@ public:
 	explicit ____intellisense_altint(unsigned int) throw();
 	explicit ____intellisense_altint(unsigned long) throw();
 	explicit ____intellisense_altint(unsigned long long) throw();
+#if 0
+	explicit ____intellisense_altint(wchar_t) throw();
+#endif
+#if 0
+	explicit ____intellisense_altint(char16_t) throw();
+	explicit ____intellisense_altint(char32_t) throw();
+#endif
 };
 
 
-template<class T> struct ____INTELLISENSE_isarith { enum{__value=false}; };
-template<class T> struct ____INTELLISENSE_issigned { enum{__value=false}; };
-template<class T> struct ____INTELLISENSE_isunsigned { enum{__value=false}; };
-template<> struct ____INTELLISENSE_isarith<bool> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<wchar_t> { enum{__value=true}; };
+template<class __T> struct ____INTELLISENSE_isarith { enum { __value = false }; };
+template<class __T> struct ____INTELLISENSE_issigned { enum { __value = false }; };
+template<class __T> struct ____INTELLISENSE_isunsigned { enum { __value = false }; };
+template<> struct ____INTELLISENSE_isarith<bool> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<wchar_t> { enum { __value = true }; };
 #if defined(_WCHAR_T_DEFINED) || defined(__GNUC__)
-template<> struct ____INTELLISENSE_isarith<char16_t> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<char32_t> { enum{__value=true}; };
+template<> struct ____INTELLISENSE_isarith<char16_t> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<char32_t> { enum { __value = true }; };
 #endif
-template<> struct ____INTELLISENSE_isarith<char> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<signed char> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<unsigned char> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<short> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<unsigned short> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<int> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<unsigned int> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<long> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<unsigned long> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<long long> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<unsigned long long> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isarith<decltype(nullptr)> { enum{__value=true}; };
-template<class T> struct ____INTELLISENSE_isarith<T *> { enum{__value=true}; };
+template<> struct ____INTELLISENSE_isarith<char> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<signed char> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<unsigned char> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<short> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<unsigned short> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<int> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<unsigned int> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<unsigned long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<long long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<unsigned long long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isarith<decltype(nullptr)> { enum { __value = true }; };
+template<class __T> struct ____INTELLISENSE_isarith<__T *> { enum { __value = true }; };
 
-template<> struct ____INTELLISENSE_issigned<signed char> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isunsigned<unsigned char> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_issigned<short> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isunsigned<unsigned short> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_issigned<int> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isunsigned<unsigned int> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_issigned<long> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isunsigned<unsigned long> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_issigned<long long> { enum{__value=true}; };
-template<> struct ____INTELLISENSE_isunsigned<unsigned long long> { enum{__value=true}; };
+template<> struct ____INTELLISENSE_issigned<signed char> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isunsigned<unsigned char> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_issigned<short> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isunsigned<unsigned short> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_issigned<int> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isunsigned<unsigned int> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_issigned<long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isunsigned<unsigned long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_issigned<long long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isunsigned<unsigned long long> { enum { __value = true }; };
 
-template<unsigned int uid, class T> struct ____INTELLISENSE_isarith<____intellisense_altint<uid,T> > { enum{__value=____INTELLISENSE_isarith<T>::__value}; };
-template<unsigned int uid, class T> struct ____INTELLISENSE_issigned<____intellisense_altint<uid,T> > { enum{__value=____INTELLISENSE_issigned<T>::__value}; };
-template<unsigned int uid, class T> struct ____INTELLISENSE_isunsigned<____intellisense_altint<uid,T> > { enum{__value=____INTELLISENSE_isunsigned<T>::__value}; };
+template<class __UID, bool __ALLOW_INT_OPS, class __T> struct ____INTELLISENSE_isarith<____intellisense_altint<__UID, __ALLOW_INT_OPS, __T> > { enum{__value=____INTELLISENSE_isarith<__T>::__value}; };
+template<class __UID, bool __ALLOW_INT_OPS, class __T> struct ____INTELLISENSE_issigned<____intellisense_altint<__UID, __ALLOW_INT_OPS, __T> > { enum{__value=____INTELLISENSE_issigned<__T>::__value}; };
+template<class __UID, bool __ALLOW_INT_OPS, class __T> struct ____INTELLISENSE_isunsigned<____intellisense_altint<__UID, __ALLOW_INT_OPS, __T> > { enum{__value=____INTELLISENSE_isunsigned<__T>::__value}; };
 
-template<bool V, class T> struct ____INTELLISENSE_enableif { typedef T __type; };
-template<class T> struct ____INTELLISENSE_enableif<false, T> {};
+template<bool __V, class __T> struct ____INTELLISENSE_enableif { typedef __T __type; };
+template<class __T> struct ____INTELLISENSE_enableif<false, __T> {};
 
-template<class TA, class TB, class TR>
+template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_issigned<TA>::__value &&
-	____INTELLISENSE_issigned<TB>::__value &&
-	____INTELLISENSE_issigned<TR>::__value,
-bool>::__type __intellisense_overflow_sadd(TA __lhs, TB __rhs, TR *__res);
-template<class TA, class TB, class TR>
+	____INTELLISENSE_issigned<__TA>::__value &&
+	____INTELLISENSE_issigned<__TB>::__value &&
+	____INTELLISENSE_issigned<__TR>::__value,
+bool>::__type __intellisense_overflow_sadd(__TA __lhs, __TB __rhs, __TR *__res);
+template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_isunsigned<TA>::__value &&
-	____INTELLISENSE_isunsigned<TB>::__value &&
-	____INTELLISENSE_isunsigned<TR>::__value,
-bool>::__type __intellisense_overflow_uadd(TA __lhs, TB __rhs, TR *__res);
+	____INTELLISENSE_isunsigned<__TA>::__value &&
+	____INTELLISENSE_isunsigned<__TB>::__value &&
+	____INTELLISENSE_isunsigned<__TR>::__value,
+bool>::__type __intellisense_overflow_uadd(__TA __lhs, __TB __rhs, __TR *__res);
 
 
-template<class TA, class TB, class TR>
+template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_issigned<TA>::__value &&
-	____INTELLISENSE_issigned<TB>::__value &&
-	____INTELLISENSE_issigned<TR>::__value,
-bool>::__type __intellisense_overflow_ssub(TA __lhs, TB __rhs, TR *__res);
-template<class TA, class TB, class TR>
+	____INTELLISENSE_issigned<__TA>::__value &&
+	____INTELLISENSE_issigned<__TB>::__value &&
+	____INTELLISENSE_issigned<__TR>::__value,
+bool>::__type __intellisense_overflow_ssub(__TA __lhs, __TB __rhs, __TR *__res);
+template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_isunsigned<TA>::__value &&
-	____INTELLISENSE_isunsigned<TB>::__value &&
-	____INTELLISENSE_isunsigned<TR>::__value,
-bool>::__type __intellisense_overflow_usub(TA __lhs, TB __rhs, TR *__res);
+	____INTELLISENSE_isunsigned<__TA>::__value &&
+	____INTELLISENSE_isunsigned<__TB>::__value &&
+	____INTELLISENSE_isunsigned<__TR>::__value,
+bool>::__type __intellisense_overflow_usub(__TA __lhs, __TB __rhs, __TR *__res);
 
-template<class TA, class TB, class TR>
+template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_issigned<TA>::__value &&
-	____INTELLISENSE_issigned<TB>::__value &&
-	____INTELLISENSE_issigned<TR>::__value,
-bool>::__type __intellisense_overflow_smul(TA __lhs, TB __rhs, TR *__res);
-template<class TA, class TB, class TR>
+	____INTELLISENSE_issigned<__TA>::__value &&
+	____INTELLISENSE_issigned<__TB>::__value &&
+	____INTELLISENSE_issigned<__TR>::__value,
+bool>::__type __intellisense_overflow_smul(__TA __lhs, __TB __rhs, __TR *__res);
+template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_isunsigned<TA>::__value &&
-	____INTELLISENSE_isunsigned<TB>::__value &&
-	____INTELLISENSE_isunsigned<TR>::__value,
-bool>::__type __intellisense_overflow_umul(TA __lhs, TB __rhs, TR *__res);
+	____INTELLISENSE_isunsigned<__TA>::__value &&
+	____INTELLISENSE_isunsigned<__TB>::__value &&
+	____INTELLISENSE_isunsigned<__TR>::__value,
+bool>::__type __intellisense_overflow_umul(__TA __lhs, __TB __rhs, __TR *__res);
 
 
 
-template<class T> struct ____INTELLISENSE_promote;
+template<class __T> struct ____INTELLISENSE_promote;
 template<> struct ____INTELLISENSE_promote<char> { typedef int __type; };
 template<> struct ____INTELLISENSE_promote<signed char> { typedef int __type; };
 template<> struct ____INTELLISENSE_promote<unsigned char> { typedef int __type; };
@@ -223,10 +334,10 @@ template<> struct ____INTELLISENSE_promote<unsigned long long> { typedef unsigne
  * regular integers without prior casting using the.
  * (le|be)swap_(16|32|64) functions from <byteswap.h>
  * >> Again: Only meant to highlight usage errors in visual studio. */
-template<int endian,class T> class ____intellisense_endianint {
-	T __v;
+template<int endian,class __T> class ____intellisense_endianint {
+	__T __v;
 public:
-//bool operator ! (void) const;
+/*	bool operator ! () const; */
 	explicit operator bool() const throw();
 	explicit operator char() const throw();
 	explicit operator short() const throw();
@@ -239,14 +350,14 @@ public:
 	explicit operator unsigned int() const throw();
 	explicit operator unsigned long() const throw();
 	explicit operator unsigned long long() const throw();
-	//____intellisense_endianint &operator = (T) throw();
+	//____intellisense_endianint &operator = (__T) throw();
 	____intellisense_endianint &operator = (____intellisense_endianint const &) throw() = default;
-	template<class S> bool operator <  (____intellisense_endianint<endian,S> const &) const throw();
-	template<class S> bool operator <= (____intellisense_endianint<endian,S> const &) const throw();
-	template<class S> bool operator == (____intellisense_endianint<endian,S> const &) const throw();
-	template<class S> bool operator != (____intellisense_endianint<endian,S> const &) const throw();
-	template<class S> bool operator >  (____intellisense_endianint<endian,S> const &) const throw();
-	template<class S> bool operator >= (____intellisense_endianint<endian,S> const &) const throw();
+	template<class __S> bool operator <  (____intellisense_endianint<endian,__S> const &) const throw();
+	template<class __S> bool operator <= (____intellisense_endianint<endian,__S> const &) const throw();
+	template<class __S> bool operator == (____intellisense_endianint<endian,__S> const &) const throw();
+	template<class __S> bool operator != (____intellisense_endianint<endian,__S> const &) const throw();
+	template<class __S> bool operator >  (____intellisense_endianint<endian,__S> const &) const throw();
+	template<class __S> bool operator >= (____intellisense_endianint<endian,__S> const &) const throw();
 	____intellisense_endianint() = default;
 	____intellisense_endianint(____intellisense_endianint const &) = default;
 	explicit ____intellisense_endianint(char) throw();
@@ -264,28 +375,28 @@ public:
 
 #pragma pack(pop)
 
-unsigned short __intellisense_leswap16(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__,unsigned short>);
-unsigned short __intellisense_beswap16(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned short>);
-unsigned int __intellisense_leswap32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__,unsigned int>);
-unsigned int __intellisense_beswap32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned int>);
-unsigned long __intellisense_leswap32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__,unsigned long>);
-unsigned long __intellisense_beswap32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned long>);
-unsigned long long __intellisense_leswap64(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__,unsigned long long>);
-unsigned long long __intellisense_beswap64(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned long long>);
+unsigned short __intellisense_leswap16(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned short>);
+unsigned short __intellisense_beswap16(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short>);
+unsigned int __intellisense_leswap32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned int>);
+unsigned int __intellisense_beswap32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int>);
+unsigned long __intellisense_leswap32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long>);
+unsigned long __intellisense_beswap32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long>);
+unsigned long long __intellisense_leswap64(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long long>);
+unsigned long long __intellisense_beswap64(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long>);
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 unsigned short __intellisense_leswap16(unsigned short);
 unsigned int __intellisense_leswap32(unsigned int);
 unsigned long __intellisense_leswap32(unsigned long);
 unsigned long long __intellisense_leswap64(unsigned long long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned short> __intellisense_beswap16(unsigned short);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned int> __intellisense_beswap32(unsigned int);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned long> __intellisense_beswap32(unsigned long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned long long> __intellisense_beswap64(unsigned long long);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short> __intellisense_beswap16(unsigned short);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int> __intellisense_beswap32(unsigned int);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long> __intellisense_beswap32(unsigned long);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long> __intellisense_beswap64(unsigned long long);
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned short> __intellisense_leswap16(unsigned short);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned int> __intellisense_leswap32(unsigned int);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned long> __intellisense_leswap32(unsigned long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__,unsigned long long> __intellisense_leswap64(unsigned long long);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short> __intellisense_leswap16(unsigned short);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int> __intellisense_leswap32(unsigned int);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long> __intellisense_leswap32(unsigned long);
+__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long> __intellisense_leswap64(unsigned long long);
 unsigned short __intellisense_beswap16(unsigned short);
 unsigned int __intellisense_beswap32(unsigned int);
 unsigned long __intellisense_beswap32(unsigned long);
@@ -297,47 +408,47 @@ unsigned long long __intellisense_beswap64(unsigned long long);
 #ifdef __INTELLISENSE_GCC__
 /* ... */
 #else /* __INTELLISENSE_GCC__ */
-::__intern::____intellisense_endianint<4321,unsigned short> __builtin_bswap16(__intern::____intellisense_endianint<1234,unsigned short>);
-::__intern::____intellisense_endianint<1234,unsigned short> __builtin_bswap16(__intern::____intellisense_endianint<4321,unsigned short>);
-::__intern::____intellisense_endianint<4321,unsigned int> __builtin_bswap32(__intern::____intellisense_endianint<1234,unsigned int>);
-::__intern::____intellisense_endianint<1234,unsigned int> __builtin_bswap32(__intern::____intellisense_endianint<4321,unsigned int>);
-::__intern::____intellisense_endianint<4321,unsigned long> __builtin_bswap32(__intern::____intellisense_endianint<1234,unsigned long>);
-::__intern::____intellisense_endianint<1234,unsigned long> __builtin_bswap32(__intern::____intellisense_endianint<4321,unsigned long>);
-::__intern::____intellisense_endianint<4321,unsigned long long> __builtin_bswap64(__intern::____intellisense_endianint<1234,unsigned long long>);
-::__intern::____intellisense_endianint<1234,unsigned long long> __builtin_bswap64(__intern::____intellisense_endianint<4321,unsigned long long>);
+::__intern::____intellisense_endianint<4321, unsigned short> __builtin_bswap16(__intern::____intellisense_endianint<1234, unsigned short>);
+::__intern::____intellisense_endianint<1234, unsigned short> __builtin_bswap16(__intern::____intellisense_endianint<4321, unsigned short>);
+::__intern::____intellisense_endianint<4321, unsigned int> __builtin_bswap32(__intern::____intellisense_endianint<1234, unsigned int>);
+::__intern::____intellisense_endianint<1234, unsigned int> __builtin_bswap32(__intern::____intellisense_endianint<4321, unsigned int>);
+::__intern::____intellisense_endianint<4321, unsigned long> __builtin_bswap32(__intern::____intellisense_endianint<1234, unsigned long>);
+::__intern::____intellisense_endianint<1234, unsigned long> __builtin_bswap32(__intern::____intellisense_endianint<4321, unsigned long>);
+::__intern::____intellisense_endianint<4321, unsigned long long> __builtin_bswap64(__intern::____intellisense_endianint<1234, unsigned long long>);
+::__intern::____intellisense_endianint<1234, unsigned long long> __builtin_bswap64(__intern::____intellisense_endianint<4321, unsigned long long>);
 #endif /* !__INTELLISENSE_GCC__ */
 
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator + (S,__intern::____intellisense_altint<uid, T>);
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator - (S,__intern::____intellisense_altint<uid, T>);
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator * (S,__intern::____intellisense_altint<uid, T>);
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator / (S,__intern::____intellisense_altint<uid, T>);
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator % (S,__intern::____intellisense_altint<uid, T>);
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator & (S,__intern::____intellisense_altint<uid, T>);
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator | (S,__intern::____intellisense_altint<uid, T>);
-template<unsigned int uid, class T, class S> typename __intern::____INTELLISENSE_promote<S>::__type operator ^ (S,__intern::____intellisense_altint<uid, T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator + (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator - (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator * (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator / (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator % (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator & (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator | (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
+template<class __UID, bool __ALLOW_INT_OPS, class __T, class __S> typename __intern::____INTELLISENSE_promote<__S>::__type operator ^ (__S,__intern::____intellisense_altint<__UID, __ALLOW_INT_OPS, __T>);
 
 
 
-template<class TA, class TB, class TR>
+template<class __TA, class __TB, class __TR>
 typename __intern::____INTELLISENSE_enableif<
-	__intern::____INTELLISENSE_isarith<TA>::__value &&
-	__intern::____INTELLISENSE_isarith<TB>::__value &&
-	__intern::____INTELLISENSE_isarith<TR>::__value,
-bool>::__type __builtin_add_overflow(TA __lhs, TB __rhs, TR *__res);
+	__intern::____INTELLISENSE_isarith<__TA>::__value &&
+	__intern::____INTELLISENSE_isarith<__TB>::__value &&
+	__intern::____INTELLISENSE_isarith<__TR>::__value,
+bool>::__type __builtin_add_overflow(__TA __lhs, __TB __rhs, __TR *__res);
 
-template<class TA, class TB, class TR>
+template<class __TA, class __TB, class __TR>
 typename __intern::____INTELLISENSE_enableif<
-	__intern::____INTELLISENSE_isarith<TA>::__value &&
-	__intern::____INTELLISENSE_isarith<TB>::__value &&
-	__intern::____INTELLISENSE_isarith<TR>::__value,
-bool>::__type __builtin_sub_overflow(TA __lhs, TB __rhs, TR *__res);
+	__intern::____INTELLISENSE_isarith<__TA>::__value &&
+	__intern::____INTELLISENSE_isarith<__TB>::__value &&
+	__intern::____INTELLISENSE_isarith<__TR>::__value,
+bool>::__type __builtin_sub_overflow(__TA __lhs, __TB __rhs, __TR *__res);
 
-template<class TA, class TB, class TR>
+template<class __TA, class __TB, class __TR>
 typename __intern::____INTELLISENSE_enableif<
-	__intern::____INTELLISENSE_isarith<TA>::__value &&
-	__intern::____INTELLISENSE_isarith<TB>::__value &&
-	__intern::____INTELLISENSE_isarith<TR>::__value,
-bool>::__type __builtin_mul_overflow(TA __lhs, TB __rhs, TR *__res);
+	__intern::____INTELLISENSE_isarith<__TA>::__value &&
+	__intern::____INTELLISENSE_isarith<__TB>::__value &&
+	__intern::____INTELLISENSE_isarith<__TR>::__value,
+bool>::__type __builtin_mul_overflow(__TA __lhs, __TB __rhs, __TR *__res);
 
 
 bool __builtin_sadd_overflow(int __a, int __b, int *__res);

@@ -16,39 +16,21 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef __GUARD_HYBRID___LIMITS_H
-#define __GUARD_HYBRID___LIMITS_H 1
+#ifndef __GUARD_HYBRID_ALTINT_H
+#define __GUARD_HYBRID_ALTINT_H 1
 
-#include "host.h"
+/* Alternative integer type
+ * For use with Intellisense to aid in highlighting unwanted use of types
+ * >> ALTINT_UID(myaltint1)
+ * >> ALTINT_UID(myaltint2)
+ * >> typedef ALTINT(myaltint1, uint32_t) my_uint32_t;
+ * >> typedef ALTINT(myaltint2, uint32_t) my_uint32_alt_t;
+ * >> ALTINT_COMPAT(my_uint32_t, my_uint32_alt_t)
+ */
+#include "__altint.h"
+#define ALTINT         __HYBRID_ALTINT
+#define ALTINT_UID     __HYBRID_ALTINT_UID
+#define ALTINT_COMPAT  __HYBRID_ALTINT_COMPAT
+#define ALTINT_TYPEDEF __HYBRID_ALTINT_TYPEDEF
 
-#ifndef __SIZEOF_PAGE__
-#ifdef __PAGESIZE
-#define __SIZEOF_PAGE__        __PAGESIZE
-#elif defined(PAGESIZE)
-#define __SIZEOF_PAGE__        PAGESIZE
-#elif defined(__i386__) || defined(__x86_64__) || defined(__arm__)
-#define __SIZEOF_PAGE__        4096
-#endif
-#endif /* !__SIZEOF_PAGE__ */
-
-#ifndef __SIZEOF_CACHELINE__
-#ifdef __CACHELINE
-#   define __SIZEOF_CACHELINE__  __CACHELINE
-#elif defined(CACHELINE)
-#   define __SIZEOF_CACHELINE__  CACHELINE
-#elif defined(__i386__) || defined(__x86_64__)
-#   define __SIZEOF_CACHELINE__  64
-#elif 0
-#   define __SIZEOF_CACHELINE__  64 /* Just guess... */
-#endif
-#endif /* __SIZEOF_CACHELINE__ */
-
-#ifndef __ATTR_CACHELINE_ALIGNED
-#ifdef __SIZEOF_CACHELINE__
-#define __ATTR_CACHELINE_ALIGNED __ATTR_ALIGNED(__SIZEOF_CACHELINE__)
-#else /* __SIZEOF_CACHELINE__ */
-#define __ATTR_CACHELINE_ALIGNED /* nothing */
-#endif /* !__SIZEOF_CACHELINE__ */
-#endif /* !__ATTR_CACHELINE_ALIGNED */
-
-#endif /* !__GUARD_HYBRID___LIMITS_H */
+#endif /* !__GUARD_HYBRID_ALTINT_H */

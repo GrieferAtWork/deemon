@@ -233,6 +233,7 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #define __NO_builtin_constant_p  1
 #define __builtin_constant_p(x)  (__LINE__ == -1)
 #define __restrict_arr           __restrict
+#define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS 1
 #define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[1024]
 #define __attribute__(x)         /* Nothing */
 #define __NO_COMPILER_IGNORE_UNINITIALIZED 1
@@ -333,6 +334,8 @@ extern void (__cdecl _ReadWriteBarrier)(void);
 } }
 #endif /* __cplusplus */
 
+#define __COMPILER_IMPURE() (void)0
+
 #ifdef __cplusplus
 #ifdef __INTELLISENSE__
 #   define __NULLPTR    nullptr
@@ -428,8 +431,8 @@ void __builtin_va_end(__builtin_va_list &__ap);
 /* Disable some warnings that are caused by function redirections in system headers. */
 #define __REDIRECT_WSUPPRESS_BEGIN \
  __pragma(warning(push)) \
- __pragma(warning(disable: /* Redirections  */4210 4028 4142 4565 4559 4211 4115 4996 \
-                           /* Unnamed union */4201))
+ __pragma(warning(disable: /* Redirections  */ 4210 4028 4142 4565 4559 4211 4115 4996 \
+                           /* Unnamed union */ 4201))
 
 #define __REDIRECT_WSUPPRESS_END   __pragma(warning(pop))
 /* Suppress warnings caused by C-mode redirections in system headers. */
@@ -438,6 +441,6 @@ void __builtin_va_end(__builtin_va_list &__ap);
 #else /* !__cplusplus */
 /* Disable some warnings that are caused by function redirections in system headers. */
 /* Suppress warnings caused by C-mode redirections in system headers. */
-#define __SYSDECL_BEGIN __DECL_BEGIN __pragma(warning(push)) __pragma(warning(disable: /* Unnamed union */4201))
+#define __SYSDECL_BEGIN __DECL_BEGIN __pragma(warning(push)) __pragma(warning(disable: /* Unnamed union */ 4201))
 #define __SYSDECL_END   __pragma(warning(pop)) __DECL_END
 #endif /* __cplusplus */

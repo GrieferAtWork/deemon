@@ -38,7 +38,7 @@
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
-#include <hybrid/limits.h>
+#include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 
@@ -47,6 +47,12 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+
+#ifndef __ARCH_PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#endif /* __ARCH_PAGESIZE */
+#endif /* !__ARCH_PAGESIZE_MIN */
 
 DECL_BEGIN
 
@@ -71,20 +77,20 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
 	if (bufsize > (size_t)result)
 		bufsize = (size_t)result;
 	if (IsDebuggerPresent()) {
-#ifdef PAGESIZE
+#ifdef __ARCH_PAGESIZE_MIN
 		/* (ab-)use the fact that the kernel can't keep us from reading
 		 *  beyond the end of a buffer so long as that memory location
 		 *  is located within the same page as the last byte of said
 		 *  buffer (Trust me... I've written by own OS) */
 		if ((bufsize <= 1000) && /* There seems to be some kind of limit here... */
-		    (((uintptr_t)buffer + bufsize) & ~(uintptr_t)(PAGESIZE - 1)) ==
-		    (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE - 1)) &&
+		    (((uintptr_t)buffer + bufsize) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) ==
+		    (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) &&
 		    (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
 			DBG_ALIGNMENT_DISABLE();
 			OutputDebugStringA((char *)buffer);
 			DBG_ALIGNMENT_ENABLE();
 		} else
-#endif /* PAGESIZE */
+#endif /* __ARCH_PAGESIZE_MIN */
 		{
 			char temp[512];
 			while (bufsize) {

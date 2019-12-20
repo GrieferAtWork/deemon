@@ -73,11 +73,18 @@
 #endif /* !CONFIG_HOST_WINDOWS */
 
 #ifndef CONFIG_NO_OBJECT_SLABS
-#include <hybrid/limits.h>
 
-#ifndef PAGESIZE
-#define PAGESIZE 4096
-#endif /* !PAGESIZE */
+/* Figure out the alignment in which to allocate slab pages. */
+#ifndef CONFIG_SLAB_PAGESIZE
+#include <hybrid/host.h>
+#ifdef __ARCH_PAGESIZE
+#define CONFIG_SLAB_PAGESIZE __ARCH_PAGESIZE
+#elif defined(__ARCH_PAGESIZE_MIN)
+#define CONFIG_SLAB_PAGESIZE __ARCH_PAGESIZE_MIN
+#else
+#define CONFIG_SLAB_PAGESIZE 4096
+#endif
+#endif /* !CONFIG_SLAB_PAGESIZE */
 
 #ifndef __SIZEOF_POINTER__
 #if defined(__x86_64__)
@@ -91,7 +98,7 @@ DECL_BEGIN
 
 typedef struct {
 	uintptr_t sr_start;       /* Starting address of this slab region.
-	                           * NOTE: This pointer is aligned by `PAGESIZE' */
+	                           * NOTE: This pointer is aligned by `CONFIG_SLAB_PAGESIZE' */
 } SlabRegionDef;
 
 typedef struct {
@@ -101,10 +108,10 @@ typedef struct {
 		SlabRegionDef sc_regions[Dee_SLAB_COUNT]; /* Slab region definitions.
 		                                              * NOTE: The starting addresses of these are ordered ascendingly! */
 		uintptr_t     sc_heap_start;                 /* [const] Starting address of the slab heap.
-		                                              * NOTE: This pointer is aligned by `PAGESIZE' */
+		                                              * NOTE: This pointer is aligned by `CONFIG_SLAB_PAGESIZE' */
 	};
 	uintptr_t         sc_heap_end;   /* [const] End address of the slab heap.
-	                                  * NOTE: This pointer is aligned by `PAGESIZE' */
+	                                  * NOTE: This pointer is aligned by `CONFIG_SLAB_PAGESIZE' */
 } SlabConfig;
 
 PRIVATE SlabConfig slab_config = {
@@ -374,7 +381,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 	}
 	if (!total)
 		goto disable_slabs;
-	if (OVERFLOW_UMUL(total, PAGESIZE, &total))
+	if (OVERFLOW_UMUL(total, CONFIG_SLAB_PAGESIZE, &total))
 		goto disable_slabs;
 	{
 		void *slab_memory;
@@ -432,7 +439,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 			slab_config.sc_regions[i].sr_start = (uintptr_t)slab_memory;
 			if (OVERFLOW_UADD(total, sizes[i], &total))
 				goto disable_slabs;
-			slab_memory = (void *)((uintptr_t)slab_memory + sizes[i] * PAGESIZE);
+			slab_memory = (void *)((uintptr_t)slab_memory + sizes[i] * CONFIG_SLAB_PAGESIZE);
 		}
 #define SET_SLAB_STARTING_PAGE(index, size)                    \
 		*(void **)&slab##size.s_free = (void *)(uintptr_t)-1l; \

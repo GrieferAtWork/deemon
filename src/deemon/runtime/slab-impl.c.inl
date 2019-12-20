@@ -47,10 +47,10 @@ DECL_BEGIN
 
 #if !defined(CONFIG_NO_OBJECT_SLABS) && 1
 
-#define SLAB_RAW_PAGECOUNT       (PAGESIZE / ITEMSIZE)
+#define SLAB_RAW_PAGECOUNT       (CONFIG_SLAB_PAGESIZE / ITEMSIZE)
 #define SLAB_INUSE_BITSET_LENGTH ((SLAB_RAW_PAGECOUNT + (__SIZEOF_POINTER__ * 8 - 1)) / (__SIZEOF_POINTER__ * 8))
 #define SLAB_INUSE_BITSET_SIZE   (SLAB_INUSE_BITSET_LENGTH * __SIZEOF_POINTER__)
-#define SLAB_PAGECOUNT           ((PAGESIZE - (SLAB_INUSE_BITSET_SIZE + 3 * __SIZEOF_POINTER__)) / ITEMSIZE)
+#define SLAB_PAGECOUNT           ((CONFIG_SLAB_PAGESIZE - (SLAB_INUSE_BITSET_SIZE + 3 * __SIZEOF_POINTER__)) / ITEMSIZE)
 
 typedef struct {
 	uint8_t si_data[ITEMSIZE];
@@ -67,7 +67,7 @@ struct FUNC(slab_page) {
 	ATOMIC_DATA uintptr_t sp_inuse[SLAB_INUSE_BITSET_LENGTH]; /* Bitset of items that are currently in-use. */
 };
 
-STATIC_ASSERT(sizeof(FUNC(SlabPage)) <= PAGESIZE);
+STATIC_ASSERT(sizeof(FUNC(SlabPage)) <= CONFIG_SLAB_PAGESIZE);
 
 
 typedef struct {
@@ -169,7 +169,7 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 	info->si_slabend        = MY_REGION_END;
 	info->si_itemsize       = ITEMSIZE;
 	info->si_items_per_page = SLAB_PAGECOUNT;
-	total_pages             = (MY_REGION_END - MY_REGION_START) / PAGESIZE;
+	total_pages             = (MY_REGION_END - MY_REGION_START) / CONFIG_SLAB_PAGESIZE;
 	info->si_totalpages     = total_pages;
 	info->si_totalitems     = total_pages * SLAB_PAGECOUNT;
 #ifdef CONFIG_NO_OBJECT_SLAB_STATS
@@ -183,8 +183,8 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 			freeitems += ATOMIC_READ(iter->sp_free);
 			++freepages;
 		}
-		info->si_usedpages     = (tail - MY_REGION_START) / PAGESIZE;
-		info->si_tailpages     = (MY_REGION_END - tail) / PAGESIZE;
+		info->si_usedpages     = (tail - MY_REGION_START) / CONFIG_SLAB_PAGESIZE;
+		info->si_tailpages     = (MY_REGION_END - tail) / CONFIG_SLAB_PAGESIZE;
 		info->si_cur_fullpages = info->si_usedpages - freepages;
 		info->si_cur_freepages = freepages;
 		info->si_cur_free      = freeitems;
@@ -226,8 +226,8 @@ read_again:
 	if (tail != (uintptr_t)ATOMIC_READ(FUNC(slab).s_tail))
 		goto read_again;
 	rwlock_endread(&FUNC(slab).s_lock);
-	info->si_usedpages = (tail - MY_REGION_START) / PAGESIZE;
-	info->si_tailpages = (MY_REGION_END - tail) / PAGESIZE;
+	info->si_usedpages = (tail - MY_REGION_START) / CONFIG_SLAB_PAGESIZE;
+	info->si_tailpages = (MY_REGION_END - tail) / CONFIG_SLAB_PAGESIZE;
 	if (info->si_max_freepages > info->si_usedpages)
 		info->si_max_freepages = info->si_usedpages;
 	if (info->si_cur_freepages > info->si_usedpages)
@@ -267,7 +267,7 @@ FUNC(DeeSlab_ResetStatSlab)(void) {
 
 LOCAL WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeSlab_DoAlloc))(void) {
-	FUNC(SlabPage) * page;
+	FUNC(SlabPage) *page;
 again:
 	page = ATOMIC_READ(FUNC(slab).s_free);
 	if likely(page != SLAB_PAGE_INVALID) {
@@ -315,7 +315,7 @@ again:
 	/* XXX: Tell the OS that we want to use this page now, and give it a chance
 	 *      to indicate failure if there is insufficient memory, rather than
 	 *      giving us a SEGFAULT once we try to initialize it below... */
-	if (!ATOMIC_CMPXCH_WEAK(FUNC(slab).s_tail, page, (FUNC(SlabPage) *)((uintptr_t)page + PAGESIZE)))
+	if (!ATOMIC_CMPXCH_WEAK(FUNC(slab).s_tail, page, (FUNC(SlabPage) *)((uintptr_t)page + CONFIG_SLAB_PAGESIZE)))
 		goto again;
 	COMPILER_BARRIER();
 	/* Initialize the new page, and add it as a free one. */
@@ -355,11 +355,11 @@ FORCELOCAL void
 	if ((uintptr_t)ptr < MY_REGION_END)
 #endif /* NEXT_LARGER */
 	{
-		FUNC(SlabPage) * page;
+		FUNC(SlabPage) *page;
 		unsigned int index, i;
 		uintptr_t mask;
 		LOG_SLAB("[SLAB] Free: %p (%Iu bytes)\n", ptr, (size_t)ITEMSIZE);
-		page = (FUNC(SlabPage) *)((uintptr_t)ptr & ~(PAGESIZE - 1));
+		page = (FUNC(SlabPage) *)((uintptr_t)ptr & ~(CONFIG_SLAB_PAGESIZE - 1));
 		ASSERTF((((uintptr_t)ptr - (uintptr_t)page) % ITEMSIZE) == 0,
 		        "Invalid slab-pointer %p is improperly aligned for slab of size %#Ix",
 		        ptr, (size_t)ITEMSIZE);

@@ -42,10 +42,17 @@
 #ifndef CONFIG_HOST_WINDOWS
 #include <deemon/file.h>
 #else /* !CONFIG_HOST_WINDOWS */
-#include <hybrid/limits.h>
+#include <hybrid/host.h>
 #include <hybrid/minmax.h>
 
 #include <Windows.h>
+
+#ifndef __ARCH_PAGESIZE_MIN
+#ifdef __ARCH_PAGESIZE
+#define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
+#endif /* __ARCH_PAGESIZE */
+#endif /* !__ARCH_PAGESIZE_MIN */
+
 #endif /* CONFIG_HOST_WINDOWS */
 #endif /* !NDEBUG */
 
@@ -1751,20 +1758,20 @@ debug_printer(void *UNUSED(closure),
               char const *__restrict buffer, size_t bufsize) {
 #ifdef CONFIG_HOST_WINDOWS
 	size_t result = bufsize;
-#ifdef PAGESIZE
+#ifdef __ARCH_PAGESIZE_MIN
 	/* (ab-)use the fact that the kernel can't keep us from reading
 	 *  beyond the end of a buffer so long as that memory location
 	 *  is located within the same page as the last byte of said
 	 *  buffer (Trust me... I've written by own OS) */
 	if ((bufsize <= 1000) && /* There seems to be some kind of limitation by `OutputDebugStringA()' here... */
-	    (((uintptr_t)buffer + bufsize) & ~(uintptr_t)(PAGESIZE - 1)) ==
-	    (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(PAGESIZE - 1)) &&
+	    (((uintptr_t)buffer + bufsize) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) ==
+	    (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) &&
 	    (*(char *)((uintptr_t)buffer + bufsize)) == '\0') {
 		DBG_ALIGNMENT_DISABLE();
 		OutputDebugStringA((char *)buffer);
 		DBG_ALIGNMENT_ENABLE();
 	} else
-#endif /* PAGESIZE */
+#endif /* __ARCH_PAGESIZE_MIN */
 	{
 		char temp[512];
 		while (bufsize) {
