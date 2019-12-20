@@ -25,6 +25,8 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 
+#include <hybrid/typecore.h>
+
 #include <stdint.h>
 
 DECL_BEGIN
@@ -34,7 +36,7 @@ DECL_BEGIN
 #undef ceildiv
 #define ceildiv(x, y) (((x) + ((y)-1)) / (y))
 
-#ifdef CONFIG_NATIVE_INT128
+#if defined(__INT128_TYPE__) && defined(__UINT128_TYPE__)
 
 #define HAVE_128BIT_TIME 1
 #define SIZEOF_DTIME_T 16
@@ -43,7 +45,7 @@ typedef duint128_t dutime_t;
 typedef int64_t    dtime_half_t;
 typedef uint64_t   dutime_half_t;
 
-#else /* CONFIG_NATIVE_INT128 */
+#else /* __INT128_TYPE__ && __UINT128_TYPE__ */
 
 /* >> 2000*365*24*60*60*1000*1000 (MSB: 56 --> The top 8 bits are still
  *    clear, so this timer won't overrun for at least 582000 more years,
@@ -55,7 +57,7 @@ typedef uint64_t dutime_t;
 typedef int32_t  dtime_half_t;
 typedef uint32_t dutime_half_t;
 
-#endif /* !CONFIG_NATIVE_INT128 */
+#endif /* !__INT128_TYPE__ || !__UINT128_TYPE__ */
 
 /* NOTE: Everything >= day can be represented using `dtime_half_t' */
 

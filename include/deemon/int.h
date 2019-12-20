@@ -30,8 +30,9 @@
 
 #include "api.h"
 
-#include <hybrid/typecore.h>
+#include <hybrid/int128.h>
 #include <hybrid/limitcore.h>
+#include <hybrid/typecore.h>
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -100,92 +101,33 @@ DECL_BEGIN
 #define DINT128_IS0MMIN            Dee_INT128_IS0MMIN
 #endif /* DEE_SOURCE */
 
-#ifdef CONFIG_NATIVE_INT128
-#define Dee_SINT128_DEC(x)    (--(x))
-#define Dee_SINT128_INC(x)    (++(x))
-#define Dee_SINT128_INV(x)    ((x) ^= -1)
-#define Dee_SINT128_TONEG(x)  ((x) = -(x))
-#define Dee_SINT128_ISNEG(x)  ((x) < 0)
-#define Dee_SINT128_ISNUL(x)  ((x) == 0)
-#define Dee_SINT128_IS64(x)   ((x) >= INT64_MIN && (x) <= INT64_MAX)
-#define Dee_UINT128_IS64(x)   ((x) <= UINT64_MAX)
-#define Dee_UINT128_OR(x, v)  (void)((x) |= (v))
-#define Dee_UINT128_AND(x, v) (void)((x) &= (v))
-#define Dee_UINT128_XOR(x, v) (void)((x) ^= (v))
-#define Dee_UINT128_SHR(x, n) (*(Dee_uint128_t *)&(x) >>= (n))
-#define Dee_UINT128_SHL(x, n) (*(Dee_uint128_t *)&(x) <<= (n))
-#define Dee_UINT128_SET(x, v) (*(Dee_uint128_t *)&(x) = (v))
-#define Dee_SINT128_SET(x, v) (*(Dee_int128_t *)&(x) = (v))
-#define Dee_UINT128_SHL_WILL_OVERFLOW(x, n) \
-	(((Dee_uint128_t)((Dee_uint128_t)(x) << (n)) >> (n)) != (Dee_uint128_t)(x))
-#else /* CONFIG_NATIVE_INT128 */
-#define Dee_SINT128_DEC(x)                             \
-	((Dee_UINT128_GET64(x)[DEE_INT128_LS64]-- == 0)    \
-	 ? (void)(--Dee_UINT128_GET64(x)[DEE_INT128_MS64]) \
-	 : (void)0)
-#define Dee_SINT128_INC(x)                             \
-	((++Dee_UINT128_GET64(x)[DEE_INT128_LS64] == 0)    \
-	 ? (void)(++Dee_UINT128_GET64(x)[DEE_INT128_MS64]) \
-	 : (void)0)
-#define Dee_SINT128_INV(x)                        \
-	(Dee_UINT128_GET64(x)[DEE_INT128_LS64] ^= -1, \
-	 Dee_UINT128_GET64(x)[DEE_INT128_MS64] ^= -1)
-#define Dee_SINT128_TONEG(x) \
-	(Dee_SINT128_DEC(x), Dee_SINT128_INV(x)) /* x = -x  <===>  x = ~(x-1); */
-#define Dee_SINT128_ISNEG(x) \
-	(Dee_UINT128_GETS8(x)[DEE_INT128_MS8] < 0)
-#define Dee_SINT128_ISNUL(x)                   \
-	(!Dee_UINT128_GET64(x)[DEE_INT128_LS64] && \
-	 !Dee_UINT128_GET64(x)[DEE_INT128_MS64])
-#define Dee_SINT128_IS64(x)                        \
-	(Dee_UINT128_GET64(x)[DEE_INT128_MS64] == 0 || \
-	 Dee_UINT128_GETS64(x)[DEE_INT128_MS64] == -1)
-#define Dee_UINT128_IS64(x) \
-	(Dee_UINT128_GET64(x)[DEE_INT128_MS64] == 0)
-#define Dee_UINT128_SET(x, v)                   \
-	(Dee_UINT128_GET64(x)[DEE_INT128_MS64] = 0, \
-	 Dee_UINT128_GET64(x)[DEE_INT128_LS64] = (uint64_t)(v))
-#define Dee_SINT128_SET(x, v)                                            \
-	(Dee_UINT128_GETS64(x)[DEE_INT128_MS64] = (v) < 0 ? (int64_t)-1 : 0, \
-	 Dee_UINT128_GETS64(x)[DEE_INT128_LS64] = (int64_t)(v))
-#define Dee_UINT128_OR(x,v)                                                            \
-	(sizeof(v) == 1 ? (void)(Dee_UINT128_GET8(x)[DEE_INT128_LS8] |= (uint8_t)(v)) :    \
-	 sizeof(v) == 2 ? (void)(Dee_UINT128_GET16(x)[DEE_INT128_LS16] |= (uint16_t)(v)) : \
-	 sizeof(v) == 4 ? (void)(Dee_UINT128_GET32(x)[DEE_INT128_LS32] |= (uint32_t)(v)) : \
-	                  (void)(Dee_UINT128_GET64(x)[DEE_INT128_LS64] |= (uint64_t)(v)))
-#define Dee_UINT128_AND(x,v)                                                           \
-	(sizeof(v) == 1 ? (void)(Dee_UINT128_GET8(x)[DEE_INT128_LS8] &= (uint8_t)(v)) :    \
-	 sizeof(v) == 2 ? (void)(Dee_UINT128_GET16(x)[DEE_INT128_LS16] &= (uint16_t)(v)) : \
-	 sizeof(v) == 4 ? (void)(Dee_UINT128_GET32(x)[DEE_INT128_LS32] &= (uint32_t)(v)) : \
-	                  (void)(Dee_UINT128_GET64(x)[DEE_INT128_LS64] &= (uint64_t)(v)))
-#define Dee_UINT128_XOR(x,v)                                                           \
-	(sizeof(v) == 1 ? (void)(Dee_UINT128_GET8(x)[DEE_INT128_LS8] ^= (uint8_t)(v)) :    \
-	 sizeof(v) == 2 ? (void)(Dee_UINT128_GET16(x)[DEE_INT128_LS16] ^= (uint16_t)(v)) : \
-	 sizeof(v) == 4 ? (void)(Dee_UINT128_GET32(x)[DEE_INT128_LS32] ^= (uint32_t)(v)) : \
-	                  (void)(Dee_UINT128_GET64(x)[DEE_INT128_LS64] ^= (uint64_t)(v)))
+
+#define Dee_UINT128_SET __hybrid_uint128_set
+#define Dee_SINT128_SET __hybrid_int128_set
+#define Dee_SINT128_DEC __hybrid_int128_dec
+#define Dee_SINT128_INC __hybrid_int128_inc
+#define Dee_SINT128_INV __hybrid_int128_inv
+#define Dee_SINT128_TONEG __hybrid_int128_neg
+#define Dee_SINT128_ISNEG __hybrid_int128_isneg
+#define Dee_SINT128_ISNUL __hybrid_int128_iszero
+#define Dee_SINT128_IS64 __hybrid_int128_is64bit
+#define Dee_UINT128_IS64 __hybrid_uint128_is64bit
+#define Dee_UINT128_OR __hybrid_uint128_or
+#define Dee_UINT128_AND __hybrid_uint128_and
+#define Dee_UINT128_XOR __hybrid_uint128_xor
 
 /* Unsigned shift-right for n <= 64 */
-#define Dee_UINT128_SHR(x, n)                                                            \
-	(Dee_UINT128_GET64(x)[DEE_INT128_LS64] >>= (n),                                      \
-	 Dee_UINT128_GET64(x)[DEE_INT128_LS64] |=                                            \
-	 (Dee_UINT128_GET64(x)[DEE_INT128_MS64] & ((UINT64_C(1) << (n)) - 1)) << (64 - (n)), \
-	 Dee_UINT128_GET64(x)[DEE_INT128_MS64] >>= (n))
+#define Dee_UINT128_SHR __hybrid_uint128_shr64
+
 /* Unsigned shift-left for n <= 64 */
-#define Dee_UINT128_SHL(x, n)                                                                   \
-	(Dee_UINT128_GET64(x)[DEE_INT128_MS64] <<= (n),                                             \
-	 Dee_UINT128_GET64(x)[DEE_INT128_MS64] |=                                                   \
-	 (Dee_UINT128_GET64(x)[DEE_INT128_LS64] & ((UINT64_C(1) << (64 - (n))) - 1)) >> (64 - (n)), \
-	 Dee_UINT128_GET64(x)[DEE_INT128_LS64] <<= (n))
-#define Dee_UINT128_SHL_WILL_OVERFLOW(x, n) \
-	((Dee_UINT128_GET64(x)[DEE_INT128_MS64] & (((UINT64_C(1) << (n)) - 1) << (64 - (n)))) != 0)
-#endif
+#define Dee_UINT128_SHL __hybrid_uint128_shl64
+#define Dee_UINT128_SHL_WILL_OVERFLOW __hybrid_uint128_shl64_overflows
 
-#define Dee_INT128_SETMIN(x)  (Dee_UINT128_GET64(x)[DEE_INT128_LS64] = ~(uint64_t)0, Dee_UINT128_GET64(x)[DEE_INT128_MS64] = ~(UINT64_C(1) << 63))
-#define Dee_INT128_SETMAX(x)  (Dee_UINT128_GET64(x)[DEE_INT128_LS64] = 0, Dee_UINT128_GET64(x)[DEE_INT128_MS64] = (UINT64_C(1) << 63))
-#define Dee_INT128_ISMIN(x)   (Dee_UINT128_GET64(x)[DEE_INT128_LS64] == ~(uint64_t)0 && Dee_UINT128_GET64(x)[DEE_INT128_MS64] == ~(UINT64_C(1) << 63))
-#define Dee_INT128_ISMAX(x)   (Dee_UINT128_GET64(x)[DEE_INT128_LS64] == 0 && Dee_UINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63))
-#define Dee_INT128_IS0MMIN(x) (Dee_UINT128_GET64(x)[DEE_INT128_LS64] == 1 && Dee_UINT128_GET64(x)[DEE_INT128_MS64] == (UINT64_C(1) << 63)) /* x == (0 - MIN) */
-
+#define Dee_INT128_SETMIN   __hybrid_int128_setmin
+#define Dee_INT128_SETMAX   __hybrid_int128_setmax
+#define Dee_INT128_ISMIN    __hybrid_int128_ismin
+#define Dee_INT128_ISMAX    __hybrid_int128_ismax
+#define Dee_INT128_IS0MMIN 	__hybrid_int128_iszero_minus_min
 
 
 typedef struct Dee_int_object DeeIntObject;

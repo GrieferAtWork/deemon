@@ -23,6 +23,7 @@
 
 #include <hybrid/__atomic.h>
 #include <hybrid/typecore.h>
+#include <hybrid/int128.h>
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -129,63 +130,28 @@ DFUNDEF WUNUSED ATTR_PURE Dee_hash_t (DCALL Dee_HashCase4Byte)(uint32_t const *_
 #define DeeObject_Id(ob)          ((uintptr_t)(ob))
 
 
-#if defined(__UINT128_TYPE__) || defined(__SIZEOF_INT128__)
-#define CONFIG_NATIVE_INT128 1
-#ifdef __UINT128_TYPE__
-typedef __INT128_TYPE__   Dee_int128_t;
-typedef __UINT128_TYPE__  Dee_uint128_t;
-#else /* __UINT128_TYPE__ */
-typedef signed __int128   Dee_int128_t;
-typedef unsigned __int128 Dee_uint128_t;
-#endif /* !__UINT128_TYPE__ */
-#define Dee_UINT128_GET8(x)   ((uint8_t *)&(x))
-#define Dee_UINT128_GET16(x)  ((uint16_t *)&(x))
-#define Dee_UINT128_GET32(x)  ((uint32_t *)&(x))
-#define Dee_UINT128_GET64(x)  ((uint64_t *)&(x))
-#define Dee_UINT128_GETS8(x)  ((int8_t *)&(x))
-#define Dee_UINT128_GETS16(x) ((int16_t *)&(x))
-#define Dee_UINT128_GETS32(x) ((int32_t *)&(x))
-#define Dee_UINT128_GETS64(x) ((int64_t *)&(x))
-#else /* __UINT128_TYPE__ || __SIZEOF_INT128__ */
-#define Dee_UINT128_GET8(x)   ((x).int_i8)
-#define Dee_UINT128_GET16(x)  ((x).int_i16)
-#define Dee_UINT128_GET32(x)  ((x).int_i32)
-#define Dee_UINT128_GET64(x)  ((x).int_i64)
-#define Dee_UINT128_GETS8(x)  ((int8_t *)(x).int_i8)
-#define Dee_UINT128_GETS16(x) ((int16_t *)(x).int_i16)
-#define Dee_UINT128_GETS32(x) ((int32_t *)(x).int_i32)
-#define Dee_UINT128_GETS64(x) ((int64_t *)(x).int_i64)
-typedef union {
-	uint64_t int_i64[2];
-	uint32_t int_i32[4];
-	uint16_t int_i16[8];
-	uint8_t  int_i8[16];
-} Dee_uint128_t;
-#ifdef __cplusplus
-/* Allow the types to differ for function overloading,
- * although internally, the same type is used. */
-typedef union {
-	uint64_t int_i64[2];
-	uint32_t int_i32[4];
-	uint16_t int_i16[8];
-	uint8_t  int_i8[16];
-} Dee_int128_t;
-#else /* __cplusplus */
-typedef Dee_uint128_t Dee_int128_t;
-#endif /* !__cplusplus */
-#endif /* !__UINT128_TYPE__ && !__SIZEOF_INT128__ */
+#define Dee_UINT128_GET8   __hybrid_uint128_vec8
+#define Dee_UINT128_GET16  __hybrid_uint128_vec16
+#define Dee_UINT128_GET32  __hybrid_uint128_vec32
+#define Dee_UINT128_GET64  __hybrid_uint128_vec64
+#define Dee_UINT128_GETS8  __hybrid_int128_vec8
+#define Dee_UINT128_GETS16 __hybrid_int128_vec16
+#define Dee_UINT128_GETS32 __hybrid_int128_vec32
+#define Dee_UINT128_GETS64 __hybrid_int128_vec64
+typedef __hybrid_uint128_t Dee_uint128_t;
+typedef __hybrid_int128_t Dee_int128_t;
 
 #ifdef DEE_SOURCE
 typedef Dee_int128_t  dint128_t;
 typedef Dee_uint128_t duint128_t;
-#define DUINT128_GET8   Dee_UINT128_GET8
-#define DUINT128_GET16  Dee_UINT128_GET16
-#define DUINT128_GET32  Dee_UINT128_GET32
-#define DUINT128_GET64  Dee_UINT128_GET64
-#define DUINT128_GETS8  Dee_UINT128_GETS8
-#define DUINT128_GETS16 Dee_UINT128_GETS16
-#define DUINT128_GETS32 Dee_UINT128_GETS32
-#define DUINT128_GETS64 Dee_UINT128_GETS64
+#define DUINT128_GET8   __hybrid_uint128_vec8
+#define DUINT128_GET16  __hybrid_uint128_vec16
+#define DUINT128_GET32  __hybrid_uint128_vec32
+#define DUINT128_GET64  __hybrid_uint128_vec64
+#define DUINT128_GETS8  __hybrid_int128_vec8
+#define DUINT128_GETS16 __hybrid_int128_vec16
+#define DUINT128_GETS32 __hybrid_int128_vec32
+#define DUINT128_GETS64 __hybrid_int128_vec64
 #endif /* DEE_SOURCE */
 
 
