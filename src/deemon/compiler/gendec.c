@@ -1789,7 +1789,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 	} else {
 		Dec_Code *pdesc;
 		uint32_t code_addr = dec_addr;
-#ifndef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
 		/* Convert endian before writing data. */
 		descr.co_flags      = LESWAP16(descr.co_flags);      /* Dec_Code.co_flags */
 		descr.co_localc     = LESWAP16(descr.co_localc);     /* Dec_Code.co_localc */
@@ -1803,7 +1803,7 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 		descr.co_kwdoff     = LESWAP32(descr.co_kwdoff);     /* Dec_Code.co_kwdoff */
 		descr.co_textsiz    = LESWAP32(descr.co_textsiz);    /* Dec_Code.co_textsiz */
 		descr.co_textoff    = LESWAP32(descr.co_textoff);    /* Dec_Code.co_textoff */
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 		/* Allocate and copy descriptor data. */
 		pdesc = (Dec_Code *)dec_alloc(sizeof(Dec_Code));
 		if unlikely(!pdesc)

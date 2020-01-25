@@ -26,6 +26,7 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 
+#include <hybrid/byteorder.h>
 #include <hybrid/typecore.h>
 
 #include <stdint.h>
@@ -102,11 +103,11 @@ typedef uint32_t dutime_half_t;
 #define TIME_REPR_DAYS   (TIME_REPR_PLURAL | 6)
 #define TIME_REPR_WEKS   (TIME_REPR_PLURAL | 7)
 #define TIME_REPR_MONS   (TIME_REPR_PLURAL | 8)
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define TIME_KIND(type, repr) ((type) | (repr) << 8)
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 #define TIME_KIND(type, repr) ((type) << 8 | (repr))
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
 typedef struct time_object DeeTimeObject;
 struct time_object {
@@ -152,13 +153,13 @@ struct time_object {
 };
 
 #ifdef HAVE_128BIT_TIME
-#ifdef CONFIG_LITTLE_ENDIAN
-#   define _Time_Set64(x,y) ((x).t_time_half[1] = 0,(x).t_time_half[0] = (y))
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#   define _Time_Set64(x,y) ((x).t_time_half[1] = 0, (x).t_time_half[0] = (y))
 #   define _Time_Get64(x)    (x).t_time_half[0]
-#else /* CONFIG_LITTLE_ENDIAN */
-#   define _Time_Set64(x,y) ((x).t_time_half[0] = 0,(x).t_time_half[1] = (y))
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
+#   define _Time_Set64(x,y) ((x).t_time_half[0] = 0, (x).t_time_half[1] = (y))
 #   define _Time_Get64(x)    (x).t_time_half[1]
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 #else /* HAVE_128BIT_TIME */
 #   define _Time_Get64(x)    (x).t_time
 #   define _Time_Set64(x,y) ((x).t_time = (y))

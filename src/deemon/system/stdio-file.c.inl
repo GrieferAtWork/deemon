@@ -38,6 +38,7 @@
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
+#include <hybrid/wordbits.h>
 
 #include <string.h>
 
@@ -870,12 +871,6 @@ PRIVATE struct mode_name const mode_names[] = {
 #endif /* CONFIG_HAVE__IOLBF */
 };
 
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
-
 /* CASEEQ(x,'w') --> x == 'w' || x == 'W' */
 #define CASEEQ(x, ch) ((x) == (ch) || (x) == (ch) - ('a' - 'A'))
 #endif /* FILE_HAVE_SETVBUF */
@@ -923,7 +918,7 @@ sysfile_setbuf(SystemFile *self, size_t argc, DeeObject **argv) {
 		goto err_invalid_mode;
 	if (mode_iter[4])
 		goto err_invalid_mode;
-	if (buf.id == ENCODE4('k', 'e', 'e', 'p'))
+	if (buf.id == ENCODE_INT32('k', 'e', 'e', 'p'))
 		goto done;
 
 	/* Parse the main mode name. */

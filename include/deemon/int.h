@@ -31,6 +31,7 @@
 
 #include "api.h"
 
+#include <hybrid/byteorder.h>
 #include <hybrid/int128.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/typecore.h>
@@ -60,17 +61,17 @@
 DECL_BEGIN
 
 
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define DEE_INT128_MS8       15
 #define DEE_INT128_MS16      7
 #define DEE_INT128_MS32      3
 #define DEE_INT128_MS64      1
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 #define DEE_INT128_MS8       0
 #define DEE_INT128_MS16      0
 #define DEE_INT128_MS32      0
 #define DEE_INT128_MS64      0
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
 #define DEE_INT128_LS8  (15 - DEE_INT128_MS8)
 #define DEE_INT128_LS16 (7 - DEE_INT128_MS16)

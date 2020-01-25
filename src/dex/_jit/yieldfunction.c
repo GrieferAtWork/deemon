@@ -33,7 +33,9 @@
 #include <deemon/seq.h>
 #include <deemon/thread.h>
 
+#include <hybrid/byteorder.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
 
 DECL_BEGIN
 
@@ -45,15 +47,6 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getname(JITFunction *__rest
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getdoc(JITFunction *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_getkwds(JITFunction *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL jf_gettext(JITFunction *__restrict self);
-
-
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE2(a, b)       ((b) << 8 | (a))
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE2(a, b)       ((b) | (a) << 8)
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
 
 
 INTERN void DCALL
@@ -613,13 +606,13 @@ JITYieldFunctionIterator_PopState(JITYieldFunctionIterator *__restrict self) {
 		    self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
 			uint32_t name;
 			name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
-			if (name == ENCODE4('e', 'l', 's', 'e')) {
+			if (name == ENCODE_INT32('e', 'l', 's', 'e')) {
 				JITLexer_Yield(&self->ji_lex);
 do_skip_else:
 				/* Skip the accompanying block. */
 				if unlikely(JITLexer_SkipStatement(&self->ji_lex))
 					goto err;
-			} else if (name == ENCODE4('e', 'l', 'i', 'f')) {
+			} else if (name == ENCODE_INT32('e', 'l', 'i', 'f')) {
 				self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
 				goto do_skip_else;
 			}
@@ -1046,10 +1039,10 @@ parse_again_same_statement:
 				    self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
 					uint32_t name;
 					name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
-					if (name == ENCODE4('e', 'l', 's', 'e')) {
+					if (name == ENCODE_INT32('e', 'l', 's', 'e')) {
 						JITLexer_Yield(&self->ji_lex);
 						goto parse_else_after_if;
-					} else if (name == ENCODE4('e', 'l', 'i', 'f')) {
+					} else if (name == ENCODE_INT32('e', 'l', 'i', 'f')) {
 						self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
 parse_else_after_if:
 #if 1 /* Optimization: No need to push a scope if no declaration was made \
@@ -1293,7 +1286,7 @@ err_missing_rparen_after_for:
 
 		case 4:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('w', 'i', 't', 'h')) {
+			if (name == ENCODE_INT32('w', 'i', 't', 'h')) {
 				struct jit_state *st;
 				DREF DeeObject *obj;
 				JITLexer_Yield(&self->ji_lex);
@@ -1334,7 +1327,7 @@ err_obj_scope:
 
 		case 5:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('y', 'i', 'e', 'l') &&
+			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd') {
 				/* The thing that we're actually after: `yield' statements! */
 				JITLexer_Yield(&self->ji_lex);
@@ -1348,7 +1341,7 @@ err_obj_scope:
 				}
 				goto got_yield_value;
 			}
-			if (name == ENCODE4('w', 'h', 'i', 'l') &&
+			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
 				struct jit_state *st;
 				unsigned char *cond_start;
@@ -1403,8 +1396,8 @@ err_obj_scope:
 		case 6:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
 #if 0 /* TODO */
-			if (name == ENCODE4('s','w','i','t') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('c','h')) {
+			if (name == ENCODE_INT32('s','w','i','t') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c','h')) {
 				DERROR_NOTIMPLEMENTED();
 				goto err;
 			}
@@ -1413,8 +1406,8 @@ err_obj_scope:
 
 		case 7:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'c') &&
+			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'h') {
 				struct jit_state *st;
 				int temp;

@@ -1920,11 +1920,11 @@ stat_fini(DeeStatObject *__restrict self) {
 	Stat_Fini(&self->st_stat);
 }
 
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define FILETIME_GET64(x) (((x) << 32) | ((x) >> 32))
-#else /* CONFIG_BIG_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
 #define FILETIME_GET64(x)   (x)
-#endif /* !CONFIG_BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 #define FILETIME_PER_SECONDS 10000000 /* 100 nanoseconds / 0.1 microseconds. */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

@@ -28,6 +28,7 @@
 #include "alloc.h"
 #endif /* !__INTELLISENSE__ */
 
+#include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 
 #include <stdarg.h>
@@ -841,21 +842,21 @@ WUNUSED NONNULL((1)) DREF DeeObject *DeeString_NewWideAltEndian(Dee_wchar_t cons
 #define DeeString_NewWideAltEndian(str,length,error_mode) DeeString_NewUtf32AltEndian((uint16_t *)(str),length,error_mode)
 #endif
 
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define DeeString_NewUtf16Le  DeeString_NewUtf16
 #define DeeString_NewUtf32Le  DeeString_NewUtf32
 #define DeeString_NewUtf16Be  DeeString_NewUtf16AltEndian
 #define DeeString_NewUtf32Be  DeeString_NewUtf32AltEndian
 #define DeeString_NewWideLe   DeeString_NewWide
 #define DeeString_NewWideBe   DeeString_NewWideAltEndian
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 #define DeeString_NewUtf16Le  DeeString_NewUtf16AltEndian
 #define DeeString_NewUtf32Le  DeeString_NewUtf32AltEndian
 #define DeeString_NewUtf16Be  DeeString_NewUtf16
 #define DeeString_NewUtf32Be  DeeString_NewUtf32
 #define DeeString_NewWideLe   DeeString_NewWideAltEndian
 #define DeeString_NewWideBe   DeeString_NewWide
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
 
 

@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "parser-impl.c.inl"
-#endif
+#endif /* __INTELLISENSE__ */
 
 DECL_BEGIN
 
@@ -175,12 +175,12 @@ parse_remainder_before_rbrace_popscope_wrap:
 
 		case 4:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('w', 'i', 't', 'h')) {
+			if (name == ENCODE_INT32('w', 'i', 't', 'h')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(WithHybrid)(self, &was_expression);
 				goto parse_remainder_after_hybrid_popscope;
 			}
-			if (name == ENCODE4('f', 'r', 'o', 'm')) {
+			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(ImportHybrid)(self, true, &was_expression);
 				if (ISERR(result))
@@ -193,25 +193,25 @@ parse_remainder_before_rbrace_popscope_wrap:
 
 		case 5:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('t', 'h', 'r', 'o') &&
+			if (name == ENCODE_INT32('t', 'h', 'r', 'o') &&
 			    *(uint8_t *)(tok_begin + 4) == 'w')
 				goto is_a_statement;
-			if (name == ENCODE4('y', 'i', 'e', 'l') &&
+			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd')
 				goto is_a_statement;
-			if (name == ENCODE4('p', 'r', 'i', 'n') &&
+			if (name == ENCODE_INT32('p', 'r', 'i', 'n') &&
 			    *(uint8_t *)(tok_begin + 4) == 't')
 				goto is_a_statement;
-			if (name == ENCODE4('b', 'r', 'e', 'a') &&
+			if (name == ENCODE_INT32('b', 'r', 'e', 'a') &&
 			    *(uint8_t *)(tok_begin + 4) == 'k')
 				goto is_a_statement;
-			if (name == ENCODE4('w', 'h', 'i', 'l') &&
+			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(WhileHybrid)(self, &was_expression);
 				goto parse_remainder_after_hybrid_popscope;
 			}
-			if (name == ENCODE4('_', '_', 'a', 's') &&
+			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
 			    *(uint8_t *)(tok_begin + 4) == 'm')
 				goto is_a_statement;
 			break;
@@ -237,8 +237,8 @@ parse_remainder_after_semicolon_hybrid_popscope:
 				}
 				goto parse_remainder_after_hybrid_popscope_resok;
 			}
-			if (name == ENCODE4('i', 'm', 'p', 'o') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't')) {
+			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(ImportHybrid)(self, false, &was_expression);
 				if (ISERR(result))
@@ -246,25 +246,25 @@ parse_remainder_after_semicolon_hybrid_popscope:
 				/* Same as `assert': `import' requires a trailing `;' */
 				goto parse_remainder_after_semicolon_hybrid_popscope;
 			}
-			if (name == ENCODE4('s', 'w', 'i', 't') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('c', 'h'))
+			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c', 'h'))
 				goto is_a_statement;
-			if (name == ENCODE4('r', 'e', 't', 'u') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 'n'))
+			if (name == ENCODE_INT32('r', 'e', 't', 'u') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 'n'))
 				goto is_a_statement;
 			break;
 
 		case 7:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'c') &&
+			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'h') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(ForeachHybrid)(self, &was_expression);
 				goto parse_remainder_after_hybrid_popscope;
 			}
-			if (name == ENCODE4('_', '_', 'a', 's') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('m', '_') &&
+			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('m', '_') &&
 			    *(uint8_t *)(tok_begin + 6) == '_')
 				goto is_a_statement;
 			break;
@@ -273,8 +273,8 @@ parse_remainder_after_semicolon_hybrid_popscope:
 			uint32_t nam2;
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
 			nam2 = UNALIGNED_GET32((uint32_t *)(tok_begin + 4));
-			if (name == ENCODE4('c', 'o', 'n', 't') &&
-			    nam2 == ENCODE4('i', 'n', 'u', 'e'))
+			if (name == ENCODE_INT32('c', 'o', 'n', 't') &&
+			    nam2 == ENCODE_INT32('i', 'n', 'u', 'e'))
 				goto is_a_statement;
 		}	break;
 
@@ -489,11 +489,11 @@ is_a_statement:
 
 		case 4:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('w', 'i', 't', 'h')) {
+			if (name == ENCODE_INT32('w', 'i', 't', 'h')) {
 				result = FUNC(WithHybrid)(self, pwas_expression);
 				goto done;
 			}
-			if (name == ENCODE4('f', 'r', 'o', 'm')) {
+			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
 				result = FUNC(ImportHybrid)(self, true, pwas_expression);
 				ASSERT(ISERR(result) || *pwas_expression == AST_PARSE_WASEXPR_NO);
 				goto done;
@@ -502,58 +502,58 @@ is_a_statement:
 
 		case 5:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('w', 'h', 'i', 'l') &&
+			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
 				result = FUNC(WhileHybrid)(self, pwas_expression);
 				goto done;
 			}
-			if (name == ENCODE4('y', 'i', 'e', 'l') &&
+			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd')
 				goto is_a_statement;
-			if (name == ENCODE4('t', 'h', 'r', 'o') &&
+			if (name == ENCODE_INT32('t', 'h', 'r', 'o') &&
 			    *(uint8_t *)(tok_begin + 4) == 'w')
 				goto is_a_statement;
-			if (name == ENCODE4('p', 'r', 'i', 'n') &&
+			if (name == ENCODE_INT32('p', 'r', 'i', 'n') &&
 			    *(uint8_t *)(tok_begin + 4) == 't')
 				goto is_a_statement;
-			if (name == ENCODE4('b', 'r', 'e', 'a') &&
+			if (name == ENCODE_INT32('b', 'r', 'e', 'a') &&
 			    *(uint8_t *)(tok_begin + 4) == 'k')
 				goto is_a_statement;
-			if (name == ENCODE4('_', '_', 'a', 's') &&
+			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
 			    *(uint8_t *)(tok_begin + 4) == 'm')
 				goto is_a_statement;
 			break;
 
 		case 6:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('r', 'e', 't', 'u') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 'n'))
+			if (name == ENCODE_INT32('r', 'e', 't', 'u') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 'n'))
 				goto is_a_statement;
-			if (name == ENCODE4('a', 's', 's', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't')) {
+			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
 				result = FUNC(AssertHybrid)(self, pwas_expression);
 				goto done;
 			}
-			if (name == ENCODE4('i', 'm', 'p', 'o') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't')) {
+			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
 				result = FUNC(ImportHybrid)(self, false, &was_expression);
 				goto parse_unary_suffix_if_notexpr;
 			}
-			if (name == ENCODE4('s', 'w', 'i', 't') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('c', 'h'))
+			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c', 'h'))
 				goto is_a_statement;
 			break;
 
 		case 7:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'c') &&
+			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'h') {
 				result = FUNC(ForeachHybrid)(self, pwas_expression);
 				goto done;
 			}
-			if (name == ENCODE4('_', '_', 'a', 's') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('m', '_') &&
+			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('m', '_') &&
 			    *(uint8_t *)(tok_begin + 6) == '_')
 				goto is_a_statement;
 			break;
@@ -562,8 +562,8 @@ is_a_statement:
 			uint32_t nam2;
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
 			nam2 = UNALIGNED_GET32((uint32_t *)(tok_begin + 4));
-			if (name == ENCODE4('c', 'o', 'n', 't') &&
-			    nam2 == ENCODE4('i', 'n', 'u', 'e'))
+			if (name == ENCODE_INT32('c', 'o', 'n', 't') &&
+			    nam2 == ENCODE_INT32('i', 'n', 'u', 'e'))
 				goto is_a_statement;
 		}	break;
 

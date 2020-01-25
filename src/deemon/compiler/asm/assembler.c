@@ -1719,7 +1719,7 @@ err:
 	return -1;
 }
 
-#ifndef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
 INTERN WUNUSED int (DCALL asm_put_data16)(uint16_t data) {
 	uint16_t *result;
 	result = (uint16_t *)asm_alloc(sizeof(uint16_t));
@@ -1730,7 +1730,7 @@ INTERN WUNUSED int (DCALL asm_put_data16)(uint16_t data) {
 err:
 	return -1;
 }
-#endif /* !CONFIG_BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
 INTERN WUNUSED int (DCALL asm_put_data32)(uint32_t data) {
 	uint32_t *result;

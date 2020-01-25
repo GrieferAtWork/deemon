@@ -39,6 +39,7 @@
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
@@ -929,12 +930,12 @@ typedef union {
 		 * sh1tty wrapper code. */
 		uintptr_t Internal;
 		uintptr_t InternalHigh;
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		uint64_t  Offset;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 		uint32_t  Offset;
 		uint32_t  OffsetHigh;
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	}   me;
 	OVERLAPPED    ms;
 } my_OVERLAPPED;
@@ -952,12 +953,12 @@ sysfile_pread(SystemFile *__restrict self,
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 again:
 	memset(&overlapped, 0, sizeof(overlapped));
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = pos;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 	overlapped.me.Offset = (uint32_t)pos;
 	overlapped.me.OffsetHigh = (uint32_t)(pos >> 32);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__*/
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!ReadFile(self->sf_handle, buffer,
 	                      (DWORD)bufsize,
@@ -989,12 +990,12 @@ sysfile_pwrite(SystemFile *__restrict self,
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 again:
 	memset(&overlapped, 0, sizeof(overlapped));
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = pos;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 	overlapped.me.Offset = (uint32_t)pos;
 	overlapped.me.OffsetHigh = (uint32_t)(pos >> 32);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!WriteFile(self->sf_handle, buffer,
 	                       (DWORD)bufsize,

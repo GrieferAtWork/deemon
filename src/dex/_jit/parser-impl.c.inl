@@ -23,13 +23,13 @@
 #define JIT_EVAL  1
 #endif /* __INTELLISENSE__ */
 
-#include <deemon/instancemethod.h>
 #include <deemon/bool.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/float.h>
+#include <deemon/instancemethod.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
@@ -42,6 +42,7 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
 
 #if !defined(JIT_SKIP) && !defined(JIT_EVAL)
 #error "Must either #define JIT_SKIP or JIT_EVAL before #including this file"
@@ -1427,7 +1428,7 @@ skip_rbrck_and_done:
 
 		case 4:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('n', 'o', 'n', 'e')) {
+			if (name == ENCODE_INT32('n', 'o', 'n', 'e')) {
 #ifdef JIT_EVAL
 				result = Dee_None;
 				Dee_Incref(Dee_None);
@@ -1436,7 +1437,7 @@ skip_rbrck_and_done:
 #endif /* !JIT_EVAL */
 				goto done_y1;
 			}
-			if (name == ENCODE4('t', 'r', 'u', 'e')) {
+			if (name == ENCODE_INT32('t', 'r', 'u', 'e')) {
 #ifdef JIT_EVAL
 				result = Dee_True;
 				Dee_Incref(Dee_True);
@@ -1445,7 +1446,7 @@ skip_rbrck_and_done:
 #endif /* !JIT_EVAL */
 				goto done_y1;
 			}
-			if (name == ENCODE4('r', 'e', 'p', 'r')) {
+			if (name == ENCODE_INT32('r', 'e', 'p', 'r')) {
 				result = CALL_PRIMARYF(YieldAndParseUnaryKeywordOperand,
 				                       JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
@@ -1463,7 +1464,7 @@ skip_rbrck_and_done:
 #endif /* JIT_EVAL */
 				goto done;
 			}
-			if (name == ENCODE4('c', 'o', 'p', 'y')) {
+			if (name == ENCODE_INT32('c', 'o', 'p', 'y')) {
 				result = CALL_PRIMARYF(YieldAndParseUnaryKeywordOperand,
 				                       JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
@@ -1481,7 +1482,7 @@ skip_rbrck_and_done:
 #endif /* JIT_EVAL */
 				goto done;
 			}
-			if (name == ENCODE4('t', 'y', 'p', 'e')) {
+			if (name == ENCODE_INT32('t', 'y', 'p', 'e')) {
 				result = CALL_PRIMARYF(YieldAndParseUnaryKeywordOperand,
 				                       JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
@@ -1498,7 +1499,7 @@ skip_rbrck_and_done:
 #endif /* JIT_EVAL */
 				goto done;
 			}
-			if (name == ENCODE4('p', 'a', 'c', 'k')) {
+			if (name == ENCODE_INT32('p', 'a', 'c', 'k')) {
 				int has_paren = 0;
 				JITLexer_Yield(self);
 				if (self->jl_tok == '(') {
@@ -1539,7 +1540,7 @@ skip_rbrck_and_done:
 				}
 				goto done;
 			}
-			if (name == ENCODE4('w', 'i', 't', 'h')) {
+			if (name == ENCODE_INT32('w', 'i', 't', 'h')) {
 				result = FUNC(With)(self, false);
 				goto done;
 			}
@@ -1547,7 +1548,7 @@ skip_rbrck_and_done:
 
 		case 5:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('f', 'a', 'l', 's') &&
+			if (name == ENCODE_INT32('f', 'a', 'l', 's') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
 #ifdef JIT_EVAL
 				result = Dee_False;
@@ -1557,7 +1558,7 @@ skip_rbrck_and_done:
 #endif /* !JIT_EVAL */
 				goto done_y1;
 			}
-			if (name == ENCODE4('b', 'o', 'u', 'n') &&
+			if (name == ENCODE_INT32('b', 'o', 'u', 'n') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd') {
 				result = CALL_PRIMARYF(YieldAndParseUnaryKeywordOperand,
 				                       JITLEXER_EVAL_FSECONDARY);
@@ -1583,7 +1584,7 @@ skip_rbrck_and_done:
 #endif /* JIT_EVAL */
 				goto done;
 			}
-			if (name == ENCODE4('w', 'h', 'i', 'l') &&
+			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
 				result = FUNC(While)(self, false);
 				goto done;
@@ -1592,8 +1593,8 @@ skip_rbrck_and_done:
 
 		case 6:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('i', 'm', 'p', 'o') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't')) {
+			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
 #ifdef JIT_EVAL
 				result = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
 #else /* JIT_EVAL */
@@ -1602,8 +1603,8 @@ skip_rbrck_and_done:
 				goto done_y1;
 			}
 #if 1
-			if (name == ENCODE4('a', 's', 's', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't')) {
+			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
 				/* TODO: Assert expressions */
 				DERROR_NOTIMPLEMENTED();
 				goto err;
@@ -1613,8 +1614,8 @@ skip_rbrck_and_done:
 
 		case 7:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'c') &&
+			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'h') {
 				result = FUNC(Foreach)(self, false);
 				goto done;
@@ -1623,8 +1624,8 @@ skip_rbrck_and_done:
 
 		case 8:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('d', 'e', 'e', 'p') &&
-			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE4('c', 'o', 'p', 'y')) {
+			if (name == ENCODE_INT32('d', 'e', 'e', 'p') &&
+			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE_INT32('c', 'o', 'p', 'y')) {
 				result = CALL_PRIMARYF(YieldAndParseUnaryKeywordOperand,
 				                       JITLEXER_EVAL_FSECONDARY);
 #ifdef JIT_EVAL
@@ -1642,8 +1643,8 @@ skip_rbrck_and_done:
 #endif /* JIT_EVAL */
 				goto done;
 			}
-			if (name == ENCODE4('o', 'p', 'e', 'r') &&
-			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE4('a', 't', 'o', 'r')) {
+			if (name == ENCODE_INT32('o', 'p', 'e', 'r') &&
+			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE_INT32('a', 't', 'o', 'r')) {
 				/* Operator function access. */
 				int32_t opno;
 				JITLexer_Yield(self);

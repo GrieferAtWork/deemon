@@ -64,21 +64,21 @@ union integral {
 	uint16_t int_u16_v[4];
 	int8_t   int_s8_v[8];
 	uint8_t  int_u8_v[8];
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define int_s32 int_s32_v[0]
 #define int_s16 int_s16_v[0]
 #define int_s8  int_s8_v[0]
 #define int_u32 int_u32_v[0]
 #define int_u16 int_u16_v[0]
 #define int_u8  int_u8_v[0]
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 #define int_s32 int_s32_v[1]
 #define int_s16 int_s16_v[3]
 #define int_s8  int_s8_v[7]
 #define int_u32 int_u32_v[1]
 #define int_u16 int_u16_v[3]
 #define int_u8  int_u8_v[7]
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 #endif /* !__INTELLISENSE__ */
 };
 

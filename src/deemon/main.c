@@ -44,6 +44,8 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/byteorder.h>
+
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #else /* CONFIG_HOST_WINDOWS */
@@ -159,12 +161,12 @@ __DATE__ "|"
 #elif defined(__arm__)
 "arm|"
 #endif
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 "little-endian"
-#elif defined(CONFIG_BIG_ENDIAN)
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 "big-endian"
 #else
-PP_STR(CONFIG_HOST_ENDIAN) "-endian"
+PP_STR(__BYTE_ORDER__) "-endian"
 #endif
 "]\n"
 "deemon    version "

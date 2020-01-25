@@ -23,6 +23,7 @@
 #define DEE_SOURCE 1
 
 #include "libposix.h"
+#include <hybrid/byteorder.h>
 
 DECL_BEGIN
 
@@ -77,12 +78,12 @@ typedef union {
 		 * sh1tty wrapper code. */
 		uintptr_t Internal;
 		uintptr_t InternalHigh;
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		uint64_t  Offset;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 		uint32_t  Offset;
 		uint32_t  OffsetHigh;
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	}   me;
 	OVERLAPPED    ms;
 } my_OVERLAPPED;
@@ -490,12 +491,12 @@ err:
 again_ReadFile:
 	DBG_ALIGNMENT_DISABLE();
 	memset(&overlapped, 0, sizeof(overlapped));
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = (uint64_t)offset;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 	overlapped.me.Offset     = (uint32_t)((uint64_t)offset);
 	overlapped.me.OffsetHigh = (uint32_t)((uint64_t)offset >> 32);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	if unlikely(!ReadFile(h, buf, (DWORD)count,
 	                      &bytes_written,
 	                      (LPOVERLAPPED)&overlapped)) {
@@ -794,12 +795,12 @@ err:
 again_WriteFile:
 	DBG_ALIGNMENT_DISABLE();
 	memset(&overlapped, 0, sizeof(overlapped));
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = (uint64_t)offset;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 	overlapped.me.Offset     = (uint32_t)((uint64_t)offset);
 	overlapped.me.OffsetHigh = (uint32_t)((uint64_t)offset >> 32);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	if unlikely(!WriteFile(h, buf, (DWORD)count,
 	                       &bytes_written,
 	                       (LPOVERLAPPED)&overlapped)) {

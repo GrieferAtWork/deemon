@@ -125,11 +125,7 @@ lib_ntoh16_f(size_t argc, DeeObject **argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:ntoh16", &i))
 		return NULL;
-#ifdef CONFIG_LITTLE_ENDIAN
-	return DeeInt_NewU16(BSWAP16(i));
-#else /* CONFIG_LITTLE_ENDIAN */
-	return DeeInt_NewU16(i);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+	return DeeInt_NewU16(BESWAP16(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -137,11 +133,7 @@ lib_ntoh32_f(size_t argc, DeeObject **argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:ntoh32", &i))
 		return NULL;
-#ifdef CONFIG_LITTLE_ENDIAN
-	return DeeInt_NewU32(BSWAP32(i));
-#else /* CONFIG_LITTLE_ENDIAN */
-	return DeeInt_NewU32(i);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+	return DeeInt_NewU32(BESWAP32(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -149,11 +141,7 @@ lib_ntoh64_f(size_t argc, DeeObject **argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:ntoh64", &i))
 		return NULL;
-#ifdef CONFIG_LITTLE_ENDIAN
-	return DeeInt_NewU64(BSWAP64(i));
-#else /* CONFIG_LITTLE_ENDIAN */
-	return DeeInt_NewU64(i);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+	return DeeInt_NewU64(BESWAP64(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -161,11 +149,7 @@ lib_hton16_f(size_t argc, DeeObject **argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:hton16", &i))
 		return NULL;
-#ifdef CONFIG_LITTLE_ENDIAN
-	return DeeInt_NewU16(BSWAP16(i));
-#else /* CONFIG_LITTLE_ENDIAN */
-	return DeeInt_NewU16(i);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+	return DeeInt_NewU16(BESWAP16(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -173,11 +157,7 @@ lib_hton32_f(size_t argc, DeeObject **argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:hton32", &i))
 		return NULL;
-#ifdef CONFIG_LITTLE_ENDIAN
-	return DeeInt_NewU32(BSWAP32(i));
-#else /* CONFIG_LITTLE_ENDIAN */
-	return DeeInt_NewU32(i);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+	return DeeInt_NewU32(BESWAP32(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -185,11 +165,7 @@ lib_hton64_f(size_t argc, DeeObject **argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:hton64", &i))
 		return NULL;
-#ifdef CONFIG_LITTLE_ENDIAN
-	return DeeInt_NewU64(BSWAP64(i));
-#else /* CONFIG_LITTLE_ENDIAN */
-	return DeeInt_NewU64(i);
-#endif /* !CONFIG_LITTLE_ENDIAN */
+	return DeeInt_NewU64(BESWAP64(i));
 }
 
 PRIVATE DEFINE_CMETHOD(lib_ntoh16, lib_ntoh16_f);

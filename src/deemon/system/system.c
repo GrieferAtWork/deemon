@@ -730,11 +730,11 @@ PUBLIC void DCALL DeeSystem_DlClose(void *handle) {
 
 
 
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define FILETIME_GET64(x) (((x) << 32)|((x) >> 32))
-#else /* CONFIG_BIG_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
 #define FILETIME_GET64(x) (x)
-#endif /* !CONFIG_BIG_ENDIAN */
+#endif /* !__BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
 /* A couple of helper macros taken from the libtime DEX. */
 #define time_yer2day(x)     (((146097 * (x)) / 400) /*-1*/)

@@ -27,16 +27,9 @@
 #include <deemon/stringutils.h>
 
 #include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
 
 DECL_BEGIN
-
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE2(a, b)       ((b) << 8 | (a))
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE2(a, b)       ((b) | (a) << 8)
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
 
 INTDEF NONNULL((1, 2)) void DCALL
 JITLexer_ReferenceKeyword(JITLexer *__restrict self, char const *__restrict name, size_t size) {
@@ -468,17 +461,17 @@ do_handle_for:
 
 		case 4:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('n', 'o', 'n', 'e'))
+			if (name == ENCODE_INT32('n', 'o', 'n', 'e'))
 				goto do_yield_suffix;
-			if (name == ENCODE4('t', 'r', 'u', 'e'))
+			if (name == ENCODE_INT32('t', 'r', 'u', 'e'))
 				goto do_yield_suffix;
-			if (name == ENCODE4('r', 'e', 'p', 'r'))
+			if (name == ENCODE_INT32('r', 'e', 'p', 'r'))
 				goto do_yield_again_nocast;
-			if (name == ENCODE4('c', 'o', 'p', 'y'))
+			if (name == ENCODE_INT32('c', 'o', 'p', 'y'))
 				goto do_yield_again_nocast;
-			if (name == ENCODE4('t', 'y', 'p', 'e'))
+			if (name == ENCODE_INT32('t', 'y', 'p', 'e'))
 				goto do_yield_again_nocast;
-			if (name == ENCODE4('p', 'a', 'c', 'k')) {
+			if (name == ENCODE_INT32('p', 'a', 'c', 'k')) {
 				int has_paren = 0;
 				JITLexer_Yield(self);
 				if (self->jl_tok == '(') {
@@ -499,28 +492,28 @@ do_handle_for:
 					JITLexer_Yield(self);
 				goto do_suffix;
 			}
-			if (name == ENCODE4('w', 'i', 't', 'h'))
+			if (name == ENCODE_INT32('w', 'i', 't', 'h'))
 				goto do_yield_again_docast;
 			break;
 
 		case 5:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('c', 'a', 't', 'c') ||
+			if (name == ENCODE_INT32('c', 'a', 't', 'c') ||
 			    *(uint8_t *)(tok_begin + 4) == 'h') {
 				JITLexer_Yield(self);
 				JITLexer_ScanCatchMask(self);
 				goto again;
 			}
-			if (name == ENCODE4('f', 'a', 'l', 's') &&
+			if (name == ENCODE_INT32('f', 'a', 'l', 's') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e')
 				goto do_yield_suffix;
-			if (name == ENCODE4('l', 'o', 'c', 'a') &&
+			if (name == ENCODE_INT32('l', 'o', 'c', 'a') &&
 			    *(uint8_t *)(tok_begin + 4) == 'l')
 				goto do_yield_again;
-			if (name == ENCODE4('b', 'o', 'u', 'n') &&
+			if (name == ENCODE_INT32('b', 'o', 'u', 'n') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd')
 				goto do_yield_again_nocast;
-			if (name == ENCODE4('w', 'h', 'i', 'l') &&
+			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, false);
@@ -530,43 +523,43 @@ do_handle_for:
 
 		case 6:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('i', 'm', 'p', 'o') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't'))
+			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't'))
 				goto do_yield_suffix;
-			if (name == ENCODE4('a', 's', 's', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't'))
+			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't'))
 				goto do_yield_again_nocast;
-			if (name == ENCODE4('g', 'l', 'o', 'b') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'l'))
+			if (name == ENCODE_INT32('g', 'l', 'o', 'b') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'l'))
 				goto do_yield_again;
-			if (name == ENCODE4('s', 't', 'a', 't') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('i', 'c'))
+			if (name == ENCODE_INT32('s', 't', 'a', 't') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('i', 'c'))
 				goto do_yield_again;
 			break;
 
 		case 7:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('f', 'i', 'n', 'a') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('l', 'l') &&
+			if (name == ENCODE_INT32('f', 'i', 'n', 'a') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('l', 'l') &&
 			    *(uint8_t *)(tok_begin + 6) == 'y')
 				goto do_yield_again_docast;
-			if (name == ENCODE4('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'c') &&
+			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'h')
 				goto do_handle_for;
-			if (name == ENCODE4('_', '_', 's', 't') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'c') &&
+			if (name == ENCODE_INT32('_', '_', 's', 't') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'k')
 				goto do_yield_again;
 			break;
 
 		case 8:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('d', 'e', 'e', 'p') &&
-			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE4('c', 'o', 'p', 'y'))
+			if (name == ENCODE_INT32('d', 'e', 'e', 'p') &&
+			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE_INT32('c', 'o', 'p', 'y'))
 				goto do_yield_again_nocast;
-			if (name == ENCODE4('f', 'u', 'n', 'c') &&
-			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE4('t', 'i', 'o', 'n')) {
+			if (name == ENCODE_INT32('f', 'u', 'n', 'c') &&
+			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE_INT32('t', 'i', 'o', 'n')) {
 				/* Local function definition. */
 				JITLexer_Yield(self);
 				if (self->jl_tok == JIT_KEYWORD)
@@ -575,8 +568,8 @@ do_handle_for:
 					goto do_parse_function_arglist;
 				goto do_parse_function;
 			}
-			if (name == ENCODE4('o', 'p', 'e', 'r') &&
-			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE4('a', 't', 'o', 'r')) {
+			if (name == ENCODE_INT32('o', 'p', 'e', 'r') &&
+			    UNALIGNED_GET32((uint32_t *)(tok_begin + 4)) == ENCODE_INT32('a', 't', 'o', 'r')) {
 				/* Local function definition. */
 				JITLexer_Yield(self);
 				JITLexer_QuickSkipOperatorName(self);
@@ -796,15 +789,15 @@ do_yield_expression_semi:
 
 		case 4:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('w', 'i', 't', 'h') ||
-			    name == ENCODE4('e', 'l', 'i', 'f')) {
+			if (name == ENCODE_INT32('w', 'i', 't', 'h') ||
+			    name == ENCODE_INT32('e', 'l', 'i', 'f')) {
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, false);
 				goto again;
 			}
-			if (name == ENCODE4('e', 'l', 's', 'e'))
+			if (name == ENCODE_INT32('e', 'l', 's', 'e'))
 				goto do_yield_again;
-			if (name == ENCODE4('f', 'r', 'o', 'm')) {
+			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
 do_skip_until_semi:
 				do {
 					JITLexer_Yield(self);
@@ -815,23 +808,23 @@ do_skip_until_semi:
 
 		case 5:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('t', 'h', 'r', 'o') &&
+			if (name == ENCODE_INT32('t', 'h', 'r', 'o') &&
 			    *(uint8_t *)(tok_begin + 4) == 'w')
 				goto do_yield_expression_semi;
-			if (name == ENCODE4('c', 'a', 't', 'c') ||
+			if (name == ENCODE_INT32('c', 'a', 't', 'c') ||
 			    *(uint8_t *)(tok_begin + 4) == 'h') {
 				JITLexer_Yield(self);
 				JITLexer_ScanCatchMask(self);
 				goto again;
 			}
-			if (name == ENCODE4('y', 'i', 'e', 'l') &&
+			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd') {
 				/* Set the YIELDING flag if we're still within the core function! */
 				if (!(self->jl_scandata.jl_flags & JIT_SCANDATA_FINCHILD))
 					self->jl_scandata.jl_function->jf_flags |= JIT_FUNCTION_FYIELDING;
 				goto do_yield_expression_semi;
 			}
-			if (name == ENCODE4('p', 'r', 'i', 'n') &&
+			if (name == ENCODE_INT32('p', 'r', 'i', 'n') &&
 			    *(uint8_t *)(tok_begin + 4) == 't') {
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, true);
@@ -839,49 +832,49 @@ do_skip_until_semi:
 					goto do_yield_expression_semi;
 				goto done_skip_semi;
 			}
-			if (name == ENCODE4('b', 'r', 'e', 'a') &&
+			if (name == ENCODE_INT32('b', 'r', 'e', 'a') &&
 			    *(uint8_t *)(tok_begin + 4) == 'k') {
 do_yield_semi:
 				JITLexer_Yield(self);
 				goto done_skip_semi;
 			}
-			if (name == ENCODE4('_', '_', 'a', 's') &&
+			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
 			    *(uint8_t *)(tok_begin + 4) == 'm')
 				goto do_asm;
 			break;
 
 		case 6:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('r', 'e', 't', 'u') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 'n'))
+			if (name == ENCODE_INT32('r', 'e', 't', 'u') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 'n'))
 				goto do_yield_expression_semi;
-			if (name == ENCODE4('a', 's', 's', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't'))
+			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't'))
 				goto do_yield_expression_semi;
-			if (name == ENCODE4('i', 'm', 'p', 'o') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('r', 't')) {
+			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
 				JITLexer_Yield(self);
 				if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack"))
 					goto do_yield_expression_semi;
 				goto do_skip_until_semi;
 			}
-			if (name == ENCODE4('s', 'w', 'i', 't') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('c', 'h'))
+			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c', 'h'))
 				goto do_yield_expression_again;
 			break;
 
 		case 7:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (name == ENCODE4('f', 'o', 'r', 'e') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('a', 'c') &&
+			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'h')
 				goto do_scan_for_statement;
-			if (name == ENCODE4('f', 'i', 'n', 'a') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('l', 'l') &&
+			if (name == ENCODE_INT32('f', 'i', 'n', 'a') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('l', 'l') &&
 			    *(uint8_t *)(tok_begin + 6) == 'y')
 				goto do_yield_again;
-			if (name == ENCODE4('_', '_', 'a', 's') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE2('m', '_') &&
+			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('m', '_') &&
 			    *(uint8_t *)(tok_begin + 6) == '_') {
 				bool has_lparen;
 do_asm:
@@ -953,8 +946,8 @@ continue_skip_asm_operand:
 			uint32_t nam2;
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
 			nam2 = UNALIGNED_GET32((uint32_t *)(tok_begin + 4));
-			if (name == ENCODE4('c', 'o', 'n', 't') &&
-			    nam2 == ENCODE4('i', 'n', 'u', 'e'))
+			if (name == ENCODE_INT32('c', 'o', 'n', 't') &&
+			    nam2 == ENCODE_INT32('i', 'n', 'u', 'e'))
 				goto do_yield_semi;
 		}	break;
 

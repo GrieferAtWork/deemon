@@ -32,18 +32,11 @@
 
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
 
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
-
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE2(a, b)       ((b) << 8 | (a))
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE2(a, b)       ((b) | (a) << 8)
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeCodec_NormalizeName(DeeObject *__restrict name) {
@@ -75,14 +68,14 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			}
 			ASSERT(dst == DeeString_STR(result) + DeeString_SIZE(result));
 			if (length >= 4 &&
-			    UNALIGNED_GET32((uint32_t *)DeeString_STR(result)) == ENCODE4('i', 's', 'o', '-')) {
+			    UNALIGNED_GET32((uint32_t *)DeeString_STR(result)) == ENCODE_INT32('i', 's', 'o', '-')) {
 				--DeeString_SIZE(result);
 				memmove(DeeString_STR(result) + 3,
 				        DeeString_STR(result) + 4,
 				        (length - 4) * sizeof(char));
 				DeeString_STR(result)[length - 2] = '\0';
 			} else if (length >= 3 &&
-			           UNALIGNED_GET16((uint16_t *)DeeString_STR(result)) == ENCODE2('c', 'p') &&
+			           UNALIGNED_GET16((uint16_t *)DeeString_STR(result)) == ENCODE_INT16('c', 'p') &&
 			           DeeString_STR(result)[2] == '-') {
 				--DeeString_SIZE(result);
 				memmove(DeeString_STR(result) + 2,
@@ -93,21 +86,21 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			return result;
 		}
 	}
-	if (length >= 4 && UNALIGNED_GET32((uint32_t *)str) == ENCODE4('i', 's', 'o', '-')) {
+	if (length >= 4 && UNALIGNED_GET32((uint32_t *)str) == ENCODE_INT32('i', 's', 'o', '-')) {
 		result = DeeString_NewBuffer(length - 1);
 		if unlikely(!result)
 			goto err;
-		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE2('i', 's'));
+		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE_INT16('i', 's'));
 		DeeString_STR(result)[3] = 'o';
 		memcpy(DeeString_STR(result) + 3, str + 4, (length - 4) * sizeof(char));
 		return result;
 	}
 	if (length >= 3 &&
-	    UNALIGNED_GET16((uint16_t *)str) == ENCODE2('c', 'p') && str[2] == '-') {
+	    UNALIGNED_GET16((uint16_t *)str) == ENCODE_INT16('c', 'p') && str[2] == '-') {
 		result = DeeString_NewBuffer(length - 1);
 		if unlikely(!result)
 			goto err;
-		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE2('c', 'p'));
+		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE_INT16('c', 'p'));
 		memcpy(DeeString_STR(result) + 2, str + 3, (length - 3) * sizeof(char));
 		return result;
 	}
@@ -700,19 +693,19 @@ err:
 }
 
 
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 #define IS_LITTLE_ENDIAN true
 #define encode_utf16_le  encode_utf16
 #define encode_utf16_be  encode_utf16_alt
 #define encode_utf32_le  encode_utf32
 #define encode_utf32_be  encode_utf32_alt
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 #define IS_LITTLE_ENDIAN false
 #define encode_utf16_le  encode_utf16_alt
 #define encode_utf16_be  encode_utf16
 #define encode_utf32_le  encode_utf32_alt
 #define encode_utf32_be  encode_utf32
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
 PRIVATE DREF DeeObject *libcodecs = NULL;
 #ifndef CONFIG_NO_THREADS

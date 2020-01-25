@@ -33,12 +33,13 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system.h> /* DeeSystem_Unlink() */
 #include <deemon/system-features.h> /* memrchr(), memmem() */
+#include <deemon/system.h>          /* DeeSystem_Unlink() */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
 
 #include <string.h>
 
@@ -646,12 +647,6 @@ done:
 #define SEP '/'
 #endif /* !CONFIG_HOST_WINDOWS */
 
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
-
 
 /* Create and emit a DEC file for the given module. */
 INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
@@ -713,7 +708,7 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 			pathlen = (size_t)((dec_filestr + dec_filelen) - dec_filestart);
 			memcpy(dst, dec_filestart, pathlen * sizeof(char));
 			dst += pathlen;
-			UNALIGNED_SET32((uint32_t *)dst, ENCODE4('d', 'e', 'c', 0));
+			UNALIGNED_SET32((uint32_t *)dst, ENCODE_INT32('d', 'e', 'c', 0));
 		}
 	} else {
 		Dee_Incref(dec_filename);

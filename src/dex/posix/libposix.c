@@ -71,89 +71,89 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags) 
 
 
 
-PRIVATE char const *missing_features[] = {
-#ifdef p_truncate_USE_STUB
-	"truncate",
-#endif /* p_truncate_USE_STUB */
-#ifdef p_ftruncate_USE_STUB
-	"ftruncate",
-#endif /* p_ftruncate_USE_STUB */
-#ifdef p_pipe_USE_STUB
-	"pipe",
-#endif /* p_pipe_USE_STUB */
-#ifdef p_pipe2_USE_STUB
-	"pipe2",
-#endif /* p_pipe2_USE_STUB */
-#ifdef p_strerror_USE_STUB
-	"strerror",
-#endif /*p_strerror_USE_STUB */
-#ifdef p_strerrorname_USE_STUB
-	"strerrorname",
-#endif /*p_strerrorname_USE_STUB */
+PRIVATE char const missing_features[] =
+#ifdef posix_truncate_USE_STUB
+"truncate\0"
+#endif /* posix_truncate_USE_STUB */
+#ifdef posix_ftruncate_USE_STUB
+"ftruncate\0"
+#endif /* posix_ftruncate_USE_STUB */
+#ifdef posix_pipe_USE_STUB
+"pipe\0"
+#endif /* posix_pipe_USE_STUB */
+#ifdef posix_pipe2_USE_STUB
+"pipe2\0"
+#endif /* posix_pipe2_USE_STUB */
+#ifdef posix_strerror_USE_STUB
+"strerror\0"
+#endif /*posix_strerror_USE_STUB */
+#ifdef posix_strerrorname_USE_STUB
+"strerrorname\0"
+#endif /*posix_strerrorname_USE_STUB */
 #ifdef posix_open_USE_STUB
-	"open",
-	"_open",
+"open\0"
+"_open\0"
 #endif /* posix_open_USE_STUB */
 #ifdef posix_creat_USE_STUB
-	"creat",
-	"_creat",
+"creat\0"
+"_creat\0"
 #endif /* posix_creat_USE_STUB */
 #ifdef posix_close_USE_STUB
-	"close",
+"close\0"
 #endif /* posix_close_USE_STUB */
 #ifdef posix_isatty_USE_STUB
-	"isatty",
+"isatty\0"
 #endif /* posix_isatty_USE_STUB */
 #ifdef posix_umask_USE_STUB
-	"umask",
+"umask\0"
 #endif /* posix_umask_USE_STUB */
 #ifdef posix_dup_USE_STUB
-	"dup",
+"dup\0"
 #endif /* posix_dup_USE_STUB */
 #ifdef posix_dup2_USE_STUB
-	"dup2",
+"dup2\0"
 #endif /* posix_dup2_USE_STUB */
 #ifdef posix_dup3_USE_STUB
-	"dup3",
+"dup3\0"
 #endif /* posix_dup3_USE_STUB */
 #ifndef CONFIG_HAVE_errno
-	"errno",
+"errno\0"
 #endif /* !CONFIG_HAVE_errno */
 #ifdef posix_fsync_USE_STUB
-	"fsync",
+"fsync\0"
 #endif /* posix_fsync_USE_STUB */
 #ifdef posix_fdatasync_USE_STUB
-	"fdatasync",
+"fdatasync\0"
 #endif /* posix_fdatasync_USE_STUB */
 #ifdef posix_system_USE_STUB
-	"system",
+"system\0"
 #endif /* posix_system_USE_STUB */
 #ifdef posix_getpid_USE_STUB
-	"getpid",
+"getpid\0"
 #endif /* posix_getpid_USE_STUB */
 #ifdef posix_read_USE_STUB
-	"read",
+"read\0"
 #endif /* posix_read_USE_STUB */
 #ifdef posix_lseek_USE_STUB
-	"lseek",
+"lseek\0"
 #endif /* posix_lseek_USE_STUB */
 #ifdef posix_write_USE_STUB
-	"write",
+"write\0"
 #endif /* posix_write_USE_STUB */
 #ifdef posix_pread_USE_STUB
-	"pread",
+"pread\0"
 #endif /* posix_pread_USE_STUB */
 #ifdef posix_pwrite_USE_STUB
-	"pwrite",
+"pwrite\0"
 #endif /* posix_pwrite_USE_STUB */
 #ifdef posix_access_USE_STUB
-	"access",
+"access\0"
 #endif /* posix_access_USE_STUB */
 #ifdef posix_euidaccess_USE_STUB
-	"euidaccess",
+"euidaccess\0"
 #endif /* posix_euidaccess_USE_STUB */
-	NULL
-};
+""
+;
 
 
 PRIVATE char const *import_table[] = {
@@ -164,7 +164,7 @@ PRIVATE char const *import_table[] = {
 
 #ifdef __INTELLISENSE__
 #define D(...) /* nothing */
-#else /* __INTELLISENSE__ */
+#else          /* __INTELLISENSE__ */
 #define D(...) __VA_ARGS__
 #endif /* !__INTELLISENSE__ */
 
@@ -349,16 +349,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_UNSETENV_DEF)
 	D(POSIX_CLEARENV_DEF)
 
-	/* Python-like helper functions */
-	/* TODO: cpu_count() */
-	/* TODO: get_inheritable() */
-	/* TODO: set_inheritable() */
+/* Python-like helper functions */
+/* TODO: cpu_count() */
+/* TODO: get_inheritable() */
+/* TODO: set_inheritable() */
 
-	/* Higher-level wrapper functions */
-	/* TODO: popen() */
-	/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
+/* Higher-level wrapper functions */
+/* TODO: popen() */
+/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
 
-	/* Forward-aliases to `libfs' */
+/* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
 	    DOC(proto "Alias for :fs." libfs_name) }, )

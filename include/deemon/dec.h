@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/byteorder.h>
+
 #include <stdint.h>
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -299,12 +301,12 @@ typedef struct ATTR_PACKED {
 typedef union ATTR_PACKED {
 	double d;
 	struct {
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		unsigned int negative : 1;
 		unsigned int exponent : 11;
 		unsigned int mantissa0 : 20;
 		unsigned int mantissa1 : 32;
-#elif CONFIG_HOST_FLOAT_ENDIAN == 4321
+#elif __FLOAT_WORD_ORDER__ == 4321
 		unsigned int mantissa0 : 20;
 		unsigned int exponent : 11;
 		unsigned int negative : 1;
@@ -317,13 +319,13 @@ typedef union ATTR_PACKED {
 #endif /* !Endian... */
 	} ieee;
 	struct {
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 		unsigned int negative : 1;
 		unsigned int exponent : 11;
 		unsigned int quiet_nan : 1;
 		unsigned int mantissa0 : 19;
 		unsigned int mantissa1 : 32;
-#elif CONFIG_HOST_FLOAT_ENDIAN == 4321
+#elif __FLOAT_WORD_ORDER__ == 4321
 		unsigned int mantissa0 : 19;
 		unsigned int quiet_nan : 1;
 		unsigned int exponent : 11;

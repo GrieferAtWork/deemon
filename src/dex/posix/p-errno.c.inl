@@ -398,24 +398,24 @@ PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f);
 
 
 /* Figure out how to implement `posix_strerror()' */
-#undef p_strerror_USE_STRERROR_S
-#undef p_strerror_USE_SYS_ERRLIST
-#undef p_strerror_USE_STRERROR
-#undef p_strerror_USE_STUB
-#undef p_strerror_USE_DOCSTRINGS
+#undef posix_strerror_USE_STRERROR_S
+#undef posix_strerror_USE_SYS_ERRLIST
+#undef posix_strerror_USE_STRERROR
+#undef posix_strerror_USE_STUB
+#undef posix_strerror_USE_DOCSTRINGS
 #if !defined(CONFIG_HAVE_errno)
-#define p_strerror_USE_STUB 1
+#define posix_strerror_USE_STUB 1
 #elif defined(CONFIG_HAVE_strerror_s)
-#define p_strerror_USE_STRERROR_S 1
-#define p_strerror_USE_DOCSTRINGS 1
+#define posix_strerror_USE_STRERROR_S 1
+#define posix_strerror_USE_DOCSTRINGS 1
 #elif defined(CONFIG_HAVE__sys_errlist) && defined(CONFIG_HAVE__sys_nerr)
-#define p_strerror_USE_SYS_ERRLIST 1
-#define p_strerror_USE_DOCSTRINGS 1
+#define posix_strerror_USE_SYS_ERRLIST 1
+#define posix_strerror_USE_DOCSTRINGS 1
 #elif defined(CONFIG_HAVE_strerror)
-#define p_strerror_USE_STRERROR 1
-#define p_strerror_USE_DOCSTRINGS 1
+#define posix_strerror_USE_STRERROR 1
+#define posix_strerror_USE_DOCSTRINGS 1
 #else
-#define p_strerror_USE_DOCSTRINGS 1
+#define posix_strerror_USE_DOCSTRINGS 1
 #endif
 
 
@@ -443,25 +443,25 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
-#ifdef p_strerror_USE_STRERROR_S
+#ifdef posix_strerror_USE_STRERROR_S
 	{
 		char const *text;
 		text = strerror_s(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* p_strerror_USE_STRERROR_S */
+#endif /* posix_strerror_USE_STRERROR_S */
 
-#ifdef p_strerror_USE_SYS_ERRLIST
+#ifdef posix_strerror_USE_SYS_ERRLIST
 	if (errnum >= 0 && errnum < _sys_nerr) {
 		char const *text;
 		text = (char const *)_sys_errlist[errnum];
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* p_strerror_USE_SYS_ERRLIST */
+#endif /* posix_strerror_USE_SYS_ERRLIST */
 
-#ifdef p_strerror_USE_DOCSTRINGS
+#ifdef posix_strerror_USE_DOCSTRINGS
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
@@ -489,16 +489,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 		}
 	}
 #undef SYMBOL_NAME_IS_ERRNO
-#endif /* !p_strerror_USE_DOCSTRINGS */
+#endif /* !posix_strerror_USE_DOCSTRINGS */
 
-#ifdef p_strerror_USE_STRERROR
+#ifdef posix_strerror_USE_STRERROR
 	{
 		char *text;
 		text = strerror(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* p_strerror_USE_STRERROR */
+#endif /* posix_strerror_USE_STRERROR */
 
 	return_none;
 }
@@ -508,16 +508,16 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 
 
 /* Figure out how to implement `posix_strerrorname()' */
-#undef p_strerrorname_USE_STUB
-#undef p_strerrorname_USE_STRERRORNAME_S
-#undef p_strerrorname_USE_SYMBOLNAMES
+#undef posix_strerrorname_USE_STUB
+#undef posix_strerrorname_USE_STRERRORNAME_S
+#undef posix_strerrorname_USE_SYMBOLNAMES
 #if !defined(CONFIG_HAVE_errno)
-#define p_strerrorname_USE_STUB 1
+#define posix_strerrorname_USE_STUB 1
 #elif defined(CONFIG_HAVE_strerrorname_s)
-#define p_strerrorname_USE_STRERRORNAME_S 1
-#define p_strerrorname_USE_SYMBOLNAMES 1
+#define posix_strerrorname_USE_STRERRORNAME_S 1
+#define posix_strerrorname_USE_SYMBOLNAMES 1
 #else
-#define p_strerrorname_USE_SYMBOLNAMES 1
+#define posix_strerrorname_USE_SYMBOLNAMES 1
 #endif
 
 
@@ -544,16 +544,16 @@ err:
 	return NULL;
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
-#ifdef p_strerrorname_USE_STRERRORNAME_S
+#ifdef posix_strerrorname_USE_STRERRORNAME_S
 	{
 		char const *text;
 		text = strerrorname_s(errnum);
 		if (text)
 			return DeeString_NewUtf8(text, strlen(text), STRING_ERROR_FIGNORE);
 	}
-#endif /* p_strerrorname_USE_STRERRORNAME_S */
+#endif /* posix_strerrorname_USE_STRERRORNAME_S */
 
-#ifdef p_strerrorname_USE_SYMBOLNAMES
+#ifdef posix_strerrorname_USE_SYMBOLNAMES
 	/* Search our own symbol table for error code.
 	 * Since we use the errno message as doc string, we can simply return the doc here. */
 	{
@@ -579,7 +579,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum) {
 		}
 	}
 #undef SYMBOL_NAME_IS_ERRNO
-#endif /* !p_strerrorname_USE_SYMBOLNAMES */
+#endif /* !posix_strerrorname_USE_SYMBOLNAMES */
 
 	return_none;
 }

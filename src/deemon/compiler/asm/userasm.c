@@ -1271,7 +1271,7 @@ struct assembler_state {
 #define OPTION_MODE_TRY   0x80
 
 PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	if (name & 0xff000000)
 		;
 	else if (name & 0x00ff0000)
@@ -1281,7 +1281,7 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
 	else {
 		name = name << 24;
 	}
-#else /* CONFIG_BIG_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
 	if (name & 0xff000000) {
 		name = BSWAP32(name);
 	} else if (name & 0x00ff0000) {
@@ -1289,7 +1289,7 @@ PRIVATE uint32_t DCALL fix_option_name(uint32_t name) {
 	} else if (name & 0x0000ff00) {
 		name = (uint32_t)BSWAP16((uint16_t)name);
 	}
-#endif /* !CONFIG_BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 	return name;
 }
 

@@ -106,7 +106,6 @@
 
 #include <hybrid/compiler.h>
 
-#include <hybrid/__byteorder.h>
 #include <hybrid/debug-alignment.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
@@ -167,7 +166,8 @@ DECL_BEGIN
  *       -> This is only meant for testing small example applications
  *          that have proven to cause reference leaks, in order to
  *          analyze what exactly is causing them. */
-#if !defined(CONFIG_TRACE_REFCHANGES) && !defined(CONFIG_NO_TRACE_REFCHANGES)
+#if (!defined(CONFIG_TRACE_REFCHANGES) && \
+     !defined(CONFIG_NO_TRACE_REFCHANGES))
 #if !defined(NDEBUG) && 0
 #define CONFIG_TRACE_REFCHANGES 1
 #else /* !NDEBUG */
@@ -175,7 +175,8 @@ DECL_BEGIN
 #endif /* NDEBUG */
 #endif /* !CONFIG_TRACE_REFCHANGES && !CONFIG_NO_TRACE_REFCHANGES */
 
-#if !defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_BADREFCNT_CHECKS)
+#if (!defined(CONFIG_NO_BADREFCNT_CHECKS) && \
+     !defined(CONFIG_BADREFCNT_CHECKS))
 #ifdef NDEBUG
 #define CONFIG_NO_BADREFCNT_CHECKS 1
 #else /* NDEBUG */
@@ -194,8 +195,8 @@ DECL_BEGIN
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 
-#if !defined(CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS) && \
-    !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS)
+#if (!defined(CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS) && \
+     !defined(CONFIG_NO_CALLTUPLE_OPTIMIZATIONS))
 #ifndef __OPTIMIZE_SIZE__
 #define CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS 1
 #else /* !__OPTIMIZE_SIZE__ */
@@ -203,8 +204,8 @@ DECL_BEGIN
 #endif /* __OPTIMIZE_SIZE__ */
 #endif
 
-#if !defined(CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
-    !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS)
+#if (!defined(CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
+     !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
 #ifndef __OPTIMIZE_SIZE__
 #define CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
 #else /* !__OPTIMIZE_SIZE__ */
@@ -213,16 +214,16 @@ DECL_BEGIN
 #endif
 
 
-#if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
-    defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
-    defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
-    defined(_WIN32_WCE) || defined(WIN32_WCE)
+#if (defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) ||            \
+     defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) ||          \
+     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
+     defined(_WIN32_WCE) || defined(WIN32_WCE))
 #define CONFIG_HOST_WINDOWS 1
 #endif /* Windows... */
-#if defined(__unix__) || defined(__unix) || defined(unix) || \
-    defined(__linux__) || defined(__linux) || defined(linux) || \
-    defined(__KOS__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
-    defined(__DragonFly__)
+#if (defined(__unix__) || defined(__unix) || defined(unix) ||           \
+     defined(__linux__) || defined(__linux) || defined(linux) ||        \
+     defined(__KOS__) || defined(__NetBSD__) || defined(__FreeBSD__) || \
+     defined(__DragonFly__))
 #define CONFIG_HOST_UNIX 1
 #endif /* Unix... */
 
@@ -242,17 +243,9 @@ DECL_BEGIN
 #endif /* CONFIG_HOST_WINDOWS */
 
 
-#define CONFIG_HOST_ENDIAN  __BYTE_ORDER__
-#if CONFIG_HOST_ENDIAN == __ORDER_LITTLE_ENDIAN__
-#   define CONFIG_LITTLE_ENDIAN 1
-#elif CONFIG_HOST_ENDIAN == __ORDER_BIG_ENDIAN__
-#   define CONFIG_BIG_ENDIAN 1
-#endif /* Endian... */
-
-
 #ifdef CONFIG_BUILDING_DEEMON
-#if (defined(__i386__) && !defined(__x86_64__)) && \
-     defined(CONFIG_HOST_WINDOWS)
+#if ((defined(__i386__) && !defined(__x86_64__)) && \
+     defined(CONFIG_HOST_WINDOWS))
 #if 0
 #define ASSEMBLY_NAME(x,s)     PP_CAT4(__USER_LABEL_PREFIX__,x,@,s)
 #else
@@ -306,11 +299,15 @@ DECL_BEGIN
 #ifdef _MSC_VER
 extern void (__debugbreak)(void);
 #pragma intrinsic(__debugbreak)
-#define BREAKPOINT()           __debugbreak()
+#define BREAKPOINT() __debugbreak()
 #elif defined(__COMPILER_HAVE_GCC_ASM) && (defined(__i386__) || defined(__x86_64__))
-#define BREAKPOINT()  XBLOCK({ __asm__ __volatile__("int {$}3" : ); (void)0; })
+#ifdef __NO_XBLOCK
+#define BREAKPOINT() __asm__ __volatile__("int {$}3" : )
+#else /* __NO_XBLOCK */
+#define BREAKPOINT() XBLOCK({ __asm__ __volatile__("int {$}3" : ); (void)0; })
+#endif /* !__NO_XBLOCK */
 #else
-#define BREAKPOINT()          (void)0
+#define BREAKPOINT() (void)0
 #endif
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -410,14 +407,14 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
 
 #ifndef DEE_DPRINT
 #define DEE_NO_DPRINTF             1
-#define DEE_DPRINT(message)       (void)0
-#define DEE_DPRINTF(...)          (void)0
-#define DEE_VDPRINTF(format,args) (void)0
+#define DEE_DPRINT(message)        (void)0
+#define DEE_DPRINTF(...)           (void)0
+#define DEE_VDPRINTF(format, args) (void)0
 #endif /* !DEE_DPRINT */
 
 #ifndef DEE_CHECKMEMORY
 #define DEE_NO_CHECKMEMORY         1
-#define DEE_CHECKMEMORY()         (void)0
+#define DEE_CHECKMEMORY()          (void)0
 #endif /* !DEE_CHECKMEMORY */
 
 #endif /* __CC__ */

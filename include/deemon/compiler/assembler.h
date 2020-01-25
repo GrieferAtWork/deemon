@@ -23,6 +23,7 @@
 #include "../api.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
+#include <hybrid/byteorder.h>
 #include <hybrid/typecore.h>
 
 #include <stdint.h>
@@ -991,11 +992,11 @@ INTDEF WUNUSED int DCALL asm_put_data32(uint32_t data);
 INTDEF WUNUSED int DCALL asm_put_data64(uint64_t data);
 #else /* __INTELLISENSE__ */
 #define asm_put_data8(data) asm_put(data)
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define asm_put_data16(data) asm_put16(data)
-#else /* CONFIG_BIG_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
 INTDEF int DCALL asm_put_data16(uint16_t data);
-#endif /* !CONFIG_BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 INTDEF int DCALL asm_put_data32(uint32_t data);
 INTDEF int DCALL asm_put_data64(uint64_t data);
 #endif /* !__INTELLISENSE__ */

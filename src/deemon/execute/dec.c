@@ -66,6 +66,7 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
 
 #include <stdarg.h>
 
@@ -822,12 +823,6 @@ DecFile_Strtab(DecFile *__restrict self) {
 
 
 
-
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 DecFile_IsUpToDate(DecFile *__restrict self) {
@@ -2210,7 +2205,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
 		memcpy(&header.co_flags + 1, reader, sizeof(Dec_Code) - 2);
 		reader += sizeof(Dec_Code) - 2;
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
 		header.co_localc     = LESWAP16(header.co_localc);
 		header.co_refc       = LESWAP16(header.co_refc);
 		header.co_argc_min   = LESWAP16(header.co_argc_min);
@@ -2222,7 +2217,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		header.co_kwdoff     = LESWAP32(header.co_kwdoff);
 		header.co_textsiz    = LESWAP32(header.co_textsiz);
 		header.co_textoff    = LESWAP32(header.co_textoff);
-#endif /* CONFIG_BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	}
 
 	/* Validate the that text address is in-bounds (it will be read later). */

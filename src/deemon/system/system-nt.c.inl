@@ -40,6 +40,7 @@
 
 #include <hybrid/atomic.h>
 #include <hybrid/unaligned.h>
+#include <hybrid/wordbits.h>
 
 #include <Windows.h>
 
@@ -63,12 +64,6 @@ DECL_BEGIN
 #undef GetProcAddress
 #define GetProcAddress GetProcAddressA
 #endif /* _WIN32_WCE */
-
-#ifdef CONFIG_LITTLE_ENDIAN
-#define ENCODE4(a, b, c, d) ((d) << 24 | (c) << 16 | (b) << 8 | (a))
-#else /* CONFIG_LITTLE_ENDIAN */
-#define ENCODE4(a, b, c, d) ((d) | (c) << 8 | (b) << 16 | (a) << 24)
-#endif /* !CONFIG_LITTLE_ENDIAN */
 
 
 #if defined(DeeSysFD_GETSET) && defined(DeeSysFS_IS_HANDLE)
@@ -303,7 +298,7 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 		goto err;
 	filename_size = DeeString_SIZE(filename);
 	if (filename_size < 4 ||
-	    UNALIGNED_GET32((uint32_t *)DeeString_STR(filename)) != ENCODE4('\\', '\\', '.', '\\')) {
+	    UNALIGNED_GET32((uint32_t *)DeeString_STR(filename)) != ENCODE_INT32('\\', '\\', '.', '\\')) {
 		if (!DeeObject_IsShared(filename) &&
 		    DeeString_WIDTH(filename) == STRING_WIDTH_1BYTE) {
 			DeeString_FreeWidth(filename);
@@ -315,7 +310,7 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 			        filename_size * sizeof(char));
 			/* Set the prefix. */
 			UNALIGNED_SET32((uint32_t *)DeeString_STR(result),
-			                ENCODE4('\\', '\\', '.', '\\'));
+			                ENCODE_INT32('\\', '\\', '.', '\\'));
 			return result;
 		} else {
 			struct unicode_printer printer = UNICODE_PRINTER_INIT;

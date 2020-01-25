@@ -43,6 +43,7 @@
 #include <deemon/stringutils.h>
 
 #include <hybrid/atomic.h>
+#include <hybrid/byteorder.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 
@@ -2799,15 +2800,15 @@ int_tostr(DeeObject *self, size_t argc,
 	uint32_t flags                  = 10 << DEEINT_PRINT_RSHIFT;
 	char *flags_str                 = NULL;
 	PRIVATE struct keyword kwlist[] = { K(radix), K(mode), KEND };
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|I16us:tostr",
 	                    &((uint16_t *)&flags)[0], &flags_str))
 		goto err;
-#else /* CONFIG_BIG_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|I16us:tostr",
 	                    &((uint16_t *)&flags)[1], &flags_str))
 		goto err;
-#endif /* !CONFIG_BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 	if (flags_str) {
 		char *iter = flags_str;
 		for (;;) {
@@ -2873,11 +2874,11 @@ int_tobytes(DeeIntObject *self, size_t argc,
 	                    &length, &byteorder, &is_signed))
 		goto err;
 	if (DeeNone_Check(byteorder)) {
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		encode_little = true;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 		encode_little = false;
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	} else {
 		if (DeeObject_AssertTypeExact(byteorder, &DeeString_Type))
 			goto err;
@@ -2924,11 +2925,11 @@ int_frombytes(DeeObject *__restrict UNUSED(self),
 	                    &bytes, &byteorder, &is_signed))
 		goto err;
 	if (DeeNone_Check(byteorder)) {
-#ifdef CONFIG_LITTLE_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 		encode_little = true;
-#else /* CONFIG_LITTLE_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
 		encode_little = false;
-#endif /* !CONFIG_LITTLE_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	} else {
 		if (DeeObject_AssertTypeExact(byteorder, &DeeString_Type))
 			goto err;

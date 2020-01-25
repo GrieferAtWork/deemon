@@ -136,6 +136,7 @@
 
 #include <stdint.h>
 
+#include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 
 #ifdef CONFIG_HOST_WINDOWS
@@ -541,7 +542,7 @@ DECL_BEGIN
 #define NET_ENDIAN 4321 /* Big endian */
 #endif /* !NET_ENDIAN */
 
-#if CONFIG_HOST_ENDIAN == NET_ENDIAN
+#if __BYTE_ORDER__ == NET_ENDIAN
 #define SOCKADDRINET(a, b, c, d) ((a) << 24 | (b) << 16 | (c) << 8 | (d))
 #define INET_HOSTNAME_A(x) (((x)&0xff000000) >> 24)
 #define INET_HOSTNAME_B(x) (((x)&0x00ff0000) >> 16)
@@ -554,7 +555,7 @@ DECL_BEGIN
 #define HTON32_M /* nothing */
 #define HTON64   /* nothing */
 #define HTON64_M /* nothing */
-#else /* CONFIG_HOST_ENDIAN == NET_ENDIAN */
+#else /* __BYTE_ORDER__ == NET_ENDIAN */
 #define SOCKADDRINET(a, b, c, d) ((a) | (b) << 8 | (c) << 16 | (d) << 24)
 #define INET_HOSTNAME_A(x)  ((x)&0x000000ff)
 #define INET_HOSTNAME_B(x) (((x)&0x0000ff00) >> 8)
@@ -567,7 +568,7 @@ DECL_BEGIN
 #define HTON32_C  BSWAP32_C
 #define HTON64    BSWAP64
 #define HTON64_C  BSWAP64_C
-#endif /* CONFIG_HOST_ENDIAN != NET_ENDIAN */
+#endif /* __BYTE_ORDER__ != NET_ENDIAN */
 
 #define NTOH16    HTON16
 #define NTOH16_C  HTON16_C

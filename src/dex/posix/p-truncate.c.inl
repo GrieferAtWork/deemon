@@ -28,31 +28,31 @@ DECL_BEGIN
 
 /* Figure out how we want to implement `truncate()' */
 #if defined(CONFIG_HAVE_wtruncate64)
-#define p_truncate_USE_WTRUNCATE64 1
+#define posix_truncate_USE_WTRUNCATE64 1
 #elif defined(CONFIG_HAVE_wtruncate)
-#define p_truncate_USE_WTRUNCATE 1
+#define posix_truncate_USE_WTRUNCATE 1
 #elif defined(CONFIG_HAVE_truncate64)
-#define p_truncate_USE_TRUNCATE64 1
+#define posix_truncate_USE_TRUNCATE64 1
 #elif defined(CONFIG_HAVE_truncate)
-#define p_truncate_USE_TRUNCATE 1
+#define posix_truncate_USE_TRUNCATE 1
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define p_truncate_USE_WOPEN_FTRUNCATE64 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE64 1
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
-#define p_truncate_USE_WOPEN_FTRUNCATE 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE 1
 #elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate64)
-#define p_truncate_USE_OPEN_FTRUNCATE64 1
+#define posix_truncate_USE_OPEN_FTRUNCATE64 1
 #elif (defined(CONFIG_HAVE_open64) || defined(CONFIG_HAVE_open)) && defined(CONFIG_HAVE_ftruncate)
-#define p_truncate_USE_OPEN_FTRUNCATE 1
+#define posix_truncate_USE_OPEN_FTRUNCATE 1
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate64)
-#define p_truncate_USE_WOPEN_FTRUNCATE64 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE64 1
 #elif (defined(CONFIG_HAVE_wopen64) || defined(CONFIG_HAVE_wopen)) && defined(CONFIG_HAVE_ftruncate)
-#define p_truncate_USE_WOPEN_FTRUNCATE 1
+#define posix_truncate_USE_WOPEN_FTRUNCATE 1
 #else
-#define p_truncate_USE_STUB 1
+#define posix_truncate_USE_STUB 1
 #endif
 
 
-#if defined(p_truncate_USE_WTRUNCATE64) || defined(p_truncate_USE_WOPEN_FTRUNCATE64) || defined(__DEEMON__)
+#if defined(posix_truncate_USE_WTRUNCATE64) || defined(posix_truncate_USE_WOPEN_FTRUNCATE64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate", "filename:c:wchar_t[],len:I64d", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *filename, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -80,9 +80,9 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *filename, int64_t len)
 //[[[end]]]
-#endif /* p_truncate_USE_WTRUNCATE64 || p_truncate_USE_WOPEN_FTRUNCATE64 */
-#if (!(defined(p_truncate_USE_WTRUNCATE64) || defined(p_truncate_USE_WOPEN_FTRUNCATE64)) && \
-      (defined(p_truncate_USE_WTRUNCATE) || defined(p_truncate_USE_WOPEN_FTRUNCATE))) || defined(__DEEMON__)
+#endif /* posix_truncate_USE_WTRUNCATE64 || posix_truncate_USE_WOPEN_FTRUNCATE64 */
+#if (!(defined(posix_truncate_USE_WTRUNCATE64) || defined(posix_truncate_USE_WOPEN_FTRUNCATE64)) && \
+      (defined(posix_truncate_USE_WTRUNCATE) || defined(posix_truncate_USE_WOPEN_FTRUNCATE))) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate", "filename:c:wchar_t[],len:I32d", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *filename, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -110,10 +110,10 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(dwchar_t const *filename, int32_t len)
 //[[[end]]]
-#endif /* p_truncate_USE_WTRUNCATE || p_truncate_USE_WOPEN_FTRUNCATE */
-#if (!(defined(p_truncate_USE_WTRUNCATE64) || defined(p_truncate_USE_WOPEN_FTRUNCATE64) || \
-       defined(p_truncate_USE_WTRUNCATE) || defined(p_truncate_USE_WOPEN_FTRUNCATE)) && \
-      (defined(p_truncate_USE_TRUNCATE64) || defined(p_truncate_USE_OPEN_FTRUNCATE64))) || defined(__DEEMON__)
+#endif /* posix_truncate_USE_WTRUNCATE || posix_truncate_USE_WOPEN_FTRUNCATE */
+#if (!(defined(posix_truncate_USE_WTRUNCATE64) || defined(posix_truncate_USE_WOPEN_FTRUNCATE64) || \
+       defined(posix_truncate_USE_WTRUNCATE) || defined(posix_truncate_USE_WOPEN_FTRUNCATE)) && \
+      (defined(posix_truncate_USE_TRUNCATE64) || defined(posix_truncate_USE_OPEN_FTRUNCATE64))) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate", "filename:c:char[],len:I64d", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char const *filename, int64_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -141,10 +141,10 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char const *filename, int64_t len)
 //[[[end]]]
-#endif /* p_truncate_USE_TRUNCATE64 || p_truncate_USE_OPEN_FTRUNCATE64 */
-#if (!(defined(p_truncate_USE_WTRUNCATE64) || defined(p_truncate_USE_WOPEN_FTRUNCATE64) || \
-       defined(p_truncate_USE_WTRUNCATE) || defined(p_truncate_USE_WOPEN_FTRUNCATE) || \
-       defined(p_truncate_USE_TRUNCATE64) || defined(p_truncate_USE_OPEN_FTRUNCATE64))) || defined(__DEEMON__)
+#endif /* posix_truncate_USE_TRUNCATE64 || posix_truncate_USE_OPEN_FTRUNCATE64 */
+#if (!(defined(posix_truncate_USE_WTRUNCATE64) || defined(posix_truncate_USE_WOPEN_FTRUNCATE64) || \
+       defined(posix_truncate_USE_WTRUNCATE) || defined(posix_truncate_USE_WOPEN_FTRUNCATE) || \
+       defined(posix_truncate_USE_TRUNCATE64) || defined(posix_truncate_USE_OPEN_FTRUNCATE64))) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("truncate", "filename:c:char[],len:I32d", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char const *filename, int32_t len);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_truncate_f(size_t argc, DeeObject **argv, DeeObject *kw);
@@ -172,33 +172,33 @@ err:
 }
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_truncate_f_impl(/*utf-8*/ char const *filename, int32_t len)
 //[[[end]]]
-#endif /* p_truncate_USE_TRUNCATE || TRUNCATE_IMPL_WOPEN_TRUNCATE */
+#endif /* posix_truncate_USE_TRUNCATE || TRUNCATE_IMPL_WOPEN_TRUNCATE */
 {
-#ifdef p_truncate_USE_STUB
+#ifdef posix_truncate_USE_STUB
 #define NEED_ERR_UNSUPPORTED 1
 	(void)fd;
 	(void)len;
 	posix_err_unsupported("truncate");
-#else /* p_truncate_USE_STUB */
+#else /* posix_truncate_USE_STUB */
 	int result;
 EINTR_LABEL(again)
 	DBG_ALIGNMENT_DISABLE();
-#if defined(p_truncate_USE_WTRUNCATE64)
+#if defined(posix_truncate_USE_WTRUNCATE64)
 #define TRUNCATE_PRINTF_FILENAME "%lq"
 	result = wtruncate64(filename, len);
-#elif defined(p_truncate_USE_WTRUNCATE)
+#elif defined(posix_truncate_USE_WTRUNCATE)
 #define TRUNCATE_PRINTF_FILENAME "%lq"
 	result = wtruncate(filename, len);
-#elif defined(p_truncate_USE_TRUNCATE64)
+#elif defined(posix_truncate_USE_TRUNCATE64)
 #define TRUNCATE_PRINTF_FILENAME "%q"
 	result = truncate64(filename, len);
-#elif defined(p_truncate_USE_TRUNCATE)
+#elif defined(posix_truncate_USE_TRUNCATE)
 #define TRUNCATE_PRINTF_FILENAME "%q"
 	result = truncate(filename, len);
 #else /* Single-call */
 	{
-#if defined(p_truncate_USE_WOPEN_FTRUNCATE) || \
-    defined(p_truncate_USE_WOPEN_FTRUNCATE64)
+#if defined(posix_truncate_USE_WOPEN_FTRUNCATE) || \
+    defined(posix_truncate_USE_WOPEN_FTRUNCATE64)
 #define TRUNCATE_PRINTF_FILENAME "%lq"
 #ifdef CONFIG_HAVE_wopen64
 		int fd = wopen64(filename, O_RDWR);
@@ -215,8 +215,8 @@ EINTR_LABEL(again)
 #endif
 		result = fd;
 		if (fd >= 0) {
-#if defined(p_truncate_USE_OPEN_FTRUNCATE64) || \
-    defined(p_truncate_USE_WOPEN_FTRUNCATE64)
+#if defined(posix_truncate_USE_OPEN_FTRUNCATE64) || \
+    defined(posix_truncate_USE_WOPEN_FTRUNCATE64)
 			result = ftruncate64(fd, len);
 #else
 			result = ftruncate(fd, len);
@@ -244,13 +244,13 @@ EINTR_LABEL(again)
 	}
 	return_none;
 err:
-#endif /* !p_truncate_USE_STUB */
+#endif /* !posix_truncate_USE_STUB */
 	return NULL;
 }
 
 
 
-/* TOOD: Use the p_xxx_USE_XXX notation for ftruncate() */
+/* TOOD: Use the posix_xxx_USE_XXX notation for ftruncate() */
 
 #if defined(CONFIG_HAVE_ftruncate64) || defined(__DEEMON__)
 /*[[[deemon import("_dexutils").gw("ftruncate", "fd:unix:fd,len:I64d", libname: "posix"); ]]]*/

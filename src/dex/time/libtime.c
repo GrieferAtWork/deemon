@@ -46,11 +46,11 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_BIG_ENDIAN
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define FILETIME_GET64(x) (((x) << 32)|((x) >> 32))
-#else /* CONFIG_BIG_ENDIAN */
+#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
 #define FILETIME_GET64(x)   (x)
-#endif /* !CONFIG_BIG_ENDIAN */
+#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
 INTERN WUNUSED dtime_t DCALL time_now(void) {
 #ifdef CONFIG_HOST_WINDOWS
