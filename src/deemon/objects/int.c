@@ -792,29 +792,33 @@ DeeInt_NewS128(dint128_t val) {
 	DREF DeeIntObject *result;
 	int sign;
 	size_t req_digits;
-	duint128_t iter, abs_val;
+	union {
+		dint128_t  s;
+		duint128_t u;
+	} iter, abs_val;
 	if (DSINT128_IS64(val))
 		return DeeInt_NewS64(DUINT128_GETS64(val)[DEE_INT128_LS64]);
 	/* The remainder is basically the same as any other creator, but
 	 * using special macros implementing some basic 128-bit arithmetic. */
-	sign = 1, *(dint128_t *)&abs_val = val;
+	sign = 1;
+	abs_val.s = val;
 	if (DSINT128_ISNEG(val)) {
 		sign = -1;
-		DSINT128_TONEG(abs_val);
+		DSINT128_TONEG(abs_val.s);
 	}
-	for (iter = abs_val, req_digits = 0; !DSINT128_ISNUL(iter);
-	     DUINT128_SHR(iter, DIGIT_BITS), ++req_digits)
+	for (iter = abs_val, req_digits = 0; !DSINT128_ISNUL(iter.s);
+	     DUINT128_SHR(iter.s, DIGIT_BITS), ++req_digits)
 		;
 	ASSERT(req_digits > 0);
 	result = DeeInt_Alloc(req_digits);
 	if likely(result) {
 		result->ob_size = req_digits * sign;
-		for (req_digits = 0; !DSINT128_ISNUL(abs_val);
-		     DUINT128_SHR(abs_val, DIGIT_BITS), ++req_digits) {
+		for (req_digits = 0; !DSINT128_ISNUL(abs_val.s);
+		     DUINT128_SHR(abs_val.u, DIGIT_BITS), ++req_digits) {
 #if DIGIT_BITS == 30
-			result->ob_digit[req_digits] = (digit)(DUINT128_GET32(abs_val)[DEE_INT128_LS32] & DIGIT_MASK);
+			result->ob_digit[req_digits] = (digit)(DUINT128_GET32(abs_val.u)[DEE_INT128_LS32] & DIGIT_MASK);
 #else /* DIGIT_BITS == 30 */
-			result->ob_digit[req_digits] = (digit)(DUINT128_GET16(abs_val)[DEE_INT128_LS16] & DIGIT_MASK);
+			result->ob_digit[req_digits] = (digit)(DUINT128_GET16(abs_val.u)[DEE_INT128_LS16] & DIGIT_MASK);
 #endif /* DIGIT_BITS != 30 */
 		}
 	}
@@ -1902,7 +1906,10 @@ overflow:
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeInt_TryAs128(DeeObject *__restrict self,
                 dint128_t *__restrict value) {
-	duint128_t result;
+	union {
+		duint128_t u;
+		dint128_t  s;
+	} result;
 	int sign;
 	dssize_t i;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeInt_Type);
@@ -1925,30 +1932,30 @@ DeeInt_TryAs128(DeeObject *__restrict self,
 
 	default: break;
 	}
-	DUINT128_SET(result, 0);
+	DUINT128_SET(result.u, 0);
 	sign = 1;
 	i    = DeeInt_SIZE(self);
 	if (i < 0)
 		sign = -1, i = -i;
 	while (--i >= 0) {
-		if (DUINT128_SHL_WILL_OVERFLOW(result, DIGIT_BITS))
+		if (DUINT128_SHL_WILL_OVERFLOW(result.u, DIGIT_BITS))
 			goto overflow;
-		DUINT128_SHL(result, DIGIT_BITS);
-		DUINT128_OR(result, DeeInt_DIGIT(self)[i]);
+		DUINT128_SHL(result.u, DIGIT_BITS);
+		DUINT128_OR(result.u, DeeInt_DIGIT(self)[i]);
 	}
 	if (sign < 0) {
-		if (!DINT128_ISMAX(result)) {
-			DSINT128_TONEG(result);
-		} else if (DINT128_IS0MMIN(result)) {
-			DINT128_SETMIN(result);
+		if (!DINT128_ISMAX(result.s)) {
+			DSINT128_TONEG(result.s);
+		} else if (DINT128_IS0MMIN(result.s)) {
+			DINT128_SETMIN(result.s);
 		} else {
 overflow:
 			return sign > 0 ? INT_POS_OVERFLOW : INT_NEG_OVERFLOW;
 		}
-		*(duint128_t *)value = result;
+		*value = result.s;
 		return INT_SIGNED;
 	}
-	*(duint128_t *)value = result;
+	*value = result.s;
 	return INT_UNSIGNED;
 }
 
