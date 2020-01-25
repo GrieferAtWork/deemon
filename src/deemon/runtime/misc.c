@@ -40,6 +40,7 @@
 #endif /* !CONFIG_NO_DEC */
 
 #ifndef NDEBUG
+#include <hybrid/sched/yield.h>
 #ifndef CONFIG_HOST_WINDOWS
 #include <deemon/file.h>
 #else /* !CONFIG_HOST_WINDOWS */
@@ -1916,6 +1917,19 @@ PUBLIC void
 		va_end(args);
 		assert_printf("\n");
 	}
+#ifdef CONFIG_HOST_WINDOWS
+	if (!IsDebuggerPresent()) {
+#if 0
+		char *env = getenv("DEEMON_SILENT");
+		if (!env || !*env)
+#endif
+		{
+			/* Wait to allow a debugger to be attached. */
+			for (;;)
+				SCHED_YIELD();
+		}
+	}
+#endif /* CONFIG_HOST_WINDOWS */
 }
 
 PUBLIC void

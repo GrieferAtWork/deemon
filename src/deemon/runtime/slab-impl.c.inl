@@ -21,7 +21,7 @@
 #include "slab.c.inl"
 #define SIZE 10
 //#define NEXT_LARGER  5
-#endif
+#endif /* __INTELLISENSE__ */
 
 #include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
@@ -408,8 +408,7 @@ FORCELOCAL void
 #ifdef NEXT_LARGER
 	else {
 		/* Page is actually apart of a larger slab! */
-		PP_CAT2(DeeSlab_DoFree, NEXT_LARGER)
-		(ptr);
+		PP_CAT2(DeeSlab_DoFree, NEXT_LARGER)(ptr);
 	}
 #endif /* NEXT_LARGER */
 #endif
@@ -493,7 +492,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Calloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
-	                        : (Dee_Calloc)ITEMSIZE;
+	                        : (Dee_Calloc)(ITEMSIZE);
 }
 
 #undef DeeSlab_TryCalloc
@@ -501,7 +500,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryCalloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
-	                        : (Dee_TryCalloc)ITEMSIZE;
+	                        : (Dee_TryCalloc)(ITEMSIZE);
 }
 
 #undef DeeDbgSlab_Calloc
