@@ -281,8 +281,8 @@ PRIVATE struct type_method stat_class_methods[] = {
 
 INTERN DeeTypeObject DeeStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "stat",
-	/* .tp_doc      = */ DeeStat_TP_DOC,
+	/* .tp_name     = */ S_Stat_tp_name,
+	/* .tp_doc      = */ S_Stat_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -326,8 +326,8 @@ INTERN DeeTypeObject DeeStat_Type = {
 
 INTERN DeeTypeObject DeeLStat_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "lstat",
-	/* .tp_doc      = */ DeeLStat_TP_DOC,
+	/* .tp_name     = */ S_LStat_tp_name,
+	/* .tp_doc      = */ S_LStat_tp_doc,
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -371,45 +371,6 @@ INTERN DeeTypeObject DeeLStat_Type = {
 
 
 /* Filesystem write operations. */
-INTERN int DCALL
-fs_chtime(DeeObject *__restrict UNUSED(path),
-          DeeObject *__restrict UNUSED(atime),
-          DeeObject *__restrict UNUSED(mtime),
-          DeeObject *__restrict UNUSED(ctime)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_chmod(DeeObject *__restrict UNUSED(path),
-         DeeObject *__restrict UNUSED(mode)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_lchmod(DeeObject *__restrict UNUSED(path),
-          DeeObject *__restrict UNUSED(mode)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_chown(DeeObject *__restrict UNUSED(path),
-         DeeObject *__restrict UNUSED(user),
-         DeeObject *__restrict UNUSED(group)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_lchown(DeeObject *__restrict UNUSED(path),
-          DeeObject *__restrict UNUSED(user),
-          DeeObject *__restrict UNUSED(group)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_mkdir(DeeObject *__restrict UNUSED(path),
-         DeeObject *__restrict UNUSED(perm)) {
-	return fs_unsupported();
-}
 
 INTERN int DCALL
 fs_rmdir(DeeObject *__restrict UNUSED(path)) {

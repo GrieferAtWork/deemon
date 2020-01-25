@@ -6501,7 +6501,7 @@ var("__environ");
 
 #ifdef CONFIG_HAVE_errno
 #define DeeSystem_GetErrno()  errno
-#define DeeSystem_SetErrno(v) (errno=(v))
+#define DeeSystem_SetErrno(v) (errno = (v))
 #else /* CONFIG_HAVE_errno */
 #define DeeSystem_GetErrno()  0
 #define DeeSystem_SetErrno(v) (void)0

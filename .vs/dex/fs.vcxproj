@@ -73,6 +73,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\dex\fs\host.c" />
     <ClCompile Include="..\..\src\dex\fs\libfs.c" />
+    <ClCompile Include="..\..\src\dex\fs\osfs.c" />
     <ClCompile Include="..\..\src\dex\fs\path.c" />
   </ItemGroup>
   <ItemGroup>

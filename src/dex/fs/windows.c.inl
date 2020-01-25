@@ -150,7 +150,7 @@ nt_CreateHardLink(DeeObject *__restrict lpFileName,
  * @return:  0: Successfully created the symlink.
  * @return: -1: A deemon callback failed and an error was thrown.
  * @return:  1: The system call failed (See GetLastError()) */
-INTDEF int APIENTRY
+INTDEF int DCALL
 nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
                       DeeObject *__restrict lpTargetFileName,
                       DWORD dwFlags);
@@ -684,20 +684,6 @@ err_path_not_found(DWORD error, DeeObject *__restrict path) {
 }
 
 PRIVATE ATTR_COLD int DCALL
-err_file_not_found(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileNotFound, error,
-	                          "File %r could not be found",
-	                          path);
-}
-
-PRIVATE ATTR_COLD int DCALL
-err_file_no_write_access(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileAccessError, error,
-	                          "Write permissions have not been granted for file %r",
-	                          path);
-}
-
-PRIVATE ATTR_COLD int DCALL
 err_path_no_write_access(int error, DeeObject *__restrict path) {
 	return DeeError_SysThrowf(&DeeError_FileAccessError, error,
 	                          "Write permissions have not been granted for path %r",
@@ -722,13 +708,6 @@ PRIVATE ATTR_COLD int DCALL
 err_path_not_empty(DWORD error, DeeObject *__restrict path) {
 	return DeeError_SysThrowf(&DeeError_NotEmpty, error,
 	                          "The directory %r cannot be deleted because it is not empty",
-	                          path);
-}
-
-PRIVATE ATTR_COLD int DCALL
-err_chtime_no_access(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileAccessError, error,
-	                          "Changes to the selected timestamps of %r are not allowed",
 	                          path);
 }
 
@@ -2628,220 +2607,6 @@ INTERN DeeTypeObject DeeLStat_Type = {
 
 
 
-/* @return:  0: Successfully written the handle to `phandle'
- * @return:  1: Successfully written the handle to `phandle',
- *              but the caller must CloseHandle() it when they are done
- * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-get_pathhandle_wrattr(DeeObject *__restrict path,
-                      HANDLE *__restrict phandle) {
-	int result;
-	if (DeeString_Check(path)) {
-again:
-		*phandle = DeeNTSystem_CreateFile(path,
-		                                  FILE_WRITE_ATTRIBUTES,
-		                                  FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-		                                  NULL,
-		                                  OPEN_EXISTING,
-		                                  FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
-		                                  NULL);
-		if (*phandle == INVALID_HANDLE_VALUE) {
-			DWORD dwError;
-			DBG_ALIGNMENT_DISABLE();
-			dwError = GetLastError();
-			DBG_ALIGNMENT_ENABLE();
-			if (DeeNTSystem_IsBadAllocError(dwError)) {
-				if (Dee_CollectMemory(1))
-					goto again;
-			} else if (DeeNTSystem_IsNotDir(dwError)) {
-				err_path_no_dir(dwError, path);
-			} else if (DeeNTSystem_IsFileNotFoundError(dwError)) {
-				err_file_not_found(dwError, path);
-			} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
-				err_file_no_write_access(dwError, path);
-			} else {
-				DeeError_SysThrowf(&DeeError_FSError, dwError,
-				                   "Failed to obtain a writable handle for %r",
-				                   path);
-			}
-			goto err;
-		}
-		if (*phandle == NULL)
-			goto err;
-		return 1;
-	}
-	/* Load the file number of a file stream. */
-	*phandle = DeeNTSystem_GetHandle(path);
-	if (*phandle != INVALID_HANDLE_VALUE)
-		return 0;
-	if (!DeeError_Catch(&DeeError_AttributeError) &&
-	    !DeeError_Catch(&DeeError_NotImplemented))
-		goto err;
-	/* Use the filename of a file stream. */
-	path = DeeFile_Filename(path);
-	if unlikely(!path)
-		goto err;
-	result = get_pathhandle_wrattr(path, phandle);
-	Dee_Decref(path);
-	return result;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ob_GetFileTime(DeeObject *__restrict lpTime,
-               FILETIME *__restrict lpFileTime) {
-	uint64_t value;
-	if (DeeObject_AsUInt64(lpTime, &value))
-		goto err;
-	if (value < time_yer2day(1601) * MICROSECONDS_PER_DAY) {
-		DeeError_Throwf(&DeeError_ValueError,
-		                "Invalid file timestamp %k (must be located after 01.01.1601)",
-		                lpTime);
-		goto err;
-	}
-	value -= time_yer2day(1601) * MICROSECONDS_PER_DAY;
-	UNALIGNED_SET64((uint64_t *)lpFileTime,
-	                FILETIME_GET64(value *
-	                               (FILETIME_PER_SECONDS /
-	                                MICROSECONDS_PER_SECOND)));
-	return 0;
-err:
-	return -1;
-}
-
-/* Filesystem write operations. */
-INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
-          DeeObject *__restrict mtime, DeeObject *__restrict ctime) {
-	int result;
-	HANDLE hnd;
-	BOOL error;
-	FILETIME ftAtime, ftMtime, ftCtime;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	result = get_pathhandle_wrattr(path, &hnd);
-	if unlikely(result < 0)
-		goto err;
-	if (!DeeNone_Check(atime) && unlikely(ob_GetFileTime(atime, &ftAtime)))
-		goto err;
-	if (!DeeNone_Check(mtime) && unlikely(ob_GetFileTime(mtime, &ftMtime)))
-		goto err;
-	if (!DeeNone_Check(ctime) && unlikely(ob_GetFileTime(ctime, &ftCtime)))
-		goto err;
-again:
-	DBG_ALIGNMENT_DISABLE();
-	error = SetFileTime(hnd,
-	                    DeeNone_Check(ctime) ? NULL : &ftCtime,
-	                    DeeNone_Check(atime) ? NULL : &ftAtime,
-	                    DeeNone_Check(mtime) ? NULL : &ftMtime);
-	if (result)
-		CloseHandle(hnd);
-	if unlikely(!error) {
-		DWORD dwError;
-		dwError = GetLastError();
-		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsBadAllocError(dwError)) {
-			if (Dee_CollectMemory(1))
-				goto again;
-		} else if (DeeNTSystem_IsBadF(dwError)) {
-			err_handle_closed(dwError, path);
-		} else if (DeeNTSystem_IsAccessDeniedError(dwError)) {
-			err_chtime_no_access(dwError, path);
-		} else if (DeeNTSystem_IsUnsupportedError(dwError)) {
-			DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
-			                   "The filesystem hosting the path %r does "
-			                   "not support the changing of time stamps",
-			                   path);
-		} else {
-			DeeError_SysThrowf(&DeeError_FSError, dwError,
-			                   "Failed to change time properties of %r",
-			                   path);
-		}
-		goto err;
-	}
-	DBG_ALIGNMENT_ENABLE();
-	return 0;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-fs_chmod(DeeObject *__restrict path,
-         DeeObject *__restrict mode) {
-	uint16_t mask, flags;
-	DWORD old_flags, new_flags;
-	int error;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	if (!DeeString_Check(path)) {
-		if (DeeInt_Check(path)) {
-			HANDLE fd; /* Support for descriptor-based chmod() */
-			if (DeeObject_AsUIntptr(path, (uintptr_t *)&fd))
-				goto err;
-			path = DeeNTSystem_GetFilenameOfHandle(fd);
-		} else {
-			path = DeeFile_Filename(path);
-		}
-		if unlikely(!path)
-			goto err;
-		error = fs_chmod(path, mode);
-		Dee_Decref(path);
-		return error;
-	}
-	if (fs_getchmod_mask(mode, &mask, &flags))
-		goto err;
-again:
-	error = nt_GetFileAttributes(path, &old_flags);
-	if unlikely(error < 0)
-		goto err;
-	if unlikely(error)
-		goto err_nt;
-	new_flags = old_flags & ~FILE_ATTRIBUTE_READONLY;
-	if (mask & 0222) /* Inherit old writability mode. */
-		new_flags |= old_flags & FILE_ATTRIBUTE_READONLY;
-	if (flags & 0222) {
-		new_flags &= ~FILE_ATTRIBUTE_READONLY; /* Make writable. */
-	} else {
-		new_flags |= FILE_ATTRIBUTE_READONLY; /* Make readonly. */
-	}
-	if (new_flags != old_flags) {
-		/* Set new flags. */
-		error = nt_SetFileAttributes(path, new_flags);
-		if unlikely(error < 0)
-			goto err;
-		if unlikely(error)
-			goto err_nt;
-	}
-	return 0;
-err_nt:
-	DBG_ALIGNMENT_DISABLE();
-	error = (int)GetLastError();
-	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
-		if (Dee_CollectMemory(1))
-			goto again;
-	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
-		err_chattr_no_access((DWORD)error, path);
-	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
-		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
-		                   "The filesystem hosting the path %r does "
-		                   "not support the changing of NT attributes",
-		                   path);
-	} else {
-		DeeError_SysThrowf(&DeeError_FSError, (DWORD)error,
-		                   "Failed to change attributes of %r",
-		                   path);
-	}
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-fs_lchmod(DeeObject *__restrict path,
-          DeeObject *__restrict mode) {
-	return fs_chmod(path, mode);
-}
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_chattr_np(DeeObject *__restrict path,
@@ -2893,71 +2658,6 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-fs_chown(DeeObject *__restrict path,
-         DeeObject *__restrict user,
-         DeeObject *__restrict group) {
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	(void)path;
-	(void)user;
-	(void)group; /* TODO */
-	DERROR_NOTIMPLEMENTED();
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-fs_lchown(DeeObject *__restrict path,
-          DeeObject *__restrict user,
-          DeeObject *__restrict group) {
-	return fs_chown(path, user, group);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-fs_mkdir(DeeObject *__restrict path,
-         DeeObject *__restrict perm) {
-	int error;
-	if (DeeThread_CheckInterrupt())
-		goto err;
-	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
-		goto err;
-again:
-	if (!DeeNone_Check(perm)) {
-		/* TODO: Initial security attributes. */
-		error = nt_CreateDirectory(path, NULL);
-	} else {
-		error = nt_CreateDirectory(path, NULL);
-	}
-	if unlikely(error > 0)
-		goto err_nt;
-	return error;
-err_nt:
-	DBG_ALIGNMENT_DISABLE();
-	error = (int)GetLastError();
-	DBG_ALIGNMENT_ENABLE();
-	if (DeeNTSystem_IsBadAllocError((DWORD)error)) {
-		if (Dee_CollectMemory(1))
-			goto again;
-	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
-		err_path_no_write_access((DWORD)error, path);
-	} else if (DeeNTSystem_IsExists((DWORD)error)) {
-		err_path_exists((DWORD)error, path);
-	} else if (DeeNTSystem_IsNotDir((DWORD)error)) {
-		err_path_no_dir((DWORD)error, path);
-	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
-		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
-		                   "The filesystem hosting the path %r does "
-		                   "not support the creation of directories",
-		                   path);
-	} else {
-		DeeError_SysThrowf(&DeeError_FSError, (DWORD)error,
-		                   "Failed to create directory %r",
-		                   path);
-	}
-err:
-	return -1;
-}
 
 PRIVATE ATTR_COLD int DCALL
 handle_rmdir_error(DWORD error, DeeObject *__restrict path) {

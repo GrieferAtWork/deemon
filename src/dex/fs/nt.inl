@@ -507,14 +507,14 @@ err:
 	return -1;
 }
 
-typedef BOOLEAN(APIENTRY *LPCREATESYMBOLICLINKW)(LPCWSTR lpSymlinkFileName,
-                                                 LPCWSTR lpTargetFileName,
-                                                 DWORD dwFlags);
+typedef BOOLEAN (APIENTRY *LPCREATESYMBOLICLINKW)(LPCWSTR lpSymlinkFileName,
+                                                  LPCWSTR lpTargetFileName,
+                                                  DWORD dwFlags);
 PRIVATE LPCREATESYMBOLICLINKW pCreateSymbolicLinkW = NULL;
 PRIVATE WCHAR const wKernel32[]                    = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 
 
-INTERN int APIENTRY
+INTERN int DCALL
 nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
                       DeeObject *__restrict lpTargetFileName,
                       DWORD dwFlags) {

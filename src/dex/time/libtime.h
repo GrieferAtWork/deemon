@@ -42,10 +42,10 @@ DECL_BEGIN
 
 #define HAVE_128BIT_TIME 1
 #define SIZEOF_DTIME_T 16
-typedef dint128_t  dtime_t;
-typedef duint128_t dutime_t;
-typedef int64_t    dtime_half_t;
-typedef uint64_t   dutime_half_t;
+typedef Dee_int128_t  dtime_t;
+typedef Dee_uint128_t dutime_t;
+typedef int64_t       dtime_half_t;
+typedef uint64_t      dutime_half_t;
 
 #else /* __INT128_TYPE__ && __UINT128_TYPE__ */
 
@@ -111,7 +111,7 @@ typedef uint32_t dutime_half_t;
 
 typedef struct time_object DeeTimeObject;
 struct time_object {
-	OBJECT_HEAD
+	Dee_OBJECT_HEAD
 	union {
 		/* Microseconds (1000*1000 / sec) since 0:0:0 1.1.0000 (Gregorian calender).
 		 * NOTE: 0 was chosen due to the fact that this way time-offsets/timeouts
@@ -127,7 +127,7 @@ struct time_object {
 		dtime_t      t_time;   /* TIME_MICROSECONDS */
 #ifdef HAVE_128BIT_TIME
 		dtime_half_t t_time_half[2];
-#endif
+#endif /* HAVE_128BIT_TIME */
 		/* Because months can have differing lengths dependent on
 		 * which which they refer to, the time type needs to be able
 		 * to represent months and years just as well as microseconds.
