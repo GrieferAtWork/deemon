@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -72,6 +72,9 @@ struct my_node {
 #ifndef ATREE_ASSERTF
 #define ATREE_ASSERTF __hybrid_assertf
 #endif /* !ATREE_ASSERTF */
+#ifndef ATREE_NOTHROW
+#define ATREE_NOTHROW __NOTHROW_NCX
+#endif /* !ATREE_NOTHROW */
 #ifdef ATREE_SINGLE
 #ifndef ATREE_NODE_ADDR
 #define ATREE_NODE_ADDR(x) ((x)->N_NODEPATH.a_vaddr)
@@ -98,65 +101,65 @@ struct my_node {
  * @return: true:  Successfully inserted the given leaf.
  * @return: false: The key range described by `newleaf' is already mapped. */
 ATREE_FUN __ATTR_UNUSED __BOOL
-__NOTHROW(ATREE_CALL ATREE(tryinsert_at))(T **__restrict proot, T *__restrict newleaf,
-                                          ATREE_SEMI_T(Tkey) addr_semi,
-                                          ATREE_LEVEL_T addr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(tryinsert_at))(T **__restrict proot, T *__restrict newleaf,
+                                              ATREE_SEMI_T(Tkey) addr_semi,
+                                              ATREE_LEVEL_T addr_level);
 
 /* Similar to 'addrtree_tryinsert', but causes undefined behavior
  * if the key range covered by the given leaf already existed. */
 ATREE_FUN __ATTR_UNUSED void
-__NOTHROW(ATREE_CALL ATREE(insert_at))(T **__restrict proot, T *__restrict newleaf,
-                                       ATREE_SEMI_T(Tkey) addr_semi,
-                                       ATREE_LEVEL_T addr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(insert_at))(T **__restrict proot, T *__restrict newleaf,
+                                           ATREE_SEMI_T(Tkey) addr_semi,
+                                           ATREE_LEVEL_T addr_level);
 
 ATREE_FUN __ATTR_UNUSED T **
-__NOTHROW(ATREE_CALL ATREE(pinsert_at))(T **__restrict proot, T *__restrict newleaf,
-                                        ATREE_SEMI_T(Tkey) *paddr_semi,
-                                        ATREE_LEVEL_T *paddr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(pinsert_at))(T **__restrict proot, T *__restrict newleaf,
+                                            ATREE_SEMI_T(Tkey) *paddr_semi,
+                                            ATREE_LEVEL_T *paddr_level);
 
 /* Returns the old '*proot' and replaces it with either its min, or max branch.
  * Special handling is performed to determine the perfect match when
  * '*proot' has both a min and a max branch. */
 ATREE_FUN __ATTR_NONNULL((1)) __ATTR_UNUSED T *
-__NOTHROW(ATREE_CALL ATREE(pop_at))(T **__restrict proot,
-                                    ATREE_SEMI_T(Tkey) addr_semi,
-                                    ATREE_LEVEL_T addr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(pop_at))(T **__restrict proot,
+                                        ATREE_SEMI_T(Tkey) addr_semi,
+                                        ATREE_LEVEL_T addr_level);
 
 /* Remove and return the leaf associated with the given key.
  * >> This is a combination of 'plocate_at' and `pop_at' */
 ATREE_FUN __ATTR_NONNULL((1)) __ATTR_UNUSED T *
-__NOTHROW(ATREE_CALL ATREE(remove_at))(T **__restrict proot, Tkey key,
-                                       ATREE_SEMI_T(Tkey) addr_semi,
-                                       ATREE_LEVEL_T addr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(remove_at))(T **__restrict proot, Tkey key,
+                                           ATREE_SEMI_T(Tkey) addr_semi,
+                                           ATREE_LEVEL_T addr_level);
 ATREE_FUN __ATTR_NONNULL((1)) __ATTR_UNUSED T *
-__NOTHROW(ATREE_CALL ATREE(rremove_at))(T **__restrict proot,
-                                        Tkey key_min, Tkey key_max,
-                                        ATREE_SEMI_T(Tkey) addr_semi,
-                                        ATREE_LEVEL_T addr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(rremove_at))(T **__restrict proot,
+                                            Tkey key_min, Tkey key_max,
+                                            ATREE_SEMI_T(Tkey) addr_semi,
+                                            ATREE_LEVEL_T addr_level);
 
 /* Locate the leaf associated with a given `key'.
  * @return: ATREE_NULL: No leaf associated with the given `key'.
  * NOTE: 'plocate_at' will update 'addr_semi' and 'addr_level'. */
 ATREE_FUN __ATTR_UNUSED T *
-__NOTHROW(ATREE_CALL ATREE(locate_at))(T *root, Tkey key,
-                                       ATREE_SEMI_T(Tkey) addr_semi,
-                                       ATREE_LEVEL_T addr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(locate_at))(T *root, Tkey key,
+                                           ATREE_SEMI_T(Tkey) addr_semi,
+                                           ATREE_LEVEL_T addr_level);
 ATREE_FUN __ATTR_UNUSED T **
-__NOTHROW(ATREE_CALL ATREE(plocate_at))(T **__restrict proot, Tkey key,
-                                        ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
-                                        ATREE_LEVEL_T *__restrict paddr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(plocate_at))(T **__restrict proot, Tkey key,
+                                            ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
+                                            ATREE_LEVEL_T *__restrict paddr_level);
 
 /* Locate the first leaf overlapping with the given range.
  * @return: ATREE_NULL: No leaf is overlapping with the given range.
  * NOTE: 'prlocate_at' will update 'addr_semi' and 'addr_level'. */
 ATREE_FUN __ATTR_UNUSED T *
-__NOTHROW(ATREE_CALL ATREE(rlocate_at))(T *root, Tkey key_min, Tkey key_max,
-                                        ATREE_SEMI_T(Tkey) addr_semi,
-                                        ATREE_LEVEL_T addr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(rlocate_at))(T *root, Tkey key_min, Tkey key_max,
+                                            ATREE_SEMI_T(Tkey) addr_semi,
+                                            ATREE_LEVEL_T addr_level);
 ATREE_FUN __ATTR_UNUSED T **
-__NOTHROW(ATREE_CALL ATREE(prlocate_at))(T **__restrict proot, Tkey key_min, Tkey key_max,
-                                         ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
-                                         ATREE_LEVEL_T *__restrict paddr_level);
+ATREE_NOTHROW(ATREE_CALL ATREE(prlocate_at))(T **__restrict proot, Tkey key_min, Tkey key_max,
+                                             ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
+                                             ATREE_LEVEL_T *__restrict paddr_level);
 
 typedef struct {
 	T    *mm_min;     /* [0..1] Lowest branch. */
@@ -172,23 +175,23 @@ typedef struct {
 
 /* Load the lowest and greatest nodes that are overlapping with the given key-range. */
 ATREE_FUN __ATTR_UNUSED void
-__NOTHROW(ATREE_CALL ATREE(minmaxlocate_at))(T *root, Tkey key_min, Tkey key_max,
-                                             ATREE_SEMI_T(Tkey) addr_semi,
-                                             ATREE_LEVEL_T addr_level,
-                                             ATREE(minmax_t) *__restrict result);
+ATREE_NOTHROW(ATREE_CALL ATREE(minmaxlocate_at))(T *root, Tkey key_min, Tkey key_max,
+                                                 ATREE_SEMI_T(Tkey) addr_semi,
+                                                 ATREE_LEVEL_T addr_level,
+                                                 ATREE(minmax_t) *__restrict result);
 
 
 
 #ifndef ATREE_NO_CONVENIENCE
 /* Convenience functions. */
-__LOCAL __ATTR_UNUSED __BOOL __NOTHROW(ATREE_CALL ATREE(tryinsert))(T **__restrict proot, T *__restrict newleaf) { return ATREE(tryinsert_at)(proot, newleaf, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
-__LOCAL __ATTR_UNUSED void __NOTHROW(ATREE_CALL ATREE(insert))(T **__restrict proot, T *__restrict newleaf) { ATREE(insert_at)(proot, newleaf, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
-__LOCAL __ATTR_UNUSED __ATTR_NONNULL((1)) T *__NOTHROW(ATREE_CALL ATREE(pop))(T **__restrict proot) { return ATREE(pop_at)(proot, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
-__LOCAL __ATTR_UNUSED __ATTR_NONNULL((1)) T *__NOTHROW(ATREE_CALL ATREE(remove))(T **__restrict proot, Tkey key) { return ATREE(remove_at)(proot, key, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
-__LOCAL __ATTR_UNUSED T *__NOTHROW(ATREE_CALL ATREE(locate))(T *root, Tkey key) { return ATREE(locate_at)(root, key, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
-__LOCAL __ATTR_UNUSED T *__NOTHROW(ATREE_CALL ATREE(rlocate))(T *root, Tkey key_min, Tkey key_max) { return ATREE(rlocate_at)(root, key_min, key_max, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
-__LOCAL __ATTR_UNUSED __ATTR_NONNULL((1)) T *__NOTHROW(ATREE_CALL ATREE(rremove))(T **__restrict proot, Tkey key_min, Tkey key_max) { return ATREE(rremove_at)(proot, key_min, key_max, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
-__LOCAL __ATTR_UNUSED void __NOTHROW(ATREE_CALL ATREE(minmaxlocate))(T *root, Tkey key_min, Tkey key_max, ATREE(minmax_t) *__restrict result) { ATREE(minmaxlocate_at)(root, key_min, key_max, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey), result); }
+__LOCAL __ATTR_UNUSED __BOOL ATREE_NOTHROW(ATREE_CALL ATREE(tryinsert))(T **__restrict proot, T *__restrict newleaf) { return ATREE(tryinsert_at)(proot, newleaf, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
+__LOCAL __ATTR_UNUSED void ATREE_NOTHROW(ATREE_CALL ATREE(insert))(T **__restrict proot, T *__restrict newleaf) { ATREE(insert_at)(proot, newleaf, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
+__LOCAL __ATTR_UNUSED __ATTR_NONNULL((1)) T *ATREE_NOTHROW(ATREE_CALL ATREE(pop))(T **__restrict proot) { return ATREE(pop_at)(proot, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
+__LOCAL __ATTR_UNUSED __ATTR_NONNULL((1)) T *ATREE_NOTHROW(ATREE_CALL ATREE(remove))(T **__restrict proot, Tkey key) { return ATREE(remove_at)(proot, key, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
+__LOCAL __ATTR_UNUSED T *ATREE_NOTHROW(ATREE_CALL ATREE(locate))(T *root, Tkey key) { return ATREE(locate_at)(root, key, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
+__LOCAL __ATTR_UNUSED T *ATREE_NOTHROW(ATREE_CALL ATREE(rlocate))(T *root, Tkey key_min, Tkey key_max) { return ATREE(rlocate_at)(root, key_min, key_max, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
+__LOCAL __ATTR_UNUSED __ATTR_NONNULL((1)) T *ATREE_NOTHROW(ATREE_CALL ATREE(rremove))(T **__restrict proot, Tkey key_min, Tkey key_max) { return ATREE(rremove_at)(proot, key_min, key_max, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey)); }
+__LOCAL __ATTR_UNUSED void ATREE_NOTHROW(ATREE_CALL ATREE(minmaxlocate))(T *root, Tkey key_min, Tkey key_max, ATREE(minmax_t) *__restrict result) { ATREE(minmaxlocate_at)(root, key_min, key_max, ATREE_LOCAL_SEMI0(Tkey), ATREE_LOCAL_LEVEL0(Tkey), result); }
 #endif /* !ATREE_NO_CONVENIENCE */
 #endif /* !ATREE_IMPLEMENTATION_ONLY */
 
@@ -209,8 +212,8 @@ __LOCAL __ATTR_UNUSED void __NOTHROW(ATREE_CALL ATREE(minmaxlocate))(T *root, Tk
 #define ATREE_PTR(key) ((uintptr_t)(key))
 
 PRIVATE __ATTR_UNUSED void
-__NOTHROW(ATREE_CALL ATREE(priv_reinsertall))(T **__restrict proot, T *__restrict insert_root,
-                                              ATREE_SEMI_T(Tkey) addr_semi, ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(priv_reinsertall))(T **__restrict proot, T *__restrict insert_root,
+                                                  ATREE_SEMI_T(Tkey) addr_semi, ATREE_LEVEL_T addr_level) {
 	if (insert_root->N_NODEPATH.a_min != ATREE_NULL)
 		ATREE(priv_reinsertall)(proot, insert_root->N_NODEPATH.a_min, addr_semi, addr_level);
 	if (insert_root->N_NODEPATH.a_max != ATREE_NULL)
@@ -219,8 +222,8 @@ __NOTHROW(ATREE_CALL ATREE(priv_reinsertall))(T **__restrict proot, T *__restric
 }
 
 ATREE_IMP __ATTR_UNUSED __BOOL
-__NOTHROW(ATREE_CALL ATREE(tryinsert_at))(T **__restrict proot, T *__restrict newleaf,
-                                          ATREE_SEMI_T(Tkey) addr_semi, ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(tryinsert_at))(T **__restrict proot, T *__restrict newleaf,
+                                              ATREE_SEMI_T(Tkey) addr_semi, ATREE_LEVEL_T addr_level) {
 	T *iter;
 #ifdef ATREE_SINGLE
 	ATREE_SEMI_T(Tkey) newleaf_addr;
@@ -340,8 +343,8 @@ got_it:
 }
 
 ATREE_IMP __ATTR_UNUSED void
-__NOTHROW(ATREE_CALL ATREE(insert_at))(T **__restrict proot, T *__restrict newleaf,
-                                       ATREE_SEMI_T(Tkey) addr_semi, ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(insert_at))(T **__restrict proot, T *__restrict newleaf,
+                                           ATREE_SEMI_T(Tkey) addr_semi, ATREE_LEVEL_T addr_level) {
 	T *iter;
 #ifdef ATREE_SINGLE
 	ATREE_SEMI_T(Tkey) newleaf_addr;
@@ -447,8 +450,8 @@ got_it:
 }
 
 ATREE_IMP __ATTR_UNUSED T **
-__NOTHROW(ATREE_CALL ATREE(pinsert_at))(T **__restrict proot, T *__restrict newleaf,
-                                        ATREE_SEMI_T(Tkey) *paddr_semi, ATREE_LEVEL_T *paddr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(pinsert_at))(T **__restrict proot, T *__restrict newleaf,
+                                            ATREE_SEMI_T(Tkey) *paddr_semi, ATREE_LEVEL_T *paddr_level) {
 	T *iter;
 #ifdef ATREE_SINGLE
 	ATREE_SEMI_T(Tkey) newleaf_addr;
@@ -556,9 +559,9 @@ got_it:
 }
 
 ATREE_IMP __ATTR_UNUSED __ATTR_NONNULL((1)) T *
-__NOTHROW(ATREE_CALL ATREE(pop_at))(T **__restrict proot,
-                                    ATREE_SEMI_T(Tkey) addr_semi,
-                                    ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(pop_at))(T **__restrict proot,
+                                        ATREE_SEMI_T(Tkey) addr_semi,
+                                        ATREE_LEVEL_T addr_level) {
 	T *root;
 	root = *proot;
 	*proot = ATREE_NULL;
@@ -570,9 +573,9 @@ __NOTHROW(ATREE_CALL ATREE(pop_at))(T **__restrict proot,
 }
 
 ATREE_IMP __ATTR_UNUSED __ATTR_NONNULL((1)) T *
-__NOTHROW(ATREE_CALL ATREE(remove_at))(T **__restrict proot, Tkey key,
-                                       ATREE_SEMI_T(Tkey) addr_semi,
-                                       ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(remove_at))(T **__restrict proot, Tkey key,
+                                           ATREE_SEMI_T(Tkey) addr_semi,
+                                           ATREE_LEVEL_T addr_level) {
 	T **remove_head;
 	remove_head = ATREE(plocate_at)(proot, key, &addr_semi, &addr_level);
 	return remove_head != ATREE_NULL
@@ -582,10 +585,10 @@ __NOTHROW(ATREE_CALL ATREE(remove_at))(T **__restrict proot, Tkey key,
 }
 
 ATREE_IMP __ATTR_UNUSED __ATTR_NONNULL((1)) T *
-__NOTHROW(ATREE_CALL ATREE(rremove_at))(T **__restrict proot,
-                                        Tkey key_min, Tkey key_max,
-                                        ATREE_SEMI_T(Tkey) addr_semi,
-                                        ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(rremove_at))(T **__restrict proot,
+                                            Tkey key_min, Tkey key_max,
+                                            ATREE_SEMI_T(Tkey) addr_semi,
+                                            ATREE_LEVEL_T addr_level) {
 	T **remove_head;
 	remove_head = ATREE(prlocate_at)(proot, key_min, key_max, &addr_semi, &addr_level);
 	return remove_head != ATREE_NULL
@@ -594,9 +597,9 @@ __NOTHROW(ATREE_CALL ATREE(rremove_at))(T **__restrict proot,
 }
 
 ATREE_IMP __ATTR_UNUSED T *
-__NOTHROW(ATREE_CALL ATREE(locate_at))(T *root, Tkey key,
-                                       ATREE_SEMI_T(Tkey) addr_semi,
-                                       ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(locate_at))(T *root, Tkey key,
+                                           ATREE_SEMI_T(Tkey) addr_semi,
+                                           ATREE_LEVEL_T addr_level) {
 	/* addr_semi is the center point splitting the max
 	 * ranges of the underlying sb_min/sb_max branches. */
 	while (root != ATREE_NULL) {
@@ -658,9 +661,9 @@ __NOTHROW(ATREE_CALL ATREE(locate_at))(T *root, Tkey key,
 }
 
 ATREE_IMP __ATTR_UNUSED T **
-__NOTHROW(ATREE_CALL ATREE(plocate_at))(T **__restrict proot, Tkey key,
-                                        ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
-                                        ATREE_LEVEL_T *__restrict paddr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(plocate_at))(T **__restrict proot, Tkey key,
+                                            ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
+                                            ATREE_LEVEL_T *__restrict paddr_level) {
 	T *root;
 	ATREE_SEMI_T(Tkey) addr_semi = *paddr_semi;
 	ATREE_LEVEL_T addr_level = *paddr_level;
@@ -735,9 +738,9 @@ __NOTHROW(ATREE_CALL ATREE(plocate_at))(T **__restrict proot, Tkey key,
 }
 
 ATREE_IMP __ATTR_UNUSED T *
-__NOTHROW(ATREE_CALL ATREE(rlocate_at))(T *root, Tkey key_min, Tkey key_max,
-                                        ATREE_SEMI_T(Tkey) addr_semi,
-                                        ATREE_LEVEL_T addr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(rlocate_at))(T *root, Tkey key_min, Tkey key_max,
+                                            ATREE_SEMI_T(Tkey) addr_semi,
+                                            ATREE_LEVEL_T addr_level) {
 	/* addr_semi is the center point splitting the max
 	 * ranges of the underlying sb_min/sb_max branches. */
 	while (root != ATREE_NULL) {
@@ -810,9 +813,9 @@ __NOTHROW(ATREE_CALL ATREE(rlocate_at))(T *root, Tkey key_min, Tkey key_max,
 }
 
 ATREE_IMP __ATTR_UNUSED T **
-__NOTHROW(ATREE_CALL ATREE(prlocate_at))(T **__restrict proot, Tkey key_min, Tkey key_max,
-                                         ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
-                                         ATREE_LEVEL_T *__restrict paddr_level) {
+ATREE_NOTHROW(ATREE_CALL ATREE(prlocate_at))(T **__restrict proot, Tkey key_min, Tkey key_max,
+                                             ATREE_SEMI_T(Tkey) *__restrict paddr_semi,
+                                             ATREE_LEVEL_T *__restrict paddr_level) {
 	T *root;
 	ATREE_SEMI_T(Tkey) addr_semi = *paddr_semi;
 	ATREE_LEVEL_T addr_level = *paddr_level;
@@ -903,10 +906,10 @@ __NOTHROW(ATREE_CALL ATREE(prlocate_at))(T **__restrict proot, Tkey key_min, Tke
 }
 
 ATREE_IMP __ATTR_UNUSED void
-__NOTHROW(ATREE_CALL ATREE(minmaxlocate_at))(T *root, Tkey key_min, Tkey key_max,
-                                             ATREE_SEMI_T(Tkey) addr_semi,
-                                             ATREE_LEVEL_T addr_level,
-                                             ATREE(minmax_t) *__restrict result) {
+ATREE_NOTHROW(ATREE_CALL ATREE(minmaxlocate_at))(T *root, Tkey key_min, Tkey key_max,
+                                                 ATREE_SEMI_T(Tkey) addr_semi,
+                                                 ATREE_LEVEL_T addr_level,
+                                                 ATREE(minmax_t) *__restrict result) {
 	if (root == ATREE_NULL)
 		return;
 again:
@@ -977,6 +980,7 @@ __DECL_END
 #undef ATREE_NODE_MAX
 #undef ATREE_NODE_MIN
 #undef ATREE_DEBUG
+#undef ATREE_NOTHROW
 #undef ATREE_ASSERTF
 #undef ATREE_ASSERT
 #undef ATREE_IMP

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -48,29 +48,29 @@ extern unsigned __int64 (_byteswap_uint64)(unsigned __int64 x);
 #define __impl_hybrid_bswap32(x)   _byteswap_ulong(x)
 #define __impl_hybrid_bswap64(x)   _byteswap_uint64(x)
 #else /* _MSC_VER */
-#if defined(__GNUC__) || __has_builtin(__builtin_bswap16)
+#if __has_builtin(__builtin_bswap16)
 #define __impl_hybrid_bswap16(x)  __builtin_bswap16(x)
 #else /* __GNUC__ || __has_builtin(__builtin_bswap16) */
 __LOCAL __ATTR_CONST __UINT16_TYPE__
-__NOTHROW(__impl_hybrid_bswap16(__UINT16_TYPE__ __x)) {
+__NOTHROW(__impl_hybrid_bswap16)(__UINT16_TYPE__ __x) {
 	return __hybrid_bswap16_c(__x);
 }
 #endif /* !__GNUC__ && !__has_builtin(__builtin_bswap16) */
-#if defined(__GNUC__) || __has_builtin(__builtin_bswap32)
+#if __has_builtin(__builtin_bswap32)
 #define __impl_hybrid_bswap32(x)  __builtin_bswap32(x)
 #else /* __GNUC__ || __has_builtin(__builtin_bswap32) */
 __LOCAL __ATTR_CONST __UINT32_TYPE__
-__NOTHROW(__impl_hybrid_bswap32(__UINT32_TYPE__ __x)) {
+__NOTHROW(__impl_hybrid_bswap32)(__UINT32_TYPE__ __x) {
 	return ((__UINT32_TYPE__)__impl_hybrid_bswap16((__UINT16_TYPE__)__x) << 16) |
 	        (__UINT32_TYPE__)__impl_hybrid_bswap16((__UINT16_TYPE__)((__x) >> 16));
 }
 #endif /* !__GNUC__ && !__has_builtin(__builtin_bswap32) */
 #ifdef __UINT64_TYPE__
-#if defined(__GNUC__) || __has_builtin(__builtin_bswap64)
+#if __has_builtin(__builtin_bswap64)
 #define __impl_hybrid_bswap64(x)  __builtin_bswap64(x)
 #else /* __GNUC__ || __has_builtin(__builtin_bswap64) */
 __LOCAL __ATTR_CONST __UINT64_TYPE__
-__NOTHROW(__impl_hybrid_bswap64(__UINT64_TYPE__ __x)) {
+__NOTHROW(__impl_hybrid_bswap64)(__UINT64_TYPE__ __x) {
 	return ((__UINT64_TYPE__)__impl_hybrid_bswap32((__UINT32_TYPE__)__x) << 32) |
 	        (__UINT64_TYPE__)__impl_hybrid_bswap32((__UINT32_TYPE__)((__x) >> 32));
 }
@@ -79,11 +79,11 @@ __NOTHROW(__impl_hybrid_bswap64(__UINT64_TYPE__ __x)) {
 #endif /* !_MSC_VER */
 
 #ifdef __UINT128_TYPE__
-#if defined(__GNUC__) || __has_builtin(__builtin_bswap128)
+#if __has_builtin(__builtin_bswap128)
 #define __impl_hybrid_bswap128(x)  __builtin_bswap128(x)
 #else /* __GNUC__ || __has_builtin(__builtin_bswap128) */
 __LOCAL __ATTR_CONST __UINT128_TYPE__
-__NOTHROW(__impl_hybrid_bswap128(__UINT128_TYPE__ __x)) {
+__NOTHROW(__impl_hybrid_bswap128)(__UINT128_TYPE__ __x) {
 	return ((__UINT128_TYPE__)__impl_hybrid_bswap64((__UINT64_TYPE__)__x) << 64) |
 	        (__UINT128_TYPE__)__impl_hybrid_bswap64((__UINT64_TYPE__)((__x) >> 64));
 }
@@ -100,12 +100,12 @@ __NOTHROW(__impl_hybrid_bswap128(__UINT128_TYPE__ __x)) {
 #endif /* __UINT128_TYPE__ */
 #endif /* __UINT64_TYPE__ */
 #elif !defined(__NO_builtin_choose_expr) && !defined(__NO_builtin_constant_p)
-#define __hybrid_bswap16(x)  __builtin_choose_expr(__builtin_constant_p(x),__hybrid_bswap16_c(x),__impl_hybrid_bswap16(x))
-#define __hybrid_bswap32(x)  __builtin_choose_expr(__builtin_constant_p(x),__hybrid_bswap32_c(x),__impl_hybrid_bswap32(x))
+#define __hybrid_bswap16(x)  __builtin_choose_expr(__builtin_constant_p(x), __hybrid_bswap16_c(x), __impl_hybrid_bswap16(x))
+#define __hybrid_bswap32(x)  __builtin_choose_expr(__builtin_constant_p(x), __hybrid_bswap32_c(x), __impl_hybrid_bswap32(x))
 #ifdef __UINT64_TYPE__
-#define __hybrid_bswap64(x)  __builtin_choose_expr(__builtin_constant_p(x),__hybrid_bswap64_c(x),__impl_hybrid_bswap64(x))
+#define __hybrid_bswap64(x)  __builtin_choose_expr(__builtin_constant_p(x), __hybrid_bswap64_c(x), __impl_hybrid_bswap64(x))
 #ifdef __UINT128_TYPE__
-#define __hybrid_bswap128(x) __builtin_choose_expr(__builtin_constant_p(x),__hybrid_bswap128_c(x),__impl_hybrid_bswap128(x))
+#define __hybrid_bswap128(x) __builtin_choose_expr(__builtin_constant_p(x), __hybrid_bswap128_c(x), __impl_hybrid_bswap128(x))
 #endif /* __UINT128_TYPE__ */
 #endif /* __UINT64_TYPE__ */
 #else /* Without constant optimizations... */

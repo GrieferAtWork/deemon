@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -22,13 +22,14 @@
 #if 1 || defined(_MSC_VER) || defined(__GNUC__) || \
     defined(__TPP_VERSION__) || defined(__DCC_VERSION__) || \
     defined(__DEEMON__)
-#define __PREPROCESSOR_HAVE_CAT     1
-#define __PREPROCESSOR_HAVE_STR     1
-#define __PREPROCESSOR_HAVE_VA_ARGS 1
+#define __PREPROCESSOR_HAVE_CAT     1 /* #define CAT(a, b) a##b */
+#define __PREPROCESSOR_HAVE_STR     1 /* #define STR(x) #x */
+#define __PREPROCESSOR_HAVE_VA_ARGS 1 /* __VA_ARGS__ */
 #endif
 #if !defined(__INTELLISENSE__) && \
     (defined(__TPP_VERSION__) || defined(__GNUC__))
-#define __PREPROCESSOR_HAVE_INCLUDE_NEXT 1
+#define __PREPROCESSOR_HAVE_INCLUDE_NEXT 1 /* #include_next */
+#define __PREPROCESSOR_HAVE_WARNING 1 /* #warning */
 #endif
 
 

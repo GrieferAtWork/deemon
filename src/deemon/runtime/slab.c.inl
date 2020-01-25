@@ -27,6 +27,7 @@
 #include <deemon/system-features.h> /* sscanf() */
 
 #include <hybrid/host.h>
+#include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
 
 #include "misc.c"
 
@@ -86,14 +87,6 @@
 #define CONFIG_SLAB_PAGESIZE 4096
 #endif
 #endif /* !CONFIG_SLAB_PAGESIZE */
-
-#ifndef __SIZEOF_POINTER__
-#if defined(__x86_64__)
-#define __SIZEOF_POINTER__ 8
-#else /* __x86_64__ */
-#define __SIZEOF_POINTER__ 4
-#endif /* !__x86_64__ */
-#endif /* !__SIZEOF_POINTER__ */
 
 DECL_BEGIN
 

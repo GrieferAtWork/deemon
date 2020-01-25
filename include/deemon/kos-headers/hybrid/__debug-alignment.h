@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -35,6 +35,8 @@
  * stack-cookie checks (similar to gcc's -fstack-smash-protection). And
  * it's these checks that will always perform unaligned memory accesses,
  * so we can't actually turn on this functionality here, either... */
+#elif defined(__KERNEL__)
+/* EFLAGS.AC is always ignored in kernel-space */
 #elif defined(__x86_64__)
 #ifdef _MSC_VER
 __NAMESPACE_INT_BEGIN

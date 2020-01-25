@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -32,17 +32,17 @@ __NAMESPACE_INT_END
 #define __hybrid_assertf __NAMESPACE_INT_SYM __hybrid_check_assertionf
 #elif defined(NDEBUG)
 #ifdef __NO_builtin_assume
-#define __hybrid_assert(expr)   __builtin_assume(expr)
+#define __hybrid_assert        __builtin_assume
 #else /* __NO_builtin_assume */
 #define __hybrid_assert(expr)  (void)0
 #endif /* !__NO_builtin_assume */
 #else /* NDEBUG */
 #include <assert.h>
-#define __hybrid_assert(expr)   assert(expr)
+#define __hybrid_assert  assert
 #ifdef __assertf
-#define __hybrid_assertf        __assertf
+#define __hybrid_assertf __assertf
 #elif defined(assertf)
-#define __hybrid_assertf        assertf
+#define __hybrid_assertf assertf
 #endif
 #ifdef __assertion_failed
 #define __hybrid_assertion_failed __assertion_failed

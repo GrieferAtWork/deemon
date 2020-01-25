@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -52,8 +52,11 @@
 #define ATTR_SYSVABI            __ATTR_SYSVABI
 #define ATTR_MSABI              __ATTR_MSABI
 #define ATTR_PURE               __ATTR_PURE
+#define ATTR_PURE_P             __ATTR_PURE_P
 #define ATTR_CONST              __ATTR_CONST
+#define ATTR_CONST_P            __ATTR_CONST_P
 #define ATTR_LEAF               __ATTR_LEAF
+#define ATTR_LEAF_P             __ATTR_LEAF_P
 #define ATTR_FLATTEN            __ATTR_FLATTEN
 #define ATTR_MALLOC             __ATTR_MALLOC
 #define ATTR_HOT                __ATTR_HOT
@@ -181,6 +184,7 @@
 #define NONNULL             __ATTR_NONNULL
 #define WUNUSED             __ATTR_WUNUSED
 #define UNUSED              __UNUSED
+#define IMPDAT              __IMPDAT
 #define IMPDEF              __IMPDEF
 #define EXPDEF              __EXPDEF
 #define FUNDEF              __PUBDEF

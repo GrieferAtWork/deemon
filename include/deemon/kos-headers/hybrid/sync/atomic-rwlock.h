@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -46,21 +46,21 @@ struct __ATTR_PACKED atomic_rwlock {
 	__UINTPTR_TYPE__   arw_lock;
 };
 
-#define ATOMIC_RWLOCK_INIT              {0}
-#define ATOMIC_RWLOCK_INIT_READ         {1}
-#define ATOMIC_RWLOCK_INIT_WRITE        {__ATOMIC_RWLOCK_WFLAG}
+#define ATOMIC_RWLOCK_INIT              { 0 }
+#define ATOMIC_RWLOCK_INIT_READ         { 1 }
+#define ATOMIC_RWLOCK_INIT_WRITE        { __ATOMIC_RWLOCK_WFLAG }
 #define atomic_rwlock_cinit(self)       (void)__hybrid_assert((self)->arw_lock == 0)
-#define atomic_rwlock_cinit_read(self)  (void)(__hybrid_assert((self)->arw_lock == 0),(self)->arw_lock = 1)
-#define atomic_rwlock_cinit_write(self) (void)(__hybrid_assert((self)->arw_lock == 0),(self)->arw_lock = __ATOMIC_RWLOCK_WFLAG)
+#define atomic_rwlock_cinit_read(self)  (void)(__hybrid_assert((self)->arw_lock == 0), (self)->arw_lock = 1)
+#define atomic_rwlock_cinit_write(self) (void)(__hybrid_assert((self)->arw_lock == 0), (self)->arw_lock = __ATOMIC_RWLOCK_WFLAG)
 #define atomic_rwlock_init(self)        (void)((self)->arw_lock = 0)
 #define atomic_rwlock_init_read(self)   (void)((self)->arw_lock = 1)
 #define atomic_rwlock_init_write(self)  (void)((self)->arw_lock = __ATOMIC_RWLOCK_WFLAG)
-#define DEFINE_ATOMIC_RWLOCK(name)       struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
+#define DEFINE_ATOMIC_RWLOCK(name)      struct atomic_rwlock name = ATOMIC_RWLOCK_INIT
 
-#define atomic_rwlock_reading(self)    (__hybrid_atomic_load((self)->arw_lock,__ATOMIC_ACQUIRE) != 0)
-#define atomic_rwlock_writing(self)    (__hybrid_atomic_load((self)->arw_lock,__ATOMIC_ACQUIRE) & __ATOMIC_RWLOCK_WFLAG)
-#define atomic_rwlock_canread(self)  (!(__hybrid_atomic_load((self)->arw_lock,__ATOMIC_ACQUIRE) & __ATOMIC_RWLOCK_WFLAG))
-#define atomic_rwlock_canwrite(self)   (__hybrid_atomic_load((self)->arw_lock,__ATOMIC_ACQUIRE) == 0)
+#define atomic_rwlock_reading(self)  (__hybrid_atomic_load((self)->arw_lock, __ATOMIC_ACQUIRE) != 0)
+#define atomic_rwlock_writing(self)  (__hybrid_atomic_load((self)->arw_lock, __ATOMIC_ACQUIRE) & __ATOMIC_RWLOCK_WFLAG)
+#define atomic_rwlock_canread(self)  (!(__hybrid_atomic_load((self)->arw_lock, __ATOMIC_ACQUIRE) & __ATOMIC_RWLOCK_WFLAG))
+#define atomic_rwlock_canwrite(self) (__hybrid_atomic_load((self)->arw_lock, __ATOMIC_ACQUIRE) == 0)
 
 /* Acquire an exclusive read/write lock. */
 __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_rwlock_tryread)(struct atomic_rwlock *__restrict __self);
@@ -154,13 +154,13 @@ __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_rwlock_tryread)(struct atomic_rwl
 		if __untraced(__temp & __ATOMIC_RWLOCK_WFLAG)
 			return 0;
 		__hybrid_assert((__temp&__ATOMIC_RWLOCK_RMASK) != __ATOMIC_RWLOCK_RMASK);
-	} while (!__hybrid_atomic_cmpxch_weak(__self->arw_lock, __temp, __temp + 1, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
+	} while (!__hybrid_atomic_cmpxch_weak(__self->arw_lock, __temp, __temp + 1, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED));
 	__COMPILER_READ_BARRIER();
 	return 1;
 }
 
 __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_rwlock_trywrite)(struct atomic_rwlock *__restrict __self) {
-	if __untraced(!__hybrid_atomic_cmpxch(__self->arw_lock, 0, __ATOMIC_RWLOCK_WFLAG, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED))
+	if __untraced(!__hybrid_atomic_cmpxch(__self->arw_lock, 0, __ATOMIC_RWLOCK_WFLAG, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
 		return 0;
 	__COMPILER_BARRIER();
 	return 1;
@@ -205,7 +205,7 @@ __LOCAL __ATTR_WUNUSED __BOOL __NOTHROW(atomic_rwlock_tryupgrade)(struct atomic_
 		if __untraced(__temp != 1)
 			return 0;
 	} while (!__hybrid_atomic_cmpxch_weak(__self->arw_lock, __temp, __ATOMIC_RWLOCK_WFLAG,
-	                                      __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
+	                                      __ATOMIC_ACQUIRE, __ATOMIC_RELAXED));
 	__COMPILER_WRITE_BARRIER();
 	return 1;
 }
@@ -241,7 +241,7 @@ __LOCAL void __NOTHROW(atomic_rwlock_downgrade)(struct atomic_rwlock *__restrict
 		__f = __hybrid_atomic_load(__self->arw_lock, __ATOMIC_ACQUIRE);
 		__hybrid_assertf(__f == __ATOMIC_RWLOCK_WFLAG, "Lock not in write-mode (%x)", __f);
 	} while (!__hybrid_atomic_cmpxch_weak(__self->arw_lock, __f, 1,
-	                                      __ATOMIC_SEQ_CST, __ATOMIC_RELAXED));
+	                                      __ATOMIC_RELEASE, __ATOMIC_RELAXED));
 #endif /* !NDEBUG */
 }
 #endif /* !__INTELLISENSE__ */

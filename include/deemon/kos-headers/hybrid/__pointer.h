@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -38,6 +38,8 @@
 
 #include "typecore.h"
 #include "../__stdcxx.h"
+
+__CXXDECL_BEGIN
 
 #undef __POINTER_CXX_CV_QUAL
 #undef __POINTER_CXX_IS_VOID
@@ -137,6 +139,7 @@ __NAMESPACE_INT_END
 #endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
 #endif /* __SIZEOF_POINTER__ == 8 */
 
+__CXXDECL_END
 #else
 
 /* Fallback: Just replace references to pointer with sizes

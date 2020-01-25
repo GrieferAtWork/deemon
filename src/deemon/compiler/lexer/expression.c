@@ -934,9 +934,7 @@ do_create_class:
 			result = ast_parse_comma(AST_COMMA_NORMAL,
 			                         AST_FMULTIPLE_TUPLE,
 			                         NULL);
-			if likely(result &&
-				       result->a_type == AST_EXPAND)
-			{
+			if likely(result && result->a_type == AST_EXPAND) {
 				/* Wrap into a single-item tuple multiple-branch:
 				 * >> print (get_items()...); // Convert to tuple. */
 				DREF struct ast **exprv;

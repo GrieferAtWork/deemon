@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -54,6 +54,15 @@
 #define __SIZEOF_LONG_LONG__  8
 #endif /* __COMPILER_HAVE_LONGLONG */
 #endif /* !__SIZEOF_LONG_LONG__ */
+
+#ifndef __UINT128_TYPE__
+#if (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128) || \
+    (defined(__SIZEOF_INT128__) && __SIZEOF_INT128__ == 16)
+#define __INT128_TYPE__ signed __int128
+#define __UINT128_TYPE__ unsigned __int128
+#endif
+#endif /* !__UINT128_TYPE__ */
+
 
 #ifndef __INT8_C
 #if defined(_MSC_VER) || __has_extension(tpp_msvc_integer_suffix)
@@ -939,7 +948,6 @@
 #define __UINTPTR_HALF_TYPE__ __UINT32_TYPE__
 #endif
 
-
 #ifndef __SSIZE_TYPE__
 #define __SSIZE_TYPE__   __ATTR_W64 __TYPEFOR_INTIB(__SIZEOF_SIZE_T__)
 #endif /* !__SSIZE_TYPE__ */
@@ -1020,39 +1028,6 @@
 #ifndef __SIZEOF_DOUBLE__
 #define __SIZEOF_DOUBLE__      8
 #endif /* !__SIZEOF_DOUBLE__ */
-#ifndef __SIZEOF_LONG_DOUBLE__
-#ifdef _MSC_VER
-#define __SIZEOF_LONG_DOUBLE__ 8
-#elif defined(__C67__) || defined(__i386__) || \
-      defined(__i386) || defined(i386)
-#define __SIZEOF_LONG_DOUBLE__ 12
-#elif defined(__X86_64__)
-#define __SIZEOF_LONG_DOUBLE__ 16
-#elif defined(__arm__)
-#define __SIZEOF_LONG_DOUBLE__ 8
-#else
-#define __SIZEOF_LONG_DOUBLE__ 8
-#endif
-#endif /* !__SIZEOF_LONG_DOUBLE__ */
-
-
-#ifndef __MAX_ALIGN_TYPE__
-#define __MAX_ALIGN_TYPE__ long double
-#ifdef __BIGGEST_ALIGNMENT__
-#   define __ALIGNOF_MAX_ALIGN_T__ __BIGGEST_ALIGNMENT__
-#   define __SIZEOF_MAX_ALIGN_T__  __BIGGEST_ALIGNMENT__
-#elif defined(__SIZEOF_LONG_DOUBLE__)
-#   define __ALIGNOF_MAX_ALIGN_T__ 8
-#   define __SIZEOF_MAX_ALIGN_T__  8
-#elif __SIZEOF_LONG_DOUBLE__ == 12
-#   define __ALIGNOF_MAX_ALIGN_T__ 16
-#   define __SIZEOF_MAX_ALIGN_T__  12
-#else
-#   define __ALIGNOF_MAX_ALIGN_T__ __SIZEOF_LONG_DOUBLE__
-#   define __SIZEOF_MAX_ALIGN_T__  __SIZEOF_LONG_DOUBLE__
-#endif
-#endif /* !__MAX_ALIGN_TYPE__ */
-
 
 #if __SIZEOF_LONG__ == __SIZEOF_SIZE_T__
 #   define __LONGSIZE_TYPE__  __ATTR_W64 unsigned long int
@@ -1099,15 +1074,127 @@
 #define __SREGISTER_TYPE__   __LONGPTR_TYPE__
 #endif /* !__SIZEOF_REGISTER__ */
 
+#ifdef __UINT128_TYPE__
+#ifndef __ALIGNOF_INT128__
+#define __ALIGNOF_INT128__ 16
+#endif /* !__ALIGNOF_INT128__ */
+#endif /* __UINT128_TYPE__ */
 
-#if defined(_NATIVE_CHAR16_T_DEFINED) || \
-   (defined(__cpp_unicode_characters) && __cpp_unicode_characters+0 >= 200704) || \
-   (defined(_HAS_CHAR16_T_LANGUAGE_SUPPORT) && _HAS_CHAR16_T_LANGUAGE_SUPPORT+0) || \
-   (defined(__cplusplus) && (defined(__CODEGEARC__) || (defined(_MSC_VER) && _MSC_VER+0 >= 1900) || \
-   (defined(__clang__) && !defined(_MSC_VER) && (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)) || \
-   (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GCC_VERSION(4,4,0)) || \
-   (defined(__BORLANDC__) && defined(__CODEGEAR_0X_SUPPORT__) && __BORLANDC__+0 >= 0x610) || \
-   (defined(__IBMCPP_UTF_LITERAL__) && __IBMCPP_UTF_LITERAL__)))
+#ifdef __UINT64_TYPE__
+#ifndef __ALIGNOF_INT64__
+#if !defined(_MSC_VER) && !defined(__INTELLISENSE__)
+#include "host.h"
+#if defined(__i386__) && !defined(__x86_64__)
+/* On i386, `-mno-align-double' is the ABI default, which causes `long long'
+ * and `double' to have 4-byte alignment, rather than be 8-byte aligned!
+ * s.a. `https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html#index-malign-double' */
+#define __ALIGNOF_INT64__ 4
+#endif /* __i386__ && !__x86_64__ */
+#endif /* __GNUC__ && !__INTELLISENSE__ */
+#ifndef __ALIGNOF_INT64__
+#define __ALIGNOF_INT64__ 8
+#endif /* !__ALIGNOF_INT64__ */
+#endif /* !__ALIGNOF_INT64__ */
+#endif /* __UINT64_TYPE__ */
+
+#ifndef __ALIGNOF_INT32__
+#define __ALIGNOF_INT32__ 4
+#endif /* !__ALIGNOF_INT32__ */
+
+#ifndef __ALIGNOF_INT16__
+#if defined(__COMPILER_HAVE_DOUBLE_WIDE_REGISTERS) && __SIZEOF_REGISTER__ < 2
+#define __ALIGNOF_INT16__ __SIZEOF_REGISTER__
+#else /* __SIZEOF_REGISTER__ < 2 */
+#define __ALIGNOF_INT16__ 2
+#endif /* __SIZEOF_REGISTER__ >= 2 */
+#endif /* !__ALIGNOF_INT16__ */
+
+#ifndef __ALIGNOF_FLOAT__
+#define __ALIGNOF_FLOAT__ __SIZEOF_FLOAT__
+#endif /* !__ALIGNOF_FLOAT__ */
+
+#ifndef __ALIGNOF_DOUBLE__
+#if __SIZEOF_DOUBLE__ == 8
+#define __ALIGNOF_DOUBLE__ __ALIGNOF_INT64__
+#else /* __SIZEOF_DOUBLE__ == 8 */
+#define __ALIGNOF_DOUBLE__ __SIZEOF_DOUBLE__
+#endif /* __SIZEOF_DOUBLE__ != 8 */
+#endif /* !__ALIGNOF_DOUBLE__ */
+
+
+#ifndef __SIZEOF_LONG_DOUBLE__
+#ifdef _MSC_VER
+#define __SIZEOF_LONG_DOUBLE__ 8
+#elif (defined(__C67__) || defined(__i386__) || \
+       defined(__i386) || defined(i386))
+#define __SIZEOF_LONG_DOUBLE__ 12
+#elif defined(__X86_64__)
+#define __SIZEOF_LONG_DOUBLE__ 16
+#elif defined(__arm__)
+#define __SIZEOF_LONG_DOUBLE__ 8
+#elif defined(__COMPILER_HAVE_LONGDOUBLE)
+#define __SIZEOF_LONG_DOUBLE__ 8
+#endif
+#endif /* !__SIZEOF_LONG_DOUBLE__ */
+
+
+#ifdef __SIZEOF_LONG_DOUBLE__
+#undef __ARCH_LONG_DOUBLE_IS_DOUBLE
+#if __SIZEOF_LONG_DOUBLE__ == __SIZEOF_DOUBLE__
+#define __ARCH_LONG_DOUBLE_IS_DOUBLE 1
+#endif /* __SIZEOF_LONG_DOUBLE__ == __SIZEOF_DOUBLE__ */
+
+#ifndef __ALIGNOF_LONG_DOUBLE__
+#if __ALIGNOF_INT64__ < 8
+#define __ALIGNOF_LONG_DOUBLE__ __ALIGNOF_INT64__
+#elif __SIZEOF_LONG_DOUBLE__ == 12
+#define __ALIGNOF_LONG_DOUBLE__ 16
+#else /* __SIZEOF_LONG_DOUBLE__ == 12 */
+#define __ALIGNOF_LONG_DOUBLE__ __SIZEOF_LONG_DOUBLE__
+#endif /* __SIZEOF_LONG_DOUBLE__ != 12 */
+#endif /* !__ALIGNOF_LONG_DOUBLE__ */
+#endif /* __SIZEOF_LONG_DOUBLE__ */
+
+
+
+#ifndef __MAX_ALIGN_TYPE__
+#define __MAX_ALIGN_TYPE__ __LONGDOUBLE
+#ifdef __BIGGEST_ALIGNMENT__
+#   define __ALIGNOF_MAX_ALIGN_T__ __BIGGEST_ALIGNMENT__
+#   define __SIZEOF_MAX_ALIGN_T__  __BIGGEST_ALIGNMENT__
+#elif !defined(__ALIGNOF_LONG_DOUBLE__)
+#   define __ALIGNOF_MAX_ALIGN_T__ 8
+#   define __SIZEOF_MAX_ALIGN_T__  8
+#else
+#   define __ALIGNOF_MAX_ALIGN_T__ __ALIGNOF_LONG_DOUBLE__
+#   define __SIZEOF_MAX_ALIGN_T__  __ALIGNOF_LONG_DOUBLE__
+#endif
+#endif /* !__MAX_ALIGN_TYPE__ */
+
+
+
+#define __ALIGNOF_INTN_1 1
+#define __ALIGNOF_INTN_2 __ALIGNOF_INT16__
+#define __ALIGNOF_INTN_4 __ALIGNOF_INT32__
+#ifdef __ALIGNOF_INT64__
+#define __ALIGNOF_INTN_8 __ALIGNOF_INT64__
+#endif /* __ALIGNOF_INT64__ */
+#ifdef __ALIGNOF_INT128__
+#define __ALIGNOF_INTN_16 __ALIGNOF_INT128__
+#endif /* __ALIGNOF_INT128__ */
+#define __ALIGNOF_INTN2(sizeof) __ALIGNOF_INTN_##sizeof
+#define __ALIGNOF_INTN(sizeof) __ALIGNOF_INTN2(sizeof)
+
+
+#if (defined(_NATIVE_CHAR16_T_DEFINED) ||                                                                               \
+     (defined(__cpp_unicode_characters) && __cpp_unicode_characters + 0 >= 200704) ||                                   \
+     (defined(_HAS_CHAR16_T_LANGUAGE_SUPPORT) && _HAS_CHAR16_T_LANGUAGE_SUPPORT + 0) ||                                 \
+     (defined(__cplusplus) &&                                                                                           \
+      (defined(__CODEGEARC__) || (defined(_MSC_VER) && _MSC_VER + 0 >= 1900) ||                                         \
+       (defined(__clang__) && !defined(_MSC_VER) && (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)) || \
+       (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GCC_VERSION_NUM >= 40400) ||                                           \
+       (defined(__BORLANDC__) && defined(__CODEGEAR_0X_SUPPORT__) && __BORLANDC__ + 0 >= 0x610) ||                      \
+       (defined(__IBMCPP_UTF_LITERAL__) && __IBMCPP_UTF_LITERAL__))))
 /* The compiler is pre-defining the `char16_t' / `char32_t' types. */
 #undef __CHAR16_TYPE__
 #undef __CHAR32_TYPE__

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -236,12 +236,13 @@ public:
 template<class __T> struct ____INTELLISENSE_isarith { enum { __value = false }; };
 template<class __T> struct ____INTELLISENSE_issigned { enum { __value = false }; };
 template<class __T> struct ____INTELLISENSE_isunsigned { enum { __value = false }; };
+template<class __T> struct ____INTELLISENSE_isfloat { enum { __value = false }; };
 template<> struct ____INTELLISENSE_isarith<bool> { enum { __value = true }; };
 template<> struct ____INTELLISENSE_isarith<wchar_t> { enum { __value = true }; };
 #if defined(_WCHAR_T_DEFINED) || defined(__GNUC__)
 template<> struct ____INTELLISENSE_isarith<char16_t> { enum { __value = true }; };
 template<> struct ____INTELLISENSE_isarith<char32_t> { enum { __value = true }; };
-#endif
+#endif /* _WCHAR_T_DEFINED || __GNUC__ */
 template<> struct ____INTELLISENSE_isarith<char> { enum { __value = true }; };
 template<> struct ____INTELLISENSE_isarith<signed char> { enum { __value = true }; };
 template<> struct ____INTELLISENSE_isarith<unsigned char> { enum { __value = true }; };
@@ -266,6 +267,9 @@ template<> struct ____INTELLISENSE_issigned<long> { enum { __value = true }; };
 template<> struct ____INTELLISENSE_isunsigned<unsigned long> { enum { __value = true }; };
 template<> struct ____INTELLISENSE_issigned<long long> { enum { __value = true }; };
 template<> struct ____INTELLISENSE_isunsigned<unsigned long long> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isfloat<float> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isfloat<double> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isfloat<long double> { enum { __value = true }; };
 
 template<class __UID, bool __ALLOW_INT_OPS, class __T> struct ____INTELLISENSE_isarith<____intellisense_altint<__UID, __ALLOW_INT_OPS, __T> > { enum{__value=____INTELLISENSE_isarith<__T>::__value}; };
 template<class __UID, bool __ALLOW_INT_OPS, class __T> struct ____INTELLISENSE_issigned<____intellisense_altint<__UID, __ALLOW_INT_OPS, __T> > { enum{__value=____INTELLISENSE_issigned<__T>::__value}; };
@@ -276,41 +280,41 @@ template<class __T> struct ____INTELLISENSE_enableif<false, __T> {};
 
 template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_issigned<__TA>::__value &&
-	____INTELLISENSE_issigned<__TB>::__value &&
+	____INTELLISENSE_isarith<__TA>::__value &&
+	____INTELLISENSE_isarith<__TB>::__value &&
 	____INTELLISENSE_issigned<__TR>::__value,
 bool>::__type __intellisense_overflow_sadd(__TA __lhs, __TB __rhs, __TR *__res);
 template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_isunsigned<__TA>::__value &&
-	____INTELLISENSE_isunsigned<__TB>::__value &&
+	____INTELLISENSE_isarith<__TA>::__value &&
+	____INTELLISENSE_isarith<__TB>::__value &&
 	____INTELLISENSE_isunsigned<__TR>::__value,
 bool>::__type __intellisense_overflow_uadd(__TA __lhs, __TB __rhs, __TR *__res);
 
 
 template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_issigned<__TA>::__value &&
-	____INTELLISENSE_issigned<__TB>::__value &&
+	____INTELLISENSE_isarith<__TA>::__value &&
+	____INTELLISENSE_isarith<__TB>::__value &&
 	____INTELLISENSE_issigned<__TR>::__value,
 bool>::__type __intellisense_overflow_ssub(__TA __lhs, __TB __rhs, __TR *__res);
 template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_isunsigned<__TA>::__value &&
-	____INTELLISENSE_isunsigned<__TB>::__value &&
+	____INTELLISENSE_isarith<__TA>::__value &&
+	____INTELLISENSE_isarith<__TB>::__value &&
 	____INTELLISENSE_isunsigned<__TR>::__value,
 bool>::__type __intellisense_overflow_usub(__TA __lhs, __TB __rhs, __TR *__res);
 
 template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_issigned<__TA>::__value &&
-	____INTELLISENSE_issigned<__TB>::__value &&
+	____INTELLISENSE_isarith<__TA>::__value &&
+	____INTELLISENSE_isarith<__TB>::__value &&
 	____INTELLISENSE_issigned<__TR>::__value,
 bool>::__type __intellisense_overflow_smul(__TA __lhs, __TB __rhs, __TR *__res);
 template<class __TA, class __TB, class __TR>
 typename ____INTELLISENSE_enableif<
-	____INTELLISENSE_isunsigned<__TA>::__value &&
-	____INTELLISENSE_isunsigned<__TB>::__value &&
+	____INTELLISENSE_isarith<__TA>::__value &&
+	____INTELLISENSE_isarith<__TB>::__value &&
 	____INTELLISENSE_isunsigned<__TR>::__value,
 bool>::__type __intellisense_overflow_umul(__TA __lhs, __TB __rhs, __TR *__res);
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -117,14 +117,6 @@ static_assert(sizeof(__UINT_FAST64_TYPE__) == __SIZEOF_FAST64_TYPE__, "WTF Intel
 
 
 #if 0 /* How can Intellisense be this stupid? - I mean: this is linux 101! */
-static_assert(sizeof(long double) == __SIZEOF_LONG_DOUBLE__, "WTF Intellisense?");
-#else
-#undef __SIZEOF_LONG_DOUBLE__
-#define __SIZEOF_LONG_DOUBLE__ __SIZEOF_DOUBLE__
-#endif
-
-
-#if 0 /* How can Intellisense be this stupid? - I mean: this is linux 101! */
 static_assert(sizeof(wchar_t) == __SIZEOF_WCHAR_T__, "WTF Intellisense?");
 #else
 #undef __SIZEOF_WCHAR_T__
@@ -151,6 +143,216 @@ static_assert(sizeof(wchar_t) == __SIZEOF_WCHAR_T__, "WTF Intellisense?");
 
 
 namespace __intern {
+
+/* Intellisense doesn't emulate `__int128' properly (or rather: at all; it only
+ * defines the `__SIZEOF_INT128__' feature test macro, but don't actually care to
+ * implement the actual feature it is used to test for... ~ugh~)
+ * -> So try to fix that _BUG_! Because that's totally what it is, and not
+ *    just the vs developers being lazy. Oh no, it totally isn't that they
+ *    probably just copied a list of gcc's predefined macros and called it
+ *    a day without actually going through all of them and checking that they're
+ *    actually doing what they're supposed to do.
+ * I mean: How else do you think not only something like this happened, but
+ * also something like `__INT64_TYPE__' not actually being 64-bit because its
+ * default definition is (just like it is in gcc) `signed long int' (again:
+ * Intellisense continues to define `long int' as 32-bit, instead of defining
+ * it as pointer-sized) */
+#ifdef __SIZEOF_INT128__
+class __intellisense_int128;
+class __intellisense_uint128;
+template<> struct ____INTELLISENSE_issigned<__intellisense_int128> { enum { __value = true }; };
+template<> struct ____INTELLISENSE_isunsigned<__intellisense_uint128> { enum { __value = true }; };
+class __attribute__((__aligned__(16))) __intellisense_int128 {
+private:
+	signed char __data[__SIZEOF_INT128__];
+public:
+	__intellisense_int128() throw() = default;
+	__intellisense_int128(__intellisense_int128 const &) throw() = default;
+	__intellisense_int128(__intellisense_int128 &&) throw() = default;
+	__intellisense_int128(bool) throw();
+	__intellisense_int128(char) throw();
+	__intellisense_int128(signed char) throw();
+	__intellisense_int128(unsigned char) throw();
+	__intellisense_int128(short) throw();
+	__intellisense_int128(unsigned short) throw();
+	__intellisense_int128(int) throw();
+	__intellisense_int128(unsigned int) throw();
+	__intellisense_int128(long) throw();
+	__intellisense_int128(unsigned long) throw();
+	__intellisense_int128(long long) throw();
+	__intellisense_int128(unsigned long long) throw();
+	__intellisense_int128(wchar_t) throw();
+	__intellisense_int128(__intellisense_uint128) throw();
+	__intellisense_int128 &operator = (__intellisense_int128 const &) throw();
+	__intellisense_int128 &operator = (__intellisense_int128 &&) throw();
+	__intellisense_int128 &operator = (bool) throw();
+	__intellisense_int128 &operator = (char) throw();
+	__intellisense_int128 &operator = (signed char) throw();
+	__intellisense_int128 &operator = (unsigned char) throw();
+	__intellisense_int128 &operator = (short) throw();
+	__intellisense_int128 &operator = (unsigned short) throw();
+	__intellisense_int128 &operator = (int) throw();
+	__intellisense_int128 &operator = (unsigned int) throw();
+	__intellisense_int128 &operator = (long) throw();
+	__intellisense_int128 &operator = (unsigned long) throw();
+	__intellisense_int128 &operator = (long long) throw();
+	__intellisense_int128 &operator = (unsigned long long) throw();
+	__intellisense_int128 &operator = (wchar_t) throw();
+	__intellisense_int128 &operator = (__intellisense_uint128) throw();
+	__intellisense_int128 &operator++() throw();
+	__intellisense_int128 &operator--() throw();
+	__intellisense_int128 operator++(int) throw();
+	__intellisense_int128 operator--(int) throw();
+	__intellisense_int128 operator<<(unsigned int) const throw();
+	__intellisense_int128 operator>>(unsigned int) const throw();
+	__intellisense_int128 operator-() const throw();
+	__intellisense_int128 operator~() const throw();
+	__intellisense_int128 &operator<<=(unsigned int) throw();
+	__intellisense_int128 &operator>>=(unsigned int) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator + (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator - (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator * (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator / (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator % (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator & (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator | (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128>::__type operator ^ (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator += (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator -= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator *= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator /= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator %= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator &= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator |= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_int128 &>::__type operator ^= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator == (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator != (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator < (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator > (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator <= (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator >= (__VT const &) const throw();
+	bool operator!() const throw();
+	operator bool() const throw();
+	operator char() const throw();
+	operator signed char() const throw();
+	operator unsigned char() const throw();
+	operator short() const throw();
+	operator unsigned short() const throw();
+	operator int() const throw();
+	operator unsigned int() const throw();
+	operator long() const throw();
+	operator unsigned long() const throw();
+	operator long long() const throw();
+	operator unsigned long long() const throw();
+	operator wchar_t() const throw();
+	operator __intellisense_uint128() const throw();
+#if defined(_WCHAR_T_DEFINED) || defined(__GNUC__)
+	__intellisense_int128(char16_t) throw();
+	__intellisense_int128(char32_t) throw();
+	operator char16_t() const throw();
+	operator char32_t() const throw();
+#endif /* _WCHAR_T_DEFINED || __GNUC__ */
+};
+
+class __attribute__((__aligned__(16))) __intellisense_uint128 {
+private:
+	unsigned char __data[__SIZEOF_INT128__];
+public:
+	__intellisense_uint128() throw() = default;
+	__intellisense_uint128(__intellisense_uint128 const &) throw() = default;
+	__intellisense_uint128(__intellisense_uint128 &&) throw() = default;
+	__intellisense_uint128(bool) throw();
+	__intellisense_uint128(char) throw();
+	__intellisense_uint128(signed char) throw();
+	__intellisense_uint128(unsigned char) throw();
+	__intellisense_uint128(short) throw();
+	__intellisense_uint128(unsigned short) throw();
+	__intellisense_uint128(int) throw();
+	__intellisense_uint128(unsigned int) throw();
+	__intellisense_uint128(long) throw();
+	__intellisense_uint128(unsigned long) throw();
+	__intellisense_uint128(long long) throw();
+	__intellisense_uint128(unsigned long long) throw();
+	__intellisense_uint128(wchar_t) throw();
+	__intellisense_uint128(__intellisense_int128) throw();
+	__intellisense_uint128 &operator = (__intellisense_uint128 const &) throw();
+	__intellisense_uint128 &operator = (__intellisense_uint128 &&) throw();
+	__intellisense_uint128 &operator = (bool) throw();
+	__intellisense_uint128 &operator = (char) throw();
+	__intellisense_uint128 &operator = (signed char) throw();
+	__intellisense_uint128 &operator = (unsigned char) throw();
+	__intellisense_uint128 &operator = (short) throw();
+	__intellisense_uint128 &operator = (unsigned short) throw();
+	__intellisense_uint128 &operator = (int) throw();
+	__intellisense_uint128 &operator = (unsigned int) throw();
+	__intellisense_uint128 &operator = (long) throw();
+	__intellisense_uint128 &operator = (unsigned long) throw();
+	__intellisense_uint128 &operator = (long long) throw();
+	__intellisense_uint128 &operator = (unsigned long long) throw();
+	__intellisense_uint128 &operator = (wchar_t) throw();
+	__intellisense_uint128 &operator = (__intellisense_int128) throw();
+	__intellisense_uint128 &operator++() throw();
+	__intellisense_uint128 &operator--() throw();
+	__intellisense_uint128 operator++(int) throw();
+	__intellisense_uint128 operator--(int) throw();
+	__intellisense_uint128 operator<<(unsigned int) const throw();
+	__intellisense_uint128 operator>>(unsigned int) const throw();
+	__intellisense_uint128 operator~() const throw();
+	__intellisense_uint128 &operator<<=(unsigned int) throw();
+	__intellisense_uint128 &operator>>=(unsigned int) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator + (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator - (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator * (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator / (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator % (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator & (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator | (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128>::__type operator ^ (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator += (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator -= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator *= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator /= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator %= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator &= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator |= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, __intellisense_uint128 &>::__type operator ^= (__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator == (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator != (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator < (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator > (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator <= (__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value, bool>::__type operator >= (__VT const &) const throw();
+	bool operator!() const throw();
+	operator bool() const throw();
+	operator char() const throw();
+	operator signed char() const throw();
+	operator unsigned char() const throw();
+	operator short() const throw();
+	operator unsigned short() const throw();
+	operator int() const throw();
+	operator unsigned int() const throw();
+	operator long() const throw();
+	operator unsigned long() const throw();
+	operator long long() const throw();
+	operator unsigned long long() const throw();
+	operator wchar_t() const throw();
+	operator __intellisense_int128() const throw();
+#if defined(_WCHAR_T_DEFINED) || defined(__GNUC__)
+	__intellisense_uint128(char16_t) throw();
+	__intellisense_uint128(char32_t) throw();
+	operator char16_t() const throw();
+	operator char32_t() const throw();
+#endif /* _WCHAR_T_DEFINED || __GNUC__ */
+};
+} /* namespace __intern */
+#define __INT128_TYPE__  ::__intern::__intellisense_int128
+#define __UINT128_TYPE__ ::__intern::__intellisense_uint128
+template<class __T> __T *operator+(__T *, __INT128_TYPE__ const &) throw();
+template<class __T> __T *operator-(__T *, __INT128_TYPE__ const &) throw();
+template<class __T> __T *operator+(__T *, __UINT128_TYPE__ const &) throw();
+template<class __T> __T *operator-(__T *, __UINT128_TYPE__ const &) throw();
+namespace __intern {
+#endif /* __SIZEOF_INT128__ */
 
 unsigned short __override_builtin_bswap16(unsigned short);
 ____intellisense_endianint<4321, unsigned short> __override_builtin_bswap16(____intellisense_endianint<1234, unsigned short>);
@@ -224,6 +426,154 @@ template<class T, class S> typename ____INTELLISENSE_enableif<____INTELLISENSE_i
 #define __atomic_fetch_or           ::__intern::__intellisense_atomic_fetch_or
 #define __atomic_fetch_nand         ::__intern::__intellisense_atomic_fetch_nand
 
-}
+
+#if 0 /* How can Intellisense be this stupid? - I mean: this is linux 101! */
+static_assert(sizeof(long double) == __SIZEOF_LONG_DOUBLE__, "WTF Intellisense?");
+#elif 1
+
+#ifndef __SIZEOF_LONG_DOUBLE__
+#ifdef __i386__
+#define __SIZEOF_LONG_DOUBLE__ 12
+#elif defined(__x86_64__)
+#define __SIZEOF_LONG_DOUBLE__ 16
+#elif defined(__arm__)
+#define __SIZEOF_LONG_DOUBLE__ 8
+#else
+#define __SIZEOF_LONG_DOUBLE__ 12
+#endif
+#endif /* !__SIZEOF_LONG_DOUBLE__ */
+
+class __intellisense_long_double;
+template<> struct ____INTELLISENSE_isfloat<__intellisense_long_double> { enum { __value = true }; };
+
+#define __LONGDOUBLE ::__intern::__intellisense_long_double
+#if __SIZEOF_LONG_DOUBLE__ == 12
+class __attribute__((__aligned__(16))) __intellisense_long_double
+#else /* __SIZEOF_LONG_DOUBLE__ == 12 */
+class __attribute__((__aligned__(__SIZEOF_LONG_DOUBLE__))) __intellisense_long_double
+#endif /* __SIZEOF_LONG_DOUBLE__ != 12 */
+{
+private:
+	unsigned char __ld_data[__SIZEOF_LONG_DOUBLE__];
+public:
+	__intellisense_long_double() throw() = default;
+	__intellisense_long_double(__intellisense_long_double const &) throw() = default;
+	__intellisense_long_double(__intellisense_long_double &&) throw() = default;
+	__intellisense_long_double(bool) throw();
+	__intellisense_long_double(char) throw();
+	__intellisense_long_double(signed char) throw();
+	__intellisense_long_double(unsigned char) throw();
+	__intellisense_long_double(short) throw();
+	__intellisense_long_double(unsigned short) throw();
+	__intellisense_long_double(int) throw();
+	__intellisense_long_double(unsigned int) throw();
+	__intellisense_long_double(long) throw();
+	__intellisense_long_double(unsigned long) throw();
+	__intellisense_long_double(long long) throw();
+	__intellisense_long_double(unsigned long long) throw();
+	__intellisense_long_double(wchar_t) throw();
+	__intellisense_long_double(float) throw();
+	__intellisense_long_double(double) throw();
+	__intellisense_long_double(long double) throw();
+	__intellisense_long_double(__intellisense_int128) throw();
+	__intellisense_long_double(__intellisense_uint128) throw();
+	__intellisense_long_double &operator=(__intellisense_long_double const &) throw();
+	__intellisense_long_double &operator=(__intellisense_long_double &&) throw();
+	__intellisense_long_double &operator=(bool) throw();
+	__intellisense_long_double &operator=(char) throw();
+	__intellisense_long_double &operator=(signed char) throw();
+	__intellisense_long_double &operator=(unsigned char) throw();
+	__intellisense_long_double &operator=(short) throw();
+	__intellisense_long_double &operator=(unsigned short) throw();
+	__intellisense_long_double &operator=(int) throw();
+	__intellisense_long_double &operator=(unsigned int) throw();
+	__intellisense_long_double &operator=(long) throw();
+	__intellisense_long_double &operator=(unsigned long) throw();
+	__intellisense_long_double &operator=(long long) throw();
+	__intellisense_long_double &operator=(unsigned long long) throw();
+	__intellisense_long_double &operator=(wchar_t) throw();
+	__intellisense_long_double &operator=(float) throw();
+	__intellisense_long_double &operator=(double) throw();
+	__intellisense_long_double &operator=(long double) throw();
+	__intellisense_long_double &operator=(__intellisense_int128) throw();
+	__intellisense_long_double &operator=(__intellisense_uint128) throw();
+	__intellisense_long_double operator-() const throw();
+	__intellisense_long_double operator+(__intellisense_long_double const &) const throw();
+	__intellisense_long_double operator-(__intellisense_long_double const &) const throw();
+	__intellisense_long_double operator*(__intellisense_long_double const &)const throw();
+	__intellisense_long_double operator/(__intellisense_long_double const &) const throw();
+	__intellisense_long_double &operator+=(__intellisense_long_double const &) throw();
+	__intellisense_long_double &operator-=(__intellisense_long_double const &) throw();
+	__intellisense_long_double &operator*=(__intellisense_long_double const &) throw();
+	__intellisense_long_double &operator/=(__intellisense_long_double const &) throw();
+	bool operator==(__intellisense_long_double const &) const throw();
+	bool operator!=(__intellisense_long_double const &) const throw();
+	bool operator<(__intellisense_long_double const &) const throw();
+	bool operator>(__intellisense_long_double const &) const throw();
+	bool operator<=(__intellisense_long_double const &) const throw();
+	bool operator>=(__intellisense_long_double const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator+(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator-(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator*(__VT const &)const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator/(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator+=(__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator-=(__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator*=(__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator/=(__VT const &) throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator==(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator!=(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator<(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator>(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator<=(__VT const &) const throw();
+	template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator>=(__VT const &) const throw();
+	bool operator!() const throw();
+	operator bool() const throw();
+	operator char() const throw();
+	operator signed char() const throw();
+	operator unsigned char() const throw();
+	operator short() const throw();
+	operator unsigned short() const throw();
+	operator int() const throw();
+	operator unsigned int() const throw();
+	operator long() const throw();
+	operator unsigned long() const throw();
+	operator long long() const throw();
+	operator unsigned long long() const throw();
+	operator wchar_t() const throw();
+	operator float() const throw();
+	operator double() const throw();
+	operator long double() const throw();
+	operator __intellisense_int128() const throw();
+	operator __intellisense_uint128() const throw();
+#if defined(_WCHAR_T_DEFINED) || defined(__GNUC__)
+	__intellisense_long_double(char16_t) throw();
+	__intellisense_long_double(char32_t) throw();
+	operator char16_t() const throw();
+	operator char32_t() const throw();
+#endif /* _WCHAR_T_DEFINED || __GNUC__ */
+};
+
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator+(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator-(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator*(__VT const &, __intellisense_long_double const &)throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double>::__type operator/(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator+=(__VT const &, __intellisense_long_double &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator-=(__VT const &, __intellisense_long_double &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator*=(__VT const &, __intellisense_long_double &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, __intellisense_long_double &>::__type operator/=(__VT const &, __intellisense_long_double &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator==(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator!=(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator<(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator>(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator<=(__VT const &, __intellisense_long_double const &) throw();
+template<class __VT> typename ____INTELLISENSE_enableif<____INTELLISENSE_issigned<__VT>::__value || ____INTELLISENSE_isunsigned<__VT>::__value || ____INTELLISENSE_isfloat<__VT>::__value, bool>::__type operator>=(__VT const &, __intellisense_long_double const &) throw();
+
+
+#else
+#undef __SIZEOF_LONG_DOUBLE__
+#define __SIZEOF_LONG_DOUBLE__ __SIZEOF_DOUBLE__
+#endif
+
+} /* namespace __intern */
 
 #endif /* !____INTELLISENSE_STDINC_SYNTAX_GCC_H */

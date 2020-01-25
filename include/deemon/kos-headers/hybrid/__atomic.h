@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2020 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -80,7 +80,7 @@ __SYSDECL_BEGIN
 __SYSDECL_END
 #include "__atomic-libatomic.h"
 __SYSDECL_BEGIN
-#elif __GCC_VERSION(4, 7, 0) || defined(____INTELLISENSE_STDINC_COMMON_H)
+#elif (defined(__GNUC__) && __GCC_VERSION_NUM >= 40700) || defined(____INTELLISENSE_STDINC_COMMON_H)
 
 /************************************************************************/
 /* __atomic_xxx()                                                       */
@@ -144,7 +144,7 @@ __SYSDECL_BEGIN
 #define __impl_hybrid_atomic_fetchor_seqcst(x, v)   __sync_fetch_and_or(&(x), v)
 #define __impl_hybrid_atomic_fetchand_seqcst(x, v)  __sync_fetch_and_and(&(x), v)
 #define __impl_hybrid_atomic_fetchxor_seqcst(x, v)  __sync_fetch_and_xor(&(x), v)
-#if !defined(__GNUC__) || __GCC_VERSION(4, 4, 0)
+#if !defined(__GNUC__) || __GCC_VERSION_NUM >= 40400
 #define __impl_hybrid_atomic_fetchnand_seqcst(x, v) __sync_fetch_and_nand(&(x), v)
 #define __impl_hybrid_atomic_nandfetch_seqcst(x, v) __sync_nand_and_fetch(&(x), v)
 #endif /* GCC 4.4 */
