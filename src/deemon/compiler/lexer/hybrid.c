@@ -416,8 +416,6 @@ parse_remainder_after_semicolon_hybrid_popscope:
 is_a_statement:
 		if unlikely(scope_push() < 0)
 			goto err;
-		if unlikely(yield() < 0)
-			goto err;
 		/* Enter a new scope and parse expressions. */
 		if (parser_flags & PARSE_FLFSTMT)
 			TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
@@ -425,9 +423,10 @@ is_a_statement:
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		if unlikely(!result)
 			goto err;
-		while (tok == '\n')
+		while (tok == '\n') {
 			if unlikely(yield() < 0)
-		goto err_r;
+				goto err_r;
+		}
 		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
 			goto err_r;
 		scope_pop();
