@@ -37,6 +37,7 @@
 
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
+#include <hybrid/typecore.h>
 
 #include <string.h>
 
@@ -48,6 +49,45 @@
 #define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
 #endif /* __ARCH_PAGESIZE */
 #endif /* !__ARCH_PAGESIZE_MIN */
+
+#ifdef CONFIG_HAVE_fopen64
+#undef fopen
+#define fopen(filename, mode) fopen64(filename, mode)
+#endif /* CONFIG_HAVE_fopen64 */
+
+#ifndef CONFIG_HAVE_stdin
+#undef stdin
+#ifdef CONFIG_HAVE_fopen_binary
+#define stdin fopen("/dev/stdin", "rb")
+#else /* CONFIG_HAVE_fopen_binary */
+#define stdin fopen("/dev/stdin", "r")
+#endif /* !CONFIG_HAVE_fopen_binary */
+#endif /* !CONFIG_HAVE_stdin */
+
+#ifndef CONFIG_HAVE_stdout
+#undef stdout
+#ifdef CONFIG_HAVE_fopen_binary
+#define stdout fopen("/dev/stdout", "rb")
+#else /* CONFIG_HAVE_fopen_binary */
+#define stdout fopen("/dev/stdout", "r")
+#endif /* !CONFIG_HAVE_fopen_binary */
+#endif /* !CONFIG_HAVE_stdout */
+
+#ifndef CONFIG_HAVE_stderr
+#undef stderr
+#ifdef CONFIG_HAVE_stdout
+#define stderr stdout
+#elif defined(CONFIG_HAVE_fopen_binary)
+#define stderr fopen("/dev/stderr", "rb")
+#else /* CONFIG_HAVE_fopen_binary */
+#define stderr fopen("/dev/stderr", "r")
+#endif /* !CONFIG_HAVE_fopen_binary */
+#endif /* !CONFIG_HAVE_stderr */
+
+#ifndef EOF
+#define EOF (-1)
+#endif /* !EOF */
+
 
 DECL_BEGIN
 
@@ -300,6 +340,12 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 #endif /* !CONFIG_CANNOT_STATIC_INITIALIZE_SYSF_STD */
 #endif /* !CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD */
 
+#if (!defined(CONFIG_HAVE_stdin) ||  \
+     !defined(CONFIG_HAVE_stdout) || \
+     !defined(CONFIG_HAVE_stderr))
+#undef CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD
+#endif
+
 #ifdef CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD
 PRIVATE SystemFile sysf_std[] = {
 	{ FILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), stdin },
@@ -312,8 +358,8 @@ PRIVATE SystemFile sysf_std[] = {
 };
 PUBLIC ATTR_RETNONNULL
 DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
- ASSERT(id <= DEE_STDERR);
- return &sysf_std[id];
+	ASSERT(id <= DEE_STDERR);
+	return &sysf_std[id];
 }
 #else /* CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD */
 PRIVATE uint8_t sysf_std_closed = 0;
@@ -381,7 +427,45 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 #endif /* !CONFIG_CAN_STATIC_INITIALIZE_SYSF_STD */
 
 
+#ifndef CONFIG_HAVE_fread
+#ifdef CONFIG_HAVE_fgetc
+#define CONFIG_HAVE_fread 1
+#undef fread
+#define fread dee_fread
+PRIVATE size_t DCALL
+dee_fread(void *buf, size_t elemsize, size_t elemcount, FILE *stream) {
+	size_t i, total;
+	total = elemsize * elemcount;
+	for (i = 0; i < total; ++i) {
+		int ch = fgetc(stream);
+		if (ch == EOF)
+			break;
+		((__BYTE_TYPE__ *)buf)[i] = (__BYTE_TYPE__)(unsigned int)ch;
+	}
+	return i / elemsize;
+}
+#endif /* CONFIG_HAVE_fgetc */
+#endif /* !CONFIG_HAVE_fread */
 
+#ifndef CONFIG_HAVE_fwrite
+#ifdef CONFIG_HAVE_fputc
+#define CONFIG_HAVE_fwrite 1
+#undef fwrite
+#define fwrite dee_fwrite
+PRIVATE size_t DCALL
+dee_fwrite(void const *buf, size_t elemsize, size_t elemcount, FILE *stream) {
+	size_t i, total;
+	total = elemsize * elemcount;
+	for (i = 0; i < total; ++i) {
+		__BYTE_TYPE__ b;
+		b = ((__BYTE_TYPE__ const *)buf)[i];
+		if (fputc(b, stream) == EOF)
+			break;
+	}
+	return i / elemsize;
+}
+#endif /* CONFIG_HAVE_fputc */
+#endif /* !CONFIG_HAVE_fwrite */
 
 
 PRIVATE dssize_t DCALL
@@ -462,14 +546,15 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 	DBG_ALIGNMENT_ENABLE();
 	if ((long)result == -1L)
 		return error_file_io(self);
-#else
+#else /* ... */
 	result = err_unimplemented_operator((DeeTypeObject *)&DeeSystemFile_Type,
 	                                    FILE_OPERATOR_SEEK);
-#endif
+#endif /* !... */
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sysfile_sync(SystemFile *__restrict self) {
 	if unlikely(!self->sf_handle)
 		return error_file_closed(self);
 	DBG_ALIGNMENT_DISABLE();
@@ -481,7 +566,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self)
 	}
 #elif defined(CONFIG_HAVE_fflush)
 	fflush((FILE *)self->sf_handle);
-#endif
+#endif /* ... */
 	DBG_ALIGNMENT_ENABLE();
 	return 0;
 }
@@ -683,18 +768,67 @@ DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 	return NULL;
 }
 
+
+#undef sysfile_isatty_USE_ISATTY
+#undef sysfile_isatty_USE_ISASTDFILE
+#undef sysfile_isatty_USE_RETURN_FALSE
+#if defined(CONFIG_HAVE_fileno) && defined(CONFIG_HAVE_isatty)
+#define sysfile_isatty_USE_ISATTY 1
+#elif defined(CONFIG_HAVE_stdin) ||  defined(CONFIG_HAVE_stdout) || defined(CONFIG_HAVE_stderr)
+#define sysfile_isatty_USE_ISASTDFILE 1
+#else
+#define sysfile_isatty_USE_RETURN_FALSE 1
+#endif
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sysfile_isatty(SystemFile *self) {
 	if unlikely(!self->sf_handle) {
 		error_file_closed(self);
-		goto err;
+		return NULL;
 	}
-	/* General-purpose: Assume that the standard streams are connected to a TTY */
-	return_bool(self->sf_handle == stdin ||
-	            self->sf_handle == stdout ||
-	            self->sf_handle == stderr);
-err:
+#ifdef sysfile_isatty_USE_ISATTY
+	int result;
+	DBG_ALIGNMENT_DISABLE();
+	result = isatty(fileno((FILE *)self->sf_handle));
+	DBG_ALIGNMENT_ENABLE();
+	if (result)
+		return_true;
+#if defined(EINVAL) || defined(ENOTTY)
+	/* Check our whitelist of errors that indicate not-a-tty. */
+	DeeSystem_IF_E2(DeeSystem_GetErrno(),
+	                EINVAL,
+	                ENOTTY,
+	                return_false);
+	error_file_io(self);
 	return NULL;
+#else /* EINVAL || ENOTTY */
+	return_false;
+#endif /* !EINVAL && !ENOTTY */
+#endif /* sysfile_isatty_USE_ISATTY */
+
+	/* General-purpose: Assume that the standard streams are connected to a TTY */
+#ifdef sysfile_isatty_USE_ISASTDFILE
+#ifdef CONFIG_HAVE_stdin
+	if (self->sf_handle == stdin)
+		goto yes;
+#endif /* CONFIG_HAVE_stdin */
+#ifdef CONFIG_HAVE_stdout
+	if (self->sf_handle == stdout)
+		goto yes;
+#endif /* CONFIG_HAVE_stdout */
+#ifdef CONFIG_HAVE_stderr
+	if (self->sf_handle == stderr)
+		goto yes;
+#endif /* CONFIG_HAVE_stderr */
+	return_false;
+yes:
+	return_true;
+#endif /* sysfile_isatty_USE_ISASTDFILE */
+
+#ifdef sysfile_isatty_USE_RETURN_FALSE
+	return_false;
+#endif /* sysfile_isatty_USE_RETURN_FALSE */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -944,9 +1078,9 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */sysfile_methods,
-		/* .tp_getsets       = */sysfile_getsets,
-		/* .tp_members       = */sysfile_members,
+		/* .tp_methods       = */ sysfile_methods,
+		/* .tp_getsets       = */ sysfile_getsets,
+		/* .tp_members       = */ sysfile_members,
 		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
@@ -1005,7 +1139,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 		/* .tp_methods       = */ NULL,
 		/* .tp_getsets       = */ NULL,
 		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */sysfile_class_methods,
+		/* .tp_class_methods = */ sysfile_class_methods,
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},

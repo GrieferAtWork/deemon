@@ -21,15 +21,22 @@
 #define GUARD_DEEMON_SYSTEM_FILE_C 1
 
 #include <deemon/api.h>
+#include <deemon/filetypes.h>
 
-#if defined(CONFIG_HOST_WINDOWS)
+#ifdef DEESYSTEM_FILE_USE_WINDOWS
 #include "win-file.c.inl"
-#elif defined(CONFIG_HOST_UNIX)
+#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+
+#ifdef DEESYSTEM_FILE_USE_UNIX
 #include "unix-file.c.inl"
-#elif !defined(CONFIG_NO_STDIO)
+#endif /* DEESYSTEM_FILE_USE_UNIX */
+
+#ifdef DEESYSTEM_FILE_USE_STDIO
 #include "stdio-file.c.inl"
-#else
+#endif /* DEESYSTEM_FILE_USE_STDIO */
+
+#ifdef DEESYSTEM_FILE_USE_STUB
 #include "generic-file.c.inl"
-#endif
+#endif /* DEESYSTEM_FILE_USE_STUB */
 
 #endif /* !GUARD_DEEMON_SYSTEM_FILE_C */

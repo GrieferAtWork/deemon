@@ -38,6 +38,10 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+#ifdef DEESYSTEM_FILE_USE_STDIO
+#include <stdio.h>
+#endif /* DEESYSTEM_FILE_USE_STDIO */
+
 DECL_BEGIN
 
 typedef DeeFileBufferObject Buffer;
@@ -1690,15 +1694,13 @@ buffer_class_sync(DeeObject *__restrict UNUSED(self),
 		goto err;
 	if (DeeFileBuffer_SyncTTYs())
 		goto err;
-#if !defined(CONFIG_HOST_WINDOWS) && \
-    !defined(CONFIG_HOST_UNIX) &&    \
-    !defined(CONFIG_NO_STDIO)
+#ifdef DEESYSTEM_FILE_USE_STDIO
 	/* When the STDIO filesystem is used, also flush its buffers.
 	 * Since it doesn't use ours, we need to make sure that its
 	 * buffer implementation is flushed when the user requests
 	 * all buffers to be flushed. */
 	fflush(NULL);
-#endif
+#endif /* DEESYSTEM_FILE_USE_STDIO */
 	return_none;
 err:
 	return NULL;

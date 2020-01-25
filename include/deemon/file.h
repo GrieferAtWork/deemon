@@ -32,16 +32,34 @@
 #include <stdbool.h> /* bool */
 #include <stddef.h>  /* NULL */
 
-#ifndef __INTELLISENSE__
-#ifdef CONFIG_NO_STDIO_H
-#undef CONFIG_HAVE_STDIO_H
-#else /* CONFIG_NO_STDIO_H */
-#define CONFIG_HAVE_STDIO_H 1
-#endif /* !CONFIG_NO_STDIO_H */
-#ifdef CONFIG_HAVE_STDIO_H
-#include <stdio.h>
-#endif /* CONFIG_HAVE_STDIO_H */
-#endif /* !__INTELLISENSE__ */
+#if (!defined(DEESYSTEM_FILE_USE_WINDOWS) && \
+     !defined(DEESYSTEM_FILE_USE_UNIX) &&    \
+     !defined(DEESYSTEM_FILE_USE_STDIO) &&   \
+     !defined(DEESYSTEM_FILE_USE_STUB))
+#ifdef CONFIG_HOST_WINDOWS
+#define DEESYSTEM_FILE_USE_WINDOWS 1
+#elif defined(CONFIG_HOST_UNIX)
+#define DEESYSTEM_FILE_USE_UNIX 1
+#else /* ... */
+#include "system-features.h"
+#if (defined(CONFIG_HAVE_read) || defined(CONFIG_HAVE_write) ||    \
+     defined(CONFIG_HAVE_open) || defined(CONFIG_HAVE_open64) ||   \
+     defined(CONFIG_HAVE_creat) || defined(CONFIG_HAVE_creat64) || \
+     defined(CONFIG_HAVE_close) || defined(CONFIG_HAVE_lseek) ||   \
+     defined(CONFIG_HAVE_lseek64))
+/* Check if there are any fd-based functions available */
+#define DEESYSTEM_FILE_USE_UNIX 1
+#elif (defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64) || \
+       defined(CONFIG_HAVE_fread) || defined(CONFIG_HAVE_fwrite) ||  \
+       defined(CONFIG_HAVE_fgetc) || defined(CONFIG_HAVE_fputc))
+/* Check if there are any FILE-based functions available */
+#define DEESYSTEM_FILE_USE_STDIO 1
+#else /* FILE-based I/O mechanism */
+/* Fallback: Use stub file apis */
+#define DEESYSTEM_FILE_USE_STUB 1
+#endif /* Unknown I/O mechanism */
+#endif /* !... */
+#endif /* !... */
 
 #ifndef SEEK_SET
 #define SEEK_SET 0
@@ -114,40 +132,22 @@ struct Dee_file_object {
  * else:
  *     int
  */
+
 #undef DeeSysFS_IS_HANDLE /* Window's `HANDLE' */
 #undef DeeSysFS_IS_INT    /* Unix's `int' */
 #undef DeeSysFS_IS_FILE   /* Stdio's `FILE *' */
-#if defined(CONFIG_HOST_WINDOWS)
+#if defined(DEESYSTEM_FILE_USE_WINDOWS)
 #define DeeSysFS_IS_HANDLE 1
-#elif defined(CONFIG_HOST_UNIX)
-/* If we're being hosted by a known UNIX system, then we don't
- * have to include <deemon/system-features.h> in order to figure
- * out that int-based file descriptors are being used! */
+#elif defined(DEESYSTEM_FILE_USE_UNIX)
 #define DeeSysFS_IS_INT 1
-#else /* Known-Host-OS... */
-/* Fallback: use `system-features.h' to figure out what's going on! */
-#include "system-features.h"
-
-#if defined(CONFIG_HAVE_read) || defined(CONFIG_HAVE_write) || \
-    defined(CONFIG_HAVE_open) || defined(CONFIG_HAVE_open64) || \
-    defined(CONFIG_HAVE_creat) || defined(CONFIG_HAVE_creat64) || \
-    defined(CONFIG_HAVE_close) || defined(CONFIG_HAVE_lseek) || \
-    defined(CONFIG_HAVE_lseek64)
-/* Check if there are any fd-based functions available */
-#define DeeSysFS_IS_INT 1
-#elif defined(CONFIG_HAVE_fopen) || defined(CONFIG_HAVE_fopen64) || \
-      defined(CONFIG_HAVE_fread) || defined(CONFIG_HAVE_fwrite) || \
-      defined(CONFIG_HAVE_fgetc) || defined(CONFIG_HAVE_fputc)
-/* Check if there are any FILE-based functions available */
+#elif defined(DEESYSTEM_FILE_USE_STDIO)
 #define DeeSysFS_IS_FILE 1
-#else /* FILE-based I/O mechanism */
+#else /* ... */
 /* Fallback: Just assume FD-based file I/O (even though at this point
  *           it's most likely that no I/O at all is supported, which
  *           will cause the deemon sources to stub out most APIs...) */
 #define DeeSysFS_IS_INT 1
-#endif /* Unknown I/O mechanism */
-
-#endif /* Unknown-Host-OS... */
+#endif /* !... */
 
 #define DeeSysFD_HANDLE_GETSET  "osfhandle_np"
 #define DeeSysFD_INT_GETSET     "fileno_np"

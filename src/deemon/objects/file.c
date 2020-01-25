@@ -620,6 +620,7 @@ err_result_ob:
 err:
 	return DeeSysFD_INVALID;
 #else /* DeeSysFD_GETSET */
+	(void)self;
 	DeeError_Throwf(&DeeError_UnsupportedAPI,
 	                "System file descriptors cannot be bound to objects");
 	return DeeSysFD_INVALID;

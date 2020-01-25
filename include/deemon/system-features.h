@@ -5357,6 +5357,10 @@ var("__environ");
 #endif
 
 
+#if 1
+#define CONFIG_HAVE_fopen_binary 1 /* fopen() accepts the "b" mode flag */
+#endif
+
 
 /* Substitute some known function aliases */
 #if defined(CONFIG_HAVE__exit) && !defined(CONFIG_HAVE__Exit)
@@ -7170,6 +7174,5 @@ for (local x: [1:n+1]) {
 #define DeeSystem_DlOpen_USE_STUB 1
 #endif
 #endif /* CONFIG_BUILDING_DEEMON */
-
 
 #endif /* !GUARD_DEEMON_SYSTEM_FEATURES_H */

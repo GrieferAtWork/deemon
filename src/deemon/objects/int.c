@@ -3148,10 +3148,10 @@ PRIVATE struct type_member int_class_members[] = {
 	                      "in deemon as ${(size_t from ctypes).max}\n"
 	                      "Note that this value is guarantied to be sufficiently great, such that "
 	                      "a sequence consisting of SIZE_MAX elements, each addressed as its own "
-	                      "member, or modifyable index in some array, is impossible to achive due "
+	                      "member, or modifiable index in some array, is impossible to achieve due "
 	                      "to memory constraints.\n"
 	                      "In this implementation, $SIZE_MAX is ${2**31} on 32-bit hosts, and ${2**63} on 64-bit hosts\n"
-	                      "Custom, mutable sequences with sizes greater than this may expirience inaccuracies "
+	                      "Custom, mutable sequences with sizes greater than this may experience inaccuracies "
 	                      "with the default implementation of function such as :Sequence.insert's index-argument "
 	                      "potentially not being able to correctly determine if a negative or positive number was given\n"
 	                      "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"),

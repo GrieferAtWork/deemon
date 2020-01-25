@@ -41,6 +41,8 @@
 
 #include <deemon/api.h>
 
+/* TODO: Select implementations on a per-function basis! */
+
 /* Select the host-specific filesystem implementation. */
 #ifdef CONFIG_HOST_WINDOWS
 #include "windows.c.inl"

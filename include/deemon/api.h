@@ -142,7 +142,6 @@
 DECL_BEGIN
 
 /* #define CONFIG_NO_THREADS 1 */
-/* #define CONFIG_NO_STDIO 1 */
 
 /* CONFIG:  Enable tracing of all incref()s and decref()s that
  *          happen to an object over the course of its lifetime.

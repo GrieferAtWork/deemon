@@ -314,7 +314,7 @@ from ctypes import
  *       context for opening other files in order to produce format
  *       output.
  * In deemon 200+ this is no longer necessary because PWD
- * will have already been set to what the above would achive,
+ * will have already been set to what the above would achieve,
  * with the following code undoing the directory change done
  * by such code.
  */
@@ -326,7 +326,7 @@ from ctypes import
 		__fs.chdir("../" * __rel.replace("\\","/").count("/"));
 }
 
-#endif
+#endif /* __FORMAT__ && __FORMAT_SCRIPT__ */
 
 
 

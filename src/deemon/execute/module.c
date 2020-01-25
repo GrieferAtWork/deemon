@@ -1337,7 +1337,7 @@ DeeModule_ViewGlobals(DeeObject *__restrict self);
 PRIVATE struct type_getset module_getsets[] = {
 	{ "__exports__", &DeeModule_ViewExports, NULL, NULL,
 	  DOC("->?S?T2?Dstring?O\n"
-	      "Returns a modifyable mapping-like object containing @this "
+	      "Returns a modifiable mapping-like object containing @this "
 	      "Module's global variables accessible by name (and enumerable)\n"
 	      "Note that only existing exports can be modified, however no new symbols can be added:\n"
 	      ">import util;\n"
