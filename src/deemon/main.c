@@ -53,10 +53,10 @@
 #undef chdir
 #include <direct.h> /* chdir() */
 #define chdir _chdir
-#else               /* _MSC_VER */
+#else /* _MSC_VER */
 #include <unistd.h> /* chdir() */
-#endif              /* !_MSC_VER */
-#endif              /* !CONFIG_HOST_WINDOWS */
+#endif /* !_MSC_VER */
+#endif /* !CONFIG_HOST_WINDOWS */
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
@@ -1029,7 +1029,7 @@ err_nofp:
 }
 
 
-PRIVATE int DCALL compiler_setup(void *UNUSED(arg)) {
+PRIVATE int DCALL compiler_setup(void *arg) {
 	/* Define a macro `__MAIN__' in order to indicate to script/module
 	 * hybrid source files that they are being executed as a script.
 	 * Using macros for this case is OK because when executed as a
@@ -1043,7 +1043,7 @@ PRIVATE int DCALL compiler_setup(void *UNUSED(arg)) {
 	/* - Add pre-defined macros passed through `-D' */
 	/* - Add pre-defined assertions passed through `-A' */
 	/* - Set misc. lexer context/flags based on the commandline. */
-	return cmd_runlate();
+	return cmd_runlate(arg == NULL);
 }
 
 PRIVATE int DCALL
@@ -2562,9 +2562,31 @@ operation_mode_format(int argc, char **argv) {
 	 * tinker with the compiler while the main thread is trying to
 	 * format the original source file. */
 	recursive_rwlock_write(&DeeCompiler_Lock);
+	/* Keep `co_setup_arg' non-NULL until the last file.
+	 * This is required to keep `cmd_runlate()' from freeing
+	 * up `late_options.lco_optv' when it would still be used
+	 * afterwards. */
+	script_options.co_setup_arg = (void *)(uintptr_t)1;
 	/* Go over all input files and format them individually. */
 	for (i = 0; i < argc; ++i) {
-		if (dchdir_and_format_source_files(argv[i]))
+		char *filename;
+		filename = argv[i];
+		if (i == argc - 1)
+			script_options.co_setup_arg = NULL;
+		if (argc > 1) {
+			DREF DeeObject *fp;
+			dssize_t temp;
+			fp = DeeFile_GetStd(DEE_STDOUT);
+			if unlikely(!fp)
+				goto err;
+			temp = DeeFile_WriteAll(fp, filename, strlen(filename));
+			if (temp >= 0)
+				temp = DeeFile_WriteAll(fp, ":\n", 2);
+			Dee_Decref(fp);
+			if unlikely(temp < 0)
+				goto err;
+		}
+		if (dchdir_and_format_source_files(filename))
 			goto err;
 	}
 	recursive_rwlock_endwrite(&DeeCompiler_Lock);
