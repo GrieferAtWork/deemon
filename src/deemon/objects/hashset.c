@@ -1946,12 +1946,12 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */set_methods,
-	/* .tp_getsets       = */hashset_getsets,
+	/* .tp_methods       = */ set_methods,
+	/* .tp_getsets       = */ hashset_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */set_class_members
+	/* .tp_class_members = */ set_class_members
 };
 
 DECL_END

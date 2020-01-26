@@ -291,7 +291,7 @@ done:
 /* NOTE: _Always_ inherits references to `key' */
 PRIVATE int DCALL
 insert(DREF Set *__restrict self, size_t mask,
-       DREF DeeObject *__restrict key) {
+       /*inherit(always)*/ DREF DeeObject *__restrict key) {
 	size_t i, perturb, hash;
 	struct roset_item *item;
 	hash    = DeeObject_Hash(key);
@@ -307,8 +307,10 @@ insert(DREF Set *__restrict self, size_t mask,
 		error = DeeObject_CompareEq(key, item->si_key);
 		if unlikely(error < 0)
 			goto err;
-		if (error)
+		if (error) {
+			Dee_Decref(key);
 			return 1; /* It _is_ the same key! */
+		}
 	}
 	/* Fill in the item. */
 	item->si_hash = hash;
