@@ -67,55 +67,55 @@ public:
 	bool(parity)() const {
 		return Object(inherit(DeeObject_CallAttrString(*this, "parity", 0, NULL))).bool_();
 	}
-#define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)    \
-	Treturn(name)(DeeObject *elem) const; \
-	Treturn(name)(DeeObject *elem, DeeObject *key) const;
+#define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name) \
+	inline Treturn(name)(DeeObject *elem) const;   \
+	inline Treturn(name)(DeeObject *elem, DeeObject *key) const;
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, count)
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, locate)
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, rlocate)
 #undef DEFINE_ELEM_SEARCH_FUNCTION
 #define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                 \
-	Treturn(name)(DeeObject *elem) const {                             \
+	Treturn(name)(DeeObject *elem) const {                                         \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));        \
 	}                                                                              \
-	Treturn(name)(DeeObject *elem, DeeObject *key) const { \
+	Treturn(name)(DeeObject *elem, DeeObject *key) const {                         \
 		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));  \
 	}
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::bool_, contains)
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::bool_, startswith)
 	DEFINE_ELEM_SEARCH_FUNCTION(deemon::bool_, endswith)
 #undef DEFINE_ELEM_SEARCH_FUNCTION
-#define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                \
-	Treturn(name)(DeeObject *elem) const;                                           \
-	Treturn(name)(DeeObject *elem, DeeObject *key) const;               \
-	Treturn(name)(DeeObject *elem, size_t start) const;                             \
-	Treturn(name)(DeeObject *elem, size_t start, DeeObject *key) const; \
-	Treturn(name)(DeeObject *elem, size_t start, size_t end) const;                 \
-	Treturn(name)(DeeObject *elem, size_t start, size_t end, DeeObject *key) const;
+#define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                               \
+	inline Treturn(name)(DeeObject *elem) const;                               \
+	inline Treturn(name)(DeeObject *elem, DeeObject *key) const;               \
+	inline Treturn(name)(DeeObject *elem, size_t start) const;                 \
+	inline Treturn(name)(DeeObject *elem, size_t start, DeeObject *key) const; \
+	inline Treturn(name)(DeeObject *elem, size_t start, size_t end) const;     \
+	inline Treturn(name)(DeeObject *elem, size_t start, size_t end, DeeObject *key) const;
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, find)
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, rfind)
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, index)
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, rindex)
 	DEFINE_ELEM_FIND_FUNCTION(deemon::int_, removeall)
 #undef DEFINE_ELEM_FIND_FUNCTION
-#define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                             \
-	Treturn(name)(DeeObject *elem) const {                                                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                                  \
-	}                                                                                                        \
-	Treturn(name)(DeeObject *elem, DeeObject *key) const {                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                            \
-	}                                                                                                        \
-	Treturn(name)(DeeObject *elem, size_t start) const {                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", elem, start));                         \
-	}                                                                                                        \
-	Treturn(name)(DeeObject *elem, size_t start, DeeObject *key) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", elem, start, key));                   \
-	}                                                                                                        \
-	Treturn(name)(DeeObject *elem, size_t start, size_t end) const {                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", elem, start, end));                  \
-	}                                                                                                        \
-	Treturn(name)(DeeObject *elem, size_t start, size_t end, DeeObject *key) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", elem, start, end, key));            \
+#define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                  \
+	Treturn(name)(DeeObject *elem) const {                                                        \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                       \
+	}                                                                                             \
+	Treturn(name)(DeeObject *elem, DeeObject *key) const {                                        \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                 \
+	}                                                                                             \
+	Treturn(name)(DeeObject *elem, size_t start) const {                                          \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", elem, start));              \
+	}                                                                                             \
+	Treturn(name)(DeeObject *elem, size_t start, DeeObject *key) const {                          \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", elem, start, key));        \
+	}                                                                                             \
+	Treturn(name)(DeeObject *elem, size_t start, size_t end) const {                              \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", elem, start, end));       \
+	}                                                                                             \
+	Treturn(name)(DeeObject *elem, size_t start, size_t end, DeeObject *key) const {              \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", elem, start, end, key)); \
 	}
 	DEFINE_ELEM_FIND_FUNCTION(deemon::bool_, remove)
 	DEFINE_ELEM_FIND_FUNCTION(deemon::bool_, rremove)
@@ -299,29 +299,29 @@ public:
 	}
 
 public: /* Static functions. */
-	static Sequence<deemon::int_>(makerange)(Dee_ssize_t end);
-	static Sequence<deemon::int_>(makerange)(Dee_ssize_t start, Dee_ssize_t end);
-	static Sequence<deemon::int_>(makerange)(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step);
-	static Sequence<deemon::int_>(makerange)(Dee_ssize_t start, Dee_ssize_t end, DeeObject *step);
-	static Sequence<deemon::int_>(makerange)(Dee_ssize_t start, DeeObject *end);
-	static Sequence<deemon::int_>(makerange)(Dee_ssize_t start, DeeObject *end, Dee_ssize_t step);
-	static Sequence<deemon::int_>(makerange)(Dee_ssize_t start, DeeObject *end, DeeObject *step);
-	static Sequence<deemon::int_>(makerange)(DeeObject *start, Dee_ssize_t end);
-	static Sequence<deemon::int_>(makerange)(DeeObject *start, Dee_ssize_t end, Dee_ssize_t step);
-	static Sequence<deemon::int_>(makerange)(DeeObject *start, Dee_ssize_t end, DeeObject *step);
-	static Sequence<deemon::int_>(makerange)(DeeObject *start, DeeObject *end, Dee_ssize_t step);
-	static Sequence<Object>(makerange)(DeeObject *end);
-	static Sequence<Object>(makerange)(DeeObject *start, DeeObject *end);
-	static Sequence<Object>(makerange)(DeeObject *start, DeeObject *end, DeeObject *step);
-	static Sequence<Object>(repeat)(DeeObject *item, size_t count);
-	static Sequence<Object>(repeat)(DeeObject *item, DeeObject *count);
-	static Sequence<Object>(repeatseq)(DeeObject *seq, size_t count);
-	static Sequence<Object>(repeatseq)(DeeObject *seq, DeeObject *count);
-	static Sequence<Object>(concat)(size_t nseq, DeeObject **seqv);
-	static Sequence<Object>(concat)(size_t nseq, DeeObject *const *seqv);
-	static Sequence<Object>(concat)(size_t nseq, Object **seqv);
-	static Sequence<Object>(concat)(size_t nseq, Object *const *seqv);
-	static Sequence<Object>(concat)(std::initializer_list<DeeObject *> const &sequences);
+	static inline Sequence<deemon::int_>(makerange)(Dee_ssize_t end);
+	static inline Sequence<deemon::int_>(makerange)(Dee_ssize_t start, Dee_ssize_t end);
+	static inline Sequence<deemon::int_>(makerange)(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step);
+	static inline Sequence<deemon::int_>(makerange)(Dee_ssize_t start, Dee_ssize_t end, DeeObject *step);
+	static inline Sequence<deemon::int_>(makerange)(Dee_ssize_t start, DeeObject *end);
+	static inline Sequence<deemon::int_>(makerange)(Dee_ssize_t start, DeeObject *end, Dee_ssize_t step);
+	static inline Sequence<deemon::int_>(makerange)(Dee_ssize_t start, DeeObject *end, DeeObject *step);
+	static inline Sequence<deemon::int_>(makerange)(DeeObject *start, Dee_ssize_t end);
+	static inline Sequence<deemon::int_>(makerange)(DeeObject *start, Dee_ssize_t end, Dee_ssize_t step);
+	static inline Sequence<deemon::int_>(makerange)(DeeObject *start, Dee_ssize_t end, DeeObject *step);
+	static inline Sequence<deemon::int_>(makerange)(DeeObject *start, DeeObject *end, Dee_ssize_t step);
+	static inline Sequence<Object>(makerange)(DeeObject *end);
+	static inline Sequence<Object>(makerange)(DeeObject *start, DeeObject *end);
+	static inline Sequence<Object>(makerange)(DeeObject *start, DeeObject *end, DeeObject *step);
+	static inline Sequence<Object>(repeat)(DeeObject *item, size_t count);
+	static inline Sequence<Object>(repeat)(DeeObject *item, DeeObject *count);
+	static inline Sequence<Object>(repeatseq)(DeeObject *seq, size_t count);
+	static inline Sequence<Object>(repeatseq)(DeeObject *seq, DeeObject *count);
+	static inline Sequence<Object>(concat)(size_t nseq, DeeObject **seqv);
+	static inline Sequence<Object>(concat)(size_t nseq, DeeObject *const *seqv);
+	static inline Sequence<Object>(concat)(size_t nseq, Object **seqv);
+	static inline Sequence<Object>(concat)(size_t nseq, Object *const *seqv);
+	static inline Sequence<Object>(concat)(std::initializer_list<DeeObject *> const &sequences);
 };
 }
 
@@ -346,10 +346,10 @@ public: /* iterator from deemon */
 	}
 };
 
-deemon::Iterator<Object> Object::iter() const {
+inline deemon::Iterator<Object> Object::iter() const {
 	return inherit(DeeObject_IterSelf(*this));
 }
-template<class T> deemon::Iterator<T> Object::iter() const {
+template<class T> inline deemon::Iterator<T> Object::iter() const {
 	return inherit(DeeObject_IterSelf(*this));
 }
 
@@ -792,8 +792,17 @@ public: /* sequence from deemon */
 	WUNUSED item_proxy_obj operator[](DeeObject *index) const {
 		return item_proxy_obj(*this, index);
 	}
-	WUNUSED item_proxy_idx operator[](size_t index) const {
-		return item_proxy_idx(*this, index);
+	WUNUSED item_proxy_idx operator[](int index) const {
+		return item_proxy_idx(*this, (size_t)(unsigned int)index);
+	}
+	WUNUSED item_proxy_idx operator[](unsigned int index) const {
+		return item_proxy_idx(*this, (size_t)index);
+	}
+	WUNUSED item_proxy_idx operator[](long index) const {
+		return item_proxy_idx(*this, (size_t)(unsigned long)index);
+	}
+	WUNUSED item_proxy_idx operator[](unsigned long index) const {
+		return item_proxy_idx(*this, (size_t)index);
 	}
 	WUNUSED item_proxy_sth operator[](char const *name) const {
 		return item_proxy_sth(*this, name);
@@ -862,12 +871,12 @@ public: /* sequence from deemon */
 	WUNUSED T(max)(DeeObject *key) const {
 		return inherit(DeeObject_CallAttrStringf(*this, "max", "o", key));
 	}
-#define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                         \
-	WUNUSED Treturn(name)(DeeObject *elem) const {                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                \
-	}                                                                                      \
-	WUNUSED Treturn(name)(DeeObject *elem, DeeObject *key) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));          \
+#define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                \
+	WUNUSED Treturn(name)(DeeObject *elem) const {                                \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));       \
+	}                                                                             \
+	WUNUSED Treturn(name)(DeeObject *elem, DeeObject *key) const {                \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key)); \
 	}
 	DEFINE_ELEM_SEARCH_FUNCTION(Sequence, locateall)
 #undef DEFINE_ELEM_SEARCH_FUNCTION
@@ -1111,121 +1120,147 @@ public:
 	}
 };
 
-Sequence<Object> detail::sequence_base::makerange(DeeObject *end) {
+inline Sequence<Object> detail::sequence_base::makerange(DeeObject *end) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "o", end));
 }
-Sequence<Object> detail::sequence_base::makerange(DeeObject *start, DeeObject *end) {
+
+inline Sequence<Object> detail::sequence_base::makerange(DeeObject *start, DeeObject *end) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "oo", start, end));
 }
-Sequence<Object> detail::sequence_base::makerange(DeeObject *start, DeeObject *end, DeeObject *step) {
+
+inline Sequence<Object> detail::sequence_base::makerange(DeeObject *start, DeeObject *end, DeeObject *step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "ooo", start, end, step));
 }
-Sequence<Object> detail::sequence_base::repeat(DeeObject *item, size_t count) {
+
+inline Sequence<Object> detail::sequence_base::repeat(DeeObject *item, size_t count) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "repeat", "oIu", item, count));
 }
-Sequence<Object> detail::sequence_base::repeat(DeeObject *item, DeeObject *count) {
+
+inline Sequence<Object> detail::sequence_base::repeat(DeeObject *item, DeeObject *count) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "repeat", "oo", item, count));
 }
-Sequence<Object> detail::sequence_base::repeatseq(DeeObject *seq, size_t count) {
+
+inline Sequence<Object> detail::sequence_base::repeatseq(DeeObject *seq, size_t count) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "repeatseq", "oIu", seq, count));
 }
-Sequence<Object> detail::sequence_base::repeatseq(DeeObject *seq, DeeObject *count) {
+
+inline Sequence<Object> detail::sequence_base::repeatseq(DeeObject *seq, DeeObject *count) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "repeatseq", "oo", seq, count));
 }
-Sequence<Object> detail::sequence_base::concat(size_t nseq, DeeObject **seqv) {
+
+inline Sequence<Object> detail::sequence_base::concat(size_t nseq, DeeObject **seqv) {
 	return inherit(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "concat", nseq, seqv));
 }
-Sequence<Object> detail::sequence_base::concat(size_t nseq, DeeObject *const *seqv) {
+
+inline Sequence<Object> detail::sequence_base::concat(size_t nseq, DeeObject *const *seqv) {
 	return inherit(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "concat", nseq, (DeeObject **)seqv));
 }
-Sequence<Object> detail::sequence_base::concat(size_t nseq, Object **seqv) {
+
+inline Sequence<Object> detail::sequence_base::concat(size_t nseq, Object **seqv) {
 	return inherit(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "concat", nseq, (DeeObject **)seqv));
 }
-Sequence<Object> detail::sequence_base::concat(size_t nseq, Object *const *seqv) {
+
+inline Sequence<Object> detail::sequence_base::concat(size_t nseq, Object *const *seqv) {
 	return inherit(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "concat", nseq, (DeeObject **)seqv));
 }
-Sequence<Object> detail::sequence_base::concat(std::initializer_list<DeeObject *> const &sequences) {
+
+inline Sequence<Object> detail::sequence_base::concat(std::initializer_list<DeeObject *> const &sequences) {
 	return inherit(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "concat", sequences.size(), (DeeObject **)sequences.begin()));
 }
 
 #ifdef GUARD_DEEMON_CXX_INT_H
-deemon::int_ detail::sequence_base::erase(size_t index) const {
+inline deemon::int_ detail::sequence_base::erase(size_t index) const {
 	return inherit(DeeObject_CallAttrStringf(*this, "erase", "Iu", index));
 }
-deemon::int_ detail::sequence_base::erase(size_t index, size_t count) const {
+
+inline deemon::int_ detail::sequence_base::erase(size_t index, size_t count) const {
 	return inherit(DeeObject_CallAttrStringf(*this, "erase", "IuIu", index, count));
 }
-deemon::int_ detail::sequence_base::erase(DeeObject *index) const {
+
+inline deemon::int_ detail::sequence_base::erase(DeeObject *index) const {
 	return inherit(DeeObject_CallAttrStringf(*this, "erase", "o", index));
 }
-deemon::int_ detail::sequence_base::erase(DeeObject *index, size_t count) const {
+
+inline deemon::int_ detail::sequence_base::erase(DeeObject *index, size_t count) const {
 	return inherit(DeeObject_CallAttrStringf(*this, "erase", "oIu", index, count));
 }
-deemon::int_ detail::sequence_base::erase(DeeObject *index, DeeObject *count) const {
+
+inline deemon::int_ detail::sequence_base::erase(DeeObject *index, DeeObject *count) const {
 	return inherit(DeeObject_CallAttrStringf(*this, "erase", "oo", index, count));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t end) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t end) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "Id", end));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "IdId", start, end));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, Dee_ssize_t step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "IdIdId", start, end, step));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, DeeObject *step) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, Dee_ssize_t end, DeeObject *step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "IdIdo", start, end, step));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *end) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *end) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "Ido", start, end));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *end, Dee_ssize_t step) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *end, Dee_ssize_t step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "IdoId", start, end, step));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *end, DeeObject *step) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(Dee_ssize_t start, DeeObject *end, DeeObject *step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "Idoo", start, end, step));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, Dee_ssize_t end) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, Dee_ssize_t end) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "oId", start, end));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, Dee_ssize_t end, Dee_ssize_t step) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, Dee_ssize_t end, Dee_ssize_t step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "oIdId", start, end, step));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, Dee_ssize_t end, DeeObject *step) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, Dee_ssize_t end, DeeObject *step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "oIdo", start, end, step));
 }
-Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, DeeObject *end, Dee_ssize_t step) {
+
+inline Sequence<deemon::int_> detail::sequence_base::makerange(DeeObject *start, DeeObject *end, Dee_ssize_t step) {
 	return inherit(DeeObject_CallAttrStringf((DeeObject *)&DeeSeq_Type, "range", "ooId", start, end, step));
 }
-#define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                                        \
-	Treturn(detail::sequence_base::name)(DeeObject *elem) const {                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                               \
-	}                                                                                                     \
-	Treturn(detail::sequence_base::name)(DeeObject *elem, DeeObject *key) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                         \
+#define DEFINE_ELEM_SEARCH_FUNCTION(Treturn, name)                                       \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem) const {                 \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));              \
+	}                                                                                    \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem, DeeObject *key) const { \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));        \
 	}
 DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, count)
 DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, locate)
 DEFINE_ELEM_SEARCH_FUNCTION(deemon::int_, rlocate)
 #undef DEFINE_ELEM_SEARCH_FUNCTION
-#define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                                                    \
-	Treturn(detail::sequence_base::name)(DeeObject *elem) const {                                                       \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                                                         \
-	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject *elem, DeeObject *key) const {                           \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                                                   \
-	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start) const {                                         \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", elem, start));                                                \
-	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start, DeeObject *key) const {             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", elem, start, key));                                          \
-	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start, size_t end) const {                             \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", elem, start, end));                                         \
-	}                                                                                                                               \
-	Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start, size_t end, DeeObject *key) const { \
-		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", elem, start, end, key));                                   \
+#define DEFINE_ELEM_FIND_FUNCTION(Treturn, name)                                                                   \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem) const {                                           \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "o", elem));                                        \
+	}                                                                                                              \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem, DeeObject *key) const {                           \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oo", elem, key));                                  \
+	}                                                                                                              \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start) const {                             \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIu", elem, start));                               \
+	}                                                                                                              \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start, DeeObject *key) const {             \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuo", elem, start, key));                         \
+	}                                                                                                              \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start, size_t end) const {                 \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIu", elem, start, end));                        \
+	}                                                                                                              \
+	inline Treturn(detail::sequence_base::name)(DeeObject *elem, size_t start, size_t end, DeeObject *key) const { \
+		return inherit(DeeObject_CallAttrStringf(*this, #name, "oIuIuo", elem, start, end, key));                  \
 	}
 DEFINE_ELEM_FIND_FUNCTION(deemon::int_, find)
 DEFINE_ELEM_FIND_FUNCTION(deemon::int_, rfind)

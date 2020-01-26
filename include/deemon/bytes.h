@@ -105,18 +105,28 @@ DDATDEF DeeObject                     DeeBytes_Empty;
 
 
 
-/* Construct a bytes-buffer from `self', using the generic object-buffer interface. */
+/* Construct a bytes-buffer from `self', using the generic object-buffer interface.
+ * @param: flags: Set of `Dee_BUFFER_FREADONLY | Dee_BUFFER_FWRITABLE' */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Bytes(DeeObject *__restrict self,
                 unsigned int flags,
                 size_t start, size_t end);
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeBytes_NewBufferUninitialized(size_t num_bytes);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
-DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self, size_t num_bytes);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
+
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeBytes_NewBufferUninitialized(size_t num_bytes);
+
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes);
+
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t num_bytes);
+
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeBytes_TruncateBuffer(/*inherit(always)*/ DREF DeeObject *__restrict self, size_t num_bytes);
 
 /* Constructs a byte-view for data in `base...+=num_bytes' held by `owner'.
  * The given `flags' determines if the view is read-only, or can be modified.
@@ -126,22 +136,31 @@ DeeBytes_NewView(DeeObject *owner, void *base,
                  size_t num_bytes, unsigned int flags);
 
 #ifdef __INTELLISENSE__
-#define DeeBytes_NewSubView(self, base, num_bytes) \
-	DeeBytes_NewView((self)->b_orig, base, num_bytes, (self)->b_flags)
-#define DeeBytes_NewSubViewRo(self, base, num_bytes) \
-	DeeBytes_NewView((self)->b_orig, base, num_bytes, (self)->b_flags & ~Dee_BUFFER_FWRITABLE)
+#define DeeBytes_NewSubView(self, base, num_bytes)                                           \
+	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_orig, base, num_bytes, \
+	                 ((DeeBytesObject *)(self))->b_flags)
+#define DeeBytes_NewSubViewRo(self, base, num_bytes)                                                   \
+	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_orig, (void *)(base), num_bytes, \
+	                 ((DeeBytesObject *)(self))->b_flags & ~Dee_BUFFER_FWRITABLE)
 #else /* __INTELLISENSE__ */
-#define DeeBytes_NewSubView(self, base, num_bytes)                                   \
-	DeeBytes_NewView((self)->b_buffer.bb_put ? (DeeObject *)(self) : (self)->b_orig, \
-	                 base, num_bytes, (self)->b_flags)
+#define DeeBytes_NewSubView(self, base, num_bytes)                                  \
+	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_buffer.bb_put \
+	                 ? (DeeObject *)(self)                                          \
+	                 : ((DeeBytesObject *)(self))->b_orig,                          \
+	                 base, num_bytes, ((DeeBytesObject *)(self))->b_flags)
 #if Dee_BUFFER_FMASK == Dee_BUFFER_FWRITABLE
-#define DeeBytes_NewSubViewRo(self, base, num_bytes)                                 \
-	DeeBytes_NewView((self)->b_buffer.bb_put ? (DeeObject *)(self) : (self)->b_orig, \
-	                 base, num_bytes, Dee_BUFFER_FREADONLY)
+#define DeeBytes_NewSubViewRo(self, base, num_bytes)                                \
+	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_buffer.bb_put \
+	                 ? (DeeObject *)(self)                                          \
+	                 : ((DeeBytesObject *)(self))->b_orig,                          \
+	                 (void *)(base), num_bytes, Dee_BUFFER_FREADONLY)
 #else /* Dee_BUFFER_FMASK == Dee_BUFFER_FWRITABLE */
-#define DeeBytes_NewSubViewRo(self, base, num_bytes)                                 \
-	DeeBytes_NewView((self)->b_buffer.bb_put ? (DeeObject *)(self) : (self)->b_orig, \
-	                 base, num_bytes, (self)->b_flags & ~Dee_BUFFER_FWRITABLE)
+#define DeeBytes_NewSubViewRo(self, base, num_bytes)                                \
+	DeeBytes_NewView(((DeeBytesObject *)Dee_REQUIRES_OBJECT(self))->b_buffer.bb_put \
+	                 ? (DeeObject *)(self)                                          \
+	                 : ((DeeBytesObject *)(self))->b_orig,                          \
+	                 (void *)(base), num_bytes,                                     \
+	                 ((DeeBytesObject *)(self))->b_flags & ~Dee_BUFFER_FWRITABLE)
 #endif /* Dee_BUFFER_FMASK != Dee_BUFFER_FWRITABLE */
 #endif /* !__INTELLISENSE__ */
 

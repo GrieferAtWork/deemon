@@ -678,9 +678,9 @@ DFUNDEF WUNUSED DREF DeeObject *
 #define DeeInt_AsLong(self, result)    DeeInt_AsS(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(long *, result))
 #define DeeInt_AsULong(self, result)   DeeInt_AsU(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(unsigned long *, result))
 #ifdef __COMPILER_HAVE_LONGLONG
-#define DeeInt_AsLLong(self, result)   DeeInt_AsS(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(long long *, result))
-#define DeeInt_AsULLong(self, result)  DeeInt_AsU(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(unsigned long long *, result))
-#endif
+#define DeeInt_AsLLong(self, result)   DeeInt_AsS(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__LONGLONG *, result))
+#define DeeInt_AsULLong(self, result)  DeeInt_AsU(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__ULONGLONG *, result))
+#endif /* __COMPILER_HAVE_LONGLONG */
 #define DeeInt_AsSize(self, result)    DeeInt_AsU(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(size_t *, result))
 #define DeeInt_AsSSize(self, result)   DeeInt_AsS(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(Dee_ssize_t *, result))
 #define DeeInt_AsPtrdiff(self, result) DeeInt_AsS(__SIZEOF_PTRDIFF_T__, self, DEE_REQUIRES_TYPE(ptrdiff_t *, result))

@@ -144,16 +144,16 @@ public:
 	bool(isatty)() const {
 		return throw_if_negative(DeeFile_IsAtty(*this)) != 0;
 	}
-	DeeSysFD (getsysfd)() const {
+	DeeSysFD(getsysfd)() const {
 		DeeSysFD result = DeeFile_GetSysFD(*this);
 		if unlikely(result == DeeSysFD_INVALID)
 			throw_last_deemon_exception();
 		return result;
 	}
-	string(filename)() const;
-	string(readline)(size_t max_length = (size_t)-1, bool keep_lf = true) const;
-	string(read)(size_t max_length = (size_t)-1, bool readall = false) const;
-	string(pread)(Dee_pos_t pos, size_t max_length = (size_t)-1, bool readall = false) const;
+	inline string(filename)() const;
+	inline Bytes(readline)(size_t max_length = (size_t)-1, bool keep_lf = true) const;
+	inline Bytes(read)(size_t max_length = (size_t)-1, bool readall = false) const;
+	inline Bytes(pread)(Dee_pos_t pos, size_t max_length = (size_t)-1, bool readall = false) const;
 	size_t(printf)(char const *__restrict format, ...) const {
 		Dee_ssize_t result;
 		va_list args;
@@ -304,7 +304,7 @@ public:
 	Writer()
 	    : File(inherit(DeeFile_OpenWriter())) {}
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Writer, File)
-	deemon::string(string)() const;
+	inline deemon::string(string)() const;
 	Writer const &operator<<(DeeObject *__restrict right) const {
 		printobj(right);
 		return *this;
@@ -382,19 +382,24 @@ public:
 inline string(File::filename)() const {
 	return inherit(DeeFile_Filename(*this));
 }
-inline string(File::readline)(size_t max_length, bool keep_lf) const {
-	return inherit(DeeFile_ReadLine(*this, max_length, keep_lf));
-}
-inline string(File::read)(size_t max_length, bool readall) const {
-	return inherit(DeeFile_ReadText(*this, max_length, readall));
-}
-inline string(File::pread)(Dee_pos_t pos, size_t max_length, bool readall) const {
-	return inherit(DeeFile_PReadText(*this, max_length, pos, readall));
-}
 inline deemon::string(File::Writer::string)() const {
-	return inherit(DeeObject_InstanceOfExact(this->ptr(), (DeeTypeObject *)&DeeFileWriter_Type) ? DeeFileWriter_GetString(*this) : DeeObject_GetAttrString(*this, "string"));
+	return inherit(DeeObject_InstanceOfExact(this->ptr(), (DeeTypeObject *)&DeeFileWriter_Type)
+	               ? DeeFileWriter_GetString(*this)
+	               : DeeObject_GetAttrString(*this, "string"));
 }
 #endif /* GUARD_DEEMON_CXX_STRING_H */
+
+#ifdef GUARD_DEEMON_CXX_BYTES_H
+inline Bytes(File::readline)(size_t max_length, bool keep_lf) const {
+	return inherit(DeeFile_ReadLine(*this, max_length, keep_lf));
+}
+inline Bytes(File::read)(size_t max_length, bool readall) const {
+	return inherit(DeeFile_ReadText(*this, max_length, readall));
+}
+inline Bytes(File::pread)(Dee_pos_t pos, size_t max_length, bool readall) const {
+	return inherit(DeeFile_PReadText(*this, max_length, pos, readall));
+}
+#endif /* GUARD_DEEMON_CXX_BYTES_H */
 
 DEE_CXX_END
 

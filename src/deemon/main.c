@@ -1332,7 +1332,7 @@ done:
 	Dee_Shutdown();
 
 #undef CONFIG_ALWAYS_LOG_LEAKS
-#if !defined(NDEBUG) && 0
+#if !defined(NDEBUG) && 1
 #define CONFIG_ALWAYS_LOG_LEAKS 1
 #endif
 

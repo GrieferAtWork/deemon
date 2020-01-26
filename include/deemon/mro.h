@@ -30,7 +30,7 @@
 
 DECL_BEGIN
 
-/* MRO -- Method (or rather attribute) Resolution Order.
+/* MRO -- Method (or rather Attribute) Resolution Order.
  *
  * Defines all the functions and types (except for `membercache' itself,
  * which needs to be defined in `object.h', because it appears 2x as an
@@ -77,7 +77,7 @@ struct Dee_membercache_slot {
 			char const                 *a_name; /* [1..1][const][== DeeString_STR(a_attr->ca_name)] The attribute attr. */
 			struct Dee_class_attribute *a_attr; /* [1..1][const] The class attribute. */
 			struct Dee_class_desc      *a_desc; /* [1..1][const][== DeeClass_DESC(mcs_decl)] The class implementing the attribute. */
-		}                  mcs_attrib; /* [valid_if(mcs_type == MEMBERCACHE_ATTRIB || mcs_type == MEMBERCACHE_INSTANCE_ATTRIB)] */
+		} mcs_attrib; /* [valid_if(mcs_type == MEMBERCACHE_ATTRIB || mcs_type == MEMBERCACHE_INSTANCE_ATTRIB)] */
 	};
 };
 

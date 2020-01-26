@@ -171,10 +171,10 @@ inline unsigned long (DCALL throw_if_negative)(long x) {
 	return (unsigned long)x;
 }
 #ifdef __COMPILER_HAVE_LONGLONG
-inline unsigned long long (DCALL throw_if_negative)(long long x) {
+inline __ULONGLONG (DCALL throw_if_negative)(__LONGLONG x) {
 	if unlikely(x < 0ll)
 		throw_last_deemon_exception();
-	return (unsigned long long)x;
+	return (__ULONGLONG)x;
 }
 #endif /* __COMPILER_HAVE_LONGLONG */
 inline unsigned int (DCALL throw_if_nonzero)(int x) {
@@ -193,8 +193,8 @@ inline unsigned long (DCALL throw_if_minusone)(unsigned long x) {
 	return x;
 }
 #ifdef __COMPILER_HAVE_LONGLONG
-inline unsigned long long (DCALL throw_if_minusone)(unsigned long long x) {
-	if unlikely(x == (unsigned long long)-1ll)
+inline __ULONGLONG (DCALL throw_if_minusone)(__ULONGLONG x) {
+	if unlikely(x == (__ULONGLONG)-1ll)
 		throw_last_deemon_exception();
 	return x;
 }
@@ -281,6 +281,7 @@ inline WUNUSED obj_nonnull_inherited DCALL inherit(obj_nonnull_inherited ptr) {
 
 class Object;
 class string;
+class Bytes;
 class Super;
 template<class T = Object> class Type;
 template<class T = Object> class Iterator;
@@ -627,13 +628,13 @@ public:
 	}
 };
 #ifdef __COMPILER_HAVE_LONGLONG
-template<> class any_convertible<long long>: public any_convertible_base {
+template<> class any_convertible<__LONGLONG>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(long value) {
 		return DeeInt_NewLLong(value);
 	}
 };
-template<> class any_convertible<unsigned long long>: public any_convertible_base {
+template<> class any_convertible<__ULONGLONG>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(unsigned long value) {
 		return DeeInt_NewULLong(value);
@@ -676,14 +677,14 @@ public:
 		return DeeString_NewUtf8(value, strlen(value), STRING_ERROR_FSTRICT);
 	}
 };
-#ifdef CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T
+#ifdef __native_wchar_t_defined
 template<> class any_convertible</*wide*/ dwchar_t const *>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(/*wide*/ dwchar_t const *__restrict value) {
 		return DeeString_NewWide(value, wcslen(value), STRING_ERROR_FSTRICT);
 	}
 };
-#endif /* CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T */
+#endif /* __native_wchar_t_defined */
 #undef DEFINE_CONVERTIBLE
 template<size_t sz>
 class any_convertible<char const[sz]>: public any_convertible_base {
@@ -693,7 +694,7 @@ public:
 	}
 };
 template<size_t sz> class any_convertible<char[sz]>: public any_convertible<char const[sz]> {};
-#ifdef CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T
+#ifdef __native_wchar_t_defined
 template<size_t sz>
 class any_convertible<dwchar_t const[sz]>: public any_convertible_base {
 public:
@@ -703,7 +704,7 @@ public:
 };
 template<size_t sz> class any_convertible<dwchar_t[sz]>
     : public any_convertible<dwchar_t const[sz]> {};
-#endif /* CONFIG_DEEMON_HAVE_NATIVE_WCHAR_T */
+#endif /* __native_wchar_t_defined */
 
 template<class T>
 class any_convertible<std::initializer_list<T> > {
@@ -2031,8 +2032,8 @@ public:
 	WUNUSED iterator(end)() const {
 		return iterator();
 	}
-	deemon::Iterator<Object>(iter)() const;
-	template<class T = Object> deemon::Iterator<T>(iter)() const;
+	inline deemon::Iterator<Object>(iter)() const;
+	template<class T = Object> inline deemon::Iterator<T>(iter)() const;
 
 	Object(next)() const {
 		DREF DeeObject *result = throw_if_null(DeeObject_IterNext(*this));
@@ -2257,8 +2258,17 @@ public:
 	WUNUSED item_proxy_obj operator[](DeeObject *index) const {
 		return item_proxy_obj(*this, index);
 	}
-	WUNUSED item_proxy_idx operator[](size_t index) const {
-		return item_proxy_idx(*this, index);
+	WUNUSED item_proxy_idx operator[](int index) const {
+		return item_proxy_idx(*this, (size_t)(unsigned int)index);
+	}
+	WUNUSED item_proxy_idx operator[](unsigned int index) const {
+		return item_proxy_idx(*this, (size_t)index);
+	}
+	WUNUSED item_proxy_idx operator[](long index) const {
+		return item_proxy_idx(*this, (size_t)(unsigned long)index);
+	}
+	WUNUSED item_proxy_idx operator[](unsigned long index) const {
+		return item_proxy_idx(*this, (size_t)index);
 	}
 	WUNUSED item_proxy_sth operator[](char const *__restrict name) const {
 		return item_proxy_sth(*this, name);
@@ -2544,11 +2554,11 @@ public:
 		return *this;
 	}
 #ifdef __COMPILER_HAVE_LONGLONG
-	Object const &(getval)(long long &value) const {
+	Object const &(getval)(__LONGLONG &value) const {
 		throw_if_nonzero(DeeObject_AsLLong(*this, &value));
 		return *this;
 	}
-	Object const &(getval)(unsigned long long &value) const {
+	Object const &(getval)(__ULONGLONG &value) const {
 		throw_if_nonzero(DeeObject_AsULLong(*this, &value));
 		return *this;
 	}
@@ -2581,6 +2591,49 @@ public:
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 
 	/* Helper functions to explicitly convert an object to an integral value. */
+	WUNUSED short(asshort)() const {
+		short result;
+		getval(result);
+		return result;
+	}
+	WUNUSED unsigned short(asushort)() const {
+		unsigned short result;
+		getval(result);
+		return result;
+	}
+	WUNUSED int(asint)() const {
+		int result;
+		getval(result);
+		return result;
+	}
+	WUNUSED unsigned int(asuint)() const {
+		unsigned int result;
+		getval(result);
+		return result;
+	}
+	WUNUSED long(aslong)() const {
+		long result;
+		getval(result);
+		return result;
+	}
+	WUNUSED unsigned long(asulong)() const {
+		unsigned long result;
+		getval(result);
+		return result;
+	}
+#ifdef __COMPILER_HAVE_LONGLONG
+	WUNUSED __LONGLONG(asllong)() const {
+		__LONGLONG result;
+		getval(result);
+		return result;
+	}
+	WUNUSED __ULONGLONG(asullong)() const {
+		__ULONGLONG result;
+		getval(result);
+		return result;
+	}
+#endif /* __COMPILER_HAVE_LONGLONG */
+
 	WUNUSED int8_t(ass8)() const {
 		int8_t result;
 		getval(result);
@@ -2706,13 +2759,13 @@ public:
 		return result;
 	}
 #ifdef __COMPILER_HAVE_LONGLONG
-	explicit WUNUSED operator long long() const {
-		long long result;
+	explicit WUNUSED operator __LONGLONG() const {
+		__LONGLONG result;
 		getval(result);
 		return result;
 	}
-	explicit WUNUSED operator unsigned long long() const {
-		unsigned long long result;
+	explicit WUNUSED operator __ULONGLONG() const {
+		__ULONGLONG result;
 		getval(result);
 		return result;
 	}

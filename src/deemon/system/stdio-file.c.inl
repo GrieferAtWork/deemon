@@ -519,7 +519,7 @@ sysfile_seek(SystemFile *__restrict self, doff_t off, int whence) {
 		return error_file_closed(self);
 #if defined(CONFIG_HAVE_fseeko64) && defined(CONFIG_HAVE_ftello64)
 	DBG_ALIGNMENT_DISABLE();
-	if (fseeko64((FILE *)self->sf_handle, (long long)off, whence)) {
+	if (fseeko64((FILE *)self->sf_handle, (__LONGLONG)off, whence)) {
 		DBG_ALIGNMENT_ENABLE();
 		return error_file_io(self);
 	}

@@ -6762,13 +6762,16 @@ var("__environ");
 		return result;                                              \
 	}
 
-#define DeeSystem_DEFINE_wcslen(name)                   \
-	LOCAL size_t name(dwchar_t const *__restrict str) { \
-		size_t result;                                  \
-		for (result = 0; *str; ++str, ++result)         \
-			;                                           \
-		return result;                                  \
+#define DeeSystem_DEFINE_XSTRLEN(name, T)        \
+	LOCAL size_t name(T const *__restrict str) { \
+		size_t result;                           \
+		for (result = 0; *str; ++str, ++result)  \
+			;                                    \
+		return result;                           \
 	}
+
+#define DeeSystem_DEFINE_wcslen(name) \
+	DeeSystem_DEFINE_XSTRLEN(name, Dee_wchar_t)
 
 #define DeeSystem_DEFINE_rawmemchr(name)                \
 	LOCAL void *name(void const *__restrict p, int c) { \

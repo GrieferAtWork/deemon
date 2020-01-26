@@ -2179,8 +2179,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__
 #define DeeObject_AsLong(self, result)    DeeObject_AsXInt(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(long *, result))
 #define DeeObject_AsULong(self, result)   DeeObject_AsXUInt(__SIZEOF_LONG__, self, DEE_REQUIRES_TYPE(unsigned long *, result))
 #ifdef __COMPILER_HAVE_LONGLONG
-#define DeeObject_AsLLong(self, result)   DeeObject_AsXInt(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(long long *, result))
-#define DeeObject_AsULLong(self, result)  DeeObject_AsXUInt(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(unsigned long long *, result))
+#define DeeObject_AsLLong(self, result)   DeeObject_AsXInt(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__LONGLONG *, result))
+#define DeeObject_AsULLong(self, result)  DeeObject_AsXUInt(__SIZEOF_LONG_LONG__, self, DEE_REQUIRES_TYPE(__ULONGLONG *, result))
 #endif /* __COMPILER_HAVE_LONGLONG */
 #define DeeObject_AsSize(self, result)    DeeObject_AsXUInt(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(size_t *, result))
 #define DeeObject_AsSSize(self, result)   DeeObject_AsXInt(__SIZEOF_SIZE_T__, self, DEE_REQUIRES_TYPE(Dee_ssize_t *, result))

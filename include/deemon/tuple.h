@@ -40,11 +40,10 @@ typedef struct Dee_tuple_object DeeTupleObject;
 struct Dee_tuple_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec-386.S' */
 	Dee_OBJECT_HEAD
-#ifdef __INTELLISENSE__
 	size_t          t_size;       /* [const] Tuple size. */
+#ifdef __INTELLISENSE__
 	DeeObject      *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
 #else /* __INTELLISENSE__ */
-	size_t          t_size;       /* [const] Tuple size. */
 	DREF DeeObject *t_elem[1024]; /* [1..1][const][t_size] Tuple elements. */
 #endif /* !__INTELLISENSE__ */
 };
@@ -57,7 +56,11 @@ struct Dee_tuple_object {
 #define DeeTuple_SET(ob, i, v)   ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (v)
 
 /* Define a statically allocated tuple:
- * >> PRIVATE DEFINE_TUPLE(my_tuple,2,{ Dee_EmptyString, Dee_EmptyString }); */
+ * >> PRIVATE DREF DeeObject *DCALL get_my_tuple(void) {
+ * >>     PRIVATE DEFINE_TUPLE(my_tuple, 2, { Dee_EmptyString, Dee_EmptyString });
+ * >>     return_reference((DeeObject *)&my_tuple);
+ * >> }
+ */
 #define Dee_DEFINE_TUPLE(name, elemc, ...)    \
 	struct {                                  \
 		Dee_OBJECT_HEAD                       \

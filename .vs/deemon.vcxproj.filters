@@ -1190,6 +1190,9 @@
     <None Include="..\include\deemon\ctypes-abi.h">
       <Filter>include\deemon</Filter>
     </None>
+    <None Include="..\include\deemon\cxx\bytes.h">
+      <Filter>include\deemon\cxx</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">

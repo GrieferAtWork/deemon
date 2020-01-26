@@ -39,16 +39,12 @@ public:
 		return DeeCell_CheckExact(ob);
 	}
 
-private:
-	Cell(DeeObject *__restrict ob, int)
-	    : Object(inherit(DeeCell_New(ob))) {}
-
 public:
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Cell, Object)
 	Cell()
 	    : Object(inherit(DeeCell_NewEmpty())) {}
 	static Cell with(DeeObject *__restrict ob) {
-		return Cell(ob, 0);
+		return inherit(DeeCell_New(ob));
 	}
 	WUNUSED DREF DeeObject *getref() const DEE_CXX_NOTHROW {
 		return DeeCell_Get(m_ptr);

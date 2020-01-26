@@ -480,7 +480,7 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_ResizeBuffer(DREF DeeObject *__restrict self,
+DeeBytes_ResizeBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                       size_t num_bytes) {
 	DREF Bytes *result, *new_result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeBytes_Type);
@@ -511,7 +511,7 @@ again:
 }
 
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeBytes_TruncateBuffer(DREF DeeObject *__restrict self,
+DeeBytes_TruncateBuffer(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                         size_t num_bytes) {
 	DREF Bytes *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeBytes_Type);

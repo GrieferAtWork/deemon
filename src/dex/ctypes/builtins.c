@@ -242,8 +242,8 @@
 /* `signed long long' */
 #define SIGNED                1
 #define FORMAT_STR            "%lld"
-#define FORMAT_TYP            signed long long
-#define T                     signed long long
+#define FORMAT_TYP            __LONGLONG
+#define T                     __LONGLONG
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
 #define TYPE_NAME             DeeCLLong_Type
@@ -252,8 +252,8 @@
 #include "define-integer.c.inl"
 /* `unsigned long long' */
 #define FORMAT_STR            "%llu"
-#define FORMAT_TYP            unsigned long long
-#define T                     unsigned long long
+#define FORMAT_TYP            __ULONGLONG
+#define T                     __ULONGLONG
 #define SIZEOF                CONFIG_CTYPES_SIZEOF_LLONG
 #define ALIGNOF               CONFIG_CTYPES_ALIGNOF_LLONG
 #define TYPE_NAME             DeeCULLong_Type

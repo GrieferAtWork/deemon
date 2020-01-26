@@ -176,7 +176,7 @@ struct va_list_struct { va_list vl_ap; };
  *                  | 'h'  // short
  *                  | ''   // int (Default when nothing else was given)
  *                  | 'l'  // long
- *                  | 'll' // long long
+ *                  | 'll' // long long (__(U)LONGLONG)
  *     ;
  *     ref_float  ::= 'f'  // float / double
  *                  | 'LD' // long double
@@ -306,7 +306,7 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
  *                  | 'h'  // `va_arg(short *)'
  *                  | ''   // `va_arg(int *)' (Default when nothing else was given)
  *                  | 'l'  // `va_arg(long *)'
- *                  | 'll' // `va_arg(long long *)'
+ *                  | 'll' // `va_arg(long long *)' (__(U)LONGLONG *)
  *     ;
  *     ref_float  ::= 'f'  // `va_arg(float *)'
  *                  | 'D'  // `va_arg(double *)'
