@@ -1719,7 +1719,8 @@ DeeMem_ClearCaches(size_t max_collect) {
 
 PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
 	/* Clear caches and collect memory from various places. */
-	size_t collect_bytes = DeeMem_ClearCaches(req_bytes);
+	size_t collect_bytes;
+	collect_bytes = DeeMem_ClearCaches(req_bytes);
 	if (collect_bytes >= req_bytes)
 		return true;
 	req_bytes -= collect_bytes;

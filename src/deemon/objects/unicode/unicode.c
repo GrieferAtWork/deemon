@@ -227,7 +227,7 @@ again:
 			Dee_string_utf_free(utf);
 			goto again;
 		}
-		Dee_UntrackAlloc(utf);
+		Dee_string_utf_untrack(utf);
 	}
 	ASSERT(utf->u_width <= STRING_WIDTH_2BYTE);
 	if likely(!utf->u_data[STRING_WIDTH_2BYTE]) {
@@ -272,7 +272,7 @@ again:
 			Dee_string_utf_free(utf);
 			goto again;
 		}
-		Dee_UntrackAlloc(utf);
+		Dee_string_utf_untrack(utf);
 	}
 	ASSERT(utf->u_width <= STRING_WIDTH_4BYTE);
 	if likely(!utf->u_data[STRING_WIDTH_4BYTE]) {
@@ -344,7 +344,7 @@ set_utf8_and_return_1byte:
 			Dee_string_utf_free(utf);
 			goto again;
 		}
-		Dee_UntrackAlloc(utf);
+		Dee_string_utf_untrack(utf);
 	}
 	iter = (uint8_t *)DeeString_STR(self);
 	end  = iter + DeeString_SIZE(self);
@@ -432,7 +432,7 @@ set_utf8_and_return_1byte:
 			Dee_string_utf_free(utf);
 			goto again;
 		}
-		Dee_UntrackAlloc(utf);
+		Dee_string_utf_untrack(utf);
 	}
 	iter = (uint8_t *)DeeString_STR(self);
 	end  = iter + DeeString_SIZE(self);
@@ -842,7 +842,7 @@ print_ascii:
 			Dee_string_utf_free(utf);
 			goto again;
 		}
-		Dee_UntrackAlloc(utf);
+		Dee_string_utf_untrack(utf);
 	}
 	result = 0;
 	iter = flush_start = (uint8_t *)DeeString_STR(self);
@@ -1537,7 +1537,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data */
 	result->s_hash                  = DEE_STRING_HASH_UNSET;
 	result->s_data                  = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	Dee_UntrackAlloc((size_t *)text - 1);
@@ -1593,7 +1593,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text; /* Inherit data */
 	result->s_hash                  = DEE_STRING_HASH_UNSET;
 	result->s_data                  = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	Dee_UntrackAlloc((size_t *)text - 1);
@@ -1770,11 +1770,10 @@ read_text_i:
 		}
 	}
 	result->s_data = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	result->s_hash             = DEE_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
-	Dee_UntrackAlloc(utf);
 	return (DREF DeeObject *)result;
 err_r_utf:
 	Dee_string_utf_free(utf);
@@ -1924,11 +1923,10 @@ continue_at_i:
 		}
 	}
 	result->s_data = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	result->s_hash             = DEE_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
-	Dee_UntrackAlloc(utf);
 	return (DREF DeeObject *)result;
 err_r_utf:
 	Dee_string_utf_free(utf);
@@ -2006,12 +2004,11 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 		utf->u_width = STRING_WIDTH_4BYTE;
 	}
 	result->s_data = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	result->s_hash             = DEE_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	Dee_UntrackAlloc((size_t *)text - 1);
-	Dee_UntrackAlloc(utf);
 	return (DREF DeeObject *)result;
 err_r:
 	DeeObject_Free(result);
@@ -2071,12 +2068,11 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 		utf->u_width = STRING_WIDTH_4BYTE;
 	}
 	result->s_data = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	result->s_hash             = DEE_STRING_HASH_UNSET;
 	result->s_str[utf8_length] = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	Dee_UntrackAlloc((size_t *)text - 1);
-	Dee_UntrackAlloc(utf);
 	return (DREF DeeObject *)result;
 err_r:
 	DeeObject_Free(result);
@@ -2194,7 +2190,7 @@ done:
 	result->s_str[mbcs_length]                 = '\0';
 	DeeObject_Init(result, &DeeString_Type);
 	Dee_UntrackAlloc((size_t *)text - 1);
-	Dee_UntrackAlloc(result->s_data);
+	Dee_string_utf_untrack(result->s_data);
 	return (DREF DeeObject *)result;
 err_r:
 	DeeObject_Free(result);
@@ -2270,7 +2266,7 @@ case STRING_ENCODING_-- - MBCS: {
 	}
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
 	((String *)self)->s_data = data;
-	Dee_UntrackAlloc(data);
+	Dee_string_utf_untrack(data);
 	return self;
 }
 
@@ -2465,7 +2461,7 @@ err_buffer16:
 		break;
 	}
 	result->s_data = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	result->s_hash        = DEE_STRING_HASH_UNSET;
 	result->s_len         = length;
 	result->s_str[length] = '\0';
@@ -2666,7 +2662,7 @@ err_buffer16:
 	ASSERT(!DeeObject_IsShared(result));
 	ASSERT(!result->s_data);
 	result->s_data = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	return (DREF DeeObject *)result;
 err_r:
 	DeeObject_FreeTracker(result);
@@ -2830,7 +2826,7 @@ err_buffer16:
 	ASSERT(!DeeObject_IsShared(result));
 	ASSERT(!result->s_data);
 	result->s_data = utf;
-	Dee_UntrackAlloc(utf);
+	Dee_string_utf_untrack(utf);
 	return (DREF DeeObject *)result;
 err_r:
 	/*DeeObject_FreeTracker(result);*/

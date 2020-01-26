@@ -333,9 +333,17 @@ struct Dee_string_utf {
 			Dee_Free(((size_t *)(self)->u_utf16) - 1);                                                            \
 	} __WHILE0
 
-#define Dee_string_utf_alloc()    DeeObject_MALLOC(struct Dee_string_utf)
-#define Dee_string_utf_tryalloc() DeeObject_TRYMALLOC(struct Dee_string_utf)
-#define Dee_string_utf_free(ptr)  DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
+#if 1
+#define Dee_string_utf_alloc()      DeeObject_MALLOC(struct Dee_string_utf)
+#define Dee_string_utf_tryalloc()   DeeObject_TRYMALLOC(struct Dee_string_utf)
+#define Dee_string_utf_free(ptr)    DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
+#define Dee_string_utf_untrack(ptr) (void)0
+#else
+#define Dee_string_utf_alloc()      ((struct Dee_string_utf *)Dee_Malloc(sizeof(struct Dee_string_utf)))
+#define Dee_string_utf_tryalloc()   ((struct Dee_string_utf *)Dee_TryMalloc(sizeof(struct Dee_string_utf)))
+#define Dee_string_utf_free(ptr)    Dee_Free(ptr)
+#define Dee_string_utf_untrack(ptr) Dee_UntrackAlloc(utf)
+#endif
 
 
 struct Dee_string_object {
