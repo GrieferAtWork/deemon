@@ -120,6 +120,19 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 			goto return_unmodified; /* NUL */
 		if (eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[2], 'n'))
 			goto return_unmodified; /* CON */
+		if (eqnocase(begin[0], 'p') && eqnocase(begin[1], 'r') && eqnocase(begin[2], 'n'))
+			goto return_unmodified; /* PRN */
+		if (eqnocase(begin[0], 'a') && eqnocase(begin[1], 'u') && eqnocase(begin[2], 'x'))
+			goto return_unmodified; /* AUX */
+		break;
+
+	case 4:
+		/* COM1, COM2, COM3, COM4, COM5, COM6, COM7, COM8, COM9,
+		 * LPT1, LPT2, LPT3, LPT4, LPT5, LPT6, LPT7, LPT8, LPT9 */
+		if (begin[3] >= '1' && begin[3] <= '9' &&
+		    ((eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[1], 'm')) ||
+		     (eqnocase(begin[0], 'l') && eqnocase(begin[1], 'p') && eqnocase(begin[1], 't'))))
+			goto return_unmodified;
 		break;
 
 	case 6:
