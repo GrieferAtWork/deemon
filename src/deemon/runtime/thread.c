@@ -103,7 +103,6 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/cache.h>
 #include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>

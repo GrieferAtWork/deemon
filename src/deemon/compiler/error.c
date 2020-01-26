@@ -36,7 +36,6 @@
 #include <deemon/object.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
-#include <deemon/util/cache.h>
 
 #include <stdarg.h>
 

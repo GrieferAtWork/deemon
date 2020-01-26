@@ -39,16 +39,11 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/tuple.h>
-#include <deemon/util/cache.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
-
-DECLARE_OBJECT_CACHE(compiler_item, DeeCompilerItemObject)
-DECLARE_OBJECT_CACHE(compiler_wrap, DeeCompilerWrapperObject)
-
 
 INTERN tok_t DCALL
 get_token_from_str(char const *__restrict name, bool create_missing) {
@@ -802,7 +797,7 @@ INTERN DeeTypeObject DeeCompilerKeyword_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerItemObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2367,7 +2362,7 @@ INTERN DeeTypeObject DeeCompilerLexer_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2469,7 +2464,7 @@ INTERN DeeTypeObject DeeCompilerLexerKeywords_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerWrapper_Fini,
@@ -2514,7 +2509,7 @@ INTERN DeeTypeObject DeeCompilerLexerExtensions_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2559,7 +2554,7 @@ INTERN DeeTypeObject DeeCompilerLexerWarnings_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2746,7 +2741,7 @@ INTERN DeeTypeObject DeeCompilerLexerSyspaths_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerWrapper_Fini,
@@ -2793,7 +2788,7 @@ INTERN DeeTypeObject DeeCompilerLexerIfdef_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -3243,7 +3238,7 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -4647,7 +4642,7 @@ INTERN DeeTypeObject DeeCompilerFile_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerItemObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,

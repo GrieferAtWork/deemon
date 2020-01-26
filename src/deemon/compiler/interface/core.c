@@ -29,7 +29,6 @@
 #include <deemon/compiler/symbol.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
-#include <deemon/util/cache.h>
 
 #include <hybrid/atomic.h>
 
@@ -37,9 +36,6 @@ DECL_BEGIN
 
 typedef DeeCompilerItemObject CompilerItem;
 typedef DeeCompilerWrapperObject CompilerWrapper;
-
-DEFINE_OBJECT_CACHE(compiler_item, CompilerItem, 64)    /* TODO: Use slabs */
-DEFINE_OBJECT_CACHE(compiler_wrap, CompilerWrapper, 16) /* TODO: Use slabs */
 
 INTERN NONNULL((1)) void DCALL
 DeeCompilerItem_Fini(CompilerItem *__restrict self) {
@@ -115,7 +111,7 @@ INTERN DeeTypeObject DeeCompilerItem_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+				TYPE_FIXED_ALLOCATOR(CompilerItem)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerItem_Fini,
@@ -160,7 +156,7 @@ INTERN DeeTypeObject DeeCompilerObjItem_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+				TYPE_FIXED_ALLOCATOR(CompilerItem)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerObjItem_Fini,
@@ -212,7 +208,7 @@ INTERN DeeTypeObject DeeCompilerWrapper_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(CompilerWrapper)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&DeeCompilerWrapper_Fini,
@@ -249,9 +245,7 @@ DeeCompiler_GetWrapper(DeeCompilerObject *__restrict self,
 	DREF CompilerWrapper *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	ASSERT(!(type->tp_flags & TP_FVARIABLE));
-	ASSERT(type->tp_init.tp_alloc.tp_alloc == &compiler_wrap_tp_alloc);
-	ASSERT(type->tp_init.tp_alloc.tp_free == &compiler_wrap_tp_free);
-	result = compiler_wrap_alloc();
+	result = DeeObject_MALLOC(CompilerWrapper);
 	if unlikely(!result)
 		goto done;
 	result->cw_compiler = self;
@@ -272,8 +266,6 @@ get_compiler_item_impl(DeeTypeObject *__restrict type,
 	DeeCompilerObject *self = DeeCompiler_Current;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
 	ASSERT(!(type->tp_flags & TP_FVARIABLE));
-	ASSERT(type->tp_init.tp_alloc.tp_alloc == &compiler_item_tp_alloc);
-	ASSERT(type->tp_init.tp_alloc.tp_free == &compiler_item_tp_free);
 	ASSERT(value != NULL);
 	ASSERT(self);
 	ASSERT(recursive_rwlock_reading(&DeeCompiler_Lock));
@@ -293,7 +285,7 @@ again:
 	}
 	rwlock_endread(&self->cp_items.ci_lock);
 	/* Construct a new item. */
-	result = compiler_item_alloc();
+	result = DeeObject_MALLOC(CompilerItem);
 	if unlikely(!result)
 		goto done;
 	rwlock_write(&self->cp_items.ci_lock);
@@ -307,7 +299,7 @@ again:
 				continue;
 			ASSERT_OBJECT_TYPE_EXACT(new_result, type);
 			rwlock_endread(&self->cp_items.ci_lock);
-			compiler_item_free(result);
+			DeeObject_FREE(result);
 			return (DREF DeeObject *)new_result;
 		}
 	}
@@ -321,7 +313,7 @@ again:
 		                                                  sizeof(DeeCompilerItemObject *));
 		if unlikely(!new_map && !self->cp_items.ci_list) {
 			rwlock_endwrite(&self->cp_items.ci_lock);
-			compiler_item_free(result);
+			DeeObject_FREE(result);
 			goto again;
 		}
 		/* Re-hash the old map. */

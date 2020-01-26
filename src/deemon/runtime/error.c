@@ -29,7 +29,6 @@
 #include <deemon/traceback.h>
 #include <deemon/system-features.h> /* fprintf(stderr, ...) */
 #include <deemon/tuple.h>
-#include <deemon/util/cache.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>

@@ -35,7 +35,6 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
-#include <deemon/util/cache.h>
 
 #include <hybrid/atomic.h>
 
@@ -45,7 +44,6 @@
 
 DECL_BEGIN
 
-DECLARE_OBJECT_CACHE(compiler_item, DeeCompilerItemObject)
 typedef DeeCompilerAstObject Ast;
 
 INTERN ATTR_COLD int DCALL
@@ -5517,16 +5515,25 @@ INTERN DeeTypeObject DeeCompilerAst_Type = {
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeCompilerObjItem_Type,
-	/* .tp_init = */ { { /* .tp_alloc = */ { /* .tp_ctor      = */ NULL,
-	                                         /* .tp_copy_ctor = */ NULL,
-	                                         /* .tp_deep_ctor = */ NULL,
-	                                         /* .tp_any_ctor  = */ NULL, TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free) } },
-	                   /* .tp_dtor        = */ NULL,
-	                   /* .tp_assign      = */ NULL,
-	                   /* .tp_move_assign = */ NULL },
-	/* .tp_cast = */ { /* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_str,
-	                   /* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_repr,
-	                   /* .tp_bool = */ NULL },
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
+				TYPE_FIXED_ALLOCATOR(DeeCompilerItemObject)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_repr,
+		/* .tp_bool = */ NULL
+	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,

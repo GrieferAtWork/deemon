@@ -175,7 +175,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self
  * DeeSlab_Free:            Accepts  DeeSlab_Malloc<M>()
  *                          Accepts  Dee_Malloc()
  *
- * DeeSlab_FFree(...,<N>):
+ * DeeSlab_FFree(..., <N>):
  * DeeSlab_Free<N>:         Accepts  DeeSlab_Malloc<M>()         | M >= N
  *                          Accepts  Dee_Malloc()
  *
@@ -184,7 +184,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self
  *                          Accepts  DeeObject_Malloc()
  *                          Accepts  NULL
  *
- * DeeObject_FFree(...,<N>):
+ * DeeObject_FFree(..., <N>):
  * DeeObject_SlabFree<N>:   Accepts  DeeObject_SlabMalloc<M>()   | M >= N
  *                          Accepts  DeeObject_FMalloc(<N>)      | M >= N
  *                          Accepts  DeeObject_Malloc()
@@ -195,7 +195,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self
  *                          Accepts  DeeGCObject_Malloc()
  *                          Accepts  NULL
  *
- * DeeGCObject_FFree(...,<N>):
+ * DeeGCObject_FFree(..., <N>):
  * DeeGCObject_SlabFree<N>: Accepts  DeeGCObject_SlabMalloc<M>() | M >= N
  *                          Accepts  DeeGCObject_FMalloc(<M>)    | M >= N
  *                          Accepts  DeeGCObject_Malloc()
@@ -206,11 +206,11 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self
  *   - DeeGCObject_Free
  * The following free functions require the caller to pass non-NULL pointers:
  *   - DeeSlab_Free
- *   - DeeSlab_FFree(...,<N>)
+ *   - DeeSlab_FFree(..., <N>)
  *   - DeeSlab_Free<N>
- *   - DeeObject_FFree(...,<N>)
+ *   - DeeObject_FFree(..., <N>)
  *   - DeeObject_SlabFree<N>
- *   - DeeGCObject_FFree(...,<N>)
+ *   - DeeGCObject_FFree(..., <N>)
  *   - DeeGCObject_SlabFree<N>
  */
 
@@ -269,21 +269,21 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self
 #define DEE_PRIVATE_SLAB_HASSIZE_CALLBACK(index, size) size
 #define DeeSlab_IndexOf(size) (DeeSlab_ENUMERATE((size) DEE_PRIVATE_SLAB_INDEXOF_CALLBACK) 0xffu)
 #define DeeSlab_HasSize(size) (0 DeeSlab_ENUMERATE(|| (size) == DEE_PRIVATE_SLAB_HASSIZE_CALLBACK))
-#define DeeSlab_InvokeDyn(func, size, args, fallback)  \
-	((size) <= 4*__SIZEOF_POINTER__ ? func##4 args :   \
-	 (size) <= 5*__SIZEOF_POINTER__ ? func##5 args :   \
-	 (size) <= 6*__SIZEOF_POINTER__ ? func##6 args :   \
-	 (size) <= 8*__SIZEOF_POINTER__ ? func##8 args :   \
-	 (size) <= 10*__SIZEOF_POINTER__ ? func##10 args : \
-	                                   fallback)
+#define DeeSlab_InvokeDyn(func, size, args, fallback)    \
+	((size) <= 4 * __SIZEOF_POINTER__  ? func##4 args :  \
+	 (size) <= 5 * __SIZEOF_POINTER__  ? func##5 args :  \
+	 (size) <= 6 * __SIZEOF_POINTER__  ? func##6 args :  \
+	 (size) <= 8 * __SIZEOF_POINTER__  ? func##8 args :  \
+	 (size) <= 10 * __SIZEOF_POINTER__ ? func##10 args : \
+	                                     fallback)
 #ifndef __NO_builtin_choose_expr
-#define DeeSlab_Invoke(func, size, args, fallback)                       \
-	__builtin_choose_expr((size) <= 4*__SIZEOF_POINTER__,func##4 args,   \
-	__builtin_choose_expr((size) <= 5*__SIZEOF_POINTER__,func##5 args,   \
-	__builtin_choose_expr((size) <= 6*__SIZEOF_POINTER__,func##6 args,   \
-	__builtin_choose_expr((size) <= 8*__SIZEOF_POINTER__,func##8 args,   \
-	__builtin_choose_expr((size) <= 10*__SIZEOF_POINTER__,func##10 args, \
-	                                                      fallback)))))
+#define DeeSlab_Invoke(func, size, args, fallback)                          \
+	__builtin_choose_expr((size) <= 4 * __SIZEOF_POINTER__,  func##4 args,  \
+	__builtin_choose_expr((size) <= 5 * __SIZEOF_POINTER__,  func##5 args,  \
+	__builtin_choose_expr((size) <= 6 * __SIZEOF_POINTER__,  func##6 args,  \
+	__builtin_choose_expr((size) <= 8 * __SIZEOF_POINTER__,  func##8 args,  \
+	__builtin_choose_expr((size) <= 10 * __SIZEOF_POINTER__, func##10 args, \
+	                                                         fallback)))))
 #else /* !__NO_builtin_choose_expr */
 #define DeeSlab_Invoke  DeeSlab_InvokeDyn
 #endif /* __NO_builtin_choose_expr */

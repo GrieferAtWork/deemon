@@ -536,7 +536,7 @@ INTDEF NONNULL((1)) void DCALL JITObjectTable_Fini(JITObjectTable *__restrict se
 INTDEF NONNULL((1, 2)) void DCALL JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg);
 
 /* Allocate/free a JIT object table from cache. */
-DECLARE_STRUCT_CACHE(jit_object_table,struct jit_object_table);
+DECLARE_STRUCT_CACHE(jit_object_table, struct jit_object_table);
 #ifndef NDEBUG
 #define jit_object_table_alloc() jit_object_table_dbgalloc(__FILE__, __LINE__)
 #endif /* !NDEBUG */

@@ -20,18 +20,18 @@
 #ifndef GUARD_DEEMON_OBJECTS_INSTANCEMETHOD_C
 #define GUARD_DEEMON_OBJECTS_INSTANCEMETHOD_C 1
 
-#include <deemon/instancemethod.h>
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
+#include <deemon/instancemethod.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/util/cache.h>
 
 #include <hybrid/atomic.h>
 
@@ -41,26 +41,13 @@ DECL_BEGIN
 
 typedef DeeInstanceMethodObject InstanceMethod;
 
-/* Since `super' and `InstanceMethod' objects share the same
- * size, we also let them share a pool of pre-allocated objects. */
-STATIC_ASSERT(sizeof(DeeSuperObject) == sizeof(InstanceMethod));
-DECLARE_OBJECT_CACHE(super, DeeSuperObject); /* TODO: Get rid of this (rely on slabs instead) */
-
-#ifndef NDEBUG
-#define super_alloc() super_dbgalloc(__FILE__, __LINE__)
-#endif /* !NDEBUG */
-#define instance_method_alloc    (InstanceMethod *)super_alloc
-#define instance_method_free(p)  super_free((DeeSuperObject *)(p))
-#define instance_method_tp_alloc super_tp_alloc
-#define instance_method_tp_free  super_tp_free
-
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMethod_New(DeeObject *func,
                       DeeObject *this_arg) {
 	DREF InstanceMethod *result;
 	ASSERT_OBJECT(func);
 	ASSERT_OBJECT(this_arg);
-	result = instance_method_alloc();
+	result = DeeObject_MALLOC(InstanceMethod);
 	if unlikely(!result)
 		return NULL;
 	DeeObject_Init(result, &DeeInstanceMethod_Type);
@@ -184,6 +171,10 @@ PRIVATE struct type_cmp im_cmp = {
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&im_ne,
 };
 
+
+STATIC_ASSERT(sizeof(DeeSuperObject) == sizeof(InstanceMethod));
+STATIC_ASSERT(offsetof(DeeSuperObject, s_type) == offsetof(InstanceMethod, im_func));
+STATIC_ASSERT(offsetof(DeeSuperObject, s_self) == offsetof(InstanceMethod, im_this));
 
 /* Since `super' and `InstanceMethod' share an identical
  * layout, we can re-use some operators here... */
@@ -370,7 +361,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 				/* .tp_copy_ctor   = */ &im_copy,
 				/* .tp_deep_ctor   = */ &im_deepcopy,
 				/* .tp_any_ctor    = */ NULL,
-				TYPE_ALLOCATOR(&instance_method_tp_alloc, &instance_method_tp_free),
+				TYPE_FIXED_ALLOCATOR(InstanceMethod),
 				/* .tp_any_ctor_kw = */ &im_init,
 			}
 		},

@@ -42,7 +42,7 @@
 DECL_BEGIN
 
 INTDEF struct module_symbol empty_module_buckets[];
-DEFINE_STRUCT_CACHE_EX(sym,struct symbol,
+DEFINE_STRUCT_CACHE_EX(sym, struct symbol,
                        MAX(sizeof(struct symbol),
                            sizeof(struct text_label)),
                        64)

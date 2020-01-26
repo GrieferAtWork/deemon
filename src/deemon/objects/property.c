@@ -32,7 +32,6 @@
 #include <deemon/property.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/util/cache.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

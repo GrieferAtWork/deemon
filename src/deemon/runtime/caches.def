@@ -25,7 +25,3 @@ Cs(ast)
 #else /* CONFIG_AST_IS_STRUCT */
 Co(ast)
 #endif /* !CONFIG_AST_IS_STRUCT */
-Co(super) /* TODO: Remove this */
-Co(float) /* TODO: Remove this */
-Co(compiler_item) /* TODO: Remove this */
-Co(compiler_wrap) /* TODO: Remove this */

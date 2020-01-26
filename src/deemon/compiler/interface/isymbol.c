@@ -22,6 +22,7 @@
 
 #include <deemon/compiler/compiler.h>
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/compiler/ast.h>
@@ -30,13 +31,11 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
-#include <deemon/util/cache.h>
 
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
 
-DECLARE_OBJECT_CACHE(compiler_item,DeeCompilerItemObject)
 typedef DeeCompilerSymbolObject Symbol;
 
 INTERN DeeObject *symbol_type_names[] = {
@@ -431,7 +430,7 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_item_tp_alloc, &compiler_item_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerItemObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,

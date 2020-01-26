@@ -31,7 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* CONFIG_HAVE_FLOAT_H */
-#include <deemon/util/cache.h>
+
 #include <hybrid/floatcore.h>
 
 #include "../runtime/strings.h"
@@ -43,10 +43,6 @@
 DECL_BEGIN
 
 typedef DeeFloatObject Float;
-DEFINE_OBJECT_CACHE(float,Float,128) /* TODO: Get rid of this (rely on slabs, instead) */
-#ifndef NDEBUG
-#define float_alloc() float_dbgalloc(__FILE__,__LINE__)
-#endif /* !NDEBUG */
 
 
 LOCAL WUNUSED DREF Float *DCALL
@@ -57,7 +53,7 @@ DeeFloat_NewReuse(Float *__restrict self, double value) {
 		Dee_Incref(result);
 		goto done_ok;
 	}
-	result = float_alloc();
+	result = DeeObject_MALLOC(Float);
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &DeeFloat_Type);
@@ -70,7 +66,8 @@ done:
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFloat_New(double value) {
 	/* Allocate a new float object descriptor. */
-	DREF Float *result = float_alloc();
+	DREF Float *result;
+	result = DeeObject_MALLOC(Float);
 	if unlikely(!result)
 		goto done;
 	/* Initialize the float object and assign its value. */
@@ -327,8 +324,7 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
 				/* .tp_deep_ctor = */ (int (DCALL *)(DeeTypeObject *__restrict, DeeObject *__restrict, DeeObject *__restrict))&float_copy,
 				/* .tp_any_ctor  = */ (int (DCALL *)(DeeTypeObject *__restrict, size_t, DeeObject **__restrict))&float_ctor,
-				/* Float object use a cached allocator. */
-				TYPE_ALLOCATOR(&float_tp_alloc, &float_tp_free)
+				TYPE_FIXED_ALLOCATOR(Float)
 			}
 		},
 		/* .tp_dtor        = */ NULL,

@@ -22,6 +22,7 @@
 
 #include <deemon/compiler/compiler.h>
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
@@ -32,13 +33,8 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/thread.h>
-#include <deemon/util/cache.h>
 
 DECL_BEGIN
-
-DECLARE_OBJECT_CACHE(compiler_wrap, DeeCompilerWrapperObject)
-
-
 
 
 INTDEF int DCALL
@@ -50,9 +46,9 @@ PRIVATE struct keyword suffix_kwlist[] = { K(head), KEND };
 
 PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 #define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(name, func, IF_SUFFIX, is_suffix)  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                               \
-	parser_##name(DeeCompilerWrapperObject *__restrict self,                    \
-	              size_t argc, DeeObject **argv,                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
+	parser_##name(DeeCompilerWrapperObject *self,                               \
+	              size_t argc, DeeObject **argv,                                \
 	              DeeObject *kw) {                                              \
 		DREF DeeObject *result = NULL;                                          \
 		DeeCompilerAstObject *head;                                             \
@@ -91,9 +87,9 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		return result;                                                          \
 	}
 #define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                             \
-	parser_##name(DeeCompilerWrapperObject *__restrict self,                                  \
-	              size_t argc, DeeObject **argv,                                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                     \
+	parser_##name(DeeCompilerWrapperObject *self,                                             \
+	              size_t argc, DeeObject **argv,                                              \
 	              DeeObject *kw) {                                                            \
 		DREF DeeObject *result = NULL;                                                        \
 		DREF struct ast *result_ast;                                                          \
@@ -433,8 +429,8 @@ parser_getlfstmt(DeeCompilerWrapperObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-parser_setlfstmt(DeeCompilerWrapperObject *__restrict self,
-                 DeeObject *__restrict value) {
+parser_setlfstmt(DeeCompilerWrapperObject *self,
+                 DeeObject *value) {
 	int newval = DeeObject_Bool(value);
 	if unlikely(newval < 0)
 		return -1;
@@ -523,7 +519,7 @@ INTERN DeeTypeObject DeeCompilerParser_Type = {
 				/* .tp_copy_ctor = */ NULL,
 				/* .tp_deep_ctor = */ NULL,
 				/* .tp_any_ctor  = */ NULL,
-				TYPE_ALLOCATOR(&compiler_wrap_tp_alloc, &compiler_wrap_tp_free)
+				TYPE_FIXED_ALLOCATOR(DeeCompilerWrapperObject)
 			}
 		},
 		/* .tp_dtor        = */ NULL,

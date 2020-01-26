@@ -1340,14 +1340,14 @@ done:
 	 *   - Lazily allocated global data structures:
 	 *     It's not a memory leak because there can only ever be
 	 *     one of them allocated a time. And if we fail to release
-	 *     it at allocation exit, the kernel will just do that for
+	 *     it at application exit, the kernel will just do that for
 	 *     us.
 	 *      - DeeExec_SetHome
 	 *      - DeeThread_Fini
 	 *   - Preallocated object caches:
 	 *     These are just another abstraction layer between the
 	 *     universal heap, and a very specific kind of allocation,
-	 *     which are meant to speed by allocating objects of known
+	 *     which are meant to speed up allocating objects of known
 	 *     size by re-using previously ~freed~ objects instead of
 	 *     having to go through the regular heap.
 	 *     They're not leaks because they're meant to represent
@@ -2589,9 +2589,10 @@ operation_mode_format(int argc, char **argv) {
 	 * format the original source file. */
 	recursive_rwlock_write(&DeeCompiler_Lock);
 	/* Go over all input files and format them individually. */
-	for (i = 0; i < argc; ++i)
+	for (i = 0; i < argc; ++i) {
 		if (dchdir_and_format_source_files(argv[i]))
 			goto err;
+	}
 	recursive_rwlock_endwrite(&DeeCompiler_Lock);
 	return 0;
 err:

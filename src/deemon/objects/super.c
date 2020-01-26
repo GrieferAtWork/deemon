@@ -22,11 +22,11 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/super.h>
-#include <deemon/util/cache.h>
 
 #include "../runtime/strings.h"
 
@@ -44,11 +44,6 @@
 DECL_BEGIN
 
 typedef DeeSuperObject Super;
-
-DEFINE_OBJECT_CACHE(super,Super,128); /* TODO: Get rid of this (rely on slabs instead) */
-#ifndef NDEBUG
-#define super_alloc()  super_dbgalloc(__FILE__,__LINE__)
-#endif /* !NDEBUG */
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
@@ -69,7 +64,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	}
 	ASSERT(!DeeSuper_Check(self));
 	/* Allocate + construct a new super-object. */
-	result = super_alloc();
+	result = DeeObject_MALLOC(Super);
 	if unlikely(!result)
 		goto err;
 	DeeObject_Init(result, &DeeSuper_Type);
@@ -779,7 +774,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 				/* .tp_copy_ctor = */ (void *)&super_copy,
 				/* .tp_deep_ctor = */ (void *)&super_deepcopy,
 				/* .tp_any_ctor  = */ (void *)&super_init,
-				TYPE_ALLOCATOR(&super_tp_alloc, &super_tp_free)
+				TYPE_FIXED_ALLOCATOR(Super)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&super_fini,

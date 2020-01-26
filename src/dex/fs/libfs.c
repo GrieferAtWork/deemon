@@ -841,7 +841,7 @@ local names = {
 import * from _dexutils;
 include("constants.def");
 for (local x: names)
-	gi("S_"+x,"STAT_"+x);
+	gi("S_"+x, "STAT_"+x);
 ]]]*/
 #include "constants.def"
 //[[[end]]]
