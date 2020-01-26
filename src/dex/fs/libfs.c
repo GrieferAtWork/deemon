@@ -492,8 +492,30 @@ INTERN DEFINE_STRING(libfs_sep, "/");
 INTERN DEFINE_STRING(libfs_delim, ":");
 #endif /* !CONFIG_HOST_WINDOWS */
 
-#define f_libfs_joinpath fs_pathjoin
 
+#ifdef CONFIG_HOST_WINDOWS
+INTERN DEFINE_STRING(libfs_DEV_NULL, "NUL");
+INTERN DEFINE_STRING(libfs_DEV_TTY, "CON");
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+INTERN DEFINE_STRING(libfs_DEV_STDIN, "stdIN$");
+INTERN DEFINE_STRING(libfs_DEV_STDOUT, "stdOUT$");
+INTERN DEFINE_STRING(libfs_DEV_STDERR, "stdERR$");
+#else /* CONFIG_WANT_WINDOWS_STD_FILES */
+INTERN DEFINE_STRING(libfs_DEV_STDIN, "conIN$");   /* Not ~really~ the same, but (might be) good enough... */
+INTERN DEFINE_STRING(libfs_DEV_STDOUT, "conOUT$"); /* ... */
+#define libfs_DEV_STDERR libfs_DEV_STDOUT /* ... */
+#endif /* !CONFIG_WANT_WINDOWS_STD_FILES */
+#else /* CONFIG_HOST_WINDOWS */
+INTERN DEFINE_STRING(libfs_DEV_NULL, "/dev/null");
+INTERN DEFINE_STRING(libfs_DEV_TTY, "/dev/tty");
+INTERN DEFINE_STRING(libfs_DEV_STDIN, "/dev/stdin");
+INTERN DEFINE_STRING(libfs_DEV_STDOUT, "/dev/stdout");
+INTERN DEFINE_STRING(libfs_DEV_STDERR, "/dev/stderr");
+#endif /* !CONFIG_HOST_WINDOWS */
+
+
+
+#define f_libfs_joinpath fs_pathjoin
 struct expand_option {
 	char     eo_name; /* The single character identifying this option. */
 	uint16_t eo_flag; /* One, or a set of `FS_EXPAND_F*' */
@@ -1418,6 +1440,22 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("->?Dstring\n"
 	      "A string used to delimit individual paths in path-listings often "
 	      "found in environment variables, most notably ${environ[\"PATH\"]}") },
+	{ "DEV_NULL", (DeeObject *)&libfs_DEV_NULL, MODSYM_FNORMAL,
+	  DOC("->?Dstring\n"
+	      "A special filename accepted by :posix:open to return a data sink") },
+	{ "DEV_TTY", (DeeObject *)&libfs_DEV_TTY, MODSYM_FNORMAL,
+	  DOC("->?Dstring\n"
+	      "A special filename accepted by :posix:open to return a "
+	      "handle to the calling process's controlling terminal") },
+	{ "DEV_STDIN", (DeeObject *)&libfs_DEV_STDIN, MODSYM_FNORMAL,
+	  DOC("->?Dstring\n"
+	      "A special filename accepted by :posix:open to return a handle to :File.stdin") },
+	{ "DEV_STDOUT", (DeeObject *)&libfs_DEV_STDOUT, MODSYM_FNORMAL,
+	  DOC("->?Dstring\n"
+	      "A special filename accepted by :posix:open to return a handle to :File.stdout") },
+	{ "DEV_STDERR", (DeeObject *)&libfs_DEV_STDERR, MODSYM_FNORMAL,
+	  DOC("->?Dstring\n"
+	      "A special filename accepted by :posix:open to return a handle to :File.stderr") },
 
 	/* stat.st_mode bits. */
 	LIBFS_S_IFMT_DEF
