@@ -110,6 +110,52 @@ DeeSystem_MakeAbsolute(/*String*/ DeeObject *__restrict filename) {
 	if unlikely(!begin)
 		goto err;
 	end = begin + WSTR_LENGTH(begin);
+#ifdef CONFIG_HOST_WINDOWS
+	/* Don't modify special filenames such as `CON' or `NUL' */
+	switch ((size_t)(end - begin)) {
+#define eqnocase(a, b) ((a) == (b) || (a) == ((b) + ('A' - 'a')))
+
+	case 3:
+		if (eqnocase(begin[0], 'n') && eqnocase(begin[1], 'u') && eqnocase(begin[2], 'l'))
+			goto return_unmodified; /* NUL */
+		if (eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[2], 'n'))
+			goto return_unmodified; /* CON */
+		break;
+
+	case 6:
+		if (eqnocase(begin[3], 'i') && eqnocase(begin[4], 'n') && begin[5] == '$') {
+			if (eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[2], 'n'))
+				goto return_unmodified; /* CONIN$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+			if (eqnocase(begin[0], 's') && eqnocase(begin[1], 't') && eqnocase(begin[2], 'd'))
+				goto return_unmodified; /* STDIN$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		}
+		break;
+
+	case 7:
+		if (eqnocase(begin[3], 'o') && eqnocase(begin[4], 'u') &&
+		    eqnocase(begin[5], 't') && begin[6] == '$') {
+			if (eqnocase(begin[0], 'c') && eqnocase(begin[1], 'o') && eqnocase(begin[2], 'n'))
+				goto return_unmodified; /* CONOUT$ */
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+			if (eqnocase(begin[0], 's') && eqnocase(begin[1], 't') && eqnocase(begin[2], 'd'))
+				goto return_unmodified; /* STDOUT$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		}
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+		if (eqnocase(begin[0], 's') && eqnocase(begin[1], 't') && eqnocase(begin[2], 'd') &&
+		    eqnocase(begin[3], 'e') && eqnocase(begin[4], 'r') && eqnocase(begin[5], 'r') &&
+		    begin[6] == '$')
+			goto return_unmodified; /* STDERR$ */
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+		break;
+
+#undef eqnocase
+	default:
+		break;
+	}
+#endif /* CONFIG_HOST_WINDOWS */
 	/* Strip leading space. */
 	begin = utf8_skipspace(begin, end);
 	if (!DeeSystem_IsAbs(begin)) {
@@ -266,6 +312,9 @@ done:
 		 * If this is the case, we can simply re-return the given path. */
 		if (!UNICODE_PRINTER_LENGTH(&printer)) {
 			unicode_printer_fini(&printer);
+#ifdef CONFIG_HOST_WINDOWS
+return_unmodified:
+#endif /* CONFIG_HOST_WINDOWS */
 			return_reference_(filename);
 		}
 		/* Actually print the remainder. */

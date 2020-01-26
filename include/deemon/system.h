@@ -29,6 +29,16 @@
 
 DECL_BEGIN
 
+#ifdef CONFIG_HOST_WINDOWS
+/* Recognize `STDIN$', `STDOUT$' and `STDERR$' special file names, to
+ * go alongside filenames such as `CON', `NUL', `CONIN$', `CONOUT$' */
+#undef CONFIG_WANT_WINDOWS_STD_FILES
+#ifndef CONFIG_NO_WANT_WINDOWS_STD_FILES
+#define CONFIG_WANT_WINDOWS_STD_FILES 1
+#endif /* !CONFIG_NO_WANT_WINDOWS_STD_FILES */
+#endif /* CONFIG_HOST_WINDOWS */
+
+
 #ifdef DEE_SOURCE
 #define Dee_unicode_printer unicode_printer
 #endif /* DEE_SOURCE */

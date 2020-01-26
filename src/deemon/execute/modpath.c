@@ -784,9 +784,10 @@ got_result_modulepath:
 	input_stream = DeeFile_Open((DeeObject *)module_path_ob, OPEN_FRDONLY, 0);
 	if unlikely(!ITER_ISOK(input_stream)) {
 		result = (DREF DeeModuleObject *)input_stream;
-		if (input_stream == ITER_DONE && throw_error)
-			err_file_not_found_ob((DeeObject *)module_path_ob),
+		if (input_stream == ITER_DONE && throw_error) {
+			err_file_not_found_ob((DeeObject *)module_path_ob);
 			result = NULL;
+		}
 		goto got_result_modulepath;
 	}
 

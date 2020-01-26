@@ -1872,33 +1872,72 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
                        /*DWORD*/ DeeNT_DWORD dwCreationDisposition,
                        /*DWORD*/ DeeNT_DWORD dwFlagsAndAttributes,
                        /*HANDLE*/ void *hTemplateFile) {
-	HANDLE result;
-	LPWSTR wname;
-	wname = (LPWSTR)DeeString_AsWide(lpFileName);
-	if unlikely(!wname)
+	HANDLE hResult;
+	LPWSTR lpwName;
+	ASSERT_OBJECT_TYPE_EXACT(lpFileName, &DeeString_Type);
+#ifdef CONFIG_WANT_WINDOWS_STD_FILES
+#define eqnocase(a, b) ((a) == (b) || (a) == ((b) + ('A' - 'a')))
+	if (DeeString_SIZE(lpFileName) >= 6 &&
+	    eqnocase(DeeString_STR(lpFileName)[0], 's') &&
+	    eqnocase(DeeString_STR(lpFileName)[1], 't') &&
+	    eqnocase(DeeString_STR(lpFileName)[2], 'd')) {
+		if (DeeString_SIZE(lpFileName) == 6 &&
+		    eqnocase(DeeString_STR(lpFileName)[3], 'i') &&
+		    eqnocase(DeeString_STR(lpFileName)[4], 'n') &&
+		    DeeString_STR(lpFileName)[5] == '$') {
+			hResult = GetStdHandle(STD_INPUT_HANDLE);
+do_copy_and_return_hResult:
+			if (!DuplicateHandle(GetCurrentProcess(), hResult,
+			                     GetCurrentProcess(), &hResult, dwDesiredAccess,
+			                     FALSE, 0))
+				return INVALID_HANDLE_VALUE;
+			if unlikely(hResult == NULL)
+				hResult = INVALID_HANDLE_VALUE;
+			return hResult;
+		}
+		if (DeeString_SIZE(lpFileName) == 7 &&
+		    DeeString_STR(lpFileName)[6] == '$') {
+			if (eqnocase(DeeString_STR(lpFileName)[3], 'o') &&
+			    eqnocase(DeeString_STR(lpFileName)[4], 'u') &&
+			    eqnocase(DeeString_STR(lpFileName)[5], 't')) {
+				hResult = GetStdHandle(STD_OUTPUT_HANDLE);
+				goto do_copy_and_return_hResult;
+			}
+			if (eqnocase(DeeString_STR(lpFileName)[3], 'e') &&
+			    eqnocase(DeeString_STR(lpFileName)[4], 'r') &&
+			    eqnocase(DeeString_STR(lpFileName)[5], 'r')) {
+				hResult = GetStdHandle(STD_ERROR_HANDLE);
+				goto do_copy_and_return_hResult;
+			}
+		}
+	}
+#undef eqnocase
+#endif /* CONFIG_WANT_WINDOWS_STD_FILES */
+	lpwName = (LPWSTR)DeeString_AsWide(lpFileName);
+	if unlikely(!lpwName)
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
-	result = CreateFileW(wname,
-	                     (DWORD)dwDesiredAccess,
-	                     (DWORD)dwShareMode,
-	                     (LPSECURITY_ATTRIBUTES)lpSecurityAttributes,
-	                     (DWORD)dwCreationDisposition,
-	                     (DWORD)dwFlagsAndAttributes,
-	                     (HANDLE)hTemplateFile);
-	if (result == INVALID_HANDLE_VALUE) {
+	hResult = CreateFileW(lpwName,
+	                      (DWORD)dwDesiredAccess,
+	                      (DWORD)dwShareMode,
+	                      (LPSECURITY_ATTRIBUTES)lpSecurityAttributes,
+	                      (DWORD)dwCreationDisposition,
+	                      (DWORD)dwFlagsAndAttributes,
+	                      (HANDLE)hTemplateFile);
+	if (hResult == INVALID_HANDLE_VALUE) {
 		if (DeeNTSystem_IsUncError(GetLastError())) {
 			/* Fix the filename and try again. */
 			DBG_ALIGNMENT_ENABLE();
 			lpFileName = DeeNTSystem_FixUncPath(lpFileName);
 			if unlikely(!lpFileName)
 				goto err;
-			wname = (LPWSTR)DeeString_AsWide(lpFileName);
-			if unlikely(!wname) {
+			lpwName = (LPWSTR)DeeString_AsWide(lpFileName);
+			if unlikely(!lpwName) {
 				Dee_Decref(lpFileName);
 				goto err;
 			}
 			DBG_ALIGNMENT_DISABLE();
-			result = CreateFileW(wname,
+			hResult = CreateFileW(lpwName,
 			                     (DWORD)dwDesiredAccess,
 			                     (DWORD)dwShareMode,
 			                     (LPSECURITY_ATTRIBUTES)lpSecurityAttributes,
@@ -1910,9 +1949,9 @@ DeeNTSystem_CreateFile(/*String*/ DeeObject *__restrict lpFileName,
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();
-	if unlikely(result == NULL)
-		result = INVALID_HANDLE_VALUE; /* Shouldn't happen... */
-	return result;
+	if unlikely(hResult == NULL)
+		hResult = INVALID_HANDLE_VALUE; /* Shouldn't happen... */
+	return hResult;
 err:
 	return NULL;
 }

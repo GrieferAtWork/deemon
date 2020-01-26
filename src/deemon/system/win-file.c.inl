@@ -284,14 +284,12 @@ PRIVATE DWORD const generic_access[4] = {
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	DREF SystemFile *result;
-	HANDLE fp;
-	LPWSTR wname;
-	DWORD dwDesiredAccess = generic_access[oflags & OPEN_FACCMODE];
-	DWORD dwShareMode     = (FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
-	DWORD dwCreationDisposition;
-	DWORD dwFlagsAndAttributes = (FILE_ATTRIBUTE_NORMAL |
-	                              FILE_FLAG_BACKUP_SEMANTICS);
-	ASSERT_OBJECT_TYPE_EXACT(filename, &DeeString_Type);
+	HANDLE hFile;
+	DWORD dwDesiredAccess, dwShareMode;
+	DWORD dwCreationDisposition, dwFlagsAndAttributes;
+	dwDesiredAccess      = generic_access[oflags & OPEN_FACCMODE];
+	dwShareMode          = (FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE);
+	dwFlagsAndAttributes = (FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS);
 	/* Apply exclusivity flags. */
 	if (oflags & OPEN_FXREAD)
 		dwShareMode &= ~(FILE_SHARE_READ);
@@ -321,88 +319,47 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 	}
 	if (oflags & (OPEN_FDIRECT | OPEN_FSYNC))
 		dwFlagsAndAttributes |= FILE_FLAG_WRITE_THROUGH;
-	if (oflags & (OPEN_FHIDDEN))
+	if (oflags & OPEN_FHIDDEN)
 		dwFlagsAndAttributes |= FILE_ATTRIBUTE_HIDDEN;
-
-#undef QUICK_ATTEMPT_ANSI_API
-#if 0
-#define QUICK_ATTEMPT_ANSI_API 1
-#endif
-
-#ifdef QUICK_ATTEMPT_ANSI_API
-	/* Invoke the CreateFile() system call. */
-	if (!((DeeStringObject *)filename)->s_data ||
-	    !((DeeStringObject *)filename)->s_data->u_data[STRING_WIDTH_WCHAR]) {
-		/* No unicode cache has been pre-allocated. Try to open using ANSI APIs. */
-		DBG_ALIGNMENT_DISABLE();
-		fp = CreateFileA(DeeString_STR(filename), dwDesiredAccess, dwShareMode,
-		                 NULL, dwCreationDisposition, dwFlagsAndAttributes, NULL);
-		DBG_ALIGNMENT_ENABLE();
-		if (fp != INVALID_HANDLE_VALUE)
-			goto early_got_fp;
-		/* NOTE: The ANSI version is limited to MAX_PATH characters.
-		 *       If we haven't exceeded that limit, no need to try
-		 *       the wide-version without fixing UNC paths first. */
-		if (DeeString_SIZE(filename) <= MAX_PATH)
-			goto check_unc_path;
-	}
-#endif /* QUICK_ATTEMPT_ANSI_API */
-	wname = (LPWSTR)DeeString_AsWide(filename);
-	if unlikely(!wname)
+again:
+	hFile = DeeNTSystem_CreateFile(filename, dwDesiredAccess, dwShareMode, NULL,
+	                               dwCreationDisposition, dwFlagsAndAttributes, NULL);
+	if unlikely(!hFile)
 		goto err;
-	DBG_ALIGNMENT_DISABLE();
-	fp = CreateFileW(wname, dwDesiredAccess, dwShareMode, NULL,
-	                 dwCreationDisposition, dwFlagsAndAttributes, NULL);
-	DBG_ALIGNMENT_ENABLE();
-	if unlikely(!fp)
-		goto err;
-	if (fp != INVALID_HANDLE_VALUE) {
-		/* Simple case: The open was successful. */
-#ifdef QUICK_ATTEMPT_ANSI_API
-early_got_fp:
-#endif /* QUICK_ATTEMPT_ANSI_API */
-		Dee_Incref(filename);
-	} else {
+	if unlikely(hFile == INVALID_HANDLE_VALUE) {
 		DWORD error;
-#ifdef QUICK_ATTEMPT_ANSI_API
-check_unc_path:
-#endif /* QUICK_ATTEMPT_ANSI_API */
 		DBG_ALIGNMENT_DISABLE();
 		error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		if (DeeNTSystem_IsUncError(error)) {
-			/* Fix UNC and try again. */
-			filename = DeeNTSystem_FixUncPath(filename);
-			if unlikely(!filename)
-				goto err;
-			wname = (LPWSTR)DeeString_AsWide(filename);
-			if unlikely(!wname)
-				goto err_filename;
-			DBG_ALIGNMENT_DISABLE();
-			fp = CreateFileW(wname, dwDesiredAccess, dwShareMode, NULL,
-			                 dwCreationDisposition, dwFlagsAndAttributes, NULL);
-			DBG_ALIGNMENT_ENABLE();
-			if (fp != INVALID_HANDLE_VALUE)
-				goto got_file_name;
-			Dee_Decref(filename);
-			DBG_ALIGNMENT_DISABLE();
-			error = GetLastError();
-			DBG_ALIGNMENT_ENABLE();
-		}
 /*check_nt_error:*/
-		if (DeeNTSystem_IsFileNotFoundError(error) &&
-		    !(oflags & OPEN_FCREAT))
-			return ITER_DONE;
 		/* Handle file already-exists. */
 		if ((error == ERROR_FILE_EXISTS) &&
 		    (oflags & OPEN_FEXCL))
 			return ITER_DONE;
 		/* Throw the error as an NT error. */
-		nt_ThrowError(error);
+		if (DeeNTSystem_IsBadAllocError(error)) {
+			if (Dee_CollectMemory(1))
+				goto again;
+		} else if (DeeNTSystem_IsNotDir(error) ||
+		           DeeNTSystem_IsFileNotFoundError(error)) {
+			if (!(oflags & OPEN_FCREAT))
+				return ITER_DONE;
+			DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+			                        "File %r could not be found",
+			                        filename);
+		} else if (DeeNTSystem_IsAccessDeniedError(error)) {
+			DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+			                        "Access has not been granted for file %r",
+			                        filename);
+		} else {
+			DeeNTSystem_ThrowErrorf(&DeeError_FSError, error,
+			                        "Failed to obtain a writable handle for %r",
+			                        filename);
+		}
 		goto err;
 	}
-got_file_name:
-
+	/* Simple case: The open was successful. */
+	Dee_Incref(filename);
 #if 0 /* XXX: Only if `fp' is a pipe */
 	{
 		DWORD new_mode = oflags & OPEN_FNONBLOCK ? PIPE_NOWAIT : PIPE_WAIT;
@@ -423,15 +380,15 @@ got_file_name:
 	if unlikely(!result)
 		goto err_fp;
 	DeeLFileObject_Init(result, &DeeFSFile_Type);
-	result->sf_handle    = fp;
-	result->sf_ownhandle = fp;       /* Inherit stream. */
+	result->sf_handle    = hFile;
+	result->sf_ownhandle = hFile;    /* Inherit handle. */
 	result->sf_filename  = filename; /* Inherit reference. */
 	result->sf_filetype  = (uint32_t)FILE_TYPE_UNKNOWN;
 	result->sf_pendingc  = 0;
 	return (DREF DeeObject *)result;
 err_fp:
-	CloseHandle(fp);
-err_filename:
+	CloseHandle(hFile);
+/*err_filename:*/
 	Dee_Decref(filename);
 err:
 	return NULL;
