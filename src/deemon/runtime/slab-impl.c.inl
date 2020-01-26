@@ -19,8 +19,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "slab.c.inl"
-#define SIZE 10
-//#define NEXT_LARGER  5
+#define SIZE 6
+#define NEXT_LARGER  7
 #endif /* __INTELLISENSE__ */
 
 #include <hybrid/atomic.h>
@@ -48,10 +48,21 @@ DECL_BEGIN
 
 #if !defined(CONFIG_NO_OBJECT_SLABS) && 1
 
-#define SLAB_RAW_PAGECOUNT       (CONFIG_SLAB_PAGESIZE / ITEMSIZE)
-#define SLAB_INUSE_BITSET_LENGTH ((SLAB_RAW_PAGECOUNT + (__SIZEOF_POINTER__ * 8 - 1)) / (__SIZEOF_POINTER__ * 8))
-#define SLAB_INUSE_BITSET_SIZE   (SLAB_INUSE_BITSET_LENGTH * __SIZEOF_POINTER__)
-#define SLAB_PAGECOUNT           ((CONFIG_SLAB_PAGESIZE - (SLAB_INUSE_BITSET_SIZE + 3 * __SIZEOF_POINTER__)) / ITEMSIZE)
+#define SLAB_RAW_PAGECOUNT            (CONFIG_SLAB_PAGESIZE / ITEMSIZE)
+#define SLAB_RAW_INUSE_BITSET_LENGTH  ((SLAB_RAW_PAGECOUNT + (__SIZEOF_POINTER__ * 8 - 1)) / (__SIZEOF_POINTER__ * 8))
+#define SLAB_RAW_INUSE_BITSET_SIZE    (SLAB_RAW_INUSE_BITSET_LENGTH * __SIZEOF_POINTER__)
+#define SLAB_ITEMCOUNT                ((CONFIG_SLAB_PAGESIZE - (SLAB_RAW_INUSE_BITSET_SIZE + 3 * __SIZEOF_POINTER__)) / ITEMSIZE)
+#define SLAB_INUSE_BITSET_LENGTH      SLAB_RAW_INUSE_BITSET_LENGTH
+#define SLAB_LASTINUSEALWAYSUSED      ((SLAB_RAW_INUSE_BITSET_SIZE * 8) - SLAB_ITEMCOUNT)
+#if SLAB_LASTINUSEALWAYSUSED >= (__SIZEOF_POINTER__ * 8)
+#undef SLAB_INUSE_BITSET_LENGTH
+#define SLAB_INUSE_BITSET_LENGTH (SLAB_RAW_INUSE_BITSET_LENGTH - 1)
+#undef SLAB_LASTINUSEALWAYSUSED
+#define SLAB_LASTINUSEALWAYSUSED (((SLAB_RAW_INUSE_BITSET_SIZE - (__SIZEOF_POINTER__ * 8)) * 8) - SLAB_ITEMCOUNT)
+#if SLAB_LASTINUSEALWAYSUSED < 0 || SLAB_LASTINUSEALWAYSUSED >= (__SIZEOF_POINTER__ * 8)
+#error "This shouldn't happen"
+#endif /* SLAB_LASTINUSEALWAYSUSED < 0 || SLAB_LASTINUSEALWAYSUSED >= (__SIZEOF_POINTER__ * 8) */
+#endif /* SLAB_LASTINUSEALWAYSUSED >= (__SIZEOF_POINTER__ * 8) */
 
 typedef struct {
 	uint8_t si_data[ITEMSIZE];
@@ -61,7 +72,7 @@ typedef struct {
 #define SLAB_PAGE_INVALID    ((FUNC(SlabPage) *)-1)
 typedef struct FUNC(slab_page) FUNC(SlabPage);
 struct FUNC(slab_page) {
-	FUNC(SlabItem)        sp_items[SLAB_PAGECOUNT];
+	FUNC(SlabItem)        sp_items[SLAB_ITEMCOUNT];
 	FUNC(SlabPage)      **sp_pself; /* [1..1][1..1] Page self-pointer. */
 	FUNC(SlabPage)       *sp_next;  /* [0..1] Next page (of the same type; aka. free or full). */
 	ATOMIC_DATA uintptr_t sp_free;  /* Number of free items in this page. */
@@ -169,10 +180,10 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 	info->si_slabstart      = MY_REGION_START;
 	info->si_slabend        = MY_REGION_END;
 	info->si_itemsize       = ITEMSIZE;
-	info->si_items_per_page = SLAB_PAGECOUNT;
+	info->si_items_per_page = SLAB_ITEMCOUNT;
 	total_pages             = (MY_REGION_END - MY_REGION_START) / CONFIG_SLAB_PAGESIZE;
 	info->si_totalpages     = total_pages;
-	info->si_totalitems     = total_pages * SLAB_PAGECOUNT;
+	info->si_totalitems     = total_pages * SLAB_ITEMCOUNT;
 #ifdef CONFIG_NO_OBJECT_SLAB_STATS
 	rwlock_read(&FUNC(slab).s_lock);
 	{
@@ -189,8 +200,8 @@ FUNC(DeeSlab_StatSlab)(DeeSlabInfo *__restrict info) {
 		info->si_cur_fullpages = info->si_usedpages - freepages;
 		info->si_cur_freepages = freepages;
 		info->si_cur_free      = freeitems;
-		info->si_cur_alloc     = (freepages * SLAB_PAGECOUNT) - freeitems;
-		info->si_cur_alloc += info->si_cur_fullpages * SLAB_PAGECOUNT;
+		info->si_cur_alloc     = (freepages * SLAB_ITEMCOUNT) - freeitems;
+		info->si_cur_alloc += info->si_cur_fullpages * SLAB_ITEMCOUNT;
 	}
 	rwlock_endread(&FUNC(slab).s_lock);
 	info->si_max_alloc     = info->si_cur_alloc;
@@ -238,18 +249,18 @@ read_again:
 		info->si_max_fullpages = info->si_cur_fullpages;
 	if (info->si_max_freepages < info->si_cur_freepages)
 		info->si_max_freepages = info->si_cur_freepages;
-	if (info->si_cur_alloc > info->si_cur_freepages * SLAB_PAGECOUNT)
-		info->si_cur_alloc = info->si_cur_freepages * SLAB_PAGECOUNT;
-	if (info->si_cur_free > info->si_cur_freepages * SLAB_PAGECOUNT)
-		info->si_cur_free = info->si_cur_freepages * SLAB_PAGECOUNT;
+	if (info->si_cur_alloc > info->si_cur_freepages * SLAB_ITEMCOUNT)
+		info->si_cur_alloc = info->si_cur_freepages * SLAB_ITEMCOUNT;
+	if (info->si_cur_free > info->si_cur_freepages * SLAB_ITEMCOUNT)
+		info->si_cur_free = info->si_cur_freepages * SLAB_ITEMCOUNT;
 	if (info->si_max_alloc < info->si_cur_alloc)
 		info->si_max_alloc = info->si_cur_alloc;
 	if (info->si_max_free < info->si_cur_free)
 		info->si_max_free = info->si_cur_free;
-	if (info->si_max_alloc > info->si_cur_freepages * SLAB_PAGECOUNT)
-		info->si_max_alloc = info->si_cur_freepages * SLAB_PAGECOUNT;
-	if (info->si_max_free > info->si_cur_freepages * SLAB_PAGECOUNT)
-		info->si_max_free = info->si_cur_freepages * SLAB_PAGECOUNT;
+	if (info->si_max_alloc > info->si_cur_freepages * SLAB_ITEMCOUNT)
+		info->si_max_alloc = info->si_cur_freepages * SLAB_ITEMCOUNT;
+	if (info->si_max_free > info->si_cur_freepages * SLAB_ITEMCOUNT)
+		info->si_max_free = info->si_cur_freepages * SLAB_ITEMCOUNT;
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 }
 
@@ -276,6 +287,7 @@ again:
 		unsigned int i, j;
 		uintptr_t alloc;
 		for (i = 0; i < SLAB_INUSE_BITSET_LENGTH; ++i) {
+			unsigned int index;
 			uintptr_t mask = ATOMIC_READ(page->sp_inuse[i]);
 			if (mask == (uintptr_t)-1)
 				continue; /* Fully in use. */
@@ -303,8 +315,10 @@ again:
 			}
 			DEC_MAXPAIR(FUNC(slab).s_num_free, FUNC(slab).s_max_free);
 			INC_MAXPAIR(FUNC(slab).s_num_alloc, FUNC(slab).s_max_alloc);
-			LOG_SLAB("[SLAB] Alloc: %p (%Iu bytes)\n", &page->sp_items[(i * (__SIZEOF_POINTER__ * 8)) + j], (size_t)ITEMSIZE);
-			return &page->sp_items[(i * (__SIZEOF_POINTER__ * 8)) + j];
+			index = (i * (__SIZEOF_POINTER__ * 8)) + j;
+			ASSERTF(index < SLAB_ITEMCOUNT, "Invalid index: %u", index);
+			LOG_SLAB("[SLAB] Alloc: %p (%Iu bytes)\n", &page->sp_items[indexj], (size_t)ITEMSIZE);
+			return &page->sp_items[index];
 		}
 		SCHED_YIELD();
 		goto again;
@@ -320,14 +334,29 @@ again:
 		goto again;
 	COMPILER_BARRIER();
 	/* Initialize the new page, and add it as a free one. */
+#if SLAB_LASTINUSEALWAYSUSED == 0
 #if SLAB_INUSE_BITSET_LENGTH > 1
 	MEMSET_PTR(page->sp_inuse + 1, 0, SLAB_INUSE_BITSET_LENGTH - 1);
 #endif /* SLAB_INUSE_BITSET_LENGTH > 1 */
+#else /* SLAB_LASTINUSEALWAYSUSED == 0 */
+#if SLAB_INUSE_BITSET_LENGTH > 2
+	MEMSET_PTR(page->sp_inuse + 1, 0, SLAB_INUSE_BITSET_LENGTH - 2);
+#endif /* SLAB_INUSE_BITSET_LENGTH > 1 */
+	/* Fill in the last in-use word such that trailing/control items cannot be allocated! */
+	page->sp_inuse[SLAB_INUSE_BITSET_LENGTH - 1] = (~(((uintptr_t)1 << ((__SIZEOF_POINTER__ * 8) -
+	                                                                    SLAB_LASTINUSEALWAYSUSED)) -
+	                                                  1));
+#endif /* SLAB_LASTINUSEALWAYSUSED != 0 */
+
 	/* Set up the page such that we've already allocated its the first item. */
-	page->sp_inuse[0] = 0x0001;
-	page->sp_free     = SLAB_PAGECOUNT - 1;
+#if SLAB_INUSE_BITSET_LENGTH == 1 && SLAB_LASTINUSEALWAYSUSED != 0
+	page->sp_inuse[0] |= 0x1;
+#else /* SLAB_INUSE_BITSET_LENGTH == 1 && SLAB_LASTINUSEALWAYSUSED != 0 */
+	page->sp_inuse[0] = 0x1;
+#endif /* SLAB_INUSE_BITSET_LENGTH != 1 || SLAB_LASTINUSEALWAYSUSED == 0 */
+	page->sp_free = SLAB_ITEMCOUNT - 1;
 	COMPILER_WRITE_BARRIER();
-#if SLAB_PAGECOUNT >= 2
+#if SLAB_ITEMCOUNT >= 2
 	/* Remember the newly allocated page as containing free elements. */
 	rwlock_write(&FUNC(slab).s_lock);
 	COMPILER_READ_BARRIER();
@@ -342,8 +371,8 @@ again:
 	            FUNC(slab).s_max_alloc);
 	ADD_MAXPAIR(FUNC(slab).s_num_free,
 	            FUNC(slab).s_max_free,
-	            SLAB_PAGECOUNT - 1);
-#endif /* SLAB_PAGECOUNT >= 2 */
+	            SLAB_ITEMCOUNT - 1);
+#endif /* SLAB_ITEMCOUNT >= 2 */
 	return &page->sp_items[0];
 }
 
@@ -365,9 +394,9 @@ FORCELOCAL void
 		        "Invalid slab-pointer %p is improperly aligned for slab of size %#Ix",
 		        ptr, (size_t)ITEMSIZE);
 		index = (unsigned int)(((uintptr_t)ptr - (uintptr_t)page) / ITEMSIZE);
-		ASSERTF(index < (unsigned int)SLAB_PAGECOUNT,
+		ASSERTF(index < (unsigned int)SLAB_ITEMCOUNT,
 		        "Invalid slab-pointer %p is part of slab page controller (index = %u/%u)",
-		        ptr, index, (unsigned int)SLAB_PAGECOUNT);
+		        ptr, index, (unsigned int)SLAB_ITEMCOUNT);
 		FINI_DEBUG(ptr);
 		i = index / (__SIZEOF_POINTER__ * 8);
 		ASSERT(i < SLAB_INUSE_BITSET_LENGTH);
@@ -561,9 +590,11 @@ PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr,
 #undef ADD_MAXPAIR
 #undef SLAB_PAGE_INVALID
 #undef SLAB_RAW_PAGECOUNT
+#undef SLAB_RAW_INUSE_BITSET_LENGTH
+#undef SLAB_RAW_INUSE_BITSET_SIZE
+#undef SLAB_ITEMCOUNT
 #undef SLAB_INUSE_BITSET_LENGTH
-#undef SLAB_INUSE_BITSET_SIZE
-#undef SLAB_PAGECOUNT
+#undef SLAB_LASTINUSEALWAYSUSED
 
 #else /* !CONFIG_NO_OBJECT_SLABS */
 
