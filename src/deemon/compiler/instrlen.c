@@ -557,7 +557,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0xa1 */ 4, /* `ASM16_PRINT_C':               `print const <imm16>' */
 	/* 0xa2 */ 4, /* `ASM16_PRINT_C_SP':            `print const <imm16>, sp' */
 	/* 0xa3 */ 4, /* `ASM16_PRINT_C_NL':            `print const <imm16>, nl' */
-	/* 0xa4 */ 5, /* `ASM_RANGE_0_I32':             `push range $0, $<imm32>' */
+	/* 0xa4 */ 6, /* `ASM_RANGE_0_I32':             `push range $0, $<imm32>' */
 	/* 0xa5 */ 2, /* --- */
 	/* 0xa6 */ 3, /* `ASM_VARARGS_UNPACK':          `unpack varargs, #<imm8>' */
 	/* 0xa7 */ 2, /* `ASM_PUSH_VARKWDS_NE':         `push bool varkwds' */

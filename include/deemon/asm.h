@@ -1176,7 +1176,7 @@
 #define ASM16_PRINT_C         0xf0a1 /* [4][-0,+0]   `print const <imm16>'                - Print a constant from `<imm16>' to stdout. */
 #define ASM16_PRINT_C_SP      0xf0a2 /* [4][-0,+0]   `print const <imm16>, sp'            - Same as `ASM_PRINT_C16', but follow up by printing a space character. */
 #define ASM16_PRINT_C_NL      0xf0a3 /* [4][-0,+0]   `print const <imm16>, nl'            - Same as `ASM_PRINT_C16', but follow up by printing a new-line character. */
-#define ASM_RANGE_0_I32       0xf0a4 /* [5][-0,+1]   `push range $0, $<imm32>'            - Create a new range from using `int(0)' as `begin' and `int(<imm32>)' as `end'. */
+#define ASM_RANGE_0_I32       0xf0a4 /* [6][-0,+1]   `push range $0, $<imm32>'            - Create a new range from using `int(0)' as `begin' and `int(<imm32>)' as `end'. */
 /*      ASM_                  0xf0a5  *               --------                            - ------------------ */
 #define ASM_VARARGS_UNPACK    0xf0a6 /* [3][-0,+n]   `unpack varargs, #<imm8>'            - Unpack variable arguments and push `imm8' stack items. - Behaves the same as `push varargs; unpack pop, #<imm8>', except that the varargs Tuple doesn't need to be pushed. */
 #define ASM_PUSH_VARKWDS_NE   0xf0a7 /* [2][-0,+1]   `push bool varkwds'                  - Push true/false indicative of variable arguments being present. (Illegal instruction if the code doesn't have the `CODE_FVARKWDS' flag set) */
