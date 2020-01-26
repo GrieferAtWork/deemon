@@ -235,16 +235,164 @@ struct gc_deps {
 
 
 struct gc_dep_partner {
-	DeeObject               *dp_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
-	dref_t                   dp_num;  /* [!0] Amount of reference accounted for this chain entry. */
+	DeeObject *dp_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
+	dref_t     dp_num;  /* [!0] Amount of reference accounted for this chain entry. */
 };
 
+
+#undef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
+#if 1
+#define CONFIG_GC_DEP_PARTNERS_USE_BSEARCH 1
+#endif
+
+struct gc_dep_partners {
+	dref_t                 dp_pnum; /* Number of partner dependencies. */
+	struct gc_dep_partner *dp_pvec; /* [0..dp_pnum][owned] Vector of partner dependencies. */
+};
+
+/* Try to locate a partner dependency for `obj'
+ * If no such dependency exists, return `NULL' instead. */
+LOCAL WUNUSED NONNULL((1, 2)) struct gc_dep_partner *DCALL
+gc_dep_partners_locate(struct gc_dep_partners const *__restrict self,
+                       DeeObject *__restrict obj) {
+#ifdef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
+	size_t lo, hi;
+	lo = 0;
+	hi = self->dp_pnum;
+	while likely(lo < hi) {
+		size_t test_index;
+		DeeObject *other;
+		test_index = (lo + hi) / 2;
+		other      = self->dp_pvec[test_index].dp_obj;
+		if (obj < other) {
+			hi = test_index;
+		} else if (obj > other) {
+			lo = test_index + 1;
+		} else {
+			/* Found it! */
+			return &self->dp_pvec[test_index];
+		}
+	}
+	return NULL;
+#else /* CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
+	size_t i;
+	for (i = 0; i < self->dp_pnum; ++i) {
+		if (self->dp_pvec[i].dp_obj == obj)
+			return &self->dp_pvec[i];
+	}
+	return NULL;
+#endif /* !CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
+}
+
+/* Try to resize the given partner dependency set. */
+LOCAL WUNUSED NONNULL((1)) bool DCALL
+gc_dep_partners_resize(struct gc_dep_partners *__restrict self,
+                       size_t new_num_objs) {
+	struct gc_dep_partner *new_vec;
+	new_vec = (struct gc_dep_partner *)Dee_TryRealloc(self->dp_pvec,
+	                                                  new_num_objs *
+	                                                  sizeof(struct gc_dep_partner));
+	if unlikely(!new_vec) {
+		DeeMem_ClearCaches((size_t)-1);
+		new_vec = (struct gc_dep_partner *)Dee_TryRealloc(self->dp_pvec,
+		                                                  new_num_objs *
+		                                                  sizeof(struct gc_dep_partner));
+		if unlikely(!new_vec)
+			return false;
+	}
+	self->dp_pvec = new_vec;
+	self->dp_pnum = new_num_objs;
+	return true;
+}
+
+/* Insert the `nth_object' after a call to `gc_dep_partners_resize()' */
+LOCAL WUNUSED NONNULL((1)) void DCALL
+gc_dep_partners_insert_after_resize(struct gc_dep_partners *__restrict self,
+                                    size_t nth_object,
+                                    DeeObject *__restrict obj,
+                                    dref_t num) {
+#ifdef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
+	size_t lo, hi;
+	ASSERT(nth_object < self->dp_pnum);
+	lo = 0;
+	hi = self->dp_pnum;
+	while likely(lo < hi) {
+		size_t test_index;
+		DeeObject *other;
+		test_index = (lo + hi) / 2;
+		other      = self->dp_pvec[test_index].dp_obj;
+		if (obj < other) {
+			hi = test_index;
+		} else {
+			ASSERTF(obj != other,
+			        "Duplicate object %p",
+			        obj);
+			lo = test_index + 1;
+		}
+	}
+	ASSERT(lo == hi);
+	memmove(&self->dp_pvec[lo] + 1,
+	        &self->dp_pvec[lo],
+	        (nth_object - lo) *
+	        sizeof(struct gc_dep_partner));
+	self->dp_pvec[lo].dp_obj = obj;
+	self->dp_pvec[lo].dp_num = num;
+#else /* CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
+	ASSERT(nth_object < self->dp_pnum);
+	self->dp_pvec[nth_object].dp_obj = obj;
+	self->dp_pvec[nth_object].dp_num = num;
+#endif /* !CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
+}
+
+/* NOTE: This function assumes that `vec' is sorted by object address
+ *       when `CONFIG_GC_DEP_PARTNERS_USE_BSEARCH' is defined! */
+LOCAL WUNUSED NONNULL((1)) void DCALL
+gc_dep_partners_insertall_after_resize(struct gc_dep_partners *__restrict self,
+                                       size_t nth_object,
+                                       struct gc_dep_partner const *__restrict vec,
+                                       size_t count) {
+#ifdef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
+	size_t dst_index, src_index;
+	for (src_index = dst_index = 0; src_index < count; ++src_index) {
+		DeeObject *obj;
+		obj = vec[src_index].dp_obj;
+		for (;;) {
+			if (dst_index >= nth_object) {
+				memcpy(&self->dp_pvec[nth_object],
+				       &vec[src_index],
+				       (count - src_index) *
+				       sizeof(struct gc_dep_partner));
+				return;
+			}
+			ASSERTF(obj != self->dp_pvec[dst_index].dp_obj,
+			        "Duplicate object %p",
+			        obj);
+			if (obj <= self->dp_pvec[dst_index].dp_obj)
+				break;
+			++dst_index;
+		}
+		/* Insert the object here. */
+		memmove(&self->dp_pvec[dst_index] + 1,
+		        &self->dp_pvec[dst_index],
+		        (nth_object - dst_index) *
+		        sizeof(struct gc_dep_partner));
+		self->dp_pvec[dst_index].dp_obj = obj;
+		self->dp_pvec[dst_index].dp_num = vec[src_index].dp_num;
+		++dst_index;
+		++nth_object;
+	}
+#else /* CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
+	ASSERT((nth_object + count) <= self->dp_pnum);
+	ASSERT(count != 0);
+	memcpy(&self->dp_pvec[nth_object], vec, count * sizeof(struct gc_dep_partner));
+#endif /* !CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
+}
+
 struct gc_dep_chain {
-	struct gc_dep_chain     *dc_prev; /* [0..1] Another object dependency also apart of this chain. */
-	DeeObject               *dc_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
-	dref_t                   dc_num;  /* [!0] Amount of reference accounted for this chain entry. */
-	dref_t                   dc_pnum; /* Number of partner dependencies. */
-	struct gc_dep_partner   *dc_pvec; /* [0..dc_pnum][owned] Vector of partner dependencies. */
+	struct gc_dep_chain   *dc_prev; /* [0..1] Another object dependency also apart of this chain. */
+	DeeObject             *dc_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
+	dref_t                 dc_num;  /* [!0] Amount of reference accounted for this chain entry. */
+	struct gc_dep_partners dc_part; /* Partner dependencies. */
 };
 
 struct visit_data {
@@ -394,7 +542,7 @@ again:
 	self = (DeeObject *)tp_self;
 	goto again;
 do_the_visit:
-	/*DEE_DPRINTF("VISIT: %k at %p (%u refs)\n",tp_self,self,self->ob_refcnt);*/
+	/*DEE_DPRINTF("VISIT: %k at %p (%u refs)\n", tp_self, self, self->ob_refcnt);*/
 	perturb = i = Dee_HashPointer(self) & data->vd_deps.gd_msk;
 	for (;; i = VD_HASHNX(i, perturb), VD_HASHPT(perturb)) {
 		struct gc_dep *dep;
@@ -417,8 +565,11 @@ do_the_visit:
 			/* Insert the link dependency. */
 			gc_deps_insert(&data->vd_deps, link->dc_obj, link->dc_num);
 			/* Also insert partner dependencies. */
-			for (j = 0; j < link->dc_pnum; ++j)
-				gc_deps_insert(&data->vd_deps, link->dc_pvec[j].dp_obj, link->dc_pvec[j].dp_num);
+			for (j = 0; j < link->dc_part.dp_pnum; ++j) {
+				gc_deps_insert(&data->vd_deps,
+				               link->dc_part.dp_pvec[j].dp_obj,
+				               link->dc_part.dp_pvec[j].dp_num);
+			}
 		}
 		return;
 	}
@@ -430,7 +581,7 @@ do_the_visit:
 	 *          to resolve, in which case return immediately. */
 	link = data->vd_chain, i = 0;
 	for (; link; link = link->dc_prev, ++i) {
-		size_t j;
+		struct gc_dep_partner *partner;
 		if (link->dc_obj == self) {
 			/* Found another reference to this object. */
 			++link->dc_num;
@@ -440,14 +591,12 @@ do_the_visit:
 			goto found_chain_link;
 		}
 		/* Must also search partners. */
-		for (j = 0; j < link->dc_pnum; ++j) {
-			if (link->dc_pvec[j].dp_obj != self)
-				continue;
+		partner = gc_dep_partners_locate(&link->dc_part, self);
+		if (partner) {
 			/* Found a partner! */
-			++link->dc_pvec[j].dp_num;
+			++partner->dp_num;
 #ifdef GC_ASSERT_REFERENCE_COUNTS
-			ASSERT(link->dc_pvec[j].dp_obj->ob_refcnt >=
-			       link->dc_pvec[j].dp_num);
+			ASSERT(partner->dp_obj->ob_refcnt >= partner->dp_num);
 #endif /* GC_ASSERT_REFERENCE_COUNTS */
 			goto found_chain_link;
 		}
@@ -478,44 +627,32 @@ found_chain_link:
 		 */
 		if (i != 0) {
 			/* Transfer partner dependencies. */
-			size_t new_count, dst;
+			size_t dst;
 			struct gc_dep_chain *iter;
-			struct gc_dep_partner *new_vec;
 			iter = data->vd_chain;
 			for (; iter != link; iter = iter->dc_prev)
-				i += iter->dc_pnum; /* Flatten inner partners. */
-			dst       = link->dc_pnum;
-			new_count = dst + i;
-			new_vec = (struct gc_dep_partner *)Dee_TryRealloc(link->dc_pvec,
-			                                                  new_count *
-			                                                  sizeof(struct gc_dep_partner));
-			if unlikely(!new_vec) {
-				DeeMem_ClearCaches((size_t)-1);
-				new_vec = (struct gc_dep_partner *)Dee_TryRealloc(link->dc_pvec,
-				                                                  new_count *
-				                                                  sizeof(struct gc_dep_partner));
-				if unlikely(!new_vec) {
-					data->vd_deps.gd_err = true; /* What'sha gonna do? */
-					return;
-				}
+				i += iter->dc_part.dp_pnum; /* Flatten inner partners. */
+			dst = link->dc_part.dp_pnum;
+			if unlikely(!gc_dep_partners_resize(&link->dc_part, dst + i)) {
+				data->vd_deps.gd_err = true; /* What'sha gonna do? */
+				return;
 			}
-			link->dc_pvec = new_vec;
-			link->dc_pnum = new_count;
-			iter          = data->vd_chain;
-			for (; iter != link; iter = iter->dc_prev) {
-				link->dc_pvec[dst].dp_obj = iter->dc_obj;
-				link->dc_pvec[dst].dp_num = iter->dc_num;
+			for (iter = data->vd_chain; iter != link; iter = iter->dc_prev) {
+				gc_dep_partners_insert_after_resize(&link->dc_part,
+				                                    dst,
+				                                    iter->dc_obj,
+				                                    iter->dc_num);
 				++dst;
 				/* Copy old partners. */
-				if (iter->dc_pnum) {
-					memcpy(&link->dc_pvec[dst],
-					       iter->dc_pvec,
-					       iter->dc_pnum *
-					       sizeof(struct gc_dep_partner));
-					dst += iter->dc_pnum;
+				if (iter->dc_part.dp_pnum) {
+					gc_dep_partners_insertall_after_resize(&link->dc_part,
+					                                       dst,
+					                                       iter->dc_part.dp_pvec,
+					                                       iter->dc_part.dp_pnum);
+					dst += iter->dc_part.dp_pnum;
 				}
 			}
-			ASSERT(dst == link->dc_pnum);
+			ASSERT(dst == link->dc_part.dp_pnum);
 			/* Remove partners objects from the
 			 * base-chain of unconfirmed dependencies. */
 			data->vd_chain = link;
@@ -528,12 +665,12 @@ found_chain_link:
 	 *          object and update visit_data to take it into
 	 *          account before proceeding to recursively search
 	 *          other dependencies. */
-	node.dc_prev   = data->vd_chain;
-	node.dc_obj    = self;
-	node.dc_num    = 1;
-	node.dc_pnum   = 0;
-	node.dc_pvec   = NULL;
-	data->vd_chain = &node;
+	node.dc_prev         = data->vd_chain;
+	node.dc_obj          = self;
+	node.dc_num          = 1;
+	node.dc_part.dp_pnum = 0;
+	node.dc_part.dp_pvec = NULL;
+	data->vd_chain       = &node;
 
 	/* Recursively search this object. */
 	DeeObject_Visit(self, (dvisit_t)&visit_object, data);
@@ -543,7 +680,7 @@ found_chain_link:
 	if (data->vd_chain == &node)
 		data->vd_chain = node.dc_prev;
 	/* Free the vector of partner dependencies. */
-	Dee_Free(node.dc_pvec);
+	Dee_Free(node.dc_part.dp_pvec);
 }
 
 
