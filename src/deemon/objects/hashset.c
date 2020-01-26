@@ -749,8 +749,11 @@ restart:
 			item->si_key = dummy;
 			Dee_Incref(dummy);
 			ASSERT(me->s_used);
-			if (--me->s_used < me->s_size / 2)
+			if (--me->s_used <= me->s_size / 2)
 				set_rehash(me, -1);
+			ASSERT((me->s_elem == empty_set_items) == (me->s_mask == 0));
+			ASSERT((me->s_elem == empty_set_items) == (me->s_used == 0));
+			ASSERT((me->s_elem == empty_set_items) == (me->s_size == 0));
 			DeeHashSet_LockEndWrite(me);
 			Dee_Decref(item_key);
 			return 1;
@@ -1001,8 +1004,11 @@ again_lock:
 		item->si_key = dummy;
 		Dee_Incref(dummy);
 		ASSERT(me->s_used);
-		if (--me->s_used < me->s_size / 2)
+		if (--me->s_used <= me->s_size / 2)
 			set_rehash(me, -1);
+		ASSERT((me->s_elem == empty_set_items) == (me->s_mask == 0));
+		ASSERT((me->s_elem == empty_set_items) == (me->s_used == 0));
+		ASSERT((me->s_elem == empty_set_items) == (me->s_size == 0));
 		DeeHashSet_LockEndRead(me);
 		Dee_Decref(old_item);
 		return 1;
@@ -1684,8 +1690,11 @@ set_pop(Set *self, size_t argc, DeeObject **argv) {
 		item->si_key = dummy;
 		Dee_Incref(dummy);
 		ASSERT(self->s_used);
-		if (--self->s_used < self->s_size / 2)
+		if (--self->s_used <= self->s_size / 2)
 			set_rehash(self, -1);
+		ASSERT((self->s_elem == empty_set_items) == (self->s_mask == 0));
+		ASSERT((self->s_elem == empty_set_items) == (self->s_used == 0));
+		ASSERT((self->s_elem == empty_set_items) == (self->s_size == 0));
 		DeeHashSet_LockEndWrite(self);
 		return result;
 	}

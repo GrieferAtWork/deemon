@@ -480,8 +480,12 @@ INTDEF struct uset_item empty_set_items[1];
 
 INTDEF WUNUSED NONNULL((1)) DREF USet *DCALL USet_FromSequence(DeeObject *__restrict sequence);
 INTDEF WUNUSED NONNULL((1)) DREF UDict *DCALL UDict_FromSequence(DeeObject *__restrict sequence);
+
+INTDEF WUNUSED DREF URoSet *DCALL URoSet_New(void);
 INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromIterator(DeeObject *__restrict iterator);
 INTDEF WUNUSED NONNULL((1)) DREF URoSet *DCALL URoSet_FromSequence(DeeObject *__restrict sequence);
+
+INTDEF WUNUSED DREF URoDict *DCALL URoDict_New(void);
 INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromIterator(DeeObject *__restrict iterator);
 INTDEF WUNUSED NONNULL((1)) DREF URoDict *DCALL URoDict_FromSequence(DeeObject *__restrict sequence);
 
