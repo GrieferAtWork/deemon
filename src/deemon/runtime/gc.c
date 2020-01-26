@@ -1046,10 +1046,29 @@ restart:
 	did_untrack = false;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
 		ASSERT(iter != iter->gc_next);
+#ifdef CONFIG_NO_THREADS
 		if (iter->gc_object.ob_refcnt == 0)
 			continue; /* The object may have just been decref()-ed by another thread,
 			           * but that thread hadn't had the chance to untrack it, yet. */
 		ASSERT_OBJECT(&iter->gc_object);
+#else /* CONFIG_NO_THREADS */
+		if (ATOMIC_READ(iter->gc_object.ob_refcnt) == 0)
+			continue; /* The object may have just been decref()-ed by another thread,
+			           * but that thread hadn't had the chance to untrack it, yet. */
+		/* This can (and has been seen to) fail when another thread is currently
+		 * destroying the associated object, causing its refcnt to drop to zero
+		 * NOTE: In the generic case, this is allowed to happen, since the destroying
+		 *       thread will have to acquire `gc_lock' in order to untrack the object,
+		 *       meaning that the thread has to wait for us to finish, and all we have
+		 *       to do is to be able to deal with a dead-but-not-yet-destroyed-object,
+		 *       as indicated by the object's refcnt having dropped to `0'
+		 */
+#if 0
+		ASSERT_OBJECT(&iter->gc_object);
+#else
+		ASSERT_OBJECT(iter->gc_object.ob_type);
+#endif
+#endif /* !CONFIG_NO_THREADS */
 #ifdef CONFIG_GC_CHECK_MEMORY
 		DEE_CHECKMEMORY();
 #endif /* CONFIG_GC_CHECK_MEMORY */
