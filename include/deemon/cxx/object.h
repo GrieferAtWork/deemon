@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <type_traits>
+#include <hybrid/typecore.h>
 
 #include "../bool.h"
 #include "../error.h"
@@ -36,6 +37,10 @@
 #include "../object.h"
 #include "../string.h"
 #include "../tuple.h"
+
+#ifdef __native_wchar_t_defined
+#include "../system-features.h"
+#endif /* __native_wchar_t_defined */
 
 DEE_CXX_BEGIN
 
@@ -297,32 +302,32 @@ class object_base {
 protected:
 	DREF DeeObject *m_ptr; /* [1..1][lock(CALLER)] The represented object. */
 public:
-#define DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(T, superT)                    \
-	T(T &&right)  DEE_CXX_NOTHROW: superT(std::move((superT &)right)) {} \
-	T(T const &right) DEE_CXX_NOTHROW: superT(right) {}                  \
-	T(DeeObject *obj) DEE_CXX_NOTHROW: superT(obj) {}                    \
-	T(obj_nonnull obj) DEE_CXX_NOTHROW: superT(obj) {}                   \
-	T(obj_maybenull obj) DEE_CXX_NOTHROW: superT(obj) {}                 \
-	T(obj_inherited obj) DEE_CXX_NOTHROW: superT(obj) {}                 \
-	T(obj_nonnull_inherited obj) DEE_CXX_NOTHROW: superT(obj) {}         \
-	T(obj_maybenull_inherited obj) DEE_CXX_NOTHROW: superT(obj) {}       \
-	T &operator=(T &&right) DEE_CXX_NOTHROW {                            \
-		superT::operator=(std::move((superT &)right));                   \
-		return *this;                                                    \
-	}                                                                    \
-	T &operator=(T const &right) DEE_CXX_NOTHROW {                       \
-		superT::operator=(right);                                        \
-		return *this;                                                    \
-	}                                                                    \
-	T copy() const {                                                     \
-		return inherit(DeeObject_Copy(*this));                           \
-	}                                                                    \
-	T deepcopy() const {                                                 \
-		return inherit(DeeObject_DeepCopy(*this));                       \
-	}                                                                    \
-	T &inplace_deepcopy() {                                              \
-		throw_if_nonzero(DeeObject_InplaceDeepCopy(&this->m_ptr));       \
-		return *this;                                                    \
+#define DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(T, ...)                                 \
+	T(T &&right)  DEE_CXX_NOTHROW: __VA_ARGS__(std::move((__VA_ARGS__ &)right)) {} \
+	T(T const &right) DEE_CXX_NOTHROW: __VA_ARGS__(right) {}                       \
+	T(DeeObject *obj) DEE_CXX_NOTHROW: __VA_ARGS__(obj) {}                         \
+	T(obj_nonnull obj) DEE_CXX_NOTHROW: __VA_ARGS__(obj) {}                        \
+	T(obj_maybenull obj) DEE_CXX_NOTHROW: __VA_ARGS__(obj) {}                      \
+	T(obj_inherited obj) DEE_CXX_NOTHROW: __VA_ARGS__(obj) {}                      \
+	T(obj_nonnull_inherited obj) DEE_CXX_NOTHROW: __VA_ARGS__(obj) {}              \
+	T(obj_maybenull_inherited obj) DEE_CXX_NOTHROW: __VA_ARGS__(obj) {}            \
+	T &operator=(T &&right) DEE_CXX_NOTHROW {                                      \
+		__VA_ARGS__::operator=(std::move((__VA_ARGS__ &)right));                   \
+		return *this;                                                              \
+	}                                                                              \
+	T &operator=(T const &right) DEE_CXX_NOTHROW {                                 \
+		__VA_ARGS__::operator=(right);                                             \
+		return *this;                                                              \
+	}                                                                              \
+	T copy() const {                                                               \
+		return inherit(DeeObject_Copy(*this));                                     \
+	}                                                                              \
+	T deepcopy() const {                                                           \
+		return inherit(DeeObject_DeepCopy(*this));                                 \
+	}                                                                              \
+	T &inplace_deepcopy() {                                                        \
+		throw_if_nonzero(DeeObject_InplaceDeepCopy(&this->m_ptr));                 \
+		return *this;                                                              \
 	}
 	object_base() DEE_CXX_NOTHROW: m_ptr(NULL) {}
 	object_base(object_base &&right) DEE_CXX_NOTHROW: m_ptr(right.m_ptr) {
@@ -678,13 +683,45 @@ public:
 	}
 };
 #ifdef __native_wchar_t_defined
-template<> class any_convertible</*wide*/ dwchar_t const *>: public any_convertible_base {
+#ifndef _dee_wcslen
+#ifdef CONFIG_HAVE_wcslen
+#define _dee_wcslen(str) ::wcslen(str)
+#else /* CONFIG_HAVE_wcslen */
+#define _dee_wcslen(str) (::deemon::detail::_dee_wcslen)(str)
+DeeSystem_DEFINE_wcslen(_dee_wcslen)
+#endif /* !CONFIG_HAVE_wcslen */
+#endif /* !_dee_wcslen */
+template<> class any_convertible</*wide*/ wchar_t const *>: public any_convertible_base {
 public:
-	static DREF DeeObject *convert(/*wide*/ dwchar_t const *__restrict value) {
-		return DeeString_NewWide(value, wcslen(value), STRING_ERROR_FSTRICT);
+	static DREF DeeObject *convert(/*wide*/ wchar_t const *__restrict value) {
+		return DeeString_NewWide(value, _dee_wcslen(value), STRING_ERROR_FSTRICT);
 	}
 };
 #endif /* __native_wchar_t_defined */
+
+#ifdef __native_char16_t_defined
+#ifndef _dee_c16len
+DeeSystem_DEFINE_XSTRLEN(_dee_c16len, uint16_t)
+#define _dee_c16len(str) _dee_c16len(str)
+#endif /* !_dee_c16len */
+#ifndef _dee_c32len
+DeeSystem_DEFINE_XSTRLEN(_dee_c32len, uint32_t)
+#define _dee_c32len(str) _dee_c32len(str)
+#endif /* !_dee_c32len */
+template<> class any_convertible<char16_t const *>: public any_convertible_base {
+public:
+	static DREF DeeObject *convert(char16_t const *__restrict value) {
+		return DeeString_NewUtf16((uint16_t const *)value, _dee_c16len((uint16_t const *)value), STRING_ERROR_FSTRICT);
+	}
+};
+template<> class any_convertible<char32_t const *>: public any_convertible_base {
+public:
+	static DREF DeeObject *convert(char32_t const *__restrict value) {
+		return DeeString_NewUtf32((uint32_t const *)value, _dee_c32len((uint32_t const *)value), STRING_ERROR_FSTRICT);
+	}
+};
+#endif /* __native_char16_t_defined */
+
 #undef DEFINE_CONVERTIBLE
 template<size_t sz>
 class any_convertible<char const[sz]>: public any_convertible_base {
@@ -696,15 +733,35 @@ public:
 template<size_t sz> class any_convertible<char[sz]>: public any_convertible<char const[sz]> {};
 #ifdef __native_wchar_t_defined
 template<size_t sz>
-class any_convertible<dwchar_t const[sz]>: public any_convertible_base {
+class any_convertible<wchar_t const[sz]>: public any_convertible_base {
 public:
-	static DREF DeeObject *convert(/*utf-8*/ dwchar_t const (&value)[sz]) {
+	static DREF DeeObject *convert(/*utf-8*/ wchar_t const (&value)[sz]) {
 		return DeeString_NewWide(value, sz - 1, STRING_ERROR_FSTRICT);
 	}
 };
-template<size_t sz> class any_convertible<dwchar_t[sz]>
-    : public any_convertible<dwchar_t const[sz]> {};
+template<size_t sz> class any_convertible<wchar_t[sz]>
+    : public any_convertible<wchar_t const[sz]> {};
 #endif /* __native_wchar_t_defined */
+#ifdef __native_char16_t_defined
+template<size_t sz>
+class any_convertible<char16_t const[sz]>: public any_convertible_base {
+public:
+	static DREF DeeObject *convert(/*utf-8*/ char16_t const (&value)[sz]) {
+		return DeeString_NewUtf16(value, sz - 1, STRING_ERROR_FSTRICT);
+	}
+};
+template<size_t sz> class any_convertible<char16_t[sz]>
+    : public any_convertible<char16_t const[sz]> {};
+template<size_t sz>
+class any_convertible<char32_t const[sz]>: public any_convertible_base {
+public:
+	static DREF DeeObject *convert(/*utf-8*/ char32_t const (&value)[sz]) {
+		return DeeString_NewUtf32(value, sz - 1, STRING_ERROR_FSTRICT);
+	}
+};
+template<size_t sz> class any_convertible<char32_t[sz]>
+    : public any_convertible<char32_t const[sz]> {};
+#endif /* __native_char16_t_defined */
 
 template<class T>
 class any_convertible<std::initializer_list<T> > {

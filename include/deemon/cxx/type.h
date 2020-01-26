@@ -136,10 +136,10 @@ public: /* type_ from deemon */
 };
 
 
-/* typeof(): type  (Same as the `type()' expression in user-code) */
+/* typeof_(): type  (Same as the `type()' expression in user-code) */
 template<class T>
 inline typename std::enable_if<std::is_base_of< ::deemon::Object, T>::value,
-                               Type<T> >::type const &typeof(T const &ob) DEE_CXX_NOTHROW {
+                               Type<T> >::type const &typeof_(T const &ob) DEE_CXX_NOTHROW {
 	return *(::deemon::Type<T> const *)&ob.ptr()->ob_type;
 }
 

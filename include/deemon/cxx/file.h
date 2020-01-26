@@ -266,13 +266,13 @@ public:
 
 class File::Buffer: public File {
 public:
-	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
+	static DeeTypeObject *(classtype)() DEE_CXX_NOTHROW {
 		return (DeeTypeObject *)&DeeFileBuffer_Type;
 	}
-	static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+	static bool (check)(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
 		return DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeFileBuffer_Type);
 	}
-	static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+	static bool (checkexact)(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
 		return DeeObject_InstanceOfExact(ob, (DeeTypeObject *)&DeeFileBuffer_Type);
 	}
 
@@ -280,23 +280,23 @@ public:
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Buffer, deemon::File)
 	Buffer(DeeObject *__restrict file, uint16_t mode, size_t size)
 	    : deemon::File(inherit(DeeFileBuffer_New(file, mode, size))) {}
-	void setmode(uint16_t mode, size_t size) {
+	void (setmode)(uint16_t mode, size_t size) {
 		throw_if_nonzero(DeeFileBuffer_SetMode(*this, mode, size));
 	}
-	static void sync_ttys() {
+	static void (sync_ttys)() {
 		throw_if_nonzero(DeeFileBuffer_SyncTTYs());
 	}
 };
 
 class File::Writer: public File {
 public:
-	static DeeTypeObject *classtype() DEE_CXX_NOTHROW {
+	static DeeTypeObject *(classtype)() DEE_CXX_NOTHROW {
 		return (DeeTypeObject *)&DeeFileWriter_Type;
 	}
-	static bool check(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+	static bool (check)(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
 		return DeeObject_InstanceOf(ob, (DeeTypeObject *)&DeeFileWriter_Type);
 	}
-	static bool checkexact(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
+	static bool (checkexact)(DeeObject *__restrict ob) DEE_CXX_NOTHROW {
 		return DeeObject_InstanceOfExact(ob, (DeeTypeObject *)&DeeFileWriter_Type);
 	}
 

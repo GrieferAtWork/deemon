@@ -125,9 +125,13 @@ typedef struct Dee_string_object DeeStringObject;
 #error "__WCHAR_TYPE__ should have been defined by <hybrid/typecore.h>"
 #endif /* !__WCHAR_TYPE__ */
 
+#ifdef __native_wchar_t_defined
+typedef wchar_t Dee_wchar_t;
+#else /* __native_wchar_t_defined */
 typedef __WCHAR_TYPE__ Dee_wchar_t;
+#endif /* !__native_wchar_t_defined */
 #ifdef DEE_SOURCE
-typedef __WCHAR_TYPE__ dwchar_t;
+typedef Dee_wchar_t dwchar_t;
 #define Dee_charptr dcharptr
 #endif /* DEE_SOURCE */
 

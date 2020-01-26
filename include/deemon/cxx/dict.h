@@ -44,9 +44,9 @@ public:
 	}
 
 public: /* Dict from deemon */
-	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Dict, Mapping)
+	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(Dict, Mapping<KeyType, ValueType>)
 	Dict()
-	    : Mapping(inherit(DeeDict_New())) {}
+	    : Mapping<KeyType, ValueType>(inherit(DeeDict_New())) {}
 };
 
 

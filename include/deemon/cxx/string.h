@@ -37,15 +37,23 @@ DEE_CXX_BEGIN
 
 namespace detail {
 #ifdef __native_wchar_t_defined
+#ifndef _dee_wcslen
 #ifdef CONFIG_HAVE_wcslen
 #define _dee_wcslen(str) ::wcslen(str)
 #else /* CONFIG_HAVE_wcslen */
 #define _dee_wcslen(str) (::deemon::detail::_dee_wcslen)(str)
 DeeSystem_DEFINE_wcslen(_dee_wcslen)
 #endif /* !CONFIG_HAVE_wcslen */
+#endif /* !_dee_wcslen */
 #endif /* __native_wchar_t_defined */
+#ifndef _dee_c16len
 DeeSystem_DEFINE_XSTRLEN(_dee_c16len, uint16_t)
+#define _dee_c16len(str) _dee_c16len(str)
+#endif /* !_dee_c16len */
+#ifndef _dee_c32len
 DeeSystem_DEFINE_XSTRLEN(_dee_c32len, uint32_t)
+#define _dee_c32len(str) _dee_c32len(str)
+#endif /* !_dee_c32len */
 }
 
 class string: public Sequence<string> {

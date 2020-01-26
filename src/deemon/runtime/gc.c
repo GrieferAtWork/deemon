@@ -346,7 +346,7 @@ gc_dep_partners_resize(struct gc_dep_partners *__restrict self,
 }
 
 /* Insert the `nth_object' after a call to `gc_dep_partners_resize()' */
-LOCAL WUNUSED NONNULL((1)) void DCALL
+LOCAL NONNULL((1)) void DCALL
 gc_dep_partners_insert_after_resize(struct gc_dep_partners *__restrict self,
                                     size_t nth_object,
                                     DeeObject *__restrict obj,
@@ -386,7 +386,7 @@ gc_dep_partners_insert_after_resize(struct gc_dep_partners *__restrict self,
 
 /* NOTE: This function assumes that `vec' is sorted by object address
  *       when `CONFIG_GC_DEP_PARTNERS_USE_BSEARCH' is defined! */
-LOCAL WUNUSED NONNULL((1)) void DCALL
+LOCAL NONNULL((1)) void DCALL
 gc_dep_partners_insertall_after_resize(struct gc_dep_partners *__restrict self,
                                        size_t nth_object,
                                        struct gc_dep_partner const *__restrict vec,
