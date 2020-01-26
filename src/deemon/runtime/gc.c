@@ -355,7 +355,7 @@ gc_dep_partners_insert_after_resize(struct gc_dep_partners *__restrict self,
 	size_t lo, hi;
 	ASSERT(nth_object < self->dp_pnum);
 	lo = 0;
-	hi = self->dp_pnum;
+	hi = nth_object;
 	while likely(lo < hi) {
 		size_t test_index;
 		DeeObject *other;
