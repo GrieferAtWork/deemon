@@ -217,6 +217,15 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 
 
 
+#undef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
+#if 1
+#define CONFIG_GC_DEP_PARTNERS_USE_BSEARCH 1
+#endif
+
+#undef CONFIG_GC_TRACK_LEAFS
+#if 1
+#define CONFIG_GC_TRACK_LEAFS 1
+#endif
 
 
 struct gc_dep {
@@ -233,17 +242,27 @@ struct gc_deps {
 #define VD_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
 #define VD_HASHPT(perturb)     ((perturb) >>= 5)
 
+#ifdef CONFIG_GC_TRACK_LEAFS
+struct gc_leaf {
+	DREF DeeObject *gl_obj; /* [0..1] The leaf object. */
+};
+
+struct gc_leafs {
+	/* GC leaf objects (i.e. objects checked, but found to not be apart of the current loop) */
+	size_t          gl_cnt; /* Number of leafs. */
+	size_t          gl_msk; /* [!0] Leaf mask. */
+	struct gc_leaf *gl_vec; /* [1..gd_msk+1] Hash-vector of leafs. */
+};
+#define VL_HASHOF(dat, ob)     (Dee_HashPointer(ob) & (dat)->gl_msk)
+#define VL_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
+#define VL_HASHPT(perturb)     ((perturb) >>= 5)
+#endif /* CONFIG_GC_TRACK_LEAFS */
+
 
 struct gc_dep_partner {
 	DeeObject *dp_obj;  /* [1..1] The object that is apart of the current, unconfirmed chain of dependencies. */
 	dref_t     dp_num;  /* [!0] Amount of reference accounted for this chain entry. */
 };
-
-
-#undef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
-#if 1
-#define CONFIG_GC_DEP_PARTNERS_USE_BSEARCH 1
-#endif
 
 struct gc_dep_partners {
 	dref_t                 dp_pnum; /* Number of partner dependencies. */
@@ -397,12 +416,18 @@ struct gc_dep_chain {
 
 struct visit_data {
 	struct gc_deps       vd_deps;   /* Set of known dependencies. */
+#ifdef CONFIG_GC_TRACK_LEAFS
+	struct gc_leafs      vd_leafs;  /* Set of known leaf objects. */
+#endif /* CONFIG_GC_TRACK_LEAFS */
 	struct gc_dep_chain *vd_chain;  /* [0..1] Chain of unconfirmed dependencies. */
 };
 
 /* Fallback buffer used for when there is not enough memory
  * to create a larger buffer for tracking visited objects. */
-PRIVATE struct gc_dep static_visit_buffer[256];
+PRIVATE struct gc_dep static_visit_buffer[1 << 8];
+#ifdef CONFIG_GC_TRACK_LEAFS
+PRIVATE struct gc_leaf static_leaf_buffer[1 << 7];
+#endif /* CONFIG_GC_TRACK_LEAFS */
 
 
 #undef GC_ASSERT_REFERENCE_COUNTS
@@ -508,6 +533,78 @@ gc_deps_insert(struct gc_deps *__restrict self,
 	++self->gd_cnt;
 }
 
+
+
+#ifdef CONFIG_GC_TRACK_LEAFS
+LOCAL bool DCALL
+gc_leafs_rehash(struct gc_leafs *__restrict self) {
+	struct gc_leaf *new_vec;
+	size_t i, j, perturb, new_mask;
+	new_mask = (self->gl_msk << 1) | 1;
+	new_vec = (struct gc_leaf *)Dee_TryCalloc((new_mask + 1) *
+	                                          sizeof(struct gc_leaf));
+	if unlikely(!new_vec)
+		return false;
+	/* Re-insert all objects into the new hash-vector. */
+	for (i = 0; i <= self->gl_msk; ++i) {
+		struct gc_leaf *old_leaf;
+		old_leaf = &self->gl_vec[i];
+		if (!old_leaf->gl_obj)
+			continue;
+		perturb = j = Dee_HashPointer(old_leaf->gl_obj) & new_mask;
+		for (;; j = VL_HASHNX(j, perturb), VL_HASHPT(perturb)) {
+			struct gc_leaf *leaf;
+			leaf = &new_vec[j & new_mask];
+			if (leaf->gl_obj)
+				continue;
+			/* Copy over the dependency. */
+			memcpy(leaf, old_leaf, sizeof(struct gc_leaf));
+			break;
+		}
+	}
+	if (self->gl_vec != static_leaf_buffer)
+		Dee_Free(self->gl_vec);
+	self->gl_msk = new_mask;
+	self->gl_vec = new_vec;
+	return true;
+}
+
+/* Remember `obj' as a known leaf
+ * This function will create a new reference to `obj' */
+LOCAL void DCALL
+gc_leafs_insert(struct gc_leafs *__restrict self,
+                DeeObject *__restrict obj) {
+	dhash_t i, perturb;
+	if (self->gl_cnt * 2 >= self->gl_msk &&
+	    !gc_leafs_rehash(self)) {
+		if (self->gl_cnt == self->gl_msk) {
+			/* At this point, we _need_ to rehash, or we
+			 * can't continue using the hash-vector. */
+			DeeMem_ClearCaches((size_t)-1);
+			if (!gc_leafs_rehash(self)) {
+				/* It's OK if this fails. - Keeping track of leaf objects
+				 * is entirely optional and only done to cut down on the
+				 * number of unnecessary objects getting visited. */
+				return;
+			}
+		}
+	}
+	perturb = i = VL_HASHOF(self, obj);
+	for (;; i = VL_HASHNX(i, perturb), VL_HASHPT(perturb)) {
+		struct gc_leaf *leaf;
+		leaf = &self->gl_vec[i & self->gl_msk];
+		ASSERT(leaf->gl_obj != obj);
+		if (!leaf->gl_obj) {
+			/* Use this slot! */
+			leaf->gl_obj = obj;
+			break;
+		}
+	}
+	++self->gl_cnt;
+}
+#endif /* CONFIG_GC_TRACK_LEAFS */
+
+
 PRIVATE void DCALL
 visit_object(DeeObject *__restrict self,
              struct visit_data *__restrict data) {
@@ -543,7 +640,9 @@ again:
 	goto again;
 do_the_visit:
 	/*DEE_DPRINTF("VISIT: %k at %p (%u refs)\n", tp_self, self, self->ob_refcnt);*/
-	perturb = i = Dee_HashPointer(self) & data->vd_deps.gd_msk;
+
+	/* Check if this is a known dependency */
+	perturb = i = VD_HASHOF(&data->vd_deps, self);
 	for (;; i = VD_HASHNX(i, perturb), VD_HASHPT(perturb)) {
 		struct gc_dep *dep;
 		dep = &data->vd_deps.gd_vec[i & data->vd_deps.gd_msk];
@@ -551,7 +650,7 @@ do_the_visit:
 			break;
 		if (dep->gd_object != self)
 			continue;
-			/* Found it! */
+		/* Found it! */
 #ifdef GC_ASSERT_REFERENCE_COUNTS
 		ASSERT(dep->gd_extern != 0);
 #endif /* GC_ASSERT_REFERENCE_COUNTS */
@@ -574,8 +673,21 @@ do_the_visit:
 		return;
 	}
 
-	/* Step #2: If not a confirmed dependency, check if the object
-	 *          is already an unconfirmed dependency.
+#ifdef CONFIG_GC_TRACK_LEAFS
+	/* Optional: Check if this is a leaf object */
+	perturb = i = VL_HASHOF(&data->vd_leafs, self);
+	for (;; i = VL_HASHNX(i, perturb), VL_HASHPT(perturb)) {
+		struct gc_leaf *leaf;
+		leaf = &data->vd_leafs.gl_vec[i & data->vd_leafs.gl_msk];
+		if (!leaf->gl_obj)
+			break;
+		if (leaf->gl_obj == self)
+			return; /* Skip known leafs */
+	}
+#endif /* CONFIG_GC_TRACK_LEAFS */
+
+	/* Step #2: If not a confirmed dependency, check if the
+	 *          object is already an unconfirmed dependency.
 	 *          If it is, it is apart of a reference loop
 	 *          that is unrelated to the one we're trying
 	 *          to resolve, in which case return immediately. */
@@ -681,6 +793,11 @@ found_chain_link:
 		data->vd_chain = node.dc_prev;
 	/* Free the vector of partner dependencies. */
 	Dee_Free(node.dc_part.dp_pvec);
+
+#ifdef CONFIG_GC_TRACK_LEAFS
+	/* Optional: Mark the visited object as a known leaf */
+	gc_leafs_insert(&data->vd_leafs, self);
+#endif /* CONFIG_GC_TRACK_LEAFS */
 }
 
 
@@ -688,8 +805,14 @@ found_chain_link:
 
 PRIVATE size_t DCALL
 gc_trydestroy(struct gc_head *__restrict head,
-              struct gc_dep **__restrict pbuffer,
-              size_t *__restrict pmask) {
+              struct gc_dep **__restrict pdep_buffer,
+              size_t *__restrict pdep_mask
+#ifdef CONFIG_GC_TRACK_LEAFS
+              ,
+              struct gc_leaf **__restrict pleaf_buffer,
+              size_t *__restrict pleaf_mask
+#endif /* CONFIG_GC_TRACK_LEAFS */
+              ) {
 	/* Step #1: Collect all objects reachable from `head' that eventually loop
 	 *          back around and point back at `head' (i.e. form a loop)
 	 *          At the same time, save the reference counts of all those objects.
@@ -708,14 +831,22 @@ gc_trydestroy(struct gc_head *__restrict head,
 	size_t i, result = 0;
 	struct gc_dep *init_dep;
 	DeeObject *ob;
-	visit.vd_deps.gd_cnt = 1;
-	visit.vd_deps.gd_vec = *pbuffer;
-	visit.vd_deps.gd_msk = *pmask;
-	visit.vd_deps.gd_err = false;
-	visit.vd_chain       = NULL;
+	visit.vd_deps.gd_cnt  = 1;
+	visit.vd_deps.gd_vec  = *pdep_buffer;
+	visit.vd_deps.gd_msk  = *pdep_mask;
+	visit.vd_deps.gd_err  = false;
+	visit.vd_chain        = NULL;
 	memset(visit.vd_deps.gd_vec, 0,
 	       (visit.vd_deps.gd_msk + 1) *
 	       sizeof(struct gc_dep));
+#ifdef CONFIG_GC_TRACK_LEAFS
+	visit.vd_leafs.gl_cnt = 0;
+	visit.vd_leafs.gl_vec = *pleaf_buffer;
+	visit.vd_leafs.gl_msk = *pleaf_mask;
+	memset(visit.vd_leafs.gl_vec, 0,
+	       (visit.vd_leafs.gl_msk + 1) *
+	       sizeof(struct gc_leaf));
+#endif /* CONFIG_GC_TRACK_LEAFS */
 
 	/* Add the initial dependency, that is the object being collected itself. */
 	init_dep            = &visit.vd_deps.gd_vec[VD_HASHOF(&visit.vd_deps, &head->gc_object)];
@@ -844,8 +975,12 @@ gc_trydestroy(struct gc_head *__restrict head,
 			++result;
 	}
 out:
-	*pbuffer = visit.vd_deps.gd_vec;
-	*pmask   = visit.vd_deps.gd_msk;
+	*pdep_buffer  = visit.vd_deps.gd_vec;
+	*pdep_mask    = visit.vd_deps.gd_msk;
+#ifdef CONFIG_GC_TRACK_LEAFS
+	*pleaf_buffer = visit.vd_leafs.gl_vec;
+	*pleaf_mask   = visit.vd_leafs.gl_msk;
+#endif /* CONFIG_GC_TRACK_LEAFS */
 	return result;
 done:
 	/* Always decref all remaining objects. */
@@ -866,9 +1001,20 @@ done:
 
 PUBLIC size_t DCALL DeeGC_Collect(size_t max_objects) {
 	struct gc_head *iter;
-	size_t temp, result = 0;
-	struct gc_dep *buffer = static_visit_buffer;
-	size_t mask           = COMPILER_LENOF(static_visit_buffer) - 1;
+	size_t temp, result;
+	struct gc_dep *dep_buffer;
+	size_t dep_mask;
+#ifdef CONFIG_GC_TRACK_LEAFS
+	struct gc_leaf *leaf_buffer;
+	size_t leaf_mask;
+#endif /* CONFIG_GC_TRACK_LEAFS */
+	result = 0;
+	dep_buffer = static_visit_buffer;
+	dep_mask   = COMPILER_LENOF(static_visit_buffer) - 1;
+#ifdef CONFIG_GC_TRACK_LEAFS
+	leaf_buffer = static_leaf_buffer;
+	leaf_mask   = COMPILER_LENOF(static_leaf_buffer) - 1;
+#endif /* CONFIG_GC_TRACK_LEAFS */
 	if unlikely(!max_objects)
 		goto done_nolock;
 	GCLOCK_ACQUIRE();
@@ -900,7 +1046,15 @@ restart:
 #ifdef CONFIG_GC_CHECK_MEMORY
 		DEE_CHECKMEMORY();
 #endif /* CONFIG_GC_CHECK_MEMORY */
-		temp = gc_trydestroy(iter, &buffer, &mask);
+		temp = gc_trydestroy(iter,
+		                     &dep_buffer,
+		                     &dep_mask
+#ifdef CONFIG_GC_TRACK_LEAFS
+		                     ,
+		                     &leaf_buffer,
+		                     &leaf_mask
+#endif /* CONFIG_GC_TRACK_LEAFS */
+		                     );
 #ifdef CONFIG_GC_CHECK_MEMORY
 		DEE_CHECKMEMORY();
 #endif /* CONFIG_GC_CHECK_MEMORY */
@@ -927,8 +1081,12 @@ restart:
 done:
 	GCLOCK_RELEASE();
 done_nolock:
-	if (buffer != static_visit_buffer)
-		Dee_Free(buffer);
+	if (dep_buffer != static_visit_buffer)
+		Dee_Free(dep_buffer);
+#ifdef CONFIG_GC_TRACK_LEAFS
+	if (leaf_buffer != static_leaf_buffer)
+		Dee_Free(leaf_buffer);
+#endif /* CONFIG_GC_TRACK_LEAFS */
 	return result;
 }
 
