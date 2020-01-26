@@ -91,8 +91,9 @@ err:
 }
 
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_id_get(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL object_id_get(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL string_hashed(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL string_hasutf(DeeObject *__restrict self);
 
 
 /* Don't allow member calls with these types at compile-time. */
@@ -126,9 +127,13 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject **argv) {
 		/* `Object.id()' should not be evaluated at compile-time! */
 		if (get == &object_id_get)
 			return ITER_DONE;
+		/* `string.__hasutf__' and `string.__hashed__' are runtime-volatile. */
+		if (get == &string_hasutf || get == &string_hashed)
+			return ITER_DONE;
 	}
 	return DeeObject_Call(self, argc, argv);
 }
+
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -151,6 +156,22 @@ emulate_member_call(DeeObject *base, DeeObject *name,
 	if (IS_BLACKLISTED_BASE(base))
 		return ITER_DONE;
 	return DeeObject_CallAttr(base, name, argc, argv);
+#undef NAME_EQ
+}
+
+/* Returns `ITER_DONE' if the call isn't allowed. */
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+emulate_getattr(DeeObject *base, DeeObject *name) {
+#define NAME_EQ(x)                                 \
+	(DeeString_SIZE(name) == COMPILER_STRLEN(x) && \
+	 memcmp(DeeString_STR(name), x, sizeof(x) - sizeof(char)) == 0)
+	if (DeeString_Check(base)) {
+		/* `string.__hasutf__' and `string.__hashed__' are runtime-volatile. */
+		if (NAME_EQ("__hasutf__") || NAME_EQ("__hashed__"))
+			return ITER_DONE;
+	}
+	return DeeObject_GetAttr(base, name);
+#undef NAME_EQ
 }
 
 
@@ -187,11 +208,40 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		/* TODO: Unknown varargs when their number can now be predicted. */
 		return 0;
 	}
+	if (self->a_flag == OPERATOR_GETATTR) {
+		struct ast *base = self->a_operator.o_op0;
+		struct ast *attr = self->a_operator.o_op1;
+		if (ast_optimize(stack, base, true))
+			goto err;
+		if (ast_optimize(stack, attr, true))
+			goto err;
+		if (base->a_type == AST_CONSTEXPR &&
+		    attr->a_type == AST_CONSTEXPR &&
+		    DeeString_Check(attr->a_constexpr)) {
+			/* Black-list certain attributes */
+			operator_result = emulate_getattr(base->a_constexpr,
+			                                  attr->a_constexpr);
+			if (operator_result == ITER_DONE)
+				goto done; /* lookup wasn't allowed. */
+#ifdef CONFIG_HAVE_OPTIMIZE_VERBOSE
+			if (operator_result &&
+			    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
+				OPTIMIZE_VERBOSE("Reduce constant expression `%r.%k -> %r'\n",
+				                 base->a_constexpr,
+				                 attr->a_constexpr,
+				                 operator_result);
+			}
+#endif /* CONFIG_HAVE_OPTIMIZE_VERBOSE */
+			opcount = 2;
+			goto set_operator_result;
+		}
+		goto do_generic;
+	}
 	/* Since `objmethod' isn't allowed in constant expressions, but
-	* since it is the gateway to all kinds of compiler optimizations,
-	* such as `"foo".upper()' --> `"FOO"', as a special case we try
-	* to bridge across the GETATTR operator invocation and try to
-	* directly invoke the function when possible. */
+	 * since it is the gateway to all kinds of compiler optimizations,
+	 * such as `"foo".upper()' --> `"FOO"', as a special case we try
+	 * to bridge across the GETATTR operator invocation and try to
+	 * directly invoke the function when possible. */
 	if (self->a_flag == OPERATOR_CALL &&
 	    self->a_operator.o_op1 &&
 	    self->a_operator.o_op0->a_type == AST_OPERATOR &&
@@ -243,6 +293,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 		}
 	}
 
+do_generic:
 	opcount = 1;
 	if (ast_optimize(stack, self->a_operator.o_op0, true))
 		goto err;

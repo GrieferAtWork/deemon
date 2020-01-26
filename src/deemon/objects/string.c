@@ -1451,9 +1451,18 @@ INTDEF struct type_math string_math;
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Ordinals(DeeObject *__restrict self);
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_hashed(String *__restrict self) {
 	return_bool(self->s_hash != DEE_STRING_HASH_UNSET);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_hasutf(String *__restrict self) {
+#ifdef CONFIG_NO_THREADS
+	return_bool(self->s_data != NULL);
+#else /* CONFIG_NO_THREADS */
+	return_bool(ATOMIC_READ(self->s_data) != NULL);
+#endif /* !CONFIG_NO_THREADS */
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1492,6 +1501,10 @@ PRIVATE struct type_getset string_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this string has been hashed") },
+	{ "__hasutf__",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hasutf, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Evaluates to :true if @this string owns a UTF container") },
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
 	  DOC("->?.\n"
