@@ -171,8 +171,11 @@ cmd_parse(int    *__restrict pargc,
 #endif
 		if (!exec_all && cmd[0] != '-')
 			break; /* End of command list. */
-		if (cmd[0] == '-')
-			++cmd;      /* Skip the initial dash. */
+		if (cmd[0] == '-') {
+			++cmd; /* Skip the initial dash. */
+			if (!*cmd)
+				break; /* Nothing after the `-' (used in places as alias for /dev/stdin) */
+		}
 		++argv, --argc; /* Consume this argument. */
 		if (cmd[0] == '-') {
 			char *eq_sign;
