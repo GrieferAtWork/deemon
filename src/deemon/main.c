@@ -1331,44 +1331,6 @@ done:
 	 */
 	Dee_Shutdown();
 
-	/* Free up cached objects. They're not actually memory leaks, mkay?
-	 * Any malloc()-ed heap-block at application exit is a pretty broad
-	 * definition of memory leaks. While the set of data encompassed by
-	 * this definition does include any kind of memory leak caused by
-	 * malloc(), it also includes other stuff that should't be considered
-	 * a leak, which is mainly qualified by this stuff right here:
-	 *   - Lazily allocated global data structures:
-	 *     It's not a memory leak because there can only ever be
-	 *     one of them allocated a time. And if we fail to release
-	 *     it at application exit, the kernel will just do that for
-	 *     us.
-	 *      - DeeExec_SetHome
-	 *      - DeeThread_Fini
-	 *   - Preallocated object caches:
-	 *     These are just another abstraction layer between the
-	 *     universal heap, and a very specific kind of allocation,
-	 *     which are meant to speed up allocating objects of known
-	 *     size by re-using previously ~freed~ objects instead of
-	 *     having to go through the regular heap.
-	 *     They're not leaks because they're meant to represent
-	 *     data that has been free()-ed, and will be cleaned up
-	 *     by the kernel once the application has terminated.
-	 *     As a matter of fact: I bet you that the underlying
-	 *     malloc()-free() functions won't munmap() the entire heap
-	 *     once nothing is being used anymore, but will instead
-	 *     let the kernel do that.
-	 *      - DeeMem_ClearCaches
-	 */
-#if !defined(NDEBUG) || defined(CONFIG_TRACE_REFCHANGES)
-	DeeExec_SetHome(NULL);
-	DEE_CHECKMEMORY();
-	DeeThread_Fini();
-	DEE_CHECKMEMORY();
-#endif /* !NDEBUG || CONFIG_TRACE_REFCHANGES */
-#ifndef NDEBUG
-	DeeMem_ClearCaches((size_t)-1);
-	DEE_CHECKMEMORY();
-#endif /* !NDEBUG */
 #ifndef NDEBUG
 	if (_Dee_dprint_enabled != 0)
 #endif /* !NDEBUG */
