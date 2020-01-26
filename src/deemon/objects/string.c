@@ -35,7 +35,6 @@
 #include <deemon/stringutils.h>
 #include <deemon/thread.h>
 #include <deemon/system-features.h> /* memmem() */
-#include <deemon/util/cache.h>
 
 #include <hybrid/minmax.h>
 
@@ -55,29 +54,7 @@
 
 DECL_BEGIN
 
-DEFINE_STRUCT_CACHE(utf, struct string_utf, 256)
 typedef DeeStringObject String;
-
-PUBLIC ATTR_MALLOC WUNUSED struct string_utf *(DCALL Dee_string_utf_alloc)(void) {
-	return utf_alloc();
-}
-
-#ifndef NDEBUG
-PUBLIC ATTR_MALLOC WUNUSED struct string_utf *
-(DCALL Dee_string_utf_alloc_d)(char const *file, int line) {
-	return utf_dbgalloc(file, line);
-}
-#else /* !NDEBUG */
-PUBLIC ATTR_MALLOC WUNUSED struct string_utf *
-(DCALL Dee_string_utf_alloc_d)(char const *UNUSED(file), int UNUSED(line)) {
-	return utf_alloc();
-}
-#endif /* NDEBUG */
-
-PUBLIC NONNULL((1)) void
-(DCALL Dee_string_utf_free)(struct string_utf *__restrict self) {
-	utf_free(self);
-}
 
 #ifndef CONFIG_HAVE_memmem
 #define memmem dee_memmem
@@ -377,14 +354,16 @@ DeeString_NewBuffer(size_t num_bytes) {
 
 PUBLIC NONNULL((1)) void DCALL
 DeeString_FreeWidth(DeeObject *__restrict self) {
+	DeeStringObject *me;
 	struct string_utf *utf;
-	ASSERTF(DeeString_Check(self), "Not a string buffer");
-	ASSERTF(!DeeObject_IsShared(self), "String buffers cannot be shared");
-	if ((utf = ((DeeStringObject *)self)->s_data) == NULL)
+	me = (DeeStringObject *)self;
+	ASSERTF(DeeString_Check(me), "Not a string buffer");
+	ASSERTF(!DeeObject_IsShared(me), "String buffers cannot be shared");
+	if ((utf = me->s_data) == NULL)
 		return;
 	ASSERTF(utf->u_width == STRING_WIDTH_1BYTE, "This isn't a 1-byte string");
-	string_utf_fini(utf, self);
-	((DeeStringObject *)self)->s_data = NULL;
+	Dee_string_utf_fini(utf, me);
+	me->s_data = NULL;
 	Dee_string_utf_free(utf);
 }
 
@@ -553,7 +532,7 @@ string_fini(String *__restrict self) {
 	struct string_utf *utf;
 	/* Clean up UTF data. */
 	if ((utf = self->s_data) != NULL) {
-		string_utf_fini(utf, self);
+		Dee_string_utf_fini(utf, self);
 		Dee_string_utf_free(utf);
 	}
 }

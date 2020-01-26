@@ -872,9 +872,6 @@ EXPORTS
 	Dee_ddi_next_state@12=_Dee_ddi_next_state@12
 	Dee_ddi_state_fini@4=_Dee_ddi_state_fini@4
 	Dee_ddi_state_init@12=_Dee_ddi_state_init@12
-	Dee_string_utf_alloc@0=_Dee_string_utf_alloc@0
-	Dee_string_utf_alloc_d@8=_Dee_string_utf_alloc_d@8
-	Dee_string_utf_free@4=_Dee_string_utf_free@4
 	Dee_unicode_printer_alloc_utf16@8=_Dee_unicode_printer_alloc_utf16@8
 	Dee_unicode_printer_alloc_utf32@8=_Dee_unicode_printer_alloc_utf32@8
 	Dee_unicode_printer_alloc_utf8@8=_Dee_unicode_printer_alloc_utf8@8

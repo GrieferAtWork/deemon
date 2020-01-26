@@ -618,7 +618,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		    (result = keyword_entry->k_rare->kr_file) != NULL) {
 			/* This file has been included before! (it's still cached) */
 			if (buffer && buffer->s_data) {
-				string_utf_fini(buffer->s_data, buffer);
+				Dee_string_utf_fini(buffer->s_data, buffer);
 				Dee_string_utf_free(buffer->s_data);
 			}
 			DeeObject_Free(buffer);
@@ -686,7 +686,7 @@ done_notfound:
 /*done:*/
 	/* Free the temporary filename-buffer. */
 	if (buffer && buffer->s_data) {
-		string_utf_fini(buffer->s_data, buffer);
+		Dee_string_utf_fini(buffer->s_data, buffer);
 		Dee_string_utf_free(buffer->s_data);
 	}
 	DeeObject_Free(buffer);

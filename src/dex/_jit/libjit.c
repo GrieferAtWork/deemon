@@ -422,15 +422,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ NULL }
 };
 
-PRIVATE void DCALL
-libjit_fini(DeeDexObject *__restrict UNUSED(self)) {
-	jit_object_table_clear((size_t)-1);
-}
-
 PUBLIC struct dex DEX = {
 	/* .d_symbols = */ symbols,
 	/* .d_init    = */ NULL,
-	/* .d_fini    = */ &libjit_fini,
+	/* .d_fini    = */ NULL
 };
 
 DECL_END

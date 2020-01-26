@@ -37,9 +37,6 @@
 
 DECL_BEGIN
 
-/* Allocate/free a JIT object table from cache. */
-DEFINE_STRUCT_CACHE(jit_object_table, struct jit_object_table, 32); /* TODO: Use slabs! */
-
 INTERN void FCALL
 JITLValue_Fini(JITLValue *__restrict self) {
 	switch (self->lv_kind) {
@@ -708,7 +705,7 @@ _JITContext_PopLocals(JITContext *__restrict self) {
 		return;
 	self->jc_locals = tab->ot_prev;
 	JITObjectTable_Fini(tab);
-	jit_object_table_free(tab);
+	JITObjectTable_Free(tab);
 }
 
 
@@ -723,7 +720,7 @@ JITContext_GetRWLocals(JITContext *__restrict self) {
 	if (result && self->jc_locals.otp_ind == 1)
 		return result;
 	/* Must create a new table for our own usage. */
-	result = jit_object_table_alloc();
+	result = JITObjectTable_Alloc();
 	if unlikely(!result)
 		goto done;
 	JITObjectTable_Init(result);

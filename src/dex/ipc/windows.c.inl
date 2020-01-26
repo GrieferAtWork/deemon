@@ -354,7 +354,7 @@ err_result:
 				result->s_data->u_utf16 = NULL;
 				if (result->s_data->u_data[STRING_WIDTH_2BYTE] == (size_t *)buffer)
 					result->s_data->u_data[STRING_WIDTH_2BYTE] = NULL;
-				string_utf_fini(result->s_data, result);
+				Dee_string_utf_fini(result->s_data, result);
 				Dee_string_utf_free(result->s_data);
 			}
 			DeeObject_FreeTracker((DeeObject *)result);

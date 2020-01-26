@@ -28,7 +28,6 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/util/cache.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -137,14 +136,7 @@ PUBLIC uint8_t const Dee_utf8_sequence_len[256] = {
 
 
 /* String functions related to unicode. */
-
-DECLARE_STRUCT_CACHE(utf, struct string_utf)
-DEFINE_STRUCT_CACHE_TRYALLOC(utf, struct string_utf, sizeof(struct string_utf))
-#ifndef NDEBUG
-#define utf_alloc()  utf_dbgalloc(__FILE__,__LINE__)
-#endif /* !NDEBUG */
 typedef DeeStringObject String;
-
 
 /* Preallocated latin1 character table.
  * Elements are lazily allocated. */
@@ -232,7 +224,7 @@ again:
 		utf->u_width = STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
-			utf_free(utf);
+			Dee_string_utf_free(utf);
 			goto again;
 		}
 		Dee_UntrackAlloc(utf);
@@ -277,7 +269,7 @@ again:
 		utf->u_width = STRING_WIDTH_1BYTE;
 #endif /* STRING_WIDTH_1BYTE != 0 */
 		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
-			utf_free(utf);
+			Dee_string_utf_free(utf);
 			goto again;
 		}
 		Dee_UntrackAlloc(utf);
@@ -342,14 +334,14 @@ set_utf8_and_return_1byte:
 	/* We are either a LATIN1, or an ASCII string. */
 	if (!utf) {
 		/* Allocate the UTF-buffer. */
-		utf = utf_alloc();
+		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
 		memset(utf, 0, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
-			utf_free(utf);
+			Dee_string_utf_free(utf);
 			goto again;
 		}
 		Dee_UntrackAlloc(utf);
@@ -430,14 +422,14 @@ set_utf8_and_return_1byte:
 	/* We are either a LATIN1, or an ASCII string. */
 	if (!utf) {
 		/* Allocate the UTF-buffer. */
-		utf = utf_tryalloc();
+		utf = Dee_string_utf_tryalloc();
 		if unlikely(!utf)
 			goto err;
 		memset(utf, 0, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
-			utf_free(utf);
+			Dee_string_utf_free(utf);
 			goto again;
 		}
 		Dee_UntrackAlloc(utf);
@@ -840,14 +832,14 @@ print_ascii:
 	/* The UTF-8 string is encoded in LATIN-1, or ASCII */
 	if (!utf) {
 		/* Allocate the UTF-buffer. */
-		utf = utf_alloc();
+		utf = Dee_string_utf_alloc();
 		if unlikely(!utf)
 			goto err;
 		memset(utf, 0, sizeof(struct string_utf));
 		utf->u_width                    = STRING_WIDTH_1BYTE;
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)DeeString_STR(self);
 		if (!ATOMIC_CMPXCH(((String *)self)->s_data, NULL, utf)) {
-			utf_free(utf);
+			Dee_string_utf_free(utf);
 			goto again;
 		}
 		Dee_UntrackAlloc(utf);
@@ -1531,7 +1523,7 @@ DeeString_Pack2ByteBuffer(/*inherit(always)*/ uint16_t *__restrict text) {
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
-	utf           = utf_alloc();
+	utf           = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
 	memset(utf, 0, sizeof(struct string_utf));
@@ -1586,7 +1578,7 @@ DeeString_TryPack2ByteBuffer(/*inherit(on_success)*/ uint16_t *__restrict text) 
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
-	utf           = utf_alloc();
+	utf           = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
 	memset(utf, 0, sizeof(struct string_utf));
@@ -1711,7 +1703,7 @@ read_text_i:
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
-	utf           = utf_alloc();
+	utf = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
 	memset(utf, 0, sizeof(struct string_utf));
@@ -1785,7 +1777,7 @@ read_text_i:
 	Dee_UntrackAlloc(utf);
 	return (DREF DeeObject *)result;
 err_r_utf:
-	utf_free(utf);
+	Dee_string_utf_free(utf);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -1867,7 +1859,7 @@ continue_at_i:
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
-	utf           = utf_tryalloc();
+	utf           = Dee_string_utf_tryalloc();
 	if unlikely(!utf)
 		goto err_r;
 	memset(utf, 0, sizeof(struct string_utf));
@@ -1939,7 +1931,7 @@ continue_at_i:
 	Dee_UntrackAlloc(utf);
 	return (DREF DeeObject *)result;
 err_r_utf:
-	utf_free(utf);
+	Dee_string_utf_free(utf);
 err_r:
 	DeeObject_Free(result);
 err:
@@ -2000,7 +1992,7 @@ DeeString_PackUtf32Buffer(/*inherit(always)*/ uint32_t *__restrict text,
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
-	utf           = utf_alloc();
+	utf           = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
 	memset(utf, 0, sizeof(struct string_utf));
@@ -2065,7 +2057,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 	if unlikely(!result)
 		goto err;
 	result->s_len = utf8_length;
-	utf           = utf_alloc();
+	utf           = Dee_string_utf_alloc();
 	if unlikely(!utf)
 		goto err_r;
 	memset(utf, 0, sizeof(struct string_utf));
@@ -2185,7 +2177,7 @@ handle_decode_error:
 	}
 done:
 	/* Fill in the unicode data of the resulting object. */
-	result->s_data = utf_alloc();
+	result->s_data = Dee_string_utf_alloc();
 	if unlikely(!result->s_data)
 		goto err_r;
 	memset(result->s_data, 0, sizeof(struct string_utf));
@@ -2256,7 +2248,7 @@ case STRING_ENCODING_-- - MBCS: {
 		return self;
 	ASSERT(!DeeObject_IsShared(self));
 	ASSERT(!((String *)self)->s_data);
-	data = utf_alloc();
+	data = Dee_string_utf_alloc();
 	if unlikely(!data)
 		goto err;
 	memset(data, 0, sizeof(struct string_utf));
@@ -2265,7 +2257,7 @@ case STRING_ENCODING_-- - MBCS: {
 	data->u_data[STRING_WIDTH_2BYTE] = (size_t *)mbcs_to_wide((uint8_t *)DeeString_STR(self),
 	                                                          DeeString_SIZE(self));
 	if unlikely(!data->u_data[STRING_WIDTH_2BYTE]) {
-		utf_free(data);
+		Dee_string_utf_free(data);
 		goto err;
 	}
 #else /* __SIZEOF_WCHAR_T__ == 2 */
@@ -2273,7 +2265,7 @@ case STRING_ENCODING_-- - MBCS: {
 	data->u_data[STRING_WIDTH_4BYTE] = (size_t *)mbcs_to_wide((uint8_t *)DeeString_STR(self),
 	                                                          DeeString_SIZE(self));
 	if unlikely(!data->u_data[STRING_WIDTH_4BYTE]) {
-		utf_free(data);
+		Dee_string_utf_free(data);
 		goto err;
 	}
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
@@ -2388,7 +2380,7 @@ err_buffer32:
 				if likely(new_buffer32)
 					buffer32 = new_buffer32;
 			}
-			utf = utf_alloc();
+			utf = Dee_string_utf_alloc();
 			if unlikely(!utf)
 				goto err_buffer32;
 			memset(utf, 0, sizeof(*utf));
@@ -2461,7 +2453,7 @@ err_buffer16:
 				if likely(new_buffer16)
 					buffer16 = new_buffer16;
 			}
-			utf = utf_alloc();
+			utf = Dee_string_utf_alloc();
 			if unlikely(!utf)
 				goto err_buffer16;
 			memset(utf, 0, sizeof(*utf));
@@ -2586,7 +2578,7 @@ err_buffer32:
 				if likely(new_buffer32)
 					buffer32 = new_buffer32;
 			}
-			utf = utf_alloc();
+			utf = Dee_string_utf_alloc();
 			if unlikely(!utf)
 				goto err_buffer32;
 			memset(utf, 0, sizeof(*utf));
@@ -2659,7 +2651,7 @@ err_buffer16:
 				if likely(new_buffer16)
 					buffer16 = new_buffer16;
 			}
-			utf = utf_alloc();
+			utf = Dee_string_utf_alloc();
 			if unlikely(!utf)
 				goto err_buffer16;
 			memset(utf, 0, sizeof(*utf));
@@ -2758,7 +2750,7 @@ use_buffer32:
 				if likely(new_buffer32)
 					buffer32 = new_buffer32;
 			}
-			utf = utf_tryalloc();
+			utf = Dee_string_utf_tryalloc();
 			if unlikely(!utf) {
 				DeeString_Free4ByteBuffer(buffer32);
 				goto err_r;
@@ -2823,7 +2815,7 @@ err_buffer16:
 				if likely(new_buffer16)
 					buffer16 = new_buffer16;
 			}
-			utf = utf_tryalloc();
+			utf = Dee_string_utf_tryalloc();
 			if unlikely(!utf)
 				goto err_buffer16;
 			memset(utf, 0, sizeof(*utf));

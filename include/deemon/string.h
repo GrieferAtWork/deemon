@@ -316,7 +316,7 @@ struct Dee_string_utf {
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
 };
 
-#define string_utf_fini(self, str)                                                                                \
+#define Dee_string_utf_fini(self, str)                                                                            \
 	do {                                                                                                          \
 		unsigned int i;                                                                                           \
 		for (i = 1; i < STRING_WIDTH_COUNT; ++i) {                                                                \
@@ -333,13 +333,9 @@ struct Dee_string_utf {
 			Dee_Free(((size_t *)(self)->u_utf16) - 1);                                                            \
 	} __WHILE0
 
-
-DFUNDEF ATTR_MALLOC WUNUSED struct Dee_string_utf *(DCALL Dee_string_utf_alloc)(void);
-DFUNDEF NONNULL((1)) void (DCALL Dee_string_utf_free)(struct Dee_string_utf *__restrict self);
-#ifndef NDEBUG
-DFUNDEF ATTR_MALLOC WUNUSED struct Dee_string_utf *(DCALL Dee_string_utf_alloc_d)(char const *file, int line);
-#define Dee_string_utf_alloc() Dee_string_utf_alloc_d(__FILE__,__LINE__)
-#endif /* !NDEBUG */
+#define Dee_string_utf_alloc()    DeeObject_MALLOC(struct Dee_string_utf)
+#define Dee_string_utf_tryalloc() DeeObject_TRYMALLOC(struct Dee_string_utf)
+#define Dee_string_utf_free(ptr)  DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
 
 
 struct Dee_string_object {

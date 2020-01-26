@@ -20,10 +20,10 @@
 #ifndef GUARD_DEX_JIT_LIBJIT_H
 #define GUARD_DEX_JIT_LIBJIT_H 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
-#include <deemon/util/cache.h>
 
 #include <hybrid/typecore.h>
 
@@ -531,15 +531,13 @@ INTDEF struct jit_object_entry jit_empty_object_list[1];
 	 (self)->ot_list = jit_empty_object_list)
 #define JITObjectTable_Init(self)                             \
 	((self)->ot_mask = (self)->ot_size = (self)->ot_used = 0, \
-	 (self)->ot_list                                     = jit_empty_object_list)
+	 (self)->ot_list = jit_empty_object_list)
 INTDEF NONNULL((1)) void DCALL JITObjectTable_Fini(JITObjectTable *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL JITObjectTable_Visit(JITObjectTable *__restrict self, dvisit_t proc, void *arg);
 
 /* Allocate/free a JIT object table from cache. */
-DECLARE_STRUCT_CACHE(jit_object_table, struct jit_object_table);
-#ifndef NDEBUG
-#define jit_object_table_alloc() jit_object_table_dbgalloc(__FILE__, __LINE__)
-#endif /* !NDEBUG */
+#define JITObjectTable_Alloc()   DeeObject_MALLOC(struct jit_object_table)
+#define JITObjectTable_Free(ptr) DeeObject_FFree(ptr, sizeof(struct jit_object_table))
 
 /* Initialize `dst' as a copy of `src' */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL

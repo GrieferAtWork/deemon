@@ -879,7 +879,7 @@ again:
 			if (me->w_printer.up_length != result->s_len) {
 				/* Flush the string buffer and deallocated unused memory. */
 				if (result->s_data) {
-					string_utf_fini(result->s_data, result);
+					Dee_string_utf_fini(result->s_data, result);
 					Dee_string_utf_free(result->s_data);
 					result->s_data = NULL;
 				}

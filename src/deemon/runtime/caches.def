@@ -19,7 +19,6 @@
  */
 
 Cs(sym)
-Cs(utf) /* TODO: Remove this */
 #ifdef CONFIG_AST_IS_STRUCT
 Cs(ast)
 #else /* CONFIG_AST_IS_STRUCT */
