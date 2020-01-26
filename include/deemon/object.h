@@ -75,18 +75,18 @@ struct Dee_class_desc;
 
 typedef struct Dee_type_object DeeTypeObject;
 typedef struct Dee_object      DeeObject;
-typedef uintptr_t              Dee_ref_t;
+typedef uintptr_t              Dee_refcnt_t;
 typedef __SSIZE_TYPE__         Dee_ssize_t;
 typedef __LONG64_TYPE__        Dee_off_t;
 typedef __ULONG64_TYPE__       Dee_pos_t;
 typedef uintptr_t              Dee_hash_t;
 
 #ifdef DEE_SOURCE
-typedef Dee_ref_t   dref_t;
-typedef Dee_ssize_t dssize_t;
-typedef Dee_off_t   doff_t;
-typedef Dee_pos_t   dpos_t;
-typedef Dee_hash_t  dhash_t;
+typedef Dee_refcnt_t drefcnt_t;
+typedef Dee_ssize_t  dssize_t;
+typedef Dee_off_t    doff_t;
+typedef Dee_pos_t    dpos_t;
+typedef Dee_hash_t   dhash_t;
 #endif /* DEE_SOURCE */
 
 /* Hashing helpers. */
@@ -198,25 +198,25 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 
 #ifdef __INTELLISENSE__
 #define Dee_OBJECT_HEAD     \
-	Dee_ref_t ob_refcnt;    \
+	Dee_refcnt_t ob_refcnt; \
 	DeeTypeObject *ob_type; \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define Dee_OBJECT_HEAD_EX(Ttype) \
-	Dee_ref_t ob_refcnt;          \
+	Dee_refcnt_t ob_refcnt;       \
 	Ttype *ob_type;               \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 struct Dee_object {
-	Dee_ref_t      ob_refcnt;
+	Dee_refcnt_t      ob_refcnt;
 	DeeTypeObject *ob_type;
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 };
 #else /* __INTELLISENSE__ */
 #define Dee_OBJECT_HEAD          \
-	Dee_ref_t ob_refcnt;         \
+	Dee_refcnt_t ob_refcnt;      \
 	DREF DeeTypeObject *ob_type; \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define Dee_OBJECT_HEAD_EX(Ttype) \
-	Dee_ref_t ob_refcnt;          \
+	Dee_refcnt_t ob_refcnt;       \
 	DREF Ttype *ob_type;          \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 struct Dee_object {
@@ -585,7 +585,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy_d(DeeObject *__restrict self, 
  * Use these (#undef'ing the macros) in dex modules that
  * should work independently of the deemon configuration. */
 DFUNDEF NONNULL((1)) void (DCALL Dee_Incref)(DeeObject *__restrict ob);
-DFUNDEF NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, Dee_ref_t n);
+DFUNDEF NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, Dee_refcnt_t n);
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob);
 DFUNDEF NONNULL((1)) void (DCALL Dee_Decref)(DeeObject *__restrict ob);
 DFUNDEF NONNULL((1)) void (DCALL Dee_DecrefDokill)(DeeObject *__restrict ob);
@@ -648,15 +648,15 @@ DFUNDEF void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, char const *file
  *       debug information when the resulting code isn't getting optimized.
  *       Therefor,  we try to bypass them here to speed up compile-time and ease debugging. */
 #if __SIZEOF_POINTER__ == 4
-#   define _DeeRefcnt_FetchInc(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x))-1)
-#   define _DeeRefcnt_FetchDec(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x))+1)
-#   define _DeeRefcnt_IncFetch(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)))
+#   define _DeeRefcnt_FetchInc(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x))-1)
+#   define _DeeRefcnt_FetchDec(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x))+1)
+#   define _DeeRefcnt_IncFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)))
+#   define _DeeRefcnt_DecFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)))
 #elif __SIZEOF_POINTER__ == 8
-#   define _DeeRefcnt_FetchInc(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x))-1)
-#   define _DeeRefcnt_FetchDec(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x))+1)
-#   define _DeeRefcnt_IncFetch(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x)   ((Dee_ref_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)))
+#   define _DeeRefcnt_FetchInc(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x))-1)
+#   define _DeeRefcnt_FetchDec(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x))+1)
+#   define _DeeRefcnt_IncFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)))
+#   define _DeeRefcnt_DecFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)))
 #endif
 #endif /* _MSC_VER && CONFIG_HOST_WINDOWS */
 #ifndef _DeeRefcnt_FetchInc
@@ -705,7 +705,7 @@ DeeObject_NewRef_untraced_inline(DeeObject *__restrict self) {
 
 LOCAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
-	Dee_ref_t refcnt;
+	Dee_refcnt_t refcnt;
 	do {
 		refcnt = __hybrid_atomic_load(self->ob_refcnt, __ATOMIC_ACQUIRE);
 		if (refcnt <= 1)
@@ -717,7 +717,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 
 LOCAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
-	Dee_ref_t refcnt;
+	Dee_refcnt_t refcnt;
 	do {
 		refcnt = __hybrid_atomic_load(self->ob_refcnt, __ATOMIC_ACQUIRE);
 		if (!refcnt)
@@ -755,7 +755,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 
 #ifdef CONFIG_TRACE_REFCHANGES
 DFUNDEF NONNULL((1)) void DCALL Dee_Incref_traced(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF NONNULL((1)) void DCALL Dee_Incref_n_traced(DeeObject *__restrict ob, Dee_ref_t n, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL Dee_Incref_n_traced(DeeObject *__restrict ob, Dee_refcnt_t n, char const *file, int line);
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob, char const *file, int line);
 DFUNDEF NONNULL((1)) void DCALL Dee_Decref_traced(DeeObject *__restrict ob, char const *file, int line);
 DFUNDEF NONNULL((1)) void DCALL Dee_DecrefDokill_traced(DeeObject *__restrict ob, char const *file, int line);

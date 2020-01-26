@@ -1331,8 +1331,15 @@ done:
 	 */
 	Dee_Shutdown();
 
+#undef CONFIG_ALWAYS_LOG_LEAKS
+#if !defined(NDEBUG) && 0
+#define CONFIG_ALWAYS_LOG_LEAKS 1
+#endif
+
 #ifndef NDEBUG
+#ifndef CONFIG_ALWAYS_LOG_LEAKS
 	if (_Dee_dprint_enabled != 0)
+#endif /* !CONFIG_ALWAYS_LOG_LEAKS */
 #endif /* !NDEBUG */
 	{
 		/* Dump information on all objects that are still alive.
@@ -1344,11 +1351,16 @@ done:
 		DBG_ALIGNMENT_DISABLE();
 #ifdef _CRTDBG_MAP_ALLOC
 #ifdef CONFIG_HOST_WINDOWS
+#ifndef CONFIG_ALWAYS_LOG_LEAKS
 		if (!IsDebuggerPresent())
+#endif /* !CONFIG_ALWAYS_LOG_LEAKS */
 #endif /* CONFIG_HOST_WINDOWS */
 		{
+#ifndef CONFIG_ALWAYS_LOG_LEAKS
 			_Dee_dprint("");
-			if (_Dee_dprint_enabled) {
+			if (_Dee_dprint_enabled)
+#endif /* !CONFIG_ALWAYS_LOG_LEAKS */
+			{
 				_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
 				_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
 				_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
@@ -1358,7 +1370,7 @@ done:
 			}
 		}
 		if ((_CrtDumpMemoryLeaks)())
-			BREAKPOINT();
+			_DeeAssert_Fail("!_CrtDumpMemoryLeaks()", __FILE__, __LINE__);
 		DEE_CHECKMEMORY();
 #endif /* _CRTDBG_MAP_ALLOC */
 	}

@@ -1375,9 +1375,9 @@ DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name) {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeTypeObject  *to_type; /* [1..1][const] The type who's operators should be enumerated. */
-	ATOMIC_DATA uint16_t to_opid; /* Next operator ID to check. */
-	bool                 to_name; /* [const] When true, try to assign human-readable names to operators. */
+	DREF DeeTypeObject *to_type; /* [1..1][const] The type who's operators should be enumerated. */
+	DWEAK uint16_t      to_opid; /* Next operator ID to check. */
+	bool                to_name; /* [const] When true, try to assign human-readable names to operators. */
 } TypeOperatorsIterator;
 
 typedef struct {

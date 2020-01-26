@@ -37,7 +37,7 @@
 #define __restrict__ restrict
 
 #define DREF
-#define ATOMIC_DATA
+#define DWEAK
 #define __LIBCCALL
 #define DCALL
 #define DECL_BEGIN
@@ -176,14 +176,14 @@
 	void DeeDbgSlab_Free##size(void *restrict ptr, char const *file, int line); \
 	void DeeGCObject_SlabFree##size(void *restrict ptr);
 
-#define OBJECT_HEAD               Dee_ref_t ob_refcnt; DeeTypeObject *ob_type;
-#define Dee_OBJECT_HEAD           Dee_ref_t ob_refcnt; DeeTypeObject *ob_type;
-#define OBJECT_HEAD_EX(Ttype)     Dee_ref_t ob_refcnt; Ttype *ob_type;
-#define Dee_OBJECT_HEAD_EX(Ttype) Dee_ref_t ob_refcnt; Ttype *ob_type;
-#define ERROR_OBJECT_HEAD         Dee_ref_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
-#define Dee_ERROR_OBJECT_HEAD     Dee_ref_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
-#define FILE_OBJECT_HEAD          Dee_ref_t ob_refcnt; DeeFileTypeObject *ob_type;
-#define Dee_FILE_OBJECT_HEAD      Dee_ref_t ob_refcnt; DeeFileTypeObject *ob_type;
+#define OBJECT_HEAD               Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type;
+#define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type;
+#define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt; Ttype *ob_type;
+#define Dee_OBJECT_HEAD_EX(Ttype) Dee_refcnt_t ob_refcnt; Ttype *ob_type;
+#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
+#define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt; DeeTypeObject *ob_type; struct Dee_string_object *e_message; DeeObject *e_inner;
+#define FILE_OBJECT_HEAD          Dee_refcnt_t ob_refcnt; DeeFileTypeObject *ob_type;
+#define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt; DeeFileTypeObject *ob_type;
 
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define WEAKREF_SUPPORT           struct Dee_weakref_list ob_weakrefs;

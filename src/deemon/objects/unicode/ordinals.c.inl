@@ -37,10 +37,10 @@ typedef struct {
 	/* A proxy object for viewing the characters of a string as an array of unsigned
 	 * integers representing the unicode character codes for each character. */
 	OBJECT_HEAD
-	DREF DeeStringObject      *soi_str;   /* [1..1][const] The string who's character ordinals are being viewed. */
-	unsigned int               soi_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
-	ATOMIC_DATA union dcharptr soi_ptr;   /* Pointer to the next character. */
-	union dcharptr             soi_end;   /* [const][== DeeString_WEND(so_str)] The end of the string. */
+	DREF DeeStringObject *soi_str;   /* [1..1][const] The string who's character ordinals are being viewed. */
+	unsigned int          soi_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
+	DWEAK union dcharptr  soi_ptr;   /* Pointer to the next character. */
+	union dcharptr        soi_end;   /* [const][== DeeString_WEND(so_str)] The end of the string. */
 } StringOrdinalsIterator;
 #ifdef CONFIG_NO_THREADS
 #define READ_PTR(x)               (x)->soi_ptr.ptr

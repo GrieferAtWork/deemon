@@ -332,7 +332,7 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 /* }; */
 
 /* struct code_object { */
-#define ob_refcnt       0                            /* Dee_ref_t ob_refcnt; */
+#define ob_refcnt       0                            /* Dee_refcnt_t ob_refcnt; */
 #define ob_type         DEE_OBJECT_OFFSETOF_TYPE     /* DeeTypeObject *ob_type; */
 #define co_flags        DEE_OBJECT_OFFSETOF_DATA     /* uint16_t co_flags; */
 #define co_localc      (DEE_OBJECT_OFFSETOF_DATA+2)  /* uint16_t co_localc; */

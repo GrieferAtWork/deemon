@@ -259,20 +259,20 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 #ifdef __INTELLISENSE__
 struct {
 #ifndef CONFIG_NO_THREADS
-	rwlock_t           s_lock; /* Lock for this slab */
+	rwlock_t     s_lock; /* Lock for this slab */
 #endif /* !CONFIG_NO_THREADS */
-	void              *s_free; /* [0..1][lock(s_lock)] Chain of free pages */
-	void              *s_full; /* [0..1][lock(s_lock)] Chain of pages that fully in-use */
-	void              *s_tail; /* [0..1][lock(s_lock)] Pointer to the next page that should be allocated from the system. */
+	void        *s_free; /* [0..1][lock(s_lock)] Chain of free pages */
+	void        *s_full; /* [0..1][lock(s_lock)] Chain of pages that fully in-use */
+	void        *s_tail; /* [0..1][lock(s_lock)] Pointer to the next page that should be allocated from the system. */
 #ifndef CONFIG_NO_OBJECT_SLAB_STATS
-	ATOMIC_DATA size_t s_num_free;      /* Number of items currently marked as free. */
-	ATOMIC_DATA size_t s_max_free;      /* Max number of items ever marked as free. */
-	ATOMIC_DATA size_t s_num_alloc;     /* Number of items currently allocated from this slab. */
-	ATOMIC_DATA size_t s_max_alloc;     /* Max number of items that were ever allocated at once. */
-	ATOMIC_DATA size_t s_num_fullpages; /* Number of full pages currently allocated from this slab. */
-	ATOMIC_DATA size_t s_max_fullpages; /* Max number of full pages that were ever allocated at once. */
-	ATOMIC_DATA size_t s_num_freepages; /* Number of pages containing unused items. */
-	ATOMIC_DATA size_t s_max_freepages; /* Max number of pages containing unused items to ever exist. */
+	DWEAK size_t s_num_free;      /* Number of items currently marked as free. */
+	DWEAK size_t s_max_free;      /* Max number of items ever marked as free. */
+	DWEAK size_t s_num_alloc;     /* Number of items currently allocated from this slab. */
+	DWEAK size_t s_max_alloc;     /* Max number of items that were ever allocated at once. */
+	DWEAK size_t s_num_fullpages; /* Number of full pages currently allocated from this slab. */
+	DWEAK size_t s_max_fullpages; /* Max number of full pages that were ever allocated at once. */
+	DWEAK size_t s_num_freepages; /* Number of pages containing unused items. */
+	DWEAK size_t s_max_freepages; /* Max number of pages containing unused items to ever exist. */
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 }
 #define DEFINE_SLAB_VAR(index, size) slab##size,

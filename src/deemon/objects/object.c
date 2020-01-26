@@ -718,7 +718,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 #else /* CONFIG_NO_THREADS */
 		{
 			/* Do an atomic-inc-if-not-zero on the reference counter. */
-			dref_t refcnt;
+			drefcnt_t refcnt;
 			do {
 				refcnt = ATOMIC_READ(result->ob_refcnt);
 				if (!refcnt) {
@@ -878,7 +878,7 @@ again:
 #else /* CONFIG_NO_THREADS */
 		{
 			/* Do an atomic-inc-if-not-zero on the reference counter. */
-			dref_t refcnt;
+			drefcnt_t refcnt;
 			do {
 				refcnt = ATOMIC_READ(result->ob_refcnt);
 				if (!refcnt) {
@@ -922,7 +922,7 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 			COMPILER_READ_BARRIER();
 			/* Special case: The destructor managed to revive the object. */
 			{
-				dref_t refcnt;
+				drefcnt_t refcnt;
 				do {
 					refcnt = ATOMIC_READ(self->ob_refcnt);
 					if (refcnt == 0)
@@ -1199,7 +1199,8 @@ again:
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
-						dref_t oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
+						drefcnt_t oldref;
+						oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
 						ASSERTF(oldref != 0,
 						        "Upon revival, a destructor must let the caller inherit a "
 						        "reference (which may appear like a leak, but actually isn't)");
@@ -1269,7 +1270,8 @@ again:
 #ifndef CONFIG_TRACE_REFCHANGES
 					/* Same as below, but prevent recursion (after all: we're already inside of `DeeObject_Destroy()'!) */
 					{
-						dref_t oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
+						drefcnt_t oldref;
+						oldref = ATOMIC_FETCHDEC(self->ob_refcnt);
 						ASSERTF(oldref != 0,
 						        "Upon revival, a destructor must let the caller inherit a "
 						        "reference (which may appear like a leak, but actually isn't)");
@@ -4239,11 +4241,11 @@ PRIVATE DEFINE_RWLOCK(reftracker_lock);
 #endif /* !CONFIG_NO_THREADS */
 PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 
-PRIVATE NONNULL((1)) dref_t DCALL
+PRIVATE NONNULL((1)) drefcnt_t DCALL
 print_refchange(struct Dee_refchange *__restrict item,
-                dref_t prev_total) {
+                drefcnt_t prev_total) {
 	char mode[2] = { '+', 0 };
-	dref_t count;
+	drefcnt_t count;
 	if (item->rc_line < 0)
 		--prev_total, mode[0] = '-';
 	DEE_DPRINTF("%s(%d) : [%c][%Iu]", item->rc_file,
@@ -4260,9 +4262,9 @@ print_refchange(struct Dee_refchange *__restrict item,
 	return prev_total;
 }
 
-PRIVATE NONNULL((1)) dref_t DCALL
+PRIVATE NONNULL((1)) drefcnt_t DCALL
 print_refchanges(struct Dee_refchanges *__restrict item,
-                 dref_t prev_total) {
+                 drefcnt_t prev_total) {
 	unsigned int i;
 	if (item->rc_prev)
 		prev_total = print_refchanges(item->rc_prev, prev_total);
@@ -4413,7 +4415,7 @@ Dee_Incref_traced(DeeObject *__restrict ob,
 }
 
 PUBLIC NONNULL((1)) void DCALL
-Dee_Incref_n_traced(DeeObject *__restrict ob, dref_t n,
+Dee_Incref_n_traced(DeeObject *__restrict ob, drefcnt_t n,
                     char const *file, int line) {
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if (ATOMIC_FETCHADD(ob->ob_refcnt, n) == 0)
@@ -4428,7 +4430,7 @@ Dee_Incref_n_traced(DeeObject *__restrict ob, dref_t n,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob,
                            char const *file, int line) {
-	dref_t oldref;
+	drefcnt_t oldref;
 	do {
 		if ((oldref = ATOMIC_READ(ob->ob_refcnt)) == 0)
 			return false;
@@ -4440,7 +4442,7 @@ Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob,
 PUBLIC NONNULL((1)) void DCALL
 Dee_Decref_traced(DeeObject *__restrict ob,
                   char const *file, int line) {
-	dref_t newref;
+	drefcnt_t newref;
 	newref = ATOMIC_FETCHDEC(ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(newref == 0)
@@ -4490,7 +4492,7 @@ Dee_DecrefIfOne_traced(DeeObject *__restrict ob,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob,
                           char const *file, int line) {
-	dref_t oldref;
+	drefcnt_t oldref;
 	do {
 		if ((oldref = ATOMIC_READ(ob->ob_refcnt)) <= 1)
 			return false;
@@ -4502,7 +4504,7 @@ Dee_DecrefIfNotOne_traced(DeeObject *__restrict ob,
 PUBLIC WUNUSED NONNULL((1)) bool DCALL
 Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
                        char const *file, int line) {
-	dref_t newref;
+	drefcnt_t newref;
 	newref = ATOMIC_FETCHDEC(ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 	if unlikely(newref == 0)
@@ -4526,7 +4528,7 @@ PUBLIC NONNULL((1)) void
 }
 
 PUBLIC NONNULL((1)) void
-(DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, dref_t n,
+(DCALL Dee_Incref_n_traced)(DeeObject *__restrict ob, drefcnt_t n,
                             char const *UNUSED(file),
                             int UNUSED(line)) {
 	Dee_Incref_n(ob, n);
@@ -4591,7 +4593,7 @@ PUBLIC NONNULL((1)) void (DCALL Dee_Incref)(DeeObject *__restrict ob) {
 	Dee_Incref_untraced(ob);
 }
 
-PUBLIC NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, dref_t n) {
+PUBLIC NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, drefcnt_t n) {
 	Dee_Incref_n_untraced(ob, n);
 }
 

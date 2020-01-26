@@ -40,13 +40,13 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF StringFind           *sfi_find;       /* [1..1][const] The underlying find-controller. */
-	union dcharptr             sfi_start;      /* [1..1][const] Starting pointer. */
-	ATOMIC_DATA union dcharptr sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	union dcharptr             sfi_end;        /* [1..1][const] End pointer. */
-	union dcharptr             sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
-	size_t                     sfi_needle_len; /* [const] Length of the needle being searched. */
-	unsigned int               sfi_width;      /* [const] The common width of the searched, and needle string. */
+	DREF StringFind     *sfi_find;       /* [1..1][const] The underlying find-controller. */
+	union dcharptr       sfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK union dcharptr sfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	union dcharptr       sfi_end;        /* [1..1][const] End pointer. */
+	union dcharptr       sfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	size_t               sfi_needle_len; /* [const] Length of the needle being searched. */
+	unsigned int         sfi_width;      /* [const] The common width of the searched, and needle string. */
 } StringFindIterator;
 
 INTDEF WUNUSED DREF DeeObject *DCALL

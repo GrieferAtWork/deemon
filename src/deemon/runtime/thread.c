@@ -752,7 +752,7 @@ again:
 again_locked:
 	iter = DeeThread_Main.t_globalnext;
 	while (iter) {
-		dref_t refcnt;
+		drefcnt_t refcnt;
 		if (interrupt_phase) {
 			if (iter->t_state & THREAD_STATE_SHUTDOWNINTR)
 				goto next_thread;
@@ -885,7 +885,7 @@ PRIVATE NONNULL((1)) void DCALL thread_fini(DeeThreadObject *__restrict self);
 
 PRIVATE void DCALL
 destroy_thread_self(DREF DeeThreadObject *__restrict self) {
-	dref_t refcnt;
+	drefcnt_t refcnt;
 	uint16_t old_state;
 	bool did_shutdown = false;
 #ifdef CONFIG_THREADS_PTHREAD

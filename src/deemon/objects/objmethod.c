@@ -444,8 +444,8 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DocKwds           *dki_kwds; /* [1..1][const] The associated sequence. */
-	ATOMIC_DATA char const *dki_iter; /* [1..1] Iterator position (start of next keyword name). */
+	DREF DocKwds     *dki_kwds; /* [1..1][const] The associated sequence. */
+	DWEAK char const *dki_iter; /* [1..1] Iterator position (start of next keyword name). */
 } DocKwdsIterator;
 
 #ifdef CONFIG_NO_THREADS

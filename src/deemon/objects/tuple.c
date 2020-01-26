@@ -938,7 +938,7 @@ err:
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeTupleObject *ti_tuple; /* [1..1][const] Referenced tuple. */
-	ATOMIC_DATA size_t   ti_index; /* [<= ti_tuple->t_size] Next-element index. */
+	DWEAK size_t         ti_index; /* [<= ti_tuple->t_size] Next-element index. */
 } TupleIterator;
 
 #ifdef CONFIG_NO_THREADS

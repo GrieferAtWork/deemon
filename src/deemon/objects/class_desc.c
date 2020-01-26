@@ -78,9 +78,9 @@ typedef struct {
 	/* A mapping-like {(string | int, int)...} object used for mapping
 	 * operator names to their respective class instance table slots. */
 	OBJECT_HEAD
-	DREF ClassDescriptor              *co_desc; /* [1..1][const] The referenced class descriptor. */
-	ATOMIC_DATA struct class_operator *co_iter; /* [1..1] Current iterator position. */
-	struct class_operator             *co_end;  /* [1..1][const] Iterator end position. */
+	DREF ClassDescriptor        *co_desc; /* [1..1][const] The referenced class descriptor. */
+	DWEAK struct class_operator *co_iter; /* [1..1] Current iterator position. */
+	struct class_operator       *co_end;  /* [1..1][const] Iterator end position. */
 } ClassOperatorTableIterator;
 
 INTDEF DeeTypeObject ClassOperatorTableIterator_Type;
@@ -461,9 +461,9 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF ClassDescriptor               *ca_desc; /* [1..1][const] Class descriptor. */
-	ATOMIC_DATA struct class_attribute *ca_iter; /* [1..1] Current iterator position. */
-	struct class_attribute             *ca_end;  /* [1..1][const] Iterator end. */
+	DREF ClassDescriptor         *ca_desc; /* [1..1][const] Class descriptor. */
+	DWEAK struct class_attribute *ca_iter; /* [1..1] Current iterator position. */
+	struct class_attribute       *ca_end;  /* [1..1][const] Iterator end. */
 } ClassAttributeTableIterator;
 
 typedef struct {

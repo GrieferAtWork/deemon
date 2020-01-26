@@ -72,11 +72,11 @@ typedef struct {
 #define SLAB_PAGE_INVALID    ((FUNC(SlabPage) *)-1)
 typedef struct FUNC(slab_page) FUNC(SlabPage);
 struct FUNC(slab_page) {
-	FUNC(SlabItem)        sp_items[SLAB_ITEMCOUNT];
-	FUNC(SlabPage)      **sp_pself; /* [1..1][1..1] Page self-pointer. */
-	FUNC(SlabPage)       *sp_next;  /* [0..1] Next page (of the same type; aka. free or full). */
-	ATOMIC_DATA uintptr_t sp_free;  /* Number of free items in this page. */
-	ATOMIC_DATA uintptr_t sp_inuse[SLAB_INUSE_BITSET_LENGTH]; /* Bitset of items that are currently in-use. */
+	FUNC(SlabItem)   sp_items[SLAB_ITEMCOUNT];
+	FUNC(SlabPage) **sp_pself; /* [1..1][1..1] Page self-pointer. */
+	FUNC(SlabPage)  *sp_next;  /* [0..1] Next page (of the same type; aka. free or full). */
+	DWEAK uintptr_t  sp_free;  /* Number of free items in this page. */
+	DWEAK uintptr_t  sp_inuse[SLAB_INUSE_BITSET_LENGTH]; /* Bitset of items that are currently in-use. */
 };
 
 STATIC_ASSERT(sizeof(FUNC(SlabPage)) <= CONFIG_SLAB_PAGESIZE);
@@ -90,14 +90,14 @@ typedef struct {
 	FUNC(SlabPage) *s_full; /* [0..1|null(SLAB_PAGE_INVALID)][lock(s_lock)] Chain of pages that fully in-use */
 	FUNC(SlabPage) *s_tail; /* [0..1|null(SLAB_PAGE_INVALID)][lock(s_lock)] Pointer to the next page that should be allocated from the system. */
 #ifndef CONFIG_NO_OBJECT_SLAB_STATS
-	ATOMIC_DATA size_t s_num_free;      /* Number of items currently marked as free. */
-	ATOMIC_DATA size_t s_max_free;      /* Max number of items ever marked as free. */
-	ATOMIC_DATA size_t s_num_alloc;     /* Number of items currently allocated from this slab. */
-	ATOMIC_DATA size_t s_max_alloc;     /* Max number of items that were ever allocated at once. */
-	ATOMIC_DATA size_t s_num_fullpages; /* Number of full pages currently allocated from this slab. */
-	ATOMIC_DATA size_t s_max_fullpages; /* Max number of full pages that were ever allocated at once. */
-	ATOMIC_DATA size_t s_num_freepages; /* Number of pages containing unused items. */
-	ATOMIC_DATA size_t s_max_freepages; /* Max number of pages containing unused items to ever exist. */
+	DWEAK size_t    s_num_free;      /* Number of items currently marked as free. */
+	DWEAK size_t    s_max_free;      /* Max number of items ever marked as free. */
+	DWEAK size_t    s_num_alloc;     /* Number of items currently allocated from this slab. */
+	DWEAK size_t    s_max_alloc;     /* Max number of items that were ever allocated at once. */
+	DWEAK size_t    s_num_fullpages; /* Number of full pages currently allocated from this slab. */
+	DWEAK size_t    s_max_fullpages; /* Max number of full pages that were ever allocated at once. */
+	DWEAK size_t    s_num_freepages; /* Number of pages containing unused items. */
+	DWEAK size_t    s_max_freepages; /* Max number of pages containing unused items to ever exist. */
 #endif /* !CONFIG_NO_OBJECT_SLAB_STATS */
 } FUNC(Slab);
 

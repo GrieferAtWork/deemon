@@ -37,7 +37,7 @@ typedef struct {
 typedef struct {
 	OBJECT_HEAD
 	DREF SlabStatObject *sti_stat;  /* [1..1][const] Slab statistics. */
-	ATOMIC_DATA size_t   sti_index; /* Iterator position. */
+	DWEAK size_t         sti_index; /* Iterator position. */
 } SlabStatIteratorObject;
 
 typedef struct {

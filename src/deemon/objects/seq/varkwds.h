@@ -99,9 +99,9 @@ INTDEF DeeTypeObject BlackListVarkwds_Type;
 
 typedef struct {
 	OBJECT_HEAD
-	ATOMIC_DATA struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
-	struct kwds_entry             *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-	DREF BlackListVarkwds         *ki_map;  /* [1..1][const] The associated keywords mapping. */
+	DWEAK struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
+	struct kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	DREF BlackListVarkwds   *ki_map;  /* [1..1][const] The associated keywords mapping. */
 } BlackListVarkwdsIterator;
 
 INTDEF DeeTypeObject BlackListVarkwdsIterator_Type;

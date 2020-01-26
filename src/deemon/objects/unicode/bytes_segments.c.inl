@@ -37,7 +37,7 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeBytesObject *b_str;   /* [1..1][const] The Bytes object that is being segmented. */
 	size_t               b_siz;   /* [!0][const] The size of a single segment. */
-	ATOMIC_DATA uint8_t *b_ptr;   /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
+	DWEAK uint8_t       *b_ptr;   /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
 	uint8_t             *b_end;   /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
 } BytesSegmentsIterator;
 

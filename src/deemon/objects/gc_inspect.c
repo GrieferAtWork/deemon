@@ -47,8 +47,8 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	DREF GCSet        *gsi_set;   /* [1..1][const] The set being iterated. */
-	ATOMIC_DATA size_t gsi_index; /* Index of the next set element to-be iterated. */
+	DREF GCSet  *gsi_set;   /* [1..1][const] The set being iterated. */
+	DWEAK size_t gsi_index; /* Index of the next set element to-be iterated. */
 } GCSetIterator;
 
 #ifdef CONFIG_NO_THREADS

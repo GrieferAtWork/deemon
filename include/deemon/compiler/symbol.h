@@ -513,7 +513,7 @@ struct text_label {
 
 struct symbol {
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
-	ATOMIC_DATA Dee_ref_t s_refcnt;/* Reference counter */
+	DWEAK Dee_refcnt_t    s_refcnt;/* Reference counter */
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
 	DREF struct symbol   *s_next;  /* [0..1][owned] Next symbol with the same modulated `s_name->k_id' */
 	struct TPPKeyword    *s_name;  /* [1..1][const] Name of this symbol. */

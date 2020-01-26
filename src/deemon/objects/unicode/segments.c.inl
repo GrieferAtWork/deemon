@@ -37,7 +37,7 @@ typedef struct {
 	OBJECT_HEAD
 	DREF DeeStringObject *s_str;   /* [1..1][const] The string that is being segmented. */
 	size_t                s_siz;   /* [!0][const] The size of a single segment. */
-	ATOMIC_DATA uint8_t  *s_ptr;   /* [1..1][in(DeeString_WSTR(s_str))] Pointer to the start of the next segment. */
+	DWEAK uint8_t        *s_ptr;   /* [1..1][in(DeeString_WSTR(s_str))] Pointer to the start of the next segment. */
 	uint8_t              *s_end;   /* [1..1][== DeeString_WEND(s_str)] End pointer. */
 	unsigned int          s_width; /* [const] The width of a single character. */
 } StringSegmentsIterator;

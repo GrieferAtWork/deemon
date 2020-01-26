@@ -43,21 +43,21 @@ INTDEF DeeTypeObject BytesLineSplit_Type;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Bytes          *bs_bytes;     /* [1..1][const] The Bytes object being split. */
-	DREF DeeObject      *bs_sep_owner; /* [0..1][const] The owner of the split sequence. */
-	uint8_t             *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
-	size_t               bs_sep_len;   /* [const] Length of the separation sequence (in bytes). */
-	uint8_t              bs_sep_buf[sizeof(void *)]; /* A small inline-buffer used for single-byte splits. */
+	DREF Bytes     *bs_bytes;     /* [1..1][const] The Bytes object being split. */
+	DREF DeeObject *bs_sep_owner; /* [0..1][const] The owner of the split sequence. */
+	uint8_t        *bs_sep_ptr;   /* [const] Pointer to the effective separation sequence. */
+	size_t          bs_sep_len;   /* [const] Length of the separation sequence (in bytes). */
+	uint8_t         bs_sep_buf[sizeof(void *)]; /* A small inline-buffer used for single-byte splits. */
 } BytesSplit;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF BytesSplit     *bsi_split;    /* [1..1][const] The underlying split controller. */
-	ATOMIC_DATA uint8_t *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	uint8_t             *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
-	Bytes               *bsi_bytes;    /* [1..1][const][== bsi_split] The Bytes object being split. */
-	uint8_t             *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
-	size_t               bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
+	DREF BytesSplit *bsi_split;    /* [1..1][const] The underlying split controller. */
+	DWEAK uint8_t   *bsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
+	uint8_t         *bsi_end;      /* [1..1][== DeeBytes_TERM(bsi_split->bs_bytes)] Pointer to the end of input data. */
+	Bytes           *bsi_bytes;    /* [1..1][const][== bsi_split] The Bytes object being split. */
+	uint8_t         *bsi_sep_ptr;  /* [const][== bsi_split->bs_sep_ptr] Pointer to the effective separation sequence. */
+	size_t           bsi_sep_len;  /* [const][== bsi_split->bs_sep_len] Length of the separation sequence (in bytes). */
 } BytesSplitIterator;
 
 #ifndef CONFIG_NO_THREADS
@@ -695,16 +695,16 @@ err_r:
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Bytes          *bls_bytes;    /* [1..1][const] The Bytes object being split. */
-	bool                 bls_keepends; /* [const] If true, keep line endings. */
+	DREF Bytes *bls_bytes;    /* [1..1][const] The Bytes object being split. */
+	bool        bls_keepends; /* [const] If true, keep line endings. */
 } BytesLineSplit;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Bytes          *blsi_bytes;    /* [1..1][const] The Bytes object being split. */
-	ATOMIC_DATA uint8_t *blsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
-	uint8_t             *blsi_end;      /* [1..1][== DeeBytes_TERM(blsi_bytes)] Pointer to the end of input data. */
-	bool                 blsi_keepends; /* [const] If true, keep line endings. */
+	DREF Bytes    *blsi_bytes;    /* [1..1][const] The Bytes object being split. */
+	DWEAK uint8_t *blsi_iter;     /* [0..1] Pointer to the start of the next split (When NULL, iteration is complete). */
+	uint8_t       *blsi_end;      /* [1..1][== DeeBytes_TERM(blsi_bytes)] Pointer to the end of input data. */
+	bool           blsi_keepends; /* [const] If true, keep line endings. */
 } BytesLineSplitIterator;
 
 #ifndef CONFIG_NO_THREADS

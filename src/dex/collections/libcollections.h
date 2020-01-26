@@ -361,8 +361,8 @@ typedef struct {
 
 typedef struct {
 	Dee_OBJECT_HEAD
-	DREF FixedList    *li_list; /* [1..1][const] The list being iterated. */
-	ATOMIC_DATA size_t li_iter; /* Iterator position. */
+	DREF FixedList *li_list; /* [1..1][const] The list being iterated. */
+	DWEAK size_t    li_iter; /* Iterator position. */
 } FixedListIterator;
 
 

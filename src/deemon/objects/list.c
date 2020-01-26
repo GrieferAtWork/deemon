@@ -55,8 +55,8 @@ typedef DeeListObject List;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF List         *li_list;  /* [1..1][const] The list being iterated. */
-	ATOMIC_DATA size_t li_index; /* The current iteration index. */
+	DREF List   *li_list;  /* [1..1][const] The list being iterated. */
+	DWEAK size_t li_index; /* The current iteration index. */
 } ListIterator;
 
 INTDEF DeeTypeObject DeeListIterator_Type;

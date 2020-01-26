@@ -132,7 +132,7 @@ struct asm_operand {
 
 struct ast {
 #ifdef CONFIG_AST_IS_STRUCT
-	Dee_ref_t            a_refcnt; /* [lock(DeeCompiler_Lock)] Reference counter. */
+	Dee_refcnt_t         a_refcnt; /* [lock(DeeCompiler_Lock)] Reference counter. */
 #else /* CONFIG_AST_IS_STRUCT */
 	Dee_OBJECT_HEAD
 #endif /* !CONFIG_AST_IS_STRUCT */

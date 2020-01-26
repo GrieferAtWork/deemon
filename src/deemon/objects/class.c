@@ -620,7 +620,7 @@ instance_destructor(DeeObject *__restrict self) {
 	if unlikely(!callback)
 		result = NULL;
 	else {
-		dref_t new_refcnt;
+		drefcnt_t new_refcnt;
 		ATOMIC_FETCHINC(self->ob_refcnt);
 		result = DeeObject_ThisCall(callback, self, 0, NULL);
 		Dee_Decref(callback);

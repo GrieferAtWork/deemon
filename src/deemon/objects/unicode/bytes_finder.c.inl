@@ -42,12 +42,12 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF BytesFind      *bfi_find;       /* [1..1][const] The underlying find-controller. */
-	uint8_t             *bfi_start;      /* [1..1][const] Starting pointer. */
-	ATOMIC_DATA uint8_t *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	uint8_t             *bfi_end;        /* [1..1][const] End pointer. */
-	uint8_t             *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
-	size_t               bfi_needle_len; /* [const] Length of the needle being searched. */
+	DREF BytesFind *bfi_find;       /* [1..1][const] The underlying find-controller. */
+	uint8_t        *bfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK uint8_t  *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	uint8_t        *bfi_end;        /* [1..1][const] End pointer. */
+	uint8_t        *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	size_t          bfi_needle_len; /* [const] Length of the needle being searched. */
 } BytesFindIterator;
 
 INTDEF WUNUSED DREF DeeObject *DCALL

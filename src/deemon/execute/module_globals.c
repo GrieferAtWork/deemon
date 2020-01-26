@@ -44,7 +44,7 @@ DECL_BEGIN
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeModuleObject *mei_module; /* [1..1][const] The module who's exports are being iterated. */
-	ATOMIC_DATA uint16_t  mei_index;  /* The current global variable index. */
+	DWEAK uint16_t        mei_index;  /* The current global variable index. */
 } ModuleExportsIterator;
 
 typedef struct {
@@ -594,7 +594,7 @@ done:
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeModuleObject *mgi_module; /* [1..1] The module who's exports are being viewed. */
-	ATOMIC_DATA uint16_t  mgi_index;  /* The current global variable index. */
+	DWEAK uint16_t        mgi_index;  /* The current global variable index. */
 } ModuleGlobalsIterator;
 
 STATIC_ASSERT(COMPILER_OFFSETOF(ModuleExportsIterator, mei_module) ==

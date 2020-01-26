@@ -47,9 +47,9 @@ typedef DeeKwdsMappingObject KwdsMapping;
 
 typedef struct {
 	OBJECT_HEAD
-	ATOMIC_DATA struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
-	struct kwds_entry             *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-	DREF Kwds                     *ki_map;  /* [1..1][const] The associated keywords table. */
+	DWEAK struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
+	struct kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	DREF Kwds               *ki_map;  /* [1..1][const] The associated keywords table. */
 } KwdsIterator;
 
 #ifdef CONFIG_NO_THREADS
@@ -641,9 +641,9 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 
 typedef struct {
 	OBJECT_HEAD
-	ATOMIC_DATA struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
-	struct kwds_entry             *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
-	DREF KwdsMapping              *ki_map;  /* [1..1][const] The associated keywords mapping. */
+	DWEAK struct kwds_entry *ki_iter; /* [1..1] The next entry to iterate. */
+	struct kwds_entry       *ki_end;  /* [1..1][const] Pointer to the end of the associated keywords table. */
+	DREF KwdsMapping        *ki_map;  /* [1..1][const] The associated keywords mapping. */
 } KmapIterator;
 
 #ifdef CONFIG_NO_THREADS
