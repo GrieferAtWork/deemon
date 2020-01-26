@@ -2071,7 +2071,7 @@ struct Dee_ascii_printer {
 NONNULL((1)) void Dee_ascii_printer_init(struct Dee_ascii_printer *__restrict self);
 NONNULL((1)) void Dee_ascii_printer_fini(struct Dee_ascii_printer *__restrict self);
 #else /* __INTELLISENSE__ */
-#define Dee_ascii_printer_init(self) (void)((self)->ap_length = 0,(self)->ap_string = NULL)
+#define Dee_ascii_printer_init(self) (void)((self)->ap_length = 0, (self)->ap_string = NULL)
 #define Dee_ascii_printer_fini(self) DeeObject_Free((self)->ap_string)
 #endif /* !__INTELLISENSE__ */
 

@@ -416,7 +416,8 @@ FORCELOCAL void
 
 
 #ifdef NDEBUG
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Malloc))(void) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeSlab_Malloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -424,7 +425,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Malloc))(void) {
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -432,7 +434,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Malloc))(char const *fil
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryMalloc))(void) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeSlab_TryMalloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -440,7 +443,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryMalloc))(void) {
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -450,7 +454,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *
 
 #else /* NDEBUG */
 
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Malloc))(void) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeSlab_Malloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -459,7 +464,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Malloc))(void) {
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeDbgSlab_Malloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -468,7 +474,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Malloc))(char const *fil
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryMalloc))(void) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeSlab_TryMalloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -477,7 +484,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryMalloc))(void) {
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	if unlikely(!result)
@@ -488,7 +496,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryMalloc))(char const *
 #endif /* !NDEBUG */
 
 #undef DeeSlab_Calloc
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Calloc))(void) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeSlab_Calloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
@@ -496,7 +505,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_Calloc))(void) {
 }
 
 #undef DeeSlab_TryCalloc
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryCalloc))(void) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeSlab_TryCalloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
@@ -504,7 +514,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeSlab_TryCalloc))(void) {
 }
 
 #undef DeeDbgSlab_Calloc
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Calloc))(char const *file, int line) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeDbgSlab_Calloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
@@ -512,7 +523,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_Calloc))(char const *fil
 }
 
 #undef DeeDbgSlab_TryCalloc
-PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *file, int line) {
+PUBLIC WUNUSED ATTR_MALLOC void *
+(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
 	return (likely(result)) ? memset(result, 0, ITEMSIZE)
@@ -520,7 +532,7 @@ PUBLIC WUNUSED ATTR_MALLOC void *(DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *
 }
 
 #undef DeeSlab_Free
-PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
+PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *ptr) {
 	if (IS_SLAB_POINTER(ptr))
 		FUNC(DeeSlab_DoFree)(ptr);
 	else {
@@ -529,8 +541,9 @@ PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
 }
 
 #undef DeeDbgSlab_Free
-PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr,
-                                         char const *file, int line) {
+INTDEF DREF DeeStringObject *latin1_chars[256];
+PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr,
+                                          char const *file, int line) {
 	if (IS_SLAB_POINTER(ptr))
 		FUNC(DeeSlab_DoFree)(ptr);
 	else {
@@ -593,11 +606,11 @@ DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeSlab_Free), 4),
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(FUNC(DeeDbgSlab_Free), 12),
                     ASSEMBLY_NAME(DeeDbg_Free, 12));
 #else /* !__NO_DEFINE_ALIAS */
-PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *__restrict ptr) {
+PUBLIC void (DCALL FUNC(DeeSlab_Free))(void *ptr) {
 	(Dee_Free)(ptr);
 }
 
-PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *__restrict ptr, char const *file, int line) {
+PUBLIC void (DCALL FUNC(DeeDbgSlab_Free))(void *ptr, char const *file, int line) {
 	(DeeDbg_Free)(ptr, file, line);
 }
 #endif /* __NO_DEFINE_ALIAS */

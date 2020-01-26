@@ -204,12 +204,12 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self
  *   - Dee_Free
  *   - DeeObject_Free
  *   - DeeGCObject_Free
- * The following free functions require the caller to pass non-NULL pointers:
  *   - DeeSlab_Free
  *   - DeeSlab_FFree(..., <N>)
  *   - DeeSlab_Free<N>
  *   - DeeObject_FFree(..., <N>)
  *   - DeeObject_SlabFree<N>
+ * The following free functions require the caller to pass non-NULL pointers:
  *   - DeeGCObject_FFree(..., <N>)
  *   - DeeGCObject_SlabFree<N>
  */
@@ -302,8 +302,8 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabCalloc##size)(void);                     \
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryMalloc##size)(void);                  \
 	DFUNDEF WUNUSED ATTR_MALLOC void *(DCALL DeeGCObject_SlabTryCalloc##size)(void);                  \
-	DFUNDEF void (DCALL DeeSlab_Free##size)(void *__restrict ptr);                                    \
-	DFUNDEF void (DCALL DeeDbgSlab_Free##size)(void *__restrict ptr, char const *file, int line);     \
+	DFUNDEF void (DCALL DeeSlab_Free##size)(void *ptr);                                               \
+	DFUNDEF void (DCALL DeeDbgSlab_Free##size)(void *ptr, char const *file, int line);                \
 	DFUNDEF void (DCALL DeeGCObject_SlabFree##size)(void *__restrict ptr);
 DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 #undef DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS
@@ -331,8 +331,8 @@ DeeSlab_ENUMERATE(DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS)
 /* Free any kind of pointer allocated by the general-purpose slab allocators.
  * NOTE: Do not mix with object slab allocators, even if they may appear identical! */
 #ifdef __INTELLISENSE__
-DFUNDEF void (DCALL DeeSlab_Free)(void *__restrict ptr);
-DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int line);
+DFUNDEF void (DCALL DeeSlab_Free)(void *ptr);
+DFUNDEF void (DCALL DeeDbgSlab_Free)(void *ptr, char const *file, int line);
 #elif Dee_SLAB_MINSIZE == 4
 #define DeeSlab_Free      DeeSlab_Free4
 #define DeeDbgSlab_Free   DeeDbgSlab_Free4
@@ -471,8 +471,8 @@ DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int
 /* Free any kind of pointer allocated by the general-purpose slab allocators.
  * NOTE: Do not mix with object slab allocators, even if they may appear identical! */
 #ifdef __INTELLISENSE__
-DFUNDEF void (DCALL DeeSlab_Free)(void *__restrict ptr);
-DFUNDEF void (DCALL DeeDbgSlab_Free)(void *__restrict ptr, char const *file, int line);
+DFUNDEF void (DCALL DeeSlab_Free)(void *ptr);
+DFUNDEF void (DCALL DeeDbgSlab_Free)(void *ptr, char const *file, int line);
 #else /* __INTELLISENSE__ */
 #define DeeSlab_Free      Dee_Free
 #define DeeDbgSlab_Free   DeeDbg_Free
