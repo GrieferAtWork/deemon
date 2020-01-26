@@ -62,7 +62,7 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 #undef DeeSystem_PrintPwd_USE_GETCWD
 #undef DeeSystem_PrintPwd_USE_GETENV
 #undef DeeSystem_PrintPwd_USE_DOT
-#if defined(CONFIG_HOST_WINDOWS) && 0
+#if defined(CONFIG_HOST_WINDOWS)
 #define DeeSystem_PrintPwd_USE_WINDOWS 1
 #elif defined(CONFIG_HAVE_wgetcwd) && defined(CONFIG_PREFER_WCHAR_FUNCTIONS)
 #define DeeSystem_PrintPwd_USE_WGETCWD 1
