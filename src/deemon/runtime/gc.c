@@ -57,7 +57,32 @@ DECL_BEGIN
 /* Required in case new GC objects are scheduled
  * whilst tp_gc() is invoked on some GC object
  * when `gc_lock' is still being held. */
+#undef CONFIG_HAVE_PENDING_GC_OBJECTS
+#if 1
 #define CONFIG_HAVE_PENDING_GC_OBJECTS 1
+#endif
+
+/* Use priority clear (`tp_pclear') instead of `tp_clear' */
+#undef CONFIG_GC_PRIORITY_CLEAR
+#if 1
+#define CONFIG_GC_PRIORITY_CLEAR 1
+#endif
+
+/* Construct the dependency partners vector such that
+ * it can be scanned using a bsearch-style approach. */
+#undef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
+#if 1
+#define CONFIG_GC_DEP_PARTNERS_USE_BSEARCH 1
+#endif
+
+/* Keep track of leaf objects to speed up gc traversal. */
+#undef CONFIG_GC_TRACK_LEAFS
+#if 1
+#define CONFIG_GC_TRACK_LEAFS 1
+#endif
+
+
+
 
 #ifdef CONFIG_NO_THREADS
 #undef CONFIG_HAVE_PENDING_GC_OBJECTS
@@ -92,14 +117,55 @@ PRIVATE struct gc_head *gc_root  = NULL;
 PRIVATE bool did_untrack = false;
 
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-PRIVATE rwlock_t gc_pending_lock = RWLOCK_INIT;
-PRIVATE struct gc_head *gc_pending_front = NULL; /* [0..1] First pending object. */
-PRIVATE struct gc_head *gc_pending_back  = NULL; /* [0..1] Last pending object. */
-#endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+PRIVATE struct gc_head *gc_pending = NULL; /* [0..1] Pending object for GC tracking. */
+#ifdef CONFIG_NO_THREADS
+#define GC_PENDING_MUSTSERVICE() (gc_pending != NULL)
+#else /* CONFIG_NO_THREADS */
+#define GC_PENDING_MUSTSERVICE() (ATOMIC_READ(gc_pending) != NULL)
+#endif /* !CONFIG_NO_THREADS */
+PRIVATE void DCALL gc_pending_service(void) {
+	struct gc_head *chain;
+	chain = ATOMIC_XCH(gc_pending, NULL);
+	if (chain) {
+		struct gc_head *next, **pself;
+		pself = &gc_root;
+		for (next = chain;;) {
+			next->gc_pself = pself;
+			pself = &next->gc_next;
+			next  = *pself;
+			if (!next)
+				break;
+		}
+		next = COMPILER_CONTAINER_OF(pself, struct gc_head, gc_next); /* last */
+		ASSERT(next->gc_next == NULL);
+		ASSERT(chain->gc_pself == &gc_root);
+		/* Append the old GC chain */
+		if ((next->gc_next = gc_root) != NULL)
+			gc_root->gc_pself = &next->gc_next;
+		gc_root = chain; /* Set the new GC chain */
+	}
+}
 
+LOCAL void DCALL gc_lock_acquire_s(void) {
+	GCLOCK_ACQUIRE();
+	gc_pending_service();
+}
+LOCAL void DCALL gc_lock_release_s(void) {
+again:
+	gc_pending_service();
+	GCLOCK_RELEASE();
+	if unlikely(GC_PENDING_MUSTSERVICE()) {
+		if (GCLOCK_TRYACQUIRE())
+			goto again;
+	}
+}
+#define GCLOCK_ACQUIRE_S() gc_lock_acquire_s()
+#define GCLOCK_RELEASE_S() gc_lock_release_s()
+#else /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+#define GCLOCK_ACQUIRE_S() GCLOCK_ACQUIRE()
+#define GCLOCK_RELEASE_S() GCLOCK_RELEASE()
+#endif /* !CONFIG_HAVE_PENDING_GC_OBJECTS */
 
-#undef CONFIG_GC_PRIORITY_CLEAR
-#define CONFIG_GC_PRIORITY_CLEAR 1
 
 /* Begin/end tracking a given GC-allocated object.
  * `DeeGC_Track()' must be called explicitly when the object
@@ -120,49 +186,33 @@ DeeGC_Track(DeeObject *__restrict ob) {
 #endif /* GCHEAD_ISTRACKED */
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 	if (!GCLOCK_TRYACQUIRE()) {
-		rwlock_write(&gc_pending_lock);
-		head->gc_next = NULL;
-		ASSERT((gc_pending_front != NULL) ==
-		       (gc_pending_back != NULL));
-		if (gc_pending_back) {
-			head->gc_pself           = &gc_pending_back->gc_next;
-			gc_pending_back->gc_next = head;
-		} else {
-			/* Technically incorrect, but prevents
-			 * having to re-assign this once the chains get merged. */
-			head->gc_pself   = &gc_root;
-			gc_pending_front = head;
-		}
-		gc_pending_back = head;
-		rwlock_endwrite(&gc_pending_lock);
+		struct gc_head *next;
+#ifdef GCHEAD_ISTRACKED
+		head->gc_pself = (struct gc_head **)1;
+		ASSERT(GCHEAD_ISTRACKED(head));
+#endif /* GCHEAD_ISTRACKED */
+		do {
+			next = ATOMIC_READ(gc_pending);
+			head->gc_next = next;
+			COMPILER_WRITE_BARRIER();
+		} while (!ATOMIC_CMPXCH(gc_pending, next, head));
 	} else {
-		rwlock_write(&gc_pending_lock);
-		ASSERT((gc_pending_front != NULL) ==
-		       (gc_pending_back != NULL));
-		if (gc_pending_back) {
-			/* Transfer the chain of pending objects. */
-			ASSERT(!gc_pending_back->gc_next);
-			if ((gc_pending_back->gc_next = gc_root) != NULL)
-				gc_root->gc_pself = &gc_pending_back->gc_next;
-			gc_root = gc_pending_front;
-			ASSERT(gc_pending_front->gc_pself == &gc_root);
-			gc_pending_front = NULL;
-			gc_pending_back  = NULL;
-		}
-		rwlock_endwrite(&gc_pending_lock);
+		gc_pending_service();
+		ASSERT(head != gc_root);
 		if ((head->gc_next = gc_root) != NULL)
 			gc_root->gc_pself = &head->gc_next;
 		head->gc_pself = &gc_root;
 		gc_root        = head;
-		GCLOCK_RELEASE();
+		GCLOCK_RELEASE_S();
 	}
 #else /* CONFIG_HAVE_PENDING_GC_OBJECTS */
-	GCLOCK_ACQUIRE();
+	GCLOCK_ACQUIRE_S();
+	ASSERT(head != gc_root);
 	if ((head->gc_next = gc_root) != NULL)
 		gc_root->gc_pself = &head->gc_next;
 	head->gc_pself = &gc_root;
 	gc_root        = head;
-	GCLOCK_RELEASE();
+	GCLOCK_RELEASE_S();
 #endif /* !CONFIG_HAVE_PENDING_GC_OBJECTS */
 	return ob;
 }
@@ -180,22 +230,7 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 	        "repr: `%r'",
 	        ob, ob->ob_type->tp_name, ob);
 #endif /* GCHEAD_ISTRACKED */
-	GCLOCK_ACQUIRE();
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	rwlock_write(&gc_pending_lock);
-	if (head == gc_pending_front) {
-		gc_pending_front = head->gc_next;
-		if (head == gc_pending_back) {
-			ASSERT(!gc_pending_front);
-			gc_pending_back = NULL;
-		}
-	} else if (head == gc_pending_back) {
-		ASSERT(!head->gc_next);
-		ASSERT(head->gc_pself != &gc_root);
-		gc_pending_back = COMPILER_CONTAINER_OF(head->gc_pself, struct gc_head, gc_next);
-		/*gc_pending_back->gc_next = NULL;*/ /* Cleared by `*head->gc_pself = head->gc_next' */
-	}
-#endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+	GCLOCK_ACQUIRE_S();
 	/*printf("Untrack: %s:%p\n",ob->ob_type->tp_name,ob);*/
 	/* Unlink the gc head from whatever chain it is apart of. */
 	/* HINT: If the following line crashes, it is likely that a GC-object was
@@ -204,28 +239,14 @@ DeeGC_Untrack(DeeObject *__restrict ob) {
 	 */
 	if ((*head->gc_pself = head->gc_next) != NULL)
 		head->gc_next->gc_pself = head->gc_pself;
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	rwlock_endwrite(&gc_pending_lock);
-#endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
 	did_untrack = true;
-	GCLOCK_RELEASE();
+	GCLOCK_RELEASE_S();
 #ifndef NDEBUG
 	memset(head, 0xcc, DEE_GC_HEAD_SIZE);
 #endif /* !NDEBUG */
 	return ob;
 }
 
-
-
-#undef CONFIG_GC_DEP_PARTNERS_USE_BSEARCH
-#if 1
-#define CONFIG_GC_DEP_PARTNERS_USE_BSEARCH 1
-#endif
-
-#undef CONFIG_GC_TRACK_LEAFS
-#if 1
-#define CONFIG_GC_TRACK_LEAFS 1
-#endif
 
 
 struct gc_dep {
@@ -1017,28 +1038,14 @@ PUBLIC size_t DCALL DeeGC_Collect(size_t max_objects) {
 #endif /* CONFIG_GC_TRACK_LEAFS */
 	if unlikely(!max_objects)
 		goto done_nolock;
-	GCLOCK_ACQUIRE();
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	if (gc_pending_front != NULL) {
 collect_restart_with_pending_hint:
-		rwlock_write(&gc_pending_lock);
-		/* Transfer pending GC objects, so we can try to collect them immediately. */
-		COMPILER_READ_BARRIER();
-		if (gc_pending_front != NULL) {
-			ASSERT(gc_pending_front->gc_pself == &gc_root);
-			ASSERT(gc_pending_back != NULL);
-			if ((gc_pending_back->gc_next = gc_root) != NULL)
-				gc_root->gc_pself = &gc_pending_back->gc_next;
-			gc_root          = gc_pending_front;
-			gc_pending_back  = NULL;
-			gc_pending_front = NULL;
-		}
-		rwlock_endwrite(&gc_pending_lock);
-	}
 #endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+	GCLOCK_ACQUIRE_S();
 restart:
 	did_untrack = false;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
+		ASSERT(iter != iter->gc_next);
 		if (iter->gc_object.ob_refcnt == 0)
 			continue; /* The object may have just been decref()-ed by another thread,
 			           * but that thread hadn't had the chance to untrack it, yet. */
@@ -1059,8 +1066,10 @@ restart:
 		DEE_CHECKMEMORY();
 #endif /* CONFIG_GC_CHECK_MEMORY */
 		if (temp) {
-			if ((result += temp) >= max_objects)
-				goto done;
+			if ((result += temp) >= max_objects) {
+				GCLOCK_RELEASE_S();
+				goto done_nolock;
+			}
 			/* Restart checking all objects, as we're unable to trace
 			 * which objects were destroyed (any of which may be located
 			 * anywhere else in the current gc_root-chain), meaning there'd
@@ -1073,13 +1082,12 @@ restart:
 		if (did_untrack)
 			goto restart;
 	}
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 	COMPILER_READ_BARRIER();
-	if (gc_pending_front != NULL)
+	GCLOCK_RELEASE();
+#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
+	if (GC_PENDING_MUSTSERVICE())
 		goto collect_restart_with_pending_hint;
 #endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
-done:
-	GCLOCK_RELEASE();
 done_nolock:
 	if (dep_buffer != static_visit_buffer)
 		Dee_Free(dep_buffer);
@@ -1092,44 +1100,11 @@ done_nolock:
 
 INTERN bool DCALL DeeGC_IsEmptyWithoutDex(void) {
 	struct gc_head *iter;
-	/* Do a quick check to see if all GC object chains are NULL. */
-#ifdef CONFIG_NO_THREADS
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	if (!gc_pending_front && !gc_root)
-		return true;
-#else /* CONFIG_HAVE_PENDING_GC_OBJECTS */
-	if (!gc_root)
-		return true;
-#endif /* !CONFIG_HAVE_PENDING_GC_OBJECTS */
-#else /* CONFIG_NO_THREADS */
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	if (ATOMIC_READ(gc_pending_front) == NULL &&
-	    ATOMIC_READ(gc_root) == NULL)
-		return true;
-#else /* CONFIG_HAVE_PENDING_GC_OBJECTS */
-	if (ATOMIC_READ(gc_root) == NULL)
-		return true;
-#endif /* !CONFIG_HAVE_PENDING_GC_OBJECTS */
-#endif /* !CONFIG_NO_THREADS */
-	GCLOCK_ACQUIRE();
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	rwlock_read(&gc_pending_lock);
-	iter = gc_pending_front;
-	for (; iter; iter = iter->gc_next) {
-		if (!iter->gc_object.ob_refcnt)
-			continue;
-#ifndef CONFIG_NO_DEX
-		if (DeeDex_Check(&iter->gc_object))
-			continue;
-#endif /* !CONFIG_NO_DEX */
-		rwlock_endread(&gc_pending_lock);
-		goto is_nonempty;
-	}
-	rwlock_endread(&gc_pending_lock);
-#endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+	GCLOCK_ACQUIRE_S();
 	/* Also search the regular GC chain. */
 	iter = gc_root;
 	for (; iter; iter = iter->gc_next) {
+		ASSERT(iter != iter->gc_next);
 		if (!iter->gc_object.ob_refcnt)
 			continue;
 #ifndef CONFIG_NO_DEX
@@ -1138,10 +1113,10 @@ INTERN bool DCALL DeeGC_IsEmptyWithoutDex(void) {
 #endif /* !CONFIG_NO_DEX */
 		goto is_nonempty;
 	}
-	GCLOCK_RELEASE();
+	GCLOCK_RELEASE_S();
 	return true;
 is_nonempty:
-	GCLOCK_RELEASE();
+	GCLOCK_RELEASE_S();
 	return false;
 }
 
@@ -1149,30 +1124,15 @@ is_nonempty:
 INTERN size_t DCALL DeeExec_KillUserCode(void) {
 	struct gc_head *iter;
 	size_t result = 0;
-	GCLOCK_ACQUIRE();
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	if (gc_pending_front != NULL) {
 collect_restart_with_pending_hint:
-		rwlock_write(&gc_pending_lock);
-		/* Transfer pending GC objects, so we can try to collect them immediately. */
-		COMPILER_READ_BARRIER();
-		if (gc_pending_front != NULL) {
-			ASSERT(gc_pending_front->gc_pself == &gc_root);
-			ASSERT(gc_pending_back != NULL);
-			if ((gc_pending_back->gc_next = gc_root) != NULL)
-				gc_root->gc_pself = &gc_pending_back->gc_next;
-			gc_root          = gc_pending_front;
-			gc_pending_back  = NULL;
-			gc_pending_front = NULL;
-		}
-		rwlock_endwrite(&gc_pending_lock);
-	}
 #endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
-	for (iter = gc_root; iter;
-	     iter = iter->gc_next) {
+	GCLOCK_ACQUIRE_S();
+	for (iter = gc_root; iter; iter = iter->gc_next) {
 		instruction_t old_instr;
 		uint16_t old_flags;
 		ASSERT_OBJECT(&iter->gc_object);
+		ASSERT(iter != iter->gc_next);
 		if unlikely(!iter->gc_object.ob_refcnt)
 			continue; /* Object is currently being destroyed. */
 		if (!DeeCode_Check(&iter->gc_object))
@@ -1205,12 +1165,12 @@ collect_restart_with_pending_hint:
 		    (old_flags & CODE_FFINALLY))
 			++result;
 	}
+	GCLOCK_RELEASE();
 #ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
 	COMPILER_READ_BARRIER();
-	if (gc_pending_front != NULL)
+	if (GC_PENDING_MUSTSERVICE())
 		goto collect_restart_with_pending_hint;
 #endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
-	GCLOCK_RELEASE();
 	return result;
 }
 
@@ -1333,6 +1293,7 @@ dump_reference_history(DeeObject *__restrict obj);
 INTERN void DCALL gc_dump_all(void) {
 	struct gc_head *iter;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
+		ASSERT(iter != iter->gc_next);
 		DEE_DPRINTF("GC Object at %p: Instance of %s (%u refs)\n",
 		            &iter->gc_object, iter->gc_object.ob_type->tp_name,
 		            iter->gc_object.ob_refcnt);
@@ -1384,18 +1345,15 @@ gciter_next(GCIter *__restrict self) {
 		return ITER_DONE;
 	}
 	GCLOCK_ACQUIRE_READ();
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	rwlock_read(&gc_pending_lock);
-#endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
 	/* Skip ZERO-ref entries. */
 	next = DeeGC_Head(result)->gc_next;
-	/*  Find the next object that we can actually incref()
+	ASSERT(DeeGC_Head(result) != next);
+	/* Find the next object that we can actually incref()
 	 * (The GC chain may contain dangling (aka. weak) objects) */
-	while (next && !Dee_IncrefIfNotZero(&next->gc_object))
+	while (next && !Dee_IncrefIfNotZero(&next->gc_object)) {
+		ASSERT(next != next->gc_next);
 		next = next->gc_next;
-#ifdef CONFIG_HAVE_PENDING_GC_OBJECTS
-	rwlock_endread(&gc_pending_lock);
-#endif /* CONFIG_HAVE_PENDING_GC_OBJECTS */
+	}
 	GCLOCK_RELEASE_READ();
 	self->gi_next = next ? &next->gc_object : NULL; /* Inherit reference. */
 	rwlock_endwrite(&self->gi_lock);
@@ -1448,7 +1406,7 @@ PRIVATE DeeTypeObject GCIter_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */gciter_members,
+	/* .tp_members       = */ gciter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1466,8 +1424,10 @@ gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 	first = gc_root;
 	/*  Find the first object that we can actually incref()
 	 * (The GC chain may contain dangling (aka. weak) objects) */
-	while (first && !Dee_IncrefIfNotZero(&first->gc_object))
+	while (first && !Dee_IncrefIfNotZero(&first->gc_object)) {
+		ASSERT(first != first->gc_next);
 		first = first->gc_next;
+	}
 	GCLOCK_RELEASE_READ();
 	rwlock_init(&result->gi_lock);
 	/* Save the first object in the iterator. */
@@ -1482,8 +1442,10 @@ gcenum_size(DeeObject *__restrict UNUSED(self)) {
 	size_t result = 0;
 	struct gc_head *iter;
 	GCLOCK_ACQUIRE_READ();
-	for (iter = gc_root; iter; iter = iter->gc_next)
+	for (iter = gc_root; iter; iter = iter->gc_next) {
+		ASSERT(iter != iter->gc_next);
 		++result;
+	}
 	GCLOCK_RELEASE_READ();
 	return DeeInt_NewSize(result);
 }
@@ -1495,11 +1457,12 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 		return_false;
 #if defined(GCHEAD_ISTRACKED)
 	return_bool(GCHEAD_ISTRACKED(DeeGC_Head(ob)));
-#else
+#else /* GCHEAD_ISTRACKED */
 	{
 		struct gc_head *iter;
 		GCLOCK_ACQUIRE_READ();
 		for (iter = gc_root; iter; iter = iter->gc_next) {
+			ASSERT(iter != iter->gc_next);
 			if (&iter->gc_object == ob) {
 				GCLOCK_RELEASE_READ();
 				return_true;
@@ -1508,7 +1471,7 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 		GCLOCK_RELEASE_READ();
 	}
 	return_false;
-#endif
+#endif /* !GCHEAD_ISTRACKED */
 }
 
 PRIVATE struct type_seq gcenum_seq = {
@@ -1664,12 +1627,12 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */gcenum_methods,
+	/* .tp_methods       = */ gcenum_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */gcenum_class_members
+	/* .tp_class_members = */ gcenum_class_members
 };
 
 
@@ -1685,7 +1648,9 @@ DeeGC_CollectGCReferred(GCSetMaker *__restrict self,
 again:
 	GCLOCK_ACQUIRE_READ();
 	for (iter = gc_root; iter; iter = iter->gc_next) {
-		DREF DeeObject *obj = &iter->gc_object;
+		DREF DeeObject *obj;
+		ASSERT(iter != iter->gc_next);
+		obj = &iter->gc_object;
 		if (!Dee_IncrefIfNotZero(obj))
 			continue;
 		if (DeeGC_ReferredBy(obj, target)) {
