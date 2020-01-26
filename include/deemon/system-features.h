@@ -461,6 +461,8 @@ func("_lseeki64", msvc, test: "return (int)_lseeki64(1, 0, SEEK_SET);");
 
 functest('chdir("..")', unix);
 functest('_chdir("..")', msvc);
+func("wchdir", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wchdir(c, 0755);");
+func("_wchdir", "defined(_WDIRECT_DEFINED)", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchdir(c);");
 
 func("readlink", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'char buf[256]; return (int)readlink("foo", buf, 256);');
 func("freadlinkat", "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_KOS) && defined(__CRT_HAVE_freadlinkat) && defined(AT_READLINK_REQSIZE)", test: 'char buf[256]; return (int)freadlinkat(AT_FDCWD, "foo", buf, 256, AT_READLINK_REQSIZE);');
@@ -473,6 +475,14 @@ func("fstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)",
 func("lstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'struct stat64 st; return lstat64("foo", &st);');
 func("fstatat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct stat st; return fstatat(AT_FDCWD, "foo", &st, 0);');
 func("fstatat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)", test: 'struct stat64 st; return fstatat64(AT_FDCWD, "foo", &st, 0);');
+func("_wstat", "defined(_WIO_DEFINED)", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wstat(c, &st);");
+func("wstat", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wstat(c, &st);");
+func("_wstat64", "defined(_WIO_DEFINED) && defined(__USE_LARGEFILE64)", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wstat64(c, &st);");
+func("wstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wstat64(c, &st);");
+func("_wlstat", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wlstat(c, &st);");
+func("wlstat", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wlstat(c, &st);");
+func("_wlstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wlstat64(c, &st);");
+func("wlstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wlstat64(c, &st);");
 // syscall_ulong_t st_[acm]timensec
 feature("STAT_ST_NSEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC)", test: "struct stat st; st.st_atimensec = st.st_ctimensec = st.st_mtimensec = 0; return 0;");
 // struct timespec st_[acm]tim
@@ -570,10 +580,15 @@ func("_wgetcwd", "defined(_WDIRECT_DEFINED)", test: 'wchar_t buf[256]; return _w
 
 functest('unlink("foo.txt")', unix);
 functest('_unlink("foo.txt")', "defined(_CRT_DIRECTORY_DEFINED)");
+functest('rmdir("foo")', "defined(CONFIG_HAVE_UNISTD_H)");
+functest('_rmdir("foo")', "defined(CONFIG_HAVE_DIRECT_H)");
+functest('unlinkat(AT_FDCWD, "foo", AT_REMOVEDIR)', "defined(CONFIG_HAVE_UNISTD_H) && defined(__USE_ATFILE)");
 functest('remove("foo.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
 functest('rename("foo.txt", "bar.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
 func("wunlink", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
 func("_wunlink", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
+func('wrmdir', test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return wrmdir(s);");
+func('_wrmdir', "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wrmdir(s);");
 func("wremove", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wremove(s);");
 func("_wremove", "defined(_WSTDIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wremove(s);");
 func("wrename", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return wrename(s, t);");
@@ -1214,6 +1229,13 @@ var("__environ");
 #define CONFIG_HAVE_execv 1
 #endif
 
+#ifdef CONFIG_NO__execv
+#undef CONFIG_HAVE__execv
+#elif !defined(CONFIG_HAVE__execv) && \
+      (defined(_execv) || defined(___execv_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__execv 1
+#endif
+
 #ifdef CONFIG_NO_execve
 #undef CONFIG_HAVE_execve
 #elif !defined(CONFIG_HAVE_execve) && \
@@ -1221,6 +1243,13 @@ var("__environ");
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
 #define CONFIG_HAVE_execve 1
+#endif
+
+#ifdef CONFIG_NO__execve
+#undef CONFIG_HAVE__execve
+#elif !defined(CONFIG_HAVE__execve) && \
+      (defined(_execve) || defined(___execve_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__execve 1
 #endif
 
 #ifdef CONFIG_NO_execvp
@@ -1232,6 +1261,13 @@ var("__environ");
 #define CONFIG_HAVE_execvp 1
 #endif
 
+#ifdef CONFIG_NO__execvp
+#undef CONFIG_HAVE__execvp
+#elif !defined(CONFIG_HAVE__execvp) && \
+      (defined(_execvp) || defined(___execvp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__execvp 1
+#endif
+
 #ifdef CONFIG_NO_execvpe
 #undef CONFIG_HAVE_execvpe
 #elif !defined(CONFIG_HAVE_execvpe) && \
@@ -1239,34 +1275,6 @@ var("__environ");
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix)))
 #define CONFIG_HAVE_execvpe 1
-#endif
-
-#ifdef CONFIG_NO_fexecve
-#undef CONFIG_HAVE_fexecve
-#elif !defined(CONFIG_HAVE_fexecve) && \
-      (defined(fexecve) || defined(__fexecve_defined) || defined(__USE_XOPEN2K8))
-#define CONFIG_HAVE_fexecve 1
-#endif
-
-#ifdef CONFIG_NO__execv
-#undef CONFIG_HAVE__execv
-#elif !defined(CONFIG_HAVE__execv) && \
-      (defined(_execv) || defined(___execv_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__execv 1
-#endif
-
-#ifdef CONFIG_NO__execve
-#undef CONFIG_HAVE__execve
-#elif !defined(CONFIG_HAVE__execve) && \
-      (defined(_execve) || defined(___execve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__execve 1
-#endif
-
-#ifdef CONFIG_NO__execvp
-#undef CONFIG_HAVE__execvp
-#elif !defined(CONFIG_HAVE__execvp) && \
-      (defined(_execvp) || defined(___execvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE__execvp 1
 #endif
 
 #ifdef CONFIG_NO__execvpe
@@ -1283,32 +1291,18 @@ var("__environ");
 #define CONFIG_HAVE_wexecv 1
 #endif
 
-#ifdef CONFIG_NO_wexecve
-#undef CONFIG_HAVE_wexecve
-#elif !defined(CONFIG_HAVE_wexecve) && \
-      (defined(wexecve) || defined(__wexecve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wexecve 1
-#endif
-
-#ifdef CONFIG_NO_wexecvp
-#undef CONFIG_HAVE_wexecvp
-#elif !defined(CONFIG_HAVE_wexecvp) && \
-      (defined(wexecvp) || defined(__wexecvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wexecvp 1
-#endif
-
-#ifdef CONFIG_NO_wexecvpe
-#undef CONFIG_HAVE_wexecvpe
-#elif !defined(CONFIG_HAVE_wexecvpe) && \
-      (defined(wexecvpe) || defined(__wexecvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wexecvpe 1
-#endif
-
 #ifdef CONFIG_NO__wexecv
 #undef CONFIG_HAVE__wexecv
 #elif !defined(CONFIG_HAVE__wexecv) && \
       (defined(_wexecv) || defined(___wexecv_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wexecv 1
+#endif
+
+#ifdef CONFIG_NO_wexecve
+#undef CONFIG_HAVE_wexecve
+#elif !defined(CONFIG_HAVE_wexecve) && \
+      (defined(wexecve) || defined(__wexecve_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wexecve 1
 #endif
 
 #ifdef CONFIG_NO__wexecve
@@ -1318,11 +1312,25 @@ var("__environ");
 #define CONFIG_HAVE__wexecve 1
 #endif
 
+#ifdef CONFIG_NO_wexecvp
+#undef CONFIG_HAVE_wexecvp
+#elif !defined(CONFIG_HAVE_wexecvp) && \
+      (defined(wexecvp) || defined(__wexecvp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wexecvp 1
+#endif
+
 #ifdef CONFIG_NO__wexecvp
 #undef CONFIG_HAVE__wexecvp
 #elif !defined(CONFIG_HAVE__wexecvp) && \
       (defined(_wexecvp) || defined(___wexecvp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wexecvp 1
+#endif
+
+#ifdef CONFIG_NO_wexecvpe
+#undef CONFIG_HAVE_wexecvpe
+#elif !defined(CONFIG_HAVE_wexecvpe) && \
+      (defined(wexecvpe) || defined(__wexecvpe_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wexecvpe 1
 #endif
 
 #ifdef CONFIG_NO__wexecvpe
@@ -1339,32 +1347,18 @@ var("__environ");
 #define CONFIG_HAVE_spawnv 1
 #endif
 
-#ifdef CONFIG_NO_spawnve
-#undef CONFIG_HAVE_spawnve
-#elif !defined(CONFIG_HAVE_spawnve) && \
-      (defined(spawnve) || defined(__spawnve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_spawnve 1
-#endif
-
-#ifdef CONFIG_NO_spawnvp
-#undef CONFIG_HAVE_spawnvp
-#elif !defined(CONFIG_HAVE_spawnvp) && \
-      (defined(spawnvp) || defined(__spawnvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_spawnvp 1
-#endif
-
-#ifdef CONFIG_NO_spawnvpe
-#undef CONFIG_HAVE_spawnvpe
-#elif !defined(CONFIG_HAVE_spawnvpe) && \
-      (defined(spawnvpe) || defined(__spawnvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_spawnvpe 1
-#endif
-
 #ifdef CONFIG_NO__spawnv
 #undef CONFIG_HAVE__spawnv
 #elif !defined(CONFIG_HAVE__spawnv) && \
       (defined(_spawnv) || defined(___spawnv_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__spawnv 1
+#endif
+
+#ifdef CONFIG_NO_spawnve
+#undef CONFIG_HAVE_spawnve
+#elif !defined(CONFIG_HAVE_spawnve) && \
+      (defined(spawnve) || defined(__spawnve_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_spawnve 1
 #endif
 
 #ifdef CONFIG_NO__spawnve
@@ -1374,11 +1368,25 @@ var("__environ");
 #define CONFIG_HAVE__spawnve 1
 #endif
 
+#ifdef CONFIG_NO_spawnvp
+#undef CONFIG_HAVE_spawnvp
+#elif !defined(CONFIG_HAVE_spawnvp) && \
+      (defined(spawnvp) || defined(__spawnvp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_spawnvp 1
+#endif
+
 #ifdef CONFIG_NO__spawnvp
 #undef CONFIG_HAVE__spawnvp
 #elif !defined(CONFIG_HAVE__spawnvp) && \
       (defined(_spawnvp) || defined(___spawnvp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__spawnvp 1
+#endif
+
+#ifdef CONFIG_NO_spawnvpe
+#undef CONFIG_HAVE_spawnvpe
+#elif !defined(CONFIG_HAVE_spawnvpe) && \
+      (defined(spawnvpe) || defined(__spawnvpe_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_spawnvpe 1
 #endif
 
 #ifdef CONFIG_NO__spawnvpe
@@ -1395,32 +1403,18 @@ var("__environ");
 #define CONFIG_HAVE_wspawnv 1
 #endif
 
-#ifdef CONFIG_NO_wspawnve
-#undef CONFIG_HAVE_wspawnve
-#elif !defined(CONFIG_HAVE_wspawnve) && \
-      (defined(wspawnve) || defined(__wspawnve_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wspawnve 1
-#endif
-
-#ifdef CONFIG_NO_wspawnvp
-#undef CONFIG_HAVE_wspawnvp
-#elif !defined(CONFIG_HAVE_wspawnvp) && \
-      (defined(wspawnvp) || defined(__wspawnvp_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wspawnvp 1
-#endif
-
-#ifdef CONFIG_NO_wspawnvpe
-#undef CONFIG_HAVE_wspawnvpe
-#elif !defined(CONFIG_HAVE_wspawnvpe) && \
-      (defined(wspawnvpe) || defined(__wspawnvpe_defined) || defined(_MSC_VER))
-#define CONFIG_HAVE_wspawnvpe 1
-#endif
-
 #ifdef CONFIG_NO__wspawnv
 #undef CONFIG_HAVE__wspawnv
 #elif !defined(CONFIG_HAVE__wspawnv) && \
       (defined(_wspawnv) || defined(___wspawnv_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wspawnv 1
+#endif
+
+#ifdef CONFIG_NO_wspawnve
+#undef CONFIG_HAVE_wspawnve
+#elif !defined(CONFIG_HAVE_wspawnve) && \
+      (defined(wspawnve) || defined(__wspawnve_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wspawnve 1
 #endif
 
 #ifdef CONFIG_NO__wspawnve
@@ -1430,6 +1424,13 @@ var("__environ");
 #define CONFIG_HAVE__wspawnve 1
 #endif
 
+#ifdef CONFIG_NO_wspawnvp
+#undef CONFIG_HAVE_wspawnvp
+#elif !defined(CONFIG_HAVE_wspawnvp) && \
+      (defined(wspawnvp) || defined(__wspawnvp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wspawnvp 1
+#endif
+
 #ifdef CONFIG_NO__wspawnvp
 #undef CONFIG_HAVE__wspawnvp
 #elif !defined(CONFIG_HAVE__wspawnvp) && \
@@ -1437,11 +1438,25 @@ var("__environ");
 #define CONFIG_HAVE__wspawnvp 1
 #endif
 
+#ifdef CONFIG_NO_wspawnvpe
+#undef CONFIG_HAVE_wspawnvpe
+#elif !defined(CONFIG_HAVE_wspawnvpe) && \
+      (defined(wspawnvpe) || defined(__wspawnvpe_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_wspawnvpe 1
+#endif
+
 #ifdef CONFIG_NO__wspawnvpe
 #undef CONFIG_HAVE__wspawnvpe
 #elif !defined(CONFIG_HAVE__wspawnvpe) && \
       (defined(_wspawnvpe) || defined(___wspawnvpe_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__wspawnvpe 1
+#endif
+
+#ifdef CONFIG_NO_fexecve
+#undef CONFIG_HAVE_fexecve
+#elif !defined(CONFIG_HAVE_fexecve) && \
+      (defined(fexecve) || defined(__fexecve_defined) || defined(__USE_XOPEN2K8))
+#define CONFIG_HAVE_fexecve 1
 #endif
 
 #ifdef CONFIG_NO_cwait
@@ -3525,6 +3540,20 @@ var("__environ");
 #define CONFIG_HAVE__chdir 1
 #endif
 
+#ifdef CONFIG_NO_wchdir
+#undef CONFIG_HAVE_wchdir
+#elif !defined(CONFIG_HAVE_wchdir) && \
+      (defined(wchdir) || defined(__wchdir_defined))
+#define CONFIG_HAVE_wchdir 1
+#endif
+
+#ifdef CONFIG_NO__wchdir
+#undef CONFIG_HAVE__wchdir
+#elif !defined(CONFIG_HAVE__wchdir) && \
+      (defined(_wchdir) || defined(___wchdir_defined) || defined(_WDIRECT_DEFINED))
+#define CONFIG_HAVE__wchdir 1
+#endif
+
 #ifdef CONFIG_NO_readlink
 #undef CONFIG_HAVE_readlink
 #elif !defined(CONFIG_HAVE_readlink) && \
@@ -3601,6 +3630,63 @@ var("__environ");
       (defined(fstatat64) || defined(__fstatat64_defined) || (defined(CONFIG_HAVE_SYS_STAT_H) && \
        defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)))
 #define CONFIG_HAVE_fstatat64 1
+#endif
+
+#ifdef CONFIG_NO__wstat
+#undef CONFIG_HAVE__wstat
+#elif !defined(CONFIG_HAVE__wstat) && \
+      (defined(_wstat) || defined(___wstat_defined) || defined(_WIO_DEFINED))
+#define CONFIG_HAVE__wstat 1
+#endif
+
+#ifdef CONFIG_NO_wstat
+#undef CONFIG_HAVE_wstat
+#elif !defined(CONFIG_HAVE_wstat) && \
+      (defined(wstat) || defined(__wstat_defined))
+#define CONFIG_HAVE_wstat 1
+#endif
+
+#ifdef CONFIG_NO__wstat64
+#undef CONFIG_HAVE__wstat64
+#elif !defined(CONFIG_HAVE__wstat64) && \
+      (defined(_wstat64) || defined(___wstat64_defined) || (defined(_WIO_DEFINED) && \
+       defined(__USE_LARGEFILE64)))
+#define CONFIG_HAVE__wstat64 1
+#endif
+
+#ifdef CONFIG_NO_wstat64
+#undef CONFIG_HAVE_wstat64
+#elif !defined(CONFIG_HAVE_wstat64) && \
+      (defined(wstat64) || defined(__wstat64_defined))
+#define CONFIG_HAVE_wstat64 1
+#endif
+
+#ifdef CONFIG_NO__wlstat
+#undef CONFIG_HAVE__wlstat
+#elif !defined(CONFIG_HAVE__wlstat) && \
+      (defined(_wlstat) || defined(___wlstat_defined))
+#define CONFIG_HAVE__wlstat 1
+#endif
+
+#ifdef CONFIG_NO_wlstat
+#undef CONFIG_HAVE_wlstat
+#elif !defined(CONFIG_HAVE_wlstat) && \
+      (defined(wlstat) || defined(__wlstat_defined))
+#define CONFIG_HAVE_wlstat 1
+#endif
+
+#ifdef CONFIG_NO__wlstat64
+#undef CONFIG_HAVE__wlstat64
+#elif !defined(CONFIG_HAVE__wlstat64) && \
+      (defined(_wlstat64) || defined(___wlstat64_defined))
+#define CONFIG_HAVE__wlstat64 1
+#endif
+
+#ifdef CONFIG_NO_wlstat64
+#undef CONFIG_HAVE_wlstat64
+#elif !defined(CONFIG_HAVE_wlstat64) && \
+      (defined(wlstat64) || defined(__wlstat64_defined))
+#define CONFIG_HAVE_wlstat64 1
 #endif
 
 #ifdef CONFIG_NO_STAT_ST_NSEC
@@ -4154,6 +4240,28 @@ var("__environ");
 #define CONFIG_HAVE__unlink 1
 #endif
 
+#ifdef CONFIG_NO_rmdir
+#undef CONFIG_HAVE_rmdir
+#elif !defined(CONFIG_HAVE_rmdir) && \
+      (defined(rmdir) || defined(__rmdir_defined) || defined(CONFIG_HAVE_UNISTD_H))
+#define CONFIG_HAVE_rmdir 1
+#endif
+
+#ifdef CONFIG_NO__rmdir
+#undef CONFIG_HAVE__rmdir
+#elif !defined(CONFIG_HAVE__rmdir) && \
+      (defined(_rmdir) || defined(___rmdir_defined) || defined(CONFIG_HAVE_DIRECT_H))
+#define CONFIG_HAVE__rmdir 1
+#endif
+
+#ifdef CONFIG_NO_unlinkat
+#undef CONFIG_HAVE_unlinkat
+#elif !defined(CONFIG_HAVE_unlinkat) && \
+      (defined(unlinkat) || defined(__unlinkat_defined) || (defined(CONFIG_HAVE_UNISTD_H) && \
+       defined(__USE_ATFILE)))
+#define CONFIG_HAVE_unlinkat 1
+#endif
+
 #ifdef CONFIG_NO_remove
 #undef CONFIG_HAVE_remove
 #elif !defined(CONFIG_HAVE_remove) && \
@@ -4180,6 +4288,20 @@ var("__environ");
 #elif !defined(CONFIG_HAVE__wunlink) && \
       (defined(_wunlink) || defined(___wunlink_defined) || defined(_WIO_DEFINED))
 #define CONFIG_HAVE__wunlink 1
+#endif
+
+#ifdef CONFIG_NO_wrmdir
+#undef CONFIG_HAVE_wrmdir
+#elif !defined(CONFIG_HAVE_wrmdir) && \
+      (defined(wrmdir) || defined(__wrmdir_defined))
+#define CONFIG_HAVE_wrmdir 1
+#endif
+
+#ifdef CONFIG_NO__wrmdir
+#undef CONFIG_HAVE__wrmdir
+#elif !defined(CONFIG_HAVE__wrmdir) && \
+      (defined(_wrmdir) || defined(___wrmdir_defined) || defined(_WIO_DEFINED))
+#define CONFIG_HAVE__wrmdir 1
 #endif
 
 #ifdef CONFIG_NO_wremove
@@ -5448,6 +5570,26 @@ var("__environ");
 #define wspawnvpe _wspawnvpe
 #endif /* wspawnvpe = _wspawnvpe */
 
+#if defined(CONFIG_HAVE__wstat) && !defined(CONFIG_HAVE_wstat)
+#define CONFIG_HAVE_wstat 1
+#define wstat _wstat
+#endif /* wstat = _wstat */
+
+#if defined(CONFIG_HAVE__wstat64) && !defined(CONFIG_HAVE_wstat64)
+#define CONFIG_HAVE_wstat64 1
+#define wstat64 _wstat64
+#endif /* wstat64 = _wstat64 */
+
+#if defined(CONFIG_HAVE__wlstat) && !defined(CONFIG_HAVE_wlstat)
+#define CONFIG_HAVE_wlstat 1
+#define wlstat _wlstat
+#endif /* wlstat = _wlstat */
+
+#if defined(CONFIG_HAVE__wlstat64) && !defined(CONFIG_HAVE_wlstat64)
+#define CONFIG_HAVE_wlstat64 1
+#define wlstat64 _wlstat64
+#endif /* wlstat64 = _wlstat64 */
+
 #if defined(CONFIG_HAVE__cwait) && !defined(CONFIG_HAVE_cwait)
 #define CONFIG_HAVE_cwait 1
 #define cwait _cwait
@@ -5482,6 +5624,16 @@ var("__environ");
 #define CONFIG_HAVE_wunlink 1
 #define wunlink _wunlink
 #endif /* wunlink = _wunlink */
+
+#if defined(CONFIG_HAVE__rmdir) && !defined(CONFIG_HAVE_rmdir)
+#define CONFIG_HAVE_rmdir 1
+#define rmdir _rmdir
+#endif /* rmdir = _rmdir */
+
+#if defined(CONFIG_HAVE__wrmdir) && !defined(CONFIG_HAVE_wrmdir)
+#define CONFIG_HAVE_wrmdir 1
+#define wrmdir _wrmdir
+#endif /* wrmdir = _wrmdir */
 
 #if defined(CONFIG_HAVE__remove) && !defined(CONFIG_HAVE_remove)
 #define CONFIG_HAVE_remove 1
@@ -5557,6 +5709,11 @@ var("__environ");
 #define CONFIG_HAVE_chdir 1
 #define chdir _chdir
 #endif /* chdir = _chdir */
+
+#if defined(CONFIG_HAVE__wchdir) && !defined(CONFIG_HAVE_wchdir)
+#define CONFIG_HAVE_wchdir 1
+#define wchdir _wchdir
+#endif /* wchdir = _wchdir */
 
 #if defined(CONFIG_HAVE__getpid) && !defined(CONFIG_HAVE_getpid)
 #define CONFIG_HAVE_getpid 1
@@ -6868,25 +7025,26 @@ import * from util;
 local n = 4;
 
 local errno_names = {
-	"ENOENT",
-	"ENOTDIR",
-	"ENAMETOOLONG",
-	"ELOOP",
-	"EPERM",
 	"EACCES",
-	"EEXIST",
-	"EROFS",
-	"ENXIO",
-	"EISDIR",
-	"ETXTBSY",
-	"ENOSYS",
-	"ENOTSUP",
-	"EOPNOTSUPP",
 	"EBADF",
-	"EINVAL",
+	"EBUSY",
+	"EEXIST",
 	"EFBIG",
+	"EINVAL",
+	"EISDIR",
+	"ELOOP",
+	"ENAMETOOLONG",
+	"ENOENT",
 	"ENOMEM",
+	"ENOSYS",
+	"ENOTDIR",
+	"ENOTSUP",
 	"ENOTTY",
+	"ENXIO",
+	"EOPNOTSUPP",
+	"EPERM",
+	"EROFS",
+	"ETXTBSY",
 };
 
 for (local x: errno_names) {
@@ -6970,101 +7128,106 @@ for (local x: [1:n+1]) {
 }
 
 ]]]*/
-#ifdef ENOENT
-#define DeePrivateSystem_IF_HAVE_ENOENT(tt, ff) tt
-#else /* ENOENT */
-#define DeePrivateSystem_IF_HAVE_ENOENT(tt, ff) ff
-#endif /* !ENOENT */
-#ifdef ENOTDIR
-#define DeePrivateSystem_IF_HAVE_ENOTDIR(tt, ff) tt
-#else /* ENOTDIR */
-#define DeePrivateSystem_IF_HAVE_ENOTDIR(tt, ff) ff
-#endif /* !ENOTDIR */
-#ifdef ENAMETOOLONG
-#define DeePrivateSystem_IF_HAVE_ENAMETOOLONG(tt, ff) tt
-#else /* ENAMETOOLONG */
-#define DeePrivateSystem_IF_HAVE_ENAMETOOLONG(tt, ff) ff
-#endif /* !ENAMETOOLONG */
-#ifdef ELOOP
-#define DeePrivateSystem_IF_HAVE_ELOOP(tt, ff) tt
-#else /* ELOOP */
-#define DeePrivateSystem_IF_HAVE_ELOOP(tt, ff) ff
-#endif /* !ELOOP */
-#ifdef EPERM
-#define DeePrivateSystem_IF_HAVE_EPERM(tt, ff) tt
-#else /* EPERM */
-#define DeePrivateSystem_IF_HAVE_EPERM(tt, ff) ff
-#endif /* !EPERM */
 #ifdef EACCES
 #define DeePrivateSystem_IF_HAVE_EACCES(tt, ff) tt
 #else /* EACCES */
 #define DeePrivateSystem_IF_HAVE_EACCES(tt, ff) ff
 #endif /* !EACCES */
-#ifdef EEXIST
-#define DeePrivateSystem_IF_HAVE_EEXIST(tt, ff) tt
-#else /* EEXIST */
-#define DeePrivateSystem_IF_HAVE_EEXIST(tt, ff) ff
-#endif /* !EEXIST */
-#ifdef EROFS
-#define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) tt
-#else /* EROFS */
-#define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) ff
-#endif /* !EROFS */
-#ifdef ENXIO
-#define DeePrivateSystem_IF_HAVE_ENXIO(tt, ff) tt
-#else /* ENXIO */
-#define DeePrivateSystem_IF_HAVE_ENXIO(tt, ff) ff
-#endif /* !ENXIO */
-#ifdef EISDIR
-#define DeePrivateSystem_IF_HAVE_EISDIR(tt, ff) tt
-#else /* EISDIR */
-#define DeePrivateSystem_IF_HAVE_EISDIR(tt, ff) ff
-#endif /* !EISDIR */
-#ifdef ETXTBSY
-#define DeePrivateSystem_IF_HAVE_ETXTBSY(tt, ff) tt
-#else /* ETXTBSY */
-#define DeePrivateSystem_IF_HAVE_ETXTBSY(tt, ff) ff
-#endif /* !ETXTBSY */
-#ifdef ENOSYS
-#define DeePrivateSystem_IF_HAVE_ENOSYS(tt, ff) tt
-#else /* ENOSYS */
-#define DeePrivateSystem_IF_HAVE_ENOSYS(tt, ff) ff
-#endif /* !ENOSYS */
-#ifdef ENOTSUP
-#define DeePrivateSystem_IF_HAVE_ENOTSUP(tt, ff) tt
-#else /* ENOTSUP */
-#define DeePrivateSystem_IF_HAVE_ENOTSUP(tt, ff) ff
-#endif /* !ENOTSUP */
-#ifdef EOPNOTSUPP
-#define DeePrivateSystem_IF_HAVE_EOPNOTSUPP(tt, ff) tt
-#else /* EOPNOTSUPP */
-#define DeePrivateSystem_IF_HAVE_EOPNOTSUPP(tt, ff) ff
-#endif /* !EOPNOTSUPP */
 #ifdef EBADF
 #define DeePrivateSystem_IF_HAVE_EBADF(tt, ff) tt
 #else /* EBADF */
 #define DeePrivateSystem_IF_HAVE_EBADF(tt, ff) ff
 #endif /* !EBADF */
-#ifdef EINVAL
-#define DeePrivateSystem_IF_HAVE_EINVAL(tt, ff) tt
-#else /* EINVAL */
-#define DeePrivateSystem_IF_HAVE_EINVAL(tt, ff) ff
-#endif /* !EINVAL */
+#ifdef EBUSY
+#define DeePrivateSystem_IF_HAVE_EBUSY(tt, ff) tt
+#else /* EBUSY */
+#define DeePrivateSystem_IF_HAVE_EBUSY(tt, ff) ff
+#endif /* !EBUSY */
+#ifdef EEXIST
+#define DeePrivateSystem_IF_HAVE_EEXIST(tt, ff) tt
+#else /* EEXIST */
+#define DeePrivateSystem_IF_HAVE_EEXIST(tt, ff) ff
+#endif /* !EEXIST */
 #ifdef EFBIG
 #define DeePrivateSystem_IF_HAVE_EFBIG(tt, ff) tt
 #else /* EFBIG */
 #define DeePrivateSystem_IF_HAVE_EFBIG(tt, ff) ff
 #endif /* !EFBIG */
+#ifdef EINVAL
+#define DeePrivateSystem_IF_HAVE_EINVAL(tt, ff) tt
+#else /* EINVAL */
+#define DeePrivateSystem_IF_HAVE_EINVAL(tt, ff) ff
+#endif /* !EINVAL */
+#ifdef EISDIR
+#define DeePrivateSystem_IF_HAVE_EISDIR(tt, ff) tt
+#else /* EISDIR */
+#define DeePrivateSystem_IF_HAVE_EISDIR(tt, ff) ff
+#endif /* !EISDIR */
+#ifdef ELOOP
+#define DeePrivateSystem_IF_HAVE_ELOOP(tt, ff) tt
+#else /* ELOOP */
+#define DeePrivateSystem_IF_HAVE_ELOOP(tt, ff) ff
+#endif /* !ELOOP */
+#ifdef ENAMETOOLONG
+#define DeePrivateSystem_IF_HAVE_ENAMETOOLONG(tt, ff) tt
+#else /* ENAMETOOLONG */
+#define DeePrivateSystem_IF_HAVE_ENAMETOOLONG(tt, ff) ff
+#endif /* !ENAMETOOLONG */
+#ifdef ENOENT
+#define DeePrivateSystem_IF_HAVE_ENOENT(tt, ff) tt
+#else /* ENOENT */
+#define DeePrivateSystem_IF_HAVE_ENOENT(tt, ff) ff
+#endif /* !ENOENT */
 #ifdef ENOMEM
 #define DeePrivateSystem_IF_HAVE_ENOMEM(tt, ff) tt
 #else /* ENOMEM */
 #define DeePrivateSystem_IF_HAVE_ENOMEM(tt, ff) ff
 #endif /* !ENOMEM */
+#ifdef ENOSYS
+#define DeePrivateSystem_IF_HAVE_ENOSYS(tt, ff) tt
+#else /* ENOSYS */
+#define DeePrivateSystem_IF_HAVE_ENOSYS(tt, ff) ff
+#endif /* !ENOSYS */
+#ifdef ENOTDIR
+#define DeePrivateSystem_IF_HAVE_ENOTDIR(tt, ff) tt
+#else /* ENOTDIR */
+#define DeePrivateSystem_IF_HAVE_ENOTDIR(tt, ff) ff
+#endif /* !ENOTDIR */
+#ifdef ENOTSUP
+#define DeePrivateSystem_IF_HAVE_ENOTSUP(tt, ff) tt
+#else /* ENOTSUP */
+#define DeePrivateSystem_IF_HAVE_ENOTSUP(tt, ff) ff
+#endif /* !ENOTSUP */
 #ifdef ENOTTY
 #define DeePrivateSystem_IF_HAVE_ENOTTY(tt, ff) tt
 #else /* ENOTTY */
 #define DeePrivateSystem_IF_HAVE_ENOTTY(tt, ff) ff
 #endif /* !ENOTTY */
+#ifdef ENXIO
+#define DeePrivateSystem_IF_HAVE_ENXIO(tt, ff) tt
+#else /* ENXIO */
+#define DeePrivateSystem_IF_HAVE_ENXIO(tt, ff) ff
+#endif /* !ENXIO */
+#ifdef EOPNOTSUPP
+#define DeePrivateSystem_IF_HAVE_EOPNOTSUPP(tt, ff) tt
+#else /* EOPNOTSUPP */
+#define DeePrivateSystem_IF_HAVE_EOPNOTSUPP(tt, ff) ff
+#endif /* !EOPNOTSUPP */
+#ifdef EPERM
+#define DeePrivateSystem_IF_HAVE_EPERM(tt, ff) tt
+#else /* EPERM */
+#define DeePrivateSystem_IF_HAVE_EPERM(tt, ff) ff
+#endif /* !EPERM */
+#ifdef EROFS
+#define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) tt
+#else /* EROFS */
+#define DeePrivateSystem_IF_HAVE_EROFS(tt, ff) ff
+#endif /* !EROFS */
+#ifdef ETXTBSY
+#define DeePrivateSystem_IF_HAVE_ETXTBSY(tt, ff) tt
+#else /* ETXTBSY */
+#define DeePrivateSystem_IF_HAVE_ETXTBSY(tt, ff) ff
+#endif /* !ETXTBSY */
 #define DeePrivateSystem_IF_E1(errno, e1, ...) \
 	do {                                       \
 		if ((errno) == e1) {                   \

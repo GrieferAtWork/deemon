@@ -187,6 +187,50 @@ INTDEF int DCALL nt_printhome_process(struct unicode_printer *__restrict printer
 #endif
 #endif /* !CONFIG_HOST_WINDOWS */
 
+#ifdef S_ISDIR
+#define STAT_ISDIR(mode) S_ISDIR(mode)
+#else /* S_ISDIR */
+#define STAT_ISDIR(mode) (((mode) & STAT_IFMT) == STAT_IFDIR)
+#endif /* !S_ISDIR */
+
+#ifdef S_ISCHR
+#define STAT_ISCHR(mode) S_ISCHR(mode)
+#else /* S_ISCHR */
+#define STAT_ISCHR(mode) (((mode) & STAT_IFMT) == STAT_IFCHR)
+#endif /* !S_ISCHR */
+
+#ifdef S_ISBLK
+#define STAT_ISBLK(mode) S_ISBLK(mode)
+#else /* S_ISBLK */
+#define STAT_ISBLK(mode) (((mode) & STAT_IFMT) == STAT_IFBLK)
+#endif /* !S_ISBLK */
+
+#ifdef S_ISREG
+#define STAT_ISREG(mode) S_ISREG(mode)
+#else /* S_ISREG */
+#define STAT_ISREG(mode) (((mode) & STAT_IFMT) == STAT_IFREG)
+#endif /* !S_ISREG */
+
+#ifdef S_ISFIFO
+#define STAT_ISFIFO(mode) S_ISFIFO(mode)
+#else /* S_ISFIFO */
+#define STAT_ISFIFO(mode) (((mode) & STAT_IFMT) == STAT_IFIFO)
+#endif /* !S_ISFIFO */
+
+#ifdef S_ISLNK
+#define STAT_ISLNK(mode) S_ISLNK(mode)
+#else /* S_ISLNK */
+#define STAT_ISLNK(mode) (((mode) & STAT_IFMT) == STAT_IFLNK)
+#endif /* !S_ISLNK */
+
+#ifdef S_ISSOCK
+#define STAT_ISSOCK(mode) S_ISSOCK(mode)
+#else /* S_ISSOCK */
+#define STAT_ISSOCK(mode) (((mode) & STAT_IFMT) == STAT_IFSOCK)
+#endif /* !S_ISSOCK */
+
+
+
 #define STAT_IRUSR  0000400 /* Read by owner. */
 #define STAT_IWUSR  0000200 /* Write by owner. */
 #define STAT_IXUSR  0000100 /* Execute by owner. */
@@ -235,33 +279,60 @@ fs_chtime(DeeObject *__restrict path, DeeObject *__restrict atime,
 
 /* Change access rights */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-fs_chmod(DeeObject *__restrict path, DeeObject *__restrict mode);
+fs_chmod(DeeObject *__restrict path,
+         DeeObject *__restrict mode);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-fs_lchmod(DeeObject *__restrict path, DeeObject *__restrict mode);
+fs_lchmod(DeeObject *__restrict path,
+          DeeObject *__restrict mode);
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+fs_chown(DeeObject *__restrict path,
+         DeeObject *__restrict user,
+         DeeObject *__restrict group);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+fs_lchown(DeeObject *__restrict path,
+          DeeObject *__restrict user,
+          DeeObject *__restrict group);
 
 #ifdef CONFIG_HOST_WINDOWS
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-fs_chattr_np(DeeObject *__restrict path, DeeObject *__restrict new_attr);
+fs_chattr_np(DeeObject *__restrict path,
+             DeeObject *__restrict new_attr);
 #endif /* CONFIG_HOST_WINDOWS */
 
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-fs_chown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-fs_lchown(DeeObject *__restrict path, DeeObject *__restrict user, DeeObject *__restrict group);
-
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_mkdir(DeeObject *__restrict path, DeeObject *__restrict perm);
-INTDEF WUNUSED NONNULL((1)) int DCALL fs_rmdir(DeeObject *__restrict path);
-INTDEF WUNUSED NONNULL((1)) int DCALL fs_unlink(DeeObject *__restrict path);
-INTDEF WUNUSED NONNULL((1)) int DCALL fs_remove(DeeObject *__restrict path);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-fs_rename(DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
+fs_mkdir(DeeObject *__restrict path,
+         DeeObject *__restrict perm);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL
+fs_rmdir(DeeObject *__restrict path);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL
+fs_unlink(DeeObject *__restrict path);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL
+fs_remove(DeeObject *__restrict path);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+fs_rename(DeeObject *__restrict existing_path,
+          DeeObject *__restrict new_path);
+
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 fs_copyfile(DeeObject *__restrict existing_file,
             DeeObject *__restrict new_file,
             DeeObject *__restrict progress_callback);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_link(DeeObject *__restrict existing_path, DeeObject *__restrict new_path);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL fs_symlink(DeeObject *__restrict target_text, DeeObject *__restrict link_path, bool format_target);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_readlink(DeeObject *__restrict path);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+fs_link(DeeObject *__restrict existing_path,
+        DeeObject *__restrict new_path);
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+fs_symlink(DeeObject *__restrict target_text,
+           DeeObject *__restrict link_path,
+           bool format_target);
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+fs_readlink(DeeObject *__restrict path);
 
 
 /* Return the mask and flags to be applied

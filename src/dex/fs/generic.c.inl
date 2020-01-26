@@ -158,10 +158,6 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	return fs_gethostname();
 }
 
-INTERN int DCALL
-fs_chdir(DeeObject *__restrict UNUSED(path)) {
-	return fs_unsupported();
-}
 
 #ifndef __INTELLISENSE__
 #include "generic-user.c.inl"
@@ -327,73 +323,6 @@ INTERN DeeTypeObject DeeLStat_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-
-/* Filesystem write operations. */
-INTERN int DCALL
-fs_chtime(DeeObject *__restrict UNUSED(path),
-          DeeObject *__restrict UNUSED(atime),
-          DeeObject *__restrict UNUSED(mtime),
-          DeeObject *__restrict UNUSED(ctime)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_chmod(DeeObject *__restrict UNUSED(path),
-         DeeObject *__restrict UNUSED(mode)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_chown(DeeObject *__restrict UNUSED(path),
-         DeeObject *__restrict UNUSED(user),
-         DeeObject *__restrict UNUSED(group)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_mkdir(DeeObject *__restrict UNUSED(path),
-         DeeObject *__restrict UNUSED(perm)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_rmdir(DeeObject *__restrict UNUSED(path)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_unlink(DeeObject *__restrict UNUSED(path)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_remove(DeeObject *__restrict UNUSED(path)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_rename(DeeObject *__restrict UNUSED(existing_path),
-          DeeObject *__restrict UNUSED(new_path)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_link(DeeObject *__restrict UNUSED(existing_path),
-        DeeObject *__restrict UNUSED(new_path)) {
-	return fs_unsupported();
-}
-
-INTERN int DCALL
-fs_symlink(DeeObject *__restrict UNUSED(target_text),
-           DeeObject *__restrict UNUSED(link_path),
-           bool UNUSED(format_target)) {
-	return fs_unsupported();
-}
-
-INTERN WUNUSED DREF DeeObject *DCALL
-fs_readlink(DeeObject *__restrict UNUSED(path)) {
-	return fs_gethostname();
-}
 
 #ifndef __INTELLISENSE__
 #include "generic-dir.c.inl"

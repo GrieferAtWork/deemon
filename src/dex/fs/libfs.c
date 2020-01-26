@@ -854,11 +854,7 @@ f_libfs_S_ISDIR(size_t argc, DeeObject **argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISDIR", &arg))
 		return NULL;
-#ifdef S_ISDIR
-	return_bool(S_ISDIR(arg));
-#else /* S_ISDIR */
-	return_bool((arg & STAT_IFMT) == STAT_IFDIR);
-#endif /* !S_ISDIR */
+	return_bool(STAT_ISDIR(arg));
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -866,11 +862,7 @@ f_libfs_S_ISCHR(size_t argc, DeeObject **argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISCHR", &arg))
 		return NULL;
-#ifdef S_ISCHR
-	return_bool(S_ISCHR(arg));
-#else /* S_ISCHR */
-	return_bool((arg & STAT_IFMT) == STAT_IFCHR);
-#endif /* !S_ISCHR */
+	return_bool(STAT_ISCHR(arg));
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -878,11 +870,7 @@ f_libfs_S_ISBLK(size_t argc, DeeObject **argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISBLK", &arg))
 		return NULL;
-#ifdef S_ISBLK
-	return_bool(S_ISBLK(arg));
-#else /* S_ISBLK */
-	return_bool((arg & STAT_IFMT) == STAT_IFBLK);
-#endif /* !S_ISBLK */
+	return_bool(STAT_ISBLK(arg));
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -890,11 +878,7 @@ f_libfs_S_ISREG(size_t argc, DeeObject **argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISREG", &arg))
 		return NULL;
-#ifdef S_ISREG
-	return_bool(S_ISREG(arg));
-#else /* S_ISREG */
-	return_bool((arg & STAT_IFMT) == STAT_IFREG);
-#endif /* !S_ISREG */
+	return_bool(STAT_ISREG(arg));
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -902,11 +886,7 @@ f_libfs_S_ISFIFO(size_t argc, DeeObject **argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISFIFO", &arg))
 		return NULL;
-#ifdef S_ISFIFO
-	return_bool(S_ISFIFO(arg));
-#else /* S_ISFIFO */
-	return_bool((arg & STAT_IFMT) == STAT_IFIFO);
-#endif /* !S_ISFIFO */
+	return_bool(STAT_ISFIFO(arg));
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -914,11 +894,7 @@ f_libfs_S_ISLNK(size_t argc, DeeObject **argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISLNK", &arg))
 		return NULL;
-#ifdef S_ISLNK
-	return_bool(S_ISLNK(arg));
-#else /* S_ISLNK */
-	return_bool((arg & STAT_IFMT) == STAT_IFLNK);
-#endif /* !S_ISLNK */
+	return_bool(STAT_ISLNK(arg));
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -926,11 +902,7 @@ f_libfs_S_ISSOCK(size_t argc, DeeObject **argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISSOCK", &arg))
 		return NULL;
-#ifdef S_ISSOCK
-	return_bool(S_ISSOCK(arg));
-#else /* S_ISSOCK */
-	return_bool((arg & STAT_IFMT) == STAT_IFSOCK);
-#endif /* !S_ISSOCK */
+	return_bool(STAT_ISSOCK(arg));
 }
 
 PRIVATE DEFINE_CMETHOD(libfs_S_ISDIR, &f_libfs_S_ISDIR);

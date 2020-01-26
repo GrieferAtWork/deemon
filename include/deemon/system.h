@@ -330,6 +330,14 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_ReadlinkString(/*utf-8*/ cha
 DFUNDEF WUNUSED int DCALL
 DeeUnixSystem_GetFD(DeeObject *__restrict ob);
 
+#define DeeUnixSystem_ThrowErrorf(tp, errno_value, format, ...) \
+	DeeError_SysThrowf(tp, errno_value, format, __VA_ARGS__)
+#define DeeUnixSystem_ThrowLastErrorf(tp, format, ...) \
+	DeeUnixSystem_ThrowErrorf(tp, DeeSystem_GetErrno(), format, args)
+#define DeeUnixSystem_VThrowErrorf(tp, errno_value, format, args) \
+	DeeError_VSysThrowf(tp, errno_value, format, args)
+#define DeeUnixSystem_VThrowLastErrorf(tp, format, args) \
+	DeeUnixSystem_VThrowErrorf(tp, DeeSystem_GetErrno(), format, args)
 
 
 #ifndef __INTELLISENSE__
