@@ -860,7 +860,8 @@ writer_visit(Writer *__restrict self, dvisit_t proc, void *arg) {
 	DeeFile_LockEndRead(self);
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+/* Returns the current string written by the writer. (decoded) */
+PUBLIC WUNUSED NONNULL((1)) /*string*/ DREF DeeObject *DCALL
 DeeFileWriter_GetString(DeeObject *__restrict self) {
 	Writer *me = (Writer *)self;
 	DREF DeeStringObject *result;

@@ -282,15 +282,16 @@ DeeFile_Putc(DeeObject *__restrict self, int ch) {
 				result = (*((DeeFileTypeObject *)tp_self)->ft_putc)((DeeFileObject *)self, ch,
 				                                                    Dee_FILEIO_FNORMAL);
 			} else if (((DeeFileTypeObject *)tp_self)->ft_write) {
-				char value = (char)ch;
+				char value;
 				dssize_t error;
+				value = (char)(unsigned char)(unsigned int)ch;
 				error = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self,
 				                                                    &value, sizeof(char),
 				                                                    Dee_FILEIO_FNORMAL);
 				if (error < 0)
 					result = GETC_ERR;
 				else if ((size_t)error >= sizeof(char))
-					result = (int)value;
+					result = (int)(unsigned int)(unsigned char)value;
 				else {
 					result = GETC_EOF;
 				}
@@ -321,15 +322,16 @@ DeeFile_Putcf(DeeObject *__restrict self, int ch, dioflag_t flags) {
 			if (((DeeFileTypeObject *)tp_self)->ft_putc) {
 				result = (*((DeeFileTypeObject *)tp_self)->ft_putc)((DeeFileObject *)self, ch, flags);
 			} else if (((DeeFileTypeObject *)tp_self)->ft_write) {
-				char value = (char)ch;
+				char value;
 				dssize_t error;
+				value = (char)(unsigned char)(unsigned int)ch;
 				error = (*((DeeFileTypeObject *)tp_self)->ft_write)((DeeFileObject *)self,
 				                                                    &value, sizeof(char),
 				                                                    flags);
 				if (error < 0)
 					result = GETC_ERR;
 				else if ((size_t)error >= sizeof(char))
-					result = (int)value;
+					result = (int)(unsigned int)(unsigned char)value;
 				else {
 					result = GETC_EOF;
 				}
@@ -2006,7 +2008,7 @@ file_putc(DeeObject *self, size_t argc, DeeObject **argv) {
 	uint8_t byte;
 	if (DeeArg_Unpack(argc, argv, "I8u:putc", &byte))
 		goto err;
-	result = DeeFile_Putc(self, (int)byte);
+	result = DeeFile_Putc(self, (int)(unsigned int)byte);
 	if unlikely(result == GETC_ERR)
 		goto err;
 	return_bool_(result != GETC_EOF);

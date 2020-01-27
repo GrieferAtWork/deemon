@@ -282,7 +282,7 @@ DDATDEF DeeFileTypeObject DeeFileWriter_Type; /* File.Writer */
 DFUNDEF WUNUSED DREF /*File*/ DeeObject *DCALL DeeFile_OpenWriter(void);
 
 /* Returns the current string written by the writer. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*string*/ DeeObject *DCALL
 DeeFileWriter_GetString(DeeObject *__restrict self);
 
 
