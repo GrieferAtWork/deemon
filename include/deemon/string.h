@@ -794,7 +794,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DeeString_Newf(/*utf-8*/ char const
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_VNewf(/*utf-8*/ char const *__restrict format, va_list args);
 
 /* Construct strings with basic width-data. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_NewSized(/*unsigned*/ char const *__restrict str, size_t length);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t length);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_New2Byte(uint16_t const *__restrict str, size_t length);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_New4Byte(uint32_t const *__restrict str, size_t length);
 #define DeeString_NewSizedWithHash(str, length, hash) \

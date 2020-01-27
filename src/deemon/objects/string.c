@@ -368,7 +368,7 @@ DeeString_FreeWidth(DeeObject *__restrict self) {
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_NewSized(char const *__restrict str, size_t length) {
+DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t length) {
 	DREF DeeObject *result;
 	/* Optimization: use pre-allocated latin1 strings
 	 *               for single-character sequences. */

@@ -713,7 +713,6 @@ err:
 	return NULL;
 }
 
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_assign(Bytes *__restrict self,
              DeeObject *__restrict values) {
@@ -746,7 +745,7 @@ bytes_print_repr(Bytes *__restrict self, dformatprinter printer, void *arg) {
 	result = temp;
 	temp   = DeeFormat_PRINT(printer, arg, ".bytes()");
 #else
-	temp          = DeeFormat_PRINT(printer, arg, "bytes(");
+	temp = DeeFormat_PRINT(printer, arg, "Bytes(");
 	if unlikely(temp < 0)
 		goto err;
 	result = temp;
@@ -781,7 +780,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytes_bool(Bytes *__restrict self) {
-	return DeeBytes_SIZE(self) != 0;
+	return !DeeBytes_IsEmpty(self);
 }
 
 

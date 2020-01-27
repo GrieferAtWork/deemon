@@ -1,0 +1,53 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2020 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+/* Construct a string containing every possible single-byte value */
+local s: string = string.fromseq(for (local x: [:256]) x);
+assert s is string;
+
+/* Encode the string  */
+local b1: Bytes = File.Reader(s).read();
+local b2: Bytes = s.bytes();
+local b3: Bytes = s.encode("latin-1").bytes();
+assert b1 is Bytes;
+assert b2 is Bytes;
+assert b3 is Bytes;
+assert b1 == b2;
+assert b1 == b3;
+assert s.ordinals == b1;
+
+local s1: string = (File.Writer() << b1).string;
+local s2: string = str b1;
+local s3: string = str b1.decode("latin-1");
+assert s1 is string;
+assert s2 is string;
+assert s3 is string;
+assert s == s1;
+assert s == s2;
+assert s == s3;
+assert s.ordinals == s1.ordinals;
+assert s.ordinals == s2.ordinals;
+assert s.ordinals == s3.ordinals;
+
+
+
