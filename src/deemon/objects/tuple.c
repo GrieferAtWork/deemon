@@ -1547,21 +1547,33 @@ tuple_visit(Tuple *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_str(Tuple *__restrict self) {
+	/* Special case to facilitate function-like use of `print':
+	 * >> print "foo", "bar";   // Prints "foo bar\n"
+	 * >> print("foo", "bar");  // Prints "foobar\n"
+	 * >> print "foo", "bar",;  // Prints "foo bar"
+	 * >> print("foo", "bar"),; // Prints "foobar"
+	 * Using this mechanic, printing multiple objects without having
+	 * them separated by spaces becomes much simpler, especially since
+	 * this way of implementing this mechanism is entirely opaque to
+	 * user-code and fully compliant with Sequence requirements (since
+	 * `Sequence' only mandates a proper implementation of `operator repr',
+	 * but leaves `operator str' unspecified)
+	 * Note that the compiler knows about this and will optimize away
+	 * attempts of printing Tuple sequences at compile-time, reducing
+	 * them to `print' instructions that ever actually create a tuple.
+	 * >> print;                         // Prints "\n"
+	 * >> print();                       // Prints "\n"
+	 * >> print("foo", "bar");           // Prints "foobar\n"
+	 * >> print Tuple { "foo", "bar" };  // Prints "foobar\n"
+	 */
+	size_t i;
 	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	DeeObject **iter, **end;
-	if (unicode_printer_putascii(&p, '(') < 0)
-		goto err;
-	end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
-	for (; iter != end; ++iter) {
-		/* Print this item. */
-		if (iter != DeeTuple_ELEM(self) &&
-		    UNICODE_PRINTER_PRINT(&p, ", ") < 0)
-			goto err;
-		if (unicode_printer_printobject(&p, *iter) < 0)
+	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+		DeeObject *elem;
+		elem = DeeTuple_GET(self, i);
+		if (unicode_printer_printobject(&p, elem) < 0)
 			goto err;
 	}
-	if (unicode_printer_putascii(&p, ')') < 0)
-		goto err;
 	return unicode_printer_pack(&p);
 err:
 	unicode_printer_fini(&p);
