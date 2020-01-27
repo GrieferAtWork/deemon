@@ -70,7 +70,7 @@
  *       throw an `Error.RuntimeError.IllegalInstruction'
  *  >> Attempting to execute an undefined instruction:
  *       throw an `Error.RuntimeError.IllegalInstruction'
- *  >> Attempting to do a fast attribute lookup (`ASM_GETATTR', etc.) using a constant that isn't a string:
+ *  >> Attempting to do a fast attribute lookup (`ASM_GETATTR_C', etc.) using a constant that isn't a string:
  *       throw an `Error.TypeError'
  *  >> Attempting to handle an exception thrown by a caller:
  *       throw an `Error.RuntimeError.IllegalInstruction'
@@ -81,20 +81,29 @@
  *     acquire the static variable lock before accessing the static
  *     variable vector.
  *     Similarly, all other instructions that use constant also acquire
- *     this lock (e.g.: `ASM_GETITEM_C', or `ASM_GETATTR_C')
+ *     this lock (i.e.: `ASM_GETITEM_C', `ASM_GETATTR_C', etc...)
  */
 
 /* Interpreter registers:
- *   - pointer    REG_PC              // Instruction pointer
- *   - pointer    REG_SP              // Stack pointer (Describes a potentially infinite amount of memory)
- *   - pointer    REG_START_PC        // Instruction pointer directed at the start of the current instruction.
- *   - Object     REG_RESULT          // Result value
- *   - bool       REG_RESULT_ITERDONE // When true, the function shall return to indicate iterator exhaustion. Only available in yielding function.
- *   - integer    REG_EXCEPTION_START // Value of `thread->t_exceptsz' when the frame got created
- *   - Object[]   REG_LOCALS          // A variable number of Object slots for local variables, limited by code requirements.
- *   - Object[]   REG_CONSTANTS       // A variable number of constant Object slots, stored alongside code. Also contained are static variables.
- *   - Object[]   REG_GLOBALS         // A variable number of Object slots for global variables, limited by module requirements.
- *   - Object[][] REG_EXTERN          // A variable number of Object slots, accessible through a variable number of module slots.
+ *   - pointer REG_PC;              // Instruction pointer
+ *   - pointer REG_SP;              // Stack pointer (Describes a potentially infinite amount of memory); may be limited by code requirements.
+ *   - pointer REG_START_PC;        // Instruction pointer directed at the start of the current instruction.
+ *   - Object  REG_RESULT;          // Result value
+ *   - bool    REG_RESULT_ITERDONE; // When true, the function shall return to indicate iterator exhaustion. Only available in yielding function.
+ *   - Integer REG_EXCEPTION_START; // Value of `thread->t_exceptsz' when the frame got created
+ *   - Object  REG_LOCALS[];        // A variable number of object slots for local variables, limited by code requirements.
+ *   - Object  REG_CONSTANTS[];     // A variable number of constant object slots, stored alongside code. Also contained are static variables.
+ *   - Object  REG_REFS[];          // A variable number of object slots for referenced variables, limited by code requirements.
+ *   - Object  REG_ARGS[];          // A variable number of object slots for function arguments, limited by code requirements.
+ *   - Object  REG_GLOBALS[];       // A variable number of object slots for global variables, limited by module requirements.
+ *   - Object  REG_EXTERN[][];      // A variable number of object slots, accessible through a variable number of module slots.
+ *
+ * Interpreter constants:
+ *   - pointer MAX_VALID_INSTRUCTION_INDEX; // Greatest valid program counter (program size - 1)
+ *   - pointer MIN_VALID_STACK_POINTER;     // Lowest valid stack pointer (GET_SP_BASE() + 0)
+ *   - pointer MAX_VALID_STACK_POINTER;     // Greatest valid stack pointer (GET_SP_BASE() + (STACK_SIZE - 1) * STACK_ENTRY_SIZE)
+ *   - Integer CODE_FLAGS;                  // Code flags (set of `CODE_F*')
+ *   - bool    IS_CODE_YIELDING = CODE_FLAGS & CODE_FYIELDING;
  *
  * Frame setup:
  * >>     IF GET_THREADLOCAL_FRAME_COUNT() >= MAX_FRAME_COUNT THEN
@@ -112,7 +121,8 @@
  * >>     WHILE TRUE DO
  * >> DISPATCH:
  * >>         REG_START_PC = REG_PC;
- * >>         EXECUTE_INSTRUCTION();
+ * >>         REG_PC, OPCODE = DECODE_INSTRUCTION(WITH pc = REG_PC)...;
+ * >>         EXECUTE_INSTRUCTION(WITH instr = OPCODE);
  * >>     DONE
  *
  * Frame cleanup:
@@ -121,8 +131,8 @@
  * >>     IF HAS_FINALLY_HANDLERS(REG_START_PC) THEN
  * >>         EXECUTE_FINALLY_HANDLERS();
  * >>     FI
- * >>     ATTR_FALLTHROUGH();
- * >>     
+ * >>     GOTO RETURN_WITHOUT_FINALLY;
+ * >>
  * >> RETURN_WITHOUT_FINALLY:
  * >>     DECREMENT_THREADLOCAL_FRAME_COUNT();
  * >>     
@@ -131,15 +141,16 @@
  * >>         IF IS_BOUND(REG_RESULT) THEN
  * >>             REG_RESULT = UNBOUND;
  * >>         FI
- * >>         WHILE thread->t_exceptsz > REG_EXCEPTION_START+1 DO
+ * >>         WHILE thread->t_exceptsz > REG_EXCEPTION_START + 1 DO
  * >>             PRINT_EXCEPT(WITH reason = "Discarding secondary error\n");
- * >>             POP_EXCEPT(WITH handle_interrupt = FALSE);
+ * >>             POP_EXCEPT(WITH handle_interrupt = FALSE); // i.e. interrupts are re-scheduled
  * >>         DONE
  * >>         PROPAGATE_EXCEPTIONS_TO_CALLER();
  * >>     FI
  * >>     
  * >>     // NOTE: Implementations may implement some other means of indicating iter-done.
- * >>     IF REG_RESULT_ITERDONE THEN
+ * >>     //       For example, Griefer@Work's deemon returns `ITER_DONE' from `DeeObject_IterNext()'
+ * >>     IF REG_RESULT_ITERDONE == true THEN
  * >>         THROW(StopIteration());
  * >>         PROPAGATE_EXCEPTIONS_TO_CALLER();
  * >>     FI
@@ -154,34 +165,126 @@
  * >>     PROPAGATE_EXCEPTIONS_TO_CALLER();
  * >>
  * >>
- * >> void    THROW(Object obj);
- * >> void    THROW_OR_UNDEFINED_BEHAVIOR(Object obj); // Causes undefined behavior in fast-mode code. Else, throws an exception `obj' in safe-mode code
+ * >> void THROW(Object obj);
+ * >>
+ * >> // Causes undefined behavior in fast-mode code.
+ * >> // Else, throws an exception `obj' in safe-mode code
+ * >> void THROW_OR_UNDEFINED_BEHAVIOR(Object obj);
  * >>
  * >> // Access to stack items.
- * >> void    PUSH(Object obj);
- * >> Object  POP();
- * >> Tuple   POP(Integer num_items);
- * >> Object &NTH(Integer nth_item);
- * >> Object &EXTERN(Integer module_index, Integer symbol_index);
- * >> Object &GLOBAL(Integer symbol_index);
- * >> Object &LOCAL(Integer local_index);
- * >> Object &STATIC(Integer static_index);
- * >> Object  CONSTANT(Integer static_index); // Constant and static symbols use the same indices
- * >> Object  MODULE(Integer module_index);
- * >> Object  REF(Integer reference_index);
- * >> Object  ARG(Integer argument_index);
+ * >> void PUSH(Object obj) BEGIN
+ * >>     IF REG_SP >= MAX_VALID_STACK_POINTER THEN
+ * >>         IF CODE_FLAGS & CODE_FLENIENT THEN
+ * >>             EXTEND_STACK();
+ * >>         ELSE
+ * >>             THROW_OR_UNDEFINED_BEHAVIOR(SegFault());
+ * >>         FI
+ * >>     FI
+ * >>     *REG_SP = obj;
+ * >>     REG_SP += 1;
+ * >> END
+ * >>
+ * >> Object POP() BEGIN
+ * >>     IF REG_SP <= MIN_VALID_STACK_POINTER THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(SegFault());
+ * >>     FI
+ * >>     REG_SP -= 1;
+ * >>     RETURN *REG_SP;
+ * >> END
+ * >>
+ * >> Tuple POP(Integer num_items) BEGIN
+ * >>     local result = List();
+ * >>     for (none: [:num_items])
+ * >>         result.insert(0, POP());
+ * >>     RETURN Tuple(result);
+ * >> END
+ * >>
+ * >> Object &NTH(Integer nth_item) BEGIN
+ * >>     RETURN *(REG_SP - (nth_item + 1));
+ * >> END
+ * >>
+ * >> Object &EXTERN(Integer module_index, Integer symbol_index) BEGIN
+ * >>     IF module_index >= LENGTH(REG_EXTERN) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     IF symbol_index >= LENGTH(REG_EXTERN[module_index]) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_EXTERN[module_index][symbol_index];
+ * >> END
+ * >>
+ * >> Object &GLOBAL(Integer symbol_index) BEGIN
+ * >>     IF symbol_index >= LENGTH(REG_GLOBALS) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_GLOBALS[symbol_index];
+ * >> END
+ * >>
+ * >> Object &LOCAL(Integer local_index) BEGIN
+ * >>     IF symbol_index >= LENGTH(REG_LOCALS) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_LOCALS[symbol_index];
+ * >> END
+ * >>
+ * >> Object &STATIC(Integer static_index) BEGIN
+ * >>     IF symbol_index >= LENGTH(REG_CONSTANTS) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_CONSTANTS[symbol_index];
+ * >> END
+ * >>
+ * >> Object  CONSTANT(Integer static_index) BEGIN
+ * >>     RETURN STATIC(symbol_index); // Constant and static symbols use the same indices
+ * >> END
+ * >>
+ * >> Object MODULE(Integer module_index) BEGIN
+ * >>     IF module_index >= LENGTH(REG_EXTERN) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_EXTERN[module_index];
+ * >> END
+ * >>
+ * >> Object REF(Integer reference_index) BEGIN
+ * >>     IF reference_index >= LENGTH(REG_REFS) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_REFS[reference_index];
+ * >> END
+ * >>
+ * >> Object ARG(Integer argument_index) BEGIN
+ * >>     IF argument_index >= LENGTH(REG_ARGS) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_ARGS[argument_index];
+ * >> END
+ * >>
+ * >> Object INVOKE_OPERATOR(Integer operator_id, Object self, Object args...) BEGIN
+ * >>     // `operator_id' is one of `OPERATOR_*'
+ * >>     RETURN DeeObject_InvokeOperator(self, operator_id, #args, [args...]);
+ * >> END
+ * >>
+ * >> void SET_PREFIX_OBJECT(Object obj) BEGIN
+ * >>     // Set the `Object &' referenced by the instruction prefix (s.a. `ASM_ISPREFIX()')
+ * >>     ...
+ * >> END
+ * >>
  * >> Object &TOP    = NTH(0);
  * >> Object &FIRST  = NTH(0);
  * >> Object &SECOND = NTH(1);
  * >> Object &THIRD  = NTH(2);
  * >> Object &FOURTH = NTH(3);
+ * >>
+ * >> // Check if a given Object @ob is bound.
+ * >> bool IS_BOUND(Object &obj) BEGIN
+ * >>     RETURN obj != UNBOUND;
+ * >> END
+ * >>
  * >> // When `handle_interrupt' is FALSE, `@[interrupt]'
  * >> // exceptions are re-scheduled as pending interrupts
  * >> void    POP_EXCEPT(bool handle_interrupt);
  * >> void    PRINT_EXCEPT(string reason);
- * >> // Check if a given Object @ob is bound.
- * >> bool    IS_BOUND(Object &obj);
- * >> void    UNBIND(Object &obj);
+ * >>
  * >> // Propagate active exceptions to the caller after ensuring that no
  * >> // more than a single exception has been set since `REG_EXCEPTION_START'
  * >> NORETURN void PROPAGATE_EXCEPTIONS_TO_CALLER();
@@ -335,11 +438,11 @@
                                     * >> Object args = POP(IMM8);
                                     * >> IF CURRENT_INSTRUCTION_HAS_PREFIX THEN
                                     * >>     Object obj = GET_PREFIX_OBJECT();
-                                    * >>     obj = INVOKE_OPERATOR(id,obj, args...);
+                                    * >>     obj = INVOKE_OPERATOR(id, obj, args...);
                                     * >>     SET_PREFIX_OBJECT(obj);
                                     * >> ELSE
                                     * >>     Object obj = POP();
-                                    * >>     PUSH(INVOKE_OPERATOR(id,obj, args...));
+                                    * >>     PUSH(INVOKE_OPERATOR(id, obj, args...));
                                     * >> FI */
 #define ASM_OPERATOR_TUPLE    0x1a /* [2][-2,+1]   `op top, $<imm8>, pop...'            - Similar to `ASM_CALL_OP', but directly pop the argument Tuple.
                                     * [2][-1,+1]   `PREFIX: push op $<imm8>, pop...'
@@ -372,9 +475,9 @@
                                     */
 /*      ASM_                  0x1d  *               --------                            - ------------------ */
 #define ASM_DEL_GLOBAL        0x1e /* [2][-0,+0]   `del global <imm8>'                  - Unlink the global variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
-                                    * >> UNBIND(GLOBAL(IMM8)); */
+                                    * >> GLOBAL(IMM8) = UNBOUND; */
 #define ASM_DEL_LOCAL         0x1f /* [2][-0,+0]   `del local <imm8>'                   - Unlink the local variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
-                                    * >> UNBIND(LOCAL(IMM8)); */
+                                    * >> LOCAL(IMM8) = UNBOUND; */
 
 /* Stack control instructions. */
 #define ASM_SWAP              0x20 /* [1][-2,+2]   `swap'                               - Swap the 2 top-most stack entries.

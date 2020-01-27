@@ -266,13 +266,13 @@ DECL_BEGIN
  * >>          printf("argv[%lu] = %p\n",(unsigned long)i,argv[i]);
  * >> }
  * >> #ifndef __NO_DEFINE_ALIAS
- * >> DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(function_b,8),
- * >>                     ASSEMBLY_NAME(function_a,8));
- * >> #else
+ * >> DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(function_b, 8),
+ * >>                     ASSEMBLY_NAME(function_a, 8));
+ * >> #else // !__NO_DEFINE_ALIAS
  * >> void DCALL function_b(size_t argc, va_list args) {
  * >>      function_a(argc,(void **)args);
  * >> }
- * >> #endif
+ * >> #endif // __NO_DEFINE_ALIAS
  * >> void function_c(size_t argc, ...) {
  * >>      va_list args;
  * >>      va_start(args,argc);
@@ -351,7 +351,7 @@ extern void (__debugbreak)(void);
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS
 #ifdef _MSC_VER
-#define DEE_CHECKMEMORY()  (DBG_ALIGNMENT_DISABLE(),(_CrtCheckMemory)(),DBG_ALIGNMENT_ENABLE())
+#define DEE_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), (_CrtCheckMemory)(), DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
 extern ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
 #else /* !_MSC_VER || _DLL */
@@ -428,6 +428,8 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *          This character is deleted from the generated text, but is not
  *          recognized as an escape character within an specific doc option.
  *          e.g.: "Therefor\\:this is an example"
+ *          The following characters must be escaped:
+ *              \ : { } @ # $ % & ^ ?
  *
  *    - :ident
  *    - :{ident}
