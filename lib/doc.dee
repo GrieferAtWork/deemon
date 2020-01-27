@@ -3676,9 +3676,6 @@ set_is_type:
 			m_operator_sections = enumerate_operators_sections();
 		for (local name, sect: m_operator_sections)
 			yield Doc(this, "op:" + name, sect);
-		/* TODO: Enumerate operators implemented by the type,
-		 *       but not included in documentation strings
-		 *      (aka `x !in m_operator_sections.keys()') */
 	}
 
 	@@Check if @this doc node has a child attribute @name
