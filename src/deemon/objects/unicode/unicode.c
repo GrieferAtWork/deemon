@@ -490,6 +490,12 @@ err:
 	return NULL;
 }
 
+/* Return the given string's character as a byte-array.
+ * Characters above 0xFF either cause `NULL' to be returned, alongside a
+ * ValueError being thrown, or cause them to be replaced with '?'.
+ * @return: * :   The Bytes-data of the given string `self' (encoded as a width-string)
+ *                NOTE: The length of this block also matches `DeeString_WLEN(self)'
+ * @return: NULL: An error occurred. */
 PUBLIC uint8_t *DCALL
 DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid) {
 	struct string_utf *utf;

@@ -847,6 +847,7 @@ writer_fini(Writer *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 writer_visit(Writer *__restrict self, dvisit_t proc, void *arg) {
+	DeeFile_LockRead(self);
 	if (self->w_string) {
 		Dee_Visit(self->w_string);
 	} else if (!self->w_printer.up_buffer) {
@@ -856,6 +857,7 @@ writer_visit(Writer *__restrict self, dvisit_t proc, void *arg) {
 		                                s_str));
 	} else {
 	}
+	DeeFile_LockEndRead(self);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
