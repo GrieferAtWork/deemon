@@ -30,6 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/super.h>
+#include <deemon/tuple.h>
 
 DECL_BEGIN
 
@@ -68,6 +69,84 @@ ast_iterator_is_nonempty(struct ast *__restrict self) {
 		return ast_sequence_is_nonempty(self->a_operator.o_op0);
 	/* TODO: Check if `self' is an iterator that is non-empty. */
 	return false;
+}
+
+/* Flatten `(a, "foo", ("bar", 42), b)' into `(a, "foobar42", b)',
+ * as can be done when `self' is used in a tostr context such as
+ * `print' or `str' */
+INTERN int
+(DCALL ast_flatten_tostr)(struct ast *__restrict self) {
+	while (self->a_type == AST_MULTIPLE &&
+	       self->a_flag == AST_FMULTIPLE_KEEPLAST) {
+		if (!self->a_multiple.m_astc)
+			goto done;
+		self = self->a_multiple.m_astv[self->a_multiple.m_astc - 1];
+	}
+	if (self->a_type == AST_MULTIPLE) {
+		size_t i;
+		if (AST_FMULTIPLE_ISSEQUENCE(self->a_flag)) {
+			for (i = 0; i < self->a_multiple.m_astc; ++i) {
+				if (ast_flatten_tostr(self->a_multiple.m_astv[i]))
+					goto err;
+			}
+		}
+		if (self->a_flag == AST_FMULTIPLE_TUPLE &&
+		    self->a_multiple.m_astc >= 2) {
+			size_t i;
+			/* Find consecutive string constants and concat them. */
+			for (i = 0; i < self->a_multiple.m_astc - 1; ) {
+				struct ast *a;
+				a = self->a_multiple.m_astv[i];
+				if (a->a_type == AST_CONSTEXPR && DeeString_Check(a->a_constexpr)) {
+					struct ast *b;
+					b = self->a_multiple.m_astv[i + 1];
+					if (b->a_type == AST_CONSTEXPR && DeeString_Check(b->a_constexpr)) {
+						DREF DeeObject *concat;
+						concat = DeeObject_Add(a->a_constexpr, b->a_constexpr);
+						if unlikely(!concat) {
+							DeeError_Handled(ERROR_HANDLED_RESTORE);
+						} else {
+							OPTIMIZE_VERBOSE("Optimize `str(..., %r, %r, ...)' -> `str(..., %r, ...)'\n",
+							                 a->a_constexpr, b->a_constexpr, concat);
+							++optimizer_count;
+							/* Remove `b' and replace `a' with `a + b' */
+							Dee_Decref(a->a_constexpr);
+							ast_decref(b);
+							a->a_constexpr = concat;
+							memmove(&self->a_multiple.m_astv[i + 1],
+							        &self->a_multiple.m_astv[i + 2],
+							        ((self->a_multiple.m_astc - i) - 2) *
+							        sizeof(struct ast *));
+							--self->a_multiple.m_astc;
+							continue;
+						}
+					}
+				}
+				++i;
+			}
+		}
+	}
+	if (self->a_type == AST_CONSTEXPR) {
+		/* Since we're in a str() context, we can convert known constant
+		 * expressions into their str() representations at compile-time. */
+		if (!DeeString_Check(self->a_constexpr)) {
+			DREF DeeObject *str_repr;
+			str_repr = DeeObject_Str(self->a_constexpr);
+			if unlikely(!str_repr) {
+				DeeError_Handled(ERROR_HANDLED_RESTORE);
+			} else {
+				OPTIMIZE_VERBOSE("Optimize `str(%r)' -> `str(%r)'\n",
+				                 self->a_constexpr, str_repr);
+				++optimizer_count;
+				Dee_Decref(self->a_constexpr);
+				self->a_constexpr = str_repr;
+			}
+		}
+	}
+done:
+	return 0;
+err:
+	return -1;
 }
 
 
@@ -541,6 +620,106 @@ action_set_expr_result:
 		}
 		break;
 
+	case AST_FACTION_FPRINT:
+	case AST_FACTION_FPRINTLN: {
+		struct ast *printseq;
+		printseq = self->a_action.a_act1;
+		if (ast_optimize(stack, self->a_action.a_act0, true))
+			goto err;
+		__IF0 {
+	case AST_FACTION_PRINT:
+	case AST_FACTION_PRINTLN:
+			printseq = self->a_action.a_act0;
+		}
+		if (ast_optimize(stack, printseq, true))
+			goto err;
+		if (printseq->a_type == AST_MULTIPLE) {
+			while (printseq->a_flag == AST_FMULTIPLE_KEEPLAST) {
+				if (!printseq->a_multiple.m_astc)
+					goto done;
+				printseq = printseq->a_multiple.m_astv[printseq->a_multiple.m_astc - 1];
+				if (printseq->a_type != AST_MULTIPLE)
+					goto check_printseq_const;
+			}
+			if (AST_FMULTIPLE_ISSEQUENCE(printseq->a_flag)) {
+				size_t i;
+				for (i = 0; i < printseq->a_multiple.m_astc; ++i) {
+					if (ast_flatten_tostr(printseq->a_multiple.m_astv[i]))
+						goto err;
+				}
+			}
+		}
+check_printseq_const:
+		if (printseq->a_type == AST_CONSTEXPR) {
+			size_t i;
+			/* Convert the sequence of printed expressions into a tuple.
+			 * This can always be done since the following lines are identical:
+			 * >> print ["foo", "bar"]...;
+			 * >> print ("foo", "bar")...;
+			 * >> print {"foo", "bar"}...;
+			 * >> print "foo", "bar"; // Converted to one of the above by the parser */
+			if unlikely(!DeeTuple_Check(printseq->a_constexpr)) {
+				DREF DeeObject *tpl;
+				tpl = DeeTuple_FromSequence(printseq->a_constexpr);
+				if unlikely(!tpl) {
+					DeeError_Handled(ERROR_HANDLED_RESTORE);
+					goto done;
+				}
+				OPTIMIZE_VERBOSE("Optimize `print %r...' -> `print %r...'\n",
+				                 printseq->a_constexpr, tpl);
+				++optimizer_count;
+				Dee_Decref(printseq->a_constexpr);
+				printseq->a_constexpr = tpl; /* Inherit references */
+			}
+			/* Check for sequence of tuples, where we can replace
+			 * the inner tuples with constant string expressions:
+			 * >> print (("foo", "bar"), ("baz", "boo"))...;
+			 * Optimize into this:
+			 * >> print ("foobar", "bazboo")...; */
+			ASSERT(DeeTuple_Check(printseq->a_constexpr));
+			for (i = 0; i < DeeTuple_SIZE(printseq->a_constexpr); ++i) {
+				DeeObject *elem = DeeTuple_GET(printseq->a_constexpr, i);
+				if (!DeeString_Check(elem)) {
+					/* Replace with str(elem) */
+					DREF DeeObject *elem_str;
+					elem_str = DeeObject_Str(elem);
+					if unlikely(!elem_str) {
+						DeeError_Handled(ERROR_HANDLED_RESTORE);
+						continue;
+					}
+					if (DeeObject_IsShared(printseq->a_constexpr)) {
+						/* Must create a new tuple. */
+						DREF DeeObject *new_tuple;
+						size_t j, len;
+						len = DeeTuple_SIZE(printseq->a_constexpr);
+						ASSERT(i < len);
+						new_tuple = DeeTuple_NewUninitialized(len);
+						if unlikely(!new_tuple) {
+							Dee_Decref(elem_str);
+							DeeError_Handled(ERROR_HANDLED_RESTORE);
+							continue;
+						}
+						for (j = 0; j < len; ++j) {
+							DREF DeeObject *ob;
+							if (j == i) {
+								ob = elem_str; /* Inherit reference */
+							} else {
+								ob = DeeTuple_GET(printseq->a_constexpr, j);
+								Dee_Incref(ob);
+							}
+							DeeTuple_SET(new_tuple, j, ob);
+						}
+						Dee_Decref_unlikely(printseq->a_constexpr);
+						printseq->a_constexpr = new_tuple;
+					} else {
+						DeeTuple_SET(printseq->a_constexpr, i, elem_str); /* Inherit reference (x2) */
+						Dee_Decref(elem);
+					}
+				}
+			}
+		}
+	}	break;
+
 	case AST_FACTION_DIFFOBJ:
 		if (ast_optimize(stack, self->a_action.a_act0, true))
 			goto err;
@@ -629,7 +808,7 @@ action_set_expr_result:
 		}
 		break;
 	}
-/*done:*/
+done:
 	return 0;
 did_optimize:
 	++optimizer_count;

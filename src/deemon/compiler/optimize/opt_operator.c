@@ -39,6 +39,8 @@
 
 DECL_BEGIN
 
+INTDEF int (DCALL ast_flatten_tostr)(struct ast *__restrict self);
+
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
               DeeObject **argv, DeeObject *kw);
@@ -311,6 +313,12 @@ do_generic:
 					goto err;
 			}
 		}
+	}
+	/* Optimize stuff like `str(a, "foo", "bar", b)' into `str(a, "foobar", b)' */
+	if (self->a_flag == OPERATOR_STR) {
+		ASSERT(opcount == 1);
+		if (ast_flatten_tostr(self->a_operator.o_op0))
+			goto err;
 	}
 	/* Invoke the specified operator. */
 	/* XXX: `AST_FOPERATOR_POSTOP'? */
