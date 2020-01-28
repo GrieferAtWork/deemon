@@ -258,7 +258,42 @@ STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NORMAL | PRINT_MODE_FILE) == ASM16_FPR
 STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_SP | PRINT_MODE_FILE) == ASM16_FPRINT_C_SP);
 STATIC_ASSERT(ASM16_PRINT_C + (PRINT_MODE_NL | PRINT_MODE_FILE) == ASM16_FPRINT_C_NL);
 
-PRIVATE DEFINE_STRING(space_string, " ");
+PRIVATE WUNUSED ATTR_PURE NONNULL((1)) bool DCALL
+constexpr_is_empty_string(DeeObject *__restrict self) {
+	if (DeeString_Check(self) && DeeString_IsEmpty(self))
+		goto yes;
+	if (DeeBytes_Check(self) && DeeBytes_IsEmpty(self))
+		goto yes;
+	if (self == Dee_EmptyTuple)
+		goto yes;
+	return false;
+yes:
+	return true;
+}
+
+PRIVATE int DCALL
+ast_genprint_emptystring(instruction_t mode,
+                         struct ast *__restrict ddi_ast) {
+	int32_t empty_cid;
+	/* Just print an empty line. */
+	if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NL) {
+		if (asm_putddi(ddi_ast))
+			goto err;
+		return asm_put((instruction_t)(ASM_PRINTNL + (mode & PRINT_MODE_FILE)));
+	}
+	/* Nothing needs to be printed _at_ _all_. */
+	if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NORMAL)
+		return 0;
+	/* Print whitespace. */
+	empty_cid = asm_newconst(Dee_EmptyString);
+	if unlikely(empty_cid < 0)
+		goto err;
+	if (asm_putddi(ddi_ast))
+		goto err;
+	return asm_gprint_const((uint16_t)empty_cid);
+err:
+	return -1;
+}
 
 /* Generate code for the expression `print print_expression...;'
  * @param: mode: The print mode. NOTE: When `PRINT_MODE_FILE' is set,
@@ -278,24 +313,8 @@ ast_genprint(instruction_t mode,
 			end = (iter = print_expression->a_multiple.m_astv) +
 			      print_expression->a_multiple.m_astc;
 			if (iter == end) {
-				int32_t space_cid;
 empty_operand:
-				/* Just print an empty line. */
-				if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NL) {
-					if (asm_putddi(ddi_ast))
-						goto err;
-					return asm_put((instruction_t)(ASM_PRINTNL + (mode & PRINT_MODE_FILE)));
-				}
-				/* Nothing needs to be printed _at_ _all_. */
-				if ((mode & ~(PRINT_MODE_FILE | PRINT_MODE_ALL)) == PRINT_MODE_NORMAL)
-					return 0;
-				/* Print whitespace. */
-				space_cid = asm_newconst((DeeObject *)&space_string);
-				if unlikely(space_cid < 0)
-					goto err;
-				if (asm_putddi(ddi_ast))
-					goto err;
-				return asm_gprint_const((uint16_t)space_cid);
+				return ast_genprint_emptystring(mode, ddi_ast);
 			}
 			/* Print each expression individually. */
 			for (; iter != end; ++iter) {
@@ -324,12 +343,17 @@ empty_operand:
 			for (; iter != end; ++iter) {
 				instruction_t item_mode;
 				int32_t const_cid;
+				DeeObject *elem;
 				item_mode = PRINT_MODE_SP | (mode & PRINT_MODE_FILE);
+				elem = *iter;
 				if (iter == end - 1)
 					item_mode = (mode & ~PRINT_MODE_ALL);
 				/* Check if the operand is allowed to appear in constants. */
-				if (!asm_allowconst(*iter)) {
-					if (asm_gpush_constexpr(*iter))
+				if (constexpr_is_empty_string(elem)) {
+					if (ast_genprint_emptystring(item_mode, ddi_ast))
+						goto err_items;
+				} else if (!asm_allowconst(elem)) {
+					if (asm_gpush_constexpr(elem))
 						goto err_items;
 					if (asm_putddi(ddi_ast))
 						goto err;
@@ -337,7 +361,7 @@ empty_operand:
 						goto err_items;
 					asm_decsp();
 				} else {
-					const_cid = asm_newconst(*iter);
+					const_cid = asm_newconst(elem);
 					if unlikely(const_cid < 0)
 						goto err_items;
 					if (asm_putddi(ddi_ast))
@@ -358,9 +382,7 @@ err_items:
 		/* Special instructions exist for direct printing of constants. */
 		int32_t const_cid;
 		/* Special case: Print what essentially boils down to being an empty string. */
-		if ((DeeString_Check(print_expression->a_constexpr) && DeeString_IsEmpty(print_expression->a_constexpr)) ||
-		    (DeeBytes_Check(print_expression->a_constexpr) && DeeBytes_IsEmpty(print_expression->a_constexpr)) ||
-		    print_expression->a_constexpr == Dee_EmptyTuple)
+		if (constexpr_is_empty_string(print_expression->a_constexpr))
 			goto empty_operand;
 		const_cid = asm_newconst(print_expression->a_constexpr);
 		if unlikely(const_cid < 0)
