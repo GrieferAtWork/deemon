@@ -47,9 +47,8 @@ PRIVATE struct keyword suffix_kwlist[] = { K(head), KEND };
 PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 #define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(name, func, IF_SUFFIX, is_suffix)  \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
-	parser_##name(DeeCompilerWrapperObject *self,                               \
-	              size_t argc, DeeObject *const *argv,                                \
-	              DeeObject *kw) {                                              \
+	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                  \
+	              DeeObject *const *argv, DeeObject *kw) {                      \
 		DREF DeeObject *result = NULL;                                          \
 		DeeCompilerAstObject *head;                                             \
 		DREF struct ast *result_ast;                                            \
@@ -88,9 +87,8 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 	}
 #define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                  \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                                     \
-	parser_##name(DeeCompilerWrapperObject *self,                                             \
-	              size_t argc, DeeObject *const *argv,                                              \
-	              DeeObject *kw) {                                                            \
+	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                                \
+	              DeeObject *const *argv, DeeObject *kw) {                                    \
 		DREF DeeObject *result = NULL;                                                        \
 		DREF struct ast *result_ast;                                                          \
 		unsigned int lookup_mode;                                                             \

@@ -2121,9 +2121,9 @@ err:
 }
 
 #define DEFINE_DEPRECATED_INPLACE_BINARY(name, func)              \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                 \
-	object_##name(DeeObject *__restrict self,                     \
-	              size_t argc, DeeObject *const *argv) {     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                         \
+	object_##name(DeeObject *self, size_t argc,                   \
+	              DeeObject *const *argv) {                       \
 		DREF DeeObject *selfref;                                  \
 		int error;                                                \
 		DeeObject *other;                                         \

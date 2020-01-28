@@ -1973,7 +1973,7 @@ err:
 #ifdef HAVE_128BIT_TIME
 #define DEFINE_INTERVAL_GENERATOR(name, new)                    \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                       \
-	f_libtime_##name(size_t argc, DeeObject *const *argv) {           \
+	f_libtime_##name(size_t argc, DeeObject *const *argv) {     \
 		DeeObject *value_ob;                                    \
 		dtime_t value;                                          \
 		if (DeeArg_Unpack(argc, argv, "o:" #name, &value_ob) || \
@@ -1984,7 +1984,7 @@ err:
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #define DEFINE_INTERVAL_GENERATOR_HALF(name, new)             \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
-	f_libtime_##name(size_t argc, DeeObject *const *argv) {         \
+	f_libtime_##name(size_t argc, DeeObject *const *argv) {   \
 		dtime_half_t value;                                   \
 		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value)) \
 			return NULL;                                      \
@@ -1994,7 +1994,7 @@ err:
 #else /* HAVE_128BIT_TIME */
 #define DEFINE_INTERVAL_GENERATOR(name, new)                  \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
-	f_libtime_##name(size_t argc, DeeObject *const *argv) {         \
+	f_libtime_##name(size_t argc, DeeObject *const *argv) {   \
 		dtime_t value;                                        \
 		if (DeeArg_Unpack(argc, argv, "I64d:" #name, &value)) \
 			return NULL;                                      \
@@ -2003,7 +2003,7 @@ err:
 	PRIVATE DEFINE_CMETHOD(libtime_##name, &f_libtime_##name)
 #define DEFINE_INTERVAL_GENERATOR_HALF(name, new)             \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
-	f_libtime_##name(size_t argc, DeeObject *const *argv) {         \
+	f_libtime_##name(size_t argc, DeeObject *const *argv) {   \
 		dtime_half_t value;                                   \
 		if (DeeArg_Unpack(argc, argv, "I32d:" #name, &value)) \
 			return NULL;                                      \

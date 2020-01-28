@@ -106,35 +106,35 @@ LOCAL int DCALL math_checkerr_i(int x) {
 #endif /* !CONFIG_HAVE_errno */
 
 
-#define DEFINE_MATH_CONVERSION_1(name)                 \
-	PRIVATE WUNUSED DREF DeeObject *DCALL              \
-	f_math_##name(size_t argc, DeeObject *const *argv) {     \
-		double x;                                      \
-		if (DeeArg_Unpack(argc, argv, "D:" #name, &x)) \
-			goto err;                                  \
-		return DeeFloat_New(name(x));                  \
-	err:                                               \
-		return NULL;                                   \
-	}                                                  \
+#define DEFINE_MATH_CONVERSION_1(name)                   \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                \
+	f_math_##name(size_t argc, DeeObject *const *argv) { \
+		double x;                                        \
+		if (DeeArg_Unpack(argc, argv, "D:" #name, &x))   \
+			goto err;                                    \
+		return DeeFloat_New(name(x));                    \
+	err:                                                 \
+		return NULL;                                     \
+	}                                                    \
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
-#define DEFINE_MATH_CONVERSION_1_E(name)               \
-	PRIVATE WUNUSED DREF DeeObject *DCALL              \
-	f_math_##name(size_t argc, DeeObject *const *argv) {     \
-		double x, result;                              \
-		if (DeeArg_Unpack(argc, argv, "D:" #name, &x)) \
-			goto err;                                  \
-		SET_OK();                                      \
-		result = name(x);                              \
-		if (math_checkerr(result))                     \
-			goto err;                                  \
-		return DeeFloat_New(result);                   \
-	err:                                               \
-		return NULL;                                   \
-	}                                                  \
+#define DEFINE_MATH_CONVERSION_1_E(name)                 \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                \
+	f_math_##name(size_t argc, DeeObject *const *argv) { \
+		double x, result;                                \
+		if (DeeArg_Unpack(argc, argv, "D:" #name, &x))   \
+			goto err;                                    \
+		SET_OK();                                        \
+		result = name(x);                                \
+		if (math_checkerr(result))                       \
+			goto err;                                    \
+		return DeeFloat_New(result);                     \
+	err:                                                 \
+		return NULL;                                     \
+	}                                                    \
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_CONVERSION_2(name)                      \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                   \
-	f_math_##name(size_t argc, DeeObject *const *argv) {          \
+	f_math_##name(size_t argc, DeeObject *const *argv) {    \
 		double x, y;                                        \
 		if (DeeArg_Unpack(argc, argv, "DD:" #name, &x, &y)) \
 			goto err;                                       \
@@ -145,7 +145,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_CONVERSION_2_E(name)                    \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                   \
-	f_math_##name(size_t argc, DeeObject *const *argv) {          \
+	f_math_##name(size_t argc, DeeObject *const *argv) {    \
 		double x, y, result;                                \
 		if (DeeArg_Unpack(argc, argv, "DD:" #name, &x, &y)) \
 			goto err;                                       \
@@ -158,20 +158,20 @@ LOCAL int DCALL math_checkerr_i(int x) {
 		return NULL;                                        \
 	}                                                       \
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
-#define DEFINE_MATH_FLOAT_TRAIT(name)                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL              \
-	f_math_##name(size_t argc, DeeObject *const *argv) {     \
-		double x;                                      \
-		if (DeeArg_Unpack(argc, argv, "D:" #name, &x)) \
-			goto err;                                  \
-		return_bool(name(x));                          \
-	err:                                               \
-		return NULL;                                   \
-	}                                                  \
+#define DEFINE_MATH_FLOAT_TRAIT(name)                    \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                \
+	f_math_##name(size_t argc, DeeObject *const *argv) { \
+		double x;                                        \
+		if (DeeArg_Unpack(argc, argv, "D:" #name, &x))   \
+			goto err;                                    \
+		return_bool(name(x));                            \
+	err:                                                 \
+		return NULL;                                     \
+	}                                                    \
 	PRIVATE DEFINE_CMETHOD(math_##name, f_math_##name);
 #define DEFINE_MATH_FLOAT_TRAIT2(name)                      \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                   \
-	f_math_##name(size_t argc, DeeObject *const *argv) {          \
+	f_math_##name(size_t argc, DeeObject *const *argv) {    \
 		double x, y;                                        \
 		if (DeeArg_Unpack(argc, argv, "DD:" #name, &x, &y)) \
 			goto err;                                       \

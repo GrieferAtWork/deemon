@@ -821,9 +821,8 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 }
 
 #define DEFINE_BYTES_TRAIT(name, function, test_ch)                     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
-	bytes_##name(Bytes *__restrict self,                                \
-	             size_t argc, DeeObject *const *argv) {            \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                               \
+	bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv) {    \
 		size_t start = 0, end = (size_t)-1;                             \
 		if (argc == 1) {                                                \
 			uint8_t ch;                                                 \
@@ -846,9 +845,8 @@ DeeBytes_IsSymbol(Bytes *__restrict self,
 		return NULL;                                                    \
 	}
 #define DEFINE_ANY_BYTES_TRAIT(name, function)                                           \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                        \
-	bytes_##name(Bytes *__restrict self, size_t argc,                                    \
-	             DeeObject *const *argv, DeeObject *kw) {                           \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                \
+	bytes_##name(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {      \
 		size_t start = 0, end = (size_t)-1;                                              \
 		if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId" #name, &start, &end)) \
 			return NULL;                                                                 \

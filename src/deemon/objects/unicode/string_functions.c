@@ -2330,9 +2330,8 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 
 
 #define DEFINE_STRING_TRAIT(name, function, test_ch)                    \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
-	string_##name(String *__restrict self,                              \
-	              size_t argc, DeeObject *const *argv) {           \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                               \
+	string_##name(String *self, size_t argc, DeeObject *const *argv) {  \
 		size_t start = 0, end = (size_t)-1;                             \
 		if (argc == 1) {                                                \
 			uint32_t ch;                                                \
@@ -2355,9 +2354,8 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 		return NULL;                                                    \
 	}
 #define DEFINE_ANY_STRING_TRAIT(name, function)                                          \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                        \
-	string_##name(String *__restrict self, size_t argc,                                  \
-	              DeeObject *const *argv, DeeObject *kw) {                          \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                                \
+	string_##name(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {    \
 		size_t start = 0, end = (size_t)-1;                                              \
 		if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId" #name, &start, &end)) \
 			return NULL;                                                                 \
