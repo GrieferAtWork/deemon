@@ -1290,8 +1290,9 @@ done_fake_none:
 			 *       when their enumeration doesn't have any side-effects! */
 			/* If the result isn't being used, follow the regular comma-rule
 			 * to generate expected assembly for code like this:
-			 * >> foo()...; // the results of foo() can be as comma-separated,
-			 * >>           // but doing so doesn't have any special meaning.
+			 * >> foo()...;
+			 * Same as:
+			 * >> for (none: foo()); // Force enumeration
 			 */
 			struct asm_sym *loop, *stop;
 			if (ast_genasm(self->a_expand, ASM_G_FPUSHRES))

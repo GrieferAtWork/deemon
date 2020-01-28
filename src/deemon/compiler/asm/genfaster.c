@@ -98,7 +98,12 @@ INTERN WUNUSED NONNULL((1)) int
 	/* Strip away unnecessary sequence casts. */
 	self = ast_strip_seqcast(self);
 	/* Generate the expression. */
-	/* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_GENERIC' */
+	/* TODO: If `ast' is AST_MULTIPLE, we should generate it as `AST_FMULTIPLE_GENERIC':
+	 * >> for (local x: [a, b, c]) ...;
+	 * This doesn't need to be a list and could be compiled as ...
+	 * >> for (local x: { a, b, c }) ...;
+	 * ... to speed up the program.
+	 */
 	return ast_genasm(self, gflags);
 }
 

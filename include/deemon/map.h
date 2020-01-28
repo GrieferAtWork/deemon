@@ -30,8 +30,6 @@
 
 DECL_BEGIN
 
-/* TODO: Mapping.Keys should be a set-like type (i.e. `Dict().keys is set' should be the case) */
-
 /* Base class for mapping-style sequence types (e.g. `Dict')
  * :: Characteristics of a mapping type::
  *   - operator iter():

@@ -89,21 +89,24 @@ ast_assemble_function_refargs(struct ast *__restrict function_ast,
 	current_scope     = (DREF DeeScopeObject *)function_ast->a_function.f_scope;
 	current_basescope = function_ast->a_function.f_scope;
 
-	/* HINT: `code_compile_argrefs' will safe and restore our own assembler context. */
+	/* HINT: `code_compile_argrefs()' will safe and restore our own assembler context. */
 	result = code_compile_argrefs(function_ast->a_function.f_code,
 	                              /* Don't propagate `ASM_FBIGCODE' */
 	                              (current_assembler.a_flag & ~(ASM_FBIGCODE)) |
-	                              (DeeCompiler_Current->cp_options ? (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE) : 0)
-#if 1 /* Further reduce the amount of needed references by passing this flag!  \
-       * TODO: This flag should not be effective for recursive sub-functions,  \
-       *       but rather only for symbols where references would have to pass \
-       *       through us. - I.e. a sub-function should not be hindered from   \
-       *       references a symbol that wouldn't even need to pass through our \
+	                              (DeeCompiler_Current->cp_options
+	                               ? (DeeCompiler_Current->cp_options->co_assembler & ASM_FBIGCODE)
+	                               : 0)
+#if 1 /* Further reduce the amount of needed references by passing this flag!   \
+       * TODO: This flag should not be effective for recursive sub-functions,   \
+       *       but rather only for symbols where references would have to pass  \
+       *       through us. - I.e. a sub-function should not be hindered from    \
+       *       referencing a symbol that wouldn't even need to pass through our \
        *       scope (because it would be declared by one of our children) */
 	                              | ASM_FREDUCEREFS
 #endif
 	                              ,
-	                              prefc, prefv, pargc, pargv);
+	                              prefc, prefv,
+	                              pargc, pargv);
 	/* Now that the code has been generated, it's time to
 	 * register it as a constant variable of our own code. */
 	current_basescope = prev_scope->s_base;

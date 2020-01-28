@@ -233,9 +233,9 @@ ob_weakref_hash(WeakRef *__restrict self) {
 }
 
 #define DEFINE_WEAKREF_CMP(name, op)                                         \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                            \
-	name(WeakRef *__restrict self,                                           \
-	     WeakRef *__restrict other) {                                        \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                                    \
+	name(WeakRef *self,                                                      \
+	     WeakRef *other) {                                                   \
 		if (DeeNone_Check(other))                                            \
 			return_bool((void *)LAZY_GETOBJ(self) op(void *) NULL);          \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeWeakRef_Type)) \
@@ -282,10 +282,8 @@ ob_weakref_del(WeakRef *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 ob_weakref_set(WeakRef *__restrict self,
                DeeObject *__restrict value) {
-	if (!Dee_weakref_set(&self->wr_ref, value)) {
-		err_cannot_weak_reference(value);
-		return -1;
-	}
+	if unlikely(!Dee_weakref_set(&self->wr_ref, value))
+		return err_cannot_weak_reference(value);
 	return 0;
 }
 
@@ -373,49 +371,48 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_WeakRef),
 	/* .tp_doc      = */ DOC("A weak reference to another object implementing WeakRef functionality\n"
-	                        "\n"
-	                        "()\n"
-	                        "Construct an unbound weak reference\n"
-	                        "\n"
-	                        "(obj,callback?:?DCallable)\n"
-	                        "@throw TypeError The given object @obj does not implement weak referencing support\n"
-	                        "Construct a weak reference bound to @obj, that will be notified once said "
-	                        "object is supposed to be destroyed. With that in mind, weak references don't "
-	                        "actually hold references at all, but rather allow the user to test if an "
-	                        "object is still allocated at runtime.\n"
-	                        "If given, @callback is invoked with a single argument passed as "
-	                        "@this WeakRef object once the then bound object dies on its own\n"
-	                        "Note however that the bound callback does not influence anything "
-	                        "else, such as comparison operators, which only compare the ids of "
-	                        "bound objects, even after those objects have died\n"
-	                        "Also note that at the time that @callback is invoked, @this weak reference "
-	                        "will have already been unbound and no longer point to the object that is "
-	                        "being destroyed, so-as to prevent a possible infinite loop caused by the "
-	                        "object being revived when accessed (@callback is only invoked once the bound "
-	                        "object has passed the point of no return and can no longer be revived)\n"
-	                        "\n"
-	                        "bool->\n"
-	                        "Returns true if the weak reference is currently bound. Note however that this "
-	                        "information is volatile and may not longer be up-to-date by the time the operator returns\n"
-	                        "\n"
-	                        "==(other:?X2?.?N)->\n"
-	                        "!=(other:?X2?.?N)->\n"
-	                        "<(other:?X2?.?N)->\n"
-	                        "<=(other:?X2?.?N)->\n"
-	                        ">(other:?X2?.?N)->\n"
-	                        ">=(other:?X2?.?N)->\n"
-	                        "When compared with :none, test for the pointed-to object being bound. "
-	                        "Otherwise, compare the pointed-to object of @this weak reference to "
-	                        "that of @other\n"
-	                        "\n"
-	                        ":=(other:?X2?.?O)->\n"
-	                        "@throw TypeError The given @other does not implement weak referencing support\n"
-	                        "Assign the value of @other to @this WeakRef object\n"
-	                        "\n"
-	                        "move:=->\n"
-	                        "Override @this weak reference with the value referenced by @other, "
-	                        "while atomically clearing the weak reference from @other\n"
-	                        ),
+	                         "\n"
+	                         "()\n"
+	                         "Construct an unbound weak reference\n"
+	                         "\n"
+	                         "(obj,callback?:?DCallable)\n"
+	                         "@throw TypeError The given object @obj does not implement weak referencing support\n"
+	                         "Construct a weak reference bound to @obj, that will be notified once said "
+	                         "object is supposed to be destroyed. With that in mind, weak references don't "
+	                         "actually hold references at all, but rather allow the user to test if an "
+	                         "object is still allocated at runtime.\n"
+	                         "If given, @callback is invoked with a single argument passed as "
+	                         "@this WeakRef object once the then bound object dies on its own\n"
+	                         "Note however that the bound callback does not influence anything "
+	                         "else, such as comparison operators, which only compare the ids of "
+	                         "bound objects, even after those objects have died\n"
+	                         "Also note that at the time that @callback is invoked, @this weak reference "
+	                         "will have already been unbound and no longer point to the object that is "
+	                         "being destroyed, so-as to prevent a possible infinite loop caused by the "
+	                         "object being revived when accessed (@callback is only invoked once the bound "
+	                         "object has passed the point of no return and can no longer be revived)\n"
+	                         "\n"
+	                         "bool->\n"
+	                         "Returns true if the weak reference is currently bound. Note however that this "
+	                         "information is volatile and may not longer be up-to-date by the time the operator returns\n"
+	                         "\n"
+	                         "==(other:?X2?.?N)->\n"
+	                         "!=(other:?X2?.?N)->\n"
+	                         "<(other:?X2?.?N)->\n"
+	                         "<=(other:?X2?.?N)->\n"
+	                         ">(other:?X2?.?N)->\n"
+	                         ">=(other:?X2?.?N)->\n"
+	                         "When compared with :none, test for the pointed-to object being bound. "
+	                         "Otherwise, compare the pointed-to object of @this weak reference to "
+	                         "that of @other\n"
+	                         "\n"
+	                         ":=(other:?X2?.?O)->\n"
+	                         "@throw TypeError The given @other does not implement weak referencing support\n"
+	                         "Assign the value of @other to @this WeakRef object\n"
+	                         "\n"
+	                         "move:=->\n"
+	                         "Override @this weak reference with the value referenced by @other, "
+	                         "while atomically clearing the weak reference from @other\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT|TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -451,9 +448,9 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ob_weakref_methods,
-	/* .tp_getsets       = */ob_weakref_getsets,
-	/* .tp_members       = */ob_weakref_members,
+	/* .tp_methods       = */ ob_weakref_methods,
+	/* .tp_getsets       = */ ob_weakref_getsets,
+	/* .tp_members       = */ ob_weakref_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -498,7 +495,7 @@ PUBLIC DeeTypeObject DeeWeakRefAble_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_WeakRefAble),
 	/* .tp_doc      = */ DOC("An base class that user-defined classes can "
-	                        "be derived from to become weakly referencable"),
+	                         "be derived from to become weakly referencable"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(WeakRefAble),
 	/* .tp_features = */ TF_NONE,

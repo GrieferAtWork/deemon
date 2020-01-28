@@ -132,7 +132,7 @@ emit_instruction:
 		/* TODO: Some operands don't need to be duplicated, as re-loading them
 		 *       from their base-expression doesn't have any side-effects.
 		 *       Such operands include constants, or symbols that couldn't be
-		 *       modified in the mean time. */
+		 *       modified in the mean time (such as locals, refs, or args). */
 		switch (argc) {
 
 		case 4:

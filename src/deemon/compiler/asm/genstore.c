@@ -1809,7 +1809,7 @@ check_dst_sym_class_hybrid:
 	default: break;
 	}
 	/* TODO: Special handling when the stored value uses the target:
-	 *  >> local my_list = [10,20,my_list]; // Should create a self-referencing list.
+	 *  >> local my_list = [10, 20, my_list]; // Should create a self-referencing list.
 	 * ASM:
 	 *  >>    pack List 0
 	 *  >>    pop  local @my_list
