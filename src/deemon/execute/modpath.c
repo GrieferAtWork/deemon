@@ -756,8 +756,7 @@ DeeModule_OpenSourceFile(DeeObject *__restrict source_pathname,
 	rwlock_read(&modules_lock);
 	hash   = DeeString_HashCase((DeeObject *)module_path_ob);
 	result = find_file_module(module_path_ob, hash);
-	if (result) {
-		Dee_Incref(result);
+	if (result && Dee_IncrefIfNotZero(result)) {
 		rwlock_endread(&modules_lock);
 got_result_modulepath:
 		Dee_Decref(module_path_ob);
@@ -771,8 +770,7 @@ got_result_modulepath:
 	if (ITER_ISOK(module_global_name)) {
 		rwlock_read(&modules_glob_lock);
 		result = find_glob_module((DeeStringObject *)module_global_name);
-		if (result) {
-			Dee_Incref(result);
+		if (result && Dee_IncrefIfNotZero(result)) {
 			rwlock_endread(&modules_glob_lock);
 			goto got_result_modulepath;
 		}
@@ -858,8 +856,7 @@ set_file_module_global:
 		existing_module = find_file_module(module_path_ob, hash);
 		if likely(!existing_module)
 			existing_module = find_glob_module(module_name_ob);
-		if unlikely(existing_module) {
-			Dee_Incref(existing_module);
+		if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 			rwlock_endwrite(&modules_glob_lock);
 			rwlock_endwrite(&modules_lock);
 			Dee_DecrefDokill(result);
@@ -885,8 +882,7 @@ set_file_module_global:
 set_file_module:
 		rwlock_write(&modules_lock);
 		existing_module = find_file_module(module_path_ob, hash);
-		if unlikely(existing_module) {
-			Dee_Incref(existing_module);
+		if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 			rwlock_endwrite(&modules_lock);
 			Dee_DecrefDokill(result);
 			Dee_Decref_likely(input_stream);
@@ -1025,8 +1021,7 @@ DeeModule_OpenSourceStream(DeeObject *source_stream,
 		/* Check if the module is already loaded in the global cache. */
 		rwlock_read(&modules_glob_lock);
 		result = find_glob_module((DeeStringObject *)module_name);
-		if (result) {
-			Dee_Incref(result);
+		if (result && Dee_IncrefIfNotZero(result)) {
 			rwlock_endread(&modules_glob_lock);
 			goto found_existing_module;
 		}
@@ -1037,9 +1032,8 @@ DeeModule_OpenSourceStream(DeeObject *source_stream,
 set_global_module:
 		rwlock_write(&modules_glob_lock);
 		existing_module = find_glob_module((DeeStringObject *)module_name);
-		if unlikely(existing_module) {
+		if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 			/* The module got created in the mean time. */
-			Dee_Incref(existing_module);
 			rwlock_endwrite(&modules_glob_lock);
 			Dee_Decref(result);
 			result = existing_module;
@@ -1427,7 +1421,8 @@ again_search_fs_modules:
 				continue;
 			utf8_path = DeeString_TryAsUtf8((DeeObject *)result->mo_path);
 			if unlikely(!utf8_path) {
-				Dee_Incref(result);
+				if (!Dee_IncrefIfNotZero(result))
+					break;
 				rwlock_endread(&modules_lock);
 				utf8_path = DeeString_AsUtf8((DeeObject *)result->mo_path);
 				if unlikely(!utf8_path)
@@ -1448,7 +1443,8 @@ again_search_fs_modules:
 			if (fs_memcmp(utf8_path, buf, len * sizeof(char)) != 0)
 				continue;
 			/* Found it! */
-			Dee_Incref(result);
+			if (!Dee_IncrefIfNotZero(result))
+				break;
 			rwlock_endread(&modules_lock);
 got_result_set_global:
 			if (module_global_name && likely(!result->mo_globpself)) {
@@ -1483,8 +1479,7 @@ again_find_existing_global_module:
 					 */
 
 					existing_module = find_glob_module(result->mo_name);
-					if unlikely(existing_module) {
-						Dee_Incref(existing_module);
+					if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 						rwlock_endwrite(&modules_glob_lock);
 						Dee_Decref_likely(result);
 						result = existing_module;
@@ -1582,8 +1577,7 @@ set_dec_file_module_global:
 					existing_module = find_file_module(module_path_ob, hash);
 					if likely(!existing_module)
 						existing_module = find_glob_module(module_name_ob);
-					if unlikely(existing_module) {
-						Dee_Incref(existing_module);
+					if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 						rwlock_endwrite(&modules_glob_lock);
 						rwlock_endwrite(&modules_lock);
 						Dee_DecrefDokill(result);
@@ -1609,8 +1603,7 @@ set_dec_file_module_global:
 set_dec_file_module:
 					rwlock_write(&modules_lock);
 					existing_module = find_file_module(module_path_ob, hash);
-					if unlikely(existing_module) {
-						Dee_Incref(existing_module);
+					if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 						rwlock_endwrite(&modules_lock);
 						Dee_DecrefDokill(result);
 						Dee_Decref_likely(dec_stream);
@@ -1754,8 +1747,7 @@ set_dex_file_module_global:
 				existing_module = find_file_module(module_path_ob, hash);
 				if likely(!existing_module)
 					existing_module = find_glob_module(module_name_ob);
-				if unlikely(existing_module) {
-					Dee_Incref(existing_module);
+				if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 					rwlock_endwrite(&modules_glob_lock);
 					rwlock_endwrite(&modules_lock);
 					Dee_DecrefDokill(result);
@@ -1781,8 +1773,7 @@ set_dex_file_module_global:
 set_dex_file_module:
 				rwlock_write(&modules_lock);
 				existing_module = find_file_module(module_path_ob, hash);
-				if unlikely(existing_module) {
-					Dee_Incref(existing_module);
+				if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 					rwlock_endwrite(&modules_lock);
 					Dee_DecrefDokill(result);
 					DeeSystem_DlClose(dex_handle);
@@ -1867,8 +1858,7 @@ set_src_file_module_global:
 			existing_module = find_file_module(module_path_ob, hash);
 			if likely(!existing_module)
 				existing_module = find_glob_module(module_name_ob);
-			if unlikely(existing_module) {
-				Dee_Incref(existing_module);
+			if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 				rwlock_endwrite(&modules_glob_lock);
 				rwlock_endwrite(&modules_lock);
 				Dee_DecrefDokill(result);
@@ -1894,8 +1884,7 @@ set_src_file_module_global:
 set_src_file_module:
 			rwlock_write(&modules_lock);
 			existing_module = find_file_module(module_path_ob, hash);
-			if unlikely(existing_module) {
-				Dee_Incref(existing_module);
+			if unlikely(existing_module && Dee_IncrefIfNotZero(existing_module)) {
 				rwlock_endwrite(&modules_lock);
 				Dee_DecrefDokill(result);
 				Dee_Decref_likely(source_stream);
@@ -2135,8 +2124,7 @@ DeeModule_OpenGlobal(DeeObject *__restrict module_name,
 	/* Search for a cache entry for this module in the global module cache. */
 	rwlock_read(&modules_glob_lock);
 	result = find_glob_module((DeeStringObject *)module_name);
-	if (result) {
-		Dee_Incref(result);
+	if (result && Dee_IncrefIfNotZero(result)) {
 		rwlock_endread(&modules_glob_lock);
 		goto done;
 	}
@@ -2213,8 +2201,7 @@ DeeModule_OpenGlobalString(/*utf-8*/ char const *__restrict module_name,
 	/* Search for a cache entry for this module in the global module cache. */
 	rwlock_read(&modules_glob_lock);
 	result = find_glob_module_str(module_name, module_namesize);
-	if (result) {
-		Dee_Incref(result);
+	if (result && Dee_IncrefIfNotZero(result)) {
 		rwlock_endread(&modules_glob_lock);
 		goto done;
 	}
