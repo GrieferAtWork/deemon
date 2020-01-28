@@ -125,7 +125,13 @@ struct asm_operand {
 		DREF struct ast      *ao_expr;  /* [1..1][valid_if((self - :as_opv) < :as_num_o+:as_num_i)] Input/output operand expression. */
 		struct text_label    *ao_label; /* [1..1][valid_if((self - :as_opv) >= :as_num_o+:as_num_i)] Label operand.
 		                                 * NOTE: Also holds a reference to `tl_goto' */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define ao_expr  _dee_aunion.ao_expr
+#define ao_label _dee_aunion.ao_label
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 #define ASM_OPERAND_IS_INOUT(x) ((x)->ao_type->s_text[0] == '+')
 
@@ -240,16 +246,28 @@ struct ast {
 		struct {
 			union {
 				DREF struct ast  *l_elem; /* [0..1][valid_if(AST_FLOOP_FOREACH)]
-											* The element expression (`x' in the example above).
-											* NOTE: Just like AST_ACTION:AST_FACTION_STORE, this pointer also holds a write-reference to symbols. */
+				                           * The element expression (`x' in the example above).
+				                           * NOTE: Just like AST_ACTION:AST_FACTION_STORE, this pointer also holds a write-reference to symbols. */
 				DREF struct ast  *l_cond; /* [0..1][valid_if(!AST_FLOOP_FOREACH)] Loop condition. (Either evaluated before, or after the main loop)
-											* NOTE: Setting this to `NULL' is the same as a constant true. */
-			};
+				                           * NOTE: Setting this to `NULL' is the same as a constant true. */
+			}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+			_dee_aunion
+#define l_elem  _dee_aunion.l_elem
+#define l_cond  _dee_aunion.l_cond
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+			;
 			union {
 				DREF struct ast  *l_iter; /* [1..1][valid_if(AST_FLOOP_FOREACH)] The iterator expression (`y' in the example above).
-											*                               NOTE: This expression is only evaluated once! */
+				                           *                               NOTE: This expression is only evaluated once! */
 				DREF struct ast  *l_next; /* [0..1][valid_if(!AST_FLOOP_FOREACH)] Loop advance expression (Executed after `a_loop', unless `break' was used) */
-			};
+			}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+			_dee_aunion
+#define l_iter  _dee_aunion.l_iter
+#define l_next  _dee_aunion.l_next
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+			;
 			DREF struct ast      *l_loop; /* [0..1] Loop block. */
 		}                         a_loop; /* Loop statement. */
 
@@ -319,7 +337,7 @@ struct ast {
 		                                   * >> x = y.operator +; // compiles (in this implementation) as `x = (InstanceMethod from deemon)(y,__pooad from operators);' */
 		struct {
 			DREF struct ast  *of_binding; /* [0..1] The first argument of the operator (if it is bound).
-											* When set, construct an InstanceMethod object that is bound to this expression. */
+			                               * When set, construct an InstanceMethod object that is bound to this expression. */
 		} a_operator_func;
 
 
@@ -546,7 +564,34 @@ struct ast {
 			                              *   - as_num_o+as_num_i..as_opc-1 are label operands. */
 		}                      a_assembly;
 
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define a_constexpr      _dee_aunion.a_constexpr
+#define a_sym            _dee_aunion.a_sym
+#define a_unbind         _dee_aunion.a_unbind
+#define a_bound          _dee_aunion.a_bound
+#define a_multiple       _dee_aunion.a_multiple
+#define a_return         _dee_aunion.a_return
+#define a_yield          _dee_aunion.a_yield
+#define a_throw          _dee_aunion.a_throw
+#define a_try            _dee_aunion.a_try
+#define a_loop           _dee_aunion.a_loop
+#define a_conditional    _dee_aunion.a_conditional
+#define a_bool           _dee_aunion.a_bool
+#define a_expand         _dee_aunion.a_expand
+#define a_function       _dee_aunion.a_function
+#define a_operator_func  _dee_aunion.a_operator_func
+#define a_operator       _dee_aunion.a_operator
+#define a_operator_ops   _dee_aunion.a_operator_ops
+#define a_action         _dee_aunion.a_action
+#define a_class          _dee_aunion.a_class
+#define a_label          _dee_aunion.a_label
+#define a_goto           _dee_aunion.a_goto
+#define a_switch         _dee_aunion.a_switch
+#define a_assembly       _dee_aunion.a_assembly
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 

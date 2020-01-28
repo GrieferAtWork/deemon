@@ -103,7 +103,13 @@ typedef struct {
 		                                              * NOTE: The starting addresses of these are ordered ascendingly! */
 		uintptr_t     sc_heap_start;                 /* [const] Starting address of the slab heap.
 		                                              * NOTE: This pointer is aligned by `CONFIG_SLAB_PAGESIZE' */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define sc_regions    _dee_aunion.sc_regions
+#define sc_heap_start _dee_aunion.sc_heap_start
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	uintptr_t         sc_heap_end;   /* [const] End address of the slab heap.
 	                                  * NOTE: This pointer is aligned by `CONFIG_SLAB_PAGESIZE' */
 } SlabConfig;

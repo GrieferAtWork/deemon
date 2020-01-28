@@ -2188,7 +2188,14 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
 		struct {
 			UCHAR DataBuffer[1];
 		} GenericReparseBuffer;
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define SymbolicLinkReparseBuffer _dee_aunion.SymbolicLinkReparseBuffer
+#define MountPointReparseBuffer   _dee_aunion.MountPointReparseBuffer
+#define GenericReparseBuffer      _dee_aunion.GenericReparseBuffer
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 } DEE_REPARSE_DATA_BUFFER, *DEE_PREPARSE_DATA_BUFFER;
 #endif /* fs_readlink_USE_DEVICEIOCONTROL */
 

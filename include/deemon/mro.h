@@ -78,7 +78,16 @@ struct Dee_membercache_slot {
 			struct Dee_class_attribute *a_attr; /* [1..1][const] The class attribute. */
 			struct Dee_class_desc      *a_desc; /* [1..1][const][== DeeClass_DESC(mcs_decl)] The class implementing the attribute. */
 		} mcs_attrib; /* [valid_if(mcs_type == MEMBERCACHE_ATTRIB || mcs_type == MEMBERCACHE_INSTANCE_ATTRIB)] */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define mcs_name   _dee_aunion.mcs_name
+#define mcs_method _dee_aunion.mcs_method
+#define mcs_getset _dee_aunion.mcs_getset
+#define mcs_member _dee_aunion.mcs_member
+#define mcs_attrib _dee_aunion.mcs_attrib
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 #ifdef DEE_SOURCE

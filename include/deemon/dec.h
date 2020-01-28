@@ -590,7 +590,14 @@ typedef struct {
 		                                    *  by a couple of bytes of padding data that is ZERO-initialized. */
 		uint8_t               *df_base;    /* [0..df_size] Base address of the DEC image mapped into host memory. */
 		Dec_Ehdr              *df_ehdr;    /* [0..1] A pointer to the DEC file header mapped into host memory. */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define df_data _dee_aunion.df_data
+#define df_base _dee_aunion.df_base
+#define df_ehdr _dee_aunion.df_ehdr
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	size_t                     df_size;    /* Total number of usable bytes of memory
 	                                        * that can be found within the source file. */
 	DREF struct string_object *df_name;    /* [1..1] The filename of the `*.dee' file opened by this descriptor. */

@@ -252,7 +252,13 @@ struct Dee_ddi_state {
 	union {
 		struct Dee_ddi_regs  rs_regs;   /* The current register state. */
 		struct Dee_ddi_xregs rs_xregs;  /* The current register state (in extended form). */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define rs_regs  _dee_aunion.rs_regs
+#define rs_xregs _dee_aunion.rs_xregs
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	struct Dee_ddi_saved    *rs_save;   /* [0..1][owned] Chain of saved register states.
 	                                     * When enumerating for a traceback, this
 	                                     * the list of inline function calls. */
@@ -472,7 +478,13 @@ struct Dee_code_object {
 		                                      *       code objects of a given module before that module has actually
 		                                      *       been created. */
 		DREF DeeCodeObject  *co_next;        /* [0..1] Only used during compilation: Pointer to another code object. */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define co_module _dee_aunion.co_module
+#define co_next   _dee_aunion.co_next
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	DREF struct Dee_string_object
 	                 *const *co_keywords;    /* [1..1][const][0..co_argc_max][const] Argument keywords. */
 	DREF DeeObject   *const *co_defaultv;    /* [0..1][const][0..(co_argc_max-co_argc_min)][owned] Vector of default argument values.
@@ -522,7 +534,7 @@ struct Dee_code_object {
 			uint32_t                              co_framesize;                 \
 			Dee_code_size_t                       co_codebytes;                 \
 			_DEE_CODE_CO_STATIC_LOCK_FIELD                                      \
-			DREF struct Dee_module_object        *co_module;                    \
+			DREF struct Dee_module_object        *_co_module;                   \
 			DREF struct Dee_string_object *const *co_keywords;                  \
 			DREF DeeObject                *const *co_defaultv;                  \
 			DREF DeeObject                      **co_staticv;                   \

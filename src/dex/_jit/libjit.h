@@ -285,7 +285,14 @@ struct jit_symbol {
 			size_t                   jg_namelen; /* Length of the global symbol name. */
 			dhash_t                  jg_namehsh; /* Hash for the global symbol name. */
 		} js_globalstr; /* JIT_SYMBOL_GLOBALSTR */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define js_objent    _dee_aunion.js_objent
+#define js_extern    _dee_aunion.js_extern
+#define js_globalstr _dee_aunion.js_globalstr
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 #ifdef __INTELLISENSE__
@@ -357,7 +364,21 @@ struct jit_lvalue {
 			DREF DeeObject *lr_end;   /* [1..1] Range end index object */
 		} lv_range; /* JIT_LVALUE_RANGE */
 		DREF DeeObject *lv_rvalue;    /* [1..1] JIT_LVALUE_RVALUE */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define lv_ptr       _dee_aunion.lv_ptr
+#define lv_objent    _dee_aunion.lv_objent
+#define lv_extern    _dee_aunion.lv_extern
+#define lv_global    _dee_aunion.lv_global
+#define lv_globalstr _dee_aunion.lv_globalstr
+#define lv_attr      _dee_aunion.lv_attr
+#define lv_attrstr   _dee_aunion.lv_attrstr
+#define lv_item      _dee_aunion.lv_item
+#define lv_range     _dee_aunion.lv_range
+#define lv_rvalue    _dee_aunion.lv_rvalue
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 #define JITLValue_Init(self) ((self)->lv_kind = JIT_LVALUE_NONE)
@@ -446,8 +467,30 @@ struct jit_lexer {
 			                                  * to this object is stored to ensure that child code will not be deallocated. */
 			JITContext        *jl_context;   /* [1..1][const] The associated JIT context. */
 			JITLValue          jl_lvalue;    /* L-value expression. */
-		};
-	};
+		}
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+		_dee_astruct
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+		;
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define jl_scandata _dee_aunion.jl_scandata
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+#define jl_text     _dee_aunion._dee_astruct.jl_text
+#define jl_context  _dee_aunion._dee_astruct.jl_context
+#define jl_lvalue   _dee_aunion._dee_astruct.jl_lvalue
+#else /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define jl_text     _dee_aunion.jl_text
+#define jl_context  _dee_aunion.jl_context
+#define jl_lvalue   _dee_aunion.jl_lvalue
+#endif /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
+#elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
+#define jl_text     _dee_astruct.jl_text
+#define jl_context  _dee_astruct.jl_context
+#define jl_lvalue   _dee_astruct.jl_lvalue
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+	;
 };
 
 
@@ -1191,7 +1234,7 @@ struct jit_state {
 		struct {
 			DREF DeeObject *f_iter; /* [1..1] The iterator object. */
 			JITLValue       f_elem; /* The iterator target expression lvalue (this is
-										* where the elements enumerated from `f_iter' go). */
+			                         * where the elements enumerated from `f_iter' go). */
 			unsigned char  *f_loop; /* [1..1] Pointer to the foreach statement's loop-statement. */
 		}             js_foreach;   /* JIT_STATE_KIND_FOREACH */
 		struct {
@@ -1206,7 +1249,18 @@ struct jit_state {
 		struct {
 			unsigned char *t_guard; /* [1..1] Pointer to the start of the guarded statement block. */
 		}             js_try;       /* JIT_STATE_KIND_TRY */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define js_dowhile  _dee_aunion.js_dowhile
+#define js_for      _dee_aunion.js_for
+#define js_while    _dee_aunion.js_while
+#define js_foreach  _dee_aunion.js_foreach
+#define js_foreach2 _dee_aunion.js_foreach2
+#define js_with     _dee_aunion.js_with
+#define js_try      _dee_aunion.js_try
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 INTDEF void DCALL jit_state_fini(struct jit_state *__restrict self);

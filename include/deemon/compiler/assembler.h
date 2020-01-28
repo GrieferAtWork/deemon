@@ -381,7 +381,14 @@ struct asm_invoke_operand {
 			uint16_t                   io_modid;  /* Module id. */
 		}                              io_extern; /* `OPERAND_CLASS_EXTERN' */
 		struct asm_intexpr             io_intexpr;
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define io_symid   _dee_aunion.io_symid
+#define io_extern  _dee_aunion.io_extern
+#define io_intexpr _dee_aunion.io_intexpr
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 /* Print a human-readable representation of `self' to `printer' */
@@ -1784,7 +1791,15 @@ struct register_effect {
 #define REGISTER_MISC_THIS_FUNCTION  0x0002 /* The current function. */
 #define REGISTER_MISC_THIS_MODULE    0x0003 /* The current module. */
 		uint16_t     re_misc;               /* REGISTER_EFFECT_CLASS_MISC (One of `REGISTER_MISC_*') */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define re_index  _dee_aunion.re_index
+#define re_stack  _dee_aunion.re_stack
+#define re_extern _dee_aunion.re_extern
+#define re_misc   _dee_aunion.re_misc
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 #define INSTRUCTION_EFFECT_MAXREGS  3 /* The max number of register-effects achievable by an instruction. */

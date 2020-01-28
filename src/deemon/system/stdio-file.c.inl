@@ -852,10 +852,16 @@ err:
 #ifdef FILE_HAVE_SETVBUF
 struct mode_name {
 	union {
-		char     name[4]; /* Mode name. */
-		uint32_t nameid;
-	};
-	int          flag;    /* Mode flags. */
+		char     mn_name[4]; /* Mode name. */
+		uint32_t mn_nameid;
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define mn_name   _dee_aunion.mn_name
+#define mn_nameid _dee_aunion.mn_nameid
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+	int          mn_flag;    /* Mode flags. */
 };
 
 PRIVATE struct mode_name const mode_names[] = {
@@ -925,9 +931,9 @@ sysfile_setbuf(SystemFile *self, size_t argc, DeeObject **argv) {
 	for (i = 0;; ++i) {
 		if (i == COMPILER_LENOF(mode_names))
 			goto err_invalid_mode;
-		if (mode_names[i].nameid != buf.id)
+		if (mode_names[i].mn_nameid != buf.id)
 			continue;
-		mode = mode_names[i].flag; /* Found it! */
+		mode = mode_names[i].mn_flag; /* Found it! */
 		break;
 	}
 again_setbuf:

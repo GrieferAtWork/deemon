@@ -410,7 +410,20 @@ struct decl_ast {
 			struct decl_ast *w_cell;   /* [2..2][owned] 0: The cell container; 1: The cell element. */
 		}                   da_with;   /* [DAST_WITH] Representation for cell-like containers. */
 		DREF struct string_object *da_string; /* [1..1][DAST_STRING] Custom string. */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define da_symbol _dee_aunion.da_symbol
+#define da_const  _dee_aunion.da_const
+#define da_alt    _dee_aunion.da_alt
+#define da_tuple  _dee_aunion.da_tuple
+#define da_seq    _dee_aunion.da_seq
+#define da_func   _dee_aunion.da_func
+#define da_attr   _dee_aunion.da_attr
+#define da_with   _dee_aunion.da_with
+#define da_string _dee_aunion.da_string
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 struct decl_arg_ast {
 	struct TPPKeyword *da_name; /* [1..1] Argument name */
@@ -459,24 +472,24 @@ struct ast_loc {
 			int          l_col;  /* [valid_if(l_file != NULL)] Location column. */
 		}
 #ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
-		_l_linecol
-#endif
+		_dee_astruct
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 		;
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
-	_l_lc_select
-#define l_lc       _l_lc_select.l_lc
+	_dee_aunion
+#define l_lc       _dee_aunion.l_lc
 #ifdef __COMPILER_HAVE_TRANSPARENT_STRUCT
-#define l_line     _l_lc_select.l_line
-#define l_col      _l_lc_select.l_col
+#define l_line     _dee_aunion.l_line
+#define l_col      _dee_aunion.l_col
 #else /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
-#define l_line     _l_lc_select._l_linecol.l_line
-#define l_col      _l_lc_select._l_linecol.l_col
+#define l_line     _dee_aunion._dee_astruct.l_line
+#define l_col      _dee_aunion._dee_astruct.l_col
 #endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 #elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
-#define l_line     _l_linecol.l_line
-#define l_col      _l_linecol.l_col
-#endif
+#define l_line     _dee_astruct.l_line
+#define l_col      _dee_astruct.l_col
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
 	;
 #else /* CONFIG_BUILDING_DEEMON */
 	int                  l_line; /* [valid_if(l_file != NULL)] Location line. */
@@ -488,22 +501,28 @@ struct ast_loc {
 
 
 struct text_label {
-	struct text_label          *tl_next; /* [0..1][owned] Next case-label, or the next symbol with
-	                                      *               the same modulated `s_name->k_id' */
+	struct text_label     *tl_next; /* [0..1][owned] Next case-label, or the next symbol with
+	                                 *               the same modulated `s_name->k_id' */
 	union {
 #ifdef __INTELLISENSE__
-		     struct ast *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
-		                           *  Expression of a case-label. NOTE: NULL for the default case.
-		                           *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+		     struct ast   *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
+		                             *  Expression of a case-label. NOTE: NULL for the default case.
+		                             *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #else /* __INTELLISENSE__ */
-		DREF struct ast *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
-		                           *  Expression of a case-label. NOTE: NULL for the default case.
-		                           *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
+		DREF struct ast   *tl_expr; /* [0..1][valid_if(CHAIN(bs_swcase|s_cases))][const]
+		                             *  Expression of a case-label. NOTE: NULL for the default case.
+		                             *  NOTE: Always NULL in `bs_swdefl|s_default' labels. */
 #endif /* !__INTELLISENSE__ */
-		struct TPPKeyword      *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
-	};
-	struct asm_sym             *tl_asym; /* [0..1] Assembly symbol (lazily allocated) */
-	unsigned int                tl_goto; /* The number of times this label is used as a goto target. */
+		struct TPPKeyword *tl_name; /* [1..1][valid_if(CHAIN(bs_lbl[*]))][const] Name of this label. */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define tl_expr _dee_aunion.tl_expr
+#define tl_name _dee_aunion.tl_name
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+	struct asm_sym        *tl_asym; /* [0..1] Assembly symbol (lazily allocated) */
+	unsigned int           tl_goto; /* The number of times this label is used as a goto target. */
 };
 
 
@@ -601,7 +620,19 @@ struct symbol {
 			                                      * [0..a_declc][owned] Additional declaration locations. */
 		}                s_ambig;  /* [SYMBOL_TYPE_AMBIG] */
 		DREF DeeObject  *s_const;  /* [SYMBOL_TYPE_CONST] The constant that the symbol evaluates to. */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define s_extern _dee_aunion.s_extern
+#define s_module _dee_aunion.s_module
+#define s_global _dee_aunion.s_global
+#define s_attr   _dee_aunion.s_attr
+#define s_getset _dee_aunion.s_getset
+#define s_alias  _dee_aunion.s_alias
+#define s_ambig  _dee_aunion.s_ambig
+#define s_const  _dee_aunion.s_const
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 

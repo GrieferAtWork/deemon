@@ -114,10 +114,16 @@ struct frame_object {
 #ifndef CONFIG_NO_THREADS
 	union {
 		Dee_rwlock_t      *f_plock;       /* [0..1][valid_if(!DEEFRAME_FRECLOCK)][const]
-											* Lock that must be acquired when accessing the frame. */
+		                                   * Lock that must be acquired when accessing the frame. */
 		Dee_recursive_rwlock_t *f_prlock; /* [1..1][valid_if(DEEFRAME_FRECLOCK)][const]
-											* Lock that must be acquired when accessing the frame. */
-	};
+		                                   * Lock that must be acquired when accessing the frame. */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define f_plock   _dee_aunion.f_plock
+#define f_prlock  _dee_aunion.f_prlock
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	Dee_rwlock_t           f_lock;  /* Lock for accessing fields of this frame object. */
 #endif /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FNORMAL   0x0000 /* Normal frame flags. */

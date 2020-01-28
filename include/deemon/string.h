@@ -2168,7 +2168,12 @@ struct Dee_unicode_printer {
 		void     *up_buffer; /* [0..1][owned(DeeString_FreeWidthBuffer)] The current width-buffer. */
 		char     *_up_str;   /* Only here, so the printer's string can be viewed in a debugger. */
 		Dee_wchar_t *_up_wstr;  /* Only here, so the printer's string can be viewed in a debugger. */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define up_buffer  _dee_aunion.up_buffer
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 #else
 	void         *up_buffer; /* [0..1][owned(DeeString_FreeWidthBuffer)] The current width-buffer. */
 #endif

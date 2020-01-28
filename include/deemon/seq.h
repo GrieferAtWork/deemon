@@ -309,7 +309,12 @@ struct Dee_type_nii {
 			WUNUSED NONNULL((1))
 			DREF DeeObject *(DCALL *nii_peek)(DeeObject *__restrict self);
 		}                   nii_common;
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define nii_common _dee_aunion.nii_common
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 
@@ -434,7 +439,15 @@ struct Dee_type_nsi {
 			 * @return: -1: Error. */
 			WUNUSED NONNULL((1, 2)) int    (DCALL *nsi_remove)(DeeObject *self, DeeObject *key);
 		}                   nsi_setlike;
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define nsi_common  _dee_aunion.nsi_common
+#define nsi_seqlike _dee_aunion.nsi_seqlike
+#define nsi_maplike _dee_aunion.nsi_maplike
+#define nsi_setlike _dee_aunion.nsi_setlike
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 

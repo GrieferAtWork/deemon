@@ -434,7 +434,8 @@ struct Dee_weakref_list {
  * constructors of types implementing weakref support!) */
 #define Dee_weakref_support_init(x) ((x)->ob_weakrefs.wl_nodes = NULL)
 
-/* Finalize weakref support */
+/* Finalize weakref support (must be called manually by
+ * destructors of types implementing weakref support!) */
 #define Dee_weakref_support_fini(x)                                    \
 	(__hybrid_atomic_load((x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
 	 ? (Dee_weakref_support_fini(&(x)->ob_weakrefs))                   \
@@ -486,11 +487,11 @@ DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *
 DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copy)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
 DFUNDEF NONNULL((1, 2)) void (DCALL Dee_weakref_copyassign)(struct Dee_weakref *__restrict self, struct Dee_weakref *__restrict other);
 #ifdef __cplusplus
-#define Dee_weakref_copy(self,other) Dee_weakref_copy(self,(struct ::Dee_weakref *)(other))
-#define Dee_weakref_copyassign(self,other) Dee_weakref_copyassign(self,(struct ::Dee_weakref *)(other))
+#define Dee_weakref_copy(self, other) Dee_weakref_copy(self, (struct ::Dee_weakref *)(other))
+#define Dee_weakref_copyassign(self, other) Dee_weakref_copyassign(self, (struct ::Dee_weakref *)(other))
 #else /* __cplusplus */
-#define Dee_weakref_copy(self,other) Dee_weakref_copy(self,(struct Dee_weakref *)(other))
-#define Dee_weakref_copyassign(self,other) Dee_weakref_copyassign(self,(struct Dee_weakref *)(other))
+#define Dee_weakref_copy(self, other) Dee_weakref_copy(self, (struct Dee_weakref *)(other))
+#define Dee_weakref_copyassign(self, other) Dee_weakref_copyassign(self, (struct Dee_weakref *)(other))
 #endif /* !__cplusplus */
 #endif /* !__INTELLISENSE__ */
 
@@ -558,9 +559,9 @@ typedef void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
 typedef Dee_visit_t  dvisit_t;
 #endif /* DEE_SOURCE */
 
-/* Used to undo object construction in generic sub-classes after
- * base classes have already been constructed, before a later
- * constructor fails.
+/* Used to undo object construction in generic sub-classes
+ * after base classes had already been constructed when a
+ * later constructor fails.
  * This function will invoke destructors of each type already constructed. */
 DFUNDEF WUNUSED NONNULL((2)) bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
@@ -888,12 +889,12 @@ typedef Dee_enum_t denum_t;
 
 #ifndef DEE_TYPE_ALLOCATOR
 /* Specifies a custom object allocator declaration. */
-#define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (void *)(tp_free), {(uintptr_t)(void *)(tp_malloc) }
+#define DEE_TYPE_ALLOCATOR(tp_malloc, tp_free) (void *)(tp_free), { (uintptr_t)(void *)(tp_malloc) }
 
 /* Specifies an automatic object allocator. */
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR(size)                 NULL, {(uintptr_t)(size) }
-#define DEE_TYPE_AUTOSIZED_ALLOCATOR_R(min_size, max_size) NULL, {(uintptr_t)(max_size) }
-#define DEE_TYPE_AUTO_ALLOCATOR(T)                         NULL, {(uintptr_t)sizeof(T) }
+#define DEE_TYPE_AUTOSIZED_ALLOCATOR(size)                 NULL, { (uintptr_t)(size) }
+#define DEE_TYPE_AUTOSIZED_ALLOCATOR_R(min_size, max_size) NULL, { (uintptr_t)(max_size) }
+#define DEE_TYPE_AUTO_ALLOCATOR(T)                         NULL, { (uintptr_t)sizeof(T) }
 
 /* Expose shorter variants of macros */
 #ifdef DEE_SOURCE
@@ -953,6 +954,7 @@ typedef Dee_enum_t denum_t;
 
 
 
+#undef tp_alloc
 struct Dee_type_constructor {
 	/* Instance constructors/destructors. */
 	union {
@@ -981,7 +983,12 @@ struct Dee_type_constructor {
 			union {
 				size_t tp_instance_size; /* [valid_if(tp_free == NULL)] */
 				void *(DCALL *tp_alloc)(void); /* [valid_if(tp_free != NULL)] */
-			};
+			}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+			_dee_aunion
+#define tp_instance_size _dee_aunion.tp_instance_size
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+			;
 			WUNUSED NONNULL((1))
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject **argv, DeeObject *kw);
@@ -1007,7 +1014,13 @@ struct Dee_type_constructor {
 			struct { uintptr_t tp_pad; } tp_pad; /* ... */
 			DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject **argv, DeeObject *kw);
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define tp_alloc _dee_aunion.tp_alloc
+#define tp_var   _dee_aunion.tp_var
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	NONNULL((1)) void (DCALL *tp_dtor)(DeeObject *__restrict self); /* [0..1] */
 	/* NOTE: `tp_move_assign' is favored in code such as this:
 	 * >> local my_list = [];
@@ -1463,7 +1476,13 @@ struct Dee_type_member {
 			uint16_t      m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
 			uint16_t      m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
 		}                 m_field;
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define m_const _dee_aunion.m_const
+#define m_field _dee_aunion.m_field
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
 };
 

@@ -803,10 +803,15 @@ struct cfunction_type_object {
 	 *  3. argument pointers... */
 	size_t                             ft_wsize;
 	size_t                             ft_woff_argmem;
+#ifdef __COMPILER_HAVE_TRANSPARENT_UNION
 	union {
 		size_t                         ft_woff_argptr;
 		size_t                         ft_woff_variadic_argmem;
 	};
+#else /* __COMPILER_HAVE_TRANSPARENT_UNION */
+	size_t                             ft_woff_argptr;
+#define ft_woff_variadic_argmem        ft_woff_argptr
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 #endif /* !CONFIG_NO_CFUNCTION */
 };
 

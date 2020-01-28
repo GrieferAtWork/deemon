@@ -142,14 +142,42 @@ struct time_object {
 		 * of the left-hand-side is always inherited by the result.
 		 */
 		dtime_half_t t_months; /* TIME_MONTHS */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define t_time   _dee_aunion.t_time
+#ifdef HAVE_128BIT_TIME
+#define t_time_half _dee_aunion.t_time_half
+#endif /* HAVE_128BIT_TIME */
+#define t_months _dee_aunion.t_months
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	union {
 		struct {
 			uint8_t  t_type; /* Time encoding (One of `TIME_*') */
 			uint8_t  t_repr; /* Time representation (One of `TIME_REPR_*') */
-		};
+		}
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+		_dee_astruct
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+		;
 		uint16_t     t_kind; /* Encoded using TIME_KIND(type,repr) */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion2
+#define t_kind   _dee_aunion2.t_kind
+#ifndef __COMPILER_HAVE_TRANSPARENT_STRUCT
+#define t_type   _dee_aunion2._dee_astruct.t_type
+#define t_repr   _dee_aunion2._dee_astruct.t_repr
+#else /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+#define t_type   _dee_aunion2.t_type
+#define t_repr   _dee_aunion2.t_repr
+#endif /* __COMPILER_HAVE_TRANSPARENT_STRUCT */
+#elif !defined(__COMPILER_HAVE_TRANSPARENT_STRUCT)
+#define t_type   _dee_astruct.t_type
+#define t_repr   _dee_astruct.t_repr
+#endif /* !__COMPILER_HAVE_TRANSPARENT_STRUCT */
+	;
 };
 
 #ifdef HAVE_128BIT_TIME

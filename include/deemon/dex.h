@@ -98,7 +98,13 @@ struct Dee_dex {
 	                                        * NULL-terminated vector of other imported modules. */
 	    DeeObject        **d_imports;      /* [1..1][0..1] A shadow copy of the dex's `m_importv' vector.
 	                                        * NOTE: Not modified when `d_import_names' was empty, or NULL. */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define d_import_names _dee_aunion.d_import_names
+#define d_imports      _dee_aunion.d_imports
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	/* Called during the GC-cleanup phase near the end of deemon's execution cycle.
 	 * This function should be implemented to clear global caches or object hooks.
 	 * @return: true:  Something was cleared.
@@ -118,7 +124,15 @@ struct Dee_dex_object {
 	DeeDexObject     **d_pself;        /* [1..1][== self][0..1][lock(INTERN(dex_lock))] Dex self-pointer. */
 	DREF DeeDexObject *d_next;         /* [0..1][lock(INTERN(dex_lock))] Extension initialized before this one.
 	                                    * During finalization, extensions are unloaded in reverse order. */
+#ifdef __COMPILER_HAVE_TRANSPARENT_UNION
 	char const *const *d_import_names; /* [1..1|SENTINEL([0..0])][0..1] NULL-terminated vector of other imported modules. */
+#else /* __COMPILER_HAVE_TRANSPARENT_UNION */
+	union {
+#undef d_import_names
+		char const *const *d_import_names; /* [1..1|SENTINEL([0..0])][0..1] NULL-terminated vector of other imported modules. */
+#define d_import_names _dee_aunion.d_import_names
+	} _dee_aunion;
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 };
 
 DDATDEF DeeTypeObject DeeDex_Type;

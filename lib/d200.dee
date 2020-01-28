@@ -39,7 +39,7 @@ import * from deemon;
 @@assembled to be deribed from `OldUserClass from d200'
 class OldUserClass
 	/* Inherit from weakrefable, because it used to be that
-	 * any user-defined class could be weakly referneced by
+	 * any user-defined class could be weakly referenced by
 	 * default, since _any_ object was capable of sustaining
 	 * weak references. */
 	: WeakRefAble

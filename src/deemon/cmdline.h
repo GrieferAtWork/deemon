@@ -84,7 +84,14 @@ struct cmd_option {
 		                                  *    Group:       `Wl' (short name)
 		                                  *    Sub-options: `-fopt-a', `-fopt-b', `-fopt-c=foo,bar'
 		                                  */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define co_hook  _dee_aunion.co_hook
+#define co_func  _dee_aunion.co_func
+#define co_group _dee_aunion.co_group
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 	char const *co_doc;                  /* [0..1] An optional documentation string for this command. */
 };
 #define CMD_OPTION_SENTINEL      { CMD_FNORMAL, "", NULL, { NULL }, NULL }

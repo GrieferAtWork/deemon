@@ -61,7 +61,16 @@ struct dhashalgo {
 		dhashfunc16_t  ha_hash16; /* [1..1] */
 		dhashfunc32_t  ha_hash32; /* [1..1] */
 		dhashfunc64_t  ha_hash64; /* [1..1] */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define ha_hashn  _dee_aunion.ha_hashn
+#define ha_hash8  _dee_aunion.ha_hash8
+#define ha_hash16 _dee_aunion.ha_hash16
+#define ha_hash32 _dee_aunion.ha_hash32
+#define ha_hash64 _dee_aunion.ha_hash64
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 #define DHASHALGO_MEMBERS(T)                                                                         \

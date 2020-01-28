@@ -238,7 +238,13 @@ struct Dee_module_symbol {
 			                               * NOTE: Must be at the same offset as `ss_index' */
 			uint16_t           ss_impid;  /* [< :mo_importc] The index of the referenced module in the import vector. */
 		}                      ss_extern; /* [valid_if(MODSYM_FEXTERN)] External symbol reference. */
-	};
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion
+#define ss_index  _dee_aunion.ss_index
+#define ss_extern _dee_aunion.ss_extern
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 #define Dee_MODULE_SYMBOL_EQUALS(x, name, size)                \
