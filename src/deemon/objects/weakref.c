@@ -304,6 +304,11 @@ ob_weakref_lock(WeakRef *self, size_t argc, DeeObject **argv) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ob_weakref_alive(WeakRef *__restrict self) {
+	return_bool(Dee_weakref_bound(&self->wr_ref));
+}
+
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject **argv) {
@@ -319,22 +324,12 @@ ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject **argv) {
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ob_weakref_alive(WeakRef *self, size_t argc, DeeObject **argv) {
-	if (DeeArg_Unpack(argc, argv, ":alive"))
-		return NULL;
-	return_bool(Dee_weakref_bound(&self->wr_ref));
-}
-
 PRIVATE struct type_method ob_weakref_methods[] = {
 	{ "lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_lock,
 	  DOC("->\n"
 	      "(def)->\n"
 	      "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
 	      "Lock the weak reference and return the pointed-to object") },
-	{ "alive", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_alive,
-	  DOC("->?Dbool\n"
-	      "Alias for #op:bool") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_try_lock,
 	  DOC("()\n"
@@ -352,6 +347,10 @@ PRIVATE struct type_getset ob_weakref_getsets[] = {
 	  DOC("@throw ReferenceError Attempted to get the value after the reference has been unbound\n"
 	      "@throw ValueError Attempted to set an object that does not support weak referencing\n"
 	      "Access to the referenced object") },
+	{ "alive",
+	  (DREF DeeObject *(DCALL *)(DeeObject *))&ob_weakref_alive, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Alias for #op:bool") },
 	{ NULL }
 };
 
