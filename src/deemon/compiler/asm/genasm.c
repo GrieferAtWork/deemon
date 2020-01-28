@@ -377,19 +377,20 @@ err_items:
 			goto err;
 #endif
 		}
-	} else if (print_expression->a_type == AST_CONSTEXPR &&
-	           asm_allowconst(print_expression->a_constexpr)) {
-		/* Special instructions exist for direct printing of constants. */
-		int32_t const_cid;
+	} else if (print_expression->a_type == AST_CONSTEXPR) {
 		/* Special case: Print what essentially boils down to being an empty string. */
 		if (constexpr_is_empty_string(print_expression->a_constexpr))
 			goto empty_operand;
-		const_cid = asm_newconst(print_expression->a_constexpr);
-		if unlikely(const_cid < 0)
-			goto err;
-		if (asm_putddi(ddi_ast))
-			goto err;
-		return asm_put816(ASM_PRINT_C + mode, (uint16_t)const_cid);
+		/* Special instructions exist for direct printing of constants. */
+		if (asm_allowconst(print_expression->a_constexpr)) {
+			int32_t const_cid;
+			const_cid = asm_newconst(print_expression->a_constexpr);
+			if unlikely(const_cid < 0)
+				goto err;
+			if (asm_putddi(ddi_ast))
+				goto err;
+			return asm_put816(ASM_PRINT_C + mode, (uint16_t)const_cid);
+		}
 	}
 fallback:
 	/* Fallback: Compile the print expression, then print it as an expanded sequence. */
@@ -414,7 +415,11 @@ fallback:
 		if (!cnt)
 			goto empty_operand; /* Special case: `print()'; */
 		for (i = 0; i < cnt; ++i) {
-			if (ast_genprint(mode & ~(PRINT_MODE_SP | PRINT_MODE_NL),
+			instruction_t elem_mode;
+			elem_mode = mode;
+			if (i != cnt - 1)
+				elem_mode &= ~(PRINT_MODE_SP | PRINT_MODE_NL);
+			if (ast_genprint(elem_mode,
 			                 print_expression->a_multiple.m_astv[i],
 			                 ddi_ast))
 				goto err;
