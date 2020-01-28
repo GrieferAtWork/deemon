@@ -694,19 +694,6 @@ do_the_visit:
 		return;
 	}
 
-#ifdef CONFIG_GC_TRACK_LEAFS
-	/* Optional: Check if this is a leaf object */
-	perturb = i = VL_HASHOF(&data->vd_leafs, self);
-	for (;; i = VL_HASHNX(i, perturb), VL_HASHPT(perturb)) {
-		struct gc_leaf *leaf;
-		leaf = &data->vd_leafs.gl_vec[i & data->vd_leafs.gl_msk];
-		if (!leaf->gl_obj)
-			break;
-		if (leaf->gl_obj == self)
-			return; /* Skip known leafs */
-	}
-#endif /* CONFIG_GC_TRACK_LEAFS */
-
 	/* Step #2: If not a confirmed dependency, check if the
 	 *          object is already an unconfirmed dependency.
 	 *          If it is, it is apart of a reference loop
@@ -793,6 +780,19 @@ found_chain_link:
 		ASSERT(data->vd_chain == link);
 		return; /* We're already searching this one! */
 	}
+
+#ifdef CONFIG_GC_TRACK_LEAFS
+	/* Optional: Check if this is a leaf object */
+	perturb = i = VL_HASHOF(&data->vd_leafs, self);
+	for (;; i = VL_HASHNX(i, perturb), VL_HASHPT(perturb)) {
+		struct gc_leaf *leaf;
+		leaf = &data->vd_leafs.gl_vec[i & data->vd_leafs.gl_msk];
+		if (!leaf->gl_obj)
+			break;
+		if (leaf->gl_obj == self)
+			return; /* Skip known leafs */
+	}
+#endif /* CONFIG_GC_TRACK_LEAFS */
 
 	/* Step #3: Create a stack-allocated dependency entry for the
 	 *          object and update visit_data to take it into
