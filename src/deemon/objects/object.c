@@ -760,8 +760,9 @@ PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref *__res
 			return false;
 		}
 		WEAKREF_UNLOCK(self);
+		return true;
 	}
-	return true;
+	return false;
 }
 
 /* Do an atomic compare-exchange operation on the weak reference

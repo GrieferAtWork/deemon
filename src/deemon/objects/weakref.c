@@ -323,7 +323,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ob_weakref_alive(WeakRef *self, size_t argc, DeeObject **argv) {
 	if (DeeArg_Unpack(argc, argv, ":alive"))
 		return NULL;
-	return_bool(ob_weakref_bool(self));
+	return_bool(Dee_weakref_bound(&self->wr_ref));
 }
 
 PRIVATE struct type_method ob_weakref_methods[] = {
