@@ -1545,6 +1545,28 @@ tuple_visit(Tuple *__restrict self,
 		Dee_Visit(DeeTuple_GET(self, i));
 }
 
+/* Print all bytes from `self' encoded as UTF-8.
+ * In other words, bytes that are non-ASCII (aka. 80-FF) are
+ * encoded as 2-byte UTF-8 sequences (aka: as LATIN-1), allowing
+ * them to be properly interpreted by the given `printer' */
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeTuple_Print(DeeObject *__restrict self,
+               Dee_formatprinter_t printer, void *arg) {
+	size_t i;
+	dssize_t temp, result = 0;
+	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+		DeeObject *elem;
+		elem = DeeTuple_GET(self, i);
+		temp = DeeObject_Print(elem, printer, arg);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	return result;
+err:
+	return temp;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_str(Tuple *__restrict self) {
 	/* Special case to facilitate function-like use of `print':

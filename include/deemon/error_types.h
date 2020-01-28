@@ -93,6 +93,16 @@ DDATDEF DeeSignalObject DeeError_StopIteration_instance;
 DDATDEF DeeSignalObject DeeError_Interrupt_instance;
 #endif /* GUARD_DEEMON_OBJECTS_ERROR_TYPES_C */
 
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeCompilerError_Print(DeeObject *__restrict self,
+                       Dee_formatprinter_t printer, void *arg);
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeCompilerError_Print(self, printer, arg) \
+	DeeObject_Print(self, printer, arg)
+#endif /* !CONFIG_BUILDING_DEEMON */
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_ERROR_TYPES_H */

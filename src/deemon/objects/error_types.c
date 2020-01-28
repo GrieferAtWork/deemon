@@ -439,13 +439,12 @@ comerr_visit(DeeCompilerErrorObject *__restrict self,
 	}
 }
 
-INTDEF dssize_t DCALL
-comerr_print(DeeCompilerErrorObject *__restrict self,
-             dformatprinter printer, void *arg);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 comerr_str(DeeCompilerErrorObject *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	if unlikely(comerr_print(self, &unicode_printer_print, &printer) < 0)
+	if unlikely(DeeCompilerError_Print((DeeObject *)self,
+	                                   &unicode_printer_print,
+	                                   &printer) < 0)
 		goto err;
 	return unicode_printer_pack(&printer);
 err:

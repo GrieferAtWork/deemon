@@ -1225,19 +1225,20 @@ DeeList_Clear(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-list_printrepr(List *__restrict self,
-               dformatprinter printer, void *arg) {
+DeeList_PrintRepr(DeeObject *__restrict self,
+                  dformatprinter printer, void *arg) {
 	size_t i;
 	dssize_t temp, result = 0;
+	List *me = (List *)self;
 	temp = (*printer)(arg, "[", 1);
 	if unlikely(temp < 0)
 		goto err;
 	result += temp;
-	DeeList_LockRead(self);
-	for (i = 0; i < self->l_size; ++i) {
-		DREF DeeObject *elem = self->l_elem[i];
+	DeeList_LockRead(me);
+	for (i = 0; i < me->l_size; ++i) {
+		DREF DeeObject *elem = me->l_elem[i];
 		Dee_Incref(elem);
-		DeeList_LockEndRead(self);
+		DeeList_LockEndRead(me);
 		/* Print this item. */
 		if (i) {
 			temp = (*printer)(arg, ", ", 2);
@@ -1250,9 +1251,9 @@ list_printrepr(List *__restrict self,
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
-		DeeList_LockRead(self);
+		DeeList_LockRead(me);
 	}
-	DeeList_LockEndRead(self);
+	DeeList_LockEndRead(me);
 	temp = (*printer)(arg, "]", 1);
 	if unlikely(temp < 0)
 		goto err;
@@ -1263,12 +1264,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_repr(List *__restrict self) {
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	if unlikely(list_printrepr(self, &unicode_printer_print, &p) < 0)
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	if unlikely(DeeList_PrintRepr((DeeObject *)self,
+	                              &unicode_printer_print,
+	                              &printer) < 0)
 		goto err;
-	return unicode_printer_pack(&p);
+	return unicode_printer_pack(&printer);
 err:
-	unicode_printer_fini(&p);
+	unicode_printer_fini(&printer);
 	return NULL;
 }
 

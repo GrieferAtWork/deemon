@@ -163,6 +163,17 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeTuple_Append(/*inherit(on_success)*/ DREF DeeObject *__restrict self,
                 DeeObject *__restrict item);
 
+#ifdef CONFIG_BUILDING_DEEMON
+/* Print all elements of the given tuple without any separators in-between
+ * elements. This is equivalent to `Tuple.operator str' and is realted to
+ * the change introduced for handling `print("foo", "bar");'-like statements */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeTuple_Print(DeeObject *__restrict self,
+               Dee_formatprinter_t printer, void *arg);
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeTuple_Print(self, printer, arg) \
+	DeeObject_Print(self, printer, arg)
+#endif /* !CONFIG_BUILDING_DEEMON */
 
 
 DECL_END

@@ -4528,26 +4528,28 @@ err:
 	return -1;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-comerr_print(DeeCompilerErrorObject *__restrict self,
-             dformatprinter printer, void *arg);
-
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_Print(DeeObject *__restrict self,
                 dformatprinter printer, void *arg) {
 	DREF DeeObject *ob_str;
 	dssize_t result;
-	if (DeeInt_Check(self))
-		return DeeInt_Print(self, DEEINT_PRINT_DEC, printer, arg);
-	if (DeeString_Check(self))
+	DeeTypeObject *typ;
+	typ = Dee_TYPE(self);
+	if (typ == &DeeString_Type)
 		return DeeString_PrintUtf8(self, printer, arg);
-	if (DeeBytes_Check(self))
+	if (typ == &DeeInt_Type)
+		return DeeInt_Print(self, DEEINT_PRINT_DEC, printer, arg);
+	if (typ == &DeeTuple_Type)
+		return DeeTuple_Print(self, printer, arg);
+	if (typ == &DeeBytes_Type)
 		return DeeBytes_PrintUtf8(self, printer, arg);
-	if (Dee_TYPE(self) == &DeeError_CompilerError ||
-	    Dee_TYPE(self) == &DeeError_SyntaxError ||
-	    Dee_TYPE(self) == &DeeError_SymbolError)
-		return comerr_print((DeeCompilerErrorObject *)self, printer, arg);
-	/* Fallback: print the object __str__ operator result. */
+	if (typ == &DeeFloat_Type)
+		return DeeFormat_Printf(printer, arg, "%f", DeeFloat_VALUE(self));
+	if (typ == &DeeError_CompilerError ||
+	    typ == &DeeError_SyntaxError ||
+	    typ == &DeeError_SymbolError)
+		return DeeCompilerError_Print(self, printer, arg);
+	/* Fallback: print the object's __str__ operator result. */
 	ob_str = DeeObject_Str(self);
 	if unlikely(!ob_str)
 		goto err;
@@ -4558,28 +4560,27 @@ err:
 	return -1;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-bytes_print_repr(DeeObject *__restrict self,
-                 dformatprinter printer, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL
-list_printrepr(DeeListObject *__restrict self,
-               dformatprinter printer, void *arg);
-
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_PrintRepr(DeeObject *__restrict self,
                     dformatprinter printer, void *arg) {
 	DREF DeeObject *ob_repr;
 	dssize_t result;
-	if (DeeInt_Check(self))
-		return DeeInt_Print(self, DEEINT_PRINT_DEC, printer, arg);
-	if (DeeString_Check(self))
+	DeeTypeObject *typ;
+	typ = Dee_TYPE(self);
+	if (typ == &DeeString_Type)
 		return DeeString_PrintRepr(self, printer, arg, FORMAT_QUOTE_FNORMAL);
-	if (DeeBytes_Check(self))
-		return bytes_print_repr(self, printer, arg);
-	if (Dee_TYPE(self) == &DeeError_CompilerError)
-		return comerr_print((DeeCompilerErrorObject *)self, printer, arg);
-	if (Dee_TYPE(self) == &DeeList_Type)
-		return list_printrepr((DeeListObject *)self, printer, arg);
+	if (typ == &DeeInt_Type)
+		return DeeInt_Print(self, DEEINT_PRINT_DEC, printer, arg);
+	if (typ == &DeeBytes_Type)
+		return DeeBytes_PrintRepr(self, printer, arg);
+	if (typ == &DeeFloat_Type)
+		return DeeFormat_Printf(printer, arg, "%f", DeeFloat_VALUE(self));
+	if (typ == &DeeList_Type)
+		return DeeList_PrintRepr(self, printer, arg);
+	if (typ == &DeeError_CompilerError ||
+	    typ == &DeeError_SyntaxError ||
+	    typ == &DeeError_SymbolError)
+		return DeeCompilerError_Print(self, printer, arg);
 
 	/* Fallback: print the object __repr__ operator result. */
 	ob_repr = DeeObject_Repr(self);

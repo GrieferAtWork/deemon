@@ -153,6 +153,15 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_InsertIterator(DeeObject *self
 DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_InsertSequence(DeeObject *self, size_t index, DeeObject *sequence);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_InsertVector(DeeObject *self, size_t index, size_t objc, DeeObject *const *objv);
 
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeList_PrintRepr(DeeObject *__restrict self,
+                  Dee_formatprinter_t printer, void *arg);
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeList_PrintRepr(self, printer, arg) \
+	DeeObject_PrintRepr(self, printer, arg)
+#endif /* !CONFIG_BUILDING_DEEMON */
+
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

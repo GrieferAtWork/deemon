@@ -177,7 +177,15 @@ DeeBytes_FromSequence(DeeObject *__restrict seq);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeBytes_PrintUtf8(DeeObject *__restrict self,
                    Dee_formatprinter_t printer, void *arg);
-#endif /* CONFIG_BUILDING_DEEMON */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+DeeBytes_PrintRepr(DeeObject *__restrict self,
+                   Dee_formatprinter_t printer, void *arg);
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeBytes_PrintUtf8(self, printer, arg) \
+	DeeObject_Print(self, printer, arg)
+#define DeeBytes_PrintRepr(self, printer, arg) \
+	DeeObject_PrintRepr(self, printer, arg)
+#endif /* !CONFIG_BUILDING_DEEMON */
 
 /* Unpack the given sequence `seq' into `num_bytes', invoking the
  * `operator int' on each, converting their values into bytes, before

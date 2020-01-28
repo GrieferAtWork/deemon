@@ -726,6 +726,54 @@ err_readonly:
 }
 
 
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeBytes_PrintUtf8(DeeObject *__restrict self,
+                   dformatprinter printer, void *arg) {
+	dssize_t temp, result = 0;
+	uint8_t *iter, *end, *flush_start;
+	/* Optimizations for special printer targets. */
+	if (printer == &bytes_printer_print)
+		return bytes_printer_append((struct bytes_printer *)arg, DeeBytes_DATA(self), DeeBytes_SIZE(self));
+	if (printer == &unicode_printer_print)
+		return unicode_printer_print8((struct unicode_printer *)arg, DeeBytes_DATA(self), DeeBytes_SIZE(self));
+
+	end = (iter = flush_start = DeeBytes_DATA(self)) + DeeBytes_SIZE(self);
+	while (iter < end) {
+		uint8_t escape_buf[2];
+		uint8_t ch = *iter++;
+		if (ch < 0x80)
+			continue;
+		if (flush_start < iter - 1) {
+			temp = (*printer)(arg,
+			                  (char const *)flush_start,
+			                  (size_t)((iter - 1) - flush_start));
+			if unlikely(temp < 0)
+				goto err;
+			result += temp;
+		}
+		escape_buf[0] = 0xc0 | ((ch & 0xc0) >> 6);
+		escape_buf[1] = 0x80 | (ch & 0x3f);
+		temp = (*printer)(arg, (char const *)escape_buf, 2);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		flush_start = iter;
+	}
+	if (flush_start < end) {
+		temp = (*printer)(arg,
+		                  (char const *)flush_start,
+		                  (size_t)(end - flush_start));
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	return result;
+err:
+	return temp;
+}
+
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_str(Bytes *__restrict self) {
 	return DeeString_NewSized((char *)DeeBytes_DATA(self),
@@ -733,12 +781,16 @@ bytes_str(Bytes *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-bytes_print_repr(Bytes *__restrict self, dformatprinter printer, void *arg) {
+DeeBytes_PrintRepr(DeeObject *__restrict self,
+                   dformatprinter printer,
+                   void *arg) {
 	dssize_t temp, result;
+	Bytes *me;
+	me = (Bytes *)self;
 #if 1
 	temp = DeeFormat_Quote8(printer, arg,
-	                        DeeBytes_DATA(self),
-	                        DeeBytes_SIZE(self),
+	                        DeeBytes_DATA(me),
+	                        DeeBytes_SIZE(me),
 	                        FORMAT_QUOTE_FNORMAL);
 	if unlikely(temp < 0)
 		goto err;
@@ -750,8 +802,8 @@ bytes_print_repr(Bytes *__restrict self, dformatprinter printer, void *arg) {
 		goto err;
 	result = temp;
 	temp = DeeFormat_Quote8(printer, arg,
-	                        DeeBytes_DATA(self),
-	                        DeeBytes_SIZE(self),
+	                        DeeBytes_DATA(me),
+	                        DeeBytes_SIZE(me),
 	                        FORMAT_QUOTE_FNORMAL);
 	if unlikely(temp < 0)
 		goto err;
@@ -768,9 +820,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_repr(Bytes *__restrict self) {
 	struct ascii_printer printer = ASCII_PRINTER_INIT;
-	if unlikely(bytes_print_repr(self,
-	                             &ascii_printer_print,
-	                             &printer) < 0)
+	if unlikely(DeeBytes_PrintRepr((DeeObject *)self,
+	                               &ascii_printer_print,
+	                               &printer) < 0)
 		goto err;
 	return ascii_printer_pack(&printer);
 err:
@@ -1097,54 +1149,6 @@ err:
 	bytes_printer_fini(&printer);
 	return NULL;
 }
-
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeBytes_PrintUtf8(DeeObject *__restrict self,
-                   dformatprinter printer, void *arg) {
-	dssize_t temp, result = 0;
-	uint8_t *iter, *end, *flush_start;
-	/* Optimizations for special printer targets. */
-	if (printer == &bytes_printer_print)
-		return bytes_printer_append((struct bytes_printer *)arg, DeeBytes_DATA(self), DeeBytes_SIZE(self));
-	if (printer == &unicode_printer_print)
-		return unicode_printer_print8((struct unicode_printer *)arg, DeeBytes_DATA(self), DeeBytes_SIZE(self));
-
-	end = (iter = flush_start = DeeBytes_DATA(self)) + DeeBytes_SIZE(self);
-	while (iter < end) {
-		uint8_t escape_buf[2];
-		uint8_t ch = *iter++;
-		if (ch < 0x80)
-			continue;
-		if (flush_start < iter - 1) {
-			temp = (*printer)(arg,
-			                  (char const *)flush_start,
-			                  (size_t)((iter - 1) - flush_start));
-			if unlikely(temp < 0)
-				goto err;
-			result += temp;
-		}
-		escape_buf[0] = 0xc0 | ((ch & 0xc0) >> 6);
-		escape_buf[1] = 0x80 | (ch & 0x3f);
-		temp = (*printer)(arg, (char const *)escape_buf, 2);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-		flush_start = iter;
-	}
-	if (flush_start < end) {
-		temp = (*printer)(arg,
-		                  (char const *)flush_start,
-		                  (size_t)(end - flush_start));
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-	}
-	return result;
-err:
-	return temp;
-}
-
-
 
 PRIVATE struct type_math bytes_math = {
 	/* .tp_int32  = */ NULL,

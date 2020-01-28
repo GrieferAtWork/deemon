@@ -401,9 +401,9 @@ get_warning_error_class(int wnum) {
 	return &DeeError_CompilerError;
 }
 
-INTERN dssize_t DCALL
-comerr_print(DeeCompilerErrorObject *__restrict self,
-             dformatprinter printer, void *arg) {
+INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
+DeeCompilerError_Print(DeeObject *__restrict self,
+                       dformatprinter printer, void *arg) {
 #if defined(_MSC_VER) && 0
 #define LOG_PREFIX "../"
 #else /* _MSC_VER */
@@ -428,11 +428,15 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 			goto err;                                               \
 		result += temp;                                             \
 	} __WHILE0
+	DeeCompilerErrorObject *me;
 	dssize_t temp, result = 0;
-	size_t i, count       = self->ce_errorc;
-	struct compiler_error_loc *main_loc = self->ce_loc;
+	size_t i, count;
+	struct compiler_error_loc *main_loc;
 	struct compiler_error_loc *iter;
 	char const *file_and_line;
+	me = (DeeCompilerErrorObject *)self;
+	count         = me->ce_errorc;
+	main_loc      = me->ce_loc;
 	file_and_line = TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
 	                ? LOG_PREFIX "%s(%d,%d) : "
 	                : LOG_PREFIX "%s:%d:%d: ";
@@ -444,10 +448,10 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 	}
 	/* Print information about the warning number. */
 	printf("%c%.4d(",
-	       (self->ce_mode == Dee_COMPILER_ERROR_FATALITY_WARNING) ? 'W' : 'E',
-	       self->ce_wnum);
+	       (me->ce_mode == Dee_COMPILER_ERROR_FATALITY_WARNING) ? 'W' : 'E',
+	       me->ce_wnum);
 	{
-		unsigned int wid = wnum2id(self->ce_wnum);
+		unsigned int wid = wnum2id(me->ce_wnum);
 		if (wid_isvalid(wid)) {
 			wgroup_t const *wgroups;
 			wgroups = w_associated_groups[wid - WG_COUNT];
@@ -463,10 +467,10 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 		}
 		PRINT("): ");
 	}
-	if likely(self->e_message)
-		printob((DeeObject *)self->e_message);
+	if likely(me->e_message)
+		printob((DeeObject *)me->e_message);
 	if (main_loc) {
-		for (iter                   = &self->ce_locs;
+		for (iter                   = &me->ce_locs;
 		     iter != main_loc; iter = iter->cl_prev) {
 			if (!iter->cl_file)
 				continue;
@@ -492,13 +496,13 @@ comerr_print(DeeCompilerErrorObject *__restrict self,
 		}
 	}
 	for (i = 0; i < count; ++i) {
-		if (self->ce_errorv[i] == self)
+		if (me->ce_errorv[i] == me)
 			continue;
 		temp = (*printer)(arg, "\n", 1);
 		if unlikely(temp < 0)
 			goto err;
 		result += temp;
-		temp = DeeObject_Print((DeeObject *)self->ce_errorv[i],
+		temp = DeeObject_Print((DeeObject *)me->ce_errorv[i],
 		                       printer, arg);
 		if unlikely(temp < 0)
 			goto err;
