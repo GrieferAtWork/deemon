@@ -356,7 +356,13 @@ err_items:
 	} else if (print_expression->a_type == AST_CONSTEXPR &&
 	           asm_allowconst(print_expression->a_constexpr)) {
 		/* Special instructions exist for direct printing of constants. */
-		int32_t const_cid = asm_newconst(print_expression->a_constexpr);
+		int32_t const_cid;
+		/* Special case: Print what essentially boils down to being an empty string. */
+		if ((DeeString_Check(print_expression->a_constexpr) && DeeString_IsEmpty(print_expression->a_constexpr)) ||
+		    (DeeBytes_Check(print_expression->a_constexpr) && DeeBytes_IsEmpty(print_expression->a_constexpr)) ||
+		    print_expression->a_constexpr == Dee_EmptyTuple)
+			goto empty_operand;
+		const_cid = asm_newconst(print_expression->a_constexpr);
 		if unlikely(const_cid < 0)
 			goto err;
 		if (asm_putddi(ddi_ast))
@@ -372,6 +378,30 @@ fallback:
 			goto err;
 		if (asm_put(ASM_PRINTALL + mode))
 			goto err;
+	} else if (print_expression->a_type == AST_MULTIPLE &&
+	           print_expression->a_flag == AST_FMULTIPLE_TUPLE) {
+		/* Printing a Tuple expression is the same as printing
+		 * each if its elements without any separators.
+		 * >> print("foo", "bar", 42); // Prints "foobar42\n"
+		 * >> print "foo", "bar", 42;  // Prints "foo bar 42\n"
+		 * Instead of generating a Tuple object here, we can
+		 * instead directly go through the tuple elements and
+		 * print them individually. */
+		size_t i, cnt;
+		cnt = print_expression->a_multiple.m_astc;
+		if (!cnt)
+			goto empty_operand; /* Special case: `print()'; */
+		for (i = 0; i < cnt; ++i) {
+			if (ast_genprint(mode & ~(PRINT_MODE_SP | PRINT_MODE_NL),
+			                 print_expression->a_multiple.m_astv[i],
+			                 ddi_ast))
+				goto err;
+		}
+		return 0;
+	} else if (print_expression->a_type == AST_OPERATOR &&
+	           print_expression->a_flag == OPERATOR_STR) {
+		/* `print str(x);' is the same as `print x;'. */
+		return ast_genprint(mode, print_expression->a_operator.o_op0, ddi_ast);
 	} else {
 		if (ast_genasm(print_expression, ASM_G_FPUSHRES))
 			goto err;
