@@ -166,7 +166,7 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 PRIVATE int DCALL
 stat_ctor(DeeObject *__restrict UNUSED(self),
           size_t UNUSED(argc),
-          DeeObject **UNUSED(argv)) {
+          DeeObject *const *UNUSED(argv)) {
 	return fs_unsupported();
 }
 
@@ -200,7 +200,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                \
 	funnam(DeeObject *UNUSED(self),                      \
-	       size_t argc, DeeObject **argv) {              \
+	       size_t argc, DeeObject *const *argv) {              \
 		DeeObject *path;                                 \
 		if (DeeArg_Unpack(argc, argv, "o:" name, &path)) \
 			return NULL;                                 \

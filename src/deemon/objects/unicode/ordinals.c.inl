@@ -105,7 +105,7 @@ stringordinalsiter_copy(StringOrdinalsIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
-                        size_t argc, DeeObject **argv) {
+                        size_t argc, DeeObject *const *argv) {
 	StringOrdinals *ords;
 	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinalsIterator", &ords) ||
 	    DeeObject_AssertTypeExact((DeeObject *)ords, &StringOrdinals_Type))

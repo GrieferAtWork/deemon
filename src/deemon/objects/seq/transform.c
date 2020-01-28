@@ -180,7 +180,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 transiter_init(TransformationIterator *__restrict self,
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	Transformation *trans;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqTransformationIterator", &trans))
 		goto err;
@@ -424,7 +424,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 trans_init(Transformation *__restrict self,
-           size_t argc, DeeObject **argv) {
+           size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_SeqTransformation", &self->t_seq, &self->t_fun))
 		goto err;
 	Dee_Incref(self->t_seq);

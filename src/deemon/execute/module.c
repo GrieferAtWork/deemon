@@ -1401,7 +1401,7 @@ PRIVATE struct type_getset module_class_getsets[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 module_class_open(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	/* This is pretty much the same as the builtin `import()' function.
 	 * The only reason it exist is to be a deprecated alias for backwards
 	 * compatibility with the old deemon. */

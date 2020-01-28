@@ -122,7 +122,7 @@ next_opt:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 libdisasm_public_printcode_f(size_t argc,
-                             DeeObject **argv,
+                             DeeObject *const *argv,
                              DeeObject *kw) {
 	DeeObject *fp = NULL;
 	DeeCodeObject *code;

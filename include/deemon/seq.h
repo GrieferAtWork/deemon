@@ -738,9 +738,11 @@ DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
  * from the given vector once `DeeSharedVector_Decref()' is called.
  * NOTE: This function implicitly inherits a reference to each item
  *       of the given vector, though does not actually inherit the
- *       vector itself! */
+ *       vector itself!
+ * NOTE: The returned object cannot be used to change out the elements
+ *       of the given `vector', meaning that _it_ can still be [const] */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeSharedVector_NewShared(size_t length, DREF DeeObject **vector);
+DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector);
 
 /* Check if the reference counter of `self' is 1. When it is,
  * simply destroy the shared vector without freeing `sv_vector',

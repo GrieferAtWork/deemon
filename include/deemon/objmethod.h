@@ -57,8 +57,8 @@ typedef struct Dee_clsmember_object DeeClsMemberObject;
 typedef struct Dee_cmethod_object DeeCMethodObject;
 typedef struct Dee_kwcmethod_object DeeKwCMethodObject;
 
-typedef WUNUSED DREF DeeObject *(DCALL *Dee_cmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/DeeObject **argv);
-typedef WUNUSED DREF DeeObject *(DCALL *Dee_kwcmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/DeeObject **argv, DeeObject *kw);
+typedef WUNUSED DREF DeeObject *(DCALL *Dee_cmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/DeeObject *const *argv);
+typedef WUNUSED DREF DeeObject *(DCALL *Dee_kwcmethod_t)(size_t argc, /*nonnull_if(argc != 0)*/DeeObject *const *argv, DeeObject *kw);
 
 #ifdef DEE_SOURCE
 typedef Dee_cmethod_t   dcmethod_t;
@@ -246,10 +246,10 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define DeeObjMethod_CallFunc(fun, self, argc, argv)       DeeObjMethod_CallFunc_d(fun, self, argc, argv)
 #define DeeKwCMethod_CallFunc(fun, argc, argv, kw)         DeeKwCMethod_CallFunc_d(fun, argc, argv, kw)
 #define DeeKwObjMethod_CallFunc(fun, self, argc, argv, kw) DeeKwObjMethod_CallFunc_d(fun, self, argc, argv, kw)
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_CallFunc_d(Dee_cmethod_t fun, size_t argc, DeeObject **argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObjMethod_CallFunc_d(Dee_objmethod_t fun, DeeObject *self, size_t argc, DeeObject **argv);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(Dee_kwcmethod_t fun, size_t argc, DeeObject **argv, DeeObject *kw);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(Dee_kwobjmethod_t fun, DeeObject *self, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_CallFunc_d(Dee_cmethod_t fun, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObjMethod_CallFunc_d(Dee_objmethod_t fun, DeeObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_CallFunc_d(Dee_kwcmethod_t fun, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwObjMethod_CallFunc_d(Dee_kwobjmethod_t fun, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #endif /* !NDEBUG */
 #endif /* CONFIG_BUILDING_DEEMON */
 

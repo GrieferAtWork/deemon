@@ -106,7 +106,7 @@ bytesiter_copy(BytesIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bytesiter_init(BytesIterator *__restrict self,
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	Bytes *bytes;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesIterator", &bytes) ||
 	    DeeObject_AssertTypeExact((DeeObject *)bytes, &DeeBytes_Type))
@@ -595,7 +595,7 @@ bytes_copy(Bytes *__restrict other) {
 }
 
 PRIVATE WUNUSED DREF Bytes *DCALL
-bytes_init(size_t argc, DeeObject **argv) {
+bytes_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	unsigned int flags = Dee_BUFFER_FREADONLY;
 	size_t start = 0, end = (size_t)-1;
@@ -1119,12 +1119,12 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 DeeString_CFormat(dformatprinter printer,
                   dformatprinter format_printer, void *arg,
                   /*utf-8*/ char const *__restrict format, size_t format_len,
-                  size_t argc, DeeObject **argv);
+                  size_t argc, DeeObject *const *argv);
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_mod(Bytes *self, DeeObject *args) {
 	struct bytes_printer printer = BYTES_PRINTER_INIT;
-	DeeObject **argv;
+	DeeObject *const *argv;
 	size_t argc;
 	/* C-style string formating */
 	if (DeeTuple_Check(args)) {
@@ -1530,7 +1530,7 @@ INTDEF struct type_method bytes_methods[];
 
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_fromseq(DeeTypeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:fromseq", &seq))
 		goto err;
@@ -1541,7 +1541,7 @@ err:
 
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	DeeObject *hex_str;
 	DREF Bytes *result;
 	uint8_t *dst;
@@ -1740,7 +1740,7 @@ err:
 
 
 PRIVATE struct type_method bytes_class_methods[] = {
-	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&bytes_fromseq,
+	{ "fromseq", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fromseq,
 	  DOC("(seq:?S?Dint)->?.\n"
 	      "@throw NotImplemented The given @seq cannot be iterated, or contains at "
 	      "least one item that cannot be converted into an integer\n"
@@ -1749,7 +1749,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
 	      "Convert the items of the given sequence @seq into integers, "
 	      "and construct a writable Bytes object from their values\n"
 	      "Passing :none for @seq will return an empty Bytes object") },
-	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&bytes_fromhex,
+	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fromhex,
 	  DOC("(hex_string:?Dstring)->?.\n"
 	      "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
 	      "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"

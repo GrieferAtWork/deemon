@@ -127,7 +127,7 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sema_init(Semaphore *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	LONG init_value = 0;
 	if (DeeArg_Unpack(argc, argv, "|I32u:semaphore", &init_value))
 		goto err;
@@ -159,7 +159,7 @@ PRIVATE ATTR_COLD int DCALL err_post_failed(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_post(Semaphore *self, size_t argc,
-          DeeObject **argv) {
+          DeeObject *const *argv) {
 	LONG count = 1;
 	if (DeeArg_Unpack(argc, argv, "|I32u:post", &count))
 		goto err;
@@ -177,7 +177,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_wait(Semaphore *self, size_t argc,
-          DeeObject **argv) {
+          DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":wait") ||
 	    nt_WaitForSemaphore(self->sem_handle, (uint64_t)-1))
 		return NULL;
@@ -186,7 +186,7 @@ sema_wait(Semaphore *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_trywait(Semaphore *self, size_t argc,
-             DeeObject **argv) {
+             DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":trywait"))
 		goto err;
@@ -200,7 +200,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_timedwait(Semaphore *self, size_t argc,
-               DeeObject **argv) {
+               DeeObject *const *argv) {
 	int error;
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:timedwait", &timeout))
@@ -215,7 +215,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sema_fileno(Semaphore *self, size_t argc,
-            DeeObject **argv) {
+            DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
 	return DeeInt_NewUIntptr((uintptr_t)self->sem_handle);
@@ -224,29 +224,29 @@ sema_fileno(Semaphore *self, size_t argc,
 
 PRIVATE struct type_method sema_methods[] = {
 	{ "post",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sema_post,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_post,
 	  DOC("(count=!1)\n"
 	      "Post @count tickets to the semaphore") },
 	{ "wait",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sema_wait,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_wait,
 	  DOC("()\n"
 	      "Wait for the semaphore to become ready and acquire a ticket") },
 	{ "trywait",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sema_trywait,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_trywait,
 	  DOC("->?Dbool\n"
 	      "@interrupt\n"
 	      "@return true: A ticket was acquired\n"
 	      "@return false: No ticket was available\n"
 	      "Check if unused tickets are available and acquire one") },
 	{ "timedwait",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sema_timedwait,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_timedwait,
 	  DOC("(timeout_microseconds:?Dint)->?Dbool\n"
 	      "@interrupt\n"
 	      "@return true: A ticket was acquired\n"
 	      "@return false: The given @timeout_microseconds has expired without a ticket becoming available\n"
 	      "Wait for up to @timeout_microseconds for a ticket to become ready and try to acquire it") },
 	{ "fileno",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sema_fileno,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sema_fileno,
 	  DOC("->?Dint\n"
 	      "Non-portable windows extension to retrive the file descriptor number (HANDLE) of the semaphore") },
 	{ NULL }
@@ -433,7 +433,7 @@ PRIVATE struct type_with mutex_with = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mutex_acquire(Mutex *self, size_t argc, DeeObject **argv) {
+mutex_acquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":acquire") ||
 	    mutex_timedenter(self, (uint64_t)-1))
 		return NULL;
@@ -441,7 +441,7 @@ mutex_acquire(Mutex *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mutex_tryacquire(Mutex *self, size_t argc, DeeObject **argv) {
+mutex_tryacquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":tryacquire"))
 		goto err;
@@ -454,7 +454,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mutex_timedacquire(Mutex *self, size_t argc, DeeObject **argv) {
+mutex_timedacquire(Mutex *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:tryacquire", &timeout))
@@ -468,7 +468,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mutex_release(Mutex *self, size_t argc, DeeObject **argv) {
+mutex_release(Mutex *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":release") ||
 	    mutex_leave(self))
 		return NULL;
@@ -476,18 +476,18 @@ mutex_release(Mutex *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE struct type_method mutex_methods[] = {
-	{ "acquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&mutex_acquire,
+	{ "acquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_acquire,
 	  DOC("()\n"
 	      "Wait for the mutex to becomes available and recursive acquires an exclusive lock") },
-	{ "tryacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&mutex_tryacquire,
+	{ "tryacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_tryacquire,
 	  DOC("->?Dbool\n"
 	      "Try to recursive acquire an exclusive lock but fail and "
 	      "return :false if this is not possible without blocking") },
-	{ "timedacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&mutex_timedacquire,
+	{ "timedacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_timedacquire,
 	  DOC("(timeout_microseconds:?Dint)->?Dbool\n"
 	      "Try to recursive acquire an exclusive lock but fail and "
 	      "return :false if the given @timeout_microseconds has passed") },
-	{ "release", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&mutex_release,
+	{ "release", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_release,
 	  DOC("()\n"
 	      "@throw RuntimeError The calling thread has not acquired the mutex\n"
 	      "Recursively release a lock to @this mutex") },

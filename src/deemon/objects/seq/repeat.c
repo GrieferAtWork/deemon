@@ -109,7 +109,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatIterator", &self->ri_rep) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->ri_rep, &SeqRepeat_Type))
 		return -1;
@@ -408,7 +408,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeat_init(Repeat *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqRepeat", &self->r_seq, &self->r_num))
 		return -1;
 	if unlikely(!self->r_num) {
@@ -721,7 +721,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitemiter_init(RepeatItemIterator *__restrict self,
-                    size_t argc, DeeObject **argv) {
+                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqItemRepeatIterator", &self->rii_rep))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->rii_rep, &SeqItemRepeat_Type))
@@ -939,7 +939,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_init(RepeatItem *__restrict self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_SeqItemRepeat", &self->ri_obj, &self->ri_num))
 		goto err;
 	if unlikely(!self->ri_num)

@@ -66,12 +66,12 @@ INTDEF DeeTypeObject RefVectorIterator_Type;
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         sv_lock;   /* Lock for this shared-vector. */
+	rwlock_t               sv_lock;   /* Lock for this shared-vector. */
 #endif /* !CONFIG_NO_THREADS */
-	size_t           sv_length; /* [lock(sv_lock)] The number of items in this vector. */
-	DREF DeeObject **sv_vector; /* [1..1][const][0..sv_length][lock(sv_lock)][owned]
-	                             * The vector of objects that is being referenced.
-	                             * NOTE: Elements of this vector must not be changed. */
+	size_t                 sv_length; /* [lock(sv_lock)] The number of items in this vector. */
+	DREF DeeObject *const *sv_vector; /* [1..1][const][0..sv_length][lock(sv_lock)][owned]
+	                                   * The vector of objects that is being referenced.
+	                                   * NOTE: Elements of this vector must not be changed. */
 } SharedVector;
 
 INTDEF DeeTypeObject SharedVector_Type;

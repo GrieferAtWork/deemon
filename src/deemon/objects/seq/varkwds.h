@@ -138,7 +138,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
-                     DeeObject **argv);
+                     DeeObject *const *argv);
 
 /* Unshare the argument vector from a blacklist-varkwds object, automatically
  * constructing a copy if all contained objects if `self' is being shared,

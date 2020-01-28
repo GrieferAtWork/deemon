@@ -273,7 +273,7 @@ PRIVATE struct type_getset symbol_getsets[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject **argv) {
+symbol_getalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
 	COMPILER_BEGIN(self->ci_compiler);
@@ -298,7 +298,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject **argv) {
+symbol_setalias(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result = NULL;
 	struct symbol *sym;
 	DeeCompilerSymbolObject *other;
@@ -350,7 +350,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject **argv) {
+symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":setnone") ||
 	    symbol_delkind(self))
 		return NULL;
@@ -359,17 +359,17 @@ symbol_setnone(DeeCompilerSymbolObject *self, size_t argc, DeeObject **argv) {
 
 
 PRIVATE struct type_method symbol_methods[] = {
-	{ "getalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&symbol_getalias,
+	{ "getalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&symbol_getalias,
 	  DOC("->?.\n"
 	      "Either re-returns @this symbol, or unwinds it to return "
 	      "the effective symbol that is being aliased by it") },
-	{ "setalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&symbol_setalias,
+	{ "setalias", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&symbol_setalias,
 	  DOC("(other:?.)->?.\n"
 	      "@throw ReferenceError Either @other is the same symbol as @this, or "
 	      "it is another alias eventually leading to @this\n"
 	      "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
 	      "Change @this symbol to be an alias for @other, and re-return @this") },
-	{ "setnone", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&symbol_setnone,
+	{ "setnone", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&symbol_setnone,
 	  DOC("->?.\n"
 	      "@throw TypeError Attempted to modify the typing of an $\"arg\" symbol\n"
 	      "Change @this symbol to a none-symbol") },

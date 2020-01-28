@@ -283,7 +283,7 @@ PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL struct_type_new_empty(void) {
 }
 
 PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
-struct_type_init(size_t argc, DeeObject **argv) {
+struct_type_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *fields_or_name, *fields = NULL;
 	unsigned int flags = STRUCT_TYPE_FNORMAL; /* TODO */
 	if (DeeArg_Unpack(argc, argv, "o|o:struct_type", &fields_or_name, &fields))
@@ -318,7 +318,7 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject **argv) {
+struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
 	dhash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:offsetof", &name))
@@ -351,7 +351,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject **argv) {
+struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
 	dhash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:offsetafter", &name))
@@ -385,7 +385,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject **argv) {
+struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *argv) {
 	dhash_t i, perturb, hash;
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, "o:typeof", &name) ||
@@ -418,18 +418,18 @@ struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject **argv) {
 
 
 PRIVATE struct type_method struct_type_methods[] = {
-	{ "offsetof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&struct_type_offsetof,
+	{ "offsetof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&struct_type_offsetof,
 	  DOC("(field:?Dstring)->?Dint\n"
 	      "@throw AttributeError No field with the name @field exists\n"
 	      "Returns the offset of a given @field") },
-	{ "offsetafter", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&struct_type_offsetafter,
+	{ "offsetafter", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&struct_type_offsetafter,
 	  DOC("(field:?Dstring)->?Dint\n"
 	      "@throw AttributeError No field with the name @field exists\n"
 	      "Returns the offset after a given @field") },
 	/* TODO: containerof(pointer p, string field) -> lvalue
 	 *       Where type(p) === this.typeof(field).pointer,
 	 *       and type(return) == this.lvalue */
-	{ "typeof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&struct_type_typeof,
+	{ "typeof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&struct_type_typeof,
 	  DOC("(field:?Dstring)->structured_type\n"
 	      "@throw AttributeError No field with the name @field exists\n"
 	      "Returns the typing of given @field") },
@@ -626,9 +626,9 @@ err:
 
 
 PRIVATE struct stype_attr struct_attr = {
-	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_getattr,
-	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_delattr,
-	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict, DeeObject *__restrict))&struct_setattr,
+	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_getattr,
+	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_delattr,
+	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&struct_setattr,
 	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&struct_enumattr
 };
 
@@ -748,7 +748,7 @@ err:
 
 PRIVATE int DCALL
 struct_init(DeeStructTypeObject *__restrict tp_self,
-            void *self, size_t argc, DeeObject **argv) {
+            void *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *value = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "|o:struct", &value))
 		return -1;
@@ -846,8 +846,8 @@ INTERN DeeStructTypeObject DeeStruct_Type = {
 #endif /* !CONFIG_NO_CFUNCTION */
 		/* .st_sizeof   = */ 0,
 		/* .st_align    = */ CONFIG_CTYPES_ALIGNOF_POINTER,
-		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&struct_init,
-		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&struct_assign,
+		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&struct_init,
+		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&struct_assign,
 		/* .st_cast     = */ {
 			/* .st_str  = */ NULL,
 			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&struct_repr,

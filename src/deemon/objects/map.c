@@ -61,7 +61,7 @@ proxy_iterator_ctor(MapProxyIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_iterator_init(MapProxyIterator *__restrict self,
-                    size_t argc, DeeObject **argv) {
+                    size_t argc, DeeObject *const *argv) {
 	self->mpi_map = Dee_EmptyMapping;
 	if (DeeArg_Unpack(argc, argv, "|o:_mappingproxy.Iterator", &self->mpi_map))
 		return -1;
@@ -215,7 +215,7 @@ PRIVATE DeeTypeObject DeeMappingKeysIterator_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_iterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_iterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -260,7 +260,7 @@ PRIVATE DeeTypeObject DeeMappingValuesIterator_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_iterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_iterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -305,7 +305,7 @@ PRIVATE DeeTypeObject DeeMappingItemsIterator_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_iterator_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_iterator_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_iterator_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxy_iterator_init,
 				TYPE_FIXED_ALLOCATOR(MapProxyIterator)
 			}
 		},
@@ -355,7 +355,7 @@ proxy_ctor(MapProxy *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(MapProxy *__restrict self, size_t argc,
-           DeeObject **argv) {
+           DeeObject *const *argv) {
 	self->mp_map = Dee_EmptyMapping;
 	if (DeeArg_Unpack(argc, argv, "|o:_MappingProxy", &self->mp_map))
 		return -1;
@@ -483,7 +483,7 @@ PRIVATE DeeTypeObject DeeMappingProxy_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -528,7 +528,7 @@ PRIVATE DeeTypeObject DeeMappingKeys_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -573,7 +573,7 @@ PRIVATE DeeTypeObject DeeMappingValues_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -618,7 +618,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 				/* .tp_ctor      = */ (int (DCALL *)(DeeObject *__restrict))&proxy_ctor,
 				/* .tp_copy_ctor = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_copy,
 				/* .tp_deep_ctor = */ NULL,
-				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject **))&proxy_init,
+				/* .tp_any_ctor  = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxy_init,
 				TYPE_FIXED_ALLOCATOR(MapProxy)
 			}
 		},
@@ -964,7 +964,7 @@ map_iteritems(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-map_get(DeeObject *self, size_t argc, DeeObject **argv) {
+map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		return NULL;
@@ -974,7 +974,7 @@ map_get(DeeObject *self, size_t argc, DeeObject **argv) {
 
 INTERN struct type_method map_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&map_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_get,
 	  DOC("(key,def:?O=!N)->\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }

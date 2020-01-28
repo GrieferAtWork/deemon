@@ -48,7 +48,7 @@ DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangeiterator_init(SubRangeIterator *__restrict self,
-                      size_t argc, DeeObject **argv) {
+                      size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|IuIu:_SubRangeIterator",
 	                  &self->sr_iter,
 	                  &self->sr_start,
@@ -471,7 +471,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrange_init(SubRange *__restrict self, size_t argc,
-              DeeObject **argv) {
+              DeeObject *const *argv) {
 	size_t end     = (size_t)-1;
 	self->sr_start = 0;
 	if (DeeArg_Unpack(argc, argv, "o|IuIu:_SeqSubRange",
@@ -797,7 +797,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 subrangen_init(SubRangeN *__restrict self, size_t argc,
-               DeeObject **argv) {
+               DeeObject *const *argv) {
 	self->sr_start = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSubRangeN",
 	                  &self->sr_seq, &self->sr_start))

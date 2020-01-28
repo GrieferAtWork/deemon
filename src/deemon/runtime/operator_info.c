@@ -581,7 +581,7 @@ Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 invoke_operator(DeeObject *self, DeeObject **pself,
-                uint16_t name, size_t argc, DeeObject **argv) {
+                uint16_t name, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	ASSERT_OBJECT(self);
 	/* Fast-pass for known operators. */
@@ -1268,13 +1268,13 @@ return_self:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
-                         size_t argc, DeeObject **argv) {
+                         size_t argc, DeeObject *const *argv) {
 	return invoke_operator(self, NULL, name, argc, argv);
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
-                          size_t argc, DeeObject **argv) {
+                          size_t argc, DeeObject *const *argv) {
 	ASSERT(pself);
 	return invoke_operator(*pself, pself, name, argc, argv);
 }

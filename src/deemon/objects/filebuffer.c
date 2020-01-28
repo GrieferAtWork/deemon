@@ -1316,7 +1316,7 @@ PRIVATE struct mode_name const mode_names[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_ctor(Buffer *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	uint16_t mode = (FILE_BUFFER_MODE_AUTO);
 	DeeObject *file;
 	char const *mode_str = NULL;
@@ -1448,7 +1448,7 @@ buffer_visit(Buffer *__restrict self, dvisit_t proc, void *arg) {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-buffer_size(Buffer *self, size_t argc, DeeObject **argv) {
+buffer_size(Buffer *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *file, *result;
 	buf_write(self);
 	file = self->fb_file;
@@ -1504,7 +1504,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-buffer_flush(Buffer *self, size_t argc, DeeObject **argv) {
+buffer_flush(Buffer *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":flush"))
 		goto err;
@@ -1523,7 +1523,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 buffer_setbuf(Buffer *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	uint16_t mode;
 	char const *mode_iter;
 	char const *mode_str;
@@ -1587,16 +1587,16 @@ err:
 
 PRIVATE struct type_method buffer_methods[] = {
 	{ DeeString_STR(&str_size),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&buffer_size,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_size,
 	  DOC("->?Dint\n"
 	      "Forward to the $size function of the file being buffered") },
 	{ "flush",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&buffer_flush,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_flush,
 	  DOC("()\n"
 	      "Similar to #sync, but never synchronize the underlying file, regardless "
 	      "of whether or not $\"nosync\" was passed to the constructor, or #setbuf") },
 	{ "setbuf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&buffer_setbuf,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_setbuf,
 	  DOC("(mode:?Dstring,size=!0)\n"
 	      "@throw ValueError The given @mode is malformed, or not recognized\n"
 	      "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
@@ -1689,7 +1689,7 @@ PRIVATE struct type_getset buffer_getsets[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 buffer_class_sync(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		goto err;
 	if (DeeFileBuffer_SyncTTYs())

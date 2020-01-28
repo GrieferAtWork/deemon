@@ -2300,7 +2300,7 @@ dhashalgo_find(char const *__restrict name) {
 
 
 PRIVATE DREF DeeObject *DCALL
-dhashmain_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+dhashmain_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	char const *name;
 	DeeObject *data, *start = NULL;
 	struct dhashalgo const *algo;

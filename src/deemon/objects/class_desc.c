@@ -1322,7 +1322,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_sizeof(ClassDescriptor *self, size_t argc, DeeObject **argv) {
+cd_sizeof(ClassDescriptor *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(ClassDescriptor, cd_iattr_list) +
@@ -1335,7 +1335,7 @@ err:
 
 PRIVATE struct type_method cd_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&cd_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cd_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -1804,7 +1804,7 @@ err:
 
 
 PRIVATE WUNUSED DREF ClassDescriptor *DCALL
-cd_init_kw(size_t argc, DeeObject **argv, DeeObject *kw) {
+cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF ClassDescriptor *result;
 	DREF DeeObject *iterator, *elem, *data[2];
 	DeeStringObject *class_name;
@@ -2376,7 +2376,7 @@ PRIVATE struct type_member ot_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ot_init(ObjectTable *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	DeeTypeObject *type = NULL;
 	struct class_desc *desc;
@@ -2520,7 +2520,7 @@ PRIVATE struct keyword thisarg_kwlist[] = { K(thisarg), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get(DeeInstanceMemberObject *self, size_t argc,
-                   DeeObject **argv, DeeObject *kw) {
+                   DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
 	struct class_desc *desc;
 	if (DeeArg_UnpackKw(argc, argv, kw, thisarg_kwlist, "o:get", &thisarg))
@@ -2539,7 +2539,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_delete(DeeInstanceMemberObject *self, size_t argc,
-                      DeeObject **argv, DeeObject *kw) {
+                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
 	struct class_desc *desc;
 	if (DeeArg_UnpackKw(argc, argv, kw, thisarg_kwlist, "o:delete", &thisarg))
@@ -2560,7 +2560,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_set(DeeInstanceMemberObject *self, size_t argc,
-                   DeeObject **argv, DeeObject *kw) {
+                   DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg, *value;
 	struct class_desc *desc;
 	PRIVATE struct keyword kwlist[] = { K(thisarg), K(value), KEND };
@@ -2603,17 +2603,17 @@ instancemember_visit(DeeInstanceMemberObject *__restrict self, dvisit_t proc, vo
 
 PRIVATE struct type_method instancemember_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&instancemember_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&instancemember_get,
 	  DOC("(thisarg)->\n"
 	      "Return the @thisarg's value of @this member"),
 	  TYPE_METHOD_FKWDS },
 	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&instancemember_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&instancemember_delete,
 	  DOC("(thisarg)\n"
 	      "Delete @thisarg's value of @this member"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_set),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&instancemember_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&instancemember_set,
 	  DOC("(thisarg,value)\n"
 	      "Set @thisarg's value of @this member to @value"),
 	  TYPE_METHOD_FKWDS },
@@ -2778,7 +2778,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **, DeeObject *))&instancemember_get
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&instancemember_get
 };
 
 
@@ -3296,7 +3296,7 @@ DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttribute(DeeTypeObject *class_type,
                                struct class_attribute *__restrict attr,
-                               size_t argc, DeeObject **argv) {
+                               size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)) {
@@ -3355,7 +3355,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type,
                                  struct class_attribute *__restrict attr,
-                                 size_t argc, DeeObject **argv,
+                                 size_t argc, DeeObject *const *argv,
                                  DeeObject *kw) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
@@ -3810,7 +3810,7 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
                           struct instance_desc *__restrict self,
                           DeeObject *this_arg,
                           struct class_attribute *__restrict attr,
-                          size_t argc, DeeObject **argv) {
+                          size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *callback;
 	ASSERT(self);
 	ASSERT(attr);
@@ -3920,7 +3920,7 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
                             DeeObject *__restrict this_arg,
                             struct class_attribute *__restrict attr,
-                            size_t argc, DeeObject **argv,
+                            size_t argc, DeeObject *const *argv,
                             DeeObject *kw) {
 	DREF DeeObject *result, *callback;
 	ASSERT(self);

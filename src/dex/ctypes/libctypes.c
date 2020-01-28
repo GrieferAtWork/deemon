@@ -220,7 +220,7 @@ do_rethrow:
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_sizeof(size_t argc, DeeObject **argv) {
+f_ctypes_sizeof(size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *type;
 	DeeObject *arg;
 	size_t result;
@@ -244,7 +244,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_alignof(size_t argc, DeeObject **argv) {
+f_ctypes_alignof(size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *type;
 	DeeObject *arg;
 	size_t result;
@@ -266,7 +266,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_intfor(size_t argc, DeeObject **argv) {
+f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *result = NULL;
 	bool return_signed     = true;
 	size_t intsize;
@@ -342,7 +342,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_bswap16(size_t argc, DeeObject **argv) {
+f_ctypes_bswap16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:bswap16", &i))
 		return NULL;
@@ -350,7 +350,7 @@ f_ctypes_bswap16(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_bswap32(size_t argc, DeeObject **argv) {
+f_ctypes_bswap32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:bswap32", &i))
 		return NULL;
@@ -358,7 +358,7 @@ f_ctypes_bswap32(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_bswap64(size_t argc, DeeObject **argv) {
+f_ctypes_bswap64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:bswap64", &i))
 		return NULL;
@@ -366,7 +366,7 @@ f_ctypes_bswap64(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_leswap16(size_t argc, DeeObject **argv) {
+f_ctypes_leswap16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:leswap16", &i))
 		return NULL;
@@ -374,7 +374,7 @@ f_ctypes_leswap16(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_leswap32(size_t argc, DeeObject **argv) {
+f_ctypes_leswap32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:leswap32", &i))
 		return NULL;
@@ -382,7 +382,7 @@ f_ctypes_leswap32(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_leswap64(size_t argc, DeeObject **argv) {
+f_ctypes_leswap64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:leswap64", &i))
 		return NULL;
@@ -390,7 +390,7 @@ f_ctypes_leswap64(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_beswap16(size_t argc, DeeObject **argv) {
+f_ctypes_beswap16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:beswap16", &i))
 		return NULL;
@@ -398,7 +398,7 @@ f_ctypes_beswap16(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_beswap32(size_t argc, DeeObject **argv) {
+f_ctypes_beswap32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:beswap32", &i))
 		return NULL;
@@ -406,7 +406,7 @@ f_ctypes_beswap32(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_beswap64(size_t argc, DeeObject **argv) {
+f_ctypes_beswap64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:beswap64", &i))
 		return NULL;

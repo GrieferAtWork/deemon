@@ -142,7 +142,7 @@ super_deepcopy(Super *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-super_init(Super *self, size_t argc, DeeObject **argv) {
+super_init(Super *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	DeeTypeObject *tp = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:Super", &ob, &tp))
@@ -229,13 +229,13 @@ super_bool(Super *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-super_call(Super *self, size_t argc, DeeObject **argv) {
+super_call(Super *self, size_t argc, DeeObject *const *argv) {
 	return DeeObject_TCall(self->s_type, self->s_self, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_call_kw(Super *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	return DeeObject_TCallKw(self->s_type, self->s_self, argc, argv, kw);
 }
 
@@ -646,7 +646,7 @@ PRIVATE struct type_buffer super_buffer = {
  * and self fields of a super object. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_typeof(DeeObject *UNUSED(self),
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	Super *super_object;
 	if (DeeArg_Unpack(argc, argv, "o:typeof", &super_object) ||
 	    DeeObject_AssertTypeExact((DeeObject *)super_object, &DeeSuper_Type))
@@ -656,7 +656,7 @@ super_typeof(DeeObject *UNUSED(self),
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_selfof(DeeObject *UNUSED(self),
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	Super *super_object;
 	if (DeeArg_Unpack(argc, argv, "o:selfof", &super_object) ||
 	    DeeObject_AssertTypeExact((DeeObject *)super_object, &DeeSuper_Type))
@@ -786,7 +786,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_repr,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&super_bool
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&super_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&super_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&super_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &super_math,
@@ -802,7 +802,7 @@ PUBLIC DeeTypeObject DeeSuper_Type = {
 	/* .tp_class_methods = */ super_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **, DeeObject *))&super_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&super_call_kw,
 };
 
 

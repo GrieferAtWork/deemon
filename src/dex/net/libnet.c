@@ -39,7 +39,7 @@ DECL_BEGIN
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getafname_f(size_t argc, DeeObject **argv) {
+lib_getafname_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getafname", &af_id))
 		return NULL;
@@ -47,7 +47,7 @@ lib_getafname_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getafof_f(size_t argc, DeeObject **argv) {
+lib_getafof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
 	if (DeeArg_Unpack(argc, argv, "o:getafof", &afob) ||
@@ -57,7 +57,7 @@ lib_getafof_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_gettypename_f(size_t argc, DeeObject **argv) {
+lib_gettypename_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:gettypename", &af_id))
 		return NULL;
@@ -65,7 +65,7 @@ lib_gettypename_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_gettypeof_f(size_t argc, DeeObject **argv) {
+lib_gettypeof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
 	if (DeeArg_Unpack(argc, argv, "o:gettypeof", &afob) ||
@@ -75,7 +75,7 @@ lib_gettypeof_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getprotoname_f(size_t argc, DeeObject **argv) {
+lib_getprotoname_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getprotoname", &af_id))
 		return NULL;
@@ -83,7 +83,7 @@ lib_getprotoname_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getprotoof_f(size_t argc, DeeObject **argv) {
+lib_getprotoof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
 	if (DeeArg_Unpack(argc, argv, "o:getprotoof", &afob) ||
@@ -93,7 +93,7 @@ lib_getprotoof_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getmsgflagsname_f(size_t argc, DeeObject **argv) {
+lib_getmsgflagsname_f(size_t argc, DeeObject *const *argv) {
 	int af_id;
 	if (DeeArg_Unpack(argc, argv, "d:getmsgflagsname", &af_id))
 		return NULL;
@@ -101,7 +101,7 @@ lib_getmsgflagsname_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_getmsgflagsof_f(size_t argc, DeeObject **argv) {
+lib_getmsgflagsof_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *afob;
 	int afid;
 	if (DeeArg_Unpack(argc, argv, "o:getmsgflags", &afob) ||
@@ -121,7 +121,7 @@ PRIVATE DEFINE_CMETHOD(lib_getmsgflagsof, &lib_getmsgflagsof_f);
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_ntoh16_f(size_t argc, DeeObject **argv) {
+lib_ntoh16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:ntoh16", &i))
 		return NULL;
@@ -129,7 +129,7 @@ lib_ntoh16_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_ntoh32_f(size_t argc, DeeObject **argv) {
+lib_ntoh32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:ntoh32", &i))
 		return NULL;
@@ -137,7 +137,7 @@ lib_ntoh32_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_ntoh64_f(size_t argc, DeeObject **argv) {
+lib_ntoh64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:ntoh64", &i))
 		return NULL;
@@ -145,7 +145,7 @@ lib_ntoh64_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_hton16_f(size_t argc, DeeObject **argv) {
+lib_hton16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:hton16", &i))
 		return NULL;
@@ -153,7 +153,7 @@ lib_hton16_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_hton32_f(size_t argc, DeeObject **argv) {
+lib_hton32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:hton32", &i))
 		return NULL;
@@ -161,7 +161,7 @@ lib_hton32_f(size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-lib_hton64_f(size_t argc, DeeObject **argv) {
+lib_hton64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:hton64", &i))
 		return NULL;

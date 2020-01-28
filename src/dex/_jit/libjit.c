@@ -42,7 +42,7 @@ DECL_BEGIN
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-libjit_exec_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeObject *globals;
 	JITContext context;

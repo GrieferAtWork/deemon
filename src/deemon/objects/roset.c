@@ -67,7 +67,7 @@ rosetiterator_ctor(SetIterator *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 rosetiterator_init(SetIterator *__restrict self,
-                   size_t argc, DeeObject **argv) {
+                   size_t argc, DeeObject *const *argv) {
 	Set *set;
 	if (DeeArg_Unpack(argc, argv, "o:_RoSetIterator", &set) ||
 	    DeeObject_AssertTypeExact((DeeObject *)set, &DeeRoSet_Type))
@@ -553,7 +553,7 @@ PRIVATE struct type_seq roset_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-roset_sizeof(Set *self, size_t argc, DeeObject **argv) {
+roset_sizeof(Set *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(Set, rs_elem) +
@@ -565,7 +565,7 @@ err:
 
 PRIVATE struct type_method roset_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&roset_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&roset_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -629,7 +629,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF Set *DCALL
-roset_init(size_t argc, DeeObject **argv) {
+roset_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoSet", &seq))
 		return NULL;

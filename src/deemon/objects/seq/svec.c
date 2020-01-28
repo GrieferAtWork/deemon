@@ -55,7 +55,7 @@ rveciter_copy(RefVectorIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_RefVectorIterator", &self->rvi_vector) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->rvi_vector, &RefVector_Type))
 		return -1;
@@ -1121,7 +1121,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sveciter_init(SharedVectorIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedVectorIterator", &self->si_seq))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->si_seq, &SharedVector_Type))
@@ -1354,20 +1354,17 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 
 PRIVATE NONNULL((1)) void DCALL
 svec_fini(SharedVector *__restrict self) {
-	DREF DeeObject **begin, **iter;
-	iter = (begin = self->sv_vector) + self->sv_length;
-	while (iter-- != begin)
-		Dee_Decref(*iter);
-	Dee_Free(begin);
+	size_t i;
+	for (i = 0; i < self->sv_length; ++i)
+		Dee_Decref(self->sv_vector[i]);
+	Dee_Free((void *)self->sv_vector);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 svec_visit(SharedVector *__restrict self, dvisit_t proc, void *arg) {
-	DREF DeeObject **begin, **iter;
-	iter = (begin = self->sv_vector) + self->sv_length;
-	while (iter-- != begin) {
-		Dee_Visit(*iter);
-	}
+	size_t i;
+	for (i = 0; i < self->sv_length; ++i)
+		Dee_Visit(self->sv_vector[i]);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SharedVectorIterator *DCALL
@@ -1387,11 +1384,11 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 svec_size(SharedVector *__restrict self) {
 #ifdef CONFIG_NO_THREADS
- size_t result = self->sv_length;
-#else /* CONFIG_NO_THREADS */
- size_t result = ATOMIC_READ(self->sv_length);
+	size_t result = self->sv_length;
+#else  /* CONFIG_NO_THREADS */
+	size_t result = ATOMIC_READ(self->sv_length);
 #endif /* !CONFIG_NO_THREADS */
- return DeeInt_NewSize(result);
+	return DeeInt_NewSize(result);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1617,7 +1614,9 @@ again:
 			goto again;
 		goto err;
 	}
-	MEMCPY_PTR(self->sv_vector, other->sv_vector, self->sv_length);
+	MEMCPY_PTR((DREF DeeObject **)self->sv_vector,
+	           other->sv_vector,
+	           self->sv_length);
 	for (i = 0; i < self->sv_length; ++i)
 		Dee_Incref(self->sv_vector[i]);
 	rwlock_endread(&other->sv_lock);
@@ -1634,14 +1633,14 @@ svec_deep(SharedVector *__restrict self,
 	if unlikely(svec_copy(self, other))
 		goto err;
 	for (i = 0; i < self->sv_length; ++i) {
-		if unlikely(DeeObject_InplaceDeepCopy(&self->sv_vector[i]))
+		if unlikely(DeeObject_InplaceDeepCopy((DREF DeeObject **)&self->sv_vector[i]))
 			goto err_r;
 	}
 	return 0;
 err_r:
 	for (i = 0; i < self->sv_length; ++i)
 		Dee_Decref(self->sv_vector[i]);
-	Dee_Free(self->sv_vector);
+	Dee_Free((void *)self->sv_vector);
 err:
 	return -1;
 }
@@ -1707,7 +1706,7 @@ INTERN DeeTypeObject SharedVector_Type = {
  *       of the given vector, though does not actually inherit the
  *       vector itself! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeSharedVector_NewShared(size_t length, DREF DeeObject **vector) {
+DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	DREF SharedVector *result;
 	result = DeeObject_MALLOC(SharedVector);
 	if unlikely(!result)
@@ -1736,7 +1735,7 @@ done:
  *    the `ASM_CALL_SEQ' opcode, as generated for brace-initializers. */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
-	DREF DeeObject **begin, **iter;
+	DREF DeeObject *const *begin, *const *iter;
 	DREF DeeObject **vector_copy;
 	SharedVector *me = (SharedVector *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &SharedVector_Type);

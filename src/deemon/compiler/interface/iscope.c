@@ -312,7 +312,7 @@ PRIVATE struct type_member scope_class_members[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-scope_newanon(DeeCompilerScopeObject *self, size_t argc, DeeObject **argv) {
+scope_newanon(DeeCompilerScopeObject *self, size_t argc, DeeObject *const *argv) {
  DREF DeeObject *result = NULL; struct symbol *sym;
  COMPILER_BEGIN(self->ci_compiler);
  if (DeeArg_Unpack(argc, argv,":newanon"))
@@ -329,7 +329,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
-               DeeObject **argv, DeeObject *kw) {
+               DeeObject *const *argv, DeeObject *kw) {
  DREF DeeObject *result = NULL; struct symbol *sym; struct TPPKeyword *kwd;
  DeeObject *name,*loc = NULL; bool requirenew = true; char *name_utf8;
  PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
@@ -361,7 +361,7 @@ done:
 }
 
 PRIVATE struct type_method scope_methods[] = {
-	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&scope_newanon,
+	{ "newanon", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&scope_newanon,
 	  DOC("->?ASymbol?Ert:Compiler\n"
 	      "Construct a new anonymous symbol, and add it as part of @this scope\n"
 	      "The symbol isn't given a name (when queried it will have an empty name), and "
@@ -370,7 +370,7 @@ PRIVATE struct type_method scope_methods[] = {
 	      "meaning that this is the type of symbol that should be used to hold hidden "
 	      "values, as used by $with-statements\n"
 	      "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
-	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&scope_newlocal,
+	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&scope_newlocal,
 	  DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
 	      "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
 	      "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"

@@ -1111,7 +1111,7 @@ struct user_object {
 
 PRIVATE int DCALL
 user_init(struct user_object *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *name_or_id = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:user", &name_or_id))
 		goto err;
@@ -1742,7 +1742,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_ctor(DeeStatObject *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_tp_name, &path, &arg2))
 		return -1;
@@ -1751,7 +1751,7 @@ stat_ctor(DeeStatObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 lstat_ctor(DeeStatObject *__restrict self,
-           size_t argc, DeeObject **argv) {
+           size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|on:" S_LStat_tp_name, &path, &arg2))
 		return -1;
@@ -2007,7 +2007,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_exists(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_exists(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2037,7 +2037,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_isdir(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_isdir(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2069,7 +2069,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_ischr(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_ischr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2097,7 +2097,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_isblk(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_isblk(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2125,7 +2125,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_isreg(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_isreg(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2165,7 +2165,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_isfifo(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_isfifo(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2190,7 +2190,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_islnk(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2223,7 +2223,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_issock(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_issock(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2247,7 +2247,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stat_class_ishidden(DeeObject *self, size_t argc, DeeObject **argv) {
+stat_class_ishidden(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
 	Stat buf;
@@ -2330,7 +2330,7 @@ is_exe_filename(DeeObject *__restrict path) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_isexe(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	bool result;
 	if (DeeArg_Unpack(argc, argv, "o|on:" S_Stat_class_function_isexe_name, &path, &arg2))
@@ -2828,7 +2828,7 @@ dir_copy(Dir *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dir_ctor(Dir *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:" S_Dir_tp_name, &self->d_path))
 		goto err;
 	if (DeeString_Check(self->d_path)) {

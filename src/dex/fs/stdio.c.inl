@@ -140,7 +140,7 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_ctor(Stat *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_tp_name, &path))
@@ -217,7 +217,7 @@ PRIVATE struct type_getset stat_getsets[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_exists(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_exists_name, &path))
@@ -232,7 +232,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 stat_class_isreg(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:" S_Stat_class_function_isreg_name, &path))
@@ -248,7 +248,7 @@ err:
 #define DEFINE_STATIC_QUERY(funnam, name, return_)       \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                \
 	funnam(DeeObject *UNUSED(self),                      \
-	       size_t argc, DeeObject **argv) {              \
+	       size_t argc, DeeObject *const *argv) {              \
 		DeeObject *path;                                 \
 		if (DeeArg_Unpack(argc, argv, "o:" name, &path)) \
 			return NULL;                                 \

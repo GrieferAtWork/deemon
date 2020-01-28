@@ -1506,7 +1506,7 @@ PRIVATE struct type_member gcenum_class_members[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 gcenum_collect(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	size_t max = (size_t)-1, result;
 	if (DeeArg_Unpack(argc, argv, "|Iu:collect", &max))
 		goto err;
@@ -1518,7 +1518,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 gcenum_referred(DeeObject *__restrict UNUSED(self),
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:referred", &start))
 		goto err;
@@ -1529,7 +1529,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 gcenum_referredgc(DeeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:referredgc", &start))
 		goto err;
@@ -1540,7 +1540,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 gcenum_reachable(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:reachable", &start))
 		goto err;
@@ -1551,7 +1551,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 gcenum_reachablegc(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **argv) {
+                   size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:reachablegc", &start))
 		goto err;
@@ -1562,7 +1562,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 gcenum_referring(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *to;
 	if (DeeArg_Unpack(argc, argv, "o:referring", &to))
 		goto err;
@@ -1573,7 +1573,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 gcenum_isreferring(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **argv) {
+                   size_t argc, DeeObject *const *argv) {
 	DeeObject *from, *to;
 	if (DeeArg_Unpack(argc, argv, "oo:isreferring", &from, &to))
 		goto err;

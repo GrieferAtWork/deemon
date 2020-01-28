@@ -250,7 +250,7 @@ dictiterator_bool(DictIterator *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 dictiterator_init(DictIterator *__restrict self,
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	DeeDictObject *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &Dict) ||
 	    DeeObject_AssertType((DeeObject *)Dict, &DeeDict_Type))
@@ -503,7 +503,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 dictproxyiterator_init(DictProxyIterator *__restrict self,
-                       size_t argc, DeeObject **argv) {
+                       size_t argc, DeeObject *const *argv) {
 	DictProxy *proxy;
 	if (DeeArg_Unpack(argc, argv, "o:_DictIterator", &proxy))
 		goto err;
@@ -628,7 +628,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(DictProxy *__restrict self,
-           size_t argc, DeeObject **argv) {
+           size_t argc, DeeObject *const *argv) {
 	DeeObject *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_DictProxy", &Dict))
 		goto err;

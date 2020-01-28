@@ -1403,7 +1403,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 imod_ctor(InteractiveModule *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	DeeObject *imod_path = NULL;
 	DeeObject *imod_name = NULL;
 	DeeObject *imod_argv = NULL;

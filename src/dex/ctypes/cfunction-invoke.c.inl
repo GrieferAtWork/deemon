@@ -26,12 +26,12 @@
 INTERN WUNUSED DREF DeeObject *DCALL
 cfunction_call_v(DeeCFunctionTypeObject *__restrict tp_self,
                  void (*self)(void),
-                 size_t argc, DeeObject **argv)
+                 size_t argc, DeeObject *const *argv)
 #else /* VARARGS */
 INTERN WUNUSED DREF DeeObject *DCALL
 cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
                void (*self)(void),
-               size_t argc, DeeObject **argv)
+               size_t argc, DeeObject *const *argv)
 #endif /* !VARARGS */
 {
 #ifdef VARARGS
@@ -42,9 +42,9 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 #endif /* VARARGS */
 	void *wbuf, **argp_iter;
 	union argument *iter, *end;
-	DREF DeeObject *result, **arg_iter;
+	DREF DeeObject *result, *const *arg_iter;
 	ffi_type **ffi_argtyv;
-#define ret_mem wbuf // Return memory is located at the start of the wbuffer
+#define ret_mem wbuf /* Return memory is located at the start of the wbuffer */
 #ifdef VARARGS
 	if (argc < tp_self->ft_argc) {
 		DeeError_Throwf(&DeeError_TypeError,

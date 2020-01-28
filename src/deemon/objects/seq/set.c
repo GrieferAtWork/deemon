@@ -209,7 +209,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 suiter_init(SetUnionIterator *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetUnionIterator", &self->sui_union))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->sui_union, &SetUnion_Type))
@@ -574,7 +574,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 su_init(SetUnion *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	self->su_a = Dee_EmptySet;
 	self->su_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetUnion", &self->su_a, &self->su_b))
@@ -831,7 +831,7 @@ INTERN DeeTypeObject SetSymmetricDifferenceIterator_Type = {
 #define ssd_deep su_deep
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssd_init(SetSymmetricDifference *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	self->ssd_a = Dee_EmptySet;
 	self->ssd_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetSymmetricDifference", &self->ssd_a, &self->ssd_b))
@@ -1007,7 +1007,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 siiter_init(SetIntersectionIterator *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetIntersectionIterator", &self->sii_intersect))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->sii_intersect, &SetIntersection_Type))
@@ -1137,7 +1137,7 @@ INTERN DeeTypeObject SetIntersectionIterator_Type = {
 #define si_deep su_deep
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 si_init(SetIntersection *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	self->si_a = Dee_EmptySet;
 	self->si_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetIntersection", &self->si_a, &self->si_b))
@@ -1342,7 +1342,7 @@ INTERN DeeTypeObject SetDifferenceIterator_Type = {
 #define sd_deep su_deep
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sd_init(SetDifference *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	self->sd_a = Dee_EmptySet;
 	self->sd_b = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|oo:_SetDifference", &self->sd_a, &self->sd_b))

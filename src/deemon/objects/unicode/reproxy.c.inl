@@ -109,7 +109,7 @@ refaiter_copy(ReSequenceIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refaiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReFindAllIterator", &reseq))
 		goto err;
@@ -333,7 +333,7 @@ INTERN DeeTypeObject ReFindAllIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 relaiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReLocateAllIterator", &reseq) ||
 	    DeeObject_AssertTypeExact((DeeObject *)reseq, &ReLocateAll_Type))
@@ -471,7 +471,7 @@ INTERN DeeTypeObject ReLocateAllIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 respiter_init(ReSequenceIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReSplitIterator", &reseq) ||
 	    DeeObject_AssertTypeExact((DeeObject *)reseq, &ReSplit_Type))
@@ -628,7 +628,7 @@ refa_ctor(ReSequence *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 refa_init(ReSequence *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	String *rules = NULL;
 	if (DeeArg_Unpack(argc, argv, "oo|o" /*":_ReFindAll"*/,
 	                  &self->re_data, &self->re_pattern, &rules) ||
@@ -930,7 +930,7 @@ resp_ctor(ReSequence *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 resp_init(ReSequence *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	int result = refa_init(self, argc, argv);
 	if (!self->re_args.re_datalen)
 		self->re_args.re_dataptr = NULL;

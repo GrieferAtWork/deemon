@@ -674,7 +674,7 @@ struct Dee_code_frame {
 	                                       *       the frame is not being executed. */
 	DeeFunctionObject        *cf_func;    /* [1..1] The function running within in this frame. */
 	size_t                    cf_argc;    /* [const] Amount of input arguments. */
-	DREF DeeObject          **cf_argv;    /* [1..1][const][0..cf_argc][const] Vector of input arguments. */
+	DREF DeeObject    *const *cf_argv;    /* [1..1][const][0..cf_argc][const] Vector of input arguments. */
 	struct Dee_code_frame_kwds
 	                         *cf_kw;      /* [0..1][const] Keyword argument extension data. */
 	DREF DeeObject          **cf_frame;   /* [0..1][cf_func->fo_code->co_framesize / sizeof(DeeObject *)][owned] Frame-local work-memory used during execution. */
@@ -944,11 +944,11 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeFunction_ThisCall(DeeFunctionObject *self,
                      DeeObject *this_arg,
-                     size_t argc, DeeObject **argv);
+                     size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeFunction_ThisCallKw(DeeFunctionObject *self,
                        DeeObject *this_arg,
-                       size_t argc, DeeObject **argv,
+                       size_t argc, DeeObject *const *argv,
                        DeeObject *kw);
 
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS

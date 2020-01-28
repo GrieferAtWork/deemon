@@ -41,7 +41,7 @@ bool_return_false(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-bool_new(size_t argc, DeeObject **argv) {
+bool_new(size_t argc, DeeObject *const *argv) {
 	bool value;
 	if (DeeArg_Unpack(argc, argv, "b:bool", &value))
 		return NULL;

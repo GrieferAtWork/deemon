@@ -122,7 +122,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 se_init(SeqEachBase *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqEach", &self->se_seq))
 		goto err;
 	Dee_Incref(self->se_seq);
@@ -241,7 +241,7 @@ se_bool(SeqEachBase *__restrict self) {
 }
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
-se_call(SeqEachBase *self, size_t argc, DeeObject **argv) {
+se_call(SeqEachBase *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
@@ -253,7 +253,7 @@ err:
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 se_call_kw(SeqEachBase *__restrict self, size_t argc,
-           DeeObject **argv, DeeObject *kw) {
+           DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
@@ -584,7 +584,7 @@ INTERN DeeTypeObject SeqEach_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_repr,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&se_bool
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&se_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&se_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&se_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &se_math,
@@ -600,7 +600,7 @@ INTERN DeeTypeObject SeqEach_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&se_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&se_call_kw,
 };
 
 #undef DEFINE_SEQ_EACH_TRINARY
@@ -679,7 +679,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_init(SeqEachOperator *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	size_t i;
 	DeeObject *name;
 	DeeObject *args = Dee_EmptyTuple;
@@ -759,7 +759,7 @@ sew_setattr(DeeObject *__restrict self, DeeObject *__restrict attr, DeeObject *_
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sew_call(DeeObject *self, size_t argc, DeeObject **argv) {
+sew_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
@@ -771,7 +771,7 @@ err:
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
 sew_call_kw(DeeObject *__restrict self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
 	if unlikely(!tuple)
@@ -1261,7 +1261,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sew_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&seo_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &seo_math,
@@ -1277,7 +1277,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ seo_class_members,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&sew_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&sew_call_kw,
 };
 
 
@@ -1300,7 +1300,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seoi_init(SeqEachIterator *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqEachOperatorIterator", &self->ei_each))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ei_each, &SeqEachOperator_Type))
@@ -1540,7 +1540,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttr(DeeObject *__restrict self,
                     DeeObject *__restrict attr,
                     size_t argc,
-                    DeeObject **argv) {
+                    DeeObject *const *argv) {
 	size_t i;
 	DREF SeqEachCallAttr *result;
 	result = (DREF SeqEachCallAttr *)DeeObject_Malloc(COMPILER_OFFSETOF(SeqEachCallAttr, sg_argv) +
@@ -1564,7 +1564,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
                       DeeObject *__restrict attr,
                       size_t argc,
-                      DeeObject **argv,
+                      DeeObject *const *argv,
                       DeeObject *kw) {
 	size_t i;
 	DREF SeqEachCallAttrKw *result;
@@ -1593,7 +1593,7 @@ done:
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrString(DeeObject *__restrict self,
                           char const *__restrict attr, dhash_t hash,
-                          size_t argc, DeeObject **argv) {
+                          size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
@@ -1612,7 +1612,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLen(DeeObject *__restrict self,
                              char const *__restrict attr, size_t attrlen, dhash_t hash,
-                             size_t argc, DeeObject **argv) {
+                             size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
@@ -1631,7 +1631,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringKw(DeeObject *__restrict self,
                             char const *__restrict attr, dhash_t hash,
-                            size_t argc, DeeObject **argv, DeeObject *kw) {
+                            size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
@@ -1651,7 +1651,7 @@ err:
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLenKw(DeeObject *__restrict self,
                                char const *__restrict attr, size_t attrlen, dhash_t hash,
-                               size_t argc, DeeObject **argv, DeeObject *kw) {
+                               size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);

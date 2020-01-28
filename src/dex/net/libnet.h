@@ -716,7 +716,7 @@ INTDEF socklen_t DCALL SockAddr_Sizeof(sa_family_t family, int protocol);
 INTDEF WUNUSED NONNULL((1)) int DCALL
 SockAddr_FromArgv(SockAddr *__restrict self,
                   int family, int protocol, int type,
-                  size_t argc, DeeObject **argv);
+                  size_t argc, DeeObject *const *argv);
 
 typedef struct socket_object DeeSocketObject;
 typedef struct sockaddr_object DeeSockAddrObject;

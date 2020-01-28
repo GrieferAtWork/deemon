@@ -1233,7 +1233,7 @@ INTDEF DeeTypeObject HashSetIterator_Type;
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 setiterator_init(SetIterator *__restrict self,
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	Set *set;
 	if (DeeArg_Unpack(argc, argv, "o:_HashSetIterator", &set) ||
 	    DeeObject_AssertType((DeeObject *)set, &DeeHashSet_Type))
@@ -1657,7 +1657,7 @@ set_bool(Set *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 set_init(Set *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	int error;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:HashSet", &seq))
@@ -1675,7 +1675,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_pop(Set *self, size_t argc, DeeObject **argv) {
+set_pop(Set *self, size_t argc, DeeObject *const *argv) {
 	size_t i;
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":pop"))
@@ -1706,7 +1706,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_doclear(Set *self, size_t argc, DeeObject **argv) {
+set_doclear(Set *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	set_clear(self);
@@ -1716,7 +1716,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_insert(Set *self, size_t argc, DeeObject **argv) {
+set_insert(Set *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:insert", &item))
@@ -1730,7 +1730,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_unify(Set *self, size_t argc, DeeObject **argv) {
+set_unify(Set *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:unify", &item))
 		goto err;
@@ -1750,7 +1750,7 @@ insert_callback(Set *__restrict self, DeeObject *item) {
 #endif
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_update(Set *self, size_t argc, DeeObject **argv) {
+set_update(Set *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *items;
 	dssize_t result;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
@@ -1764,7 +1764,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_remove(Set *self, size_t argc, DeeObject **argv) {
+set_remove(Set *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:remove", &item))
@@ -1779,7 +1779,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-hashset_sizeof(Set *self, size_t argc, DeeObject **argv) {
+hashset_sizeof(Set *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(sizeof(Set) +
@@ -1793,52 +1793,52 @@ err:
 
 PRIVATE struct type_method set_methods[] = {
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_pop,
 	  DOC("->\n"
 	      "@throw ValueError The set is empty\n"
 	      "Pop a random item from the set and return it") },
 	{ DeeString_STR(&str_clear),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_doclear,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_doclear,
 	  DOC("()\n"
 	      "Clear all items from the set") },
 	{ "popitem",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_pop,
 	  DOC("->\n"
 	      "@throw ValueError The set is empty\n"
 	      "Pop a random item from the set and return it (alias for #pop)") },
 	{ "unify",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_unify,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_unify,
 	  DOC("(ob)->\n"
 	      "Insert @ob into the set if it wasn't inserted before, "
 	      "and re-return it, or the pre-existing instance") },
 	{ DeeString_STR(&str_insert),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_insert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
 	  DOC("(ob)->?Dbool\n"
 	      "Returns :true if the object wasn't apart of the set before") },
 	{ "update",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_update,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_update,
 	  DOC("(items:?S?O)->?Dint\n"
 	      "Insert all items from @items into @this set, and return the number of inserted items") },
 	{ DeeString_STR(&str_remove),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_remove,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
 	  DOC("(ob)->?Dbool\n"
 	      "Returns :true if the object was removed from the set") },
 	/* Alternative function names. */
 	{ "add",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_insert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
 	  DOC("(ob)->?Dbool\n"
 	      "Deprecated alias for #insert") },
 	{ "discard",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_remove,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
 	  DOC("(ob)->?Dbool\n"
 	      "Deprecated alias for #remove") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&hashset_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&hashset_sizeof,
 	  DOC("->?Dint") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
 	{ "insert_all",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&set_update,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_update,
 	  DOC("(ob)->?Dbool\n"
 	      "Deprecated alias for #update") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

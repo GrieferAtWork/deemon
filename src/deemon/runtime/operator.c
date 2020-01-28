@@ -433,7 +433,7 @@ err_object_type:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject **argv) {
+DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
@@ -553,7 +553,7 @@ err_object_type:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_NewKw(DeeTypeObject *object_type, size_t argc,
-                DeeObject **argv, DeeObject *kw) {
+                DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(object_type);
 	ASSERT(DeeType_Check(object_type));
@@ -1379,7 +1379,7 @@ DEFINE_OPERATOR(int, Bool, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, Call,
-               (DeeObject *self, size_t argc, DeeObject **argv)) {
+               (DeeObject *self, size_t argc, DeeObject *const *argv)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_call)
@@ -1467,7 +1467,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
 
 DEFINE_OPERATOR(DREF DeeObject *, CallKw,
                 (DeeObject *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw)) {
+                 DeeObject *const *argv, DeeObject *kw)) {
 	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_call_kw)
@@ -1501,17 +1501,17 @@ err_no_keywords:
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeObject_TThisCall(DeeTypeObject *tp_self,
                     DeeObject *self, DeeObject *this_arg,
-                    size_t argc, DeeObject **argv);
+                    size_t argc, DeeObject *const *argv);
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeObject_TThisCallKw(DeeTypeObject *tp_self,
                       DeeObject *self, DeeObject *this_arg,
-                      size_t argc, DeeObject **argv,
+                      size_t argc, DeeObject *const *argv,
                       DeeObject *kw);
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
                 (DeeObject *self, DeeObject *this_arg,
-                 size_t argc, DeeObject **argv)) {
+                 size_t argc, DeeObject *const *argv)) {
 	DREF DeeObject *full_args, *result;
 	ASSERT_OBJECT(self);
 #ifndef DEFINE_TYPE_OPERATORS
@@ -1559,7 +1559,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 
 DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
                 (DeeObject *self, DeeObject *this_arg,
-                 size_t argc, DeeObject **argv,
+                 size_t argc, DeeObject *const *argv,
                  DeeObject *kw)) {
 	DREF DeeObject *full_args, *result;
 	ASSERT_OBJECT(self);
@@ -3534,8 +3534,8 @@ DeeObject_ConcatInherited(DREF DeeObject *self, DeeObject *other) {
 }
 
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-DeeObject_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self, size_t argc,
-                          /*inherit(on_success)*/ DREF DeeObject **argv) {
+DeeObject_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
+                          /*inherit(on_success)*/ DREF DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeObject *other;
 	if (DeeTuple_CheckExact(self))
@@ -4777,17 +4777,17 @@ done:
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *name);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL type_callattr(DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv);
 #ifndef DEFINE_TYPE_OPERATORS
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_getattr(DeeObject *self, DeeObject *name);
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *DCALL
-DeeObject_TCallAttr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name, size_t argc, DeeObject **argv);
+DeeObject_TCallAttr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *name, size_t argc, DeeObject *const *argv);
 #endif /* !DEFINE_TYPE_OPERATORS */
 
 
 DEFINE_OPERATOR(DREF DeeObject *, CallAttr,
                 (DeeObject *self, /*String*/ DeeObject *attr_name,
-                 size_t argc, DeeObject **argv)) {
+                 size_t argc, DeeObject *const *argv)) {
 	DREF DeeObject *result;
 	dhash_t hash;
 	DeeTypeObject *iter;

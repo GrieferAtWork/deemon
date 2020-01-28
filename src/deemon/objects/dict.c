@@ -1634,7 +1634,7 @@ dict_bool(Dict *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_init(Dict *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:Dict", &seq))
 		goto err;
@@ -1664,7 +1664,7 @@ dict_values(DeeDictObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_doclear(Dict *self, size_t argc, DeeObject **argv) {
+dict_doclear(Dict *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	dict_clear(self);
@@ -1674,7 +1674,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_get(Dict *self, size_t argc, DeeObject **argv) {
+dict_get(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		goto err;
@@ -1684,7 +1684,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_pop(Dict *self, size_t argc, DeeObject **argv) {
+dict_pop(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
 		goto err;
@@ -1694,7 +1694,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_popsomething(Dict *self, size_t argc, DeeObject **argv) {
+dict_popsomething(Dict *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	struct dict_item *iter;
 	if (DeeArg_Unpack(argc, argv, ":popitem"))
@@ -1730,7 +1730,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setdefault(Dict *self, size_t argc, DeeObject **argv) {
+dict_setdefault(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *value = Dee_None, *old_value;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o|o:setdefault", &key, &value))
@@ -1746,7 +1746,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setold(Dict *self, size_t argc, DeeObject **argv) {
+dict_setold(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *value;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setold", &key, &value))
@@ -1760,7 +1760,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setnew(Dict *self, size_t argc, DeeObject **argv) {
+dict_setnew(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *value;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setnew", &key, &value))
@@ -1774,7 +1774,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setold_ex(Dict *self, size_t argc, DeeObject **argv) {
+dict_setold_ex(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *value, *old_value, *result;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setold_ex", &key, &value))
@@ -1794,7 +1794,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_setnew_ex(Dict *self, size_t argc, DeeObject **argv) {
+dict_setnew_ex(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *value, *old_value, *result;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "oo:setnew_ex", &key, &value))
@@ -1814,7 +1814,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_update(Dict *self, size_t argc, DeeObject **argv) {
+dict_update(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *items, *iterator;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
@@ -1830,7 +1830,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_sizeof(Dict *self, size_t argc, DeeObject **argv) {
+dict_sizeof(Dict *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(sizeof(Dict) +
@@ -1851,59 +1851,59 @@ err:
 
 PRIVATE struct type_method dict_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_get,
 	  DOC("(key,def=!N)->\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_pop,
 	  DOC("(key)->\n"
 	      "(key,def)->\n"
 	      "@throw KeyError No @def was given and @key was not found\n"
 	      "Delete @key from @this and return its previously assigned value or @def when @key had no item associated") },
 	{ DeeString_STR(&str_clear),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_doclear,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_doclear,
 	  DOC("()\n"
 	      "Clear all values from @this :Dict") },
 	{ "popitem",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_popsomething,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_popsomething,
 	  DOC("->?T2?O?O\n"
 	      "@return A random pair key-value pair that has been removed\n"
 	      "@throw ValueError @this :Dict was empty") },
 	{ "setdefault",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_setdefault,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setdefault,
 	  DOC("(key,def=!N)->\n"
 	      "@return The object currently assigned to @key\n"
 	      "Lookup @key in @this Dict and return its value if found. Otherwise, assign @def to @key and return it instead") },
 	{ "setold",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_setold,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setold,
 	  DOC("(key,value)->?Dbool\n"
 	      "@return Indicative of @value having been assigned to @key\n"
 	      "Assign @value to @key, only succeeding when @key already existed to begin with") },
 	{ "setnew",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_setnew,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setnew,
 	  DOC("(key,value)->?Dbool\n"
 	      "@return Indicative of @value having been assigned to @key\n"
 	      "Assign @value to @key, only succeeding when @key didn't exist before") },
 	{ "setold_ex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_setold_ex,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setold_ex,
 	  DOC("(key,value)->?T2?Dbool?O\n"
 	      "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
 	      "Same as #setold but also return the previously assigned object") },
 	{ "setnew_ex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_setnew_ex,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_setnew_ex,
 	  DOC("(key,value)->?T2?Dbool?O\n"
 	      "@return A pair of values (new-value-was-assigned, old-value-or-none)\n"
 	      "Same as #setnew but return the previously assigned object on failure") },
 	{ "update",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_update,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
 	  DOC("(items:?S?T2?O?O)\n"
 	      "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this Dict") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_sizeof,
 	  DOC("->?Dint") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
-	{ "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&dict_update,
+	{ "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
 	  DOC("(items:?S?T2?O?O)\n"
 	      "A deprecated alias for #update") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

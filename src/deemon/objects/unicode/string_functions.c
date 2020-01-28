@@ -2028,7 +2028,7 @@ PRIVATE struct keyword replace_kwlist[] = { K(find), K(replace), K(max), KEND };
 
 PRIVATE WUNUSED DREF String *DCALL
 string_replace(String *__restrict self, size_t argc,
-               DeeObject **argv, DeeObject *Kw) {
+               DeeObject *const *argv, DeeObject *Kw) {
 	String *find, *replace;
 	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, Kw, replace_kwlist, "oo|Iu:replace", &find, &replace, &max_count) ||
@@ -2149,7 +2149,7 @@ retself:
 
 PRIVATE WUNUSED DREF String *DCALL
 string_casereplace(String *__restrict self, size_t argc,
-                   DeeObject **argv, DeeObject *kw) {
+                   DeeObject *const *argv, DeeObject *kw) {
 	String *find, *replace;
 	size_t max_count = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, replace_kwlist, "oo|Iu:casereplace", &find, &replace, &max_count) ||
@@ -2272,7 +2272,7 @@ retself:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_ord(String *self, size_t argc, DeeObject **argv) {
+string_ord(String *self, size_t argc, DeeObject *const *argv) {
 	size_t index = 0;
 	if (argc) {
 		if (DeeArg_Unpack(argc, argv, "Iu:ord", &index))
@@ -2294,7 +2294,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 string_bytes(String *self, size_t argc,
-             DeeObject **argv) {
+             DeeObject *const *argv) {
 	bool allow_invalid = false;
 	size_t start = 0, end = (size_t)-1;
 	uint8_t *my_bytes;
@@ -2332,7 +2332,7 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 #define DEFINE_STRING_TRAIT(name, function, test_ch)                    \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
 	string_##name(String *__restrict self,                              \
-	              size_t argc, DeeObject **argv) {           \
+	              size_t argc, DeeObject *const *argv) {           \
 		size_t start = 0, end = (size_t)-1;                             \
 		if (argc == 1) {                                                \
 			uint32_t ch;                                                \
@@ -2357,7 +2357,7 @@ PRIVATE struct keyword substr_kwlist[] = { K(start), K(end), KEND };
 #define DEFINE_ANY_STRING_TRAIT(name, function)                                          \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                                        \
 	string_##name(String *__restrict self, size_t argc,                                  \
-	              DeeObject **argv, DeeObject *kw) {                          \
+	              DeeObject *const *argv, DeeObject *kw) {                          \
 		size_t start = 0, end = (size_t)-1;                                              \
 		if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId" #name, &start, &end)) \
 			return NULL;                                                                 \
@@ -2398,7 +2398,7 @@ DEFINE_ANY_STRING_TRAIT(isanyascii, DeeString_IsAnyAscii)
 #undef DEFINE_STRING_TRAIT
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_asnumber(String *self, size_t argc, DeeObject **argv) {
+string_asnumber(String *self, size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
@@ -2435,7 +2435,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_asdigit(String *self, size_t argc, DeeObject **argv) {
+string_asdigit(String *self, size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
@@ -2472,7 +2472,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_asdecimal(String *self, size_t argc, DeeObject **argv) {
+string_asdecimal(String *self, size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	DeeObject *defl = NULL;
 	struct unitraits *trt;
@@ -2519,7 +2519,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_Swapcase(DeeObject *
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_lower(String *self, size_t argc,
-             DeeObject **argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:lower", &start, &end))
 		return NULL;
@@ -2528,7 +2528,7 @@ string_lower(String *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_upper(String *self, size_t argc,
-             DeeObject **argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:upper", &start, &end))
 		return NULL;
@@ -2537,7 +2537,7 @@ string_upper(String *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_title(String *self, size_t argc,
-             DeeObject **argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:title", &start, &end))
 		return NULL;
@@ -2546,7 +2546,7 @@ string_title(String *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_capitalize(String *self, size_t argc,
-                  DeeObject **argv, DeeObject *kw) {
+                  DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:capitalize", &start, &end))
 		return NULL;
@@ -2555,7 +2555,7 @@ string_capitalize(String *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_swapcase(String *self, size_t argc,
-                DeeObject **argv, DeeObject *kw) {
+                DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:swapcase", &start, &end))
 		return NULL;
@@ -2564,7 +2564,7 @@ string_swapcase(String *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefold(String *self, size_t argc,
-                DeeObject **argv, DeeObject *kw) {
+                DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:casefold", &start, &end))
 		goto err;
@@ -2699,7 +2699,7 @@ PRIVATE struct keyword find_kwlist[] = { K(needle), K(start), K(end), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_find(String *self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	size_t result;
@@ -2779,7 +2779,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rfind(String *self, size_t argc,
-             DeeObject **argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	size_t result;
@@ -2859,7 +2859,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_index(String *self, size_t argc,
-             DeeObject **argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	size_t result;
@@ -2940,7 +2940,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rindex(String *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	size_t result;
@@ -3027,7 +3027,7 @@ DeeString_CaseFindAll(String *self, String *other,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findall(String *self, size_t argc,
-               DeeObject **argv, DeeObject *kw) {
+               DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:findall", &other, &start, &end) ||
@@ -3038,7 +3038,7 @@ string_findall(String *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefindall(String *self, size_t argc,
-                   DeeObject **argv, DeeObject *kw) {
+                   DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casefindall", &other, &start, &end) ||
@@ -3049,7 +3049,7 @@ string_casefindall(String *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefind(String *self, size_t argc,
-                DeeObject **argv, DeeObject *kw) {
+                DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
@@ -3134,7 +3134,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserfind(String *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
@@ -3219,7 +3219,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseindex(String *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
@@ -3305,7 +3305,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserindex(String *self, size_t argc,
-                  DeeObject **argv, DeeObject *kw) {
+                  DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t start = 0, end = (size_t)-1;
 	size_t mylen, result, match_length;
@@ -3443,7 +3443,7 @@ string_getsubstr(String *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_substr(String *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	size_t start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:substr", &start, &end))
 		return NULL;
@@ -3451,7 +3451,7 @@ string_substr(String *self, size_t argc,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_strip(String *self, size_t argc, DeeObject **argv) {
+string_strip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:strip", &mask))
 		return NULL;
@@ -3460,7 +3460,7 @@ string_strip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_lstrip(String *self, size_t argc, DeeObject **argv) {
+string_lstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:lstrip", &mask))
 		return NULL;
@@ -3469,7 +3469,7 @@ string_lstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rstrip(String *self, size_t argc, DeeObject **argv) {
+string_rstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:rstrip", &mask))
 		return NULL;
@@ -3478,7 +3478,7 @@ string_rstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casestrip(String *self, size_t argc, DeeObject **argv) {
+string_casestrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:casestrip", &mask))
 		return NULL;
@@ -3487,7 +3487,7 @@ string_casestrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caselstrip(String *self, size_t argc, DeeObject **argv) {
+string_caselstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:caselstrip", &mask))
 		return NULL;
@@ -3496,7 +3496,7 @@ string_caselstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caserstrip(String *self, size_t argc, DeeObject **argv) {
+string_caserstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *mask = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:caserstrip", &mask))
 		return NULL;
@@ -3509,7 +3509,7 @@ string_caserstrip(String *self, size_t argc, DeeObject **argv) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_startswith(String *self, size_t argc,
-                  DeeObject **argv, DeeObject *kw) {
+                  DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
@@ -3591,7 +3591,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_endswith(String *self, size_t argc,
-                DeeObject **argv, DeeObject *kw) {
+                DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
@@ -3680,7 +3680,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casestartswith(String *self, size_t argc,
-                      DeeObject **argv, DeeObject *kw) {
+                      DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
@@ -3740,7 +3740,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseendswith(String *self, size_t argc,
-                    DeeObject **argv, DeeObject *kw) {
+                    DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr my_str, ot_str;
@@ -3806,7 +3806,7 @@ PRIVATE struct keyword decode_encode_kwlist[] = { K(codec), K(errors), KEND };
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *codec;
 	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
@@ -3825,7 +3825,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *codec;
 	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
@@ -3847,7 +3847,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Segments(String *__restrict self, size_t substring_length);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_segments(String *self, size_t argc, DeeObject **argv) {
+string_segments(String *self, size_t argc, DeeObject *const *argv) {
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:segments", &substring_length))
 		return NULL;
@@ -3859,7 +3859,7 @@ string_segments(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_distribute(String *self, size_t argc, DeeObject **argv) {
+string_distribute(String *self, size_t argc, DeeObject *const *argv) {
 	size_t substring_count;
 	size_t substring_length;
 	if (DeeArg_Unpack(argc, argv, "Iu:distribute", &substring_count))
@@ -3882,7 +3882,7 @@ PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_center(String *self, size_t argc, DeeObject **argv) {
+string_center(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result_length, my_len, fl_len;
 	size_t fill_front, fill_back;
 	DeeObject *filler_ob = NULL;
@@ -4012,7 +4012,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_ljust(String *self, size_t argc, DeeObject **argv) {
+string_ljust(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result_length, my_len, fl_len, fill_back;
 	DeeObject *filler_ob = NULL;
 	DREF DeeObject *result;
@@ -4127,7 +4127,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rjust(String *self, size_t argc, DeeObject **argv) {
+string_rjust(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result_length, my_len, fl_len, fill_front;
 	DeeObject *filler_ob = NULL;
 	DREF DeeObject *result;
@@ -4243,7 +4243,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_count(String *self, size_t argc,
-             DeeObject **argv, DeeObject *kw) {
+             DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t result = 0;
 	size_t begin = 0, end = (size_t)-1;
@@ -4321,7 +4321,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casecount(String *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t result = 0;
 	size_t begin = 0, end = (size_t)-1, match_length;
@@ -4402,7 +4402,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_contains_f(String *self, size_t argc,
-                  DeeObject **argv, DeeObject *kw) {
+                  DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr lhs, rhs;
@@ -4475,7 +4475,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casecontains_f(String *self, size_t argc,
-                      DeeObject **argv, DeeObject *kw) {
+                      DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	size_t begin = 0, end = (size_t)-1;
 	union dcharptr lhs, rhs;
@@ -4547,7 +4547,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_zfill(String *self, size_t argc, DeeObject **argv) {
+string_zfill(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result_length, my_len, fl_len, fill_front;
 	DeeObject *filler_ob = NULL;
 	DREF DeeObject *result;
@@ -4687,7 +4687,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_reversed(String *self, size_t argc,
-                DeeObject **argv, DeeObject *kw) {
+                DeeObject *const *argv, DeeObject *kw) {
 	size_t begin = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, substr_kwlist, "|IdId:reversed", &begin, &end))
 		return NULL;
@@ -4695,7 +4695,7 @@ string_reversed(String *self, size_t argc,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_expandtabs(String *self, size_t argc, DeeObject **argv) {
+string_expandtabs(String *self, size_t argc, DeeObject *const *argv) {
 	size_t tab_width = 8;
 	if (DeeArg_Unpack(argc, argv, "|Iu:expandtabs", &tab_width))
 		return NULL;
@@ -4703,7 +4703,7 @@ string_expandtabs(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_join(String *self, size_t argc, DeeObject **argv) {
+string_join(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *items;
 	if (DeeArg_Unpack(argc, argv, "o:join", &items))
 		return NULL;
@@ -4711,7 +4711,7 @@ string_join(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_unifylines(String *self, size_t argc, DeeObject **argv) {
+string_unifylines(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *replacement = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:unifylines", &replacement))
 		return NULL;
@@ -5043,7 +5043,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_parition(String *self, size_t argc,
-                DeeObject **argv, DeeObject *kw) {
+                DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1;
@@ -5139,7 +5139,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rparition(String *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1;
@@ -5235,7 +5235,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseparition(String *self, size_t argc,
-                    DeeObject **argv, DeeObject *kw) {
+                    DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1, match_length;
@@ -5337,7 +5337,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserparition(String *self, size_t argc,
-                     DeeObject **argv, DeeObject *kw) {
+                     DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1, match_length;
@@ -5438,7 +5438,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_sstrip(String *self, size_t argc, DeeObject **argv) {
+string_sstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:sstrip", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5447,7 +5447,7 @@ string_sstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_lsstrip(String *self, size_t argc, DeeObject **argv) {
+string_lsstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:lsstrip", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5456,7 +5456,7 @@ string_lsstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rsstrip(String *self, size_t argc, DeeObject **argv) {
+string_rsstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:rsstrip", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5465,7 +5465,7 @@ string_rsstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casesstrip(String *self, size_t argc, DeeObject **argv) {
+string_casesstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:casesstrip", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5474,7 +5474,7 @@ string_casesstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caselsstrip(String *self, size_t argc, DeeObject **argv) {
+string_caselsstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:caselsstrip", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5483,7 +5483,7 @@ string_caselsstrip(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casersstrip(String *self, size_t argc, DeeObject **argv) {
+string_casersstrip(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:casersstrip", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5501,7 +5501,7 @@ struct compare_args {
 
 PRIVATE int DCALL
 get_compare_args(struct compare_args *__restrict args,
-                 size_t argc, DeeObject **argv,
+                 size_t argc, DeeObject *const *argv,
                  char const *__restrict funname) {
 	args->my_start = 0;
 	args->my_end   = (size_t)-1;
@@ -6239,7 +6239,7 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_compare(String *self, size_t argc, DeeObject **argv) {
+string_compare(String *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "compare"))
@@ -6252,7 +6252,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casecompare(String *self, size_t argc, DeeObject **argv) {
+string_casecompare(String *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "compare"))
@@ -6266,7 +6266,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_vercompare(String *self, size_t argc, DeeObject **argv) {
+string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	int32_t result;
@@ -6365,7 +6365,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casevercompare(String *self, size_t argc, DeeObject **argv) {
+string_casevercompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	int32_t result;
@@ -6464,7 +6464,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_fuzzycompare(String *self, size_t argc, DeeObject **argv) {
+string_fuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	dssize_t result;
@@ -6565,7 +6565,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casefuzzycompare(String *self, size_t argc, DeeObject **argv) {
+string_casefuzzycompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	dssize_t result;
@@ -6666,7 +6666,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_common(String *self, size_t argc, DeeObject **argv) {
+string_common(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
@@ -6791,7 +6791,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rcommon(String *self, size_t argc, DeeObject **argv) {
+string_rcommon(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
@@ -6922,7 +6922,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casecommon(String *self, size_t argc, DeeObject **argv) {
+string_casecommon(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
@@ -7046,7 +7046,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casercommon(String *self, size_t argc, DeeObject **argv) {
+string_casercommon(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len, result = 0;
 	struct compare_args args;
@@ -7171,7 +7171,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_wildcompare(String *self, size_t argc, DeeObject **argv) {
+string_wildcompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	int64_t result;
@@ -7270,7 +7270,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_wmatch(String *self, size_t argc, DeeObject **argv) {
+string_wmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	bool result;
@@ -7369,7 +7369,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casewildcompare(String *self, size_t argc, DeeObject **argv) {
+string_casewildcompare(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	int result;
@@ -7476,7 +7476,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casewmatch(String *self, size_t argc, DeeObject **argv) {
+string_casewmatch(String *self, size_t argc, DeeObject *const *argv) {
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
 	int result;
@@ -7588,7 +7588,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_CaseSplit(DeeObject *self, DeeObject *seperator);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_split(String *self, size_t argc, DeeObject **argv) {
+string_split(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:split", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -7597,7 +7597,7 @@ string_split(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casesplit(String *self, size_t argc, DeeObject **argv) {
+string_casesplit(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:casesplit", &other) ||
 	    DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -7609,7 +7609,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_SplitLines(DeeObject *__restrict self, bool keepends);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_splitlines(String *self, size_t argc, DeeObject **argv) {
+string_splitlines(String *self, size_t argc, DeeObject *const *argv) {
 	bool keepends = false;
 	if (DeeArg_Unpack(argc, argv, "|b:splitlines", &keepends))
 		return NULL;
@@ -7617,7 +7617,7 @@ string_splitlines(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_indent(String *self, size_t argc, DeeObject **argv) {
+string_indent(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *filler = &str_tab;
 	if (DeeArg_Unpack(argc, argv, "|o:indent", &filler) ||
 	    DeeObject_AssertTypeExact(filler, &DeeString_Type))
@@ -7626,7 +7626,7 @@ string_indent(String *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_dedent(String *self, size_t argc, DeeObject **argv) {
+string_dedent(String *self, size_t argc, DeeObject *const *argv) {
 	size_t max_chars = 1;
 	DeeObject *mask  = NULL;
 	if (DeeArg_Unpack(argc, argv, "|Iuo:dedent", &max_chars, &mask))
@@ -7643,7 +7643,7 @@ DeeString_Format(dformatprinter printer, void *arg,
                  size_t format_len, DeeObject *__restrict args);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_format(String *self, size_t argc, DeeObject **argv) {
+string_format(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args;
 	char *utf8_repr;
 	if (DeeArg_Unpack(argc, argv, "o:format", &args))
@@ -7671,7 +7671,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_Scanf(DeeObject *self,
                 DeeObject *format);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_scanf(String *self, size_t argc, DeeObject **argv) {
+string_scanf(String *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *format;
 	if (DeeArg_Unpack(argc, argv, "o:scanf", &format) ||
 	    DeeObject_AssertTypeExact(format, &DeeString_Type))
@@ -7682,7 +7682,7 @@ string_scanf(String *self, size_t argc, DeeObject **argv) {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_findmatch(String *self, size_t argc, DeeObject **argv) {
+string_findmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -7773,7 +7773,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_indexmatch(String *self, size_t argc, DeeObject **argv) {
+string_indexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -7866,7 +7866,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casefindmatch(String *self, size_t argc, DeeObject **argv) {
+string_casefindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -7963,7 +7963,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caseindexmatch(String *self, size_t argc, DeeObject **argv) {
+string_caseindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -8062,7 +8062,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rfindmatch(String *self, size_t argc, DeeObject **argv) {
+string_rfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -8153,7 +8153,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rindexmatch(String *self, size_t argc, DeeObject **argv) {
+string_rindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -8246,7 +8246,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caserfindmatch(String *self, size_t argc, DeeObject **argv) {
+string_caserfindmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -8343,7 +8343,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caserindexmatch(String *self, size_t argc, DeeObject **argv) {
+string_caserindexmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, ptr;
@@ -8443,7 +8443,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_partitionmatch(String *self, size_t argc, DeeObject **argv) {
+string_partitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
@@ -8593,7 +8593,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rpartitionmatch(String *self, size_t argc, DeeObject **argv) {
+string_rpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
@@ -8747,7 +8747,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_casepartitionmatch(String *self, size_t argc, DeeObject **argv) {
+string_casepartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
@@ -8903,7 +8903,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_caserpartitionmatch(String *self, size_t argc, DeeObject **argv) {
+string_caserpartitionmatch(String *self, size_t argc, DeeObject *const *argv) {
 	String *s_open, *s_clos;
 	size_t start = 0, end = (size_t)-1;
 	union dcharptr scan_str, open_str, clos_str, match_start, match_end;
@@ -9156,7 +9156,7 @@ err:
 
 PRIVATE int (DCALL regex_getargs_generic)(String *__restrict self,
                                          char const *__restrict function_name,
-                                         size_t argc, DeeObject **argv,
+                                         size_t argc, DeeObject *const *argv,
                                          struct re_args *__restrict result) {
 	DeeObject *pattern;
 	result->re_flags  = Dee_REGEX_FNORMAL;
@@ -9295,7 +9295,7 @@ err:
 
 PRIVATE int (DCALL regex_getargs_generic_ex)(String *__restrict self,
                                             char const *__restrict function_name,
-                                            size_t argc, DeeObject **argv,
+                                            size_t argc, DeeObject *const *argv,
                                             struct re_args_ex *__restrict result) {
 	DeeObject *pattern;
 	result->re_flags    = Dee_REGEX_FNORMAL;
@@ -9434,7 +9434,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rematch(String *self, size_t argc, DeeObject **argv) {
+string_rematch(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	size_t result;
 	if (regex_getargs_generic(self, "rematch", argc, argv, &args))
@@ -9452,7 +9452,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rematches(String *self, size_t argc, DeeObject **argv) {
+string_rematches(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	size_t result;
 	char const *data_endptr;
@@ -9499,7 +9499,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_refind(String *self, size_t argc, DeeObject **argv) {
+string_refind(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9521,7 +9521,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rerfind(String *self, size_t argc, DeeObject **argv) {
+string_rerfind(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9543,7 +9543,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_reindex(String *self, size_t argc, DeeObject **argv) {
+string_reindex(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9567,7 +9567,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rerindex(String *self, size_t argc, DeeObject **argv) {
+string_rerindex(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9592,7 +9592,7 @@ err:
 
 PRIVATE WUNUSED DREF String *DCALL
 string_relocate(String *self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9617,7 +9617,7 @@ err:
 
 PRIVATE WUNUSED DREF String *DCALL
 string_rerlocate(String *self,
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9698,7 +9698,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_repartition(String *self, size_t argc, DeeObject **argv) {
+string_repartition(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9720,7 +9720,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rerpartition(String *self, size_t argc, DeeObject **argv) {
+string_rerpartition(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range result_range;
@@ -9742,7 +9742,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_rereplace(String *self, size_t argc, DeeObject **argv) {
+string_rereplace(String *self, size_t argc, DeeObject *const *argv) {
 	String *find_pattern, *replace;
 	DeeObject *opt1 = NULL, *opt2 = NULL;
 	size_t max_count  = (size_t)-1;
@@ -9824,7 +9824,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL string_re_locateall(Stri
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL string_re_split(String *__restrict self, String *__restrict pattern, struct re_args const *__restrict args);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_refindall(String *self, size_t argc, DeeObject **argv) {
+string_refindall(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	if (regex_getargs_generic(self, "refindall", argc, argv, &args))
 		goto err;
@@ -9834,7 +9834,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_relocateall(String *self, size_t argc, DeeObject **argv) {
+string_relocateall(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	if (regex_getargs_generic(self, "relocateall", argc, argv, &args))
 		goto err;
@@ -9844,7 +9844,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_resplit(String *self, size_t argc, DeeObject **argv) {
+string_resplit(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	if (regex_getargs_generic(self, "resplit", argc, argv, &args))
 		goto err;
@@ -9854,7 +9854,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_restartswith(String *self, size_t argc, DeeObject **argv) {
+string_restartswith(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	size_t result;
 	if (regex_getargs_generic(self, "restartswith", argc, argv, &args))
@@ -9872,7 +9872,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_reendswith(String *self, size_t argc, DeeObject **argv) {
+string_reendswith(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	int error;
 	struct regex_range_ptr range;
@@ -9895,7 +9895,7 @@ err:
 
 PRIVATE WUNUSED DREF String *DCALL
 string_relstrip(String *self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	struct re_args args;
 	size_t temp;
 	if (regex_getargs_generic(self, "relstrip", argc, argv, &args))
@@ -9923,7 +9923,7 @@ err:
 
 PRIVATE WUNUSED DREF String *DCALL
 string_rerstrip(String *self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	struct re_args_ex args;
 	int error;
 	struct regex_range_ex range;
@@ -9954,7 +9954,7 @@ err:
 
 PRIVATE WUNUSED DREF String *DCALL
 string_restrip(String *self,
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	struct re_args_ex args;
 	int error;
 	struct regex_range_ex range;
@@ -10001,7 +10001,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_recontains(String *self, size_t argc, DeeObject **argv) {
+string_recontains(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args_ex args;
 	int error;
 	struct regex_range_ptr range;
@@ -10021,7 +10021,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_recount(String *self, size_t argc, DeeObject **argv) {
+string_recount(String *self, size_t argc, DeeObject *const *argv) {
 	struct re_args_ex args;
 	int error;
 	size_t result;
@@ -10051,7 +10051,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_sizeof(String *self, size_t argc, DeeObject **argv) {
+string_sizeof(String *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	struct string_utf *utf;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
@@ -10086,7 +10086,7 @@ INTERN struct type_method string_methods[] = {
 
 	/* String encode/decode functions */
 	{ "decode",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_decode,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_decode,
 	  DOC("(codec:?.,errors=!Pstrict)->?X2?.?O\n"
 	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
 	      "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
@@ -10117,7 +10117,7 @@ INTERN struct type_method string_methods[] = {
 	      "If the given @codec is not apart of this list, a call is made to :codecs:decode"),
 	  TYPE_METHOD_FKWDS },
 	{ "encode",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_encode,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_encode,
 	  DOC("(codec:?.,errors=!Pstrict)->?X3?DBytes?.?O\n"
 	      "@throw ValueError The given @codec or @errors wasn't recognized\n"
 	      "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
@@ -10148,7 +10148,7 @@ INTERN struct type_method string_methods[] = {
 	      "If the given @codec is not apart of this list, a call is made to :codecs:encode"),
 	  TYPE_METHOD_FKWDS },
 	{ "bytes",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_bytes,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_bytes,
 	  DOC("(allow_invalid=!f)->?DBytes\n"
 	      "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
 	      "@throw ValueError @allow_invalid is :false, and @this string contains characters above $0xff\n"
@@ -10157,7 +10157,7 @@ INTERN struct type_method string_methods[] = {
 	      "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
 	      "$\"?\" in the returned Bytes object") },
 	{ "ord",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_ord,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_ord,
 	  DOC("->?Dint\n"
 	      "@throw ValueError The length of @this string is not equal to $1\n"
 	      "Return the ordinal integral value of @this single-character string\n"
@@ -10169,7 +10169,7 @@ INTERN struct type_method string_methods[] = {
 
 	/* String formatting / scanning. */
 	{ "format",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_format,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_format,
 	  DOC("(args:?S?O)->?.\n"
 	      "Format @this string using @args:\n"
 	      "This kind of formating is the most powerful variant of string formatting available in deemon.\n"
@@ -10227,7 +10227,7 @@ INTERN struct type_method string_methods[] = {
 	      "$\"{:^42:foo}\"|Will append ${selected_object.operator str().center(42,\"foo\")} to the resulting string (s.a. #center)\n"
 	      "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42,\"foo\")} to the resulting string (s.a. #zfill)}") },
 	{ "scanf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_scanf,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_scanf,
 	  DOC("(format:?.)->?S?O\n"
 	      "@throw ValueError The given @format is malformed\n"
 	      "@throw ValueError Conversion to an integer failed\n"
@@ -10260,7 +10260,7 @@ INTERN struct type_method string_methods[] = {
 
 	/* String/Character traits */
 	{ "isprint",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isprint,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isprint,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10269,7 +10269,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all "
 	      "characters in ${this.substr(start,end)} are printable") },
 	{ "isalpha",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isalpha,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isalpha,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10278,7 +10278,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are alphabetical") },
 	{ "isspace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isspace,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isspace,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10287,7 +10287,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are space-characters") },
 	{ "islf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_islf,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_islf,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10296,7 +10296,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are line-feeds") },
 	{ "islower",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_islower,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_islower,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10305,7 +10305,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are lower-case") },
 	{ "isupper",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isupper,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isupper,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10314,7 +10314,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are upper-case") },
 	{ "iscntrl",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_iscntrl,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_iscntrl,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10323,7 +10323,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are control characters") },
 	{ "isdigit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isdigit,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isdigit,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10332,7 +10332,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are digits") },
 	{ "isdecimal",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isdecimal,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isdecimal,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10341,7 +10341,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are dicimal characters") },
 	{ "issymstrt",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_issymstrt,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymstrt,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10350,7 +10350,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} can be used to start a symbol name") },
 	{ "issymcont",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_issymcont,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymcont,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10359,7 +10359,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} can be used to continue a symbol name") },
 	{ "isalnum",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isalnum,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isalnum,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10368,7 +10368,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      "in ${this.substr(start,end)} are alpha-numerical") },
 	{ "isnumeric",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isnumeric,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isnumeric,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10378,7 +10378,7 @@ INTERN struct type_method string_methods[] = {
 	      "in ${this.substr(start,end)} qualify as digit or decimal characters\n"
 	      "This function is the logical union of #isdigit and #isdecimal") },
 	{ "istitle",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_istitle,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_istitle,
 	  DOC("(index:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
@@ -10390,7 +10390,7 @@ INTERN struct type_method string_methods[] = {
 	      "follows title-casing, meaning that space is followed by title-case, "
 	      "with all remaining characters not being title-case") },
 	{ "issymbol",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_issymbol,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymbol,
 	  DOC("(index:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
@@ -10402,7 +10402,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
 	      "is a valid symbol name") },
 	{ "isascii",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isascii,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isascii,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
@@ -10411,7 +10411,7 @@ INTERN struct type_method string_methods[] = {
 	      "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start,end)} "
 	      "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 	{ "asnumber",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_asnumber,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asnumber,
 	  DOC("->?Dint\n"
 	      "@throw ValueError The string is longer than a single character\n"
 	      "(index:?Dint)->?Dint\n"
@@ -10431,7 +10431,7 @@ INTERN struct type_method string_methods[] = {
 	      ">print \"\xC2\xB2\".isnumeric(); /* true */\n"
 	      ">print \"\xC2\xB2\".asnumber();  /* 2 */") },
 	{ "asdigit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_asdigit,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asdigit,
 	  DOC("->?Dint\n"
 	      "@throw ValueError The string is longer than a single character\n"
 	      "(index:?Dint)->?Dint\n"
@@ -10442,7 +10442,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric") },
 	{ "asdecimal",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_asdecimal,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asdecimal,
 	  DOC("->?Dint\n"
 	      "@throw ValueError The string is longer than a single character\n"
 	      "(index:?Dint)->?Dint\n"
@@ -10454,91 +10454,91 @@ INTERN struct type_method string_methods[] = {
 	      "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric") },
 
 	{ "isanyprint",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanyprint,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyprint,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is printable"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalpha",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanyalpha,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalpha,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is alphabetical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyspace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanyspace,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyspace,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is a space character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanylf,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylf,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is a line-feeds"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylower",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanylower,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylower,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyupper",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanyupper,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyupper,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanycntrl",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanycntrl,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanycntrl,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is a control character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydigit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanydigit,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydigit,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is a digit"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydecimal",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanydecimal,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydecimal,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is a dicimal character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymstrt",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanysymstrt,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymstrt,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} can be used to start a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymcont",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanysymcont,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymcont,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} can be used to continue a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalnum",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanyalnum,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalnum,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} is alpha-numerical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanynumeric",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanynumeric,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanynumeric,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} qualifies as digit or decimal characters"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanytitle",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanytitle,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanytitle,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
 	      "${this.substr(start,end)} has title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyascii",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_isanyascii,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyascii,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in ${this.substr(start,end)} is "
 	      "an ascii character, that is has an ordinal value ${<= 0x7f}"),
@@ -10546,33 +10546,33 @@ INTERN struct type_method string_methods[] = {
 
 	/* String conversion */
 	{ "lower",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_lower,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lower,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Returns @this string converted to lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "upper",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_upper,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_upper,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Returns @this string converted to upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "title",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_title,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_title,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Returns @this string converted to title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "capitalize",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_capitalize,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_capitalize,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Returns @this string with each word capitalized"),
 	  TYPE_METHOD_FKWDS },
 	{ "swapcase",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_swapcase,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_swapcase,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Returns @this string with the casing of each "
 	      "character that has two different casings swapped"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefold",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casefold,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefold,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Returns @this string with its casing folded.\n"
 	      "The equivalent of the string returned by this function is what is "
@@ -10593,55 +10593,55 @@ INTERN struct type_method string_methods[] = {
 
 	/* Case-sensitive query functions */
 	{ DeeString_STR(&str_replace),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_replace,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_replace,
 	  DOC("(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	      "Find up to @max occurrances of @find and replace each with @replace, then return the resulting string"),
 	  TYPE_METHOD_FKWDS },
 	{ "find",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_find,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_find,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
 	      "Find the first instance of @needle within ${this.substr(start,end)}, "
 	      "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "rfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rfind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rfind,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
 	      "Find the last instance of @needle within ${this.substr(start,end)}, "
 	      "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "index",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_index,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_index,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
 	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
 	      "Find the first instance of @needle within ${this.substr(start,end)}, "
 	      "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "rindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rindex,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rindex,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
 	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
 	      "Find the last instance of @needle within ${this.substr(start,end)}, "
 	      "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "findall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_findall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_findall,
 	  DOC("(needle:?.,start=!0,end=!-1)->?S?Dint\n"
 	      "Find all instances of @needle within ${this.substr(start,end)}, "
 	      "and return their starting indeces as a sequence"),
 	  TYPE_METHOD_FKWDS },
 	{ "count",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_count,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_count,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
 	      "Count the number of instances of @needle that exist within ${this.substr(start,end)}, "
 	      "and return now many were found"),
 	  TYPE_METHOD_FKWDS },
 	{ "contains",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_contains_f,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_contains_f,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	      "Check if @needle can be found within ${this.substr(start,end)}, and return a boolean indicative of that"),
 	  TYPE_METHOD_FKWDS },
 	{ "substr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_substr,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_substr,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Similar to ${this[start:end]}, however only integer-convertible objects may "
 	      "be passed (passing :none will invoke ${(int)none}, which results in $0), and "
@@ -10661,22 +10661,22 @@ INTERN struct type_method string_methods[] = {
 	      "as well as many others"),
 	  TYPE_METHOD_FKWDS },
 	{ "strip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_strip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_strip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Strip all leading and trailing whitespace-characters, or "
 	      "characters apart of @mask, and return the resulting string") },
 	{ "lstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_lstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lstrip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Strip all leading whitespace-characters, or "
 	      "characters apart of @mask, and return the resulting string") },
 	{ "rstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rstrip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Strip all trailing whitespace-characters, or "
 	      "characters apart of @mask, and return the resulting string") },
 	{ "sstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_sstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_sstrip,
 	  DOC("(needle:?.)->?.\n"
 	      "Strip all leading and trailing instances of @needle from @this string\n"
 	      ">local result = this;\n"
@@ -10685,52 +10685,52 @@ INTERN struct type_method string_methods[] = {
 	      ">while (result.endswith(needle))\n"
 	      "> result = result[:#result-#needle];") },
 	{ "lsstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_lsstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lsstrip,
 	  DOC("(needle:?.)->?.\n"
 	      "Strip all leading instances of @needle from @this string\n"
 	      ">local result = this;\n"
 	      ">while (result.startswith(needle))\n"
 	      "> result = result[#needle:];") },
 	{ "rsstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rsstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rsstrip,
 	  DOC("(needle:?.)->?.\n"
 	      "Strip all trailing instances of @needle from @this string\n"
 	      ">local result = this;\n"
 	      ">while (result.endswith(needle))\n"
 	      "> result = result[:#result-#needle];") },
 	{ "startswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_startswith,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_startswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	      "Return :true if the sub-string ${this.substr(start,end)} starts with @needle"),
 	  TYPE_METHOD_FKWDS },
 	{ "endswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_endswith,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_endswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	      "Return :true if the sub-string ${this.substr(start,end)} ends with @needle"),
 	  TYPE_METHOD_FKWDS },
 	{ "partition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_parition,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_parition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the first instance of @needle within ${this.substr(start,end)} and "
 	      "return a 3-element sequence of strings ${(this[:pos],needle,this[pos+#needle:])}.\n"
 	      "If @needle could not be found, ${(this,\"\",\"\")} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "rpartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rparition,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rparition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Search for the last instance of @needle within ${this.substr(start,end)} and "
 	      "return a 3-element sequence of strings ${(this[:pos],needle,this[pos+#needle:])}.\n"
 	      "If @needle could not be found, ${(this,\"\",\"\")} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "compare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_compare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_compare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Compare the sub-string ${left = this.substr(my_start,my_end)} with ${right = other.substr(other_start,other_end)}, returning "
 	      "${< 0} if ${left < right}, ${> 0} if ${left > right}, or ${== 0} if they are equal") },
 	{ "vercompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_vercompare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_vercompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
@@ -10742,7 +10742,7 @@ INTERN struct type_method string_methods[] = {
 	      "%{link https://linux.die.net/man/3/strverscmp strverscmp}, "
 	      "for which you may follow the link for further details") },
 	{ "wildcompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_wildcompare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_wildcompare,
 	  DOC("(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
@@ -10753,7 +10753,7 @@ INTERN struct type_method string_methods[] = {
 	      "be matched with any single character from @this, and $\"*\" to be matched to "
 	      "any number of characters") },
 	{ "fuzzycompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_fuzzycompare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_fuzzycompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
@@ -10766,7 +10766,7 @@ INTERN struct type_method string_methods[] = {
 	      "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
 	      "Note that there is another version #casefuzzycompare that also ignores casing") },
 	{ "wmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_wmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_wmatch,
 	  DOC("(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
@@ -10774,117 +10774,117 @@ INTERN struct type_method string_methods[] = {
 
 	/* Case-insensitive query functions */
 	{ "casereplace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casereplace,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casereplace,
 	  DOC("(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
 	      "Same as #replace, however perform a case-folded search (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casefind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefind,
 	  DOC("(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as #find, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)\n"
 	      "If no match if found, :none is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caserfind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserfind,
 	  DOC("(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as #rfind, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)\n"
 	      "If no match if found, :none is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caseindex,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseindex,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	      "Same as #index, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caserindex,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserindex,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	      "Same as #rindex, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefindall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casefindall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefindall,
 	  DOC("(needle:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
 	      "Same as #findall, however perform a case-folded search and return the star and end indices of matches (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casecount,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casecount,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
 	      "Same as #count, however perform a case-folded search (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecontains",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casecontains_f,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casecontains_f,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	      "Same as #contains, however perform a case-folded search (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casestrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casestrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casestrip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Same as #strip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
 	{ "caselstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caselstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caselstrip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Same as #lstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
 	{ "caserstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caserstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserstrip,
 	  DOC("(mask?:?.)->?.\n"
 	      "Same as #rstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
 	{ "casesstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casesstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casesstrip,
 	  DOC("(needle:?.)->?.\n"
 	      "Same as #sstrip, however perform a case-folded search (s.a. #casefold)") },
 	{ "caselsstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caselsstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caselsstrip,
 	  DOC("(needle:?.)->?.\n"
 	      "Same as #lsstrip, however perform a case-folded search (s.a. #casefold)") },
 	{ "casersstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casersstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casersstrip,
 	  DOC("(needle:?.)->?.\n"
 	      "Same as #rsstrip, however perform a case-folded search (s.a. #casefold)") },
 	{ "casestartswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casestartswith,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casestartswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	      "Same as #startswith, however perform a case-folded search (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseendswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caseendswith,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseendswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	      "Same as #endswith, however perform a case-folded search (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casepartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caseparition,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseparition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Same as #partition, however perform a case-folded search (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserpartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caserparition,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserparition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Same as #rpartition, however perform a case-folded search (s.a. #casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casecompare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casecompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Same as #compare, however compare strings with their casing folded (s.a. #casefold)") },
 	{ "casevercompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casevercompare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casevercompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Same as #vercompare, however compare strings with their casing folded (s.a. #casefold)") },
 	{ "casewildcompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casewildcompare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casewildcompare,
 	  DOC("(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "Same as #wildcompare, however compare strings with their casing folded (s.a. #casefold)") },
 	{ "casefuzzycompare",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casefuzzycompare,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefuzzycompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Same as #fuzzycompare, however compare strings with their casing folded (s.a. #casefold)") },
 	{ "casewmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casewmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casewmatch,
 	  DOC("(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
@@ -10892,57 +10892,57 @@ INTERN struct type_method string_methods[] = {
 
 	/* String alignment functions. */
 	{ "center",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_center,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_center,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
 	      "Use @this string as result, then evenly insert @filler at "
 	      "the front and back to pad its length to @width characters") },
 	{ "ljust",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_ljust,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_ljust,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
 	      "Use @this string as result, then insert @filler "
 	      "at the back to pad its length to @width characters") },
 	{ "rjust",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rjust,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rjust,
 	  DOC("(width:?Dint,filler=!P{ })->?.\n"
 	      "Use @this string as result, then insert @filler "
 	      "at the front to pad its length to @width characters") },
 	{ "zfill",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_zfill,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_zfill,
 	  DOC("(width:?Dint,filler=!P{0})->?.\n"
 	      "Skip leading ${\'+\'} and ${\'-\'} characters, then insert @filler "
 	      "to pad the resulting string to a length of @width characters") },
 	{ "reversed",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_reversed,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reversed,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Return the sub-string ${this.substr(start,end)} with its character order reversed"),
 	  TYPE_METHOD_FKWDS },
 	{ "expandtabs",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_expandtabs,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_expandtabs,
 	  DOC("(tabwidth=!8)->?.\n"
 	      "Expand tab characters with whitespace offset from the start of "
 	      "their respective line at multiples of @tabwidth") },
 	{ "unifylines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_unifylines,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_unifylines,
 	  DOC("(replacement=!P{\\\n})->?.\n"
 	      "Unify all linefeed character sequences found in @this string to "
 	      "make exclusive use of @replacement") },
 
 	/* String -- sequence interaction. */
 	{ "join",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_join,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_join,
 	  DOC("(seq:?S?O)->?.\n"
 	      "Iterate @seq and convert all items into string, inserting @this "
 	      "string before each element, starting only with the second") },
 	{ "split",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_split,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_split,
 	  DOC("(sep:?.)->?S?.\n"
 	      "Split @this string at each instance of @sep, returning a sequence of the resulting parts") },
 	{ "casesplit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casesplit,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casesplit,
 	  DOC("(sep:?.)->?S?.\n"
 	      "Same as #split, however perform a case-folded search") },
 	{ "splitlines",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_splitlines,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_splitlines,
 	  DOC("(keepends=!f)->?S?.\n"
 	      "Split @this string at each linefeed, returning a sequence of all contained lines\n"
 	      "When @keepends is :false, this is identical to ${this.unifylines().split(\"\\n\")}\n"
@@ -10951,7 +10951,7 @@ INTERN struct type_method string_methods[] = {
 
 	/* String indentation. */
 	{ "indent",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_indent,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_indent,
 	  DOC("(filler=!P{\t})->?.\n"
 	      "Using @this string as result, insert @filler at the front, as well as after "
 	      "every linefeed with the exception of one that may be located at its end\n"
@@ -10959,7 +10959,7 @@ INTERN struct type_method string_methods[] = {
 	      ">text = get_html();\n"
 	      ">text = \"<html>\n{}\n</html>\".format({ text.strip().indent() });") },
 	{ "dedent",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_dedent,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_dedent,
 	  DOC("(max_chars=!1,mask?:?.)->?.\n"
 	      "Using @this string as result, remove up to @max_chars whitespace "
 	      "(s.a. #isspace) characters, or if given: characters apart of @mask "
@@ -10967,26 +10967,26 @@ INTERN struct type_method string_methods[] = {
 
 	/* Common-character search functions. */
 	{ "common",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_common,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_common,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Returns the number of common leading characters shared between @this and @other, "
 	      "or in other words: the lowest index $i for which ${this[i] != other[i]} is true") },
 	{ "rcommon",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rcommon,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rcommon,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Returns the number of common trailing characters shared between @this and @other") },
 	{ "casecommon",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casecommon,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casecommon,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "Same as #common, however perform a case-folded search") },
 	{ "casercommon",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casercommon,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casercommon,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
@@ -10994,7 +10994,7 @@ INTERN struct type_method string_methods[] = {
 
 	/* Find match character sequences */
 	{ "findmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_findmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_findmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	      "Similar to #find, but do a recursive search for the "
 	      "first @close that doesn't have a match @{open}:\n"
@@ -11007,23 +11007,23 @@ INTERN struct type_method string_methods[] = {
 	      "Note that @open and @close are not restricted to single-character "
 	      "strings, are allowed to be of any length") },
 	{ "indexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_indexmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_indexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
 	      "Same as #findmatch, but throw an :IndexError instead of "
 	      "returning ${-1} if no @close without a match @open exists") },
 	{ "casefindmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casefindmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as #findmatch, however perform a case-folded search and return the start and end indices of the match\n"
 	      "If no match if found, :none is returned") },
 	{ "caseindexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caseindexmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
 	      "Same as #indexmatch, however perform a case-folded search and return the start and end indices of the match") },
 	{ "rfindmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rfindmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rfindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	      "Similar to #findmatch, but operate in a mirrored fashion, searching for the "
 	      "last instance of @open that has no match @close within ${this.substr(start,end)}:\n"
@@ -11034,25 +11034,25 @@ INTERN struct type_method string_methods[] = {
 	      ">print repr s[mtch:lcol+1]; /* \"(bar(),baz(42),7)\" */\n"
 	      "If no @open without a match @close exists, ${-1} is returned") },
 	{ "rindexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rindexmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
 	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
 	      "Same as #rfindmatch, but throw an :IndexError instead of "
 	      "returning ${-1} if no @open without a match @close exists") },
 	{ "caserfindmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caserfindmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserfindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as #rfindmatch, however perform a case-folded search and return the start and end indices of the match\n"
 	      "If no match if found, :none is returned") },
 	{ "caserindexmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caserindexmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
 	      "Same as #rindexmatch, however perform a case-folded search and return the start and end indices of the match") },
 
 	/* Using the find-match functionality, also provide a partitioning version */
 	{ "partitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_partitionmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_partitionmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "A hybrid between #find, #findmatch and #partition that returns the strings surrounding "
 	      "the matched string portion, the first being the substring prior to the match, "
@@ -11069,7 +11069,7 @@ INTERN struct type_method string_methods[] = {
 	      "> return (this.substr(start,i),this.substr(i,j+#close),this.substr(j+#close,end))\n"
 	      ">}") },
 	{ "rpartitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rpartitionmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rpartitionmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "A hybrid between #rfind, #rfindmatch and #rpartition that returns the strings surrounding "
 	      "the matched string portion, the first being the substring prior to the match, "
@@ -11086,16 +11086,16 @@ INTERN struct type_method string_methods[] = {
 	      "> return (this.substr(start,i),this.substr(i,j+#close),this.substr(j+#close,end))\n"
 	      ">}") },
 	{ "casepartitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_casepartitionmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casepartitionmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Same as #partitionmatch, however perform a case-folded search") },
 	{ "caserpartitionmatch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_caserpartitionmatch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserpartitionmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "Same as #rpartitionmatch, however perform a case-folded search") },
 
 	{ "segments",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_segments,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_segments,
 	  DOC("(substring_length:?Dint)->?S?.\n"
 	      "Split @this string into segments, each exactly @substring_length characters long, with the "
 	      "last segment containing the remaining characters and having a length of between "
@@ -11104,7 +11104,7 @@ INTERN struct type_method string_methods[] = {
 	      "length of sub-strings and figuring out their amount, this function takes "
 	      "the amount of sub-strings and figures out their lengths") },
 	{ "distribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_distribute,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_distribute,
 	  DOC("(substring_count:?Dint)->?S?.\n"
 	      "Split @this string into @substring_count similarly sized sub-strings, each with a "
 	      "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
@@ -11115,7 +11115,7 @@ INTERN struct type_method string_methods[] = {
 
 	/* Regex functions. */
 	{ "rematch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rematch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rematch,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dint\n"
 	      "@throw ValueError The given @pattern is malformed\n"
@@ -11302,7 +11302,7 @@ INTERN struct type_method string_methods[] = {
 	      "> *    repeated */\n"
 	      ">print repr data.relocateall(r\"((,| f| ))+\"); /* { \",  f\" } */") },
 	{ "rematches",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rematches,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rematches,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11311,7 +11311,7 @@ INTERN struct type_method string_methods[] = {
 	      "Check if @pattern matches the entirety of the specified range of @this string\n"
 	      "This function behaves identical to ${this.rematch(...) == #this}") },
 	{ "refind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_refind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refind,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11329,7 +11329,7 @@ INTERN struct type_method string_methods[] = {
 	      "> * `data' itself in the event of `refind' having failed. */\n"
 	      ">print repr data.substr(start,end);") },
 	{ "rerfind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rerfind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerfind,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11337,7 +11337,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Find the last sub-string matched by @pattern, and return its start/end indices, or :none if no match exists (s.a. #refind)") },
 	{ "reindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_reindex,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reindex,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11346,7 +11346,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
 	      "Same as #refind, but throw an :IndexError when no match can be found") },
 	{ "rerindex",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rerindex,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerindex,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11355,7 +11355,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
 	      "Same as #rerfind, but throw an :IndexError when no match can be found") },
 	{ "relocate",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_relocate,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocate,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11366,7 +11366,7 @@ INTERN struct type_method string_methods[] = {
 	      "given regular expression, or an empty string if not found\n"
 	      "This function has nothing to do with relocations! - it's pronounced R.E. locate") },
 	{ "rerlocate",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rerlocate,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerlocate,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11376,7 +11376,7 @@ INTERN struct type_method string_methods[] = {
 	      "In other words: return the last sub-string matched by the "
 	      "given regular expression, or an empty string if not found") },
 	{ "repartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_repartition,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_repartition,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11389,7 +11389,7 @@ INTERN struct type_method string_methods[] = {
 	      "> return (this.substr(0,start),this.substr(start,end),this.substr(end,-1));\n"
 	      ">}") },
 	{ "rerpartition",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rerpartition,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerpartition,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11402,7 +11402,7 @@ INTERN struct type_method string_methods[] = {
 	      "> return (this.substr(0,start),this.substr(start,end),this.substr(end,-1));\n"
 	      ">}") },
 	{ "rereplace",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rereplace,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rereplace,
 	  DOC("(pattern:?.,replace_str:?.,max_count:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	      "(pattern:?.,replace_str:?.,rules=!P{},max_count:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11411,7 +11411,7 @@ INTERN struct type_method string_methods[] = {
 	      "Similar to #replace, however the string to search for is implemented as a regular expression "
 	      "pattern, with the sub-string matched by it then getting replaced by @replace_str") },
 	{ "refindall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_refindall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refindall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11420,7 +11420,7 @@ INTERN struct type_method string_methods[] = {
 	      "Similar to #refind, but return a sequence of all matches found within ${this.substr(start,end)}\n"
 	      "Note that the matches returned are ordered ascendingly") },
 	{ "relocateall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_relocateall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocateall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11431,7 +11431,7 @@ INTERN struct type_method string_methods[] = {
 	      "Note that the matches returned are ordered ascendingly\n"
 	      "This function has nothing to do with relocations! - it's pronounced R.E. locate all") },
 	{ "resplit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_resplit,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_resplit,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11446,7 +11446,7 @@ INTERN struct type_method string_methods[] = {
 	      "strings between matches, use #relocateall instead, which also behaves "
 	      "as a sequence") },
 	{ "restartswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_restartswith,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restartswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11457,7 +11457,7 @@ INTERN struct type_method string_methods[] = {
 	      "> return this.rematch(pattern) != 0;\n"
 	      ">}") },
 	{ "reendswith",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_reendswith,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reendswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11469,7 +11469,7 @@ INTERN struct type_method string_methods[] = {
 	      "> return rpos !is none && rpos[1] == #this;\n"
 	      ">}") },
 	{ "restrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_restrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11477,7 +11477,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Strip all leading and trailing matches for @pattern from @this string and return the result (s.a. #strip)") },
 	{ "relstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_relstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11485,7 +11485,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Strip all leading matches for @pattern from @this string and return the result (s.a. #lstrip)") },
 	{ "rerstrip",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_rerstrip,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11493,7 +11493,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Strip all trailing matches for @pattern from @this string and return the result (s.a. #lstrip)") },
 	{ "recount",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_recount,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recount,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dint\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11502,7 +11502,7 @@ INTERN struct type_method string_methods[] = {
 	      "Count the number of matches of a given regular expression @pattern (s.a. #count)\n"
 	      "Hint: This is the same as ${#this.refindall(pattern)} or ${#this.relocateall(pattern)}") },
 	{ "recontains",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_recontains,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recontains,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
@@ -11512,12 +11512,12 @@ INTERN struct type_method string_methods[] = {
 	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}") },
 
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_sizeof,
 	  DOC("->?Dint") },
 
 	/* Deprecated functions. */
 	{ "reverse",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&string_reversed,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reversed,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Deprecated alias for #reversed"),
 	  TYPE_METHOD_FKWDS },
@@ -11780,12 +11780,12 @@ INTDEF dssize_t DCALL
 DeeString_CFormat(dformatprinter printer,
                   dformatprinter format_printer, void *arg,
                   /*utf-8*/ char const *__restrict format, size_t format_len,
-                  size_t argc, DeeObject **argv);
+                  size_t argc, DeeObject *const *argv);
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
 string_mod(String *__restrict self, DeeObject *__restrict args) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	DeeObject **argv;
+	DeeObject *const *argv;
 	size_t argc;
 	char *format_str;
 	/* C-style string formating */

@@ -43,10 +43,10 @@ INTDEF int (DCALL ast_flatten_tostr)(struct ast *__restrict self);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_decode(DeeObject *self, size_t argc,
-              DeeObject **argv, DeeObject *kw);
+              DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_encode(DeeObject *self, size_t argc,
-              DeeObject **argv, DeeObject *kw);
+              DeeObject *const *argv, DeeObject *kw);
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCodec_NormalizeName(DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1)) unsigned int DCALL DeeCodec_GetErrorMode(char const *__restrict errors);
@@ -54,7 +54,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeCodec_DecodeIntern(DeeOb
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeCodec_EncodeIntern(DeeObject *self, DeeObject *name, unsigned int error_mode);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-emulate_object_decode(DeeObject *self, size_t argc, DeeObject **argv) {
+emulate_object_decode(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	/* Something like `"foo".encode("UTF-8")' can still be
 	 * optimized at compile-time, however `"foo".encode("hex")'
 	 * mustn't, because the codec is implemented externally */
@@ -75,7 +75,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-emulate_object_encode(DeeObject *self, size_t argc, DeeObject **argv) {
+emulate_object_encode(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	char *errors            = NULL;
 	unsigned int error_mode = STRING_ERROR_FSTRICT;
@@ -106,7 +106,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL string_hasutf(DeeObject *__res
 
 /* Returns `ITER_DONE' if the call isn't allowed. */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-emulate_method_call(DeeObject *self, size_t argc, DeeObject **argv) {
+emulate_method_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self)) {
 		/* Must emulate encode() and decode() functions, so they don't
 		 * call into libcodecs, which should only be loaded at runtime!
@@ -140,7 +140,7 @@ emulate_method_call(DeeObject *self, size_t argc, DeeObject **argv) {
 /* Returns `ITER_DONE' if the call isn't allowed. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 emulate_member_call(DeeObject *base, DeeObject *name,
-                    size_t argc, DeeObject **argv) {
+                    size_t argc, DeeObject *const *argv) {
 #define NAME_EQ(x)                                 \
 	(DeeString_SIZE(name) == COMPILER_STRLEN(x) && \
 	 memcmp(DeeString_STR(name), x, sizeof(x) - sizeof(char)) == 0)

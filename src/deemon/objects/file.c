@@ -1181,7 +1181,7 @@ PRIVATE struct open_option const open_options[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_class_open(DeeObject *UNUSED(self),
-                size_t argc, DeeObject **argv,
+                size_t argc, DeeObject *const *argv,
                 DeeObject *kw) {
 	DeeObject *path;
 	DREF DeeObject *result, *new_result;
@@ -1306,7 +1306,7 @@ err:
 
 PRIVATE struct type_method file_class_methods[] = {
 	{ "open",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_class_open,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_class_open,
 	  DOC("(path:?Dstring,oflags=!Pr,mode=!0644)->?.\n"
 	      "(path:?Dstring,oflags:?Dint,mode=!0644)->?.\n"
 	      "@interrupt\n"
@@ -1730,7 +1730,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_read(DeeObject *self, size_t argc,
-          DeeObject **argv, DeeObject *kw) {
+          DeeObject *const *argv, DeeObject *kw) {
 	size_t max_length = (size_t)-1;
 	bool readall      = false;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(maxbytes), K(readall), KEND });
@@ -1743,7 +1743,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_readinto(DeeObject *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	dssize_t result;
 	DeeObject *dst;
@@ -1766,7 +1766,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_write(DeeObject *self, size_t argc,
-           DeeObject **argv, DeeObject *kw) {
+           DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	bool writeall = true;
@@ -1789,7 +1789,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pread(DeeObject *self, size_t argc,
-           DeeObject **argv, DeeObject *kw) {
+           DeeObject *const *argv, DeeObject *kw) {
 	dpos_t file_pos;
 	size_t max_length = (size_t)-1;
 	bool readall      = false;
@@ -1803,7 +1803,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_preadinto(DeeObject *self, size_t argc,
-               DeeObject **argv, DeeObject *kw) {
+               DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	dssize_t result;
 	DeeObject *data;
@@ -1826,7 +1826,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_pwrite(DeeObject *self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	dpos_t file_pos;
@@ -1861,7 +1861,7 @@ PRIVATE struct whence_name whence_names[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_seek(DeeObject *self, size_t argc,
-          DeeObject **argv, DeeObject *kw) {
+          DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *whence_ob = NULL;
 	doff_t seek_off;
 	int whence = SEEK_SET;
@@ -1907,7 +1907,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_tell(DeeObject *self, size_t argc, DeeObject **argv) {
+file_tell(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	doff_t result;
 	if (DeeArg_Unpack(argc, argv, ":tell"))
 		goto err;
@@ -1920,7 +1920,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_rewind(DeeObject *self, size_t argc, DeeObject **argv) {
+file_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":rewind"))
 		goto err;
 	if (DeeFile_Rewind(self) < 0)
@@ -1931,7 +1931,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_trunc(DeeObject *self, size_t argc, DeeObject **argv) {
+file_trunc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	dpos_t trunc_pos;
 	if (argc == 0) {
 		/* Truncate at the current position. */
@@ -1951,7 +1951,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_sync(DeeObject *self, size_t argc, DeeObject **argv) {
+file_sync(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		goto err;
 	if (DeeFile_Sync(self))
@@ -1962,7 +1962,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_close(DeeObject *self, size_t argc, DeeObject **argv) {
+file_close(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":close"))
 		goto err;
 	if (DeeFile_Close(self))
@@ -1973,7 +1973,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_getc(DeeObject *self, size_t argc, DeeObject **argv) {
+file_getc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":getc"))
 		goto err;
@@ -1990,7 +1990,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_ungetc(DeeObject *self, size_t argc, DeeObject **argv) {
+file_ungetc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, "d:ungetc", &result))
 		goto err;
@@ -2003,7 +2003,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_putc(DeeObject *self, size_t argc, DeeObject **argv) {
+file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	uint8_t byte;
 	if (DeeArg_Unpack(argc, argv, "I8u:putc", &byte))
@@ -2017,7 +2017,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_size(DeeObject *self, size_t argc, DeeObject **argv) {
+file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		goto err;
@@ -2052,7 +2052,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_readline(DeeObject *self, size_t argc, DeeObject **argv) {
+file_readline(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	size_t max_length = (size_t)-1;
 	bool keeplf       = true;
@@ -2074,7 +2074,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_readall(DeeObject *self, size_t argc, DeeObject **argv) {
+file_readall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t max_length = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "|Id:readall", &max_length))
 		goto err;
@@ -2084,7 +2084,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-file_readallat(DeeObject *self, size_t argc, DeeObject **argv) {
+file_readallat(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	dpos_t file_pos;
 	size_t max_length = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "I64u|Id:readallat", &file_pos, &max_length))
@@ -2097,7 +2097,7 @@ err:
 
 PRIVATE struct type_method file_methods[] = {
 	{ "read",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_read,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_read,
 	  DOC("(maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Read and return at most @maxbytes of data from the file stream. "
 	      "When @readall is :true, keep on reading data until the buffer is full, or the "
@@ -2105,7 +2105,7 @@ PRIVATE struct type_method file_methods[] = {
 	      "internal buffer size used when reading data."),
 	  TYPE_METHOD_FKWDS },
 	{ "readinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_readinto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_readinto,
 	  DOC("(dst:?DBytes,readall=!f)->?Dint\n"
 	      "Read data into the given buffer @dst and return the number of bytes read. "
 	      "When @readall is :true, keep on reading data until the buffer is full, or the "
@@ -2113,7 +2113,7 @@ PRIVATE struct type_method file_methods[] = {
 	      "requested read size."),
 	  TYPE_METHOD_FKWDS },
 	{ "write",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_write,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
 	  DOC("(data:?DBytes,writeall=!t)->?Dint\n"
 	      "Write @data to the file stream and return the actual number of bytes written. "
 	      "When @writeall is :true, keep writing data until the write-callback "
@@ -2121,25 +2121,25 @@ PRIVATE struct type_method file_methods[] = {
 	      "the write-callback only a single time."),
 	  TYPE_METHOD_FKWDS },
 	{ "pread",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pread,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Similar to #read, but read data from a given file-offset "
 	      "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "preadinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_preadinto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_preadinto,
 	  DOC("(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
 	      "Similar to #readinto, but read data from a given file-offset "
 	      "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "pwrite",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pwrite,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pwrite,
 	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
 	      "Similar to #write, but write data to a given file-offset "
 	      "@pos, rather than at the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "seek",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_seek,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_seek,
 	  DOC("(off:?Dint,whence=!PSET)->?Dint\n"
 	      "(off:?Dint,whence:?Dint)->?Dint\n"
 	      "@throw ValueError The given string passed as seek mode @whence was not recognized\n"
@@ -2153,41 +2153,41 @@ PRIVATE struct type_method file_methods[] = {
 	      "$\"END\"|Set the file pointer relative to the end of the stream}"),
 	  TYPE_METHOD_FKWDS },
 	{ "tell",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_tell,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_tell,
 	  DOC("->?Dint\n"
 	      "Same as calling #seek as ${this.seek(0,\"CUR\")}") },
 	{ "rewind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_rewind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_rewind,
 	  DOC("()\n"
 	      "Same as calling #seek as ${this.seek(0,\"SET\")}") },
 	{ "trunc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_trunc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_trunc,
 	  DOC("->?Dint\n"
 	      "(size:?Dint)->?Dint\n"
 	      "Truncate the file to a new length of @size bytes. "
 	      "When no argument is given, the file's length is truncated "
 	      "to its current position (#tell), rather than the one given") },
 	{ "sync",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_sync,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_sync,
 	  DOC("()\n"
 	      "Flush buffers and synchronize disk activity of the file") },
 	{ "close",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_close,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_close,
 	  DOC("()\n"
 	      "Close the file") },
 	{ "getc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_getc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_getc,
 	  DOC("->?Dint\n"
 	      "Read and return a single character (byte) from then file, "
 	      "or return ${-1} if the file's end has been reached") },
 	{ "ungetc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_ungetc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_ungetc,
 	  DOC("(ch:?Dint)->?Dbool\n"
 	      "Unget a given character @ch to be re-read the next time #getc or #read is called. "
 	      "If the file's start has already been reached, :false is returned and the character "
 	      "will not be re-read from this file") },
 	{ "putc",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_putc,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_putc,
 	  DOC("(byte:?Dint)->?Dbool\n"
 	      "Append a single @byte at the end of @this File, returning :true on "
 	      "success, or :false if the file has entered an end-of-file state") },
@@ -2195,7 +2195,7 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("->?Dint\n"
 	      "Returns the size (in bytes) of the file stream") },
 	{ "readline",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_readline,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_readline,
 	  DOC("(keeplf:?Dbool)->?DBytes\n"
 	      "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
 	      "Read one line from the file stream, but read at most @maxbytes bytes.\n"
@@ -2206,12 +2206,12 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("(maxbytes=!-1)->?DBytes\n"
 	      "Deprecated alias for ${this.read(maxbytes,true)}") },
 	{ "readat",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pread,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Deprecated alias for #pread"),
 	  TYPE_METHOD_FKWDS },
 	{ "writeat",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_pwrite,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pwrite,
 	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
 	      "Deprecated alias for #pwrite"),
 	  TYPE_METHOD_FKWDS },
@@ -2219,7 +2219,7 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("(pos:?Dint,maxbytes=!-1)->?DBytes\n"
 	      "Deprecated alias for ${this.pread(pos,maxbytes,true)}") },
 	{ "setpos",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_seek,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_seek,
 	  DOC("(pos:?Dint)->?Dint\n"
 	      "Deprecated alias for #seek"),
 	  TYPE_METHOD_FKWDS },
@@ -2227,7 +2227,7 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("()\n"
 	      "Deprecated alias for #sync") },
 	{ "puts",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&file_write,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
 	  DOC("(data:?DBytes)->?Dint\n"
 	      "Deprecated alias for #write"),
 	  TYPE_METHOD_FKWDS },

@@ -426,7 +426,7 @@ err:
 
 PRIVATE int DCALL
 F(init)(STRUCT_TYPE *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_SeqEachGetAttr",
 	                  &self->se_seq,
 	                  &self->sg_attr))
@@ -528,7 +528,7 @@ err_r:
 }
 
 PRIVATE WUNUSED DREF STRUCT_TYPE *DCALL
-F(init)(size_t argc, DeeObject **argv) {
+F(init)(size_t argc, DeeObject *const *argv) {
 	DREF STRUCT_TYPE *result;
 	DeeStringObject *attr;
 	DeeObject *seq;
@@ -577,7 +577,7 @@ err:
 #ifdef DEFINE_GETATTR
 PRIVATE WUNUSED DREF SeqEachCallAttr *DCALL
 F(call)(STRUCT_TYPE *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	return (DREF SeqEachCallAttr *)DeeSeqEach_CallAttr(self->se_seq,
 	                                                   (DeeObject *)self->sg_attr,
 	                                                   argc, argv);
@@ -585,7 +585,7 @@ F(call)(STRUCT_TYPE *__restrict self,
 
 PRIVATE WUNUSED DREF SeqEachCallAttrKw *DCALL
 F(call_kw)(STRUCT_TYPE *__restrict self, size_t argc,
-           DeeObject **argv, DeeObject *kw) {
+           DeeObject *const *argv, DeeObject *kw) {
 	return (DREF SeqEachCallAttrKw *)DeeSeqEach_CallAttrKw(self->se_seq,
 	                                                       (DeeObject *)self->sg_attr,
 	                                                       argc, argv, kw);
@@ -648,9 +648,9 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&sew_bool
 	},
 #ifdef DEFINE_GETATTR
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&F(call),
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&F(call),
 #else /* DEFINE_GETATTR */
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sew_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sew_call,
 #endif /* !DEFINE_GETATTR */
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&F(visit),
 	/* .tp_gc            = */ NULL,
@@ -668,9 +668,9 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ F(class_members),
 #ifdef DEFINE_GETATTR
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&F(call_kw),
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&F(call_kw),
 #else /* DEFINE_GETATTR */
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&sew_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&sew_call_kw,
 #endif /* !DEFINE_GETATTR */
 };
 
@@ -696,7 +696,7 @@ err:
 
 PRIVATE int DCALL
 Fi(init)(SeqEachIterator *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 #ifdef DEFINE_GETATTR
 	if (DeeArg_Unpack(argc, argv, "o:_SeqEachGetAttrIterator", &self->ei_each))
 		goto err;

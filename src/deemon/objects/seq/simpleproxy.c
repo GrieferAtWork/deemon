@@ -64,7 +64,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_init(SeqSimpleProxy *__restrict self,
-           size_t argc, DeeObject **argv) {
+           size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv,
 	                  self->ob_type == &SeqIds_Type
 	                  ? "o:_SeqIds"
@@ -716,7 +716,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iter_init(SeqSimpleProxyIterator *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	SeqSimpleProxy *seq;
 	DeeTypeObject *tp;
 	if (DeeArg_Unpack(argc, argv,

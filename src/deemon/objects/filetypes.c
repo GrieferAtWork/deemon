@@ -642,7 +642,7 @@ reader_ctor(Reader *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 reader_init(Reader *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	size_t begin = 0, end = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "o|IdId:_FileReader", &self->r_owner, &begin, &end) ||
 	    DeeObject_GetBuf(self->r_owner, &self->r_buffer, Dee_BUFFER_FREADONLY))
@@ -809,7 +809,7 @@ writer_ctor(Writer *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-writer_init(Writer *__restrict self, size_t argc, DeeObject **argv) {
+writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeStringObject *init_string;
 	if (DeeArg_Unpack(argc, argv, "o:_FileWriter", &init_string) ||
 	    DeeObject_AssertTypeExact((DeeObject *)init_string, &DeeString_Type))
@@ -1026,14 +1026,14 @@ PRIVATE struct type_getset writer_getsets[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-writer_get(Writer *self, size_t argc, DeeObject **argv) {
+writer_get(Writer *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
 		return NULL;
 	return (DREF DeeStringObject *)DeeFileWriter_GetString((DeeObject *)self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-writer_size(Writer *self, size_t argc, DeeObject **argv) {
+writer_size(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":size"))
 		return NULL;
@@ -1046,7 +1046,7 @@ writer_size(Writer *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-writer_allocated(Writer *self, size_t argc, DeeObject **argv) {
+writer_allocated(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":allocated"))
 		return NULL;
@@ -1059,7 +1059,7 @@ writer_allocated(Writer *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-writer_sizeof(Writer *self, size_t argc, DeeObject **argv) {
+writer_sizeof(Writer *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
@@ -1076,23 +1076,23 @@ err:
 
 PRIVATE struct type_method writer_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&writer_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_get,
 	  DOC("->?Dstring\n"
 	      "Synchronize and retrieve all data that has already been written") },
 	{ "pack",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&writer_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_get,
 	  DOC("->?Dstring\n"
 	      "Deprecated alias for reading from #string") },
 	{ DeeString_STR(&str_size),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&writer_size,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_size,
 	  DOC("->?Dint\n"
 	      "Return the total amount of written bytes") },
 	{ "allocated",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&writer_allocated,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_allocated,
 	  DOC("->?Dint\n"
 	      "Returns the currently allocated buffer size (in bytes)") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&writer_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

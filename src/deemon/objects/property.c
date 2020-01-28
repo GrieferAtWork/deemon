@@ -86,7 +86,7 @@ err:
 
 PRIVATE int DCALL
 property_init_kw(Property *__restrict self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	PRIVATE DEFINE_KWLIST(kwlist, { K(getter), K(delete), K(setter), KEND });
 	self->p_get = NULL;
 	self->p_del = NULL;
@@ -360,7 +360,7 @@ PRIVATE struct type_getset property_getsets[] = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-property_call(Property *self, size_t argc, DeeObject **argv) {
+property_call(Property *self, size_t argc, DeeObject *const *argv) {
 	if likely(self->p_get)
 		return DeeObject_Call(self->p_get, argc, argv);
 	err_unbound_attribute(&DeeProperty_Type, DeeString_STR(&str_get));
@@ -399,7 +399,7 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&property_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&property_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&property_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&property_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,

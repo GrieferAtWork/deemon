@@ -134,7 +134,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 comiter_init(CombinationsIterator *__restrict self,
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	size_t i, comlen;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqCombinationsIterator", &self->ci_combi))
 		goto err;
@@ -712,7 +712,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rcomiter_init(CombinationsIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	size_t i, comlen;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatCombinationsIterator", &self->ci_combi))
 		goto err;
@@ -951,7 +951,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 pmutiter_init(CombinationsIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	size_t i, comlen;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqPermutationsIterator", &self->ci_combi))
 		goto err;

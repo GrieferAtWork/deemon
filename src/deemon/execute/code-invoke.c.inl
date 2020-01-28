@@ -133,7 +133,7 @@ MY_FUNCTION_NAME(DeeFunctionObject *self
 #define GET_ARGV() argv
                  ,
                  size_t argc,
-                 DeeObject **argv
+                 DeeObject *const *argv
 #endif /* !CALL_TUPLE */
 #ifdef CALL_KW
                  ,

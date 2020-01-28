@@ -608,7 +608,7 @@ child_error:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_start(Process *self, size_t argc, DeeObject **argv) {
+process_start(Process *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *result = NULL;
 	pid_t cpid;
 	DREF DeeStringObject *exe, *pwd;
@@ -749,7 +749,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_detach(Process *self, size_t argc, DeeObject **argv) {
+process_detach(Process *self, size_t argc, DeeObject *const *argv) {
 	uint16_t state;
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_detach_name))
 		goto err;
@@ -824,7 +824,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_terminate(Process *self, size_t argc, DeeObject **argv) {
+process_terminate(Process *self, size_t argc, DeeObject *const *argv) {
 	uint32_t exit_code = 0;
 	if (DeeArg_Unpack(argc, argv,
 	                  "|I32u:" S_Process_function_terminate_name,
@@ -1030,7 +1030,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_join(Process *self, size_t argc, DeeObject **argv) {
+process_join(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, result;
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_join_name))
 		goto err;
@@ -1044,7 +1044,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_tryjoin(Process *self, size_t argc, DeeObject **argv) {
+process_tryjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, result;
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_function_join_name))
 		goto err;
@@ -1060,7 +1060,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_timedjoin(Process *self, size_t argc, DeeObject **argv) {
+process_timedjoin(Process *self, size_t argc, DeeObject *const *argv) {
 	int error, result;
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64d:" S_Process_function_timedjoin_name, &timeout))
@@ -1122,12 +1122,12 @@ nope:
 
 
 PRIVATE struct type_method process_methods[] = {
-	{ S_Process_function_start_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_start, S_Process_function_start_doc },
-	{ S_Process_function_join_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_join, S_Process_function_join_doc },
-	{ S_Process_function_tryjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_tryjoin, S_Process_function_tryjoin_doc },
-	{ S_Process_function_timedjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_timedjoin, S_Process_function_timedjoin_doc },
-	{ S_Process_function_detach_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_detach, S_Process_function_detach_doc },
-	{ S_Process_function_terminate_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&process_terminate, S_Process_function_terminate_doc },
+	{ S_Process_function_start_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_start, S_Process_function_start_doc },
+	{ S_Process_function_join_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_join, S_Process_function_join_doc },
+	{ S_Process_function_tryjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_tryjoin, S_Process_function_tryjoin_doc },
+	{ S_Process_function_timedjoin_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_timedjoin, S_Process_function_timedjoin_doc },
+	{ S_Process_function_detach_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_detach, S_Process_function_detach_doc },
+	{ S_Process_function_terminate_name, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&process_terminate, S_Process_function_terminate_doc },
 	{ NULL }
 };
 
@@ -1306,7 +1306,7 @@ DEFINE_PROCESS_STD_FUNCTIONS(stderr, DEE_STDERR, STDERR_FILENO)
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 call_extern(DeeObject *module_name, DeeObject *global_name,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *module, *result;
 	module = DeeModule_OpenGlobal(module_name, NULL, true);
 	if unlikely(!module)
@@ -2095,7 +2095,7 @@ PRIVATE struct type_getset process_getsets[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 process_class_self(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **argv) {
+                   size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":" S_Process_class_function_self_name))
 		return NULL;
 	return_reference_((DeeObject *)&this_process);
@@ -2114,7 +2114,7 @@ PRIVATE struct type_member process_class_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 process_init(Process *__restrict self,
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	DREF DeeStringObject *exe;
 	DREF DeeObject *args = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:" S_Process_tp_name, &exe, &args))

@@ -1329,7 +1329,7 @@ PRIVATE int DCALL priv_stobdaddr(char *name, bdaddr_t *bdaddr) {
 INTERN int DCALL
 SockAddr_FromArgv(SockAddr *__restrict self,
                   int family, int protocol, int type,
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	DeeObject *arg0;
 	(void)protocol; /* Not used most of the time */
 
@@ -1652,7 +1652,7 @@ sockaddr_repr(DeeSockAddrObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sockaddr_ctor(DeeSockAddrObject *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	int af_type, result;
 	if (!argc) {
 		DeeError_Throwf(&DeeError_TypeError,

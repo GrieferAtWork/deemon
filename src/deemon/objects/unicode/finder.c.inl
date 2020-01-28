@@ -181,7 +181,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sfi_init(StringFindIterator *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	StringFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_StringFindIterator", &find) ||
 	    DeeObject_AssertTypeExact((DeeObject *)find, &StringFind_Type))
@@ -193,7 +193,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 scfi_init(StringFindIterator *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	StringFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_StringCaseFindIterator", &find) ||
 	    DeeObject_AssertTypeExact((DeeObject *)find, &StringCaseFind_Type))
@@ -512,7 +512,7 @@ sf_ctor(StringFind *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sf_init(StringFind *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	self->sf_start = 0;
 	self->sf_end   = (size_t)-1;
 	if (DeeArg_Unpack(argc, argv, "oo|IdId:_StringFind",

@@ -128,7 +128,7 @@ done:
 
 PRIVATE int DCALL
 F(floatinit)(DeeSTypeObject *__restrict UNUSED(tp_self),
-             T *self, size_t argc, DeeObject **argv) {
+             T *self, size_t argc, DeeObject *const *argv) {
 	double value;
 	DeeObject *arg;
 #ifdef NAME
@@ -352,30 +352,30 @@ PRIVATE struct stype_math F(floatmath) = {
 	/* .st_inv         = */ NULL,
 	/* .st_pos         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(float_pos),
 	/* .st_neg         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(float_neg),
-	/* .st_add         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_add),
-	/* .st_sub         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_sub),
-	/* .st_mul         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_mul),
-	/* .st_div         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_div),
+	/* .st_add         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_add),
+	/* .st_sub         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_sub),
+	/* .st_mul         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_mul),
+	/* .st_div         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_div),
 	/* .st_mod         = */ NULL,
 	/* .st_shl         = */ NULL,
 	/* .st_shr         = */ NULL,
 	/* .st_and         = */ NULL,
 	/* .st_or          = */ NULL,
 	/* .st_xor         = */ NULL,
-	/* .st_pow         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_pow),
+	/* .st_pow         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_pow),
 	/* .st_inc         = */ NULL,
 	/* .st_dec         = */ NULL,
-	/* .st_inplace_add = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_inplace_add),
-	/* .st_inplace_sub = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_inplace_sub),
-	/* .st_inplace_mul = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_inplace_mul),
-	/* .st_inplace_div = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_inplace_div),
+	/* .st_inplace_add = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_inplace_add),
+	/* .st_inplace_sub = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_inplace_sub),
+	/* .st_inplace_mul = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_inplace_mul),
+	/* .st_inplace_div = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_inplace_div),
 	/* .st_inplace_mod = */ NULL,
 	/* .st_inplace_shl = */ NULL,
 	/* .st_inplace_shr = */ NULL,
 	/* .st_inplace_and = */ NULL,
 	/* .st_inplace_or  = */ NULL,
 	/* .st_inplace_xor = */ NULL,
-	/* .st_inplace_pow = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_inplace_pow)
+	/* .st_inplace_pow = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_inplace_pow)
 };
 
 #define DEFINE_COMPARE_OPERATOR(name, op)                  \
@@ -400,12 +400,12 @@ DEFINE_COMPARE_OPERATOR(F(float_ge), >=)
 
 
 PRIVATE struct stype_cmp F(floatcmp) = {
-     /* .st_eq = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_eq),
-     /* .st_ne = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_ne),
-     /* .st_lo = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_lo),
-     /* .st_le = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_le),
-     /* .st_gr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_gr),
-     /* .st_ge = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(float_ge)
+     /* .st_eq = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_eq),
+     /* .st_ne = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_ne),
+     /* .st_lo = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_lo),
+     /* .st_le = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_le),
+     /* .st_gr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_gr),
+     /* .st_ge = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_ge)
 };
 
 #undef NEW_FLOAT
@@ -489,8 +489,8 @@ INTERN DeeSTypeObject TYPE_NAME = {
 #else
 	/* .st_align    = */ COMPILER_ALIGNOF(T),
 #endif
-	/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, size_t, DeeObject **__restrict))&F(floatinit),
-	/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, DeeObject *__restrict))&F(floatass),
+	/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&F(floatinit),
+	/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(floatass),
 	/* .st_cast     = */ {
 		/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(floatstr),
 		/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&F(floatstr),

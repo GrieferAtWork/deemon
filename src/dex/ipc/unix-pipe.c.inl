@@ -60,7 +60,7 @@ done:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	int fds[2];
 	uint32_t pipe_size;
 	DREF SystemFile *fReader, *fWriter;

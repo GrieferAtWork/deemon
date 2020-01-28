@@ -56,7 +56,7 @@ typedef struct {
 
 PRIVATE int DCALL
 shlib_init(Shlib *__restrict self, size_t argc,
-           DREF DeeObject **argv) {
+           DREF DeeObject *const *argv) {
 	DeeStringObject *name, *cc_name = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:shlib", &name, &cc_name) ||
 	    DeeObject_AssertTypeExact((DeeObject *)name, &DeeString_Type))
@@ -301,7 +301,7 @@ PRIVATE struct type_attr shlib_attr = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 shlib_base(Shlib *self, size_t argc,
-           DeeObject **argv) {
+           DeeObject *const *argv) {
 	DREF struct pointer_object *result;
 	DREF DeeSTypeObject *result_type;
 	if (DeeArg_Unpack(argc, argv, ":base"))
@@ -326,7 +326,7 @@ err:
 
 
 PRIVATE struct type_method shlib_methods[] = {
-	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&shlib_base,
+	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&shlib_base,
 	  DOC("->?Aptr?Gvoid\nReturns the base address of the shared library") },
 	{ NULL }
 };

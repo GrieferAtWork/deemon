@@ -956,13 +956,16 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((3)) int
-(DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject **argv,
+(DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                        char const *__restrict format, va_list args) {
-	char const *fmt_start = format;
-	bool is_optional      = false;
+	char const *fmt_start;
+	bool is_optional;
 	int temp;
-	struct va_list_struct *pargs = (struct va_list_struct *)VALIST_ADDR(args);
-	DeeObject **iter, **end;
+	struct va_list_struct *pargs;
+	DeeObject *const *iter, *const *end;
+	fmt_start   = format;
+	is_optional = false;
+	pargs       = (struct va_list_struct *)VALIST_ADDR(args);
 	ASSERT(format);
 	end = (iter = argv) + argc;
 	for (;;) {
@@ -984,8 +987,7 @@ PUBLIC WUNUSED NONNULL((3)) int
 	return 0;
 invalid_argc:
 	{
-		size_t argc_min;
-		size_t argc_max;
+		size_t argc_min, argc_max;
 		format   = fmt_start;
 		argc_min = argc_max = count_unpack_args((char const **)&format);
 		if (*format == '|') {
@@ -1003,7 +1005,7 @@ invalid_argc:
 }
 
 PUBLIC WUNUSED NONNULL((3)) int
-(DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject **argv,
+(DeeArg_Unpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                 char const *__restrict format, ...) {
 	int result;
 	va_list args;
@@ -1035,7 +1037,7 @@ kwds_findstr(DeeKwdsObject *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((4, 5)) int
-(DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject **argv,
+(DCALL DeeArg_VUnpackKw)(size_t argc, DeeObject *const *argv,
                          DeeObject *kw, struct keyword *__restrict kwlist,
                          char const *__restrict format, va_list args) {
 	char const *fmt_start;
@@ -1253,7 +1255,7 @@ invalid_argc:
 }
 
 PUBLIC WUNUSED NONNULL((4, 5)) int
-(DeeArg_UnpackKw)(size_t argc, DeeObject **argv,
+(DeeArg_UnpackKw)(size_t argc, DeeObject *const *argv,
                   DeeObject *kw, struct keyword *__restrict kwlist,
                   char const *__restrict format, ...) {
 	int result;

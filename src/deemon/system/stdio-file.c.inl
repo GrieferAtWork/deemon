@@ -833,7 +833,7 @@ yes:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_flush(SystemFile *self, size_t argc, DeeObject **argv) {
+sysfile_flush(SystemFile *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(DeeArg_Unpack(argc, argv, ":flush"))
 		goto err;
 	if unlikely(sysfile_sync(self))
@@ -882,7 +882,7 @@ PRIVATE struct mode_name const mode_names[] = {
 #endif /* FILE_HAVE_SETVBUF */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-sysfile_setbuf(SystemFile *self, size_t argc, DeeObject **argv) {
+sysfile_setbuf(SystemFile *self, size_t argc, DeeObject *const *argv) {
 #ifdef FILE_HAVE_SETVBUF
 	int mode;
 	char const *mode_iter;
@@ -971,11 +971,11 @@ err:
 
 PRIVATE struct type_method sysfile_methods[] = {
 	{ "flush",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_flush,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sysfile_flush,
 	  DOC("()\n"
 	      "An alias for #sync used for compatibility with :File.Buffer") },
 	{ "setbuf",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&sysfile_setbuf,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sysfile_setbuf,
 	  DOC("(string mode,size=!0)\n"
 	      "Set the buffering mode in a manner that is compatible with :File.Buffer.setbuf") },
 	{ NULL }
@@ -1021,7 +1021,7 @@ sysfile_visit(SystemFile *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **argv) {
+                   size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;
 	/* Flush all streams. */

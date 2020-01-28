@@ -2577,7 +2577,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 thread_ctor(DeeThreadObject *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	if unlikely(argc > 3) {
 		err_invalid_argc(DeeString_STR(&str_Thread), argc, 0, 3);
 		goto err;
@@ -2678,7 +2678,7 @@ DeeThread_Join(/*Thread*/ DeeObject *__restrict UNUSED(self),
 #endif /* CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_start(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_start(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":start"))
 		goto err;
@@ -2691,7 +2691,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_detach(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_detach(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":detach"))
 		goto err;
@@ -2704,7 +2704,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_join(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_join(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":join"))
@@ -2718,7 +2718,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_tryjoin(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_tryjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":tryjoin"))
@@ -2734,7 +2734,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_timedjoin(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_timedjoin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	DeeObject *result;
 	uint64_t timeout;
@@ -2751,7 +2751,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_interrupt(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_interrupt(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *sig  = &DeeError_Interrupt_instance;
 	DeeObject *args = NULL;
 	int error;
@@ -2767,35 +2767,35 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_started(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_started(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":started"))
 		return NULL;
 	return_bool(DeeThread_HasStarted(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_detached(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_detached(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":detached"))
 		return NULL;
 	return_bool(DeeThread_WasDetached(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_terminated(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_terminated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":terminated"))
 		return NULL;
 	return_bool(DeeThread_HasTerminated(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_interrupted(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_interrupted(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":interrupted"))
 		return NULL;
 	return_bool(DeeThread_WasInterrupted(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_crashed(DeeObject *self, size_t argc, DeeObject **argv) {
+thread_crashed(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":crashed"))
 		return NULL;
 	return_bool(DeeThread_HasCrashed(self));
@@ -2812,7 +2812,7 @@ err_not_terminated(DeeThreadObject *__restrict self) {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject **argv) {
+thread_crash_error(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":crash_error"))
 		goto err;
 	{
@@ -2848,7 +2848,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject **argv) {
+thread_crash_traceback(DeeThreadObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":crash_traceback"))
 		goto err;
 	{
@@ -2972,11 +2972,11 @@ PRIVATE struct type_method thread_methods[] = {
 	{ "timed_join", &thread_timedjoin,
 	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
 	      "Old, deprecated name for #timedjoin") },
-	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&thread_crash_error,
+	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&thread_crash_error,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
-	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&thread_crash_traceback,
+	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&thread_crash_traceback,
 	  DOC("->?DTraceback\n"
 	      "->?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
@@ -2985,7 +2985,7 @@ PRIVATE struct type_method thread_methods[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_self(DeeObject *__restrict UNUSED(self),
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))
 		return NULL;
 	return_reference(DeeThread_Self());
@@ -2998,7 +2998,7 @@ thread_current_get(DeeObject *__restrict UNUSED(self)) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_selfid(DeeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":selfid"))
 		return NULL;
 #ifdef CONFIG_NO_THREADID_INTERNAL
@@ -3023,7 +3023,7 @@ thread_selfid(DeeObject *__restrict UNUSED(self),
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_yield(DeeObject *__restrict UNUSED(self),
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":yield"))
 		return NULL;
 	SCHED_YIELD();
@@ -3032,7 +3032,7 @@ thread_yield(DeeObject *__restrict UNUSED(self),
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_check_interrupt(DeeObject *__restrict UNUSED(self),
-                       size_t argc, DeeObject **argv) {
+                       size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":check_interrupt") ||
 	    DeeThread_CheckInterrupt())
 		return NULL;
@@ -3041,7 +3041,7 @@ thread_check_interrupt(DeeObject *__restrict UNUSED(self),
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_sleep(DeeObject *__restrict UNUSED(self),
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:sleep", &timeout) ||
 	    DeeThread_Sleep(timeout))
@@ -3051,7 +3051,7 @@ thread_sleep(DeeObject *__restrict UNUSED(self),
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 thread_exit(DeeObject *__restrict UNUSED(self),
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	DeeObject *result = Dee_None;
 	DREF struct threadexit_object *error;
 	if (DeeArg_Unpack(argc, argv, "|o:exit", &result))
@@ -3960,7 +3960,7 @@ thread_collect_traceback(DeeThreadObject *__restrict self,
 		/* Copy arguments and locals */
 		if (dst->cf_argv) {
 			for (i = 0; i < dst->cf_argc; ++i) {
-				dst->cf_argv[i] = iter->cf_argv[i];
+				((DREF DeeObject **)dst->cf_argv)[i] = iter->cf_argv[i];
 				Dee_Incref(dst->cf_argv[i]);
 			}
 		}

@@ -98,7 +98,7 @@ dir_copy(DeeObject *__restrict UNUSED(self),
 PRIVATE int DCALL
 dir_ctor(DeeObject *__restrict UNUSED(self),
          size_t UNUSED(argc),
-         DeeObject **UNUSED(argv)) {
+         DeeObject *const *UNUSED(argv)) {
 	return fs_unsupported();
 }
 

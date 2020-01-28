@@ -162,7 +162,7 @@ stype_fini(DeeSTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_dofunc(DeeSTypeObject *self, size_t argc,
-             DeeObject **argv, ctypes_cc_t cc_flags) {
+             DeeObject *const *argv, ctypes_cc_t cc_flags) {
 	DeeSTypeObject **argv_types;
 	size_t i;
 	ctypes_cc_t cc = (ctypes_cc_t)((unsigned int)CC_DEFAULT |
@@ -193,18 +193,18 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stype_func(DeeSTypeObject *self, size_t argc, DeeObject **argv) {
+stype_func(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 	return stype_dofunc(self, argc, argv, (ctypes_cc_t)0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stype_vfunc(DeeSTypeObject *self, size_t argc, DeeObject **argv) {
+stype_vfunc(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 	return stype_dofunc(self, argc, argv, CC_FVARARGS);
 }
 
 
 PRIVATE struct type_method stype_methods[] = {
-	{ "func", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stype_func,
+	{ "func", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_func,
 	  DOC("(types!:?DType)->?Gfunction_type\n"
 	      "(calling_convention:?Dstring,types!:?DType)->?Gfunction_type\n"
 	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
@@ -213,19 +213,19 @@ PRIVATE struct type_method stype_methods[] = {
 	      "as return type, and @calling_convention as calling convention\n"
 	      "Note that unlike #{operator ()}, certain types from the deemon core are "
 	      "also accepted as argument types, such as :deemon:bool inplace of :bool") },
-	{ "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stype_vfunc,
+	{ "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_vfunc,
 	  DOC("(types!:?DType)->function_type\n"
 	      "(calling_convention:?Dstring,types!:?DType)->function_type\n"
 	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
 	      "@param calling_convention The name of the calling convention\n"
 	      "Same as #func, but enable support for varrgs") },
 	{ NULL }
-	//{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_array", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	//{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_array", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	//{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -288,7 +288,7 @@ PRIVATE struct type_seq stype_seq = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stype_call(DeeSTypeObject *self, size_t argc, DeeObject **argv) {
+stype_call(DeeSTypeObject *self, size_t argc, DeeObject *const *argv) {
 	size_t i;
 	/* Create a new instance, or create a new function-type. */
 	if (!argc)
@@ -344,7 +344,7 @@ INTERN DeeTypeObject DeeSType_Type = {
 		/* .tp_repr = */ NULL,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&stype_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -729,7 +729,7 @@ struct_copy(DeeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 struct_init(DeeObject *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	DeeSTypeObject *orig_type, *tp_self;
 	orig_type = tp_self = (DeeSTypeObject *)Dee_TYPE(self);
 	do {
@@ -784,7 +784,7 @@ DEFINE_UNARY_STRUCT_OPERATOR(DREF DeeObject *, struct_repr, DeeStruct_Repr)
 DEFINE_UNARY_STRUCT_OPERATOR(int, struct_bool, DeeStruct_Bool)
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_call(DeeObject *self, size_t argc, DeeObject **argv) {
+struct_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	return DeeStruct_Call((DeeSTypeObject *)Dee_TYPE(self),
 	                      DeeStruct_Data(self), argc, argv);
 }
@@ -999,7 +999,7 @@ PRIVATE struct type_getset struct_getsets[] = {
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-struct_ref_func(DeeObject *self, size_t argc, DeeObject **argv) {
+struct_ref_func(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__ref__"))
 		goto err;
 	return struct_ref(self);
@@ -1303,7 +1303,7 @@ DeeStruct_Bool(DeeSTypeObject *tp_self, void *self) {
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeStruct_Call(DeeSTypeObject *tp_self,
                void *self, size_t argc,
-               DeeObject **argv) {
+               DeeObject *const *argv) {
 	DeeSTypeObject *orig_type = tp_self;
 	do {
 		if (tp_self->st_call)

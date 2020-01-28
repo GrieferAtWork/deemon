@@ -320,7 +320,7 @@ PRIVATE struct keyword path_pwd_kwlist[] = { K(path), K(pwd), KEND };
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_gettmp(size_t argc, DeeObject **argv) {
+f_libfs_gettmp(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gettmp"))
 		return NULL;
 	return fs_gettmp();
@@ -337,7 +337,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_getcwd(size_t argc, DeeObject **argv) {
+f_libfs_getcwd(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getcwd"))
 		return NULL;
 	return fs_getcwd();
@@ -345,7 +345,7 @@ f_libfs_getcwd(size_t argc, DeeObject **argv) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 
-f_libfs_chdir(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_chdir(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:chdir", &path) ||
 	    fs_chdir(path))
@@ -354,14 +354,14 @@ f_libfs_chdir(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_gethostname(size_t argc, DeeObject **argv) {
+f_libfs_gethostname(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gethostname"))
 		return NULL;
 	return fs_gethostname();
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_headof(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_headof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:headof", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -370,7 +370,7 @@ f_libfs_headof(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_tailof(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_tailof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:tailof", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -379,7 +379,7 @@ f_libfs_tailof(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_fileof(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_fileof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:fileof", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -388,7 +388,7 @@ f_libfs_fileof(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_extof(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_extof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:extof", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -397,7 +397,7 @@ f_libfs_extof(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_driveof(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_driveof(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:driveof", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -406,7 +406,7 @@ f_libfs_driveof(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_inctrail(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_inctrail(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:inctrail", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -415,7 +415,7 @@ f_libfs_inctrail(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_exctrail(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_exctrail(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:exctrail", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -424,7 +424,7 @@ f_libfs_exctrail(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_abspath(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_abspath(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path, *pwd = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_pwd_kwlist, "o|o:abspath", &path, &pwd) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type) ||
@@ -434,7 +434,7 @@ f_libfs_abspath(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_relpath(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_relpath(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path, *pwd = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_pwd_kwlist, "o|o:relpath", &path, &pwd) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type) ||
@@ -444,7 +444,7 @@ f_libfs_relpath(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_isabs(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_isabs(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:isabs", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -453,7 +453,7 @@ f_libfs_isabs(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_isrel(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_isrel(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:isrel", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -462,7 +462,7 @@ f_libfs_isrel(size_t argc, DeeObject **argv, DeeObject *kw) {
 }
 
 INTDEF WUNUSED DREF DeeObject *DCALL
-f_libfs_issep(size_t argc, DeeObject **argv)
+f_libfs_issep(size_t argc, DeeObject *const *argv)
 #ifdef CONFIG_HOST_WINDOWS
 {
 	DeeObject *str;
@@ -581,7 +581,7 @@ PRIVATE uint8_t expand_options_matrix[64] = {
 
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_expand(size_t argc, DeeObject **argv) {
+f_libfs_expand(size_t argc, DeeObject *const *argv) {
 	uint16_t options = EXPAND_DEFAULT_OPTIONS;
 	DREF DeeObject *path, *options_ob = NULL, *env_ob = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|oo:expand", &path, &options_ob, &env_ob) ||
@@ -623,7 +623,7 @@ err:
 
 #ifdef CONFIG_HOST_WINDOWS
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_nt_fixunc(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_nt_fixunc(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	if (DeeArg_UnpackKw(argc, argv, kw, path_kwlist, "o:fixunc_np", &path) ||
 	    DeeObject_AssertTypeExact(path, &DeeString_Type))
@@ -633,7 +633,7 @@ f_libfs_nt_fixunc(size_t argc, DeeObject **argv, DeeObject *kw) {
 
 PRIVATE DEFINE_KWCMETHOD(libfs_fixunc_np, &f_libfs_nt_fixunc);
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_chattr_np(size_t argc, DeeObject **argv) {
+f_libfs_chattr_np(size_t argc, DeeObject *const *argv) {
 	DeeObject *arg, *mode;
 	if (DeeArg_Unpack(argc, argv, "oo:chattr_np", &arg, &mode) ||
 	    fs_chattr_np(arg, mode))
@@ -666,7 +666,7 @@ PRIVATE DEFINE_CMETHOD(libfs_expand, &f_libfs_expand);
 
 /* Filesystem write operations. */
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_chtime(size_t argc, DeeObject **argv, DeeObject *kw) {
+f_libfs_chtime(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *path;
 	DeeObject *atime                = Dee_None;
 	DeeObject *mtime                = Dee_None;
@@ -682,7 +682,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_chmod(size_t argc, DeeObject **argv) {
+f_libfs_chmod(size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *mode;
 	if (DeeArg_Unpack(argc, argv, "oo:chmod", &path, &mode))
 		goto err;
@@ -694,7 +694,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_lchmod(size_t argc, DeeObject **argv) {
+f_libfs_lchmod(size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *mode;
 	if (DeeArg_Unpack(argc, argv, "oo:lchmod", &path, &mode))
 		goto err;
@@ -706,7 +706,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_chown(size_t argc, DeeObject **argv) {
+f_libfs_chown(size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *user, *group;
 	if (DeeArg_Unpack(argc, argv, "ooo:chown", &path, &user, &group))
 		goto err;
@@ -718,7 +718,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_lchown(size_t argc, DeeObject **argv) {
+f_libfs_lchown(size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *user, *group;
 	if (DeeArg_Unpack(argc, argv, "ooo:lchown", &path, &user, &group))
 		goto err;
@@ -730,7 +730,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_mkdir(size_t argc, DeeObject **argv) {
+f_libfs_mkdir(size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *perm = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:mkdir", &path, &perm))
 		goto err;
@@ -742,7 +742,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_rmdir(size_t argc, DeeObject **argv) {
+f_libfs_rmdir(size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:rmdir", &path))
 		goto err;
@@ -754,7 +754,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_unlink(size_t argc, DeeObject **argv) {
+f_libfs_unlink(size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:unlink", &path))
 		goto err;
@@ -766,7 +766,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_remove(size_t argc, DeeObject **argv) {
+f_libfs_remove(size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:remove", &path))
 		goto err;
@@ -778,7 +778,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_rename(size_t argc, DeeObject **argv) {
+f_libfs_rename(size_t argc, DeeObject *const *argv) {
 	DeeObject *existing_path, *new_path;
 	if (DeeArg_Unpack(argc, argv, "oo:rename", &existing_path, &new_path))
 		goto err;
@@ -790,7 +790,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_copyfile(size_t argc, DeeObject **argv) {
+f_libfs_copyfile(size_t argc, DeeObject *const *argv) {
 	DeeObject *existing_file, *new_file, *progress_callback = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "oo|o:copyfile", &existing_file, &new_file, &progress_callback))
 		goto err;
@@ -802,7 +802,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_link(size_t argc, DeeObject **argv) {
+f_libfs_link(size_t argc, DeeObject *const *argv) {
 	DeeObject *existing_path, *new_path;
 	if (DeeArg_Unpack(argc, argv, "oo:link", &existing_path, &new_path))
 		goto err;
@@ -814,7 +814,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_symlink(size_t argc, DeeObject **argv) {
+f_libfs_symlink(size_t argc, DeeObject *const *argv) {
 	DeeObject *target_text, *link_path;
 	bool format_target = true;
 	if (DeeArg_Unpack(argc, argv, "oo|b:symlink", &target_text, &link_path, &format_target))
@@ -827,7 +827,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_libfs_readlink(size_t argc, DeeObject **argv) {
+f_libfs_readlink(size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	if (DeeArg_Unpack(argc, argv, "o:readlink", &path))
 		goto err;
@@ -872,7 +872,7 @@ for (local x: names)
 
 /* Stat helper functions. */
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_S_ISDIR(size_t argc, DeeObject **argv) {
+f_libfs_S_ISDIR(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISDIR", &arg))
 		return NULL;
@@ -880,7 +880,7 @@ f_libfs_S_ISDIR(size_t argc, DeeObject **argv) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_S_ISCHR(size_t argc, DeeObject **argv) {
+f_libfs_S_ISCHR(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISCHR", &arg))
 		return NULL;
@@ -888,7 +888,7 @@ f_libfs_S_ISCHR(size_t argc, DeeObject **argv) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_S_ISBLK(size_t argc, DeeObject **argv) {
+f_libfs_S_ISBLK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISBLK", &arg))
 		return NULL;
@@ -896,7 +896,7 @@ f_libfs_S_ISBLK(size_t argc, DeeObject **argv) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_S_ISREG(size_t argc, DeeObject **argv) {
+f_libfs_S_ISREG(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISREG", &arg))
 		return NULL;
@@ -904,7 +904,7 @@ f_libfs_S_ISREG(size_t argc, DeeObject **argv) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_S_ISFIFO(size_t argc, DeeObject **argv) {
+f_libfs_S_ISFIFO(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISFIFO", &arg))
 		return NULL;
@@ -912,7 +912,7 @@ f_libfs_S_ISFIFO(size_t argc, DeeObject **argv) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_S_ISLNK(size_t argc, DeeObject **argv) {
+f_libfs_S_ISLNK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISLNK", &arg))
 		return NULL;
@@ -920,7 +920,7 @@ f_libfs_S_ISLNK(size_t argc, DeeObject **argv) {
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-f_libfs_S_ISSOCK(size_t argc, DeeObject **argv) {
+f_libfs_S_ISSOCK(size_t argc, DeeObject *const *argv) {
 	uint16_t arg;
 	if (DeeArg_Unpack(argc, argv, "I16u:S_ISSOCK", &arg))
 		return NULL;

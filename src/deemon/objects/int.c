@@ -2545,7 +2545,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL int_return_zero(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-int_new(size_t argc, DeeObject **argv) {
+int_new(size_t argc, DeeObject *const *argv) {
 	DeeObject *val;
 	uint16_t radix = 0;
 	if (DeeArg_Unpack(argc, argv, "o|I16u:int", &val, &radix))
@@ -2796,7 +2796,7 @@ err_printer:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tostr(DeeObject *self, size_t argc,
-          DeeObject **argv, DeeObject *kw) {
+          DeeObject *const *argv, DeeObject *kw) {
 	uint32_t flags                  = 10 << DEEINT_PRINT_RSHIFT;
 	char *flags_str                 = NULL;
 	PRIVATE struct keyword kwlist[] = { K(radix), K(mode), KEND };
@@ -2835,7 +2835,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_hex(DeeObject *self, size_t argc, DeeObject **argv) {
+int_hex(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":hex"))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(16, DEEINT_PRINT_FNUMSYS));
@@ -2844,7 +2844,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_bin(DeeObject *self, size_t argc, DeeObject **argv) {
+int_bin(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":bin"))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(2, DEEINT_PRINT_FNUMSYS));
@@ -2853,7 +2853,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_oct(DeeObject *self, size_t argc, DeeObject **argv) {
+int_oct(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":oct"))
 		goto err;
 	return int_tostr_impl(self, DEEINT_PRINT(8, DEEINT_PRINT_FNUMSYS));
@@ -2863,7 +2863,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tobytes(DeeIntObject *self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	struct keyword kwlist[] = { K(length), K(byteorder), K(signed), KEND };
 	size_t length;
 	DeeObject *byteorder = Dee_None;
@@ -2912,7 +2912,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 int_frombytes(DeeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject **argv,
+              size_t argc, DeeObject *const *argv,
               DeeObject *kw) {
 	struct keyword kwlist[] = { K(bytes), K(byteorder), K(signed), KEND };
 	DeeObject *bytes;
@@ -2971,7 +2971,7 @@ PRIVATE struct type_method int_class_methods[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-int_sizeof(DeeIntObject *self, size_t argc, DeeObject **argv) {
+int_sizeof(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	size_t int_size;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
@@ -2985,7 +2985,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
-int_forcecopy(DeeIntObject *self, size_t argc, DeeObject **argv) {
+int_forcecopy(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeIntObject *result;
 	size_t int_size;
 	if (DeeArg_Unpack(argc, argv, ":__forcecopy__"))
@@ -3006,7 +3006,7 @@ err:
 
 PRIVATE struct type_method int_methods[] = {
 	{ "tostr",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_tostr,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tostr,
 	  DOC("(radix=!10,mode=!P{})->?Dstring\n"
 	      "@throw ValueError The given @mode was not recognized\n"
 	      "@throw NotImplemented The given @radix cannot be represented\n"
@@ -3019,19 +3019,19 @@ PRIVATE struct type_method int_methods[] = {
 	      "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hex",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_hex,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_hex,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(16,\"n\")} (s.a. #tostr)") },
 	{ "bin",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_bin,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bin,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(2,\"n\")} (s.a. #tostr)") },
 	{ "oct",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_oct,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_oct,
 	  DOC("->?Dstring\n"
 	      "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. #tostr)") },
 	{ "tobytes",
-	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_tobytes,
+	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tobytes,
 	  DOC("(length:?Dint,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
@@ -3045,10 +3045,10 @@ PRIVATE struct type_method int_methods[] = {
 	      "negative integers"),
 	  TYPE_METHOD_FKWDS },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_sizeof,
 	  DOC("->?Dint") },
 	{ "__forcecopy__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&int_forcecopy,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_forcecopy,
 	  DOC("->?Dint\n"
 	      "Internal function to force the creation of a copy of @this "
 	      "integer without performing aliasing for known constants.\n"

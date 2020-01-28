@@ -70,10 +70,10 @@ public: /* type_ from deemon */
 	T(new_)() const {
 		return inherit(DeeObject_NewDefault(*this));
 	}
-	T(new_)(size_t argc, DeeObject **argv) const {
+	T(new_)(size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_New(*this, argc, argv));
 	}
-	T(new_)(size_t argc, DeeObject **argv, DeeObject *kw) const {
+	T(new_)(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, argv, kw));
 	}
 	T(new_)(size_t argc, DeeObject *const *argv) const {
@@ -103,10 +103,10 @@ public: /* type_ from deemon */
 	T operator()() const {
 		return inherit(DeeObject_NewDefault(*this));
 	}
-	T operator()(size_t argc, DeeObject **argv) const {
+	T operator()(size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_New(*this, argc, argv));
 	}
-	T operator()(size_t argc, DeeObject **argv, DeeObject *kw) const {
+	T operator()(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_NewKw(*this, argc, argv, kw));
 	}
 	T operator()(size_t argc, DeeObject *const *argv) const {

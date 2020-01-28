@@ -52,7 +52,7 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_init(SegmentsIterator *__restrict self,
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	self->si_len = 1;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegmentsIterator",
 	                  &self->si_iter, &self->si_len))
@@ -283,7 +283,7 @@ seg_ctor(Segments *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seg_init(Segments *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	self->s_len = 1;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_SeqSegments",
 	                  &self->s_seq, &self->s_len))

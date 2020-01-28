@@ -331,7 +331,7 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 		/* .tp_repr = */ &none_str,
 		/* .tp_bool = */ &none_bool
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&none_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&none_call,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &none_math,

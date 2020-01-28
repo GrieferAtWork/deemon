@@ -744,7 +744,7 @@ DeeTuple_Append(DREF DeeObject *__restrict self,
 
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
-                         /*inherit(on_success)*/ DREF DeeObject **argv) {
+                         /*inherit(on_success)*/ DREF DeeObject *const *argv) {
 	DREF DeeTupleObject *result;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeTuple_Check(self));
@@ -980,7 +980,7 @@ err:
 
 PRIVATE NONNULL((1, 3)) int DCALL
 tuple_iterator_init(TupleIterator *__restrict self,
-                    size_t argc, DeeObject **argv) {
+                    size_t argc, DeeObject *const *argv) {
 	self->ti_tuple = (DREF DeeTupleObject *)Dee_EmptyTuple;
 	self->ti_index = 0;
 	if (DeeArg_Unpack(argc, argv, "|oIu:_TupleIterator",
@@ -1290,7 +1290,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF Tuple *DCALL
-tuple_init(size_t argc, DeeObject **argv) {
+tuple_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:Tuple", &seq))
 		goto err;
@@ -1506,7 +1506,7 @@ PRIVATE struct type_seq tuple_seq = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 tuple_unpack(DeeObject *__restrict UNUSED(self),
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	size_t num_items;
 	DeeObject *init;
 	DREF DeeObject *result;
@@ -1647,7 +1647,7 @@ tuple_hash(Tuple *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_sizeof(Tuple *self, size_t argc, DeeObject **argv) {
+tuple_sizeof(Tuple *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(Tuple, t_elem) +
@@ -1679,7 +1679,7 @@ err_empty:
 
 PRIVATE struct type_method tuple_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tuple_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tuple_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

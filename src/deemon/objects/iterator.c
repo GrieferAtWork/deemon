@@ -194,7 +194,7 @@ PRIVATE struct type_cmp iterator_cmp = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_next(DeeObject *self, size_t argc, DeeObject **argv) {
+iterator_next(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *defl = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:next", &defl))
 		goto err;
@@ -227,7 +227,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_prev(DeeObject *self, size_t argc, DeeObject **argv) {
+iterator_prev(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":prev"))
 		goto err;
@@ -248,7 +248,7 @@ INTERN DEFINE_INT32(int_size_min, SSIZE_MIN);
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_rewind(DeeObject *self, size_t argc, DeeObject **argv) {
+iterator_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":rewind"))
 		goto err;
 	if (DeeIterator_Rewind(self))
@@ -755,7 +755,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_revert(DeeObject *self, size_t argc, DeeObject **argv) {
+iterator_revert(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	dssize_t count;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "Id:revert", &count))
@@ -776,7 +776,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_advance(DeeObject *self, size_t argc, DeeObject **argv) {
+iterator_advance(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	dssize_t count;
 	int error;
 	if (DeeArg_Unpack(argc, argv, "Id:advance", &count))
@@ -797,7 +797,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-iterator_peek(DeeObject *self, size_t argc, DeeObject **argv) {
+iterator_peek(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *defl = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:peek", &defl))
@@ -2568,7 +2568,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_init(IteratorFuture *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_IteratorFuture", &self->if_iter))
 		goto err;
 	Dee_Incref(self->if_iter);
@@ -2697,7 +2697,7 @@ ip_copy(IteratorPending *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ip_init(IteratorPending *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_IteratorPending", &self->ip_iter))
 		goto err;
 	Dee_Incref(self->ip_iter);

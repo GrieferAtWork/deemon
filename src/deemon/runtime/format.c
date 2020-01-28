@@ -1835,7 +1835,7 @@ kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
  * Printed: "int, float, string, enabled: bool" */
 PUBLIC WUNUSED NONNULL((1)) dssize_t
 (DCALL DeeFormat_PrintArgumentTypesKw)(dformatprinter printer, void *arg,
-                                       size_t argc, DeeObject **argv,
+                                       size_t argc, DeeObject *const *argv,
                                        DeeObject *kw) {
 	size_t i;
 	char const *str;

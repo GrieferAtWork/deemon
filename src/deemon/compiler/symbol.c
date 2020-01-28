@@ -811,7 +811,7 @@ INTERN DeeTypeObject DeeBaseScope_Type = {
 /* -------- DeeRootScopeObject Implementation -------- */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 root_scope_ctor(DeeRootScopeObject *__restrict self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	DeeModuleObject *module;
 	if (DeeArg_Unpack(argc, argv, "o:root_scope", &module))
 		goto err;

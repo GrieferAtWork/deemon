@@ -401,7 +401,7 @@ string_new_empty(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-string_new(size_t argc, DeeObject **argv) {
+string_new(size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	if (DeeArg_Unpack(argc, argv, "o:string", &ob))
 		goto err;
@@ -995,7 +995,7 @@ stringiter_copy(StringIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_init(StringIterator *__restrict self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	String *str;
 	if (DeeArg_Unpack(argc, argv, "o:string.Iterator", &str))
 		goto err;
@@ -1386,7 +1386,7 @@ PRIVATE struct type_member string_class_members[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 string_class_chr(DeeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	if (DeeArg_Unpack(argc, argv, "I32u:chr", &ch))
 		goto err;
@@ -1397,7 +1397,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 string_class_fromseq(DeeObject *__restrict UNUSED(self),
-                     size_t argc, DeeObject **argv) {
+                     size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:fromseq", &seq))
 		goto err;

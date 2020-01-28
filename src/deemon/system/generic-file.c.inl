@@ -152,7 +152,7 @@ sysfile_putc(DeeFileObject *__restrict UNUSED(self), int UNUSED(ch),
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_fileno(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	if (!DeeArg_Unpack(argc, argv, ":fileno"))
 		fs_unsupported();
 	return NULL;
@@ -165,7 +165,7 @@ PRIVATE struct type_method sysfile_methods[] = {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
-                   size_t argc, DeeObject **argv) {
+                   size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;
 	return_none;

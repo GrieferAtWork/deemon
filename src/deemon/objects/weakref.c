@@ -109,7 +109,7 @@ ob_weakref_invoke_callback(struct weakref *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ob_weakref_init(WeakRef *__restrict self,
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	DeeObject *obj;
 	self->wr_del = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:WeakRef", &obj, &self->wr_del))
@@ -133,7 +133,7 @@ err:
 
 PRIVATE int DCALL
 ob_weakref_init_kw(WeakRef *__restrict self, size_t argc,
-                   DeeObject **argv, DeeObject *kw) {
+                   DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *obj;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(obj), K(callback), KEND });
 	self->wr_del = NULL;
@@ -288,7 +288,7 @@ ob_weakref_set(WeakRef *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ob_weakref_lock(WeakRef *self, size_t argc, DeeObject **argv) {
+ob_weakref_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *alt = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:lock", &alt))
@@ -311,7 +311,7 @@ ob_weakref_alive(WeakRef *__restrict self) {
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject **argv) {
+ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, ":try_lock"))
 		return NULL;
@@ -325,13 +325,13 @@ ob_weakref_try_lock(WeakRef *self, size_t argc, DeeObject **argv) {
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method ob_weakref_methods[] = {
-	{ "lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_lock,
+	{ "lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ob_weakref_lock,
 	  DOC("->\n"
 	      "(def)->\n"
 	      "@throw ReferenceError The weak reference is no longer bound and no @def was given\n"
 	      "Lock the weak reference and return the pointed-to object") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	{ "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&ob_weakref_try_lock,
+	{ "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ob_weakref_try_lock,
 	  DOC("()\n"
 	      "->\n"
 	      "Deprecated alias for #lock with passing :none (${this.lock(none)})") },

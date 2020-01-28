@@ -330,7 +330,7 @@ INTDEF struct type_member compiler_class_members[];
 
 INTDEF int DCALL
 compiler_init(DeeCompilerObject *__restrict self,
-              size_t argc, DeeObject **argv,
+              size_t argc, DeeObject *const *argv,
               DeeObject *kw);
 
 PUBLIC DeeTypeObject DeeCompiler_Type = {

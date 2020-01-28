@@ -97,7 +97,7 @@ im_deepcopy(InstanceMethod *__restrict self,
 
 PRIVATE int DCALL
 im_init(InstanceMethod *__restrict self,
-        size_t argc, DeeObject **argv,
+        size_t argc, DeeObject *const *argv,
         DeeObject *kw) {
 	DeeObject *thisarg, *func;
 	PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
@@ -116,13 +116,13 @@ im_repr(InstanceMethod *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-im_call(InstanceMethod *self, size_t argc, DeeObject **argv) {
+im_call(InstanceMethod *self, size_t argc, DeeObject *const *argv) {
 	return DeeObject_ThisCall(self->im_func, self->im_this, argc, argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 im_callkw(InstanceMethod *self, size_t argc,
-          DeeObject **argv, DeeObject *kw) {
+          DeeObject *const *argv, DeeObject *kw) {
 	return DeeObject_ThisCallKw(self->im_func, self->im_this, argc, argv, kw);
 }
 
@@ -374,7 +374,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&im_repr,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&im_call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&im_call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&im_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -390,7 +390,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **, DeeObject *))&im_callkw
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&im_callkw
 };
 
 DECL_END

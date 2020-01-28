@@ -962,10 +962,10 @@ class Object: public detail::object_base {
 		Object(call)(obj_tuple args, DeeObject *kw) const {
 			return inherit(((T const *)this)->callref(args, kw));
 		}
-		Object(call)(size_t argc, DeeObject **argv) const {
+		Object(call)(size_t argc, DeeObject *const *argv) const {
 			return inherit(((T const *)this)->callref(argc, argv));
 		}
-		Object(call)(size_t argc, DeeObject **argv, DeeObject *kw) const {
+		Object(call)(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 			return inherit(((T const *)this)->callref(argc, argv, kw));
 		}
 		Object(call)(size_t argc, DeeObject *const *argv) const {
@@ -1021,10 +1021,10 @@ class Object: public detail::object_base {
 		WUNUSED DREF DeeObject *callref(obj_tuple args, DeeObject *kw) const {
 			return DeeObject_CallAttrTupleKw(m_ptr, m_str, args, kw);
 		}
-		WUNUSED DREF DeeObject *callref(size_t argc, DeeObject **argv) const {
+		WUNUSED DREF DeeObject *callref(size_t argc, DeeObject *const *argv) const {
 			return DeeObject_CallAttr(m_ptr, m_str, argc, argv);
 		}
-		WUNUSED DREF DeeObject *callref(size_t argc, DeeObject **argv, DeeObject *kw) const {
+		WUNUSED DREF DeeObject *callref(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 			return DeeObject_CallAttrKw(m_ptr, m_str, argc, argv, kw);
 		}
 		bool has() const {
@@ -1068,10 +1068,10 @@ class Object: public detail::object_base {
 		WUNUSED DREF DeeObject *(callref)(obj_tuple args, DeeObject *kw) const {
 			return DeeObject_CallAttrStringTupleKw(m_ptr, m_str, (DeeObject *)args, kw);
 		}
-		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject **argv) const {
+		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject *const *argv) const {
 			return DeeObject_CallAttrString(m_ptr, m_str, argc, argv);
 		}
-		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject **argv, DeeObject *kw) const {
+		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 			return DeeObject_CallAttrStringKw(m_ptr, m_str, argc, argv, kw);
 		}
 		bool(has)() const {
@@ -1118,10 +1118,10 @@ class Object: public detail::object_base {
 		WUNUSED DREF DeeObject *(callref)(obj_tuple args, DeeObject *kw) const {
 			return DeeObject_CallAttrStringHashTupleKw(m_ptr, m_str, m_hsh, (DeeObject *)args, kw);
 		}
-		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject **argv) const {
+		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject *const *argv) const {
 			return DeeObject_CallAttrStringHash(m_ptr, m_str, m_hsh, argc, argv);
 		}
-		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject **argv, DeeObject *kw) const {
+		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 			return DeeObject_CallAttrStringHashKw(m_ptr, m_str, m_hsh, argc, argv, kw);
 		}
 		bool(has)() const {
@@ -1171,10 +1171,10 @@ class Object: public detail::object_base {
 		WUNUSED DREF DeeObject *(callref)(obj_tuple args, DeeObject *kw) const {
 			return DeeObject_CallAttrStringLenHashTupleKw(m_ptr, m_str, m_len, m_hsh, (DeeObject *)args, kw);
 		}
-		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject **argv) const {
+		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject *const *argv) const {
 			return DeeObject_CallAttrStringLenHash(m_ptr, m_str, m_len, m_hsh, argc, argv);
 		}
-		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject **argv, DeeObject *kw) const {
+		WUNUSED DREF DeeObject *(callref)(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 			return DeeObject_CallAttrStringLenHashKw(m_ptr, m_str, m_len, m_hsh, argc, argv, kw);
 		}
 		bool(has)() const {
@@ -1604,10 +1604,10 @@ public:
 	Object(callattr)(obj_string name, obj_tuple args, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrTupleKw(*this, name, args, kw));
 	}
-	Object(callattr)(obj_string name, size_t argc, DeeObject **argv) const {
+	Object(callattr)(obj_string name, size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_CallAttr(*this, name, argc, argv));
 	}
-	Object(callattr)(obj_string name, size_t argc, DeeObject **argv, DeeObject *kw) const {
+	Object(callattr)(obj_string name, size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrKw(*this, name, argc, argv, kw));
 	}
 	Object(callattr)(obj_string name, size_t argc, DeeObject *const *__restrict argv) const {
@@ -1640,10 +1640,10 @@ public:
 	Object(callattr)(char const *__restrict name, obj_tuple args, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrStringTupleKw(*this, name, (DeeObject *)args, kw));
 	}
-	Object(callattr)(char const *__restrict name, size_t argc, DeeObject **argv) const {
+	Object(callattr)(char const *__restrict name, size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_CallAttrString(*this, name, argc, argv));
 	}
-	Object(callattr)(char const *__restrict name, size_t argc, DeeObject **argv, DeeObject *kw) const {
+	Object(callattr)(char const *__restrict name, size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrStringKw(*this, name, argc, argv, kw));
 	}
 	Object(callattr)(char const *__restrict name, size_t argc, DeeObject *const *__restrict argv) const {
@@ -1676,10 +1676,10 @@ public:
 	Object(callattr)(char const *__restrict name, Dee_hash_t hash, obj_tuple args, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrStringHashTupleKw(*this, name, hash, (DeeObject *)args, kw));
 	}
-	Object(callattr)(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject **argv) const {
+	Object(callattr)(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_CallAttrStringHash(*this, name, hash, argc, argv));
 	}
-	Object(callattr)(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject **argv, DeeObject *kw) const {
+	Object(callattr)(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrStringHashKw(*this, name, hash, argc, argv, kw));
 	}
 	Object(callattr)(char const *__restrict name, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv) const {
@@ -1712,10 +1712,10 @@ public:
 	Object(callattr)(char const *__restrict name, size_t namelen, Dee_hash_t hash, obj_tuple args, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrStringLenHashTupleKw(*this, name, namelen, hash, (DeeObject *)args, kw));
 	}
-	Object(callattr)(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject **argv) const {
+	Object(callattr)(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_CallAttrStringLenHash(*this, name, namelen, hash, argc, argv));
 	}
-	Object(callattr)(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject **argv, DeeObject *kw) const {
+	Object(callattr)(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_CallAttrStringLenHashKw(*this, name, namelen, hash, argc, argv, kw));
 	}
 	Object(callattr)(char const *__restrict name, size_t namelen, Dee_hash_t hash, size_t argc, DeeObject *const *__restrict argv) const {
@@ -1953,10 +1953,10 @@ public:
 	Object(call)(obj_tuple args, DeeObject *kw) const {
 		return inherit(DeeObject_CallTupleKw(*this, args, kw));
 	}
-	Object(call)(size_t argc, DeeObject **argv) const {
+	Object(call)(size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_Call(*this, argc, argv));
 	}
-	Object(call)(size_t argc, DeeObject **argv, DeeObject *kw) const {
+	Object(call)(size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_CallKw(*this, argc, argv, kw));
 	}
 	Object(call)(size_t argc, DeeObject *const *argv) const {
@@ -1992,10 +1992,10 @@ public:
 	Object(thiscall)(DeeObject *this_arg, obj_tuple args, DeeObject *kw) const {
 		return inherit(DeeObject_ThisCallTupleKw(*this, this_arg, args, kw));
 	}
-	Object(thiscall)(DeeObject *this_arg, size_t argc, DeeObject **argv) const {
+	Object(thiscall)(DeeObject *this_arg, size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_ThisCall(*this, this_arg, argc, argv));
 	}
-	Object(thiscall)(DeeObject *this_arg, size_t argc, DeeObject **argv, DeeObject *kw) const {
+	Object(thiscall)(DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw) const {
 		return inherit(DeeObject_ThisCallKw(*this, this_arg, argc, argv, kw));
 	}
 	Object(thiscall)(DeeObject *this_arg, size_t argc, DeeObject *const *__restrict argv) const {
@@ -2289,7 +2289,7 @@ public:
 	Object(invoke_operator)(uint16_t name, obj_tuple args) const {
 		return inherit(DeeObject_InvokeOperatorTuple(*this, name, (DeeObject *)args));
 	}
-	Object(invoke_operator)(uint16_t name, size_t argc, DeeObject **argv) const {
+	Object(invoke_operator)(uint16_t name, size_t argc, DeeObject *const *argv) const {
 		return inherit(DeeObject_InvokeOperator(*this, name, argc, argv));
 	}
 	Object(invoke_operator)(uint16_t name, size_t argc, Object *__restrict argv) const {
@@ -2301,7 +2301,7 @@ public:
 	Object(invoke_inplace_operator)(uint16_t name, obj_tuple args) {
 		return inherit(DeeObject_PInvokeOperatorTuple(&this->m_ptr, name, (DeeObject *)args));
 	}
-	Object(invoke_inplace_operator)(uint16_t name, size_t argc, DeeObject **argv) {
+	Object(invoke_inplace_operator)(uint16_t name, size_t argc, DeeObject *const *argv) {
 		return inherit(DeeObject_PInvokeOperator(&this->m_ptr, name, argc, argv));
 	}
 	Object(invoke_inplace_operator)(uint16_t name, size_t argc, Object *__restrict argv) {

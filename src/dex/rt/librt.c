@@ -88,7 +88,7 @@ DECL_BEGIN
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_getstacklimit_f(size_t argc, DeeObject **argv) {
+librt_getstacklimit_f(size_t argc, DeeObject *const *argv) {
 	uint16_t result;
 	if (DeeArg_Unpack(argc, argv, ":getstacklimit"))
 		goto err;
@@ -99,7 +99,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_setstacklimit_f(size_t argc, DeeObject **argv) {
+librt_setstacklimit_f(size_t argc, DeeObject *const *argv) {
 	uint16_t result, newval = DEE_CONFIG_DEFAULT_STACK_LIMIT;
 	if (DeeArg_Unpack(argc, argv, "|I16u:setstacklimit", &newval))
 		goto err;
@@ -110,7 +110,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_makeclass_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+librt_makeclass_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *base;
 	DeeObject *descriptor;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(base), K(descriptor), KEND });
@@ -178,63 +178,63 @@ librt_get_ObjectTable_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ClassOperatorTable_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ClassOperatorTable_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ClassOperatorTable_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ClassOperatorTableIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ClassOperatorTableIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ClassOperatorTable_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ClassAttribute_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ClassAttribute_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ClassAttribute_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ClassAttributeTable_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ClassAttributeTable_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ClassAttributeTable_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ClassAttributeTableIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ClassAttributeTableIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ClassAttributeTable_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ObjectTable_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ObjectTable_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ObjectTable_impl_f();
 }
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_RoDictIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_RoDictIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeRoDict_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_RoSetIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_RoSetIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeRoSet_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_KwdsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_KwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeKwds_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_KwdsMappingIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_KwdsMappingIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeKwdsMapping_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_GenericIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_GenericIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	/* The internal `_ObjectTable' type doesn't implement its own iterator type,
 	 * but instead uses the generic iterator. - By requesting access to the iterator
 	 * that's being used, we can thereby gain backdoor access to the internal, generic
@@ -263,12 +263,12 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IteratorPending_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_IteratorPending_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_generic_iterator_member_type("pending");
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_IteratorFuture_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_IteratorFuture_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_generic_iterator_member_type("future");
 }
 
@@ -276,73 +276,73 @@ librt_get_IteratorFuture_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeString_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeBytes_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ListIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ListIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeList_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_TupleIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_TupleIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeTuple_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_HashSetIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_HashSetIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeHashSet_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_DictIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDict_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictProxyIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_DictProxyIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictProxy_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictKeysIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_DictKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictKeys_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictItemsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_DictItemsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictItems_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DictValuesIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_DictValuesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeDictValues_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_TracebackIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_TracebackIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return DeeObject_GetAttr((DeeObject *)&DeeTraceback_Type,
 	                         (DeeObject *)STR_ITERATOR);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_GCEnum_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_GCEnum_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return_reference((DREF DeeObject *)Dee_TYPE(&DeeGCEnumTracked_Singleton));
 }
 
@@ -353,17 +353,17 @@ librt_get_GCSet_empty_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_GCSet_empty_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_GCSet_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_GCSet_empty_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_GCSet_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_GCSet_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(librt_get_GCSet_empty_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_GCSetIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_GCSetIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(get_type_of(librt_get_GCSet_empty_impl_f()));
 }
 
@@ -429,22 +429,22 @@ librt_get_BlackListMapping_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListVarkwds_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BlackListVarkwds_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BlackListVarkwds_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListVarkwdsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BlackListVarkwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BlackListVarkwds_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListMapping_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BlackListMapping_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BlackListMapping_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListMappingIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BlackListMappingIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BlackListMapping_impl_f());
 }
 
@@ -476,12 +476,12 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DocKwds_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_DocKwds_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_DocKwds_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_DocKwdsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_DocKwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_DocKwds_impl_f());
 }
 
@@ -507,42 +507,42 @@ librt_get_MappingItems_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingProxy_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingProxy_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingProxy_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingKeys_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingKeys_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingKeys_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingValues_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingValues_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingValues_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingItems_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingItems_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingItems_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingProxyIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingProxyIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingProxy_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingKeysIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingKeysIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingKeys_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingValuesIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingValuesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingValues_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_MappingItemsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_MappingItemsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingItems_impl_f());
 }
 
@@ -552,12 +552,12 @@ librt_get_TypeOperators_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_TypeOperators_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_TypeOperators_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_TypeOperators_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_TypeOperatorsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_TypeOperatorsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_TypeOperators_impl_f());
 }
 
@@ -586,12 +586,12 @@ librt_get_SeqCombinations_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqCombinations_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqCombinations_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqCombinations_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqCombinationsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqCombinationsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqCombinations_impl_f());
 }
 
@@ -602,12 +602,12 @@ librt_get_SeqRepeatCombinations_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqRepeatCombinations_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqRepeatCombinations_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqRepeatCombinations_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqRepeatCombinationsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqRepeatCombinationsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqRepeatCombinations_impl_f());
 }
 
@@ -618,12 +618,12 @@ librt_get_SeqPermutations_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqPermutations_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqPermutations_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqPermutations_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqPermutationsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqPermutationsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqPermutations_impl_f());
 }
 
@@ -634,12 +634,12 @@ librt_get_SeqSegments_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqSegments_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqSegments_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqSegments_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqSegmentsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqSegmentsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqSegments_impl_f());
 }
 
@@ -649,12 +649,12 @@ librt_get_SeqConcat_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqConcat_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqConcat_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqConcat_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqConcatIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqConcatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqConcat_impl_f());
 }
 
@@ -665,12 +665,12 @@ librt_get_SeqFilter_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqFilter_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqFilter_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqFilterIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqFilter_impl_f());
 }
 
@@ -681,12 +681,12 @@ librt_get_SeqLocator_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqLocator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqLocator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqLocator_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqLocatorIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqLocatorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqLocator_impl_f());
 }
 
@@ -696,17 +696,17 @@ librt_get_SeqSubRange_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqSubRange_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqSubRange_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqSubRange_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqSubRangeIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqSubRangeIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqSubRange_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqSubRangeN_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqSubRangeN_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(DeeObject_GetRange(Dee_EmptySeq, &DeeInt_One, Dee_None));
 }
 
@@ -717,12 +717,12 @@ librt_get_SeqTransformation_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqTransformation_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqTransformation_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqTransformation_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqTransformationIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqTransformationIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqTransformation_impl_f());
 }
 
@@ -732,12 +732,12 @@ librt_get_SeqRange_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqRange_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqRange_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqRange_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqRangeIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqRangeIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqRange_impl_f());
 }
 
@@ -747,12 +747,12 @@ librt_get_SeqIntRange_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqIntRange_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqIntRange_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqIntRange_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqIntRangeIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqIntRangeIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqIntRange_impl_f());
 }
 
@@ -763,12 +763,12 @@ librt_get_SeqRepeat_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqRepeat_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqRepeat_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqRepeat_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqRepeatIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqRepeatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqRepeat_impl_f());
 }
 
@@ -779,12 +779,12 @@ librt_get_SeqItemRepeat_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqItemRepeat_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqItemRepeat_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqItemRepeat_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqItemRepeatIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqItemRepeatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqItemRepeat_impl_f());
 }
 
@@ -794,12 +794,12 @@ librt_get_SeqIds_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqIds_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqIds_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqIds_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqIdsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqIdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqIds_impl_f());
 }
 
@@ -809,12 +809,12 @@ librt_get_SeqTypes_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqTypes_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqTypes_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqTypes_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqTypesIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqTypesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqTypes_impl_f());
 }
 
@@ -824,12 +824,12 @@ librt_get_SeqClasses_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqClasses_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqClasses_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqClasses_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqClassesIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqClassesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqClasses_impl_f());
 }
 
@@ -895,47 +895,47 @@ librt_get_SeqEachCallAttrKw_stub_instance(void) {
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEach_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEach_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(librt_get_SeqEach_stub_instance());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachOperator_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachOperator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(librt_get_SeqEachOperator_stub_instance());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachOperatorIterator_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachOperatorIterator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(get_type_of(librt_get_SeqEachOperator_stub_instance()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachGetAttr_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachGetAttr_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(librt_get_SeqEachGetAttr_stub_instance());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachGetAttrIterator_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachGetAttrIterator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(get_type_of(librt_get_SeqEachGetAttr_stub_instance()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachCallAttr_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachCallAttr_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(librt_get_SeqEachCallAttr_stub_instance());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachCallAttrIterator_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachCallAttrIterator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(get_type_of(librt_get_SeqEachCallAttr_stub_instance()));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachCallAttrKw_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachCallAttrKw_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(librt_get_SeqEachCallAttrKw_stub_instance());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SeqEachCallAttrKwIterator_Type_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SeqEachCallAttrKwIterator_Type_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(get_type_of(librt_get_SeqEachCallAttrKw_stub_instance()));
 }
 
@@ -1020,42 +1020,42 @@ librt_get_SetDifference_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetUnion_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetUnion_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SetUnion_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetUnionIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetUnionIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SetUnion_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetSymmetricDifference_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetSymmetricDifference_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SetSymmetricDifference_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetSymmetricDifferenceIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetSymmetricDifferenceIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SetSymmetricDifference_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetIntersection_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetIntersection_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SetIntersection_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetIntersectionIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetIntersectionIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SetIntersection_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetDifference_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetDifference_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SetDifference_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SetDifferenceIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SetDifferenceIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SetDifference_impl_f());
 }
 
@@ -1075,12 +1075,12 @@ librt_get_SharedVector_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedVector_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SharedVector_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SharedVector_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedVectorIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SharedVectorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SharedVector_impl_f());
 }
 
@@ -1098,12 +1098,12 @@ librt_get_SharedMap_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedMap_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SharedMap_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SharedMap_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedMapIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_SharedMapIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SharedMap_impl_f());
 }
 
@@ -1114,12 +1114,12 @@ librt_get_RefVector_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_RefVector_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_RefVector_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_RefVector_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_RefVectorIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_RefVectorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_RefVector_impl_f());
 }
 
@@ -1132,12 +1132,12 @@ librt_get_ModuleExports_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ModuleExports_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ModuleExports_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ModuleExports_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ModuleExportsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ModuleExportsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ModuleExports_impl_f());
 }
 
@@ -1147,12 +1147,12 @@ librt_get_ModuleGlobals_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ModuleGlobals_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ModuleGlobals_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ModuleGlobals_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ModuleGlobalsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ModuleGlobalsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ModuleGlobals_impl_f());
 }
 
@@ -1166,12 +1166,12 @@ librt_get_BytesFind_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesFind_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesFind_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BytesFind_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesFindIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BytesFind_impl_f());
 }
 
@@ -1182,12 +1182,12 @@ librt_get_BytesCaseFind_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesCaseFind_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesCaseFind_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BytesCaseFind_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesCaseFindIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesCaseFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BytesCaseFind_impl_f());
 }
 
@@ -1198,12 +1198,12 @@ librt_get_BytesSegments_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesSegments_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesSegments_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BytesSegments_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesSegmentsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesSegmentsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BytesSegments_impl_f());
 }
 
@@ -1214,12 +1214,12 @@ librt_get_BytesSplit_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesSplit_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BytesSplit_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesSplitIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BytesSplit_impl_f());
 }
 
@@ -1230,12 +1230,12 @@ librt_get_BytesCaseSplit_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesCaseSplit_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesCaseSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BytesCaseSplit_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesCaseSplitIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesCaseSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BytesCaseSplit_impl_f());
 }
 
@@ -1245,12 +1245,12 @@ librt_get_BytesLineSplit_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesLineSplit_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesLineSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_BytesLineSplit_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BytesLineSplitIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_BytesLineSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_BytesLineSplit_impl_f());
 }
 
@@ -1306,82 +1306,82 @@ librt_get_StringOrdinals_impl_f(void) {
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringSegments_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringSegments_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringSegments_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringSegmentsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringSegmentsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringSegments_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringFind_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringFind_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringFind_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringFindIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringFind_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringCaseFind_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringCaseFind_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringCaseFind_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringCaseFindIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringCaseFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringCaseFind_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringSplit_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringSplit_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringSplitIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringSplit_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringCaseSplit_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringCaseSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringCaseSplit_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringCaseSplitIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringCaseSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringCaseSplit_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringLineSplit_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringLineSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringLineSplit_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringLineSplitIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringLineSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringLineSplit_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringScan_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringScan_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringScan_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringScanIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringScanIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringScan_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringOrdinals_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringOrdinals_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_StringOrdinals_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringOrdinalsIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_StringOrdinalsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_StringOrdinals_impl_f());
 }
 
@@ -1406,32 +1406,32 @@ librt_get_ReSplit_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReFindAll_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ReFindAll_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ReFindAll_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReFindAllIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ReFindAllIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ReFindAll_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReLocateAll_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ReLocateAll_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ReLocateAll_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReLocateAllIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ReLocateAllIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ReLocateAll_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReSplit_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ReSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ReSplit_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReSplitIterator_f(size_t UNUSED(argc), DeeObject **UNUSED(argv)) {
+librt_get_ReSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ReSplit_impl_f());
 }
 
@@ -1580,7 +1580,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReSplitIterator, librt_get_ReSplitIterator_f);
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_argv_get_f(size_t argc, DeeObject **argv) {
+librt_argv_get_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":argv.getter"))
 		goto err;
 	return Dee_GetArgv();
@@ -1589,7 +1589,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_argv_set_f(size_t argc, DeeObject **argv) {
+librt_argv_set_f(size_t argc, DeeObject *const *argv) {
 	DeeObject *new_tuple;
 	size_t i;
 	if (DeeArg_Unpack(argc, argv, "o:argv.setter", &new_tuple))

@@ -67,7 +67,7 @@ rodictiterator_ctor(DictIterator *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 rodictiterator_init(DictIterator *__restrict self,
-                    size_t argc, DeeObject **argv) {
+                    size_t argc, DeeObject *const *argv) {
 	Dict *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_RoDictIterator", &Dict) ||
 	    DeeObject_AssertTypeExact((DeeObject *)Dict, &DeeRoDict_Type))
@@ -879,7 +879,7 @@ PRIVATE struct type_seq rodict_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rodict_get(Dict *self, size_t argc, DeeObject **argv) {
+rodict_get(Dict *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		goto err;
@@ -889,7 +889,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rodict_sizeof(Dict *self, size_t argc, DeeObject **argv) {
+rodict_sizeof(Dict *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(Dict, rd_elem) +
@@ -901,11 +901,11 @@ err:
 
 PRIVATE struct type_method rodict_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&rodict_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&rodict_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -976,7 +976,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF Dict *DCALL
-rodict_init(size_t argc, DeeObject **argv) {
+rodict_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoDict", &seq))
 		return NULL;

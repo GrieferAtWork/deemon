@@ -260,11 +260,11 @@ function gii(
 @@Usage (in a file `libfoo.c', after running `$ deemon -F libfoo.c'):
 @@>/*[[[deemon import("_dexutils").gw("bar", "arg1:obj:string,arg2:o,arg3:o=NULL,arg4:b=true"); ]]]*/
 @@>FORCELOCAL WUNUSED DREF DeeObject *DCALL libfoo_bar_f_impl(DeeStringObject *arg1, DeeObject *arg2, DeeObject *arg3, bool arg4);
-@@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject **argv, DeeObject *kw);
+@@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 @@>#define LIBFOO_BAR_DEF(doc) { "bar", (DeeObject *)&libfoo_bar, MODSYM_FNORMAL, DOC("(arg1:?Dstring,arg2,arg3?,arg4:?Dbool=!t)\n" doc)}
 @@>PRIVATE DEFINE_KWCMETHOD(libfoo_bar, libfoo_bar_f);
 @@>PRIVATE DEFINE_KWLIST(libfoo_bar_kwds, { K(arg1), K(arg2), K(arg3), K(arg4), KEND });
-@@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject **argv, DeeObject *kw) {
+@@>PRIVATE WUNUSED DREF DeeObject *DCALL libfoo_bar_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 @@>	DeeStringObject *arg1;
 @@>	DeeObject *arg2;
 @@>	DeeObject *arg3 = NULL;
@@ -343,7 +343,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	print_user_impl();
 	print ";";
 	print visi == "INTERN" ? "INTDEF" : visi,
-		"WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv"
+		"WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject *const *argv"
 		.format({ libname, name }),;
 	if (kw && arg_data) print ", DeeObject *kw",;
 	print ");";
@@ -443,10 +443,10 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 			print "K({}), ".format({ x }),;
 		print "KEND });";
 		print "#endif /* !"+kwlist_def_name, "*/";
-		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv, DeeObject *kw) {{".format({ libname, name });
+		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {{".format({ libname, name });
 	} else {
 		print visi, "DEFINE_CMETHOD({}{}, {0}{1}_f);".format({ libname, name });
-		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject **argv) {{".format({ libname, name });
+		print visi, "WUNUSED DREF DeeObject *DCALL {}{}_f(size_t argc, DeeObject *const *argv) {{".format({ libname, name });
 	}
 	for (local x, y, z: arg_data) {
 		local conv;

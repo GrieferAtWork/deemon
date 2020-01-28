@@ -84,7 +84,7 @@ kwdsiter_copy(KwdsIterator *__restrict self,
 #define kwdsiter_deep kwdsiter_copy /* Only uses Immutable types, so deepcopy == copy */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject **argv) {
+kwdsiter_init(KwdsIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_KwdsIterator", &self->ki_map) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->ki_map, &DeeKwds_Type))
 		return -1;
@@ -436,7 +436,7 @@ done:
 }
 
 PRIVATE WUNUSED DREF Kwds *DCALL
-kwds_init(size_t argc, DeeObject **argv) {
+kwds_init(size_t argc, DeeObject *const *argv) {
 	/* TODO */
 	(void)argc;
 	(void)argv;
@@ -675,7 +675,7 @@ err:
 #define kmapiter_copy kwdsiter_copy
 #define kmapiter_deep kwdsiter_deep
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject **argv) {
+kmapiter_init(KmapIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_KwdsMappingIterator", &self->ki_map))
 		goto err;
 	if (DeeObject_AssertTypeExact((DeeObject *)self->ki_map, &DeeKwdsMapping_Type))
@@ -949,7 +949,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmap_init(KwdsMapping *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	DeeObject *args;
 	size_t i;
 	if (DeeArg_Unpack(argc, argv, "oo:_KwdsMapping", &self->kmo_kwds, &args))
@@ -1201,13 +1201,13 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
  *       to clean up the returned object. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
-                   DeeObject **argv) {
+                   DeeObject *const *argv) {
 	DREF KwdsMapping *result;
 	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
 	result = DeeObject_MALLOC(KwdsMapping);
 	if unlikely(!result)
 		goto done;
-	result->kmo_argv = argv;
+	result->kmo_argv = (DREF DeeObject **)(DeeObject **)argv;
 	result->kmo_kwds = (DREF DeeKwdsObject *)kwds;
 	rwlock_init(&result->kmo_lock);
 	DeeObject_Init(result, &DeeKwdsMapping_Type);
@@ -1427,7 +1427,7 @@ no_such_key:
  * the actually mapped arguments. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict pargc,
-             DeeObject **argv,
+             DeeObject *const *argv,
              DeeObject *kw) {
 	if (!kw)
 		return_reference_(Dee_EmptyMapping);
@@ -1448,7 +1448,7 @@ DeeArg_GetKw(size_t *__restrict pargc,
 }
 
 PUBLIC NONNULL((3)) void DCALL
-DeeArg_PutKw(size_t argc, DeeObject **argv, DREF DeeObject *kw) {
+DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
 	ASSERT_OBJECT(kw);
 	if (DeeKwdsMapping_Check(kw) &&
 	    ((DeeKwdsMappingObject *)kw)->kmo_argv == argv + argc) {
@@ -1461,7 +1461,7 @@ DeeArg_PutKw(size_t argc, DeeObject **argv, DREF DeeObject *kw) {
 
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
-DeeArg_GetKwString(size_t argc, DeeObject **argv,
+DeeArg_GetKwString(size_t argc, DeeObject *const *argv,
                    DeeObject *kw, char const *__restrict name) {
 	dhash_t hash;
 	if (!kw) {
@@ -1489,7 +1489,7 @@ DeeArg_GetKwString(size_t argc, DeeObject **argv,
 }
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
-DeeArg_GetKwStringLen(size_t argc, DeeObject **argv, DeeObject *kw,
+DeeArg_GetKwStringLen(size_t argc, DeeObject *const *argv, DeeObject *kw,
                       char const *__restrict name, size_t namelen, dhash_t hash) {
 	if (!kw) {
 		err_unknown_key_str_len(Dee_EmptyMapping, name, namelen);
@@ -1515,7 +1515,7 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject **argv, DeeObject *kw,
 }
 
 PUBLIC WUNUSED NONNULL((4, 5)) DREF DeeObject *DCALL
-DeeArg_GetKwStringDef(size_t argc, DeeObject **argv,
+DeeArg_GetKwStringDef(size_t argc, DeeObject *const *argv,
                       DeeObject *kw, char const *__restrict name,
                       DeeObject *def) {
 	dhash_t hash;
@@ -1541,7 +1541,7 @@ return_def:
 }
 
 PUBLIC WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
-DeeArg_GetKwStringLenDef(size_t argc, DeeObject **argv,
+DeeArg_GetKwStringLenDef(size_t argc, DeeObject *const *argv,
                          DeeObject *kw, char const *__restrict name,
                          size_t namelen, dhash_t hash,
                          DeeObject *def) {

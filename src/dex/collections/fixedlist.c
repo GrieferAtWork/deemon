@@ -250,7 +250,7 @@ err:
 
 
 PRIVATE WUNUSED DREF FixedList *DCALL
-fl_init(size_t argc, DeeObject **argv) {
+fl_init(size_t argc, DeeObject *const *argv) {
 	DREF FixedList *result;
 	DeeObject *size_ob, *init = NULL;
 	size_t size;
@@ -748,7 +748,7 @@ PRIVATE struct type_seq fl_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_clear_meth(FixedList *self, size_t argc, DeeObject **argv) {
+fl_clear_meth(FixedList *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		goto err;
 	fl_clear(self);
@@ -758,7 +758,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_sizeof(FixedList *self, size_t argc, DeeObject **argv) {
+fl_sizeof(FixedList *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
 	return DeeInt_NewSize(offsetof(FixedList, fl_elem) +
@@ -769,10 +769,10 @@ err:
 
 PRIVATE struct type_method fl_methods[] = {
 	{ "clear",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&fl_clear_meth,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&fl_clear_meth,
 	  DOC("()") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&fl_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&fl_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -919,7 +919,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fli_init(FixedListIterator *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	self->li_iter = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:FixedListIterator", &self->li_list, &self->li_iter))
 		goto err;

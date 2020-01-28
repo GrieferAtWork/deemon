@@ -55,7 +55,7 @@ err_no_af_support(neterrno_t error, sa_family_t af) {
 
 PRIVATE NONNULL((1)) int DCALL
 socket_ctor(Socket *__restrict self,
-            size_t argc, DeeObject **argv,
+            size_t argc, DeeObject *const *argv,
             DeeObject *kw) {
 	int af, type, proto;
 	DeeObject *arg_af, *arg_type = Dee_None, *arg_proto = Dee_None;
@@ -316,7 +316,7 @@ err_shutdown_failed(Socket *__restrict self, int error) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_close(Socket *self, size_t argc, DeeObject **argv) {
+socket_close(Socket *self, size_t argc, DeeObject *const *argv) {
 	sock_t socket_handle;
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	if (DeeArg_Unpack(argc, argv, "|o:close", &shutdown_mode))
@@ -384,7 +384,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_shutdown(Socket *self, size_t argc, DeeObject **argv) {
+socket_shutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	if (DeeArg_Unpack(argc, argv, "|o:shutdown", &shutdown_mode))
 		goto err;
@@ -1875,7 +1875,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_bind(Socket *self, size_t argc, DeeObject **argv) {
+socket_bind(Socket *self, size_t argc, DeeObject *const *argv) {
 	SockAddr addr;
 	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
@@ -1894,7 +1894,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_connect(Socket *self, size_t argc, DeeObject **argv) {
+socket_connect(Socket *self, size_t argc, DeeObject *const *argv) {
 	SockAddr addr;
 	if unlikely(SockAddr_FromArgv(&addr,
 		                           self->s_sockaddr.sa.sa_family,
@@ -1913,7 +1913,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_listen(Socket *self, size_t argc, DeeObject **argv) {
+socket_listen(Socket *self, size_t argc, DeeObject *const *argv) {
 	int max_backlog = -1;
 	if (DeeArg_Unpack(argc, argv, "|d:listen", &max_backlog))
 		goto err;
@@ -1955,7 +1955,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_accept(Socket *self, size_t argc, DeeObject **argv) {
+socket_accept(Socket *self, size_t argc, DeeObject *const *argv) {
 	uint64_t timeout = (uint64_t)-1;
 	if (DeeArg_Unpack(argc, argv, "|I64d:accept", &timeout))
 		return NULL;
@@ -1963,14 +1963,14 @@ socket_accept(Socket *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_tryaccept(Socket *self, size_t argc, DeeObject **argv) {
+socket_tryaccept(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":tryaccept"))
 		return NULL;
 	return socket_doaccept(self, 0);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_recv(Socket *self, size_t argc, DeeObject **argv) {
+socket_recv(Socket *self, size_t argc, DeeObject *const *argv) {
 	size_t max_size;
 	uint64_t timeout;
 	int flags;
@@ -2028,7 +2028,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_recvinto(Socket *self, size_t argc, DeeObject **argv) {
+socket_recvinto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	DeeObject *arg1 = NULL, *arg2 = NULL;
@@ -2077,7 +2077,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_recvfrom(Socket *self, size_t argc, DeeObject **argv) {
+socket_recvfrom(Socket *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeSockAddrObject *result_addr;
 	DREF DeeObject *result_text, *result;
 	size_t max_size;
@@ -2161,7 +2161,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_recvfrominto(Socket *self, size_t argc, DeeObject **argv) {
+socket_recvfrominto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
 	DeeObject *data;
 	DeeObject *arg1 = NULL, *arg2 = NULL;
@@ -2243,7 +2243,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_send(Socket *self, size_t argc, DeeObject **argv) {
+socket_send(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
 	DeeObject *data, *arg_0 = NULL, *arg_1 = NULL;
 	uint64_t timeout;
@@ -2293,7 +2293,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_sendto(Socket *self, size_t argc, DeeObject **argv) {
+socket_sendto(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeBuffer buffer;
 	SockAddr target_addr;
 	DeeObject *target, *data, *arg_0 = NULL, *arg_1 = NULL;
@@ -2366,28 +2366,28 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_isbound(Socket *self, size_t argc, DeeObject **argv) {
+socket_isbound(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":isbound"))
 		return NULL;
 	return_bool(self->s_state & SOCKET_FBOUND);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_isconnected(Socket *self, size_t argc, DeeObject **argv) {
+socket_isconnected(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":isconnected"))
 		return NULL;
 	return_bool(self->s_state & SOCKET_FCONNECTED);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_islistening(Socket *self, size_t argc, DeeObject **argv) {
+socket_islistening(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":islistening"))
 		return NULL;
 	return_bool(self->s_state & SOCKET_FLISTENING);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_wasshutdown(Socket *self, size_t argc, DeeObject **argv) {
+socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	int mode;
 	uint16_t state = self->s_state;
@@ -2414,14 +2414,14 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_wasclosed(Socket *self, size_t argc, DeeObject **argv) {
+socket_wasclosed(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":wasclosed"))
 		return NULL;
 	return_bool(!(self->s_state & SOCKET_FOPENED));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_fileno(Socket *self, size_t argc, DeeObject **argv) {
+socket_fileno(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
 #ifdef CONFIG_HOST_WINDOWS
@@ -2434,7 +2434,7 @@ socket_fileno(Socket *self, size_t argc, DeeObject **argv) {
 
 PRIVATE struct type_method socket_methods[] = {
 	{ "close",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_close,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_close,
 	  DOC("(shutdown_mode:?Dint)\n"
 	      "(shutdown_mode=!Prw)\n"
 	      "@interrupt\n"
@@ -2445,7 +2445,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "#shutdown will automatically be invoked on @this socket if it hasn't before\n"
 	      "Note that in the event that #shutdown has already been called, ") },
 	{ "shutdown",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_shutdown,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_shutdown,
 	  DOC("(how:?Dint)\n"
 	      "(how=!Prw)\n"
 	      "@interrupt\n"
@@ -2454,7 +2454,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw FileClosed @this socket has already been closed\n"
 	      "Shuts down @this socket either for reading, for writing or for both") },
 	{ "bind",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_bind,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_bind,
 	  DOC("(args!)\n"
 	      "@interrupt\n"
 	      "@throw NetError.AddrInUse The address specified for binding is already in use\n"
@@ -2467,7 +2467,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Binds @this socket to a given address.\n"
 	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
 	{ "connect",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_connect,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_connect,
 	  DOC("(args!)\n"
 	      "@interrupt\n"
 	      "@throw NetError.AddrNotAvail The speficied address is not reachable from this machine\n"
@@ -2485,7 +2485,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Connect @this socket with a given address.\n"
 	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
 	{ "listen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_listen,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_listen,
 	  DOC("(max_backlog=!-1)\n"
 	      "@interrupt\n"
 	      "@throw NetError.NotBound @this socket has not been bound and the protocol does not allow listening on an unbound address\n"
@@ -2499,7 +2499,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Start listening for incoming connections on @this socket, preferrable after it has been #bound\n"
 	      "Note that calling this function may require the user to whitelist deemon in their firewall") },
 	{ "accept",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_accept,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_accept,
 	  DOC("(timeout_microseconds=!-1)->?Gsocket\n"
 	      "(timeout_microseconds=!-1)->?N\n"
 	      "@interrupt\n"
@@ -2512,7 +2512,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@return A new socket object describing the connection to the new client, or :none when @timeout_microseconds has passed\n"
 	      "Accept new incoming connections on a listening socket") },
 	{ "tryaccept",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_tryaccept,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_tryaccept,
 	  DOC("->?Gsocket\n"
 	      "->?N\n"
 	      "@interrupt\n"
@@ -2522,7 +2522,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
 	      "Same as calling #accept with a timeout_microseconds argument of ${0}") },
 	{ "recv",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_recv,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recv,
 	  DOC("(flags:?Dstring)->?DBytes\n"
 	      "(max_size=!-1,flags=!P{})->?DBytes\n"
 	      "(max_size=!-1,timeout_microseconds=!-1)->?DBytes\n"
@@ -2548,7 +2548,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "Some protocols may also cause this function to return an empty string to indicate a graceful "
 	      "termination of the connection") },
 	{ "recvinto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_recvinto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvinto,
 	  DOC("(dst:?DBytes,flags=!P{})->?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1)->?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
@@ -2563,7 +2563,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
 	      "Same as #recv, but received data is written into the given buffer @dst") },
 	{ "recvfrom",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_recvfrom,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvfrom,
 	  DOC("(flags:?Dstring)->?T2?Gsockaddr?DBytes\n"
 	      "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
 	      "(max_size=!-1,timeout_microseconds=!-1)->?T2?Gsockaddr?DBytes\n"
@@ -2583,7 +2583,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is #{close}ed, or "
 	      "as any other integer value to specify how long to wait before returning ${(none,\"\")}") },
 	{ "recvfrominto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_recvfrominto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvfrominto,
 	  DOC("(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1)->?T2?Gsockaddr?Dint\n"
 	      "(dst:?DBytes,timeout_microseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
@@ -2597,7 +2597,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
 	      "Same as #recvfrom, buf read received data into the given buffer @dst") },
 	{ "send",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_send,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_send,
 	  DOC("(data:?DBytes,flags=!P{})->?Dint\n"
 	      "(data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
 	      "(data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
@@ -2615,7 +2615,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@return The total number of bytes that was sent\n"
 	      "Send @data over the network to the peer of a connected socket") },
 	{ "sendto",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_sendto,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_sendto,
 	  DOC("(target:?DBytes,data:?DBytes,flags=!P{})->?Dint\n"
 	      "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!0)->?Dint\n"
 	      "(target:?DBytes,data:?DBytes,timeout_microseconds=!-1,flags=!P{})->?Dint\n"
@@ -2637,29 +2637,29 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@return The total number of bytes that was sent\n"
 	      "Same as #send, but used to transmit data to a specific network target, rather than one that is already connected.") },
 	{ "isbound",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_isbound,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_isbound,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket has been bound (s.a. #bind)") },
 	{ "isconnected",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_isconnected,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_isconnected,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket has been #{connect}ed") },
 	{ "islistening",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_islistening,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_islistening,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket is #{listen}ing for incoming connections") },
 	{ "wasshutdown",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_wasshutdown,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_wasshutdown,
 	  DOC("(how:?Dint)->?Dbool\n"
 	      "(how=!?rw)->?Dbool\n"
 	      "Returns :true if @this socket has been #shutdown according to @how (inclusive when multiple modes are specified)\n"
 	      "See #shutdown for possible values that may be passed to @how") },
 	{ "wasclosed",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_wasclosed,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_wasclosed,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this socket has been #{close}ed") },
 	{ "fileno",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&socket_fileno,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_fileno,
 	  DOC("->?Dint\n"
 	      "Returns the underlying file descriptor/handle associated @this socket") },
 	{ NULL }

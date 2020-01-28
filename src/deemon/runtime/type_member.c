@@ -253,7 +253,7 @@ type_member_typeof(struct type_member *chain,
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmeth_call(DeeTypeObject *cls_type,
                  struct type_method *desc,
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc) {
 		DeeError_Throwf(&DeeError_TypeError,
 		                "classmethod `%s' must be called with at least 1 argument",
@@ -274,7 +274,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmeth_call_kw(DeeTypeObject *cls_type,
                     struct type_method *desc,
-                    size_t argc, DeeObject **argv,
+                    size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	if unlikely(!argc) {
 		DeeError_Throwf(&DeeError_TypeError,
@@ -311,7 +311,7 @@ err_no_keywords:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_method_call_kw_normal(struct type_method *desc,
                            DeeObject *self, size_t argc,
-                           DeeObject **argv, DeeObject *kw) {
+                           DeeObject *const *argv, DeeObject *kw) {
 	ASSERT(!(desc->m_flag & TYPE_METHOD_FKWDS));
 	if (kw) {
 		if (DeeKwds_Check(kw)) {
@@ -364,7 +364,7 @@ PRIVATE struct keyword getter_kwlist[] = { K(thisarg), KEND };
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obprop_call(DeeTypeObject *cls_type,
                  struct type_getset *desc,
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
 	if unlikely(!desc->gs_get)
 		goto err_unbound;
@@ -382,7 +382,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obprop_call_kw(DeeTypeObject *cls_type,
                     struct type_getset *desc,
-                    size_t argc, DeeObject **argv,
+                    size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	DeeObject *thisarg;
 	if unlikely(!desc->gs_get)
@@ -401,7 +401,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmemb_call(DeeTypeObject *cls_type,
                  struct type_member *desc,
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg) ||
 	    /* Allow non-instance objects for generic types. */
@@ -414,7 +414,7 @@ type_obmemb_call(DeeTypeObject *cls_type,
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 type_obmemb_call_kw(DeeTypeObject *cls_type,
                     struct type_member *desc,
-                    size_t argc, DeeObject **argv,
+                    size_t argc, DeeObject *const *argv,
                     DeeObject *kw) {
 	DeeObject *thisarg;
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg) ||

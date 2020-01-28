@@ -90,7 +90,7 @@ PUBLIC ATTR_COLD NONNULL((1, 2)) int
 
 INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc,
-                                 DeeObject **argv, DeeObject *kw) {
+                                 DeeObject *const *argv, DeeObject *kw) {
 	int result;
 	DREF DeeObject *error_args[1], *error_ob;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;

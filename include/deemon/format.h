@@ -363,7 +363,7 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
 	DeeFormat_PrintArgumentTypesKw(printer, arg, argc, argv, NULL)
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DCALL DeeFormat_PrintArgumentTypesKw)(Dee_formatprinter_t printer, void *arg,
-                                       size_t argc, DeeObject **argv,
+                                       size_t argc, DeeObject *const *argv,
                                        DeeObject *kw);
 
 

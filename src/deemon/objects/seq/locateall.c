@@ -115,7 +115,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 locatoriter_init(LocatorIterator *__restrict self,
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	Locator *loc;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqLocatorIterator", &loc))
 		goto err;
@@ -325,7 +325,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 locator_init(Locator *__restrict self,
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	self->l_pred = NULL;
 	if (DeeArg_Unpack(argc, argv, "oo|o:_SeqLocator", &self->l_seq, &self->l_elem, &self->l_pred))
 		goto err;

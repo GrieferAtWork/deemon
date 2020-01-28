@@ -175,7 +175,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 smapiter_ctor(SharedVectorIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->si_seq, &SharedMap_Type))
 		return -1;
@@ -524,7 +524,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-smap_get(SharedMap *self, size_t argc, DeeObject **argv) {
+smap_get(SharedMap *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		return NULL;
@@ -593,7 +593,7 @@ PRIVATE struct type_member smap_class_members[] = {
 
 PRIVATE struct type_method smap_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&smap_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&smap_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }

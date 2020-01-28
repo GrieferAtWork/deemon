@@ -607,7 +607,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 jf_call_kw(JITFunction *self, size_t argc,
-           DeeObject **argv, DeeObject *kw) {
+           DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	JITLexer lexer;
 	JITContext context;
@@ -1132,7 +1132,7 @@ INTERN DeeTypeObject JITFunction_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **__restrict, DeeObject *))&jf_call_kw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&jf_call_kw,
 };
 
 DECL_END

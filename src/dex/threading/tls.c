@@ -205,7 +205,7 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_init(Tls *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	self->t_factory = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:Tls", &self->t_factory))
 		goto err;
@@ -434,7 +434,7 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 tls_init(Tls *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	self->t_value   = NULL;
 	self->t_factory = NULL;
 	if (DeeArg_Unpack(argc, argv, "|o:Tls", &self->t_factory))
@@ -645,7 +645,7 @@ PRIVATE struct type_getset tls_getsets[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_xch(Tls *self, size_t argc, DeeObject **argv) {
+tls_xch(Tls *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *newval;
 	if (DeeArg_Unpack(argc, argv, "o:xch", &newval))
 		return NULL;
@@ -653,21 +653,21 @@ tls_xch(Tls *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_pop(Tls *self, size_t argc, DeeObject **argv) {
+tls_pop(Tls *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":pop"))
 		return NULL;
 	return tls_xchitem(self, ITER_DONE);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_get(Tls *self, size_t argc, DeeObject **argv) {
+tls_get(Tls *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":get"))
 		return NULL;
 	return tls_getvalue(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_delete(Tls *self, size_t argc, DeeObject **argv) {
+tls_delete(Tls *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":delete"))
 		goto err;
@@ -680,7 +680,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tls_set(Tls *self, size_t argc, DeeObject **argv) {
+tls_set(Tls *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *ob;
 	if (DeeArg_Unpack(argc, argv, "o:set", &ob) ||
 	    tls_setvalue(self, ob))
@@ -690,33 +690,33 @@ tls_set(Tls *self, size_t argc, DeeObject **argv) {
 
 PRIVATE struct type_method tls_methods[] = {
 	{ "get",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tls_get,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_get,
 	  DOC("->\n"
 	      "@throw UnboundAttribute The TLS variable isn't bound\n"
 	      "Return the stored object. Same as ${this.item}") },
 	{ "delete",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tls_delete,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_delete,
 	  DOC("->?Dbool\n"
 	      "Unbind the TLS variable slot, returning :false if "
 	      "it had already been unbound and :true otherwise") },
 	{ "set",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tls_set,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_set,
 	  DOC("(ob)\n"
 	      "Set the TLS variable. Same as ${this.item = ob}") },
 	{ "xch",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tls_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_xch,
 	  DOC("(ob)->\n"
 	      "@throw AttributeError The TLS variable had already been unbound\n"
 	      "Exchange the stored TLS value with @ob and return the old value") },
 	{ "pop",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tls_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_pop,
 	  DOC("->\n"
 	      "@throw AttributeError The TLS variable had already been unbound\n"
 	      "Unbind the stored TLS object and return the previously stored object") },
 
 	/* Deprecated functions. */
 	{ "exchange",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&tls_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_xch,
 	  DOC("(ob)->\n"
 	      "Deprecated alias for #xch") },
 	{ NULL }

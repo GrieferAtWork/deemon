@@ -415,7 +415,7 @@ PRIVATE DEFINE_KWLIST(attrinit_kwlist, { K(ob), K(name), K(flagmask), K(flagval)
 
 PRIVATE int DCALL
 attribute_init(DeeAttributeObject *__restrict self, size_t argc,
-               DeeObject **argv, DeeObject *kw) {
+               DeeObject *const *argv, DeeObject *kw) {
 	int lookup_error;
 	DeeObject *search_self, *search_name;
 	DeeObject *flagmask = NULL, *flagval = NULL;
@@ -484,7 +484,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	int lookup_error;
 	struct attribute_info info;
 	DeeObject *search_self, *search_name;
@@ -550,7 +550,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeAttributeObject *result;
 	int lookup_error;
 	struct attribute_info info;
@@ -625,7 +625,7 @@ err:
 }
 
 PRIVATE struct type_method attr_class_methods[] = {
-	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&attribute_exists,
+	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_exists,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Taking the same arguments as #op:constructor, check if the an attribute matching "
@@ -640,7 +640,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 	      "> return true;\n"
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
-	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&attribute_lookup,
+	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_lookup,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Same as #op:constructor, but return :none if the attribute doesn't exist\n"
@@ -807,7 +807,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 enumattr_init(EnumAttr *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	DeeObject *a, *b = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:enumattr", &a, &b))
 		return -1;
@@ -1020,7 +1020,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 enumattriter_init(EnumAttrIter *__restrict self,
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	EnumAttr *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_EnumAttrIterator", &seq))
 		goto err;

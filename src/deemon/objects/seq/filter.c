@@ -60,7 +60,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_init(FilterIterator *__restrict self,
-                    size_t argc, DeeObject **argv) {
+                    size_t argc, DeeObject *const *argv) {
 	Filter *filter;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqFilterIterator", &filter))
 		goto err;
@@ -332,7 +332,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filter_init(Filter *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_SeqFilter", &self->f_seq, &self->f_fun))
 		goto err;
 	self->f_seq = Dee_EmptySeq;

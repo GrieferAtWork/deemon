@@ -1320,7 +1320,7 @@ object_copy_ctor(DeeObject *__restrict UNUSED(self),
 
 PRIVATE int DCALL
 object_any_ctor(DeeObject *__restrict UNUSED(self),
-                size_t argc, DeeObject **argv) {
+                size_t argc, DeeObject *const *argv) {
 	return DeeArg_Unpack(argc, argv, ":Object");
 }
 
@@ -1412,7 +1412,7 @@ PRIVATE char const meth_setattr[]    = "oo:__setattr__";
 PRIVATE char const meth_enumattr[]   = ":__enumattr__";
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_sizeof(DeeObject *self, size_t argc, DeeObject **argv) {
+object_sizeof(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *type;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
@@ -1459,7 +1459,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_copy(DeeObject *self, size_t argc, DeeObject **argv) {
+object_copy(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_copy))
 		goto err;
 	return DeeObject_Copy(self);
@@ -1468,7 +1468,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_deepcopy(DeeObject *self, size_t argc, DeeObject **argv) {
+object_deepcopy(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_deepcopy))
 		goto err;
 	return DeeObject_DeepCopy(self);
@@ -1477,7 +1477,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_assign(DeeObject *self, size_t argc, DeeObject **argv) {
+object_assign(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_assign, &other))
 		goto err;
@@ -1489,7 +1489,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_moveassign(DeeObject *self, size_t argc, DeeObject **argv) {
+object_moveassign(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_moveassign, &other))
 		goto err;
@@ -1503,7 +1503,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_dostr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_dostr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_str))
 		goto err;
 	return DeeObject_Str(self);
@@ -1512,7 +1512,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_dorepr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_dorepr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_repr))
 		goto err;
 	return DeeObject_Repr(self);
@@ -1521,7 +1521,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_bool(DeeObject *self, size_t argc, DeeObject **argv) {
+object_bool(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, meth_bool))
 		goto err;
@@ -1534,7 +1534,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_call(DeeObject *self, size_t argc, DeeObject **argv) {
+object_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *args_tuple;
 	if (DeeArg_Unpack(argc, argv, meth_call, &args_tuple))
 		goto err;
@@ -1548,7 +1548,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_thiscall(DeeObject *self, size_t argc, DeeObject **argv) {
+object_thiscall(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *this_arg;
 	DeeObject *args_tuple = Dee_EmptyTuple;
 	if (DeeArg_Unpack(argc, argv, meth_thiscall, &this_arg, &args_tuple))
@@ -1563,7 +1563,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_hash(DeeObject *self, size_t argc, DeeObject **argv) {
+object_hash(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_hash))
 		goto err;
 	return DeeInt_NewSize(DeeObject_Hash(self));
@@ -1572,7 +1572,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_int(DeeObject *self, size_t argc, DeeObject **argv) {
+object_int(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_int))
 		goto err;
 	return DeeObject_Int(self);
@@ -1581,7 +1581,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_inv(DeeObject *self, size_t argc, DeeObject **argv) {
+object_inv(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_inv))
 		goto err;
 	return DeeObject_Inv(self);
@@ -1590,7 +1590,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_pos(DeeObject *self, size_t argc, DeeObject **argv) {
+object_pos(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_pos))
 		goto err;
 	return DeeObject_Pos(self);
@@ -1599,7 +1599,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_neg(DeeObject *self, size_t argc, DeeObject **argv) {
+object_neg(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_neg))
 		goto err;
 	return DeeObject_Neg(self);
@@ -1608,7 +1608,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_add(DeeObject *self, size_t argc, DeeObject **argv) {
+object_add(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_add, &other))
 		goto err;
@@ -1618,7 +1618,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_sub(DeeObject *self, size_t argc, DeeObject **argv) {
+object_sub(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_sub, &other))
 		goto err;
@@ -1628,7 +1628,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_mul(DeeObject *self, size_t argc, DeeObject **argv) {
+object_mul(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_mul, &other))
 		goto err;
@@ -1638,7 +1638,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_div(DeeObject *self, size_t argc, DeeObject **argv) {
+object_div(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_div, &other))
 		goto err;
@@ -1648,7 +1648,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_mod(DeeObject *self, size_t argc, DeeObject **argv) {
+object_mod(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_mod, &other))
 		goto err;
@@ -1658,7 +1658,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_shl(DeeObject *self, size_t argc, DeeObject **argv) {
+object_shl(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_shl, &other))
 		goto err;
@@ -1668,7 +1668,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_shr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_shr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_shr, &other))
 		goto err;
@@ -1678,7 +1678,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_and(DeeObject *self, size_t argc, DeeObject **argv) {
+object_and(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_and, &other))
 		goto err;
@@ -1688,7 +1688,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_or(DeeObject *self, size_t argc, DeeObject **argv) {
+object_or(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_or, &other))
 		goto err;
@@ -1698,7 +1698,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_xor(DeeObject *self, size_t argc, DeeObject **argv) {
+object_xor(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_xor, &other))
 		goto err;
@@ -1708,7 +1708,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_pow(DeeObject *self, size_t argc, DeeObject **argv) {
+object_pow(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_pow, &other))
 		goto err;
@@ -1718,7 +1718,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_eq(DeeObject *self, size_t argc, DeeObject **argv) {
+object_eq(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_eq, &other))
 		goto err;
@@ -1728,7 +1728,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_ne(DeeObject *self, size_t argc, DeeObject **argv) {
+object_ne(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_ne, &other))
 		goto err;
@@ -1738,7 +1738,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_lo(DeeObject *self, size_t argc, DeeObject **argv) {
+object_lo(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_lo, &other))
 		goto err;
@@ -1748,7 +1748,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_le(DeeObject *self, size_t argc, DeeObject **argv) {
+object_le(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_le, &other))
 		goto err;
@@ -1758,7 +1758,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_gr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_gr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_gr, &other))
 		goto err;
@@ -1768,7 +1768,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_ge(DeeObject *self, size_t argc, DeeObject **argv) {
+object_ge(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_ge, &other))
 		goto err;
@@ -1778,7 +1778,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_size(DeeObject *self, size_t argc, DeeObject **argv) {
+object_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_size))
 		goto err;
 	return DeeObject_SizeObject(self);
@@ -1787,7 +1787,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_contains(DeeObject *self, size_t argc, DeeObject **argv) {
+object_contains(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_contains, &other))
 		goto err;
@@ -1797,7 +1797,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_getitem(DeeObject *self, size_t argc, DeeObject **argv) {
+object_getitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_getitem, &other))
 		goto err;
@@ -1807,7 +1807,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_delitem(DeeObject *self, size_t argc, DeeObject **argv) {
+object_delitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, meth_delitem, &other))
 		goto err;
@@ -1819,7 +1819,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_setitem(DeeObject *self, size_t argc, DeeObject **argv) {
+object_setitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other, *value;
 	if (DeeArg_Unpack(argc, argv, meth_setitem, &other, &value))
 		goto err;
@@ -1831,7 +1831,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_getrange(DeeObject *self, size_t argc, DeeObject **argv) {
+object_getrange(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *begin_index, *end_index;
 	if (DeeArg_Unpack(argc, argv, meth_getrange, &begin_index, &end_index))
 		goto err;
@@ -1841,7 +1841,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_delrange(DeeObject *self, size_t argc, DeeObject **argv) {
+object_delrange(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *begin_index, *end_index;
 	if (DeeArg_Unpack(argc, argv, meth_delrange, &begin_index, &end_index))
 		goto err;
@@ -1853,7 +1853,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_setrange(DeeObject *self, size_t argc, DeeObject **argv) {
+object_setrange(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *begin_index, *end_index, *value;
 	if (DeeArg_Unpack(argc, argv, meth_setrange, &begin_index, &end_index, &value))
 		goto err;
@@ -1865,7 +1865,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_iterself(DeeObject *self, size_t argc, DeeObject **argv) {
+object_iterself(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_iterself))
 		goto err;
 	return DeeObject_IterSelf(self);
@@ -1874,7 +1874,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_iternext(DeeObject *self, size_t argc, DeeObject **argv) {
+object_iternext(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	if (DeeArg_Unpack(argc, argv, meth_iternext))
 		goto err;
@@ -1889,7 +1889,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_getattr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_getattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, meth_getattr, &name))
 		goto err;
@@ -1901,7 +1901,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_callattr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_callattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc)
 		goto err_badargc;
 	if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
@@ -1914,7 +1914,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_hasattr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_hasattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	int result;
 	if (DeeArg_Unpack(argc, argv, meth_hasattr, &name))
@@ -1930,7 +1930,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_delattr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_delattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name;
 	if (DeeArg_Unpack(argc, argv, meth_delattr, &name))
 		goto err;
@@ -1944,7 +1944,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_setattr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_setattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *name, *value;
 	if (DeeArg_Unpack(argc, argv, meth_setattr, &name, &value))
 		goto err;
@@ -1958,7 +1958,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_enumattr(DeeObject *self, size_t argc, DeeObject **argv) {
+object_enumattr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_enumattr))
 		goto err;
 	return DeeObject_New(&DeeEnumAttr_Type, 1, (DeeObject **)&self);
@@ -1973,7 +1973,7 @@ object_format_generic(DeeObject *__restrict self,
                       size_t format_len);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_format_method(DeeObject *self, size_t argc, DeeObject **argv) {
+object_format_method(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *format_str;
 	char *format_utf8;
 	if (DeeArg_Unpack(argc, argv, "o:__format__", &format_str))
@@ -2000,7 +2000,7 @@ err:
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_not(DeeObject *self, size_t argc, DeeObject **argv) {
+object_not(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int temp;
 	if (DeeArg_Unpack(argc, argv, ":__not__"))
 		goto err;
@@ -2013,7 +2013,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_is(DeeObject *self, size_t argc, DeeObject **argv) {
+object_is(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	bool is_instance;
 	DeeTypeObject *tp;
 	if (DeeArg_Unpack(argc, argv, "o:__is__", &tp))
@@ -2031,7 +2031,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_inc(DeeObject *self, size_t argc, DeeObject **argv) {
+object_inc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref;
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":__inc__"))
@@ -2052,7 +2052,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_dec(DeeObject *self, size_t argc, DeeObject **argv) {
+object_dec(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref;
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":__dec__"))
@@ -2073,7 +2073,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_incpost(DeeObject *self, size_t argc, DeeObject **argv) {
+object_incpost(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref, *result;
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":__incpost__"))
@@ -2097,7 +2097,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-object_decpost(DeeObject *self, size_t argc, DeeObject **argv) {
+object_decpost(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *selfref, *result;
 	int error;
 	if (DeeArg_Unpack(argc, argv, ":__decpost__"))
@@ -2123,7 +2123,7 @@ err:
 #define DEFINE_DEPRECATED_INPLACE_BINARY(name, func)              \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                 \
 	object_##name(DeeObject *__restrict self,                     \
-	              size_t argc, DeeObject **argv) {     \
+	              size_t argc, DeeObject *const *argv) {     \
 		DREF DeeObject *selfref;                                  \
 		int error;                                                \
 		DeeObject *other;                                         \
@@ -2441,7 +2441,7 @@ type_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_baseof(DeeTypeObject *self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
 	PRIVATE struct keyword kwlist[] = { K(other), KEND };
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o:baseof", &other))
@@ -2453,7 +2453,7 @@ type_baseof(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_derivedfrom(DeeTypeObject *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	DeeTypeObject *other;
 	PRIVATE struct keyword kwlist[] = { K(other), KEND };
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o:derivedfrom", &other))
@@ -2826,7 +2826,7 @@ unpack_init_info1(DeeObject *__restrict info) {
 INTDEF int DCALL
 type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
                              DeeObject *__restrict self, size_t argc,
-                             DeeObject **argv, DeeObject *kw);
+                             DeeObject *const *argv, DeeObject *kw);
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 assign_init_fields(DeeTypeObject *__restrict tp_self,
@@ -2976,7 +2976,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_newinstance(DeeTypeObject *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeObject *iterator, *elem;
 	if (self == &DeeNone_Type)
@@ -3058,7 +3058,7 @@ PRIVATE struct keyword boundattr_kwdlist[] = { K(name), K(allow_missing), KEND }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_getinstanceattr(DeeTypeObject *self, size_t argc,
-                     DeeObject **argv, DeeObject *kw) {
+                     DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_getinstanceattr, &name) ||
 	    DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -3070,7 +3070,7 @@ type_getinstanceattr(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_callinstanceattr(DeeTypeObject *self, size_t argc,
-                      DeeObject **argv, DeeObject *kw) {
+                      DeeObject *const *argv, DeeObject *kw) {
 	if (!argc) {
 		err_invalid_argc_va(meth_callinstanceattr, argc, 1);
 		return NULL;
@@ -3087,7 +3087,7 @@ type_callinstanceattr(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasinstanceattr(DeeTypeObject *self, size_t argc,
-                     DeeObject **argv, DeeObject *kw) {
+                     DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	int result;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_hasinstanceattr, &name) ||
@@ -3103,7 +3103,7 @@ type_hasinstanceattr(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_boundinstanceattr(DeeTypeObject *self, size_t argc,
-                       DeeObject **argv, DeeObject *kw) {
+                       DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	bool allow_missing = true;
 	int result;
@@ -3125,7 +3125,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_delinstanceattr(DeeTypeObject *self, size_t argc,
-                     DeeObject **argv, DeeObject *kw) {
+                     DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_delinstanceattr, &name) ||
 	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
@@ -3138,7 +3138,7 @@ type_delinstanceattr(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_setinstanceattr(DeeTypeObject *self, size_t argc,
-                     DeeObject **argv, DeeObject *kw) {
+                     DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
 	if (DeeArg_UnpackKw(argc, argv, kw, setattr_kwdlist, meth_setattr, &name, &value) ||
 	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
@@ -3180,7 +3180,7 @@ found:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasattribute(DeeTypeObject *self, size_t argc,
-                  DeeObject **argv, DeeObject *kw) {
+                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	char const *name_str;
 	dhash_t name_hash;
@@ -3225,7 +3225,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasprivateattribute(DeeTypeObject *self, size_t argc,
-                         DeeObject **argv, DeeObject *kw) {
+                         DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasprivateattribute", &name) ||
 	    DeeObject_AssertTypeExact(name, &DeeString_Type))
@@ -3240,7 +3240,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasoperator(DeeTypeObject *self, size_t argc,
-                 DeeObject **argv, DeeObject *kw) {
+                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	uint16_t opid;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasoperator", &name))
@@ -3263,7 +3263,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasprivateoperator(DeeTypeObject *self, size_t argc,
-                        DeeObject **argv, DeeObject *kw) {
+                        DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	uint16_t opid;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasprivateoperator", &name))
@@ -3287,7 +3287,7 @@ err:
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_derivedfrom_not_same(DeeTypeObject *self, size_t argc,
-                          DeeObject **argv) {
+                          DeeObject *const *argv) {
 	DeeTypeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:derived_from", &other))
 		return NULL;
@@ -3296,7 +3296,7 @@ type_derivedfrom_not_same(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_vartype(DeeTypeObject *self, size_t argc,
-                DeeObject **argv) {
+                DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_vartype"))
 		return NULL;
 	return_bool(DeeType_IsVariable(self));
@@ -3304,7 +3304,7 @@ type_is_vartype(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_heaptype(DeeTypeObject *self, size_t argc,
-                 DeeObject **argv) {
+                 DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_heaptype"))
 		return NULL;
 	return_bool(DeeType_IsCustom(self));
@@ -3312,7 +3312,7 @@ type_is_heaptype(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_gctype(DeeTypeObject *self, size_t argc,
-               DeeObject **argv) {
+               DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_gctype"))
 		return NULL;
 	return_bool(DeeType_IsGC(self));
@@ -3320,7 +3320,7 @@ type_is_gctype(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_final(DeeTypeObject *self, size_t argc,
-              DeeObject **argv) {
+              DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_final"))
 		return NULL;
 	return_bool(DeeType_IsFinal(self));
@@ -3328,7 +3328,7 @@ type_is_final(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_class(DeeTypeObject *self, size_t argc,
-              DeeObject **argv) {
+              DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_class"))
 		return NULL;
 	return_bool(DeeType_IsClass(self));
@@ -3336,7 +3336,7 @@ type_is_class(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_complete(DeeTypeObject *__restrict UNUSED(self),
-                 size_t argc, DeeObject **argv) {
+                 size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_complete"))
 		return NULL;
 	return_true;
@@ -3344,7 +3344,7 @@ type_is_complete(DeeTypeObject *__restrict UNUSED(self),
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_classtype(DeeTypeObject *__restrict UNUSED(self),
-                  size_t argc, DeeObject **argv) {
+                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_class_type"))
 		return NULL;
 	return_false;
@@ -3380,42 +3380,42 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_is_pointer(DeeTypeObject *self, size_t argc, DeeObject **argv) {
+type_is_pointer(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_pointer"))
 		return NULL;
 	return type_is_ctypes_class(self, "ispointer");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_is_lvalue(DeeTypeObject *self, size_t argc, DeeObject **argv) {
+type_is_lvalue(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_pointer"))
 		return NULL;
 	return type_is_ctypes_class(self, "islvalue");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_is_structured(DeeTypeObject *self, size_t argc, DeeObject **argv) {
+type_is_structured(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_structured"))
 		return NULL;
 	return DeeObject_GetAttrString((DeeObject *)self, "isstructured");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_is_struct(DeeTypeObject *self, size_t argc, DeeObject **argv) {
+type_is_struct(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_struct"))
 		return NULL;
 	return type_is_ctypes_class(self, "isstruct");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_is_array(DeeTypeObject *self, size_t argc, DeeObject **argv) {
+type_is_array(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_array"))
 		return NULL;
 	return type_is_ctypes_class(self, "isarray");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject **argv) {
+type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_foreign_function"))
 		return NULL;
 	return type_is_ctypes_class(self, "isfunction");
@@ -3423,7 +3423,7 @@ type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject **argv) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_filetype(DeeTypeObject *self, size_t argc,
-                 DeeObject **argv) {
+                 DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_file"))
 		return NULL;
 	return_bool(Dee_TYPE(self) == &DeeFileType_Type);
@@ -3431,7 +3431,7 @@ type_is_filetype(DeeTypeObject *self, size_t argc,
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_superbase(DeeTypeObject *self, size_t argc,
-                  DeeObject **argv) {
+                  DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_super_base"))
 		return NULL;
 	return_bool(DeeType_Base(self) == NULL);
@@ -3439,19 +3439,19 @@ type_is_superbase(DeeTypeObject *self, size_t argc,
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method type_methods[] = {
-	{ "baseof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_baseof,
+	{ "baseof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_baseof,
 	  DOC("(other:?DType)->?Dbool\n"
 	      "Returns :true if @this Type is equal to, or a base of @other\n"
 	      "If @other isn't a Type, :false is returned\n"
 	      "Using baseof, the behavior of ${x is y} can be approximated as:\n"
 	      ">print y.baseof(type(x)); // print x is y;"),
 	  TYPE_METHOD_FKWDS },
-	{ "derivedfrom", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_derivedfrom,
+	{ "derivedfrom", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom,
 	  DOC("(other:?DType)->?Dbool\n"
 	      "Returns :true if @this Type is equal to, or has been derived from @other\n"
 	      "If @other isn't a Type, :false is returned"),
 	  TYPE_METHOD_FKWDS },
-	{ "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_newinstance,
+	{ "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_newinstance,
 	  DOC("(fields!!)->\n"
 	      "Allocate a new instance of @this Type and initialize members in accordance ot @fields\n"
 	      ">class MyClass {\n"
@@ -3494,7 +3494,7 @@ PRIVATE struct type_method type_methods[] = {
 	      ">x.appendmember();\n"
 	      ">print repr x;          /* [10,20,30,\"abc\"] */"),
 	  TYPE_METHOD_FKWDS },
-	{ "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_hasattribute,
+	{ "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Returns :true if this type, or one of its sub-classes defines an "
 	      "instance-attribute @name, and doesn't define any attribute-operators. "
@@ -3509,7 +3509,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "that function, this function will stop searching the base-classes of @this Type "
 	      "when one of that types implements one of the attribute operators."),
 	  TYPE_METHOD_FKWDS },
-	{ "hasprivateattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_hasprivateattribute,
+	{ "hasprivateattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasprivateattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Similar to #hasattribute, but only looks at attributes declared by "
 	      "@this Type, excluding any defined by a sub-class.\n"
@@ -3518,7 +3518,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "> return attribute.exists(this,name,\"ic\",\"ic\",this)\n"
 	      ">}"),
 	  TYPE_METHOD_FKWDS },
-	{ "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_hasoperator,
+	{ "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
 	      "Returns :true if instances of @this Type implement an operator @name, "
@@ -3595,7 +3595,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "$\"leave\"|$\"leave\"|${operator leave(): none}\n"
 	      "}"),
 	  TYPE_METHOD_FKWDS },
-	{ "hasprivateoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_hasprivateoperator,
+	{ "hasprivateoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasprivateoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
 	      "Returns :true if instances of @this Type implement an operator @name, "
@@ -3607,7 +3607,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "inherited constructors\n"
 	      "For a list of operator names, see #hasoperator"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_getinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_getinstanceattr,
+	{ meth_getinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_getinstanceattr,
 	  DOC("(name:?Dstring)->\n"
 	      "Lookup an attribute @name that is implemented by instances of @this Type\n"
 	      "Normally, such attributes can also be accessed using regular attribute lookup, "
@@ -3632,46 +3632,46 @@ PRIVATE struct type_method type_methods[] = {
 	      "one of the attribute-operators, but will continue search for matching attribute names, even "
 	      "if those attributes would normally have been overshadowed by attribute callbacks"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_callinstanceattr,
+	{ meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_callinstanceattr,
 	  DOC("(name:?Dstring,args!)->\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_hasinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_hasinstanceattr,
+	{ meth_hasinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasinstanceattr,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_boundinstanceattr + 4, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_boundinstanceattr,
+	{ meth_boundinstanceattr + 4, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_boundinstanceattr,
 	  DOC("(name:?Dstring,allow_missing=!t)->?Dbool\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_delinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_delinstanceattr,
+	{ meth_delinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_delinstanceattr,
 	  DOC("(name:?Dstring)\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
-	{ meth_setinstanceattr + 3, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_setinstanceattr,
+	{ meth_setinstanceattr + 3, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_setinstanceattr,
 	  DOC("(name:?Dstring,value)->\n"
 	      "s.a. #getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	{ "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_derivedfrom, DOC("(other:?DType)->?Dbool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
-	{ "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_derivedfrom_not_same, DOC("(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
-	{ "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for #__isvariable__") },
-	{ "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #__iscustom__") },
-	{ "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for #__isgc__") },
-	{ "is_final", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_final, DOC("->?Dbool\nDeprecated alias for #isfinal") },
-	{ "is_class", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_class, DOC("->?Dbool\nDeprecated alias for #__isclass__") },
-	{ "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
-	{ "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
-	{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
-	{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_lvalue, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
-	{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_structured, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
-	{ "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_struct, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
-	{ "is_array", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_array, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
-	{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_foreign_function, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
-	{ "is_file", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_filetype, DOC("->?Dbool\nDeprecated alias for ${this is type(File from deemon)}") },
-	{ "is_super_base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&type_is_superbase, DOC("->?Dbool\nDeprecated alias for ${this.__base__ !is bound}") },
+	{ "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom, DOC("(other:?DType)->?Dbool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
+	{ "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom_not_same, DOC("(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
+	{ "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for #__isvariable__") },
+	{ "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #__iscustom__") },
+	{ "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for #__isgc__") },
+	{ "is_final", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_final, DOC("->?Dbool\nDeprecated alias for #isfinal") },
+	{ "is_class", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_class, DOC("->?Dbool\nDeprecated alias for #__isclass__") },
+	{ "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
+	{ "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
+	{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_lvalue, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
+	{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_structured, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
+	{ "is_struct", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_struct, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}") },
+	{ "is_array", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_array, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}") },
+	{ "is_foreign_function", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_foreign_function, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}") },
+	{ "is_file", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_filetype, DOC("->?Dbool\nDeprecated alias for ${this is type(File from deemon)}") },
+	{ "is_super_base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_superbase, DOC("->?Dbool\nDeprecated alias for ${this.__base__ !is bound}") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 	{ NULL }
@@ -4124,7 +4124,7 @@ type_setattr(DeeObject *__restrict self,
 INTERN WUNUSED DREF DeeObject *DCALL
 type_callattr(DeeObject *__restrict self,
               DeeObject *__restrict name,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	return DeeType_CallAttrString((DeeTypeObject *)self,
 	                              DeeString_STR(name),
 	                              DeeString_Hash(name),
@@ -4134,7 +4134,7 @@ type_callattr(DeeObject *__restrict self,
 INTERN WUNUSED DREF DeeObject *DCALL
 type_callattr_kw(DeeObject *__restrict self,
                  DeeObject *__restrict name,
-                 size_t argc, DeeObject **argv,
+                 size_t argc, DeeObject *const *argv,
                  DeeObject *kw) {
 	return DeeType_CallAttrStringKw((DeeTypeObject *)self,
 	                                DeeString_STR(name),
@@ -4216,7 +4216,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 		/* .tp_repr = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&type_str,
 		/* .tp_bool = */ NULL
 	},
-	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&DeeObject_New,
+	/* .tp_call          = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeObject_New,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&type_visit,
 	/* .tp_gc            = */ &type_gc_data,
 	/* .tp_math          = */ NULL,
@@ -4232,7 +4232,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **, DeeObject *))&DeeObject_NewKw,
+	/* .tp_call_kw       = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
 };
 
 

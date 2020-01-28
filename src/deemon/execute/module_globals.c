@@ -85,7 +85,7 @@ mei_copy(ModuleExportsIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mei_init(ModuleExportsIterator *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	ModuleExports *exports_map;
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleExportsIterator", &exports_map) ||
 	    DeeObject_AssertTypeExact((DeeObject *)exports_map, &ModuleExports_Type))
@@ -291,7 +291,7 @@ me_ctor(ModuleExports *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 me_init(ModuleExports *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleExports", &self->me_module) ||
 	    DeeObject_AssertType((DeeObject *)self->me_module, &DeeModule_Type))
 		return -1;
@@ -422,7 +422,7 @@ unknown_key:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-me_get_f(ModuleExports *self, size_t argc, DeeObject **argv) {
+me_get_f(ModuleExports *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeObject *key;
 	DeeModuleObject *module = self->me_module;
@@ -511,7 +511,7 @@ PRIVATE struct type_seq me_seq = {
 
 PRIVATE struct type_method me_methods[] = {
 	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&me_get_f,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&me_get_f,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
 	{ NULL }
@@ -625,7 +625,7 @@ DeeModule_ViewGlobals(DeeModuleObject *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mgi_init(ModuleGlobalsIterator *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	ModuleGlobals *globals;
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobalsIterator", &globals) ||
 	    DeeObject_AssertTypeExact((DeeObject *)globals, &ModuleGlobals_Type))
@@ -748,7 +748,7 @@ INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mg_init(ModuleGlobals *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobals", &self->mg_module) ||
 	    DeeObject_AssertType((DeeObject *)self->mg_module, &DeeModule_Type))
 		return -1;

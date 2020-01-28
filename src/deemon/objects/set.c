@@ -70,7 +70,7 @@ invset_ctor(DeeInverseSetObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 invset_init(DeeInverseSetObject *__restrict self,
-            size_t argc, DeeObject **argv) {
+            size_t argc, DeeObject *const *argv) {
 	self->is_set = Dee_EmptySet;
 	if (DeeArg_Unpack(argc, argv, "|o:_InverseSet", &self->is_set))
 		goto err;
@@ -342,7 +342,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_difference(DeeObject *self, size_t argc, DeeObject **argv) {
+set_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:difference", &other))
 		return NULL;
@@ -350,7 +350,7 @@ set_difference(DeeObject *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_intersection(DeeObject *self, size_t argc, DeeObject **argv) {
+set_intersection(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:intersection", &other))
 		return NULL;
@@ -358,7 +358,7 @@ set_intersection(DeeObject *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_isdisjoint(DeeObject *self, size_t argc, DeeObject **argv) {
+set_isdisjoint(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:isdisjoint", &other) ||
@@ -368,7 +368,7 @@ set_isdisjoint(DeeObject *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_union(DeeObject *self, size_t argc, DeeObject **argv) {
+set_union(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:union", &other))
 		return NULL;
@@ -376,7 +376,7 @@ set_union(DeeObject *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_symmetric_difference(DeeObject *self, size_t argc, DeeObject **argv) {
+set_symmetric_difference(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:symmetric_difference", &other))
 		return NULL;
@@ -384,7 +384,7 @@ set_symmetric_difference(DeeObject *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_issubset(DeeObject *self, size_t argc, DeeObject **argv) {
+set_issubset(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:issubset", &other) ||
@@ -394,7 +394,7 @@ set_issubset(DeeObject *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-set_issuperset(DeeObject *self, size_t argc, DeeObject **argv) {
+set_issuperset(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *other;
 	int result;
 	if (DeeArg_Unpack(argc, argv, "o:issuperset", &other) ||

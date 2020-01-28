@@ -89,7 +89,7 @@ ssegiter_copy(StringSegmentsIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ssegiter_init(StringSegmentsIterator *__restrict self,
-              size_t argc, DeeObject **argv) {
+              size_t argc, DeeObject *const *argv) {
 	StringSegments *seg;
 	if (DeeArg_Unpack(argc, argv, "o:_StringSegmentsIterator", &seg))
 		goto err;
@@ -251,7 +251,7 @@ sseg_ctor(StringSegments *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_init(StringSegments *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oIu:_StringSegments", &self->s_str, &self->s_siz) ||
 	    DeeObject_AssertTypeExact((DeeObject *)self->s_str, &DeeString_Type))
 		goto err;

@@ -1520,7 +1520,7 @@ err:
 
 
 PRIVATE WUNUSED DREF DeeCodeObject *DCALL
-code_init_kw(size_t argc, DeeObject **argv, DeeObject *kw) {
+code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeCodeObject *result;
 	DeeObject *flags        = Dee_None;
 	DeeObject *except       = Dee_None;

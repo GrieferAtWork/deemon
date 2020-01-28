@@ -242,13 +242,13 @@ struct stype_object {
 	size_t                  st_align;     /* [const] Alignment required by this type. */
 	WUNUSED NONNULL((1))
 	int             (DCALL *st_init)(DeeSTypeObject *tp_self, void *self,
-	                                 size_t argc, DeeObject **argv);
+	                                 size_t argc, DeeObject *const *argv);
 	WUNUSED NONNULL((1, 3))
 	int             (DCALL *st_assign)(DeeSTypeObject *tp_self, void *self, DeeObject *value);
 	struct stype_cast       st_cast;      /* Type casting operators. */
 	WUNUSED NONNULL((1))
 	DREF DeeObject *(DCALL *st_call)(DeeSTypeObject *tp_self, void *self,
-	                                 size_t argc, DeeObject **argv);
+	                                 size_t argc, DeeObject *const *argv);
 	struct stype_math      *st_math;      /* [0..1] Math related operators. */
 	struct stype_cmp       *st_cmp;       /* [0..1] Compare operators. */
 	struct stype_seq       *st_seq;       /* [0..1] Sequence operators. */
@@ -408,7 +408,7 @@ INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_Assign(DeeSTypeObject *tp_sel
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeStruct_Str(DeeSTypeObject *tp_self, void *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeStruct_Repr(DeeSTypeObject *tp_self, void *self);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeStruct_Bool(DeeSTypeObject *tp_self, void *self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeStruct_Call(DeeSTypeObject *tp_self, void *self, size_t argc, DeeObject **argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeStruct_Call(DeeSTypeObject *tp_self, void *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_Int32(DeeSTypeObject *tp_self, void *self, int32_t *result);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_Int64(DeeSTypeObject *tp_self, void *self, int64_t *result);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeStruct_Double(DeeSTypeObject *tp_self, void *self, double *result);

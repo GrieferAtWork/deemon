@@ -72,7 +72,7 @@ PP_CAT2(MY_FUNCTION_NAME,IntellisenseInternal)
 #define GET_ARGC() argc
 #define GET_ARGV() argv
                  , size_t argc
-                 , DeeObject **argv
+                 , DeeObject *const *argv
 #endif /* !CALL_TUPLE */
 #ifdef CALL_KW
                  , DeeObject *kw

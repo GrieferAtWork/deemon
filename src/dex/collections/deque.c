@@ -787,7 +787,7 @@ deque_push_back(void *self, DeeObject *__restrict ob) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deq_init(Deque *__restrict self,
-         size_t argc, DeeObject **argv) {
+         size_t argc, DeeObject *const *argv) {
 	DeeObject *init   = Dee_EmptySeq;
 	self->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
 	if (DeeArg_Unpack(argc, argv, "|oIu:Deque", &init, &self->d_bucket_sz))
@@ -1277,7 +1277,7 @@ PRIVATE struct type_seq deq_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_pushfront(Deque *self, size_t argc, DeeObject **argv) {
+deq_pushfront(Deque *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:pushfront", &item))
 		goto err;
@@ -1289,7 +1289,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_pushback(Deque *self, size_t argc, DeeObject **argv) {
+deq_pushback(Deque *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:pushback", &item))
 		goto err;
@@ -1301,7 +1301,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_popfront(Deque *self, size_t argc, DeeObject **argv) {
+deq_popfront(Deque *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
 	return Deque_PopFront(self);
@@ -1310,7 +1310,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_popback(Deque *self, size_t argc, DeeObject **argv) {
+deq_popback(Deque *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popback"))
 		goto err;
 	return Deque_PopBack(self);
@@ -1322,7 +1322,7 @@ INTERN struct keyword seq_insert_kwlist[] = { K(index), K(item), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_insert(Deque *self, size_t argc,
-           DeeObject **argv, DeeObject *kw) {
+           DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, "Ido:insert", &index, &item))
@@ -1338,7 +1338,7 @@ INTERN struct keyword seq_erase_kwlist[] = { K(index), K(count), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_erase(Deque *self, size_t argc,
-          DeeObject **argv, DeeObject *kw) {
+          DeeObject *const *argv, DeeObject *kw) {
 	size_t index, result;
 	size_t num_items = 1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, "Id|Iu:erase", &index, &num_items))
@@ -1355,7 +1355,7 @@ INTERN struct keyword seq_pop_kwlist[] = { K(index), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 deq_pop(Deque *self, size_t argc,
-        DeeObject **argv, DeeObject *kw) {
+        DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "Id:pop", &index))
 		return NULL;
@@ -1363,7 +1363,7 @@ deq_pop(Deque *self, size_t argc,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_llrot(Deque *self, size_t argc, DeeObject **argv) {
+deq_llrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:llrot", &num_items) ||
 	    Deque_llrot(self, num_items))
@@ -1372,7 +1372,7 @@ deq_llrot(Deque *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_lrrot(Deque *self, size_t argc, DeeObject **argv) {
+deq_lrrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:lrrot", &num_items) ||
 	    Deque_lrrot(self, num_items))
@@ -1381,7 +1381,7 @@ deq_lrrot(Deque *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_rlrot(Deque *self, size_t argc, DeeObject **argv) {
+deq_rlrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:rlrot", &num_items) ||
 	    Deque_rlrot(self, num_items))
@@ -1390,7 +1390,7 @@ deq_rlrot(Deque *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_rrrot(Deque *self, size_t argc, DeeObject **argv) {
+deq_rrrot(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t num_items;
 	if (DeeArg_Unpack(argc, argv, "Iu:rrrot", &num_items) ||
 	    Deque_rrrot(self, num_items))
@@ -1399,7 +1399,7 @@ deq_rrrot(Deque *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_sizeof(Deque *self, size_t argc, DeeObject **argv) {
+deq_sizeof(Deque *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		goto err;
@@ -1421,38 +1421,38 @@ err:
 
 
 PRIVATE struct type_method deq_methods[] = {
-	{ "insert", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_insert,
+	{ "insert", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_insert,
 	  DOC("(index:?Dint,ob)\n"
 	      "@throw IntegerOverflow @index is negative or too large\n"
 	      "Insert the given object @ob at @index"),
 	  TYPE_METHOD_FKWDS },
-	{ "erase", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_erase,
+	{ "erase", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_erase,
 	  DOC("(index:?Dint,num_items=!1)->?Dint\n"
 	      "@throw IntegerOverflow @index is negative or too large\n"
 	      "@return The actual number of erased items\n"
 	      "Erase up to @num_items objects from @this deque, starting at @index"),
 	  TYPE_METHOD_FKWDS },
-	{ "pop", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_pop,
+	{ "pop", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_pop,
 	  DOC("(index=!-1)->\n"
 	      "@throw IntegerOverflow @index is negative or too large\n"
 	      "@return The item that got removed\n"
 	      "Pop (erase) the item located at @index and return it"),
 	  TYPE_METHOD_FKWDS },
-	{ "pushfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_pushfront,
+	{ "pushfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_pushfront,
 	  DOC("(ob)\n"
 	      "Insert the given object @ob at the front of @this deque") },
-	{ "pushback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_pushback,
+	{ "pushback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_pushback,
 	  DOC("(ob)\n"
 	      "Insert the given object @ob at the back of @this deque") },
-	{ "popfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_popfront,
+	{ "popfront", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_popfront,
 	  DOC("->\n"
 	      "@throw ValueError @this deque is empty\n"
 	      "Pop and return an item from the front of @this deque") },
-	{ "popback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_popback,
+	{ "popback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_popback,
 	  DOC("->\n"
 	      "@throw ValueError @this deque is empty\n"
 	      "Pop and return an item from the back of @this deque") },
-	{ "llrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_llrot,
+	{ "llrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_llrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the first @num_items items left by 1:\n"
@@ -1460,7 +1460,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
 	      ">x.llrot(3);\n"
 	      ">print repr x; /* { 20, 30, 10, 40, 50 } */") },
-	{ "lrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_lrrot,
+	{ "lrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_lrrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the first @num_items items right by 1:\n"
@@ -1468,7 +1468,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
 	      ">x.lrrot(3);\n"
 	      ">print repr x; /* { 30, 10, 20, 40, 50 } */") },
-	{ "rlrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_rlrot,
+	{ "rlrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_rlrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the last @num_items items left by 1:\n"
@@ -1476,7 +1476,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
 	      ">x.rlrot(3);\n"
 	      ">print repr x; /* { 10, 20, 40, 50, 30 } */") },
-	{ "rrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_rrrot,
+	{ "rrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_rrrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the last @num_items items right by 1:\n"
@@ -1485,7 +1485,7 @@ PRIVATE struct type_method deq_methods[] = {
 	      ">x.rrrot(3);\n"
 	      ">print repr x; /* { 10, 20, 50, 30, 40 } */") },
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&deq_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };
@@ -1682,7 +1682,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 deqiter_init(DequeIteratorObject *__restrict self,
-             size_t argc, DeeObject **argv) {
+             size_t argc, DeeObject *const *argv) {
 	size_t index = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:DequeIterator", &self->di_deq, &index))
 		goto err;

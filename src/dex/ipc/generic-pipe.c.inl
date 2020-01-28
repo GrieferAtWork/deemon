@@ -47,7 +47,7 @@ typedef DeeSystemFileObject SystemFile;
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 pipe_class_new(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	uint32_t pipe_size;
 	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Pipe_function_new_name, &pipe_size))
 		goto err;

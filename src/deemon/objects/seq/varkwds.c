@@ -955,7 +955,7 @@ INTERN WUNUSED DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
-                     DeeObject **argv) {
+                     DeeObject *const *argv) {
 	DREF BlackListVarkwds *result;
 	size_t argc, mask;
 	if unlikely(!DeeKwds_SIZE(kwds)) {
@@ -985,7 +985,7 @@ BlackListVarkwds_New(struct code_object *__restrict code,
 	result->vk_ckwc = argc - positional_argc;
 	result->vk_ckwv = code->co_keywords + positional_argc;
 	result->vk_kwds = kwds; /* Weakly referenced. */
-	result->vk_argv = argv; /* Weakly referenced. */
+	result->vk_argv = (DREF DeeObject **)(DeeObject **)argv; /* Weakly referenced. */
 	result->vk_mask = mask;
 	DeeObject_Init(result, &BlackListVarkwds_Type);
 done:

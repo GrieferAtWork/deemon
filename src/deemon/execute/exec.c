@@ -82,7 +82,7 @@ DECL_BEGIN
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream,
                   unsigned int mode,
-                  size_t argc, DeeObject **argv,
+                  size_t argc, DeeObject *const *argv,
                   int start_line, int start_col,
                   struct compiler_options *options,
                   DeeObject *default_symbols,
@@ -110,7 +110,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStreamString(DeeObject *source_stream,
                         unsigned int mode,
-                        size_t argc, DeeObject **argv,
+                        size_t argc, DeeObject *const *argv,
                         int start_line, int start_col,
                         struct compiler_options *options,
                         DeeObject *default_symbols,
@@ -264,7 +264,7 @@ err:
 /* Same as the functions above, but instead take a raw memory block as input */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                  unsigned int mode, size_t argc, DeeObject **argv,
+                  unsigned int mode, size_t argc, DeeObject *const *argv,
                   int start_line, int start_col,
                   struct compiler_options *options,
                   DeeObject *default_symbols,
@@ -293,7 +293,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                        unsigned int mode, size_t argc, DeeObject **argv,
+                        unsigned int mode, size_t argc, DeeObject *const *argv,
                         int start_line, int start_col,
                         struct compiler_options *options,
                         DeeObject *default_symbols,

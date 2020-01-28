@@ -107,10 +107,11 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 				dst->cf_argv = NULL;
 			else if ((dst->cf_argv = (DREF DeeObject **)Dee_TryMalloc(dst->cf_argc *
 			                                                          sizeof(DREF DeeObject *))) != NULL) {
-				DREF DeeObject **iter, **end, **src_iter;
-				end      = (iter = dst->cf_argv) + dst->cf_argc;
+				DeeObject *const *src_iter;
+				DREF DeeObject **iter, **end;
+				end = (iter = (DREF DeeObject **)dst->cf_argv) + dst->cf_argc;
 				src_iter = src->cf_argv;
-				for (; iter != end; ++iter, ++src_iter) {
+				for (; iter < end; ++iter, ++src_iter) {
 					if (*src_iter == dont_track_this) {
 						*iter = Dee_None;
 						Dee_Incref(Dee_None);
@@ -249,7 +250,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 traceiter_init(TraceIterator *__restrict self,
-               size_t argc, DeeObject **argv) {
+               size_t argc, DeeObject *const *argv) {
 	size_t index = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_TracebackIterator",
 	                  &self->ti_trace, &index))
@@ -502,7 +503,7 @@ traceback_fini(DeeTracebackObject *__restrict self) {
 		i = frame->cf_argc;
 		while (i--)
 			Dee_Decref(frame->cf_argv[i]);
-		Dee_Free(frame->cf_argv);
+		Dee_Free((void *)frame->cf_argv);
 		/* Decref misc. frame objects. */
 		Dee_Decref(frame->cf_func);
 		Dee_XDecref(frame->cf_this);
@@ -531,11 +532,11 @@ traceback_visit(DeeTracebackObject *__restrict self,
 		}
 		/* Visit stack objects. */
 		oend = (oiter = iter->cf_stack) + iter->cf_stacksz;
-		for (; oiter != oend; ++oiter)
+		for (; oiter < oend; ++oiter)
 			Dee_Visit(*oiter);
 		/* Visit argument objects. */
-		oend = (oiter = iter->cf_argv) + iter->cf_argc;
-		for (; oiter != oend; ++oiter)
+		oend = (oiter = (DREF DeeObject **)iter->cf_argv) + iter->cf_argc;
+		for (; oiter < oend; ++oiter)
 			Dee_Visit(*oiter);
 		Dee_Visit(iter->cf_func);
 		Dee_XVisit(iter->cf_this);
@@ -587,8 +588,8 @@ traceback_clear(DeeTracebackObject *__restrict self) {
 			}
 		}
 		/* Decref argument objects. */
-		oend = (oiter = iter->cf_argv) + iter->cf_argc;
-		for (; oiter != oend; ++oiter) {
+		oend = (oiter = (DREF DeeObject **)iter->cf_argv) + iter->cf_argc;
+		for (; oiter < oend; ++oiter) {
 			DeeObject *ob = *oiter;
 			if (DeeNone_Check(ob))
 				continue;
@@ -730,7 +731,7 @@ PRIVATE struct type_gc traceback_gc = {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-traceback_sizeof(DeeTracebackObject *self, size_t argc, DeeObject **argv) {
+traceback_sizeof(DeeTracebackObject *self, size_t argc, DeeObject *const *argv) {
 	size_t result;
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
@@ -752,7 +753,7 @@ err:
 
 PRIVATE struct type_method traceback_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&traceback_sizeof,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&traceback_sizeof,
 	  DOC("->?Dint") },
 	{ NULL }
 };

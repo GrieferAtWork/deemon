@@ -39,7 +39,7 @@ INTDEF ATTR_COLD int DCALL err_subclass_final_type(DeeTypeObject *__restrict tp)
 #define err_unexpected_type(self, wanted_type) DeeObject_TypeAssertFailed(self, wanted_type)
 #define err_unimplemented_constructor(tp, argc, argv) \
 	err_unimplemented_constructor_kw(tp, argc, argv, NULL)
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc, DeeObject **argv, DeeObject *kw);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_divide_by_zero(DeeObject *a, DeeObject *b);
 INTDEF ATTR_COLD int DCALL err_divide_by_zero_i(dssize_t a);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_shift_negative(DeeObject *a, DeeObject *b, bool is_left_shift);

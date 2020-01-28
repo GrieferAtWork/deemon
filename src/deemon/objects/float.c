@@ -92,7 +92,7 @@ float_copy(Float *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 float_ctor(Float *__restrict self,
-           size_t argc, DeeObject **argv) {
+           size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
 	char *str;
 	if (DeeArg_Unpack(argc, argv, "o:float", &arg))

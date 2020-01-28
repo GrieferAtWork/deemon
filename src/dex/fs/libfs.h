@@ -372,7 +372,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL fs_pathexctrail(DeeObject *__r
 INTDEF WUNUSED DREF DeeObject *DCALL fs_pathabs(DeeObject *__restrict path, DeeObject *pwd);
 INTDEF WUNUSED DREF DeeObject *DCALL fs_pathrel(DeeObject *__restrict path, DeeObject *pwd);
 INTDEF WUNUSED NONNULL((1)) bool DCALL fs_pathisabs(DeeObject *__restrict path);
-INTDEF WUNUSED DREF DeeObject *DCALL fs_pathjoin(size_t pathc, DeeObject **__restrict pathv);
+INTDEF WUNUSED DREF DeeObject *DCALL fs_pathjoin(size_t pathc, DeeObject *const *__restrict pathv);
 
 /* @param: options: Set of `FS_EXPAND_F*' */
 INTDEF WUNUSED DREF DeeObject *DCALL fs_pathexpand(DeeObject *__restrict path, uint16_t options,

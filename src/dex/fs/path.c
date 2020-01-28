@@ -783,7 +783,7 @@ err:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-fs_pathjoin(size_t pathc, DeeObject **__restrict pathv) {
+fs_pathjoin(size_t pathc, DeeObject *const *__restrict pathv) {
 	size_t i;
 	char nextsep = SEP;
 	struct unicode_printer printer;

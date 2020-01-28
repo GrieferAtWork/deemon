@@ -482,7 +482,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
-                        /*inherit(on_success)*/ DREF DeeObject **argv) {
+                        /*inherit(on_success)*/ DREF DeeObject *const *argv) {
 	DREF List *result;
 	if (!DeeObject_IsShared(self)) {
 		size_t req_alloc;
@@ -1164,7 +1164,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 list_init(List *__restrict self,
-          size_t argc, DeeObject **argv) {
+          size_t argc, DeeObject *const *argv) {
 	DeeObject *sequence;
 	DeeObject *filler = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:List", &sequence, &filler))
@@ -2266,7 +2266,7 @@ INTDEF struct keyword seq_pop_kwlist[];
 INTDEF struct keyword seq_resize_kwlist[];
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_append(List *self, size_t argc, DeeObject **argv) {
+list_append(List *self, size_t argc, DeeObject *const *argv) {
 	/* Optimize for the case of a single object to-be appended. */
 	if (likely(argc == 1) ? DeeList_Append((DeeObject *)self, argv[0])
 	                      : DeeList_AppendVector((DeeObject *)self, argc, argv))
@@ -2275,7 +2275,7 @@ list_append(List *self, size_t argc, DeeObject **argv) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_extend(List *self, size_t argc, DeeObject **argv) {
+list_extend(List *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *extension;
 	if (DeeArg_Unpack(argc, argv, "o:extend", &extension) ||
 	    DeeList_AppendSequence((DeeObject *)self, extension))
@@ -2285,7 +2285,7 @@ list_extend(List *self, size_t argc, DeeObject **argv) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_insert(List *self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *item;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_insert_kwlist, "Iuo:insert", &index, &item) ||
@@ -2296,7 +2296,7 @@ list_insert(List *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_insertall(List *self, size_t argc,
-               DeeObject **argv, DeeObject *kw) {
+               DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *items;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist, "Ido:insertall", &index, &items) ||
@@ -2307,7 +2307,7 @@ list_insertall(List *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_removeif(List *self, size_t argc,
-              DeeObject **argv, DeeObject *kw) {
+              DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *should;
 	size_t result, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist, "o|IdId:removeif", &should, &start, &end))
@@ -2322,7 +2322,7 @@ err:
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 list_insertiter_deprecated(List *self,
-                           size_t argc, DeeObject **argv) {
+                           size_t argc, DeeObject *const *argv) {
 	size_t index;
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "Ido:insert_iter", &index, &seq) ||
@@ -2333,7 +2333,7 @@ list_insertiter_deprecated(List *self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_erase(List *self, size_t argc,
-           DeeObject **argv, DeeObject *kw) {
+           DeeObject *const *argv, DeeObject *kw) {
 	size_t index, count = 1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_erase_kwlist, "Iu|Iu:erase", &index, &count))
 		return NULL;
@@ -2345,7 +2345,7 @@ list_erase(List *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_xch(List *self, size_t argc,
-         DeeObject **argv, DeeObject *kw) {
+         DeeObject *const *argv, DeeObject *kw) {
 	size_t index;
 	DeeObject *value;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_xch_kwlist, "Iuo:xch", &index, &value))
@@ -2357,7 +2357,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_pop(List *self, size_t argc,
-         DeeObject **argv, DeeObject *kw) {
+         DeeObject *const *argv, DeeObject *kw) {
 	dssize_t index = -1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_pop_kwlist, "|Id:pop", &index))
 		return NULL;
@@ -2365,7 +2365,7 @@ list_pop(List *self, size_t argc,
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-list_clear(List *self, size_t argc, DeeObject **argv) {
+list_clear(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clear"))
 		return NULL;
 	DeeList_Clear((DeeObject *)self);
@@ -2379,7 +2379,7 @@ list_clear(List *self, size_t argc, DeeObject **argv) {
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_sizeof(List *self, size_t argc, DeeObject **argv) {
+list_sizeof(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":__sizeof__"))
 		return NULL;
 	return DeeInt_NewSize(sizeof(List) +
@@ -2586,7 +2586,7 @@ done_unlock:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_pushfront(List *self, size_t argc, DeeObject **argv) {
+list_pushfront(List *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *item;
 	if (DeeArg_Unpack(argc, argv, "o:pushfront", &item) ||
 	    DeeList_Insert((DeeObject *)self, 0, item))
@@ -2597,7 +2597,7 @@ err:
 }
 #define list_pushback list_append
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_popfront(List *self, size_t argc, DeeObject **argv) {
+list_popfront(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popfront"))
 		goto err;
 	return DeeList_Pop((DeeObject *)self, 0);
@@ -2606,7 +2606,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_popback(List *self, size_t argc, DeeObject **argv) {
+list_popback(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":popback"))
 		goto err;
 	return DeeList_Pop((DeeObject *)self, -1);
@@ -2615,7 +2615,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_reserve(List *self, size_t argc, DeeObject **argv) {
+list_reserve(List *self, size_t argc, DeeObject *const *argv) {
 	size_t size;
 	if (DeeArg_Unpack(argc, argv, "Iu:reserve", &size))
 		goto err;
@@ -2637,7 +2637,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_shrink(List *self, size_t argc, DeeObject **argv) {
+list_shrink(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":shrink"))
 		goto err;
 	list_do_shrink(self);
@@ -2661,7 +2661,7 @@ DeeList_Reverse(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_reverse(List *self, size_t argc, DeeObject **argv) {
+list_reverse(List *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":reverse"))
 		return NULL;
 	DeeList_Reverse((DeeObject *)self);
@@ -2778,7 +2778,7 @@ err:
 INTDEF struct keyword seq_sort_kwlist[];
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sort(List *self, size_t argc,
-          DeeObject **argv, DeeObject *kw) {
+          DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:sort", &key))
 		goto err;
@@ -2793,7 +2793,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_sorted(List *self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:sorted", &key))
 		goto err;
@@ -2807,7 +2807,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_resize(List *self, size_t argc,
-            DeeObject **argv, DeeObject *kw) {
+            DeeObject *const *argv, DeeObject *kw) {
 	size_t newsize;
 	DeeObject *filler = Dee_None;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist, "Iu|o:resize", &newsize, &filler))
@@ -2934,44 +2934,44 @@ PRIVATE struct type_getset list_getsets[] = {
 
 PRIVATE struct type_method list_methods[] = {
 	{ "__sizeof__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_sizeof },
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_sizeof },
 	{ DeeString_STR(&str_append),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_append,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_append,
 	  DOC("(items!)\n"
 	      "Append all the given @items at the end of @this List") },
 	{ DeeString_STR(&str_extend),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_extend,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_extend,
 	  DOC("(items:?S?O)\n"
 	      "Append all elements from @items to the end of @this List") },
 	{ DeeString_STR(&str_resize),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_resize,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_resize,
 	  DOC("(newsize:?Dint,filler=!N)\n"
 	      "@throw IntegerOverflow The given @newsize is lower than $0\n"
 	      "Resize the size of @this List to match @newsize, using @filler to initialize new items"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_insert),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insert,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_insert,
 	  DOC("(index:?Dint,item)\n"
 	      "@throw IntegerOverflow The given @index is too large\n"
 	      "Insert the given @item at the specified @index\n"
 	      "When @index is lower than $0, or greater thatn ${#this}, append items at the end"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_insertall),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insertall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_insertall,
 	  DOC("(index:?Dint,seq:?S?O)\n"
 	      "@throw IntegerOverflow The given @index is too large\n"
 	      "Insert all items from a sequence @seq at the specified @index\n"
 	      "When @index is lower than $0, or greater thatn ${#this}, append items at the end"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_erase),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_erase,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_erase,
 	  DOC("(index:?Dint,count=!1)->?Dint\n"
 	      "@throw IntegerOverflow The given @index or @count are lower than $0, or too large\n"
 	      "@return The number of erased items (Zero when @index is out of bounds)\n"
 	      "Erase up to @count items starting at the given @index"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_pop),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pop,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pop,
 	  DOC("(index=!-1)->\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "@return Items that was removed\n"
@@ -2980,48 +2980,48 @@ PRIVATE struct type_method list_methods[] = {
 	      "negative numbers pop items relative to the end of the List"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_xch),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_xch,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_xch,
 	  DOC("(index:?Dint,value)->\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Exchange the @index'th item of @this List with @value, returning the item's old value"),
 	  TYPE_METHOD_FKWDS },
 	{ DeeString_STR(&str_clear),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_clear,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_clear,
 	  DOC("()\n"
 	      "Clear all items from @this List") },
 	{ DeeString_STR(&str_removeif),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_removeif,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_removeif,
 	  DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
 	      "@return The number of removed items"
 	      "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
 	  TYPE_METHOD_FKWDS },
 
 	{ DeeString_STR(&str_pushfront),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pushfront,
 	  DOC("(item)\nInserts @item at the fron of this @this List. Same as ${this.insert(0,item)}") },
 	{ DeeString_STR(&str_pushback),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pushback,
 	  DOC("(item)\nInserts @item at the end of this @this List. Same as #append") },
 	{ DeeString_STR(&str_popfront),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_popfront,
 	  DOC("->\nSame as ${this.pop(0)}") },
 	{ DeeString_STR(&str_popback),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_popback,
 	  DOC("->\nSame as ${this.pop(-1)}") },
 
 	/* List ordering functions. */
 	{ "reverse",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_reverse,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_reverse,
 	  DOC("()\n"
 	      "Reverse the order of all the elements of @this List") },
 	{ "sort",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_sort,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_sort,
 	  DOC("()\n"
 	      "(key:?DCallable)\n"
 	      "Sort the elements of @this List in ascending order, or in accordance to @key"),
 	  TYPE_METHOD_FKWDS },
 	{ "sorted",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_sorted,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_sorted,
 	  DOC("->?S?O\n"
 	      "(key:?DCallable)->?S?O\n"
 	      "Return a sequence that contains all elements from @this sequence, "
@@ -3030,48 +3030,48 @@ PRIVATE struct type_method list_methods[] = {
 	  TYPE_METHOD_FKWDS },
 
 	/* List buffer functions. */
-	{ "reserve", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_reserve,
+	{ "reserve", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_reserve,
 	  DOC("(size:?Dint)\n"
 	      "Reserve (preallocate) memory for @size items\n"
 	      "Failures to pre-allocate memory are silently ignored, in which case #allocated will remain unchanged\n"
 	      "If @size is lower than the currently #allocated size, the function becomes a no-op") },
-	{ "shrink", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_shrink,
+	{ "shrink", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_shrink,
 	  DOC("()\n"
 	      "Release any pre-allocated, but unused memory, setting #allocated to the length of @this List") },
 
 	/* Deprecated aliases / functions. */
 	{ "remove_if",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_removeif,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_removeif,
 	  DOC("(should:?DCallable,start=!0,end=!-1)->?Dint\n"
 	      "Deprecated alias for #removeif"),
 	  TYPE_METHOD_FKWDS },
 	{ "insert_list",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insertall,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_insertall,
 	  DOC("(index:?Dint,items:?S?O)\n"
 	      "Deprecated alias for #insertall"),
 	  TYPE_METHOD_FKWDS },
 	{ "insert_iter",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_insertiter_deprecated,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_insertiter_deprecated,
 	  DOC("(index:?Dint,iter:?DIterator)\n"
 	      "Deprecated alias for ${this.insertall(index,(iter as iterator from deemon).future)}") },
 	{ "push_front",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pushfront,
 	  DOC("(item)\n"
 	      "Deprecated alias for #pushfront") },
 	{ "push_back",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_pushback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_pushback,
 	  DOC("(item)\n"
 	      "Deprecated alias for #pushback") },
 	{ "pop_front",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popfront,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_popfront,
 	  DOC("(item)\n"
 	      "Deprecated alias for #popfront") },
 	{ "pop_back",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_popback,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_popback,
 	  DOC("(item)\n"
 	      "Deprecated alias for #popback") },
 	{ "shrink_to_fit",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject **))&list_shrink,
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&list_shrink,
 	  DOC("()\n"
 	      "Deprecated alias for #shrink") },
 	/* TODO: DEE_METHODDEF_v100("sorted_insert",member(&_deelist_sorted_insert),DEE_DOC_AUTO),
@@ -3905,7 +3905,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 li_init(ListIterator *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	self->li_index = 0;
 	if (DeeArg_Unpack(argc, argv, "o|Iu:_ListIterator", &self->li_list, &self->li_index))
 		goto err;

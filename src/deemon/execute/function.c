@@ -335,14 +335,14 @@ done:
 
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_Call(DeeObject *self, size_t argc, DeeObject **argv);
+DeeFunction_Call(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFunction_CallKw(DeeObject *self, size_t argc,
-                   DeeObject **argv, DeeObject *kw);
+                   DeeObject *const *argv, DeeObject *kw);
 
 
 PRIVATE WUNUSED DREF Function *DCALL
-function_init(size_t argc, DeeObject **argv) {
+function_init(size_t argc, DeeObject *const *argv) {
 	DREF Function *result;
 	DeeCodeObject *code = &empty_code;
 	DeeObject *refs     = Dee_EmptyTuple;
@@ -1386,7 +1386,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfi_new(YFIterator *__restrict self,
-        size_t argc, DeeObject **argv) {
+        size_t argc, DeeObject *const *argv) {
 	YFunction *func;
 	if (DeeArg_Unpack(argc, argv, "o:YieldFunction.Iterator", &func))
 		goto err;
@@ -1399,9 +1399,10 @@ err:
 
 LOCAL WUNUSED NONNULL((1)) int DCALL
 inplace_deepcopy_noarg(DREF DeeObject **__restrict pob,
-                       size_t argc1, DREF DeeObject **argv1,
-                       size_t args2_c, DeeObject **args2_v) {
-	DREF DeeObject *ob = *pob, **iter, **end;
+                       size_t argc1, DeeObject *const *argv1,
+                       size_t argc2, DeeObject *const *argv2) {
+	size_t i;
+	DREF DeeObject *ob = *pob;
 	/* Check if `*pob' is apart of the argument
 	 * tuple, and don't copy it if it is.
 	 * We take special care not to copy objects that were loaded
@@ -1431,14 +1432,14 @@ inplace_deepcopy_noarg(DREF DeeObject **__restrict pob,
 	 *       in the sense that unless for some bug, the design is able to
 	 *       never crash no matter what the user might do.
 	 */
-	end = (iter = argv1) + argc1;
-	for (; iter != end; ++iter)
-		if (*iter == ob)
+	for (i = 0; i < argc1; ++i) {
+		if (argv1[i] == ob)
 			return 0;
-	end = (iter = args2_v) + args2_c;
-	for (; iter != end; ++iter)
-		if (*iter == ob)
+	}
+	for (i = 0; i < argc2; ++i) {
+		if (argv2[i] == ob)
 			return 0;
+	}
 	/* Create an inplace deep-copy of this object. */
 	return DeeObject_InplaceDeepCopy(pob);
 }
@@ -1539,7 +1540,7 @@ again:
 		DeeObject *this_arg = self->yi_frame.cf_this;
 		DeeObject *varargs  = (DeeObject *)self->yi_frame.cf_vargs;
 		size_t argc         = self->yi_frame.cf_argc;
-		DeeObject **argv    = self->yi_frame.cf_argv;
+		DeeObject *const *argv    = self->yi_frame.cf_argv;
 		size_t refc         = self->yi_func->yf_func->fo_code->co_refc;
 		DeeObject **refv    = self->yi_func->yf_func->fo_refv;
 		/* With all objects now referenced, we still have to replace

@@ -185,12 +185,12 @@ struct Dee_compiler_options;
  *                          only exists as an anonymous module. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStream(DeeObject *source_stream, unsigned int mode,
-                  size_t argc, DeeObject **argv, int start_line, int start_col,
+                  size_t argc, DeeObject *const *argv, int start_line, int start_col,
                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                   DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunStreamString(DeeObject *source_stream, unsigned int mode,
-                        size_t argc, DeeObject **argv, int start_line, int start_col,
+                        size_t argc, DeeObject *const *argv, int start_line, int start_col,
                         struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                         /*utf-8*/ char const *module_name, size_t module_namesize);
@@ -231,13 +231,13 @@ DeeExec_CompileFunctionStreamString(DeeObject *source_stream,
 /* Same as the functions above, but instead take a raw memory block as input */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemory(/*utf-8*/ char const *__restrict data, size_t data_size,
-                  unsigned int mode, size_t argc, DeeObject **argv,
+                  unsigned int mode, size_t argc, DeeObject *const *argv,
                   int start_line, int start_col,
                   struct Dee_compiler_options *options, DeeObject *default_symbols,
                   DeeObject *source_pathname, DeeObject *module_name);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeExec_RunMemoryString(/*utf-8*/ char const *__restrict data, size_t data_size,
-                        unsigned int mode, size_t argc, DeeObject **argv,
+                        unsigned int mode, size_t argc, DeeObject *const *argv,
                         int start_line, int start_col,
                         struct Dee_compiler_options *options, DeeObject *default_symbols,
                         /*utf-8*/ char const *source_pathname, size_t source_pathsize,
