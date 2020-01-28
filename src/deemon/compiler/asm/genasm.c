@@ -372,7 +372,8 @@ empty_operand:
 				if (iter == end - 1)
 					item_mode = (mode & ~PRINT_MODE_ALL);
 				/* Check if the operand is allowed to appear in constants. */
-				if (constexpr_is_empty_string(elem)) {
+				if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
+				    constexpr_is_empty_string(elem)) {
 					if (ast_genprint_emptystring(item_mode, ddi_ast))
 						goto err_items;
 				} else if (!asm_allowconst(elem)) {
@@ -402,8 +403,10 @@ err_items:
 		}
 	} else if (print_expression->a_type == AST_CONSTEXPR) {
 		/* Special case: Print what essentially boils down to being an empty string. */
-		if (constexpr_is_empty_string(print_expression->a_constexpr))
-			goto empty_operand;
+		if (current_assembler.a_flag & ASM_FOPTIMIZE) {
+			if (constexpr_is_empty_string(print_expression->a_constexpr))
+				goto empty_operand;
+		}
 		/* Special instructions exist for direct printing of constants. */
 		if (asm_allowconst(print_expression->a_constexpr)) {
 			int32_t const_cid;
@@ -424,7 +427,8 @@ fallback:
 			goto err;
 		if (asm_put(ASM_PRINTALL + mode))
 			goto err;
-	} else if (print_expression->a_type == AST_MULTIPLE &&
+	} else if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
+	           print_expression->a_type == AST_MULTIPLE &&
 	           print_expression->a_flag == AST_FMULTIPLE_TUPLE) {
 		/* Printing a Tuple expression is the same as printing
 		 * each if its elements without any separators.
@@ -462,7 +466,8 @@ fallback:
 				goto err;
 		}
 		return 0;
-	} else if (print_expression->a_type == AST_OPERATOR &&
+	} else if ((current_assembler.a_flag & ASM_FOPTIMIZE) &&
+	           print_expression->a_type == AST_OPERATOR &&
 	           print_expression->a_flag == OPERATOR_STR) {
 		/* `print str(x);' is the same as `print x;'. */
 		return ast_genprint(mode, print_expression->a_operator.o_op0, ddi_ast);
