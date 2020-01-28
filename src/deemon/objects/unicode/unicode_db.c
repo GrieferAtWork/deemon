@@ -123,7 +123,8 @@ for (local i: [:256]) {
 	if (s.isdecimal()) flags |= UNICODE_FDECIMAL;
 	if (s.issymstrt()) flags |= UNICODE_FSYMSTRT;
 	if (s.issymcont()) flags |= UNICODE_FSYMCONT;
-	if ((i % 16) == 0) print "\t",;
+	if ((i % 16) == 0)
+		print "\t",;
 	print "%#.4x," % flags,;
 	if ((i % 16) == 15)
 		print;

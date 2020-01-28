@@ -48,11 +48,8 @@ agii("F_OK", doc: "Test for existence");
 
 File.stdout = orig_stdout;
 print "#define POSIX_ACCESS_DEFS \\";
-for (local x: allDecls) {
-	print "\tPOSIX_",;
-	print x,;
-	print "_DEF \\";
-}
+for (local x: allDecls)
+	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
 ]]]*/

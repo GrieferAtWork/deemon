@@ -104,11 +104,8 @@ fgii("AT_THIS_STACK");
 
 File.stdout = orig_stdout;
 print "#define POSIX_OPEN_BASIC_DEFS \\";
-for (local x: allDecls) {
-	print "\tPOSIX_",;
-	print x,;
-	print "_DEF \\";
-}
+for (local x: allDecls)
+	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
 ]]]*/

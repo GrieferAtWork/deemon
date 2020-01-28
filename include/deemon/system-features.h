@@ -48,18 +48,14 @@ function addparen(x) {
 	return x;
 }
 function feature(name, default_requirements, test = none) {
-	print "#ifdef CONFIG_NO_",;
-	print name;
-	print "#undef CONFIG_HAVE_",;
-	print name;
+	print("#ifdef CONFIG_NO_", name);
+	print("#undef CONFIG_HAVE_", name);
 	if (default_requirements == "1") {
-		print "#else";
+		print("#else");
 	} else if (default_requirements in ["", "0"]) {
-		print "#elif 0";
+		print("#elif 0");
 	} else {
-		print "#elif !defined(CONFIG_HAVE_",;
-		print name,;
-		print ") && \\";
+		print("#elif !defined(CONFIG_HAVE_", name, ") && \\");
 		print "      (",;
 		default_requirements = default_requirements.strip();
 		while (#default_requirements > 80) {
@@ -70,18 +66,14 @@ function feature(name, default_requirements, test = none) {
 				++p;
 			if (default_requirements.substr(p, p + 2) in ["||", "&&"])
 				p += 2;
-			print default_requirements[:p].rstrip(),;
-			print " \\";
+			print(default_requirements[:p].rstrip(), " \\");
 			print "       ",;
 			default_requirements = default_requirements[p:].lstrip(),;
 		}
-		print default_requirements,;
-		print ")";
+		print(default_requirements, ")");
 	}
-	print "#define CONFIG_HAVE_",;
-	print name,;
-	print " 1";
-	print "#endif";
+	print("#define CONFIG_HAVE_", name, " 1");
+	print("#endif");
 	print;
 }
 
@@ -111,29 +103,18 @@ function header(name, default_requirements = "") {
 #define typ      func
 #define constant func
 function constant_nonzero(name) {
-	print "#ifdef CONFIG_NO_",;
-	print name;
-	print "#undef CONFIG_HAVE_",;
-	print name;
-	print "#elif defined(CONFIG_HAVE_",;
-	print name,;
-	print ")";
-	print "#elif defined(",;
-	print name,;
-	print ")";
-	print "#if",name,"!= 0";
-	print "#define CONFIG_HAVE_",;
-	print name,"1";
-	print "#else /" "*", name, "*" "/";
-	print "#define CONFIG_NO_",;
-	print name,"1";
-	print "#endif /" "*", name, "*" "/";
-	print "#elif defined(__",;
-	print name,;
-	print "__defined)";
-	print "#define CONFIG_HAVE_",;
-	print name,"1";
-	print "#endif";
+	print("#ifdef CONFIG_NO_", name);
+	print("#undef CONFIG_HAVE_", name);
+	print("#elif defined(CONFIG_HAVE_", name, ")");
+	print("#elif defined(", name, ")");
+	print("#if ", name, " != 0");
+	print("#define CONFIG_HAVE_", name, " 1");
+	print("#else /" "* ", name, " *" "/");
+	print("#define CONFIG_NO_", name, " 1");
+	print("#endif /" "* ", name, " *" "/");
+	print("#elif defined(__", name, "__defined)");
+	print("#define CONFIG_HAVE_", name," 1");
+	print("#endif");
 	print;
 }
 function func(name, default_requirements = "", check_defined = 2, test = none) {
@@ -157,13 +138,9 @@ function isenabled(name) {
 function include_known_headers() {
 	for (local name: known_headers) {
 		local featnam = header_featnam(name);
-		print "#ifdef CONFIG_HAVE_",;
-		print featnam;
-		print "#include <",;
-		print name,;
-		print ">";
-		print "#endif /" "* CONFIG_HAVE_",;
-		print featnam, "*" "/";
+		print("#ifdef CONFIG_HAVE_", featnam);
+		print("#include <", name, ">");
+		print("#endif /" "* CONFIG_HAVE_", featnam, " *" "/");
 		print;
 	}
 }

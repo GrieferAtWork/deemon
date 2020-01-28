@@ -50,11 +50,8 @@ rwgii("SEEK_DATA");
 
 File.stdout = orig_stdout;
 print "#define POSIX_READWRITE_DEFS \\";
-for (local x: allDecls) {
-	print "\tPOSIX_",;
-	print x,;
-	print "_DEF \\";
-}
+for (local x: allDecls)
+	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
 ]]]*/

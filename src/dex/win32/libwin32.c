@@ -219,11 +219,8 @@ wgii("STD_ERROR_HANDLE");
 
 File.stdout = orig_stdout;
 print "#define LIBWIN32_CONSTANTS_DEFS \\";
-for (local x: allDecls) {
-	print "\tLIBWIN32_",;
-	print x,;
-	print "_DEF \\";
-}
+for (local x: allDecls)
+	print("\tLIBWIN32_", x, "_DEF \\");
 print "/" "**" "/";
 
 

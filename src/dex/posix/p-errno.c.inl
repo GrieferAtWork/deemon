@@ -184,11 +184,8 @@ e("ECASECLASH",      doc: "Filename exists with different case");
 
 File.stdout = orig_stdout;
 print "#define POSIX_ERRNO_DEFS \\";
-for (local x: allDecls) {
-	print "\tPOSIX_",;
-	print x,;
-	print "_DEF \\";
-}
+for (local x: allDecls)
+	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
 ]]]*/

@@ -27,9 +27,7 @@ import * from fs;
 function status(message) {
 	if (#message > 60)
 		message = message[:57] + "...";
-	print "\r", " " * 60,;
-	print "\r",;
-	print message,;
+	print("\r", " " * 60, "\r", message),;
 	File.stdout.sync();
 }
 

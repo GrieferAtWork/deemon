@@ -48,11 +48,8 @@ fgii("STDERR_FILENO");
 
 File.stdout = orig_stdout;
 print "#define POSIX_FD_DEFS \\";
-for (local x: allDecls) {
-	print "\tPOSIX_",;
-	print x,;
-	print "_DEF \\";
-}
+for (local x: allDecls)
+	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
 ]]]*/
@@ -159,10 +156,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_isatty_f(size_t argc, DeeObject **ar
 	int fd_fd;
 	DeeObject *fd;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:isatty", &fd))
-	    goto err;
+		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_isatty_f_impl(fd_fd);
 err:
 	return NULL;
@@ -221,7 +218,7 @@ PRIVATE DEFINE_KWLIST(posix_kwds_mask, { K(mask), KEND });
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_umask_f(size_t argc, DeeObject **argv, DeeObject *kw) {
 	int mask;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_mask, "d:umask", &mask))
-	    goto err;
+		goto err;
 	return posix_umask_f_impl(mask);
 err:
 	return NULL;
@@ -273,10 +270,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup_f(size_t argc, DeeObject **argv,
 	int fd_fd;
 	DeeObject *fd;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:dup", &fd))
-	    goto err;
+		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_dup_f_impl(fd_fd);
 err:
 	return NULL;
@@ -335,13 +332,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup2_f(size_t argc, DeeObject **argv
 	int newfd_fd;
 	DeeObject *newfd;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newfd, "oo:dup2", &oldfd, &newfd))
-	    goto err;
+		goto err;
 	oldfd_fd = DeeUnixSystem_GetFD(oldfd);
 	if unlikely(oldfd_fd == -1)
-	    goto err;
+		goto err;
 	newfd_fd = DeeUnixSystem_GetFD(newfd);
 	if unlikely(newfd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_dup2_f_impl(oldfd_fd, newfd_fd);
 err:
 	return NULL;
@@ -403,13 +400,13 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_dup3_f(size_t argc, DeeObject **argv
 	DeeObject *newfd;
 	int oflags;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_oldfd_newfd_oflags, "ood:dup3", &oldfd, &newfd, &oflags))
-	    goto err;
+		goto err;
 	oldfd_fd = DeeUnixSystem_GetFD(oldfd);
 	if unlikely(oldfd_fd == -1)
-	    goto err;
+		goto err;
 	newfd_fd = DeeUnixSystem_GetFD(newfd);
 	if unlikely(newfd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_dup3_f_impl(oldfd_fd, newfd_fd, oflags);
 err:
 	return NULL;
@@ -588,10 +585,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL posix_close_f(size_t argc, DeeObject **arg
 	int fd_fd;
 	DeeObject *fd;
 	if (DeeArg_UnpackKw(argc, argv, kw, posix_kwds_fd, "o:close", &fd))
-	    goto err;
+		goto err;
 	fd_fd = DeeUnixSystem_GetFD(fd);
 	if unlikely(fd_fd == -1)
-	    goto err;
+		goto err;
 	return posix_close_f_impl(fd_fd);
 err:
 	return NULL;

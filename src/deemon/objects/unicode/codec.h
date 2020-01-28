@@ -88,11 +88,7 @@ function gen_switch(prefix, indent) {
 	local suffix_chars = HashSet();
 	for (local x: codecs) {
 		if (x[0] == prefix) {
-			print indent,;
-			print x[1],;
-			print "; /" "* ",;
-			print repr x[0].rstrip("\0"),;
-			print " *" "/ \\";
+			print(indent, x[1], "; /" "* ", repr x[0].rstrip("\0"), " *" "/ \\");
 			return;
 		}
 		if (!x[0].startswith(prefix))
@@ -116,34 +112,14 @@ function gen_switch(prefix, indent) {
 					if (suffix.endswith("\0"))
 						suffix = suffix[:-1];
 					if (#suffix <= 1) goto do_as_if;
-					print "if (memcmp(name + ",;
-					print #prefix,;
-					print ", ",;
-					print repr suffix,;
-					print ", ",;
-					print #suffix,;
-					print "*sizeof(char)",;
-					print ") == 0) { \\";
-					print indent,;
-					print inset,;
-					print target,;
-					print "; /" "* ",;
-					print repr name.rstrip("\0"),;
-					print " *" "/ \\";
-					print indent,;
-					print "} ",;
+					print("if (memcmp(name + ", #prefix, ", ", repr suffix, ", ", #suffix, "*sizeof(char)", ") == 0) { \\");
+					print(indent, inset, target, "; /" "* ", repr name.rstrip("\0"), " *" "/ \\");
+					print(indent, "} "),;
 				} else {
 do_as_if:
-					print "if ((uint8_t)name[",;
-					print #prefix,;
-					print "] == ",;
-					print ch.ord(),;
-					print ") { /" "* ",;
-					print repr ch,;
-					print " *" "/ \\";
+					print("if ((uint8_t)name[", #prefix, "] == ", ch.ord(), ") { /" "* ", repr ch, " *" "/ \\");
 					gen_switch(prefix + ch, indent + inset);
-					print indent,;
-					print "} ",;
+					print(indent, "} "),;
 				}
 			}
 		}
@@ -151,36 +127,22 @@ do_as_if:
 			print "\\";
 		return;
 	}
-	print indent,;
-	print "switch ((uint8_t)name[",;
-	print #prefix,;
-	print "]) { \\";
+	print(indent, "switch ((uint8_t)name[", #prefix, "]) { \\");
 	local prev_ch = none;
 	for (local name, target: cases) {
 		local ch = name[#prefix];
 		if (prev_ch is none || prev_ch != ch) {
 			if (prev_ch !is none) {
-				print indent,;
-				print inset,;
-				print "break; \\";
+				print(indent, inset, "break; \\");
 			}
 			prev_ch = ch;
-			print indent,;
-			print "case ",;
-			print ch.ord(),;
-			print ": /" "* ",;
-			print repr ch,;
-			print " *" "/ \\";
+			print(indent, "case ", ch.ord(), ": /" "* ", repr ch, " *" "/ \\");
 			gen_switch(prefix + ch, indent + inset);
 		}
 	}
-	print indent,;
-	print inset,;
-	print "break; \\";
-	print indent,;
-	print "default: break; \\";
-	print indent,;
-	print "} \\";
+	print(indent, inset, "break; \\");
+	print(indent, "default: break; \\");
+	print(indent, "} \\");
 }
 local target_names = [];
 for (local alias, target: codecs) {
@@ -192,19 +154,13 @@ target_names.sort();
 print "#ifdef __INTELLISENSE__";
 print "#define SWITCH_BUILTIN_CODECS(name \\";
 for (local x: target_names) {
-	print inset,;
-	print ", ",;
-	print x,;
-	print " \\";
+	print(inset, ", ", x, " \\");
 }
 print ") {  }";
 print "#else";
 print "#define SWITCH_BUILTIN_CODECS(name \\";
 for (local x: target_names) {
-	print inset,;
-	print ", ",;
-	print x,;
-	print " \\";
+	print(inset, ", ", x, " \\");
 }
 print ") { \\";
 gen_switch("", inset);

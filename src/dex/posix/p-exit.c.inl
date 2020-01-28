@@ -47,11 +47,8 @@ egii("EXIT_FAILURE");
 
 File.stdout = orig_stdout;
 print "#define POSIX_EXIT_DEFS \\";
-for (local x: allDecls) {
-	print "\tPOSIX_",;
-	print x,;
-	print "_DEF \\";
-}
+for (local x: allDecls)
+	print("\tPOSIX_", x, "_DEF \\");
 print "/" "**" "/";
 
 ]]]*/
