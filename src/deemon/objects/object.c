@@ -767,8 +767,9 @@ PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref *__res
 
 /* Do an atomic compare-exchange operation on the weak reference
  * and return a reference to the previously assigned object, or
- * `NULL' when none was assigned, or `ITER_DONE' when `new_ob'
- * does not support weak referencing functionality.
+ * `NULL' when none was assigned, or `Dee_ITER_DONE' when `new_ob'
+ * does not support weak referencing functionality (in which case
+ * the actual pointed-to weak object of `self' isn't changed).
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Dee_weakref_cmpxch(struct weakref *__restrict self,
@@ -998,7 +999,7 @@ PRIVATE DEFINE_RWLOCK(bad_refcnt_lock);
 #define BADREFCNT_END()   rwlock_endwrite(&bad_refcnt_lock)
 #endif /* !CONFIG_NO_THREADS */
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeFatal_BadIncref(DeeObject *__restrict ob,
                    char const *file, int line) {
 	DeeTypeObject *type;
@@ -1017,7 +1018,7 @@ DeeFatal_BadIncref(DeeObject *__restrict ob,
 	BREAKPOINT();
 }
 
-PUBLIC void DCALL
+PUBLIC NONNULL((1)) void DCALL
 DeeFatal_BadDecref(DeeObject *__restrict ob,
                    char const *file, int line) {
 	DeeTypeObject *type;
@@ -1035,7 +1036,7 @@ DeeFatal_BadDecref(DeeObject *__restrict ob,
 	BADREFCNT_END();
 	BREAKPOINT();
 }
-#else
+#else /* !CONFIG_NO_BADREFCNT_CHECKS */
 PUBLIC void DCALL
 DeeFatal_BadIncref(DeeObject *__restrict UNUSED(ob),
                    char const *UNUSED(file), int UNUSED(line)) {
@@ -1051,7 +1052,7 @@ DeeFatal_BadDecref(DeeObject *__restrict UNUSED(ob),
 DEFINE_PUBLIC_ALIAS(ASSEMBLY_NAME(DeeFatal_BadDecref, 12),
                     ASSEMBLY_NAME(DeeFatal_BadIncref, 12));
 #endif /* !__NO_DEFINE_ALIAS */
-#endif
+#endif /* CONFIG_NO_BADREFCNT_CHECKS */
 
 
 /* Finalize weakref support */

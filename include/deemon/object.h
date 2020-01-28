@@ -197,27 +197,27 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 
 
 #ifdef __INTELLISENSE__
-#define Dee_OBJECT_HEAD     \
-	Dee_refcnt_t ob_refcnt; \
-	DeeTypeObject *ob_type; \
+#define Dee_OBJECT_HEAD       \
+	Dee_refcnt_t   ob_refcnt; \
+	DeeTypeObject *ob_type;   \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define Dee_OBJECT_HEAD_EX(Ttype) \
 	Dee_refcnt_t ob_refcnt;       \
-	Ttype *ob_type;               \
+	Ttype       *ob_type;         \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 struct Dee_object {
-	Dee_refcnt_t      ob_refcnt;
+	Dee_refcnt_t   ob_refcnt;
 	DeeTypeObject *ob_type;
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 };
 #else /* __INTELLISENSE__ */
-#define Dee_OBJECT_HEAD          \
-	Dee_refcnt_t ob_refcnt;      \
-	DREF DeeTypeObject *ob_type; \
+#define Dee_OBJECT_HEAD            \
+	Dee_refcnt_t        ob_refcnt; \
+	DREF DeeTypeObject *ob_type;   \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 #define Dee_OBJECT_HEAD_EX(Ttype) \
 	Dee_refcnt_t ob_refcnt;       \
-	DREF Ttype *ob_type;          \
+	DREF Ttype  *ob_type;         \
 	DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
 struct Dee_object {
 	Dee_OBJECT_HEAD
@@ -538,23 +538,19 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct Dee_weakref *
 /* Do an atomic compare-exchange operation on the weak reference
  * and return a reference to the previously assigned object, or
  * `NULL' when none was assigned, or `Dee_ITER_DONE' when `new_ob'
- * does not support weak referencing functionality.
+ * does not support weak referencing functionality (in which case
+ * the actual pointed-to weak object of `self' isn't changed).
  * NOTE: You may pass `NULL' for `new_ob' to clear the the weakref. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL Dee_weakref_cmpxch)(struct Dee_weakref *__restrict self,
                            DeeObject *old_ob, DeeObject *new_ob);
 
 
-/* Type visit helpers. */
+/* Type visit helpers.
+ * WARNING: These helper macros are allowed to evaluate their arguments multiple times! */
 typedef void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
 #define Dee_Visit(ob)  (*proc)((DeeObject *)Dee_REQUIRES_OBJECT(ob), arg)
 #define Dee_XVisit(ob) (!(ob) || (Dee_Visit(ob), 0))
-#define Dee_VISIT(ob)  Dee_Visit(ob)
-#define Dee_XVISIT(ob)                                               \
-	do {                                                             \
-		DeeObject *const _x_ = (DeeObject *)Dee_REQUIRES_OBJECT(ob); \
-		Dee_XVisit(_x_);                                             \
-	} __WHILE0
 #ifdef DEE_SOURCE
 typedef Dee_visit_t  dvisit_t;
 #endif /* DEE_SOURCE */
@@ -610,8 +606,8 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict 
 #define Dee_DecrefWasOk_untraced(x)        (Dee_Decref(x), true)
 #else /* __INTELLISENSE__ */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-DFUNDEF void DCALL DeeFatal_BadIncref(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadIncref(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, char const *file, int line);
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 #ifdef CONFIG_NO_THREADS
 #define _DeeRefcnt_FetchInc(x)    ((x)++)
@@ -823,6 +819,7 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_XClear_likely(x)    (!(x) || Dee_Clear_likely(x))
 #define Dee_XClear_unlikely(x)  (!(x) || Dee_Clear_unlikely(x))
 
+/* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
 #define Dee_return_reference(ob)                                          \
 	do {                                                                  \
 		DeeObject *const _result_ = (DeeObject *)Dee_REQUIRES_OBJECT(ob); \
@@ -830,11 +827,9 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 		return _result_;                                                  \
 	} __WHILE0
 
+/* NOTE: `(Dee_)return_reference_()' may evaluate `ob' multiple times */
 #define Dee_return_reference_(ob) \
-	do {                          \
-		Dee_Incref(ob);           \
-		return ob;                \
-	} __WHILE0
+	return (Dee_Incref(ob), ob)
 
 #ifdef DEE_SOURCE
 #define return_reference   Dee_return_reference
