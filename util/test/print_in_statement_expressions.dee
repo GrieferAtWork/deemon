@@ -33,6 +33,16 @@ assert newStdout.string == "Line #1\n";
 
 local newStdout = File.Writer();
 File.stdout = newStdout;
+
+/* There used to be a parser bug that caused print (and a couple of
+ * other) statementents at the start of a ({ })-hybrid statement to
+ * be skipped without being parsed (causing the compiler to see the
+ * next statement as: `({ "Line #2"; });' instead)
+ *
+ * hybrid because `({ a(), b(), c() })' is a 3-
+ * element sequence, while `({ a(), b(), c(); })'
+ * is a statement-in-expression construct that
+ * evaluates to the value of `c()' */
 ({
 	print "Line #2";
 });
