@@ -82,6 +82,16 @@ cmdline_add_arg(struct ascii_printer *__restrict printer,
 			if (ascii_printer_print(printer, "\\\"", 2) < 0)
 				goto err;
 			flush_start = iter + 1;
+			/* Needed for cygwin:
+			 * >> echo  foo\"bar   # Not parsed correctly? (but does work for programs compiled by msvc)
+			 * >> echo  "foo\"bar" # This works as expected everywhere */
+			must_quote = true;
+		} else if (*iter == '\'') {
+			/* Needed for cygwin:
+			 * While msvc completely ignores '-characters on the commandline,
+			 * cygwin does assign them a similar meaning as the "-character.
+			 * As such, we must escape them by quoting the entire argument. */
+			must_quote = true;
 		} else if (*iter == ' ' || *iter == '\t') {
 			must_quote = true;
 		}
