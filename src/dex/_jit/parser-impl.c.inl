@@ -2223,7 +2223,7 @@ case_unary:
 		result = CALL_SECONDARY(UnaryOperand, result);
 		if (ISERR(result))
 			goto done;
-		if (TOKEN_IS_SUM(self)) {
+		if (TOKEN_IS_PROD(self)) {
 	CASE_TOKEN_IS_PROD:
 			result = CALL_SECONDARY(ProdOperand, result);
 			if (ISERR(result))
