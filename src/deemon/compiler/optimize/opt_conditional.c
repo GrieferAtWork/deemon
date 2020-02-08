@@ -407,7 +407,7 @@ optimize_conditional_bool_predictable_inherit_multiple:
 			if (DeeBool_Check(tt->a_constexpr) &&
 			    DeeBool_Check(ff->a_constexpr)) {
 				/* TODO: Even without this special case, the optimization
-				 *       for `operator []' should be also be able to get
+				 *       for `operator []' should also be able to get
 				 *       rid of this! */
 				tt_value = DeeBool_IsTrue(tt->a_constexpr);
 				ff_value = DeeBool_IsTrue(ff->a_constexpr);
