@@ -160,7 +160,12 @@ DFUNDEF void (DCALL DeeDbgObject_Free)(void *ptr, char const *file, int line);
  * Should be called prior to `DeeObject_Free()' for any object
  * who's reference counter was modified at any point in time. */
 #ifdef CONFIG_TRACE_REFCHANGES
-DFUNDEF NONNULL((1)) void DCALL DeeObject_FreeTracker(DeeObject *__restrict self);
+#ifdef DEE_SOURCE
+#define Dee_object object_
+#endif /* DEE_SOURCE */
+struct Dee_object;
+DFUNDEF NONNULL((1)) void DCALL
+DeeObject_FreeTracker(struct Dee_object *__restrict self);
 #else /* CONFIG_TRACE_REFCHANGES */
 #define DeeObject_FreeTracker(self) (void)0
 #endif /* !CONFIG_TRACE_REFCHANGES */

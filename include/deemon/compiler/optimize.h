@@ -373,7 +373,7 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL has_cast_constructor(DeeObject *__restric
 
 #if !defined(NDEBUG) && 1
 #define CONFIG_HAVE_OPTIMIZE_VERBOSE 1
-#define OPTIMIZE_VERBOSE(...)       ast_optimize_verbose(self,__VA_ARGS__)
+#define OPTIMIZE_VERBOSE(...)        ast_optimize_verbose(self,__VA_ARGS__)
 #define OPTIMIZE_VERBOSEAT(ast, ...) ast_optimize_verbose(ast,__VA_ARGS__)
 INTDEF void ast_optimize_verbose(struct ast *__restrict self, char const *format, ...);
 #else /* !NDEBUG */

@@ -1008,7 +1008,7 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 		/*Dee_Decref(me->vk_code);*/ /* Not actually referenced */
 		/*Dee_Decref(me->vk_kwds);*/ /* Not actually referenced */
 		Dee_DecrefNokill(&BlackListVarkwds_Type);
-		DeeObject_FreeTracker(me);
+		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;
 	}

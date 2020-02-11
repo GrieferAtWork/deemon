@@ -4243,39 +4243,109 @@ PRIVATE DEFINE_RWLOCK(reftracker_lock);
 #endif /* !CONFIG_NO_THREADS */
 PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 
+/* #define REFLEAK_PRINTF(...) fprintf(stderr, __VA_ARGS__) */
+
+#ifndef REFLEAK_PRINTF
+#define REFLEAK_PRINT  DEE_DPRINT
+#define REFLEAK_PRINTF DEE_DPRINTF
+#endif /* !REFLEAK_PRINTF */
+#ifndef REFLEAK_PRINT
+#define REFLEAK_PRINT(str)  REFLEAK_PRINTF("%s", str)
+#define REFLEAK_PRINTS(STR) REFLEAK_PRINTF("%s", STR)
+#else /* !REFLEAK_PRINT */
+#define REFLEAK_PRINTS DEE_DPRINT
+#endif /* REFLEAK_PRINT */
+
+PRIVATE NONNULL((1)) size_t DCALL
+print_refchange_len(struct Dee_refchange *__restrict item) {
+	size_t result;
+	int line = item->rc_line;
+	if (line < 0)
+		line = -line;
+	result = strlen(item->rc_file);
+	if (line > 10)
+		++result;
+	if (line > 100)
+		++result;
+	if (line > 1000)
+		++result;
+	if (line > 10000)
+		++result;
+	if (line > 100000)
+		++result;
+	return result;
+}
+
 PRIVATE NONNULL((1)) drefcnt_t DCALL
 print_refchange(struct Dee_refchange *__restrict item,
-                drefcnt_t prev_total) {
+                drefcnt_t prev_total, size_t maxlen) {
 	char mode[2] = { '+', 0 };
-	drefcnt_t count;
-	if (item->rc_line < 0)
-		--prev_total, mode[0] = '-';
-	DEE_DPRINTF("%s(%d) : [%c][%Iu]", item->rc_file,
-	            item->rc_line < 0 ? -item->rc_line : item->rc_line,
-	            mode[0], prev_total);
-	count = prev_total;
+	drefcnt_t count, next_total;
+	size_t mylen;
+	next_total = prev_total;
+	if (item->rc_line < 0) {
+		--next_total;
+		mode[0] = '-';
+	} else {
+		++next_total;
+	}
+	REFLEAK_PRINTF("%s(%d) : ", item->rc_file,
+	               item->rc_line < 0 ? -item->rc_line : item->rc_line);
+	mylen = print_refchange_len(item);
+	if (mylen < maxlen) {
+		REFLEAK_PRINTF("%*s",
+		               (int)(unsigned int)(maxlen - mylen),
+		               " ");
+	}
+	REFLEAK_PRINTF("[%c][%Iu->%Iu]", mode[0], prev_total, next_total);
+	count = next_total;
 	if (count > 15)
 		count = 15;
 	while (count--)
-		DEE_DPRINT(mode);
-	DEE_DPRINT("\n");
-	if (item->rc_line >= 0)
-		++prev_total;
+		REFLEAK_PRINT(mode);
+	REFLEAK_PRINTS("\n");
+	return next_total;
+}
+
+PRIVATE NONNULL((1)) size_t DCALL
+print_refchanges_len(struct Dee_refchanges *__restrict item) {
+	unsigned int i;
+	size_t result = 0;
+	if (item->rc_prev)
+		result = print_refchanges_len(item->rc_prev);
+	for (i = 0; i < COMPILER_LENOF(item->rc_chng); ++i) {
+		size_t temp;
+		if (!item->rc_chng[i].rc_file)
+			break;
+		temp = print_refchange_len(&item->rc_chng[i]);
+		if (result < temp)
+			result = temp;
+	}
+	return result;
+}
+
+PRIVATE NONNULL((1)) drefcnt_t DCALL
+do_print_refchanges(struct Dee_refchanges *__restrict item,
+                    drefcnt_t prev_total, size_t maxlen) {
+	unsigned int i;
+	if (item->rc_prev)
+		prev_total = do_print_refchanges(item->rc_prev, prev_total, maxlen);
+	for (i = 0; i < COMPILER_LENOF(item->rc_chng); ++i) {
+		if (!item->rc_chng[i].rc_file)
+			break;
+		prev_total = print_refchange(&item->rc_chng[i], prev_total, maxlen);
+	}
 	return prev_total;
 }
 
 PRIVATE NONNULL((1)) drefcnt_t DCALL
 print_refchanges(struct Dee_refchanges *__restrict item,
                  drefcnt_t prev_total) {
-	unsigned int i;
-	if (item->rc_prev)
-		prev_total = print_refchanges(item->rc_prev, prev_total);
-	for (i = 0; i < COMPILER_LENOF(item->rc_chng); ++i) {
-		if (!item->rc_chng[i].rc_file)
-			break;
-		prev_total = print_refchange(&item->rc_chng[i], prev_total);
-	}
-	return prev_total;
+	drefcnt_t result;
+	size_t maxlen;
+	maxlen = print_refchanges_len(item);
+	result = do_print_refchanges(item, prev_total, maxlen);
+	return result;
 }
 
 INTERN NONNULL((1)) void DCALL
@@ -4291,11 +4361,11 @@ PUBLIC void DCALL Dee_DumpReferenceLeaks(void) {
 	struct Dee_reftracker *iter;
 	rwlock_read(&reftracker_lock);
 	for (iter = reftracker_list; iter; iter = iter->rt_next) {
-		DEE_DPRINTF("Object at %p of instance %s leaked %Iu references:\n",
-		            iter->rt_obj, iter->rt_obj->ob_type->tp_name,
-		            iter->rt_obj->ob_refcnt);
+		REFLEAK_PRINTF("Object at %p of instance %s leaked %Iu references:\n",
+		               iter->rt_obj, iter->rt_obj->ob_type->tp_name,
+		               iter->rt_obj->ob_refcnt);
 		print_refchanges(iter->rt_last, 1);
-		DEE_DPRINT("\n");
+		REFLEAK_PRINTS("\n");
 	}
 	rwlock_endread(&reftracker_lock);
 }

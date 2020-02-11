@@ -1359,7 +1359,9 @@ done:
 #ifndef CONFIG_ALWAYS_LOG_LEAKS
 			_Dee_dprint("");
 			if (_Dee_dprint_enabled)
-#endif /* !CONFIG_ALWAYS_LOG_LEAKS */
+#elif defined(CONFIG_HOST_WINDOWS)
+		if (!IsDebuggerPresent())
+#endif /* ... */
 			{
 				_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
 				_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);

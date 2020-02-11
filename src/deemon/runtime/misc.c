@@ -1832,13 +1832,16 @@ PRIVATE void DCALL determine_is_dprint_enabled(void) {
 
 PUBLIC void (DCALL _Dee_vdprintf)(char const *__restrict format, va_list args) {
 #ifdef NDEBUG
-	(void)format;
-	(void)args;
+	Dee_vsnprintf(NULL, 0, format, args);
 #else /* NDEBUG */
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
-	if (!_Dee_dprint_enabled)
+	if (!_Dee_dprint_enabled) {
+		/* Must still use the given format-string for something,
+		 * as it may be used to inherit object references! */
+		Dee_vsnprintf(NULL, 0, format, args);
 		return;
+	}
 	if (DeeFormat_VPrintf(&debug_printer, NULL, format, args) < 0)
 		DeeError_Handled(ERROR_HANDLED_RESTORE);
 #endif /* !NDEBUG */
@@ -1865,16 +1868,23 @@ PUBLIC void (DCALL _Dee_dprint)(char const *__restrict message) {
 
 PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 #ifdef NDEBUG
-	(void)format;
+	va_list args;
+	va_start(args, format);
+	Dee_vsnprintf(NULL, 0, format, args);
+	va_end(args);
 #else /* NDEBUG */
 	va_list args;
 	if (_Dee_dprint_enabled == 2)
 		determine_is_dprint_enabled();
-	if (!_Dee_dprint_enabled)
-		return;
 	va_start(args, format);
-	if (DeeFormat_VPrintf(&debug_printer, NULL, format, args) < 0)
-		DeeError_Handled(ERROR_HANDLED_RESTORE);
+	if (!_Dee_dprint_enabled) {
+		/* Must still use the given format-string for something,
+		 * as it may be used to inherit object references! */
+		Dee_vsnprintf(NULL, 0, format, args);
+	} else {
+		if (DeeFormat_VPrintf(&debug_printer, NULL, format, args) < 0)
+			DeeError_Handled(ERROR_HANDLED_RESTORE);
+	}
 	va_end(args);
 #endif /* !NDEBUG */
 }

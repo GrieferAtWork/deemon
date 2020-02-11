@@ -2671,7 +2671,7 @@ err_buffer16:
 	Dee_string_utf_untrack(utf);
 	return (DREF DeeObject *)result;
 err_r:
-	DeeObject_FreeTracker(result);
+	DeeObject_FreeTracker((DeeObject *)result);
 	DeeObject_Free(result);
 	Dee_DecrefNokill(&DeeString_Type);
 	return NULL;

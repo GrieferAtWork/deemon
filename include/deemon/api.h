@@ -371,7 +371,7 @@ extern "C++" template<class T> T ____INTELLISENSE_req_type(T x);
 #ifndef NDEBUG
 #define DEE_DPRINT(message)        (_Dee_dprint_enabled ? _Dee_dprint(message) : (void)0)
 #define DEE_DPRINTF(...)           (_Dee_dprint_enabled ? _Dee_dprintf(__VA_ARGS__) : (void)0)
-#define DEE_VDPRINTF(format, args) (_Dee_dprint_enabled ? _Dee_vdprintf(format, args) : (void)0)
+#define DEE_VDPRINTF(format, args) _Dee_vdprintf(format, args) /* Always invoke because `format' may mandate a decref() operation! */
 DDATDEF int _Dee_dprint_enabled;
 DFUNDEF void (DCALL _Dee_dprint)(char const *__restrict message);
 DFUNDEF void (_Dee_dprintf)(char const *__restrict format, ...);

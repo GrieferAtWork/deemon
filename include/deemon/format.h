@@ -334,13 +334,13 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
 DFUNDEF NONNULL((1, 2)) char *
 Dee_sprintf(char *__restrict buffer,
             char const *__restrict format, ...);
-DFUNDEF NONNULL((1, 3)) char *
+DFUNDEF NONNULL((3)) char *
 Dee_snprintf(char *__restrict buffer, size_t bufsize,
              char const *__restrict format, ...);
 DFUNDEF NONNULL((1, 2)) char *DCALL
 Dee_vsprintf(char *__restrict buffer,
              char const *__restrict format, va_list args);
-DFUNDEF NONNULL((1, 3)) char *DCALL
+DFUNDEF NONNULL((3)) char *DCALL
 Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
               char const *__restrict format, va_list args);
 

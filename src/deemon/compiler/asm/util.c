@@ -582,6 +582,7 @@ check_set_again:
 				continue;
 			if (elem[i].si_key == dummy)
 				continue;
+			Dee_Incref(elem[i].si_key); /* Inherited by `roset_insert_nocheck()' */
 			roset_insert_nocheck(roset,
 			                     elem[i].si_hash,
 			                     elem[i].si_key);
