@@ -35,10 +35,10 @@ print false;  /* false */
 /* `none' on the other hand is a no-op / placeholder singleton with a
  * variety of special meanings: */
 local x = 42;
-print x is none; /* false -- alias for `x is type none' */
+print x is none; /* false -- alias for `x is type none' or `x === none' */
 
 /* Using none in an unpack-expression always produces the required number of results,
- * which is something that cannot be reproduced using any other kind of object. */
+ * which is something that cannot be done using any other kind of object. */
 local x, y, z = none...;
 print x, y, z; /* none none none */
 
@@ -82,7 +82,8 @@ print y("1234");   /* foobar1234 */
 print y("barfoo"); /* foobarbarfoo */
 
 /* Also note that `operator <name>' can also be used by itself. */
-print operator + (x, "1234"); /* foobar1234 */
+local opadd = operator +;
+print opadd(x, "1234"); /* foobar1234 */
 
 /* When it comes to what operators exist, as well as what their names
  * are, look at the tutorial for classes. */

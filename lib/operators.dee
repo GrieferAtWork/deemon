@@ -58,7 +58,7 @@ function copy(self) -> copy self;
 function deepcopy(self) -> deepcopy self;
 function destructor(self): none -> self.operator destructor();
 function assign(self, other) -> self := other;
-function moveassign(self, other) -> self.operator = move (other);
+function moveassign(self, other) -> self.operator move := (other);
 function str(self): string -> str self;
 function repr(self): string -> repr self;
 function bool(self): bool from deemon -> !!self;

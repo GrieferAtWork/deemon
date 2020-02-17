@@ -49,6 +49,8 @@
 }
 
 {
+	/* WARNING: Implicitly declaring `foo' as a local variable.
+	 *          Write `local foo' if this is intended */
 	foo;
 	{
 		foo = 7;
@@ -62,19 +64,17 @@
  * - Variable names can be re-used in sub-scopes
  * - Variables must not necessarily be initialized when being declared
  * - Variables can be assigned using `='
- * - Variables of the same name found in outer scopes retain
- *   their values, even if inner scopes re-use that name.
- * - When variables are used, the closest match is used
- * - The `local' prefix can be omitted when new variables are declared,
- *   however doing so isn't recommended as the variable may unexpectedly
- *   link against an outer symbol of the same name.
+ * - Variables of the same name found in outer scopes retain their
+ *   values, even if inner scopes re-use that name in declarations.
+ * - When variables are referenced, the closest match is used
+ * - The `local' prefix should not be omitted when a new variable is declared.
  */
 
 /* With those rules in mind, there are some special rules
  * that affect the global scope of a module, i.e. the one
  * that this comment is written. */
 
-foobar = 32;
+foobar = 32;   /* No warning here, despite no prefix! */
 print foobar;
 
 /* `foobar' here is more than just a regular local variable.
@@ -86,7 +86,7 @@ print foobar;
 global barfoo = foobar;
 print barfoo;
 
-/* Global variables can explicitly be defined by being declared as `global',
+/* Global variables can be explicitly defined by being declared as `global',
  * using the same rules as `local' with the exception that a `global' prefix
  * in a scope other than the global scope is illegal. */
 {
@@ -98,11 +98,11 @@ print barfoo;
 /* The following example now introduces the `import' statement, which may be
  * used to access the variables of another module.
  * For this, also take a look at `demo_module.dee'
- * NOTE: Once you run time tutorial file, a new file `.demo_module.dec'
+ * NOTE: Once you run this tutorial file, a new file `.demo_module.dec'
  *       will appear in this folder. - Don't be alarmed, it's a precompiled
  *       cache file for `demo_module.dee'. - You may simply ignore it,
  *       or delete it, however it will reappear if you run this tutorial
- *       again, and will be updated if `demo_module.dee' is changed.
+ *       again, and will be updated if `demo_module.dee' gets modified.
  */
 {
 	local but_im_not = "I wasn't imported";
@@ -146,7 +146,7 @@ print barfoo;
  *       - 2 consecutive `..' characters translate to `./../'
  *       - 3 consecutive `...' characters translate to `./../../', etc.
  *       - Names without a leading `.' character will be searched for in the module
- *         search path, which by default contains `/lib' (in the deemon source tree)
+ *         search path, which by default contains `/lib' (from the deemon source tree)
  *     Examles:
  *       - util       --> "${LIBPATH}/util.dee"
  *       - sys.util   --> "${LIBPATH}/sys/util.dee"
@@ -262,14 +262,26 @@ print barfoo;
 		del x;     /* >> UNBIND(x);
 		            * >> DELETE_SYMBOL(x);
 		            * Note that the UNBIND() is not necessarily done when a variable simply
-		            * goes out of scope, but only once the containing function returns.
-		            */
+		            * goes out of scope, but only once the containing function returns. */
 		print x;   /* Outer x */
 	}
 	/* >> DELETE_SYMBOL(x);
 	 * Note that "Outer x" is not unbound here! */
 }
 
+{
+	local x = "My X variable";
+	print x is bound; /* True */
+	{
+		del x; /* >> UNBIND(x);
+		        * Note that the `x' symbol doesn't get deleted here.
+		        * This is because `x' was declared in a different scope,
+		        * and `del' statements always unbind, but only delete
+		        * if the variable originates from the current scope. */
+	}
+	print x is bound; /* False */
+	
+}
 
 
 
@@ -285,19 +297,19 @@ print barfoo;
 	static local x = 42;
 	print x;
 }
-/* Static variables are somewhat special in that their first initialize
- * is executed only once, and in the fact that when re-assigned, new
- * values will stay across multiple invocations of the surrounding
- * function (see tutorial about functions) */
+/* Static variables are somewhat special in that their first
+ * initialization is executed only once, and that after being re-
+ * assigned, new values will stay across multiple invocations of
+ * the surrounding function (see tutorial about functions) */
 
 
-/* Lastly, there are `__stack' variables, an optional extension that is
- * can simply be ignored by deemon distributions choosing not to implement
+/* Lastly, there are `__stack' variables, an optional extension that may
+ * simply be ignored by deemon distributions choosing not to implement
  * it, while in those that do referring to variables that should be stored
  * on the execution stack, allowing them to be referenced quicker, and
  * potentially allow store expressions to be omitted from generated code.
- * Just like `static' variables, `__stack' variables can only be used as
- * local variables, meaning you should always include a `local' prefix
+ * Just like `static' variables, `__stack' variables can only be used with
+ * local visibility, meaning you should always include a `local' prefix
  * when declaring them, too.
  * Use of `__stack' variables is never required, and in certain situations
  * may even break code. Additionally, with optimizations enabled, the compiler
@@ -331,7 +343,15 @@ print barfoo;
  * to select the n'th match of a given name, rather than the first.
  * This is a lesser used feature which none-the-less finds great
  * use in autogenerated code using scopes and the preprocessor to
- * structure its data tree (s.a. `/magic.dee'). */
+ * structure its data tree.
+ * For example, KOS's magic.dee uses it to implement the BEGIN-END
+ * macros in `*.magic' files as:
+ * >> #define BEGIN { local options = deepcopy __nth(2) options;
+ * >> #define END   }
+ * Meaning that every BEGIN-END block has its own options-copy derived
+ * from options of the surrounding scope, while still being entirely
+ * seperate.
+ */
 
 
 
@@ -370,9 +390,9 @@ print barfoo;
 
 	/* Also note that in all of the examples above, `del'
 	 * can also be used to invoke different behavior: */
-	del x[3:];
+	del x[3:];            /* This is a delrange expression. */
 	print repr x;         /* [1, "foo", 5] */
-	del x[1];
+	del x[1];             /* This is a delitem expression. */
 	print repr x;         /* [1, 5] */
 	del x.allocated;      /* This is a delattr expression. (which deletes any overallocations made by the List) */
 	print repr x;         /* [1, 5] */
@@ -419,7 +439,9 @@ print barfoo;
 	print y;  /* 20 */
 	print z;  /* 30 */
 
-	/* An alternate representation of the line above. */
+	/* An alternate representation of the line above.
+	 * WARNING: This form of writing is an extension specific to the GATW
+	 *          deemon driver and currently isn't accepted by the JIT driver. */
 	(x, y, z) = ("foo", "bar", "foobar");
 	print x;  /* foo */
 	print y;  /* bar */

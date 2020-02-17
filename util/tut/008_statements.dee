@@ -26,7 +26,7 @@ local x = 42;
 if (x == 42) {
 	x = 7;
 } else {
-	print "x wasn't 42, but is", x;
+	print "x isn't 42, but is", x;
 }
 print "Now x is", x;
 
@@ -80,7 +80,7 @@ print x && y; /* false -- Logical and -- Same as `!!x ? !!y : ' */
 
 /* Since deemon supports exceptions, it has try-catch/finally statements.
  * Also note that any arbitrary object can be thrown as an exception,
- * though builtin functions usually only thrown object derived from either
+ * though builtin functions usually only throw object derived from either
  * `Error from deemon' or `Signal from deemon' */
 try {
 	try {
@@ -103,7 +103,11 @@ try {
  *   - catch (<typeexpr>)        -- Catch any object `x' where `x is <typeexpr>' is true
  *                                  <typeexpr> is evaluated only when an exception occurs
  *   - catch (<typeexpr> as e)   -- Same as `catch (<typeexpr>)', but also store it in a newly created local variable `e'
+ * A good example of an @[interrupt] exception should be `Signal.Interrupt.KeyboardInterrupt',
+ * as thrown when you press CTRL+C to terminate a deemon script. This distinction way made to
+ * prevent exceptions meant to terminate from being caught by regular catch-all handlers.
  */
+
 
 
 /* Additionally, in order to best support sequences, for-each statements exist: */
@@ -118,6 +122,12 @@ local item_pairs = { { "a", 10 }, { "b", 20 }, { "c", 30 } };
 for (local x, y: item_pairs) {
 	print x, y;
 }
+/* Which is the same as: */
+for (local elem: item_pairs) {
+	local x, y = elem...;
+	print x, y;
+}
+
 
 /* This becomes especially interesting when dealing with mapping-like objects,
  * as those objects are generally written as {(Object, Object)...}, meaning they're
@@ -129,7 +139,7 @@ for (local x, y: item_pairs) {
 		"b" : 19,
 		"c" : 31,
 	};
-	items["foobar"] = items + ...; /* sum(items) */
+	items["foobar"] = items.values + ...; /* sum(items.values) (== 3 + 19 + 32 == 53) */
 	for (local key, value: items)
 		print key, "=", repr value;
 }

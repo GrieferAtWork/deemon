@@ -19,7 +19,7 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-/* One of the main focal points of deemon are its abilities for working
+/* One of the main focal points of deemon is its abilities for working
  * with sequences. For this purpose, multiple syntax constructs exist,
  * however this file will only introduce sequence operators, as well as
  * the expand expression. */
@@ -36,26 +36,26 @@ print repr({ 10: 20, 30: 40 }); /* Abstract Mapping -- Context-dependent behavio
  *    form of a List or Tuple (both of which are further elaborated on below),
  *    you are simply telling it that you don't care what their typing will
  *    be at runtime, so long as their types will be derived from
- *      - `sequence from deemon'  for Abstract sequence expressions
- *      - `mapping from deemon'   for Abstract mapping expressions
+ *      - `Sequence from deemon'  for Abstract sequence expressions
+ *      - `Mapping from deemon'   for Abstract mapping expressions
  */
 
 /* tuples, and how ambiguity with arithmetic parenthesis is handled. */
-print (10, 20, 30); /* This is a 3-element tuple `(10,20,30)' */
-print (10, 20,);    /* This is a 2-element tuple `(10,20)' */
-print (10, 20);     /* This is a 2-element tuple `(10,20)' */
-print (10,);        /* This is a 1-element tuple `(10)' */
-print (10);         /* This isn't a tuple, but regular parenthesis that still evaluates to `10' */
-print ();           /* This is an empty tuple `()' */
+print repr((10, 20, 30)); /* This is a 3-element Tuple `(10, 20, 30)' */
+print repr((10, 20,));    /* This is a 2-element Tuple `(10, 20)' */
+print repr((10, 20));     /* This is a 2-element Tuple `(10, 20)' */
+print repr((10,));        /* This is a 1-element Tuple `(10,)' */
+print repr((10));         /* This isn't a tuple, but regular parenthesis that still evaluates to `10' */
+print repr(());           /* This is an empty Tuple `()' */
 
 /* lists, and how they actually differ from tuples.
  * To anwer this, I have to reach ahead a little bit and quickly
  * introduce variables. - They should be self-explainatory for now,
  * so don't worry about them for the time being. */
 local x = [10, 20, 30];
-print x; /* [10, 20, 30] */
+print repr x; /* [10, 20, 30] */
 x.append(40);
-print x; /* [10, 20, 30, 40] */
+print repr x; /* [10, 20, 30, 40] */
 /* Lists are mutable, meaning that elements can be appened, removed, inserted, etc.
  * Tuples however aren't, as they are fixed-length, and cannot be modified
  * or resized once created. */
@@ -66,7 +66,8 @@ print #"foobar";        /* 6 */
 /* Sequence expressions can be prefixed by `#', which will return the length of that sequence.
  * However, be careful not to have a line of source code start with a `#', as this
  * will cause that line to be interpreted as a preprocessor directive.
- * The simplest work-around for this corner-case is to add parenthesis  */
+ * The simplest work-around for this corner-case is to add parenthesis
+ * such that `#myseq' becomes `(#myseq)' */
 
 /* You can test for the presence of an item within a sequence by using `in' */
 print 10 in [10, 20, 30];  /* true */
@@ -101,8 +102,8 @@ print repr [10, 20, 30, 40][:-1];   /* [10, 20, 30] */
 
 
 
-/* Another important sequence construct are range expressions.
- * Note the abstract sequence syntax! */
+/* Another important sequence construct is the range expression.
+ * Note the abstract sequence syntax of the repr. - These aren't List objects! */
 print repr [:10];      /* { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 } */
 print repr [2:10];     /* { 2, 3, 4, 5, 6, 7, 8, 9 } */
 print repr [2:10, 3];  /* { 2, 5, 8 } */
@@ -110,9 +111,10 @@ print repr [10:0, -3]; /* { 10, 7, 4, 1 } */
 
 /* Range expressions are written as `[<start>:<end>,<step>]',
  * with `<start>' defaulting to a default-constructed instance
- * of end (which is usually just `0'), and `<step>' being omitting
- * resulting in `operator ++' (explained later alongside variables),
- * or in its presence resulting in `operator +' being used.
+ * of end (which is usually just `0'), and `<step>' being omit
+ * causing `operator ++' to be used (explained later alongside
+ * variables), or when present resulting in `operator +' being
+ * used.
  * For integers, you can simply think of `<step>' defaulting to `1' */
 
 /* Don't get confused from their similarly though. Range expressions
@@ -131,7 +133,11 @@ print repr [[:8]..., 4];  /* [0, 1, 2, 3, 4, 5, 6, 7, 4] */
  * Its behavior then is to interpret that expression as a sequence
  * who's arguments are taken and re-interpreted as though they were
  * written as a list of comma-separated expression at the same
- * location as the expand modifier itself. */
+ * location as the expand modifier itself.
+ * In other word:
+ *    Given a sequence `seq = { 30, 40, 50 };'
+ *    Writing `[10, 20, seq..., 60, 70]' results in `[10, 20, 30, 40, 50, 60, 70]'
+ */
 print repr((["a", "b", "c"]...)); /* Cast to tuple -- ("a", "b", "c") */
 print repr([("a", "b", "c")...]); /* Cast to list  -- ["a", "b", "c"] */
 
@@ -149,11 +155,11 @@ print x["b"]; /* 17 */
 print x[14];  /* foobar */
 
 /* It should already be quite obvious what mapping-like objects are.
- * They're often called associative arrays, or dictionaries, or hashed lists,
- * or you-get-the-idea-so-lets-move-one
+ * They're often called associative arrays, or dictionaries, or hashed
+ * lists, or you-get-the-idea-so-lets-move-one
  * As mentioned, deemon includes an abstract syntax for defining a
  * generic mapping-like object, as can be seen in the example above.
- * Mapping-like objects themself then are usually derived from Doc("/deemon/mapping")
+ * Mapping-like objects themself then are usually derived from `Mapping from deemon'
  * Additionally, deemon includes a builtin type for mutable mappings
  * known as `Dict from deemon', which is basically the same as the python
  * type of the same name. */

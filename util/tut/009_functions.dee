@@ -26,7 +26,7 @@
 
 @@A regular function that is exported from this module
 function foo(x, y) {
-	print "foo(" + x + ", " + y + ")";
+	print("foo(", repr x, ", ", repr y, ")");
 	return x + y;
 }
 
@@ -34,9 +34,9 @@ print foo(10, 20); /* 30 */
 
 
 function bar(x, args...) {
-	/* args is a tuple containing all variable arguments passed to the function. */
-	print "x =", x;
-	print "args =", args;
+	/* args is a Tuple containing all variable arguments passed to the function. */
+	print "x =", repr x;
+	print "args =", repr args;
 	/* Without a `return' statement, the function returns `none' */
 }
 
