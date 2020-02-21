@@ -1791,18 +1791,18 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 		uint32_t code_addr = dec_addr;
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
 		/* Convert endian before writing data. */
-		descr.co_flags      = LESWAP16(descr.co_flags);      /* Dec_Code.co_flags */
-		descr.co_localc     = LESWAP16(descr.co_localc);     /* Dec_Code.co_localc */
-		descr.co_refc       = LESWAP16(descr.co_refc);       /* Dec_Code.co_refc */
-		descr.co_argc_min   = LESWAP16(descr.co_argc_min);   /* Dec_Code.co_argc_min */
-		descr.co_stackmax   = LESWAP16(descr.co_stackmax);   /* Dec_Code.co_stackmax */
-		descr.co_staticoff  = LESWAP32(descr.co_staticoff);  /* Dec_Code.co_staticoff */
-		descr.co_exceptoff  = LESWAP32(descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
-		descr.co_defaultoff = LESWAP32(descr.co_defaultoff); /* Dec_Code.co_defaultoff */
-		descr.co_ddioff     = LESWAP32(descr.co_ddioff);     /* Dec_Code.co_ddioff */
-		descr.co_kwdoff     = LESWAP32(descr.co_kwdoff);     /* Dec_Code.co_kwdoff */
-		descr.co_textsiz    = LESWAP32(descr.co_textsiz);    /* Dec_Code.co_textsiz */
-		descr.co_textoff    = LESWAP32(descr.co_textoff);    /* Dec_Code.co_textoff */
+		descr.co_flags      = HTOLE16(descr.co_flags);      /* Dec_Code.co_flags */
+		descr.co_localc     = HTOLE16(descr.co_localc);     /* Dec_Code.co_localc */
+		descr.co_refc       = HTOLE16(descr.co_refc);       /* Dec_Code.co_refc */
+		descr.co_argc_min   = HTOLE16(descr.co_argc_min);   /* Dec_Code.co_argc_min */
+		descr.co_stackmax   = HTOLE16(descr.co_stackmax);   /* Dec_Code.co_stackmax */
+		descr.co_staticoff  = HTOLE32(descr.co_staticoff);  /* Dec_Code.co_staticoff */
+		descr.co_exceptoff  = HTOLE32(descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
+		descr.co_defaultoff = HTOLE32(descr.co_defaultoff); /* Dec_Code.co_defaultoff */
+		descr.co_ddioff     = HTOLE32(descr.co_ddioff);     /* Dec_Code.co_ddioff */
+		descr.co_kwdoff     = HTOLE32(descr.co_kwdoff);     /* Dec_Code.co_kwdoff */
+		descr.co_textsiz    = HTOLE32(descr.co_textsiz);    /* Dec_Code.co_textsiz */
+		descr.co_textoff    = HTOLE32(descr.co_textoff);    /* Dec_Code.co_textoff */
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 		/* Allocate and copy descriptor data. */
 		pdesc = (Dec_Code *)dec_alloc(sizeof(Dec_Code));
@@ -1864,8 +1864,8 @@ INTERN int (DCALL dec_generate)(DeeModuleObject *__restrict self) {
 		if unlikely(comtm == (uint64_t)-1)
 			goto err;
 		/* Fill in the original timestamp of when the module was compiled. */
-		header->e_timestamp_lo = LESWAP32((uint32_t)comtm);
-		header->e_timestamp_hi = LESWAP32((uint32_t)(comtm >> 32));
+		header->e_timestamp_lo = HTOLE32((uint32_t)comtm);
+		header->e_timestamp_hi = HTOLE32((uint32_t)(comtm >> 32));
 	}
 
 	/* Create initial relocations against other sections. */

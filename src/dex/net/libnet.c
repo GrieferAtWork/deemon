@@ -125,7 +125,7 @@ lib_ntoh16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:ntoh16", &i))
 		return NULL;
-	return DeeInt_NewU16(BESWAP16(i));
+	return DeeInt_NewU16(BETOH16(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -133,7 +133,7 @@ lib_ntoh32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:ntoh32", &i))
 		return NULL;
-	return DeeInt_NewU32(BESWAP32(i));
+	return DeeInt_NewU32(BETOH32(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -141,7 +141,7 @@ lib_ntoh64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:ntoh64", &i))
 		return NULL;
-	return DeeInt_NewU64(BESWAP64(i));
+	return DeeInt_NewU64(BETOH64(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -149,7 +149,7 @@ lib_hton16_f(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:hton16", &i))
 		return NULL;
-	return DeeInt_NewU16(BESWAP16(i));
+	return DeeInt_NewU16(HTOBE16(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -157,7 +157,7 @@ lib_hton32_f(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:hton32", &i))
 		return NULL;
-	return DeeInt_NewU32(BESWAP32(i));
+	return DeeInt_NewU32(HTOBE32(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -165,7 +165,7 @@ lib_hton64_f(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:hton64", &i))
 		return NULL;
-	return DeeInt_NewU64(BESWAP64(i));
+	return DeeInt_NewU64(HTOBE64(i));
 }
 
 PRIVATE DEFINE_CMETHOD(lib_ntoh16, lib_ntoh16_f);

@@ -262,16 +262,16 @@ xddi_putsymbol(struct bytewriter *__restrict writer,
 		break;
 
 	case DDI_EXDAT_OP16:
-		if (bytewriter_putw(writer, LESWAP16(symbol_id)))
+		if (bytewriter_putw(writer, HTOLE16(symbol_id)))
 			goto err;
-		if (bytewriter_putw(writer, LESWAP16((uint16_t)name_offset)))
+		if (bytewriter_putw(writer, HTOLE16((uint16_t)name_offset)))
 			goto err;
 		break;
 
 	case DDI_EXDAT_OP32:
-		if (bytewriter_putw(writer, LESWAP16(symbol_id)))
+		if (bytewriter_putw(writer, HTOLE16(symbol_id)))
 			goto err;
-		if (bytewriter_putl(writer, LESWAP32(name_offset)))
+		if (bytewriter_putl(writer, HTOLE32(name_offset)))
 			goto err;
 		break;
 

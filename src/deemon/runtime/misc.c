@@ -114,7 +114,7 @@ Dee_HashPtr(void const *__restrict ptr, size_t n_bytes) {
 	uint32_t hash          = 0;
 	uint32_t k;
 	for (i = 0; i < nblocks; ++i) {
-		k = LESWAP32(blocks[i]);
+		k = HTOLE32(blocks[i]);
 		k *= c1;
 		k = ROT32(k, r1);
 		k *= c2;
@@ -268,7 +268,7 @@ Dee_HashCasePtr(void const *__restrict ptr, size_t n_bytes) {
 			uint32_t block;
 			char part[4];
 		} b;
-		b.block   = LESWAP32(blocks[i]);
+		b.block   = HTOLE32(blocks[i]);
 		b.part[0] = (char)DeeUni_ToLower(b.part[0]);
 		b.part[1] = (char)DeeUni_ToLower(b.part[1]);
 		b.part[2] = (char)DeeUni_ToLower(b.part[2]);

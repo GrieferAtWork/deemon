@@ -751,33 +751,33 @@ err_seek_failed:
 		goto end_not_a_dec_data;
 	if unlikely(hdr->e_ident[DI_MAG3] != DECMAG3)
 		goto end_not_a_dec_data;
-	if unlikely(hdr->e_version != LESWAP16_C(DVERSION_CUR))
+	if unlikely(hdr->e_version != HTOLE16_C(DVERSION_CUR))
 		goto end_not_a_dec_data;
 	if unlikely(hdr->e_size < sizeof(Dec_Ehdr))
 		goto end_not_a_dec_data;
 	if unlikely(hdr->e_builtinset > DBUILTINS_MAX)
 		goto end_not_a_dec_data;
 	/* Validate pointers from the header. */
-	if unlikely(LESWAP32(hdr->e_impoff) > total_size)
+	if unlikely(LETOH32(hdr->e_impoff) > total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LESWAP32(hdr->e_depoff) > total_size)
+	if unlikely(LETOH32(hdr->e_depoff) > total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LESWAP32(hdr->e_globoff) > total_size)
+	if unlikely(LETOH32(hdr->e_globoff) > total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LESWAP32(hdr->e_rootoff) > total_size)
+	if unlikely(LETOH32(hdr->e_rootoff) > total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LESWAP32(hdr->e_stroff) < hdr->e_size)
+	if unlikely(LETOH32(hdr->e_stroff) < hdr->e_size)
 		goto end_not_a_dec_data; /* Missing string table. */
-	if unlikely(LESWAP32(hdr->e_rootoff) < hdr->e_size)
+	if unlikely(LETOH32(hdr->e_rootoff) < hdr->e_size)
 		goto end_not_a_dec_data; /* Validate the root-code pointer. */
-	if unlikely(LESWAP32(hdr->e_stroff) +
-		         LESWAP32(hdr->e_strsiz) <
-		         LESWAP32(hdr->e_stroff))
-	goto end_not_a_dec_data; /* Check for overflow */
-	if unlikely(LESWAP32(hdr->e_stroff) +
-		         LESWAP32(hdr->e_strsiz) >
-		         total_size)
-	goto end_not_a_dec_data;
+	if unlikely(LETOH32(hdr->e_stroff) +
+	            LETOH32(hdr->e_strsiz) <
+	            LETOH32(hdr->e_stroff))
+		goto end_not_a_dec_data; /* Check for overflow */
+	if unlikely(LETOH32(hdr->e_stroff) +
+	            LETOH32(hdr->e_strsiz) >
+	            total_size)
+		goto end_not_a_dec_data;
 
 	/* Save the given options in the DEC file descriptor. */
 	self->df_options = options;
@@ -814,8 +814,8 @@ DecFile_Strtab(DecFile *__restrict self) {
 	DeeStringObject *result;
 	if ((result = self->df_strtab) == NULL) {
 		result = (DeeStringObject *)DeeString_NewSized((char const *)(self->df_base +
-		                                                              LESWAP32(self->df_ehdr->e_stroff)),
-		                                               LESWAP32(self->df_ehdr->e_strsiz));
+		                                                              LETOH32(self->df_ehdr->e_stroff)),
+		                                               LETOH32(self->df_ehdr->e_strsiz));
 		self->df_strtab = result; /* Inherit reference. */
 	}
 	return (DeeObject *)result;
@@ -831,8 +831,8 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 	other = DecTime_Lookup((DeeObject *)self->df_name);
 	if unlikely(other == (uint64_t)-1)
 		goto err;
-	timestamp = (((uint64_t)LESWAP32(hdr->e_timestamp_hi) << 32) |
-	             ((uint64_t)LESWAP32(hdr->e_timestamp_lo)));
+	timestamp = (((uint64_t)LETOH32(hdr->e_timestamp_hi) << 32) |
+	             ((uint64_t)LETOH32(hdr->e_timestamp_lo)));
 	if (other > timestamp)
 		goto changed; /* Base source file has changed. */
 #if 0 /* TODO */
@@ -842,7 +842,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 		char *strtab, *filend;
 		uint16_t count;
 		uint8_t *reader;
-		depmap = (Dec_Strmap *)(self->df_base + LESWAP32(hdr->e_depoff));
+		depmap = (Dec_Strmap *)(self->df_base + LETOH32(hdr->e_depoff));
 		if unlikely((count = UNALIGNED_GETLE16((uint16_t *)&depmap->i_len)) == 0)
 			goto done; /* Unlikely, but allowed. */
 		reader = depmap->i_map;
@@ -850,7 +850,7 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 		       !DeeSystem_IsSep(module_pathstr[module_pathlen - 1])) {
 			--module_pathlen;
 		}
-		strtab = (char *)(self->df_base + LESWAP32(hdr->e_stroff));
+		strtab = (char *)(self->df_base + LETOH32(hdr->e_stroff));
 		filend = (char *)(self->df_base + self->df_size);
 		while (count--) {
 			size_t name_len;
@@ -903,11 +903,11 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	/* Quick check: Without an import table, nothing needs to be loaded. */
 	if (!hdr->e_impoff)
 		return 0;
-	timestamp = (((uint64_t)LESWAP32(hdr->e_timestamp_hi) << 32) |
-	             ((uint64_t)LESWAP32(hdr->e_timestamp_lo)));
+	timestamp = (((uint64_t)LETOH32(hdr->e_timestamp_hi) << 32) |
+	             ((uint64_t)LETOH32(hdr->e_timestamp_lo)));
 
 	/* Load the import table. */
-	strtab         = (char *)(self->df_base + LESWAP32(hdr->e_stroff));
+	strtab         = (char *)(self->df_base + LETOH32(hdr->e_stroff));
 	module_pathstr = DeeString_AsUtf8((DeeObject *)self->df_name);
 	if unlikely(!module_pathstr)
 		goto err;
@@ -915,7 +915,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 	while (module_pathlen &&
 	       !DeeSystem_IsSep(module_pathstr[module_pathlen - 1]))
 		--module_pathlen;
-	impmap  = (Dec_Strmap *)(self->df_base + LESWAP32(hdr->e_impoff));
+	impmap  = (Dec_Strmap *)(self->df_base + LETOH32(hdr->e_impoff));
 	importc = UNALIGNED_GETLE16((uint16_t *)&impmap->i_len);
 	importv = (DREF DeeModuleObject **)Dee_Malloc(importc * sizeof(DREF DeeModuleObject *));
 	if unlikely(!importv)
@@ -928,7 +928,7 @@ DecFile_LoadImports(DecFile *__restrict self) {
 		if unlikely(reader >= end)
 			GOTO_CORRUPTED(reader, stop_imports);
 		off = Dec_DecodePointer(&reader);
-		if unlikely(off >= LESWAP32(hdr->e_strsiz))
+		if unlikely(off >= LETOH32(hdr->e_strsiz))
 			GOTO_CORRUPTED(reader, stop_imports);
 		module_name = strtab + off;
 		/* Load the imported module. */
@@ -1021,14 +1021,14 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 		return 0;
 
 	/* Load the global object table. */
-	glbmap  = (Dec_Glbmap *)(self->df_base + LESWAP32(hdr->e_globoff));
+	glbmap  = (Dec_Glbmap *)(self->df_base + LETOH32(hdr->e_globoff));
 	globalc = UNALIGNED_GETLE16((uint16_t *)&glbmap->g_cnt);
 	symbolc = UNALIGNED_GETLE16((uint16_t *)&glbmap->g_len);
 	if unlikely(globalc > symbolc)
 		GOTO_CORRUPTED(&glbmap->g_cnt, stop);
 	if unlikely(!symbolc)
 		return 0; /* Unlikely, but allowed. */
-	strtab = (char *)(self->df_base + LESWAP32(hdr->e_stroff));
+	strtab = (char *)(self->df_base + LETOH32(hdr->e_stroff));
 	reader = (uint8_t *)glbmap + 4;
 
 	/* Figure out how large the hash-mask should be. */
@@ -1199,7 +1199,7 @@ set_none_result:
 			char *str;
 			uint32_t ptr;
 			ptr = Dec_DecodePointer(&reader);
-			str = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff) + ptr);
+			str = (char *)(self->df_base + LETOH32(self->df_ehdr->e_stroff) + ptr);
 			if unlikely(ptr + len < ptr)
 				GOTO_CORRUPTED(reader, done); /* Check for overflow. */
 			if unlikely(str + len > (char *)(self->df_base + self->df_size))
@@ -1320,7 +1320,7 @@ err_function_code:
 		/* 8-bit class descriptor. */
 		flags   = *(uint8_t *)reader, reader += 1;
 		fileend = (char *)(self->df_base + self->df_size);
-		strtab  = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
+		strtab  = (char *)(self->df_base + LETOH32(self->df_ehdr->e_stroff));
 		name    = strtab + Dec_DecodePointer(&reader);
 		if unlikely(name < strtab || name >= fileend)
 			GOTO_CORRUPTED(reader, corrupt);
@@ -1503,7 +1503,7 @@ err_function_code:
 		result = DeeKwds_NewWithHint(count);
 		if unlikely(!result)
 			goto done;
-		strtab = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
+		strtab = (char *)(self->df_base + LETOH32(self->df_ehdr->e_stroff));
 		end    = self->df_base + self->df_size;
 		for (i = 0; i < count; ++i) {
 			uint32_t addr;
@@ -1680,7 +1680,7 @@ err_function_code:
 			/* 16-bit class descriptor. */
 			flags   = UNALIGNED_GETLE16((uint16_t *)reader), reader += 2;
 			fileend = (char *)(self->df_base + self->df_size);
-			strtab  = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
+			strtab  = (char *)(self->df_base + LETOH32(self->df_ehdr->e_stroff));
 			name    = strtab + Dec_DecodePointer(&reader);
 			if unlikely(name < strtab || name >= fileend)
 				GOTO_CORRUPTED(reader, corrupt);
@@ -2021,7 +2021,7 @@ load_strmap(DecFile *__restrict self,
 	if unlikely(!vector)
 		return -1;
 
-	string_size = LESWAP32(self->df_ehdr->e_strsiz);
+	string_size = LETOH32(self->df_ehdr->e_strsiz);
 	/* Read vector contents. */
 	for (i = 0; i < map_length; ++i) {
 		uint32_t pointer;
@@ -2206,17 +2206,17 @@ DecFile_LoadCode(DecFile *__restrict self,
 		memcpy(&header.co_flags + 1, reader, sizeof(Dec_Code) - 2);
 		reader += sizeof(Dec_Code) - 2;
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
-		header.co_localc     = LESWAP16(header.co_localc);
-		header.co_refc       = LESWAP16(header.co_refc);
-		header.co_argc_min   = LESWAP16(header.co_argc_min);
-		header.co_stackmax   = LESWAP16(header.co_stackmax);
-		header.co_staticoff  = LESWAP32(header.co_staticoff);
-		header.co_exceptoff  = LESWAP32(header.co_exceptoff);
-		header.co_defaultoff = LESWAP32(header.co_defaultoff);
-		header.co_ddioff     = LESWAP32(header.co_ddioff);
-		header.co_kwdoff     = LESWAP32(header.co_kwdoff);
-		header.co_textsiz    = LESWAP32(header.co_textsiz);
-		header.co_textoff    = LESWAP32(header.co_textoff);
+		header.co_localc     = LETOH16(header.co_localc);
+		header.co_refc       = LETOH16(header.co_refc);
+		header.co_argc_min   = LETOH16(header.co_argc_min);
+		header.co_stackmax   = LETOH16(header.co_stackmax);
+		header.co_staticoff  = LETOH32(header.co_staticoff);
+		header.co_exceptoff  = LETOH32(header.co_exceptoff);
+		header.co_defaultoff = LETOH32(header.co_defaultoff);
+		header.co_ddioff     = LETOH32(header.co_ddioff);
+		header.co_kwdoff     = LETOH32(header.co_kwdoff);
+		header.co_textsiz    = LETOH32(header.co_textsiz);
+		header.co_textoff    = LETOH32(header.co_textoff);
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 	}
 
@@ -2396,8 +2396,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 	if (header.co_kwdoff && result->co_argc_max != 0) {
 		DREF DeeStringObject **kwds;
 		uint16_t i;
-		uint32_t string_size = LESWAP32(self->df_ehdr->e_strsiz);
-		char *strtab         = (char *)(self->df_base + LESWAP32(self->df_ehdr->e_stroff));
+		uint32_t string_size = LETOH32(self->df_ehdr->e_strsiz);
+		char *strtab         = (char *)(self->df_base + LETOH32(self->df_ehdr->e_stroff));
 		uint8_t *kwd_reader  = self->df_base + header.co_kwdoff;
 		if unlikely(kwd_reader >= end || kwd_reader < self->df_base)
 			GOTO_CORRUPTED(kwd_reader, corrupt_r_ddi);

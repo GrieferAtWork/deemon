@@ -366,52 +366,101 @@ f_ctypes_bswap64(size_t argc, DeeObject *const *argv) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_leswap16(size_t argc, DeeObject *const *argv) {
+f_ctypes_htole16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:leswap16", &i))
+	if (DeeArg_Unpack(argc, argv, "I16u:htole16", &i))
 		return NULL;
-	return int_newu16(LESWAP16(i));
+	return int_newu16(HTOLE16(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_leswap32(size_t argc, DeeObject *const *argv) {
-	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:leswap32", &i))
-		return NULL;
-	return int_newu32(LESWAP32(i));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_leswap64(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:leswap64", &i))
-		return NULL;
-	return int_newu64(LESWAP64(i));
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_beswap16(size_t argc, DeeObject *const *argv) {
+f_ctypes_letoh16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
-	if (DeeArg_Unpack(argc, argv, "I16u:beswap16", &i))
+	if (DeeArg_Unpack(argc, argv, "I16u:letoh16", &i))
 		return NULL;
-	return int_newu16(BESWAP16(i));
+	return int_newu16(LETOH16(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_beswap32(size_t argc, DeeObject *const *argv) {
+f_ctypes_htole32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
-	if (DeeArg_Unpack(argc, argv, "I32u:beswap32", &i))
+	if (DeeArg_Unpack(argc, argv, "I32u:htole32", &i))
 		return NULL;
-	return int_newu32(BESWAP32(i));
+	return int_newu32(HTOLE32(i));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-f_ctypes_beswap64(size_t argc, DeeObject *const *argv) {
-	uint64_t i;
-	if (DeeArg_Unpack(argc, argv, "I64u:beswap64", &i))
+f_ctypes_letoh32(size_t argc, DeeObject *const *argv) {
+	uint32_t i;
+	if (DeeArg_Unpack(argc, argv, "I32u:letoh32", &i))
 		return NULL;
-	return int_newu64(BESWAP64(i));
+	return int_newu32(LETOH32(i));
 }
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_htole64(size_t argc, DeeObject *const *argv) {
+	uint64_t i;
+	if (DeeArg_Unpack(argc, argv, "I64u:htole64", &i))
+		return NULL;
+	return int_newu64(HTOLE64(i));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_letoh64(size_t argc, DeeObject *const *argv) {
+	uint64_t i;
+	if (DeeArg_Unpack(argc, argv, "I64u:letoh64", &i))
+		return NULL;
+	return int_newu64(LETOH64(i));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_htobe16(size_t argc, DeeObject *const *argv) {
+	uint16_t i;
+	if (DeeArg_Unpack(argc, argv, "I16u:htobe16", &i))
+		return NULL;
+	return int_newu16(HTOBE16(i));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_betoh16(size_t argc, DeeObject *const *argv) {
+	uint16_t i;
+	if (DeeArg_Unpack(argc, argv, "I16u:betoh16", &i))
+		return NULL;
+	return int_newu16(BETOH16(i));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_htobe32(size_t argc, DeeObject *const *argv) {
+	uint32_t i;
+	if (DeeArg_Unpack(argc, argv, "I32u:htobe32", &i))
+		return NULL;
+	return int_newu32(HTOBE32(i));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_betoh32(size_t argc, DeeObject *const *argv) {
+	uint32_t i;
+	if (DeeArg_Unpack(argc, argv, "I32u:betoh32", &i))
+		return NULL;
+	return int_newu32(BETOH32(i));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_htobe64(size_t argc, DeeObject *const *argv) {
+	uint64_t i;
+	if (DeeArg_Unpack(argc, argv, "I64u:htobe64", &i))
+		return NULL;
+	return int_newu64(HTOBE64(i));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+f_ctypes_betoh64(size_t argc, DeeObject *const *argv) {
+	uint64_t i;
+	if (DeeArg_Unpack(argc, argv, "I64u:betoh64", &i))
+		return NULL;
+	return int_newu64(BETOH64(i));
+}
+
 
 PRIVATE DEFINE_CMETHOD(ctypes_sizeof, f_ctypes_sizeof);
 PRIVATE DEFINE_CMETHOD(ctypes_alignof, f_ctypes_alignof);
@@ -421,12 +470,18 @@ PRIVATE DEFINE_CMETHOD(ctypes_bswap16, f_ctypes_bswap16);
 PRIVATE DEFINE_CMETHOD(ctypes_bswap32, f_ctypes_bswap32);
 PRIVATE DEFINE_CMETHOD(ctypes_bswap64, f_ctypes_bswap64);
 
-PRIVATE DEFINE_CMETHOD(ctypes_leswap16, f_ctypes_leswap16);
-PRIVATE DEFINE_CMETHOD(ctypes_leswap32, f_ctypes_leswap32);
-PRIVATE DEFINE_CMETHOD(ctypes_leswap64, f_ctypes_leswap64);
-PRIVATE DEFINE_CMETHOD(ctypes_beswap16, f_ctypes_beswap16);
-PRIVATE DEFINE_CMETHOD(ctypes_beswap32, f_ctypes_beswap32);
-PRIVATE DEFINE_CMETHOD(ctypes_beswap64, f_ctypes_beswap64);
+PRIVATE DEFINE_CMETHOD(ctypes_htole16, f_ctypes_htole16);
+PRIVATE DEFINE_CMETHOD(ctypes_letoh16, f_ctypes_letoh16);
+PRIVATE DEFINE_CMETHOD(ctypes_htole32, f_ctypes_htole32);
+PRIVATE DEFINE_CMETHOD(ctypes_letoh32, f_ctypes_letoh32);
+PRIVATE DEFINE_CMETHOD(ctypes_htole64, f_ctypes_htole64);
+PRIVATE DEFINE_CMETHOD(ctypes_letoh64, f_ctypes_letoh64);
+PRIVATE DEFINE_CMETHOD(ctypes_htobe16, f_ctypes_htobe16);
+PRIVATE DEFINE_CMETHOD(ctypes_betoh16, f_ctypes_betoh16);
+PRIVATE DEFINE_CMETHOD(ctypes_htobe32, f_ctypes_htobe32);
+PRIVATE DEFINE_CMETHOD(ctypes_betoh32, f_ctypes_betoh32);
+PRIVATE DEFINE_CMETHOD(ctypes_htobe64, f_ctypes_htobe64);
+PRIVATE DEFINE_CMETHOD(ctypes_betoh64, f_ctypes_betoh64);
 
 PRIVATE DEFINE_CMETHOD(ctypes_malloc, capi_malloc);
 PRIVATE DEFINE_CMETHOD(ctypes_free, capi_free);
@@ -622,24 +677,43 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(x:?Guint64_t)->?Guint64_t\n"
 	      "Return @x with reversed endian") },
 
-	{ "leswap16", (DeeObject *)&ctypes_leswap16, MODSYM_FNORMAL,
+	{ "htole16", (DeeObject *)&ctypes_htole16, MODSYM_FNORMAL,
 	  DOC("(x:?Guint16_t)->?Guint16_t\n"
-	      "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
-	{ "leswap32", (DeeObject *)&ctypes_leswap32, MODSYM_FNORMAL,
-	  DOC("(x:?Guint32_t)->?Guint32_t\n"
-	      "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
-	{ "leswap64", (DeeObject *)&ctypes_leswap64, MODSYM_FNORMAL,
-	  DOC("(x:?Guint64_t)->?Guint64_t\n"
-	      "Return a little-endian @x in host-endian, or a host-endian @x in little-endian") },
-	{ "beswap16", (DeeObject *)&ctypes_beswap16, MODSYM_FNORMAL,
+	      "Convert a 16-bit integer from host-endian to little-endian") },
+	{ "letoh16", (DeeObject *)&ctypes_letoh16, MODSYM_FNORMAL,
 	  DOC("(x:?Guint16_t)->?Guint16_t\n"
-	      "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
-	{ "beswap32", (DeeObject *)&ctypes_beswap32, MODSYM_FNORMAL,
+	      "Convert a 16-bit integer from little-endian to host-endian") },
+	{ "htole32", (DeeObject *)&ctypes_htole32, MODSYM_FNORMAL,
 	  DOC("(x:?Guint32_t)->?Guint32_t\n"
-	      "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
-	{ "beswap64", (DeeObject *)&ctypes_beswap64, MODSYM_FNORMAL,
+	      "Convert a 32-bit integer from host-endian to little-endian") },
+	{ "letoh32", (DeeObject *)&ctypes_letoh32, MODSYM_FNORMAL,
+	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	      "Convert a 32-bit integer from little-endian to host-endian") },
+	{ "htole64", (DeeObject *)&ctypes_htole64, MODSYM_FNORMAL,
 	  DOC("(x:?Guint64_t)->?Guint64_t\n"
-	      "Return a big-endian @x in host-endian, or a host-endian @x in big-endian") },
+	      "Convert a 64-bit integer from host-endian to little-endian") },
+	{ "letoh64", (DeeObject *)&ctypes_letoh64, MODSYM_FNORMAL,
+	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	      "Convert a 64-bit integer from little-endian to host-endian") },
+
+	{ "htobe16", (DeeObject *)&ctypes_htobe16, MODSYM_FNORMAL,
+	  DOC("(x:?Guint16_t)->?Guint16_t\n"
+	      "Convert a 16-bit integer from host-endian to big-endian") },
+	{ "betoh16", (DeeObject *)&ctypes_betoh16, MODSYM_FNORMAL,
+	  DOC("(x:?Guint16_t)->?Guint16_t\n"
+	      "Convert a 16-bit integer from big-endian to host-endian") },
+	{ "htobe32", (DeeObject *)&ctypes_htobe32, MODSYM_FNORMAL,
+	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	      "Convert a 32-bit integer from host-endian to big-endian") },
+	{ "betoh32", (DeeObject *)&ctypes_betoh32, MODSYM_FNORMAL,
+	  DOC("(x:?Guint32_t)->?Guint32_t\n"
+	      "Convert a 32-bit integer from big-endian to host-endian") },
+	{ "htobe64", (DeeObject *)&ctypes_htobe64, MODSYM_FNORMAL,
+	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	      "Convert a 64-bit integer from host-endian to big-endian") },
+	{ "betoh64", (DeeObject *)&ctypes_betoh64, MODSYM_FNORMAL,
+	  DOC("(x:?Guint64_t)->?Guint64_t\n"
+	      "Convert a 64-bit integer from big-endian to host-endian") },
 
 	/* <string.h> & <stdlib.h> - style ctypes functions */
 	{ "malloc", (DeeObject *)&ctypes_malloc, MODSYM_FNORMAL,
