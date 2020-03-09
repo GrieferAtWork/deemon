@@ -1732,9 +1732,11 @@ operation_mode_printpp(int argc, char **argv) {
 		goto err;
 	if ((emitpp_state & EMITPP_MOUTLINE) == EMITPP_FOUTLINE_ZERO)
 		emitpp_writeout("\0", sizeof(char));
+	parser_errors_fini(&current_parser_errors);
 	TPP_FINALIZE();
 	return 0;
 err:
+	parser_errors_fini(&current_parser_errors);
 	TPP_FINALIZE();
 err_nofin:
 	return -1;
