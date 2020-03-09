@@ -1897,12 +1897,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_connect(Socket *self, size_t argc, DeeObject *const *argv) {
 	SockAddr addr;
 	if unlikely(SockAddr_FromArgv(&addr,
-		                           self->s_sockaddr.sa.sa_family,
-		                           self->s_proto,
-		                           self->s_type,
-		                           argc,
-		                           argv))
-	goto err;
+	                              self->s_sockaddr.sa.sa_family,
+	                              self->s_proto,
+	                              self->s_type,
+	                              argc,
+	                              argv))
+		goto err;
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely(DeeSocket_Connect(self, &addr))
 		goto err;

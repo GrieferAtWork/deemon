@@ -729,7 +729,10 @@ err_seek_failed:
 	self->df_ehdr = hdr;
 	self->df_size = (size_t)total_size;
 
-	/* Read the entire file. */
+	/* Read the entire file.
+	 * TODO: Use `mmap()' or equivalent when possible and supported by the OS
+	 *       mmap() is __much__ more efficient that malloc()+read(), especially
+	 *       in cases where the entire file has to get mapped. */
 	if (DeeFile_ReadAll(input_stream, hdr, (size_t)total_size) < 0)
 		goto err_data;
 
