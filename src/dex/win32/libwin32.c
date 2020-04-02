@@ -217,6 +217,27 @@ wgii("STD_INPUT_HANDLE");
 wgii("STD_OUTPUT_HANDLE");
 wgii("STD_ERROR_HANDLE");
 
+wgii("PIPE_ACCESS_DUPLEX");
+wgii("PIPE_ACCESS_INBOUND");
+wgii("PIPE_ACCESS_OUTBOUND");
+wgii("FILE_FLAG_FIRST_PIPE_INSTANCE");
+wgii("FILE_FLAG_WRITE_THROUGH");
+wgii("FILE_FLAG_OVERLAPPED");
+wgii("WRITE_DAC");
+wgii("WRITE_OWNER");
+wgii("ACCESS_SYSTEM_SECURITY");
+wgii("PIPE_TYPE_BYTE");
+wgii("PIPE_TYPE_MESSAGE");
+wgii("PIPE_READMODE_BYTE");
+wgii("PIPE_READMODE_MESSAGE");
+wgii("PIPE_WAIT");
+wgii("PIPE_NOWAIT");
+wgii("PIPE_ACCEPT_REMOTE_CLIENTS");
+wgii("PIPE_REJECT_REMOTE_CLIENTS");
+wgii("PIPE_UNLIMITED_INSTANCES");
+wgii("NMPWAIT_USE_DEFAULT_WAIT");
+wgii("NMPWAIT_WAIT_FOREVER");
+
 File.stdout = orig_stdout;
 print "#define LIBWIN32_CONSTANTS_DEFS \\";
 for (local x: allDecls)
@@ -343,6 +364,26 @@ print "/" "**" "/";
 	LIBWIN32_STD_INPUT_HANDLE_DEF \
 	LIBWIN32_STD_OUTPUT_HANDLE_DEF \
 	LIBWIN32_STD_ERROR_HANDLE_DEF \
+	LIBWIN32_PIPE_ACCESS_DUPLEX_DEF \
+	LIBWIN32_PIPE_ACCESS_INBOUND_DEF \
+	LIBWIN32_PIPE_ACCESS_OUTBOUND_DEF \
+	LIBWIN32_FILE_FLAG_FIRST_PIPE_INSTANCE_DEF \
+	LIBWIN32_FILE_FLAG_WRITE_THROUGH_DEF \
+	LIBWIN32_FILE_FLAG_OVERLAPPED_DEF \
+	LIBWIN32_WRITE_DAC_DEF \
+	LIBWIN32_WRITE_OWNER_DEF \
+	LIBWIN32_ACCESS_SYSTEM_SECURITY_DEF \
+	LIBWIN32_PIPE_TYPE_BYTE_DEF \
+	LIBWIN32_PIPE_TYPE_MESSAGE_DEF \
+	LIBWIN32_PIPE_READMODE_BYTE_DEF \
+	LIBWIN32_PIPE_READMODE_MESSAGE_DEF \
+	LIBWIN32_PIPE_WAIT_DEF \
+	LIBWIN32_PIPE_NOWAIT_DEF \
+	LIBWIN32_PIPE_ACCEPT_REMOTE_CLIENTS_DEF \
+	LIBWIN32_PIPE_REJECT_REMOTE_CLIENTS_DEF \
+	LIBWIN32_PIPE_UNLIMITED_INSTANCES_DEF \
+	LIBWIN32_NMPWAIT_USE_DEFAULT_WAIT_DEF \
+	LIBWIN32_NMPWAIT_WAIT_FOREVER_DEF \
 /**/
 //[[[end]]]
 
@@ -3172,6 +3213,194 @@ err:
 
 
 
+/*[[[deemon import("_dexutils").gw("CreateNamedPipe",
+      "lpName:nt:LPCWSTR"
+     ",dwOpenMode:nt:DWORD=PIPE_ACCESS_DUPLEX"
+     ",dwPipeMode:nt:DWORD=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE"
+     ",nMaxInstances:nt:DWORD=PIPE_UNLIMITED_INSTANCES"
+     ",nOutBufferSize:nt:DWORD=65536"
+     ",nInBufferSize:nt:DWORD=65536"
+     ",nDefaultTimeOut:nt:DWORD=0"
+     ",lpSecurityAttributes:?GSECURITY_ATTRIBUTES=NULL"
+     "->" MAYBE_NONE("?GHANDLE")
+     ); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f_impl(LPCWSTR lpName, DWORD dwOpenMode, DWORD dwPipeMode, DWORD nMaxInstances, DWORD nOutBufferSize, DWORD nInBufferSize, DWORD nDefaultTimeOut, DeeObject *lpSecurityAttributes);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_CREATENAMEDPIPE_DEF { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FNORMAL, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE") },
+#define LIBWIN32_CREATENAMEDPIPE_DEF_DOC(doc) { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FNORMAL, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_CreateNamedPipe, libwin32_CreateNamedPipe_f);
+#ifndef LIBWIN32_KWDS_LPNAME_DWOPENMODE_DWPIPEMODE_NMAXINSTANCES_NOUTBUFFERSIZE_NINBUFFERSIZE_NDEFAULTTIMEOUT_LPSECURITYATTRIBUTES_DEFINED
+#define LIBWIN32_KWDS_LPNAME_DWOPENMODE_DWPIPEMODE_NMAXINSTANCES_NOUTBUFFERSIZE_NINBUFFERSIZE_NDEFAULTTIMEOUT_LPSECURITYATTRIBUTES_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpName_dwOpenMode_dwPipeMode_nMaxInstances_nOutBufferSize_nInBufferSize_nDefaultTimeOut_lpSecurityAttributes, { K(lpName), K(dwOpenMode), K(dwPipeMode), K(nMaxInstances), K(nOutBufferSize), K(nInBufferSize), K(nDefaultTimeOut), K(lpSecurityAttributes), KEND });
+#endif /* !LIBWIN32_KWDS_LPNAME_DWOPENMODE_DWPIPEMODE_NMAXINSTANCES_NOUTBUFFERSIZE_NINBUFFERSIZE_NDEFAULTTIMEOUT_LPSECURITYATTRIBUTES_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	LPCWSTR lpName_str;
+	DeeStringObject *lpName;
+	DWORD dwOpenMode = PIPE_ACCESS_DUPLEX;
+	DWORD dwPipeMode = PIPE_TYPE_BYTE|PIPE_READMODE_BYTE;
+	DWORD nMaxInstances = PIPE_UNLIMITED_INSTANCES;
+	DWORD nOutBufferSize = 65536;
+	DWORD nInBufferSize = 65536;
+	DWORD nDefaultTimeOut = 0;
+	DeeObject *lpSecurityAttributes = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpName_dwOpenMode_dwPipeMode_nMaxInstances_nOutBufferSize_nInBufferSize_nDefaultTimeOut_lpSecurityAttributes, "o|I32uI32uI32uI32uI32uI32uo:CreateNamedPipe", &lpName, &dwOpenMode, &dwPipeMode, &nMaxInstances, &nOutBufferSize, &nInBufferSize, &nDefaultTimeOut, &lpSecurityAttributes))
+		goto err;
+	if (DeeObject_AssertTypeExact(lpName, &DeeString_Type))
+		goto err;
+	lpName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpName);
+	if unlikely(!lpName_str)
+		goto err;
+	return libwin32_CreateNamedPipe_f_impl(lpName_str, dwOpenMode, dwPipeMode, nMaxInstances, nOutBufferSize, nInBufferSize, nDefaultTimeOut, lpSecurityAttributes);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f_impl(LPCWSTR lpName, DWORD dwOpenMode, DWORD dwPipeMode, DWORD nMaxInstances, DWORD nOutBufferSize, DWORD nInBufferSize, DWORD nDefaultTimeOut, DeeObject *lpSecurityAttributes)
+//[[[end]]]
+{
+	HANDLE hResult;
+	DREF DeeObject *result;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	(void)lpSecurityAttributes; /* TODO */
+	hResult = CreateNamedPipeW(lpName,
+	                           dwOpenMode,
+	                           dwPipeMode,
+	                           nMaxInstances,
+	                           nOutBufferSize,
+	                           nInBufferSize,
+	                           nDefaultTimeOut,
+	                           NULL);
+	if unlikely(hResult == INVALID_HANDLE_VALUE) {
+		DWORD dwError = GetLastError();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		DBG_ALIGNMENT_ENABLE();
+		RETURN_ERROR(dwError,
+		             "Failed to create named pipe %lq (dwOpenMode: %#I32x, dwPipeMode: %#I32x, "
+		             "nMaxInstances: %#I32x, nOutBufferSize: %#I32x, nInBufferSize: %#I32x, "
+		             "nDefaultTimeOut: %#I32x)",
+		             lpName, dwOpenMode, dwPipeMode, nMaxInstances,
+		             nOutBufferSize, nInBufferSize, nDefaultTimeOut);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	result = libwin32_CreateHandle(hResult);
+	if likely(result)
+		return result;
+	CloseHandle(hResult);
+err:
+	return NULL;
+}
+
+/*[[[deemon import("_dexutils").gw("ConnectNamedPipe",
+      "hNamedPipe:nt:HANDLE"
+     ",lpOverlapped:?GOVERLAPPED=NULL"
+     "->" ERROR_OR_BOOL
+     ); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f_impl(HANDLE hNamedPipe, DeeObject *lpOverlapped);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_CONNECTNAMEDPIPE_DEF { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FNORMAL, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)") },
+#define LIBWIN32_CONNECTNAMEDPIPE_DEF_DOC(doc) { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FNORMAL, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_ConnectNamedPipe, libwin32_ConnectNamedPipe_f);
+#ifndef LIBWIN32_KWDS_HNAMEDPIPE_LPOVERLAPPED_DEFINED
+#define LIBWIN32_KWDS_HNAMEDPIPE_LPOVERLAPPED_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hNamedPipe_lpOverlapped, { K(hNamedPipe), K(lpOverlapped), KEND });
+#endif /* !LIBWIN32_KWDS_HNAMEDPIPE_LPOVERLAPPED_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	HANDLE hhNamedPipe;
+	DeeObject *hNamedPipe;
+	DeeObject *lpOverlapped = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hNamedPipe_lpOverlapped, "o|o:ConnectNamedPipe", &hNamedPipe, &lpOverlapped))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hNamedPipe, (void **)&hhNamedPipe))
+		goto err;
+	return libwin32_ConnectNamedPipe_f_impl(hhNamedPipe, lpOverlapped);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f_impl(HANDLE hNamedPipe, DeeObject *lpOverlapped)
+//[[[end]]]
+{
+	BOOL bOk;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	(void)lpOverlapped; /* TODO */
+	bOk = ConnectNamedPipe(hNamedPipe, NULL);
+	if (!bOk) {
+		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to wait for connected on named pipe %p",
+		                      hNamedPipe);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	RETURN_SUCCESS_OR_TRUE;
+err:
+	return NULL;
+}
+
+/*[[[deemon import("_dexutils").gw("WaitNamedPipe",
+      "lpNamedPipeName:nt:LPCWSTR"
+     ",nTimeOut:nt:DWORD=NMPWAIT_WAIT_FOREVER"
+     "->" ERROR_OR_BOOL
+     ); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f_impl(LPCWSTR lpNamedPipeName, DWORD nTimeOut);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_WAITNAMEDPIPE_DEF { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FNORMAL, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)") },
+#define LIBWIN32_WAITNAMEDPIPE_DEF_DOC(doc) { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FNORMAL, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_WaitNamedPipe, libwin32_WaitNamedPipe_f);
+#ifndef LIBWIN32_KWDS_LPNAMEDPIPENAME_NTIMEOUT_DEFINED
+#define LIBWIN32_KWDS_LPNAMEDPIPENAME_NTIMEOUT_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_lpNamedPipeName_nTimeOut, { K(lpNamedPipeName), K(nTimeOut), KEND });
+#endif /* !LIBWIN32_KWDS_LPNAMEDPIPENAME_NTIMEOUT_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	LPCWSTR lpNamedPipeName_str;
+	DeeStringObject *lpNamedPipeName;
+	DWORD nTimeOut = NMPWAIT_WAIT_FOREVER;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_lpNamedPipeName_nTimeOut, "o|I32u:WaitNamedPipe", &lpNamedPipeName, &nTimeOut))
+		goto err;
+	if (DeeObject_AssertTypeExact(lpNamedPipeName, &DeeString_Type))
+		goto err;
+	lpNamedPipeName_str = (LPCWSTR)DeeString_AsWide((DeeObject *)lpNamedPipeName);
+	if unlikely(!lpNamedPipeName_str)
+		goto err;
+	return libwin32_WaitNamedPipe_f_impl(lpNamedPipeName_str, nTimeOut);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f_impl(LPCWSTR lpNamedPipeName, DWORD nTimeOut)
+//[[[end]]]
+{
+	BOOL bOk;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	bOk = WaitNamedPipeW(lpNamedPipeName, nTimeOut);
+	if (!bOk) {
+		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to wait for named pipe %lq (nTimeOut: %#I32x)",
+		                      lpNamedPipeName, nTimeOut);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	RETURN_SUCCESS_OR_TRUE;
+err:
+	return NULL;
+}
+
 
 
 
@@ -3261,6 +3490,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* DLL functions */
 	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module")
 	LIBWIN32_GETMAPPEDFILENAME_DEF
+
+	/* Named pipe API. */
+	LIBWIN32_CREATENAMEDPIPE_DEF
+	LIBWIN32_CONNECTNAMEDPIPE_DEF
+	LIBWIN32_WAITNAMEDPIPE_DEF
 
 	/* Include Windows constants. */
 	LIBWIN32_CONSTANTS_DEFS
