@@ -458,7 +458,7 @@ DeeThreadObject DeeThread_Main = {
 PRIVATE uint64_t performance_freq = 0;
 PRIVATE uint64_t performance_freq_div_1000000 = 0;
 PRIVATE uint64_t performance_1000000_div_freq = 0;
-PRIVATE WCHAR const kernel32[] = {'K','E','R','N','E','L','3','2',0};
+PRIVATE WCHAR const kernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 
 PRIVATE ULONGLONG (WINAPI *lp_GetTickCount64)(void) = NULL;
 #endif /* CONFIG_HOST_WINDOWS */

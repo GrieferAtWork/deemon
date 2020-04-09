@@ -72,6 +72,7 @@ local converter_map: {string: (string, string, string) | string} = {
 	"LD"           : ("LD", "?Dfloat", "long double"),
 	"obj"          : "o",
 	"obj:any"      : "o",
+	"obj:sequence" : ("o", "?S?O",     "DeeObject *"),
 	"obj:buffer"   : ("o", "?DBytes",  "DeeObject *"),
 	"obj:int"      : ("o", "?Dint",    "DeeIntObject *",
 		"\tif (DeeObject_AssertTypeExact({obj}, &DeeInt_Type))\n"
@@ -99,6 +100,8 @@ local converter_map: {string: (string, string, string) | string} = {
 		"\t\tgoto err;\n",
 		("void *","{}_ptr")),
 	"c:bool"       : ("b", "?Dbool",   "bool"),
+	"nt:LONG"      : ("I32s", "?Dint", "LONG"),
+	"nt:UINT"      : ("I32u", "?Dint", "UINT"),
 	"nt:DWORD"     : ("I32u", "?Dint", "DWORD"),
 	"unix:fd"      : ("o", "?X2?Dint?DFile", "DeeObject *",
 		"\t{obj}_fd = DeeUnixSystem_GetFD({obj});\n"
@@ -155,6 +158,7 @@ global MODULE_NAME: string | none = none;
 #define AUTOLIBNAME() \
 	(MODULE_NAME !is none ? MODULE_NAME : getDefaultLibnameOfSourceFile(Traceback()[1].file))
 
+global KNOWN_INTEGER_CONSTANTS: {int: string} = Dict();
 
 @@Define an integer constant (gi -- GenerateInteger)
 function gi(
@@ -180,13 +184,27 @@ function gi(
 	print File.stderr: macro_name;
 	print "#define", macro_name, "\\\n\t",
 		"{", (repr name) + ", (DeeObject *)&{}{}".format({ libname, name }) +
-		",", isconstant ? "MODSYM_FREADONLY|MODSYM_FCONSTEXPR" : "MODSYM_FNORMAL",;
+		",", isconstant ? "MODSYM_FREADONLY | MODSYM_FCONSTEXPR" : "MODSYM_FNORMAL",;
 	if (doc !is none)
 		print ",", repr doc,;
 	print " },";
 	local valid_bits = [15, 30, 45, 60];
 	if (value is int) {
 		/* The constant is given directly. */
+		local existingName = KNOWN_INTEGER_CONSTANTS.get(value);
+		if (existingName is none) {
+			final local DEFAULT_KNOWN_CONSTANTS: {int: string} = {
+				-1 : "DeeInt_MinusOne",
+				0 : "DeeInt_Zero",
+				1 : "DeeInt_One",
+			};
+			existingName = DEFAULT_KNOWN_CONSTANTS.get(value);
+		}
+		if (existingName !is none) {
+			print("#define ", libname, name, " ", existingName);
+			return;
+		}
+		KNOWN_INTEGER_CONSTANTS[value] = libname + name;
 		if (value < 0) {
 			for (local b: valid_bits) {
 				if (value < -(1 << (b - 1)))
@@ -243,15 +261,19 @@ function gii(
 		libname = AUTOLIBNAME();
 	if (value is none)
 		value = name;
-	if (check is none)
+	if (check is none && value is string)
 		check = value;
-	print "#ifdef", check;
-	gi(name, value, libname, visi, isconstant, doc);
-	print "#else /*", check, "*/";
-	if (libname)
-		libname = libname + "_";
-	print "#define {}{}_DEF /* nothing */".format({ libname.upper(), name.upper() });
-	print "#endif /* !"+check, "*/";
+	if (check is none) {
+		gi(name, value, libname, visi, isconstant, doc);
+	} else {
+		print "#ifdef", check;
+		gi(name, value, libname, visi, isconstant, doc);
+		print "#else /*", check, "*/";
+		if (libname)
+			libname = libname + "_";
+		print "#define {}{}_DEF /* nothing */".format({ libname.upper(), name.upper() });
+		print "#endif /* !"+check, "*/";
+	}
 }
 
 
