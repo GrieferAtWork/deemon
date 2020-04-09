@@ -74,7 +74,7 @@
  *       throw an `Error.TypeError'
  *  >> Attempting to handle an exception thrown by a caller:
  *       throw an `Error.RuntimeError.IllegalInstruction'
- * 
+ *
  * Additional changes in behavior when `CODE_FASSEMBLY' is set:
  *  >> `ASM_PUSH_CONST' and `ASM_PUSH_CONST16' behave identical to
  *     `ASM_PUSH_STATIC' and `ASM_PUSH_STATIC16' in that they always
@@ -135,7 +135,7 @@
  * >>
  * >> RETURN_WITHOUT_FINALLY:
  * >>     DECREMENT_THREADLOCAL_FRAME_COUNT();
- * >>     
+ * >>
  * >>     // Deal with dangling exceptions
  * >>     IF thread->t_exceptsz > REG_EXCEPTION_START THEN
  * >>         IF IS_BOUND(REG_RESULT) THEN
@@ -147,7 +147,7 @@
  * >>         DONE
  * >>         PROPAGATE_EXCEPTIONS_TO_CALLER();
  * >>     FI
- * >>     
+ * >>
  * >>     // NOTE: Implementations may implement some other means of indicating iter-done.
  * >>     //       For example, Griefer@Work's deemon returns `ITER_DONE' from `DeeObject_IterNext()'
  * >>     IF REG_RESULT_ITERDONE == true THEN
@@ -234,7 +234,7 @@
  * >>     RETURN REG_CONSTANTS[symbol_index];
  * >> END
  * >>
- * >> Object  CONSTANT(Integer static_index) BEGIN
+ * >> Object CONSTANT(Integer static_index) BEGIN
  * >>     RETURN STATIC(symbol_index); // Constant and static symbols use the same indices
  * >> END
  * >>
@@ -333,9 +333,9 @@
 #define ASM_YIELDALL          0x02 /* [1][-1,+0]   `yield foreach, pop'                 - Pop one Object and iterate it, yielding all contained objects, one at a time.
                                     * [1][-0,+0]   `yield foreach, PREFIX'              - `PREFIX: yield foreach'
                                     *                                                     NOTE: Only available in code of yield functions.
-                                    *                                                     HINT: During execution, this opcode will replace stack-top with its own iterator and
-                                    *                                                           keep resetting `REG_PC' to re-execute itself until the iterator is finished, at which
-                                    *                                                           point it will finally pop one value and resume execution at the next instruction.
+                                    *                                                     HINT: During execution, this opcode will keep resetting `REG_PC' to re-execute
+                                    *                                                           itself until the iterator-operand is exhausted, at which point it will
+                                    *                                                           finally pop the iterator and resume execution with the next instruction.
                                     *                                                     WARNING: This instruction takes an iterator, not a sequence.
                                     * >> IF EXEC_SAFE && !IS_CODE_YIELDING THEN
                                     * >>     THROW(IllegalInstruction());
@@ -351,7 +351,7 @@
                                     * >> DONE
                                     * >> REG_PC = REG_START_PC;
                                     * >> GOTO RETURN_WITHOUT_FINALLY; */
-#define ASM_THROW             0x03 /* [1][-1,+0]   `throw pop'                          - Pop one Object and throw it as an exception. This instruction does not return.
+#define ASM_THROW             0x03 /* [1][-1,+0]   `throw pop'                          - Pop one Object and throw it as an exception. This instruction does not return normally.
                                     * [1][-0,+0]   `throw PREFIX'                       - `PREFIX: throw'
                                     * >> THROW(POP());
                                     * >> EXCEPT(); */
@@ -375,8 +375,9 @@
                                     * >>     POP_EXCEPT(WITH handle_interrupt = TRUE);
                                     * >> FI */
 #define ASM_ENDFINALLY        0x07 /* [1][-0,+0]   `end finally'                        - When running a finally-block after return, continue executing of the next surrounding finally-block, or actually return to the caller.
-                                    *                                                     If this instruction is executed before a return instruction has been encountered (aka. when no return value has been set), it acts as a no-op.
-                                    *                                                     If unhandled exceptions exist when this instruction is being executed, exception handling will recommence.
+                                    *                                                     If this instruction is executed before a return instruction has been encountered (aka. when no return value has been set),
+                                    *                                                     it acts as a no-op with the side-effect of re-throwing the last exception if one has been thrown by the current, or a called function.
+                                    *                                                     If unhandled exceptions exist when this instruction is being executed, exception handling will resume.
                                     *                                                     In order to support recursive catch/finally handling, an additional overload exists that accepts the min. number of errors
                                     *                                                     that must have been thrown since the start of the function in order for the runtime to rethrow the last of them.
                                     * >> IF IS_BOUND(REG_RESULT) THEN
@@ -421,7 +422,7 @@
 #define ASM_FOREACH           0x16 /* [2][-1,+2|0] `foreach top, <Sdisp8>'              - Invoke the __iternext__ operator on stack-top, popping the iterator and performing a `jmp' using <Sdisp8> when it is empty, or leaving the iterator and pushing the loaded value onto the stack otherwise.
                                     * [2][-0,+1|0] `foreach PREFIX, <Sdisp8>'           - `PREFIX: foreach <Sdisp8>' */
 #define ASM_FOREACH16         0x17 /* [3][-1,+2|0] `foreach top, <Sdisp16>'             - Invoke the __iternext__ operator on stack-top, popping the iterator and performing a `jmp' using <Sdisp16> when it is empty, or leaving the iterator and pushing the loaded value onto the stack otherwise.
-                                    * [3][-0,+1|0] `foreach PREFIX, <Sdisp16>'          - `PREFIX: foreach <Sdisp16>' 
+                                    * [3][-0,+1|0] `foreach PREFIX, <Sdisp16>'          - `PREFIX: foreach <Sdisp16>'
                                     * >> ob: Object = TOP.operator next();
                                     * >> IF IS_BOUND(ob) THEN
                                     * >>     PUSH(ob);
@@ -495,9 +496,9 @@
                                     * >> push $10 // 5, 10
                                     * >> push $20 // 5, 10, 20
                                     * >> push $30 // 5, 10, 20, 30
-                                    * >>                 |  /   /
-                                    * >>                 +-/---/-+
-                                    * >>                  /   /  |
+                                    * >>             |   |  /   /
+                                    * >>             |   +-/---/-+
+                                    * >>             |    /   /  |
                                     * >> lrot #3  // 5, 20, 30, 10 // The top 3 entries were rotated left once
                                     * >>              \   \   \  |
                                     * >>             +-\---\---\-+
@@ -705,6 +706,13 @@
                                     * >> PUSH(POP() == POP()); */
 #define ASM_CMP_NE            0x61 /* [1][-2,+1]   `cmp ne, top, pop'                   - Compare the two top-most objects on the stack and push the result.
                                     * >> PUSH(POP() != POP()); */
+/* TODO: Change the order of compare instructions:
+ *       eq, ne
+ *       ge, lo
+ *       le, gr
+ *       This way, bit#0^1 inverts logic, and bit#0=1
+ *       means that top and pop are non-equal
+ */
 #define ASM_CMP_LO            0x62 /* [1][-2,+1]   `cmp lo, top, pop'                   - Compare the two top-most objects on the stack and push the result.
                                     * >> PUSH(POP() < POP()); */
 #define ASM_CMP_LE            0x63 /* [1][-2,+1]   `cmp le, top, pop'                   - Compare the two top-most objects on the stack and push the result.
@@ -963,7 +971,7 @@
                                     * ASM_INCPOST:    `local <imm8>: push inc'
                                     * ASM_FUNCTION_C: `local <imm8>: function const <imm8>, #<imm8>+1'
                                     * ASM_OPERATOR:   `local <imm8>: op $<imm8>, #<imm8>+1'
-                                    * @throws: Error.RuntimeError.IllegalInstruction: 
+                                    * @throws: Error.RuntimeError.IllegalInstruction:
                                     *          The following instruction doesn't support this prefix, and
                                     *          the associated code object is marked as `CODE_FASSEMBLY'.
                                     *          WARNING: If the code object isn't marked as `CODE_FASSEMBLY',
@@ -1397,7 +1405,7 @@
  * >>     switch (op) {
  * >>     case DDI_STOP:
  * >>         return is_enumerating_code_points ? enumeration_done() : ip_no_found();
- * >>     
+ * >>
  * >>         ... // Handle other instructions.
  * >>             // Whenever any of them try to modify REG_PC, the following must be done:
  * >>             // >>
@@ -1410,7 +1418,7 @@
  * >>             // >>     if (old_state.uip <= DESIRED_IP && DESIRED_IP < cur_state.uip)
  * >>             // >>         return old_state; // The old state describes information about `DESIRED_IP'
  * >>             // >> }
- * >>     
+ * >>
  * >>     default:
  * >>         cur_state.uip += DDI_GENERIC_IP(op);
  * >>         cur_state.lno += DDI_GENERIC_LN(op);
