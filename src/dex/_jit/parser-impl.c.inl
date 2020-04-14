@@ -305,7 +305,7 @@ done_zero:
 #endif /* !TPPLIKE_STRING_TO_FLOAT_DEFINED */
 
 
-INTDEF RETURN_TYPE FCALL
+INTERN RETURN_TYPE FCALL
 #ifdef JIT_EVAL
 JITLexer_EvalKeywordLabelList(JITLexer *__restrict self,
                               char const *__restrict first_label_name,
@@ -375,7 +375,7 @@ err:
 }
 
 
-INTDEF RETURN_TYPE FCALL
+INTERN RETURN_TYPE FCALL
 #ifdef JIT_EVAL
 JITLexer_EvalArgumentList(JITLexer *__restrict self, DREF DeeObject **__restrict pkwds)
 #else /* JIT_EVAL */
@@ -1668,25 +1668,25 @@ skip_rbrck_and_done:
 			size_t symbol_size      = (size_t)(self->jl_tokend - self->jl_tokstart);
 			JITLexer_Yield(self);
 			if (JITLexer_ISKWD(self, "from")) {
-				DREF DeeModuleObject *module;
+				DREF DeeModuleObject *mod;
 				struct module_symbol *symbol;
 				JITLexer_Yield(self);
-				module = (DREF DeeModuleObject *)JITLexer_EvalModule(self);
-				if unlikely(!module)
+				mod = (DREF DeeModuleObject *)JITLexer_EvalModule(self);
+				if unlikely(!mod)
 					goto err;
-				symbol = DeeModule_GetSymbolStringLen(module,
+				symbol = DeeModule_GetSymbolStringLen(mod,
 				                                      symbol_name,
 				                                      symbol_size,
 				                                      Dee_HashUtf8(symbol_name, symbol_size));
 				if unlikely(!symbol) {
 					DeeError_Throwf(&DeeError_SymbolError,
-					                "Symbol `%$s' could not be found in module `%k'",
-					                symbol_size, symbol_name, module);
-					Dee_Decref(module);
+					                "Symbol `%$s' could not be found in mod `%k'",
+					                symbol_size, symbol_name, mod);
+					Dee_Decref(mod);
 					goto err;
 				}
 				self->jl_lvalue.lv_kind          = JIT_LVALUE_EXTERN;
-				self->jl_lvalue.lv_extern.lx_mod = module; /* Inherit reference. */
+				self->jl_lvalue.lv_extern.lx_mod = mod; /* Inherit reference. */
 				self->jl_lvalue.lv_extern.lx_sym = symbol;
 			} else {
 				if (JITContext_Lookup(self->jl_context,
@@ -1896,12 +1896,53 @@ err_result_copy:
 			}
 			break;
 
-			{
-				RETURN_TYPE temp;
-			case '[': /* sequence operator */
-				IF_EVAL(pos = self->jl_tokstart;)
-				LOAD_LVALUE(lhs, err);
+		case '[': {
+			/* sequence operator */
+			RETURN_TYPE temp;
+			IF_EVAL(pos = self->jl_tokstart;)
+			LOAD_LVALUE(lhs, err);
+			JITLexer_Yield(self);
+			if (self->jl_tok == ':') {
 				JITLexer_Yield(self);
+				if (self->jl_tok == ']') {
+					JITLexer_Yield(self);
+#ifdef JIT_EVAL
+					ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+					self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
+					self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
+					self->jl_lvalue.lv_range.lr_start = Dee_None;
+					self->jl_lvalue.lv_range.lr_end   = Dee_None;
+					Dee_Incref_n(Dee_None, 2);
+					lhs = JIT_LVALUE;
+#endif /* JIT_EVAL */
+				} else {
+					temp = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
+					if (ISERR(temp))
+						goto err_r;
+					LOAD_LVALUE(temp, err_r);
+					if (self->jl_tok == ']') {
+						JITLexer_Yield(self);
+					} else {
+err_r_temp_expected_rbrck:
+						DECREF(temp);
+						syn_item_expected_rbracket_after_lbracket(self);
+						goto err_r;
+					}
+#ifdef JIT_EVAL
+					ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+					self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
+					self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
+					self->jl_lvalue.lv_range.lr_start = Dee_None;
+					self->jl_lvalue.lv_range.lr_end   = temp; /* Inherit reference. */
+					Dee_Incref(Dee_None);
+					lhs = JIT_LVALUE;
+#endif /* JIT_EVAL */
+				}
+			} else {
+				temp = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
+				if (ISERR(temp))
+					goto err_r;
+				LOAD_LVALUE(temp, err_r);
 				if (self->jl_tok == ':') {
 					JITLexer_Yield(self);
 					if (self->jl_tok == ']') {
@@ -1909,100 +1950,58 @@ err_result_copy:
 #ifdef JIT_EVAL
 						ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
 						self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
-						self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
-						self->jl_lvalue.lv_range.lr_start = Dee_None;
+						self->jl_lvalue.lv_range.lr_base  = lhs;  /* Inherit reference. */
+						self->jl_lvalue.lv_range.lr_start = temp; /* Inherit reference. */
 						self->jl_lvalue.lv_range.lr_end   = Dee_None;
-						Dee_Incref_n(Dee_None, 2);
-						lhs = JIT_LVALUE;
-#endif /* JIT_EVAL */
-					} else {
-						temp = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
-						if (ISERR(temp))
-							goto err_r;
-						LOAD_LVALUE(temp, err_r);
-						if (self->jl_tok == ']') {
-							JITLexer_Yield(self);
-						} else {
-err_r_temp_expected_rbrck:
-							DECREF(temp);
-							syn_item_expected_rbracket_after_lbracket(self);
-							goto err_r;
-						}
-#ifdef JIT_EVAL
-						ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
-						self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
-						self->jl_lvalue.lv_range.lr_base  = lhs; /* Inherit reference. */
-						self->jl_lvalue.lv_range.lr_start = Dee_None;
-						self->jl_lvalue.lv_range.lr_end   = temp; /* Inherit reference. */
 						Dee_Incref(Dee_None);
 						lhs = JIT_LVALUE;
 #endif /* JIT_EVAL */
-					}
-				} else {
-					temp = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
-					if (ISERR(temp))
-						goto err_r;
-					LOAD_LVALUE(temp, err_r);
-					if (self->jl_tok == ':') {
-						JITLexer_Yield(self);
-						if (self->jl_tok == ']') {
-							JITLexer_Yield(self);
-#ifdef JIT_EVAL
-							ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
-							self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
-							self->jl_lvalue.lv_range.lr_base  = lhs;  /* Inherit reference. */
-							self->jl_lvalue.lv_range.lr_start = temp; /* Inherit reference. */
-							self->jl_lvalue.lv_range.lr_end   = Dee_None;
-							Dee_Incref(Dee_None);
-							lhs = JIT_LVALUE;
-#endif /* JIT_EVAL */
-						} else {
-#ifdef JIT_EVAL
-							DREF DeeObject *start_expr;
-							start_expr = temp;
-#endif /* JIT_EVAL */
-							temp = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
-							if (self->jl_tok == ']') {
-								JITLexer_Yield(self);
-							} else {
-								DECREF(start_expr);
-								goto err_r_temp_expected_rbrck;
-							}
-#ifndef JIT_EVAL
-							if (ISERR(temp))
-								goto err_r;
-#else /* !JIT_EVAL */
-							if (ISERR(temp)) {
-err_start_expr:
-								Dee_Decref(start_expr);
-								goto err_r;
-							}
-							LOAD_LVALUE(temp, err_start_expr);
-							ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
-							self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
-							self->jl_lvalue.lv_range.lr_base  = lhs;        /* Inherit reference. */
-							self->jl_lvalue.lv_range.lr_start = start_expr; /* Inherit reference. */
-							self->jl_lvalue.lv_range.lr_end   = temp;       /* Inherit reference. */
-							lhs                               = JIT_LVALUE;
-#endif /* JIT_EVAL */
-						}
 					} else {
+#ifdef JIT_EVAL
+						DREF DeeObject *start_expr;
+						start_expr = temp;
+#endif /* JIT_EVAL */
+						temp = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
 						if (self->jl_tok == ']') {
 							JITLexer_Yield(self);
 						} else {
+							DECREF(start_expr);
 							goto err_r_temp_expected_rbrck;
 						}
-#ifdef JIT_EVAL
+#ifndef JIT_EVAL
+						if (ISERR(temp))
+							goto err_r;
+#else /* !JIT_EVAL */
+						if (ISERR(temp)) {
+err_start_expr:
+							Dee_Decref(start_expr);
+							goto err_r;
+						}
+						LOAD_LVALUE(temp, err_start_expr);
 						ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
-						self->jl_lvalue.lv_kind          = JIT_LVALUE_ITEM;
-						self->jl_lvalue.lv_item.li_base  = lhs;  /* Inherit reference. */
-						self->jl_lvalue.lv_item.li_index = temp; /* Inherit reference. */
-						lhs                              = JIT_LVALUE;
+						self->jl_lvalue.lv_kind           = JIT_LVALUE_RANGE;
+						self->jl_lvalue.lv_range.lr_base  = lhs;        /* Inherit reference. */
+						self->jl_lvalue.lv_range.lr_start = start_expr; /* Inherit reference. */
+						self->jl_lvalue.lv_range.lr_end   = temp;       /* Inherit reference. */
+						lhs                               = JIT_LVALUE;
 #endif /* JIT_EVAL */
 					}
+				} else {
+					if (self->jl_tok == ']') {
+						JITLexer_Yield(self);
+					} else {
+						goto err_r_temp_expected_rbrck;
+					}
+#ifdef JIT_EVAL
+					ASSERT(self->jl_lvalue.lv_kind == JIT_LVALUE_NONE);
+					self->jl_lvalue.lv_kind          = JIT_LVALUE_ITEM;
+					self->jl_lvalue.lv_item.li_base  = lhs;  /* Inherit reference. */
+					self->jl_lvalue.lv_item.li_index = temp; /* Inherit reference. */
+					lhs                              = JIT_LVALUE;
+#endif /* JIT_EVAL */
 				}
 			}
-			break;
+		}	break;
 
 		case '{':
 			/* Brace initializer expressions. */
@@ -2090,7 +2089,7 @@ err_r_invoke:
 	JITLexer_ErrorTrace(self, pos);
 #endif /* JIT_EVAL */
 err_r:
-	DECREF(lhs);
+	DECREF_MAYBE_LVALUE(lhs);
 #ifdef JIT_EVAL
 err:
 #endif /* JIT_EVAL */

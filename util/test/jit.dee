@@ -42,18 +42,33 @@ assert identical(exec(r"'foo'"),      "foo");
 assert identical(exec(r'true'),       true);
 assert identical(exec(r'false'),      false);
 assert identical(exec(r'none'),       none);
+assert identical(exec(r'1;'),         1);
+assert identical(exec(r'1.0;'),       1.0);
+assert identical(exec(r'"foo";'),     "foo");
+assert identical(exec(r"'foo';"),     "foo");
+assert identical(exec(r'true;'),      true);
+assert identical(exec(r'false;'),     false);
+assert identical(exec(r'none;'),      none);
 
 /* Simple arithmetic. */
-assert identical(exec(r'10*2 + 11*3'), 53);
-assert identical(exec(r'10/2*5'),      25);
-assert identical(exec(r'10/(2*5)'),    1);
+assert identical(exec(r'10*2 + 11*3'),  53);
+assert identical(exec(r'10/2*5'),       25);
+assert identical(exec(r'10/(2*5)'),     1);
+assert identical(exec(r'10*2 + 11*3;'), 53);
+assert identical(exec(r'10/2*5;'),      25);
+assert identical(exec(r'10/(2*5);'),    1);
 
 /* Simple unary instructions */
-assert identical(exec(r'str 1'),      "1");
-assert identical(exec(r'str 1.0'),    "1.0");
-assert identical(exec(r'type true'),  bool);
-assert identical(exec(r'type(true)'), bool);
-assert identical(exec(r'str(true)'),  "true");
+assert identical(exec(r'str 1'),       "1");
+assert identical(exec(r'str 1.0'),     "1.0");
+assert identical(exec(r'type true'),   bool);
+assert identical(exec(r'type(true)'),  bool);
+assert identical(exec(r'str(true)'),   "true");
+assert identical(exec(r'str 1;'),      "1");
+assert identical(exec(r'str 1.0;'),    "1.0");
+assert identical(exec(r'type true;'),  bool);
+assert identical(exec(r'type(true);'), bool);
+assert identical(exec(r'str(true);'),  "true");
 
 /* Parenthesis vs. tuples, as well as expand-Sequence casting. */
 assert identical(exec(r'(1)'),          1);
@@ -100,20 +115,82 @@ assert identical(exec(r'"foo".find !!is bound'), true);
 assert identical(exec(r'"foo".nonexisting_symbols !!is bound'), false);
 assert identical(exec(r'bound("foo".find)'), true);
 assert identical(exec(r'bound("foo".nonexisting_symbols)'), false);
+assert identical(exec(r'bound("foo".nonexisting_symbols);'), false);
 
+assert identical(exec(r'10'), 10);
+assert identical(exec(r'10;'), 10);
 assert identical(exec(r'[10, 20, "foo", false, none]'), [10, 20, "foo", false, none]);
+assert identical(exec(r'[10, 20, "foo", false, none];'), [10, 20, "foo", false, none]);
 assert identical(#exec(r'[10, 20, "foo", false, none]'), #[10, 20, "foo", false, none]);
-//assert exec(r'{ 10, 20, "foo", false, none }') == { 10, 20, "foo", false, none };
-//{
-//	local map = exec(r'{ 10: 20, 20: 30, "foo": "bar" }');
-//	assert #map == 3;
-//	assert identical(map.get(10), 20);
-//	assert identical(map.get(20), 30);
-//	assert identical(map.get("foo"), "bar");
-//	assert identical(map[10], 20);
-//	assert identical(map[20], 30);
-//	assert identical(map["foo"], "bar");
-//}
+assert identical(#exec(r'[10, 20, "foo", false, none];'), #[10, 20, "foo", false, none]);
+assert identical(exec(r'#[10, 20, "foo", false, none]'), #[10, 20, "foo", false, none]);
+assert identical(exec(r'#[10, 20, "foo", false, none];'), #[10, 20, "foo", false, none]);
+assert identical(exec(r'({ 10; })'), 10);
+assert identical(exec(r'({ 10; });'), 10);
+assert identical(exec(r'{ 10; }'), 10);
+assert identical(exec(r'{ 10; };'), none);
+assert exec(r'{ 10 }') == { 10 };
+assert exec(r'{ 10 };') == { 10 };
+assert exec(r'{ 10, }') == { 10 };
+assert exec(r'{ 10, };') == { 10 };
+assert identical(exec(r'{ 10, 20, "foo", false, none; }'), none);
+assert identical(exec(r'({ 10, 20, "foo", false, none; })'), none);
+assert identical(exec(r'{ 10, 20, "foo", false, none; }'), ({ 10, 20, "foo", false, none; }));
+assert identical(exec(r'({ 10, 20, "foo", false, none; })'), ({ 10, 20, "foo", false, none; }));
+
+for (local code: {
+	r'{ 10, 20, "foo", false, none }',
+	r'{ 10, 20, "foo", false, none };',
+	r'({ 10, 20, "foo", false, none })',
+	r'({ 10, 20, "foo", false, none });',
+}) {
+	assert exec(code) == { 10, 20, "foo", false, none };
+}
+
+for (local code: {
+	r'{ 10: 20, 20: 30, "foo": "bar" }',
+	r'({ 10: 20, 20: 30, "foo": "bar" })',
+	r'({ 10: 20, 20: 30, "foo": "bar" });',
+}) {
+	local map = exec(code);
+	assert identical(#map, 3);
+	assert identical(map.get(10), 20);
+	assert identical(map.get(20), 30);
+	assert identical(map.get("foo"), "bar");
+	assert identical(map[10], 20);
+	assert identical(map[20], 30);
+	assert identical(map["foo"], "bar");
+}
+
+for (local code: {
+	r'local x = { 10, 20, 30 };x;',
+	r'global x = { 10, 20, 30 };x;',
+	r'x = { 10, 20, 30 };x;',
+}) {
+	assert exec(code) == { 10, 20, 30 };
+}
+
+for (local code: {
+	r'x = 42;',
+	r'x = 42',
+	r'global x = 42;',
+	r'global x = 42',
+}) {
+	local glob = Dict();
+	exec(code, globals: glob);
+	assert identical(glob["x"], 42);
+}
+
+for (local code: {
+	r'x = { 10, 20, 30 };',
+	r'x = { 10, 20, 30 }',
+	r'global x = { 10, 20, 30 };',
+	r'global x = { 10, 20, 30 }',
+}) {
+	local glob = Dict();
+	exec(code, globals: glob);
+	assert glob["x"] == { 10, 20, 30 };
+}
 
 
 /* Conditional execution containing an errorous dead branch. */
@@ -127,6 +204,39 @@ assert identical(exec(r'true ? "ok" : "foo".bar.baz.bim'), "ok");
 	exec(r'result = x.center(y - 5)', globals: glob);
 	assert identical(glob["result"], "foo".center(15));
 }
+
+assert identical(exec(r'x = 2'), 2);
+assert identical(exec(r'x = 2;'), 2);
+assert identical(exec(r'global x = 2'), 2);
+assert identical(exec(r'global x = 2;'), 2);
+assert identical(exec(r'local x = 2'), 2);
+assert identical(exec(r'local x = 2;'), 2);
+
+assert identical(exec(r'function foo(x) -> x * 2')(7), 14);
+assert identical(exec(r'function foo(x) -> x * 2;')(7), 14);
+assert identical(exec(r'function foo(x) { return x * 2; }')(7), 14);
+assert identical(exec(r'function foo(x) { return x * 2; };')(7), none);
+assert identical(exec(r'global function foo(x) -> x * 2')(7), 14);
+assert identical(exec(r'global function foo(x) -> x * 2;')(7), 14);
+assert identical(exec(r'global function foo(x) { return x * 2; }')(7), 14);
+assert identical(exec(r'global function foo(x) { return x * 2; };')(7), none);
+assert identical(exec(r'local function foo(x) -> x * 2')(7), 14);
+assert identical(exec(r'local function foo(x) -> x * 2;')(7), 14);
+assert identical(exec(r'local function foo(x) { return x * 2; }')(7), 14);
+assert identical(exec(r'local function foo(x) { return x * 2; };')(7), none);
+assert identical(exec(r'function(x) -> x * 2')(7), 14);
+assert identical(exec(r'function(x) -> x * 2;')(7), 14);
+assert identical(exec(r'function(x) { return x * 2; }')(7), 14);
+assert identical(exec(r'function(x) { return x * 2; };')(7), none);
+assert identical(exec(r'[](x) -> x * 2')(7), 14);
+assert identical(exec(r'[](x) -> x * 2;')(7), 14);
+assert identical(exec(r'[](x) { return x * 2; }')(7), 14);
+/* Syntactic difference: `[]() { }' is an expression, so `[]() { };' still
+ * evaluates to that same expression. `function() { }' is a pseudo-statement
+ * that doesn't expect a trailing `;'-character, so `function() { };' are
+ * actually 2 statements `function() { }' and `;', with the later (`;')
+ * evaluating to `none'! */
+assert identical(exec(r'[](x) { return x * 2; };')(7), 14);
 
 
 /* Test simple lambda expressions */
@@ -174,8 +284,48 @@ assert identical(exec(r'true ? "ok" : "foo".bar.baz.bim'), "ok");
 	assert x.__globals__ === glob;
 }
 
+/* C-style cast expressions */
+assert identical(exec(r'(import("deemon").int)"42"'), 42);
+assert identical(exec(r'(import("deemon").int)42'), 42);
+assert identical(exec(r'(import("deemon").List){ 10, 20, 30 }'), [10, 20, 30]);
 
 
+for (local typ: { Tuple, List, Dict, HashSet }) {
+	for (local code: {
+		r'import("deemon").{typ}(())',
+		r'import("deemon").{typ}(());',
+		r'import("deemon").{typ}(none)',
+		r'import("deemon").{typ}(none);',
+		r'import("deemon").{typ}()',
+		r'import("deemon").{typ}();',
+//		r'local x = import("deemon").{typ}; x()', /* Not allowed! */
+		r'local x = import("deemon").{typ}; x();',
+		/* NOTE: Double-`{{' and `}}' is only here because that's how
+		 *       `{' and `}' characters are escaped in string.format() */
+		r'({{ local x = import("deemon").{typ}; x(); }})',
+		r'({{ local x = import("deemon").{typ}; x(); }});',
+		r'(import("deemon").{typ})(())',
+		r'(import("deemon").{typ})(());',
+		r'(import("deemon").{typ})(none)',
+		r'(import("deemon").{typ})(none);',
+		r'(import("deemon").{typ})()',
+		r'(import("deemon").{typ})();',
+		r'(import("deemon").{typ})none',
+		r'(import("deemon").{typ})none;',
+//TODO:		r'import("deemon").{typ} pack',
+//TODO:		r'import("deemon").{typ} pack;',
+//TODO:		r'import("deemon").{typ} pack()',
+//TODO:		r'import("deemon").{typ} pack();',
+	}) {
+		code = code.format({ "typ" : typ });
+		assert identical(exec(code), typ(()));
+		assert identical(exec(code), typ());
+	}
+}
+
+assert identical(exec(r'"{{foo{bar}}}".format({ "bar" : 42 })'), "{foo42}");
+assert identical(exec(r'"{{{bar}foo{bar}}}".format({ "bar" : 42 })'), "{42foo42}");
+assert identical(exec(r'"{{{baz}foo{bar}}}".format({ "bar" : 42, "baz" : 43 })'), "{43foo42}");
 
 
 

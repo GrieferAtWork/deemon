@@ -322,18 +322,18 @@ err_var_symbol:
 			JITLexer_Yield(self);
 
 			/* Allow syntax like this:
-			 * >> list my_list;
+			 * >> List my_list;
 			 * >> int my_int = 42;
 			 * >> MyClass my_instance(10,20,30);
-			 * >> thread my_thread = []{
+			 * >> Thread my_thread = []{
 			 * >>     print "Thread execution...";
 			 * >> };
 			 * >> my_thread.start();
 			 * Same as:
-			 * >> local my_list = list();
+			 * >> local my_list = List();
 			 * >> local my_int = int(42);
 			 * >> local my_instance = MyClass(10,20,30);
-			 * >> local my_thread = thread([]{
+			 * >> local my_thread = Thread([]{
 			 * >>     print "Thread execution...";
 			 * >> });
 			 * >> my_thread.start();
@@ -511,34 +511,39 @@ continue_at_comma:
 	if (self->jl_tok == '=') {
 #ifdef JIT_EVAL
 		JITLValue current_lvalue;
-#endif
+#endif /* JIT_EVAL */
 		RETURN_TYPE store_source;
 #ifdef JIT_EVAL
 		memcpy(&current_lvalue, &self->jl_lvalue, sizeof(JITLValue));
 		self->jl_lvalue.lv_kind = JIT_LVALUE_NONE;
-#endif
+#endif /* JIT_EVAL */
 
 		/* This is where the magic happens and where we
 		 * assign to expression in the active comma-list. */
 		JITLexer_Yield(self);
 		/* TODO: Add support for applying annotations here! */
+		{
+			uint16_t store_source_mode;
+			/* Must pass a pointer for pout_mode, since this call might
+			 * otherwise try to consume a trailing ';'-character. */
 #ifdef JIT_EVAL
-		store_source = JITLexer_EvalComma(self,
-		                                  AST_COMMA_PARSESINGLE |
-		                                  (mode & AST_COMMA_STRICTCOMMA),
-		                                  NULL,
-		                                  NULL);
-#else
-		store_source = JITLexer_SkipComma(self,
-		                                  AST_COMMA_PARSESINGLE |
-		                                  (mode & AST_COMMA_STRICTCOMMA),
-		                                  NULL);
-#endif
+			store_source = JITLexer_EvalComma(self,
+			                                  AST_COMMA_PARSESINGLE |
+			                                  (mode & AST_COMMA_STRICTCOMMA),
+			                                  NULL,
+			                                  &store_source_mode);
+#else /* JIT_EVAL */
+			store_source = JITLexer_SkipComma(self,
+			                                  AST_COMMA_PARSESINGLE |
+			                                  (mode & AST_COMMA_STRICTCOMMA),
+			                                  &store_source_mode);
+#endif /* !JIT_EVAL */
+		}
 		if (ISERR(store_source)) {
 #ifdef JIT_EVAL
 err_current_lvalue:
 			JITLValue_Fini(&current_lvalue);
-#endif
+#endif /* JIT_EVAL */
 			goto err_current;
 		}
 		LOAD_LVALUE(store_source, err_current_lvalue);

@@ -750,15 +750,15 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
 				goto err_no_keywords;
 		}
 	}
-	if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
-		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
-		func = tp_self->tp_init.tp_alloc.tp_any_ctor;
-		return DeeType_INVOKE_ANY_CTOR(func, tp_self, self, argc, argv);
-	}
 	if (tp_self->tp_init.tp_alloc.tp_ctor && !argc) {
 		int (DCALL *func)(DeeObject *__restrict);
 		func = tp_self->tp_init.tp_alloc.tp_ctor;
 		return DeeType_INVOKE_CTOR(func, tp_self, self);
+	}
+	if (tp_self->tp_init.tp_alloc.tp_any_ctor) {
+		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
+		func = tp_self->tp_init.tp_alloc.tp_any_ctor;
+		return DeeType_INVOKE_ANY_CTOR(func, tp_self, self, argc, argv);
 	}
 	if (tp_self->tp_init.tp_alloc.tp_copy_ctor &&
 	    (argc == 1 && DeeObject_InstanceOf(argv[0], tp_self))) {
@@ -1187,7 +1187,11 @@ instance_initsuper_as_init(DeeTypeObject *tp_super,
 		tp_super = DeeType_Base(tp_super);
 	ASSERTF(!(tp_super->tp_flags & TP_FVARIABLE), "Type derived from variable type");
 	/* Initialize the super-type. */
-	if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
+	if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
+		int (DCALL *func)(DeeObject *__restrict);
+		func   = tp_super->tp_init.tp_alloc.tp_ctor;
+		result = DeeType_INVOKE_CTOR(func, tp_super, self);
+	} else if (tp_super->tp_init.tp_alloc.tp_any_ctor) {
 		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor;
 		result = DeeType_INVOKE_ANY_CTOR(func, tp_super, self, argc, argv);
@@ -1195,10 +1199,6 @@ instance_initsuper_as_init(DeeTypeObject *tp_super,
 		int (DCALL *func)(DeeObject *, size_t, DeeObject *const *, DeeObject *);
 		func   = tp_super->tp_init.tp_alloc.tp_any_ctor_kw;
 		result = DeeType_INVOKE_ANY_CTOR_KW(func, tp_super, self, argc, argv, NULL);
-	} else if (tp_super->tp_init.tp_alloc.tp_ctor && !argc) {
-		int (DCALL *func)(DeeObject *__restrict);
-		func   = tp_super->tp_init.tp_alloc.tp_ctor;
-		result = DeeType_INVOKE_CTOR(func, tp_super, self);
 	} else {
 		result = err_unimplemented_constructor(tp_super, argc, argv);
 	}

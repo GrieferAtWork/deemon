@@ -4023,10 +4023,12 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_operatorids(DeeTypeOb
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_ctable(DeeTypeObject *__restrict self);
 
 PRIVATE struct type_getset type_getsets[] = {
-	TYPE_FEATURE_GETSETS { "isbuffer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
-	                       DOC("->?Dbool\n"
-	                           "Returns :true if @this Type implements the buffer interface\n"
-	                           "The most prominent Type to which this applies is :Bytes, however other types also support this") },
+	TYPE_FEATURE_GETSETS
+	/**/
+	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_isbuffer, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Returns :true if @this Type implements the buffer interface\n"
+	      "The most prominent Type to which this applies is :Bytes, however other types also support this") },
 	/* TODO: __mro__->?S?DType
 	 *    - Returns a sequence proxy detailing the method
 	 *     (attribute) resolution order used for @this Type:

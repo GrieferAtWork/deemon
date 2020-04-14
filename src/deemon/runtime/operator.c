@@ -576,6 +576,8 @@ do_invoke_var_any_ctor:
 						goto err_no_keywords;
 				}
 			}
+			if (object_type->tp_init.tp_var.tp_ctor && !argc)
+				goto do_invoke_var_ctor_nokw;
 			return (*object_type->tp_init.tp_var.tp_any_ctor)(argc, argv);
 		}
 		if (object_type->tp_init.tp_var.tp_ctor && !argc) {
@@ -592,6 +594,7 @@ do_invoke_var_ctor:
 						goto err_no_keywords;
 				}
 			}
+do_invoke_var_ctor_nokw:
 			return (*object_type->tp_init.tp_var.tp_ctor)();
 		}
 		if (object_type->tp_init.tp_var.tp_copy_ctor && argc == 1 &&
@@ -652,6 +655,8 @@ do_invoke_alloc_any_ctor:
 						goto err_no_keywords_r;
 				}
 			}
+			if (object_type->tp_init.tp_alloc.tp_ctor && !argc)
+				goto do_invoke_alloc_ctor_nokw;
 			error = (*object_type->tp_init.tp_alloc.tp_any_ctor)(result, argc, argv);
 		} else if (object_type->tp_init.tp_alloc.tp_ctor && !argc) {
 do_invoke_alloc_ctor:
@@ -667,6 +672,7 @@ do_invoke_alloc_ctor:
 						goto err_no_keywords_r;
 				}
 			}
+do_invoke_alloc_ctor_nokw:
 			error = (*object_type->tp_init.tp_alloc.tp_ctor)(result);
 		} else if (object_type->tp_init.tp_alloc.tp_copy_ctor && argc == 1 &&
 		           DeeObject_InstanceOf(argv[0], object_type)) {

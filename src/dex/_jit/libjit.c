@@ -95,7 +95,6 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	JITLexer_Start(&lexer,
 	               (unsigned char *)usertext,
 	               (unsigned char *)usertext + usersize);
-#if 1
 	{
 		unsigned int was;
 		result = JITLexer_EvalHybrid(&lexer, &was);
@@ -133,15 +132,6 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 			}
 		}
 	}
-#else
-	result = JITLexer_EvalComma(&lexer,
-	                            AST_COMMA_NORMAL |
-	                            AST_COMMA_STRICTCOMMA |
-	                            AST_COMMA_NOSUFFIXKWD |
-	                            AST_COMMA_PARSESINGLE,
-	                            NULL,
-	                            NULL);
-#endif
 	ASSERT(!result || (result == JIT_LVALUE) ==
 	                  (lexer.jl_lvalue.lv_kind != JIT_LVALUE_NONE));
 	/* Check if the resulting expression evaluates to an L-Value
@@ -151,6 +141,10 @@ libjit_exec_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		                            &context);
 		JITLValue_Fini(&lexer.jl_lvalue);
 		lexer.jl_lvalue.lv_kind = JIT_LVALUE_NONE;
+	}
+	if (context.jc_locals.otp_tab) {
+		JITObjectTable_Fini(context.jc_locals.otp_tab);
+		JITObjectTable_Free(context.jc_locals.otp_tab);
 	}
 	ASSERT(ts->t_exceptsz >= context.jc_except);
 	/* Check for non-propagated exceptions. */

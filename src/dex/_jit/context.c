@@ -794,8 +794,6 @@ set_global:
 			if (ent)
 				goto set_object_entry;
 		}
-		if (!self->jc_globals)
-			break;
 		/* If we're not allowed to declare things, always
 		 * assume that this is referring to a global */
 		if (!(mode & LOOKUP_SYM_ALLOWDECL))
@@ -805,7 +803,7 @@ set_global:
 		if (JITContext_IsGlobalScope(self))
 			goto set_global;
 		/* Check if the symbol exists within the global symbol table. */
-		{
+		if (self->jc_globals) {
 			int error;
 			error = DeeObject_HasItemStringLen(self->jc_globals,
 			                                   name,

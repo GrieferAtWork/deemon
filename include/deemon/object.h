@@ -984,6 +984,8 @@ struct Dee_type_constructor {
 #define tp_instance_size _dee_aunion.tp_instance_size
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 			;
+			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
+			 *           even when `tp_ctor' has been defined as non-NULL! */
 			WUNUSED NONNULL((1))
 			int (DCALL *tp_any_ctor_kw)(DeeObject *__restrict self, size_t argc,
 			                            DeeObject *const *argv, DeeObject *kw);
@@ -1007,6 +1009,8 @@ struct Dee_type_constructor {
 			WUNUSED              DREF DeeObject *(DCALL *tp_any_ctor)(size_t argc, DeeObject *const *argv);
 			        NONNULL((1)) void            (DCALL *tp_free)(void *__restrict ob);
 			struct { uintptr_t tp_pad; } tp_pad; /* ... */
+			/* WARNING: `tp_any_ctor_kw' may be invoked with `argc == 0 && kw == NULL',
+			 *           even when `tp_ctor' has been defined as non-NULL! */
 			DREF DeeObject *(DCALL *tp_any_ctor_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);
 		} tp_var; /* [valid_if(TP_FVARIABLE)] */
 	}
