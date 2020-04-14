@@ -1052,13 +1052,12 @@ again:
 	                     dwOptions)) {
 		DWORD dwError;
 		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
-		DBG_ALIGNMENT_ENABLE();
 		RETURN_ERROR(dwError,
 		             "Failed to duplicate handle "
 		             "(hSourceProcessHandle: %p, "
@@ -1135,13 +1134,12 @@ again:
 	                                 hTemplateFile);
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
 		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
-		DBG_ALIGNMENT_ENABLE();
 		RETURN_ERROR(dwError,
 		             "Failed to open file %lq (dwDesiredAccess: %#I32x, dwShareMode: %#I32x, "
 		             "dwCreationDisposition: %#I32x, dwFlagsAndAttributes: %#I32x, hTemplateFile: %p)",
@@ -1203,13 +1201,12 @@ again:
 	               &dwNumberOfBytesWritten,
 	               NULL)) {
 		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
-		DBG_ALIGNMENT_ENABLE();
 		DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FREADONLY);
 		RETURN_ERROR(dwError, "Failed to write to file %p", hFile);
 	}
@@ -1268,13 +1265,12 @@ again:
 	              &dwNumberOfBytesRead,
 	              NULL)) {
 		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
-		DBG_ALIGNMENT_ENABLE();
 		DeeObject_PutBuf(lpBuffer, &buffer, Dee_BUFFER_FWRITABLE);
 		RETURN_ERROR(dwError, "Failed to read from file %p", hFile);
 	}
@@ -1467,8 +1463,8 @@ again:
 	if (!bResult) {
 		DWORD dwError;
 		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
@@ -1580,7 +1576,6 @@ again:
 					goto err;
 				goto again;
 			}
-			DBG_ALIGNMENT_ENABLE();
 			RETURN_ERROR(dwError,
 			             "Failed to seek file %p (offset: %I64d, whence: %I32u)",
 			             hFile, lDistanceToMove, dwMoveMethod);
@@ -1636,13 +1631,12 @@ again:
 	                      &ftLastWriteTime.ft);
 	if (!bResult) {
 		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
-		DBG_ALIGNMENT_ENABLE();
 		RETURN_ERROR(dwError,
 		             "Failed to lookup file times of %p",
 		             hFile);
@@ -1806,8 +1800,9 @@ again:
 			}
 			if (dwError != NO_ERROR)
 				RETURN_ERROR(dwError, "Failed to determine TEMPPATH");
+		} else {
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
 			break;
 		/* Resize to fit. */
@@ -1878,8 +1873,9 @@ again:
 			}
 			if (dwError != NO_ERROR)
 				RETURN_ERROR(dwError, "Failed to determine the DLL Directory");
+		} else {
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
 			break;
 		/* Resize to fit. */
@@ -2136,6 +2132,8 @@ again:
 			             "Failed to determine drive type of %lq",
 			             lpRootPathName);
 		}
+	} else {
+		DBG_ALIGNMENT_ENABLE();
 	}
 	return DeeInt_NewUInt(uResult);
 err:
@@ -2256,8 +2254,9 @@ again:
 			}
 			if (dwError != NO_ERROR)
 				RETURN_ERROR(dwError, "Failed to determine the system directory");
+		} else {
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
 			break;
 		/* Resize to fit. */
@@ -2313,8 +2312,9 @@ again:
 			}
 			if (dwError != NO_ERROR)
 				RETURN_ERROR(dwError, "Failed to determine the Windows directory");
+		} else {
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
 			break;
 		/* Resize to fit. */
@@ -2368,8 +2368,9 @@ again:
 			}
 			if (dwError != NO_ERROR)
 				RETURN_ERROR(dwError, "Failed to determine the System-Windows directory");
+		} else {
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
 			break;
 		/* Resize to fit. */
@@ -2445,8 +2446,9 @@ again:
 			}
 			if (dwError != NO_ERROR)
 				RETURN_ERROR(dwError, "Failed to determine the SystemWow64 directory");
+		} else {
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
 			break;
 		/* Resize to fit. */
@@ -2517,8 +2519,9 @@ again:
 			}
 			if (dwError != NO_ERROR)
 				RETURN_ERROR(dwError, "Failed to query logical drive strings");
+		} else {
+			DBG_ALIGNMENT_ENABLE();
 		}
-		DBG_ALIGNMENT_ENABLE();
 		if (dwError <= dwBufSize)
 			break;
 		/* Resize to fit. */
@@ -2865,8 +2868,9 @@ again:
 		}
 		if (dwError != NO_ERROR)
 			RETURN_ERROR(dwError, "Failed to determine the compressed size of %lq", lpFileName);
+	} else {
+		DBG_ALIGNMENT_ENABLE();
 	}
-	DBG_ALIGNMENT_ENABLE();
 	return DeeInt_NewU64((uint64_t)dwSizeLow |
 	                     (uint64_t)dwSizeHigh << 32);
 err:
@@ -3130,6 +3134,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f_impl(HANDLE hF
 	DREF DeeObject *result;
 	LPVOID pResult;
 again:
+	DBG_ALIGNMENT_DISABLE();
 	pResult = MapViewOfFile(hFileMappingObject,
 	                        dwDesiredAccess,
 	                        (DWORD)(dwFileOffset >> 32),
@@ -3138,6 +3143,7 @@ again:
 	if (pResult == NULL) {
 		DWORD dwError;
 		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
 				goto err;
@@ -3149,12 +3155,15 @@ again:
 		             hFileMappingObject, dwDesiredAccess,
 		             dwFileOffset, dwNumberOfBytesToMap);
 	}
+	DBG_ALIGNMENT_ENABLE();
 	result = DeeCTypes_CreateVoidPointer(pResult);
 	if unlikely(!result) {
 		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		UnmapViewOfFile(pResult);
 		SetLastError(dwError);
+		DBG_ALIGNMENT_ENABLE();
 	}
 	return result;
 err:
@@ -3189,9 +3198,11 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *l
 {
 	BOOL bOk;
 again:
+	DBG_ALIGNMENT_DISABLE();
 	bOk = UnmapViewOfFile((LPCVOID)lpBaseAddress);
 	if (!bOk) {
 		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
 				goto err;
@@ -3201,6 +3212,7 @@ again:
 		                      "failed to unmap view of file at %p",
 		                      lpBaseAddress);
 	}
+	DBG_ALIGNMENT_ENABLE();
 	RETURN_SUCCESS_OR_TRUE;
 err:
 	return NULL;
@@ -3254,6 +3266,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f_impl(HANDL
 	HANDLE hResult;
 again:
 	(void)lpFileMappingAttributes; /* TODO */
+	DBG_ALIGNMENT_DISABLE();
 	hResult = CreateFileMappingW(hFile,
 	                             NULL,
 	                             flProtect,
@@ -3263,6 +3276,7 @@ again:
 	if (hResult == NULL) {
 		DWORD dwError;
 		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
 				goto err;
@@ -3273,12 +3287,15 @@ again:
 		             "(flProtect: %#I32x, dwMaximumSize: %I64u, lpName: %lq)",
 		             hFile, flProtect, dwMaximumSize, lpName);
 	}
+	DBG_ALIGNMENT_ENABLE();
 	result = libwin32_CreateHandle(hResult);
 	if unlikely(!result) {
 		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		CloseHandle(hResult);
 		SetLastError(dwError);
+		DBG_ALIGNMENT_ENABLE();
 	}
 	return result;
 err:
@@ -3303,7 +3320,11 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f_impl(void)
 //[[[end]]]
 {
-	return libwin32_CreateHandle(GetCurrentProcess());
+	HANDLE hCurrentProcess;
+	DBG_ALIGNMENT_DISABLE();
+	hCurrentProcess = GetCurrentProcess();
+	DBG_ALIGNMENT_ENABLE();
+	return libwin32_CreateHandle(hCurrentProcess);
 }
 
 
@@ -3324,7 +3345,11 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f_impl(void)
 //[[[end]]]
 {
-	return libwin32_CreateHandle(GetCurrentThread());
+	HANDLE hCurrentThread;
+	DBG_ALIGNMENT_DISABLE();
+	hCurrentThread = GetCurrentProcess();
+	DBG_ALIGNMENT_ENABLE();
+	return libwin32_CreateHandle(hCurrentThread);
 }
 
 
@@ -3345,7 +3370,11 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f_impl(void)
 //[[[end]]]
 {
-	return DeeInt_NewU32(GetCurrentProcessId());
+	DWORD dwCurrentProcessId;
+	DBG_ALIGNMENT_DISABLE();
+	dwCurrentProcessId = GetCurrentProcessId();
+	DBG_ALIGNMENT_ENABLE();
+	return DeeInt_NewU32(dwCurrentProcessId);
 }
 
 
@@ -3366,7 +3395,11 @@ err:
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void)
 //[[[end]]]
 {
-	return DeeInt_NewU32(GetCurrentThreadId());
+	DWORD dwCurrentThreadId;
+	DBG_ALIGNMENT_DISABLE();
+	dwCurrentThreadId = GetCurrentThreadId();
+	DBG_ALIGNMENT_ENABLE();
+	return DeeInt_NewU32(dwCurrentThreadId);
 }
 
 
@@ -3393,8 +3426,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f_impl(int32_t nS
 //[[[end]]]
 {
 	HANDLE hResult;
-	DBG_ALIGNMENT_DISABLE();
 again:
+	DBG_ALIGNMENT_DISABLE();
 	hResult = GetStdHandle((DWORD)nStdHandle);
 	if unlikely(!hResult || hResult == INVALID_HANDLE_VALUE) {
 		DWORD dwError = GetLastError();
@@ -3417,9 +3450,11 @@ check_interrupt:
 				             "Failed to get STD handle %I32d",
 				             nStdHandle);
 			}
+			goto done;
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();
+done:
 	return libwin32_CreateHandle(hResult);
 err:
 	return NULL;
@@ -3537,13 +3572,12 @@ again:
 	                           NULL);
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
 		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
-			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
 		}
-		DBG_ALIGNMENT_ENABLE();
 		RETURN_ERROR(dwError,
 		             "Failed to create named pipe %lq (dwOpenMode: %#I32x, dwPipeMode: %#I32x, "
 		             "nMaxInstances: %#I32x, nOutBufferSize: %#I32x, nInBufferSize: %#I32x, "
