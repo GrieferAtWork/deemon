@@ -1,0 +1,104 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2020 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+local a = "0x0X012340X0x0";
+local b = "0x0X043210X0x0".bytes();
+
+assert a.lsstrip("0x") == "0X012340X0x0";
+assert a.rsstrip("x0") == "0x0X012340X0";
+assert b.lsstrip("0x") == "0X043210X0x0";
+assert b.rsstrip("x0") == "0x0X043210X0";
+assert a.sstrip("0x") == "0X012340X0x0";
+assert a.sstrip("x0") == "0x0X012340X0";
+assert b.sstrip("0x") == "0X043210X0x0";
+assert b.sstrip("x0") == "0x0X043210X0";
+
+assert a.lstrip("0x") == "X012340X0x0";
+assert a.lstrip("x0") == "X012340X0x0";
+assert b.lstrip("0x") == "X043210X0x0";
+assert b.lstrip("x0") == "X043210X0x0";
+assert a.rstrip("x0") == "0x0X012340X";
+assert a.rstrip("0x") == "0x0X012340X";
+assert b.rstrip("x0") == "0x0X043210X";
+assert b.rstrip("0x") == "0x0X043210X";
+assert a.strip("0x") == "X012340X";
+assert a.strip("x0") == "X012340X";
+assert b.strip("0x") == "X043210X";
+assert b.strip("x0") == "X043210X";
+
+assert a.caselsstrip("0x") == "012340X0x0";
+assert a.casersstrip("x0") == "0x0X012340";
+assert b.caselsstrip("0x") == "043210X0x0";
+assert b.casersstrip("x0") == "0x0X043210";
+assert a.casesstrip("0x") == "012340X0x0";
+assert a.casesstrip("x0") == "0x0X012340";
+assert b.casesstrip("0x") == "043210X0x0";
+assert b.casesstrip("x0") == "0x0X043210";
+
+assert a.caselstrip("0x") == "12340X0x0";
+assert a.caselstrip("x0") == "12340X0x0";
+assert b.caselstrip("0x") == "43210X0x0";
+assert b.caselstrip("x0") == "43210X0x0";
+assert a.caserstrip("x0") == "0x0X01234";
+assert a.caserstrip("0x") == "0x0X01234";
+assert b.caserstrip("x0") == "0x0X04321";
+assert b.caserstrip("0x") == "0x0X04321";
+assert a.casestrip("0x") == "1234";
+assert a.casestrip("x0") == "1234";
+assert b.casestrip("0x") == "4321";
+assert b.casestrip("x0") == "4321";
+
+assert a.caselsstrip("0X") == "012340X0x0";
+assert a.casersstrip("X0") == "0x0X012340";
+assert b.caselsstrip("0X") == "043210X0x0";
+assert b.casersstrip("X0") == "0x0X043210";
+assert a.casesstrip("0X") == "012340X0x0";
+assert a.casesstrip("X0") == "0x0X012340";
+assert b.casesstrip("0X") == "043210X0x0";
+assert b.casesstrip("X0") == "0x0X043210";
+
+assert a.caselstrip("0X") == "12340X0x0";
+assert a.caselstrip("X0") == "12340X0x0";
+assert b.caselstrip("0X") == "43210X0x0";
+assert b.caselstrip("X0") == "43210X0x0";
+assert a.caserstrip("X0") == "0x0X01234";
+assert a.caserstrip("0X") == "0x0X01234";
+assert b.caserstrip("X0") == "0x0X04321";
+assert b.caserstrip("0X") == "0x0X04321";
+assert a.casestrip("0X") == "1234";
+assert a.casestrip("X0") == "1234";
+assert b.casestrip("0X") == "4321";
+assert b.casestrip("X0") == "4321";
+
+assert a.lsstrip("") == "0x0X012340X0x0";
+assert a.rsstrip("") == "0x0X012340X0x0";
+assert a.sstrip("") == "0x0X012340X0x0";
+assert a.lstrip("") == "0x0X012340X0x0";
+assert a.rstrip("") == "0x0X012340X0x0";
+assert a.strip("") == "0x0X012340X0x0";
+
+assert b.lsstrip("") == "0x0X043210X0x0";
+assert b.rsstrip("") == "0x0X043210X0x0";
+assert b.sstrip("") == "0x0X043210X0x0";
+assert b.lstrip("") == "0x0X043210X0x0";
+assert b.rstrip("") == "0x0X043210X0x0";
+assert b.strip("") == "0x0X043210X0x0";
+

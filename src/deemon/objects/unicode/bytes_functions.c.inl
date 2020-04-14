@@ -1991,7 +1991,7 @@ bytes_sstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (get_needle(&needle, mask))
 		goto err;
-	if (needle.n_size)
+	if unlikely(!needle.n_size)
 		goto retself;
 	begin = DeeBytes_DATA(self);
 	size  = DeeBytes_SIZE(self);
@@ -2027,7 +2027,7 @@ bytes_casesstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (get_needle(&needle, mask))
 		goto err;
-	if (needle.n_size)
+	if unlikely(!needle.n_size)
 		goto retself;
 	begin = DeeBytes_DATA(self);
 	size  = DeeBytes_SIZE(self);
@@ -2063,7 +2063,7 @@ bytes_lsstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (get_needle(&needle, mask))
 		goto err;
-	if (needle.n_size)
+	if unlikely(!needle.n_size)
 		goto retself;
 	begin = DeeBytes_DATA(self);
 	size  = DeeBytes_SIZE(self);
@@ -2093,7 +2093,7 @@ bytes_caselsstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (get_needle(&needle, mask))
 		goto err;
-	if (needle.n_size)
+	if unlikely(!needle.n_size)
 		goto retself;
 	begin = DeeBytes_DATA(self);
 	size  = DeeBytes_SIZE(self);
@@ -2123,7 +2123,7 @@ bytes_rsstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (get_needle(&needle, mask))
 		goto err;
-	if (needle.n_size)
+	if unlikely(!needle.n_size)
 		goto retself;
 	begin = DeeBytes_DATA(self);
 	size  = DeeBytes_SIZE(self);
@@ -2152,7 +2152,7 @@ bytes_casersstrip(Bytes *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (get_needle(&needle, mask))
 		goto err;
-	if (needle.n_size)
+	if unlikely(!needle.n_size)
 		goto retself;
 	begin = DeeBytes_DATA(self);
 	size  = DeeBytes_SIZE(self);
@@ -2172,11 +2172,11 @@ err:
 }
 
 struct bcompare_args {
-	DeeObject *other; /* [1..1] String or Bytes object. */
-	uint8_t *lhs_ptr; /* [0..my_len] Starting pointer of lhs. */
-	size_t lhs_len;   /* Number of bytes in lhs. */
-	uint8_t *rhs_ptr; /* [0..my_len] Starting pointer of rhs. */
-	size_t rhs_len;   /* Number of bytes in rhs. */
+	DeeObject *other;   /* [1..1] String or Bytes object. */
+	uint8_t   *lhs_ptr; /* [0..my_len] Starting pointer of lhs. */
+	size_t     lhs_len; /* # of bytes in lhs. */
+	uint8_t   *rhs_ptr; /* [0..my_len] Starting pointer of rhs. */
+	size_t     rhs_len; /* # of bytes in rhs. */
 };
 
 PRIVATE int DCALL
