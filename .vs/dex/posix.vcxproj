@@ -68,6 +68,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\dex\posix\p-access.c.inl" />
+    <None Include="..\..\src\dex\posix\p-cpucount.c.inl" />
     <None Include="..\..\src\dex\posix\p-errno.c.inl" />
     <None Include="..\..\src\dex\posix\p-exit.c.inl" />
     <None Include="..\..\src\dex\posix\p-fd.c.inl" />

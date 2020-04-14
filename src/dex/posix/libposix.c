@@ -26,6 +26,7 @@
 
 #ifndef __INTELLISENSE__
 #include "p-access.c.inl"
+#include "p-cpucount.c.inl"
 #include "p-errno.c.inl"
 #include "p-exit.c.inl"
 #include "p-fd.c.inl"
@@ -152,6 +153,9 @@ PRIVATE char const missing_features[] =
 #ifdef posix_euidaccess_USE_STUB
 "euidaccess\0"
 #endif /* posix_euidaccess_USE_STUB */
+#ifdef posix_cpu_count_USE_STUB
+"cpu_count\0"
+#endif /* posix_cpu_count_USE_STUB */
 ""
 ;
 
@@ -349,14 +353,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_UNSETENV_DEF)
 	D(POSIX_CLEARENV_DEF)
 
-/* Python-like helper functions */
-/* TODO: cpu_count() */
-/* TODO: get_inheritable() */
-/* TODO: set_inheritable() */
+	/* Python-like helper functions */
+	D(POSIX_CPU_COUNT_DEF_DOC("Returns the # of available processors on the host machine"))
+	/* TODO: get_inheritable() */
+	/* TODO: set_inheritable() */
 
-/* Higher-level wrapper functions */
-/* TODO: popen() */
-/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
+	/* Higher-level wrapper functions */
+	/* TODO: popen() */
+	/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
 
 /* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \

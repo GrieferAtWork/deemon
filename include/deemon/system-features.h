@@ -758,6 +758,18 @@ var("environ");
 var("_environ");
 var("__environ");
 
+functest("sysconf(0)", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix));
+functest("_sysconf(0)");
+functest("mpctl(0, 0, 0)", "defined(__hpux__)");
+functest("sysctl(0, 0, 0, 0, 0, 0)");
+
+constant("_SC_NPROCESSORS_ONLN");
+constant("_SC_NPROC_ONLN");
+constant("MPC_GETNUMSPUS", "defined(__hpux__)");
+constant("CTL_HW");
+constant("HW_AVAILCPU");
+constant("HW_NCPU");
+
 //END:FEATURES
 
 // NOTE: Other config features used in deemon source files:
@@ -5441,7 +5453,98 @@ var("__environ");
       (defined(__environ) || defined(____environ_defined))
 #define CONFIG_HAVE___environ 1
 #endif
+
+#ifdef CONFIG_NO_sysconf
+#undef CONFIG_HAVE_sysconf
+#elif !defined(CONFIG_HAVE_sysconf) && \
+      (defined(sysconf) || defined(__sysconf_defined) || (defined(CONFIG_HAVE_UNISTD_H) || \
+       (defined(__linux__) || defined(__linux) || defined(linux) || defined(__unix__) || \
+       defined(__unix) || defined(unix))))
+#define CONFIG_HAVE_sysconf 1
+#endif
+
+#ifdef CONFIG_NO__sysconf
+#undef CONFIG_HAVE__sysconf
+#elif !defined(CONFIG_HAVE__sysconf) && \
+      (defined(_sysconf) || defined(___sysconf_defined))
+#define CONFIG_HAVE__sysconf 1
+#endif
+
+#ifdef CONFIG_NO_mpctl
+#undef CONFIG_HAVE_mpctl
+#elif !defined(CONFIG_HAVE_mpctl) && \
+      (defined(mpctl) || defined(__mpctl_defined) || defined(__hpux__))
+#define CONFIG_HAVE_mpctl 1
+#endif
+
+#ifdef CONFIG_NO_sysctl
+#undef CONFIG_HAVE_sysctl
+#elif !defined(CONFIG_HAVE_sysctl) && \
+      (defined(sysctl) || defined(__sysctl_defined))
+#define CONFIG_HAVE_sysctl 1
+#endif
+
+#ifdef CONFIG_NO__SC_NPROCESSORS_ONLN
+#undef CONFIG_HAVE__SC_NPROCESSORS_ONLN
+#elif !defined(CONFIG_HAVE__SC_NPROCESSORS_ONLN) && \
+      (defined(_SC_NPROCESSORS_ONLN) || defined(___SC_NPROCESSORS_ONLN_defined))
+#define CONFIG_HAVE__SC_NPROCESSORS_ONLN 1
+#endif
+
+#ifdef CONFIG_NO__SC_NPROC_ONLN
+#undef CONFIG_HAVE__SC_NPROC_ONLN
+#elif !defined(CONFIG_HAVE__SC_NPROC_ONLN) && \
+      (defined(_SC_NPROC_ONLN) || defined(___SC_NPROC_ONLN_defined))
+#define CONFIG_HAVE__SC_NPROC_ONLN 1
+#endif
+
+#ifdef CONFIG_NO_MPC_GETNUMSPUS
+#undef CONFIG_HAVE_MPC_GETNUMSPUS
+#elif !defined(CONFIG_HAVE_MPC_GETNUMSPUS) && \
+      (defined(MPC_GETNUMSPUS) || defined(__MPC_GETNUMSPUS_defined) || defined(__hpux__))
+#define CONFIG_HAVE_MPC_GETNUMSPUS 1
+#endif
+
+#ifdef CONFIG_NO_CTL_HW
+#undef CONFIG_HAVE_CTL_HW
+#elif !defined(CONFIG_HAVE_CTL_HW) && \
+      (defined(CTL_HW) || defined(__CTL_HW_defined))
+#define CONFIG_HAVE_CTL_HW 1
+#endif
+
+#ifdef CONFIG_NO_HW_AVAILCPU
+#undef CONFIG_HAVE_HW_AVAILCPU
+#elif !defined(CONFIG_HAVE_HW_AVAILCPU) && \
+      (defined(HW_AVAILCPU) || defined(__HW_AVAILCPU_defined))
+#define CONFIG_HAVE_HW_AVAILCPU 1
+#endif
+
+#ifdef CONFIG_NO_HW_NCPU
+#undef CONFIG_HAVE_HW_NCPU
+#elif !defined(CONFIG_HAVE_HW_NCPU) && \
+      (defined(HW_NCPU) || defined(__HW_NCPU_defined))
+#define CONFIG_HAVE_HW_NCPU 1
+#endif
 //[[[end]]]
+
+
+/* Figure out of the host has a /proc filesystem.
+ * NOTE: This configure option simply controls a couple of
+ *       optional features and only impacts things that may
+ *       be attempted at runtime to implement various functions.
+ *       One such function is dex:posix.cpu_count(), which tries
+ *       to make use of `/proc/cpuinfo' when this option is enabled.
+ * Anything that uses this feature still functions properly, even
+ * when a /proc filesystem is actually available at runtime.
+ * Furthermore, certain components may simply assume that a /proc
+ * filesystem is available at runtime, irregardless of this configure
+ * option (such as the unix implementation of dex:ipc) */
+#ifdef CONFIG_NO_PROCFS
+#undef CONFIG_HAVE_PROCFS
+#elif !defined(CONFIG_HAVE_PROCFS) && defined(CONFIG_HOST_UNIX)
+#define CONFIG_HAVE_PROCFS 1
+#endif
+
 
 
 /* Figure out if we want to prefer wchar_t-functions over char-functions */
@@ -5901,6 +6004,11 @@ var("__environ");
 #define CONFIG_HAVE_wexecpv 1
 #define wexecvp(path, argv) wexecvpe(path, argv, environ)
 #endif /* wexecvp = wexecvpe */
+
+#if defined(CONFIG_HAVE__sysconf) && !defined(CONFIG_HAVE_sysconf)
+#define CONFIG_HAVE_sysconf 1
+#define sysconf _sysconf
+#endif /* sysconf = _sysconf */
 
 
 
