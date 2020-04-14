@@ -700,7 +700,7 @@ functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || 
 //       that `NULL' be returned, as deemon considers an empty string not
 //       to be contained ~in-between two other characters~
 // KOS provides this behavior when given the `_MEMMEM_EMPTY_NEEDLE_SOURCE' option,
-// which report back an ACK in the form of `__USE_MEMMEM_EMPTY_NEEDLE_NULL'
+// which reports back an ACK in the form of `__USE_MEMMEM_EMPTY_NEEDLE_NULL'
 // NOTE: Because we need the specific KOS-variant of this (and because the KOS variant
 //       is guarantied to report back its presence with `__USE_MEMMEM_EMPTY_NEEDLE_NULL'),
 //       we don't include these configure options as part of the autoconf testing (which

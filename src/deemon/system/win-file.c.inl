@@ -1047,12 +1047,14 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_close(SystemFile *__restrict self) {
-	DBG_ALIGNMENT_DISABLE();
-	if unlikely(!CloseHandle(self->sf_ownhandle)) {
+	if (self->sf_ownhandle != INVALID_HANDLE_VALUE) {
+		DBG_ALIGNMENT_DISABLE();
+		if unlikely(!CloseHandle(self->sf_ownhandle)) {
+			DBG_ALIGNMENT_ENABLE();
+			return error_file_io(self);
+		}
 		DBG_ALIGNMENT_ENABLE();
-		return error_file_io(self);
 	}
-	DBG_ALIGNMENT_ENABLE();
 	self->sf_handle    = INVALID_HANDLE_VALUE;
 	self->sf_ownhandle = INVALID_HANDLE_VALUE;
 	return 0;
@@ -1090,6 +1092,59 @@ PRIVATE struct type_getset sysfile_getsets[] = {
 	{ "filename", &DeeSystemFile_Filename, NULL, NULL, DOC("->?Dstring") },
 	{ NULL }
 };
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sysfile_init_kw(SystemFile *__restrict self,
+                size_t argc, DeeObject *const *argv,
+                DeeObject *kw) {
+	PRIVATE DEFINE_KWLIST(kwlist, { K(handle), K(inherit), K(duplicate), KEND });
+	bool inherit = false;
+	bool duplicate = false;
+	HANDLE hHandle;
+	DeeObject *hHandleObj;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bb:_SystemFile",
+	                    &hHandleObj, &inherit, &duplicate))
+		goto err;
+	hHandle = (HANDLE)DeeNTSystem_GetHandle(hHandleObj);
+	if unlikely(hHandle == INVALID_HANDLE_VALUE)
+		goto err;
+	if (duplicate) {
+		HANDLE hDuplicatedHandle;
+		HANDLE hMyProcess = GetCurrentProcess();
+again_duplicate:
+		DBG_ALIGNMENT_DISABLE();
+		if (!DuplicateHandle(hMyProcess, hHandle,
+		                     hMyProcess, &hDuplicatedHandle,
+		                     0, TRUE, DUPLICATE_SAME_ACCESS)) {
+			DWORD dwError;
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeNTSystem_IsIntr(dwError)) {
+				if (DeeThread_CheckInterrupt())
+					goto err;
+				goto again_duplicate;
+			}
+			DeeNTSystem_ThrowErrorf(NULL, dwError,
+			                        "Failed to duplicate handle %p",
+			                        hHandle);
+		}
+		DBG_ALIGNMENT_ENABLE();
+		self->sf_handle    = (void *)hDuplicatedHandle;
+		self->sf_ownhandle = (void *)hDuplicatedHandle;
+	} else {
+		self->sf_handle    = (void *)hHandle;
+		self->sf_ownhandle = INVALID_HANDLE_VALUE;
+		if (inherit)
+			self->sf_ownhandle = (void *)hHandle;
+	}
+	self->sf_filename = NULL;
+	self->sf_filetype = FILE_TYPE_UNKNOWN;
+	self->sf_pendingc = 0;
+	rwlock_init(&self->fo_lock);
+	return 0;
+err:
+	return -1;
+}
 
 PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
@@ -1142,7 +1197,12 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_SystemFile",
-		/* .tp_doc      = */ NULL,
+		/* .tp_doc      = */ DOC("(handle:?X3?Dint?DFile?Ewin32:HANDLE,inherit=!f,duplicate=!f)\n"
+		                         "Construct a new SystemFile wrapper for @handle. When @inherit is "
+		                         ":true, the given @handle is inherited (and automatically closed "
+		                         "once the returned :File is destroyed or #{close}ed. When @duplicate "
+		                         "is :true, the given @handle is duplicated, and the duplicated copy "
+		                         "will be stored inside (in this case, @inherit is ignored)"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_HASFILEOPS,
@@ -1154,7 +1214,8 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 					/* .tp_copy_ctor = */ NULL,
 					/* .tp_deep_ctor = */ NULL,
 					/* .tp_any_ctor  = */ NULL,
-					TYPE_FIXED_ALLOCATOR(SystemFile)
+					TYPE_FIXED_ALLOCATOR(SystemFile),
+					/* .tp_any_ctor_kw = */ (void *)&sysfile_init_kw
 				}
 			},
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sysfile_fini,

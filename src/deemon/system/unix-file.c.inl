@@ -720,6 +720,72 @@ PRIVATE struct type_getset sysfile_getsets[] = {
 	{ NULL }
 };
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+sysfile_init_kw(SystemFile *__restrict self,
+                size_t argc, DeeObject *const *argv,
+                DeeObject *kw) {
+	PRIVATE DEFINE_KWLIST(kwlist, { K(fd), K(inherit), K(duplicate), KEND });
+	bool inherit = false;
+	bool duplicate = false;
+	int fd;
+	DeeObject *fdobj;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bb:_SystemFile",
+	                    &fdobj, &inherit, &duplicate))
+		goto err;
+	fd = DeeUnixSystem_GetFD(fdobj);
+	if unlikely(fd == -1)
+		goto err;
+	if (duplicate) {
+#ifdef CONFIG_HAVE_dup
+		int dupfd;
+#ifdef EINTR
+again_dup:
+#endif /* EINTR */
+		DBG_ALIGNMENT_DISABLE();
+		dupfd = dup(fd);
+		if unlikely(dupfd < 0) {
+			int error = DeeSystem_GetErrno();
+			DBG_ALIGNMENT_ENABLE();
+#ifdef EINTR
+			if (error == EINTR)
+				goto again_dup;
+#endif /* EINTR */
+#ifdef ENOSYS
+			if (error == ENOSYS) {
+				DeeError_Throwf(&DeeError_UnsupportedAPI,
+				                "Unsupported function `dup'");
+				goto err;
+			}
+#endif /* ENOSYS */
+#ifdef EBADF
+			if (error == EBADF) {
+				DeeError_Throwf(&DeeError_FileClosed,
+				                "Invalid handle %d", fd);
+			}
+#endif /* EBADF */
+			DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                          "Failed to dup %d", fd);
+			goto err;
+		}
+		DBG_ALIGNMENT_ENABLE();
+#else /* CONFIG_HAVE_dup */
+		DeeError_Throwf(&DeeError_UnsupportedAPI,
+		                "Unsupported function `dup'");
+		goto err;
+#endif /* !CONFIG_HAVE_dup */
+	} else {
+		self->sf_handle    = (DeeSysFD)fd;
+		self->sf_ownhandle = (DeeSysFD)-1;
+		if (inherit)
+			self->sf_ownhandle = (DeeSysFD)fd;
+	}
+	self->sf_filename = NULL;
+	rwlock_init(&self->fo_lock);
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE NONNULL((1)) void DCALL
 sysfile_fini(SystemFile *__restrict self) {
 #ifdef CONFIG_HAVE_close
@@ -766,7 +832,12 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_SystemFile",
-		/* .tp_doc      = */ NULL,
+		/* .tp_doc      = */ DOC("(fd:?X2?Dint?DFile,inherit=!f,duplicate=!f)\n"
+		                         "Construct a new SystemFile wrapper for @fd. When @inherit is "
+		                         ":true, the given @fd is inherited (and automatically closed "
+		                         "once the returned :File is destroyed or #{close}ed. When @duplicate "
+		                         "is :true, the given @fd is duplicated, and the duplicated copy "
+		                         "will be stored inside (in this case, @inherit is ignored)"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_HASFILEOPS,
@@ -778,7 +849,8 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 					/* .tp_copy_ctor = */ NULL,
 					/* .tp_deep_ctor = */ NULL,
 					/* .tp_any_ctor  = */ NULL,
-					TYPE_FIXED_ALLOCATOR(SystemFile)
+					TYPE_FIXED_ALLOCATOR(SystemFile),
+					/* .tp_any_ctor_kw = */ &sysfile_init_kw
 				}
 			},
 			/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&sysfile_fini,
@@ -825,7 +897,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ "_FSFile",
 		/* .tp_doc      = */ NULL,
-		/* .tp_flags    = */ TP_FNORMAL,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FINHERITCTOR,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeSystemFile_Type,
