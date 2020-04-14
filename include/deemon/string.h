@@ -2190,8 +2190,11 @@ struct Dee_unicode_printer {
 NONNULL((1)) void Dee_unicode_printer_init(struct Dee_unicode_printer *__restrict self);
 NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restrict self);
 #else /* __INTELLISENSE__ */
-#define Dee_unicode_printer_init(self) ((self)->up_length = 0,(self)->up_buffer = NULL,(self)->up_flags = Dee_STRING_WIDTH_1BYTE)
-#define Dee_unicode_printer_fini(self) DeeString_FreeWidthBuffer((self)->up_buffer,UNICODE_PRINTER_WIDTH(self))
+#define Dee_unicode_printer_init(self)                \
+	((self)->up_length = 0, (self)->up_buffer = NULL, \
+	 (self)->up_flags = Dee_STRING_WIDTH_1BYTE)
+#define Dee_unicode_printer_fini(self) \
+	DeeString_FreeWidthBuffer((self)->up_buffer, Dee_UNICODE_PRINTER_WIDTH(self))
 #endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
@@ -2298,13 +2301,13 @@ NONNULL((1)) void Dee_unicode_printer_fini(struct Dee_unicode_printer *__restric
 #define Dee_UNICODE_PRINTER_LENGTH(x)        ((x)->up_length) /* Used length */
 #define Dee_UNICODE_PRINTER_BUFSIZE(x)       ((x)->up_buffer ? Dee_WSTR_LENGTH((x)->up_buffer) : NULL) /* Allocated length */
 #define Dee_UNICODE_PRINTER_WIDTH(x)         ((x)->up_flags & Dee_UNICODE_PRINTER_FWIDTH) /* Current width */
-#define Dee_UNICODE_PRINTER_GETCHAR(x, i)    Dee_STRING_WIDTH_GETCHAR(UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i)    /* Get a character */
-#define Dee_UNICODE_PRINTER_SETCHAR(x, i, v) Dee_STRING_WIDTH_SETCHAR(UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i, v) /* Replace a character (`v' must fit into the buffer's current width) */
+#define Dee_UNICODE_PRINTER_GETCHAR(x, i)    Dee_STRING_WIDTH_GETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i)    /* Get a character */
+#define Dee_UNICODE_PRINTER_SETCHAR(x, i, v) Dee_STRING_WIDTH_SETCHAR(Dee_UNICODE_PRINTER_WIDTH(x), (x)->up_buffer, i, v) /* Replace a character (`v' must fit into the buffer's current width) */
 
 #ifndef NDEBUG
-#define Dee_unicode_printer_truncate(self, len)                                         \
-	(void)(Dee_ASSERT((len) <= (self)->up_length),                                      \
-	       (self)->up_length ? (void)UNICODE_PRINTER_SETCHAR(self, (len), 0) : (void)0, \
+#define Dee_unicode_printer_truncate(self, len)                                             \
+	(void)(Dee_ASSERT((len) <= (self)->up_length),                                          \
+	       (self)->up_length ? (void)Dee_UNICODE_PRINTER_SETCHAR(self, (len), 0) : (void)0, \
 	       (self)->up_length = (len))
 #else /* !NDEBUG */
 #define Dee_unicode_printer_truncate(self, len)    \
@@ -2448,7 +2451,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 
 
 /* Reserve `num_chars' characters, to-be either using
- * `UNICODE_PRINTER_SETCHAR()', or `DeeString_SetChar()'.
+ * `Dee_UNICODE_PRINTER_SETCHAR()', or `DeeString_SetChar()'.
  * The return value of this function is the starting index of the reservation,
  * which is made at the end of the currently printed portion of text.
  * @return: * : The starting index of the reservation.
