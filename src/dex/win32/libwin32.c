@@ -3666,6 +3666,42 @@ err:
 	return NULL;
 }
 
+PRIVATE BOOL DCALL libwin32_AcquirePrivilege(LPCWSTR wPrivilegeName) {
+	HANDLE hAdjustPrivilegeToken;
+	HANDLE hCurrentProcess;
+	TOKEN_PRIVILEGES tpTokenPrivileges;
+	LUID luPrivilegeId;
+	DWORD dwError;
+	hCurrentProcess = GetCurrentProcess();
+	if unlikely(!OpenProcessToken(hCurrentProcess,
+	                              TOKEN_ADJUST_PRIVILEGES,
+	                              &hAdjustPrivilegeToken))
+		return FALSE;
+	if unlikely(!LookupPrivilegeValueW(NULL,
+	                                   wPrivilegeName,
+	                                   &luPrivilegeId))
+		return FALSE;
+	tpTokenPrivileges.PrivilegeCount           = 1;
+	tpTokenPrivileges.Privileges[0].Luid       = luPrivilegeId;
+	tpTokenPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+	if unlikely(!AdjustTokenPrivileges(hAdjustPrivilegeToken,
+	                                   FALSE, &tpTokenPrivileges,
+	                                   0, NULL, NULL))
+		return FALSE;
+	dwError = GetLastError();
+	SetLastError(0);
+	if unlikely(dwError == ERROR_NOT_ALL_ASSIGNED)
+		return FALSE;
+	return TRUE;
+}
+
+PRIVATE WCHAR const wstr_SeDebugPrivilege[] = {
+	'S', 'e', 'D', 'e', 'b', 'u', 'g', 'P', 'r', 'i', 'v', 'i', 'l', 'e', 'g', 'e', 0
+};
+PRIVATE BOOL DCALL libwin32_AcquireDebugPrivileges(void) {
+	return libwin32_AcquirePrivilege(wstr_SeDebugPrivilege);
+}
+
 
 /*[[[deemon import("_dexutils").gw("OpenProcess",
      "dwDesiredAccess:nt:DWORD"
@@ -3703,14 +3739,27 @@ again:
 		DWORD dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
+check_interrupt:
 			if (DeeThread_CheckInterrupt())
 				goto err;
 			goto again;
+		}
+		if (DeeNTSystem_IsAccessDeniedError(dwError)) {
+			DBG_ALIGNMENT_DISABLE();
+			libwin32_AcquireDebugPrivileges();
+			hResult = OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
+			if (hResult != NULL)
+				goto got_hResult;
+			dwError = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeNTSystem_IsIntr(dwError))
+				goto check_interrupt;
 		}
 		RETURN_ERROR(dwError,
 		             "Failed to open process (dwDesiredAccess: %#I32x, bInheritHandle: %u, dwProcessId: %#I32x)",
 		             dwDesiredAccess, (unsigned int)bInheritHandle, dwProcessId);
 	}
+got_hResult:
 	DBG_ALIGNMENT_ENABLE();
 	result = libwin32_CreateHandle(hResult);
 	if likely(result)
@@ -5475,8 +5524,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Error-related functions. */
 	LIBWIN32_GETLASTERROR_DEF
 	LIBWIN32_SETLASTERROR_DEF
-	LIBWIN32_FORMATERRORMESSAGE_DEF_DOC("Return a human-readable error message associated with the "
-	                                    "given @dwError (as returned by #GetLastError)")
+	LIBWIN32_FORMATERRORMESSAGE_DEF_DOC("Return a human-readable error message associated with "
+	                                    "the given @dwError (as returned by #GetLastError)")
 
 	/* Handle-related functions. */
 	LIBWIN32_CLOSEHANDLE_DEF

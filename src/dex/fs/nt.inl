@@ -511,7 +511,7 @@ typedef BOOLEAN (APIENTRY *LPCREATESYMBOLICLINKW)(LPCWSTR lpSymlinkFileName,
                                                   LPCWSTR lpTargetFileName,
                                                   DWORD dwFlags);
 PRIVATE LPCREATESYMBOLICLINKW pCreateSymbolicLinkW = NULL;
-PRIVATE WCHAR const wKernel32[]                    = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
+PRIVATE WCHAR const wKernel32[] = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 
 
 INTERN int DCALL
