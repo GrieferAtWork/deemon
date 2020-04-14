@@ -151,19 +151,6 @@ sysfile_putc(DeeFileObject *__restrict UNUSED(self), int UNUSED(ch),
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-sysfile_fileno(DeeObject *__restrict UNUSED(self),
-               size_t argc, DeeObject *const *argv) {
-	if (!DeeArg_Unpack(argc, argv, ":fileno"))
-		fs_unsupported();
-	return NULL;
-}
-
-PRIVATE struct type_method sysfile_methods[] = {
-	{ STR_FILENO, &sysfile_fileno, DOC("->?Dint") },
-	{ NULL }
-};
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
 sysfile_class_sync(DeeObject *__restrict UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
@@ -176,6 +163,11 @@ PRIVATE struct type_method sysfile_class_methods[] = {
 	  DOC("()\n"
 	      "Synchronize all unwritten data with the host operating system") },
 	{ NULL }
+};
+
+PRIVATE struct type_member sysfile_class_members[] = {
+	TYPE_MEMBER_CONST("Fs", (DeeTypeObject *)&DeeFSFile_Type),
+	TYPE_MEMBER_END
 };
 
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
@@ -216,12 +208,12 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_attr          = */ NULL,
 		/* .tp_with          = */ NULL,
 		/* .tp_buffer        = */ NULL,
-		/* .tp_methods       = */sysfile_methods,
+		/* .tp_methods       = */ NULL,
 		/* .tp_getsets       = */ NULL,
 		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */sysfile_class_methods,
+		/* .tp_class_methods = */ sysfile_class_methods,
 		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ NULL
+		/* .tp_class_members = */ sysfile_class_members
 	},
 	/* .ft_read   = */ &sysfile_read,
 	/* .ft_write  = */ &sysfile_write,

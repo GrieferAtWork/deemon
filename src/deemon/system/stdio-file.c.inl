@@ -1040,6 +1040,10 @@ PRIVATE struct type_method sysfile_class_methods[] = {
 	{ NULL }
 };
 
+PRIVATE struct type_member sysfile_class_members[] = {
+	TYPE_MEMBER_CONST("Fs", (DeeTypeObject *)&DeeFSFile_Type),
+	TYPE_MEMBER_END
+};
 
 PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 	/* .ft_base = */ {
@@ -1082,9 +1086,9 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_methods       = */ sysfile_methods,
 		/* .tp_getsets       = */ sysfile_getsets,
 		/* .tp_members       = */ sysfile_members,
-		/* .tp_class_methods = */ NULL,
+		/* .tp_class_methods = */ sysfile_class_methods,
 		/* .tp_class_getsets = */ NULL,
-		/* .tp_class_members = */ NULL
+		/* .tp_class_members = */ sysfile_class_members
 	},
 	/* .ft_read   = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void *__restrict, size_t, dioflag_t))&sysfile_read,
 	/* .ft_write  = */ (dssize_t (DCALL *)(DeeFileObject *__restrict, void const *__restrict, size_t, dioflag_t))&sysfile_write,
@@ -1140,7 +1144,7 @@ PUBLIC DeeFileTypeObject DeeFSFile_Type = {
 		/* .tp_methods       = */ NULL,
 		/* .tp_getsets       = */ NULL,
 		/* .tp_members       = */ NULL,
-		/* .tp_class_methods = */ sysfile_class_methods,
+		/* .tp_class_methods = */ NULL,
 		/* .tp_class_getsets = */ NULL,
 		/* .tp_class_members = */ NULL
 	},
