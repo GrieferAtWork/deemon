@@ -391,6 +391,9 @@ wgii("LIST_MODULES_32BIT",   1);
 wgii("LIST_MODULES_64BIT",   2);
 wgii("LIST_MODULES_ALL",     3); // LIST_MODULES_32BIT | LIST_MODULES_64BIT
 
+wgii("DUPLICATE_CLOSE_SOURCE", 0x00000001);
+wgii("DUPLICATE_SAME_ACCESS",  0x00000002);
+
 File.stdout = orig_stdout;
 print "#define LIBWIN32_CONSTANTS_DEFS \\";
 for (local x: allDecls)
@@ -648,6 +651,8 @@ print "/" "**" "/";
 	LIBWIN32_LIST_MODULES_32BIT_DEF \
 	LIBWIN32_LIST_MODULES_64BIT_DEF \
 	LIBWIN32_LIST_MODULES_ALL_DEF \
+	LIBWIN32_DUPLICATE_CLOSE_SOURCE_DEF \
+	LIBWIN32_DUPLICATE_SAME_ACCESS_DEF \
 /**/
 //[[[end]]]
 
@@ -4088,8 +4093,9 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	cbNeededProcesses /= sizeof(DWORD);
-	if (cbNeededProcesses > cbAllocProcesses) {
+	if (cbNeededProcesses >= cbAllocProcesses) {
 		DWORD *pidNewProcesses;
+		cbNeededProcesses = cbAllocProcesses * 2;
 		pidNewProcesses = (DWORD *)Dee_Realloc(pidProcesses, cbNeededProcesses * sizeof(DWORD));
 		if unlikely(!pidNewProcesses)
 			goto err_modules;
