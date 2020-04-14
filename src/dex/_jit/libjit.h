@@ -493,6 +493,9 @@ struct jit_lexer {
 	;
 };
 
+#define JITLexer_TokPtr(self) (self)->jl_tokstart
+#define JITLexer_TokLen(self) (size_t)((self)->jl_tokend - (self)->jl_tokstart)
+
 
 /* Similar to `JITLexer_GetLValue()', but also finalize
  * the stored L-value, and set it to describe nothing.

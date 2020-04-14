@@ -414,8 +414,7 @@ do_parse_function:
 		switch (tok_length) {
 
 		case 2:
-			if (tok_begin[0] == 'i' &&
-			    tok_begin[1] == 'f') {
+			if (tok_begin[0] == 'i' && tok_begin[1] == 'f') {
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, false);
 				JITLexer_ScanExpression(self, true);
@@ -425,8 +424,7 @@ do_parse_function:
 				}
 				goto do_suffix;
 			}
-			if (tok_begin[0] == 'd' &&
-			    tok_begin[1] == 'o') {
+			if (tok_begin[0] == 'd' && tok_begin[1] == 'o') {
 				JITLexer_Yield(self);
 				JITLexer_ScanExpression(self, true);
 				if (JITLexer_ISKWD(self, "while")) {
@@ -441,16 +439,13 @@ do_yield_again:
 			break;
 
 		case 3:
-			if (tok_begin[0] == 's' &&
-			    tok_begin[1] == 't' &&
+			if (tok_begin[0] == 's' && tok_begin[1] == 't' &&
 			    tok_begin[2] == 'r')
 				goto do_yield_again_nocast;
-			if (tok_begin[0] == 't' &&
-			    tok_begin[1] == 'r' &&
+			if (tok_begin[0] == 't' && tok_begin[1] == 'r' &&
 			    tok_begin[2] == 'y')
 				goto do_yield_again_docast;
-			if (tok_begin[0] == 'f' &&
-			    tok_begin[1] == 'o' &&
+			if (tok_begin[0] == 'f' && tok_begin[1] == 'o' &&
 			    tok_begin[2] == 'r') {
 do_handle_for:
 				JITLexer_Yield(self);
@@ -580,15 +575,19 @@ do_handle_for:
 		default: break;
 		}
 		{
-			char const *name = (char const *)self->jl_tokstart;
-			size_t size      = (size_t)(self->jl_tokend - self->jl_tokstart);
+			char const *name;
+			size_t size;
+			name = (char const *)JITLexer_TokPtr(self);
+			size = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
-			if (!JITLexer_ISKWD(self, "from")) {
-				JITLexer_ReferenceKeyword(self, name, size);
-			} else {
+			if (size == 4 &&
+			    UNALIGNED_GET32((uint32_t *)name) ==
+			    ENCODE_INT32('f', 'r', 'o', 'm')) {
 				/* `foo from bar' */
 				JITLexer_Yield(self);
 				JITLexer_QuickSkipModuleName(self);
+			} else {
+				JITLexer_ReferenceKeyword(self, name, size);
 			}
 		}
 	}	break;

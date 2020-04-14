@@ -134,7 +134,7 @@ JITLexer_ParseOperatorName(JITLexer *__restrict self,
 	case TOK_INT: {
 		uint16_t val;
 		if (Dee_Atou16((char const *)self->jl_tokstart,
-		               (size_t)(self->jl_tokend - self->jl_tokstart),
+		               JITLexer_TokLen(self),
 		               DEEINT_STRING(0, DEEINT_STRING_FNORMAL),
 		               &val))
 			goto err_trace;
@@ -431,8 +431,8 @@ err_rbrck_after_lbrck:
 					{
 						DeeError_Throwf(&DeeError_SyntaxError,
 						                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
-						                (size_t)(self->jl_tokend - self->jl_tokstart),
-						                self->jl_tokstart);
+						                JITLexer_TokLen(self),
+						                JITLexer_TokPtr(self));
 						goto err_trace;
 					}
 					goto done_y1;
@@ -609,8 +609,8 @@ print_module_name(JITLexer *__restrict self,
 		} else if (self->jl_tok == JIT_KEYWORD) {
 			if (printer &&
 			    unicode_printer_print(printer,
-			                          (char *)self->jl_tokstart,
-			                          (size_t)(self->jl_tokend - self->jl_tokstart)) < 0)
+			                          (char *)JITLexer_TokPtr(self),
+			                          JITLexer_TokLen(self)) < 0)
 				goto err_trace;
 			JITLexer_Yield(self);
 			if (self->jl_tok != '.' && self->jl_tok != TOK_DOTS)
@@ -620,13 +620,13 @@ print_module_name(JITLexer *__restrict self,
 			if (printer) {
 				if (self->jl_tok == JIT_RAWSTRING) {
 					if (unicode_printer_print(printer,
-					                          (char *)self->jl_tokstart + 2,
-					                          (size_t)(self->jl_tokend - self->jl_tokstart) - 3) < 0)
+					                          (char *)JITLexer_TokPtr(self) + 2,
+					                          JITLexer_TokLen(self) - 3) < 0)
 						goto err_trace;
 				} else {
 					if (DeeString_DecodeBackslashEscaped(printer,
-					                                     (char *)self->jl_tokstart + 1,
-					                                     (size_t)(self->jl_tokend - self->jl_tokstart) - 2,
+					                                     (char *)JITLexer_TokPtr(self) + 1,
+					                                     JITLexer_TokLen(self) - 2,
 					                                     STRING_ERROR_FSTRICT) < 0)
 						goto err_trace;
 				}

@@ -135,14 +135,12 @@ parse_remainder_before_rbrace_popscope_wrap:
 		switch (tok_length) {
 
 		case 2:
-			if (self->jl_tokstart[0] == 'i' &&
-			    self->jl_tokstart[1] == 'f') {
+			if (tok_begin[0] == 'i' && tok_begin[1] == 'f') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(IfHybrid)(self, &was_expression);
 				goto parse_remainder_after_hybrid_popscope;
 			}
-			if (self->jl_tokstart[0] == 'd' &&
-			    self->jl_tokstart[1] == 'o') {
+			if (tok_begin[0] == 'd' && tok_begin[1] == 'o') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(DoHybrid)(self, &was_expression);
 				goto parse_remainder_after_hybrid_popscope;
@@ -150,23 +148,20 @@ parse_remainder_before_rbrace_popscope_wrap:
 			break;
 
 		case 3:
-			if (self->jl_tokstart[0] == 't' &&
-			    self->jl_tokstart[1] == 'r' &&
-			    self->jl_tokstart[2] == 'y') {
+			if (tok_begin[0] == 't' && tok_begin[1] == 'r' &&
+			    tok_begin[2] == 'y') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(TryHybrid)(self, &was_expression);
 				goto parse_remainder_after_hybrid_popscope;
 			}
-			if (self->jl_tokstart[0] == 'f' &&
-			    self->jl_tokstart[1] == 'o' &&
-			    self->jl_tokstart[2] == 'r') {
+			if (tok_begin[0] == 'f' && tok_begin[1] == 'o' &&
+			    tok_begin[2] == 'r') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(ForHybrid)(self, &was_expression);
 				goto parse_remainder_after_hybrid_popscope;
 			}
-			if (self->jl_tokstart[0] == 'd' &&
-			    self->jl_tokstart[1] == 'e' &&
-			    self->jl_tokstart[2] == 'l') {
+			if (tok_begin[0] == 'd' && tok_begin[1] == 'e' &&
+			    tok_begin[2] == 'l') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(DelHybrid)(self, &was_expression);
 				goto parse_remainder_after_semicolon_hybrid_popscope;
@@ -218,12 +213,8 @@ parse_remainder_before_rbrace_popscope_wrap:
 
 		case 6:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
-			if (self->jl_tokstart[0] == 'a' &&
-			    self->jl_tokstart[1] == 's' &&
-			    self->jl_tokstart[2] == 's' &&
-			    self->jl_tokstart[3] == 'e' &&
-			    self->jl_tokstart[4] == 'r' &&
-			    self->jl_tokstart[5] == 't') {
+			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(AssertHybrid)(self, &was_expression);
 parse_remainder_after_semicolon_hybrid_popscope:
@@ -475,34 +466,29 @@ is_a_statement:
 		switch (tok_length) {
 
 		case 2:
-			if (self->jl_tokstart[0] == 'i' &&
-			    self->jl_tokstart[1] == 'f') {
+			if (tok_begin[0] == 'i' && tok_begin[1] == 'f') {
 				result = FUNC(IfHybrid)(self, pwas_expression);
 				goto done;
 			}
-			if (self->jl_tokstart[0] == 'd' &&
-			    self->jl_tokstart[1] == 'o') {
+			if (tok_begin[0] == 'd' && tok_begin[1] == 'o') {
 				result = FUNC(DoHybrid)(self, &was_expression);
 				goto parse_unary_suffix_if_notexpr;
 			}
 			break;
 
 		case 3:
-			if (self->jl_tokstart[0] == 't' &&
-			    self->jl_tokstart[1] == 'r' &&
-			    self->jl_tokstart[2] == 'y') {
+			if (tok_begin[0] == 't' && tok_begin[1] == 'r' &&
+			    tok_begin[2] == 'y') {
 				result = FUNC(TryHybrid)(self, pwas_expression);
 				goto done;
 			}
-			if (self->jl_tokstart[0] == 'f' &&
-			    self->jl_tokstart[1] == 'o' &&
-			    self->jl_tokstart[2] == 'r') {
+			if (tok_begin[0] == 'f' && tok_begin[1] == 'o' &&
+			    tok_begin[2] == 'r') {
 				result = FUNC(ForHybrid)(self, pwas_expression);
 				goto done;
 			}
-			if (self->jl_tokstart[0] == 'd' &&
-			    self->jl_tokstart[1] == 'e' &&
-			    self->jl_tokstart[2] == 'l') {
+			if (tok_begin[0] == 'd' && tok_begin[1] == 'e' &&
+			    tok_begin[2] == 'l') {
 				result = FUNC(DelHybrid)(self, &was_expression);
 				goto parse_unary_suffix_if_notexpr;
 			}

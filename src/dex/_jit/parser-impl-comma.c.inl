@@ -313,8 +313,8 @@ err_var_symbol:
 					used_lookup_mode |= LOOKUP_SYM_VGLOBAL;
 				if (JITContext_Lookup(self->jl_context,
 				                      &var_symbol,
-				                      (char const *)self->jl_tokstart,
-				                      (size_t)(self->jl_tokend - self->jl_tokstart),
+				                      (char const *)JITLexer_TokPtr(self),
+				                      JITLexer_TokLen(self),
 				                      used_lookup_mode) < 0)
 					goto err_current;
 			}

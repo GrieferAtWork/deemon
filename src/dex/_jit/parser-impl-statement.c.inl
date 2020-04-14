@@ -275,16 +275,14 @@ FUNC(Statement)(JITLexer *__restrict self) {
 		switch (tok_length) {
 
 		case 2:
-			if (tok_begin[0] == 'i' &&
-			    tok_begin[1] == 'f') {
+			if (tok_begin[0] == 'i' && tok_begin[1] == 'f') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(If)(self, true);
 				LOAD_LVALUE(result, err_popscope);
 				IF_EVAL(JITContext_PopScope(self->jl_context));
 				goto done;
 			}
-			if (tok_begin[0] == 'd' &&
-			    tok_begin[1] == 'o') {
+			if (tok_begin[0] == 'd' && tok_begin[1] == 'o') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(Do)(self, true);
 				LOAD_LVALUE(result, err_popscope);
@@ -294,14 +292,12 @@ FUNC(Statement)(JITLexer *__restrict self) {
 			break;
 
 		case 3:
-			if (tok_begin[0] == 't' &&
-			    tok_begin[1] == 'r' &&
+			if (tok_begin[0] == 't' && tok_begin[1] == 'r' &&
 			    tok_begin[2] == 'y') {
 				result = FUNC(Try)(self, true);
 				goto done;
 			}
-			if (tok_begin[0] == 'f' &&
-			    tok_begin[1] == 'o' &&
+			if (tok_begin[0] == 'f' && tok_begin[1] == 'o' &&
 			    tok_begin[2] == 'r') {
 				IF_EVAL(JITContext_PushScope(self->jl_context));
 				result = FUNC(For)(self, true);
@@ -309,8 +305,7 @@ FUNC(Statement)(JITLexer *__restrict self) {
 				IF_EVAL(JITContext_PopScope(self->jl_context));
 				goto done;
 			}
-			if (tok_begin[0] == 'd' &&
-			    tok_begin[1] == 'e' &&
+			if (tok_begin[0] == 'd' && tok_begin[1] == 'e' &&
 			    tok_begin[2] == 'l') {
 				result = FUNC(Del)(self, true);
 				goto done;
@@ -545,11 +540,11 @@ again_eval_asm_string:
 #ifdef JIT_EVAL
 					{
 						size_t str_len;
-						str_len = (size_t)(self->jl_tokend - self->jl_tokstart) - 2;
+						str_len = JITLexer_TokLen(self) - 2;
 						if (str_len != 0) {
 							size_t i, len;
 							DREF DeeObject *str;
-							str = DeeString_FromBackslashEscaped((char const *)self->jl_tokstart + 1,
+							str = DeeString_FromBackslashEscaped((char const *)JITLexer_TokPtr(self) + 1,
 							                                     str_len, STRING_ERROR_FSTRICT);
 							if unlikely(!str)
 								goto err;

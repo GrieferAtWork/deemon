@@ -712,8 +712,8 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
 			goto err;
 		}
 #ifdef JIT_EVAL
-		first_key = DeeString_NewUtf8((char const *)self->jl_tokstart,
-		                              (size_t)(self->jl_tokend - self->jl_tokstart),
+		first_key = DeeString_NewUtf8((char const *)JITLexer_TokPtr(self),
+		                              JITLexer_TokLen(self),
 		                              STRING_ERROR_FSTRICT);
 		if unlikely(!first_key)
 			goto err;
@@ -762,8 +762,8 @@ DEFINE_PRIMARY(UnaryHead) {
 	case TOK_INT:
 		/* Integer constant. */
 #ifdef JIT_EVAL
-		result = DeeInt_FromString((char const *)self->jl_tokstart,
-		                           (size_t)(self->jl_tokend - self->jl_tokstart),
+		result = DeeInt_FromString((char const *)JITLexer_TokPtr(self),
+		                           JITLexer_TokLen(self),
 		                           DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
 #else /* JIT_EVAL */
 		result = 0;
@@ -775,8 +775,8 @@ done_y1:
 	case JIT_STRING:
 		/* String literal */
 #ifdef JIT_EVAL
-		result = DeeString_FromBackslashEscaped((char const *)self->jl_tokstart + 1,
-		                                        (size_t)(self->jl_tokend - self->jl_tokstart) - 2,
+		result = DeeString_FromBackslashEscaped((char const *)JITLexer_TokPtr(self) + 1,
+		                                        JITLexer_TokLen(self) - 2,
 		                                        STRING_ERROR_FSTRICT);
 #else /* JIT_EVAL */
 		result = 0;
@@ -786,8 +786,8 @@ done_y1:
 	case JIT_RAWSTRING:
 		/* Raw string literal */
 #ifdef JIT_EVAL
-		result = DeeString_NewUtf8((char const *)self->jl_tokstart + 2,
-		                           (size_t)(self->jl_tokend - self->jl_tokstart) - 3,
+		result = DeeString_NewUtf8((char const *)JITLexer_TokPtr(self) + 2,
+		                           JITLexer_TokLen(self) - 3,
 		                           STRING_ERROR_FSTRICT);
 #else /* JIT_EVAL */
 		result = 0;
@@ -798,8 +798,8 @@ done_y1:
 		/* Floating point constant */
 #ifdef JIT_EVAL
 		result = JIT_atof(self,
-		                  (char const *)self->jl_tokstart,
-		                  (size_t)(self->jl_tokend - self->jl_tokstart));
+		                  (char const *)JITLexer_TokPtr(self),
+		                  JITLexer_TokLen(self));
 #else /* JIT_EVAL */
 		result = 0;
 #endif /* !JIT_EVAL */
@@ -1664,8 +1664,8 @@ skip_rbrck_and_done:
 		/* Fallback: identifier lookup / <x from y> expression. */
 		{
 #ifdef JIT_EVAL
-			char const *symbol_name = (char const *)self->jl_tokstart;
-			size_t symbol_size      = (size_t)(self->jl_tokend - self->jl_tokstart);
+			char const *symbol_name = (char const *)JITLexer_TokPtr(self);
+			size_t symbol_size      = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
 			if (JITLexer_ISKWD(self, "from")) {
 				DREF DeeModuleObject *mod;
@@ -1839,8 +1839,8 @@ err_result_copy:
 				size_t attr_size;
 				LOAD_LVALUE(lhs, err);
 				/* Generic attribute lookup. */
-				attr_name = (char const *)self->jl_tokstart;
-				attr_size = (size_t)(self->jl_tokend - self->jl_tokstart);
+				attr_name = (char const *)JITLexer_TokPtr(self);
+				attr_size = JITLexer_TokLen(self);
 #endif /* JIT_EVAL */
 				JITLexer_Yield(self);
 #ifdef JIT_EVAL
@@ -3488,7 +3488,7 @@ again:
 		}
 #ifdef JIT_EVAL
 		lhs = DeeString_NewUtf8((char const *)self->jl_tokstart,
-		                        (size_t)(self->jl_tokend - self->jl_tokstart),
+		                        JITLexer_TokLen(self),
 		                        STRING_ERROR_FSTRICT);
 		if unlikely(!lhs)
 			goto err_r;
