@@ -28,6 +28,7 @@
 #include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/bytes.h>
 #include <deemon/ctypes-abi.h>
 #include <deemon/dex.h>
 #include <deemon/file.h>
@@ -41,9 +42,6 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/atomic.h>
-
-/**/
-#include <psapi.h>
 
 DECL_BEGIN
 
@@ -65,6 +63,20 @@ DECL_BEGIN
 #define STD_INPUT_HANDLE    (-10)
 #define STD_OUTPUT_HANDLE   (-11)
 #define STD_ERROR_HANDLE    (-12)
+
+#ifndef LIST_MODULES_DEFAULT
+#define LIST_MODULES_DEFAULT 0x0
+#endif /* !LIST_MODULES_DEFAULT */
+#ifndef LIST_MODULES_32BIT
+#define LIST_MODULES_32BIT 0x1
+#endif /* !LIST_MODULES_32BIT */
+#ifndef LIST_MODULES_64BIT
+#define LIST_MODULES_64BIT 0x2
+#endif /* !LIST_MODULES_64BIT */
+
+#ifndef NT_ERROR
+#define NT_ERROR(Status) ((((ULONG)(Status)) >> 30) == 3)
+#endif /* !NT_ERROR */
 
 #ifndef DRIVE_UNKNOWN
 #define DRIVE_UNKNOWN       0
@@ -3871,6 +3883,7 @@ PRIVATE HMODULE DCALL libwin32_GetPsAPIOrKernel32Module(void) {
 	hResult = ATOMIC_READ(libwin32_PsAPIOrKernel32Module);
 	if (hResult != NULL)
 		return hResult;
+	DBG_ALIGNMENT_DISABLE();
 	hResult = GetModuleHandleW(wPsapi);
 	if (hResult != NULL)
 		goto done_set;
@@ -3883,9 +3896,11 @@ PRIVATE HMODULE DCALL libwin32_GetPsAPIOrKernel32Module(void) {
 	hResult = LoadLibraryW(wKernel32Dll);
 	if (hResult != NULL)
 		goto done_set;
+	DBG_ALIGNMENT_ENABLE();
 	DeeNTSystem_ThrowErrorf(NULL, GetLastError(),
 	                        "Failed to load \"psapi.dll\" or \"kernel32.dll\"");
 done_set:
+	DBG_ALIGNMENT_ENABLE();
 	ATOMIC_WRITE(libwin32_PsAPIOrKernel32Module, hResult);
 	return hResult;
 }
@@ -3897,7 +3912,9 @@ PRIVATE FARPROC DCALL libwin32_GetPsAPIProc(char const *__restrict name) {
 	hMod = libwin32_GetPsAPIOrKernel32Module();
 	if unlikely(!hMod)
 		goto done;
+	DBG_ALIGNMENT_DISABLE();
 	pResult = GetProcAddress(hMod, name);
+	DBG_ALIGNMENT_ENABLE();
 	if (pResult)
 		goto done;
 	{
@@ -3913,12 +3930,16 @@ PRIVATE FARPROC DCALL libwin32_GetPsAPIProc(char const *__restrict name) {
 		namebuf[2] = '2';
 		memcpy(namebuf + 3, name, namelen * sizeof(char));
 		namebuf[3 + namelen] = '\0';
+		DBG_ALIGNMENT_DISABLE();
 		pResult = GetProcAddress(hMod, namebuf);
+		DBG_ALIGNMENT_ENABLE();
 		if (pResult) {
 			Dee_AFree(namebuf);
 			goto done;
 		}
+		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
 		Dee_AFree(namebuf);
 		DeeNTSystem_ThrowErrorf(NULL, dwError,
 		                        "Failed to locate symbol %q in \"psapi.dll\" or \"K32%#q\" in \"kernel32.dll\"",
@@ -4549,6 +4570,548 @@ again:
 	return DeeInt_NewU32(dwResult);
 err:
 	return NULL;
+}
+
+
+PRIVATE HMODULE libwin32_NtDllModule = NULL;
+PRIVATE WCHAR const wNtDll[]    = { 'N', 'T', 'D', 'L', 'L', 0 };
+PRIVATE WCHAR const wNtDllDll[] = { 'N', 't', 'D', 'l', 'l', '.', 'd', 'l', 'l', 0 };
+
+/* @return: NULL: An error was thrown */
+PRIVATE HMODULE DCALL libwin32_GetNtDllModule(void) {
+	HMODULE hResult;
+	hResult = ATOMIC_READ(libwin32_NtDllModule);
+	if (hResult != NULL)
+		return hResult;
+	DBG_ALIGNMENT_DISABLE();
+	hResult = GetModuleHandleW(wNtDll);
+	if (hResult != NULL)
+		goto done_set;
+	hResult = LoadLibraryW(wNtDllDll);
+	if (hResult != NULL)
+		goto done_set;
+	DBG_ALIGNMENT_ENABLE();
+	DeeNTSystem_ThrowErrorf(NULL, GetLastError(),
+	                        "Failed to load \"NtDll.dll\"");
+done_set:
+	DBG_ALIGNMENT_ENABLE();
+	ATOMIC_WRITE(libwin32_NtDllModule, hResult);
+	return hResult;
+}
+
+/* @return: NULL: An error was thrown */
+PRIVATE FARPROC DCALL libwin32_GetNtDllProc(char const *__restrict name) {
+	HMODULE hMod;
+	FARPROC pResult = NULL;
+	hMod = libwin32_GetNtDllModule();
+	if unlikely(!hMod)
+		goto done;
+	DBG_ALIGNMENT_DISABLE();
+	pResult = GetProcAddress(hMod, name);
+	DBG_ALIGNMENT_ENABLE();
+	if (pResult)
+		goto done;
+	{
+		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		DeeNTSystem_ThrowErrorf(NULL, dwError,
+		                        "Failed to locate symbol %q in \"NtDll.dll\"",
+		                        name);
+	}
+done:
+	return pResult;
+}
+
+#define LOAD_NTDLL_FUNCTION(err_label, returnType, cc, name, args) \
+	typedef returnType(cc *LP_psapi_##name) args;                  \
+	PRIVATE LP_psapi_##name name = NULL;                           \
+	if (!name) {                                                   \
+		name = (LP_psapi_##name)libwin32_GetNtDllProc(#name);      \
+		if unlikely(!name)                                         \
+			goto err_label;                                        \
+	}
+#ifndef NTAPI
+#define NTAPI WINAPI
+#endif /* !NTAPI */
+
+typedef ULONG (NTAPI *LPRTLNTSTATUSTODOSERROR)(NTSTATUS Status);
+PRIVATE LPRTLNTSTATUSTODOSERROR pdyn_RtlNtStatusToDosError = NULL;
+PRIVATE LPRTLNTSTATUSTODOSERROR DCALL get_RtlNtStatusToDosError(void) {
+	if (!pdyn_RtlNtStatusToDosError)
+		pdyn_RtlNtStatusToDosError = (LPRTLNTSTATUSTODOSERROR)libwin32_GetNtDllProc("RtlNtStatusToDosError");
+	return pdyn_RtlNtStatusToDosError;
+}
+
+#define LOAD_NTDLL_RTLNTSTATUSTODOSERROR(err_label)      \
+	LPRTLNTSTATUSTODOSERROR RtlNtStatusToDosError;       \
+	RtlNtStatusToDosError = get_RtlNtStatusToDosError(); \
+	if unlikely(!RtlNtStatusToDosError)                  \
+		goto err_label;
+
+
+/*[[[deemon import("_dexutils").gw("NtQueryInformationProcess",
+       "ProcessHandle:nt:HANDLE"
+      ",ProcessInformationClass:u"
+      ",ProcessInformationLength:c:size_t=64"
+     "->" MAYBE_NONE("?DBytes")); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
+#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF_DOC(doc) { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtQueryInformationProcess, libwin32_NtQueryInformationProcess_f);
+#ifndef LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
+#define LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, { K(ProcessHandle), K(ProcessInformationClass), K(ProcessInformationLength), KEND });
+#endif /* !LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	HANDLE hProcessHandle;
+	DeeObject *ProcessHandle;
+	unsigned int ProcessInformationClass;
+	size_t ProcessInformationLength = 64;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, "ou|Iu:NtQueryInformationProcess", &ProcessHandle, &ProcessInformationClass, &ProcessInformationLength))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(ProcessHandle, (void **)&hProcessHandle))
+		goto err;
+	return libwin32_NtQueryInformationProcess_f_impl(hProcessHandle, ProcessInformationClass, ProcessInformationLength);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength)
+//[[[end]]]
+{
+	NTSTATUS nsResult;
+	ULONG ulReturnLength;
+	DREF DeeBytesObject *result;
+	LOAD_NTDLL_FUNCTION(err, NTSTATUS, NTAPI, NtQueryInformationProcess,
+	                    (HANDLE ProcessHandle, /*PROCESSINFOCLASS*/ int ProcessInformationClass,
+	                     PVOID ProcessInformation, ULONG ProcessInformationLength,
+	                     PULONG ReturnLength))
+	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(ProcessInformationLength);
+	if unlikely(!result)
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	ulReturnLength = 0;
+	nsResult = (*NtQueryInformationProcess)(ProcessHandle,
+	                                        (/*PROCESSINFOCLASS*/ int)ProcessInformationClass,
+	                                        DeeBytes_DATA(result), (ULONG)DeeBytes_SIZE(result),
+	                                        &ulReturnLength);
+	DBG_ALIGNMENT_ENABLE();
+	if (NT_ERROR(nsResult)) {
+		DWORD dwError;
+		LOAD_NTDLL_RTLNTSTATUSTODOSERROR(err_r);
+		DBG_ALIGNMENT_DISABLE();
+		dwError = (*RtlNtStatusToDosError)(nsResult);
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_r;
+			goto again;
+		}
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
+			if (ulReturnLength <= DeeBytes_SIZE(result))
+				ulReturnLength = (ULONG)DeeBytes_SIZE(result) * 2;
+			goto resize_buffer;
+		}
+		if (ulReturnLength == 0 || ulReturnLength >= 0x01000000) {
+			Dee_Decref_likely(result);
+			RETURN_ERROR(dwError,
+			             "Failed to query information for process %p (ProcessInformationClass: %u)",
+			             ProcessHandle, ProcessInformationClass);
+		}
+	}
+	if (ulReturnLength > DeeBytes_SIZE(result)) {
+		DREF DeeBytesObject *new_result;
+resize_buffer:
+		new_result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DeeObject *)result,
+		                                                          ulReturnLength);
+		if unlikely(!new_result)
+			goto err_r;
+		result = new_result;
+		goto again;
+	} else if (ulReturnLength < DeeBytes_SIZE(result)) {
+		result = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result,
+		                                                        ulReturnLength);
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	Dee_Decref_likely(result);
+err:
+	return NULL;
+}
+
+
+/*[[[deemon import("_dexutils").gw("NtWow64QueryInformationProcess64",
+       "ProcessHandle:nt:HANDLE"
+      ",ProcessInformationClass:u"
+      ",ProcessInformationLength:c:size_t=64"
+     "->" MAYBE_NONE("?DBytes")); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
+#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF_DOC(doc) { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64QueryInformationProcess64, libwin32_NtWow64QueryInformationProcess64_f);
+#ifndef LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
+#define LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, { K(ProcessHandle), K(ProcessInformationClass), K(ProcessInformationLength), KEND });
+#endif /* !LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	HANDLE hProcessHandle;
+	DeeObject *ProcessHandle;
+	unsigned int ProcessInformationClass;
+	size_t ProcessInformationLength = 64;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_ProcessHandle_ProcessInformationClass_ProcessInformationLength, "ou|Iu:NtWow64QueryInformationProcess64", &ProcessHandle, &ProcessInformationClass, &ProcessInformationLength))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(ProcessHandle, (void **)&hProcessHandle))
+		goto err;
+	return libwin32_NtWow64QueryInformationProcess64_f_impl(hProcessHandle, ProcessInformationClass, ProcessInformationLength);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength)
+//[[[end]]]
+{
+	NTSTATUS nsResult;
+	ULONG ulReturnLength;
+	DREF DeeBytesObject *result;
+	LOAD_NTDLL_FUNCTION(err, NTSTATUS, NTAPI, NtWow64QueryInformationProcess64,
+	                    (HANDLE ProcessHandle, /*PROCESSINFOCLASS*/ int ProcessInformationClass,
+	                     PVOID ProcessInformation, ULONG ProcessInformationLength,
+	                     PULONG ReturnLength))
+	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(ProcessInformationLength);
+	if unlikely(!result)
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	ulReturnLength = 0;
+	nsResult = (*NtWow64QueryInformationProcess64)(ProcessHandle,
+	                                               (/*PROCESSINFOCLASS*/ int)ProcessInformationClass,
+	                                               DeeBytes_DATA(result), (ULONG)DeeBytes_SIZE(result),
+	                                               &ulReturnLength);
+	DBG_ALIGNMENT_ENABLE();
+	if (NT_ERROR(nsResult)) {
+		DWORD dwError;
+		LOAD_NTDLL_RTLNTSTATUSTODOSERROR(err_r);
+		DBG_ALIGNMENT_DISABLE();
+		dwError = (*RtlNtStatusToDosError)(nsResult);
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_r;
+			goto again;
+		}
+		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
+			if (ulReturnLength <= DeeBytes_SIZE(result))
+				ulReturnLength = (ULONG)DeeBytes_SIZE(result) * 2;
+			goto resize_buffer;
+		}
+		if (ulReturnLength == 0 || ulReturnLength >= 0x01000000) {
+			Dee_Decref_likely(result);
+			RETURN_ERROR(dwError,
+			             "Failed to query wow64 information for process %p (ProcessInformationClass: %u)",
+			             ProcessHandle, ProcessInformationClass);
+		}
+	}
+	if (ulReturnLength > DeeBytes_SIZE(result)) {
+		DREF DeeBytesObject *new_result;
+resize_buffer:
+		new_result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DeeObject *)result,
+		                                                          ulReturnLength);
+		if unlikely(!new_result)
+			goto err_r;
+		result = new_result;
+		goto again;
+	} else if (ulReturnLength < DeeBytes_SIZE(result)) {
+		result = (DREF DeeBytesObject *)DeeBytes_TruncateBuffer((DeeObject *)result,
+		                                                        ulReturnLength);
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	Dee_Decref_likely(result);
+err:
+	return NULL;
+}
+
+
+/*[[[deemon import("_dexutils").gw("ReadProcessMemory",
+       "hProcess:nt:HANDLE"
+      ",lpBaseAddress:c:uintptr_t"
+      ",nSize:nt:SIZE_T"
+     "->" MAYBE_NONE("?DBytes")); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, SIZE_T nSize);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_READPROCESSMEMORY_DEF { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
+#define LIBWIN32_READPROCESSMEMORY_DEF_DOC(doc) { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_ReadProcessMemory, libwin32_ReadProcessMemory_f);
+#ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
+#define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_nSize, { K(hProcess), K(lpBaseAddress), K(nSize), KEND });
+#endif /* !LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	HANDLE hhProcess;
+	DeeObject *hProcess;
+	uintptr_t lpBaseAddress;
+	SIZE_T nSize;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_nSize, "oIuIu:ReadProcessMemory", &hProcess, &lpBaseAddress, &nSize))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
+		goto err;
+	return libwin32_ReadProcessMemory_f_impl(hhProcess, lpBaseAddress, nSize);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, SIZE_T nSize)
+//[[[end]]]
+{
+	SIZE_T szNumberOfBytesRead;
+	DREF DeeBytesObject *result;
+	BOOL bOk;
+	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized(nSize);
+	if unlikely(!result)
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	bOk = ReadProcessMemory(hProcess, (LPCVOID)lpBaseAddress,
+	                        DeeBytes_DATA(result), nSize,
+	                        &szNumberOfBytesRead);
+	if (!bOk) {
+		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_r;
+			goto again;
+		}
+		Dee_Decref_likely(result);
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to read process %p memory at (nSize: %Iu)",
+		                      hProcess, (void *)lpBaseAddress, nSize);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	if unlikely(szNumberOfBytesRead < nSize) {
+		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DREF DeeObject *)result,
+		                                                      szNumberOfBytesRead);
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	Dee_Decref_likely(result);
+err:
+	return NULL;
+}
+
+
+/*[[[deemon import("_dexutils").gw("NtWow64ReadVirtualMemory64",
+       "hProcess:nt:HANDLE"
+      ",lpBaseAddress:c:uint64_t"
+      ",nSize:nt:ULONG64"
+     "->" MAYBE_NONE("?DBytes")); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, ULONG64 nSize);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
+#define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64ReadVirtualMemory64, libwin32_NtWow64ReadVirtualMemory64_f);
+#ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
+#define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_nSize, { K(hProcess), K(lpBaseAddress), K(nSize), KEND });
+#endif /* !LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	HANDLE hhProcess;
+	DeeObject *hProcess;
+	uint64_t lpBaseAddress;
+	ULONG64 nSize;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_nSize, "oI64uI64u:NtWow64ReadVirtualMemory64", &hProcess, &lpBaseAddress, &nSize))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
+		goto err;
+	return libwin32_NtWow64ReadVirtualMemory64_f_impl(hhProcess, lpBaseAddress, nSize);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, ULONG64 nSize)
+//[[[end]]]
+{
+#if __SIZEOF_POINTER__ >= 8
+	return libwin32_ReadProcessMemory_f_impl(hProcess, (uintptr_t)lpBaseAddress, (SIZE_T)nSize);
+#else /* __SIZEOF_POINTER__ >= 8 */
+	ULONG64 szNumberOfBytesRead;
+	DREF DeeBytesObject *result;
+	NTSTATUS nsResult;
+	LOAD_NTDLL_FUNCTION(err, NTSTATUS, NTAPI, NtWow64ReadVirtualMemory64,
+	                    (HANDLE ProcessHandle, PVOID64 BaseAddress,
+	                     PVOID Buffer, ULONG64 Size, PULONG64 NumberOfBytesRead))
+	result = (DREF DeeBytesObject *)DeeBytes_NewBufferUninitialized((size_t)nSize);
+	if unlikely(!result)
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	nsResult = (*NtWow64ReadVirtualMemory64)(hProcess, (PVOID64)lpBaseAddress,
+	                                         DeeBytes_DATA(result), nSize,
+	                                         &szNumberOfBytesRead);
+	if (NT_ERROR(nsResult)) {
+		DWORD dwError;
+		LOAD_NTDLL_RTLNTSTATUSTODOSERROR(err_r);
+		DBG_ALIGNMENT_DISABLE();
+		dwError = (*RtlNtStatusToDosError)(nsResult);
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_r;
+			goto again;
+		}
+		Dee_Decref_likely(result);
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to read wow64 process %p memory at (nSize: %Iu)",
+		                      hProcess, (void *)lpBaseAddress, nSize);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	if unlikely(szNumberOfBytesRead < nSize) {
+		result = (DREF DeeBytesObject *)DeeBytes_ResizeBuffer((DREF DeeObject *)result,
+		                                                      (size_t)szNumberOfBytesRead);
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	Dee_Decref_likely(result);
+err:
+	return NULL;
+#endif /* __SIZEOF_POINTER__ < 8 */
+}
+
+
+/*[[[deemon import("_dexutils").gw("WriteProcessMemory",
+       "hProcess:nt:HANDLE"
+      ",lpBaseAddress:c:uintptr_t"
+      ",lpBuffer:obj:buffer"
+     "->" MAYBE_NONE("?Dint")); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, DeeObject *lpBuffer);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_WRITEPROCESSMEMORY_DEF { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
+#define LIBWIN32_WRITEPROCESSMEMORY_DEF_DOC(doc) { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_WriteProcessMemory, libwin32_WriteProcessMemory_f);
+#ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
+#define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, { K(hProcess), K(lpBaseAddress), K(lpBuffer), KEND });
+#endif /* !LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	HANDLE hhProcess;
+	DeeObject *hProcess;
+	uintptr_t lpBaseAddress;
+	DeeObject *lpBuffer;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, "oIuo:WriteProcessMemory", &hProcess, &lpBaseAddress, &lpBuffer))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
+		goto err;
+	return libwin32_WriteProcessMemory_f_impl(hhProcess, lpBaseAddress, lpBuffer);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, DeeObject *lpBuffer)
+//[[[end]]]
+{
+	SIZE_T szNumberOfBytesWritten;
+	BOOL bOk;
+	DeeBuffer buf;
+	if (DeeObject_GetBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY))
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	bOk = WriteProcessMemory(hProcess, (LPVOID)lpBaseAddress,
+	                         buf.bb_base, buf.bb_size,
+	                         &szNumberOfBytesWritten);
+	if (!bOk) {
+		DWORD dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_buf;
+			goto again;
+		}
+		DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to write process %p memory at (nSize: %Iu)",
+		                      hProcess, (void *)lpBaseAddress, buf.bb_size);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+	return DeeInt_NewSize(szNumberOfBytesWritten);
+err_buf:
+	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+err:
+	return NULL;
+}
+
+
+/*[[[deemon import("_dexutils").gw("NtWow64WriteVirtualMemory64",
+       "hProcess:nt:HANDLE"
+      ",lpBaseAddress:c:uint64_t"
+      ",lpBuffer:obj:buffer"
+     "->" MAYBE_NONE("?Dint")); ]]]*/
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, DeeObject *lpBuffer);
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
+#define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
+#define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
+PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64WriteVirtualMemory64, libwin32_NtWow64WriteVirtualMemory64_f);
+#ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
+#define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED 1
+PRIVATE DEFINE_KWLIST(libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, { K(hProcess), K(lpBaseAddress), K(lpBuffer), KEND });
+#endif /* !LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED */
+PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	HANDLE hhProcess;
+	DeeObject *hProcess;
+	uint64_t lpBaseAddress;
+	DeeObject *lpBuffer;
+	if (DeeArg_UnpackKw(argc, argv, kw, libwin32_kwds_hProcess_lpBaseAddress_lpBuffer, "oI64uo:NtWow64WriteVirtualMemory64", &hProcess, &lpBaseAddress, &lpBuffer))
+		goto err;
+	if (DeeNTSystem_TryGetHandle(hProcess, (void **)&hhProcess))
+		goto err;
+	return libwin32_NtWow64WriteVirtualMemory64_f_impl(hhProcess, lpBaseAddress, lpBuffer);
+err:
+	return NULL;
+}
+FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, DeeObject *lpBuffer)
+//[[[end]]]
+{
+#if __SIZEOF_POINTER__ >= 8
+	return libwin32_WriteProcessMemory_f_impl(hProcess, (uintptr_t)lpBaseAddress, lpBuffer);
+#else /* __SIZEOF_POINTER__ >= 8 */
+	ULONG64 szNumberOfBytesWritten;
+	DeeBuffer buf;
+	NTSTATUS nsResult;
+	LOAD_NTDLL_FUNCTION(err, NTSTATUS, NTAPI, NtWow64WriteVirtualMemory64,
+	                    (HANDLE ProcessHandle, PVOID64 BaseAddress,
+	                     PVOID Buffer, ULONG64 Size, PULONG64 NumberOfBytesWritten))
+	if (DeeObject_GetBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY))
+		goto err;
+again:
+	DBG_ALIGNMENT_DISABLE();
+	nsResult = (*NtWow64WriteVirtualMemory64)(hProcess, (PVOID64)lpBaseAddress,
+	                                          buf.bb_base, buf.bb_size,
+	                                          &szNumberOfBytesWritten);
+	if (NT_ERROR(nsResult)) {
+		DWORD dwError;
+		LOAD_NTDLL_RTLNTSTATUSTODOSERROR(err_buf);
+		DBG_ALIGNMENT_DISABLE();
+		dwError = (*RtlNtStatusToDosError)(nsResult);
+		DBG_ALIGNMENT_ENABLE();
+		if (DeeNTSystem_IsIntr(dwError)) {
+			if (DeeThread_CheckInterrupt())
+				goto err_buf;
+			goto again;
+		}
+		DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+		RETURN_ERROR_OR_FALSE(dwError,
+		                      "Failed to write wow64 process %.16I64X memory at (nSize: %Iu)",
+		                      hProcess, lpBaseAddress, buf.bb_size);
+	}
+	DBG_ALIGNMENT_ENABLE();
+	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+	return DeeInt_NewU64(szNumberOfBytesWritten);
+err_buf:
+	DeeObject_PutBuf(lpBuffer, &buf, Dee_BUFFER_FREADONLY);
+err:
+	return NULL;
+#endif /* __SIZEOF_POINTER__ < 8 */
 }
 
 
@@ -5624,6 +6187,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_TERMINATETHREAD_DEF
 	LIBWIN32_SUSPENDTHREAD_DEF
 	LIBWIN32_RESUMETHREAD_DEF
+	LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF
+	LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF
+	LIBWIN32_READPROCESSMEMORY_DEF
+	LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF
+	LIBWIN32_WRITEPROCESSMEMORY_DEF
+	LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF
 
 	/* Filesystem functions */
 	LIBWIN32_REMOVEDIRECTORY_DEF
