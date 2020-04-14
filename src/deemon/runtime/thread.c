@@ -98,8 +98,9 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
 #include <deemon/system-error.h>
+#include <deemon/system-features.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -1634,8 +1635,8 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		DBG_ALIGNMENT_DISABLE();
 		error = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		return DeeError_SysThrowf(&DeeError_SystemError, error,
-		                          "Failed to start thread %k", self);
+		return DeeNTSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                               "Failed to start thread %k", self);
 	}
 #elif defined(CONFIG_THREADS_PTHREAD)
 	{
@@ -1646,7 +1647,13 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 #ifdef CONFIG_HOST_WINDOWS
 		me->t_join = CreateSemaphoreW(NULL, 0, 0x7fffffff, NULL);
 		if unlikely(me->t_join == NULL) {
-			error = GetLastError();
+			error = (int)GetLastError();
+			ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_STARTING);
+			/* Drop the reference that never came to be... */
+			del_running_thread(me);
+			Dee_DecrefNokill(self);
+			return DeeNTSystem_ThrowErrorf(&DeeError_SystemError, (DWORD)error,
+			                               "Failed to start thread %k", self);
 		} else
 #elif defined(CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T)
 		if unlikely(sem_init(&me->t_join, 0, 0)) {
@@ -1669,8 +1676,8 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 			/* Drop the reference that never came to be... */
 			del_running_thread(me);
 			Dee_DecrefNokill(self);
-			return DeeError_SysThrowf(&DeeError_SystemError, error,
-			                          "Failed to start thread %k", self);
+			return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                                 "Failed to start thread %k", self);
 		}
 	}
 #endif
@@ -1990,8 +1997,8 @@ again:
 				DBG_ALIGNMENT_DISABLE();
 				wait_state = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				DeeError_SysThrowf(&DeeError_SystemError, wait_state,
-				                   "Failed to join thread %k", self);
+				DeeNTSystem_ThrowErrorf(&DeeError_SystemError, wait_state,
+				                        "Failed to join thread %k", self);
 				goto err;
 
 #if 0
@@ -2030,8 +2037,8 @@ again:
 				DBG_ALIGNMENT_DISABLE();
 				wait_state = GetLastError();
 				DBG_ALIGNMENT_ENABLE();
-				DeeError_SysThrowf(&DeeError_SystemError, wait_state,
-				                   "Failed to join thread %k", self);
+				DeeNTSystem_ThrowErrorf(&DeeError_SystemError, wait_state,
+				                        "Failed to join thread %k", self);
 				goto err;
 
 #if 0
@@ -2082,8 +2089,8 @@ again:
 				if (error == EINTR)
 					goto again;
 #endif /* EINTR */
-				DeeError_SysThrowf(&DeeError_SystemError, error,
-				                   "Failed to join thread %k", self);
+				DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+				                          "Failed to join thread %k", self);
 				goto err;
 			}
 #else

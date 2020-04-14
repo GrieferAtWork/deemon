@@ -125,8 +125,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsync_f_impl(int fd)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fsync")
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to sync %d", fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to sync %d", fd);
 		goto err;
 	}
 	return_none;
@@ -186,8 +186,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fdatasync_f_impl(int fd)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
 		HANDLE_ENOSYS(error, err, "fdatasync")
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to sync %d", fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to sync %d", fd);
 		goto err;
 	}
 	return_none;

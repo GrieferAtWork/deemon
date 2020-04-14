@@ -188,9 +188,9 @@ EINTR_LABEL(again)
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check access to " ACCESS_PRINTF_FILENAME, filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory " ACCESS_PRINTF_FILENAME " could not be found", filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " ACCESS_PRINTF_FILENAME, filename)
-		DeeError_SysThrowf(&DeeError_SystemError, result,
-		                   "Failed to check access to " ACCESS_PRINTF_FILENAME,
-		                   filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
+		                          "Failed to check access to " ACCESS_PRINTF_FILENAME,
+		                          filename);
 		goto err;
 #else /* EACCES */
 		return_false;
@@ -266,9 +266,9 @@ EINTR_LABEL(again)
 		HANDLE_ENOMEM(result, err, "Insufficient kernel memory to check euidaccess to %s", filename)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %s could not be found", filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %s", filename)
-		DeeError_SysThrowf(&DeeError_SystemError, result,
-		                   "Failed to check euidaccess to %s",
-		                   filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
+		                          "Failed to check euidaccess to %s",
+		                          filename);
 		goto err;
 #else /* EACCES */
 		return_false;
@@ -340,7 +340,9 @@ EINTR_LABEL(again)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%s could not be found", dfd, filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%s", dfd, filename)
 		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to check access to %d:%s", dfd, filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
+		                          "Failed to check access to %d:%s",
+		                          dfd, filename);
 		goto err;
 #else /* EACCES */
 		return_false;

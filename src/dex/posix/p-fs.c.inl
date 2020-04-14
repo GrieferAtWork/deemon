@@ -216,7 +216,9 @@ EINTR_LABEL(again)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%q could not be found", dfd, filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%q", dfd, filename)
 		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change ownership of %d:%q", dfd, filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
+		                          "Failed to change ownership of %d:%q",
+		                          dfd, filename);
 		goto err;
 	}
 	return DeeInt_NewInt(result);
@@ -297,7 +299,9 @@ EINTR_LABEL(again)
 		HANDLE_ENOENT_ENOTDIR(result, err, "File or directory %d:%q could not be found", dfd, filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file %d:%q", dfd, filename)
 		HANDLE_EBADF(result, err, "Invalid handle %d", dfd)
-		DeeError_SysThrowf(&DeeError_SystemError, result, "Failed to change access mode of %d:%q", dfd, filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
+		                          "Failed to change access mode of %d:%q",
+		                          dfd, filename);
 		goto err;
 	}
 	return DeeInt_NewInt(result);

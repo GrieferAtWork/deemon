@@ -339,9 +339,9 @@ EINTR_LABEL(again)
 		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory " OPEN_PRINTF_FILENAME " for writing", filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " OPEN_PRINTF_FILENAME, filename)
 		HANDLE_ENOSYS(result, err, "open")
-		DeeError_SysThrowf(&DeeError_FSError, result,
-		                   "Failed to open " OPEN_PRINTF_FILENAME,
-		                   filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, result,
+		                          "Failed to open " OPEN_PRINTF_FILENAME,
+		                          filename);
 		goto err;
 	}
 	return DeeInt_NewUInt((unsigned int)result);
@@ -525,9 +525,9 @@ EINTR_LABEL(again)
 		HANDLE_ENXIO_EISDIR(result, err, "Cannot open directory " CREAT_PRINTF_FILENAME " for writing", filename)
 		HANDLE_EROFS_ETXTBSY(result, err, "Read-only file " CREAT_PRINTF_FILENAME, filename)
 		HANDLE_ENOSYS(result, err, "creat")
-		DeeError_SysThrowf(&DeeError_FSError, result,
-		                   "Failed to open " CREAT_PRINTF_FILENAME,
-		                   filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, result,
+		                          "Failed to open " CREAT_PRINTF_FILENAME,
+		                          filename);
 		goto err;
 	}
 	return DeeInt_NewUInt((unsigned int)result);

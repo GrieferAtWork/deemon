@@ -168,11 +168,11 @@ unix_readlink(/*utf-8*/ char const *__restrict path) {
 		req_size = readlink(path, buffer, bufsize + 1);
 		if unlikely(req_size < 0) {
 handle_error:
+			error = DeeSystem_GetErrno();
 			DBG_ALIGNMENT_ENABLE();
-			error = errno;
-			DeeError_SysThrowf(&DeeError_FSError, error,
-			                   "Failed to read symbolic link %q",
-			                   path);
+			DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+			                          "Failed to read symbolic link %q",
+			                          path);
 			goto err_buf;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -719,8 +719,12 @@ again:
 	                        used_stderr,
 	                        search_path);
 	if (cpid < 0) {
-		DeeError_SysThrowf(&DeeError_SystemError, errno,
-		                   "Failed to spawn new process");
+		int error;
+		DBG_ALIGNMENT_DISABLE();
+		error = errno;
+		DBG_ALIGNMENT_ENABLE();
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to spawn new process");
 	} else {
 		self->p_pid = cpid;
 		result = Dee_None;
@@ -851,9 +855,13 @@ process_terminate(Process *self, size_t argc, DeeObject *const *argv) {
 	}
 	DBG_ALIGNMENT_DISABLE();
 	if (kill(self->p_pid, TERMINATE_SIGNAL) != 0) {
-		DeeError_SysThrowf(&DeeError_SystemError, errno,
-		                   "Process %k could not be terminated",
-		                   self);
+		int error;
+		DBG_ALIGNMENT_DISABLE();
+		error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Process %k could not be terminated",
+		                          self);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -941,14 +949,14 @@ again:
 	}
 	if (result > 0)
 		return 0; /* Success */
-	result = errno;
+	result = DeeSystem_GetErrno();
 #ifdef EINTR
 	if (result == EINTR)
 		goto again;
 #endif /* EINTR */
 	ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
-	DeeError_SysThrowf(&DeeError_SystemError, result,
-	                   "Failed to join process %k", self);
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, result,
+	                          "Failed to join process %k", self);
 err:
 	return -1;
 }

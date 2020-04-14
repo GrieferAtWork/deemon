@@ -227,11 +227,11 @@ DeeError_Throwf(DeeTypeObject *__restrict tp,
 DFUNDEF NONNULL((1, 2)) int DCALL
 DeeError_VThrowf(DeeTypeObject *__restrict tp,
                  char const *__restrict format, va_list args);
-DFUNDEF NONNULL((1, 3)) int
-DeeError_SysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
+DFUNDEF NONNULL((3)) int
+DeeError_SysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
                    char const *__restrict format, ...);
-DFUNDEF NONNULL((1, 3)) int DCALL
-DeeError_VSysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
+DFUNDEF NONNULL((3)) int DCALL
+DeeError_VSysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
                     char const *__restrict format, va_list args);
 
 /* Return the currently effective error, or NULL if none is. */

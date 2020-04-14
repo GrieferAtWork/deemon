@@ -32,6 +32,7 @@
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 #include <deemon/tuple.h>
 
 #include <string.h>
@@ -69,9 +70,10 @@ pipe_class_new(DeeObject *__restrict UNUSED(self),
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (pipe(fds) != 0) {
+		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
-		DeeError_SysThrowf(&DeeError_SystemError, errno,
-		                   "Failed to create pipe");
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to create pipe");
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();

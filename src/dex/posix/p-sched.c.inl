@@ -274,8 +274,8 @@ EINTR_LABEL(again)
 		if (error != 0) {
 			HANDLE_EINTR(error, again, err)
 			HANDLE_ENOSYS(error, err, "getpid")
-			DeeError_SysThrowf(&DeeError_SystemError, error,
-			                   "Failed to get pid");
+			DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                          "Failed to get pid");
 			goto err;
 		}
 	}

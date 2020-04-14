@@ -136,7 +136,7 @@ INTERN DeeTypeObject DeeError_NoHostAddress   = INIT_ERROR("NoHostAddress", &Dee
 
 INTERN NONNULL((2)) void DCALL
 err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self) {
-	DeeError_SysThrowf(&DeeError_FileClosed, err,
+	DeeNet_ThrowErrorf(&DeeError_FileClosed, err,
 	                   "Socket %k has been closed", self);
 }
 

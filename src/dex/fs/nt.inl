@@ -100,13 +100,15 @@ nt_GetTempPath(void) {
 	for (;;) {
 		DBG_ALIGNMENT_DISABLE();
 		error = GetTempPathW(bufsize + 1, buffer);
-		DBG_ALIGNMENT_ENABLE();
 		if (!error) {
 			/* Error. */
-			DeeError_SysThrowf(&DeeError_SystemError, GetLastError(),
-			                   "Failed to lookup the path for tmp");
+			error = GetLastError();
+			DBG_ALIGNMENT_ENABLE();
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                        "Failed to lookup the path for tmp");
 			goto err_result;
 		}
+		DBG_ALIGNMENT_ENABLE();
 		if (error <= bufsize)
 			break;
 		/* Resize to fit. */

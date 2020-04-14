@@ -252,8 +252,8 @@ again:
 				goto again;
 			if (DeeNTSystem_IsBufferTooSmall(dwError))
 				goto do_increase_buffer;
-			DeeError_SysThrowf(&DeeError_SystemError, dwError,
-			                   "Failed to lookup module name");
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to lookup module name");
 			goto err_buffer;
 		}
 		DBG_ALIGNMENT_ENABLE();

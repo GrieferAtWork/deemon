@@ -574,9 +574,9 @@ again_setenv:
 			if (Dee_CollectMemory(1))
 				goto again_setenv;
 		} else {
-			DeeError_SysThrowf(&DeeError_SystemError, dwError,
-			                   "Failed to set environment variable `%k' to `%k'",
-			                   name, value);
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to set environment variable `%k' to `%k'",
+			                        name, value);
 		}
 		goto err;
 	}
@@ -657,37 +657,37 @@ err:
 
 PRIVATE ATTR_COLD int DCALL
 err_path_no_dir(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_NoDirectory, error,
-	                          "Some part of the path %r is not a directory",
-	                          path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_NoDirectory, error,
+	                               "Some part of the path %r is not a directory",
+	                               path);
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_path_not_found(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileNotFound, error,
-	                          "Path %r could not be found",
-	                          path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+	                               "Path %r could not be found",
+	                               path);
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_path_no_access(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileAccessError, error,
-	                          "Search permissions are not granted for path %r",
-	                          path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+	                               "Search permissions are not granted for path %r",
+	                               path);
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_chattr_no_access(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileAccessError, error,
-	                          "Changes to the attributes of %r are not allowed",
-	                          path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+	                               "Changes to the attributes of %r are not allowed",
+	                               path);
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_handle_closed(DWORD error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileClosed, error,
-	                          "The given handle %r has been closed",
-	                          path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FileClosed, error,
+	                               "The given handle %r has been closed",
+	                               path);
 }
 
 
@@ -736,9 +736,9 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 	if (*(void **)&my_GetUserProfileDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeError_SysThrowf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
-		                          "Cannot determine home of token %p (`GetUserProfileDirectoryW' not found)",
-		                          hToken);
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		                               "Cannot determine home of token %p (`GetUserProfileDirectoryW' not found)",
+		                               hToken);
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
@@ -759,9 +759,9 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 				unicode_printer_free_wchar(printer, wBuffer);
 				return 1;
 			}
-			DeeError_SysThrowf(&DeeError_SystemError, dwError,
-			                   "Failed to determine home of token %p",
-			                   hToken);
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to determine home of token %p",
+			                        hToken);
 			goto err_release;
 		}
 		DBG_ALIGNMENT_DISABLE();
@@ -797,8 +797,8 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 	if (*(void **)&my_GetProfilesDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeError_SysThrowf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
-		                          "Cannot determine profiles directory (`GetProfilesDirectoryW' not found)");
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		                               "Cannot determine profiles directory (`GetProfilesDirectoryW' not found)");
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
@@ -819,8 +819,8 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 				unicode_printer_free_wchar(printer, wBuffer);
 				return 1;
 			}
-			DeeError_SysThrowf(&DeeError_SystemError, dwError,
-			                   "Failed to determine profiles directory");
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to determine profiles directory");
 			goto err_release;
 		}
 		DBG_ALIGNMENT_DISABLE();
@@ -857,8 +857,8 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 	if (*(void **)&my_GetDefaultUserProfileDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeError_SysThrowf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
-		                          "Cannot determine profiles directory (`GetDefaultUserProfileDirectoryW' not found)");
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		                               "Cannot determine profiles directory (`GetDefaultUserProfileDirectoryW' not found)");
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
@@ -879,8 +879,8 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 				unicode_printer_free_wchar(printer, wBuffer);
 				return 1;
 			}
-			DeeError_SysThrowf(&DeeError_SystemError, dwError,
-			                   "Failed to determine profiles directory");
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to determine profiles directory");
 			goto err_release;
 		}
 		DBG_ALIGNMENT_DISABLE();
@@ -916,8 +916,8 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 	if (*(void **)&my_GetAllUsersProfileDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeError_SysThrowf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
-		                          "Cannot determine profiles directory (`GetAllUsersProfileDirectoryW' not found)");
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		                               "Cannot determine profiles directory (`GetAllUsersProfileDirectoryW' not found)");
 	}
 	dwBufsize = PATH_MAX;
 	wBuffer   = unicode_printer_alloc_wchar(printer, dwBufsize);
@@ -938,8 +938,8 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 				unicode_printer_free_wchar(printer, wBuffer);
 				return 1;
 			}
-			DeeError_SysThrowf(&DeeError_SystemError, dwError,
-			                   "Failed to determine profiles directory");
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to determine profiles directory");
 			goto err_release;
 		}
 		DBG_ALIGNMENT_DISABLE();
@@ -968,9 +968,9 @@ nt_printhome_process(struct unicode_printer *__restrict printer, void *hProcess,
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		return DeeError_SysThrowf(&DeeError_SystemError, dwError,
-		                          "Failed to determine home of process %p",
-		                          hProcess);
+		return DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                               "Failed to determine home of process %p",
+		                               hProcess);
 	}
 	result = nt_printhome_token(printer, (void *)hProcessToken, bTryGet);
 	CloseHandle(hProcessToken);
@@ -1061,8 +1061,8 @@ fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 				unicode_printer_free_wchar(printer, wBuffer);
 				return 1;
 			}
-			DeeError_SysThrowf(&DeeError_SystemError, dwError,
-			                   "Failed to determine name of the current user");
+			DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+			                        "Failed to determine name of the current user");
 			goto err_release;
 		}
 	}
@@ -1395,9 +1395,9 @@ nt_NewUserDescriptorFromHandleOwner(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
 	if (dwError != ERROR_SUCCESS) {
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		DeeError_SysThrowf(&DeeError_SystemError, dwError,
-		                   "Failed to query owner SID of %lu-typed handle %p",
-		                   (unsigned long)ObjectType, (void *)hHandle);
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to query owner SID of %lu-typed handle %p",
+		                        (unsigned long)ObjectType, (void *)hHandle);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1422,9 +1422,9 @@ nt_NewUserDescriptorFromHandleGroup(HANDLE hHandle, SE_OBJECT_TYPE ObjectType) {
 	if (dwError != ERROR_SUCCESS) {
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		DeeError_SysThrowf(&DeeError_SystemError, dwError,
-		                   "Failed to query group SID of %lu-typed handle %p",
-		                   (unsigned long)ObjectType, (void *)hHandle);
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to query group SID of %lu-typed handle %p",
+		                        (unsigned long)ObjectType, (void *)hHandle);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -1697,9 +1697,9 @@ err_nt:
 	} else if (DeeNTSystem_IsBadF((DWORD)error)) {
 		err_handle_closed((DWORD)error, path);
 	} else {
-		DeeError_SysThrowf(&DeeError_FSError, (DWORD)error,
-		                   "Failed to open file %r",
-		                   path);
+		DeeNTSystem_ThrowErrorf(&DeeError_FSError, (DWORD)error,
+		                        "Failed to open file %r",
+		                        path);
 	}
 err:
 	return -1;
@@ -2509,14 +2509,14 @@ again:
 	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
 		err_chattr_no_access((DWORD)error, path);
 	} else if (DeeNTSystem_IsUnsupportedError((DWORD)error)) {
-		DeeError_SysThrowf(&DeeError_UnsupportedAPI, (DWORD)error,
-		                   "The filesystem hosting the path %r does "
-		                   "not support the changing of NT attributes",
-		                   path);
+		DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, (DWORD)error,
+		                        "The filesystem hosting the path %r does "
+		                        "not support the changing of NT attributes",
+		                        path);
 	} else {
-		DeeError_SysThrowf(&DeeError_FSError, (DWORD)error,
-		                   "Failed to change attributes of %r",
-		                   path);
+		DeeNTSystem_ThrowErrorf(&DeeError_FSError, (DWORD)error,
+		                        "Failed to change attributes of %r",
+		                        path);
 	}
 err:
 	return -1;
@@ -2585,9 +2585,9 @@ diriter_copy(DirIterator *__restrict self,
 
 PRIVATE ATTR_COLD int DCALL
 err_handle_findnextfile(DWORD dwError, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FSError, dwError,
-	                          "Failed to read entires from directory %r",
-	                          path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to read entires from directory %r",
+	                               path);
 }
 
 
@@ -2688,9 +2688,9 @@ err_handle_opendir(DWORD error, DeeObject *__restrict path) {
 		return err_path_not_found(error, path);
 	if (DeeNTSystem_IsNotDir(error))
 		return err_path_no_dir(error, path);
-	return DeeError_SysThrowf(&DeeError_FSError, error,
-	                          "Failed to open directory %r",
-	                          path);
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, error,
+	                               "Failed to open directory %r",
+	                               path);
 }
 
 

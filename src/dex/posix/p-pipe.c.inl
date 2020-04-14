@@ -100,8 +100,8 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "pipe")
 		/* TODO: Other errors */
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to create pipe");
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to create pipe");
 		goto err;
 	}
 	result = DeeTuple_Newf("dd", fds[0], fds[1]);
@@ -130,8 +130,8 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
-		DeeError_SysThrowf(&DeeError_SystemError, dwError,
-		                   "Failed to create pipe");
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to create pipe");
 		goto err;
 	}
 	/* On unix, pipe handles are inheritable by default */
@@ -156,17 +156,17 @@ err_fds:
 	close(fds[0]);
 	goto err;
 err_hWritefds0_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
-	                   "Failed to create pipe");
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
+	                          "Failed to create pipe");
 	close(fds[0]);
 	goto err_hWrite;
 err_hWritehRead_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
-	                   "Failed to create pipe");
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
+	                          "Failed to create pipe");
 	goto err_hWritehRead;
 err_hWritehRead_nterror:
-	DeeError_SysThrowf(&DeeError_SystemError, GetLastError(),
-	                   "Failed to create pipe");
+	DeeNTSystem_ThrowErrorf(&DeeError_SystemError, GetLastError(),
+	                        "Failed to create pipe");
 err_hWritehRead:
 	CloseHandle(hRead);
 err_hWrite:
@@ -294,8 +294,8 @@ handle_system_error:
 	HANDLE_EINTR(error, again, err)
 	HANDLE_ENOSYS(error, err, "pipe2")
 	HANDLE_EINVAL(error, err, "Invalid oflags for pipe2 %#x", oflags)
-	DeeError_SysThrowf(&DeeError_SystemError, error,
-	                   "Failed to create pipe");
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+	                          "Failed to create pipe");
 err:
 	return NULL;
 #endif /* posix_pipe2_USE_PIPE2 || posix_pipe2_USE_PIPE_FCNTL */
@@ -325,8 +325,8 @@ again:
 				goto err;
 			goto again;
 		}
-		DeeError_SysThrowf(&DeeError_SystemError, dwError,
-		                   "Failed to create pipe");
+		DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+		                        "Failed to create pipe");
 		goto err;
 	}
 #ifdef CONFIG_HAVE_O_CLOEXEC
@@ -356,15 +356,15 @@ again:
 #endif /* CONFIG_HAVE_close */
 	return result;
 err_hWritefds0_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
-	                   "Failed to create pipe");
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
+	                          "Failed to create pipe");
 #ifdef CONFIG_HAVE_close
 	close(fds[0]);
 #endif /* CONFIG_HAVE_close */
 	goto err_hWrite;
 err_hWritehRead_errno:
-	DeeError_SysThrowf(&DeeError_SystemError, DeeSystem_GetErrno(),
-	                   "Failed to create pipe");
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, DeeSystem_GetErrno(),
+	                          "Failed to create pipe");
 	goto err_hWritehRead;
 err_hWritehRead_nterror:
 	DeeNTSystem_ThrowLastErrorf(&DeeError_SystemError,

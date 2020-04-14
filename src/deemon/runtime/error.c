@@ -206,15 +206,21 @@ DeeError_Throwf(DeeTypeObject *__restrict tp,
 	return result;
 }
 
-PUBLIC NONNULL((1, 3)) int DCALL
-DeeError_VSysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
+PUBLIC NONNULL((3)) int DCALL
+DeeError_VSysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
                     char const *__restrict format, va_list args) {
+	if (!tp) {
+		/* TODO: Rename this function to `DeeUnixSystem_ThrowErrorf()',
+		 *       and use `error' as one of `E*' to select an appropriate
+		 *       exception type to-be thrown here */
+		tp = &DeeError_SystemError;
+	}
 	(void)error; /* TODO */
 	return DeeError_VThrowf(tp, format, args);
 }
 
-PUBLIC NONNULL((1, 3)) int
-DeeError_SysThrowf(DeeTypeObject *__restrict tp, Dee_syserrno_t error,
+PUBLIC NONNULL((3)) int
+DeeError_SysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
                    char const *__restrict format, ...) {
 	va_list args;
 	int result;

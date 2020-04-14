@@ -21,6 +21,7 @@
 #define GUARD_DEX_SOCKET_LIBNET_H 1
 
 #include <deemon/api.h>
+#include <deemon/system.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
@@ -639,12 +640,14 @@ struct sockaddr_un {
 typedef DWORD            neterrno_t;
 #define GET_NET_ERROR()  (neterrno_t)WSAGetLastError()
 #define SET_NET_ERROR(x) WSASetLastError((int)(x))
+#define DeeNet_ThrowErrorf DeeNTSystem_ThrowErrorf
 #endif /* CONFIG_HOST_WINDOWS */
 
 #ifndef GET_NET_ERROR
-typedef int              neterrno_t;
-#define GET_NET_ERROR()  errno
-#define SET_NET_ERROR(x) (void)(errno=(x))
+typedef int                neterrno_t;
+#define GET_NET_ERROR()    DeeSystem_GetErrno()
+#define SET_NET_ERROR(x)   DeeSystem_SetErrno(x)
+#define DeeNet_ThrowErrorf DeeUnixSystem_ThrowErrorf
 #endif /* !GET_NET_ERROR */
 
 

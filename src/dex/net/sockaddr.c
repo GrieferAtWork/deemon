@@ -667,28 +667,30 @@ SockAddr_Sizeof(sa_family_t family, int protocol) {
 PRIVATE ATTR_COLD int DCALL
 err_no_host(char const *__restrict host,
             char const *port, int error) {
+	(void)error; /* XXX: New error code class? */
 	if (port) {
-		return DeeError_SysThrowf(&DeeError_HostNotFound, error,
-		                          "Host %q with port %q could not be found",
-		                          host, port);
+		return DeeError_Throwf(&DeeError_HostNotFound,
+		                       "Host %q with port %q could not be found",
+		                       host, port);
 	} else {
-		return DeeError_SysThrowf(&DeeError_HostNotFound, error,
-		                          "Host %q could not be found",
-		                          host);
+		return DeeError_Throwf(&DeeError_HostNotFound,
+		                       "Host %q could not be found",
+		                       host);
 	}
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_no_host_data(char const *__restrict host,
                  char const *port, int family, int error) {
+	(void)error; /* XXX: New error code class? */
 	if (port) {
-		return DeeError_SysThrowf(&DeeError_NoHostAddress, error,
-		                          "Host %q with port %q is valid but has no addresses for family %K associated with it",
-		                          host, port, sock_getafnameorid(family));
+		return DeeError_Throwf(&DeeError_NoHostAddress,
+		                       "Host %q with port %q is valid but has no addresses for family %K associated with it",
+		                       host, port, sock_getafnameorid(family));
 	} else {
-		return DeeError_SysThrowf(&DeeError_NoHostAddress, error,
-		                          "Host %q is valid but has no addresses for family %K associated with it",
-		                          host, sock_getafnameorid(family));
+		return DeeError_Throwf(&DeeError_NoHostAddress,
+		                       "Host %q is valid but has no addresses for family %K associated with it",
+		                       host, sock_getafnameorid(family));
 	}
 }
 
@@ -718,23 +720,25 @@ restart:
 		if (flags & SOCKADDR_STR_FNOFAIL)
 			goto nodns;
 		if (error == HOST_NOT_FOUND) {
-			DeeError_SysThrowf(&DeeError_HostNotFound, error,
-			                   "Host %K with family %K could not be found",
-			                   sock_gethostbyaddr(data, datalen, family,
-			                                      SOCKADDR_STR_FNODNS |
-			                                      SOCKADDR_STR_FNOFAIL),
-			                   sock_getafnameorid(family));
+			(void)error; /* XXX: New error code class? */
+			DeeError_Throwf(&DeeError_HostNotFound,
+			                "Host %K with family %K could not be found",
+			                sock_gethostbyaddr(data, datalen, family,
+			                                   SOCKADDR_STR_FNODNS |
+			                                   SOCKADDR_STR_FNOFAIL),
+			                sock_getafnameorid(family));
 		} else if (error == NO_ADDRESS
 #if defined(NO_DATA) && NO_DATA != NO_ADDRESS
 		           || error == NO_DATA
 #endif /* NO_DATA && NO_DATA != NO_ADDRESS */
 		           ) {
-			DeeError_SysThrowf(&DeeError_NoHostAddress, error,
-			                   "Host %K with family %K has no addresses associated",
-			                   sock_gethostbyaddr(data, datalen, family,
-			                                      SOCKADDR_STR_FNODNS |
-			                                      SOCKADDR_STR_FNOFAIL),
-			                   sock_getafnameorid(family));
+			(void)error; /* XXX: New error code class? */
+			DeeError_Throwf(&DeeError_NoHostAddress,
+			                "Host %K with family %K has no addresses associated",
+			                sock_gethostbyaddr(data, datalen, family,
+			                                   SOCKADDR_STR_FNODNS |
+			                                   SOCKADDR_STR_FNOFAIL),
+			                sock_getafnameorid(family));
 #ifdef TRY_AGAIN
 		} else if (error == TRY_AGAIN && attempt_counter < 3) {
 			if (DeeThread_Sleep(10000))
@@ -743,11 +747,12 @@ restart:
 			goto restart;
 #endif /* TRY_AGAIN */
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, error,
-			                   "Failed to get host address for %K",
-			                   sock_gethostbyaddr(data, datalen, family,
-			                                      SOCKADDR_STR_FNODNS |
-			                                      SOCKADDR_STR_FNOFAIL));
+			(void)error; /* XXX: New error code class? */
+			DeeError_Throwf(&DeeError_NetError,
+			                "Failed to get host address for %K",
+			                sock_gethostbyaddr(data, datalen, family,
+			                                   SOCKADDR_STR_FNODNS |
+			                                   SOCKADDR_STR_FNOFAIL));
 		}
 		goto err;
 	}
@@ -1054,14 +1059,15 @@ retry_addrinfo:
 #endif /* !CONFIG_HOST_WINDOWS */
 			}
 #endif /* EAI_SYSTEM */
+			(void)error; /* XXX: New error code class? */
 #ifdef CONFIG_HOST_WINDOWS
-			DeeError_SysThrowf(&DeeError_NetError, error,
-			                   "Failed to query getaddrinfo(%q,%q)",
-			                   host, port);
+			DeeError_Throwf(&DeeError_NetError,
+			                "Failed to query getaddrinfo(%q,%q)",
+			                host, port);
 #else /* CONFIG_HOST_WINDOWS */
-			DeeError_SysThrowf(&DeeError_NetError, error,
-			                   "Failed to query getaddrinfo(%q,%q): %s",
-			                   host, port, gai_strerror(error));
+			DeeError_Throwf(&DeeError_NetError,
+			                "Failed to query getaddrinfo(%q,%q): %s",
+			                host, port, gai_strerror(error));
 #endif /* !CONFIG_HOST_WINDOWS */
 			goto err;
 		}
@@ -1229,9 +1235,10 @@ do_gethostbyname_again:
 				goto do_gethostbyname_again;
 #endif /* TRY_AGAIN */
 			} else {
-				DeeError_SysThrowf(&DeeError_NetError, error,
-				                   "Failed to query host name %q",
-				                   host);
+				(void)error; /* XXX: New error code class? */
+				DeeError_Throwf(&DeeError_NetError,
+				                "Failed to query host name %q",
+				                host);
 			}
 			goto err;
 		}
@@ -1262,9 +1269,10 @@ do_port_inet6:
 		{
 			sa_family_t fam = (sa_family_t)hp->h_addrtype;
 			rwlock_endread(&sysdb_lock);
-			DeeError_SysThrowf(&DeeError_NetError, error,
-			                   "Unsupported address family %K for host name %q",
-			                   sock_getafnameorid(fam), host);
+			(void)error; /* XXX: New error code class? */
+			DeeError_Throwf(&DeeError_NetError,
+			                "Unsupported address family %K for host name %q",
+			                sock_getafnameorid(fam), host);
 			goto err;
 		}
 		goto done;

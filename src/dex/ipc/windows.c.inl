@@ -833,9 +833,9 @@ save_final_exe:
 			DBG_ALIGNMENT_DISABLE();
 			error = GetLastError();
 			DBG_ALIGNMENT_ENABLE();
-			DeeError_SysThrowf(&DeeError_FileNotFound, error,
-			                   "Application %r could not be found",
-			                   exe);
+			DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+			                        "Application %r could not be found",
+			                        exe);
 		} else {
 			Dee_XDecref(fixed_exe);
 			nt_ThrowError(error);
@@ -915,8 +915,8 @@ err:
 		DBG_ALIGNMENT_DISABLE();
 		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		return DeeError_SysThrowf(&DeeError_SystemError, dwError,
-		                          "Failed to access process %k", self);
+		return DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+	                                   "Failed to access process %k", self);
 	}
 }
 
@@ -1002,8 +1002,14 @@ again:
 			case WAIT_FAILED:
 				/* Error */
 				ATOMIC_FETCHAND(self->p_state, ~PROCESS_FDETACHING);
-				DeeError_SysThrowf(&DeeError_SystemError, GetLastError(),
-				                   "Failed to join process %k", self);
+				{
+					DWORD dwError;
+					DBG_ALIGNMENT_DISABLE();
+					dwError = GetLastError();
+					DBG_ALIGNMENT_ENABLE();
+					DeeNTSystem_ThrowErrorf(&DeeError_SystemError, dwError,
+					                        "Failed to join process %k", self);
+				}
 				goto err;
 
 #if 0

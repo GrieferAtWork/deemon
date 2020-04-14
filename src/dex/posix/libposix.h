@@ -66,38 +66,38 @@ DECL_BEGIN
 #define HANDLE_EINTR(error, again, err_label) /* nothing */
 #endif
 
-#define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                    \
-	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                           \
-		DeeError_SysThrowf(&DeeError_FileNotFound, error, __VA_ARGS__); \
-		goto err_label;                                                 \
+#define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                           \
+	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                                  \
+		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
+		goto err_label;                                                        \
 	});
 
-#define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                    \
-	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                           \
-		DeeError_SysThrowf(&DeeError_FileNotFound, error, __VA_ARGS__); \
-		goto err_label;                                                 \
+#define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                           \
+	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                                  \
+		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
+		goto err_label;                                                        \
 	});
-#define HANDLE_ENXIO_EISDIR(error, err_label, ...)                      \
-	DeeSystem_IF_E2(error, ENXIO, EISDIR, {                             \
-		DeeError_SysThrowf(&DeeError_ReadOnlyFile, error, __VA_ARGS__); \
-		goto err_label;                                                 \
+#define HANDLE_ENXIO_EISDIR(error, err_label, ...)                             \
+	DeeSystem_IF_E2(error, ENXIO, EISDIR, {                                    \
+		DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error, __VA_ARGS__); \
+		goto err_label;                                                        \
 	});
-#define HANDLE_EROFS_ETXTBSY(error, err_label, ...)                     \
-	DeeSystem_IF_E2(error, EROFS, ETXTBSY, {                            \
-		DeeError_SysThrowf(&DeeError_ReadOnlyFile, error, __VA_ARGS__); \
-		goto err_label;                                                 \
+#define HANDLE_EROFS_ETXTBSY(error, err_label, ...)                            \
+	DeeSystem_IF_E2(error, EROFS, ETXTBSY, {                                   \
+		DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error, __VA_ARGS__); \
+		goto err_label;                                                        \
 	});
-#define HANDLE_EACCES(error, err_label, ...)                               \
-	DeeSystem_IF_E1(error, EACCES, {                                       \
-		DeeError_SysThrowf(&DeeError_FileAccessError, error, __VA_ARGS__); \
-		goto err_label;                                                    \
+#define HANDLE_EACCES(error, err_label, ...)                                      \
+	DeeSystem_IF_E1(error, EACCES, {                                              \
+		DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error, __VA_ARGS__); \
+		goto err_label;                                                           \
 	});
-#define HANDLE_EEXIST_IF(error, cond, err_label, ...)                          \
-	DeeSystem_IF_E1(error, EEXIST, {                                           \
-		if (cond) {                                                            \
-			DeeError_SysThrowf(&DeeError_FileAccessError, error, __VA_ARGS__); \
-			goto err_label;                                                    \
-		}                                                                      \
+#define HANDLE_EEXIST_IF(error, cond, err_label, ...)                                 \
+	DeeSystem_IF_E1(error, EEXIST, {                                                  \
+		if (cond) {                                                                   \
+			DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error, __VA_ARGS__); \
+			goto err_label;                                                           \
+		}                                                                             \
 	});
 #define HANDLE_EINVAL(error, err_label, ...)                \
 	DeeSystem_IF_E1(error, EINVAL, {                        \

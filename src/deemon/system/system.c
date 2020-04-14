@@ -86,15 +86,15 @@ DeeSystem_DEFINE_wcslen(dee_wcslen)
 #ifdef DeeSystem_PrintPwd_USE_WINDOWS
 PRIVATE ATTR_COLD int DCALL nt_err_getcwd(DWORD dwError) {
 	if (DeeNTSystem_IsAccessDeniedError(dwError)) {
-		return DeeError_SysThrowf(&DeeError_FileAccessError, dwError,
-		                          "Permission to read a part of the current "
-		                          "working directory's path was denied");
+		return DeeNTSystem_ThrowErrorf(&DeeError_FileAccessError, dwError,
+		                               "Permission to read a part of the current "
+		                               "working directory's path was denied");
 	} else if (DeeNTSystem_IsFileNotFoundError(dwError)) {
-		return DeeError_SysThrowf(&DeeError_FileNotFound, dwError,
-		                          "The current working directory has been unlinked");
+		return DeeNTSystem_ThrowErrorf(&DeeError_FileNotFound, dwError,
+		                               "The current working directory has been unlinked");
 	}
-	return DeeError_SysThrowf(&DeeError_FSError, dwError,
-	                          "Failed to retrieve the current working directory");
+	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, dwError,
+	                               "Failed to retrieve the current working directory");
 }
 #endif /* DeeSystem_PrintPwd_USE_WINDOWS */
 
@@ -437,18 +437,18 @@ err:
 		if (error != ERANGE) {
 			DBG_ALIGNMENT_ENABLE();
 			DeeSystem_IF_E1(error, EACCES, {
-				DeeError_SysThrowf(&DeeError_FileAccessError, error,
-				                   "Permission to read a part of the current "
-				                   "working directory's path was denied");
+				DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+				                          "Permission to read a part of the current "
+				                          "working directory's path was denied");
 				goto err_release;
 			});
 			DeeSystem_IF_E1(error, ENOENT, {
-				DeeError_SysThrowf(&DeeError_FileNotFound, error,
-				                   "The current working directory has been unlinked");
+				DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+				                          "The current working directory has been unlinked");
 				goto err_release;
 			});
-			DeeError_SysThrowf(&DeeError_FSError, error,
-			                   "Failed to retrieve the current working directory");
+			DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+			                          "Failed to retrieve the current working directory");
 			goto err_release;
 		}
 #endif /* CONFIG_HAVE_errno && ERANGE */
@@ -1220,23 +1220,23 @@ again_deletefile:
 	{
 		int error = DeeSystem_GetErrno();
 		DeeSystem_IF_E4(error, ENOENT, ENOTDIR, ENAMETOOLONG, ELOOP, {
-			return DeeError_SysThrowf(&DeeError_FileNotFound, error,
-			                          "Cannot delete missing file %r",
-			                          filename);
+			return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+			                                 "Cannot delete missing file %r",
+			                                 filename);
 		});
 		DeeSystem_IF_E2(error, EPERM, EACCES, {
-			return DeeError_SysThrowf(&DeeError_FileAccessError, error,
-			                          "Not allowed to delete file %r",
-			                          filename);
+			return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+			                                 "Not allowed to delete file %r",
+			                                 filename);
 		});
 		DeeSystem_IF_E1(error, EROFS, {
-			return DeeError_SysThrowf(&DeeError_ReadOnlyFile, error,
-			                          "Cannot delete file %r on read-only filesystem",
-			                          filename);
+			return DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error,
+			                                 "Cannot delete file %r on read-only filesystem",
+			                                 filename);
 		});
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to delete file %r",
-		                   filename);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to delete file %r",
+		                          filename);
 	}
 	return -1;
 #endif /* DeeSystem_Unlink_WUNLINK || DeeSystem_Unlink_WREMOVE || \
@@ -1245,10 +1245,10 @@ again_deletefile:
 #ifdef DeeSystem_Unlink_STUB
 	if (!throw_exception_on_error)
 		return 1;
-	DeeError_SysThrowf(&DeeError_SystemError,
-	                   DeeSystem_GetErrno(),
-	                   "Failed to delete file %r",
-	                   filename);
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError,
+	                          DeeSystem_GetErrno(),
+	                          "Failed to delete file %r",
+	                          filename);
 	return -1;
 #endif /* DeeSystem_Unlink_STUB */
 

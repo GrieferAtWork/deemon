@@ -179,9 +179,9 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err);
 		HANDLE_ENOSYS(error, err, "isatty");
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd);
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to check isatty for %d",
-		                   fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to check isatty for %d",
+		                          fd);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -292,8 +292,8 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "dup")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to dup %d", fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to dup %d", fd);
 		goto err;
 	}
 	return DeeInt_NewInt(result);
@@ -357,8 +357,8 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "dup2")
 		HANDLE_EBADF(error, err, "Invalid handle %d", oldfd)
-		DeeError_SysThrowf(&DeeError_SystemError, error,
-		                   "Failed to dup %d", oldfd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+		                          "Failed to dup %d", oldfd);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -536,9 +536,9 @@ handle_system_error:
 	HANDLE_ENOSYS(error, err, "dup3")
 	HANDLE_EBADF(error, err, "Invalid fd %d", oldfd)
 	HANDLE_EINVAL(error, err, "Invalid oflags for dup3 %#x", oflags)
-	DeeError_SysThrowf(&DeeError_SystemError, error,
-	                   "Failed to duplicate file descriptor %d into %d",
-	                   oldfd, newfd);
+	DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+	                          "Failed to duplicate file descriptor %d into %d",
+	                          oldfd, newfd);
 err:
 	return NULL;
 #endif /* posix_dup3_USE_DUP3 || posix_dup3_USE_DUP2_FCNTL */
@@ -607,8 +607,8 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "close")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to close %d", fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to close %d", fd);
 		goto err;
 	}
 	return_none;

@@ -48,7 +48,7 @@ typedef DeeSocketObject Socket;
 
 PRIVATE ATTR_COLD int DCALL
 err_no_af_support(neterrno_t error, sa_family_t af) {
-	return DeeError_SysThrowf(&DeeError_NoSupport, error,
+	return DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
 	                          "Address family %R is not supported",
 	                          sock_getafnameorid(af));
 }
@@ -89,17 +89,17 @@ socket_ctor(Socket *__restrict self,
 		if (err == EAFNOSUPPORT) {
 			err_no_af_support(err, (sa_family_t)af);
 		} else if (err == EPROTONOSUPPORT) {
-			DeeError_SysThrowf(&DeeError_NoSupport, err,
+			DeeNet_ThrowErrorf(&DeeError_NoSupport, err,
 			                   "Protocol %R is not supported or cannot be used with address family %R",
 			                   sock_getprotonameorid(proto),
 			                   sock_getafnameorid((sa_family_t)af));
 		} else if (err == EPROTOTYPE) {
-			DeeError_SysThrowf(&DeeError_NoSupport, err,
+			DeeNet_ThrowErrorf(&DeeError_NoSupport, err,
 			                   "Socket type %R cannot be used with protocol %R",
 			                   sock_gettypenameorid(type),
 			                   sock_getprotonameorid(proto));
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, err,
+			DeeNet_ThrowErrorf(&DeeError_NetError, err,
 			                   "Failed to create `socket(%R,%R,%R)'",
 			                   sock_getafnameorid((sa_family_t)af),
 			                   sock_gettypenameorid(type),
@@ -158,7 +158,7 @@ again:
 			if (!(state & SOCKET_FOPENED)) {
 				err_socket_closed(EINVAL, self);
 			} else {
-				DeeError_SysThrowf(&DeeError_NotConnected, ENOTCONN,
+				DeeNet_ThrowErrorf(&DeeError_NotConnected, ENOTCONN,
 				                   "Socket %k is neither bound nor connected",
 				                   self);
 			}
@@ -182,11 +182,11 @@ again:
 				if (error == EBADF || error == ENOTSOCK || error == EINVAL) {
 					err_socket_closed(error, self);
 				} else if (error == EOPNOTSUPP) {
-					DeeError_SysThrowf(&DeeError_NoSupport, error,
+					DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
 					                   "The socket's protocol %K does not support socket names",
 					                   sock_getprotonameorid(self->s_proto));
 				} else {
-					DeeError_SysThrowf(&DeeError_NetError, error,
+					DeeNet_ThrowErrorf(&DeeError_NetError, error,
 					                   "Failed to get name of socket %k",
 					                   self);
 				}
@@ -235,16 +235,16 @@ DeeSocket_GetPeerAddr(DeeSocketObject *__restrict self,
 		err = GET_NET_ERROR();
 		DBG_ALIGNMENT_ENABLE();
 		if (err == ENOTCONN) {
-			DeeError_SysThrowf(&DeeError_NotConnected, err,
+			DeeNet_ThrowErrorf(&DeeError_NotConnected, err,
 			                   "Socket %k is not connected", self);
 		} else if (err == EOPNOTSUPP) {
-			DeeError_SysThrowf(&DeeError_NoSupport, err,
+			DeeNet_ThrowErrorf(&DeeError_NoSupport, err,
 			                   "Cannot query peer address for socket protocol %R",
 			                   sock_getprotonameorid(self->s_proto));
 		} else if (err == EINVAL) {
 			err_socket_closed(err, self);
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, err,
+			DeeNet_ThrowErrorf(&DeeError_NetError, err,
 			                   "Failed to query peer address of socket %k",
 			                   self);
 		}
@@ -303,14 +303,14 @@ socket_do_shutdown(Socket *__restrict self, int how) {
 
 
 PRIVATE ATTR_COLD int DCALL
-err_invalid_shutdown_how(int how) {
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "Invalid shutdown mode %x", how);
+err_invalid_shutdown_how(neterrno_t error, int how) {
+	return DeeNet_ThrowErrorf(&DeeError_ValueError, error,
+	                          "Invalid shutdown mode %x", how);
 }
 
 PRIVATE ATTR_COLD int DCALL
-err_shutdown_failed(Socket *__restrict self, int error) {
-	return DeeError_SysThrowf(&DeeError_NetError, error,
+err_shutdown_failed(Socket *__restrict self, neterrno_t error) {
+	return DeeNet_ThrowErrorf(&DeeError_NetError, error,
 	                          "Failed to shutdown socket %k",
 	                          self);
 }
@@ -356,7 +356,7 @@ again_shutdown:
 			ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 			socket_endread(self);
 			if (error == EINVAL)
-				err_invalid_shutdown_how(mode);
+				err_invalid_shutdown_how(error, mode);
 			else {
 				err_shutdown_failed(self, error);
 			}
@@ -426,7 +426,7 @@ again_shutdown:
 				ATOMIC_FETCHAND(self->s_state, ~SOCKET_FSHUTTINGDOWN);
 				socket_endread(self);
 				if (error == EINVAL)
-					err_invalid_shutdown_how(mode);
+					err_invalid_shutdown_how(error, mode);
 				else if (error == EBADF || error == ENOTSOCK)
 					err_socket_closed(error, self);
 				else {
@@ -449,7 +449,7 @@ PRIVATE ATTR_COLD NONNULL((2)) int DCALL
 err_addr_not_available(neterrno_t error,
                        SockAddr const *__restrict addr,
                        int prototype) {
-	return DeeError_SysThrowf(&DeeError_AddrNotAvail, error,
+	return DeeNet_ThrowErrorf(&DeeError_AddrNotAvail, error,
 	                          "The specified address %K is not available from the local machine",
 	                          SockAddr_ToString(addr, prototype, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 }
@@ -499,7 +499,7 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 	/* Handle errors. */
 	if (error_code == EADDRINUSE) {
-		DeeError_SysThrowf(&DeeError_AddrInUse, error_code,
+		DeeNet_ThrowErrorf(&DeeError_AddrInUse, error_code,
 		                   "The specified address %K is already in use",
 		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 	} else if (error_code == EADDRNOTAVAIL) {
@@ -512,20 +512,20 @@ again:
 err_closed:
 			err_socket_closed(error_code, self);
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, error_code,
+			DeeNet_ThrowErrorf(&DeeError_NetError, error_code,
 			                   "Cannot rebind socket %k of address family %K to address %K", self,
 			                   sock_getafnameorid(self->s_proto),
 			                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 		}
 	} else if (error_code == EOPNOTSUPP) {
-		DeeError_SysThrowf(&DeeError_NoSupport, error_code,
+		DeeNet_ThrowErrorf(&DeeError_NoSupport, error_code,
 		                   "The socket protocol %K does allow address binding",
 		                   sock_getafnameorid(self->s_proto));
 	} else if (error_code == EISCONN) {
-		DeeError_SysThrowf(&DeeError_IsConnected, error_code,
+		DeeNet_ThrowErrorf(&DeeError_IsConnected, error_code,
 		                   "socket %k is already connected", self);
 	} else {
-		DeeError_SysThrowf(&DeeError_NetError, error_code,
+		DeeNet_ThrowErrorf(&DeeError_NetError, error_code,
 		                   "Failed to bind socket %k to address %K", self,
 		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 	}
@@ -560,9 +560,9 @@ select_interruptible(SOCKET hSocket, LONG lNetworkEvents, DWORD dwTimeout) {
 
 
 PRIVATE ATTR_COLD NONNULL((2, 3)) int DCALL
-err_network_down(int error, Socket *__restrict socket,
+err_network_down(neterrno_t error, Socket *__restrict socket,
                  SockAddr const *__restrict addr) {
-	return DeeError_SysThrowf(&DeeError_NetUnreachable, error,
+	return DeeNet_ThrowErrorf(&DeeError_NetUnreachable, error,
 	                          "No route to network of %K can be established",
 	                          SockAddr_ToString(addr, socket->s_proto,
 	                                            SOCKADDR_STR_FNOFAIL |
@@ -678,36 +678,36 @@ err_connect_failure:
 	} else if (error == EBADF || error == ENOTSOCK) {
 		err_socket_closed(error, self);
 	} else if (error == EOPNOTSUPP) {
-		DeeError_Throwf(&DeeError_NoSupport,
-		                "The socket %k is currently listening and cannot connect",
-		                self);
+		DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
+		                   "The socket %k is currently listening and cannot connect",
+		                   self);
 	} else if (error == EALREADY || error == EISCONN) {
-		DeeError_SysThrowf(&DeeError_IsConnected, error,
+		DeeNet_ThrowErrorf(&DeeError_IsConnected, error,
 		                   "Socket %k is already connected or connecting", self);
 	} else if (error == ECONNRESET) {
-		DeeError_SysThrowf(&DeeError_ConnectReset, error,
+		DeeNet_ThrowErrorf(&DeeError_ConnectReset, error,
 		                   "The target %K reset the connection request before it could complete",
 		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 	} else if (error == ECONNREFUSED) {
-		DeeError_SysThrowf(&DeeError_ConnectRefused, error,
+		DeeNet_ThrowErrorf(&DeeError_ConnectRefused, error,
 		                   "Target %K is not listening or has refused to connect",
 		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 	} else if (error == ENETUNREACH) {
 		err_network_down(error, self, addr);
 	} else if (error == EHOSTUNREACH) {
-		DeeError_SysThrowf(&DeeError_HostUnreachable, error,
+		DeeNet_ThrowErrorf(&DeeError_HostUnreachable, error,
 		                   "The target host %K cannot be reached",
 		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 	} else if (error == EPROTOTYPE) {
-		DeeError_Throwf(&DeeError_NoSupport,
-		                "The address %K uses a different type than socket %k",
-		                SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS), self);
+		DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
+		                   "The address %K uses a different type than socket %k",
+		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS), self);
 	} else if (error == ETIMEDOUT) {
-		DeeError_Throwf(&DeeError_TimedOut,
-		                "Timed out while attempting to connect to %K",
-		                SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
+		DeeNet_ThrowErrorf(&DeeError_TimedOut, error,
+		                   "Timed out while attempting to connect to %K",
+		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 	} else {
-		DeeError_SysThrowf(&DeeError_NetError, error,
+		DeeNet_ThrowErrorf(&DeeError_NetError, error,
 		                   "Failed to connect socket %k with address %K", self,
 		                   SockAddr_ToString(addr, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 	}
@@ -780,11 +780,11 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 	/* Handle errors. */
 	if (error_code == EDESTADDRREQ) {
-		DeeError_SysThrowf(&DeeError_NotBound, error_code,
+		DeeNet_ThrowErrorf(&DeeError_NotBound, error_code,
 		                   "Socket %k is not bound and protocol %K does not allow listening on an unbound socket",
 		                   self, sock_getprotonameorid(self->s_proto));
 	} else if (error_code == EOPNOTSUPP) {
-		DeeError_SysThrowf(&DeeError_NoSupport, error_code,
+		DeeNet_ThrowErrorf(&DeeError_NoSupport, error_code,
 		                   "The socket protocol %K does not allow listening",
 		                   sock_getprotonameorid(self->s_proto));
 	} else if (error_code == EBADF || error_code == ENOTSOCK) {
@@ -795,12 +795,12 @@ again:
 err_closed:
 			err_socket_closed(error_code, self);
 		} else {
-			DeeError_SysThrowf(&DeeError_IsConnected, error_code,
+			DeeNet_ThrowErrorf(&DeeError_IsConnected, error_code,
 			                   "Cannot start listening on socket %k that is already connected",
 			                   self);
 		}
 	} else {
-		DeeError_SysThrowf(&DeeError_NetError, error_code,
+		DeeNet_ThrowErrorf(&DeeError_NetError, error_code,
 		                   "Failed to start listening with socket %k", self);
 	}
 err:
@@ -1066,15 +1066,15 @@ handle_accept_error_neterror:
 socket_was_closed:
 		err_socket_closed(error, self);
 	} else if (error == EINVAL) {
-		DeeError_SysThrowf(&DeeError_NotListening, error,
+		DeeNet_ThrowErrorf(&DeeError_NotListening, error,
 		                   "Cannot accept connections from a socket %k that is not listening",
 		                   self);
 	} else if (error == EOPNOTSUPP) {
-		DeeError_SysThrowf(&DeeError_NoSupport, error,
+		DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
 		                   "The type %K of socket %k does not support accepting connections",
 		                   sock_gettypenameorid(self->s_type), self);
 	} else {
-		DeeError_SysThrowf(&DeeError_NetError, error,
+		DeeNet_ThrowErrorf(&DeeError_NetError, error,
 		                   "Failed to accept connections from %k",
 		                   self);
 	}
@@ -1102,8 +1102,8 @@ restart_after_timeout:
 
 
 PRIVATE ATTR_COLD NONNULL((2)) int DCALL
-err_message_too_large(int error, Socket *__restrict self, size_t bufsize) {
-	return DeeError_SysThrowf(&DeeError_MessageSize, error,
+err_message_too_large(neterrno_t error, Socket *__restrict self, size_t bufsize) {
+	return DeeNet_ThrowErrorf(&DeeError_MessageSize, error,
 	                          "Message consisting of %Iu bytes is too large for socket %k",
 	                          bufsize, self);
 }
@@ -1111,9 +1111,9 @@ err_message_too_large(int error, Socket *__restrict self, size_t bufsize) {
 PRIVATE char const transfer_context_send[] = "transfer";
 PRIVATE char const transfer_context_recv[] = "receive";
 PRIVATE ATTR_COLD NONNULL((2, 3)) int DCALL
-err_invalid_transfer_mode(int error, Socket *__restrict self,
+err_invalid_transfer_mode(neterrno_t error, Socket *__restrict self,
                           char const *__restrict context, int mode) {
-	return DeeError_SysThrowf(&DeeError_NoSupport, error,
+	return DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
 	                          "Socket %k does not support %s mode %K",
 	                          self, context, sock_getmsgflagsnameorid(mode));
 }
@@ -1139,7 +1139,7 @@ err_configure_recv(Socket *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	error = GET_NET_ERROR();
 	DBG_ALIGNMENT_ENABLE();
-	return DeeError_SysThrowf(&DeeError_NetError, error,
+	return DeeNet_ThrowErrorf(&DeeError_NetError, error,
 	                          "Failed to configure socket %k for receiving",
 	                          self);
 }
@@ -1151,7 +1151,7 @@ err_configure_send(Socket *__restrict self) {
 	DBG_ALIGNMENT_DISABLE();
 	error = GET_NET_ERROR();
 	DBG_ALIGNMENT_ENABLE();
-	return DeeError_SysThrowf(&DeeError_NetError, error,
+	return DeeNet_ThrowErrorf(&DeeError_NetError, error,
 	                          "Failed to configure socket %k for sending",
 	                          self);
 }
@@ -1309,7 +1309,7 @@ err_select:
 	if (error == EBADF) {
 		err_socket_closed(error, self);
 	} else {
-		DeeError_SysThrowf(&DeeError_NetError, error,
+		DeeNet_ThrowErrorf(&DeeError_NetError, error,
 		                   "Failed to wait for data to be %s socket %k",
 		                   mode == WAITFORDATA_RECV ? "received from" : "send to",
 		                   self);
@@ -1329,22 +1329,22 @@ send_timeout_nounlock:
 
 
 PRIVATE ATTR_COLD NONNULL((2)) int DCALL
-err_receive_not_connected(int error, Socket *__restrict socket) {
-	return DeeError_SysThrowf(&DeeError_NotConnected, error,
+err_receive_not_connected(neterrno_t error, Socket *__restrict socket) {
+	return DeeNet_ThrowErrorf(&DeeError_NotConnected, error,
 	                          "Cannot receive data from socket %k that isn't connected",
 	                          socket);
 }
 
 PRIVATE ATTR_COLD NONNULL((2)) int DCALL
-err_receive_timed_out(int error, Socket *__restrict socket) {
-	return DeeError_SysThrowf(&DeeError_TimedOut, error,
+err_receive_timed_out(neterrno_t error, Socket *__restrict socket) {
+	return DeeNet_ThrowErrorf(&DeeError_TimedOut, error,
 	                          "Timed out while receiving data through socket %k",
 	                          socket);
 }
 
 PRIVATE ATTR_COLD NONNULL((2)) int DCALL
-err_connect_reset(int error, Socket *__restrict socket) {
-	return DeeError_SysThrowf(&DeeError_ConnectReset, error,
+err_connect_reset(neterrno_t error, Socket *__restrict socket) {
+	return DeeNet_ThrowErrorf(&DeeError_ConnectReset, error,
 	                          "The connection of socket %k was reset by its peer",
 	                          socket);
 }
@@ -1419,7 +1419,7 @@ again:
 		           || (error == EPIPE && !(self->s_state & SOCKET_FSHUTDOWN_W))
 #endif /* EPIPE */
 		           ) {
-			DeeError_SysThrowf(&DeeError_NotConnected, error,
+			DeeNet_ThrowErrorf(&DeeError_NotConnected, error,
 			                   "Cannot send data through unconnected socket %k",
 			                   self);
 #ifdef EPIPE
@@ -1431,15 +1431,15 @@ again:
 		} else if (error == ECONNRESET) {
 			err_connect_reset(error, self);
 		} else if (error == EDESTADDRREQ) {
-			DeeError_SysThrowf(&DeeError_NotBound, error,
+			DeeNet_ThrowErrorf(&DeeError_NotBound, error,
 			                   "Socket %k isn't connection-oriented and has no peer address set",
 			                   self);
 		} else if (error == ENETDOWN || error == ENETUNREACH) {
-			DeeError_SysThrowf(&DeeError_NetUnreachable, error,
+			DeeNet_ThrowErrorf(&DeeError_NetUnreachable, error,
 			                   "No route to network of connected to socket %k can be established",
 			                   socket);
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, error,
+			DeeNet_ThrowErrorf(&DeeError_NetError, error,
 			                   "Failed to send %Iu bytes of data through socket %k",
 			                   bufsize, self);
 		}
@@ -1536,7 +1536,7 @@ again:
 			/* Different kind of timeout: The connection timed out, not the data transfer! */
 			err_receive_timed_out(error, self);
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, error,
+			DeeNet_ThrowErrorf(&DeeError_NetError, error,
 			                   "Failed to receive data through socket %k",
 			                   self);
 		}
@@ -1550,9 +1550,9 @@ err:
 
 
 PRIVATE ATTR_COLD NONNULL((2, 3)) int DCALL
-err_host_unreachable(int error, Socket *__restrict socket,
+err_host_unreachable(neterrno_t error, Socket *__restrict socket,
                      SockAddr const *__restrict target) {
-	return DeeError_SysThrowf(&DeeError_HostUnreachable, error,
+	return DeeNet_ThrowErrorf(&DeeError_HostUnreachable, error,
 	                          "The host specified by %K cannot be reached",
 	                          SockAddr_ToString(target, socket->s_proto,
 	                                            SOCKADDR_STR_FNOFAIL |
@@ -1631,11 +1631,11 @@ again:
 		if (error == EBADF || error == ENOTSOCK) {
 			err_socket_closed(error, self);
 		} else if (error == EAFNOSUPPORT) {
-			DeeError_SysThrowf(&DeeError_NoSupport, error,
+			DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
 			                   "Target address family %K cannot be used with socket %k",
 			                   sock_getafnameorid(target->sa.sa_family), self);
 		} else if (error == ECONNRESET) {
-			DeeError_SysThrowf(&DeeError_ConnectReset, error,
+			DeeNet_ThrowErrorf(&DeeError_ConnectReset, error,
 			                   "The peer %K has reset the connection",
 			                   SockAddr_ToString(target, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 #if 0
@@ -1644,7 +1644,7 @@ again:
 		           || (error == EPIPE && !(self->s_state & SOCKET_FSHUTDOWN_W))
 #endif /* EPIPE */
 		           ) {
-			DeeError_SysThrowf(&DeeError_NotConnected, error,
+			DeeNet_ThrowErrorf(&DeeError_NotConnected, error,
 			                   "Socket %k is connection-oriented, but not connected",
 			                   self);
 #endif
@@ -1659,18 +1659,18 @@ again:
 		} else if (error == EHOSTUNREACH) {
 			err_host_unreachable(error, self, target);
 		} else if (error == EISCONN) {
-			DeeError_SysThrowf(&DeeError_IsConnected, error,
+			DeeNet_ThrowErrorf(&DeeError_IsConnected, error,
 			                   "A target address %K was specified when socket %k is already connected",
 			                   SockAddr_ToString(target, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS),
 			                   self);
 		} else if (error == ENETDOWN || error == ENETUNREACH) {
 			err_network_down(error, self, target);
 		} else if (error == EINVAL) {
-			DeeError_SysThrowf(&DeeError_NoSupport, error,
+			DeeNet_ThrowErrorf(&DeeError_NoSupport, error,
 			                   "The specified target address %K is not supported by this implementation",
 			                   SockAddr_ToString(target, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, error,
+			DeeNet_ThrowErrorf(&DeeError_NetError, error,
 			                   "Failed to send %Iu bytes of data through socket %k to address %K",
 			                   bufsize, self, SockAddr_ToString(target, self->s_proto, SOCKADDR_STR_FNOFAIL | SOCKADDR_STR_FNODNS));
 		}
@@ -1773,7 +1773,7 @@ again:
 			/* Different kind of timeout: The connection timed out, not the data transfer! */
 			err_receive_timed_out(error, self);
 		} else {
-			DeeError_SysThrowf(&DeeError_NetError, error,
+			DeeNet_ThrowErrorf(&DeeError_NetError, error,
 			                   "Failed to receive data through socket %k",
 			                   self);
 		}

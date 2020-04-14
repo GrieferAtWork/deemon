@@ -215,8 +215,8 @@ EINTR_LABEL(again)
 		int error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again, err)
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to read from %d", fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to read from %d", fd);
 		goto err;
 	}
 	return result_value;
@@ -414,8 +414,8 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "lseek")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to seek %d", fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to seek %d", fd);
 		goto err;
 	}
 	return DeeInt_NewS64(result);
@@ -459,9 +459,9 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "pread")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to read from %d at offset %" PREAD_PRIOFF,
-		                   fd, offset);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to read from %d at offset %" PREAD_PRIOFF,
+		                          fd, offset);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -539,9 +539,9 @@ handle_system_error:
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "pread")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to read from %d at offset %" PREAD_PRIOFF,
-		                   fd, offset);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to read from %d at offset %" PREAD_PRIOFF,
+		                          fd, offset);
 		goto err;
 	}
 err:
@@ -718,8 +718,8 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to write to %d", fd);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to write to %d", fd);
 		goto err;
 	}
 	DeeObject_PutBuf(buf, &buffer, Dee_BUFFER_FREADONLY);
@@ -763,9 +763,9 @@ EINTR_LABEL(again)
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "pwrite")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to write to %d at offset %" PWRITE_PRIOFF,
-		                   fd, offset);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to write to %d at offset %" PWRITE_PRIOFF,
+		                          fd, offset);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -842,9 +842,9 @@ handle_system_error:
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "pwrite")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to write to %d at offset %" PWRITE_PRIOFF,
-		                   fd, offset);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to write to %d at offset %" PWRITE_PRIOFF,
+		                          fd, offset);
 		goto err;
 	}
 	PWRITE_LSEEK(fd, oldpos, SEEK_SET);

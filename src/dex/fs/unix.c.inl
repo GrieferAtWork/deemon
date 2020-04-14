@@ -321,8 +321,8 @@ INTERN WUNUSED DREF /*String*/ DeeObject *DCALL fs_gethostname(void) {
 				goto err;
 		} else {
 err_generic:
-			DeeError_SysThrowf(&DeeError_SystemError, error,
-			                   "Failed to determine host name");
+			DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, error,
+			                          "Failed to determine host name");
 			goto err;
 		}
 		DBG_ALIGNMENT_DISABLE();
@@ -371,30 +371,30 @@ done:
 
 PRIVATE ATTR_COLD int DCALL
 err_path_no_access(int error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileAccessError, error,
-	                          "Search permissions are not granted for path %r",
-	                          path);
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+	                                 "Search permissions are not granted for path %r",
+	                                 path);
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_path_no_dir(int error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_NoDirectory, error,
-	                          "Some part of the path %r is not a directory",
-	                          path);
+	return DeeUnixSystem_ThrowErrorf(&DeeError_NoDirectory, error,
+	                                 "Some part of the path %r is not a directory",
+	                                 path);
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_path_not_found(int error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileNotFound, error,
-	                          "Path %r could not be found",
-	                          path);
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error,
+	                                 "Path %r could not be found",
+	                                 path);
 }
 
 PRIVATE ATTR_COLD int DCALL
 err_handle_closed(int error, DeeObject *__restrict path) {
-	return DeeError_SysThrowf(&DeeError_FileClosed, error,
-	                          "The given handle %r has been closed",
-	                          path);
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FileClosed, error,
+	                                 "The given handle %r has been closed",
+	                                 path);
 }
 
 
@@ -581,9 +581,9 @@ Stat_Init(STRUCT_STAT *__restrict self,
 		} else if (error == EBADF) {
 			err_handle_closed(error, path);
 		} else {
-			DeeError_SysThrowf(&DeeError_FSError, error,
-			                   "Failed to stat %r",
-			                   path);
+			DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+			                          "Failed to stat %r",
+			                          path);
 		}
 		goto err;
 	}
@@ -1106,9 +1106,9 @@ read_filename:
 			goto iter_done;
 		}
 		rwlock_endwrite(&self->d_lock);
-		DeeError_SysThrowf(&DeeError_FSError, error,
-		                   "Failed to read entires from directory %r",
-		                   self->d_dir->d_path);
+		DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+		                          "Failed to read entires from directory %r",
+		                          self->d_dir->d_path);
 		goto err;
 	}
 	/* Skip self/parent directories. */
@@ -1139,9 +1139,9 @@ err_handle_opendir(DeeObject *__restrict path) {
 		return err_path_not_found(error, path);
 	if (error == ENOTDIR)
 		return err_path_no_dir(error, path);
-	return DeeError_SysThrowf(&DeeError_FSError, error,
-	                          "Failed to open directory %r",
-	                          path);
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+	                                 "Failed to open directory %r",
+	                                 path);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DirIterator *DCALL

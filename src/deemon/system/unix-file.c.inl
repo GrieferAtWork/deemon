@@ -70,8 +70,9 @@ PRIVATE ATTR_COLD int DCALL err_file_closed(void) {
 PRIVATE ATTR_COLD int DCALL error_file_io(SystemFile *__restrict self) {
 	if (self->sf_handle == (DeeSysFD)-1)
 		return err_file_closed();
-	return DeeError_SysThrowf(&DeeError_FSError, DeeSystem_GetErrno(),
-	                          "I/O Operation failed");
+	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError,
+	                                 DeeSystem_GetErrno(),
+	                                 "I/O Operation failed");
 }
 
 INTERN DeeSysFD DCALL
@@ -417,8 +418,8 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 #endif /* ENOTDIR */
 #ifdef EACCES
 		if (error == EACCES) {
-			DeeError_SysThrowf(&DeeError_FileAccessError, error,
-			                   "Failed to access %r", filename);
+			DeeUnixSystem_ThrowErrorf(&DeeError_FileAccessError, error,
+			                          "Failed to access %r", filename);
 		} else
 #endif /* EACCES */
 #if defined(ENXIO) || defined(EROFS) || defined(EISDIR) || defined(ETXTBSY)
@@ -436,13 +437,15 @@ DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 		    || error == ETXTBSY
 #endif /* ETXTBSY */
 		    ) {
-			DeeError_SysThrowf(&DeeError_ReadOnlyFile, error,
-			                   "Cannot open directory %r for writing", filename);
+			DeeUnixSystem_ThrowErrorf(&DeeError_ReadOnlyFile, error,
+			                          "Cannot open directory %r for writing",
+			                          filename);
 		} else
 #endif /* ENXIO || EROFS || EISDIR || ETXTBSY */
 		{
-			DeeError_SysThrowf(&DeeError_FSError, error,
-			                   "Failed to open %r", filename);
+			DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+			                          "Failed to open %r",
+			                          filename);
 		}
 		goto err;
 	}

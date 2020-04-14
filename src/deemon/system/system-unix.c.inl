@@ -129,10 +129,10 @@ DeeUnixSystem_PrintlinkString(struct unicode_printer *__restrict printer,
 		if unlikely(req_size < 0) {
 handle_error:
 			DBG_ALIGNMENT_ENABLE();
-			error = errno;
-			DeeError_SysThrowf(&DeeError_FSError, error,
-			                   "Failed to read symbolic link %q",
-			                   filename);
+			error = DeeSystem_GetErrno();
+			DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
+			                          "Failed to read symbolic link %q",
+			                          filename);
 			goto err_buf;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -238,8 +238,8 @@ err:
 #ifdef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
 PRIVATE ATTR_COLD int DCALL
 err_PrintFilenameOfFD_BADF(int fd) {
-	return DeeError_SysThrowf(&DeeError_SystemError, EBADF,
-	                          "Bad file descriptor %d", fd);
+	return DeeUnixSystem_ThrowErrorf(&DeeError_SystemError, EBADF,
+	                                 "Bad file descriptor %d", fd);
 }
 #endif /* DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE */
 
