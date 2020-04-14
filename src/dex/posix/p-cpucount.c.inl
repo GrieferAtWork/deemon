@@ -27,6 +27,15 @@
 DECL_BEGIN
 
 /* Figure out how we want to implement `cpu_count()' */
+#undef posix_cpu_count_USE_GETSYSTEMINFO
+#undef posix_cpu_count_USE_SYSCONF_SC_NPROCESSORS_ONLN
+#undef posix_cpu_count_USE_SYSCTL_HW_AVAILCPU_HW_NCPU
+#undef posix_cpu_count_USE_SYSCTL_HW_AVAILCPU
+#undef posix_cpu_count_USE_SYSCTL_HW_NCPU
+#undef posix_cpu_count_USE_MPCTL_MPC_GETNUMSPUS
+#undef posix_cpu_count_USE_SYSCONF_SC_NPROC_ONLN
+#undef posix_cpu_count_USE_PROC_CPUINFO
+#undef posix_cpu_count_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS)
 #define posix_cpu_count_USE_GETSYSTEMINFO 1
 #elif defined(CONFIG_HAVE_sysconf) && defined(CONFIG_HAVE__SC_NPROCESSORS_ONLN)
