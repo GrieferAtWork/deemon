@@ -2702,7 +2702,7 @@ again:
 	if unlikely(!newv)
 		goto err_oldv_elem;
 	/* Do the actual sorting. */
-	if (DeeSeq_MergeSort(newv, oldv, objc, key))
+	if unlikely(DeeSeq_MergeSort(newv, oldv, objc, key))
 		goto err_newv;
 	Dee_Free(oldv);
 	DeeList_LockWrite(self);

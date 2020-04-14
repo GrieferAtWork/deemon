@@ -269,14 +269,14 @@ DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
 		       : DeeObject_CompareLo(src[0], src[1]);
 		if (temp <= 0) {
 			if unlikely(temp < 0 &&
-				         !DeeError_Catch(&DeeError_TypeError) &&
-				         !DeeError_Catch(&DeeError_NotImplemented))
-			goto err;
-			dst[0] = src[0];
-			dst[1] = src[1];
-		} else {
+			            !DeeError_Catch(&DeeError_TypeError) &&
+			            !DeeError_Catch(&DeeError_NotImplemented))
+				goto err;
 			dst[0] = src[1];
 			dst[1] = src[0];
+		} else {
+			dst[0] = src[0];
+			dst[1] = src[1];
 		}
 	}	break;
 
