@@ -1045,11 +1045,14 @@ JITLexer_ParseCatchMask(JITLexer *__restrict self,
 		*psymbol_name = NULL;
 		*psymbol_size = 0;
 		/* Check for an `as foo' suffix. */
-		if (JITLexer_ISKWD(self, "as")) {
-			JITLexer_Yield(self);
-			if unlikely(self->jl_tok != JIT_KEYWORD) {
-				syn_try_expected_keyword_after_as_in_catch(self);
-				goto err_mask;
+		if (self->jl_tok == JIT_KEYWORD) {
+			/* the `as' is optional */
+			if (JITLexer_ISTOK(self, "as")) {
+				JITLexer_Yield(self);
+				if unlikely(self->jl_tok != JIT_KEYWORD) {
+					syn_try_expected_keyword_after_as_in_catch(self);
+					goto err_mask;
+				}
 			}
 			*psymbol_name = JITLexer_TokPtr(self);
 			*psymbol_size = JITLexer_TokLen(self);
@@ -1119,6 +1122,6 @@ DECL_END
 
 #define JIT_EVAL 1
 #include "parser-impl.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEX_JIT_PARSER_C */

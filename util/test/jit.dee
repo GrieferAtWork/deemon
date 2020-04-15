@@ -544,6 +544,7 @@ assert identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exp
 
 /* Also make sure that catch-as works */
 assert identical(exec(r'try { throw "foo"; } catch (string as s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+assert identical(exec(r'try { throw "foo"; } catch (string s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
 assert identical(exec(r'try { throw "foo"; } catch (s...) { s + "bar"; }', globals: deemon.__exports__), "foobar");
 assert identical(exec(r'try { throw "foo"; } catch (...s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
 assert identical(exec(r'try { throw "foo"; } catch (...) { 42; }', globals: deemon.__exports__), 42);
