@@ -23,6 +23,7 @@
 
 import deemon;
 import * from deemon;
+import * from errors;
 
 function identical(a, b) {
 	return type a === type b
@@ -33,6 +34,10 @@ function identical(a, b) {
 		&& !(b != a)
 		;
 }
+
+/* Make sure that trying to execute an empty piece of
+ * code causes a SyntaxError exception to be thrown. */
+assert (try ({ exec(r''); none; }) catch (e...) e) is SyntaxError;
 
 /* Basic literal / constant parsing. */
 assert identical(exec(r'1'),          1);
@@ -119,6 +124,7 @@ assert identical(exec(r'bound("foo".nonexisting_symbols);'), false);
 
 assert identical(exec(r'10'), 10);
 assert identical(exec(r'10;'), 10);
+assert identical(exec(r'return 10;'), 10);
 assert identical(exec(r'[10, 20, "foo", false, none]'), [10, 20, "foo", false, none]);
 assert identical(exec(r'[10, 20, "foo", false, none];'), [10, 20, "foo", false, none]);
 assert identical(#exec(r'[10, 20, "foo", false, none]'), #[10, 20, "foo", false, none]);
@@ -127,8 +133,12 @@ assert identical(exec(r'#[10, 20, "foo", false, none]'), #[10, 20, "foo", false,
 assert identical(exec(r'#[10, 20, "foo", false, none];'), #[10, 20, "foo", false, none]);
 assert identical(exec(r'({ 10; })'), 10);
 assert identical(exec(r'({ 10; });'), 10);
+assert identical(exec(r'({ return 10; })'), 10);
+assert identical(exec(r'({ return 10; });'), 10);
 assert identical(exec(r'{ 10; }'), 10);
 assert identical(exec(r'{ 10; };'), none);
+assert identical(exec(r'{ return 10; }'), 10);
+assert identical(exec(r'{ return 10; };'), 10);
 assert exec(r'{ 10 }') == { 10 };
 assert exec(r'{ 10 };') == { 10 };
 assert exec(r'{ 10, }') == { 10 };
@@ -326,6 +336,203 @@ for (local typ: { Tuple, List, Dict, HashSet }) {
 assert identical(exec(r'"{{foo{bar}}}".format({ "bar" : 42 })'), "{foo42}");
 assert identical(exec(r'"{{{bar}foo{bar}}}".format({ "bar" : 42 })'), "{42foo42}");
 assert identical(exec(r'"{{{baz}foo{bar}}}".format({ "bar" : 42, "baz" : 43 })'), "{43foo42}");
+
+/* Test return in JIT expressions */
+assert identical(exec(r'if (10 < 20) "OK"; else "ERROR";'), "OK");  /* Statement */
+assert identical(exec(r'if (10 < 20) "OK" else "ERROR"'), "OK");    /* Expression */
+assert identical(exec(r'if (10 < 20) "OK" else "ERROR";'), "OK");   /* Expression in Statement */
+assert identical(exec(r'(if (10 < 20) "OK" else "ERROR")'), "OK");  /* Expression */
+assert identical(exec(r'(if (10 < 20) "OK" else "ERROR");'), "OK"); /* Expression in Statement */
+assert identical(exec(r'if (10 < 20) return "OK"; return "ERROR";'), "OK"); /* Statement */
+assert identical(exec(r'if (10 < 20) return "OK"; else return "ERROR";'), "OK"); /* Statement */
+
+/* Test the different types of try-blocks in JIT */
+assert identical(exec(r'try ({ throw "Error"; }) catch (...) "OK"'), "OK");
+assert identical(exec(r'try ({ throw "Error"; }) catch (...) "OK";'), "OK");
+assert identical(exec(r'(try ({ throw "Error"; }) catch (...) "OK")'), "OK");
+assert identical(exec(r'(try ({ throw "Error"; }) catch (...) "OK");'), "OK");
+assert identical(exec(r'try { throw "Error"; } catch (...) { "OK"; }'), "OK");
+assert identical(try ({ exec(r'try { throw "1"; } catch (...) { throw "2"; }'); none; }) catch (e...) e, "2");
+{
+	local glob = Dict({ "in_finally" : false });
+	local res = try exec(r"
+		try {
+			throw 'Error';
+		} finally {
+			/* Indicate that we got here. */
+			in_finally = true;
+			return 'OK';
+			/* Make sure that we didn't get here. */
+			in_finally = false;
+		}", globals: glob)
+	catch (e...) e;
+	/* Ensure that the finally-block */
+	assert identical(glob["in_finally"], true);
+}
+
+/* Make sure that return-in-catch causes the exception to be handled */
+assert identical(exec(r'try { ; } catch (...) { return "OK"; }'), none);
+assert identical(exec(r'try { throw "Error"; } catch (...) { return "OK"; }'), "OK");
+
+/* Assert that catch/finally work correctly with return and inplicit ast results. */
+assert identical(exec(r'try { return "1"; } catch (...) { return "2"; }'), "1");
+assert identical(exec(r'try { return "1"; } finally { "2"; }'), "1");
+assert identical(exec(r'try { return "1"; } finally { return "2"; }'), "2");
+assert identical(try ({ exec(r'try { return "1"; } finally { throw "ERROR"; }'); none; }) catch (e...) e, "ERROR");
+assert identical(exec(r'try { "1"; } finally { "2"; }'), "2");
+assert identical(exec(r'try { "1"; } finally { return "2"; }'), "2");
+
+assert identical(exec(r'; if (true) { } else { 42; }'), none);
+assert identical(exec(r'({ ; if (true) { } else { 42; } })'), none);
+
+/* Make sure that `{}' as an expression is an empty sequence,
+ * but when encountered in the context of a statment, it evaluates
+ * to `none' the same way an empty statement would */
+assert exec(r';') is none;
+assert exec(r'{}') == [];
+assert exec(r';{}') is none;
+
+/* Make sure that both the deemon core compiler, as well as the JIT compiler
+ * get the whole cast-vs-in/is/as  */
+assert 10 is int;
+assert 10 in [10];
+assert 10 !is none;
+assert 10 !in [11];
+assert 10 !!!is none;
+assert 10 !!!in [11];
+assert (10) is int;
+assert (10) in [10];
+assert (10) !is none;
+assert (10) !in [11];
+assert (10) !!!is none;
+assert (10) !!!in [11];
+assert exec(r'10 is int', globals: deemon.__exports__);
+assert exec(r'10 in [10]', globals: deemon.__exports__);
+assert exec(r'10 !is none');
+assert exec(r'10 !in [11]');
+assert exec(r'10 !!!is none');
+assert exec(r'10 !!!in [11]');
+assert exec(r'(10) is int', globals: deemon.__exports__);
+assert exec(r'(10) in [10]');
+assert exec(r'(10) !is none');
+assert exec(r'(10) !in [11]');
+assert exec(r'(10) !!!is none');
+assert exec(r'(10) !!!in [11]');
+{
+	local tenasint = 10 as int;
+	assert identical(10 as int, tenasint);
+	assert identical((10) as int, tenasint);
+	assert identical(exec(r'10 as int', globals: deemon.__exports__), tenasint);
+	assert identical(exec(r'(10) as int', globals: deemon.__exports__), tenasint);
+}
+
+
+
+/* XXX: The real deemon compiler also gets this one wrong:
+ *   >> `({ if (true) { } else { 42; } })'
+ *
+ *   Should evaluate to `none', and could be re-written as one of:
+ *   >> `({ if (true) ;   else { 42; } })'
+ *   >> `({ if (true) ;   else   42;   })'
+ *
+ *   During parsing it is not yet known if the hybrid-component will
+ *   end up as a statement or as an expression, and as such will default
+ *   to parsing components as expressions until a code construct is
+ *   encountered that is only allowed inside of a statement, at which
+ *   point the remainder of the construct will be parsed as an explicit
+ *   statement.
+ *
+ *   This works very well for all existing code constructs, since expression-
+ *   like syntax is always allowed in statements (after all: any expression can
+ *   be considered a statement when suffixed by `;'), and statements themself
+ *   only add the additional requirement that certain recursive expressions
+ *   be interpreted as statements, rather than expression. e.g.:
+ *   Expression: if (EXPR) ttEXPR else ffEXPR
+ *   Statement:  if (EXPR) ttSTMT else ffSTMT
+ *
+ *   The problem appears for the following case:
+ *   Statement:  if (EXPR) ttEXPR else ffSTMT
+ *
+ *   In this case, `ttEXPR' is some piece of code that is valid as both an
+ *   expression, as well as a statement (`{}' is one such construct, though
+ *   there are others such as `if (foo) {} else {}', or `for (local x: y) {}')
+ *
+ *   In all of these cases, the construct can be converted from what could
+ *   initially have been an expression, into something that later ends up
+ *   a statement:
+ *
+ *   #1>> ({ if (foo) for (local x: bar) {} else { baz } })
+ *   #2>> ({ if (foo) for (local x: bar) {} else { baz; } })
+ *
+ *   Line #1 is correctly parsed as an expression:
+ *       Sequence({
+ *          If(cc: Variable("foo"),
+ *             tt: Call(self: Function(name: "<anonymous>"
+ *                                     locl: { "x" },
+ *                                     body: Foreach(iter: Variable("x"),
+ *                                                   seq:  Variable("bar"),
+ *                                                   body: Yield(expr: Variable("x")))),
+ *                      args: Constant(Tuple {})),
+ *             ff: Sequence({ Variable("baz") }))
+ *       })
+ *   Or in other words:
+ *       { foo ? []{ for (local x: bar) yield x; }() : { baz } }
+ *
+ *   Line #2 should be parsed as:
+ *       { if (foo) { for (local x: bar); } else { baz; }; }
+ *   But is actually parsed as:
+ *       { if (foo) { []{ for (local x: bar) yield {}; }(); } else { baz; }; }
+ *
+ *   The problem here is that the compiler can't easily go back and re-parse
+ *   some piece of code in the context of a statment, after already having parsed
+ *   it in the context of an expression.
+ *   With a lot of work, this could be fixed by selectively transforming already-
+ *   parsed code components to produce the equivalent of having parsed them as
+ *   statements from the beginning.
+ *   However, such a fix would be highly prone to errors caused by incorrectly
+ *   re-interpreting already generated ASTs, meaning that ASTs would also need
+ *   to be given meta-data that can explain exactly how the AST was generated,
+ *   so-as to know if and when it should be transformed.
+ *
+ *   The JIT compiler could fairly easily fix this problem by pre-scanning every
+ *   hybrid construct ahead of time in order to determine if it's a statement, or
+ *   if it's an expression, before actually committing to evaluating only after.
+ */
+{
+	local a = ({ if (true) { } else { 42; } });
+	local b = exec(r'({ if (true) { } else { 42; } })');
+	local c = exec(r'if (true) { } else { 42; }');
+	assert identical(b, c);
+	if (a is none) {
+		/* This would be correct */
+		assert b is none;
+	} else {
+		/* This is the current behavior, which isn't entirely correct,
+		 * but should at least be consistent between the real compiler,
+		 * and the JIT compiler. */
+		a = Tuple(a);
+		b = Tuple(b);
+		assert identical(a, b);
+		/* assert false; */
+	}
+}
+
+/* Also make sure that the behavior is consistently correct when
+ * the compilers are faced with situations where it is clear that
+ * a piece of code is a statement, rather than an expression. */
+{
+	local a = ({ ;if (true) { } else { 42; } });
+	local b = exec(r'({ ;if (true) { } else { 42; } })');
+	local c = exec(r';if (true) { } else { 42; }');
+	assert a is none;
+	assert b is none;
+	assert c is none;
+}
+
+
+
+
+
 
 
 

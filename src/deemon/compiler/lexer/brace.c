@@ -84,8 +84,13 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 			if unlikely(likely(tok == '=') ? (yield() < 0) : WARN(W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
 				goto err_dict_elemv_r;
 		} else {
-			if (!maybe_expression_begin())
+			int temp;
+			temp = maybe_expression_begin();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_dict_elemv;
 				break; /* Allow (and ignore) trailing comma. */
+			}
 			result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_dict_elemv;
@@ -172,8 +177,15 @@ ast_parse_brace_list(struct ast *__restrict initial_item) {
 parse_list_item:
 		if unlikely(yield() < 0)
 			goto err_list_elemv;
-		if (!maybe_expression_begin())
-			break; /* Allow (and ignore) trailing comma. */
+		{
+			int temp;
+			temp = maybe_expression_begin();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_list_elemv;
+				break; /* Allow (and ignore) trailing comma. */
+			}
+		}
 		result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
 			goto err_list_elemv;
@@ -251,8 +263,15 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_brace_items(void) {
 		goto parse_dict;
 	}
 	/* Check for special case: Empty brace initializer. */
-	if (!maybe_expression_begin())
-		return ast_multiple(AST_FMULTIPLE_GENERIC, 0, NULL);
+	{
+		int temp;
+		temp = maybe_expression_begin();
+		if (temp <= 0) {
+			if unlikely(temp < 0)
+				goto err;
+			return ast_multiple(AST_FMULTIPLE_GENERIC, 0, NULL);
+		}
+	}
 	result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 	if unlikely(!result)
 		goto err;

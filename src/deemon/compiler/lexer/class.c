@@ -953,8 +953,15 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 				if unlikely(yield() < 0)
 					goto err_flags;
 				has_paren = false;
-				if (!maybe_expression_begin())
-					goto done_superargs;
+				{
+					int temp;
+					temp = maybe_expression_begin();
+					if (temp <= 0) {
+						if unlikely(temp < 0)
+							goto err_flags;
+						goto done_superargs;
+					}
+				}
 			} else {
 				if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
 					goto err_flags;

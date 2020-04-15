@@ -756,8 +756,10 @@ INTDEF int32_t FCALL JITLexer_ParseOperatorName(JITLexer *__restrict self, uint1
 #define AST_OPERATOR_FOR                  0xf005 /* `for' */
 
 
-/* Check if a token `tok_id' may refer to the start of an expression. */
-INTDEF bool FCALL JIT_MaybeExpressionBegin(unsigned int tok_id);
+/* Check if the current token may refer to the start of an expression.
+ * The currently selected token is not altered/is restored before this function returns.
+ * NOTE: This function may also be used with `JITSmallLexer' */
+INTDEF bool FCALL JITLexer_MaybeExpressionBegin(JITLexer *__restrict self);
 
 
 /* Return the operator function for `opname', as exported from the `operators' module. */

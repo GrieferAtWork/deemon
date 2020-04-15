@@ -653,7 +653,7 @@ err_missing_rparen:
 	default:
 		/* If what follows still isn't the start of
 		 * an expression, then this isn't a cast. */
-		if (!JIT_MaybeExpressionBegin(self->jl_tok))
+		if (!JITLexer_MaybeExpressionBegin(self))
 			goto not_a_cast;
 do_a_cast:
 		/* Actually do a cast. */
@@ -1512,7 +1512,7 @@ skip_rbrck_and_done:
 					result = ast_parse_statement_or_braces(NULL);
 				} else
 #endif
-				if (JIT_MaybeExpressionBegin(self->jl_tok)) {
+				if (JITLexer_MaybeExpressionBegin(self)) {
 					/* Parse the packed expression. */
 					result = FUNC(Comma)(self,
 					                     has_paren
@@ -3080,7 +3080,7 @@ DEFINE_SECONDARY(CondOperand) {
 				LOAD_LVALUE(lhs, err);
 				if (self->jl_tok == ':') {
 					JITLexer_Yield(self);
-					if (JIT_MaybeExpressionBegin(self->jl_tok)) {
+					if (JITLexer_MaybeExpressionBegin(self)) {
 						if unlikely(JITLexer_SkipCond(self, flags))
 							goto err_r;
 					}
@@ -3095,7 +3095,7 @@ DEFINE_SECONDARY(CondOperand) {
 					Dee_Incref(Dee_None);
 				} else {
 					JITLexer_Yield(self);
-					if (JIT_MaybeExpressionBegin(self->jl_tok)) {
+					if (JITLexer_MaybeExpressionBegin(self)) {
 						Dee_Decref(lhs);
 						lhs = JITLexer_EvalCond(self, flags);
 						if unlikely(!lhs)
@@ -3118,7 +3118,7 @@ DEFINE_SECONDARY(CondOperand) {
 		if (self->jl_tok == ':') {
 			/* Parse the false-branch. */
 			JITLexer_Yield(self);
-			if (JIT_MaybeExpressionBegin(self->jl_tok)) {
+			if (JITLexer_MaybeExpressionBegin(self)) {
 				if unlikely(JITLexer_SkipCond(self, flags))
 					goto err_r;
 			} else {
@@ -3347,7 +3347,7 @@ again:
 #endif /* !JIT_EVAL */
 		JITLexer_Yield(self);
 		/* Allow  */
-		if (!JIT_MaybeExpressionBegin(self->jl_tok))
+		if (!JITLexer_MaybeExpressionBegin(self))
 			break;
 		/* Load the next expression. */
 		lhs = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
@@ -3416,7 +3416,7 @@ again:
 #endif /* !JIT_EVAL */
 		JITLexer_Yield(self);
 		/* Allow  */
-		if (!JIT_MaybeExpressionBegin(self->jl_tok))
+		if (!JITLexer_MaybeExpressionBegin(self))
 			break;
 		/* Load the next expression. */
 		lhs = CALL_PRIMARYF(Expression, JITLEXER_EVAL_FSECONDARY);
@@ -3477,7 +3477,7 @@ again:
 	if (self->jl_tok != ',')
 		goto done;
 	JITLexer_Yield(self);
-	if (!JIT_MaybeExpressionBegin(self->jl_tok))
+	if (!JITLexer_MaybeExpressionBegin(self))
 		goto done;
 	/* Parse the next key. */
 	if (self->jl_tok == '.') {

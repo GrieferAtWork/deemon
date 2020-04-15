@@ -38,30 +38,33 @@ ast_parse_cast(struct ast *__restrict typeexpr) {
 	switch (tok) {
 
 	case '!': {
-		char *next_tok;
-		struct TPPFile *next_file;
+		struct TPPFile *tok_file;
+		struct TPPKeyword *kwd;
+		char *tok_begin;
 		/* Special handling required:
 		 * >> (int)!!!42;         // This...
 		 * >> (int)!!!in my_list; // ... vs. this
 		 * After parsing any number of additional `!' tokens, if the token
 		 * thereafter is the keyword `is' or `in', then this isn't a cast
 		 * expression. However if it isn't, then it is a cast expression. */
-		next_tok = peek_next_token(&next_file);
+		tok_begin = peek_next_token(&tok_file);
 		for (;;) {
-			if unlikely(!next_tok)
+			if unlikely(!tok_begin)
 				goto err;
-			if (*next_tok != '!')
+			if (*tok_begin != '!')
 				break;
-			next_tok = peek_next_advance(next_tok + 1, &next_file);
+			tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
 		}
-		if (*next_tok++ != 'i')
-			goto do_a_cast;
-		while (SKIP_WRAPLF(next_tok, token.t_file->f_end))
-			;
-		if (*next_tok != 's' && *next_tok != 'n')
-			goto do_a_cast;
-		/* This isn't a cast expression. */
-		goto not_a_cast;
+		kwd = peek_keyword(tok_file, tok_begin, 0);
+		if (!kwd) {
+			if unlikely(tok == TOK_ERR)
+				goto err;
+		} else {
+			/* This isn't a cast expression. */
+			if (kwd->k_id == KWD_is || kwd->k_id == KWD_in || kwd->k_id == KWD_as)
+				goto not_a_cast;
+		}
+		goto do_a_cast;
 	}
 
 	case '+': /* `(typexpr).operator add(castexpr)' vs. `(typexpr)castexpr.operator pos()' */
@@ -184,13 +187,20 @@ not_a_cast:
 	default:
 		/* If what follows still isn't the start of
 		 * an expression, then this isn't a cast. */
-		if (!maybe_expression_begin())
-			goto not_a_cast;
+		{
+			int temp;
+			temp = maybe_expression_begin();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err;
+				goto not_a_cast;
+			}
+		}
 do_a_cast:
 		/* Actually do a cast. */
 		result = ast_parse_unary(LOOKUP_SYM_NORMAL);
 		if unlikely(!result)
-			return NULL;
+			goto err;
 		/* Use the parsed branch in a single-argument call-operator invocation. */
 		exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
 		if unlikely(!exprv)

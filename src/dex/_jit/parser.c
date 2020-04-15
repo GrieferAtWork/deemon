@@ -46,14 +46,15 @@ INTERN_CONST char const rt_operator_names[1 + (AST_OPERATOR_MAX - AST_OPERATOR_M
 	/* [AST_OPERATOR_GETATTR_OR_SETATTR   - AST_OPERATOR_MIN] = */ "__gaosa"
 };
 
+/* Check if the current token may refer to the start of an expression.
+ * The currently selected token is not altered/is restored before this function returns.
+ * NOTE: This function may also be used with `JITSmallLexer' */
 INTERN bool FCALL
-JIT_MaybeExpressionBegin(unsigned int tok_id) {
-	bool result = false;
-	switch (tok_id) {
+JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
+	switch (self->jl_tok) {
 
 	case '+':
 	case '-':
-	case '!':
 	case '~':
 	case '(':
 	case '#':
@@ -62,15 +63,132 @@ JIT_MaybeExpressionBegin(unsigned int tok_id) {
 	case TOK_INC:
 	case TOK_DEC:
 	case TOK_INT:
-	case JIT_KEYWORD:
 	case JIT_STRING:
 	case JIT_RAWSTRING:
-		result = true;
-		break;
+	case TOK_FLOAT:
+	case TOK_DOTS:
+		goto yes;
 
-	default: break;
+	case '!': {
+		bool result;
+		unsigned char *orig_tok_start;
+		orig_tok_start = self->jl_tokstart;
+		/* Check if this ! is eventually followed by `is' or `in'
+		 * If this is the case, then this can't be the start of an
+		 * expression! */
+		do {
+			JITLexer_Yield(self);
+		} while (self->jl_tok == '!');
+		if (self->jl_tok != JIT_KEYWORD) {
+			result = true;
+		} else if (self->jl_tokstart + 2 == self->jl_tokend &&
+		           self->jl_tokstart[0] == 'i' &&
+		           (self->jl_tokstart[1] == 's' || self->jl_tokstart[1] == 'n')) {
+			/* `is' or `in' after `!' cannot appear at the start of an expression! */
+			result = false;
+		} else {
+			result = true;
+		}
+		JITLexer_YieldAt(self, orig_tok_start);
+		return result;
+	}	break;
+
+	case JIT_KEYWORD: {
+		/* Black-list a couple of keywords that cannot appear in expressions */
+		char *tokptr;
+		size_t toklen;
+		tokptr = (char *)JITLexer_TokPtr(self);
+		toklen = JITLexer_TokLen(self);
+		switch (toklen) {
+
+			/* Keywords that can only appear inside of expressions */
+		case 2:
+			if (tokptr[0] == 'a') {
+				if (tokptr[1] == 's')
+					goto no; /* `as' */
+			} else if (tokptr[0] == 'i') {
+				if (tokptr[1] == 'n' || tokptr[1] == 's')
+					goto no; /* `in', `is' */
+			}
+			break;
+
+		case 4: {
+			uint32_t name;
+			name = UNALIGNED_GET32((uint32_t *)tokptr);
+			if (name == ENCODE_INT32('e', 'l', 's', 'e'))
+				goto no;
+			if (name == ENCODE_INT32('f', 'r', 'o', 'm'))
+				goto no;
+#if 0 /* Unsupported */
+			if (name == ENCODE_INT32('g', 'o', 't', 'o'))
+				goto no;
+#endif
+			if (name == ENCODE_INT32('c', 'a', 's', 'e'))
+				goto no;
+		}	break;
+
+		case 5: {
+			uint32_t name;
+			name = UNALIGNED_GET32((uint32_t *)tokptr);
+			if (name == ENCODE_INT32('c', 'a', 't', 'c') && tokptr[4] == 'h')
+				goto no;
+			if (name == ENCODE_INT32('y', 'i', 'e', 'l') && tokptr[4] == 'd')
+				goto no;
+			if (name == ENCODE_INT32('t', 'h', 'r', 'o') && tokptr[4] == 'w')
+				goto no;
+			if (name == ENCODE_INT32('p', 'r', 'i', 'n') && tokptr[4] == 't')
+				goto no;
+			if (name == ENCODE_INT32('b', 'r', 'e', 'a') && tokptr[4] == 'k')
+				goto no;
+			if (name == ENCODE_INT32('_', '_', 'a', 's') && tokptr[4] == 'm')
+				goto no;
+		}	break;
+
+		case 6: {
+			uint32_t name;
+			uint16_t name2;
+			name  = UNALIGNED_GET32((uint32_t *)tokptr);
+			name2 = UNALIGNED_GET16((uint16_t *)(tokptr + 4));
+			if (name == ENCODE_INT32('r', 'e', 't', 'u') && name2 == ENCODE_INT16('r', 'n'))
+				goto no;
+			if (name == ENCODE_INT32('s', 'w', 'i', 't') && name2 == ENCODE_INT16('c', 'h'))
+				goto no;
+		}	break;
+
+		case 7: {
+			uint32_t name;
+			uint16_t name2;
+			name  = UNALIGNED_GET32((uint32_t *)tokptr);
+			name2 = UNALIGNED_GET16((uint16_t *)(tokptr + 4));
+			if (name == ENCODE_INT32('f', 'i', 'n', 'a') && name2 == ENCODE_INT16('l', 'l') && tokptr[6] == 'y')
+				goto no;
+			if (name == ENCODE_INT32('d', 'e', 'f', 'a') && name2 == ENCODE_INT16('u', 'l') && tokptr[6] == 't')
+				goto no;
+			if (name == ENCODE_INT32('_', '_', 'a', 's') && name2 == ENCODE_INT16('m', '_') && tokptr[6] == '_')
+				goto no;
+		}	break;
+
+		case 8: {
+			uint32_t namea, nameb;
+			namea = UNALIGNED_GET32((uint32_t *)tokptr);
+			nameb = UNALIGNED_GET32((uint32_t *)(tokptr + 4));
+			if (namea == ENCODE_INT32('c', 'o', 'n', 't') &&
+			    nameb == ENCODE_INT32('i', 'n', 'u', 'e'))
+				goto no;
+		}	break;
+
+		default:
+			break;
+		}
+	}	goto yes;
+
+	default:
+		goto no;
 	}
-	return result;
+no:
+	return false;
+yes:
+	return true;
 }
 
 PRIVATE DEFINE_STRING(str_operators, "operators");

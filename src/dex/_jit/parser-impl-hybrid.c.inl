@@ -279,7 +279,6 @@ parse_remainder_after_semicolon_hybrid_popscope:
 	case ';':
 is_a_statement:
 		IF_EVAL(JITContext_PushScope(self->jl_context));
-		JITLexer_Yield(self);
 		/* Enter a new scope and parse expressions. */
 		result = FUNC(StatementBlock)(self);
 		if (ISERR(result))
@@ -428,9 +427,9 @@ FUNC(Hybrid)(JITLexer *__restrict self,
 
 	case '{':
 		result = FUNC(StatementOrBraces)(self, &was_expression);
+parse_unary_suffix_if_notexpr:
 		if (ISERR(result))
 			goto err;
-parse_unary_suffix_if_notexpr:
 		if (was_expression != AST_PARSE_WASEXPR_NO) {
 			/* Try to parse a suffix expression.
 			 * If there was one, then we know that it actually was an expression. */
@@ -440,7 +439,9 @@ parse_unary_suffix_if_notexpr:
 			if (token_start != self->jl_tokstart)
 				was_expression = AST_PARSE_WASEXPR_YES;
 		}
-/*check_semi_after_expression:*/
+check_semi_after_expression:
+		if (ISERR(result))
+			goto err;
 		if (self->jl_tok == ';' && was_expression != AST_PARSE_WASEXPR_NO) {
 			JITLexer_Yield(self);
 			was_expression = AST_PARSE_WASEXPR_NO;
@@ -467,8 +468,12 @@ is_a_statement:
 
 		case 2:
 			if (tok_begin[0] == 'i' && tok_begin[1] == 'f') {
-				result = FUNC(IfHybrid)(self, pwas_expression);
-				goto done;
+				/* Expression:           `if (foo) bar else baz'   (may also be written as `(if (foo) bar else baz)') */
+				/* Expression-Statement: `if (foo) bar else baz;'  (may also be written as `(if (foo) bar else baz);') */
+				/* Pure Statement:       `if (foo) bar; else baz;' (this would be a syntax error: `(if (foo) bar; else baz);') */
+				/* Pure Statement:       `if (foo) { bar; } else { baz; }' */
+				result = FUNC(IfHybrid)(self, &was_expression);
+				goto check_semi_after_expression;
 			}
 			if (tok_begin[0] == 'd' && tok_begin[1] == 'o') {
 				result = FUNC(DoHybrid)(self, &was_expression);
@@ -479,13 +484,13 @@ is_a_statement:
 		case 3:
 			if (tok_begin[0] == 't' && tok_begin[1] == 'r' &&
 			    tok_begin[2] == 'y') {
-				result = FUNC(TryHybrid)(self, pwas_expression);
-				goto done;
+				result = FUNC(TryHybrid)(self, &was_expression);
+				goto check_semi_after_expression;
 			}
 			if (tok_begin[0] == 'f' && tok_begin[1] == 'o' &&
 			    tok_begin[2] == 'r') {
-				result = FUNC(ForHybrid)(self, pwas_expression);
-				goto done;
+				result = FUNC(ForHybrid)(self, &was_expression);
+				goto check_semi_after_expression;
 			}
 			if (tok_begin[0] == 'd' && tok_begin[1] == 'e' &&
 			    tok_begin[2] == 'l') {
@@ -497,13 +502,12 @@ is_a_statement:
 		case 4:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
 			if (name == ENCODE_INT32('w', 'i', 't', 'h')) {
-				result = FUNC(WithHybrid)(self, pwas_expression);
-				goto done;
+				result = FUNC(WithHybrid)(self, &was_expression);
+				goto check_semi_after_expression;
 			}
 			if (name == ENCODE_INT32('f', 'r', 'o', 'm')) {
-				result = FUNC(ImportHybrid)(self, true, pwas_expression);
-				ASSERT(ISERR(result) || *pwas_expression == AST_PARSE_WASEXPR_NO);
-				goto done;
+				result = FUNC(ImportHybrid)(self, true, &was_expression);
+				goto check_semi_after_expression;
 			}
 			break;
 
@@ -511,8 +515,8 @@ is_a_statement:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
 			if (name == ENCODE_INT32('w', 'h', 'i', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'e') {
-				result = FUNC(WhileHybrid)(self, pwas_expression);
-				goto done;
+				result = FUNC(WhileHybrid)(self, &was_expression);
+				goto check_semi_after_expression;
 			}
 			if (name == ENCODE_INT32('y', 'i', 'e', 'l') &&
 			    *(uint8_t *)(tok_begin + 4) == 'd')
@@ -538,8 +542,8 @@ is_a_statement:
 				goto is_a_statement;
 			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
 			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
-				result = FUNC(AssertHybrid)(self, pwas_expression);
-				goto done;
+				result = FUNC(AssertHybrid)(self, &was_expression);
+				goto check_semi_after_expression;
 			}
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
 			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('r', 't')) {
@@ -556,8 +560,8 @@ is_a_statement:
 			if (name == ENCODE_INT32('f', 'o', 'r', 'e') &&
 			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('a', 'c') &&
 			    *(uint8_t *)(tok_begin + 6) == 'h') {
-				result = FUNC(ForeachHybrid)(self, pwas_expression);
-				goto done;
+				result = FUNC(ForeachHybrid)(self, &was_expression);
+				goto check_semi_after_expression;
 			}
 			if (name == ENCODE_INT32('_', '_', 'a', 's') &&
 			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('m', '_') &&
@@ -627,7 +631,7 @@ default_case:
 	}	break;
 
 	}
-done:
+/*done:*/
 	return result;
 err:
 	return ERROR;

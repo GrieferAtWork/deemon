@@ -212,11 +212,13 @@ ast_parse_argument_list(uint16_t mode,
  */
 INTDEF int DCALL ast_parse_lookup_mode(unsigned int *__restrict pmode);
 
-/* Return true if the current token may be the begin of an expression. */
-INTDEF bool DCALL maybe_expression_begin(void);
-
-/* TODO: This false detects `+' as valid, but doesn't consider something like `+=' */
-INTDEF bool DCALL maybe_expression_begin_c(char peek);
+/* Return 1 if the current token may be the begin of an expression.
+ * @return: 1:  Yes
+ * @return: 0:  No
+ * @return: -1: Error */
+INTDEF int DCALL maybe_expression_begin(void);
+/* Same as `maybe_expression_begin()', but for the next (peeked) token. */
+INTDEF int DCALL maybe_expression_begin_peek(void);
 
 /* Parse a try-statement/expression. */
 INTDEF WUNUSED DREF struct ast *DCALL ast_parse_try(bool is_statement);

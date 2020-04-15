@@ -43,16 +43,16 @@
 #else /* JIT_HYBRID */
 #define JIT_ARGS     bool is_statement
 #ifdef JIT_EVAL
-#define EVAL_PRIMARY(self,pwas_expression)   (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL))
-#define EVAL_SECONDARY(self,pwas_expression) (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self,JITLEXER_EVAL_FNORMAL))
+#define EVAL_PRIMARY(self, pwas_expression)   (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL))
+#define EVAL_SECONDARY(self, pwas_expression) (is_statement ? JITLexer_EvalStatement(self) : JITLexer_EvalExpression(self, JITLEXER_EVAL_FNORMAL))
 #define H_FUNC(x)                             JITLexer_Eval##x
 #else /* JIT_EVAL */
-#define EVAL_PRIMARY(self,pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
-#define EVAL_SECONDARY(self,pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+#define EVAL_PRIMARY(self, pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
+#define EVAL_SECONDARY(self, pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 #define H_FUNC(x)                             JITLexer_Skip##x
 #endif /* !JIT_EVAL */
-#define SKIP_PRIMARY(self,pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
-#define SKIP_SECONDARY(self,pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self,JITLEXER_EVAL_FNORMAL))
+#define SKIP_PRIMARY(self, pwas_expression)   (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
+#define SKIP_SECONDARY(self, pwas_expression) (is_statement ? JITLexer_SkipStatement(self) : JITLexer_SkipExpression(self, JITLEXER_EVAL_FNORMAL))
 #define IF_HYBRID(...)  /* nothing */
 #define IF_NHYBRID(...) __VA_ARGS__
 #endif /* !JIT_HYBRID */
@@ -65,18 +65,31 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 	RETURN_TYPE result;
 	IF_HYBRID(unsigned int was_expression;)
 #ifdef JIT_EVAL
-	unsigned char *start;
 	ASSERT(JITLexer_ISKWD(self, "try"));
+	ASSERT(!(self->jl_context->jc_flags & JITCONTEXT_FSYNERR));
 	JITLexer_Yield(self);
-	start  = self->jl_tokstart;
-	result = EVAL_PRIMARY(self, &was_expression);
+	{
+		unsigned char *start;
+		start  = self->jl_tokstart;
+		result = EVAL_PRIMARY(self, &was_expression);
+		if (ISERR(result)) {
+			/* An exception was thrown. - If it's a syntax error,
+			 * don't allow it to be handled, but force propagation. */
+			if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
+				goto err;
+			/* Fully parse the primary expression so we end up at the catch/finally.
+			 * This must be done since an exception being thrown causes token parsing
+			 * to stop in its track, meaning that the current lexer position is
+			 * entirely undefined. */
+			JITLexer_YieldAt(self, start);
+			if (SKIP_PRIMARY(self, &was_expression))
+				goto err;
+		}
+		ASSERT(!(self->jl_context->jc_flags & JITCONTEXT_FSYNERR));
+	}
+	/* Resolve l-value expressions for the try-block. */
 	if (result == JIT_LVALUE)
 		result = JITLexer_PackLValue(self);
-	if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
-		goto err;
-	JITLexer_YieldAt(self, start);
-	if (SKIP_PRIMARY(self, &was_expression))
-		goto err;
 	while (self->jl_tok == JIT_KEYWORD) {
 		bool allow_interrupts = false;
 		/* XXX: Full tagging support? */
@@ -99,41 +112,62 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 		if (JITLexer_ISTOK(self, "finally")) {
 			DREF DeeObject *finally_value;
 			DREF DeeObject *old_return_expr;
+			unsigned char *start;
 			JITLexer_Yield(self);
+			/* Temporarily reset the return override to handle things
+			 * like double-return/break/continue (in which case the
+			 * later return/break/continue always takes precedence) */
 			old_return_expr             = self->jl_context->jc_retval;
 			self->jl_context->jc_retval = JITCONTEXT_RETVAL_UNSET;
-			start                       = self->jl_tokstart;
-			finally_value               = EVAL_SECONDARY(self, &was_expression);
-			/* Discard the finally-branch expression value. */
+			/* Parse the finally-block */
+			start         = self->jl_tokstart;
+			finally_value = EVAL_SECONDARY(self, &was_expression);
+			/* Resolve l-value branch results. */
+			if (finally_value == JIT_LVALUE)
+				finally_value = JITLexer_PackLValue(self);
 			if (ISOK(finally_value)) {
-				if (finally_value == JIT_LVALUE) {
-					JITLValue_Fini(&self->jl_lvalue);
-					JITLValue_Init(&self->jl_lvalue);
+				if (ISOK(result)) {
+					/* Use the finally-branch value as the new return value. */
+					Dee_Decref(result);
+					result = finally_value;
 				} else {
-					Dee_Decref(finally_value);
+					/* Discard the finally-branch expression value. */
+					if (finally_value == JIT_LVALUE) {
+						JITLValue_Fini(&self->jl_lvalue);
+						JITLValue_Init(&self->jl_lvalue);
+					} else {
+						Dee_Decref(finally_value);
+					}
 				}
-			}
-			if (ISERR(finally_value)) {
+			} else {
+				/* We get here for a number of reasons:
+				 *  - Syntax error in finally-block
+				 *     -> Immediatly propagate the error
+				 *  - finally-block contains a break/continue/return statement
+				 *    finally-block throws an exception
+				 *     -> Keep the new return override and continue scanning
+				 *        for more catch/finally blocks, handling them as
+				 *        though the new return override had been set by
+				 *        the original try-block.
+				 */
+				/* Discard the old return override. */
+				if (old_return_expr && JITCONTEXT_RETVAL_ISSET(old_return_expr))
+					Dee_Decref(old_return_expr);
+				/* Make sure to clear the return value. */
+				Dee_XClear(result);
+				/* Check if this is a syntax error. */
 				if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
-					goto err_r;
+					goto err;
+				/* Re-parse the finally-block */
 				JITLexer_YieldAt(self, start);
 				if (SKIP_SECONDARY(self, &was_expression))
-					goto err_r;
-				Dee_XClear(result);
+					goto err;
+				/* Continue scanning for catch/finally blocks. */
 				continue;
 			}
 			/* Restore the old special return branch, if it was set. */
-			if (self->jl_context->jc_retval &&
-			    JITCONTEXT_RETVAL_ISSET(self->jl_context->jc_retval)) {
-				Dee_Decref(self->jl_context->jc_retval);
-				self->jl_context->jc_retval = old_return_expr; /* Inherit reference. */
-			} else if (old_return_expr && JITCONTEXT_RETVAL_ISSET(old_return_expr)) {
-				self->jl_context->jc_retval = old_return_expr; /* Inherit reference. */
-			} else {
-				/* Don't restore special return branches, which finally is allowed
-				 * to re-direct (such as `continue' being turned into `break' through
-				 * use of a finally statement) */
-			}
+			ASSERT(self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET);
+			self->jl_context->jc_retval = old_return_expr; /* Inherit reference. */
 		} else if (JITLexer_ISTOK(self, "catch")) {
 			/* Skip catch statements. */
 			JITLexer_Yield(self);
@@ -185,6 +219,19 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 					if unlikely(!result) {
 						if (self->jl_context->jc_flags & JITCONTEXT_FSYNERR)
 							goto err_popscope;
+						/* `result' may also be NULL if the catch-body contained
+						 * a return/break/continue statement. If that was the case,
+						 * then we must still mark the exception as handled, handle
+						 * the exception, proceed with a set return value. */
+						if (self->jl_context->jc_retval != JITCONTEXT_RETVAL_UNSET) {
+							ASSERT(ts->t_exceptsz == old_except);
+							DeeError_Handled(ERROR_HANDLED_INTERRUPT);
+							JITContext_PopScope(self->jl_context);
+							JITLexer_YieldAt(self, start);
+							if (SKIP_SECONDARY(self, &was_expression))
+								goto err;
+							continue;
+						}
 						goto err_handle_catch_except;
 					}
 					/* The exception was handled normally. */

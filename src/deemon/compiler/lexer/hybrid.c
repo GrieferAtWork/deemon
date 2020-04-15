@@ -149,6 +149,7 @@ ast_parse_statement_or_expression(unsigned int *pwas_expression) {
 				*pwas_expression = AST_PARSE_WASEXPR_YES;
 		}
 	}	break;
+
 	}
 done:
 	return result;

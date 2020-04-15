@@ -210,12 +210,10 @@ for (local x: util::range(128)) {
 #define LOOKUP_SYM_SECONDARY  LOOKUP_SYM_NORMAL
 
 INTERN uint16_t parser_flags = PARSE_FNORMAL;
-INTERN bool DCALL maybe_expression_begin(void) {
-	bool result = false;
+INTERN int DCALL maybe_expression_begin(void) {
 	switch (tok) {
 	case '+':
 	case '-':
-	case '!':
 	case '~':
 	case '(':
 	case '#':
@@ -230,44 +228,218 @@ INTERN bool DCALL maybe_expression_begin(void) {
 	case TOK_STRING:
 	case TOK_DOTS:
 	case TOK_COLLON_COLLON: /* Deprecated global-accessor syntax. */
-		result = true;
-		break;
+		goto yes;
+
+		/* Keywords that can only appear inside of expressions */
+	case KWD_as:
+	case KWD_in:
+	case KWD_is:
+		/* Keywords that can only appear inside of expressions/statements */
+	case KWD_else:
+	case KWD_catch:
+	case KWD_finally:
+		/* Keywords that can only appear inside of statements */
+	case KWD_from:
+	case KWD_return:
+	case KWD_yield:
+	case KWD_throw:
+	case KWD_print:
+	case KWD_break:
+	case KWD_continue:
+	case KWD___asm:
+	case KWD___asm__:
+	case KWD_goto:
+	case KWD_switch:
+	case KWD_case:
+	case KWD_default:
+		goto no;
+
+	case '!': {
+		struct TPPFile *tok_file;
+		struct TPPKeyword *kwd;
+		char *tok_begin;
+		/* Check if this ! is eventually followed by `is' or `in'
+		 * If this is the case, then this can't be the start of an
+		 * expression! */
+		tok_begin = peek_next_token(&tok_file);
+		for (;;) {
+			if unlikely(!tok_begin)
+				goto err;
+			if (*tok_begin != '!')
+				break;
+			tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
+		}
+		kwd = peek_keyword(tok_file, tok_begin, 0);
+		if (!kwd) {
+			if unlikely(tok == TOK_ERR)
+				goto err;
+		} else {
+			/* This isn't an expression. */
+			if (kwd->k_id == KWD_is || kwd->k_id == KWD_in)
+				goto no;
+		}
+		goto yes;
+	}	break;
 
 	default:
 		/* Any kind of keyword can appear in expressions, either
 		 * a native expression keyword, or as a variable name. */
-		result = TPP_ISKEYWORD(tok);
-		break;
+		if (TPP_ISKEYWORD(tok))
+			goto yes;
+		/* XXX: TPP_ISUSERKEYWORD()? */
+		goto no;
 	}
-	return result;
+no:
+	return 0;
+yes:
+	return 1;
+err:
+	return -1;
 }
 
-INTERN bool DCALL
-maybe_expression_begin_c(char peek) {
-	bool result = false;
+/* Same as `maybe_expression_begin()', but for the next (peeked) token. */
+INTERN int DCALL maybe_expression_begin_peek(void) {
+	char *tok_begin, peek;
+	struct TPPFile *tok_file;
+	tok_begin = peek_next_token(&tok_file);
+	if unlikely(!tok_begin)
+		goto err;
+	/* TODO: This false detects `+' as valid, but doesn't consider something like `+=' */
+	peek = *tok_begin;
 	switch (peek) {
-	case '+':
-	case '-':
-	case '!':
+
 	case '~':
 	case '(':
 	case '#':
-	case '<': /* For cells. */
 	case '[': /* For lists. */
 	case '{': /* Brace initializers. */
-	case '\'':
-	case '\"':
 	case '_': /* For identifiers */
 	case '$': /* For identifiers */
-		result = true;
-		break;
+		goto yes;
 
-	default:
-		result = !!DeeUni_IsSymCont(peek);
-		break;
+	case '+':
+	case '-':
+	case '<': /* For cells. */
+		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
+		if unlikely(!tok_begin)
+			goto err;
+		{
+			char next;
+			next = *tok_begin;
+			if (next == peek) {
+				if (peek == '<')
+					goto no; /* `<<' cannot appear at the start of expression */
+				goto yes; /* `++' and `--' can appear, though */
+			}
+			if (next == '=')
+				goto no; /* +=, -=, <= can only appear in the middle of expressions! */
+		}
+		goto yes;
+
+	case '0': case '1': case '2': case '3': case '4':
+	case '5': case '6': case '7': case '8': case '9':
+		/* Integer / float */
+	case '\'':
+	case '\"':
+		/* String constants */
+		goto yes;
+
+	case '.': /* TOK_DOTS */
+		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
+		if unlikely(!tok_begin)
+			goto err;
+		if (*tok_begin != '.')
+			goto no;
+		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
+		if unlikely(!tok_begin)
+			goto err;
+		if (*tok_begin != '.')
+			goto no;
+		goto yes; /* ... */
+
+	case ':': /* Deprecated global-accessor syntax. */
+		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
+		if unlikely(!tok_begin)
+			goto err;
+		if (*tok_begin != ':')
+			goto no;
+		goto yes; /* :: */
+
+	case '!': {
+		struct TPPKeyword *kwd;
+		/* Check if this ! is eventually followed by `is' or `in'
+		 * If this is the case, then this can't be the start of an
+		 * expression! */
+		for (;;) {
+			tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
+			if unlikely(!tok_begin)
+				goto err;
+			if (*tok_begin != '!')
+				break;
+		}
+		kwd = peek_keyword(tok_file, tok_begin, 0);
+		if (!kwd) {
+			if unlikely(tok == TOK_ERR)
+				goto err;
+		} else {
+			/* This isn't an expression. */
+			if (kwd->k_id == KWD_is || kwd->k_id == KWD_in)
+				goto no;
+		}
+		goto yes;
+	}	break;
+
+	default: {
+		struct TPPKeyword *kwd;
+		if (!tpp_is_keyword_start(peek))
+			goto no;
+		kwd = peek_keyword(tok_file, tok_begin, 0);
+		if unlikely(!kwd) {
+			if unlikely(tok == TOK_ERR)
+				goto err;
+			goto yes; /* First-time-used user-defined keyword token. */
+		}
+		switch (kwd->k_id) {
+
+			/* Keywords that can only appear inside of expressions */
+		case KWD_as:
+		case KWD_in:
+		case KWD_is:
+			/* Keywords that can only appear inside of expressions/statements */
+		case KWD_else:
+		case KWD_catch:
+		case KWD_finally:
+			/* Keywords that can only appear inside of statements */
+		case KWD_from:
+		case KWD_return:
+		case KWD_yield:
+		case KWD_throw:
+		case KWD_print:
+		case KWD_break:
+		case KWD_continue:
+		case KWD___asm:
+		case KWD___asm__:
+		case KWD_goto:
+		case KWD_switch:
+		case KWD_case:
+		case KWD_default:
+			goto no;
+
+		default:
+			break;
+		}
+		goto yes;
 	}
-	return result;
+
+	}
+no:
+	return 0;
+yes:
+	return 1;
+err:
+	return -1;
 }
+
 
 
 PRIVATE WUNUSED DREF struct ast *FCALL
@@ -789,34 +961,40 @@ do_create_class:
 		if (tok == '{') {
 			/* Statements in expressions. */
 			result = ast_parse_statement_or_braces(NULL);
-		} else if (maybe_expression_begin()) {
-			/* Parse the packed expression. */
-			result = ast_parse_comma(has_paren
-			                         ? AST_COMMA_FORCEMULTIPLE
-			                         : AST_COMMA_FORCEMULTIPLE | AST_COMMA_STRICTCOMMA,
-			                         AST_FMULTIPLE_TUPLE,
-			                         NULL);
-#if 0 /* Because of the `AST_COMMA_FORCEMULTIPLE', this is unnecessary */
-			if likely(result &&
-			          result->a_type == AST_EXPAND) {
-				/* Wrap into a single-item tuple multiple-branch:
-				 * >> print pack get_items()...; // Convert to tuple. */
-				DREF struct ast **exprv;
-				ast_setddi(result, &loc);
-				exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
-				if unlikely(!exprv)
-					goto err_r_flags;
-				exprv[0] = result; /* Inherit */
-				merge    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
-				if unlikely(!merge) {
-					Dee_Free(exprv);
-					goto err_r_flags;
-				}
-				result = merge; /* Inherit */
-			}
-#endif
 		} else {
-			result = ast_constexpr(Dee_EmptyTuple);
+			int temp;
+			temp = maybe_expression_begin();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_flags;
+				result = ast_constexpr(Dee_EmptyTuple);
+			} else {
+				/* Parse the packed expression. */
+				result = ast_parse_comma(has_paren
+				                         ? AST_COMMA_FORCEMULTIPLE
+				                         : AST_COMMA_FORCEMULTIPLE | AST_COMMA_STRICTCOMMA,
+				                         AST_FMULTIPLE_TUPLE,
+				                         NULL);
+#if 0 /* Because of the `AST_COMMA_FORCEMULTIPLE', this is unnecessary */
+				if likely(result &&
+				          result->a_type == AST_EXPAND) {
+					/* Wrap into a single-item tuple multiple-branch:
+					 * >> print pack get_items()...; // Convert to tuple. */
+					DREF struct ast **exprv;
+					ast_setddi(result, &loc);
+					exprv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
+					if unlikely(!exprv)
+						goto err_r_flags;
+					exprv[0] = result; /* Inherit */
+					merge    = ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv);
+					if unlikely(!merge) {
+						Dee_Free(exprv);
+						goto err_r_flags;
+					}
+					result = merge; /* Inherit */
+				}
+#endif
+			}
 		}
 		ast_setddi(result, &loc);
 		if unlikely(!result)
@@ -1508,7 +1686,7 @@ err_other:
 			result = other;
 			break;
 
-			case KWD_pack: {
+		case KWD_pack: {
 			DREF struct ast *kw_labels;
 			/* Call expression without parenthesis. */
 			loc_here(&loc);
@@ -1530,13 +1708,19 @@ err_other:
 					goto err;
 				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
 					goto err_r;
-			} else if (maybe_expression_begin()) {
-				other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE |
-				                                AST_COMMA_STRICTCOMMA,
-				                                &kw_labels);
 			} else {
-				other     = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
-				kw_labels = NULL;
+				int temp;
+				temp = maybe_expression_begin();
+				if (temp <= 0) {
+					if unlikely(temp < 0)
+						goto err_r;
+					other = ast_setddi(ast_constexpr(Dee_EmptyTuple), &loc);
+					kw_labels = NULL;
+				} else {
+					other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE |
+					                                AST_COMMA_STRICTCOMMA,
+					                                &kw_labels);
+				}
 			}
 			if unlikely(!other)
 				goto err_r;
@@ -2103,15 +2287,21 @@ ast_parse_cond_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 			/* Parse the false-branch. */
 			if unlikely(yield() < 0)
 				goto err_tt;
-			if (!maybe_expression_begin() && tt != lhs) {
+			if (tt != lhs) {
+				int temp;
+				temp = maybe_expression_begin();
+				if (temp > 0)
+					goto do_parse_ff_branch;
+				if unlikely(temp < 0)
+					goto err_tt;
 				/* Missing false-branch. (Reuse the condition branch!)
 				 * >> This is a new extension of deemon that completes semantics
 				 *    by allowing the reverse of what `foo() ?: bar()' already does
-				 *    by specifying the syntax `(foo() ? bar() :)'
-				 */
+				 *    by specifying the syntax `(foo() ? bar() :)' */
 				ff = lhs;
 				ast_incref(lhs);
 			} else {
+do_parse_ff_branch:
 				ff = ast_parse_cond(LOOKUP_SYM_SECONDARY);
 				if unlikely(!ff)
 					goto err_tt;

@@ -135,14 +135,21 @@ ast_parse_del(unsigned int lookup_mode) {
 		if unlikely(yield() < 0)
 			goto err_r;
 		/* Check for relaxed comma-rules. */
-		if (!maybe_expression_begin())
-			goto done;
+		{
+			int temp;
+			temp = maybe_expression_begin();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_r;
+				goto done;
+			}
+		}
 		delv = (DREF struct ast **)Dee_Malloc(2 * sizeof(DREF struct ast *));
 		if unlikely(!delv)
 			goto err_r;
 		dela = 2, delc = 1;
 		delv[0] = result; /* Inherit */
-		do {
+		for (;;) {
 			result = ast_parse_del_single(lookup_mode);
 			if unlikely(!result)
 				goto err_delv;
@@ -169,12 +176,22 @@ do_realloc_delv:
 				break;
 			if unlikely(yield() < 0)
 				goto err_delv;
-		} while (maybe_expression_begin());
+			{
+				int temp;
+				temp = maybe_expression_begin();
+				if (temp <= 0) {
+					if unlikely(temp < 0)
+						goto err_delv;
+					break;
+				}
+			}
+		}
 		/* Pack all delete expression together into a multiple-branch. */
+		ASSERT(delc <= dela);
 		if (delc != dela) {
 			DREF struct ast **new_delv;
-			new_delv = (DREF struct ast **)Dee_TryRealloc(delv, delc *
-			                                                    sizeof(DREF struct ast *));
+			new_delv = (DREF struct ast **)Dee_TryRealloc(delv,
+			                                              delc * sizeof(DREF struct ast *));
 			if likely(new_delv)
 				delv = new_delv;
 		}

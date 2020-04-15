@@ -479,7 +479,7 @@ do_handle_for:
 					JITLexer_ScanStatement(self);
 				} else
 #endif
-				if (JIT_MaybeExpressionBegin(self->jl_tok)) {
+				if (JITLexer_MaybeExpressionBegin(self)) {
 					/* Parse the packed expression. */
 					JITLexer_ScanExpression(self, true);
 				}

@@ -240,6 +240,16 @@ INTDEF struct TPPKeyword *TPPCALL
 lookup_escaped_keyword(char const *__restrict name, size_t namelen,
                        size_t unescaped_size, int create_missing);
 
+INTERN bool DCALL tpp_is_keyword_start(char ch) {
+	uint8_t chflags = CH_ISALPHA;
+	if (HAVE_EXTENSION_EXTENDED_IDENTS)
+		chflags |= CH_ISANSI;
+	if (!((chrattr[(uint8_t)ch] & chflags) ||
+	      (HAVE_EXTENSION_DOLLAR_IS_ALPHA && ch == '$')))
+		return false; /* Not-a-keyword. */
+	return true;
+}
+
 INTERN struct TPPKeyword *DCALL
 peek_keyword(struct TPPFile *__restrict tok_file,
              char *__restrict tok_begin, int create_missing) {
@@ -259,8 +269,8 @@ peek_keyword(struct TPPFile *__restrict tok_file,
 	/* Set the ANSI flag if we're supporting those characters. */
 	if (HAVE_EXTENSION_EXTENDED_IDENTS)
 		chflags |= CH_ISANSI;
-	if (!(chrattr[(uint8_t)*iter] & chflags) ||
-	    (!HAVE_EXTENSION_DOLLAR_IS_ALPHA && *iter == '$'))
+	if (!((chrattr[(uint8_t)*iter] & chflags) ||
+	      (HAVE_EXTENSION_DOLLAR_IS_ALPHA && *iter == '$')))
 		return NULL; /* Not-a-keyword. */
 	/* All non-first characters are allowed to be digits as well. */
 	chflags |= CH_ISDIGIT;

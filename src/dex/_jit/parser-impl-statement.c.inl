@@ -260,10 +260,20 @@ FUNC(Statement)(JITLexer *__restrict self) {
 
 	case '{':
 		JITLexer_Yield(self);
-		IF_EVAL(JITContext_PushScope(self->jl_context));
-		result = FUNC(StatementBlock)(self);
-		LOAD_LVALUE(result, err_popscope);
-		IF_EVAL(JITContext_PopScope(self->jl_context));
+		if (self->jl_tok == '}') {
+#ifdef JIT_EVAL
+			result = Dee_None;
+			Dee_Incref(Dee_None);
+#else /* JIT_EVAL */
+			result = 0;
+#endif /* !JIT_EVAL */
+			JITLexer_Yield(self);
+		} else {
+			IF_EVAL(JITContext_PushScope(self->jl_context));
+			result = FUNC(StatementBlock)(self);
+			LOAD_LVALUE(result, err_popscope);
+			IF_EVAL(JITContext_PopScope(self->jl_context));
+		}
 		break;
 
 	case JIT_KEYWORD: {

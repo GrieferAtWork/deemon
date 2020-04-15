@@ -297,6 +297,7 @@ INTDEF struct TPPKeyword TPPKeyword_Empty;
 INTDEF struct TPPKeyword *DCALL tok_without_underscores(void);
 INTDEF char *DCALL peek_next_token(struct TPPFile **tok_file);
 INTDEF char *DCALL peek_next_advance(char *p, struct TPPFile *__restrict *tok_file);
+INTDEF bool DCALL tpp_is_keyword_start(char ch);
 INTDEF struct TPPKeyword *DCALL peek_keyword(struct TPPFile *__restrict tok_file, char *__restrict tok_begin, int create_missing);
 INTDEF struct TPPKeyword *DCALL peek_next_keyword(int create_missing);
 INTDEF char *DCALL advance_wraplf(char *__restrict p);

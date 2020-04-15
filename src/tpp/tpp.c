@@ -4204,7 +4204,9 @@ skipcom:
 			}
 			goto next;
 		}
-		if (tpp_isalpha(ch) || (HAVE_EXTENSION_EXTENDED_IDENTS && tpp_isansi(ch)) || (HAVE_EXTENSION_DOLLAR_IS_ALPHA && ch == '$')) {
+		if (tpp_isalpha(ch) ||
+		    (HAVE_EXTENSION_EXTENDED_IDENTS && tpp_isansi(ch)) ||
+		    (HAVE_EXTENSION_DOLLAR_IS_ALPHA && ch == '$')) {
 			/* Scan an identifier. */
 			struct TPPKeyword *arg_name;
 			char *keyword_begin = iter++;

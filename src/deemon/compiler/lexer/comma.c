@@ -572,14 +572,27 @@ next_expr:
 				old_flags      = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 				if unlikely(yield() < 0) {
+err_current_flags:
 					TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 					goto err_current;
 				}
 				/* TODO: Add support for applying annotations here! */
-				if (tok == ')' || (!has_paren && !maybe_expression_begin())) {
+				if (tok == ')') {
 					/* Empty argument list (Same as none at all). */
+do_empty_argument_list:
 					args = ast_sethere(ast_constexpr(Dee_EmptyTuple));
+				} else if (!has_paren) {
+					/* Empty argument list (Same as none at all). */
+					int temp;
+					temp = maybe_expression_begin();
+					if (temp <= 0) {
+						if unlikely(temp < 0)
+							goto err_current_flags;
+						goto do_empty_argument_list;
+					}
+					goto do_parse_argument_list;
 				} else {
+do_parse_argument_list:
 					args = ast_parse_comma(AST_COMMA_FORCEMULTIPLE,
 					                       AST_FMULTIPLE_TUPLE,
 					                       NULL);
@@ -661,11 +674,13 @@ err_args:
 	if (tok == ',' && !(mode & AST_COMMA_PARSESINGLE)) {
 		if (mode & AST_COMMA_STRICTCOMMA) {
 			/* Peek the next token to check if it might be an expression. */
-			char *next = peek_next_token(NULL);
-			if unlikely(!next)
-				goto err;
-			if (!maybe_expression_begin_c(*next))
+			int temp;
+			temp = maybe_expression_begin_peek();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err_current;
 				goto done_expression;
+			}
 		}
 		/* Append to the current comma-sequence. */
 		error = astlist_append(&expr_comma, current);
@@ -676,24 +691,30 @@ err_args:
 continue_at_comma:
 		if unlikely(yield() < 0)
 			goto err;
-		if (!maybe_expression_begin()) {
-			/* Special case: `x = (10,)'
-			 * Same as `x = pack(10)', in that a single-element tuple is created. */
-			/* Flush any remaining entries from the comma-list. */
-			error = astlist_appendall(&expr_batch, &expr_comma);
-			if unlikely(error)
-				goto err;
-			Dee_Free(expr_comma.ast_v);
-			/* Pack the branch together to form a multi-branch AST. */
-			astlist_trunc(&expr_batch);
-			current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
-			if unlikely(!current)
-				goto err_nocomma;
-			/* Free an remaining buffers. */
-			/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
-			/* WARNING: At this point, both `expr_batch' and `expr_comma' are
-			 *          in an undefined state, but don't hold any real data. */
-			goto done_expression_nomerge;
+		{
+			int temp;
+			temp = maybe_expression_begin();
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err;
+				/* Special case: `x = (10,)'
+				 * Same as `x = pack(10)', in that a single-element tuple is created. */
+				/* Flush any remaining entries from the comma-list. */
+				error = astlist_appendall(&expr_batch, &expr_comma);
+				if unlikely(error)
+					goto err;
+				Dee_Free(expr_comma.ast_v);
+				/* Pack the branch together to form a multi-branch AST. */
+				astlist_trunc(&expr_batch);
+				current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
+				if unlikely(!current)
+					goto err_nocomma;
+				/* Free an remaining buffers. */
+				/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
+				/* WARNING: At this point, both `expr_batch' and `expr_comma' are
+				 *          in an undefined state, but don't hold any real data. */
+				goto done_expression_nomerge;
+			}
 		}
 		goto next_expr;
 	}
@@ -785,11 +806,11 @@ do_append_gen_to_batch:
 				ast_decref(current);
 				goto continue_at_comma;
 			} else {
-				char *next_token;
-				next_token = peek_next_token(NULL);
-				if unlikely(!next_token)
+				int temp;
+				temp = maybe_expression_begin_peek();
+				if unlikely(temp < 0)
 					goto err_current;
-				if (maybe_expression_begin_c(*next_token))
+				if (temp)
 					goto do_append_gen_to_batch;
 			}
 		}
