@@ -1999,8 +1999,8 @@ do_push_module:
 			bool is_instance;
 			/* Special case: The deemon specs allow `none' to be
 			 *               written as the second argument to `is' */
-			if (DeeNone_Check(SECOND)) {
-				is_instance = DeeNone_Check(FIRST);
+			if (DeeNone_Check(FIRST)) {
+				is_instance = DeeNone_Check(SECOND);
 			} else if (DeeSuper_Check(SECOND)) {
 				is_instance = DeeType_IsInherited(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
 			} else {
@@ -6982,15 +6982,23 @@ handle_except:
 			current_exception = this_thread->t_except->ef_error;
 			current_except    = code->co_exceptv + code->co_exceptc;
 			while (current_except-- != code->co_exceptv) {
-				if (ip_addr >= current_except->eh_start &&
-				    ip_addr < current_except->eh_end &&
-				    /* Special case: interrupt objects can only be caught by interrupt-handlers. */
-				    (!DeeType_IsInterrupt(Dee_TYPE(current_exception)) ||
-				     (current_except->eh_flags & EXCEPTION_HANDLER_FINTERPT)) &&
-				    (!current_except->eh_mask ||
-				     DeeObject_InstanceOf(current_exception,
-				                          current_except->eh_mask)))
-					goto exec_except_maybe_handle; /* Execute this one! */
+				if (!(ip_addr >= current_except->eh_start &&
+				    ip_addr < current_except->eh_end))
+					continue;
+				/* Special case: interrupt objects can only be caught by interrupt-handlers. */
+				if (DeeObject_IsInterrupt(current_exception) &&
+				    !(current_except->eh_flags & EXCEPTION_HANDLER_FINTERPT))
+					continue;
+				/* Check the exception mask. */
+				if (current_except->eh_mask) {
+					DeeTypeObject *thrown_object_type;
+					thrown_object_type = Dee_TYPE(current_exception);
+					if (thrown_object_type == &DeeSuper_Type) /* Special case for super-views */
+						thrown_object_type = DeeSuper_TYPE(current_exception);
+					if (!DeeType_IsInherited(thrown_object_type, current_except->eh_mask))
+						continue;
+				}
+				goto exec_except_maybe_handle; /* Execute this one! */
 			}
 		}
 		if (ITER_ISOK(frame->cf_result))

@@ -1150,7 +1150,12 @@ run_finally_after_return:
 	jz     run_except_handler_in_pop_handled_x8 /* if (!eh_mask) execute_handler(); */
 	pushl  %edx          /* current_except->eh_mask */
 	ADJUST_CFA_OFFSET(4)
-	pushl  ob_type(%eax) /* current_exception->ob_type */
+	movl   ob_type(%eax), %ecx /* %ecx = current_exception->ob_type */
+	/* Special case for super-views */
+	cmpl   $(SYM(DeeSuper_Type)), %ecx
+	jne    4f
+	movl   s_type(%eax), %ecx  /* %ecx = ((DeeSuperObject *)current_exception)->s_type */
+4:	pushl  %ecx                /* <thrown_object_type> */
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeType_IsInherited,8)
 	ADJUST_CFA_OFFSET(-8)

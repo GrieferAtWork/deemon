@@ -71,8 +71,9 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_catchmask(void) {
 				DREF struct ast **new_exprv;
 				size_t new_expra = expra * 2;
 do_realloc:
-				new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv, new_expra *
-				                                                      sizeof(DREF struct ast *));
+				new_exprv = (DREF struct ast **)Dee_TryRealloc(exprv,
+				                                               new_expra *
+				                                               sizeof(DREF struct ast *));
 				if unlikely(!new_exprv) {
 					if (new_expra != exprc + 1) {
 						new_expra = exprc + 1;
