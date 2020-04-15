@@ -542,6 +542,18 @@ assert identical(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exp
 assert identical(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
 assert identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "?");
 
+/* Ensure that multi-catch masks work in JIT */
+local CATCHSOME = r'catch (int | string as s) { "int_or_string(" + s + ")"; } catch (...) { "?"; }';
+assert identical(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string(42)");
+assert identical(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string(foo)");
+assert identical(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
+assert identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "?");
+local CATCHSOME = r'catch (int | string | bool as s) { "int_or_string_or_bool(" + s + ")"; } catch (...) { "?"; }';
+assert identical(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(42)");
+assert identical(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(foo)");
+assert identical(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
+assert identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "int_or_string_or_bool(false)");
+
 /* Also make sure that catch-as works */
 assert identical(exec(r'try { throw "foo"; } catch (string as s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
 assert identical(exec(r'try { throw "foo"; } catch (string s) { s + "bar"; }', globals: deemon.__exports__), "foobar");

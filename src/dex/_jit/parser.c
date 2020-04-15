@@ -978,6 +978,15 @@ err_eof:
 
 
 
+PRIVATE DREF DeeObject *FCALL
+JITLexer_ParseCatchExprItem(JITLexer *__restrict self) {
+	DREF DeeObject *result;
+	result = JITLexer_EvalUnary(self, JITLEXER_EVAL_FPRIMARY);
+	if (result == JIT_LVALUE)
+		result = JITLexer_PackLValue(self);
+	return result;
+}
+
 /* Parse the catch-mask expression:
  * >> try {
  * >>     throw "Foo";
@@ -987,14 +996,40 @@ err_eof:
  * Also handles multi-catch masks. */
 PRIVATE DREF DeeObject *FCALL
 JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
-	DREF DeeObject *result;
-	result = JITLexer_EvalUnary(self, JITLEXER_EVAL_FPRIMARY);
-	if (result == JIT_LVALUE)
-		result = JITLexer_PackLValue(self);
+	DREF DeeObject *result, *next, *new_tuple;
+	result = JITLexer_ParseCatchExprItem(self);
 	if (self->jl_tok == '|' && result) {
-		/* TODO */
+		JITLexer_Yield(self);
+		next = JITLexer_ParseCatchExprItem(self);
+		if unlikely(!next)
+			goto err_r;
+		new_tuple = DeeTuple_NewUninitialized(2);
+		if unlikely(!new_tuple)
+			goto err_r_next;
+		DeeTuple_SET(new_tuple, 0, result); /* Inherit reference */
+		DeeTuple_SET(new_tuple, 1, next);   /* Inherit reference */
+		result = new_tuple;
+		while (self->jl_tok == '|') {
+			size_t length;
+			JITLexer_Yield(self);
+			/* Parse another catch expression item. */
+			next = JITLexer_ParseCatchExprItem(self);
+			if unlikely(!next)
+				goto err_r;
+			length    = DeeTuple_SIZE(result);
+			new_tuple = DeeTuple_ResizeUninitialized(result, length + 1);
+			if unlikely(!new_tuple)
+				goto err_r_next;
+			DeeTuple_SET(new_tuple, length, next); /* Inherit reference */
+			result = new_tuple;
+		}
 	}
 	return result;
+err_r_next:
+	Dee_Decref(next);
+err_r:
+	Dee_Decref(result);
+	return NULL;
 }
 
 /* Parse the mask portion of a catch statement:
