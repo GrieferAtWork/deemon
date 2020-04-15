@@ -231,9 +231,9 @@ parse_catch_mask:
 				 *       But since using `as' in its place is literally a 1-on-1
 				 *       transition, it doesn't hurt if we continue to allow arrows. */
 				if unlikely(tok == TOK_ARROW || tok == KWD_as) {
-					if unlikely(tok == TOK_ARROW &&
-						         WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
-					goto err_try_flags;
+					if (unlikely(tok == TOK_ARROW) &&
+					    WARN(W_DEPRECATED_ARROW_IN_CATCH_EXPRESSION))
+						goto err_try_flags;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
 					if unlikely(!TPP_ISKEYWORD(tok)) {

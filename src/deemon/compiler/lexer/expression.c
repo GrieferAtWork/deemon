@@ -320,7 +320,7 @@ INTERN int DCALL maybe_expression_begin_peek(void) {
 	case '+':
 	case '-':
 	case '<': /* For cells. */
-		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
+		tok_begin = advance_wraplf(tok_begin);
 		if unlikely(!tok_begin)
 			goto err;
 		{
@@ -345,22 +345,16 @@ INTERN int DCALL maybe_expression_begin_peek(void) {
 		goto yes;
 
 	case '.': /* TOK_DOTS */
-		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
-		if unlikely(!tok_begin)
-			goto err;
+		tok_begin = advance_wraplf(tok_begin);
 		if (*tok_begin != '.')
 			goto no;
-		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
-		if unlikely(!tok_begin)
-			goto err;
+		tok_begin = advance_wraplf(tok_begin);
 		if (*tok_begin != '.')
 			goto no;
 		goto yes; /* ... */
 
 	case ':': /* Deprecated global-accessor syntax. */
-		tok_begin = peek_next_advance(tok_begin + 1, &tok_file);
-		if unlikely(!tok_begin)
-			goto err;
+		tok_begin = advance_wraplf(tok_begin);
 		if (*tok_begin != ':')
 			goto no;
 		goto yes; /* :: */
