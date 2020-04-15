@@ -575,9 +575,9 @@ do_handle_for:
 		default: break;
 		}
 		{
-			char const *name;
+			char *name;
 			size_t size;
-			name = (char const *)JITLexer_TokPtr(self);
+			name = JITLexer_TokPtr(self);
 			size = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
 			if (size == 4 &&

@@ -346,6 +346,11 @@ assert identical(exec(r'(if (10 < 20) "OK" else "ERROR");'), "OK"); /* Expressio
 assert identical(exec(r'if (10 < 20) return "OK"; return "ERROR";'), "OK"); /* Statement */
 assert identical(exec(r'if (10 < 20) return "OK"; else return "ERROR";'), "OK"); /* Statement */
 
+/* Make sure that exec() re-throws an unhandled exception from within */
+assert identical(try ({ exec(r'throw "foobar";'); none; }) catch (e...) e, "foobar");
+assert identical(try ({ exec(r'"foobar";'); none; }) catch (e...) e, none);
+assert identical(try ({ exec(r'"foobar";'); }) catch (e...) e, "foobar");
+
 /* Test the different types of try-blocks in JIT */
 assert identical(exec(r'try ({ throw "Error"; }) catch (...) "OK"'), "OK");
 assert identical(exec(r'try ({ throw "Error"; }) catch (...) "OK";'), "OK");
@@ -530,8 +535,26 @@ assert exec(r'(10) !!!in [11]');
 }
 
 
+/* Ensure that catch-masks work with JIT expression. */
+local CATCHSOME = r'catch (int) { "1int"; } catch (string) { "2string"; } catch (...) { "?"; }';
+assert identical(exec(r'try { throw 42; }' + CATCHSOME, globals: deemon.__exports__), "1int");
+assert identical(exec(r'try { throw "foo"; }' + CATCHSOME, globals: deemon.__exports__), "2string");
+assert identical(exec(r'try { throw none; }' + CATCHSOME, globals: deemon.__exports__), "?");
+assert identical(exec(r'try { throw false; }' + CATCHSOME, globals: deemon.__exports__), "?");
 
+/* Also make sure that catch-as works */
+assert identical(exec(r'try { throw "foo"; } catch (string as s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+assert identical(exec(r'try { throw "foo"; } catch (s...) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+assert identical(exec(r'try { throw "foo"; } catch (...s) { s + "bar"; }', globals: deemon.__exports__), "foobar");
+assert identical(exec(r'try { throw "foo"; } catch (...) { 42; }', globals: deemon.__exports__), 42);
 
+/* Make sure that the JIT compiler can call into itself recursively */
+assert identical(exec(r'exec("\"inner\"")', globals: deemon.__exports__), "inner");
+assert identical(exec(r'exec("\"inner\";")', globals: deemon.__exports__), "inner");
+assert identical(exec(r'exec("\"inner\"");', globals: deemon.__exports__), "inner");
+assert identical(exec(r'exec("\"inner\";");', globals: deemon.__exports__), "inner");
+assert identical(exec(r'exec("\"inner\";;");', globals: deemon.__exports__), none);
+assert identical(exec(r'exec("\"inner\";");;', globals: deemon.__exports__), none);
 
 
 

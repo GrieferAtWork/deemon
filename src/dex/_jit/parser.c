@@ -29,7 +29,10 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
+#include <deemon/none.h>
 #include <deemon/stringutils.h>
+#include <deemon/super.h>
+#include <deemon/tuple.h>
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
@@ -97,7 +100,7 @@ JITLexer_MaybeExpressionBegin(JITLexer *__restrict self) {
 		/* Black-list a couple of keywords that cannot appear in expressions */
 		char *tokptr;
 		size_t toklen;
-		tokptr = (char *)JITLexer_TokPtr(self);
+		tokptr = JITLexer_TokPtr(self);
 		toklen = JITLexer_TokLen(self);
 		switch (toklen) {
 
@@ -727,7 +730,7 @@ print_module_name(JITLexer *__restrict self,
 		} else if (self->jl_tok == JIT_KEYWORD) {
 			if (printer &&
 			    unicode_printer_print(printer,
-			                          (char *)JITLexer_TokPtr(self),
+			                          JITLexer_TokPtr(self),
 			                          JITLexer_TokLen(self)) < 0)
 				goto err_trace;
 			JITLexer_Yield(self);
@@ -738,12 +741,12 @@ print_module_name(JITLexer *__restrict self,
 			if (printer) {
 				if (self->jl_tok == JIT_RAWSTRING) {
 					if (unicode_printer_print(printer,
-					                          (char *)JITLexer_TokPtr(self) + 2,
+					                          JITLexer_TokPtr(self) + 2,
 					                          JITLexer_TokLen(self) - 3) < 0)
 						goto err_trace;
 				} else {
 					if (DeeString_DecodeBackslashEscaped(printer,
-					                                     (char *)JITLexer_TokPtr(self) + 1,
+					                                     JITLexer_TokPtr(self) + 1,
 					                                     JITLexer_TokLen(self) - 2,
 					                                     STRING_ERROR_FSTRICT) < 0)
 						goto err_trace;
@@ -975,6 +978,25 @@ err_eof:
 
 
 
+/* Parse the catch-mask expression:
+ * >> try {
+ * >>     throw "Foo";
+ * >> } catch (string as s) {
+ *             ^      ^
+ * >> }
+ * Also handles multi-catch masks. */
+PRIVATE DREF DeeObject *FCALL
+JITLexer_ParseCatchExpr(JITLexer *__restrict self) {
+	DREF DeeObject *result;
+	result = JITLexer_EvalUnary(self, JITLEXER_EVAL_FPRIMARY);
+	if (result == JIT_LVALUE)
+		result = JITLexer_PackLValue(self);
+	if (self->jl_tok == '|' && result) {
+		/* TODO */
+	}
+	return result;
+}
+
 /* Parse the mask portion of a catch statement:
  * >> try {
  * >>     throw "Foo";
@@ -984,18 +1006,107 @@ err_eof:
  */
 INTERN int FCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
-                        DREF DeeTypeObject **__restrict ptypemask,
+                        DREF DeeObject **__restrict ptypemask,
                         char const **__restrict psymbol_name,
                         size_t *__restrict psymbol_size) {
-	/* TODO */
-	*ptypemask    = NULL;
-	*psymbol_name = NULL;
-	*psymbol_size = 0;
-	if (JITLexer_SkipPair(self, '(', ')'))
-		goto err;
+	if (self->jl_tok == TOK_DOTS) {
+		/* >> catch (...) */
+		/* >> catch (...var)  (This syntax is allowed, but is rarely ever used;
+		 *                     code usually uses `catch (var...)' instead) */
+		JITLexer_Yield(self);
+		*ptypemask    = NULL;
+		*psymbol_name = NULL;
+		*psymbol_size = 0;
+		if (self->jl_tok == JIT_KEYWORD) {
+			/* Specify the catch symbol! */
+			*psymbol_name = JITLexer_TokPtr(self);
+			*psymbol_size = JITLexer_TokLen(self);
+			JITLexer_Yield(self);
+		}
+	} else {
+		if (self->jl_tok == JIT_KEYWORD) {
+			unsigned char *start = self->jl_tokstart;
+			unsigned char *end   = self->jl_tokend;
+			JITLexer_Yield(self);
+			if (self->jl_tok == TOK_DOTS) {
+				/* `catch (e...)' (catch all into `e') */
+				*ptypemask    = NULL;
+				*psymbol_name = (char *)start;
+				*psymbol_size = (size_t)(end - start);
+				JITLexer_Yield(self);
+				goto done_skip_rparen;
+			}
+			JITLexer_YieldAt(self, start);
+		}
+		/* Parse the catch expression. */
+		*ptypemask = JITLexer_ParseCatchExpr(self);
+		if unlikely(!*ptypemask)
+			goto err;
+		*psymbol_name = NULL;
+		*psymbol_size = 0;
+		/* Check for an `as foo' suffix. */
+		if (JITLexer_ISKWD(self, "as")) {
+			JITLexer_Yield(self);
+			if unlikely(self->jl_tok != JIT_KEYWORD) {
+				syn_try_expected_keyword_after_as_in_catch(self);
+				goto err_mask;
+			}
+			*psymbol_name = JITLexer_TokPtr(self);
+			*psymbol_size = JITLexer_TokLen(self);
+			JITLexer_Yield(self);
+		}
+	}
+done_skip_rparen:
+	if unlikely(self->jl_tok != ')') {
+		syn_try_expected_rparen_after_catch(self);
+		goto err_mask;
+	}
+	JITLexer_Yield(self);
 	return 0;
+err_mask:
+	Dee_XDecref(*ptypemask);
 err:
 	return -1;
+}
+
+/* Check if `thrown_object' can be caught with `typemask'
+ * NOTE: Assumes that interrupt catches are allowed.
+ *       If such catches aren't allowed, the caller should
+ *       call this function as:
+ *       >> can_catch = (!mask || JIT_IsCatchable(obj, mask)) &&
+ *       >>             (allow_interrupts || !DeeObject_IsInterrupt(obj)); */
+INTERN NONNULL((1, 2)) bool FCALL
+JIT_IsCatchable(DeeObject *thrown_object,
+                DeeObject *typemask) {
+	DeeTypeObject *thrown_object_type;
+	ASSERT(thrown_object);
+	ASSERT(typemask);
+	/* The runtime uses `instanceof' for dynamic catch-mask detection.
+	 * As such, the special case for `foo is none' applies, such that
+	 * a type mask of `none' must match itself! */
+	if (DeeNone_Check(typemask))
+		typemask = (DeeObject *)&DeeNone_Type;
+	thrown_object_type = Dee_TYPE(thrown_object);
+	/* Special case when matching a thrown object that is a super-view */
+	if (thrown_object_type == &DeeSuper_Type)
+		thrown_object_type = DeeSuper_TYPE(thrown_object);
+	/* Special case for multi-masks */
+	if (DeeTuple_Check(typemask)) {
+		size_t i;
+		for (i = 0; i < DeeTuple_SIZE(typemask); ++i) {
+			DeeTypeObject *mask;
+			mask = (DeeTypeObject *)DeeTuple_GET(typemask, i);
+			if (DeeNone_Check(mask))
+				mask = &DeeNone_Type;
+			if (DeeType_IsInherited(thrown_object_type, mask))
+				return true; /* Got a match! */
+		}
+		return false;
+	}
+	/* Fallback: Do a regular is-instance check.
+	 * NOTE: `DeeType_IsInherited()' simply returns `false' when
+	 *       its second argument isn't actually a type at runtime. */
+	return DeeType_IsInherited(thrown_object_type, (DeeTypeObject *)typemask);
 }
 
 

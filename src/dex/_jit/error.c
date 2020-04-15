@@ -423,11 +423,19 @@ INTERN ATTR_COLD int FCALL
 syn_try_expected_rparen_after_catch(JITLexer *__restrict self) {
 	syn_trace_here(self);
 	return DeeError_Throwf(&DeeError_SyntaxError,
-	                       "Expected a keyword as label operand, but got `%$s'",
+	                       "Expected `)' after `catch', but got `%$s'",
 	                       JITLexer_TokLen(self),
 	                       JITLexer_TokPtr(self));
 }
 
+INTERN ATTR_COLD int FCALL
+syn_try_expected_keyword_after_as_in_catch(JITLexer *__restrict self) {
+	syn_trace_here(self);
+	return DeeError_Throwf(&DeeError_SyntaxError,
+	                       "Expected a keyword after `catch (... as', but got `%$s'",
+	                       JITLexer_TokLen(self),
+	                       JITLexer_TokPtr(self));
+}
 
 INTERN ATTR_COLD int FCALL
 syn_brace_expected_rbrace(JITLexer *__restrict self) {

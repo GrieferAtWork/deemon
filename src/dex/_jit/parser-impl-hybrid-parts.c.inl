@@ -171,15 +171,14 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 		} else if (JITLexer_ISTOK(self, "catch")) {
 			/* Skip catch statements. */
 			JITLexer_Yield(self);
-			if likely(self->jl_tok == '(') {
-				JITLexer_Yield(self);
-			} else {
+			if unlikely(self->jl_tok != '(') {
 				syn_try_expected_lparen_after_catch(self);
 				goto err_r;
 			}
+			JITLexer_Yield(self);
 			if (!result &&
 			    self->jl_context->jc_retval == JITCONTEXT_RETVAL_UNSET) {
-				DREF DeeTypeObject *mask;
+				DREF DeeObject *typemask;
 				char const *symbol_name;
 				size_t symbol_size;
 				uint16_t old_except;
@@ -190,12 +189,12 @@ H_FUNC(Try)(JITLexer *__restrict self, JIT_ARGS) {
 				current    = DeeError_Current();
 				ASSERT(current != NULL);
 				JITContext_PushScope(self->jl_context);
-				if (JITLexer_ParseCatchMask(self, &mask, &symbol_name, &symbol_size))
+				if (JITLexer_ParseCatchMask(self, &typemask, &symbol_name, &symbol_size))
 					goto err_r_popscope;
 				/* Check if we're allowed to handle this exception! */
-				if ((!mask || DeeObject_InstanceOf(current, mask)) &&
+				if ((!typemask || JIT_IsCatchable(current, typemask)) &&
 				    (allow_interrupts || !DeeObject_IsInterrupt(current))) {
-					Dee_XDecref(mask);
+					Dee_XDecref(typemask);
 					/* Store the current exception into a local symbol. */
 					if (symbol_size) {
 						JITObjectTable *tab;
@@ -272,7 +271,7 @@ err_handle_catch_except:
 				} else {
 					/* Don't execute this handler. */
 					JITContext_PopScope(self->jl_context);
-					Dee_XDecref(mask);
+					Dee_XDecref(typemask);
 					if (SKIP_SECONDARY(self, &was_expression))
 						goto err_r;
 				}
@@ -308,12 +307,11 @@ err_handle_catch_except:
 				goto err;
 		} else if (JITLexer_ISTOK(self, "catch")) {
 			JITLexer_Yield(self);
-			if likely(self->jl_tok == '(') {
-				JITLexer_Yield(self);
-			} else {
+			if unlikely(self->jl_tok != '(') {
 				syn_try_expected_lparen_after_catch(self);
 				goto err;
 			}
+			JITLexer_Yield(self);
 			if (JITLexer_SkipPair(self, '(', ')'))
 				goto err;
 			result = SKIP_SECONDARY(self, &was_expression);

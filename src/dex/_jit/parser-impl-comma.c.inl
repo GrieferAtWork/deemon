@@ -313,7 +313,7 @@ err_var_symbol:
 					used_lookup_mode |= LOOKUP_SYM_VGLOBAL;
 				if (JITContext_Lookup(self->jl_context,
 				                      &var_symbol,
-				                      (char const *)JITLexer_TokPtr(self),
+				                      JITLexer_TokPtr(self),
 				                      JITLexer_TokLen(self),
 				                      used_lookup_mode) < 0)
 					goto err_current;

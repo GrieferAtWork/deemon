@@ -384,12 +384,11 @@ JITLexer_EvalFinallyStatements(JITLexer *__restrict self) {
 		} else if (JITLexer_ISKWD(self, "catch")) {
 			/* Simply skip catch statements. */
 			JITLexer_Yield(self);
-			if likely(self->jl_tok == '(') {
-				JITLexer_Yield(self);
-			} else {
+			if unlikely(self->jl_tok != '(') {
 				syn_try_expected_lparen_after_catch(self);
 				goto err;
 			}
+			JITLexer_Yield(self);
 			if (JITLexer_SkipPair(self, '(', ')'))
 				goto err;
 			if (JITLexer_SkipStatement(self))
@@ -1089,8 +1088,7 @@ parse_else_after_if:
 			break;
 
 		case 3:
-			if (tok_begin[0] == 't' &&
-			    tok_begin[1] == 'r' &&
+			if (tok_begin[0] == 't' && tok_begin[1] == 'r' &&
 			    tok_begin[2] == 'y') {
 				struct jit_state *st;
 				JITLexer_Yield(&self->ji_lex);
@@ -1104,8 +1102,7 @@ parse_else_after_if:
 				self->ji_state     = st;
 				goto parse_again_same_statement;
 			}
-			if (tok_begin[0] == 'f' &&
-			    tok_begin[1] == 'o' &&
+			if (tok_begin[0] == 'f' && tok_begin[1] == 'o' &&
 			    tok_begin[2] == 'r') {
 				struct jit_state *st;
 				JITLexer_Yield(&self->ji_lex);
@@ -1396,8 +1393,8 @@ err_obj_scope:
 		case 6:
 			name = UNALIGNED_GET32((uint32_t *)tok_begin);
 #if 0 /* TODO */
-			if (name == ENCODE_INT32('s','w','i','t') &&
-			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c','h')) {
+			if (name == ENCODE_INT32('s', 'w', 'i', 't') &&
+			    UNALIGNED_GET16((uint16_t *)(tok_begin + 4)) == ENCODE_INT16('c', 'h')) {
 				DERROR_NOTIMPLEMENTED();
 				goto err;
 			}
@@ -1627,30 +1624,29 @@ service_exception_handlers:
 								Dee_Decref(value);
 							}
 						} else if (JITLexer_ISKWD(&self->ji_lex, "catch")) {
-							DREF DeeTypeObject *typemask;
+							DREF DeeObject *typemask;
 							DeeObject *current;
 							char const *symbol_name;
 							size_t symbol_size;
 							/* Simply skip catch statements. */
 							JITLexer_Yield(&self->ji_lex);
-							if likely(self->ji_lex.jl_tok == '(') {
-								JITLexer_Yield(&self->ji_lex);
-							} else {
+							if unlikely(self->ji_lex.jl_tok != '(') {
 								syn_try_expected_lparen_after_catch(&self->ji_lex);
 								goto err;
 							}
+							JITLexer_Yield(&self->ji_lex);
 							JITContext_PushScope(&self->ji_ctx);
 							/* Parse the mask of this catch statement! */
 							if unlikely(JITLexer_ParseCatchMask(&self->ji_lex,
-								                                 &typemask,
-								                                 &symbol_name,
-								                                 &symbol_size))
-							goto err_scope;
+							                                    &typemask,
+							                                    &symbol_name,
+							                                    &symbol_size))
+								goto err_scope;
 							current = DeeError_Current();
 							ASSERT(current != NULL);
 
 							/* Check if we're allowed to handle this exception! */
-							if ((!typemask || DeeObject_InstanceOf(current, typemask)) &&
+							if ((!typemask || JIT_IsCatchable(current, typemask)) &&
 							    (allow_interrupts || !DeeObject_IsInterrupt(current))) {
 								uint16_t old_except_sz;
 								unsigned char *handler_start;

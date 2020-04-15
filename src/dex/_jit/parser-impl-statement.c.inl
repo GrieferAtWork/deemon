@@ -554,7 +554,7 @@ again_eval_asm_string:
 						if (str_len != 0) {
 							size_t i, len;
 							DREF DeeObject *str;
-							str = DeeString_FromBackslashEscaped((char const *)JITLexer_TokPtr(self) + 1,
+							str = DeeString_FromBackslashEscaped(JITLexer_TokPtr(self) + 1,
 							                                     str_len, STRING_ERROR_FSTRICT);
 							if unlikely(!str)
 								goto err;

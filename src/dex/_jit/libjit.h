@@ -493,7 +493,7 @@ struct jit_lexer {
 	;
 };
 
-#define JITLexer_TokPtr(self) (self)->jl_tokstart
+#define JITLexer_TokPtr(self) ((char *)(self)->jl_tokstart)
 #define JITLexer_TokLen(self) (size_t)((self)->jl_tokend - (self)->jl_tokstart)
 
 
@@ -767,8 +767,8 @@ INTDEF WUNUSED DREF DeeObject *FCALL JIT_GetOperatorFunction(uint16_t opname);
 
 /* JIT-specific evaluation flags (may be optionally or'd with `LOOKUP_SYM_*'). */
 #define JITLEXER_EVAL_FNORMAL       0x0000 /* Normal evaluation flags. */
-#define JITLEXER_EVAL_FALLOWINPLACE 0x0010 /* Allow inplace operations */
-#define JITLEXER_EVAL_FALLOWISBOUND 0x0020 /* Allow  */
+#define JITLEXER_EVAL_FALLOWINPLACE 0x0000 /* (ignored) Allow inplace operations */
+#define JITLEXER_EVAL_FALLOWISBOUND 0x0000 /* (ignored) Allow `foo is bound' expressions */
 #define JITLEXER_EVAL_FDISALLOWCAST 0x0040 /* Disallow cast expressions. */
 #define JITLEXER_EVAL_FPRIMARY      (JITLEXER_EVAL_FALLOWISBOUND | JITLEXER_EVAL_FALLOWINPLACE)
 
@@ -957,12 +957,29 @@ INTDEF int FCALL JITLexer_SkipStatementBlock(JITLexer *__restrict self);
  * >> } catch (string as s) {
  *             ^            ^
  * >> }
+ * @param: ptypemask: Filled with one of:
+ *                      - NULL:           No mask was given (all objects can be caught)
+ *                      - DeeTupleObject: A tuple of types that should be caught
+ *                      - DeeTypeObject:  The single type that should be caught
+ *                      - DeeObject:      Some other object (Dee)
+ *                    You may use `JIT_IsCatchable()' to determine if the object can
+ *                    be caught using this mask.
  */
 INTDEF int FCALL
 JITLexer_ParseCatchMask(JITLexer *__restrict self,
-                        DREF DeeTypeObject **__restrict ptypemask,
+                        DREF DeeObject **__restrict ptypemask,
                         char const **__restrict psymbol_name,
                         size_t *__restrict psymbol_size);
+
+/* Check if `thrown_object' can be caught with `typemask'
+ * NOTE: Assumes that interrupt catches are allowed.
+ *       If such catches aren't allowed, the caller should
+ *       call this function as:
+ *       >> can_catch = (!mask || JIT_IsCatchable(obj, mask)) &&
+ *       >>             (allow_interrupts || !DeeObject_IsInterrupt(obj)); */
+INTDEF NONNULL((1, 2)) bool FCALL
+JIT_IsCatchable(DeeObject *thrown_object,
+                DeeObject *typemask);
 
 /* Hybrid parsing functions. */
 INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalStatementOrBraces(JITLexer *__restrict self, unsigned int *pwas_expression);
@@ -1350,6 +1367,7 @@ INTDEF ATTR_COLD int FCALL syn_asm_expected_rparen_after_operand(JITLexer *__res
 INTDEF ATTR_COLD int FCALL syn_asm_expected_keyword_for_label_operand(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_try_expected_lparen_after_catch(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_try_expected_rparen_after_catch(JITLexer *__restrict self);
+INTDEF ATTR_COLD int FCALL syn_try_expected_keyword_after_as_in_catch(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_brace_expected_rbrace(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_brace_expected_keyword_after_dot(JITLexer *__restrict self);
 INTDEF ATTR_COLD int FCALL syn_brace_expected_equals_after_dot(JITLexer *__restrict self);

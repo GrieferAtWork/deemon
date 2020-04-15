@@ -712,7 +712,7 @@ FUNC(BraceItems)(JITLexer *__restrict self) {
 			goto err;
 		}
 #ifdef JIT_EVAL
-		first_key = DeeString_NewUtf8((char const *)JITLexer_TokPtr(self),
+		first_key = DeeString_NewUtf8(JITLexer_TokPtr(self),
 		                              JITLexer_TokLen(self),
 		                              STRING_ERROR_FSTRICT);
 		if unlikely(!first_key)
@@ -762,7 +762,7 @@ DEFINE_PRIMARY(UnaryHead) {
 	case TOK_INT:
 		/* Integer constant. */
 #ifdef JIT_EVAL
-		result = DeeInt_FromString((char const *)JITLexer_TokPtr(self),
+		result = DeeInt_FromString(JITLexer_TokPtr(self),
 		                           JITLexer_TokLen(self),
 		                           DEEINT_STRING(0, DEEINT_STRING_FNORMAL));
 #else /* JIT_EVAL */
@@ -775,7 +775,7 @@ done_y1:
 	case JIT_STRING:
 		/* String literal */
 #ifdef JIT_EVAL
-		result = DeeString_FromBackslashEscaped((char const *)JITLexer_TokPtr(self) + 1,
+		result = DeeString_FromBackslashEscaped(JITLexer_TokPtr(self) + 1,
 		                                        JITLexer_TokLen(self) - 2,
 		                                        STRING_ERROR_FSTRICT);
 #else /* JIT_EVAL */
@@ -786,7 +786,7 @@ done_y1:
 	case JIT_RAWSTRING:
 		/* Raw string literal */
 #ifdef JIT_EVAL
-		result = DeeString_NewUtf8((char const *)JITLexer_TokPtr(self) + 2,
+		result = DeeString_NewUtf8(JITLexer_TokPtr(self) + 2,
 		                           JITLexer_TokLen(self) - 3,
 		                           STRING_ERROR_FSTRICT);
 #else /* JIT_EVAL */
@@ -798,7 +798,7 @@ done_y1:
 		/* Floating point constant */
 #ifdef JIT_EVAL
 		result = JIT_atof(self,
-		                  (char const *)JITLexer_TokPtr(self),
+		                  JITLexer_TokPtr(self),
 		                  JITLexer_TokLen(self));
 #else /* JIT_EVAL */
 		result = 0;
@@ -1664,8 +1664,8 @@ skip_rbrck_and_done:
 		/* Fallback: identifier lookup / <x from y> expression. */
 		{
 #ifdef JIT_EVAL
-			char const *symbol_name = (char const *)JITLexer_TokPtr(self);
-			size_t symbol_size      = JITLexer_TokLen(self);
+			char *symbol_name  = JITLexer_TokPtr(self);
+			size_t symbol_size = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
 			if (JITLexer_ISKWD(self, "from")) {
 				DREF DeeModuleObject *mod;
@@ -1835,11 +1835,11 @@ err_result_copy:
 #endif /* JIT_EVAL */
 			} else {
 #ifdef JIT_EVAL
-				char const *attr_name;
+				char *attr_name;
 				size_t attr_size;
 				LOAD_LVALUE(lhs, err);
 				/* Generic attribute lookup. */
-				attr_name = (char const *)JITLexer_TokPtr(self);
+				attr_name = JITLexer_TokPtr(self);
 				attr_size = JITLexer_TokLen(self);
 #endif /* JIT_EVAL */
 				JITLexer_Yield(self);
@@ -2199,9 +2199,10 @@ DEFINE_PRIMARY(Assign) {
 	return result;
 #elif 1
 	RETURN_TYPE result;
-	result = CALL_PRIMARYF(UnaryHead, flags |
-	                                  JITLEXER_EVAL_FALLOWINPLACE |
-	                                  JITLEXER_EVAL_FALLOWISBOUND);
+	result = CALL_PRIMARYF(UnaryHead,
+	                       flags |
+	                       JITLEXER_EVAL_FALLOWINPLACE |
+	                       JITLEXER_EVAL_FALLOWISBOUND);
 	if (ISERR(result))
 		goto done;
 	switch (self->jl_tok) {
