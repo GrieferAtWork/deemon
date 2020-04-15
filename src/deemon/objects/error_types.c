@@ -33,9 +33,15 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+#include <deemon/system.h>
 #include <deemon/system-features.h>
 
 #include "../runtime/strings.h"
+
+#ifdef CONFIG_HOST_WINDOWS
+#include <Windows.h>
+#endif /* CONFIG_HOST_WINDOWS */
+
 
 DECL_BEGIN
 
@@ -69,7 +75,7 @@ DECL_BEGIN
 		},                                                                                             \
 		/* .tp_cast = */ {                                                                             \
 			/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),               \
-			/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))(tp_str),               \
+			/* .tp_repr = */ NULL,                                                                     \
 			/* .tp_bool = */ NULL                                                                      \
 		},                                                                                             \
 		/* .tp_call          = */ NULL,                                                                \
@@ -297,7 +303,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 error_repr(DeeErrorObject *__restrict self) {
 	if (self->e_inner) {
 		if (self->e_message) {
-			return DeeString_Newf("%k(%r,inner: %r)",
+			return DeeString_Newf("%k(%r, inner: %r)",
 			                      Dee_TYPE(self),
 			                      self->e_message,
 			                      self->e_inner);
@@ -692,10 +698,359 @@ PRIVATE struct type_member systemerror_class_members[] = {
 	TYPE_MEMBER_CONST_DOC("IOError", &DeeError_FSError, "Deprecated alias for #FSError"),
 	TYPE_MEMBER_END
 };
-PUBLIC DeeTypeObject DeeError_SystemError =
-INIT_CUSTOM_ERROR("SystemError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_Error,
-                  NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,
-                  NULL, NULL, NULL, systemerror_class_members);
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+systemerror_init_kw(DeeSystemErrorObject *__restrict self, size_t argc,
+                    DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *obj_errno = NULL;
+#ifdef CONFIG_HOST_WINDOWS
+	DeeObject *obj_nterr_np = NULL;
+	DWORD dwLastError = GetLastError();
+	PRIVATE DEFINE_KWLIST(kwlist, { K(message), K(inner), K(errno), K(nterr_np), KEND });
+	self->e_inner   = NULL;
+	self->e_message = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|oooo:SystemError",
+	                    &self->e_message, &self->e_inner,
+	                    &obj_errno, &obj_nterr_np))
+		goto err;
+	if (obj_nterr_np) {
+		if (DeeObject_AsUInt32(obj_nterr_np, &self->se_lasterror))
+			goto err;
+		if (obj_errno) {
+			if (DeeObject_AsInt(obj_errno, &self->se_errno))
+				goto err;
+		} else {
+			self->se_errno = DeeNTSystem_TranslateErrno(self->se_lasterror);
+		}
+	} else if (obj_errno) {
+		if (DeeObject_AsInt(obj_errno, &self->se_errno))
+			goto err;
+		self->se_lasterror = DeeNTSystem_TranslateNtError(self->se_errno);
+	} else {
+		self->se_lasterror = dwLastError;
+		self->se_errno     = DeeNTSystem_TranslateErrno(dwLastError);
+	}
+#else /* CONFIG_HOST_WINDOWS */
+	PRIVATE DEFINE_KWLIST(kwlist, { K(message), K(inner), K(errno), KEND });
+	int last_errno = DeeSystem_GetErrno();
+	self->e_inner   = NULL;
+	self->e_message = NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|ooo:SystemError",
+	                    &self->e_message, &self->e_inner,
+	                    &obj_errno))
+		goto err;
+	if (obj_errno) {
+		if (DeeObject_AsInt(obj_errno, &self->se_errno))
+			goto err;
+	} else {
+		self->se_errno = last_errno;
+	}
+#endif /* !CONFIG_HOST_WINDOWS */
+	Dee_XIncref(self->e_message);
+	Dee_XIncref(self->e_inner);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+systemerror_call_posix_function(DeeSystemErrorObject *__restrict self,
+                                char const *__restrict name) {
+	DREF DeeObject *result;
+	DREF DeeObject *posix_strerrorname;
+	posix_strerrorname = DeeModule_GetExtern("posix", name);
+	if unlikely(!posix_strerrorname)
+		return NULL;
+	result = DeeObject_Callf(posix_strerrorname, "d", self->se_errno);
+	Dee_Decref(posix_strerrorname);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+systemerror_getstrerrorname(DeeSystemErrorObject *__restrict self) {
+	return systemerror_call_posix_function(self, "strerrorname");
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+systemerror_getstrerror(DeeSystemErrorObject *__restrict self) {
+	return systemerror_call_posix_function(self, "strerror");
+}
+
+#ifdef CONFIG_HOST_WINDOWS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+systemerror_getnterrmsg_np(DeeSystemErrorObject *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeNTSystem_FormatErrorMessage(self->se_lasterror);
+	ASSERT(!result || DeeString_Check(result));
+	if (result && DeeString_IsEmpty(result)) {
+		Dee_Decref_unlikely(result);
+		result = Dee_None;
+		Dee_Incref(result);
+	}
+	return result;
+}
+#endif /* CONFIG_HOST_WINDOWS */
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+systemerror_str(DeeSystemErrorObject *__restrict self) {
+	DREF DeeObject *errno_name, *errno_desc;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	if unlikely(unicode_printer_printobject(&printer,
+	                                        self->e_message
+	                                        ? (DeeObject *)self->e_message
+	                                        : (DeeObject *)Dee_TYPE(self)) < 0)
+		goto err;
+	if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
+#ifdef CONFIG_HOST_WINDOWS
+		Dee_ssize_t unix_code_length;
+#endif /* CONFIG_HOST_WINDOWS */
+		if unlikely(unicode_printer_putascii(&printer, '\n'))
+			goto err;
+		errno_name = systemerror_getstrerrorname(self);
+		if unlikely(!errno_name) {
+			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
+				goto err;
+			errno_name = Dee_None;
+			Dee_Incref(errno_name);
+		}
+		errno_desc = systemerror_getstrerror(self);
+		if unlikely(!errno_desc) {
+			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
+				goto err_errno_name;
+			errno_desc = Dee_None;
+			Dee_Incref(errno_desc);
+		}
+#ifdef CONFIG_HOST_WINDOWS
+		unix_code_length = unicode_printer_printf(&printer, "errno(%d)", self->se_errno);
+		if unlikely(unix_code_length < 0)
+			goto err_errno_desc;
+#else /* CONFIG_HOST_WINDOWS */
+		if unlikely(unicode_printer_printf(&printer, "errno(%d)", self->se_errno) < 0)
+			goto err_errno_desc;
+#endif /* !CONFIG_HOST_WINDOWS */
+		if (!DeeNone_Check(errno_name) || !DeeNone_Check(errno_desc)) {
+#ifdef CONFIG_HOST_WINDOWS
+			if (self->se_lasterror != NO_ERROR) {
+				size_t windows_code_length;
+				windows_code_length = (size_t)(uintptr_t)Dee_snprintf(NULL, 0, "%#I32x", self->se_lasterror);
+				unix_code_length -= 7;
+				if (windows_code_length > (size_t)unix_code_length) {
+					if unlikely(unicode_printer_repeatascii(&printer, ' ',
+					                                        windows_code_length -
+					                                        (size_t)unix_code_length) < 0)
+						goto err_errno_desc;
+				}
+			}
+#endif /* CONFIG_HOST_WINDOWS */
+			if unlikely(UNICODE_PRINTER_PRINT(&printer, ": ") < 0)
+				goto err_errno_desc;
+			if (DeeNone_Check(errno_name)) {
+				if unlikely(unicode_printer_putascii(&printer, '?'))
+					goto err_errno_desc;
+			} else {
+				if unlikely(unicode_printer_printobject(&printer, errno_name) < 0)
+					goto err_errno_desc;
+			}
+			if (!DeeNone_Check(errno_desc)) {
+				if unlikely(UNICODE_PRINTER_PRINT(&printer, " (") < 0)
+					goto err_errno_desc;
+				if unlikely(unicode_printer_printobject(&printer, errno_desc) < 0)
+					goto err_errno_desc;
+				if unlikely(unicode_printer_putascii(&printer, ')'))
+					goto err_errno_desc;
+			}
+		}
+		Dee_Decref(errno_desc);
+		Dee_Decref(errno_name);
+	}
+
+#ifdef CONFIG_HOST_WINDOWS
+	if (self->se_lasterror != NO_ERROR) {
+		int message_error;
+		Dee_ssize_t windows_code_length;
+		if unlikely(unicode_printer_putascii(&printer, '\n'))
+			goto err;
+		windows_code_length = unicode_printer_printf(&printer, "nterr(%#I32x)", self->se_lasterror);
+		if unlikely(windows_code_length < 0)
+			goto err;
+		if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
+			size_t unix_code_length;
+			unix_code_length = (size_t)(uintptr_t)Dee_snprintf(NULL, 0, "%d", self->se_errno);
+			windows_code_length -= 7;
+			if (unix_code_length > (size_t)windows_code_length) {
+				if unlikely(unicode_printer_repeatascii(&printer, ' ',
+				                                        unix_code_length -
+				                                        (size_t)windows_code_length) < 0)
+					goto err;
+			}
+		}
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, ": ") < 0)
+			goto err;
+		message_error = DeeNTSystem_PrintFormatMessage(&printer, FORMAT_MESSAGE_FROM_SYSTEM, NULL,
+		                                               (DWORD)self->se_lasterror,
+		                                               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), NULL);
+		if unlikely(message_error < 0)
+			goto err;
+		if unlikely(message_error > 0) {
+			/* No message string printed... */
+			if unlikely(unicode_printer_putascii(&printer, '?'))
+				goto err;
+		}
+	}
+#endif /* CONFIG_HOST_WINDOWS */
+	return unicode_printer_pack(&printer);
+err_errno_desc:
+	Dee_Decref(errno_desc);
+err_errno_name:
+	Dee_Decref(errno_name);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+systemerror_repr(DeeSystemErrorObject *__restrict self) {
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
+	bool is_first = true;
+	if unlikely(unicode_printer_printf(&printer, "%k(", Dee_TYPE(self)) < 0)
+		goto err;
+	if (self->e_message) {
+		if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->e_message) < 0)
+			goto err;
+		is_first = false;
+	}
+	if (self->e_inner) {
+		if (!is_first && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
+			goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "inner: ") < 0)
+			goto err;
+		if unlikely(unicode_printer_printobjectrepr(&printer, (DeeObject *)self->e_inner) < 0)
+			goto err;
+		is_first = false;
+	}
+	if (self->se_errno != Dee_SYSTEM_ERROR_UNKNOWN) {
+		DREF DeeObject *errno_name;
+		Dee_ssize_t print_error;
+		if (!is_first && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
+			goto err;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "errno: ") < 0)
+			goto err;
+		errno_name = systemerror_getstrerrorname(self);
+		if (!errno_name) {
+			if (!DeeError_Handled(ERROR_HANDLED_NORMAL))
+				goto err;
+			errno_name = Dee_None;
+			Dee_Incref(errno_name);
+		}
+		print_error = DeeNone_Check(errno_name)
+		              ? unicode_printer_printf(&printer, "%d", self->se_errno)
+		              : unicode_printer_printobject(&printer, errno_name);
+		Dee_Decref(errno_name);
+		if unlikely(print_error < 0)
+			goto err;
+#ifdef CONFIG_HOST_WINDOWS
+		is_first = false;
+#endif /* CONFIG_HOST_WINDOWS */
+	}
+#ifdef CONFIG_HOST_WINDOWS
+	if (self->se_lasterror != NO_ERROR) {
+		if (!is_first && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
+			goto err;
+		if unlikely(unicode_printer_printf(&printer, "nterr_np: %#I32x", self->se_lasterror) < 0)
+			goto err;
+	}
+#endif /* CONFIG_HOST_WINDOWS */
+	if unlikely(unicode_printer_putascii(&printer, ')'))
+		goto err;
+	return unicode_printer_pack(&printer);
+err:
+	unicode_printer_fini(&printer);
+	return NULL;
+}
+
+PRIVATE struct type_getset systemerror_getsets[] = {
+	{ "strerrorname",
+	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerrorname, NULL, NULL,
+	  DOC("->?Dstring\n"
+	      "The name of the associated #errno (s.a. :posix:strerrorname)\n"
+	      "Returns :none if #errno doesn't have a known name") },
+	{ "strerror",
+	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerror, NULL, NULL,
+	  DOC("->?X2?Dstring?N\n"
+	      "A description of the associated #errno (s.a. :posix:strerror)\n"
+	      "Returns :none if #errno doesn't have a description") },
+#ifdef CONFIG_HOST_WINDOWS
+	{ "nterrmsg_np",
+	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getnterrmsg_np, NULL, NULL,
+	  DOC("->?X2?Dstring?N\n"
+	      "A description of the associated #nterr_np (s.a. :win32:FormatErrorMessage)\n"
+	      "Returns :none if no message description is available") },
+#endif /* CONFIG_HOST_WINDOWS */
+	{ NULL }
+};
+
+PRIVATE struct type_member systemerror_members[] = {
+	TYPE_MEMBER_FIELD_DOC("errno", STRUCT_CONST | STRUCT_INT,
+	                      offsetof(DeeSystemErrorObject, se_errno),
+	                      "The associated system errno value (one of `E*' from :posix)"),
+#ifdef CONFIG_HOST_WINDOWS
+	TYPE_MEMBER_FIELD_DOC("nterr_np", STRUCT_CONST | STRUCT_UINT32_T,
+	                      offsetof(DeeSystemErrorObject, se_lasterror),
+	                      "The windows-specific error code, as returned by :win32:GetLastError"),
+#endif /* CONFIG_HOST_WINDOWS */
+	TYPE_MEMBER_END
+};
+
+PUBLIC DeeTypeObject DeeError_SystemError = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "SystemError",
+#ifdef CONFIG_HOST_WINDOWS
+	/* .tp_doc      = */ DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring,nterr_np?:?Dint)"),
+#else /* CONFIG_HOST_WINDOWS */
+	/* .tp_doc      = */ DOC("(message:?Dstring,inner:?DError,errno?:?X2?Dint?Dstring)"),
+#endif /* !CONFIG_HOST_WINDOWS */
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeError_Error,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ NULL,
+				/* .tp_copy_ctor = */ NULL,
+				/* .tp_deep_ctor = */ NULL,
+				/* .tp_any_ctor  = */ NULL,
+				TYPE_FIXED_ALLOCATOR(DeeSystemErrorObject),
+				/* .tp_any_ctor_kw = */ &systemerror_init_kw
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&systemerror_str,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&systemerror_repr,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ systemerror_getsets,
+	/* .tp_members       = */ systemerror_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ systemerror_class_members
+};
+
 PUBLIC DeeTypeObject DeeError_UnsupportedAPI =
 INIT_CUSTOM_ERROR("UnsupportedAPI", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_SystemError,
                   NULL, NULL, NULL, NULL, DeeSystemErrorObject, NULL, NULL, NULL,

@@ -1089,14 +1089,33 @@ DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError) {
 #endif
 
 
+/* Figure out how to implement `DeeNTSystem_TranslateErrno()' */
+#undef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
+#undef DeeNTSystem_TranslateNtError_USE_FALLBACK
+#if defined(CONFIG_HAVE_errno_kos2nt)
+#define DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT 1
+#else
+#define DeeNTSystem_TranslateNtError_USE_FALLBACK 1
+#endif
+
+
 #ifdef DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS
 #ifndef __errno_nt2kos_defined
 #ifndef __LIBCCALL
 #define __LIBCCALL /* nothing */
 #endif /* !__LIBCCALL */
-extern ATTR_DLLIMPORT Dee_syserrno_t __LIBCCALL errno_nt2kos(DeeNT_DWORD dwError);
+extern ATTR_DLLIMPORT /*errno_t*/ int __LIBCCALL errno_nt2kos(DeeNT_DWORD dwError);
 #endif /* !__errno_nt2kos_defined */
 #endif /* DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS */
+
+#ifdef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
+#ifndef __errno_kos2nt_defined
+#ifndef __LIBCCALL
+#define __LIBCCALL /* nothing */
+#endif /* !__LIBCCALL */
+extern ATTR_DLLIMPORT DeeNT_DWORD __LIBCCALL errno_kos2nt(/*errno_t*/ int errno_value);
+#endif /* !__errno_kos2nt_defined */
+#endif /* DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT */
 
 #ifdef DeeNTSystem_TranslateErrno_USE_DOSMAPERR
 #ifdef CONFIG_HAVE__doserrno
@@ -1104,15 +1123,14 @@ extern ATTR_DLLIMPORT Dee_syserrno_t __LIBCCALL errno_nt2kos(DeeNT_DWORD dwError
 #else /* CONFIG_HAVE__doserrno */
 #define IF_CONFIG_HAVE__doserrno(x) /* nothing */
 #endif /* !CONFIG_HAVE__doserrno */
-
-
 extern ATTR_DLLIMPORT void ATTR_CDECL _dosmaperr(DeeNT_DWORD dwError);
 #endif /* DeeNTSystem_TranslateErrno_USE_DOSMAPERR */
 
-#ifdef DeeNTSystem_TranslateErrno_USE_FALLBACK
+#if (defined(DeeNTSystem_TranslateErrno_USE_FALLBACK) || \
+     defined(DeeNTSystem_TranslateNtError_USE_FALLBACK))
 struct nt2errno_ent {
-	DeeNT_DWORD    etval; /* NT error code */
-	Dee_syserrno_t erval; /* errno code */
+	DeeNT_DWORD     etval; /* NT error code */
+	/*errno_t*/ int erval; /* errno code */
 };
 
 #if defined(__CYGWIN32__) && !defined(__CYGWIN__)
@@ -1631,7 +1649,7 @@ PRIVATE struct nt2errno_ent const nt2errno[] = {
 
 	{ 0, 0 }
 };
-#endif /* DeeNTSystem_TranslateErrno_USE_FALLBACK */
+#endif /* DeeNTSystem_Translate(Errno|NtError)_USE_FALLBACK */
 
 /* Translate a given `dwError' into the appropriate `errno' error code.
  * If the translation failed, return a fallback value.
@@ -1642,13 +1660,13 @@ PRIVATE struct nt2errno_ent const nt2errno[] = {
  * deemon within a windows environment.
  * NOTE: This function is also used by `DeeNTSystem_ThrowErrorf()' to translate
  *       the given NT error code into an errno. */
-PUBLIC WUNUSED Dee_syserrno_t DCALL
+PUBLIC WUNUSED /*errno_t*/ int DCALL
 DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 #ifdef DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS
 	return errno_nt2kos(dwError);
 #endif /* DeeNTSystem_TranslateErrno_USE_ERRNO_NT2KOS */
 #ifdef DeeNTSystem_TranslateErrno_USE_DOSMAPERR
-	Dee_syserrno_t result, old_errno;
+	/*errno_t*/ int result, old_errno;
 	if (dwError == 0)
 		return 0; /* Special case: No error */
 	IF_CONFIG_HAVE__doserrno(DeeNT_DWORD old_doserrno);
@@ -1731,6 +1749,28 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError) {
 	return Dee_SYSTEM_ERROR_UNKNOWN;
 #endif /* !HAVE_RETURN */
 #endif /* DeeNTSystem_TranslateErrno_USE_FALLBACK */
+}
+
+
+
+/* Do the reverse of `DeeNTSystem_TranslateErrno()' */
+DFUNDEF WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
+DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value) {
+#ifdef DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT
+	return errno_kos2nt(errno_value);
+#endif /* DeeNTSystem_TranslateNtError_USE_ERRNO_KOS2NT */
+
+#ifdef DeeNTSystem_TranslateNtError_USE_FALLBACK
+	unsigned int i;
+	if (errno_value == 0)
+		return 0; /* Special case: No error */
+	for (i = 0; nt2errno[i].etval; ++i) {
+		if (nt2errno[i].erval == errno_value)
+			return nt2errno[i].etval;
+	}
+	/* Fallback... */
+	return ERROR_INVALID_FUNCTION;
+#endif /* DeeNTSystem_TranslateNtError_USE_FALLBACK */
 }
 
 

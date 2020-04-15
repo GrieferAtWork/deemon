@@ -121,7 +121,6 @@ final function __builtin_fs_gidname(__gid) {
 }
 
 #ifdef __WINDOWS__
-/* TODO: Implement these using the `win32' module. */
 #pragma push_macro(undef,"win32", "GetLogicalDriveStrings")
 from win32 import
 	__builtin_fs_win32modulename = "GetModuleFileName",
@@ -142,7 +141,7 @@ final function __builtin_fs_win32drives() {
 }
 #define __builtin_fs_win32wdrives  __builtin_fs_win32drives
 #pragma pop_macro("win32", "GetLogicalDriveStrings", "rstrip", "split")
-#endif
+#endif /* __WINDOWS__ */
 
 function __builtin_fs_user() -> (User from fs)().operator . ("name");
 #define __builtin_fs_wuser __builtin_fs_user

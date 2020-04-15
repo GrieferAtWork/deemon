@@ -736,7 +736,7 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 	if (*(void **)&my_GetUserProfileDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, NO_ERROR,
 		                               "Cannot determine home of token %p (`GetUserProfileDirectoryW' not found)",
 		                               hToken);
 	}
@@ -797,7 +797,7 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 	if (*(void **)&my_GetProfilesDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, NO_ERROR,
 		                               "Cannot determine profiles directory (`GetProfilesDirectoryW' not found)");
 	}
 	dwBufsize = PATH_MAX;
@@ -857,7 +857,7 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 	if (*(void **)&my_GetDefaultUserProfileDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, NO_ERROR,
 		                               "Cannot determine profiles directory (`GetDefaultUserProfileDirectoryW' not found)");
 	}
 	dwBufsize = PATH_MAX;
@@ -916,7 +916,7 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 	if (*(void **)&my_GetAllUsersProfileDirectoryW == (void *)ITER_DONE) {
 		if (bTryGet)
 			return 1;
-		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, SYSTEM_ERROR_UNKNOWN,
+		return DeeNTSystem_ThrowErrorf(&DeeError_UnsupportedAPI, NO_ERROR,
 		                               "Cannot determine profiles directory (`GetAllUsersProfileDirectoryW' not found)");
 	}
 	dwBufsize = PATH_MAX;

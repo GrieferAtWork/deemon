@@ -744,6 +744,7 @@ functest("isalnum('!')", "defined(CONFIG_HAVE_CTYPE_H)");
 // CRT-specific functions
 func("_dosmaperr", msvc + " || (defined(__CRT_DOS) && defined(__CRT_HAVE__dosmaperr))", check_defined: false, test: "_dosmaperr(42); return 0;");
 functest("errno_nt2kos(42)", "defined(__CRT_HAVE_errno_nt2kos)", check_defined: false);
+functest("errno_kos2nt(42)", "defined(__CRT_HAVE_errno_kos2nt)", check_defined: false);
 func("_get_osfhandle", msvc + " || defined(__CYGWIN__) || defined(__CYGWIN32__)", test: "intptr_t fh = _get_osfhandle(1); return fh != -1;");
 func("get_osfhandle", "defined(__CYGWIN__) || defined(__CYGWIN32__)", test: "intptr_t fh = get_osfhandle(1); return fh != -1;");
 functest("open_osfhandle(1234, 0)");
@@ -5368,6 +5369,13 @@ constant("HW_NCPU");
 #define CONFIG_HAVE_errno_nt2kos 1
 #endif
 
+#ifdef CONFIG_NO_errno_kos2nt
+#undef CONFIG_HAVE_errno_kos2nt
+#elif !defined(CONFIG_HAVE_errno_kos2nt) && \
+      (defined(__CRT_HAVE_errno_kos2nt))
+#define CONFIG_HAVE_errno_kos2nt 1
+#endif
+
 #ifdef CONFIG_NO__get_osfhandle
 #undef CONFIG_HAVE__get_osfhandle
 #elif !defined(CONFIG_HAVE__get_osfhandle) && \
@@ -7133,6 +7141,10 @@ local errno_names = {
 	"EPERM",
 	"EROFS",
 	"ETXTBSY",
+	"ENOTEMPTY",
+	"EXDEV",
+	"ENOLINK",
+	"EINTR",
 };
 
 for (local x: errno_names) {
@@ -7316,6 +7328,26 @@ for (local x: [1:n+1]) {
 #else /* ETXTBSY */
 #define DeePrivateSystem_IF_HAVE_ETXTBSY(tt, ff) ff
 #endif /* !ETXTBSY */
+#ifdef ENOTEMPTY
+#define DeePrivateSystem_IF_HAVE_ENOTEMPTY(tt, ff) tt
+#else /* ENOTEMPTY */
+#define DeePrivateSystem_IF_HAVE_ENOTEMPTY(tt, ff) ff
+#endif /* !ENOTEMPTY */
+#ifdef EXDEV
+#define DeePrivateSystem_IF_HAVE_EXDEV(tt, ff) tt
+#else /* EXDEV */
+#define DeePrivateSystem_IF_HAVE_EXDEV(tt, ff) ff
+#endif /* !EXDEV */
+#ifdef ENOLINK
+#define DeePrivateSystem_IF_HAVE_ENOLINK(tt, ff) tt
+#else /* ENOLINK */
+#define DeePrivateSystem_IF_HAVE_ENOLINK(tt, ff) ff
+#endif /* !ENOLINK */
+#ifdef EINTR
+#define DeePrivateSystem_IF_HAVE_EINTR(tt, ff) tt
+#else /* EINTR */
+#define DeePrivateSystem_IF_HAVE_EINTR(tt, ff) ff
+#endif /* !EINTR */
 #define DeePrivateSystem_IF_E1(errno, e1, ...) \
 	do {                                       \
 		if ((errno) == e1) {                   \

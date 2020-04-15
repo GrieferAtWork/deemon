@@ -35,7 +35,6 @@ DECL_BEGIN
 #define Dee_threadexit_object   threadexit_object
 #define Dee_string_object       string_object
 #define ERROR_OBJECT_HEAD       Dee_ERROR_OBJECT_HEAD
-#define SYSTEM_ERROR_UNKNOWN    Dee_SYSTEM_ERROR_UNKNOWN
 #define ERROR_PRINT_DONTHANDLE  Dee_ERROR_PRINT_DONTHANDLE
 #define ERROR_PRINT_DOHANDLE    Dee_ERROR_PRINT_DOHANDLE
 #define ERROR_PRINT_HANDLEINTR  Dee_ERROR_PRINT_HANDLEINTR
@@ -46,7 +45,6 @@ DECL_BEGIN
 #endif /* DEE_SOURCE */
 
 typedef struct Dee_error_object DeeErrorObject;
-typedef int Dee_syserrno_t;
 
 /* Builtin error classes. */
 DDATDEF DeeTypeObject DeeError_Signal;
@@ -212,12 +210,6 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL DeeError_Catch(DeeTypeObject *__restrict
  * @return: -1: Always returns `-1' */
 DFUNDEF NONNULL((1)) int DCALL DeeError_Throw(DeeObject *__restrict ob);
 
-
-/* Value set for `Dee_syserrno_t' when the error is not known. */
-#ifndef Dee_SYSTEM_ERROR_UNKNOWN
-#define Dee_SYSTEM_ERROR_UNKNOWN 0
-#endif /* !Dee_SYSTEM_ERROR_UNKNOWN */
-
 /* Throw a new error of type `tp', using a printf-formatted
  * message passed through `format' and varargs.
  * @return: -1: Always returns `-1'*/
@@ -227,12 +219,6 @@ DeeError_Throwf(DeeTypeObject *__restrict tp,
 DFUNDEF NONNULL((1, 2)) int DCALL
 DeeError_VThrowf(DeeTypeObject *__restrict tp,
                  char const *__restrict format, va_list args);
-DFUNDEF NONNULL((3)) int
-DeeError_SysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
-                   char const *__restrict format, ...);
-DFUNDEF NONNULL((3)) int DCALL
-DeeError_VSysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
-                    char const *__restrict format, va_list args);
 
 /* Return the currently effective error, or NULL if none is. */
 DFUNDEF WUNUSED DeeObject *DCALL DeeError_Current(void);

@@ -206,31 +206,6 @@ DeeError_Throwf(DeeTypeObject *__restrict tp,
 	return result;
 }
 
-PUBLIC NONNULL((3)) int DCALL
-DeeError_VSysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
-                    char const *__restrict format, va_list args) {
-	if (!tp) {
-		/* TODO: Rename this function to `DeeUnixSystem_ThrowErrorf()',
-		 *       and use `error' as one of `E*' to select an appropriate
-		 *       exception type to-be thrown here */
-		tp = &DeeError_SystemError;
-	}
-	(void)error; /* TODO */
-	return DeeError_VThrowf(tp, format, args);
-}
-
-PUBLIC NONNULL((3)) int
-DeeError_SysThrowf(DeeTypeObject *tp, Dee_syserrno_t error,
-                   char const *__restrict format, ...) {
-	va_list args;
-	int result;
-	va_start(args, format);
-	result = DeeError_VSysThrowf(tp, error, format, args);
-	va_end(args);
-	return result;
-}
-
-
 #ifndef CONFIG_NO_THREADS
 INTERN void DCALL
 restore_interrupt_error(DeeThreadObject *__restrict ts,
@@ -278,13 +253,13 @@ restore_interrupt_error(DeeThreadObject *__restrict ts,
 	/* If the frame wasn't used, then still free it! */
 	except_frame_xfree(frame);
 }
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 #ifdef CONFIG_NO_THREADS
 PUBLIC bool (DCALL DeeError_HandledNoSMP)(void)
-#else
+#else /* CONFIG_NO_THREADS */
 PUBLIC bool (DCALL DeeError_Handled)(unsigned int mode)
-#endif
+#endif /* !CONFIG_NO_THREADS */
 {
 	struct except_frame *frame;
 	DeeThreadObject *ts = DeeThread_Self();

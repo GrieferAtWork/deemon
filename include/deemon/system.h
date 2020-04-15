@@ -21,7 +21,6 @@
 #define GUARD_DEEMON_SYSTEM_H 1
 
 #include "api.h"
-#include "error.h" /* Dee_syserrno_t */
 
 #include <stdbool.h>
 
@@ -167,8 +166,12 @@ DFUNDEF WUNUSED bool DCALL DeeNTSystem_IsNoLink(/*DWORD*/ DeeNT_DWORD dwError);
  * deemon within a windows environment.
  * NOTE: This function is also used by `DeeNTSystem_ThrowErrorf()' to translate
  *       the given NT error code into an errno. */
-DFUNDEF WUNUSED Dee_syserrno_t DCALL
+DFUNDEF WUNUSED /*errno_t*/ int DCALL
 DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError);
+
+/* Do the reverse of `DeeNTSystem_TranslateErrno()' */
+DFUNDEF WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
+DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value);
 
 /* Work around a problem with long path names.
  * @return: * :                   The new handle.
@@ -340,11 +343,20 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeUnixSystem_ReadlinkString(/*utf-8*/ cha
 DFUNDEF WUNUSED int DCALL
 DeeUnixSystem_GetFD(DeeObject *__restrict ob);
 
-/* TODO: Rename `DeeError_SysThrowf()' to `DeeUnixSystem_ThrowErrorf()'! */
-#define DeeUnixSystem_ThrowErrorf(tp, errno_value, ...) \
-	DeeError_SysThrowf(tp, errno_value, __VA_ARGS__)
-#define DeeUnixSystem_VThrowErrorf(tp, errno_value, format, args) \
-	DeeError_VSysThrowf(tp, errno_value, format, args)
+/* Throw an exception alongside an errno error-code `error'
+ * When `tp' is `NULL', automatically select an appropriate
+ * error type based on the value of `error' */
+DFUNDEF NONNULL((3)) int
+DeeUnixSystem_ThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                          char const *__restrict format, ...);
+DFUNDEF NONNULL((3)) int DCALL
+DeeUnixSystem_VThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                           char const *__restrict format, va_list args);
+
+/* Value set for `errno_t' when the error is not known. */
+#ifndef Dee_SYSTEM_ERROR_UNKNOWN
+#define Dee_SYSTEM_ERROR_UNKNOWN 0
+#endif /* !Dee_SYSTEM_ERROR_UNKNOWN */
 
 
 #ifndef __INTELLISENSE__

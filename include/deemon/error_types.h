@@ -41,10 +41,10 @@ typedef DeeObject DeeSignalObject;
 
 struct Dee_system_error_object {
 	Dee_ERROR_OBJECT_HEAD
-	Dee_syserrno_t se_errno;     /* A system-specific error code, or `SYSTEM_ERROR_UNKNOWN' when not known. */
+	/*errno_t*/ int se_errno;     /* A system-specific error code, or `Dee_SYSTEM_ERROR_UNKNOWN' when not known. */
 #ifdef CONFIG_HOST_WINDOWS
-	uint32_t       se_lasterror; /* The windows-specific error code (as returned by `GetLastError()')
-	                              * Set to `0' if unused. */
+	uint32_t        se_lasterror; /* The windows-specific error code (as returned by `GetLastError()')
+	                               * Set to `NO_ERROR' if unused. */
 #endif /* CONFIG_HOST_WINDOWS */
 };
 

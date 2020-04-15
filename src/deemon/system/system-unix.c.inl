@@ -20,9 +20,13 @@
 #ifndef GUARD_DEEMON_SYSTEM_SYSTEM_UNIX_C_INL
 #define GUARD_DEEMON_SYSTEM_SYSTEM_UNIX_C_INL 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
+#include <deemon/error_types.h>
 #include <deemon/format.h>
+#include <deemon/module.h>
+#include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 #include <deemon/system.h>
@@ -44,6 +48,98 @@
 #endif /* !PATH_MAX */
 
 DECL_BEGIN
+
+
+PUBLIC NONNULL((3)) int DCALL
+DeeUnixSystem_VThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                           char const *__restrict format, va_list args) {
+	int result;
+	if (!tp) {
+		/* Automatically determine the error type to-be thrown. */
+		DeeSystem_IF_E1(errno_value, ENOENT,                      { tp = &DeeError_FileNotFound; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EEXIST,                      { tp = &DeeError_FileExists; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EBADF,                       { tp = &DeeError_FileClosed; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EACCES,                      { tp = &DeeError_FileAccessError; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, ENOMEM,                      { tp = &DeeError_NoMemory; goto got_tp; });
+		DeeSystem_IF_E3(errno_value, ENOSYS, ENOTSUP, EOPNOTSUPP, { tp = &DeeError_UnsupportedAPI; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EINVAL,                      { tp = &DeeError_ValueError; goto got_tp; });
+		DeeSystem_IF_E2(errno_value, EROFS, ETXTBSY,              { tp = &DeeError_ReadOnlyFile; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EFBIG,                       { tp = &DeeError_IntegerOverflow; goto got_tp; });
+		DeeSystem_IF_E1(errno_value, EINTR,                       { tp = &DeeError_Interrupt; goto got_tp; });
+		{
+			char const *fs_error_name = NULL;
+			/* Special handling for error types that are implemented by the `fs' module. */
+			DeeSystem_IF_E1(errno_value, EBUSY,     { fs_error_name = "BusyFile"; goto got_fs_error_name; });
+			DeeSystem_IF_E1(errno_value, ENOTDIR,   { fs_error_name = "NoDirectory"; goto got_fs_error_name; });
+			DeeSystem_IF_E1(errno_value, ENOTEMPTY, { fs_error_name = "NotEmpty"; goto got_fs_error_name; });
+			DeeSystem_IF_E1(errno_value, EXDEV,     { fs_error_name = "CrossDevice"; goto got_fs_error_name; });
+			DeeSystem_IF_E1(errno_value, ENOLINK,   { fs_error_name = "NoLink"; goto got_fs_error_name; });
+			__IF0 {
+				int result;
+				DREF DeeTypeObject *fs_error_type;
+got_fs_error_name:
+				fs_error_type = (DREF DeeTypeObject *)DeeModule_GetExtern("fs", fs_error_name);
+				if unlikely(!fs_error_type)
+					return -1;
+				result = DeeUnixSystem_VThrowErrorf(fs_error_type,
+				                                    errno_value,
+				                                    format,
+				                                    args);
+				Dee_Decref(fs_error_type);
+				return result;
+			}
+		}
+		/* Fallback: Just use a SystemError */
+		tp = &DeeError_SystemError;
+		goto got_tp;
+	}
+	/* Check for error types derived from `errors.SystemError' */
+got_tp:
+	if (DeeType_Check(tp) &&
+	    DeeType_IsInherited(tp, &DeeError_SystemError)) {
+		DREF DeeSystemErrorObject *error;
+		DREF DeeStringObject *message;
+		error = (DREF DeeSystemErrorObject *)DeeObject_MALLOC(DeeSystemErrorObject);
+		if unlikely(!error) {
+			result = -1;
+			goto done;
+		}
+		message = (DREF DeeStringObject *)DeeString_VNewf(format, args);
+		if unlikely(!message) {
+			DeeObject_FREE(error);
+			result = -1;
+			goto done;
+		}
+		error->e_message = message; /* Inherit reference */
+		error->e_inner   = NULL;
+		error->se_errno  = errno_value;
+#ifdef CONFIG_HOST_WINDOWS
+		error->se_lasterror = DeeNTSystem_TranslateNtError(errno_value);
+#endif /* CONFIG_HOST_WINDOWS */
+		DeeObject_Init(error, tp);
+		result = DeeError_Throw((DeeObject *)error);
+		Dee_Decref(error);
+	} else {
+		/* Unlikely to happen: Just throw a regular, old error. */
+		result = DeeError_VThrowf(tp, format, args);
+	}
+done:
+	return result;
+}
+
+PUBLIC NONNULL((3)) int
+DeeUnixSystem_ThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
+                          char const *__restrict format, ...) {
+	va_list args;
+	int result;
+	va_start(args, format);
+	result = DeeUnixSystem_VThrowErrorf(tp, errno_value, format, args);
+	va_end(args);
+	return result;
+}
+
+
+
 
 /* Figure out how to implement `DeeUnixSystem_Readlink()' */
 #undef DeeUnixSystem_Readlink_USE_WINDOWS

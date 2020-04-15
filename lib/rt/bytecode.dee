@@ -419,8 +419,8 @@ function code(data: {int...}): Bytes {
 		local b = d.tobytes(d.bytecount, "little", false);
 		b.reverse();
 		/* Really ugly hack
-		 * TODO: Add 2 new file types `file.bytereader' and
-		 *      `file.bytewriter' that operate on bytes objects! */
+		 * TODO: Add 2 new file types `File.BytesReader' and
+		 *      `File.BytesWriter' that operate on bytes objects! */
 		w.write(b.encode("utf-8"));
 	}
 	return w.string.bytes();

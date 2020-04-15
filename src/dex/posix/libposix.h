@@ -49,7 +49,7 @@
 DECL_BEGIN
 
 /* Imported module access. */
-#define FS_MODULE   DEX.d_imports[0]
+#define FS_MODULE DEX.d_imports[0]
 
 
 #if defined(EINTR) && !defined(__INTELLISENSE__)
@@ -65,12 +65,6 @@ DECL_BEGIN
 #define EINTR_LABEL(again)                    /* nothing */
 #define HANDLE_EINTR(error, again, err_label) /* nothing */
 #endif
-
-#define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                           \
-	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                                  \
-		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
-		goto err_label;                                                        \
-	});
 
 #define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                           \
 	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                                  \

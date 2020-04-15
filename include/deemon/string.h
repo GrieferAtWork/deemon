@@ -2601,14 +2601,14 @@ WUNUSED NONNULL((1)) Dee_ssize_t (Dee_unicode_printer_confirm_wchar)(struct Dee_
 #define Dee_unicode_printer_tryresize_wchar(self,buf,new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf16(self,(uint16_t *)(buf),new_length))
 #define Dee_unicode_printer_free_wchar(self,buf)                   Dee_unicode_printer_free_utf16(self,(uint16_t *)(buf))
 #define Dee_unicode_printer_confirm_wchar(self,buf,final_length)   Dee_unicode_printer_confirm_utf16(self,(uint16_t *)(buf),final_length)
-#else
+#else /* __SIZEOF_WCHAR_T__ == 2 */
 #define Dee_unicode_printer_alloc_wchar(self,length)             ((Dee_wchar_t *)Dee_unicode_printer_alloc_utf32(self,length))
 #define Dee_unicode_printer_tryalloc_wchar(self,length)          ((Dee_wchar_t *)Dee_unicode_printer_tryalloc_utf32(self,length))
 #define Dee_unicode_printer_resize_wchar(self,buf,new_length)    ((Dee_wchar_t *)Dee_unicode_printer_resize_utf32(self,(uint32_t *)(buf),new_length))
 #define Dee_unicode_printer_tryresize_wchar(self,buf,new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf32(self,(uint32_t *)(buf),new_length))
 #define Dee_unicode_printer_free_wchar(self,buf)                   Dee_unicode_printer_free_utf32(self,(uint32_t *)(buf))
 #define Dee_unicode_printer_confirm_wchar(self,buf,final_length)   Dee_unicode_printer_confirm_utf32(self,(uint32_t *)(buf),final_length)
-#endif
+#endif /* __SIZEOF_WCHAR_T__ != 2 */
 
 #if 0
 /* Allocate raw unicode character buffer, as opposed to buffers for certain encodings. */
@@ -2670,12 +2670,12 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printf)(struct Dee_unic
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_vprintf)(struct Dee_unicode_printer *__restrict self, char const *__restrict format, va_list args);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobject)(struct Dee_unicode_printer *__restrict self, DeeObject *__restrict ob);
 WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct Dee_unicode_printer *__restrict self, DeeObject *__restrict ob);
-#else
+#else /* __INTELLISENSE__ */
 #define Dee_unicode_printer_printf(self, ...)          DeeFormat_Printf(&Dee_unicode_printer_print,self,__VA_ARGS__)
 #define Dee_unicode_printer_vprintf(self,format,args) DeeFormat_VPrintf(&Dee_unicode_printer_print,self,format,args)
 #define Dee_unicode_printer_printobject(self,ob)      DeeObject_Print(ob, &Dee_unicode_printer_print,self)
 #define Dee_unicode_printer_printobjectrepr(self,ob)  DeeObject_PrintRepr(ob, &Dee_unicode_printer_print,self)
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #ifdef DEE_SOURCE
 #ifndef __INTELLISENSE__

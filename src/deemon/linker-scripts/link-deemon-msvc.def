@@ -107,7 +107,6 @@ EXPORTS
 	DeeError_Handled@4=_DeeError_Handled@4
 	DeeError_Print@8=_DeeError_Print@8
 	DeeError_Throw@4=_DeeError_Throw@4
-	DeeError_VSysThrowf@16=_DeeError_VSysThrowf@16
 	DeeError_VThrowf@12=_DeeError_VThrowf@12
 	DeeExec_CompileFunctionMemory@36=_DeeExec_CompileFunctionMemory@36
 	DeeExec_CompileFunctionMemoryString@44=_DeeExec_CompileFunctionMemoryString@44
@@ -391,6 +390,7 @@ EXPORTS
 	DeeNTSystem_PrintFormatMessage@24=_DeeNTSystem_PrintFormatMessage@24
 	DeeNTSystem_PrintMappedFileName@12=_DeeNTSystem_PrintMappedFileName@12
 	DeeNTSystem_TranslateErrno@4=_DeeNTSystem_TranslateErrno@4
+	DeeNTSystem_TranslateNtError@4=_DeeNTSystem_TranslateNtError@4
 	DeeNTSystem_TryGetFilenameOfHandle@4=_DeeNTSystem_TryGetFilenameOfHandle@4
 	DeeNTSystem_TryGetHandle@8=_DeeNTSystem_TryGetHandle@8
 	DeeNTSystem_VThrowErrorf@16=_DeeNTSystem_VThrowErrorf@16
@@ -794,6 +794,7 @@ EXPORTS
 	DeeUnixSystem_PrintlinkString@8=_DeeUnixSystem_PrintlinkString@8
 	DeeUnixSystem_Readlink@4=_DeeUnixSystem_Readlink@4
 	DeeUnixSystem_ReadlinkString@4=_DeeUnixSystem_ReadlinkString@4
+	DeeUnixSystem_VThrowErrorf@16=_DeeUnixSystem_VThrowErrorf@16
 	Dee_AtExit@8=_Dee_AtExit@8
 	Dee_Atoi16@16=_Dee_Atoi16@16
 	Dee_Atoi32@16=_Dee_Atoi32@16

@@ -31,6 +31,7 @@
 #include <deemon/bytes.h>
 #include <deemon/ctypes-abi.h>
 #include <deemon/dex.h>
+#include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
