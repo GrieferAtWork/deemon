@@ -335,7 +335,7 @@ PRIVATE struct type_member im_members[] = {
 	                      "->\n"
 	                      "The object to which @this :InstanceMethod is bound"),
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(InstanceMethod, im_func),
-	                      "->?D\n"
+	                      "->?DCallable\n"
 	                      "The unbound class-function that is being bound by this :InstanceMethod"),
 	TYPE_MEMBER_END
 };
@@ -385,8 +385,8 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */im_getsets,
-	/* .tp_members       = */im_members,
+	/* .tp_getsets       = */ im_getsets,
+	/* .tp_members       = */ im_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,

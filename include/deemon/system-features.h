@@ -87,9 +87,10 @@ function header_nostdinc(name, default_requirements = "") {
 	default_requirements = addparen(default_requirements);
 	if (default_requirements in ["", "0"]) {
 		default_requirements = "__has_include(<{}>)".format({ name });
+	} else if (default_requirements != "1") {
+		default_requirements = "__has_include(<{}>) || (defined(__NO_has_include) && {})".format({ name, default_requirements });
 	} else {
-		if (default_requirements != "1")
-			default_requirements = "__has_include(<{}>) || (defined(__NO_has_include) && {})".format({ name, default_requirements });
+		default_requirements = "defined(__NO_has_include) || __has_include(<{}>)".format({ name });
 	}
 	local featnam = header_featnam(name);
 	feature(featnam, default_requirements);
@@ -191,7 +192,7 @@ header("dlfcn.h", unix);
 
 header_nostdinc("float.h", stdc);
 header_nostdinc("limits.h", stdc);
-header_nostdinc("link.h", stdc);
+header_nostdinc("link.h");
 
 include_known_headers();
 
@@ -874,13 +875,15 @@ constant("HW_NCPU");
 
 #ifdef CONFIG_NO_STDIO_H
 #undef CONFIG_HAVE_STDIO_H
-#else
+#elif !defined(CONFIG_HAVE_STDIO_H) && \
+      (defined(__NO_has_include) || __has_include(<stdio.h>))
 #define CONFIG_HAVE_STDIO_H 1
 #endif
 
 #ifdef CONFIG_NO_STDLIB_H
 #undef CONFIG_HAVE_STDLIB_H
-#else
+#elif !defined(CONFIG_HAVE_STDLIB_H) && \
+      (defined(__NO_has_include) || __has_include(<stdlib.h>))
 #define CONFIG_HAVE_STDLIB_H 1
 #endif
 
@@ -1012,19 +1015,22 @@ constant("HW_NCPU");
 
 #ifdef CONFIG_NO_CTYPE_H
 #undef CONFIG_HAVE_CTYPE_H
-#else
+#elif !defined(CONFIG_HAVE_CTYPE_H) && \
+      (defined(__NO_has_include) || __has_include(<ctype.h>))
 #define CONFIG_HAVE_CTYPE_H 1
 #endif
 
 #ifdef CONFIG_NO_STRING_H
 #undef CONFIG_HAVE_STRING_H
-#else
+#elif !defined(CONFIG_HAVE_STRING_H) && \
+      (defined(__NO_has_include) || __has_include(<string.h>))
 #define CONFIG_HAVE_STRING_H 1
 #endif
 
 #ifdef CONFIG_NO_WCHAR_H
 #undef CONFIG_HAVE_WCHAR_H
-#else
+#elif !defined(CONFIG_HAVE_WCHAR_H) && \
+      (defined(__NO_has_include) || __has_include(<wchar.h>))
 #define CONFIG_HAVE_WCHAR_H 1
 #endif
 
@@ -1039,19 +1045,22 @@ constant("HW_NCPU");
 
 #ifdef CONFIG_NO_FLOAT_H
 #undef CONFIG_HAVE_FLOAT_H
-#else
+#elif !defined(CONFIG_HAVE_FLOAT_H) && \
+      (defined(__NO_has_include) || __has_include(<float.h>))
 #define CONFIG_HAVE_FLOAT_H 1
 #endif
 
 #ifdef CONFIG_NO_LIMITS_H
 #undef CONFIG_HAVE_LIMITS_H
-#else
+#elif !defined(CONFIG_HAVE_LIMITS_H) && \
+      (defined(__NO_has_include) || __has_include(<limits.h>))
 #define CONFIG_HAVE_LIMITS_H 1
 #endif
 
 #ifdef CONFIG_NO_LINK_H
 #undef CONFIG_HAVE_LINK_H
-#else
+#elif !defined(CONFIG_HAVE_LINK_H) && \
+      (__has_include(<link.h>))
 #define CONFIG_HAVE_LINK_H 1
 #endif
 

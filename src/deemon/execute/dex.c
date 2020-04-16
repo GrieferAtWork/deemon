@@ -32,8 +32,9 @@
 #include <deemon/file.h>
 #include <deemon/gc.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#include <deemon/system.h>          /* DeeSystem_Dl* */
 #include <deemon/tuple.h>
-#include <deemon/system.h> /* DeeSystem_Dl* */
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>

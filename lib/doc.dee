@@ -71,7 +71,7 @@ local function decode_text(text: string): string {
 	return text;
 }
 
-@@Search for a given @ob within the export table of @mod, returning its name or :none if not found
+@@Search for a given @ob within the export table of @mod, returning its name or @none if not found
 local function lookup_object_in_module(mod: Module, ob: Object): string | none {
 	/* Search the export table of this module! */
 	for (local name, obj: Module.__exports__(mod)) {
@@ -82,9 +82,9 @@ local function lookup_object_in_module(mod: Module, ob: Object): string | none {
 }
 
 @@Try to determine the declaring module of a given type and return
-@@a string in the form of $"?E<MODULE>:<NAME>" if this applies.
+@@a string in the form of @"?E<MODULE>:<NAME>" if this applies.
 @@Otherwise, when the module could not be determined, return a
-@@string in the form of $"?U<NAME>"
+@@string in the form of @"?U<NAME>"
 local function encode_type(tp: deemon.Type): string {
 	if (tp === deemon.Object)
 		return "?O";
@@ -103,8 +103,8 @@ local function encode_type(tp: deemon.Type): string {
 	});
 }
 
-@@Given a Doc-path in the form of $"<MODULE>/<ITEM>/<ATTR>/...", convert
-@@that path into the form of $"?A<ATTR>?A<ATTR>?E<MODULE>:<ITEM>"
+@@Given a Doc-path in the form of @"<MODULE>/<ITEM>/<ATTR>/...", convert
+@@that path into the form of @"?A<ATTR>?A<ATTR>?E<MODULE>:<ITEM>"
 local function encode_type_from_path(path: string): string {
 	local a, none, b = path.strip("/").rpartition("/")...;
 	if (!b)
@@ -123,7 +123,7 @@ local function encode_type_from_path(path: string): string {
 
 
 @@Encode an arbitrary object expression @ob as a function default argument
-@@If the given @ob cannot be encoded as such, return :none instead
+@@If the given @ob cannot be encoded as such, return @none instead
 local function encode_expr(ob: Object): string | none {
 	if (ob is int || ob is float)
 		return "!" + ob;
@@ -189,7 +189,7 @@ local function is_backslash_at(text: string, pos: int): bool {
 }
 
 @@Try to find @tofind in @text, but ensure that it isn't prefixed by an unmatched backslash
-@@If @tofind could not be found, return ${-1} instead.
+@@If @tofind could not be found, return @-1 instead.
 local function find_nonescaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
 		local result = text.find(tofind, start, end);
@@ -205,7 +205,7 @@ local function find_nonescaped(text: string, tofind: string, start: int = 0, end
 	return -1;
 }
 
-@@Similar to :find_nonescaped, but search from the right
+@@Similar to @find_nonescaped, but search from the right
 local function rfind_nonescaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
 		local result = text.rfind(tofind, start, end);
@@ -355,11 +355,11 @@ local operator_sorting_weights: {string: int} = {
 
 
 @@Return the real name of a given operator name @name
-@@This function translates names such as "#" to "size"
+@@This function translates names such as @"#" to @"size"
 @@When the real operator cannot be unambiguosly deduced without
-@@known the associated argument count, return :none, in which case
+@@known the associated argument count, return @none, in which case
 @@the caller must determine the argument count and re-attempt the
-@@call while passing @argc as a value other than :none.
+@@call while passing @argc as a value other than @none.
 local function operator_realname(name: string, argc: int | none = none): string | none {
 	local result = operator_names.get(name, name);
 	if (result is none) {
@@ -378,8 +378,8 @@ local function operator_realname(name: string, argc: int | none = none): string 
 }
 
 @@Returns the Doc-like path for a given fully qualified type
-@@If no such path exists, return :none instead
-@@NOTE: The returned path includes a leading $"/"
+@@If no such path exists, return @none instead
+@@NOTE: The returned path includes a leading @"/"
 local function get_qualified_typepath(docnode: WeakRef with Doc, qual: string): string | none {
 	if (#qual >= 2) switch (qual[1]) {
 	case "G": {
@@ -505,7 +505,7 @@ local function qualify_typeref_string(docnode: WeakRef with Doc, s: string): str
 }
 
 @@Return the type associated with a given fully qualified path
-@@If the type could not be accessed, return :none or throw an
+@@If the type could not be accessed, return @none or throw an
 @@exception.
 local function get_type_from_qualpath(docnode: WeakRef with Doc, qual: string): deemon.Type | none {
 	if (#qual < 2)
@@ -586,7 +586,7 @@ class TypeRef: WeakRefAble {
 	}
 
 	@@The actual type object represented by @this TypeRef,
-	@@or :none if that type is unreachable or unknown
+	@@or @none if that type is unreachable or unknown
 	public final property typ: deemon.Type | none = {
 		get(): deemon.Type | none {
 			if (m_typ !is bound) {
@@ -603,7 +603,7 @@ class TypeRef: WeakRefAble {
 
 
 	@@Returns the Doc path associated with the type referenced by @this
-	@@If no such path exists, return :none instead
+	@@If no such path exists, return @none instead
 	@@NOTE: The returned path includes a leading $"/"
 	public final property path: string | none = {
 		get(): string | none {
@@ -673,10 +673,12 @@ class TypeRef: WeakRefAble {
 			local modname = decode_name(qual.substr(2, modend));
 			local modexp = decode_name(qual.substr(modend + 1));
 			local mymod = docnode.lock(none).module;
-			if (mymod !is none && modname == Module.__name__(mymod))
-				return modexp;
-			if (modname == "deemon" && modexp !in Module.__exports__(mymod))
-				return modexp;
+			if (mymod !is none) {
+				if (modname == Module.__name__(mymod))
+					return modexp;
+				if (modname == "deemon" && modexp !in Module.__exports__(mymod))
+					return modexp;
+			}
 			return "{}.{}".format({ modname, modexp });
 		}	break;
 		case "U":
@@ -963,7 +965,7 @@ class TypeExpr: WeakRefAble {
 		return "TypeExpr({!r}, {!r})".format({ docdecl.lock(none), docstring });
 	}
 
-	@@Returns true if @this Type expression referrs to :none
+	@@Returns true if @this Type expression referrs to @none
 	public final property isnone: bool = {
 		get(): bool {
 			if (m_docstring is string)
@@ -1269,7 +1271,7 @@ check_elem:
 class Expression: WeakRefAble {
 
 	@@The raw documentation string for this expression
-	@@Example: $"!Edeemon:none"
+	@@Example: @"!Edeemon:none"
 	public final property docstring: string = {
 		get(): string {
 			if (m_docstring === false)
@@ -1452,8 +1454,8 @@ done:
 		}
 	}
 
-	@@Initialize #m_cache as (module_name: string | module | none, module_attr: string | none)
-	@@When `module_name' is set to ".", referr to the current module.
+	@@Initialize @m_cache as @(module_name: string | module | none, module_attr: string | none)
+	@@When @module_name is set to @".", referr to the current module.
 	private Edecode() {
 		switch (m_docstring[1]) {
 		case "D":
@@ -1483,7 +1485,7 @@ done:
 	}
 
 	@@Returns the doc-path for the externally referenced
-	@@object, or :none if that path is unavailable.
+	@@object, or @none if that path is unavailable.
 	public final property Epath: string | none = {
 		get(): string | none {
 			local modnam = Emodulename;
@@ -1497,7 +1499,7 @@ done:
 	}
 
 	@@Return the doc node for the externally referenced
-	@@object, or :none if that object cannot be traced.
+	@@object, or @none if that object cannot be traced.
 	public final property Enode: Doc | none = {
 		get(): Doc | none {
 			local mod = Emodule;
@@ -1541,7 +1543,7 @@ done:
 	}
 
 	@@The name of the attribute that is being imported from the #Emodule
-	@@If the external reference applies directly to a module, evaluate to :none
+	@@If the external reference applies directly to a module, evaluate to @none
 	public final property Emoduleattr: string | none = {
 		get(): string {
 			if (m_cache !is bound)
@@ -1949,7 +1951,7 @@ class Parameter: WeakRefAble {
 	}
 
 	@@The <TYPE>-encoded typing of @this Parameter
-	@@When unspecified, evaluates to :none instead
+	@@When unspecified, evaluates to @none instead
 	public final property typstring: string | none = {
 		get(): string | none {
 			if (m_typstring !is bound)
@@ -1978,7 +1980,7 @@ class Parameter: WeakRefAble {
 	}
 
 	@@The <EXPR>-encoded default value of @this Parameter
-	@@When unspecified, evaluates to :none instead
+	@@When unspecified, evaluates to @none instead
 	public final property defstring: string | none = {
 		get(): string | none {
 			if (m_defstring !is bound)
@@ -1988,7 +1990,7 @@ class Parameter: WeakRefAble {
 	}
 
 	@@A descriptor for the default value of @this parameter
-	@@When not given, default to :none
+	@@When not given, default to @none
 	public final property defexpr: Expression | none = {
 		get(): Expression | none {
 			if (m_defexpr !is bound) {
@@ -2085,7 +2087,7 @@ done:
 class Declaration: WeakRefAble {
 
 	@@The raw documentation string for this declaration
-	@@Example: $"(x:?Dint)->?Dint"
+	@@Example: @"(x:?Dint)->?Dint"
 	public final member docstring: string;
 
 	@@The Doc section containing @this declaration
@@ -2195,7 +2197,7 @@ class Declaration: WeakRefAble {
 
 	@@Returns the (paren-stripped) string associated with the argument List
 	@@portion of @this Declaration. - If the declaration doesn't include an
-	@@explicit argument List, :none is returned instead.
+	@@explicit argument List, @none is returned instead.
 	public final property parstring: string | none = {
 		get(): string | none {
 			if (m_parstring !is bound)
@@ -2206,7 +2208,7 @@ class Declaration: WeakRefAble {
 
 	@@Returns the name of the declaration (as used to describe the name
 	@@of an operator when encountered inside of a type-expression)
-	@@If no such name has been defined, return :none instead.
+	@@If no such name has been defined, return @none instead.
 	public final property namstring: string | none = {
 		get(): string | none {
 			if (m_namstring !is bound)
@@ -2282,8 +2284,8 @@ class Declaration: WeakRefAble {
 
 	@@Returns the return expression string (as used to describe the typing
 	@@of a member-like declaration, or the return type of a function-like one)
-	@@If no type expression has been defined, return :none instead.
-	@@Note when this evaluates to an empty string, `deemon.Object' is returned.
+	@@If no type expression has been defined, return @none instead.
+	@@Note when this evaluates to an empty string, @\"deemon.Object\" is returned.
 	public final property retstring: string | none = {
 		get(): string | none {
 			if (m_retstring !is bound)
@@ -2292,11 +2294,11 @@ class Declaration: WeakRefAble {
 		}
 	}
 
-	@@Returns :true if the return type of @this declaration is always :none
+	@@Returns :true if the return type of @this declaration is always @none
 	public final property returnsnone: bool = {
 		get(): bool {
 			local retstr = m_retstring;
-			return retstr is none || retstr in ["?N", "?Dnone", "?Edeemon:none"];
+			return retstr is none || retstr in ["?N", "?Dnone", "?Edeemon@none"];
 		}
 	}
 
@@ -2730,7 +2732,7 @@ local function generate_function_params(fp: File, fun: deemon.Function) {
 class Doc: WeakRefAble {
 
 	@@A universally, unique path that can be used to address this Doc item
-	@@NOTE: If the path cannot be determined, return :none instead
+	@@NOTE: If the path cannot be determined, return @none instead
 	@@NOTE: The returned path includes a leading $"/"
 	public final property path: string | none = {
 		get(): string {
@@ -2832,7 +2834,7 @@ class Doc: WeakRefAble {
 
 	@@Similar to #path, but return in a form akin to $"deemon.string.operator =="
 	@@Additionally, this name representation still provides good-looking results
-	@@when #path would evaluate to :none
+	@@when #path would evaluate to @none
 	public final property prettypath: string = {
 		get(): string {
 			local result = path;
@@ -2883,7 +2885,7 @@ class Doc: WeakRefAble {
 	}
 	private member m_attr: Attribute | none;
 
-	@@The parent doc, or :none when unknown or @this
+	@@The parent doc, or @none when unknown or @this
 	@@Doc node is already a top-level module node
 	public property parent: Doc | none = {
 		get(): Doc | none {
@@ -3231,7 +3233,7 @@ set_is_type:
 	public final member istype: bool = false;
 
 	@@Evaluates to :true if the object is a type, but was accessed via a singleton
-	@@An example of this is :deemon.gc or :none, which are both singleton objects
+	@@An example of this is :deemon.gc or @none, which are both singleton objects
 	@@that, when accessed via Doc, should display the documentation of their
 	@@respective type, rather than what little text may be available for the
 	@@single instance itself.
@@ -3285,7 +3287,7 @@ set_is_type:
 	}
 
 	@@Returns the module-node (i.e the path-base-node) of this node
-	@@If the module could not be determined, return :none instead
+	@@If the module could not be determined, return @none instead
 	public final property modulenode: Doc | none = {
 		get() {
 			local x = this;
@@ -3313,7 +3315,7 @@ set_is_type:
 	}
 
 	@@Returns the module (i.e the path-base) of this node
-	@@If the module could not be determined, return :none instead
+	@@If the module could not be determined, return @none instead
 	public final property module: Module | none = {
 		get() {
 			local x = this;
@@ -3357,7 +3359,7 @@ set_is_type:
 		return name < other.name;
 	}
 
-	@@Returns the type of the base class of @this node, or :none if @this node isn't a type, or if that type doesn't have a base.
+	@@Returns the type of the base class of @this node, or @none if @this node isn't a type, or if that type doesn't have a base.
 	public final property objectbase: deemon.Type | none = {
 		get(): deemon.Type | none {
 			if (object !is bound ||
@@ -3393,7 +3395,7 @@ set_is_type:
 
 	@@Return a function-like declaration found in the documenation
 	@@of @this Doc node that matches the given argument List.
-	@@If no such declaration could be found, return :none instead.
+	@@If no such declaration could be found, return @none instead.
 	public final declfor(args...: Object): Declaration | none {
 		for (local d: decls)
 			if (d.isaccepted(args...))
@@ -3462,7 +3464,7 @@ set_is_type:
 			File.Writer resdoc;
 			generate_function_params(resdoc, object);
 			if (object.__code__.isconstructor) {
-				/* Constructors always return :none */
+				/* Constructors always return @none */
 			} else {
 				resdoc << "->";
 			}
