@@ -22,6 +22,7 @@
 
 #include "api.h"
 
+#include <hybrid/__byteorder.h>
 #include <hybrid/__atomic.h>
 #include <hybrid/typecore.h>
 #include <hybrid/int128.h>
@@ -266,10 +267,10 @@ struct Dee_object {
 
 
 #ifndef NDEBUG
-#define DeeObject_DoCheck(ob)                             \
-	(((DeeObject *)Dee_REQUIRES_OBJECT(ob))->ob_refcnt && \
-	 ((DeeObject *)(ob))->ob_type &&                      \
-	 ((DeeObject *)(ob))->ob_type->ob_refcnt)
+#define DeeObject_DoCheck(ob) \
+	((ob)->ob_refcnt &&       \
+	 (ob)->ob_type &&         \
+	 ((DeeObject *)(ob)->ob_type)->ob_refcnt)
 #define DeeObject_Check(ob) \
 	((ob) && DeeObject_DoCheck(ob))
 #define Dee_ASSERT_OBJECT(ob)                      (DeeObject_Check(ob) || (DeeAssert_BadObject(__FILE__, __LINE__, (DeeObject *)(ob)), BREAKPOINT(), 0))
@@ -287,8 +288,8 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeOpt(char const *file, int li
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExact(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, int line, DeeObject const *ob, DeeTypeObject const *wanted_type);
 #else /* !NDEBUG */
-#define DeeObject_DoCheck(ob)                       true
-#define DeeObject_Check(ob)                         true
+#define DeeObject_DoCheck(ob)                      true
+#define DeeObject_Check(ob)                        true
 #define Dee_ASSERT_OBJECT(ob)                      (void)0
 #define Dee_ASSERT_OBJECT_OPT(ob)                  (void)0
 #define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)0
@@ -312,7 +313,7 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(char const *file, i
 
 
 
-
+/* Prototype for callbacks to-be invoked when a weakref'd object gets destroyed. */
 typedef NONNULL((1)) void (DCALL *Dee_weakref_callback_t)(struct Dee_weakref *__restrict self);
 
 
@@ -357,7 +358,7 @@ struct Dee_weakref {
  * >>
  * >> PRIVATE void DCALL my_callback(struct Dee_weakref *__restrict self) {
  * >>     DREF MyObject *me;
- * >>     me = COMPILER_CONTAINER_OF(self,MyObject,o_ref);
+ * >>     me = COMPILER_CONTAINER_OF(self, MyObject, o_ref);
  * >>     if (!Dee_IncrefIfNotZero(me)) {
  * >>         // Race condition: the weakref controller died while
  * >>         //                 the weakref itself is also dying.
@@ -366,14 +367,14 @@ struct Dee_weakref {
  * >>         DREF MyObject *result;
  * >>         DeeWeakref_UnlockCallback(self);
  * >>         // At this point, we've unlocked the weakref after safely acquiring
- * >>         // a reference to the controlling object, meaning we're not safe to
+ * >>         // a reference to the controlling object, meaning we're now safe to
  * >>         // execute arbitrary code, with the exception that we can't propagate
  * >>         // exceptions.
- * >>         result = DeeObject_Call(me->o_fun,0,NULL);
+ * >>         result = DeeObject_Call(me->o_fun, 0, NULL);
  * >>         Dee_Decref(me);
  * >>         if unlikely(!result) {
  * >>             DeeError_Print("Unhandled exception in weakref callback",
- * >>                             ERROR_PRINT_DOHANDLE);
+ * >>                            ERROR_PRINT_DOHANDLE);
  * >>         } else {
  * >>             Dee_Decref(result);
  * >>         }
@@ -593,17 +594,17 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict 
 
 
 #ifdef __INTELLISENSE__
-#define Dee_Incref_untraced(x)             (&(x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)        (((x)->ob_refcnt += (n)))
-#define Dee_Decref_untraced(x)             (&(x)->ob_refcnt)
-#define Dee_Decref_likely_untraced(x)      (&(x)->ob_refcnt)
-#define Dee_Decref_unlikely_untraced(x)    (&(x)->ob_refcnt)
-#define Dee_IncrefIfNotZero_untraced(x)    (Dee_Incref(x), true)
-#define Dee_DecrefDokill_untraced(x)        Dee_Decref(x)
-#define Dee_DecrefNokill_untraced(x)        Dee_Decref(x)
-#define Dee_DecrefIfOne_untraced(x)        (Dee_Decref(x), true)
-#define Dee_DecrefIfNotOne_untraced(x)     (Dee_Decref(x), true)
-#define Dee_DecrefWasOk_untraced(x)        (Dee_Decref(x), true)
+#define Dee_Incref_untraced(x)          (&(x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     (((x)->ob_refcnt += (n)))
+#define Dee_Decref_untraced(x)          (&(x)->ob_refcnt)
+#define Dee_Decref_likely_untraced(x)   (&(x)->ob_refcnt)
+#define Dee_Decref_unlikely_untraced(x) (&(x)->ob_refcnt)
+#define Dee_IncrefIfNotZero_untraced(x) (Dee_Incref(x), true)
+#define Dee_DecrefDokill_untraced(x)     Dee_Decref(x)
+#define Dee_DecrefNokill_untraced(x)     Dee_Decref(x)
+#define Dee_DecrefIfOne_untraced(x)     (Dee_Decref(x), true)
+#define Dee_DecrefIfNotOne_untraced(x)  (Dee_Decref(x), true)
+#define Dee_DecrefWasOk_untraced(x)     (Dee_Decref(x), true)
 #else /* __INTELLISENSE__ */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadIncref(DeeObject *__restrict ob, char const *file, int line);
@@ -617,27 +618,27 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, cha
 #define _DeeRefcnt_AddFetch(x, n) ((x) += (n))
 #define _DeeRefcnt_FetchAdd(x, n) (((x) += (n))-(n))
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#define Dee_Incref_untraced(x)                 ((x)->ob_refcnt++ || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Incref_n_untraced(x, n)            (_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Decref_untraced(x)                 ((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)          (unlikely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x)        (likely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_DecrefDokill_untraced(x)           (--(x)->ob_refcnt, DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)           ((x)->ob_refcnt-- > 1 || (DeeFatal_BadDecref((DeeObject *)(x)), false))
-#define Dee_DecrefWasOk_untraced(x)            ((x)->ob_refcnt-- > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_Incref_untraced(x)          ((x)->ob_refcnt++ || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
+#define Dee_Incref_n_untraced(x, n)     (_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
+#define Dee_Decref_untraced(x)          ((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_likely_untraced(x)   (unlikely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_unlikely_untraced(x) (likely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_DecrefDokill_untraced(x)    (--(x)->ob_refcnt, DeeObject_Destroy((DeeObject *)(x)))
+#define Dee_DecrefNokill_untraced(x)    ((x)->ob_refcnt-- > 1 || (DeeFatal_BadDecref((DeeObject *)(x)), false))
+#define Dee_DecrefWasOk_untraced(x)     ((x)->ob_refcnt-- > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-#define Dee_Incref_untraced(x)                 (++(x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)            ((x)->ob_refcnt+=(n))
-#define Dee_Decref_untraced(x)                 (--(x)->ob_refcnt || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)          (unlikely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x)        (likely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_DecrefDokill_untraced(x)           (DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)           (--(x)->ob_refcnt)
-#define Dee_DecrefWasOk_untraced(x)            (--(x)->ob_refcnt ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
+#define Dee_Incref_untraced(x)          (++(x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     ((x)->ob_refcnt+=(n))
+#define Dee_Decref_untraced(x)          (--(x)->ob_refcnt || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_likely_untraced(x)   (unlikely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Decref_unlikely_untraced(x) (likely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_DecrefDokill_untraced(x)    (DeeObject_Destroy((DeeObject *)(x)))
+#define Dee_DecrefNokill_untraced(x)    (--(x)->ob_refcnt)
+#define Dee_DecrefWasOk_untraced(x)     (--(x)->ob_refcnt ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
-#define Dee_DecrefIfOne_untraced(x)            ((x)->ob_refcnt == 1 ? ((x)->ob_refcnt = 0, DeeObject_Destroy((DeeObject *)(x)), true) : false)
-#define Dee_DecrefIfNotOne_untraced(x)         ((x)->ob_refcnt > 1 ? (--(x)->ob_refcnt, true) : false)
-#define Dee_IncrefIfNotZero_untraced(x)        ((x)->ob_refcnt ? (++(x)->ob_refcnt, true) : false)
+#define Dee_DecrefIfOne_untraced(x)     ((x)->ob_refcnt == 1 ? ((x)->ob_refcnt = 0, DeeObject_Destroy((DeeObject *)(x)), true) : false)
+#define Dee_DecrefIfNotOne_untraced(x)  ((x)->ob_refcnt > 1 ? (--(x)->ob_refcnt, true) : false)
+#define Dee_IncrefIfNotZero_untraced(x) ((x)->ob_refcnt ? (++(x)->ob_refcnt, true) : false)
 #else /* CONFIG_NO_THREADS */
 #if defined(_MSC_VER) && defined(CONFIG_HOST_WINDOWS)
 /* NOTE: The atomic functions from hybrid would work for this case just as well,  but
@@ -645,22 +646,22 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, cha
  *       debug information when the resulting code isn't getting optimized.
  *       Therefor,  we try to bypass them here to speed up compile-time and ease debugging. */
 #if __SIZEOF_POINTER__ == 4
-#   define _DeeRefcnt_FetchInc(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x))-1)
-#   define _DeeRefcnt_FetchDec(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x))+1)
-#   define _DeeRefcnt_IncFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)))
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x))-1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x))+1)
+#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)))
+#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)))
 #elif __SIZEOF_POINTER__ == 8
-#   define _DeeRefcnt_FetchInc(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x))-1)
-#   define _DeeRefcnt_FetchDec(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x))+1)
-#   define _DeeRefcnt_IncFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)))
-#   define _DeeRefcnt_DecFetch(x)   ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)))
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x))-1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x))+1)
+#   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)))
+#   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)))
 #endif
 #endif /* _MSC_VER && CONFIG_HOST_WINDOWS */
 #ifndef _DeeRefcnt_FetchInc
-#define _DeeRefcnt_FetchInc(x)   __hybrid_atomic_fetchinc(x, __ATOMIC_SEQ_CST)
-#define _DeeRefcnt_FetchDec(x)   __hybrid_atomic_fetchdec(x, __ATOMIC_SEQ_CST)
-#define _DeeRefcnt_IncFetch(x)   __hybrid_atomic_incfetch(x, __ATOMIC_SEQ_CST)
-#define _DeeRefcnt_DecFetch(x)   __hybrid_atomic_decfetch(x, __ATOMIC_SEQ_CST)
+#define _DeeRefcnt_FetchInc(x) __hybrid_atomic_fetchinc(x, __ATOMIC_SEQ_CST)
+#define _DeeRefcnt_FetchDec(x) __hybrid_atomic_fetchdec(x, __ATOMIC_SEQ_CST)
+#define _DeeRefcnt_IncFetch(x) __hybrid_atomic_incfetch(x, __ATOMIC_SEQ_CST)
+#define _DeeRefcnt_DecFetch(x) __hybrid_atomic_decfetch(x, __ATOMIC_SEQ_CST)
 #endif /* !_DeeRefcnt_FetchInc */
 #ifndef _DeeRefcnt_FetchAdd
 #define _DeeRefcnt_FetchAdd(x, n) __hybrid_atomic_fetchadd(x, n, __ATOMIC_SEQ_CST)
@@ -762,17 +763,17 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefIfNotOne_traced(DeeObject *__r
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *file, int line);
 #define Dee_Decref_likely_traced(ob, file, line)   Dee_Decref_traced(ob, file, line)
 #define Dee_Decref_unlikely_traced(ob, file, line) Dee_Decref_traced(ob, file, line)
-#define Dee_Incref(x)                (Dee_Incref_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_Incref_n(x, n)           (Dee_Incref_n_traced((DeeObject *)(x), n, __FILE__, __LINE__), 0)
-#define Dee_IncrefIfNotZero(x)        Dee_IncrefIfNotZero_traced((DeeObject *)(x), __FILE__, __LINE__)
-#define Dee_Decref(x)                (Dee_Decref_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_Decref_likely(x)         (Dee_Decref_likely_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_Decref_unlikely(x)       (Dee_Decref_unlikely_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_DecrefDokill(x)          (Dee_DecrefDokill_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_DecrefNokill(x)          (Dee_DecrefNokill_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_DecrefIfOne(x)            Dee_DecrefIfOne_traced((DeeObject *)(x), __FILE__, __LINE__)
-#define Dee_DecrefIfNotOne(x)         Dee_DecrefIfNotOne_traced((DeeObject *)(x), __FILE__, __LINE__)
-#define Dee_DecrefWasOk(x)            Dee_DecrefWasOk_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_Incref(x)          (Dee_Incref_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
+#define Dee_Incref_n(x, n)     (Dee_Incref_n_traced((DeeObject *)(x), n, __FILE__, __LINE__), 0)
+#define Dee_IncrefIfNotZero(x)  Dee_IncrefIfNotZero_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_Decref(x)          (Dee_Decref_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
+#define Dee_Decref_likely(x)   (Dee_Decref_likely_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
+#define Dee_Decref_unlikely(x) (Dee_Decref_unlikely_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
+#define Dee_DecrefDokill(x)    (Dee_DecrefDokill_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
+#define Dee_DecrefNokill(x)    (Dee_DecrefNokill_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
+#define Dee_DecrefIfOne(x)      Dee_DecrefIfOne_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_DecrefIfNotOne(x)   Dee_DecrefIfNotOne_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_DecrefWasOk(x)      Dee_DecrefWasOk_traced((DeeObject *)(x), __FILE__, __LINE__)
 #else /* CONFIG_TRACE_REFCHANGES */
 #define Dee_Incref_traced(ob, file, line)          Dee_Incref_untraced(x)
 #define Dee_Incref_n_traced(ob, n, file, line)     Dee_Incref_n_untraced(x, n)
@@ -820,11 +821,11 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_XClear_unlikely(x)  (!(x) || Dee_Clear_unlikely(x))
 
 /* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
-#define Dee_return_reference(ob)                                          \
-	do {                                                                  \
-		DeeObject *const _result_ = (DeeObject *)Dee_REQUIRES_OBJECT(ob); \
-		Dee_Incref(_result_);                                             \
-		return _result_;                                                  \
+#define Dee_return_reference(ob)                                              \
+	do {                                                                      \
+		DeeObject *const _drr_result_ = (DeeObject *)Dee_REQUIRES_OBJECT(ob); \
+		Dee_Incref(_drr_result_);                                             \
+		return _drr_result_;                                                  \
 	} __WHILE0
 
 /* NOTE: `(Dee_)return_reference_()' may evaluate `ob' multiple times */
@@ -1399,11 +1400,27 @@ struct Dee_type_getset {
 #define Dee_STRUCT_CSTR_OPT    0x8011 /* `[0..1] char *' (Accessible as `DeeStringObject'; return `none' when `NULL') */
 #define Dee_STRUCT_CSTR_EMPTY  0x8012 /* `[0..1] char *' (Accessible as `DeeStringObject'; return an empty string when `NULL') */
 #define Dee_STRUCT_STRING      0x8013 /* `char[*]' (Accessible as `DeeStringObject') */
-#define Dee_STRUCT_BOOL        0x0014 /* `bool' (Accessible as `DeeBoolObject') */
-#define Dee_STRUCT_CHAR        0x0015 /* `char' (Accessible as `DeeStringObject') */
-#define Dee_STRUCT_FLOAT       0x0020 /* `float' */
-#define Dee_STRUCT_DOUBLE      0x0021 /* `double' */
-#define Dee_STRUCT_LDOUBLE     0x0022 /* `long double' */
+#define Dee_STRUCT_CHAR        0x0014 /* `char' (Accessible as `DeeStringObject') */
+#define Dee_STRUCT_BOOL8       0x0020 /* `uint8_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOL16      0x0021 /* `uint16_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOL32      0x0022 /* `uint32_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOL64      0x0023 /* `uint64_t' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT0    0x0030 /* `uint8_t & 0x01' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT1    0x0031 /* `uint8_t & 0x02' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT2    0x0032 /* `uint8_t & 0x04' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT3    0x0033 /* `uint8_t & 0x08' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT4    0x0034 /* `uint8_t & 0x10' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT5    0x0035 /* `uint8_t & 0x20' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT6    0x0036 /* `uint8_t & 0x40' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT7    0x0037 /* `uint8_t & 0x80' (Accessible as `DeeBoolObject') */
+#define Dee_STRUCT_BOOLBIT(mask)                                                   \
+	((mask) == 0x80 ? Dee_STRUCT_BOOLBIT7 : (mask) == 0x40 ? Dee_STRUCT_BOOLBIT6 : \
+	 (mask) == 0x20 ? Dee_STRUCT_BOOLBIT5 : (mask) == 0x10 ? Dee_STRUCT_BOOLBIT4 : \
+	 (mask) == 0x08 ? Dee_STRUCT_BOOLBIT3 : (mask) == 0x04 ? Dee_STRUCT_BOOLBIT2 : \
+	 (mask) == 0x02 ? Dee_STRUCT_BOOLBIT1 : Dee_STRUCT_BOOLBIT0)
+#define Dee_STRUCT_FLOAT       0x0040 /* `float' */
+#define Dee_STRUCT_DOUBLE      0x0041 /* `double' */
+#define Dee_STRUCT_LDOUBLE     0x0042 /* `long double' */
 #define Dee_STRUCT_VOID        Dee_STRUCT_NONE /* `void' */
 #define Dee_STRUCT_INT8        0x0800 /* `int8_t' */
 #define Dee_STRUCT_INT16       0x0801 /* `int16_t' */
@@ -1421,6 +1438,13 @@ struct Dee_type_getset {
 #define DEE_PRIVATE_STRUCT_INT(sizeof) DEE_PRIVATE_STRUCT_INT##sizeof
 #define Dee_STRUCT_INTEGER(sizeof) DEE_PRIVATE_STRUCT_INT(sizeof)
 
+#define DEE_PRIVATE_STRUCT_BOOL1 Dee_STRUCT_BOOL8
+#define DEE_PRIVATE_STRUCT_BOOL2 Dee_STRUCT_BOOL16
+#define DEE_PRIVATE_STRUCT_BOOL4 Dee_STRUCT_BOOL32
+#define DEE_PRIVATE_STRUCT_BOOL8 Dee_STRUCT_BOOL64
+#define DEE_PRIVATE_STRUCT_BOOL(sizeof) DEE_PRIVATE_STRUCT_BOOL##sizeof
+#define Dee_STRUCT_BOOL(sizeof) DEE_PRIVATE_STRUCT_BOOL(sizeof)
+
 #ifdef DEE_SOURCE
 #define STRUCT_NONE        Dee_STRUCT_NONE        /* Ignore offset and always return `none' (Useful for forward/backward no-op compatibility) */
 #define STRUCT_OBJECT      Dee_STRUCT_OBJECT      /* `[0..1] DREF DeeObject *' (raise `Error.AttributeError' if `NULL') */
@@ -1431,8 +1455,21 @@ struct Dee_type_getset {
 #define STRUCT_CSTR_OPT    Dee_STRUCT_CSTR_OPT    /* `[0..1] char *' (Accessible as `DeeStringObject'; return `none' when `NULL') */
 #define STRUCT_CSTR_EMPTY  Dee_STRUCT_CSTR_EMPTY  /* `[0..1] char *' (Accessible as `DeeStringObject'; return an empty string when `NULL') */
 #define STRUCT_STRING      Dee_STRUCT_STRING      /* `char[*]' (Accessible as `DeeStringObject') */
-#define STRUCT_BOOL        Dee_STRUCT_BOOL        /* `bool' (Accessible as `DeeBoolObject') */
 #define STRUCT_CHAR        Dee_STRUCT_CHAR        /* `char' (Accessible as `DeeStringObject') */
+#define STRUCT_BOOL8       Dee_STRUCT_BOOL8       /* `uint8_t' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOL16      Dee_STRUCT_BOOL16      /* `uint16_t' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOL32      Dee_STRUCT_BOOL32      /* `uint32_t' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOL64      Dee_STRUCT_BOOL64      /* `uint64_t' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT0    Dee_STRUCT_BOOLBIT0    /* `uint8_t & 0x01' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT1    Dee_STRUCT_BOOLBIT1    /* `uint8_t & 0x02' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT2    Dee_STRUCT_BOOLBIT2    /* `uint8_t & 0x04' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT3    Dee_STRUCT_BOOLBIT3    /* `uint8_t & 0x08' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT4    Dee_STRUCT_BOOLBIT4    /* `uint8_t & 0x10' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT5    Dee_STRUCT_BOOLBIT5    /* `uint8_t & 0x20' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT6    Dee_STRUCT_BOOLBIT6    /* `uint8_t & 0x40' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOLBIT7    Dee_STRUCT_BOOLBIT7    /* `uint8_t & 0x80' (Accessible as `DeeBoolObject') */
+#define STRUCT_BOOL        Dee_STRUCT_BOOL
+#define STRUCT_BOOLBIT     Dee_STRUCT_BOOLBIT
 #define STRUCT_FLOAT       Dee_STRUCT_FLOAT       /* `float' */
 #define STRUCT_DOUBLE      Dee_STRUCT_DOUBLE      /* `double' */
 #define STRUCT_LDOUBLE     Dee_STRUCT_LDOUBLE     /* `long double' */
@@ -1449,20 +1486,22 @@ struct Dee_type_getset {
 
 
 /* Helper macros for certain types. */
-#define STRUCT_INTPTR_T     Dee_STRUCT_INTEGER(__SIZEOF_POINTER__)
-#define STRUCT_UINTPTR_T   (Dee_STRUCT_UNSIGNED|Dee_STRUCT_INTEGER(__SIZEOF_POINTER__))
-#define STRUCT_SIZE_T      (Dee_STRUCT_UNSIGNED|Dee_STRUCT_INTEGER(__SIZEOF_SIZE_T__))
-#define STRUCT_SSIZE_T      Dee_STRUCT_INTEGER(__SIZEOF_SIZE_T__)
-#define STRUCT_INT          Dee_STRUCT_INTEGER(__SIZEOF_INT__)
-#define STRUCT_UINT        (Dee_STRUCT_UNSIGNED|Dee_STRUCT_INTEGER(__SIZEOF_INT__))
-#define STRUCT_INT8_T       Dee_STRUCT_INT8
-#define STRUCT_INT16_T      Dee_STRUCT_INT16
-#define STRUCT_INT32_T      Dee_STRUCT_INT32
-#define STRUCT_INT64_T      Dee_STRUCT_INT64
-#define STRUCT_UINT8_T     (Dee_STRUCT_UNSIGNED|Dee_STRUCT_INT8)
-#define STRUCT_UINT16_T    (Dee_STRUCT_UNSIGNED|Dee_STRUCT_INT16)
-#define STRUCT_UINT32_T    (Dee_STRUCT_UNSIGNED|Dee_STRUCT_INT32)
-#define STRUCT_UINT64_T    (Dee_STRUCT_UNSIGNED|Dee_STRUCT_INT64)
+#define STRUCT_CBOOL       Dee_STRUCT_BOOL(__SIZEOF_CHAR__)
+#define STRUCT_BOOLPTR     Dee_STRUCT_BOOL(__SIZEOF_POINTER__)
+#define STRUCT_INTPTR_T    Dee_STRUCT_INTEGER(__SIZEOF_POINTER__)
+#define STRUCT_UINTPTR_T   (Dee_STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(__SIZEOF_POINTER__))
+#define STRUCT_SIZE_T      (Dee_STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(__SIZEOF_SIZE_T__))
+#define STRUCT_SSIZE_T     Dee_STRUCT_INTEGER(__SIZEOF_SIZE_T__)
+#define STRUCT_INT         Dee_STRUCT_INTEGER(__SIZEOF_INT__)
+#define STRUCT_UINT        (Dee_STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(__SIZEOF_INT__))
+#define STRUCT_INT8_T      Dee_STRUCT_INT8
+#define STRUCT_INT16_T     Dee_STRUCT_INT16
+#define STRUCT_INT32_T     Dee_STRUCT_INT32
+#define STRUCT_INT64_T     Dee_STRUCT_INT64
+#define STRUCT_UINT8_T     (Dee_STRUCT_UNSIGNED | Dee_STRUCT_INT8)
+#define STRUCT_UINT16_T    (Dee_STRUCT_UNSIGNED | Dee_STRUCT_INT16)
+#define STRUCT_UINT32_T    (Dee_STRUCT_UNSIGNED | Dee_STRUCT_INT32)
+#define STRUCT_UINT64_T    (Dee_STRUCT_UNSIGNED | Dee_STRUCT_INT64)
 #endif /* DEE_SOURCE */
 
 
@@ -1496,14 +1535,121 @@ struct Dee_type_member {
 #define Dee_TYPE_MEMBER_FIELD(name, type, offset) Dee_TYPE_MEMBER_FIELD_DOC(name, type, offset, NULL)
 #define Dee_TYPE_MEMBER_CONST(name, value) Dee_TYPE_MEMBER_CONST_DOC(name, value, NULL)
 
+#ifdef UINT64_C
+#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)                                                    \
+	(((mask) == UINT8_C(0x01) || (mask) == UINT16_C(0x0100) ||                                    \
+	  (mask) == UINT32_C(0x010000) || (mask) == UINT32_C(0x01000000) ||                           \
+	  (mask) == UINT64_C(0x0100000000) || (mask) == UINT64_C(0x010000000000) ||                   \
+	  (mask) == UINT64_C(0x01000000000000) || (mask) == UINT64_C(0x0100000000000000))             \
+	 ? Dee_STRUCT_BOOLBIT0                                                                        \
+	 : ((mask) == UINT8_C(0x02) || (mask) == UINT16_C(0x0200) ||                                  \
+	    (mask) == UINT32_C(0x020000) || (mask) == UINT32_C(0x02000000) ||                         \
+	    (mask) == UINT64_C(0x0200000000) || (mask) == UINT64_C(0x020000000000) ||                 \
+	    (mask) == UINT64_C(0x02000000000000) || (mask) == UINT64_C(0x0200000000000000))           \
+	   ? Dee_STRUCT_BOOLBIT1                                                                      \
+	   : ((mask) == UINT8_C(0x04) || (mask) == UINT16_C(0x0400) ||                                \
+	      (mask) == UINT32_C(0x040000) || (mask) == UINT32_C(0x04000000) ||                       \
+	      (mask) == UINT64_C(0x0400000000) || (mask) == UINT64_C(0x040000000000) ||               \
+	      (mask) == UINT64_C(0x04000000000000) || (mask) == UINT64_C(0x0400000000000000))         \
+	     ? Dee_STRUCT_BOOLBIT2                                                                    \
+	     : ((mask) == UINT8_C(0x08) || (mask) == UINT16_C(0x0800) ||                              \
+	        (mask) == UINT32_C(0x080000) || (mask) == UINT32_C(0x08000000) ||                     \
+	        (mask) == UINT64_C(0x0800000000) || (mask) == UINT64_C(0x080000000000) ||             \
+	        (mask) == UINT64_C(0x08000000000000) || (mask) == UINT64_C(0x0800000000000000))       \
+	       ? Dee_STRUCT_BOOLBIT3                                                                  \
+	       : ((mask) == UINT8_C(0x10) || (mask) == UINT16_C(0x1000) ||                            \
+	          (mask) == UINT32_C(0x100000) || (mask) == UINT32_C(0x10000000) ||                   \
+	          (mask) == UINT64_C(0x1000000000) || (mask) == UINT64_C(0x100000000000) ||           \
+	          (mask) == UINT64_C(0x10000000000000) || (mask) == UINT64_C(0x1000000000000000))     \
+	         ? Dee_STRUCT_BOOLBIT4                                                                \
+	         : ((mask) == UINT8_C(0x20) || (mask) == UINT16_C(0x2000) ||                          \
+	            (mask) == UINT32_C(0x200000) || (mask) == UINT32_C(0x20000000) ||                 \
+	            (mask) == UINT64_C(0x2000000000) || (mask) == UINT64_C(0x200000000000) ||         \
+	            (mask) == UINT64_C(0x20000000000000) || (mask) == UINT64_C(0x2000000000000000))   \
+	           ? Dee_STRUCT_BOOLBIT5                                                              \
+	           : ((mask) == UINT8_C(0x40) || (mask) == UINT16_C(0x4000) ||                        \
+	              (mask) == UINT32_C(0x400000) || (mask) == UINT32_C(0x40000000) ||               \
+	              (mask) == UINT64_C(0x4000000000) || (mask) == UINT64_C(0x400000000000) ||       \
+	              (mask) == UINT64_C(0x40000000000000) || (mask) == UINT64_C(0x4000000000000000)) \
+	             ? Dee_STRUCT_BOOLBIT6                                                            \
+	             : Dee_STRUCT_BOOLBIT7)
+#define Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)    \
+	((mask)&UINT8_C(0xff)                          \
+	 ? 0                                           \
+	 : (mask)&UINT16_C(0xff00)                     \
+	   ? 1                                         \
+	   : (mask)&UINT32_C(0xff0000)                 \
+	     ? 2                                       \
+	     : (mask)&UINT32_C(0xff000000)             \
+	       ? 3                                     \
+	       : (mask)&UINT64_C(0xff00000000)         \
+	         ? 4                                   \
+	         : (mask)&UINT64_C(0xff0000000000)     \
+	           ? 5                                 \
+	           : (mask)&UINT64_C(0xff000000000000) \
+	             ? 6                               \
+	             : 7)
+#else /* UINT64_C */
+#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)                                    \
+	(((mask) == UINT8_C(0x01) || (mask) == UINT16_C(0x0100) ||                    \
+	  (mask) == UINT32_C(0x010000) || (mask) == UINT32_C(0x01000000))             \
+	 ? Dee_STRUCT_BOOLBIT0                                                        \
+	 : ((mask) == UINT8_C(0x02) || (mask) == UINT16_C(0x0200) ||                  \
+	    (mask) == UINT32_C(0x020000) || (mask) == UINT32_C(0x02000000))           \
+	   ? Dee_STRUCT_BOOLBIT1                                                      \
+	   : ((mask) == UINT8_C(0x04) || (mask) == UINT16_C(0x0400) ||                \
+	      (mask) == UINT32_C(0x040000) || (mask) == UINT32_C(0x04000000))         \
+	     ? Dee_STRUCT_BOOLBIT2                                                    \
+	     : ((mask) == UINT8_C(0x08) || (mask) == UINT16_C(0x0800) ||              \
+	        (mask) == UINT32_C(0x080000) || (mask) == UINT32_C(0x08000000))       \
+	       ? Dee_STRUCT_BOOLBIT3                                                  \
+	       : ((mask) == UINT8_C(0x10) || (mask) == UINT16_C(0x1000) ||            \
+	          (mask) == UINT32_C(0x100000) || (mask) == UINT32_C(0x10000000))     \
+	         ? Dee_STRUCT_BOOLBIT4                                                \
+	         : ((mask) == UINT8_C(0x20) || (mask) == UINT16_C(0x2000) ||          \
+	            (mask) == UINT32_C(0x200000) || (mask) == UINT32_C(0x20000000))   \
+	           ? Dee_STRUCT_BOOLBIT5                                              \
+	           : ((mask) == UINT8_C(0x40) || (mask) == UINT16_C(0x4000) ||        \
+	              (mask) == UINT32_C(0x400000) || (mask) == UINT32_C(0x40000000)) \
+	             ? Dee_STRUCT_BOOLBIT6                                            \
+	             : Dee_STRUCT_BOOLBIT7)
+#define Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask) \
+	((mask)&UINT8_C(0xff)                       \
+	 ? 0                                        \
+	 : (mask)&UINT16_C(0xff00)                  \
+	   ? 1                                      \
+	   : (mask)&UINT32_C(0xff0000)              \
+	     ? 2                                    \
+	     : 3)
+#endif /* !UINT64_C */
+
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask) \
+	offsetof(struct_type, field) + Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#define Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, mask) \
+	offsetof(struct_type, field) + (sizeof(((struct_type *)0)->field) - \
+	                                (1 + Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)))
+#else /* ... */
+#error "Unsupported endian"
+#endif /* !... */
+#define Dee_TYPE_MEMBER_BITFIELD_DOC(name, flags, struct_type, field, flagmask, doc)           \
+	Dee_TYPE_MEMBER_FIELD_DOC(name, (flags) | Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(flagmask),      \
+	                          Dee_PRIVATE_STRUCT_BOOLBIT_OFFSET(struct_type, field, flagmask), \
+	                          doc)
+#define Dee_TYPE_MEMBER_BITFIELD(name, flags, struct_type, field, flagmask) \
+	Dee_TYPE_MEMBER_BITFIELD_DOC(name, flags, struct_type, field, flagmask, NULL)
+
 #ifdef DEE_SOURCE
-#define TYPE_MEMBER_ISCONST   Dee_TYPE_MEMBER_ISCONST
-#define TYPE_MEMBER_ISFIELD   Dee_TYPE_MEMBER_ISFIELD
-#define TYPE_MEMBER_END       Dee_TYPE_MEMBER_END
-#define TYPE_MEMBER_FIELD_DOC Dee_TYPE_MEMBER_FIELD_DOC
-#define TYPE_MEMBER_CONST_DOC Dee_TYPE_MEMBER_CONST_DOC
-#define TYPE_MEMBER_FIELD     Dee_TYPE_MEMBER_FIELD
-#define TYPE_MEMBER_CONST     Dee_TYPE_MEMBER_CONST
+#define TYPE_MEMBER_ISCONST      Dee_TYPE_MEMBER_ISCONST
+#define TYPE_MEMBER_ISFIELD      Dee_TYPE_MEMBER_ISFIELD
+#define TYPE_MEMBER_END          Dee_TYPE_MEMBER_END
+#define TYPE_MEMBER_FIELD_DOC    Dee_TYPE_MEMBER_FIELD_DOC
+#define TYPE_MEMBER_BITFIELD_DOC Dee_TYPE_MEMBER_BITFIELD_DOC
+#define TYPE_MEMBER_CONST_DOC    Dee_TYPE_MEMBER_CONST_DOC
+#define TYPE_MEMBER_FIELD        Dee_TYPE_MEMBER_FIELD
+#define TYPE_MEMBER_BITFIELD     Dee_TYPE_MEMBER_BITFIELD
+#define TYPE_MEMBER_CONST        Dee_TYPE_MEMBER_CONST
 #endif /* DEE_SOURCE */
 
 
@@ -1897,7 +2043,7 @@ struct Dee_type_object {
 #define DeeType_IsConstructible(x)       (DeeType_IsSuperConstructible(x) || DeeType_IsNoArgConstructible(x) || DeeType_IsVarArgConstructible(x))
 #define DeeType_IsCopyable(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_copy_ctor != NULL || ((DeeTypeObject *)(x))->tp_init.tp_alloc.tp_deep_ctor != NULL)
 #define DeeType_Base(x)                  (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_base)
-#define DeeType_GCPriority(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
+#define DeeType_GCPriority(x)            (((DeeTypeObject *)Dee_REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject *)(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)          DeeType_GCPriority(Dee_TYPE(x))
 #define DeeObject_IsInterrupt(x)         DeeType_IsInterrupt(Dee_TYPE(x))
 

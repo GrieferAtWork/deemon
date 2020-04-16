@@ -1015,17 +1015,6 @@ jf_gettext(JITFunction *__restrict self) {
 	                         STRING_ERROR_FIGNORE);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-jf_isyielding(JITFunction *__restrict self) {
-	return_bool(self->jf_flags & JIT_FUNCTION_FYIELDING);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-jf_getisretexpr(JITFunction *__restrict self) {
-	return_bool(self->jf_flags & JIT_FUNCTION_FRETEXPR);
-}
-
-
 PRIVATE struct type_getset jf_getsets[] = {
 	{ "__name__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getname, NULL, NULL,
@@ -1040,17 +1029,6 @@ PRIVATE struct type_getset jf_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_gettext, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Returns the source text executed by @this function") },
-	{ "isyielding",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_isyielding, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this function behaves as yielding (i.e. contains a yield statment "
-	      "that doesn't appear as part of a recursively defined inner function)") },
-	{ "isretexpr",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getisretexpr, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this function was defined like ${[] -> 42}, meaning "
-	      "that #__text__ is merely the expression that should be returned by the function\n"
-	      "When :false, the function was defined like ${[] { return 42; }}") },
 	/* TODO: __default__ */
 	/* TODO: __refs__ */
 	/* TODO: __type__ */
@@ -1070,6 +1048,13 @@ PRIVATE struct type_getset jf_getsets[] = {
 };
 
 PRIVATE struct type_member jf_members[] = {
+	TYPE_MEMBER_BITFIELD_DOC("isyielding", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FYIELDING,
+	                         "Check if @this function behaves as yielding (i.e. contains a yield statement "
+	                         "that doesn't appear as part of a recursively defined inner function)"),
+	TYPE_MEMBER_BITFIELD_DOC("isretexpr", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FRETEXPR,
+	                         "Evaluates to :true if @this function was defined like ${[] -> 42}, meaning "
+	                         "that #__text__ is merely the expression that should be returned by the function\n"
+	                         "When :false, the function was defined like ${[] { return 42; }}"),
 	TYPE_MEMBER_FIELD_DOC("__impbase__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
 	                      "Returns the module used for relative module imports"),

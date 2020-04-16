@@ -44,8 +44,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 bool_new(size_t argc, DeeObject *const *argv) {
 	bool value;
 	if (DeeArg_Unpack(argc, argv, "b:bool", &value))
-		return NULL;
+		goto err;
 	return_bool_(value);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -100,86 +102,97 @@ bool_inv(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bool_or(DeeObject *self,
-        DeeObject *other) {
+bool_or(DeeObject *self, DeeObject *other) {
 	int temp;
 	if (DeeBool_IsTrue(self))
 		return_true;
 	temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
-		return NULL;
-	return_bool(temp);
+		goto err;
+	return_bool_(temp);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bool_and(DeeObject *self,
-         DeeObject *other) {
+bool_and(DeeObject *self, DeeObject *other) {
 	int temp;
 	if (!DeeBool_IsTrue(self))
 		return_false;
 	temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
-		return NULL;
-	return_bool(temp);
+		goto err;
+	return_bool_(temp);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bool_xor(DeeObject *self,
-         DeeObject *other) {
+bool_xor(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
-		return NULL;
-	return_bool(DeeBool_IsTrue(self) ^ temp);
+		goto err;
+	return_bool(DeeBool_IsTrue(self) ^ !!temp);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_div(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
-		return NULL;
+		goto err;
 	if unlikely(!temp) {
 		err_divide_by_zero(self, other);
-		return NULL;
+		goto err;
 	}
 	return_reference_(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_mod(DeeObject *self, DeeObject *other) {
 	int temp = DeeObject_Bool(other);
 	if unlikely(temp < 0)
-		return NULL;
+		goto err;
 	if unlikely(!temp) {
 		err_divide_by_zero(self, other);
-		return NULL;
+		goto err;
 	}
 	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_shl(DeeObject *self, DeeObject *other) {
 	dssize_t shift_value;
 	if (DeeObject_AsSSize(other, &shift_value))
-		return NULL;
-	if (shift_value < 0) {
+		goto err;
+	if unlikely(shift_value < 0) {
 		err_shift_negative(self, other, true);
-		return NULL;
+		goto err;
 	}
 	return_reference_(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bool_shr(DeeObject *self, DeeObject *other) {
 	dssize_t shift_value;
 	if (DeeObject_AsSSize(other, &shift_value))
-		return NULL;
-	if (shift_value < 0) {
+		goto err;
+	if unlikely(shift_value < 0) {
 		err_shift_negative(self, other, false);
-		return NULL;
+		goto err;
 	}
 	if (shift_value != 0)
 		return_false;
 	return_reference_(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -188,9 +201,11 @@ bool_pow(DeeObject *self, DeeObject *other) {
 	if (DeeBool_IsTrue(self))
 		return_true;
 	temp = DeeObject_Bool(other);
-	if (temp < 0)
-		return NULL;
-	return_bool(!temp);
+	if unlikely(temp < 0)
+		goto err;
+	return_bool_(!temp);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_math bool_math = {

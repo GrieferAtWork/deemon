@@ -1206,41 +1206,6 @@ PRIVATE struct type_cmp cd_cmp = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_isfinal(ClassDescriptor *__restrict self) {
-	return_bool(self->cd_flags & TP_FFINAL);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_isinttruncated(ClassDescriptor *__restrict self) {
-	return_bool(self->cd_flags & TP_FTRUNCATE);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_isinterrupt(ClassDescriptor *__restrict self) {
-	return_bool(self->cd_flags & TP_FINTERRUPT);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_hassuperconstructor(ClassDescriptor *__restrict self) {
-	return_bool(self->cd_flags & TP_FINHERITCTOR);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_hassuperkwds(ClassDescriptor *__restrict self) {
-	return_bool(self->cd_flags & CLASS_TP_FSUPERKWDS);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_hasautoinit(ClassDescriptor *__restrict self) {
-	return_bool(self->cd_flags & CLASS_TP_FAUTOINIT);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cd_ismoveany(ClassDescriptor *__restrict self) {
-	return_bool(self->cd_flags & TP_FMOVEANY);
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF ClassOperatorTable *DCALL
 cd_operators(ClassDescriptor *__restrict self) {
 	DREF ClassOperatorTable *result;
@@ -1341,44 +1306,6 @@ PRIVATE struct type_method cd_methods[] = {
 };
 
 PRIVATE struct type_getset cd_getsets[] = {
-	{ "isfinal",
-	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isfinal, NULL, NULL,
-	  DOC("->?Dbool") },
-	{ "isinterrupt",
-	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinterrupt, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this class behaves as an interrupt exception when thrown\n"
-	      "An interrupt exception (such as :Signal.Interrupt) is not caught by ${catch(...)} "
-	      "statements, but only by statements marked as ${@[interrupt] catch(...)}\n"
-	      "Certain types exceptions require this in order to prevent catch-all blocks surrounding "
-	      "optional function calls such as invocations of :fs:unlink from accidentally handling "
-	      "unwanted types of exceptions such as :Signal.Interrupt.KeyboardInterrupt, as caused "
-	      "by the user pressing CTRL+C to terminate the running script, and (normally) not "
-	      "expecting it to continue running because the error was silently swallowed by an "
-	      "unrelated catch-all block") },
-	{ "hassuperconstructor",
-	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperconstructor, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this class inherits its constructor from its base-type\n"
-	      "In user-defined classes, this behavior is encoded as ${this = super;}") },
-	{ "__hassuperkwds__",
-	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hassuperkwds, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to :true if the super-args operator of @this class returns a tuple (args,kwds) "
-	      "that should be used to invoke the super-constructor as ${super(args...,**kwds)}\n"
-	      "Otherwise, the super-args operator simply returns args and the super-constructor "
-	      "is called as ${super(args...)}") },
-	{ "__hasautoinit__",
-	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_hasautoinit, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this class provides an automatic initializer and ${operator repr}\n"
-	      "This is used to implement the user-code ${this = default;} constructor definition") },
-	{ "__isinttruncated__",
-	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_isinttruncated, NULL, NULL,
-	  DOC("->?Dbool") },
-	{ "__hasmoveany__",
-	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_ismoveany, NULL, NULL,
-	  DOC("->?Dbool") },
 	{ "flags",
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
@@ -1411,6 +1338,34 @@ PRIVATE struct type_getset cd_getsets[] = {
 };
 
 PRIVATE struct type_member cd_members[] = {
+	TYPE_MEMBER_BITFIELD("isfinal", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FFINAL),
+	TYPE_MEMBER_BITFIELD_DOC("isinterrupt", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FINTERRUPT,
+	                         "Evaluates to :true if @this class behaves as an interrupt exception when thrown\n"
+	                         "An interrupt exception (such as :Signal.Interrupt) is not caught by ${catch(...)} "
+	                         "statements, but only by statements marked as ${@[interrupt] catch(...)}\n"
+	                         "Certain types exceptions require this in order to prevent catch-all blocks surrounding "
+	                         "optional function calls such as invocations of :fs:unlink from accidentally handling "
+	                         "unwanted types of exceptions such as :Signal.Interrupt.KeyboardInterrupt, as caused "
+	                         "by the user pressing CTRL+C to terminate the running script, and (normally) not "
+	                         "expecting it to continue running because the error was silently swallowed by an "
+	                         "unrelated catch-all block"),
+	TYPE_MEMBER_BITFIELD_DOC("hassuperconstructor", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FINHERITCTOR,
+	                         "Evaluates to :true if @this class inherits its constructor from its base-type\n"
+	                         "In user-defined classes, this behavior is encoded as ${this = super;}"),
+#ifdef CLASS_TP_FSUPERKWDS
+	TYPE_MEMBER_BITFIELD_DOC("__hassuperkwds__", STRUCT_CONST, ClassDescriptor, cd_flags, CLASS_TP_FSUPERKWDS,
+	                         "Evaluates to :true if the super-args operator of @this class returns a tuple (args,kwds) "
+	                         "that should be used to invoke the super-constructor as ${super(args...,**kwds)}\n"
+	                         "Otherwise, the super-args operator simply returns args and the super-constructor "
+	                         "is called as ${super(args...)}"),
+#endif /* CLASS_TP_FSUPERKWDS */
+#ifdef CLASS_TP_FAUTOINIT
+	TYPE_MEMBER_BITFIELD_DOC("__hasautoinit__", STRUCT_CONST, ClassDescriptor, cd_flags, CLASS_TP_FAUTOINIT,
+	                         "Evaluates to :true if @this class provides an automatic initializer and ${operator repr}\n"
+	                         "This is used to implement the user-code ${this = default;} constructor definition"),
+#endif /* CLASS_TP_FAUTOINIT */
+	TYPE_MEMBER_BITFIELD("__isinttruncated__", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FTRUNCATE),
+	TYPE_MEMBER_BITFIELD("__hasmoveany__", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FMOVEANY),
 	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_name), "->?X2?Dstring?N"),
 	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_doc), "->?X2?Dstring?N"),
 	TYPE_MEMBER_FIELD_DOC("__csize__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(ClassDescriptor, cd_cmemb_size), "Size of the class object table"),

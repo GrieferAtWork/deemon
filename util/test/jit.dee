@@ -391,7 +391,7 @@ assert identical(exec(r'; if (true) { } else { 42; }'), none);
 assert identical(exec(r'({ ; if (true) { } else { 42; } })'), none);
 
 /* Make sure that `{}' as an expression is an empty sequence,
- * but when encountered in the context of a statment, it evaluates
+ * but when encountered in the context of a statement, it evaluates
  * to `none' the same way an empty statement would */
 assert exec(r';') is none;
 assert exec(r'{}') == [];
@@ -489,7 +489,7 @@ assert exec(r'(10) !!!in [11]');
  *       { if (foo) { []{ for (local x: bar) yield {}; }(); } else { baz; }; }
  *
  *   The problem here is that the compiler can't easily go back and re-parse
- *   some piece of code in the context of a statment, after already having parsed
+ *   some piece of code in the context of a statement, after already having parsed
  *   it in the context of an expression.
  *   With a lot of work, this could be fixed by selectively transforming already-
  *   parsed code components to produce the equivalent of having parsed them as

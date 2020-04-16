@@ -824,7 +824,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(LineSplit, ls_str) ==
 
 PRIVATE struct type_member linesplit_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(LineSplit, ls_str), "->?Dstring"),
-	TYPE_MEMBER_FIELD("__keeplf__", STRUCT_CONST | STRUCT_BOOL, offsetof(LineSplit, ls_keep)),
+	TYPE_MEMBER_FIELD("__keeplf__", STRUCT_CONST | STRUCT_CBOOL, offsetof(LineSplit, ls_keep)),
 	TYPE_MEMBER_END
 };
 

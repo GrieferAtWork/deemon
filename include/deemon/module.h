@@ -728,7 +728,7 @@ DeeModule_OpenSourceStreamString(/*File*/ DeeObject *source_stream,
  *       preceding statement-block-prefix-token-sequences, which simply discard
  *       any leading line-feeds:
  *       >> if (foo())     // This does what you think it would, in that
- *       >>                // `print bar' is tuels the true-block of this if-statment,
+ *       >>                // `print bar' is tuels the true-block of this if-statement,
  *       >>                // despite the fact that there are leading line-feeds.
  *       >> {
  *       >>     print bar

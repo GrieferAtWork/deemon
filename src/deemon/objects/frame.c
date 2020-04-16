@@ -450,11 +450,6 @@ frame_getfunc(Frame *__restrict self) {
 	return (DREF DeeObject *)result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-frame_iswritable(Frame *__restrict self) {
-	return_bool(self->f_flags & DEEFRAME_FWRITABLE);
-}
-
 PRIVATE ATTR_COLD int DCALL
 err_dead_frame(Frame *__restrict UNUSED(self)) {
 	return DeeError_Throwf(&DeeError_ReferenceError,
@@ -629,10 +624,6 @@ PRIVATE struct type_getset frame_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfunc, NULL, NULL,
 	  DOC("->?X2?Dfunction?N\n"
 	      "Returns the function that is referenced by @this Frame, or :none if not available") },
-	{ "__iswritable__",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_iswritable, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this Frame is writable") },
 	{ "__code__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcode, NULL, NULL,
 	  DOC("->?Ert:Code\n"
@@ -686,6 +677,8 @@ PRIVATE struct type_getset frame_getsets[] = {
 
 PRIVATE struct type_member frame_members[] = {
 	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(Frame, f_owner)),
+	TYPE_MEMBER_BITFIELD_DOC("__iswritable__", STRUCT_CONST, Frame, f_flags, DEEFRAME_FWRITABLE,
+	                         "Evaluates to :true if @this Frame is writable"),
 	TYPE_MEMBER_END
 };
 

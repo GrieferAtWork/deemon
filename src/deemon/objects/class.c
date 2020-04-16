@@ -4847,13 +4847,15 @@ err_custom_allocator:
 				result->tp_init.tp_alloc.tp_ctor        = &instance_inherited_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_inherited_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_inherited_initkw;
+			} else
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
-			} else if (DeeNone_Check(base) || base == &DeeObject_Type) {
+			if (DeeNone_Check(base) || base == &DeeObject_Type) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_nobase_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_nobase_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_nobase_initkw;
+			} else
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-			} else {
+			{
 				result->tp_init.tp_alloc.tp_ctor        = &instance_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_initkw;
@@ -4895,13 +4897,15 @@ err_custom_allocator:
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_inherited_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_inherited_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_inherited_initkw;
+			} else
 #ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
-			} else if (DeeNone_Check(base) || base == &DeeObject_Type) {
+			if (DeeNone_Check(base) || base == &DeeObject_Type) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_nobase_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_nobase_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_nobase_initkw;
+			} else
 #endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
-			} else {
+			{
 				/* Undefined constructor... */
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_init;

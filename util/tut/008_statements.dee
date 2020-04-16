@@ -30,7 +30,7 @@ if (x == 42) {
 }
 print "Now x is", x;
 
-/* Deemon implements any kind of statment also seen in C (including labels) */
+/* Deemon implements any kind of statement also seen in C (including labels) */
 
 switch (x) {
 case 4:
@@ -154,7 +154,7 @@ for (local elem: item_pairs) {
 
 
 
-/* Some more statements exist, such a `return' and `yield' statment,
+/* Some more statements exist, such a `return' and `yield' statement,
  * as well as `function' and `class' however those are handled in
  * the tutorials on functions and classes. */
 

@@ -772,7 +772,7 @@ stat_class_exists(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	error = Stat_Init(&buf, path, true, self == (DeeObject *)&DeeLStat_Type);
 	if unlikely(error < 0)
 		goto err;
-	return_bool(error == 0);
+	return_bool_(error == 0);
 err:
 	return NULL;
 }

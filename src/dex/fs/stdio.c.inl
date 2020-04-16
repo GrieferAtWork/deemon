@@ -225,7 +225,7 @@ stat_class_exists(DeeObject *__restrict UNUSED(self),
 	error = file_exists(path);
 	if unlikely(error < 0)
 		goto err;
-	return_bool(error != 0);
+	return_bool_(error != 0);
 err:
 	return NULL;
 }
@@ -240,7 +240,7 @@ stat_class_isreg(DeeObject *__restrict UNUSED(self),
 	error = file_exists(path);
 	if unlikely(error < 0)
 		goto err;
-	return_bool(error != 0);
+	return_bool_(error != 0);
 err:
 	return NULL;
 }

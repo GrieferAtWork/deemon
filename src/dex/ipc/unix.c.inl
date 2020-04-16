@@ -1085,21 +1085,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_hasstarted(Process *__restrict self) {
-	return_bool(self->p_state & PROCESS_FSTARTED);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_wasdetached(Process *__restrict self) {
-	return_bool(self->p_state & PROCESS_FDETACHED);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-process_isachild(Process *self) {
-	return_bool(self->p_state & PROCESS_FCHILD);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 process_hasterminated(Process *self) {
 	int error;
 	uint16_t state;
@@ -2087,10 +2072,7 @@ PRIVATE struct type_getset process_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&process_del_environ,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&process_set_environ,
 	  S_Process_getset_environ_doc },
-	{ S_Process_getset_hasstarted_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_hasstarted, NULL, NULL, S_Process_getset_hasstarted_doc },
-	{ S_Process_getset_wasdetached_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_wasdetached, NULL, NULL, S_Process_getset_wasdetached_doc },
 	{ S_Process_getset_hasterminated_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_hasterminated, NULL, NULL, S_Process_getset_hasterminated_doc },
-	{ S_Process_getset_isachild_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_isachild, NULL, NULL, S_Process_getset_isachild_doc },
 	{ S_Process_getset_id_name, (DREF DeeObject *(DCALL *)(DeeObject *))&process_id, NULL, NULL, S_Process_getset_id_doc },
 	{ S_Process_getset_threads_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_threads, NULL, NULL, S_Process_getset_threads_doc },
 	{ S_Process_getset_files_name, (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&process_get_files, NULL, NULL, S_Process_getset_files_doc },
@@ -2098,6 +2080,18 @@ PRIVATE struct type_getset process_getsets[] = {
 	{ NULL }
 };
 
+PRIVATE struct type_member process_members[] = {
+	TYPE_MEMBER_BITFIELD_DOC(S_Process_getset_hasstarted_name,
+	                         STRUCT_CONST, Process, p_state, PROCESS_FSTARTED,
+	                         S_Process_getset_hasstarted_doc),
+	TYPE_MEMBER_BITFIELD_DOC(S_Process_getset_wasdetached_name,
+	                         STRUCT_CONST, Process, p_state, PROCESS_FDETACHED,
+	                         S_Process_getset_wasdetached_doc),
+	TYPE_MEMBER_BITFIELD_DOC(S_Process_getset_isachild_name,
+	                         STRUCT_CONST, Process, p_state, PROCESS_FCHILD,
+	                         S_Process_getset_isachild_doc),
+	TYPE_MEMBER_END
+};
 
 
 
@@ -2238,7 +2232,7 @@ INTERN DeeTypeObject DeeProcess_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ process_methods,
 	/* .tp_getsets       = */ process_getsets,
-	/* .tp_members       = */ NULL,
+	/* .tp_members       = */ process_members,
 	/* .tp_class_methods = */ process_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ process_class_members

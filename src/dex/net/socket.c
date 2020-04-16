@@ -2366,27 +2366,6 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_isbound(Socket *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":isbound"))
-		return NULL;
-	return_bool(self->s_state & SOCKET_FBOUND);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_isconnected(Socket *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":isconnected"))
-		return NULL;
-	return_bool(self->s_state & SOCKET_FCONNECTED);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_islistening(Socket *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":islistening"))
-		return NULL;
-	return_bool(self->s_state & SOCKET_FLISTENING);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_wasshutdown(Socket *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *shutdown_mode = (DeeObject *)&shutdown_all;
 	int mode;
@@ -2414,21 +2393,19 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-socket_wasclosed(Socket *self, size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, ":wasclosed"))
-		return NULL;
-	return_bool(!(self->s_state & SOCKET_FOPENED));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 socket_fileno(Socket *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":fileno"))
 		return NULL;
 #ifdef CONFIG_HOST_WINDOWS
 	return DeeInt_NewUIntptr((uintptr_t)self->s_socket);
-#else
+#else /* CONFIG_HOST_WINDOWS */
 	return DeeInt_NewInt((int)self->s_socket);
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+socket_wasclosed(Socket *__restrict self) {
+	return_bool(!(self->s_state & SOCKET_FOPENED));
 }
 
 
@@ -2636,29 +2613,13 @@ PRIVATE struct type_method socket_methods[] = {
 	      "the same purpose in ${target = target is tuple ? sockaddr(this.sock_af,target...) : sockaddr(this.sock_af,target)}.\n"
 	      "@return The total number of bytes that was sent\n"
 	      "Same as #send, but used to transmit data to a specific network target, rather than one that is already connected.") },
-	{ "isbound",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_isbound,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this socket has been bound (s.a. #bind)") },
-	{ "isconnected",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_isconnected,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this socket has been #{connect}ed") },
-	{ "islistening",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_islistening,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this socket is #{listen}ing for incoming connections") },
 	{ "wasshutdown",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_wasshutdown,
 	  DOC("(how:?Dint)->?Dbool\n"
 	      "(how=!?rw)->?Dbool\n"
 	      "Returns :true if @this socket has been #shutdown according to @how (inclusive when multiple modes are specified)\n"
 	      "See #shutdown for possible values that may be passed to @how") },
-	{ "wasclosed",
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_wasclosed,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this socket has been #{close}ed") },
-	{ "fileno",
+	{ "fileno", /* TODO: Use DeeSysFD_INT_GETSET / DeeSysFD_HANDLE_GETSET for this! */
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_fileno,
 	  DOC("->?Dint\n"
 	      "Returns the underlying file descriptor/handle associated @this socket") },
@@ -2681,10 +2642,21 @@ PRIVATE struct type_getset socket_getsets[] = {
 	      "@throw NetError.NoSupport @this socket's protocol does not allow for peer addresses\n"
 	      "@throw NetError Failed to query the peer address for some unknown reason\n"
 	      "Returns the peer (remote) address of @this socket") },
+	{ "wasclosed",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_wasclosed, NULL, NULL,
+	  DOC("->?Dbool\n"
+	      "Returns :true if @this socket has been #{close}ed") },
 	{ NULL }
 };
 
+
 PRIVATE struct type_member socket_members[] = {
+	TYPE_MEMBER_BITFIELD_DOC("isbound", STRUCT_CONST, Socket, s_state, SOCKET_FBOUND,
+	                         "Returns :true if @this socket has been bound (s.a. #bind)"),
+	TYPE_MEMBER_BITFIELD_DOC("isconnected", STRUCT_CONST, Socket, s_state, SOCKET_FCONNECTED,
+	                         "Returns :true if @this socket has been #{connect}ed"),
+	TYPE_MEMBER_BITFIELD_DOC("islistening", STRUCT_CONST, Socket, s_state, SOCKET_FLISTENING,
+	                         "Returns :true if @this socket is #{listen}ing for incoming connections"),
 	TYPE_MEMBER_FIELD_DOC("sock_af", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeSocketObject, s_sockaddr.sa.sa_family),
 	                      "The socket's address family as a system-specific integer id\n"
 	                      "Usually one of AF_*, the name of which can be determined using :getafname"),

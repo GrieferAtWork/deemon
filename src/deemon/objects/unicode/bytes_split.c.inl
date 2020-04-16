@@ -840,7 +840,7 @@ PRIVATE struct type_getset blsi_getsets[] = {
 
 PRIVATE struct type_member blsi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesLineSplitIterator, blsi_bytes), "->?DBytes"),
-	TYPE_MEMBER_FIELD("__keepends__", STRUCT_BOOL | STRUCT_CONST, offsetof(BytesLineSplitIterator, blsi_keepends)),
+	TYPE_MEMBER_FIELD("__keepends__", STRUCT_CONST | STRUCT_CBOOL, offsetof(BytesLineSplitIterator, blsi_keepends)),
 	TYPE_MEMBER_END
 };
 
@@ -953,7 +953,7 @@ PRIVATE struct type_seq bls_seq = {
 
 PRIVATE struct type_member bls_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(BytesLineSplit, bls_bytes), "->?DBytes"),
-	TYPE_MEMBER_FIELD("__keepends__", STRUCT_BOOL | STRUCT_CONST, offsetof(BytesLineSplit, bls_keepends)),
+	TYPE_MEMBER_FIELD("__keepends__", STRUCT_CONST | STRUCT_CBOOL, offsetof(BytesLineSplit, bls_keepends)),
 	TYPE_MEMBER_END
 };
 

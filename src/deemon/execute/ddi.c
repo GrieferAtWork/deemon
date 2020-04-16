@@ -729,7 +729,7 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 				/* .tp_ctor      = */ &ddi_ctor,
 				/* .tp_copy_ctor = */ &DeeObject_NewRef,
 				/* .tp_deep_ctor = */ &DeeObject_NewRef,
-				/* .tp_any_ctor  = */ NULL,
+				/* .tp_any_ctor  = */ NULL, /* TODO */
 				/* .tp_free      = */ NULL
 			}
 		},
@@ -752,7 +752,7 @@ PUBLIC DeeTypeObject DeeDDI_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ NULL, /* TODO: __sizeof__(), <helpers for addr2line, etc.> */
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ ddi_members,
 	/* .tp_class_methods = */ NULL,

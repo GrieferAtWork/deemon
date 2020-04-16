@@ -2020,7 +2020,7 @@ stat_class_exists(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		error = nt_GetFileAttributes(path, &attr);
 		if unlikely(error < 0)
 			goto err;
-		return_bool(!error);
+		return_bool_(!error);
 	}
 	error = Stat_Init(&buf, path, arg2,
 	                  self == (DeeObject *)&DeeLStat_Type
@@ -2063,7 +2063,7 @@ stat_class_isdir(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		return_false;
 	error = (int)(buf.s_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
 	Stat_Fini(&buf);
-	return_bool(error);
+	return_bool_(error);
 err:
 	return NULL;
 }
@@ -2091,7 +2091,7 @@ stat_class_ischr(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		error = stat_get_nttype(&buf, true) == FILE_TYPE_CHAR;
 	}
 	Stat_Fini(&buf);
-	return_bool(error);
+	return_bool_(error);
 err:
 	return NULL;
 }
@@ -2119,7 +2119,7 @@ stat_class_isblk(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		error = stat_get_nttype(&buf, true) == FILE_TYPE_DISK;
 	}
 	Stat_Fini(&buf);
-	return_bool(error);
+	return_bool_(error);
 err:
 	return NULL;
 }
@@ -2159,7 +2159,7 @@ do_normal_stat:
 	              (FILE_ATTRIBUTE_DEVICE | FILE_ATTRIBUTE_DIRECTORY |
 	               FILE_ATTRIBUTE_REPARSE_POINT));
 	Stat_Fini(&buf);
-	return_bool(!error);
+	return_bool_(!error);
 err:
 	return NULL;
 }
@@ -2183,7 +2183,7 @@ stat_class_isfifo(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		return_false;
 	error = stat_get_nttype(&buf, true) == FILE_TYPE_PIPE;
 	Stat_Fini(&buf);
-	return_bool(error);
+	return_bool_(error);
 err:
 	return NULL;
 }
@@ -2217,7 +2217,7 @@ stat_class_islnk(DeeObject *__restrict UNUSED(self),
 	error = (int)(buf.s_info.dwFileAttributes &
 	              FILE_ATTRIBUTE_REPARSE_POINT);
 	Stat_Fini(&buf);
-	return_bool(error);
+	return_bool_(error);
 err:
 	return NULL;
 }
@@ -2241,7 +2241,7 @@ stat_class_issock(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		return_false;
 	error = stat_get_nttype(&buf, true) == FILE_TYPE_REMOTE;
 	Stat_Fini(&buf);
-	return_bool(error);
+	return_bool_(error);
 err:
 	return NULL;
 }
@@ -2278,7 +2278,7 @@ do_normal_stat:
 	error = (int)(buf.s_info.dwFileAttributes &
 	              FILE_ATTRIBUTE_HIDDEN);
 	Stat_Fini(&buf);
-	return_bool(error);
+	return_bool_(error);
 err:
 	return NULL;
 }
@@ -2360,7 +2360,7 @@ stat_class_isexe(DeeObject *__restrict UNUSED(self),
 		result = is_exe_filename(path);
 		Dee_Decref(path);
 	}
-	return_bool(result);
+	return_bool_(result);
 err:
 	return NULL;
 }

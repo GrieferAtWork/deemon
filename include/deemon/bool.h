@@ -45,7 +45,8 @@ typedef struct Dee_bool_object DeeBoolObject;
  *    >> leal Dee_FalseTrue(,%reg,8), %reg
  *       The fact that this can be done is the reason why a boolean
  *       doesn't store its value in its structure, but rather in its
- *       self-address. */
+ *       self-address.
+ * WARNING: Only possible when `CONFIG_TRACE_REFCHANGES' is disabled! */
 struct Dee_bool_object {
 	Dee_OBJECT_HEAD
 };

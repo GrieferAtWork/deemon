@@ -2956,6 +2956,7 @@ PRIVATE struct type_method thread_methods[] = {
 	      "returns :true, as indicative of the thread no longer being able to receive new interrupts. "
 	      "However to truely ensure that all interrupts have been processed, you must #join @this thread\n"
 	      "User-code may also check for interrupts explicitly by calling `:thread.check_interrupt'") },
+
 	{ "started", &thread_started,
 	  DOC("->?Dbool\n"
 	      "Deprecated alias for #hasstarted") },
@@ -2980,12 +2981,10 @@ PRIVATE struct type_method thread_methods[] = {
 	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
 	      "Old, deprecated name for #timedjoin") },
 	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&thread_crash_error,
-	  DOC("->?DTraceback\n"
-	      "->?N\n"
+	  DOC("->?X2?O?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
 	{ "crash_traceback", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&thread_crash_traceback,
-	  DOC("->?DTraceback\n"
-	      "->?N\n"
+	  DOC("->?X2?DTraceback?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[1]}") },
 	{ NULL }
 };
@@ -3297,36 +3296,6 @@ thread_id(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_isrunning(DeeObject *__restrict self) {
-	return_bool(DeeThread_IsRunning(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_hasstarted(DeeObject *__restrict self) {
-	return_bool(DeeThread_HasStarted(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_wasdetached(DeeObject *__restrict self) {
-	return_bool(DeeThread_WasDetached(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_hasterminated(DeeObject *__restrict self) {
-	return_bool(DeeThread_HasTerminated(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_wasinterrupted(DeeObject *__restrict self) {
-	return_bool(DeeThread_WasInterrupted(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-thread_hascrashed(DeeObject *__restrict self) {
-	return_bool(DeeThread_HasCrashed(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_crashinfo(DeeThreadObject *__restrict self) {
 #ifdef CONFIG_NO_THREADS
 	(void)self;
@@ -3403,6 +3372,17 @@ err:
 	return NULL;
 }
 
+#ifndef CONFIG_NO_THREADS
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_isrunning(DeeObject *__restrict self) {
+	return_bool(DeeThread_IsRunning(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_hascrashed(DeeObject *__restrict self) {
+	return_bool(DeeThread_HasCrashed(self));
+}
+#endif /* !CONFIG_NO_THREADS */
 
 
 PRIVATE struct type_getset thread_getsets[] = {
@@ -3462,26 +3442,11 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "@throw ValueError The thread hasn't been started yet\n"
 	      "@throw SystemError The system does not provide a way to query thread ids\n"
 	      "Returns an operating-system specific id of @this thread") },
+#ifndef CONFIG_NO_THREADS
 	{ "isrunning",
 	  &thread_isrunning, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this thread is current running (i.e. #hasstarted, but hasn't #hasterminated)") },
-	{ "hasstarted",
-	  &thread_hasstarted, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this thread has been started") },
-	{ "wasdetached",
-	  &thread_wasdetached, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this thread has been detached") },
-	{ "hasterminated",
-	  &thread_hasterminated, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns :true if @this thread has terminated") },
-	{ "wasinterrupted",
-	  &thread_wasinterrupted, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Returns :true if interrupts are pending for @this thread") },
 	{ "hascrashed",
 	  &thread_hascrashed, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -3489,6 +3454,7 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "is having #hasterminated while errors were still active\n"
 	      "When :true, attempting to #join @this thread will cause all of the "
 	      "errors to be rethrown in the calling thread as a :ThreadCrash error") },
+#endif /* !CONFIG_NO_THREADS */
 	{ NULL }
 };
 
@@ -3499,9 +3465,33 @@ PRIVATE struct type_member thread_members[] = {
 	                      offsetof(DeeThreadObject, t_threadname),
 	                      "->?Dstring\n"
 	                      "The name of the thread, or :none when none was assigned"),
+	TYPE_MEMBER_BITFIELD_DOC("hasstarted", STRUCT_CONST, DeeThreadObject, t_state, THREAD_STATE_STARTED,
+	                         "Returns :true if @this thread has been started"),
+	TYPE_MEMBER_BITFIELD_DOC("wasdetached", STRUCT_CONST, DeeThreadObject, t_state, THREAD_STATE_DETACHED,
+	                         "Returns :true if @this thread has been detached"),
+	TYPE_MEMBER_BITFIELD_DOC("hasterminated", STRUCT_CONST, DeeThreadObject, t_state, THREAD_STATE_TERMINATED,
+	                         "Returns :true if @this thread has terminated"),
+	TYPE_MEMBER_BITFIELD_DOC("wasinterrupted", STRUCT_CONST, DeeThreadObject, t_state, THREAD_STATE_INTERRUPTED,
+	                         "Returns :true if interrupts are pending for @this thread"),
 #else /* !CONFIG_NO_THREADS */
 	TYPE_MEMBER_CONST_DOC("name", &main_thread_name,
 	                      "The name of the thread, or :none when none was assigned"),
+	TYPE_MEMBER_CONST_DOC("isrunning", Dee_True,
+	                      "Returns :true if @this thread is current running (i.e. "
+	                      "#hasstarted, but hasn't #hasterminated)"),
+	TYPE_MEMBER_CONST_DOC("hasstarted", Dee_True,
+	                      "Returns :true if @this thread has been started"),
+	TYPE_MEMBER_CONST_DOC("wasdetached", Dee_False,
+	                      "Returns :true if @this thread has been detached"),
+	TYPE_MEMBER_CONST_DOC("hasterminated", Dee_False,
+	                      "Returns :true if @this thread has terminated"),
+	TYPE_MEMBER_CONST_DOC("wasinterrupted", Dee_False,
+	                      "Returns :true if interrupts are pending for @this thread"),
+	TYPE_MEMBER_CONST_DOC("hascrashed", Dee_False,
+	                      "Returns :true if @this thread has crashed, that "
+	                      "is having #hasterminated while errors were still active\n"
+	                      "When :true, attempting to #join @this thread will cause all of the "
+	                      "errors to be rethrown in the calling thread as a :ThreadCrash error"),
 #endif /* CONFIG_NO_THREADS */
 	TYPE_MEMBER_END
 };

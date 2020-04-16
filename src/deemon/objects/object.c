@@ -548,7 +548,8 @@ again:
 	}
 }
 
-PUBLIC void DCALL
+/* Finalize a given weak reference. */
+PUBLIC NONNULL((1)) void DCALL
 Dee_weakref_fini(struct weakref *__restrict self) {
 	ASSERT(self);
 #ifndef NDEBUG
@@ -3677,162 +3678,6 @@ PRIVATE struct type_method type_methods[] = {
 	{ NULL }
 };
 
-PRIVATE struct type_member type_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_name), "->?X2?Dstring?N"),
-	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc), "->?X2?Dstring?N"),
-	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT_OPT, offsetof(DeeTypeObject, tp_base), "->?X2?DType?N"),
-	TYPE_MEMBER_END
-};
-
-
-/*[[[deemon
-import File from deemon;
-local options = [];
-for (local line: File.open("../../../include/deemon/object.h")) {
-	local name;
-	try {
-		name = "Is" + line.scanf(" # define DeeType_Is%[^(](")[0];
-	} catch (...) {
-		try {
-			name = "Has" + line.scanf(" # define DeeType_Has%[^(](")[0];
-		} catch (...) {
-			continue;
-		}
-	}
-	options.append(name);
-}
-for (local o: options) {
-	print "PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL";
-	print "type_" + o.lower() + "(DeeObject *__restrict self) {";
-	print "\treturn_bool(DeeType_" + o + "(self));";
-	print "}";
-}
-print "#define TYPE_FEATURE_GETSETS \\";
-for (local o: options) {
-	local isname = o.lower();
-	if (isname !in ["isfinal", "isabstract", "isinterrupt"])
-		isname = "__" + isname + "__";
-	print "\t{ " + repr(isname) + ", &type_" + o.lower() + ", NULL, NULL, DOC(\"->?Dbool\") }, \\";
-}
-print "/" "* ... *" "/";
-]]]*/
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isfinal(DeeObject *__restrict self) {
-	return_bool(DeeType_IsFinal(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isinterrupt(DeeObject *__restrict self) {
-	return_bool(DeeType_IsInterrupt(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isabstract(DeeObject *__restrict self) {
-	return_bool(DeeType_IsAbstract(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isvariable(DeeObject *__restrict self) {
-	return_bool(DeeType_IsVariable(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isgc(DeeObject *__restrict self) {
-	return_bool(DeeType_IsGC(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isclass(DeeObject *__restrict self) {
-	return_bool(DeeType_IsClass(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isarithmetic(DeeObject *__restrict self) {
-	return_bool(DeeType_IsArithmetic(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_iscomparable(DeeObject *__restrict self) {
-	return_bool(DeeType_IsComparable(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_issequence(DeeObject *__restrict self) {
-	return_bool(DeeType_IsSequence(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isinttruncated(DeeObject *__restrict self) {
-	return_bool(DeeType_IsIntTruncated(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_hasmoveany(DeeObject *__restrict self) {
-	return_bool(DeeType_HasMoveAny(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isiterator(DeeObject *__restrict self) {
-	return_bool(DeeType_IsIterator(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_istypetype(DeeObject *__restrict self) {
-	return_bool(DeeType_IsTypeType(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_iscustom(DeeObject *__restrict self) {
-	return_bool(DeeType_IsCustom(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_issuperconstructible(DeeObject *__restrict self) {
-	return_bool(DeeType_IsSuperConstructible(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isnoargconstructible(DeeObject *__restrict self) {
-	return_bool(DeeType_IsNoArgConstructible(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isvarargconstructible(DeeObject *__restrict self) {
-	return_bool(DeeType_IsVarArgConstructible(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isconstructible(DeeObject *__restrict self) {
-	return_bool(DeeType_IsConstructible(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_iscopyable(DeeObject *__restrict self) {
-	return_bool(DeeType_IsCopyable(self));
-}
-#define TYPE_FEATURE_GETSETS \
-	{ "isfinal", &type_isfinal, NULL, NULL, DOC("->?Dbool") }, \
-	{ "isinterrupt", &type_isinterrupt, NULL, NULL, DOC("->?Dbool") }, \
-	{ "isabstract", &type_isabstract, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isvariable__", &type_isvariable, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isgc__", &type_isgc, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isclass__", &type_isclass, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isarithmetic__", &type_isarithmetic, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__iscomparable__", &type_iscomparable, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__issequence__", &type_issequence, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isinttruncated__", &type_isinttruncated, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__hasmoveany__", &type_hasmoveany, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isiterator__", &type_isiterator, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__istypetype__", &type_istypetype, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__iscustom__", &type_iscustom, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__issuperconstructible__", &type_issuperconstructible, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isnoargconstructible__", &type_isnoargconstructible, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isvarargconstructible__", &type_isvarargconstructible, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__isconstructible__", &type_isconstructible, NULL, NULL, DOC("->?Dbool") }, \
-	{ "__iscopyable__", &type_iscopyable, NULL, NULL, DOC("->?Dbool") }, \
-/* ... */
-//[[[end]]]
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_isbuffer(DeeTypeObject *__restrict self) {
@@ -3860,9 +3705,9 @@ type_issingleton(DeeTypeObject *__restrict self) {
 		return_true; /* Alternative means of creation. */
 	if (self->tp_class) {
 		/* Special handling for user-defined classes. */
-		if (self->tp_init.tp_alloc.tp_ctor ||
-		    self->tp_init.tp_alloc.tp_any_ctor ||
-		    self->tp_init.tp_alloc.tp_any_ctor_kw)
+		if (!self->tp_init.tp_alloc.tp_ctor &&
+		    !self->tp_init.tp_alloc.tp_any_ctor &&
+		    !self->tp_init.tp_alloc.tp_any_ctor_kw)
 			return_true; /* The type is isn't constructible. */
 	}
 	return_false;
@@ -3929,7 +3774,7 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 		                              desc->cd_iattr_list[i].ca_addr);
 		if (result)
 			goto done;
-#endif
+#endif /* CLASS_GETSET_GET == 0 */
 		if ((desc->cd_iattr_list[i].ca_flag &
 		     (CLASS_ATTRIBUTE_FREADONLY | CLASS_ATTRIBUTE_FGETSET)) ==
 		    (CLASS_ATTRIBUTE_FGETSET)) {
@@ -3938,7 +3783,7 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 			                              desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_GET);
 			if (result)
 				goto done;
-#endif
+#endif /* CLASS_GETSET_GET != 0 */
 			result = get_module_from_addr(my_class,
 			                              desc->cd_iattr_list[i].ca_addr + CLASS_GETSET_DEL);
 			if (result)
@@ -3955,13 +3800,16 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 			if (result)
 				goto done;
 		}
-#endif
+#endif /* CLASS_GETSET_GET != 0 */
 	}
 	return NULL;
 done:
 	return result;
 }
 
+/* Return the module used to define a given type `self',
+ * or `NULL' if that module could not be determined.
+ * NOTE: When `NULL' is returned, _NO_ error is thrown! */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
@@ -4022,9 +3870,55 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_operators(DeeTypeObje
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_operatorids(DeeTypeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_ctable(DeeTypeObject *__restrict self);
 
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_istypetype(DeeObject *__restrict self) {
+	return_bool(DeeType_IsTypeType(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_isvarargconstructible(DeeObject *__restrict self) {
+	return_bool(DeeType_IsVarArgConstructible(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_isconstructible(DeeObject *__restrict self) {
+	return_bool(DeeType_IsConstructible(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_iscopyable(DeeObject *__restrict self) {
+	return_bool(DeeType_IsCopyable(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_gcpriority(DeeObject *__restrict self) {
+	return DeeInt_NewUInt(DeeType_GCPriority(self));
+}
+
+PRIVATE struct type_member type_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__name__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_name), "->?X2?Dstring?N"),
+	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc), "->?X2?Dstring?N"),
+	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT_OPT, offsetof(DeeTypeObject, tp_base), "->?X2?DType?N"),
+	TYPE_MEMBER_BITFIELD("isfinal", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FFINAL),
+	TYPE_MEMBER_BITFIELD("isinterrupt", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINTERRUPT),
+	TYPE_MEMBER_BITFIELD("isabstract", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FABSTRACT),
+	TYPE_MEMBER_BITFIELD("__isvariable__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FVARIABLE),
+	TYPE_MEMBER_BITFIELD("__isgc__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FGC),
+	TYPE_MEMBER_FIELD("__isclass__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_class)),
+	TYPE_MEMBER_FIELD("__isarithmetic__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_math)),
+	TYPE_MEMBER_FIELD("__iscomparable__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_cmp)),
+	TYPE_MEMBER_FIELD("__issequence__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_seq)),
+	TYPE_MEMBER_BITFIELD("__isinttruncated__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FTRUNCATE),
+	TYPE_MEMBER_BITFIELD("__hasmoveany__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FMOVEANY),
+	TYPE_MEMBER_FIELD("__isiterator__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_iter_next)),
+	TYPE_MEMBER_BITFIELD("__iscustom__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FHEAP),
+	TYPE_MEMBER_BITFIELD("__issuperconstructible__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINHERITCTOR),
+	TYPE_MEMBER_FIELD("__isnoargconstructible__", STRUCT_CONST | STRUCT_BOOLPTR, offsetof(DeeTypeObject, tp_init.tp_alloc.tp_ctor)),
+	TYPE_MEMBER_END
+};
+
 PRIVATE struct type_getset type_getsets[] = {
-	TYPE_FEATURE_GETSETS
-	/**/
 	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_isbuffer, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this Type implements the buffer interface\n"
@@ -4093,6 +3987,11 @@ PRIVATE struct type_getset type_getsets[] = {
 	  DOC("->?X2?Dint?N\n"
 	      "Deprecated alias for #__instancesize__") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
+	{ "__istypetype__", &type_istypetype, NULL, NULL, DOC("->?Dbool") },
+	{ "__isvarargconstructible__", &type_isvarargconstructible, NULL, NULL, DOC("->?Dbool") },
+	{ "__isconstructible__", &type_isconstructible, NULL, NULL, DOC("->?Dbool") },
+	{ "__iscopyable__", &type_iscopyable, NULL, NULL, DOC("->?Dbool") },
+	{ "__gcpriority__", &type_gcpriority, NULL, NULL, DOC("->?Dint") },
 	{ NULL }
 };
 
@@ -4593,6 +4492,8 @@ Dee_DecrefWasOk_traced(DeeObject *__restrict ob,
 }
 
 #else /* CONFIG_TRACE_REFCHANGES */
+
+/* Maintain ABI compatibility by always providing traced variants of functions! */
 
 PUBLIC NONNULL((1)) void
 (DCALL Dee_Incref_traced)(DeeObject *__restrict ob,

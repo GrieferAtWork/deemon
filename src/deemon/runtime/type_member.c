@@ -62,7 +62,18 @@ type_member_typefor(struct type_member const *__restrict self) {
 	case STRUCT_CHAR:
 		return &DeeString_Type;
 
-	case STRUCT_BOOL:
+	case STRUCT_BOOL8:
+	case STRUCT_BOOL16:
+	case STRUCT_BOOL32:
+	case STRUCT_BOOL64:
+	case STRUCT_BOOLBIT0:
+	case STRUCT_BOOLBIT1:
+	case STRUCT_BOOLBIT2:
+	case STRUCT_BOOLBIT3:
+	case STRUCT_BOOLBIT4:
+	case STRUCT_BOOLBIT5:
+	case STRUCT_BOOLBIT6:
+	case STRUCT_BOOLBIT7:
 		return &DeeBool_Type;
 
 	case STRUCT_FLOAT:
@@ -493,8 +504,35 @@ handle_null_ob:
 	CASE(STRUCT_CHAR):
 		return DeeString_NewSized(&FIELD(char), 1);
 
-	CASE(STRUCT_BOOL):
-		return_bool(FIELD(bool));
+	CASE(STRUCT_BOOL8):
+		return_bool(FIELD(uint8_t) != 0);
+
+	CASE(STRUCT_BOOL16):
+		return_bool(FIELD(uint16_t) != 0);
+
+	CASE(STRUCT_BOOL32):
+		return_bool(FIELD(uint32_t) != 0);
+
+	CASE(STRUCT_BOOL64):
+		return_bool(FIELD(uint64_t) != 0);
+
+#ifdef __OPTIMIZE_SIZE__
+	CASE(STRUCT_BOOLBIT0): CASE(STRUCT_BOOLBIT1):
+	CASE(STRUCT_BOOLBIT2): CASE(STRUCT_BOOLBIT3):
+	CASE(STRUCT_BOOLBIT4): CASE(STRUCT_BOOLBIT5):
+	CASE(STRUCT_BOOLBIT6): CASE(STRUCT_BOOLBIT7):
+		return_bool((FIELD(uint8_t) & (0x01 << ((desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) -
+		                                        (STRUCT_BOOLBIT0 & ~(STRUCT_CONST | STRUCT_ATOMIC))))) != 0);
+#else /* __OPTIMIZE_SIZE__ */
+	CASE(STRUCT_BOOLBIT0): return_bool((FIELD(uint8_t) & 0x01) != 0);
+	CASE(STRUCT_BOOLBIT1): return_bool((FIELD(uint8_t) & 0x02) != 0);
+	CASE(STRUCT_BOOLBIT2): return_bool((FIELD(uint8_t) & 0x04) != 0);
+	CASE(STRUCT_BOOLBIT3): return_bool((FIELD(uint8_t) & 0x08) != 0);
+	CASE(STRUCT_BOOLBIT4): return_bool((FIELD(uint8_t) & 0x10) != 0);
+	CASE(STRUCT_BOOLBIT5): return_bool((FIELD(uint8_t) & 0x20) != 0);
+	CASE(STRUCT_BOOLBIT6): return_bool((FIELD(uint8_t) & 0x40) != 0);
+	CASE(STRUCT_BOOLBIT7): return_bool((FIELD(uint8_t) & 0x80) != 0);
+#endif /* !__OPTIMIZE_SIZE__ */
 
 	CASE(STRUCT_FLOAT):
 		return DeeFloat_New((double)FIELD(float));
@@ -560,7 +598,18 @@ type_member_bound(struct type_member *desc,
 	CASE(STRUCT_CSTR_EMPTY):
 	CASE(STRUCT_STRING):
 	CASE(STRUCT_CHAR):
-	CASE(STRUCT_BOOL):
+	CASE(STRUCT_BOOL8):
+	CASE(STRUCT_BOOL16):
+	CASE(STRUCT_BOOL32):
+	CASE(STRUCT_BOOL64):
+	CASE(STRUCT_BOOLBIT0):
+	CASE(STRUCT_BOOLBIT1):
+	CASE(STRUCT_BOOLBIT2):
+	CASE(STRUCT_BOOLBIT3):
+	CASE(STRUCT_BOOLBIT4):
+	CASE(STRUCT_BOOLBIT5):
+	CASE(STRUCT_BOOLBIT6):
+	CASE(STRUCT_BOOLBIT7):
 	CASE(STRUCT_FLOAT):
 	CASE(STRUCT_DOUBLE):
 	CASE(STRUCT_LDOUBLE):
@@ -623,25 +672,75 @@ type_member_set(struct type_member *desc,
 			chr_value = (char)DeeString_WSTR(value)[0];
 		} else {
 			if (DeeObject_AsChar(value, &chr_value))
-				return -1;
+				goto err;
 		}
 		WRITE(FIELD(char), chr_value);
 	}	return 0;
 
-	case STRUCT_BOOL: {
+	case STRUCT_BOOL8:
+	case STRUCT_BOOL16:
+	case STRUCT_BOOL32:
+	case STRUCT_BOOL64: {
 		int boolval;
 		boolval = DeeObject_Bool(value);
 		if unlikely(boolval < 0)
-			return -1;
-		FIELD(bool) = !!boolval;
-	}	return 0;
+			goto err;
+		boolval = !!boolval;
+		switch (desc->m_field.m_type & ~(STRUCT_ATOMIC)) {
+		case STRUCT_BOOL8:  FIELD(uint8_t)  = (uint8_t )(unsigned int)boolval; break;
+		case STRUCT_BOOL16: FIELD(uint16_t) = (uint16_t)(unsigned int)boolval; break;
+		case STRUCT_BOOL32: FIELD(uint32_t) = (uint32_t)(unsigned int)boolval; break;
+		case STRUCT_BOOL64: FIELD(uint64_t) = (uint64_t)(unsigned int)boolval; break;
+		default: __builtin_unreachable();
+		}
+		return 0;
+	}
+
+	case STRUCT_BOOLBIT0:
+	case STRUCT_BOOLBIT1:
+	case STRUCT_BOOLBIT2:
+	case STRUCT_BOOLBIT3:
+	case STRUCT_BOOLBIT4:
+	case STRUCT_BOOLBIT5:
+	case STRUCT_BOOLBIT6:
+	case STRUCT_BOOLBIT7: {
+		int boolval;
+		uint8_t mask, *pfield;
+		boolval = DeeObject_Bool(value);
+		if unlikely(boolval < 0)
+			goto err;
+		mask = 0x01 << ((desc->m_field.m_type & ~(STRUCT_ATOMIC)) -
+		                (STRUCT_BOOLBIT0 & ~(STRUCT_ATOMIC)));
+		pfield = &FIELD(uint8_t);
+		if (boolval) {
+#ifndef CONFIG_NO_THREADS
+			if (desc->m_field.m_type & STRUCT_ATOMIC) {
+				ATOMIC_FETCHOR(*pfield, mask);
+			} else
+#endif /* !CONFIG_NO_THREADS */
+			{
+				*pfield |= mask;
+			}
+		} else {
+#ifndef CONFIG_NO_THREADS
+			if (desc->m_field.m_type & STRUCT_ATOMIC) {
+				ATOMIC_FETCHAND(*pfield, ~mask);
+			} else
+#endif /* !CONFIG_NO_THREADS */
+			{
+				*pfield &= ~mask;
+			}
+		}
+		return 0;
+	}
+
 
 	case STRUCT_FLOAT:
 	case STRUCT_DOUBLE:
 	case STRUCT_LDOUBLE: {
 		double data;
 		if (DeeObject_AsDouble(value, &data))
-			return -1;
+			goto err;
 		switch (desc->m_field.m_type & ~(STRUCT_ATOMIC)) {
 
 		case STRUCT_FLOAT:

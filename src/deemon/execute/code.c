@@ -807,56 +807,6 @@ code_getstatic(DeeCodeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_isyielding(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FYIELDING);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_iscopyable(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FCOPYABLE);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_hasassembly(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FASSEMBLY);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_islenient(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FLENIENT);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_hasvarargs(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FVARARGS);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_hasvarkwds(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FVARKWDS);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_isthiscall(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FTHISCALL);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_hasheapframe(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FHEAPFRAME);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_hasfinally(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FFINALLY);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_isconstructor(DeeCodeObject *__restrict self) {
-	return_bool_(self->co_flags & CODE_FCONSTRUCTOR);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_name(DeeCodeObject *__restrict self) {
 	struct function_info info;
 	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
@@ -961,6 +911,30 @@ PRIVATE struct type_member code_members[] = {
 	                      "Min amount of arguments required to execute @this code"),
 	TYPE_MEMBER_FIELD_DOC("__argc_max__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_argc_max),
 	                      "Max amount of arguments accepted by @this code (excluding a varargs or varkwds argument)"),
+	TYPE_MEMBER_BITFIELD_DOC("isyielding", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FYIELDING,
+	                         "Check if @this code object is for a yield-function"),
+	TYPE_MEMBER_BITFIELD_DOC("iscopyable", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FCOPYABLE,
+	                         "Check if execution frames of @this code object can be copied"),
+	TYPE_MEMBER_BITFIELD_DOC("hasassembly", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FASSEMBLY,
+	                         "Check if assembly of @this code object is executed in safe-mode"),
+	TYPE_MEMBER_BITFIELD_DOC("islenient", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FLENIENT,
+	                         "Check if the runtime stack allocation allows for leniency"),
+	TYPE_MEMBER_BITFIELD_DOC("hasvarargs", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FVARARGS,
+	                         "Check if @this code object accepts variable arguments as overflow"),
+	TYPE_MEMBER_BITFIELD_DOC("hasvarkwds", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FVARKWDS,
+	                         "Check if @this code object accepts variable keyword arguments as overflow"),
+	TYPE_MEMBER_BITFIELD_DOC("isthiscall", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FTHISCALL,
+	                         "Check if @this code object requires a hidden leading this-argument"),
+	TYPE_MEMBER_BITFIELD_DOC("hasheapframe", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FHEAPFRAME,
+	                         "Check if the runtime stack-frame must be allocated on the heap"),
+	TYPE_MEMBER_BITFIELD_DOC("hasfinally", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FFINALLY,
+	                         "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
+	                         "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in "
+	                         "the user's source code, as the compiler may try to optimize this flag away to speed up runtime execution"),
+	TYPE_MEMBER_BITFIELD_DOC("isconstructor", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FCONSTRUCTOR,
+	                         "True for class constructor code objects. - When set, don't include the this-argument in "
+	                         "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
+	                         "causes some sort of exception to be thrown"),
 	TYPE_MEMBER_END
 };
 
@@ -1023,50 +997,6 @@ PRIVATE struct type_getset code_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getstatic, NULL, NULL,
 	  DOC("->?S?O\n"
 	      "Access to the static values of @this code object") },
-	{ "isyielding",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isyielding, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this code object is for a yield-function") },
-	{ "iscopyable",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_iscopyable, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if execution frames of @this code object can be copied") },
-	{ "hasassembly",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasassembly, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if assembly of @this code object is executed in safe-mode") },
-	{ "islenient",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_islenient, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if the runtime stack allocation allows for leniency") },
-	{ "hasvarargs",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarargs, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this code object accepts variable arguments as overflow") },
-	{ "hasvarkwds",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasvarkwds, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this code object accepts variable keyword arguments as overflow") },
-	{ "isthiscall",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isthiscall, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if @this code object requires a hidden leading this-argument") },
-	{ "hasheapframe",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasheapframe, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "Check if the runtime stack-frame must be allocated on the heap") },
-	{ "hasfinally",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_hasfinally, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
-	      "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in "
-	      "the user's source code, as the compiler may try to optimize this flag away to speed up runtime execution") },
-	{ "isconstructor",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_isconstructor, NULL, NULL,
-	  DOC("->?Dbool\n"
-	      "True for class constructor code objects. - When set, don't include the this-argument in "
-	      "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
-	      "causes some sort of exception to be thrown") },
 	{ NULL }
 };
 

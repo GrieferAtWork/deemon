@@ -350,7 +350,8 @@ PRIVATE struct type_member ri_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(RangeIterator, ri_range), "->?Ert:SeqRange"),
 	TYPE_MEMBER_FIELD("__end__", STRUCT_OBJECT, offsetof(RangeIterator, ri_end)),
 	TYPE_MEMBER_FIELD("__step__", STRUCT_OBJECT, offsetof(RangeIterator, ri_step)),
-	TYPE_MEMBER_FIELD("__first__", STRUCT_ATOMIC | STRUCT_BOOL, offsetof(RangeIterator, ri_first)),
+	/* TODO: `__first__' is writeable when `ri_lock' is held! */
+	TYPE_MEMBER_FIELD("__first__", STRUCT_CONST | STRUCT_CBOOL, offsetof(RangeIterator, ri_first)),
 	TYPE_MEMBER_END
 };
 
@@ -938,7 +939,7 @@ PRIVATE struct type_member range_members[] = {
 	TYPE_MEMBER_FIELD("start", STRUCT_OBJECT, offsetof(Range, r_start)),
 	TYPE_MEMBER_FIELD("end", STRUCT_OBJECT, offsetof(Range, r_end)),
 	TYPE_MEMBER_FIELD("step", STRUCT_OBJECT, offsetof(Range, r_step)),
-	TYPE_MEMBER_FIELD("__rev__", STRUCT_CONST | STRUCT_BOOL, offsetof(Range, r_rev)),
+	TYPE_MEMBER_FIELD("__rev__", STRUCT_CONST | STRUCT_CBOOL, offsetof(Range, r_rev)),
 	TYPE_MEMBER_END
 };
 
