@@ -1357,6 +1357,7 @@ done_fake_none:
 				goto err;
 			if (asm_put((instruction_t)(uint8_t)(int8_t)-1))
 				goto err;
+			asm_incsp();
 			if (asm_gpop())
 				goto err; /* The sequence element pushed by `foreach' */
 			if (asm_put(ASM_JMP))
@@ -1365,6 +1366,7 @@ done_fake_none:
 				goto err;
 			if (asm_put((instruction_t)(uint8_t)(int8_t)-1))
 				goto err;
+			asm_decsp(); /* FOREACH pops 1 element when jumping here */
 			asm_defsym(stop);
 		}
 		break;
