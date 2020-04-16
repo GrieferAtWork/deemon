@@ -344,7 +344,7 @@ PRIVATE struct type_member im_members[] = {
 PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_InstanceMethod),
-	/* .tp_doc      = */ DOC("(func:?Dcallable,thisarg)\n"
+	/* .tp_doc      = */ DOC("(func:?DCallable,thisarg)\n"
 	                         "Construct an object-bound instance method that can be used to invoke @func\n"
 	                         "\n"
 	                         "call(args!)->\n"

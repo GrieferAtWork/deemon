@@ -33,7 +33,7 @@ global TypeRef;
 
 
 
-local function decode_name_content(name: string): string {
+local function decodeNameContent(name: string): string {
 	name = name.substr(1, #name - 1);
 	name = name.replace("\\\n", "\n");
 	name = name.replace(r"-\>", r"->");
@@ -43,14 +43,14 @@ local function decode_name_content(name: string): string {
 }
 
 @@Decode a <NAME>-like documentation name
-local function decode_name(name: string): string {
+local function decodeName(name: string): string {
 	if (name.startswith("{") && name.endswith("}"))
-		return decode_name_content(name);
+		return decodeNameContent(name);
 	return name;
 }
 
 @@Encode a <NAME>-like documentation name
-local function encode_name(name: string): string {
+local function encodeName(name: string): string {
 	local result = name;
 	if (!result.issymbol()) {
 		for (local x: r"\?!{}|,()<>[]=")
@@ -63,7 +63,7 @@ local function encode_name(name: string): string {
 }
 
 @@Decode the contents of a custom user-text section
-local function decode_text(text: string): string {
+local function decodeText(text: string): string {
 	text = text.replace("\\\n", "\n");
 	text = text.replace("\n\\(", "\n(");
 	text = text.replace(r"-\>", r"->");
@@ -72,7 +72,7 @@ local function decode_text(text: string): string {
 }
 
 @@Search for a given @ob within the export table of @mod, returning its name or @none if not found
-local function lookup_object_in_module(mod: Module, ob: Object): string | none {
+local function findObjectNameInModule(mod: Module, ob: Object): string | none {
 	/* Search the export table of this module! */
 	for (local name, obj: Module.__exports__(mod)) {
 		if (obj === ob)
@@ -85,61 +85,61 @@ local function lookup_object_in_module(mod: Module, ob: Object): string | none {
 @@a string in the form of @"?E<MODULE>:<NAME>" if this applies.
 @@Otherwise, when the module could not be determined, return a
 @@string in the form of @"?U<NAME>"
-local function encode_type(tp: deemon.Type): string {
-	if (tp === deemon.Object)
+local function encodeType(tp: Type): string {
+	if (tp === Object)
 		return "?O";
-	local mod = deemon.Type.__module__(tp);
+	local mod = Type.__module__(tp);
 	if (mod is none) /* Module could not be determined */
-		return "?U" + encode_name(tp.__name__);
-	local name = lookup_object_in_module(mod, tp);
+		return "?U" + encodeName(tp.__name__);
+	local name = findObjectNameInModule(mod, tp);
 	if (name is none)
-		name = deemon.Type.__name__(tp);
+		name = Type.__name__(tp);
 	if (mod === deemon)
-		return "?D" + encode_name(name);
+		return "?D" + encodeName(name);
 	return "?E{}:{}".format({
 		/* TODO: This only works for global modules! */
-		encode_name(Module.__name__(mod)),
-		encode_name(name)
+		encodeName(Module.__name__(mod)),
+		encodeName(name)
 	});
 }
 
 @@Given a Doc-path in the form of @"<MODULE>/<ITEM>/<ATTR>/...", convert
 @@that path into the form of @"?A<ATTR>?A<ATTR>?E<MODULE>:<ITEM>"
-local function encode_type_from_path(path: string): string {
+local function encodeTypeFromPath(path: string): string {
 	local a, none, b = path.strip("/").rpartition("/")...;
 	if (!b)
-		return "?M" + encode_name(a);
+		return "?M" + encodeName(a);
 	if ("/" !in a) {
 		return "?E{}:{}".format({
-			encode_name(a),
-			encode_name(b),
+			encodeName(a),
+			encodeName(b),
 		});
 	}
 	return "?A{}{}".format({
-		encode_name(b),
-		encode_type_from_path(a)
+		encodeName(b),
+		encodeTypeFromPath(a)
 	});
 }
 
 
 @@Encode an arbitrary object expression @ob as a function default argument
 @@If the given @ob cannot be encoded as such, return @none instead
-local function encode_expr(ob: Object): string | none {
+local function encodeExpression(ob: Object): string | none {
 	if (ob is int || ob is float)
 		return "!" + ob;
 	if (ob is string)
-		return "!P" + encode_name(ob);
+		return "!P" + encodeName(ob);
 	if (ob is none)
 		return "!N";
 	if (ob is bool)
 		return ob ? "!t" : "!f";
 	if (ob is Type) {
-		if (ob === deemon.Object)
+		if (ob === Object)
 			return "!Dobject";
-		return "!" + encode_type(ob)[1:];
+		return "!" + encodeType(ob)[1:];
 	}
 	if (ob is Module)
-		return "!M" + encode_name(Module.__name__(ob));
+		return "!M" + encodeName(Module.__name__(ob));
 	return none;
 }
 
@@ -149,7 +149,7 @@ local function encode_expr(ob: Object): string | none {
 @@by generating names aa ab ac, etc.
 @@Additionally, when @d is given, try to extract argument name information
 @@from keyword information meta-data taken from the Doc node's bound object.
-local function get_generic_argument_name(n: int, d: Doc | none = none): string {
+local function getGenericArgumentName(n: int, d: Doc | none = none): string {
 	if (d !is none && d.object is bound) {
 		local ob = d.object;
 		if (hasattr(ob, "__kwds__")) {
@@ -171,13 +171,13 @@ local function get_generic_argument_name(n: int, d: Doc | none = none): string {
 
 @@Split a given @text documentation string into its individual sections
 @@Note that the segments returned will have already had escaped line-feeds expanded
-local function split_doc_sections(text: string): {string...} {
+local function splitDocSections(text: string): {string...} {
 	return text.unifylines().split("\n\n");
 }
 
 @@Check if a backslash at @pos in @text is non-escaped, meaning
 @@that in a text $r"a\\b", the backslash is ecaped, but isn't in $r"a\b"
-local function is_backslash_at(text: string, pos: int): bool {
+local function isBackslashAt(text: string, pos: int): bool {
 	local result = true;
 	while (pos > 0) {
 		--pos;
@@ -190,13 +190,13 @@ local function is_backslash_at(text: string, pos: int): bool {
 
 @@Try to find @tofind in @text, but ensure that it isn't prefixed by an unmatched backslash
 @@If @tofind could not be found, return @-1 instead.
-local function find_nonescaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
+local function findNonEscaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
 		local result = text.find(tofind, start, end);
 		if (result < 0)
 			break;
 		if (result && text[result - 1] == "\\" &&
-		    is_backslash_at(text, result - 1)) {
+		    isBackslashAt(text, result - 1)) {
 			start = result + 1;
 			continue;
 		}
@@ -205,8 +205,8 @@ local function find_nonescaped(text: string, tofind: string, start: int = 0, end
 	return -1;
 }
 
-@@Similar to @find_nonescaped, but search from the right
-local function rfind_nonescaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
+@@Similar to @findNonEscaped, but search from the right
+local function rfindNonEscaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
 		local result = text.rfind(tofind, start, end);
 		if (result < 0)
@@ -231,12 +231,12 @@ local function rfind_nonescaped(text: string, tofind: string, start: int = 0, en
 }
 
 @@Split a given @text at each non-escaped instance of @tofind
-local function split_nonescaped(text: string, tofind: string): {string...} {
+local function splitNonEscaped(text: string, tofind: string): {string...} {
 	if (!text)
 		return;
 	local i = 0;
 	for (;;) {
-		local pos = find_nonescaped(text, tofind, i);
+		local pos = findNonEscaped(text, tofind, i);
 		if (pos < 0) {
 			yield text.substr(i);
 			break;
@@ -248,10 +248,10 @@ local function split_nonescaped(text: string, tofind: string): {string...} {
 
 
 @@Decode a <NAME>-like documentation name
-local function decode_name_end(name: string, start: int = 0): int {
+local function decodeNameEnd(name: string, start: int = 0): int {
 	local result;
 	if (name.startswith("{", start)) {
-		result = find_nonescaped(name, "}", start + 1);
+		result = findNonEscaped(name, "}", start + 1);
 		if (result < 0)
 			result = #name;
 		return result;
@@ -265,7 +265,7 @@ local function decode_name_end(name: string, start: int = 0): int {
 
 
 @@Lookup table to convert pretty operator names to their real counterparts
-local operator_defaults: {string: string} = {
+local final OPERATOR_DEFAULTS: {string: string} = {
 	"constructor" : "(args!)->?N", "copy" : "(other:?.)->?N", "deepcopy" : "(other:?.)->?N",
 	"destructor" : "()->?N", "assign" : "(other:?.)->?N", "moveassign" : "(other:?.)->?N",
 	"str" : "()->?Dstring", "repr" : "()->?Dstring", "bool" : "()->?Dbool",
@@ -296,7 +296,7 @@ local operator_defaults: {string: string} = {
 };
 
 @@Lookup table to convert pretty operator names to their real counterparts
-local operator_names: {string: string} = {
+local final OPERATOR_NAMES: {string: string} = {
 	"this" : "constructor", "~this" : "destructor", ":=" : "assign",
 	"move:=" : "moveassign", ":=move" : "moveassign", "++" : "inc",
 	"--" : "dec", "#" : "size", "~" : "inv", "+" : none, "-" : none,
@@ -311,7 +311,8 @@ local operator_names: {string: string} = {
 	"[:]=" : "setrange", "." : "getattr", ".=" : "setattr",
 	"del." : "delattr", "lt" : "lo", "gt" : "gr",
 };
-local pretty_operator_names: {string: string} = {
+
+local final PRETTY_OPERATOR_NAMES: {string: string} = {
 	"assign" : " :=", "moveassign" : "move :=", "size" : "#",
 	"inv" : "~", "add" : "+", "sub" : "-", "pos" : "+", "neg" : "-",
 	"mul" : "*", "div" : "/", "mod" : "%", "shl" : "<<",
@@ -325,7 +326,7 @@ local pretty_operator_names: {string: string} = {
 };
 
 @@Weight of different node types when being sorted
-local kind_sorting_weights: {string: int} = {
+local final KIND_SORTING_WEIGHTS: {string: int} = {
 	"module" : 0x0000, "operator" : 0x0100,
 	"type" : 0x0101, "singleton" : 0x0102,
 	"function" : 0x0200, "property" : 0x0201, "member" : 0x0202,
@@ -334,7 +335,7 @@ local kind_sorting_weights: {string: int} = {
 };
 
 @@Weight of different operators when being sorted
-local operator_sorting_weights: {string: int} = {
+local final OPERATOR_SORTING_WEIGHTS: {string: int} = {
 	"constructor" : 0x0000, "copy" : 0x0001, "deepcopy" : 0x0002,
 	"destructor" : 0x0003, "assign" : 0x0004, "moveassign" : 0x0005,
 	"str" : 0x0100, "repr" : 0x0101, "bool" : 0x0102, "int" : 0x0103,
@@ -360,11 +361,9 @@ local operator_sorting_weights: {string: int} = {
 @@known the associated argument count, return @none, in which case
 @@the caller must determine the argument count and re-attempt the
 @@call while passing @argc as a value other than @none.
-local function operator_realname(name: string, argc: int | none = none): string | none {
-	local result = operator_names.get(name, name);
-	if (result is none) {
-		if (argc is none)
-			return none;
+local function getRealOperatorName(name: string, argc: int | none = none): string | none {
+	local result = OPERATOR_NAMES.get(name, name);
+	if (result is none && argc !is none) {
 		switch (name) {
 		case "+":
 			return argc == 0 ? "pos" : "add";
@@ -380,48 +379,54 @@ local function operator_realname(name: string, argc: int | none = none): string 
 @@Returns the Doc-like path for a given fully qualified type
 @@If no such path exists, return @none instead
 @@NOTE: The returned path includes a leading @"/"
-local function get_qualified_typepath(docnode: WeakRef with Doc, qual: string): string | none {
-	if (#qual >= 2) switch (qual[1]) {
-	case "G": {
-		local mod = docnode.value.module;
-		if (mod is none)
-			return none;
-		return "/{}/{}".format({
-			Module.__name__(mod),
-			decode_name(qual.substr(2)),
-		});
-	}	break;
-	case "E": {
-		local modend = find_nonescaped(qual, ":", 2);
-		return "/{}/{}".format({
-			decode_name(qual.substr(2, modend)),
-			decode_name(qual.substr(modend + 1)),
-		});
-	}	break;
-	case "A": {
-		local nameend = decode_name_end(qual, 2);
-		local base = get_qualified_typepath(docnode, qual.substr(nameend));
-		if (base is none)
-			return none;
-		return "{}/c:{}".format({
-			base,
-			decode_name(qual.substr(2, nameend)),
-		});
-	}	break;
-	default:
-		break;
+local function getQualifiedTypePath(docnode: WeakRef with Doc, qual: string): string | none {
+	if (#qual >= 2) {
+		switch (qual[1]) {
+
+		case "G": {
+			local mod = docnode.value.module;
+			if (mod is none)
+				return none;
+			return "/{}/{}".format({
+				Module.__name__(mod),
+				decodeName(qual.substr(2)),
+			});
+		}	break;
+
+		case "E": {
+			local modend = findNonEscaped(qual, ":", 2);
+			return "/{}/{}".format({
+				decodeName(qual.substr(2, modend)),
+				decodeName(qual.substr(modend + 1)),
+			});
+		}	break;
+
+		case "A": {
+			local nameend = decodeNameEnd(qual, 2);
+			local base = getQualifiedTypePath(docnode, qual.substr(nameend));
+			if (base is none)
+				return none;
+			return "{}/c:{}".format({
+				base,
+				decodeName(qual.substr(2, nameend)),
+			});
+		}	break;
+
+		default:
+			break;
+		}
 	}
 	return none;
 }
 
-local function find_error_by_name(t: deemon.Type, qual: string, s: string): string | none {
+local function findErrorByName(t: Type, qual: string, s: string): string | none {
 	if (t.__name__ == s)
 		return qual;
-	for (local attr: deemon.enumattr(t)) {
+	for (local attr: enumattr(t)) {
 		if (attr.decl != t) break;
-		if (attr.attrtype != type deemon.Object) break;
+		if (attr.attrtype != type Object) break;
 		if (!attr.isclass) continue;
-		local result = find_error_by_name(
+		local result = findErrorByName(
 			t.operator . (attr.name),
 			"?A{}{}".format({ attr.name, qual }),
 			s);
@@ -430,45 +435,47 @@ local function find_error_by_name(t: deemon.Type, qual: string, s: string): stri
 	}
 }
 
-local function qualify_legacy_typeref(docnode: WeakRef with Doc, s: string): string {
+local function qualifyLegacyTyperef(docnode: WeakRef with Doc, s: string): string {
 	/* Search for a legacy-like type reference */
 	local node = docnode.value;
 	if (!node.istype && node.parent !is none)
 		node = node.parent;
 	do {
 		if (node.haschild(s))
-			return "?A{}{}".format({ encode_name(s), node.qualpath });
+			return "?A{}{}".format({ encodeName(s), node.qualpath });
 		node = node.parent;
 	} while (node !is none);
 	/* Search for known sub-classes of `Error' */
-	local result = find_error_by_name(Error, "?DError", s);
+	local result = findErrorByName(Error, "?DError", s);
 	if (result !is none)
 		return result;
 	/* Search the deemon module itself. */
 	if (hasattr(deemon, s))
-		return "?D" + encode_name(s);
+		return "?D" + encodeName(s);
 	/* Fallback: Invalid encoding -> Encode an unknown */
-	return "?U" + encode_name(s);
+	return "?U" + encodeName(s);
 }
 
 @@Turn @s into a fully qualified type reference string
-local function qualify_typeref_string(docnode: WeakRef with Doc, s: string): string {
+local function qualifyTyperefString(docnode: WeakRef with Doc, s: string): string {
 	if (s.startswith("?") && #s >= 2) {
 		switch (s[1]) {
+
 		case ".": {
 			local node = docnode.value;
 			if (!node.istype && node.parent !is none)
 				node = node.parent;
 			return node.qualpath;
 		}	break;
+
 		case "#": {
 			local node = docnode.value;
-			local len = decode_name_end(s, 2);
+			local len = decodeNameEnd(s, 2);
 			if (node.ismodule) {
 				local mod = node.module;
 				return "?E{}:{}".format({
 					/* TODO: This only works for global modules! */
-					encode_name(Module.__name__(mod)),
+					encodeName(Module.__name__(mod)),
 					s.substr(2, len)
 				});
 			}
@@ -479,51 +486,61 @@ local function qualify_typeref_string(docnode: WeakRef with Doc, s: string): str
 				node.qualpath,
 			});
 		}	break;
-		case "N": return "?Edeemon:none";
-		case "O": return "?Edeemon:Object";
+
+		case "N":
+			return "?Edeemon:none";
+
+		case "O":
+			return "?Edeemon:Object";
+
 		case "D":
-			return "?Edeemon:" + decode_name(s.substr(2));
+			return "?Edeemon:" + decodeName(s.substr(2));
+
 		case "U":
 		case "E":
 		case "G":
 			return s;
+
 		case "A": {
 			local attr_end;
-			attr_end = find_nonescaped(s, "?", 2);
+			attr_end = findNonEscaped(s, "?", 2);
 			if (attr_end < 0)
 				break;
 			local tail = s.substr(attr_end);
-			local newtail = qualify_typeref_string(docnode, tail);
+			local newtail = qualifyTyperefString(docnode, tail);
 			if (tail === newtail)
 				return s;
 			return s.substr(0, attr_end) + newtail;
 		}	break;
+
 		default: break;
 		}
 	}
-	return qualify_legacy_typeref(docnode, s);
+	return qualifyLegacyTyperef(docnode, s);
 }
 
 @@Return the type associated with a given fully qualified path
 @@If the type could not be accessed, return @none or throw an
 @@exception.
-local function get_type_from_qualpath(docnode: WeakRef with Doc, qual: string): deemon.Type | none {
+local function getTypeFromQualPath(docnode: WeakRef with Doc, qual: string): Type | none {
 	if (#qual < 2)
 		return none;
 	switch (qual[1]) {
+
 	case "A": {
-		local attrend = decode_name_end(qual, 2);
-		local base = get_type_from_qualpath(docnode, qual.substr(attrend));
+		local attrend = decodeNameEnd(qual, 2);
+		local base = getTypeFromQualPath(docnode, qual.substr(attrend));
 		local result = base.operator . (qual.substr(2, attrend));
 		if (result is none) result = type none;
 		return result;
 	}	break;
+
 	case "E": {
-		local modend = find_nonescaped(qual, ":");
+		local modend = findNonEscaped(qual, ":");
 		if (modend < 0)
 			break;
-		local modnam = decode_name(qual.substr(2, modend));
-		local symnam = decode_name(qual.substr(modend + 1));
+		local modnam = decodeName(qual.substr(2, modend));
+		local symnam = decodeName(qual.substr(modend + 1));
 		local mod;
 		if (modnam.startswith(".")) {
 			/* Import the module relatively to the one calling */
@@ -533,12 +550,14 @@ local function get_type_from_qualpath(docnode: WeakRef with Doc, qual: string): 
 		}
 		return mod.operator . (symnam);
 	}	break;
+
 	case "G": {
 		local basemod = docnode.value.module;
 		local result = basemod.operator . (qual.substr(2));
 		if (result is none) result = type none;
 		return result;
 	}	break;
+
 	default: break;
 	}
 	return none;
@@ -553,27 +572,27 @@ class TypeRef: WeakRefAble {
 	@@The fully qualified documentation string for this type
 	@@Example: $"?Edeemon:int"
 	@@This type reference always has one of the following forms
-	@@ - $"?A<NAME><TYPE>" (Allowing for attribute-lookup recursion)
-	@@ - $"?E<NAME>:<NAME>" (For types with a known resident location)
-	@@ - $"?G<NAME>" (For types with a known resident location in the associated module)
-	@@ - $"?U<NAME>" (For types with an unknown resident location)
+	@@ - @"?A<NAME><TYPE>" (Allowing for attribute-lookup recursion)
+	@@ - @"?E<NAME>:<NAME>" (For types with a known resident location)
+	@@ - @"?G<NAME>" (For types with a known resident location in the associated module)
+	@@ - @"?U<NAME>" (For types with an unknown resident location)
 	public final property docstring: string = {
 		get(): string {
 			if (m_docstring !is string)
-				m_docstring = qualify_typeref_string(docnode, encode_type(m_docstring));
+				m_docstring = qualifyTyperefString(docnode, encodeType(m_docstring));
 			return m_docstring;
 		}
 	}
-	public final member m_docstring: string | deemon.Type;
+	public final member m_docstring: string | Type;
 
 	@@The doc node that contains a reference to @this TypeRef
 	public final member docnode: WeakRef with Doc;
 
-	this(d: Doc | WeakRef with Doc, ds: string | deemon.Type)
+	this(d: Doc | WeakRef with Doc, ds: string | Type)
 		: docnode(d is WeakRef ? d : WeakRef(d))
 	{
 		if (ds is string) {
-			m_docstring = qualify_typeref_string(docnode, ds);
+			m_docstring = qualifyTyperefString(docnode, ds);
 		} else {
 			m_docstring = ds;
 			m_typ = ds;
@@ -587,34 +606,34 @@ class TypeRef: WeakRefAble {
 
 	@@The actual type object represented by @this TypeRef,
 	@@or @none if that type is unreachable or unknown
-	public final property typ: deemon.Type | none = {
-		get(): deemon.Type | none {
+	public final property typ: Type | none = {
+		get(): Type | none {
 			if (m_typ !is bound) {
 				m_typ =
-					try get_type_from_qualpath(docnode, m_docstring)
+					try getTypeFromQualPath(docnode, m_docstring)
 					catch (...) none;
-				if (m_typ !is deemon.Type)
+				if (m_typ !is Type)
 					m_typ = none;
 			}
 			return m_typ;
 		}
 	}
-	private member m_typ: deemon.Type | none;
+	private member m_typ: Type | none;
 
 
 	@@Returns the Doc path associated with the type referenced by @this
 	@@If no such path exists, return @none instead
-	@@NOTE: The returned path includes a leading $"/"
+	@@NOTE: The returned path includes a leading @"/"
 	public final property path: string | none = {
 		get(): string | none {
 			if (m_path !is bound)
-				m_path = get_qualified_typepath(docnode, docstring);
+				m_path = getQualifiedTypePath(docnode, docstring);
 			return m_path;
 		}
 	}
 	private member m_path: string | none;
 
-	@@Similar to #path, but return the associated Doc node instead
+	@@Similar to @path, but return the associated Doc node instead
 	public final property node: Doc | none = {
 		get(): Doc | none {
 			if (m_node !is bound) {
@@ -647,17 +666,17 @@ class TypeRef: WeakRefAble {
 	@@and ishas 2 different forms:
 	@@ - When the type is found to be apart of the same module as the referencing
 	@@   doc node, then the module prefix is omitted, and the returned string is
-	@@   structured in the form of $"MyType.Iterator" (for ${(MyType from mymodule).Iterator})
+	@@   structured in the form of @"MyType.Iterator" (for @((MyType from mymodule).Iterator))
 	@@ - When the type is apart of a different module, then that module's name is
-	@@   prefixed, resulting in the form of $"mymodule.MyType.Iterator"
-	@@   When that other module is the builtin :deemon module, the module prefix
+	@@   prefixed, resulting in the form of @"mymodule.MyType.Iterator"
+	@@   When that other module is the builtin @deemon module, the module prefix
 	@@   will be attempted to be omitted, however if the current module also contains
 	@@   an export with the same name, the prefix is retained.
 	public final property prettyname: string = {
 		get() {
 			if (m_prettyname !is bound) {
 				if (docstring.startswith("?G"))
-					m_prettyname = decode_name(docstring.substr(2));
+					m_prettyname = decodeName(docstring.substr(2));
 				else {
 					m_prettyname = getprettyname(docstring);
 				}
@@ -666,34 +685,41 @@ class TypeRef: WeakRefAble {
 		}
 	}
 	private member m_prettyname: string;
+
 	private getprettyname(qual): string {
-		if (#qual >= 2) switch (qual[1]) {
-		case "E": {
-			local modend = find_nonescaped(qual, ":", 2);
-			local modname = decode_name(qual.substr(2, modend));
-			local modexp = decode_name(qual.substr(modend + 1));
-			local mymod = docnode.lock(none).module;
-			if (mymod !is none) {
-				if (modname == Module.__name__(mymod))
-					return modexp;
-				if (modname == "deemon" && modexp !in Module.__exports__(mymod))
-					return modexp;
+		if (#qual >= 2) {
+			switch (qual[1]) {
+
+			case "E": {
+				local modend = findNonEscaped(qual, ":", 2);
+				local modname = decodeName(qual.substr(2, modend));
+				local modexp = decodeName(qual.substr(modend + 1));
+				local mymod = docnode.lock(none).module;
+				if (mymod !is none) {
+					if (modname == Module.__name__(mymod))
+						return modexp;
+					if (modname == "deemon" && modexp !in Module.__exports__(mymod))
+						return modexp;
+				}
+				return "{}.{}".format({ modname, modexp });
+			}	break;
+
+			case "U":
+				return decodeName(qual.substr(2));
+
+			case "A": {
+				local namelen = decodeNameEnd(qual, 2);
+				return "{}.{}".format({
+					getprettyname(qual.substr(namelen)),
+					decodeName(qual.substr(2, namelen)),
+				});
 			}
-			return "{}.{}".format({ modname, modexp });
-		}	break;
-		case "U":
-			return decode_name(qual.substr(2));
-		case "A": {
-			local namelen = decode_name_end(qual, 2);
-			return "{}.{}".format({
-				getprettyname(qual.substr(namelen)),
-				decode_name(qual.substr(2, namelen)),
-			});
+
+			default:
+				break;
+			}
 		}
-		default:
-			break;
-		}
-		return decode_name(qual.substr(2));
+		return decodeName(qual.substr(2));
 	}
 
 	operator str(): string {
@@ -702,7 +728,7 @@ class TypeRef: WeakRefAble {
 }
 
 @@Returns the character index where a type expression starting at @start ends
-local function typeexpr_end(s: string, start: int): int {
+local function typeExprEnd(s: string, start: int): int {
 	local len = #s;
 	local result = start;
 again:
@@ -718,29 +744,34 @@ again:
 	if (result >= len)
 		return result;
 	switch (s[result]) {
+
 	case "#":
 	case "D":
 	case "U":
 	case "G":
 		++result;
-		result = decode_name_end(s, result);
+		result = decodeNameEnd(s, result);
 		break;
+
 	case "E":
 		++result;
-		result = decode_name_end(s, result);
+		result = decodeNameEnd(s, result);
 		if (s[result] == ":") {
 			++result;
-			result = decode_name_end(s, result);
+			result = decodeNameEnd(s, result);
 		}
 		break;
+
 	case "A":
 		++result;
-		result = decode_name_end(s, result);
+		result = decodeNameEnd(s, result);
 		goto again;
+
 	case "C":
 		++result;
-		result = typeexpr_end(s, result);
+		result = typeExprEnd(s, result);
 		goto again;
+
 	case "T":
 	case "X": {
 		++result;
@@ -749,17 +780,20 @@ again:
 			++result;
 		local n = try int(s[n_start:result]) catch (...) 0;
 		for (none: [:n])
-			result = typeexpr_end(s, result);
+			result = typeExprEnd(s, result);
 	}	break;
+
 	case "S":
 		++result;
 		goto again;
+
 	case "Q": {
-		local end = find_nonescaped(s, "]", result + 1);
+		local end = findNonEscaped(s, "]", result + 1);
 		if (end < 0)
 			end = len - 1;
 		result = end + 1;
 	}	break;
+
 	default:
 		++result;
 		break;
@@ -785,8 +819,10 @@ again:
 	if (result >= len)
 		return result;
 	switch (s[result]) {
+
 	case "V":
 		++result; /* VA */
+		/* FALLTHRU */
 	case "P":
 	case "#":
 	case "D":
@@ -794,16 +830,18 @@ again:
 	case "G":
 	case "M":
 		++result;
-		result = decode_name_end(s, result);
+		result = decodeNameEnd(s, result);
 		break;
+
 	case "E":
 		++result;
-		result = decode_name_end(s, result);
+		result = decodeNameEnd(s, result);
 		if (s[result] == ":") {
 			++result;
-			result = decode_name_end(s, result);
+			result = decodeNameEnd(s, result);
 		}
 		break;
+
 	case "T":
 	case "L":
 	case "S":
@@ -816,6 +854,7 @@ again:
 		for (none: [:n])
 			result = deflexpr_end(s, result);
 	}	break;
+
 	case "!":
 		++result;
 		if (result >= len)
@@ -857,6 +896,7 @@ again:
 		}
 		++result;
 		goto again;
+
 	case "C":
 	case "X":
 	case "W":
@@ -868,6 +908,7 @@ again:
 	case "~":
 		++result;
 		goto again;
+
 	case "*":
 	case "/":
 	case "%":
@@ -881,13 +922,16 @@ again:
 		++result;
 		result = deflexpr_end(s, result);
 		goto again;
+
 	case "I": /* conditional expression */
 		++result;
 		result = deflexpr_end(s, result);
 		result = deflexpr_end(s, result);
 		goto again;
+
 	case "-":
 		++result;
+		/* FALLTHRU */
 	default:
 		if (result < len && s.isdigit(result)) {
 			for (;;) {
@@ -916,7 +960,7 @@ again:
 @@>import * from deemon;
 @@>import * from doc;
 @@>function foo(x: int | float): string {
-@@> return str x;
+@@>    return str x;
 @@>}
 @@>
 @@>local d = Doc(foo);
@@ -929,15 +973,15 @@ again:
 class TypeExpr: WeakRefAble {
 
 	@@The raw documentation string for this type
-	@@Example: $"?T2?Dint?Dint"
+	@@Example: @"?T2?Dint?Dint"
 	public final property docstring: string = {
 		get(): string {
 			if (m_docstring !is string)
-				m_docstring = encode_type(m_docstring);
+				m_docstring = encodeType(m_docstring);
 			return m_docstring;
 		}
 	}
-	private member m_docstring: string | deemon.Type;
+	private member m_docstring: string | Type;
 
 	@@The doc node that contains a reference to @this TypeExpr
 	public final property docnode: WeakRef with Doc = {
@@ -949,7 +993,7 @@ class TypeExpr: WeakRefAble {
 	@@The doc Declaration that uses @this TypeExpr
 	public final member docdecl: WeakRef with Declaration;
 
-	this(d: Declaration | WeakRef with Declaration, ds: string | deemon.Type)
+	this(d: Declaration | WeakRef with Declaration, ds: string | Type)
 		: docdecl(d is WeakRef ? d : WeakRef(d))
 		, m_docstring(ds)
 	{
@@ -974,15 +1018,15 @@ class TypeExpr: WeakRefAble {
 		}
 	}
 
-	@@Returns :true if the type referred to by @this TypeExpr
-	@@accepts any kind of input (aka. referrs to deemon.Object)
+	@@Returns @true if the type referred to by @this TypeExpr
+	@@accepts any kind of input (aka. referrs to @Object)
 	@@Seperately, a X-expression with at least one element
 	@@accepting anything, also accepts anything itself.
 	public final property acceptsany: bool = {
 		get(): bool {
 			if (m_acceptsany !is bound) {
 				if (m_docstring !is string)
-					m_acceptsany = m_docstring === deemon.Object;
+					m_acceptsany = m_docstring === Object;
 				else if (m_docstring in ["?O", "?Dobject", "?Edeemon:Object"])
 					m_acceptsany = true;
 				else {
@@ -1003,16 +1047,18 @@ class TypeExpr: WeakRefAble {
 	private member m_acceptsany: bool;
 
 
-	@@Check if a given Object @ob can be accepted as argument for @this TypeExpr
+	@@Check if a given @Object @ob can be accepted as argument for @this @TypeExpr
 	public final isaccepted(ob: Object): bool {
 		switch (kind) {
+
 		case "E":
 			return ob is Etyperef.typ;
+
 		case "C": {
 			if (ob !is Ccelltype.typ)
 				return false;
 			local cellitem = Citemtype.typ;
-			if (cellitem === deemon.Object)
+			if (cellitem === Object)
 				return true;
 			try {
 				if (ob.value is cellitem)
@@ -1020,6 +1066,7 @@ class TypeExpr: WeakRefAble {
 			} catch (...) {
 			}
 		}	break;
+
 		case "T": {
 			local items;
 			try {
@@ -1036,12 +1083,14 @@ class TypeExpr: WeakRefAble {
 			}
 			return true;
 		}	break;
+
 		case "X":
 			for (local alt: Xtypes) {
 				if (alt.isaccepted(ob))
 					return true;
 			}
 			break;
+
 		case "S": {
 			local it;
 			try {
@@ -1067,6 +1116,7 @@ check_elem:
 			}
 			return true;
 		}	break;
+
 		default:
 			break;
 		}
@@ -1075,56 +1125,63 @@ check_elem:
 
 	@@Enumerate the (simplified) set of types which @this TypeExpr accepts
 	@@For this purpose, contained-information for Cell-like objects is removed, and
-	@@any kind of sequence-like type is interpreted as one of :Sequence or :mapping
-	public final property types: {deemon.Type...} = {
-		get(): {deemon.Type...} {
+	@@any kind of sequence-like type is interpreted as one of @Sequence or @Mapping
+	public final property types: {Type...} = {
+		get(): {Type...} {
 			if (m_types !is bound)
 				m_types = HashSet(enumtypes());
 			return m_types;
 		}
 	}
-	private member m_types: {deemon.Type...};
+	private member m_types: {Type...};
 
-	private enumtypes(): {deemon.Type...} {
+	private enumtypes(): {Type...} {
 		switch (kind) {
+
 		case "E":
 			yield Etyperef.typ;
 			break;
+
 		case "C":
 			yield Ccelltype.enumtypes()...;
 			break;
+
 		case "T":
-			yield deemon.Sequence;
+			yield Sequence;
 			break;
+
 		case "X":
 			for (local x: Xtypes)
 				yield x.enumtypes()...;
 			break;
+
 		case "S": {
 			local st = Stype;
 			if (st.docstring.startswith("?T2"))
-				yield deemon.mapping; /* Sequence of 2-element tuples. */
+				yield Mapping; /* Sequence of 2-element tuples. */
 			else {
-				yield deemon.Sequence; /* Sequence of something else. */
+				yield Sequence; /* Sequence of something else. */
 			}
 		}	break;
+
 		case "Q":
 			yield Qexpr.exprtypes...;
 			break;
+
 		default:
-			yield deemon.Object;
+			yield Object;
 			break;
 		}
 	}
 
 	@@Returns the kind of type expression represented by @this node
 	@@This is a single character, which is one of:
-	@@ - $"E": Fully qualifyable type; s.a. #Etyperef
-	@@ - $"C": Container-like type (s.a. #Ccelltype and #Citemtype)
-	@@ - $"T": Tuple consisting of multiple child-elements (s.a. #Ttypes)
-	@@ - $"X": A set of multiple, alternatively accepted types (s.a. #Xtypes)
-	@@ - $"S": A sequence containing elements of a specific type (s.a. #Stype)
-	@@ - $"Q": The type of an expression (s.a. #Qexpr)
+	@@ - @"E": Fully qualifyable type; s.a. @Etyperef
+	@@ - @"C": Container-like type (s.a. @Ccelltype and @Citemtype)
+	@@ - @"T": Tuple consisting of multiple child-elements (s.a. @Ttypes)
+	@@ - @"X": A set of multiple, alternatively accepted types (s.a. @Xtypes)
+	@@ - @"S": A sequence containing elements of a specific type (s.a. @Stype)
+	@@ - @"Q": The type of an expression (s.a. @Qexpr)
 	public final property kind: string = {
 		get(): string {
 			if (m_kind !is bound) {
@@ -1145,7 +1202,7 @@ check_elem:
 	@@Cache of child-expressions / references
 	private member m_cache: TypeRef | TypeExpr | {TypeExpr...} | (TypeExpr, TypeExpr) | Expression;
 	private loadC() {
-		local end = typeexpr_end(m_docstring, 2);
+		local end = typeExprEnd(m_docstring, 2);
 		m_cache = (
 			TypeExpr(docdecl, m_docstring.substr(2, end)),
 			TypeExpr(docdecl, m_docstring.substr(end)),
@@ -1158,7 +1215,7 @@ check_elem:
 		local n = try int(m_docstring[2:pos]) catch (...) 0;
 		local result = List(n, none);
 		for (local i: [:n]) {
-			local end = typeexpr_end(m_docstring, pos);
+			local end = typeExprEnd(m_docstring, pos);
 			result[i] = TypeExpr(docdecl, m_docstring.substr(pos, end));
 			pos = end;
 		}
@@ -1173,7 +1230,7 @@ check_elem:
 
 
 	@@Returns a fully qualified type reference for @this
-	@@WARNING: This property must only be used when #kind is equal to $"E"
+	@@WARNING: This property must only be used when @kind is equal to @"E"
 	public final property Etyperef: TypeRef = {
 		get(): TypeRef {
 			if (m_cache !is bound)
@@ -1183,7 +1240,7 @@ check_elem:
 	}
 
 	@@Returns the cell container type for @this
-	@@WARNING: This property must only be used when #kind is equal to $"C"
+	@@WARNING: This property must only be used when @kind is equal to @"C"
 	public final property Ccelltype: TypeExpr = {
 		get(): TypeExpr {
 			if (m_cache !is bound)
@@ -1193,7 +1250,7 @@ check_elem:
 	}
 
 	@@Returns the cell item type for @this
-	@@WARNING: This property must only be used when #kind is equal to $"C"
+	@@WARNING: This property must only be used when @kind is equal to @"C"
 	public final property Citemtype: TypeExpr = {
 		get(): TypeExpr {
 			if (m_cache !is bound)
@@ -1203,7 +1260,7 @@ check_elem:
 	}
 
 	@@Returns the sequence of Tuple element types
-	@@WARNING: This property must only be used when #kind is equal to $"T"
+	@@WARNING: This property must only be used when @kind is equal to @"T"
 	public final property Ttypes: {TypeExpr...} = {
 		get(): {TypeExpr...} {
 			if (m_cache !is bound)
@@ -1213,7 +1270,7 @@ check_elem:
 	}
 
 	@@Returns the sequence of alternative type expressions
-	@@WARNING: This property must only be used when #kind is equal to $"X"
+	@@WARNING: This property must only be used when @kind is equal to @"X"
 	public final property Xtypes: {TypeExpr...} = {
 		get(): {TypeExpr...} {
 			if (m_cache !is bound)
@@ -1223,7 +1280,7 @@ check_elem:
 	}
 
 	@@Returns the element type of @this sequence expression
-	@@WARNING: This property must only be used when #kind is equal to $"S"
+	@@WARNING: This property must only be used when @kind is equal to @"S"
 	public final property Stype: TypeExpr = {
 		get(): TypeExpr {
 			if (m_cache !is bound)
@@ -1233,7 +1290,7 @@ check_elem:
 	}
 
 	@@Returns the expression who's type is referenced by @this TypeExpr
-	@@WARNING: This property must only be used when #kind is equal to $"Q"
+	@@WARNING: This property must only be used when @kind is equal to @"Q"
 	public final property Qexpr: Expression = {
 		get(): Expression {
 			if (m_cache !is bound)
@@ -1245,20 +1302,27 @@ check_elem:
 	@@Return @this type in a way in which the user may have originally written it
 	operator str(): string {
 		switch (kind) {
+
 		case "E":
 			return str Etyperef;
+
 		case "C":
 			return "{} with {}".format({ Ccelltype, Citemtype });
+
 		case "T":
 			return #Ttypes == 1
 				? "({},)".format({ Ttypes[0] })
 				: "({})".format({ ", ".join(Ttypes) });
+
 		case "X":
 			return " | ".join(Xtypes);
+
 		case "S":
 			return "{{{}...}}".format({ Stype });
+
 		case "Q":
 			return "type({})".format({ Qexpr });
+
 		default: break;
 		}
 		return docstring;
@@ -1275,7 +1339,7 @@ class Expression: WeakRefAble {
 	public final property docstring: string = {
 		get(): string {
 			if (m_docstring === false)
-				m_docstring = encode_expr(m_cache);
+				m_docstring = encodeExpression(m_cache);
 			return m_docstring;
 		}
 	}
@@ -1310,16 +1374,20 @@ class Expression: WeakRefAble {
 	public final property exprtypes: {TypeExpr...} = {
 		get(): {TypeExpr...} {
 			switch (kind) {
+
 			case "C":
 				yield TypeExpr(docdecl, type Cvalue);
 				break;
+
 			case "A":
 				/* Alias the same types as seen in another argument. */
 				yield Aparam.typ.types...;
 				break;
+
 			case "S":
 				yield StypeExpr;
 				break;
+
 			default:
 				yield TypeExpr(docdecl, "?O");
 				break;
@@ -1332,14 +1400,13 @@ class Expression: WeakRefAble {
 		/* TODO */
 	}
 
-
 	@@The kind of expression, which is one of
-	@@  - C  A constant expression (s.a. #Cvalue)
-	@@  - E  An fully qualified location within a reachable module (s.a. #Epath, #Emodule, #Evalue)
-	@@  - A  Another argument (s.a. #Aparam)
-	@@  - U  An undefined/private symbol (s.a. #Uname)
-	@@  - S  A sequence expression (s.a. #Sitems, #Stype)
-	@@  - O  An operator being invoked on another expression (s.a. #Ooperator and #Ooperands)
+	@@  - @"C": A constant expression (s.a. @Cvalue)
+	@@  - @"E": An fully qualified location within a reachable module (s.a. @Epath, @Emodule, @Evalue)
+	@@  - @"A": Another argument (s.a. @Aparam)
+	@@  - @"U": An undefined/private symbol (s.a. @Uname)
+	@@  - @"S": A sequence expression (s.a. @Sitems, @Stype)
+	@@  - @"O": An operator being invoked on another expression (s.a. @Ooperator and @Ooperands)
 	public final property kind: string = {
 		get(): string {
 			if (m_kind !is bound) {
@@ -1363,8 +1430,8 @@ class Expression: WeakRefAble {
 						/* Assume external symbol. */
 						local mod, none, path = m_docstring.partition(":")...;
 						m_docstring = "!E{}:{}".format({
-							encode_name(mod),
-							encode_name(path),
+							encodeName(mod),
+							encodeName(path),
 						});
 						m_kind = "E";
 					} else {
@@ -1434,12 +1501,12 @@ done:
 	private member m_cache;
 
 
-	@@Returns the constant default value when #kind is $"C"
+	@@Returns the constant default value when @kind is @"C"
 	public final property Cvalue: Object = {
 		get(): Object {
 			if (m_cache !is bound) {
 				if (m_docstring[1] == "P") {
-					m_cache = decode_name(m_docstring.substr(2));
+					m_cache = decodeName(m_docstring.substr(2));
 				} else {
 					local ds = m_docstring.substr(1);
 					m_cache = try
@@ -1458,26 +1525,32 @@ done:
 	@@When @module_name is set to @".", referr to the current module.
 	private Edecode() {
 		switch (m_docstring[1]) {
+
 		case "D":
 			m_cache = (deemon, m_docstring.substr(2));
 			break;
+
 		case "U":
 			m_cache = (none, m_docstring.substr(2));
 			break;
+
 		case "G":
 			m_cache = (".", m_docstring.substr(2));
 			break;
+
 		case "E": {
-			local sep = find_nonescaped(m_docstring, ":", 2);
+			local sep = findNonEscaped(m_docstring, ":", 2);
 			if (sep < 0) {
 				m_cache = (m_docstring.substr(2), none);
 			} else {
 				m_cache = (m_docstring.substr(sep), m_docstring.substr(sep + 1));
 			}
 		}	break;
+
 		case "M":
 			m_cache = (m_docstring.substr(2), none);
 			break;
+
 		default:
 			m_cache = (none, m_docstring);
 			break;
@@ -1542,7 +1615,7 @@ done:
 		}
 	}
 
-	@@The name of the attribute that is being imported from the #Emodule
+	@@The name of the attribute that is being imported from the @Emodule
 	@@If the external reference applies directly to a module, evaluate to @none
 	public final property Emoduleattr: string | none = {
 		get(): string {
@@ -1563,7 +1636,7 @@ done:
 		}
 	}
 
-	@@Returns the referenced parameter when #kind is $"C"
+	@@Returns the referenced parameter when @kind is @"C"
 	public final property Aparam: Parameter | none = {
 		get(): Parameter {
 			if (m_cache !is bound) {
@@ -1590,7 +1663,7 @@ done:
 				 * dereference in the following line to read a dead WeakRef.
 				 */
 				m_cache = docdecl.value.getparambyname(
-					decode_name(m_docstring.substr(3)));
+					decodeName(m_docstring.substr(3)));
 			}
 			return m_cache;
 		}
@@ -1600,7 +1673,7 @@ done:
 	public final property Uname: string = {
 		get(): string {
 			if (m_cache !is bound)
-				m_cache = decode_name(m_docstring.substr(2));
+				m_cache = decodeName(m_docstring.substr(2));
 			return m_cache;
 		}
 	}
@@ -1626,22 +1699,23 @@ done:
 	}
 
 	@@Returns the sequence type of @this, which is one of:
-	@@ - :deemon.List
-	@@ - :deemon.Tuple
-	@@ - :deemon.Dict
-	@@ - :deemon.HashSet
-	public final property Stype: deemon.Type = {
-		get(): deemon.Type {
+	@@ - @List
+	@@ - @Tuple
+	@@ - @Dict
+	@@ - @HashSet
+	public final property Stype: Type = {
+		get(): Type {
 			local map = {
-				"L" : deemon.List,
-				"T" : deemon.Tuple,
-				"D" : deemon.Dict,
-				"S" : deemon.HashSet,
+				"L" : List,
+				"T" : Tuple,
+				"D" : Dict,
+				"S" : HashSet,
 			};
 			return map[m_docstring[1]];
 		}
 	}
-	@@Similar to #Stype, but return the associated type expression
+
+	@@Similar to @Stype, but return the associated type expression
 	public final property StypeExpr: TypeExpr = {
 		get(): TypeExpr {
 			local map = {
@@ -1654,7 +1728,7 @@ done:
 		}
 	}
 
-	@@Returns the real-name (e.g. $"add") of the operator being invoked
+	@@Returns the real-name (e.g. @"add") of the operator being invoked
 	public final property Ooperator: string = {
 		get(): string {
 			/* TODO */
@@ -1676,10 +1750,13 @@ done:
 		 *  !C!Umy_instance -> copy(my_instance)
 		 */
 		switch (kind) {
+
 		case "C":
 			return repr Cvalue;
+
 		case "A":
 			return Aparam.name;
+
 		case "E": {
 			local mod = Emodulename;
 			local att = Emoduleattr;
@@ -1689,12 +1766,16 @@ done:
 				return mod;
 			return "{}.{}".format({ mod, att });
 		}
+
 		case "U":
 			return Uname;
+
 		case "S":
 			switch (m_docstring[1]) {
+
 			case "L":
 				return "[{}]".format({ ",".join(Sitems) });
+
 			case "T": {
 				local t = Tuple(Sitems);
 				if (!t) return "()";
@@ -1702,6 +1783,7 @@ done:
 					return "({},)".format({ t[0] });
 				return "({})".format({ ",".join(t) });
 			}
+
 			case "D": {
 				File.Writer result;
 				result << "{ ";
@@ -1715,15 +1797,19 @@ done:
 				result << (is_first ? "}" : " }");
 				return result.string;
 			}
+
 			case "S":
 				return "{{ {} }}".format({ ", ".join(Sitems) });
+
 			default:
 				break;
 			}
 			break;
+
 		case "O":
 			/* TODO: Operator */
 			break;
+
 		default:
 			break;
 		}
@@ -1735,7 +1821,7 @@ done:
 class Parameter: WeakRefAble {
 
 	@@The raw documentation string for this parameter
-	@@Example: $"x:?Dint"
+	@@Example: @"x:?Dint"
 	public final member docstring: string;
 
 	@@The declaration that @this parameter is apart of
@@ -1750,14 +1836,14 @@ class Parameter: WeakRefAble {
 		, docstring(ds)
 	{}
 
-	private member m_namstring: string; /* Already decoded (using decode_name) */
+	private member m_namstring: string; /* Already decoded (using decodeName) */
 	private member m_typstring: string | none; /* in <TYPE> encoding */
 	private member m_defstring: string | none; /* in <EXPR> encoding */
 	private member m_isoptional: bool;
 	private member m_isvarargs: bool;
 	private member m_iskwargs: bool;
 
-	@@Decode #docstring to extract information
+	@@Decode @docstring to extract information
 	private decode_docstring() {
 		m_isoptional = m_isvarargs = m_iskwargs = false;
 		m_typstring = m_defstring = none;
@@ -1765,7 +1851,7 @@ class Parameter: WeakRefAble {
 		 * declarations in the form of `int x', something that we
 		 * identify by searching for a non-escaped space-character,
 		 * which we then interpret as the delimiter between name & type */
-		local type_end = find_nonescaped(docstring," ");
+		local type_end = findNonEscaped(docstring, " ");
 		local doclen = #docstring;
 		if (type_end >= 0) {
 			/* Since old-style declarations were sometimes also written
@@ -1776,7 +1862,7 @@ class Parameter: WeakRefAble {
 			 * be clear that we're dealing with a new-style parameter. */
 			docstring = docstring.strip();
 			doclen = #docstring;
-			type_end = find_nonescaped(docstring, " ");
+			type_end = findNonEscaped(docstring, " ");
 			if (type_end >= 0) {
 				m_typstring = docstring.substr(0, type_end);
 				m_namstring = docstring.substr(type_end + 1).lstrip();
@@ -1846,7 +1932,7 @@ class Parameter: WeakRefAble {
 		}
 		if (!doclen) {
 			/* Try to extract the argument name from varkwds information */
-			m_namstring = get_generic_argument_name(
+			m_namstring = getGenericArgumentName(
 				docargi, docdecl.value.docsect.value.docnode.value);
 			return;
 		}
@@ -1861,25 +1947,27 @@ class Parameter: WeakRefAble {
 			m_namstring = docstring.substr(0, name_end);
 		} else if (docstring[0] == "{") {
 			/* Escaped argument name. */
-			name_end = find_nonescaped(docstring, "}", 1);
+			name_end = findNonEscaped(docstring, "}", 1);
 			if (name_end < 0)
 				name_end = doclen;
-			m_namstring = decode_name_content(docstring.substr(1, name_end));
+			m_namstring = decodeNameContent(docstring.substr(1, name_end));
 			if (name_end < doclen)
 				++name_end;
 		} else {
 			/* Parameter is unnamed. */
-			m_namstring = get_generic_argument_name(
+			m_namstring = getGenericArgumentName(
 				docargi, docdecl.value.docsect.value.docnode.value);
 			name_end = 0;
 		}
 		if (name_end >= doclen)
 			return;
 		switch (docstring[name_end]) {
+
 		case "?":
 			m_isoptional = true;
 			++name_end;
 			break;
+
 		case "!":
 			++name_end;
 			if (name_end < doclen && docstring[name_end] == "!") {
@@ -1889,6 +1977,7 @@ class Parameter: WeakRefAble {
 				m_isvarargs = true;
 			}
 			break;
+
 		default: break;
 		}
 		if (name_end >= doclen)
@@ -1896,7 +1985,7 @@ class Parameter: WeakRefAble {
 		if (docstring[name_end] == ":") {
 			/* Argument type */
 			++name_end;
-			local typend = find_nonescaped(docstring, "=", name_end);
+			local typend = findNonEscaped(docstring, "=", name_end);
 			if (typend >= 0) {
 				/* Default expression */
 				m_typstring = docstring.substr(name_end, typend);
@@ -1974,7 +2063,7 @@ class Parameter: WeakRefAble {
 	}
 	private member m_typ: TypeExpr;
 
-	@@Alias for ${this.typ.isaccepted(ob)}
+	@@Alias for @this.typ.isaccepted(ob)
 	public final isaccepted(ob: Object): bool {
 		return typ.isaccepted(ob);
 	}
@@ -2005,8 +2094,8 @@ class Parameter: WeakRefAble {
 							.docnode.lock(none);
 						if (node !is none && node.object is bound) {
 							local ob = node.object;
-							if (ob is deemon.Function) {
-								/* Extract from default argument List of user-level function */
+							if (ob is Function) {
+								/* Extract from default argument list of user-level function */
 								local code = ob.__code__;
 								local argc_min = code.__argc_min__;
 								if (docargi >= argc_min &&
@@ -2029,7 +2118,7 @@ done:
 	private member m_defexpr: Expression | none;
 
 
-	@@Evaluates to :true if @this Parameter is an optional argument
+	@@Evaluates to @true if @this Parameter is an optional argument
 	public final property isoptional: bool = {
 		get(): string | none {
 			if (m_isoptional !is bound)
@@ -2038,7 +2127,7 @@ done:
 		}
 	}
 
-	@@Evaluates to :true if @this Parameter is a varargs argument
+	@@Evaluates to @true if @this Parameter is a varargs argument
 	public final property isvarargs: bool = {
 		get(): bool {
 			if (m_isvarargs !is bound)
@@ -2047,7 +2136,7 @@ done:
 		}
 	}
 
-	@@Evaluates to :true if @this Parameter is a varkwds argument
+	@@Evaluates to @true if @this Parameter is a varkwds argument
 	public final property isvarkwds: bool = {
 		get(): bool {
 			if (m_iskwargs !is bound)
@@ -2077,7 +2166,11 @@ done:
 
 	@@Returns a string representation of how @this Parameter can be created
 	operator repr(): string {
-		return "Parameter({!r}, {!r}, {!r})".format({ docdecl.lock(none), docargi, docstring });
+		return "Parameter({!r}, {!r}, {!r})".format({
+			docdecl.lock(none),
+			docargi,
+			docstring
+		});
 	}
 }
 
@@ -2116,10 +2209,10 @@ class Declaration: WeakRefAble {
 	private member m_isinherited: bool;
 	private member m_explittype: bool;
 
-	@@Split #docstring into its individual segments
-	private split_decl_string() {
+	@@Split @docstring into its individual segments
+	private splitDeclString() {
 		local ds = docstring;
-		local par_start = find_nonescaped(ds, "(");
+		local par_start = findNonEscaped(ds, "(");
 		local ret_start = ds.rfind("->");
 		m_parstring = m_namstring = m_retstring = none;
 		m_isdeleted = m_isinherited = m_explittype = false;
@@ -2151,24 +2244,24 @@ class Declaration: WeakRefAble {
 				if (isoperator) {
 					/* Generate default parameter information for operators */
 					m_parstring = "";
-					local defl = operator_defaults.get(opname);
+					local defl = OPERATOR_DEFAULTS.get(opname);
 					if (defl !is none) {
 						local rt = defl.rfind("->");
 						if (rt >= 0) {
 							m_parstring = defl.substr(1, rt - 1);
 							if (!m_retstring)
-								m_retstring = defl.substr(rt + 2);;
+								m_retstring = defl.substr(rt + 2);
 						}
 					}
 				} else if (docsect.value.docnode.value.isfunction) {
-					m_parstring = ""; /* Default to an empty argument List for functions */
+					m_parstring = ""; /* Default to an empty argument list for functions */
 				}
 			}
 			m_explittype = true;
 			if (!m_retstring) {
 				m_explittype = false;
 				if (isoperator) {
-					local defl = operator_defaults.get(opname);
+					local defl = OPERATOR_DEFAULTS.get(opname);
 					if (defl !is none) {
 						local rt = defl.rfind("->");
 						if (rt >= 0) {
@@ -2182,7 +2275,7 @@ class Declaration: WeakRefAble {
 			/* Default to returning `Object' when the parameter List was omitted. */
 			m_retstring = "";
 			if (isoperator) {
-				local defl = operator_defaults.get(opname);
+				local defl = OPERATOR_DEFAULTS.get(opname);
 				if (defl !is none) {
 					local rt = defl.rfind("->");
 					if (rt >= 0) {
@@ -2195,13 +2288,13 @@ class Declaration: WeakRefAble {
 		}
 	}
 
-	@@Returns the (paren-stripped) string associated with the argument List
+	@@Returns the (paren-stripped) string associated with the argument list
 	@@portion of @this Declaration. - If the declaration doesn't include an
-	@@explicit argument List, @none is returned instead.
+	@@explicit argument list, @none is returned instead.
 	public final property parstring: string | none = {
 		get(): string | none {
 			if (m_parstring !is bound)
-				split_decl_string();
+				splitDeclString();
 			return m_parstring;
 		}
 	}
@@ -2212,44 +2305,44 @@ class Declaration: WeakRefAble {
 	public final property namstring: string | none = {
 		get(): string | none {
 			if (m_namstring !is bound)
-				split_decl_string();
+				splitDeclString();
 			return m_namstring;
 		}
 	}
 
-	@@Evaluates to :true if @this declaration refers to a member/operator
-	@@that has been explicitly deleted and will throw a :NotImplemented
+	@@Evaluates to @true if @this declaration refers to a member/operator
+	@@that has been explicitly deleted and will throw a @Error.RuntimeError.NotImplemented
 	@@error, should the user attempt to invoke it.
 	public final property isdeleted: bool = {
 		get(): bool {
 			if (m_isdeleted !is bound)
-				split_decl_string();
+				splitDeclString();
 			return m_isdeleted;
 		}
 	}
 
-	@@Evaluates to :true if @this declaration refers to an member/operator
+	@@Evaluates to @true if @this declaration refers to an member/operator
 	@@that has explicitly been inherited from a base-class.
 	@@The most notable example of this is an inherited constructor, as
-	@@can easily be achieved by user-code writing ${this = super;}
+	@@can easily be achieved by user-code writing @(this = super;)
 	public final property isinherited: bool = {
 		get(): bool {
 			if (m_isinherited !is bound)
-				split_decl_string();
+				splitDeclString();
 			return m_isinherited;
 		}
 	}
 
-	@@Evaluates to :true if the return type of @this declaration has been
-	@@explicitly defined. When :false, the return type was either implied
-	@@as :Object (when a return arrow was present, but no return type), or
+	@@Evaluates to @true if the return type of @this declaration has been
+	@@explicitly defined. When @false, the return type was either implied
+	@@as @Object (when a return arrow was present, but no return type), or
 	@@as automatically deduced (as done for operators, as well as for function
 	@@prototypes implying a none-return type when a parameter List is given,
 	@@but no return arrow was found)
 	public final property istypeexplicit: bool = {
 		get(): bool {
 			if (m_explittype !is bound)
-				split_decl_string();
+				splitDeclString();
 			return m_explittype;
 		}
 	}
@@ -2262,10 +2355,10 @@ class Declaration: WeakRefAble {
 				if (name is none)
 					m_opname = "constructor";
 				else {
-					m_opname = operator_realname(name);
+					m_opname = getRealOperatorName(name);
 					/* Check if also need argument count to deduce the real operator name */
 					if (m_opname is none)
-						m_opname = operator_realname(name, #parameters);
+						m_opname = getRealOperatorName(name, #parameters);
 				}
 			}
 			return m_opname;
@@ -2289,23 +2382,23 @@ class Declaration: WeakRefAble {
 	public final property retstring: string | none = {
 		get(): string | none {
 			if (m_retstring !is bound)
-				split_decl_string();
+				splitDeclString();
 			return m_retstring;
 		}
 	}
 
-	@@Returns :true if the return type of @this declaration is always @none
+	@@Returns @true if the return type of @this declaration is always @none
 	public final property returnsnone: bool = {
 		get(): bool {
 			local retstr = m_retstring;
-			return retstr is none || retstr in ["?N", "?Dnone", "?Edeemon@none"];
+			return retstr is none || retstr in ["?N", "?Dnone", "?Edeemon:none"];
 		}
 	}
 
 	@@The return type of @this Declaration (i.e. the
-	@@type expression found after the $"->" arrow)
-	@@When #isdeleted is :true, this property evaluates
-	@@to ${TypeExpr(...,"?N")} (aka. `none')
+	@@type expression found after the @"->" arrow)
+	@@When @isdeleted is @true, this property evaluates
+	@@to @(TypeExpr(..., "?N")) (aka. @none)
 	public final property ret: TypeExpr = {
 		get(): TypeExpr {
 			if (m_typ !is bound) {
@@ -2337,7 +2430,7 @@ class Declaration: WeakRefAble {
 					}
 				} else {
 					m_parameters = Tuple(
-						for (local i, part: util.enumerate(split_nonescaped(parstr, ",")))
+						for (local i, part: util.enumerate(splitNonEscaped(parstr, ",")))
 							Parameter(this, i, part));
 				}
 			}
@@ -2408,7 +2501,8 @@ class Declaration: WeakRefAble {
 class TextSegment: WeakRefAble {
 
 	@@The raw documentation string for this text segment
-	@@Example: $"(x:?Dint,y:?Dint)->?Dint\nAdd together 2 numbers"
+	@@Example for @"(x:?Dint,y:?Dint)->?Dint\nAdd together 2 numbers":
+	@@            @"Add together 2 numbers"
 	public final member docstring: string;
 
 	@@The Doc section containing @this text segment
@@ -2466,7 +2560,7 @@ class TextSegment: WeakRefAble {
 	 *     looks way better.
 	 */
 
-	@@Returns #docstring
+	@@Returns @docstring
 	operator str(): string {
 		return docstring;
 	}
@@ -2479,12 +2573,12 @@ class TextSegment: WeakRefAble {
 }
 
 
-@@Split the text of a :DocSection into a sequence of :{Declaration}s and :{TextSegment}s
-local function split_section(sect: DocSection, docstring: string): {Declaration | TextSegment...} {
+@@Split the text of a @DocSection into a sequence of @(Declaration)s and @(TextSegment)s
+local function splitSegments(sect: DocSection, docstring: string): {Declaration | TextSegment...} {
 	local start = 0;
 	while (docstring.startswith("(", start)) {
 		/* The first line is already is one that is special */
-		local newstart = find_nonescaped(docstring, "\n", start);
+		local newstart = findNonEscaped(docstring, "\n", start);
 		if (newstart < 0) newstart = #docstring;
 		yield Declaration(sect, docstring.substr(start, newstart));
 		start = newstart + 1;
@@ -2495,24 +2589,24 @@ local function split_section(sect: DocSection, docstring: string): {Declaration 
 		if (i < 0) {
 			if (j < 0)
 				break;
-			i = rfind_nonescaped(docstring, "\n", start, j);
+			i = rfindNonEscaped(docstring, "\n", start, j);
 			if (i < 0) i = start;
 		} else {
 			++i;
 			if (j >= 0 && j < i) {
-				i = rfind_nonescaped(docstring, "\n", start, j);
+				i = rfindNonEscaped(docstring, "\n", start, j);
 				if (i < 0) i = start;
 			}
 		}
 		if (i - 1 > start)
-			yield TextSegment(sect, decode_text(docstring.substr(start, i - 1)));
-		local line_end = find_nonescaped(docstring, "\n", i);
+			yield TextSegment(sect, decodeText(docstring.substr(start, i - 1)));
+		local line_end = findNonEscaped(docstring, "\n", i);
 		if (line_end < 0) line_end = #docstring;
 		yield Declaration(sect, docstring.substr(i, line_end));
 		start = line_end + 1;
 	}
 	if (start < #docstring)
-		yield TextSegment(sect, decode_text(docstring.substr(start)));
+		yield TextSegment(sect, decodeText(docstring.substr(start)));
 }
 
 
@@ -2531,8 +2625,8 @@ class DocSection: WeakRefAble {
 	{}
 
 	@@Enumerate all operator sections contained within this DocSection
-	@@as tuples of (operator_name: string, section: DocSection)
-	public final enumerate_opsections(): {string: DocSection} {
+	@@as tuples of @(operatorName: string, section: DocSection)
+	public final enumerateOperatorSections(): {string: DocSection} {
 		local seg = segments;
 		for (local i = 0; i < #seg; ++i) {
 			local s = seg[i];
@@ -2607,7 +2701,7 @@ class DocSection: WeakRefAble {
 		return "DocSection({!r}, {!r})".format({ docnode.lock(none), docstring });
 	}
 
-	@@Evalues to :true if @this DocSection contains declaration segments
+	@@Evalues to @true if @this DocSection contains declaration segments
 	public final property hasdeclarations: bool = {
 		get() {
 			if (m_hasdecls !is bound) {
@@ -2631,7 +2725,7 @@ class DocSection: WeakRefAble {
 	public final property segments: {Declaration | TextSegment...} = {
 		get() {
 			if (m_segments !is bound)
-				m_segments = Tuple(split_section(this, docstring));
+				m_segments = Tuple(splitSegments(this, docstring));
 			return m_segments;
 		}
 	}
@@ -2641,7 +2735,7 @@ class DocSection: WeakRefAble {
 
 
 @@Automatically generate documentation for a given @fun
-local function generate_function_params(fp: File, fun: deemon.Function) {
+local function generateFunctionParams(fp: File, fun: Function) {
 	/* We can actually figure out a lot about this function! */
 	local code = fun.__code__;
 	local argc_min = code.__argc_min__;
@@ -2655,7 +2749,7 @@ local function generate_function_params(fp: File, fun: deemon.Function) {
 		if (i < n_kwds) {
 			fp << kwds[i];
 		} else {
-			fp << get_generic_argument_name(i);
+			fp << getGenericArgumentName(i);
 		}
 	}
 	if (argc_max > argc_min) {
@@ -2668,7 +2762,7 @@ local function generate_function_params(fp: File, fun: deemon.Function) {
 			if (i < n_kwds) {
 				fp << kwds[i];
 			} else {
-				fp << get_generic_argument_name(i);
+				fp << getGenericArgumentName(i);
 			}
 			if (defl[i] !is bound) {
 				fp << "?";
@@ -2678,8 +2772,8 @@ local function generate_function_params(fp: File, fun: deemon.Function) {
 				 * Since `none' is usually used as a placeholder, the user probably
 				 * doesn't expect the user of this function to pass `none' intentionally. */
 				if (default_value !is none)
-					fp << ":" << encode_type(type(default_value));
-				local defl = encode_expr(default_value);
+					fp << ":" << encodeType(type(default_value));
+				local defl = encodeExpression(default_value);
 				if (defl !is none)
 					fp << "=" << defl;
 			}
@@ -2690,7 +2784,7 @@ local function generate_function_params(fp: File, fun: deemon.Function) {
 			fp << ",";
 		fp << (argc_max < n_kwds
 			? kwds[argc_max]
-			: get_generic_argument_name(argc_max))
+			: getGenericArgumentName(argc_max))
 			<< "!";
 	}
 	fp << ")";
@@ -2715,11 +2809,18 @@ local function generate_function_params(fp: File, fun: deemon.Function) {
 @@These attributes can optionally be prefixed with one of the following
 @@modifiers in order to address different attributes namespaces:
 @@
-@@%{table Prefix|Description
-@@$""|The attribute is either a class-attribute, or an instance-attribute (may lead to ambiguity when a name is re-used, such as by :Dict.c:keys and :Dict.i:keys)"
-@@$"c:"|The attribute is a class-attribute (e.g. ${string.chr})
-@@$"i:"|The attribute is a instance-attribute (e.g. ${string.find})
-@@$"op:"|The attribute is a real operator name (e.g. ${"eq"} instead of ${"=="})}
+@@+--------+---------------------------------------------------+
+@@| Prefix | Description                                       |
+@@+--------+---------------------------------------------------+
+@@| @""    | Either class-attribute, or instance-attribute     |
+@@|        | (may lead to ambiguity when a name is re-used)    |
+@@|        |                                                   |
+@@| @"c:"  | Class-attribute (e.g. @string.chr)                |
+@@|        |                                                   |
+@@| @"i:"  | Instance-attribute (e.g. @string.find)            |
+@@|        |                                                   |
+@@| @"op:" | Real operator name (e.g. @"eq" instead of @"==")  |
+@@+--------+---------------------------------------------------+
 @@
 @@Furthermore, child-nodes (attributes) can be reached using #child, and all existing
 @@child nodes can be enumerated by using the doc-node as a sequence-like object.
@@ -2733,7 +2834,7 @@ class Doc: WeakRefAble {
 
 	@@A universally, unique path that can be used to address this Doc item
 	@@NOTE: If the path cannot be determined, return @none instead
-	@@NOTE: The returned path includes a leading $"/"
+	@@NOTE: The returned path includes a leading @"/"
 	public final property path: string | none = {
 		get(): string {
 			if (m_path !is bound) {
@@ -2755,22 +2856,22 @@ class Doc: WeakRefAble {
 	@@Similar to @path, but return the qualified path in <TYPE> encoding
 	@@NOTE: Because <TYPE> encoding includes support for untracable components,
 	@@      this property always evaluates to a string and simply uses
-	@@      the ?U encoding when the qualified path cannot be determined.
+	@@      the @"?U" encoding when the qualified path cannot be determined.
 	public final property qualpath: string = {
 		get(): string {
 			if (m_qualified_path !is bound) {
 				local par = parent;
 				if (par is none) {
-					m_qualified_path = "?U" + encode_name(name);
+					m_qualified_path = "?U" + encodeName(name);
 				} else if (par.ismodule) {
 					m_qualified_path = "?E{}:{}".format({
 						/* TODO: This only works for global modules! */
-						encode_name(par.name),
-						encode_name(name),
+						encodeName(par.name),
+						encodeName(name),
 					});
 				} else {
 					m_qualified_path = "?A{}{}".format({
-						encode_name(name),
+						encodeName(name),
 						par.qualpath,
 					});
 				}
@@ -2780,27 +2881,27 @@ class Doc: WeakRefAble {
 	}
 	private member m_qualified_path: string;
 
-	@@The name of this documentation object (last component of #path, stripped of its namespace prefix)
+	@@The name of this documentation object (last component of @path, stripped of its namespace prefix)
 	@@Note the namespace prefix will have already been stripped from this string, though
-	@@its typing can be recreated with the attributes #isclassattr and #isoperator
+	@@its typing can be recreated with the attributes @isclassattr and @isoperator
 	public final member name: string;
 
-	@@Returns the name of type, or #name if #istype is :false, or if the type is anonymous
+	@@Returns the name of type, or @name if @istype is @false, or if the type is anonymous
 	public final property typename: string = {
 		get(): string {
 			local result = none;
 			if (istype && object is bound)
-				result = deemon.Type.__name__(object);
+				result = Type.__name__(object);
 			return result is none ? name : result;
 		}
 	}
 
-	@@Similar to #name, but if @this Doc node is an operator, return
-	@@that operator's name in the form of $"==", rather than $"eq"
+	@@Similar to @name, but if @this Doc node is an operator, return
+	@@that operator's name in the form of @"==", rather than @"eq"
 	public final property prettyname: string = {
 		get(): string {
 			if (isoperator) {
-				local res = pretty_operator_names.get(name);
+				local res = PRETTY_OPERATOR_NAMES.get(name);
 				if (res !is none)
 					return res;
 			}
@@ -2808,12 +2909,12 @@ class Doc: WeakRefAble {
 		}
 	}
 
-	@@Similar to #prettyname, but include an $"operator"
+	@@Similar to @prettyname, but include an @"operator"
 	@@prefix when @this Doc node describes an operator.
 	public final property prettypathname: string = {
 		get(): string {
 			if (isoperator) {
-				local res = pretty_operator_names.get(name);
+				local res = PRETTY_OPERATOR_NAMES.get(name);
 				if (res !is none)
 					return "operator " + res;
 			}
@@ -2821,8 +2922,8 @@ class Doc: WeakRefAble {
 		}
 	}
 
-	@@Similar to #prettyname, but also include the node kind,
-	@@resulting in the form of $"operator ==" or "function foo"
+	@@Similar to @prettyname, but also include the node kind,
+	@@resulting in the form of @"operator ==" or @"function foo"
 	public final property prettydesc: string = {
 		get(): string {
 			return "{} {}".format({
@@ -2832,9 +2933,9 @@ class Doc: WeakRefAble {
 		}
 	}
 
-	@@Similar to #path, but return in a form akin to $"deemon.string.operator =="
+	@@Similar to @path, but return in a form akin to @"deemon.string.operator =="
 	@@Additionally, this name representation still provides good-looking results
-	@@when #path would evaluate to @none
+	@@when @path would evaluate to @none
 	public final property prettypath: string = {
 		get(): string {
 			local result = path;
@@ -2843,14 +2944,14 @@ class Doc: WeakRefAble {
 				if (par is none) {
 					result = name;
 					if (isoperator)
-						result = "operator " + pretty_operator_names.get(name,name);
+						result = "operator " + PRETTY_OPERATOR_NAMES.get(name,name);
 					return result;
 				}
 				result = par.prettypath;
 				if (isoperator) {
 					result = "{}.operator {}".format({
 						result,
-						pretty_operator_names.get(name, name)
+						PRETTY_OPERATOR_NAMES.get(name, name)
 					});
 				} else {
 					result = "{}.{}".format({ result, name });
@@ -2862,7 +2963,7 @@ class Doc: WeakRefAble {
 				result = result.rpartition("/")[0];
 				result = "{}.operator {}".format({
 					result,
-					pretty_operator_names.get(name, name)
+					PRETTY_OPERATOR_NAMES.get(name, name)
 				});
 			}
 			return result.replace("/",".");
@@ -2901,7 +3002,7 @@ class Doc: WeakRefAble {
 	public final member docstring: string;
 
 	@[optional.gatw.doc("(path:?Dstring)")]
-	@[optional.gatw.doc("Lookup a given @path in the form \"/<module>/<x>/<y>/<z>\"")]
+	@[optional.gatw.doc("Lookup a given @path in the form $\"/<module>/<x>/<y>/<z>\"")]
 	@[optional.gatw.doc("")]
 	@[optional.gatw.doc("(mod:?DModule)")]
 	@[optional.gatw.doc("Lookup the Doc node for a given module")]
@@ -2931,15 +3032,15 @@ class Doc: WeakRefAble {
 				name = Module.__name__(doc_parent_or_path);
 				return;
 			}
-			if (doc_parent_or_path is deemon.Type) {
+			if (doc_parent_or_path is Type) {
 				/* Doc(type) */
 				local type_module;
 load_type_input:
 				object = doc_parent_or_path;
-				m_parent = type_module = deemon.Type.__module__(doc_parent_or_path);
-				docstring = deemon.Type.__doc__(doc_parent_or_path).rstrip();
+				m_parent = type_module = Type.__module__(doc_parent_or_path);
+				docstring = Type.__doc__(doc_parent_or_path).rstrip();
 				istype = true;
-				name = deemon.Type.__name__(doc_parent_or_path);
+				name = Type.__name__(doc_parent_or_path);
 				if (type_module is none) {
 					m_attr = none;
 					m_path = none;
@@ -2968,7 +3069,7 @@ load_type_input:
 					if (doc_parent_or_path.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
 						 * between stuff like `foo.c:field' and `foo.i:field' */
-						object = deemon.Type.getinstanceattr(parob, name);
+						object = Type.getinstanceattr(parob, name);
 					} else {
 						object = parob.operator . (name);
 					}
@@ -2980,7 +3081,7 @@ load_type_input:
 			if (doc_parent_or_path !is string) {
 				/* Check for singleton-like object instances. */
 				local tp = type doc_parent_or_path;
-				if (deemon.Type.__issingleton__(tp)) {
+				if (Type.__issingleton__(tp)) {
 					doc_parent_or_path = tp;
 					goto load_type_input;
 				}
@@ -2990,7 +3091,7 @@ load_type_input:
 					ds = "";
 				docstring = ds.rstrip();
 				object = doc_parent_or_path;
-				if (deemon.hasattr(doc_parent_or_path, "__type__")) {
+				if (hasattr(doc_parent_or_path, "__type__")) {
 					local doc_type;
 					try {
 						doc_type = doc_parent_or_path.__type__;
@@ -3120,12 +3221,12 @@ err_unknown_attribute:
 		assert my_attr is Attribute;
 		if (!my_attr.isprivate && !my_attr.isproperty) {
 			local parob = doc_parent_or_path.object;
-			if (parob is deemon.Type) {
+			if (parob is Type) {
 				if (my_attr.isclass) {
 					if (my_attr.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
 						 * between stuff like `foo.c:field' and `foo.i:field' */
-						object = deemon.Type.getinstanceattr(parob, fixed_attribute_name);
+						object = Type.getinstanceattr(parob, fixed_attribute_name);
 					} else {
 						try {
 							object = parob.operator . (fixed_attribute_name);
@@ -3142,11 +3243,11 @@ err_unknown_attribute:
 		}
 		/* Types implement their own documentation strings. */
 		if (object is bound) {
-			if (object is deemon.Type) {
+			if (object is Type) {
 set_is_type:
-				docstring = deemon.Type.__doc__(object).rstrip();
+				docstring = Type.__doc__(object).rstrip();
 				istype = true;
-			} else if (deemon.Type.__issingleton__(type(object))) {
+			} else if (Type.__issingleton__(type(object))) {
 				/* When accessing the documentation of a singleton object instance
 				 * (as indicated by us having an instance of that singleton, when its
 				 * type offers no way of being constructed; `this = del'), display
@@ -3157,7 +3258,7 @@ set_is_type:
 			}
 		}
 		local tp = my_attr.attrtype;
-		if (tp !is none && deemon.Type.derivedfrom(tp, deemon.Type))
+		if (tp !is none && Type.derivedfrom(tp, Type))
 			istype = true;
 		/* If we couldn't load a non-empty doc string from other places,
 		 * try to load the doc string from the attribute descriptor. */
@@ -3181,20 +3282,20 @@ set_is_type:
 		return "Doc({!r})".format({ path });
 	}
 
-	@@Returns :true if @this doc node has allowed to referr to child nodes
+	@@Returns @true if @this doc node has allowed to referr to child nodes
 	public final property haschildren: bool = {
 		get() {
 			if (object is bound) {
-				if (object is deemon.Module)
+				if (object is Module)
 					return true;
-				if (object is deemon.Type)
+				if (object is Type)
 					return true;
 			}
 			return false;
 		}
 	}
 
-	@@Evaluates to :true if the object is function-like
+	@@Evaluates to @true if the object is function-like
 	public final property isfunction: bool = {
 		get() {
 			if (isoperator)
@@ -3206,7 +3307,7 @@ set_is_type:
 		}
 	}
 
-	@@Evaluates to :true if the object is private to its class
+	@@Evaluates to @true if the object is private to its class
 	public final property isprivate: bool = {
 		get() {
 			local at = attr;
@@ -3214,7 +3315,7 @@ set_is_type:
 		}
 	}
 
-	@@Evaluates to :true if the object is a class-attribute
+	@@Evaluates to @true if the object is a class-attribute
 	public final property isclassattr: bool = {
 		get() {
 			local at = attr;
@@ -3222,44 +3323,57 @@ set_is_type:
 		}
 	}
 
-	@@Evaluates to :true if the object is a module
+	@@Evaluates to @true if the object is a module
 	public final property ismodule: bool = {
 		get() {
 			return object is bound && object is Module;
 		}
 	}
 
-	@@Evaluates to :true if the object is a type
+	@@Evaluates to @true if the object is a type
 	public final member istype: bool = false;
 
-	@@Evaluates to :true if the object is a type, but was accessed via a singleton
-	@@An example of this is :deemon.gc or @none, which are both singleton objects
+	@@Evaluates to @true if the object is a type, but was accessed via a singleton
+	@@An example of this is @gc or @none, which are both singleton objects
 	@@that, when accessed via Doc, should display the documentation of their
 	@@respective type, rather than what little text may be available for the
 	@@single instance itself.
 	@@Since such Doc nodes would otherwise be indistinguishable from nodes created
 	@@for the actual types, nodes create via a singleton instance have this field
-	@@set to :true
+	@@set to @true
 	public final member issingleton: bool = false;
 
-	@@Evaluates to :true if the object is an operator
+	@@Evaluates to @true if the object is an operator
 	public final member isoperator: bool = false;
 
 
 
 	@@Returns the kind of node, which is one of the following
-	@@%{table Name|Description
-	@@$"module"|The node refers to a module
-	@@$"type"|The node refers to a type
-	@@$"singleton"|The node refers to a type accessed via a singleton
-	@@$"functionThe node refers to a function
-	@@$"class_function"|The node refers to a class-function
-	@@$"member"|The node refers to a member or global module-variable
-	@@$"class_member"|The node refers to a class-member
-	@@$"property"|The node refers to a property
-	@@$"class_property"|The node refers to a class-property
-	@@$"operator"|The node refers to an operator
-	@@$none|The node kind could not be determined}
+	@@+-------------------+----------------------------------------+
+	@@| Name              | Description (The node refers to a ...) |
+	@@+-------------------+----------------------------------------+
+	@@| @"module"         | module                                 |
+	@@|                   |                                        |
+	@@| @"type"           | type                                   |
+	@@|                   |                                        |
+	@@| @"singleton"      | type accessed via a singleton          |
+	@@|                   |                                        |
+	@@| @"function"       | function                               |
+	@@|                   |                                        |
+	@@| @"class_function" | class-function                         |
+	@@|                   |                                        |
+	@@| @"member"         | member or global module-variable       |
+	@@|                   |                                        |
+	@@| @"class_member"   | class-member                           |
+	@@|                   |                                        |
+	@@| @"property"       | property                               |
+	@@|                   |                                        |
+	@@| @"class_property" | class-property                         |
+	@@|                   |                                        |
+	@@| @"operator"       | operator                               |
+	@@|                   |                                        |
+	@@| @none             | The node kind could not be determined  |
+	@@+-------------------+----------------------------------------+
 	public final property kind: string | none = {
 		get(): string | none {
 			local at;
@@ -3270,7 +3384,7 @@ set_is_type:
 				if (at is none)
 					return "operator";
 			} else {
-				if (object is deemon.Module)
+				if (object is Module)
 					return "module";
 			}
 			if (at !is bound)
@@ -3303,7 +3417,7 @@ set_is_type:
 			x = this;
 			for (;;) {
 				if (x.istype && x.object is bound) {
-					local mod = deemon.Type.__module__(x.object);
+					local mod = Type.__module__(x.object);
 					if (mod !is none)
 						return Doc(mod);
 				}
@@ -3331,7 +3445,7 @@ set_is_type:
 			x = this;
 			for (;;) {
 				if (x.istype && x.object is bound) {
-					local mod = deemon.Type.__module__(x.object);
+					local mod = Type.__module__(x.object);
 					if (mod !is none)
 						return mod;
 				}
@@ -3348,28 +3462,29 @@ set_is_type:
 		local ot_kind = other.kind;
 		if (my_kind != ot_kind) {
 			return
-				kind_sorting_weights.get(my_kind, 0) <
-				kind_sorting_weights.get(ot_kind, 0);
+				KIND_SORTING_WEIGHTS.get(my_kind, 0) <
+				KIND_SORTING_WEIGHTS.get(ot_kind, 0);
 		}
 		if (my_kind == "operator") {
 			return
-				operator_sorting_weights.get(name, 0) <
-				operator_sorting_weights.get(other.name, 0);
+				OPERATOR_SORTING_WEIGHTS.get(name, 0) <
+				OPERATOR_SORTING_WEIGHTS.get(other.name, 0);
 		}
 		return name < other.name;
 	}
 
-	@@Returns the type of the base class of @this node, or @none if @this node isn't a type, or if that type doesn't have a base.
-	public final property objectbase: deemon.Type | none = {
-		get(): deemon.Type | none {
+	@@Returns the type of the base class of @this node, or @none
+	@@if @this node isn't a type, or if that type doesn't have a base.
+	public final property objectbase: Type | none = {
+		get(): Type | none {
 			if (object !is bound ||
-				object !is deemon.Type)
+				object !is Type)
 				return none;
-			return deemon.Type.__base__(object);
+			return Type.__base__(object);
 		}
 	}
 
-	@@Returns the doc-node for #objectbase
+	@@Returns the doc-node for @objectbase
 	public final property objectbasenode: Doc | none = {
 		get(): Doc | none {
 			local base = objectbase;
@@ -3394,7 +3509,7 @@ set_is_type:
 	}
 
 	@@Return a function-like declaration found in the documenation
-	@@of @this Doc node that matches the given argument List.
+	@@of @this Doc node that matches the given argument list.
 	@@If no such declaration could be found, return @none instead.
 	public final declfor(args...: Object): Declaration | none {
 		for (local d: decls)
@@ -3404,22 +3519,23 @@ set_is_type:
 	}
 
 
-	@@Check if one of @this doc's declarations accepts the given argument List.
+	@@Check if one of @this doc's declarations accepts the given argument list.
 	@@>function foo(x: int | string, y: int | float) {
+	@@>    ...
 	@@>}
-	@@>print Doc(foo).isaccepted(10, 20);      /* true */
-	@@>print Doc(foo).isaccepted(10, 1.0);     /* true */
-	@@>print Doc(foo).isaccepted(10,"foo");    /* false */
-	@@>print Doc(foo).isaccepted("bar", 20);   /* true */
-	@@>print Doc(foo).isaccepted("bar", 1.0);  /* true */
-	@@>print Doc(foo).isaccepted();            /* false */
+	@@>print Doc(foo).isaccepted(10, 20);     /* true */
+	@@>print Doc(foo).isaccepted(10, 1.0);    /* true */
+	@@>print Doc(foo).isaccepted(10,"foo");   /* false */
+	@@>print Doc(foo).isaccepted("bar", 20);  /* true */
+	@@>print Doc(foo).isaccepted("bar", 1.0); /* true */
+	@@>print Doc(foo).isaccepted();           /* false */
 	public final isaccepted(args...: Object): bool {
 		return declfor(args...) !is none;
 	}
 
 	@@Similar to @isaccepted, but return the type expression
 	@@what gets returned by the declaration capable of accepting
-	@@the given argument List.
+	@@the given argument list.
 	@@NOTE: This function does not actually perform a call!
 	@@      It merely emulates the call and returns the type
 	@@      expression describing the set of types possibly
@@ -3427,21 +3543,21 @@ set_is_type:
 	@@>import * from deemon;
 	@@>import * from doc;
 	@@>function foo(x: int, y: float): string | int {
-	@@> if (y == 0)
-	@@>  return x;
-	@@> return str(x + y);
+	@@>    if (y == 0)
+	@@>        return x;
+	@@>    return str(x + y);
 	@@>}
 	@@>print repr Doc(foo).callwith(10, 1.0).types; /* { int, string } */
 	public final callwith(args...: Object): TypeExpr | none {
 		return declfor(args...).ret;
 	}
 
-	@@Returns a sequence of all sections found on the documenation of #docstring
+	@@Returns a sequence of all sections found on the documenation of @docstring
 	public final property allsections: {DocSection...} = {
 		get(): {DocSection...} {
 			if (m_allsections !is bound) {
 				m_allsections = [];
-				for (local x: split_doc_sections(docstring))
+				for (local x: splitDocSections(docstring))
 					m_allsections.append(DocSection(this, x));
 			}
 			return m_allsections;
@@ -3449,20 +3565,20 @@ set_is_type:
 	}
 	private member m_allsections: {DocSection...};
 
-	@@Auto-generate declaration information for an operator `opname'
-	private final autogenerate_opdecl(opname: string): {DocSection...} {
-		local defl = operator_defaults.get(opname);
+	@@Auto-generate declaration information for an operator @opname
+	private final autogenerateOperatorDecl(opname: string): {DocSection...} {
+		local defl = OPERATOR_DEFAULTS.get(opname);
 		if (defl !is none)
 			yield DocSection(this, opname + defl);
 	}
 
 	@@Autogenerate declarations for @this Doc node
-	private autogenerate_decls(): {DocSection...} {
+	private autogenerateDecls(): {DocSection...} {
 		if (isoperator) {
-			yield parent.autogenerate_opdecl(name)...;
-		} else if (object is bound && object is deemon.Function) {
+			yield parent.autogenerateOperatorDecl(name)...;
+		} else if (object is bound && object is Function) {
 			File.Writer resdoc;
-			generate_function_params(resdoc, object);
+			generateFunctionParams(resdoc, object);
 			if (object.__code__.isconstructor) {
 				/* Constructors always return @none */
 			} else {
@@ -3476,7 +3592,7 @@ set_is_type:
 				if (at.cancall || Callable.baseof(attr_type))
 					yield DocSection(this, "(args!)->"); /* Some kind of function... */
 				else if (attr_type !is none)
-					yield DocSection(this, "->" + encode_type(attr_type));
+					yield DocSection(this, "->" + encodeType(attr_type));
 				else {
 					yield DocSection(this, "->");
 				}
@@ -3486,7 +3602,7 @@ set_is_type:
 		}
 	}
 
-	@@Returns a sequence of split documentation sections, as found within #docstring
+	@@Returns a sequence of split documentation sections, as found within @docstring
 	@@The sections returned by this function are those that should be listed to give
 	@@an overview of the object being documented, essentially meaning that for types,
 	@@documentation concerning operators is left omitted, while also adding automatic
@@ -3515,7 +3631,7 @@ set_is_type:
 					if (!has_desc) {
 						/* Without any pre-defined declaration, autogenerate some. */
 						local new_result;
-						new_result = List(autogenerate_decls());
+						new_result = List(autogenerateDecls());
 						new_result.extend(result);
 						result = new_result;
 					}
@@ -3528,16 +3644,16 @@ set_is_type:
 	private member m_docsections: {DocSection...};
 
 	@@Automatically generate documentation for native type constructors.
-	private autogenerate_native_constructor_desc(): {DocSection...} {
-		if (deemon.Type.__issuperconstructible__(object)) {
+	private autogenerateNativeConstructorSections(): {DocSection...} {
+		if (Type.__issuperconstructible__(object)) {
 			yield DocSection(this, "constructor->!S");
 		} else {
 			local hasany = false;
-			if (deemon.Type.__isnoargconstructible__(object)) {
+			if (Type.__isnoargconstructible__(object)) {
 				yield DocSection(this, "constructor()->");
 				hasany = true;
 			}
-			if (deemon.Type.__isvarargconstructible__(object)) {
+			if (Type.__isvarargconstructible__(object)) {
 				yield DocSection(this, "constructor->");
 				hasany = true;
 			}
@@ -3548,7 +3664,7 @@ set_is_type:
 
 
 	@@Returns the DocSection associated with a given @opname, which
-	@@must be the operator's real name (e.g. $"eq", and not $"==")
+	@@must be the operator's real name (e.g. @"eq", and not @"==")
 	@@If the operator is implemented, but doesn't have an explicit
 	@@section defined within the associated type's doc string, a
 	@@documenation string for the operator will be generated automatically,
@@ -3568,29 +3684,29 @@ set_is_type:
 			 * specified operator, auto-generate a doc for it. */
 			if (object !is bound)
 				return;
-			if (deemon.Type.__isclass__(object)) {
-				local cls = deemon.Type.__class__(object);
+			if (Type.__isclass__(object)) {
+				local cls = Type.__class__(object);
 				/* Check if `cls' makes any mention of the operator
 				 * For example: `operator str = del;' */
 				local opaddr = cls.operators.get(opname);
 				if (opaddr !is none) {
 					/* The operator does indeed get overwritten by this class */
-					local ctab = deemon.Type.__ctable__(object);
+					local ctab = Type.__ctable__(object);
 					if (ctab[opaddr] is bound) {
 						local fun = ctab[opaddr];
-						if (fun is deemon.Function) {
+						if (fun is Function) {
 							File.Writer resdoc;
 							resdoc << opname;
-							generate_function_params(resdoc, fun);
+							generateFunctionParams(resdoc, fun);
 							resdoc << "->";
-							local defl = operator_defaults.get(opname);
+							local defl = OPERATOR_DEFAULTS.get(opname);
 							if (defl !is none) {
-								local rt = find_nonescaped(defl, "->");
+								local rt = findNonEscaped(defl, "->");
 								resdoc << defl.substr(rt + 2);
 							}
 							yield DocSection(this, resdoc.string);
 						} else {
-							yield autogenerate_opdecl(opname)...;
+							yield autogenerateOperatorDecl(opname)...;
 						}
 					} else {
 						/* Deleted operator */
@@ -3598,10 +3714,10 @@ set_is_type:
 					}
 				}
 			} else {
-				if (deemon.Type.hasprivateoperator(object, opname)) {
-					yield autogenerate_opdecl(opname)...;
+				if (Type.hasprivateoperator(object, opname)) {
+					yield autogenerateOperatorDecl(opname)...;
 				} else if (opname == "constructor") {
-					yield autogenerate_native_constructor_desc()...;
+					yield autogenerateNativeConstructorSections()...;
 				}
 			}
 		}
@@ -3611,7 +3727,7 @@ set_is_type:
 	private enumerate_operators_sections(): {string: {DocSection...}} {
 		local result: {string: {DocSection...}} = Dict();
 		for (local s: allsections) {
-			for (local name, opsec: s.enumerate_opsections()) {
+			for (local name, opsec: s.enumerateOperatorSections()) {
 				local lst: {DocSection...} = result.get(name);
 				if (lst is none)
 					result[name] = lst = [];
@@ -3620,9 +3736,9 @@ set_is_type:
 		}
 		/* Enumerate operators overwritten, but not documented */
 		if (object is bound && istype) {
-			if (deemon.Type.__isclass__(object)) {
-				local ctab = deemon.Type.__ctable__(object);
-				local cls = deemon.Type.__class__(object);
+			if (Type.__isclass__(object)) {
+				local ctab = Type.__ctable__(object);
+				local cls = Type.__class__(object);
 				local ops = cls.operators;
 				if (cls.hassuperconstructor && "constructor" !in result)
 					result["constructor"] = (DocSection(this, "constructor->!S"),);
@@ -3630,19 +3746,19 @@ set_is_type:
 					if (name !in result) {
 						if (ctab[addr] is bound) {
 							local fun = ctab[addr];
-							if (fun is deemon.Function) {
+							if (fun is Function) {
 								File.Writer resdoc;
 								resdoc << name;
-								generate_function_params(resdoc, fun);
+								generateFunctionParams(resdoc, fun);
 								resdoc << "->";
-								local defl = operator_defaults.get(name);
+								local defl = OPERATOR_DEFAULTS.get(name);
 								if (defl !is none) {
-									local rt = find_nonescaped(defl, "->");
+									local rt = findNonEscaped(defl, "->");
 									resdoc << defl.substr(rt + 2);
 								}
 								result[name] = (DocSection(this, resdoc.string),);
 							} else {
-								result[name] = Tuple(autogenerate_opdecl(name));
+								result[name] = Tuple(autogenerateOperatorDecl(name));
 							}
 						} else {
 							result[name] = (DocSection(this, name + "->!D"),);
@@ -3651,8 +3767,8 @@ set_is_type:
 				}
 			} else {
 				if ("constructor" !in result)
-					result["constructor"] = Tuple(autogenerate_native_constructor_desc());
-				for (local name: deemon.Type.__operators__(object)) {
+					result["constructor"] = Tuple(autogenerateNativeConstructorSections());
+				for (local name: Type.__operators__(object)) {
 					if (name !is string)
 						continue;
 					/* Don't implicitly generate documentation for destructors of native classes
@@ -3664,7 +3780,7 @@ set_is_type:
 					if (name == "destructor")
 						continue;
 					if (name !in result)
-						result[name] = Tuple(autogenerate_opdecl(name));
+						result[name] = Tuple(autogenerateOperatorDecl(name));
 				}
 			}
 		}
@@ -3672,8 +3788,8 @@ set_is_type:
 	}
 	private member m_operator_sections: {string: {DocSection...}};
 
-	@@Enumerate the child nodes used to represent operators of @this when #istype is :true
-	private enumerate_operators(): {Doc...} {
+	@@Enumerate the child nodes used to represent operators of @this when @istype is @true
+	private enumerateOperators(): {Doc...} {
 		if (m_operator_sections !is bound)
 			m_operator_sections = enumerate_operators_sections();
 		for (local name, sect: m_operator_sections)
@@ -3690,7 +3806,7 @@ set_is_type:
 			return false;
 		local my_object = object;
 		local decl_object = my_object;
-		if (decl_object !is deemon.Type &&
+		if (decl_object !is Type &&
 		    decl_object !is Module)
 			decl_object = type decl_object;
 		if (name.startswith("i:"))
@@ -3705,12 +3821,12 @@ set_is_type:
 		if (!haschildren)
 			return;
 		if (istype)
-			yield enumerate_operators()...;
+			yield enumerateOperators()...;
 		if (object !is bound)
 			return;
 		local my_object = object;
 		local decl_object = my_object;
-		if (decl_object !is deemon.Type &&
+		if (decl_object !is Type &&
 		    decl_object !is Module)
 			decl_object = type decl_object;
 		for (local x: enumattr(my_object)) {
@@ -3724,10 +3840,10 @@ set_is_type:
 	@@in a basic, but neat (and human-readable) format
 	operator str(): string {
 		File.Writer fp;
-		print fp: "-"*80;
+		print fp: "-" * 80;
 		print fp: "| Documentation for `{}'".format({ prettypath });
 		for (local sec: docsections) {
-			print fp: "-"*80;
+			print fp: "-" * 80;
 			for (local seg: sec.segments) {
 				if (seg is Declaration) {
 					print fp: ">>", kind, "",;
@@ -3735,7 +3851,7 @@ set_is_type:
 				print fp: seg;
 			}
 		}
-		print fp: "-"*80;
+		print fp: "-" * 80;
 		if (ismodule) {
 			local children = List(this);
 			children.sort();

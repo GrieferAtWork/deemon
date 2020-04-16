@@ -61,11 +61,11 @@ struct class_attribute;
  *
  * Additionally, the following characters will only be escaped when appearing in certain
  * situations:
- *    
+ *
  *    '\'  Always (as r"\\")
  *    '>'  When encountered after a '-'
  *    '('  When encountered at the start of a line
- *    <LF> When immediately preceded by another LF, such that "\n\n\n" is escaped as "\n\\\n\\\n"
+ *    <LF> When immediately preceded by another LF, such that "\n\n\n" would be escaped as "\n\\\n\\\n"
  *
  * None of the other characters will be escaped for user-defined documentation strings, as
  * only the special character sequences "<START_OF_LINE>(" and "->" are accepted as indices
@@ -80,7 +80,7 @@ struct class_attribute;
  *
  * Pattern: "<START_OF_LINE>("
  *    The line describes argument name, and return type information:
- *    NOTE: optional whitespace may _NOT_ appear between individual strings
+ *    NOTE: _NO_ whitespace may appear between individual strings
  *        "<START_OF_LINE>(" ("," ~~ (
  *            ["<ARGUMENT_NAME>"]
  *            ["?" | "!" | "!!"]           // Optional / Varargs / Kwds indicators
@@ -89,8 +89,8 @@ struct class_attribute;
  *        )...) ")" ["->" "<RETURN_TYPE>"] "<END_OF_LINE>"
  *    
  *    CONTENT-SPECIFIC:
- *      - When encountered in a function-doc, it contains information about the function's intended invocation
- *        Unnamed arguments are automatically generated as one abcdefghijklmnopqrstuvwxyz,
+ *      - When encountered in a function-doc, it contains information about the function's intended
+ *        invocation. Unnamed arguments are automatically generated from abcdefghijklmnopqrstuvwxyz,
  *        after which naming continues as aa ab ac, etc... The chosen name is the first one
  *        that hasn't already been taken by another explicitly defined name, or another
  *        auto-generated one.
