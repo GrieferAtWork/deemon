@@ -39,10 +39,9 @@
 	 * -> To force function evaluation, the generate proxy
 	 *    sequence needs to be expanded (thus explaining the `...')
 	 * HINT:
-	 *    For this, the compiler generates assembly similar to:
-	 * >> for (none: lists.each.insert(0,9)) {}
-	 */
-	lists.each.insert(0,9)...;
+	 *    For this, the compiler generates assembly equivalent to:
+	 * >> for (none: lists.each.insert(0,9)) {} */
+	lists.each.insert(0, 9)...;
 	assert lists == { { 9, 10, 20, 30 }, { 9, 1, 2, 3 }, { 9, 19, 41, 57 } };
 
 	/* Assign elements. */

@@ -570,6 +570,41 @@ assert identical(exec(r'exec("\"inner\";;");', globals: deemon.__exports__), non
 assert identical(exec(r'exec("\"inner\";");;', globals: deemon.__exports__), none);
 
 
+/* Check various forms of expand expressions in JIT */
+assert identical(exec(r'["foobar"]'), ["foobar"]);
+assert identical(exec(r'("foobar")'), "foobar");
+assert identical(exec(r'("foobar",)'), Tuple({ "foobar" }));
+assert identical(exec(r'()'), Tuple({ }));
+assert identical(exec(r'["f"]'), ["f"]);
+assert identical(exec(r'["f"...]'), ["f"]);
+assert identical(exec(r'["foobar"...]'), ["f", "o", "o", "b", "a", "r"]);
+assert identical(exec(r'["foobar"..., 10]'), ["f", "o", "o", "b", "a", "r", 10]);
+assert identical(exec(r'[20, "foobar"..., 10]'), [20, "f", "o", "o", "b", "a", "r", 10]);
+assert identical(exec(r'("f")'), "f");
+assert identical(exec(r'("f"...)'), Tuple({ "f" })); /* Despite only being 1 element, this must still result in a Tuple */
+assert identical(exec(r'("foobar"...)'), Tuple({ "f", "o", "o", "b", "a", "r" }));
+assert identical(exec(r'("foobar"..., 10)'), Tuple({ "f", "o", "o", "b", "a", "r", 10 }));
+assert identical(exec(r'(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b", "a", "r", 10 }));
+{
+	local seq = { [10], [20] };
+	/* Without a forced expand, this should be a no-op */
+	exec(r'seq.each.insert(0, "f");', globals: { "seq" : seq });
+	assert seq == { [10], [20] };
+	/* With a forced expand, "f" should be inserted into each list */
+	exec(r'seq.each.insert(0, "f")...;', globals: { "seq" : seq });
+	assert seq == { ["f", 10], ["f", 20] };
+}
+
+/* Also assert use of expand in argument lists. */
+{
+	function getArgv(args...) -> args;
+	function r(s) -> exec(s, globals: { "getArgv" : getArgv });
+	assert identical(r(r'getArgv("f")'), Tuple({ "f" }));
+	assert identical(r(r'getArgv("f"...)'), Tuple({ "f" }));
+	assert identical(r(r'getArgv("foobar"...)'), Tuple({ "f", "o", "o", "b", "a", "r" }));
+	assert identical(r(r'getArgv("foobar"..., 10)'), Tuple({ "f", "o", "o", "b", "a", "r", 10 }));
+	assert identical(r(r'getArgv(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b", "a", "r", 10 }));
+}
 
 
 
