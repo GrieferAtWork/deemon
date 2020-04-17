@@ -36,10 +36,10 @@ transpose_modified_symbol(struct symbol *__restrict sym) {
 	if (!SYMBOL_NWRITE(sym))
 		goto done; /* Symbol is never actually being written to! */
 check_symbol:
-	switch (SYMBOL_TYPE(sym)) {
+	switch (sym->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		sym = SYMBOL_ALIAS(sym);
+		sym = sym->s_alias;
 		goto check_symbol;
 
 
@@ -62,7 +62,7 @@ check_symbol:
 #if 1
 		if (asm_plocal((uint16_t)lid))
 			goto err;
-		if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_MODULE) {
+		if (sym->s_type == SYMBOL_TYPE_MODULE) {
 			int32_t mid = asm_msymid(sym);
 			if unlikely(mid < 0)
 				goto err;
@@ -70,7 +70,7 @@ check_symbol:
 				goto err;
 			Dee_Decref(SYMBOL_MODULE_MODULE(sym));
 		} else {
-			ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXCEPT);
+			ASSERT(sym->s_type == SYMBOL_TYPE_EXCEPT);
 			if (asm_gpush_except_p())
 				goto err;
 		}
@@ -140,8 +140,8 @@ set_new_scope:
 			if (!(current_assembler.a_flag & ASM_FSTACKDISP)) {
 				struct symbol **bucket_iter, **bucket_end, *iter;
 				bucket_end = (bucket_iter = scope->s_map) + scope->s_mapa;
-				for (; bucket_iter < bucket_end; ++bucket_iter)
-					for (iter = *bucket_iter; iter; iter = iter->s_next)
+				for (; bucket_iter < bucket_end; ++bucket_iter) {
+					for (iter = *bucket_iter; iter; iter = iter->s_next) {
 						if (iter->s_type == SYMBOL_TYPE_STACK) {
 							/* Allocate memory for stack-variables when stack displacement is disabled. */
 							if (iter->s_nwrite) {
@@ -157,7 +157,9 @@ set_new_scope:
 								iter->s_flag &= ~SYMBOL_FALLOC;
 							}
 						}
-				for (iter = scope->s_del; iter; iter = iter->s_next)
+					}
+				}
+				for (iter = scope->s_del; iter; iter = iter->s_next) {
 					if (iter->s_type == SYMBOL_TYPE_STACK) {
 						/* Allocate memory for stack-variables when stack displacement is disabled. */
 						if (iter->s_nwrite) {
@@ -173,6 +175,7 @@ set_new_scope:
 							iter->s_flag &= ~SYMBOL_FALLOC;
 						}
 					}
+				}
 			}
 			if (transpose_modified_symbols(scope))
 				goto err;
@@ -222,8 +225,8 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
 	do {
 		struct symbol **bucket_iter, **bucket_end, *iter;
 		bucket_end = (bucket_iter = scope->s_map) + scope->s_mapa;
-		for (; bucket_iter < bucket_end; ++bucket_iter)
-			for (iter = *bucket_iter; iter; iter = iter->s_next)
+		for (; bucket_iter < bucket_end; ++bucket_iter) {
+			for (iter = *bucket_iter; iter; iter = iter->s_next) {
 				if (iter->s_type == SYMBOL_TYPE_STACK) {
 					if (iter->s_flag & SYMBOL_FALLOC) {
 						if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
@@ -232,7 +235,9 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
 						iter->s_flag &= ~SYMBOL_FALLOC;
 					}
 				}
-		for (iter = scope->s_del; iter; iter = iter->s_next)
+			}
+		}
+		for (iter = scope->s_del; iter; iter = iter->s_next) {
 			if (iter->s_type == SYMBOL_TYPE_STACK) {
 				if (iter->s_flag & SYMBOL_FALLOC) {
 					if (asm_putddi_sunbind(SYMBOL_STACK_OFFSET(iter)))
@@ -241,6 +246,7 @@ asm_leave_scope(DeeScopeObject *old_scope, uint16_t num_preserve) {
 					iter->s_flag &= ~SYMBOL_FALLOC;
 				}
 			}
+		}
 		scope = scope->s_prev;
 	} while (scope && scope != old_scope);
 #ifndef NDEBUG
@@ -355,8 +361,8 @@ readjust_stack_after_bad_init(uint16_t wnt_sp) {
 	do {
 		struct symbol **bucket_iter, **bucket_end, *iter;
 		bucket_end = (bucket_iter = scope->s_map) + scope->s_mapa;
-		for (; bucket_iter < bucket_end; ++bucket_iter)
-			for (iter = *bucket_iter; iter; iter = iter->s_next)
+		for (; bucket_iter < bucket_end; ++bucket_iter) {
+			for (iter = *bucket_iter; iter; iter = iter->s_next) {
 				if (iter->s_type == SYMBOL_TYPE_STACK &&
 				    (iter->s_flag & SYMBOL_FALLOC) &&
 				    (iter->s_symid >= wnt_sp)) {
@@ -364,7 +370,9 @@ readjust_stack_after_bad_init(uint16_t wnt_sp) {
 						goto err;
 					iter->s_flag &= ~SYMBOL_FALLOC;
 				}
-		for (iter = scope->s_del; iter; iter = iter->s_next)
+			}
+		}
+		for (iter = scope->s_del; iter; iter = iter->s_next) {
 			if (iter->s_type == SYMBOL_TYPE_STACK &&
 			    (iter->s_flag & SYMBOL_FALLOC) &&
 			    (iter->s_symid >= wnt_sp)) {
@@ -372,6 +380,7 @@ readjust_stack_after_bad_init(uint16_t wnt_sp) {
 					goto err;
 				iter->s_flag &= ~SYMBOL_FALLOC;
 			}
+		}
 		scope = scope->s_prev;
 	} while (scope && scope->s_base == current_basescope);
 

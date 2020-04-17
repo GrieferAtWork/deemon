@@ -176,13 +176,13 @@ ast_parse_if_hybrid(unsigned int *pwas_expression) {
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
+	if (skip('(', W_EXPECTED_LPAREN_AFTER_IF))
 		goto err_flags;
 	result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	if unlikely(!result)
 		goto err;
-	if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
+	if (skip(')', W_EXPECTED_RPAREN_AFTER_IF))
 		goto err;
 	tt_branch      = NULL;
 	was_expression = AST_PARSE_WASEXPR_MAYBE;
@@ -255,7 +255,7 @@ ast_parse_statement_or_braces(unsigned int *pwas_expression) {
 		result = ast_setddi(ast_do_parse_brace_items(), &loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+		if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 			goto err_r;
 		if (pwas_expression)
 			*pwas_expression = AST_PARSE_WASEXPR_YES;
@@ -295,7 +295,7 @@ parse_remainder_after_comma_popscope:
 					goto err_r;
 				ast_decref(result);
 				result = ast_setddi(remainder, &loc);
-				if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 				if (pwas_expression)
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
@@ -428,7 +428,7 @@ is_a_statement:
 			if unlikely(yield() < 0)
 				goto err_r;
 		}
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
+		if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))
 			goto err_r;
 		scope_pop();
 		if (pwas_expression)
@@ -490,7 +490,7 @@ parse_remainder_after_colon_popscope:
 				if unlikely(!remainder)
 					goto err;
 				result = ast_setddi(remainder, &loc);
-				if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+				if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 					goto err_r;
 				if (pwas_expression)
 					*pwas_expression = AST_PARSE_WASEXPR_YES;
@@ -500,7 +500,7 @@ parse_remainder_after_colon_popscope:
 		/* Statement expression. */
 		if (comma_mode & AST_COMMA_OUT_FNEEDSEMI) {
 			/* Consume a `;' token as part of the expression. */
-			if unlikely(likely(tok == ';') ? (yield() < 0) : WARN(W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
+			if (skip(';', W_EXPECTED_SEMICOLLON_AFTER_EXPRESSION))
 				goto err_r;
 		}
 		if (result->a_multiple.m_astc == 1) {
@@ -548,7 +548,7 @@ parse_remainder_after_statement:
 				/* `ast_multiple()' inherited `new_elemv' on success. */
 			}
 			result = ast_setddi(remainder, &loc);
-			if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
+			if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))
 				goto err_r;
 		}
 		scope_pop();

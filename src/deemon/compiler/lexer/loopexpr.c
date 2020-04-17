@@ -68,7 +68,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_flags;
 		/* NOTE: Allow variable declarations within the condition. */
 		result = ast_parse_comma(LOOKUP_SYM_NORMAL |
@@ -78,7 +78,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_IF))
 			goto err_r;
 
 		/* Parse the conditional expression. */
@@ -114,17 +114,17 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		result = parse_generator_loop(&loc);
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(tok == KWD_while) ? (yield() < 0) : WARN(W_EXPECTED_WHILE_AFTER_DO))
+		if (skip(KWD_while, W_EXPECTED_WHILE_AFTER_DO))
 			goto err_r;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_r_flags;
 		other = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!other)
 			goto err_r_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r_other;
 		/* Pack together the loop expression. */
 		merge = ast_setddi(ast_loop(AST_FLOOP_POSTCOND, other, NULL, result), &loc);
@@ -142,7 +142,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		/* Parse the while-condition. */
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_flags;
 		/* NOTE: Allow variable declarations within the condition. */
 		result = ast_parse_comma(LOOKUP_SYM_NORMAL |
@@ -152,7 +152,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
 		/* Parse the generator loop. */
 		other = parse_generator_loop(&loc);
@@ -176,7 +176,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		/* Parse the for-header. */
 		type = ast_parse_for_head(&init, &elem_or_cond, &iter_or_next);
@@ -194,7 +194,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 			ast_decref(iter_or_next);
 			iter_or_next = merge;
 		}
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_for_loop;
 		/* Parse the loop expression. */
 		result = parse_generator_loop(&loc);
@@ -244,20 +244,20 @@ err_for_loop:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		foreach_elem = ast_parse_comma(AST_COMMA_ALLOWVARDECLS,
 		                               AST_FMULTIPLE_TUPLE,
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_flags;
-		if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
+		if (skip(':', W_EXPECTED_COLLON_AFTER_FOREACH))
 			goto err_foreach_elem_flags;
 		foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!foreach_iter)
 			goto err_foreach_elem_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_foreach_iter;
 		/* Parse the generator loop expression. */
 		foreach_loop = parse_generator_loop(&loc);

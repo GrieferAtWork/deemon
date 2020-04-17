@@ -183,7 +183,7 @@ INTERN WUNUSED NONNULL((1)) int
 #endif /* LEAVE */
 				if (base->a_type == AST_SYM) {
 					struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
-					if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
+					if (sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 #ifdef LEAVE
 						if (asm_putddi(self))

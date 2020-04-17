@@ -8531,6 +8531,9 @@ prefix_target_cmp_eq = prefix_invop
 .ifndef prefix_target_cmp_ne
 prefix_target_cmp_ne = prefix_invop
 .endif
+.ifndef prefix_target_cmp_ge
+prefix_target_cmp_ge = prefix_invop
+.endif
 .ifndef prefix_target_cmp_lo
 prefix_target_cmp_lo = prefix_invop
 .endif
@@ -8539,9 +8542,6 @@ prefix_target_cmp_le = prefix_invop
 .endif
 .ifndef prefix_target_cmp_gr
 prefix_target_cmp_gr = prefix_invop
-.endif
-.ifndef prefix_target_cmp_ge
-prefix_target_cmp_ge = prefix_invop
 .endif
 .ifndef prefix_target_class_c
 prefix_target_class_c = prefix_invop
@@ -9440,10 +9440,10 @@ inst_table:
 	.long target_setattr_this_c          /* `setattr this, const <imm8>, pop' */
 	.long target_cmp_eq                  /* `cmp eq, top, pop' */
 	.long target_cmp_ne                  /* `cmp ne, top, pop' */
+	.long target_cmp_ge                  /* `cmp ge, top, pop' */
 	.long target_cmp_lo                  /* `cmp lo, top, pop' */
 	.long target_cmp_le                  /* `cmp le, top, pop' */
 	.long target_cmp_gr                  /* `cmp gr, top, pop' */
-	.long target_cmp_ge                  /* `cmp ge, top, pop' */
 	.long target_class_c                 /* `class top, const <imm8>' */
 	.long target_class_gc                /* `push class global <imm8>, const <imm8>' */
 	.long target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
@@ -9956,10 +9956,10 @@ prefix_inst_table:
 	.long prefix_target_setattr_this_c          /* `setattr this, const <imm8>, pop' */
 	.long prefix_target_cmp_eq                  /* `cmp eq, top, pop' */
 	.long prefix_target_cmp_ne                  /* `cmp ne, top, pop' */
+	.long prefix_target_cmp_ge                  /* `cmp ge, top, pop' */
 	.long prefix_target_cmp_lo                  /* `cmp lo, top, pop' */
 	.long prefix_target_cmp_le                  /* `cmp le, top, pop' */
 	.long prefix_target_cmp_gr                  /* `cmp gr, top, pop' */
-	.long prefix_target_cmp_ge                  /* `cmp ge, top, pop' */
 	.long prefix_target_class_c                 /* `class top, const <imm8>' */
 	.long prefix_target_class_gc                /* `push class global <imm8>, const <imm8>' */
 	.long prefix_target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */

@@ -824,9 +824,26 @@ not_a_link:
 			goto do_read_and_switch_ch;
 		}
 
-		case '`':
+		case '`': {
 			/* TODO: Code */
-			break;
+			char const *before_left_backtick;
+			char const *after_left_backtick;
+			before_left_backtick = ch_start;
+			after_left_backtick  = iter;
+			ch = utf8_readchar((char const **)&iter, end);
+			if (ch == '`') {
+				ch = utf8_readchar((char const **)&iter, end);
+				if (ch == '`') {
+					/* TODO: Extended code block. */
+				}
+not_a_code:
+				iter = after_left_backtick;
+				break;
+			}
+
+
+			goto not_a_code;
+		}	break;
 
 		case '@':
 			/* TODO: Reference */

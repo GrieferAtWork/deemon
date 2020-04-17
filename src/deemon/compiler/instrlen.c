@@ -233,10 +233,10 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x5f */ 2, /* `ASM_SETATTR_THIS_C':          `setattr this, const <imm8>, pop' */
 	/* 0x60 */ 1, /* `ASM_CMP_EQ':                  `cmp eq, top, pop' */
 	/* 0x61 */ 1, /* `ASM_CMP_NE':                  `cmp ne, top, pop' */
-	/* 0x62 */ 1, /* `ASM_CMP_LO':                  `cmp lo, top, pop' */
-	/* 0x63 */ 1, /* `ASM_CMP_LE':                  `cmp le, top, pop' */
-	/* 0x64 */ 1, /* `ASM_CMP_GR':                  `cmp gr, top, pop' */
-	/* 0x65 */ 1, /* `ASM_CMP_GE':                  `cmp ge, top, pop' */
+	/* 0x62 */ 1, /* `ASM_CMP_GE':                  `cmp ge, top, pop' */
+	/* 0x63 */ 1, /* `ASM_CMP_LO':                  `cmp lo, top, pop' */
+	/* 0x64 */ 1, /* `ASM_CMP_LE':                  `cmp le, top, pop' */
+	/* 0x65 */ 1, /* `ASM_CMP_GR':                  `cmp gr, top, pop' */
 	/* 0x66 */ 2, /* `ASM_CLASS_C':                 `class top, const <imm8>' */
 	/* 0x67 */ 3, /* `ASM_CLASS_GC':                `push class global <imm8>, const <imm8>' */
 	/* 0x68 */ 4, /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */
@@ -749,10 +749,10 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x5f */ STACK_EFFECT(1, 0), /* `ASM_SETATTR_THIS_C':          `setattr this, const <imm8>, pop' */
 	/* 0x60 */ STACK_EFFECT(2, 1), /* `ASM_CMP_EQ':                  `cmp eq, top, pop' */
 	/* 0x61 */ STACK_EFFECT(2, 1), /* `ASM_CMP_NE':                  `cmp ne, top, pop' */
-	/* 0x62 */ STACK_EFFECT(2, 1), /* `ASM_CMP_LO':                  `cmp lo, top, pop' */
-	/* 0x63 */ STACK_EFFECT(2, 1), /* `ASM_CMP_LE':                  `cmp le, top, pop' */
-	/* 0x64 */ STACK_EFFECT(2, 1), /* `ASM_CMP_GR':                  `cmp gr, top, pop' */
-	/* 0x65 */ STACK_EFFECT(2, 1), /* `ASM_CMP_GE':                  `cmp ge, top, pop' */
+	/* 0x62 */ STACK_EFFECT(2, 1), /* `ASM_CMP_GE':                  `cmp ge, top, pop' */
+	/* 0x63 */ STACK_EFFECT(2, 1), /* `ASM_CMP_LO':                  `cmp lo, top, pop' */
+	/* 0x64 */ STACK_EFFECT(2, 1), /* `ASM_CMP_LE':                  `cmp le, top, pop' */
+	/* 0x65 */ STACK_EFFECT(2, 1), /* `ASM_CMP_GR':                  `cmp gr, top, pop' */
 	/* 0x66 */ STACK_EFFECT(1, 1), /* `ASM_CLASS_C':                 `class top, const <imm8>' */
 	/* 0x67 */ STACK_EFFECT(0, 1), /* `ASM_CLASS_GC':                `push class global <imm8>, const <imm8>' */
 	/* 0x68 */ STACK_EFFECT(0, 1), /* `ASM_CLASS_EC':                `push class extern <imm8>:<imm8>, const <imm8>' */

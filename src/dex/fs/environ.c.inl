@@ -45,11 +45,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
-#define strend(x) ((x) + strlen(x))
-#endif /* !CONFIG_HAVE_strend */
-
 DECL_BEGIN
 
 typedef struct {

@@ -1381,7 +1381,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	/* Check the primary set for the object. */
 	temp = DeeObject_Contains(self->sd_a, item);
 	if (temp <= 0) {
-		if (temp < 0)
+		if unlikely(temp < 0)
 			goto err;
 		return_false;
 	}
@@ -1389,7 +1389,7 @@ sd_contains(SetDifference *self, DeeObject *item) {
 	 * -> Return true if it's not apart of the secondary set.
 	 * -> Return false otherwise. */
 	temp = DeeObject_Contains(self->sd_b, item);
-	if (temp < 0)
+	if unlikely(temp < 0)
 		goto err;
 	return_bool_(!temp);
 err:

@@ -124,7 +124,7 @@ not_a_cast:
 		ASSERT(merge->a_type == AST_MULTIPLE);
 		ASSERT(merge->a_flag == AST_FMULTIPLE_TUPLE);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err_merge_kwlabels;
 		if (kw_labels) {
 			result = ast_setddi(ast_action3(AST_FACTION_CALL_KW,

@@ -3547,7 +3547,8 @@ set_is_type:
 	@@>        return x;
 	@@>    return str(x + y);
 	@@>}
-	@@>print repr Doc(foo).callwith(10, 1.0).types; /* { int, string } */
+	@@>/* { int, string } */
+	@@>print repr Doc(foo).callwith(10, 1.0).types;
 	public final callwith(args...: Object): TypeExpr | none {
 		return declfor(args...).ret;
 	}

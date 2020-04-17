@@ -50,11 +50,6 @@
 
 DECL_BEGIN
 
-#ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
-#define strend(x) ((x) + strlen(x))
-#endif /* !CONFIG_HAVE_strend */
-
 #ifdef CONFIG_AST_IS_STRUCT
 DECLARE_STRUCT_CACHE(ast, struct ast)
 #else /* CONFIG_AST_IS_STRUCT */

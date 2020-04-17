@@ -865,11 +865,6 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
 	 ? (x) != current_basescope->bs_this \
 	 : (x)->s_scope->s_base != current_basescope)
 
-#define SYMBOL_ALIAS(x)            ((x)->s_alias)           /* XXX: Remove me? */
-#define SYMBOL_SCOPE(x)            ((x)->s_scope)           /* XXX: Remove me? */
-#define SYMBOL_TYPE(x)             ((x)->s_type)            /* XXX: Remove me? */
-#define SYMBOL_FIELD_CLASS(x)      ((x)->s_attr.a_class)    /* XXX: Remove me? */
-#define SYMBOL_FIELD_ATTR(x)       ((x)->s_attr.a_attr)     /* XXX: Remove me? */
 #define SYMBOL_EXTERN_MODULE(x)    ((x)->s_extern.e_module) /* XXX: Remove me? */
 #define SYMBOL_EXTERN_SYMBOL(x)    ((x)->s_extern.e_symbol) /* XXX: Remove me? */
 #define SYMBOL_MODULE_MODULE(x)    ((x)->s_module)          /* XXX: Remove me? */

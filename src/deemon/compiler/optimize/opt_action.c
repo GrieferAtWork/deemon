@@ -503,7 +503,7 @@ action_set_expr_result:
 			goto err;
 		if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
 			int temp = DeeSeq_Any(self->a_action.a_act0->a_constexpr);
-			if (temp < 0)
+			if unlikely(temp < 0)
 				expr_result = NULL;
 			else {
 				expr_result = DeeBool_For(temp);
@@ -518,7 +518,7 @@ action_set_expr_result:
 			goto err;
 		if (self->a_action.a_act0->a_type == AST_CONSTEXPR) {
 			int temp = DeeSeq_All(self->a_action.a_act0->a_constexpr);
-			if (temp < 0)
+			if unlikely(temp < 0)
 				expr_result = NULL;
 			else {
 				expr_result = DeeBool_For(temp);

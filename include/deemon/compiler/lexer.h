@@ -439,14 +439,14 @@ struct module_object;
  *                    else `false' */
 INTDEF WUNUSED DREF struct module_object *DCALL parse_module_byname(bool for_alias);
 INTDEF struct module_symbol *DCALL
-import_module_symbol(struct module_object *__restrict module,
+import_module_symbol(struct module_object *__restrict mod,
                      struct TPPKeyword *__restrict name);
 
 
 
 struct astlist {
-	size_t              ast_c; /* Amount of branches in use. */
-	size_t              ast_a; /* [>= ast_c] Allocated amount of branches. */
+	size_t            ast_c; /* Amount of branches in use. */
+	size_t            ast_a; /* [>= ast_c] Allocated amount of branches. */
 	DREF struct ast **ast_v; /* [1..1][0..ast_c|ALLOC(ast_a)][owned] Vector of branches. */
 };
 #define ASTLIST_INIT { 0, 0, NULL }
@@ -496,9 +496,9 @@ struct ast_annotations {
 
 struct ast_tags_printers {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-	struct unicode_printer at_decl;         /* A custom declaration overwrite (for creating a custom documentation prefix). */
+	struct unicode_printer at_decl; /* A custom declaration overwrite (for creating a custom documentation prefix). */
 #endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-	struct unicode_printer at_doc;          /* The documentation string that should be applied to the following declaration. */
+	struct unicode_printer at_doc;  /* The documentation string that should be applied to the following declaration. */
 };
 
 struct ast_tags {
@@ -578,6 +578,7 @@ INTDEF WUNUSED DREF struct ast *
  * parses `__attribute__', `__attribute' and `__declspec'
  * using this function. */
 INTDEF int DCALL parse_tags(void);
+
 /* Same as `parse_tags()', but also parses the leading `@'
  * token and doesn't do anything if that token wasn't found. */
 INTDEF int DCALL parse_tags_block(void);

@@ -2862,7 +2862,7 @@ asm_ssymid(struct symbol *__restrict sym) {
 	int32_t new_index;
 	ASSERT(sym);
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
-	ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_STATIC);
+	ASSERT(sym->s_type == SYMBOL_TYPE_STATIC);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 	/* Allocate a new static variable index for the given symbol.
@@ -2880,7 +2880,7 @@ end:
 INTERN WUNUSED NONNULL((1, 2)) int32_t DCALL
 asm_gsymid_for_read(struct symbol *__restrict sym,
                     struct ast *__restrict warn_ast) {
-	ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_GLOBAL);
+	ASSERT(sym->s_type == SYMBOL_TYPE_GLOBAL);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 	if (!sym->s_nwrite &&
@@ -2910,7 +2910,7 @@ INTERN WUNUSED NONNULL((1, 2)) int32_t DCALL
 asm_ssymid_for_read(struct symbol *__restrict sym,
                     struct ast *__restrict warn_ast) {
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
-	ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_STATIC);
+	ASSERT(sym->s_type == SYMBOL_TYPE_STATIC);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
 	if (!sym->s_nwrite &&
@@ -3091,10 +3091,10 @@ asm_esymid(struct symbol *__restrict sym) {
 	int32_t result;
 	DeeModuleObject *module;
 	ASSERT(sym);
-	ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_EXTERN);
+	ASSERT(sym->s_type == SYMBOL_TYPE_EXTERN);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
-	module = SYMBOL_EXTERN_MODULE(sym);
+	module = sym->s_extern.e_module;
 	if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FEXTERN) {
 		ASSERT(SYMBOL_EXTERN_SYMBOL(sym)->ss_extern.ss_impid < module->mo_importc);
 		module = module->mo_importv[SYMBOL_EXTERN_SYMBOL(sym)->ss_extern.ss_impid];
@@ -3114,10 +3114,10 @@ INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_msymid(struct symbol *__restrict sym) {
 	int32_t result;
 	ASSERT(sym);
-	ASSERT(SYMBOL_TYPE(sym) == SYMBOL_TYPE_MODULE);
+	ASSERT(sym->s_type == SYMBOL_TYPE_MODULE);
 	if (sym->s_flag & SYMBOL_FALLOC)
 		return sym->s_symid;
-	result = asm_newmodule(SYMBOL_EXTERN_MODULE(sym));
+	result = asm_newmodule(sym->s_extern.e_module);
 	if unlikely(result < 0)
 		goto end;
 	ASSERT(result <= UINT16_MAX);
@@ -3240,7 +3240,7 @@ restart:
 		for (; iter != end; ++iter) {
 			sym = *iter;
 			SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-			if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) {
+			if (sym->s_type != SYMBOL_TYPE_ARG) {
 				uint16_t argid;
 do_savearg:
 				argid = (uint16_t)(iter - current_basescope->bs_argv);

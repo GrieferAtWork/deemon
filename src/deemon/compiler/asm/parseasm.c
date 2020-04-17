@@ -37,6 +37,7 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <stdint.h> /* UINT16_MAX, ... */
@@ -54,13 +55,9 @@ INTERN struct asm_symtab     symtab;
 #endif /* !__INTELLISENSE__ */
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
+#ifdef CONFIG_HAVE_memcasecmp
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#define STRCASEEQ(a, b) (strcasecmp(a, b) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#define STRCASEEQ(a, b) (_stricmp(a, b) == 0)
-#else
+#else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
 LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
@@ -71,6 +68,11 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	}
 	return true;
 }
+#endif /* !CONFIG_HAVE_memcasecmp */
+
+#ifdef CONFIG_HAVE_strcasecmp
+#define STRCASEEQ(a, b)    (strcasecmp(a, b) == 0)
+#else /* CONFIG_HAVE_strcasecmp */
 #define STRCASEEQ(a, b) dee_strcaseeq((char *)(a), (char *)(b))
 LOCAL bool dee_strcaseeq(char *a, char *b) {
 	while (*a) {
@@ -80,7 +82,7 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
 	}
 	return true;
 }
-#endif
+#endif /* !CONFIG_HAVE_strcasecmp */
 
 #define IS_KWD(str)                                 \
 	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
@@ -486,7 +488,7 @@ yield_done:
 			goto err;
 		if unlikely(uasm_parse_intexpr(result, features))
 			goto err;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
 		break;
 
@@ -831,7 +833,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 	}
 	*pmid = (uint16_t)temp;
 	/* Now parse the symbol that is imported from this module. */
-	if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_UASM_EXPECTED_COLLON_AFTER_EXTERN_PREFIX))
+	if (skip(':', W_UASM_EXPECTED_COLLON_AFTER_EXTERN_PREFIX))
 		goto err;
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
 	if (tok == '@' && module) {
@@ -908,9 +910,11 @@ err:
 }
 
 PRIVATE int32_t FCALL do_parse_stack_operands(void) {
-	if unlikely(likely(tok == '#') ? (yield() < 0) : WARN(W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX))
-		return -1;
+	if (skip('#', W_UASM_EXPECTED_HASH_AFTER_STACK_PREFIX))
+		goto err;
 	return uasm_parse_imm16(UASM_INTEXPR_FHASSP);
+err:
+	return -1;
 }
 
 PRIVATE int32_t FCALL do_parse_local_operands(void) {
@@ -1024,7 +1028,7 @@ PRIVATE int32_t FCALL do_parse_arg_operands(void) {
 			goto err;
 		}
 		SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG) {
+		if (sym->s_type != SYMBOL_TYPE_ARG) {
 			DeeError_Throwf(&DeeError_CompilerError,
 			                "Symbol `%s' is not an argument symbol",
 			                symbol_name->k_name);
@@ -1241,10 +1245,10 @@ check_sym_class:
 			result->io_class = OPERAND_CLASS_REF;
 			result->io_symid = (uint16_t)symid;
 		} else {
-			switch (SYMBOL_TYPE(sym)) {
+			switch (sym->s_type) {
 
 			case SYMBOL_TYPE_ALIAS:
-				sym = SYMBOL_ALIAS(sym);
+				sym = sym->s_alias;
 				goto check_sym_class;
 
 			case SYMBOL_TYPE_EXTERN:
@@ -1385,7 +1389,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 			goto err;
 		if unlikely(do_parse_operand(result, false))
 			goto err;
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND))
+		if (skip('}', W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND))
 			goto err;
 		/* Set the brace flag in the operand class. */
 		result->io_class |= OPERAND_CLASS_FBRACEFLAG;
@@ -1397,7 +1401,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 			goto err;
 		if unlikely(do_parse_operand(result, false))
 			goto err;
-		if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND))
+		if (skip(']', W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND))
 			goto err;
 		/* Set the brace flag in the operand class. */
 		result->io_class |= OPERAND_CLASS_FBRACKETFLAG;
@@ -1788,7 +1792,7 @@ uasm_parse_instruction(void) {
 			goto err;
 		if unlikely(yield() < 0)
 			goto err;
-		if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_UASM_EXPECTED_COLLON_AFTER_INTEGER))
+		if (skip(':', W_UASM_EXPECTED_COLLON_AFTER_INTEGER))
 			goto err;
 		fbsym = uasm_fbsymbol_def(name);
 		if unlikely(!fbsym)
@@ -1838,7 +1842,7 @@ do_static_prefix:
 		invoc.ai_prefix_id1 = (uint16_t)val;
 continue_after_prefix:
 		invoc.ai_flags |= INVOKE_FPREFIX;
-		if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_UASM_EXPECTED_COLLON_AFTER_PREFIX))
+		if (skip(':', W_UASM_EXPECTED_COLLON_AFTER_PREFIX))
 			goto err;
 		goto read_mnemonic_name;
 	}

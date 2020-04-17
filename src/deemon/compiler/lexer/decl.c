@@ -968,7 +968,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_ASM))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_ASM))
 			goto err_flags;
 		/* TODO: Custom, user-defined encoding:
 		 * >> function foo(a: __asm__("?Dobject")) {
@@ -976,7 +976,7 @@ decl_ast_parse_unary_head(struct decl_ast *__restrict self) {
 		self->da_type = DAST_NONE;
 
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ASM))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_ASM))
 			goto err_r;
 		break;
 
@@ -1092,7 +1092,7 @@ err_type_expr:
 				elemv = new_elemv;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_TUPLE)) {
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_TUPLE)) {
 			old_flags = 0;
 			goto err_elemv;
 		}
@@ -1150,11 +1150,11 @@ err_elemv_0:
 			decl_seq->da_tuple.t_itemc = 2;
 			decl_seq->da_tuple.t_itemv = elemv; /* Inherit */
 		} else {
-			if unlikely(likely(tok == TOK_DOTS) ? (yield() < 0) : WARN(W_EXPECTED_DOTS_AFTER_SEQUENCE))
+			if (skip(TOK_DOTS, W_EXPECTED_DOTS_AFTER_SEQUENCE))
 				goto err_seq_0;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_SEQUENCE))
+		if (skip('}', W_EXPECTED_RBRACE_AFTER_SEQUENCE))
 			goto err_seq_0;
 		self->da_type = DAST_SEQ;
 		self->da_flag = DAST_FNORMAL;
@@ -1169,7 +1169,7 @@ err_elemv_0:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_NTH))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_NTH))
 			goto err_flags;
 		nth_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!nth_expr)
@@ -1186,7 +1186,7 @@ err_nth:
 		if (nth_expr->a_type != AST_CONSTEXPR &&
 		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
 			goto err_nth;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_NTH))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_nth;
 		if (TPP_ISKEYWORD(tok)) {
 			unsigned int nth_symbol = 0;

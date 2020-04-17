@@ -86,15 +86,17 @@ struct TPPKeyword;
  * we simply implement the unknown-file hook of TPP, allowing us to search the
  * default library path for a given filename whenever TPP couldn't find the file
  * as part of its own library path. */
-INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filename, size_t filename_size,
-                                              struct TPPKeyword **pkeyword_entry);
+INTDEF struct TPPFile *DCALL
+tpp_unknown_file(int mode, char *__restrict filename,
+                 size_t filename_size,
+                 struct TPPKeyword **pkeyword_entry);
 
 /* TPP isn't exported by deemon, so we configure it to only be used internally. */
 #define TPP_assert                              Dee_ASSERT
 #define TPPFUN                                  INTDEF
 #define TPP(x)                                  x
 #define TPPCALL                                 DCALL
-#define TPP_USERDEFS                           <deemon/compiler/lexer.def>
+#define TPP_USERDEFS                            <deemon/compiler/lexer.def>
 #define TPP_CONFIG_ONELEXER                     2 /* Configure for one global lexer to speed things up. */
 #define TPP_CONFIG_GCCFUNC                      0 /* Disable builtin GCC preprocessor functions. */
 #define TPP_CONFIG_MINMACRO                     1 /* Enable minimal-macro mode, disabling all of those predefined C macros. */
@@ -110,7 +112,7 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
 #define TPP_CONFIG_NO_CALLBACK_INS_COMMENT      1
 #define TPP_CONFIG_NO_CALLBACK_NEW_TEXTFILE     1
 #define TPP_CONFIG_CALLBACK_UNKNOWN_FILE        tpp_unknown_file /* Statically link our unknown-file callback. */
-#define TPP_CONFIG_CALLBACK_WARNING(...)       (parser_warnf(__VA_ARGS__) == 0)
+#define TPP_CONFIG_CALLBACK_WARNING(...)        (parser_warnf(__VA_ARGS__) == 0)
 #define TPP_CONFIG_FASTSTARTUP_KEYWORD_FLAGS    1
 #define TPP_CONFIG_USERDEFINED_KWD_DEFAULT      1
 #define TPP_CONFIG_USERDEFINED_KWD_ASSERT       1
@@ -120,8 +122,8 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
 
 /* Configure non-variable TPP options. */
 #if 1
-/* #define TPP_CONFIG_FEATURE_TRIGRAPHS           0 */
-/* #define TPP_CONFIG_FEATURE_DIGRAPHS            0 */
+/*      TPP_CONFIG_FEATURE_TRIGRAPHS           0 */
+/*      TPP_CONFIG_FEATURE_DIGRAPHS            0 */
 #define TPP_CONFIG_EXTENSION_GCC_VA_ARGS       1
 #define TPP_CONFIG_EXTENSION_GCC_VA_COMMA      1
 #define TPP_CONFIG_EXTENSION_GCC_IFELSE        1
@@ -131,9 +133,9 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
 #define TPP_CONFIG_EXTENSION_VA_OPT            1
 #define TPP_CONFIG_EXTENSION_STR_E             1
 #define TPP_CONFIG_EXTENSION_ALTMAC            1
-/* #define TPP_CONFIG_EXTENSION_RECMAC            0 */
+/*      TPP_CONFIG_EXTENSION_RECMAC            0 */
 #define TPP_CONFIG_EXTENSION_BININTEGRAL       1
-/* #define TPP_CONFIG_EXTENSION_MSVC_PRAGMA       0 */
+/*      TPP_CONFIG_EXTENSION_MSVC_PRAGMA       0 */
 #define TPP_CONFIG_EXTENSION_STRINGOPS         1
 #define TPP_CONFIG_EXTENSION_HASH_AT           1
 #define TPP_CONFIG_EXTENSION_HASH_XCLAIM       1
@@ -163,15 +165,15 @@ INTDEF struct TPPFile *DCALL tpp_unknown_file(int mode, char *__restrict filenam
 #define TPP_CONFIG_EXTENSION_TPP_STR_SIZE      1
 #define TPP_CONFIG_EXTENSION_TPP_STR_PACK      1
 #define TPP_CONFIG_EXTENSION_TPP_COUNT_TOKENS  1
-/* #define TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA   0 */
+/*      TPP_CONFIG_EXTENSION_DOLLAR_IS_ALPHA   0 */
 #define TPP_CONFIG_EXTENSION_ASSERTIONS        1
-/* #define TPP_CONFIG_EXTENSION_CANONICAL_HEADERS 0 */
-/* #define TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES  0 */
+/*      TPP_CONFIG_EXTENSION_CANONICAL_HEADERS 0 */
+/*      TPP_CONFIG_EXTENSION_EXT_ARE_FEATURES  0 */
 #define TPP_CONFIG_EXTENSION_MSVC_FIXED_INT_DEFAULT 0 /* Default to disabled. */
-/* #define TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED 0 */
+/*      TPP_CONFIG_EXTENSION_NO_EXPAND_DEFINED 0 */
 #define TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR    1
-/* #define TPP_CONFIG_EXTENSION_EXTENDED_IDENTS   0 */
-/* #define TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO 0 */
+/*      TPP_CONFIG_EXTENSION_EXTENDED_IDENTS   0 */
+/*      TPP_CONFIG_EXTENSION_TRADITIONAL_MACRO 0 */
 #else
 #define TPP_CONFIG_FEATURE_TRIGRAPHS           0
 #define TPP_CONFIG_FEATURE_DIGRAPHS            0
@@ -241,12 +243,15 @@ tok_t tok;
 tok_t yield(void);
 tok_t yieldnb(void);
 tok_t yieldnbif(bool allow);
+/* Skip a token `expected_tok', or warn with `wnum' if the current token didn't match */
+int skip(tok_t expected_tok, int wnum, ...);
 #else /* __INTELLISENSE__ */
 #define token             TPPLexer_Global.l_token
 #define tok               TPPLexer_Global.l_token.t_id
 #define yield()           TPPLexer_Yield()
 #define yieldnb()         TPPLexer_YieldNB()
 #define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
+#define skip(expected_tok, ...) unlikely(likely(tok == (expected_tok)) ? (yield() < 0) : WARN(__VA_ARGS__))
 #endif /* !__INTELLISENSE__ */
 #define HAS(ext)          TPPLexer_HasExtension(ext)
 #define WARN(...)         parser_warnf(__VA_ARGS__)
@@ -257,9 +262,9 @@ tok_t yieldnbif(bool allow);
 #define PERRAT(loc, ...)  parser_erratf(loc, __VA_ARGS__)
 #define PERRSYM(sym, ...) parser_erratrf(&(sym)->s_decl, __VA_ARGS__)
 #define PERRAST(ast, ...) parser_errastf(ast, __VA_ARGS__)
-#define TPP_PUSHF()       do{uint32_t _old_flags = TPPLexer_Current->l_flags
+#define TPP_PUSHF()       do { uint32_t _old_flags = TPPLexer_Current->l_flags
 #define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
-#define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags;}__WHILE0
+#define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; } __WHILE0
 
 
 #ifndef __INTELLISENSE__

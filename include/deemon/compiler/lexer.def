@@ -231,6 +231,10 @@ WGROUP(WG_UNUSED_LABEL, "unused-label", WSTATE_FATAL)
 
 WARNING_NAMESPACE(WN_DEEMON, 2000)
 
+/* TODO: Add special printf-like formating rules to TPP that allow error messages
+ *       to be written much easier, where special format specifiers exist that are
+ *       dedicated to things such as <print_current_token_repr>, etc... */
+
 /* Syntax */
 DEF_WARNING(W_UNEXPECTED_TOKEN_IN_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unexpected token " TOK_S " in expression", TOK_A))
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_IF, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' after `if', but got " TOK_S, TOK_A))
@@ -537,7 +541,7 @@ WARNING_NAMESPACE(WN_ASSEMBLER, 8000)
 DEF_WARNING(W_ASM_SEQUENCE_TOO_LONG, (WG_VALUE), WSTATE_ERROR, WARNF("Sequence is too long"))
 DEF_WARNING(W_ASM_STORE_TO_RVALUE, (WG_SYNTAX), WSTATE_WARN, WARNF("Store to r-value is assembled as an assignment. If this is intended, replace `=' with `:='"))
 DEF_WARNING(W_ASM_BREAK_OR_CONTINUE_NOT_ALLOWED, (WG_SYNTAX), WSTATE_ERROR, WARNF("`break' or `continue' are not allowed outside of a loop"))
-DEF_WARNING(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, (WG_SYMBOL), WSTATE_FATAL, { struct symbol *sym = ARG(struct symbol *); WARNF("Symbol `%s' of class `%s' cannot be used in inplace operations", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_CANNOT_PREFIX_SYMBOL_CLASS, (WG_SYMBOL), WSTATE_FATAL, { struct symbol *sym = ARG(struct symbol *); WARNF("Symbol `%s' of class `%s' cannot be used in inplace operations", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_STACK_VARIABLE_NOT_INITIALIZED, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Stack variable `%s' has not been initialized", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_STACK_VARIABLE_WAS_DEALLOCATED, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Stack variable `%s' initialized in another scope is no longer allocated", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_STACK_VARIABLE_DIFFERENT_SCOPE, (WG_SYMBOL), WSTATE_WARN, { struct symbol *sym = ARG(struct symbol *); WARNF("Stack variable `%s' is not allocated within the proper scope", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
@@ -567,15 +571,15 @@ DEF_WARNING(W_ASM_AMBIGUOUS_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, {
 		WARNF("See reference to %lu%s declaration", (unsigned long)i + 3, i == 0 ? "rd" : "th");
 	}
 })
-DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, (WG_SYMBOL), WSTATE_FATAL, { struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from static function `%s'", SYMBOL_FIELD_ATTR(sym)->ca_name, ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })
-DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind symbol `%s' of class `%s'", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_INSTANCE_MEMBER_FROM_CLASS_METHOD, (WG_SYMBOL), WSTATE_FATAL, { struct symbol *sym = ARG(struct symbol *); WARNF("Instance member `%k' cannot be accessed from static function `%s'", sym->s_attr.a_attr->ca_name, ARG(char *)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_CANNOT_UNBIND_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind symbol `%s' of class `%s'", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_CANNOT_UNBIND_UNDESIGNATED_STACK_VARIABLE, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot unbind undesignated stack variable `%s' at this time", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_DELETED_STACK_VARIABLE_ISNT_UNBOUND, (WG_SYMBOL), WSTATE_WARN, { struct symbol *sym = ARG(struct symbol *); WARNF("Deleting stack variable `%s' will not cause the symbol to become unbound", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-DEF_WARNING(W_ASM_CANNOT_WRITE_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot write to symbol `%s' of class `%s'", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
-DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot modify read-only external symbol `%s from %k'", SYMBOL_EXTERN_SYMBOL(sym)->ss_name, SYMBOL_EXTERN_MODULE(sym)->mo_name); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_CANNOT_WRITE_SYMBOL, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot write to symbol `%s' of class `%s'", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_EXTERNAL_SYMBOL_IS_READONLY, (WG_SYMBOL), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot modify read-only external symbol `%s from %k'", SYMBOL_EXTERN_SYMBOL(sym)->ss_name, sym->s_extern.e_module->mo_name); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_MULTIPLE_WRITES_TO_FINAL, (WG_READONLY), WSTATE_DISABLED, { struct symbol *sym = ARG(struct symbol *); WARNF("Multiple writes to final variable `%s' generate additional checks", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_UNBIND_FINAL_SYMBOL, (WG_READONLY), WSTATE_WARN, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot delete final variable `%s'", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
-DEF_WARNING(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, (WG_READONLY), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Multiple writes to final symbol `%s' of type `%s' cannot be handled", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(SYMBOL_TYPE(sym))); PRINT_SYMBOL_DECLARATION(sym); })
+DEF_WARNING(W_ASM_UNSUPPORTED_FINAL_SYMBOL_TYPE, (WG_READONLY), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Multiple writes to final symbol `%s' of type `%s' cannot be handled", SYMBOL_NAME(sym), SYMBOL_TYPE_NAME(sym->s_type)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_ASM_MISSALIGNED_STACK, (WG_VALUE), WSTATE_ERROR, WARNF("Miss-aligned stack after expression (this might happen due to incorrectly placed initializers for `__stack' variables)"))
 
 WARNING_NAMESPACE(WN_ASSEMBLER_LABLES, 8120)

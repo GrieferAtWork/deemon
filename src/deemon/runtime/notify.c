@@ -28,9 +28,11 @@
 #include <deemon/notify.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/recursive-rwlock.h>
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 #include <limits.h>
 #include <string.h>
@@ -113,11 +115,9 @@ err:
 
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
+#ifdef CONFIG_HAVE_memcasecmp
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#else
+#else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
 LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
@@ -128,7 +128,7 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	}
 	return true;
 }
-#endif
+#endif /* !CONFIG_HAVE_memcasecmp */
 
 
 

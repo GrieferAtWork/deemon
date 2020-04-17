@@ -180,7 +180,7 @@ do_realloc_catchv:
 			struct symbol *guard_symbol;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_CATCH))
+			if (skip('(', W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
 			if (tok == TOK_DOTS) {
 				if unlikely(yield() < 0)
@@ -195,7 +195,7 @@ do_realloc_catchv:
 					guard_symbol = new_local_symbol(token.t_kwd, NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
-					SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
+					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
 				}
@@ -214,7 +214,7 @@ do_realloc_catchv:
 					guard_symbol = new_local_symbol(token.t_kwd, NULL);
 					if unlikely(!guard_symbol)
 						goto err_try;
-					SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
+					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags; /* Yield the exception addressing keyword. */
 					if unlikely(yield() < 0)
@@ -254,14 +254,14 @@ parse_catch_symbol:
 					guard_symbol = new_local_symbol(token.t_kwd, NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
-					SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
+					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
 				}
 			}
 end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CATCH))
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = is_statement
 			                   ? ast_parse_statement(false)
@@ -373,7 +373,7 @@ do_realloc_catchv:
 			struct symbol *guard_symbol;
 			old_flags = TPPLexer_Current->l_flags;
 			TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_CATCH))
+			if (skip('(', W_EXPECTED_LPAREN_AFTER_CATCH))
 				goto err_try_flags;
 			if (tok == TOK_DOTS) {
 				if unlikely(yield() < 0)
@@ -388,7 +388,7 @@ do_realloc_catchv:
 					guard_symbol = new_local_symbol(token.t_kwd, NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
-					SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
+					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
 				}
@@ -407,7 +407,7 @@ do_realloc_catchv:
 					guard_symbol = new_local_symbol(token.t_kwd, NULL);
 					if unlikely(!guard_symbol)
 						goto err_try;
-					SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
+					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags; /* Yield the exception addressing keyword. */
 					if unlikely(yield() < 0)
@@ -447,14 +447,14 @@ parse_catch_symbol:
 					guard_symbol = new_local_symbol(token.t_kwd, NULL);
 					if unlikely(!guard_symbol)
 						goto err_try_flags;
-					SYMBOL_TYPE(guard_symbol) = SYMBOL_TYPE_EXCEPT;
+					guard_symbol->s_type = SYMBOL_TYPE_EXCEPT;
 					if unlikely(yield() < 0)
 						goto err_try_flags;
 				}
 			}
 end_catch_handler:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CATCH))
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_CATCH))
 				goto err_try;
 			handler->ce_code = ast_parse_hybrid_secondary(&was_expression);
 			if unlikely(!handler->ce_code)

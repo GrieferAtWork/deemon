@@ -90,14 +90,14 @@ ast_parse_for_head(DREF struct ast **__restrict pinit,
 			goto done;
 		}
 	}
-	if unlikely(likely(tok == ';') ? (yield() < 0) : WARN(W_EXPECTED_SEMICOLLON1_AFTER_FOR))
+	if (skip(';', W_EXPECTED_SEMICOLLON1_AFTER_FOR))
 		goto err;
 	if (tok != ';') {
 		elem_or_cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!elem_or_cond)
 			goto err;
 	}
-	if unlikely(likely(tok == ';') ? (yield() < 0) : WARN(W_EXPECTED_SEMICOLLON2_AFTER_FOR))
+	if (skip(';', W_EXPECTED_SEMICOLLON2_AFTER_FOR))
 		goto err;
 	if (tok == ')') {
 		iter_or_next = NULL;
@@ -220,7 +220,7 @@ again:
 		while (tok == '\n')
 			if unlikely(yield() < 0)
 		goto err_r;
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_LBRACE))
+		if (skip('}', W_EXPECTED_RBRACE_AFTER_LBRACE))
 			goto err_r;
 		scope_pop();
 		break;
@@ -250,7 +250,7 @@ again:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_flags;
 		result = ast_parse_comma(AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
@@ -259,7 +259,7 @@ again:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_IF))
 			goto err_r;
 		tt_branch = ast_parse_statement(false);
 		if unlikely(!tt_branch)
@@ -498,7 +498,7 @@ do_else_branch:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		has_scope = false;
 		if (tok != ';') {
@@ -522,7 +522,7 @@ do_else_branch:
 			ast_decref(iter_or_next);
 			iter_or_next = merge;
 		}
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_loop;
 
 		loop = ast_parse_statement(allow_nonblock);
@@ -578,7 +578,7 @@ err_loop:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_FOR))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_FOR))
 			goto err_flags;
 		if unlikely(scope_push())
 			goto err_flags;
@@ -587,13 +587,13 @@ err_loop:
 		                               NULL);
 		if unlikely(!foreach_elem)
 			goto err_flags;
-		if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_FOREACH))
+		if (skip(':', W_EXPECTED_COLLON_AFTER_FOREACH))
 			goto err_foreach_elem;
 		foreach_iter = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		if unlikely(!foreach_iter)
 			goto err_foreach_elem;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_FOR))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_FOR))
 			goto err_foreach_iter;
 		foreach_loop = ast_parse_statement(allow_nonblock);
 		if unlikely(!foreach_loop)
@@ -642,15 +642,15 @@ err_foreach_elem:
 			goto err_r;
 		if unlikely(skip_lf())
 			goto err_r;
-		if unlikely(likely(tok == KWD_while) ? (yield() < 0) : WARN(W_EXPECTED_WHILE_AFTER_DO))
+		if (skip(KWD_while, W_EXPECTED_WHILE_AFTER_DO))
 			goto err_r;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_r_flags;
 		cond = ast_parse_expr(LOOKUP_SYM_NORMAL);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
 		merge = ast_setddi(ast_loop(AST_FLOOP_POSTCOND, cond, NULL, result), &loc);
 		ast_decref(result);
@@ -673,7 +673,7 @@ err_foreach_elem:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_WHILE))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_WHILE))
 			goto err_flags;
 		result = ast_parse_comma(AST_COMMA_NORMAL |
 		                         AST_COMMA_ALLOWVARDECLS,
@@ -682,7 +682,7 @@ err_foreach_elem:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_WHILE))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_WHILE))
 			goto err_r;
 		loop = ast_parse_statement(allow_nonblock);
 		if unlikely(!loop)
@@ -751,7 +751,7 @@ err_foreach_elem:
 			if unlikely(!result)
 				goto err_flags;
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_DEL))
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_DEL))
 				goto err_r;
 		} else {
 			result = ast_parse_del(LOOKUP_SYM_ALLOWDECL);
@@ -815,7 +815,7 @@ err_foreach_elem:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_SWITCH))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_SWITCH))
 			goto err_flags;
 		/* Parse the switch-expression (NOTE: Allow variable declarations). */
 		result = ast_parse_comma(AST_COMMA_NORMAL |
@@ -825,7 +825,7 @@ err_foreach_elem:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_SWITCH))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_SWITCH))
 			goto err_r;
 
 		/* Setup + activate switch-mode. */
@@ -980,7 +980,7 @@ err_label_ast:
 				result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				if unlikely(!result)
 					goto err;
-				if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_CASE))
+				if (skip(':', W_EXPECTED_COLLON_AFTER_CASE))
 					goto err_r;
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH)) {
 					ast_decref(result);
@@ -1005,7 +1005,7 @@ err_label_ast:
 				loc_here(&loc);
 				if unlikely(yield() < 0)
 					goto err;
-				if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_DEFAULT))
+				if (skip(':', W_EXPECTED_COLLON_AFTER_DEFAULT))
 					goto err;
 				if unlikely(!(current_basescope->bs_cflags & BASESCOPE_FSWITCH))
 					goto again;

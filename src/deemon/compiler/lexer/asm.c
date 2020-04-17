@@ -129,7 +129,7 @@ asm_parse_operands(struct operand_list *__restrict list,
 				if (WARN(W_EXPECTED_KEYWORD_FOR_OPERAND_NAME))
 					goto err;
 			}
-			if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
+			if (skip(']', W_EXPECTED_RBRACKET_AFTER_OPERAND_NAME))
 				goto err;
 		}
 		if (type == OPERAND_TYPE_LABEL) {
@@ -176,12 +176,12 @@ asm_parse_operands(struct operand_list *__restrict list,
 					goto err_type;
 			} else {
 with_paren:
-				if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
+				if (skip('(', W_EXPECTED_LPAREN_BEFORE_OPERAND_VALUE))
 					goto err_type;
 				operand_value = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				if unlikely(!operand_value)
 					goto err_type;
-				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
+				if (skip(')', W_EXPECTED_RPAREN_AFTER_OPERAND_VALUE))
 					goto err_value;
 			}
 			operand = operand_list_add(list, type);
@@ -561,7 +561,7 @@ yield_prefix:
 		has_paren = false;
 	} else {
 with_paren:
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_ASM))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_ASM))
 			goto err_flags;
 		has_paren = true;
 	}
@@ -658,7 +658,7 @@ with_paren:
 	}
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	if (has_paren) {
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ASM))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_ASM))
 			goto err_text;
 	}
 	ASSERT(operands.ol_c ==

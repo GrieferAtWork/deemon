@@ -22,8 +22,6 @@
 import * from deemon;
 import * from fs;
 
-/* Import all modules reachable via deemon library path. */
-
 function status(message) {
 	if (#message > 60)
 		message = message[:57] + "...";
@@ -31,7 +29,7 @@ function status(message) {
 	File.stdout.sync();
 }
 
-function scan_path(p: string, rel: string) {
+function scanPath(p: string, rel: string) {
 	local files;
 	try {
 		files = List(dir(p));
@@ -44,7 +42,7 @@ function scan_path(p: string, rel: string) {
 		local n = rel + x;
 		local y = joinpath(p, x);
 		if (stat.isdir(y)) {
-			scan_path(y, n + ".");
+			scanPath(y, n + ".");
 		} else if (y.endswith(".dee")) {
 //			local decname = joinpath(p, "." + x[:-4] + ".dec");
 //			try unlink(decname); catch (...);
@@ -55,8 +53,9 @@ function scan_path(p: string, rel: string) {
 	}
 }
 
+/* Import all modules reachable via deemon library path. */
 for (local p: Module.path) {
-	scan_path(p, "");
+	scanPath(p, "");
 }
 
 status("");

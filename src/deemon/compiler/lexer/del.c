@@ -47,7 +47,7 @@ ast_parse_del_single(unsigned int lookup_mode) {
 		ast_decref(result);
 		result = new_result;
 		if ((lookup_mode & LOOKUP_SYM_ALLOWDECL) &&
-		    SYMBOL_SCOPE(result->a_unbind) == current_scope) {
+		    result->a_unbind->s_scope == current_scope) {
 			/* Delete the actual symbol (don't just unbind it). */
 			del_local_symbol(result->a_unbind);
 		}

@@ -675,10 +675,10 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	/* Attempt a direct call to the symbol. */
 check_function_class:
 	if (!SYMBOL_MUST_REFERENCE(function)) {
-		switch (SYMBOL_TYPE(function)) {
+		switch (function->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
-			function = SYMBOL_ALIAS(function);
+			function = function->s_alias;
 			goto check_function_class;
 
 		case SYMBOL_TYPE_EXTERN:
@@ -905,13 +905,13 @@ check_sym_class:
 			goto err;
 		return asm_gpush_ref((uint16_t)symid);
 	}
-	switch (SYMBOL_TYPE(sym)) {
+	switch (sym->s_type) {
 
 	case SYMBOL_TYPE_NONE:
 		return asm_gpush_none();
 
 	case SYMBOL_TYPE_ALIAS:
-		sym = SYMBOL_ALIAS(sym);
+		sym = sym->s_alias;
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_EXTERN:
@@ -1158,10 +1158,10 @@ asm_can_prefix_symbol(struct symbol *__restrict sym) {
 check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym))
 		return false;
-	switch (SYMBOL_TYPE(sym)) {
+	switch (sym->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		sym = SYMBOL_ALIAS(sym);
+		sym = sym->s_alias;
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_GLOBAL:
@@ -1189,10 +1189,10 @@ asm_can_prefix_symbol_for_read(struct symbol *__restrict sym) {
 check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym))
 		return false;
-	switch (SYMBOL_TYPE(sym)) {
+	switch (sym->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		sym = SYMBOL_ALIAS(sym);
+		sym = sym->s_alias;
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_GLOBAL:
@@ -1225,10 +1225,10 @@ INTERN int (DCALL asm_gprefix_symbol)(struct symbol *__restrict sym,
 	(void)warn_ast;
 check_sym_class:
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
-	switch (SYMBOL_TYPE(sym)) {
+	switch (sym->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		sym = SYMBOL_ALIAS(sym);
+		sym = sym->s_alias;
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_EXTERN:
@@ -1304,10 +1304,10 @@ INTERN int (DCALL asm_gprefix_symbol_for_read)(struct symbol *__restrict sym,
 	(void)warn_ast;
 check_sym_class:
 	ASSERT(!SYMBOL_MUST_REFERENCE(sym));
-	switch (SYMBOL_TYPE(sym)) {
+	switch (sym->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		sym = SYMBOL_ALIAS(sym);
+		sym = sym->s_alias;
 		goto check_sym_class;
 
 	case SYMBOL_TYPE_EXTERN:
@@ -1394,10 +1394,10 @@ INTERN int (DCALL asm_gpush_bnd_symbol)(struct symbol *__restrict sym,
 check_sym_class:
 	if (SYMBOL_MUST_REFERENCE(sym))
 		goto fallback;
-	switch (SYMBOL_TYPE(sym)) {
+	switch (sym->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		sym = SYMBOL_ALIAS(sym);
+		sym = sym->s_alias;
 		goto check_sym_class;
 	case SYMBOL_TYPE_ARG:
 
@@ -1630,10 +1630,10 @@ INTERN int (DCALL asm_gdel_symbol)(struct symbol *__restrict sym,
 	ASSERT(sym);
 check_sym_class:
 	if (!SYMBOL_MUST_REFERENCE(sym)) {
-		switch (SYMBOL_TYPE(sym)) {
+		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
-			sym = SYMBOL_ALIAS(sym);
+			sym = sym->s_alias;
 			goto check_sym_class;
 
 		case SYMBOL_TYPE_GLOBAL:
@@ -1893,10 +1893,10 @@ INTERN int (DCALL asm_gpop_symbol)(struct symbol *__restrict sym,
 	ASSERT(sym);
 check_sym_class:
 	if (!SYMBOL_MUST_REFERENCE(sym)) {
-		switch (SYMBOL_TYPE(sym)) {
+		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
-			sym = SYMBOL_ALIAS(sym);
+			sym = sym->s_alias;
 			goto check_sym_class;
 
 		case SYMBOL_TYPE_EXTERN:
@@ -1967,7 +1967,7 @@ check_sym_class:
 			if unlikely(!(sym->s_flag & SYMBOL_FALLOC)) {
 				/* This is where the magic of lazy stack initialization happens! */
 				if (current_assembler.a_flag & ASM_FSTACKDISP) {
-					if (current_assembler.a_scope != SYMBOL_SCOPE(sym)) {
+					if (current_assembler.a_scope != sym->s_scope) {
 						DeeScopeObject *my_scope;
 						/* Warn about undefined behavior when the variable isn't from the current scope:
 						 * >> __stack local foo;
@@ -1988,7 +1988,7 @@ check_sym_class:
 						my_scope = current_assembler.a_scope;
 						do {
 							my_scope = my_scope->s_prev;
-						} while (my_scope && my_scope != SYMBOL_SCOPE(sym));
+						} while (my_scope && my_scope != sym->s_scope);
 						if (!my_scope) {
 							if (ASM_WARN(W_ASM_STACK_VARIABLE_UNREACHABLE_SCOPE, sym))
 								goto err;
@@ -2017,7 +2017,7 @@ check_sym_class:
 						do {
 							++my_scope->s_old_stack;
 							my_scope = my_scope->s_prev;
-						} while (my_scope != SYMBOL_SCOPE(sym));
+						} while (my_scope != sym->s_scope);
 #endif /* !NDEBUG */
 					}
 					sym->s_flag |= SYMBOL_FALLOC;

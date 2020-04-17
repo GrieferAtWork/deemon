@@ -53,11 +53,6 @@
 
 #include "../time/libtime.h"
 
-#ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
-#define strend(x) ((x) + strlen(x))
-#endif /* !CONFIG_HAVE_strend */
-
 #ifndef PATH_MAX
 #ifdef PATHMAX
 #   define PATH_MAX PATHMAX
@@ -72,6 +67,23 @@
 
 
 DECL_BEGIN
+
+/* Use libc functions for case-insensitive UTF-8 string compare when available. */
+#ifdef CONFIG_HAVE_memcasecmp
+#define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
+#else /* CONFIG_HAVE_memcasecmp */
+#define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
+LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
+	while (s--) {
+		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
+			return false;
+		++a;
+		++b;
+	}
+	return true;
+}
+#endif /* !CONFIG_HAVE_memcasecmp */
+
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL nt_GetEnvironmentVariableA(char const *__restrict name);
 INTDEF WUNUSED DREF DeeObject *DCALL nt_GetTempPath(void);
@@ -155,23 +167,6 @@ nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
                       DeeObject *__restrict lpTargetFileName,
                       DWORD dwFlags);
 
-
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#else
-#define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
-	while (s--) {
-		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
-			return false;
-		++a;
-		++b;
-	}
-	return true;
-}
-#endif
 
 typedef struct {
 	OBJECT_HEAD

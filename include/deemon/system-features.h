@@ -164,6 +164,8 @@ header("sys/stat.h", addparen(msvc) + " || " + addparen(unix));
 header("fcntl.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/fcntl.h", addparen(linux) + " || " + addparen(kos));
 header("sys/ioctl.h", unix);
+header("alloca.h", addparen(cygwin) + " || " + addparen(linux) + " || " + addparen(kos));
+header("malloc.h", addparen(msvc) + " || " + addparen(cygwin) + " || " + addparen(linux) + " || " + addparen(kos));
 header("ioctl.h");
 header("unistd.h", unix);
 header("sys/unistd.h", cygwin);
@@ -192,7 +194,17 @@ header("dlfcn.h", unix);
 
 header_nostdinc("float.h", stdc);
 header_nostdinc("limits.h", stdc);
+header_nostdinc("setjmp.h", stdc);
 header_nostdinc("link.h");
+header_nostdinc("bluetooth/bluetooth.h");
+header_nostdinc("bluetooth/rfcomm.h");
+header_nostdinc("bluetooth/l2cap.h");
+header_nostdinc("bluetooth/sco.h");
+header_nostdinc("bluetooth/hci.h");
+header_nostdinc("bluetooth.h");
+header_nostdinc("linux/netlink.h", addparen(linux) + " || " + addparen(kos));
+header_nostdinc("asm/types.h", addparen(linux) + " || " + addparen(kos));
+header_nostdinc("sys/un.h", addparen(linux) + " || " + addparen(kos));
 
 include_known_headers();
 
@@ -691,7 +703,13 @@ constant("RTLD_LAZY");
 constant("RTLD_NOW");
 
 functest('_memicmp("a", "A", 1)', msvc);
+functest('memicmp("a", "A", 1)');
 functest('memcasecmp("a", "A", 1)', "defined(__USE_KOS)");
+
+functest('_stricmp("a", "A")', msvc);
+functest('stricmp("a", "A")');
+functest('strcasecmp("a", "A")', "defined(__USE_KOS)");
+
 func("memrchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = memrchr(buf, '!', 123); return p != NULL;");
 func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawmemchr(buf, '!'); return p == buf;");
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
@@ -772,6 +790,9 @@ constant("CTL_HW");
 constant("HW_AVAILCPU");
 constant("HW_NCPU");
 
+functest("alloca()", "defined(CONFIG_HAVE_ALLOCA_H)");
+functest("_alloca()", msvc);
+
 //END:FEATURES
 
 // NOTE: Other config features used in deemon source files:
@@ -838,6 +859,24 @@ constant("HW_NCPU");
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
 #define CONFIG_HAVE_SYS_IOCTL_H 1
+#endif
+
+#ifdef CONFIG_NO_ALLOCA_H
+#undef CONFIG_HAVE_ALLOCA_H
+#elif !defined(CONFIG_HAVE_ALLOCA_H) && \
+      (__has_include(<alloca.h>) || (defined(__NO_has_include) && ((defined(__CYGWIN__) || \
+       defined(__CYGWIN32__)) || (defined(__linux__) || defined(__linux) || defined(linux)) || \
+       defined(__KOS__))))
+#define CONFIG_HAVE_ALLOCA_H 1
+#endif
+
+#ifdef CONFIG_NO_MALLOC_H
+#undef CONFIG_HAVE_MALLOC_H
+#elif !defined(CONFIG_HAVE_MALLOC_H) && \
+      (__has_include(<malloc.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       (defined(__CYGWIN__) || defined(__CYGWIN32__)) || (defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_MALLOC_H 1
 #endif
 
 #ifdef CONFIG_NO_IOCTL_H
@@ -1057,11 +1096,84 @@ constant("HW_NCPU");
 #define CONFIG_HAVE_LIMITS_H 1
 #endif
 
+#ifdef CONFIG_NO_SETJMP_H
+#undef CONFIG_HAVE_SETJMP_H
+#elif !defined(CONFIG_HAVE_SETJMP_H) && \
+      (defined(__NO_has_include) || __has_include(<setjmp.h>))
+#define CONFIG_HAVE_SETJMP_H 1
+#endif
+
 #ifdef CONFIG_NO_LINK_H
 #undef CONFIG_HAVE_LINK_H
 #elif !defined(CONFIG_HAVE_LINK_H) && \
       (__has_include(<link.h>))
 #define CONFIG_HAVE_LINK_H 1
+#endif
+
+#ifdef CONFIG_NO_BLUETOOTH_BLUETOOTH_H
+#undef CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H
+#elif !defined(CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H) && \
+      (__has_include(<bluetooth/bluetooth.h>))
+#define CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H 1
+#endif
+
+#ifdef CONFIG_NO_BLUETOOTH_RFCOMM_H
+#undef CONFIG_HAVE_BLUETOOTH_RFCOMM_H
+#elif !defined(CONFIG_HAVE_BLUETOOTH_RFCOMM_H) && \
+      (__has_include(<bluetooth/rfcomm.h>))
+#define CONFIG_HAVE_BLUETOOTH_RFCOMM_H 1
+#endif
+
+#ifdef CONFIG_NO_BLUETOOTH_L2CAP_H
+#undef CONFIG_HAVE_BLUETOOTH_L2CAP_H
+#elif !defined(CONFIG_HAVE_BLUETOOTH_L2CAP_H) && \
+      (__has_include(<bluetooth/l2cap.h>))
+#define CONFIG_HAVE_BLUETOOTH_L2CAP_H 1
+#endif
+
+#ifdef CONFIG_NO_BLUETOOTH_SCO_H
+#undef CONFIG_HAVE_BLUETOOTH_SCO_H
+#elif !defined(CONFIG_HAVE_BLUETOOTH_SCO_H) && \
+      (__has_include(<bluetooth/sco.h>))
+#define CONFIG_HAVE_BLUETOOTH_SCO_H 1
+#endif
+
+#ifdef CONFIG_NO_BLUETOOTH_HCI_H
+#undef CONFIG_HAVE_BLUETOOTH_HCI_H
+#elif !defined(CONFIG_HAVE_BLUETOOTH_HCI_H) && \
+      (__has_include(<bluetooth/hci.h>))
+#define CONFIG_HAVE_BLUETOOTH_HCI_H 1
+#endif
+
+#ifdef CONFIG_NO_BLUETOOTH_H
+#undef CONFIG_HAVE_BLUETOOTH_H
+#elif !defined(CONFIG_HAVE_BLUETOOTH_H) && \
+      (__has_include(<bluetooth.h>))
+#define CONFIG_HAVE_BLUETOOTH_H 1
+#endif
+
+#ifdef CONFIG_NO_LINUX_NETLINK_H
+#undef CONFIG_HAVE_LINUX_NETLINK_H
+#elif !defined(CONFIG_HAVE_LINUX_NETLINK_H) && \
+      (__has_include(<linux/netlink.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_LINUX_NETLINK_H 1
+#endif
+
+#ifdef CONFIG_NO_ASM_TYPES_H
+#undef CONFIG_HAVE_ASM_TYPES_H
+#elif !defined(CONFIG_HAVE_ASM_TYPES_H) && \
+      (__has_include(<asm/types.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_ASM_TYPES_H 1
+#endif
+
+#ifdef CONFIG_NO_SYS_UN_H
+#undef CONFIG_HAVE_SYS_UN_H
+#elif !defined(CONFIG_HAVE_SYS_UN_H) && \
+      (__has_include(<sys/un.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_SYS_UN_H 1
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -1091,6 +1203,14 @@ constant("HW_NCPU");
 #ifdef CONFIG_HAVE_SYS_IOCTL_H
 #include <sys/ioctl.h>
 #endif /* CONFIG_HAVE_SYS_IOCTL_H */
+
+#ifdef CONFIG_HAVE_ALLOCA_H
+#include <alloca.h>
+#endif /* CONFIG_HAVE_ALLOCA_H */
+
+#ifdef CONFIG_HAVE_MALLOC_H
+#include <malloc.h>
+#endif /* CONFIG_HAVE_MALLOC_H */
 
 #ifdef CONFIG_HAVE_IOCTL_H
 #include <ioctl.h>
@@ -5118,11 +5238,39 @@ constant("HW_NCPU");
 #define CONFIG_HAVE__memicmp 1
 #endif
 
+#ifdef CONFIG_NO_memicmp
+#undef CONFIG_HAVE_memicmp
+#elif !defined(CONFIG_HAVE_memicmp) && \
+      (defined(memicmp) || defined(__memicmp_defined))
+#define CONFIG_HAVE_memicmp 1
+#endif
+
 #ifdef CONFIG_NO_memcasecmp
 #undef CONFIG_HAVE_memcasecmp
 #elif !defined(CONFIG_HAVE_memcasecmp) && \
       (defined(memcasecmp) || defined(__memcasecmp_defined) || defined(__USE_KOS))
 #define CONFIG_HAVE_memcasecmp 1
+#endif
+
+#ifdef CONFIG_NO__stricmp
+#undef CONFIG_HAVE__stricmp
+#elif !defined(CONFIG_HAVE__stricmp) && \
+      (defined(_stricmp) || defined(___stricmp_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__stricmp 1
+#endif
+
+#ifdef CONFIG_NO_stricmp
+#undef CONFIG_HAVE_stricmp
+#elif !defined(CONFIG_HAVE_stricmp) && \
+      (defined(stricmp) || defined(__stricmp_defined))
+#define CONFIG_HAVE_stricmp 1
+#endif
+
+#ifdef CONFIG_NO_strcasecmp
+#undef CONFIG_HAVE_strcasecmp
+#elif !defined(CONFIG_HAVE_strcasecmp) && \
+      (defined(strcasecmp) || defined(__strcasecmp_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_strcasecmp 1
 #endif
 
 #ifdef CONFIG_NO_memrchr
@@ -5541,6 +5689,20 @@ constant("HW_NCPU");
 #elif !defined(CONFIG_HAVE_HW_NCPU) && \
       (defined(HW_NCPU) || defined(__HW_NCPU_defined))
 #define CONFIG_HAVE_HW_NCPU 1
+#endif
+
+#ifdef CONFIG_NO_alloca
+#undef CONFIG_HAVE_alloca
+#elif !defined(CONFIG_HAVE_alloca) && \
+      (defined(alloca) || defined(__alloca_defined) || defined(CONFIG_HAVE_ALLOCA_H))
+#define CONFIG_HAVE_alloca 1
+#endif
+
+#ifdef CONFIG_NO__alloca
+#undef CONFIG_HAVE__alloca
+#elif !defined(CONFIG_HAVE__alloca) && \
+      (defined(_alloca) || defined(___alloca_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__alloca 1
 #endif
 //[[[end]]]
 
@@ -6027,6 +6189,29 @@ constant("HW_NCPU");
 #define sysconf _sysconf
 #endif /* sysconf = _sysconf */
 
+/* Try to substitute alloca() with alternatives */
+#ifndef CONFIG_HAVE_alloca
+#ifdef CONFIG_HAVE__alloca
+#define CONFIG_HAVE_alloca 1
+#define alloca _alloca
+#elif __has_builtin(__builtin_alloca)
+#define alloca __builtin_alloca
+#elif __has_builtin(__builtin_alloca_with_align)
+#include <hybrid/typecore.h>
+#define alloca(s) __builtin_alloca_with_align(s, __SIZEOF_POINTER__)
+#else /* ... */
+#include <hybrid/__alloca.h>
+#ifdef __hybrid_alloca
+#define CONFIG_HAVE_alloca 1
+#define alloca __hybrid_alloca
+#endif /* __hybrid_alloca */
+#endif /* !... */
+#endif /* !CONFIG_HAVE_alloca */
+
+#ifndef CONFIG_HAVE_strend
+#define CONFIG_HAVE_strend 1
+#define strend(s)  ((s) + strlen(s))
+#endif /* !CONFIG_HAVE_strend */
 
 
 /* Configure O_* flags for `open()' */
@@ -6772,6 +6957,21 @@ constant("HW_NCPU");
 #define memcasecmp _memicmp
 #endif /* memcasecmp = _memicmp */
 
+#if !defined(CONFIG_HAVE_memcasecmp) && defined(CONFIG_HAVE_memicmp)
+#define CONFIG_HAVE_memcasecmp 1
+#define memcasecmp memicmp
+#endif /* memcasecmp = memicmp */
+
+#if !defined(CONFIG_HAVE_strcasecmp) && defined(CONFIG_HAVE__stricmp)
+#define CONFIG_HAVE_strcasecmp 1
+#define strcasecmp _stricmp
+#endif /* strcasecmp = _stricmp */
+
+#if !defined(CONFIG_HAVE_strcasecmp) && defined(CONFIG_HAVE_stricmp)
+#define CONFIG_HAVE_strcasecmp 1
+#define strcasecmp stricmp
+#endif /* strcasecmp = stricmp */
+
 #ifndef CONFIG_HAVE_tolower
 #define CONFIG_HAVE_tolower 1
 #define tolower(ch) ((ch) >= 'A' && (ch) <= 'Z' ? ((ch) + ('a' - 'A')) : (ch))
@@ -6806,8 +7006,6 @@ constant("HW_NCPU");
 #define CONFIG_HAVE_isalnum 1
 #define isalnum(ch) (isalpha(ch) || isdigit(ch))
 #endif /* !CONFIG_HAVE_isalnum */
-
-
 
 
 

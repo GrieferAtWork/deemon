@@ -2018,7 +2018,10 @@ again:
 			DWORD wait_state;
 			DBG_ALIGNMENT_DISABLE();
 			wait_state = WaitForMultipleObjectsEx(1, &me->t_join, TRUE,
-			                                      timeout_microseconds == (uint64_t)-1 ? INFINITE : (DWORD)(timeout_microseconds / 1000), TRUE);
+			                                      timeout_microseconds == (uint64_t)-1
+			                                      ? INFINITE
+			                                      : (DWORD)(timeout_microseconds / 1000),
+			                                      TRUE);
 			DBG_ALIGNMENT_ENABLE();
 			switch (wait_state) {
 
@@ -2061,7 +2064,7 @@ again:
 			} else {
 				struct timespec join_time;
 				DBG_ALIGNMENT_DISABLE();
-				error = clock_gettime(CLOCK_REALTIME, &join_time);
+				error = clock_gettime(CLOCK_REALTIME, &join_time); /* TODO: Missing feature test! */
 				DBG_ALIGNMENT_ENABLE();
 				if (!error) {
 					join_time.tv_sec += (time_t)(timeout_microseconds / 1000000);
@@ -2143,11 +2146,12 @@ done_join:
 	 * potential errors that lead to its failure. */
 	{
 		DREF DeeObject *result;
-		uint16_t current_alloc            = 0, req_alloc;
-		struct except_frame *error_frames = NULL;
+		uint16_t current_alloc, req_alloc;
+		struct except_frame *error_frames;
+		current_alloc = 0;
+		error_frames  = NULL;
 relock_state:
-		while (ATOMIC_FETCHOR(me->t_state, THREAD_STATE_STARTING) &
-		       THREAD_STATE_STARTING)
+		while (ATOMIC_FETCHOR(me->t_state, THREAD_STATE_STARTING) & THREAD_STATE_STARTING)
 			SCHED_YIELD();
 		/* In case errors have occurred during execution
 		 * of the thread, package and rethrow those errors. */
@@ -2239,7 +2243,7 @@ DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
 	return DeeError_Throwf(&DeeError_SystemError,
 	                       "Cannot determine id of thread %k",
 	                       self);
-#else
+#else /* CONFIG_NO_THREADID_INTERNAL || CONFIG_NO_THREADID */
 	if unlikely(!(((DeeThreadObject *)self)->t_state & THREAD_STATE_STARTED)) {
 		return DeeError_Throwf(&DeeError_ValueError,
 		                       "Thread %k has no id because it wasn't started",
@@ -2247,7 +2251,7 @@ DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self,
 	}
 	*pthreadid = ((DeeThreadObject *)self)->t_threadid;
 	return 0;
-#endif
+#endif /* !CONFIG_NO_THREADID_INTERNAL && !CONFIG_NO_THREADID */
 }
 
 /* Clear all TLS variables assigned to slots in the calling thread.
@@ -2288,7 +2292,7 @@ thread_doclear(DeeThreadObject *__restrict self) {
 	ATOMIC_FETCHAND(self->t_state, ~(THREAD_STATE_INTERRUPTING |
 	                                 THREAD_STATE_INTERRUPTED));
 	/* Decref() all pending interrupts. */
-	if (old_intr.ti_intr)
+	if (old_intr.ti_intr) {
 		for (;;) {
 			struct thread_interrupt *next;
 			ASSERT(old_intr.ti_intr);
@@ -2301,7 +2305,7 @@ thread_doclear(DeeThreadObject *__restrict self) {
 			memcpy(&old_intr, next, sizeof(struct thread_interrupt));
 			Dee_Free(next);
 		}
-
+	}
 	Dee_Incref(Dee_EmptyTuple);
 	while (ATOMIC_FETCHOR(self->t_state, THREAD_STATE_STARTING) &
 	       THREAD_STATE_STARTING)
@@ -2348,12 +2352,12 @@ thread_doclear(DeeThreadObject *__restrict self) {
 /* Any platform that passes boolean return values through a
  * general-purpose register is applicable to this optimization. */
 #define thread_clear thread_doclear
-#else
+#else /* __i386__ || __x86_64__ || __arm__ */
 PRIVATE NONNULL((1)) void DCALL
 thread_clear(DeeThreadObject *__restrict self) {
 	thread_doclear(self);
 }
-#endif
+#endif /* !__i386__ && !__x86_64__ && !__arm__ */
 
 PRIVATE NONNULL((1, 2)) void DCALL
 thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
@@ -2457,7 +2461,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 			DBG_ALIGNMENT_DISABLE();
 			sem_destroy(&self->t_join);
 			DBG_ALIGNMENT_ENABLE();
-#endif
+#endif /* ... */
 		}
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
 	}

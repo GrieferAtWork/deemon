@@ -36,6 +36,7 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <stdint.h> /* INT8_MAX, ... */
@@ -54,13 +55,9 @@ INTERN struct asm_symtab symtab;
 #endif /* !__INTELLISENSE__ */
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
+#ifdef CONFIG_HAVE_memcasecmp
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#define STRCASEEQ(a, b) (strcasecmp(a, b) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#define STRCASEEQ(a, b) (_stricmp(a, b) == 0)
-#else
+#else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
 LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
@@ -71,6 +68,11 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	}
 	return true;
 }
+#endif /* !CONFIG_HAVE_memcasecmp */
+
+#ifdef CONFIG_HAVE_strcasecmp
+#define STRCASEEQ(a, b)    (strcasecmp(a, b) == 0)
+#else /* CONFIG_HAVE_strcasecmp */
 #define STRCASEEQ(a, b) dee_strcaseeq((char *)(a), (char *)(b))
 LOCAL bool dee_strcaseeq(char *a, char *b) {
 	while (*a) {
@@ -80,7 +82,8 @@ LOCAL bool dee_strcaseeq(char *a, char *b) {
 	}
 	return true;
 }
-#endif
+#endif /* !CONFIG_HAVE_strcasecmp */
+
 
 #define IS_KWD(str)                                 \
 	(COMPILER_STRLEN(str) == token.t_kwd->k_size && \
@@ -359,7 +362,7 @@ do_handle_reloc:
 			if (uasm_parse_intexpr(&expr, UASM_INTEXPR_FNORMAL))
 				goto err;
 		}
-		if unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
+		if (skip(',', W_EXPECTED_COMMA))
 			goto err;
 		reloc_name  = uasm_parse_symnam();
 		reloc_sym   = NULL;
@@ -420,10 +423,10 @@ do_handle_except:
 		 *   - `[@]mask(const)' -- Use `const' as exception handler mask.
 		 */
 		except_start = do_parse_symbol_for_except();
-		if unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
+		if (skip(',', W_EXPECTED_COMMA))
 			goto err;
 		except_end = do_parse_symbol_for_except();
-		if unlikely(likely(tok == ',') ? (yield() < 0) : WARN(W_EXPECTED_COMMA))
+		if (skip(',', W_EXPECTED_COMMA))
 			goto err;
 		except_entry = do_parse_symbol_for_except();
 		except_flags = EXCEPTION_HANDLER_FNORMAL;
@@ -459,7 +462,7 @@ except_unknown_tag:
 				DREF DeeObject *mask;
 				if unlikely(yield() < 0)
 					goto except_err;
-				if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN))
+				if (skip('(', W_EXPECTED_LPAREN))
 					goto except_err;
 				mask = do_parse_constant();
 				if (DeeNone_Check(mask)) {
@@ -468,11 +471,13 @@ except_unknown_tag:
 					mask = (DREF DeeObject *)&DeeNone_Type;
 					Dee_Incref(mask);
 				}
-				if unlikely(DeeObject_AssertType(mask, &DeeType_Type) ||
-					         (likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN))) {
+				if (DeeObject_AssertType(mask, &DeeType_Type)) {
+except_err_mask:
 					Dee_Decref(mask);
 					goto except_err;
 				}
+				if (skip(')', W_EXPECTED_RPAREN))
+					goto except_err_mask;
 				Dee_XDecref(except_mask);
 				except_mask = (DREF DeeTypeObject *)mask;
 				continue;

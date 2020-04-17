@@ -836,13 +836,13 @@ do_empty_cell:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_IF))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_IF))
 			goto err_flags;
 		result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if unlikely(!result)
 			goto err;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_IF))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_IF))
 			goto err;
 		tt_branch = NULL;
 		if (tok != KWD_else && tok != KWD_elif) {
@@ -995,7 +995,7 @@ do_create_class:
 			goto err_flags;
 		if (has_paren) {
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_PACK))
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_PACK))
 				goto err_r;
 #if 0 /* The `result->a_type != AST_MULTIPLE' would never \
        * fly, because of the `AST_COMMA_FORCEMULTIPLE' */
@@ -1129,7 +1129,7 @@ do_create_class:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
 		if (allow_cast &&
 		    result->a_type != AST_MULTIPLE) {
@@ -1151,7 +1151,7 @@ do_create_class:
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_BRACEINIT))
+		if (skip('}', W_EXPECTED_RBRACE_AFTER_BRACEINIT))
 			goto err_r;
 		break;
 
@@ -1162,13 +1162,13 @@ do_create_class:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_DEL))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_DEL))
 			goto err_flags;
 		result = ast_putddi(ast_parse_del(lookup_mode & ~PARSE_UNARY_DISALLOW_CASTS), &loc);
 		if unlikely(!result)
 			goto err_flags;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_DEL))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_DEL))
 			goto err_r;
 		break;
 
@@ -1208,7 +1208,7 @@ do_create_class:
 			if unlikely(!other)
 				goto err_flags;
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN))
+			if (skip(')', W_EXPECTED_RPAREN))
 				goto err;
 			merge = ast_build_operator((uint16_t)name,
 			                           /* Set the MAYBEPFX flag to suppress errors that
@@ -1238,7 +1238,7 @@ do_create_class:
 			if unlikely(yield() < 0)
 				goto err_flags;
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_LAMBDA))
+			if (skip(']', W_EXPECTED_RBRACKET_AFTER_LAMBDA))
 				goto err;
 			goto do_lambda;
 		}
@@ -1323,7 +1323,7 @@ err_begin_expr:
 				}
 			}
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-			if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_LIST))
+			if (skip(']', W_EXPECTED_RBRACKET_AFTER_LIST))
 				goto err_r;
 		}
 		ast_setddi(result, &loc);
@@ -1370,7 +1370,7 @@ err_begin_expr:
 			goto err;
 		old_flags = TPPLexer_Current->l_flags;
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_NTH))
+		if (skip('(', W_EXPECTED_LPAREN_AFTER_NTH))
 			goto err_flags;
 		result = ast_parse_expr(LOOKUP_SYM_SECONDARY);
 		if unlikely(!result)
@@ -1384,7 +1384,7 @@ err_begin_expr:
 		if (result->a_type != AST_CONSTEXPR &&
 		    WARN(W_EXPECTED_CONSTANT_AFTER_NTH))
 			goto err_r;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_NTH))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_NTH))
 			goto err_r;
 		if (TPP_ISKEYWORD(tok)) {
 			unsigned int nth_symbol = 0;
@@ -1557,7 +1557,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 						if unlikely(!other)
 							goto err_r_flags;
 						TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-						if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN))
+						if (skip(')', W_EXPECTED_RPAREN))
 							goto err_r;
 						merge = ast_build_bound_operator((uint16_t)name,
 						                                 /* Set the MAYBEPFX flag to suppress errors that
@@ -1649,7 +1649,7 @@ do_range:
 			if unlikely(!merge)
 				goto err;
 			result = merge;
-			if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_GETITEM))
+			if (skip(']', W_EXPECTED_RBRACKET_AFTER_GETITEM))
 				goto err_r;
 			ast_setddi(result, &loc);
 		}	break;
@@ -1700,7 +1700,7 @@ err_other:
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 				if unlikely(!other)
 					goto err;
-				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
+				if (skip(')', W_EXPECTED_RPAREN_AFTER_CALL))
 					goto err_r;
 			} else {
 				int temp;
@@ -1767,7 +1767,7 @@ err_other:
 			if unlikely(!merge)
 				goto err;
 			result = merge;
-			if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL))
+			if (skip(')', W_EXPECTED_RPAREN_AFTER_CALL))
 				goto err_r;
 		}	break;
 

@@ -120,13 +120,13 @@ err:
 }
 
 INTERN struct module_symbol *DCALL
-import_module_symbol(DeeModuleObject *__restrict module,
+import_module_symbol(DeeModuleObject *__restrict mod,
                      struct TPPKeyword *__restrict name) {
 	dhash_t i, perturb;
 	dhash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
-	perturb = i = MODULE_HASHST(module, hash);
+	perturb = i = MODULE_HASHST(mod, hash);
 	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
-		struct module_symbol *item = MODULE_HASHIT(module, i);
+		struct module_symbol *item = MODULE_HASHIT(mod, i);
 		if (!item->ss_name)
 			break; /* Not found */
 		if (item->ss_hash != hash)
@@ -252,40 +252,40 @@ err:
 
 INTERN struct symbol *FCALL
 ast_parse_import_single_sym(struct TPPKeyword *__restrict import_name) {
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	struct symbol *extern_symbol;
 	struct module_symbol *modsym;
 	/* Parse the name of the module from which to import a symbol. */
-	module = parse_module_byname(true);
-	if unlikely(!module)
+	mod = parse_module_byname(true);
+	if unlikely(!mod)
 		goto err;
 	/* We've got the module. - Now just create an anonymous symbol. */
 	extern_symbol = new_unnamed_symbol();
 	if unlikely(!extern_symbol)
 		goto err_module;
 	/* Lookup the symbol which we're importing. */
-	modsym = import_module_symbol(module, import_name);
+	modsym = import_module_symbol(mod, import_name);
 	if unlikely(!modsym) {
 		if (WARN(W_MODULE_IMPORT_NOT_FOUND,
 		         import_name->k_name,
-		         DeeString_STR(module->mo_name)))
+		         DeeString_STR(mod->mo_name)))
 			goto err_module;
-		if (module == current_rootscope->rs_module) {
+		if (mod == current_rootscope->rs_module) {
 			extern_symbol->s_type = SYMBOL_TYPE_MYMOD;
-			Dee_Decref(module);
+			Dee_Decref(mod);
 		} else {
 			extern_symbol->s_type   = SYMBOL_TYPE_MODULE;
-			extern_symbol->s_module = module; /* Inherit reference. */
+			extern_symbol->s_module = mod; /* Inherit reference. */
 		}
 	} else {
 		/* Setup this symbol as an external reference. */
 		extern_symbol->s_type            = SYMBOL_TYPE_EXTERN;
-		extern_symbol->s_extern.e_module = module; /* Inherit reference. */
+		extern_symbol->s_extern.e_module = mod; /* Inherit reference. */
 		extern_symbol->s_extern.e_symbol = modsym;
 	}
 	return extern_symbol;
 err_module:
-	Dee_Decref(module);
+	Dee_Decref(mod);
 	/*goto err;*/
 err:
 	return NULL;
@@ -342,7 +342,8 @@ get_module_symbol_name(DeeStringObject *__restrict module_name, bool is_module) 
 			                         : !(flags & UNICODE_FSYMCONT)) {
 bad_symbol_name:
 				if (is_module) {
-					if (WARN(W_INVALID_NAME_FOR_MODULE_SYMBOL, module_name, symbol_length, symbol_start))
+					if (WARN(W_INVALID_NAME_FOR_MODULE_SYMBOL,
+					         module_name, symbol_length, symbol_start))
 						goto err;
 				} else {
 					if (WARN(W_INVALID_NAME_FOR_IMPORT_SYMBOL, module_name))
@@ -545,16 +546,16 @@ err:
 }
 
 PRIVATE int DCALL
-ast_import_all_from_module(DeeModuleObject *__restrict module,
+ast_import_all_from_module(DeeModuleObject *__restrict mod,
                            struct ast_loc *loc) {
 	struct module_symbol *iter, *end;
-	ASSERT_OBJECT_TYPE(module, &DeeModule_Type);
-	if (module == current_rootscope->rs_module) {
+	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
+	if (mod == current_rootscope->rs_module) {
 		if (WARNAT(loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		goto done;
 	}
-	end = (iter = module->mo_bucketv) + (module->mo_bucketm + 1);
+	end = (iter = mod->mo_bucketv) + (mod->mo_bucketm + 1);
 	for (; iter != end; ++iter) {
 		struct symbol *sym;
 		struct TPPKeyword *name;
@@ -587,7 +588,7 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 				continue; /* Not a weakly declared symbol. */
 			/* Special handling for re-imports. */
 			if (sym->s_type == SYMBOL_TYPE_EXTERN) {
-				if (sym->s_extern.e_module == module) {
+				if (sym->s_extern.e_module == mod) {
 					if (sym->s_extern.e_symbol == iter)
 						continue; /* Same declaration. */
 				} else {
@@ -607,13 +608,17 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 					 * the symbol as found in `deemon', otherwise check if either module uses the other, in which
 					 * case: bind against the symbol of the module being used (aka. further down in the dependency
 					 * tree) */
-					if ((sym->s_extern.e_symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FPROPERTY | MODSYM_FEXTERN)) == (MODSYM_FREADONLY | MODSYM_FCONSTEXPR) &&
-					    (iter->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR | MODSYM_FPROPERTY | MODSYM_FEXTERN)) == (MODSYM_FREADONLY | MODSYM_FCONSTEXPR)) {
+					if ((sym->s_extern.e_symbol->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR |
+					                                         MODSYM_FPROPERTY | MODSYM_FEXTERN)) ==
+					    /*                               */ (MODSYM_FREADONLY | MODSYM_FCONSTEXPR) &&
+					    (iter->ss_flags & (MODSYM_FREADONLY | MODSYM_FCONSTEXPR |
+					                       MODSYM_FPROPERTY | MODSYM_FEXTERN)) ==
+					    /*             */ (MODSYM_FREADONLY | MODSYM_FCONSTEXPR)) {
 						/* Both symbols are non-varying (allowing value inlining).
 						 * -> Make sure both modules have been loaded, and compare the values that have been bound.
 						 * NOTE: For this purpose, we must perform an exact comparison (i.e. `a === b') */
 						int error;
-						error = DeeModule_RunInit((DeeObject *)module);
+						error = DeeModule_RunInit((DeeObject *)mod);
 						if unlikely(error < 0)
 							goto err;
 						if (error == 0) {
@@ -623,9 +628,9 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 							if (error == 0) {
 								/* Both modules are now initialized. */
 								DeeObject *old_val, *new_val;
-								rwlock_read(&module->mo_lock);
-								old_val = module->mo_globalv[iter->ss_index];
-								rwlock_endread(&module->mo_lock);
+								rwlock_read(&mod->mo_lock);
+								old_val = mod->mo_globalv[iter->ss_index];
+								rwlock_endread(&mod->mo_lock);
 								rwlock_read(&sym->s_extern.e_module->mo_lock);
 								new_val = sym->s_extern.e_module->mo_globalv[sym->s_extern.e_symbol->ss_index];
 								rwlock_endread(&sym->s_extern.e_module->mo_lock);
@@ -634,19 +639,19 @@ ast_import_all_from_module(DeeModuleObject *__restrict module,
 									 * for the other symbol. - Try to figure out which one is aliasing which, and
 									 * potentially re-assign the import such that the new module has less dependencies. */
 									if (sym->s_extern.e_module != &deemon_module) {
-										if (module == &deemon_module) {
+										if (mod == &deemon_module) {
 do_reassign_new_alias:
-											sym->s_extern.e_module = module;
+											sym->s_extern.e_module = mod;
 											sym->s_extern.e_symbol = iter;
 										} else {
 											uint16_t i;
 											/* Neither module is the builtin `deemon' module.
 											 * Check if one of the modules is importing the other,
 											 * or bind the new module if it doesn't have any imports. */
-											if (!module->mo_importc)
+											if (!mod->mo_importc)
 												goto do_reassign_new_alias;
 											for (i = 0; i < sym->s_extern.e_module->mo_importc; ++i) {
-												if (module == sym->s_extern.e_module->mo_importv[i])
+												if (mod == sym->s_extern.e_module->mo_importv[i])
 													goto do_reassign_new_alias;
 											}
 										}
@@ -683,9 +688,9 @@ do_reassign_new_alias:
 			/* Define this symbol as an import from this module. */
 			sym->s_type = SYMBOL_TYPE_EXTERN;
 			sym->s_flag |= SYMBOL_FWEAK; /* Symbols imported by `*' are defined weakly. */
-			sym->s_extern.e_module = module;
+			sym->s_extern.e_module = mod;
 			sym->s_extern.e_symbol = iter;
-			Dee_Incref(module);
+			Dee_Incref(mod);
 		}
 	}
 done:
@@ -695,32 +700,32 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ast_import_single_from_module(DeeModuleObject *__restrict module,
+ast_import_single_from_module(DeeModuleObject *__restrict mod,
                               struct import_item *__restrict item) {
 	struct module_symbol *sym;
 	struct symbol *import_symbol;
-	if (module == current_rootscope->rs_module) {
+	if (mod == current_rootscope->rs_module) {
 		if (WARNAT(&item->ii_import_loc, W_IMPORT_GLOBAL_FROM_OWN_MODULE))
 			goto err;
 		goto done;
 	}
 	if (item->ii_import_name) {
-		sym = DeeModule_GetSymbolString(module,
+		sym = DeeModule_GetSymbolString(mod,
 		                                DeeString_STR(item->ii_import_name),
 		                                DeeString_Hash((DeeObject *)item->ii_import_name));
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           DeeString_STR(item->ii_import_name),
-			           DeeString_STR(module->mo_name)))
+			           DeeString_STR(mod->mo_name)))
 				goto err;
 			goto done;
 		}
 	} else {
-		sym = import_module_symbol(module, item->ii_symbol_name);
+		sym = import_module_symbol(mod, item->ii_symbol_name);
 		if (!sym) {
 			if (WARNAT(&item->ii_import_loc, W_MODULE_IMPORT_NOT_FOUND,
 			           item->ii_symbol_name->k_name,
-			           DeeString_STR(module->mo_name)))
+			           DeeString_STR(mod->mo_name)))
 				goto err;
 			goto done;
 		}
@@ -732,13 +737,15 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
 			goto init_import_symbol;
 		}
 		/* Another symbol with the same name had already been imported. */
-		if (SYMBOL_TYPE(import_symbol) == SYMBOL_TYPE_EXTERN &&
-		    SYMBOL_EXTERN_MODULE(import_symbol) == module &&
-		    SYMBOL_EXTERN_SYMBOL(import_symbol) == sym) {
+		if (import_symbol->s_type == SYMBOL_TYPE_EXTERN &&
+		    import_symbol->s_extern.e_module == mod &&
+		    import_symbol->s_extern.e_symbol == sym) {
 			/* It was the same symbol that had been imported before.
 			 * -> Ignore the secondary import! */
 		} else {
-			if (WARNAT(&item->ii_import_loc, W_IMPORT_ALIAS_IS_ALREADY_DEFINED, item->ii_symbol_name))
+			if (WARNAT(&item->ii_import_loc,
+			           W_IMPORT_ALIAS_IS_ALREADY_DEFINED,
+			           item->ii_symbol_name))
 				goto err;
 		}
 	} else {
@@ -747,10 +754,10 @@ ast_import_single_from_module(DeeModuleObject *__restrict module,
 		if unlikely(!import_symbol)
 			goto err;
 init_import_symbol:
-		import_symbol->s_type               = SYMBOL_TYPE_EXTERN;
-		SYMBOL_EXTERN_MODULE(import_symbol) = module;
-		SYMBOL_EXTERN_SYMBOL(import_symbol) = sym;
-		Dee_Incref(module);
+		import_symbol->s_type            = SYMBOL_TYPE_EXTERN;
+		import_symbol->s_extern.e_module = mod;
+		import_symbol->s_extern.e_symbol = sym;
+		Dee_Incref(mod);
 	}
 done:
 	return 0;
@@ -760,11 +767,11 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_import_module(struct import_item *__restrict item) {
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	struct symbol *import_symbol;
 	if (item->ii_import_name) {
-		module = import_module_by_name(item->ii_import_name,
-		                               &item->ii_import_loc);
+		mod = import_module_by_name(item->ii_import_name,
+		                            &item->ii_import_loc);
 	} else {
 		DREF DeeStringObject *module_name;
 		module_name = (DREF DeeStringObject *)DeeString_NewUtf8(item->ii_symbol_name->k_name,
@@ -772,11 +779,11 @@ ast_import_module(struct import_item *__restrict item) {
 		                                                        STRING_ERROR_FSTRICT);
 		if unlikely(!module_name)
 			goto err;
-		module = import_module_by_name(module_name,
-		                               &item->ii_import_loc);
+		mod = import_module_by_name(module_name,
+		                            &item->ii_import_loc);
 		Dee_Decref(module_name);
 	}
-	if unlikely(!module)
+	if unlikely(!mod)
 		goto err;
 	import_symbol = get_local_symbol(item->ii_symbol_name);
 	if unlikely(import_symbol) {
@@ -785,33 +792,35 @@ ast_import_module(struct import_item *__restrict item) {
 			goto init_import_symbol;
 		}
 		/* Another symbol with the same name had already been imported. */
-		if ((SYMBOL_TYPE(import_symbol) == SYMBOL_TYPE_MODULE &&
-		     SYMBOL_MODULE_MODULE(import_symbol) == module) ||
-		    (module == current_rootscope->rs_module &&
-		     SYMBOL_TYPE(import_symbol) == SYMBOL_TYPE_MYMOD)) {
+		if ((import_symbol->s_type == SYMBOL_TYPE_MODULE &&
+		     import_symbol->s_extern.e_module == mod) ||
+		    (mod == current_rootscope->rs_module &&
+		     import_symbol->s_type == SYMBOL_TYPE_MYMOD)) {
 			/* The same module has already been imported under this name! */
 		} else {
-			if (WARNAT(&item->ii_import_loc, W_IMPORT_ALIAS_IS_ALREADY_DEFINED, item->ii_symbol_name))
+			if (WARNAT(&item->ii_import_loc,
+			           W_IMPORT_ALIAS_IS_ALREADY_DEFINED,
+			           item->ii_symbol_name))
 				goto err_module;
 		}
-		Dee_Decref(module);
+		Dee_Decref(mod);
 	} else {
 		import_symbol = new_local_symbol(item->ii_symbol_name,
 		                                 &item->ii_import_loc);
 		if unlikely(!import_symbol)
 			goto err_module;
 init_import_symbol:
-		if (module == current_rootscope->rs_module) {
-			SYMBOL_TYPE(import_symbol) = SYMBOL_TYPE_MYMOD;
-			Dee_Decref(module);
+		if (mod == current_rootscope->rs_module) {
+			import_symbol->s_type = SYMBOL_TYPE_MYMOD;
+			Dee_Decref(mod);
 		} else {
-			SYMBOL_TYPE(import_symbol)          = SYMBOL_TYPE_MODULE;
-			SYMBOL_MODULE_MODULE(import_symbol) = module; /* Inherit reference */
+			import_symbol->s_type   = SYMBOL_TYPE_MODULE;
+			import_symbol->s_module = mod; /* Inherit reference */
 		}
 	}
 	return 0;
 err_module:
-	Dee_Decref(module);
+	Dee_Decref(mod);
 err:
 	return -1;
 }
@@ -843,7 +852,7 @@ INTERN int FCALL ast_parse_post_import(void) {
 	struct ast_loc star_loc;
 	struct import_item *item_v;
 	size_t item_a, item_c;
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	star_loc.l_file = NULL; /* When non-NULL, import all */
 	if (tok == '*') {
 		loc_here(&star_loc);
@@ -852,11 +861,11 @@ INTERN int FCALL ast_parse_post_import(void) {
 		if (tok == KWD_from) {
 			if unlikely(yield() < 0)
 				goto err;
-			module = parse_module_byname(true);
-			if unlikely(!module)
+			mod = parse_module_byname(true);
+			if unlikely(!mod)
 				goto err;
-			error = ast_import_all_from_module(module, &star_loc);
-			Dee_Decref(module);
+			error = ast_import_all_from_module(mod, &star_loc);
+			Dee_Decref(mod);
 			goto done;
 		} else if (tok == ',') {
 			item_a = item_c = 0;
@@ -900,12 +909,12 @@ parse_module_import_list:
 		/*  - `import foo from bar' */
 		if unlikely(yield() < 0)
 			goto err_item;
-		module = parse_module_byname(true);
-		if unlikely(!module)
+		mod = parse_module_byname(true);
+		if unlikely(!mod)
 			goto err_item;
-		error = ast_import_single_from_module(module, &item);
+		error = ast_import_single_from_module(mod, &item);
 		Dee_XDecref(item.ii_import_name);
-		Dee_Decref(module);
+		Dee_Decref(mod);
 		if unlikely(error)
 			goto err;
 	} else if (tok == ',') {
@@ -945,12 +954,14 @@ import_parse_list:
 					size_t new_item_a = item_a * 2;
 					if unlikely(!new_item_a)
 						new_item_a = 2;
-					new_item_v = (struct import_item *)Dee_TryRealloc(item_v, new_item_a *
-					                                                          sizeof(struct import_item));
+					new_item_v = (struct import_item *)Dee_TryRealloc(item_v,
+					                                                  new_item_a *
+					                                                  sizeof(struct import_item));
 					if unlikely(!new_item_v) {
 						new_item_a = item_c + 1;
-						new_item_v = (struct import_item *)Dee_Realloc(item_v, new_item_a *
-						                                                       sizeof(struct import_item));
+						new_item_v = (struct import_item *)Dee_Realloc(item_v,
+						                                               new_item_a *
+						                                               sizeof(struct import_item));
 						if unlikely(!new_item_v)
 							goto err_item_v;
 					}
@@ -985,22 +996,22 @@ import_parse_list:
 			/* import foo, bar, foobar from foobarfoo;  (symbol import) */
 			if unlikely(yield() < 0)
 				goto err_item_v;
-			module = parse_module_byname(true);
-			if unlikely(!module)
+			mod = parse_module_byname(true);
+			if unlikely(!mod)
 				goto err_item_v;
 			/* If `*' was apart of the symbol import list,
 			 * start by importing all symbols from the module. */
 			if (star_loc.l_file) {
-				if unlikely(ast_import_all_from_module(module, &star_loc))
+				if unlikely(ast_import_all_from_module(mod, &star_loc))
 					goto err_item_v_module;
 			}
 			/* Now import all the explicitly defined symbols. */
 			for (i = 0; i < item_c; ++i) {
-				if unlikely(ast_import_single_from_module(module, &item_v[i]))
+				if unlikely(ast_import_single_from_module(mod, &item_v[i]))
 					goto err_item_v_module;
 				Dee_XClear(item_v[i].ii_import_name);
 			}
-			Dee_Decref(module);
+			Dee_Decref(mod);
 		} else {
 			size_t i;
 			if unlikely(!allow_modules) {
@@ -1018,7 +1029,7 @@ import_parse_list:
 		Dee_Free(item_v);
 		goto done;
 err_item_v_module:
-		Dee_Decref(module);
+		Dee_Decref(mod);
 err_item_v:
 		while (item_c--)
 			Dee_XDecref(item_v[item_c].ii_import_name);
@@ -1074,7 +1085,7 @@ err:
 
 
 INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
-	DREF DeeModuleObject *module;
+	DREF DeeModuleObject *mod;
 	DREF struct ast *result;
 	struct ast_loc import_loc;
 	/* There are many valid ways of writing import statements:
@@ -1167,11 +1178,11 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 			goto err;
 		if unlikely(yield() < 0)
 			goto err_r;
-		module = parse_module_byname(true);
-		if unlikely(!module)
+		mod = parse_module_byname(true);
+		if unlikely(!mod)
 			goto err_r;
 		/* All right! we've got the module. */
-		if unlikely(likely(tok == KWD_import) ? (yield() < 0) : WARN(W_EXPECTED_IMPORT_AFTER_FROM))
+		if (skip(KWD_import, W_EXPECTED_IMPORT_AFTER_FROM))
 			goto err_r_module;
 		for (;;) {
 			/* Parse an entire import list. */
@@ -1179,7 +1190,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 				if (did_import_all &&
 				    WARN(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST))
 					goto err_r_module;
-				if unlikely(ast_import_all_from_module(module, NULL))
+				if unlikely(ast_import_all_from_module(mod, NULL))
 					goto err_r_module;
 				if unlikely(yield() < 0)
 					goto err_r_module;
@@ -1192,7 +1203,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 					goto err_r_module;
 				if unlikely(error == 2)
 					break; /* failed */
-				error = ast_import_single_from_module(module, &item);
+				error = ast_import_single_from_module(mod, &item);
 				Dee_XDecref(item.ii_import_name);
 				if unlikely(error)
 					goto err_r_module;
@@ -1202,7 +1213,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 			if unlikely(yield() < 0)
 				goto err_r_module;
 		}
-		Dee_Decref(module);
+		Dee_Decref(mod);
 	} else {
 		/* - import("deemon");
 		 * - import pack "deemon";
@@ -1246,7 +1257,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_import(void) {
 done:
 	return result;
 err_r_module:
-	Dee_Decref(module);
+	Dee_Decref(mod);
 err_r:
 	ast_decref(result);
 err:

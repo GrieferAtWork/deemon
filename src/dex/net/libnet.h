@@ -19,13 +19,13 @@
  */
 #ifndef GUARD_DEX_SOCKET_LIBNET_H
 #define GUARD_DEX_SOCKET_LIBNET_H 1
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <deemon/api.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h>
 
 #ifdef CONFIG_HOST_WINDOWS
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4820 4255 4668 4365 4574)
@@ -39,9 +39,9 @@
 #pragma warning(pop)
 #pragma comment(lib, "Ws2_32.lib")
 #endif /* _MSC_VER */
+#endif /* CONFIG_HOST_WINDOWS */
 
-#elif defined(CONFIG_HOST_UNIX)
-
+#ifdef CONFIG_HOST_UNIX
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -53,76 +53,52 @@
 #include <netdb.h>
 #include <signal.h>
 #include <unistd.h>
+#endif /* CONFIG_HOST_UNIX */
 
-#else
-#error "The socket api is not supported on this host"
-#endif
 
 #ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable : 4820)
 #endif /* _MSC_VER */
 
+#ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
-#include <stdio.h>
+#endif /* CONFIG_HAVE_LIMITS_H */
 
-#ifndef __NO_has_include
-#undef CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H
-#if __has_include(<bluetooth/bluetooth.h>) && \
-    __has_include(<bluetooth/rfcomm.h>) && \
-    __has_include(<bluetooth/l2cap.h>) && \
-    __has_include(<bluetooth/sco.h>) && \
-    __has_include(<bluetooth/hci.h>)
-#define CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H 1
-#endif
-#undef CONFIG_HAVE_INCLUDE_BLUETOOTH_H
-#if __has_include(<bluetooth.h>)
-#define CONFIG_HAVE_INCLUDE_BLUETOOTH_H 1
-#endif
-#undef CONFIG_HAVE_INCLUDE_LINUX_NETLINK_H
-#if __has_include(<linux/netlink.h>)
-#define CONFIG_HAVE_INCLUDE_LINUX_NETLINK_H 1
-#endif
-#undef CONFIG_HAVE_INCLUDE_ASM_TYPES_H
-#if __has_include(<asm/types.h>)
-#define CONFIG_HAVE_INCLUDE_ASM_TYPES_H 1
-#endif
-#undef CONFIG_HAVE_INCLUDE_SYS_UN_H
-#if __has_include(<sys/un.h>)
-#define CONFIG_HAVE_INCLUDE_SYS_UN_H 1
-#endif
-#endif
-
-#ifdef CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H
+#if (defined(CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H) && \
+     defined(CONFIG_HAVE_BLUETOOTH_RFCOMM_H) && \
+     defined(CONFIG_HAVE_BLUETOOTH_L2CAP_H) && \
+     defined(CONFIG_HAVE_BLUETOOTH_SCO_H) && \
+     defined(CONFIG_HAVE_BLUETOOTH_HCI_H))
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/rfcomm.h>
 #include <bluetooth/l2cap.h>
 #include <bluetooth/sco.h>
 #include <bluetooth/hci.h>
-#else /* CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H */
+#else /* ... */
 #undef AF_BLUETOOTH
-#endif /* !CONFIG_HAVE_BLUETOOTH_BLUETOOTH_H */
+#endif /* !... */
 
-#ifdef CONFIG_HAVE_INCLUDE_BLUETOOTH_H
+#ifdef CONFIG_HAVE_BLUETOOTH_H
 #include <bluetooth.h>
-#endif /* CONFIG_HAVE_INCLUDE_BLUETOOTH_H */
+#endif /* CONFIG_HAVE_BLUETOOTH_H */
 
-#ifdef CONFIG_HAVE_INCLUDE_LINUX_NETLINK_H
-#ifdef CONFIG_HAVE_INCLUDE_ASM_TYPES_H
+#ifdef CONFIG_HAVE_LINUX_NETLINK_H
+#ifdef CONFIG_HAVE_ASM_TYPES_H
 #include <asm/types.h>
-#endif /* CONFIG_HAVE_INCLUDE_ASM_TYPES_H */
+#endif /* CONFIG_HAVE_ASM_TYPES_H */
 #include <linux/netlink.h>
-#else /* CONFIG_HAVE_INCLUDE_LINUX_NETLINK_H */
+#else /* CONFIG_HAVE_LINUX_NETLINK_H */
 #undef AF_NETLINK
-#endif /* !CONFIG_HAVE_INCLUDE_LINUX_NETLINK_H */
+#endif /* !CONFIG_HAVE_LINUX_NETLINK_H */
 
-#ifdef CONFIG_HAVE_INCLUDE_SYS_UN_H
+#ifdef CONFIG_HAVE_SYS_UN_H
 #include <sys/un.h>
-#else /* CONFIG_HAVE_INCLUDE_SYS_UN_H */
+#else /* CONFIG_HAVE_SYS_UN_H */
 #ifndef CONFIG_HOST_WINDOWS
 #undef AF_UNIX
 #endif /* !CONFIG_HOST_WINDOWS */
-#endif /* !CONFIG_HAVE_INCLUDE_SYS_UN_H */
+#endif /* !CONFIG_HAVE_SYS_UN_H */
 
 #ifdef _MSC_VER
 #pragma warning(pop)
@@ -223,116 +199,9 @@
 #endif /* CONFIG_HOST_WINDOWS */
 
 #ifdef CONFIG_HOST_WINDOWS
-#if (_WIN32_WINNT >= 0x0501)
-#ifndef IPPROTO_HOPOPTS
-#define IPPROTO_HOPOPTS IPPROTO_HOPOPTS
-#endif /* !IPPROTO_HOPOPTS */
-#endif /* (_WIN32_WINNT >= 0x0501) */
-#ifndef IPPROTO_ICMP
-#define IPPROTO_ICMP IPPROTO_ICMP
-#endif /* !IPPROTO_ICMP */
-#ifndef IPPROTO_IGMP
-#define IPPROTO_IGMP IPPROTO_IGMP
-#endif /* !IPPROTO_IGMP */
-#ifndef IPPROTO_GGP
-#define IPPROTO_GGP IPPROTO_GGP
-#endif /* !IPPROTO_GGP */
-#if (_WIN32_WINNT >= 0x0501)
-#ifndef IPPROTO_IPV4
-#define IPPROTO_IPV4 IPPROTO_IPV4
-#endif /* !IPPROTO_IPV4 */
-#endif /* (_WIN32_WINNT >= 0x0501) */
-#if (_WIN32_WINNT >= 0x0600)
-#ifndef IPPROTO_ST
-#define IPPROTO_ST IPPROTO_ST
-#endif /* !IPPROTO_ST */
-#endif /* (_WIN32_WINNT >= 0x0600) */
-#ifndef IPPROTO_TCP
-#define IPPROTO_TCP IPPROTO_TCP
-#endif /* !IPPROTO_TCP */
-#if (_WIN32_WINNT >= 0x0600)
-#ifndef IPPROTO_CBT
-#define IPPROTO_CBT IPPROTO_CBT
-#endif /* !IPPROTO_CBT */
-#ifndef IPPROTO_EGP
-#define IPPROTO_EGP IPPROTO_EGP
-#endif /* !IPPROTO_EGP */
-#ifndef IPPROTO_IGP
-#define IPPROTO_IGP IPPROTO_IGP
-#endif /* !IPPROTO_IGP */
-#endif /* (_WIN32_WINNT >= 0x0600) */
-#ifndef IPPROTO_PUP
-#define IPPROTO_PUP IPPROTO_PUP
-#endif /* !IPPROTO_PUP */
-#ifndef IPPROTO_UDP
-#define IPPROTO_UDP IPPROTO_UDP
-#endif /* !IPPROTO_UDP */
-#ifndef IPPROTO_IDP
-#define IPPROTO_IDP IPPROTO_IDP
-#endif /* !IPPROTO_IDP */
-#if (_WIN32_WINNT >= 0x0600)
-#ifndef IPPROTO_RDP
-#define IPPROTO_RDP IPPROTO_RDP
-#endif /* !IPPROTO_RDP */
-#endif /* (_WIN32_WINNT >= 0x0600) */
-#if (_WIN32_WINNT >= 0x0501)
-#ifndef IPPROTO_IPV6
-#define IPPROTO_IPV6 IPPROTO_IPV6
-#endif /* !IPPROTO_IPV6 */
-#ifndef IPPROTO_ROUTING
-#define IPPROTO_ROUTING IPPROTO_ROUTING
-#endif /* !IPPROTO_ROUTING */
-#ifndef IPPROTO_FRAGMENT
-#define IPPROTO_FRAGMENT IPPROTO_FRAGMENT
-#endif /* !IPPROTO_FRAGMENT */
-#ifndef IPPROTO_ESP
-#define IPPROTO_ESP IPPROTO_ESP
-#endif /* !IPPROTO_ESP */
-#ifndef IPPROTO_AH
-#define IPPROTO_AH IPPROTO_AH
-#endif /* !IPPROTO_AH */
-#ifndef IPPROTO_ICMPV6
-#define IPPROTO_ICMPV6 IPPROTO_ICMPV6
-#endif /* !IPPROTO_ICMPV6 */
-#ifndef IPPROTO_NONE
-#define IPPROTO_NONE IPPROTO_NONE
-#endif /* !IPPROTO_NONE */
-#ifndef IPPROTO_DSTOPTS
-#define IPPROTO_DSTOPTS IPPROTO_DSTOPTS
-#endif /* !IPPROTO_DSTOPTS */
-#endif /* (_WIN32_WINNT >= 0x0501) */
-#ifndef IPPROTO_ND
-#define IPPROTO_ND IPPROTO_ND
-#endif /* !IPPROTO_ND */
-#if (_WIN32_WINNT >= 0x0501)
-#ifndef IPPROTO_ICLFXBM
-#define IPPROTO_ICLFXBM IPPROTO_ICLFXBM
-#endif /* !IPPROTO_ICLFXBM */
-#endif /* (_WIN32_WINNT >= 0x0501) */
-#if (_WIN32_WINNT >= 0x0600)
-#ifndef IPPROTO_PIM
-#define IPPROTO_PIM IPPROTO_PIM
-#endif /* !IPPROTO_PIM */
-#ifndef IPPROTO_PGM
-#define IPPROTO_PGM IPPROTO_PGM
-#endif /* !IPPROTO_PGM */
-#ifndef IPPROTO_L2TP
-#define IPPROTO_L2TP IPPROTO_L2TP
-#endif /* !IPPROTO_L2TP */
-#ifndef IPPROTO_SCTP
-#define IPPROTO_SCTP IPPROTO_SCTP
-#endif /* !IPPROTO_SCTP */
-#endif /* (_WIN32_WINNT >= 0x0600) */
-#ifndef IPPROTO_RAW
-#define IPPROTO_RAW IPPROTO_RAW
-#endif /* !IPPROTO_RAW */
-
 #ifndef IPPROTO_HOPOPTS
 #define IPPROTO_HOPOPTS       0
 #endif /* !IPPROTO_HOPOPTS */
-#ifndef IPPROTO_ICMP
-#define IPPROTO_ICMP          1
-#endif /* !IPPROTO_ICMP */
 #ifndef IPPROTO_IGMP
 #define IPPROTO_IGMP          2
 #endif /* !IPPROTO_IGMP */
@@ -345,9 +214,6 @@
 #ifndef IPPROTO_ST
 #define IPPROTO_ST            5
 #endif /* !IPPROTO_ST */
-#ifndef IPPROTO_TCP
-#define IPPROTO_TCP           6
-#endif /* !IPPROTO_TCP */
 #ifndef IPPROTO_CBT
 #define IPPROTO_CBT           7
 #endif /* !IPPROTO_CBT */
@@ -360,9 +226,6 @@
 #ifndef IPPROTO_PUP
 #define IPPROTO_PUP           12
 #endif /* !IPPROTO_PUP */
-#ifndef IPPROTO_UDP
-#define IPPROTO_UDP           17
-#endif /* !IPPROTO_UDP */
 #ifndef IPPROTO_IDP
 #define IPPROTO_IDP           22
 #endif /* !IPPROTO_IDP */
@@ -411,9 +274,6 @@
 #ifndef IPPROTO_SCTP
 #define IPPROTO_SCTP          132
 #endif /* !IPPROTO_SCTP */
-#ifndef IPPROTO_RAW
-#define IPPROTO_RAW           255
-#endif /* !IPPROTO_RAW */
 
 #ifndef MSG_OOB
 #define MSG_OOB  0x1
@@ -443,52 +303,70 @@
 #ifndef INADDR_ANY
 #define INADDR_ANY 0
 #endif /* !INADDR_ANY */
+
 #ifndef INADDR_LOOPBACK
-#define INADDR_LOOPBACK NTOH32_M(LOCALHOST)
+#define INADDR_LOOPBACK NTOH32_C(LOCALHOST)
 #endif /* !INADDR_LOOPBACK */
+
 #ifndef INADDR_BROADCAST
-#define INADDR_BROADCAST 0xFFFFFFFF
+#define INADDR_BROADCAST 0xffffffff
 #endif /* !INADDR_BROADCAST */
+
 #ifndef INADDR_NONE
-#define INADDR_NONE 0xFFFFFFFF
+#define INADDR_NONE 0xffffffff
 #endif /* !INADDR_NONE */
+
 #ifndef INADDR_UNSPEC_GROUP
-#define INADDR_UNSPEC_GROUP 0xE0000000
+#define INADDR_UNSPEC_GROUP 0xe0000000
 #endif /* !INADDR_UNSPEC_GROUP */
+
 #ifndef INADDR_ALLHOSTS_GROUP
 #define INADDR_ALLHOSTS_GROUP 0xe0000001
 #endif /* !INADDR_ALLHOSTS_GROUP */
+
 #ifndef INADDR_MAX_LOCAL_GROUP
 #define INADDR_MAX_LOCAL_GROUP 0xe00000ff
 #endif /* !INADDR_MAX_LOCAL_GROUP */
+
 #ifndef IN6ADDR_ANY_INIT
-#define IN6ADDR_ANY_INIT      { 0 }
+#define IN6ADDR_ANY_INIT { 0 }
 #endif /* !IN6ADDR_ANY_INIT */
+
 #ifndef IN6ADDR_LOOPBACK_INIT
-#define IN6ADDR_LOOPBACK_INIT { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1 }
+#define IN6ADDR_LOOPBACK_INIT { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 }
 #endif /* !IN6ADDR_LOOPBACK_INIT */
+
+
 
 #ifndef IPPORT_RESERVED
 #define IPPORT_RESERVED 1024
 #endif /* !IPPORT_RESERVED */
+
 #ifndef IPPORT_USERRESERVED
 #define IPPORT_USERRESERVED 5000
 #endif /* !IPPORT_USERRESERVED */
+
 #ifndef IPPROTO_IP
 #define IPPROTO_IP 0
 #endif /* !IPPROTO_IP */
+
 #ifndef IPPROTO_ICMP
 #define IPPROTO_ICMP 1
 #endif /* !IPPROTO_ICMP */
+
 #ifndef IPPROTO_TCP
 #define IPPROTO_TCP 6
 #endif /* !IPPROTO_TCP */
+
 #ifndef IPPROTO_UDP
 #define IPPROTO_UDP 17
 #endif /* !IPPROTO_UDP */
+
 #ifndef IPPROTO_RAW
 #define IPPROTO_RAW 255
 #endif /* !IPPROTO_RAW */
+
+
 
 #ifdef AF_BLUETOOTH
 #if defined(__FreeBSD__)
@@ -549,20 +427,20 @@ DECL_BEGIN
 #define INET_HOSTNAME_B(x) (((x)&0x00ff0000) >> 16)
 #define INET_HOSTNAME_C(x) (((x)&0x0000ff00) >> 8)
 #define INET_HOSTNAME_D(x)  ((x)&0x000000ff)
-#define LOCALHOST DEE_UINT32_C(0x7F000001) // 127.0.0.1 (in network endian)
+#define LOCALHOST DEE_UINT32_C(0x7f000001) // 127.0.0.1 (in network endian)
 #define HTON16   /* nothing */
-#define HTON16_M /* nothing */
+#define HTON16_C /* nothing */
 #define HTON32   /* nothing */
-#define HTON32_M /* nothing */
+#define HTON32_C /* nothing */
 #define HTON64   /* nothing */
-#define HTON64_M /* nothing */
+#define HTON64_C /* nothing */
 #else /* __BYTE_ORDER__ == NET_ENDIAN */
 #define SOCKADDRINET(a, b, c, d) ((a) | (b) << 8 | (c) << 16 | (d) << 24)
 #define INET_HOSTNAME_A(x)  ((x)&0x000000ff)
 #define INET_HOSTNAME_B(x) (((x)&0x0000ff00) >> 8)
 #define INET_HOSTNAME_C(x) (((x)&0x00ff0000) >> 16)
 #define INET_HOSTNAME_D(x) (((x)&0xff000000) >> 24)
-#define LOCALHOST 0x0100007F // 127.0.0.1 (in network endian)
+#define LOCALHOST 0x0100007f // 127.0.0.1 (in network endian)
 #define HTON16    BSWAP16
 #define HTON16_C  BSWAP16_C
 #define HTON32    BSWAP32
@@ -581,7 +459,7 @@ DECL_BEGIN
 STATIC_ASSERT(LOCALHOST == SOCKADDRINET(127, 0, 0, 1));
 
 #ifndef CONFIG_HOST_WINDOWS
-#define closesocket      close
+#define closesocket    close
 #define INVALID_SOCKET (-1)
 #endif /* !CONFIG_HOST_WINDOWS */
 
@@ -606,7 +484,7 @@ typedef SocketHandleType sock_t;
 #endif /* !__INTELLISENSE__ */
 
 #ifdef CONFIG_HOST_WINDOWS
-// Dunno why the windows headers didn't already do this...
+/* Dunno why the windows headers didn't already do this... */
 #define SHUT_RD   SD_RECEIVE
 #define SHUT_WR   SD_SEND
 #define SHUT_RDWR SD_BOTH
@@ -618,13 +496,13 @@ struct sockaddr_un {
 #endif /* AF_UNIX && !CONFIG_HOST_UNIX */
 #endif /* CONFIG_HOST_WINDOWS */
 
-#if defined(AF_INET6) && \
-    defined(IPPROTO_IPV6) && \
-    defined(IPV6_V6ONLY)
+#if (defined(AF_INET6) &&     \
+     defined(IPPROTO_IPV6) && \
+     defined(IPV6_V6ONLY))
 #define DEE_HAVE_IPv6_DUALSTACK 1
-#else
+#else /* ... */
 #define DEE_HAVE_IPv6_DUALSTACK 0
-#endif
+#endif /* !... */
 
 #ifndef SHUT_RD
 #define SHUT_RD   0
@@ -679,17 +557,17 @@ typedef union {
 #endif /* !AF_BLUETOOTH */
 } SockAddr;
 
-#define SockAddr_FAMILY(ob)     ((ob)->sa.sa_family)
+#define SockAddr_FAMILY(ob) ((ob)->sa.sa_family)
 #ifdef AF_INET
-#define SockAddr_INET_HOST(ob)  ((ob)->sa_inet.sin_addr.s_addr)
-#define SockAddr_INET_PORT(ob)  ((ob)->sa_inet.sin_port)
+#define SockAddr_INET_HOST(ob) ((ob)->sa_inet.sin_addr.s_addr)
+#define SockAddr_INET_PORT(ob) ((ob)->sa_inet.sin_port)
 #endif /* AF_INET */
 #ifdef AF_INET6
 #define SockAddr_INET6_HOST(ob) ((DeeINet6Host *)(ob)->sa_inet6.sin6_addr.s6_addr)
 #define SockAddr_INET6_PORT(ob) ((ob)->sa_inet6.sin6_port)
 #endif /* AF_INET6 */
 #ifdef AF_UNIX
-#define SockAddr_UNIX_PATH(ob)  ((ob)->sa_un.sun_path)
+#define SockAddr_UNIX_PATH(ob) ((ob)->sa_un.sun_path)
 #endif /* AF_UNIX */
 #ifdef AF_NETLINK
 #define SockAddr_NETLINK_PID(ob)    ((ob)->sa_nl.nl_pid)

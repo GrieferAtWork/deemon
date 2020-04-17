@@ -68,7 +68,7 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPARENT_AFTER_WITH))
+	if (skip('(', W_EXPECTED_LPARENT_AFTER_WITH))
 		goto err_scope_flags;
 	/* Parse the expression for the with.
 	 * NOTE: We always allow the user to declare variables in here,
@@ -80,7 +80,7 @@ ast_parse_with(bool is_statement, bool allow_nonblock) {
 	if unlikely(!result)
 		goto err_scope_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPARENT_AFTER_WITH))
+	if (skip(')', W_EXPECTED_RPARENT_AFTER_WITH))
 		goto err_scope_r;
 	/* Create the symbol that's going to contain the with-expression. */
 	expression_sym = new_unnamed_symbol();
@@ -192,7 +192,7 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
 		goto err;
 	old_flags = TPPLexer_Current->l_flags;
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-	if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPARENT_AFTER_WITH))
+	if (skip('(', W_EXPECTED_LPARENT_AFTER_WITH))
 		goto err_scope_flags;
 	/* Parse the expression for the with.
 	 * NOTE: We always allow the user to declare variables in here,
@@ -204,7 +204,7 @@ ast_parse_with_hybrid(unsigned int *pwas_expression) {
 	if unlikely(!result)
 		goto err_scope_flags;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-	if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPARENT_AFTER_WITH))
+	if (skip(')', W_EXPECTED_RPARENT_AFTER_WITH))
 		goto err_scope_r;
 	/* Create the symbol that's going to contain the with-expression. */
 	expression_sym = new_unnamed_symbol();

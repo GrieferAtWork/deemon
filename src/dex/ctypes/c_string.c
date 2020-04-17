@@ -193,11 +193,6 @@ DeeSystem_DEFINE_rawmemxrlen(dee_rawmemxrlen)
 DeeSystem_DEFINE_memcasermem(dee_memcasermem)
 #endif /* !CONFIG_HAVE_memcasermem */
 
-#ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
-#define strend(x) ((x) + strlen(x))
-#endif /* !CONFIG_HAVE_strend */
-
 #ifndef CONFIG_HAVE_strnend
 #define CONFIG_HAVE_strnend 1
 #define strnend(x, maxlen) ((x) + strnlen(x, maxlen))

@@ -81,7 +81,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 				if unlikely(!result)
 					goto err_dict_elemv;
 			}
-			if unlikely(likely(tok == '=') ? (yield() < 0) : WARN(W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
+			if (skip('=', W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
 				goto err_dict_elemv_r;
 		} else {
 			int temp;
@@ -94,7 +94,7 @@ ast_parse_mapping(struct ast *__restrict initial_key) {
 			result = ast_parse_expr(LOOKUP_SYM_NORMAL);
 			if unlikely(!result)
 				goto err_dict_elemv;
-			if unlikely(likely(tok == ':') ? (yield() < 0) : WARN(W_EXPECTED_COLLON_AFTER_DICT_KEY))
+			if (skip(':', W_EXPECTED_COLLON_AFTER_DICT_KEY))
 				goto err_dict_elemv_r;
 		}
 		/* Now parse the associated item. */
@@ -258,7 +258,7 @@ INTERN WUNUSED DREF struct ast *FCALL ast_parse_brace_items(void) {
 			if unlikely(!result)
 				goto err;
 		}
-		if unlikely(likely(tok == '=') ? (yield() < 0) : WARN(W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
+		if (skip('=', W_EXPECTED_EQUAL_AFTER_BRACE_DOT))
 			goto err_r;
 		goto parse_dict;
 	}

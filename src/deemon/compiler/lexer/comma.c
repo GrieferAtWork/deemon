@@ -628,7 +628,7 @@ do_parse_argument_list:
 				if unlikely(!args)
 					goto err_current;
 				if (has_paren) {
-					if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_CALL)) {
+					if (skip(')', W_EXPECTED_RPAREN_AFTER_CALL)) {
 err_args:
 						ast_decref(args);
 						goto err_current;

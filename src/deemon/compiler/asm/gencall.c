@@ -345,7 +345,7 @@ asm_gcall_expr(struct ast *__restrict func,
 check_small_constargs_symbol:
 				switch (funsym->s_type) {
 				case SYMBOL_TYPE_ALIAS:
-					funsym = SYMBOL_ALIAS(funsym);
+					funsym = funsym->s_alias;
 					goto check_small_constargs_symbol;
 
 				case SYMBOL_TYPE_EXTERN: {
@@ -667,9 +667,9 @@ check_getattr_base_symbol_class_small:
 								break;
 							}
 						}
-						switch (SYMBOL_TYPE(sym)) {
+						switch (sym->s_type) {
 						case SYMBOL_TYPE_ALIAS:
-							sym = SYMBOL_ALIAS(sym);
+							sym = sym->s_alias;
 							goto check_getattr_base_symbol_class_small;
 
 						case SYMBOL_TYPE_THIS:
@@ -1058,7 +1058,7 @@ check_getattr_base_symbol_class_tuple:
 					switch (sym->s_type) {
 
 					case SYMBOL_TYPE_ALIAS:
-						sym = SYMBOL_ALIAS(sym);
+						sym = sym->s_alias;
 						goto check_getattr_base_symbol_class_tuple;
 
 					case SYMBOL_TYPE_THIS:
@@ -1307,7 +1307,7 @@ check_funsym_class:
 		switch (funsym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
-			funsym = SYMBOL_ALIAS(funsym);
+			funsym = funsym->s_alias;
 			goto check_funsym_class;
 
 		case SYMBOL_TYPE_EXTERN:
@@ -1655,10 +1655,10 @@ check_getattr_base_symbol_class_argv:
 						break;
 					}
 				}
-				switch (SYMBOL_TYPE(sym)) {
+				switch (sym->s_type) {
 
 				case SYMBOL_TYPE_ALIAS:
-					sym = SYMBOL_ALIAS(sym);
+					sym = sym->s_alias;
 					goto check_getattr_base_symbol_class_argv;
 
 				case SYMBOL_TYPE_THIS:

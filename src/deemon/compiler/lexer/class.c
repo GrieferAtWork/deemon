@@ -975,7 +975,7 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 					}
 				}
 			} else {
-				if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
+				if (skip('(', W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
 					goto err_flags;
 				has_paren = true;
 				if (tok == ')') {
@@ -1038,7 +1038,7 @@ err_flags_superargs_superkwds:
 done_superargs:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if (has_paren) {
-				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_SUPER_INIT))
+				if (skip(')', W_EXPECTED_RPAREN_AFTER_SUPER_INIT))
 					goto err;
 			}
 		} else {
@@ -1058,7 +1058,7 @@ done_superargs:
 			} else {
 				old_flags = TPPLexer_Current->l_flags;
 				TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
-				if unlikely(likely(tok == '(') ? (yield() < 0) : WARN(W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
+				if (skip('(', W_EXPECTED_LPAREN_OR_EQUAL_IN_CONSTRUCTOR_INIT))
 					goto err_flags;
 				if (tok == ')') {
 					/* Special case: Same as `= none' (aka: initializer to `none') */
@@ -1069,7 +1069,7 @@ done_superargs:
 				if unlikely(!initializer_ast)
 					goto err_flags;
 				TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-				if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
+				if (skip(')', W_EXPECTED_RPAREN_CONSTRUCTOR_INIT)) {
 					ast_decref(initializer_ast);
 					goto err;
 				}
@@ -1358,7 +1358,7 @@ do_parse_class_base:
 		if unlikely(!maker.cm_base)
 			goto err;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_LPAREN))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_LPAREN))
 			goto err;
 	} else {
 		/* Since this is the only place that `extends' may appear at,
@@ -1400,9 +1400,9 @@ do_parse_class_base:
 				Dee_Decref(d200_module);
 				goto err;
 			}
-			SYMBOL_TYPE(base_symbol)          = SYMBOL_TYPE_EXTERN;
-			SYMBOL_EXTERN_MODULE(base_symbol) = d200_module; /* Inherit reference. */
-			SYMBOL_EXTERN_SYMBOL(base_symbol) = oldbase_sym;
+			base_symbol->s_type            = SYMBOL_TYPE_EXTERN;
+			base_symbol->s_extern.e_module = d200_module; /* Inherit reference. */
+			base_symbol->s_extern.e_symbol = oldbase_sym;
 			/* Create a symbol-ast for the base expression. */
 			maker.cm_base = ast_sym(base_symbol);
 		} else {
@@ -1423,7 +1423,7 @@ use_object_base:
 	}
 	if (parser_flags & PARSE_FLFSTMT)
 		TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-	if unlikely(likely(tok == '{') ? (yield() < 0) : WARN(W_EXPECTED_LBRACE_AFTER_CLASS))
+	if (skip('{', W_EXPECTED_LBRACE_AFTER_CLASS))
 		goto err;
 	/* Create the symbol to assign the class to. */
 	if (create_symbol) {
@@ -1438,7 +1438,7 @@ use_object_base:
 		maker.cm_classsym = new_unnamed_symbol();
 		if unlikely(!maker.cm_classsym)
 			goto err;
-		SYMBOL_TYPE(maker.cm_classsym) = SYMBOL_TYPE_STACK;
+		maker.cm_classsym->s_type = SYMBOL_TYPE_STACK;
 	}
 	maker.cm_thissym                                 = ((DeeClassScopeObject *)current_scope)->cs_this;
 	((DeeClassScopeObject *)current_scope)->cs_class = maker.cm_classsym;
@@ -1853,8 +1853,7 @@ yield_semi_after_operator:
 				if unlikely(yield() < 0)
 					goto err;
 			} else {
-				if unlikely(likely(tok == KWD_this ||
-				                   (TPP_ISKEYWORD(tok) && token.t_kwd == name))
+				if unlikely(likely(tok == KWD_this || (TPP_ISKEYWORD(tok) && token.t_kwd == name))
 				            ? (yield() < 0)
 				            : WARN(W_EXPECTED_THIS_OR_CLASSNAME_AFTER_TILDE,
 				                   maker.cm_classsym->s_name->k_name))
@@ -2075,7 +2074,7 @@ err_ctor_expr:
 						goto err_anno;
 					if (parser_flags & PARSE_FLFSTMT)
 						TPPLexer_Current->l_flags |= TPPLEXER_FLAG_WANTLF;
-					if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ARGLIST))
+					if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 						goto err_anno;
 				} else if (tok == KWD_pack) {
 					/* Argument list. */
@@ -2205,7 +2204,7 @@ err_ctor_expr:
 					/* Parse the property declaration. */
 					if unlikely(parse_property(prop_callbacks, &maker, is_class_member))
 						goto err;
-					if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_PROPERTY))
+					if (skip('}', W_EXPECTED_RBRACE_AFTER_PROPERTY))
 						goto err_property;
 					/* Keep track of VTABLE slots used by the property and its callbacks. */
 					if (!prop_callbacks[CLASS_GETSET_DEL] &&

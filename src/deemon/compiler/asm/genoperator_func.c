@@ -101,7 +101,7 @@ ast_gen_operator_func(struct ast *binding,
 		/* Lookup a symbol matching the operator's name. */
 		temp = bind_module_symbol(operators_module, &opmod_id, &opsym_id, symbol_name);
 		if unlikely(temp != 0) {
-			if (temp < 0)
+			if unlikely(temp < 0)
 				goto err;
 			if (WARNAST(ddi_ast, W_NO_OPERATOR_SYMBOL, symbol_name))
 				goto err_module;
@@ -132,7 +132,7 @@ generic_operator:
 		                          &opsym_id,
 		                          DeeString_STR(&str_operator));
 		if unlikely(temp != 0) {
-			if (temp < 0)
+			if unlikely(temp < 0)
 				goto err;
 			if (WARNAST(ddi_ast, W_NO_OPERATOR_FALLBACK_FUNCTION))
 				goto err_module;

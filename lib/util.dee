@@ -21,7 +21,7 @@ import * from deemon;
 
 @[optional.gatw.doc("(items:?S?O)->")]
 @[optional.gatw.doc("(items!)->")]
-@@Returns the lowers element of @items or :none when empty
+@@Returns the lowers element of @items or @none when empty
 @@Objects are always compared with the current winner as left operand
 function min(items...) {
 	if (#items == 1)
@@ -31,7 +31,7 @@ function min(items...) {
 
 @[optional.gatw.doc("(items:?S?O)->")]
 @[optional.gatw.doc("(items!)->")]
-@@Returns the greatest element of @items or :none when empty
+@@Returns the greatest element of @items or @none when empty
 @@Objects are always compared with the current winner as left operand
 function max(items...) {
 	if (#items == 1)
@@ -39,10 +39,10 @@ function max(items...) {
 	return items > ...;
 }
 
-@[optional.gatw.doc("(items:{?Dfloat})->?Dfloat")]
+@[optional.gatw.doc("(items:?S?Dfloat)->?Dfloat")]
 @[optional.gatw.doc("(items!)->?Dfloat")]
 @@Returns the average of all elements in @items
-@@All elements are casted to float, added and devided by ${#items}
+@@All elements are casted to float, added and devided by @(#items)
 function avg(items...) {
 	if (#items == 1)
 		items = items[0];
@@ -57,7 +57,7 @@ function avg(items...) {
 
 @[optional.gatw.doc("(items:?S?O)->?Dbool")]
 @[optional.gatw.doc("(items!)->?Dbool")]
-@@Returns :true if all elements in @items evaluate to :true
+@@Returns @true if all elements in @items evaluate to @true
 function all(items...) {
 	if (#items == 1)
 		return items[0] && ...;
@@ -66,7 +66,7 @@ function all(items...) {
 
 @[optional.gatw.doc("(items:?S?O)->?Dbool")]
 @[optional.gatw.doc("(items!)->?Dbool")]
-@@Returns :true if any element in @items evaluates to :true
+@@Returns @true if any element in @items evaluates to @true
 function any(items...) {
 	if (#items == 1)
 		return items[0] || ...;
@@ -76,21 +76,21 @@ function any(items...) {
 @[optional.gatw.doc("(items:?S?O)->")]
 @[optional.gatw.doc("(items!)->")]
 @@Returns the sum of all arguments by adding them together
-@@The result is always replaced with the addition of ${result+next}
-@@Returns :none if no arguments are given
-@@NOTE: Use of this function is mostly redundant and code should be updated to use ${items + ...} instead
+@@The result is always replaced with the addition of @(result + next)
+@@Returns @none if no arguments are given
+@@NOTE: Use of this function is mostly redundant and code should be updated to use @(items + ...) instead
 function sum(items...) {
 	if (#items == 1)
 		return items[0] + ...;
 	return items + ...;
 }
 
-@@Returns the sqare of @x, that is ${x * x}
+@@Returns the sqare of @x, that is @(x * x)
 function sqr(x) {
 	return x * x;
 }
 
-@@Returns the ceiled integral value of a given :float @x
+@@Returns the ceiled integral value of a given @float @x
 function ceil(x: float): int {
 	local result = (int)x;
 	if (x > 0) {
@@ -100,7 +100,7 @@ function ceil(x: float): int {
 	return result;
 }
 
-@@Returns the floored integral value of a given :float @x
+@@Returns the floored integral value of a given @float @x
 function floor(x: float): int {
 	local result = (int)x;
 	if (x < 0) {
@@ -110,7 +110,7 @@ function floor(x: float): int {
 	return result;
 }
 
-@@Returns the rounded integral value of a given :float @x
+@@Returns the rounded integral value of a given @float @x
 function round(x: float): int {
 	/* Truncated; aka. rounded towards zero. */
 	local result = (int)x;
@@ -128,7 +128,7 @@ function round(x: float): int {
 @@Merges @seqs given sequences into a list of @seqs-elemntal sequences,
 @@where the index in every of those sequences is equivalent to the position of
 @@the origin Sequence in the original argument list
-@@HINT: The size of the returned list is ${(for (x: seqs) #x) < ...}
+@@HINT: The size of the returned list is @((for (x: seqs) #x) < ...)
 @@>import zip from util;
 @@>print zip([10, 20, 30], [40, 50, 60])...;     /* "(10, 40) (20, 50) (30, 60)" */
 @@>print zip([10, 20, 30], [40, 50, 60, 70])...; /* "(10, 40) (20, 50) (30, 60)" */
@@ -149,7 +149,7 @@ function zip(seqs...: Sequence): {Sequence...} {
 }
 
 @@Iterate the given @seq and yield its items, as well as
-@@an associated index number, starting at @start or $0
+@@an associated index number, starting at @start or @0
 @@>import enumerate from util;
 @@>function enum_items() {
 @@>    yield 10;
@@ -173,7 +173,7 @@ function enumerate(seq: Sequence, start: int = 0): Sequence {
 @[optional.gatw.doc("(x:?Dint)->?Dint")]
 @[optional.gatw.doc("(x:?Dfloat)->?Dfloat")]
 @[optional.gatw.doc("(x)->?O")]
-@@Return the absolute value of a given expression.
+@@Return the absolute value of @x
 @@>import abs from util;
 @@>print abs(10);  /* 10 */
 @@>print abs(-10); /* 10 */

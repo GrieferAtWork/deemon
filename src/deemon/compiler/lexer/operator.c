@@ -586,7 +586,7 @@ parse_string:
 				goto err_flags;
 		}
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_EXPECTED_RBRACKET_AFTER_LBRACKET))
+		if (skip(']', W_EXPECTED_RBRACKET_AFTER_LBRACKET))
 			goto err;
 		if (tok == '=') {
 			if unlikely(yield() < 0)

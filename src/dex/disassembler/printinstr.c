@@ -258,10 +258,10 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x5f */ "setattr this, ", /* `ASM_SETATTR_THIS_C' */
 	/* 0x60 */ "cmp    eq, top, pop", /* `ASM_CMP_EQ' */
 	/* 0x61 */ "cmp    ne, top, pop", /* `ASM_CMP_NE' */
-	/* 0x62 */ "cmp    lo, top, pop", /* `ASM_CMP_LO' */
-	/* 0x63 */ "cmp    le, top, pop", /* `ASM_CMP_LE' */
-	/* 0x64 */ "cmp    gr, top, pop", /* `ASM_CMP_GR' */
-	/* 0x65 */ "cmp    ge, top, pop", /* `ASM_CMP_GE' */
+	/* 0x62 */ "cmp    ge, top, pop", /* `ASM_CMP_GE' */
+	/* 0x63 */ "cmp    lo, top, pop", /* `ASM_CMP_LO' */
+	/* 0x64 */ "cmp    le, top, pop", /* `ASM_CMP_LE' */
+	/* 0x65 */ "cmp    gr, top, pop", /* `ASM_CMP_GR' */
 	/* 0x66 */ "class  top, ", /* `ASM_CLASS_C' */
 	/* 0x67 */ "push   class ", /* `ASM_CLASS_GC' */
 	/* 0x68 */ "push   class ", /* `ASM_CLASS_EC' */
@@ -713,7 +713,7 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 			temp = DeeInt_Print(constval,
 			                    DEEINT_PRINT(numsys, DEEINT_PRINT_FNUMSYS),
 			                    printer, arg);
-			if (temp < 0)
+			if unlikely(temp < 0)
 				return temp;
 			result += temp;
 			Dee_Decref(constval);

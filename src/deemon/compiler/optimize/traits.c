@@ -124,7 +124,7 @@ ast_predict_type(struct ast *__restrict self) {
 		/* Certain symbol classes always refer to specific object types. */
 		sym = self->a_sym;
 		SYMBOL_INPLACE_UNWIND_ALIAS(sym);
-		switch (SYMBOL_TYPE(sym)) {
+		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_MODULE:
 		case SYMBOL_TYPE_MYMOD:
@@ -788,7 +788,7 @@ ast_is_nothrow(struct ast *__restrict self, bool result_used) {
 		/* Ref vars are static and never cause exceptions. */
 		if (SYMBOL_MUST_REFERENCE(sym))
 			goto is_nothrow;
-		switch (SYMBOL_TYPE(sym)) {
+		switch (sym->s_type) {
 
 		case SYMBOL_TYPE_STATIC:
 			/* Since static variables can never be unbound,

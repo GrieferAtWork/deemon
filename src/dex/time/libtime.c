@@ -35,6 +35,7 @@
 #include <deemon/numeric.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 
 #include <limits.h>
 #include <string.h>
@@ -45,6 +46,23 @@
 #endif /* CONFIG_HOST_WINDOWS */
 
 DECL_BEGIN
+
+/* Use libc functions for case-insensitive UTF-8 string compare when available. */
+#ifdef CONFIG_HAVE_memcasecmp
+#define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
+#else /* CONFIG_HAVE_memcasecmp */
+#define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
+LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
+	while (s--) {
+		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
+			return false;
+		++a;
+		++b;
+	}
+	return true;
+}
+#endif /* !CONFIG_HAVE_memcasecmp */
+
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define FILETIME_GET64(x) (((x) << 32)|((x) >> 32))
@@ -83,24 +101,6 @@ INTERN WUNUSED dtime_t DCALL time_now(void) {
 	        time_yer2day(1970) * MICROSECONDS_PER_DAY);
 #endif
 }
-
-
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#else
-#define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
-LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
-	while (s--) {
-		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
-			return false;
-		++a;
-		++b;
-	}
-	return true;
-}
-#endif
 
 #define NAMEOF_JAN "Jan\0" "January\0"
 #define NAMEOF_FEB "Feb\0" "February\0"

@@ -36,6 +36,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
@@ -49,12 +50,10 @@
 DECL_BEGIN
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a,b,s) (memcasecmp(a,b,s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a,b,s) (_memicmp(a,b,s) == 0)
-#else
-#define MEMCASEEQ(a,b,s)  dee_memcaseeq((uint8_t *)(a),(uint8_t *)(b),s)
+#ifdef CONFIG_HAVE_memcasecmp
+#define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
+#else /* CONFIG_HAVE_memcasecmp */
+#define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
 LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
 		if (DeeUni_ToLower(*a) != DeeUni_ToLower(*b))
@@ -64,7 +63,7 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	}
 	return true;
 }
-#endif
+#endif /* !CONFIG_HAVE_memcasecmp */
 
 #define UNPACK_ARGS_0()        /* nothing */
 #define UNPACK_ARGS_1(a)       , a
@@ -490,7 +489,7 @@ DeeFile_ReadAll(DeeObject *__restrict self,
 	dssize_t result = 0, temp;
 	for (;;) {
 		temp = DeeFile_Read(self, buffer, bufsize);
-		if (temp < 0)
+		if unlikely(temp < 0)
 			return temp;
 		if (!temp)
 			break;
@@ -510,7 +509,7 @@ DeeFile_WriteAll(DeeObject *__restrict self,
 	dssize_t result = 0, temp;
 	for (;;) {
 		temp = DeeFile_Write(self, buffer, bufsize);
-		if (temp < 0)
+		if unlikely(temp < 0)
 			return temp;
 		if (!temp)
 			break;
@@ -530,7 +529,7 @@ DeeFile_PReadAll(DeeObject *__restrict self,
 	dssize_t result = 0, temp;
 	for (;;) {
 		temp = DeeFile_PRead(self, buffer, bufsize, pos);
-		if (temp < 0)
+		if unlikely(temp < 0)
 			return temp;
 		if (!temp)
 			break;
@@ -551,7 +550,7 @@ DeeFile_PWriteAll(DeeObject *__restrict self,
 	dssize_t result = 0, temp;
 	for (;;) {
 		temp = DeeFile_PWrite(self, buffer, bufsize, pos);
-		if (temp < 0)
+		if unlikely(temp < 0)
 			return temp;
 		if (!temp)
 			break;

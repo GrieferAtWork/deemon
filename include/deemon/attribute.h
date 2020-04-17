@@ -22,11 +22,26 @@
 
 #include "api.h"
 
+#include <hybrid/host.h> /* __i386__, __x86_64__, ... */
+
 #include "object.h"
 
-#if !defined(CONFIG_NO_SETJMP) && \
-    (defined(__i386__) || defined(__x86_64__)) && \
-    (defined(_MSC_VER) || defined(__COMPILER_HAVE_GCC_ASM))
+#ifdef CONFIG_NO_LONGJMP_ENUMATTR
+#undef CONFIG_LONGJMP_ENUMATTR
+#else /* CONFIG_NO_LONGJMP_ENUMATTR */
+#include "system-features.h"
+
+#ifndef CONFIG_HAVE_SETJMP_H
+/* Need setjmp() and longjmp() for this to be usable. */
+#undef CONFIG_LONGJMP_ENUMATTR
+#elif !(defined(__i386__) || defined(__x86_64__))
+/* Need to be hosted by a 32- or 64-bit x86 platform. */
+#undef CONFIG_LONGJMP_ENUMATTR
+#elif !(defined(_MSC_VER) || defined(__COMPILER_HAVE_GCC_ASM))
+/* Need MSVC or GCC-style assembly support */
+#undef CONFIG_LONGJMP_ENUMATTR
+#else /* ... */
+
 /* Enable special handling to use setjmp() / longjmp() to yield
  * attributes, turning the tp_enumattr() into a re-entrant function call.
  * The specifics are a bit complicated, but essentially we setup a small
@@ -42,26 +57,28 @@
  * NOTE: To prevent any impact from this configuration option, the `enumattr.Iterator'
  *       type is never copyable, even when this option is disabled. */
 #define CONFIG_LONGJMP_ENUMATTR         1
+
 /* The number of attributes enumerated at once before execution will switch
  * back to user-code, yielding the new attributes until that buffer is exhausted.
  * This is done to mitigate any overhead that doing setjmp/longjmp may have. */
 #define CONFIG_LONGJMP_ENUMATTR_CLUSTER 16
-
 
 #if defined(__x86_64__) && defined(_MSC_VER)
 /* Inline assembly isn't supported by the 64-bit compiler. */
 #undef CONFIG_LONGJMP_ENUMATTR
 #endif /* __x86_64__ && _MSC_VER */
 
-#endif /* ... */
+#endif /* !... */
+#endif /* !CONFIG_NO_LONGJMP_ENUMATTR */
 
 /* #undef CONFIG_LONGJMP_ENUMATTR */
 
 #ifdef CONFIG_LONGJMP_ENUMATTR
-#include "util/rwlock.h"
-
 #include <setjmp.h>
+
+#include "util/rwlock.h"
 #endif /* CONFIG_LONGJMP_ENUMATTR */
+
 #include <stddef.h>
 
 DECL_BEGIN
@@ -80,16 +97,16 @@ typedef struct Dee_enumattr_object DeeEnumAttrObject;
 typedef struct Dee_enumattr_iterator_object DeeEnumAttrIteratorObject;
 
 struct Dee_attribute_info {
-	DREF DeeObject            *a_decl;     /* [1..1] The type defining the attribute. */
-	char const                *a_doc;      /* [0..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
-	                                        * The documentation string of the attribute (when known).
-	                                        * NOTE: This may also be an empty string, which should be
-	                                        *       interpreted as no documentation string being there at all.
-	                                        * NOTE: When the `ATTR_DOCOBJ' flag is set, then this is actually
-	                                        *       the `DeeString_STR()' of a string objects, to which a
-	                                        *       reference is being held. */
-	uint16_t                   a_perm;     /* Set of `ATTR_*' flags, describing the attribute's behavior. */
-	DREF DeeTypeObject        *a_attrtype; /* [0..1] The typing of this attribute. */
+	DREF DeeObject     *a_decl;     /* [1..1] The type defining the attribute. */
+	char const         *a_doc;      /* [0..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
+	                                 * The documentation string of the attribute (when known).
+	                                 * NOTE: This may also be an empty string, which should be
+	                                 *       interpreted as no documentation string being there at all.
+	                                 * NOTE: When the `ATTR_DOCOBJ' flag is set, then this is actually
+	                                 *       the `DeeString_STR()' of a string objects, to which a
+	                                 *       reference is being held. */
+	uint16_t            a_perm;     /* Set of `ATTR_*' flags, describing the attribute's behavior. */
+	DREF DeeTypeObject *a_attrtype; /* [0..1] The typing of this attribute. */
 };
 #define Dee_attribute_info_fini(self)                                           \
 	(Dee_Decref((self)->a_decl), Dee_XDecref((self)->a_attrtype),               \

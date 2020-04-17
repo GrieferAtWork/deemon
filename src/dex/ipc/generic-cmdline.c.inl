@@ -24,26 +24,27 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/object.h>
 #include <deemon/format.h>
+#include <deemon/object.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/atomic.h>
 
 #include "libipc.h"
 
-#if !defined(CONFIG_HAVE_LIBCMDLINE) && !defined(CONFIG_NO_LIBCMDLINE) && \
-    (__has_include(<libcmdline/api.h>) && __has_include(<libcmdline/encode.h>) && \
-     __has_include(<libcmdline/decode.h>) && __has_include(<dlfcn.h>)) || \
-    (defined(__KOS__) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 400))
+#if (!defined(CONFIG_HAVE_LIBCMDLINE) && !defined(CONFIG_NO_LIBCMDLINE) && \
+     (__has_include(<libcmdline/api.h>) && __has_include(<libcmdline/encode.h>) && \
+      __has_include(<libcmdline/decode.h>) && __has_include(<dlfcn.h>)) || \
+    (defined(__KOS__) && defined(__KOS_VERSION__) && (__KOS_VERSION__ >= 400)))
 #define CONFIG_HAVE_LIBCMDLINE 1
 #endif /* ... */
 
 #ifdef CONFIG_HAVE_LIBCMDLINE
-#include <libcmdline/api.h>
-#include <libcmdline/encode.h>
-#include <libcmdline/decode.h>
 #include <dlfcn.h>
+
+#include <libcmdline/api.h>
+#include <libcmdline/decode.h>
+#include <libcmdline/encode.h>
 
 #ifndef LIBCMDLINE_LIBRARY_NAME
 #undef CONFIG_HAVE_LIBCMDLINE
@@ -54,14 +55,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* strend() */
-
-#ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
-#define strend(x) ((x) + strlen(x))
-#endif /* !CONFIG_HAVE_strend */
 #endif /* !CONFIG_HAVE_LIBCMDLINE */
-
-
 
 DECL_BEGIN
 

@@ -543,17 +543,17 @@ local __objects = deemon.List {
 	/* 0x01E2 */ compat_util_attr.enumattr, /* DeeBuiltinFunction___builtin_enumattr */
 	/* 0x01E3 */ none, /* DeeVarArrayType_Type (no longer implemented by ctypes) */
 	// Builtin File operators
-	/* 0x01E3 */ operators.read, /* DeeBuiltinFunction___read__ */
+	/* 0x01E3 */ operators.read,  /* DeeBuiltinFunction___read__ */
 	/* 0x01E4 */ operators.write, /* DeeBuiltinFunction___write__ */
-	/* 0x01E5 */ operators.read, /* DeeBuiltinFunction___readp__ */
+	/* 0x01E5 */ operators.read,  /* DeeBuiltinFunction___readp__ */
 	/* 0x01E6 */ operators.write, /* DeeBuiltinFunction___writep__ */
-	/* 0x01E7 */ operators.read, /* DeeBuiltinFunction___readnp__ */
+	/* 0x01E7 */ operators.read,  /* DeeBuiltinFunction___readnp__ */
 	/* 0x01E8 */ operators.write, /* DeeBuiltinFunction___writenp__ */
-	/* 0x01E9 */ operators.seek, /* DeeBuiltinFunction___seek__ */
-	/* 0x01EA */ operators.sync, /* DeeBuiltinFunction___flush__ */
+	/* 0x01E9 */ operators.seek,  /* DeeBuiltinFunction___seek__ */
+	/* 0x01EA */ operators.sync,  /* DeeBuiltinFunction___flush__ */
 	/* 0x01EB */ operators.trunc, /* DeeBuiltinFunction___trunc__ */
 	/* 0x01EC */ operators.close, /* DeeBuiltinFunction___close__ */
-	/* 0x01ED */ fs.User, /* DeeFSWin32SID_Type */
+	/* 0x01ED */ fs.User,         /* DeeFSWin32SID_Type */
 	/* 0x01EF */ deemon.Function,
 	/* 0x01F0 */ deemon.Function.YieldFunction.Iterator, /* DeeEnumIterator_Type (util.enumerate is now implemented as a User-function) */
 	/* 0x01F1 */ util.enumerate, /* DeeBuiltinFunction___builtin_enumerate */

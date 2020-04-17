@@ -41,12 +41,12 @@
 #ifdef CONFIG_THREADS_JOIN_SEMPAHORE
 #ifndef CONFIG_HOST_WINDOWS
 #include "system-features.h"
-#if defined(CONFIG_HAVE_SEMAPHORE_H) && \
-    defined(CONFIG_HAVE_sem_init) && \
-    defined(CONFIG_HAVE_sem_post) && \
-    defined(CONFIG_HAVE_sem_wait) && \
-    defined(CONFIG_HAVE_sem_trywait) && \
-    defined(CONFIG_HAVE_sem_timedwait)
+#if (defined(CONFIG_HAVE_SEMAPHORE_H) && \
+     defined(CONFIG_HAVE_sem_init) &&    \
+     defined(CONFIG_HAVE_sem_post) &&    \
+     defined(CONFIG_HAVE_sem_wait) &&    \
+     defined(CONFIG_HAVE_sem_trywait) && \
+     defined(CONFIG_HAVE_sem_timedwait))
 #define CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T 1
 #endif /* Semaphore... */
 #endif /* !CONFIG_HOST_WINDOWS */
@@ -354,9 +354,9 @@ struct Dee_thread_object {
 	void                     *t_join; /* HANDLE */
 #elif defined(CONFIG_THREADS_JOIN_SEMPAHORE_IS_SEM_T)
 	sem_t                     t_join;
-#else
+#else /* ... */
 	unsigned int              t_join;
-#endif
+#endif /* !... */
 #endif /* CONFIG_THREADS_JOIN_SEMPAHORE */
 #endif /* !CONFIG_NO_THREADS */
 };
@@ -372,12 +372,12 @@ struct Dee_thread_object {
 #define DeeThread_WasInterrupted(x) (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_INTERRUPTED)
 #define DeeThread_HasCrashed(x)     (((DeeThreadObject *)Dee_REQUIRES_OBJECT(x))->t_state & Dee_THREAD_STATE_TERMINATED && ((DeeThreadObject *)(x))->t_except != NULL)
 #else /* !CONFIG_NO_THREADS */
-#define DeeThread_IsRunning(x)        true
-#define DeeThread_HasStarted(x)       true
-#define DeeThread_WasDetached(x)      false
-#define DeeThread_HasTerminated(x)    false
-#define DeeThread_WasInterrupted(x)   false
-#define DeeThread_HasCrashed(x)       false
+#define DeeThread_IsRunning(x)      true
+#define DeeThread_HasStarted(x)     true
+#define DeeThread_WasDetached(x)    false
+#define DeeThread_HasTerminated(x)  false
+#define DeeThread_WasInterrupted(x) false
+#define DeeThread_HasCrashed(x)     false
 #endif /* CONFIG_NO_THREADS */
 
 
@@ -387,10 +387,14 @@ DDATDEF DeeTypeObject DeeThread_Type;
 #define DeeThread_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeThread_Type)
 
 #ifndef CONFIG_NO_THREADS
+/* Construct a new wrapper for an external reference to `thread'
+ * NOTE: The given `thread' is _NOT_ inherited! */
 #ifndef CONFIG_NO_THREADID
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_NewExternal(Dee_thread_t thread, Dee_threadid_t id);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeThread_NewExternal(Dee_thread_t thread, Dee_threadid_t id);
 #else /* !CONFIG_NO_THREADID */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_NewExternal(Dee_thread_t thread);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeThread_NewExternal(Dee_thread_t thread);
 #endif /* CONFIG_NO_THREADID */
 #endif /* !CONFIG_NO_THREADS */
 

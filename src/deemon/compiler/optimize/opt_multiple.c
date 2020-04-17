@@ -68,7 +68,7 @@ multiple_continue_at_iter:
 			only_constexpr = false;
 		temp = ast_doesnt_return(*iter, AST_DOESNT_RETURN_FNORMAL);
 		if (temp < 0)
-			is_unreachable = temp == -2;
+			is_unreachable = (temp == -2);
 		else if (is_unreachable ||
 		         /* Delete branches that are unreachable or have no side-effects. */
 		         (self->a_flag == AST_FMULTIPLE_KEEPLAST &&

@@ -366,7 +366,7 @@ again_compiler_subtag:
 					goto err;
 				if unlikely(convert_dot_tag_namespace(tag_name_len, tag_name_str))
 					goto err;
-				if unlikely(likely(tok == '.') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
+				if (skip('.', W_COMPILER_TAG_EXPECTED_DOT_AFTER_OPTIONAL))
 					goto err;
 				is_optional = true;
 				goto again_compiler_subtag;
@@ -437,7 +437,7 @@ again_compiler_subtag:
 						if unlikely(WARN(W_COMPILER_TAG_EXPECTED_STRING_AFTER_DOC))
 							goto err;
 					}
-					if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
+					if (skip(')', W_COMPILER_TAG_EXPECTED_RPAREN_AFTER_DOC))
 						goto err;
 					goto do_next_compiler_tag;
 				} else {
@@ -507,7 +507,7 @@ do_next_compiler_tag:
 			if (tok != ']')
 				goto again_compiler_tag;
 		}
-		if unlikely(likely(tok == ']') ? (yield() < 0) : WARN(W_COMPILER_TAG_EXPECTED_RBRACKET))
+		if (skip(']', W_COMPILER_TAG_EXPECTED_RBRACKET))
 			goto err;
 #undef IS_TAG
 	} else {

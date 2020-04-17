@@ -46,11 +46,6 @@
 
 #include "../time/libtime.h"
 
-#ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
-#define strend(x) ((x) + strlen(x))
-#endif /* !CONFIG_HAVE_strend */
-
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #include <string.h>
@@ -2689,7 +2684,7 @@ nt_ErrUnlink(DWORD dwError, DeeObject *__restrict path) {
 		int temp;
 		/* Check if the path is actually a directory. */
 		temp = nt_GetFileAttributes(path, &dwAttributes);
-		if (temp < 0)
+		if unlikely(temp < 0)
 			return temp;
 #define WANT_NT_ERRPATHISDIR 1
 		if (temp == 0 && (dwAttributes & FILE_ATTRIBUTE_DIRECTORY))

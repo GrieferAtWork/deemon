@@ -94,7 +94,7 @@ again:
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		self = SYMBOL_ALIAS(self);
+		self = self->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -117,7 +117,7 @@ again:
 	switch (other->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		other = SYMBOL_ALIAS(other);
+		other = other->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -154,7 +154,7 @@ again:
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		self = SYMBOL_ALIAS(self);
+		self = self->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -175,7 +175,7 @@ again:
 	switch (other->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		other = SYMBOL_ALIAS(other);
+		other = other->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -212,7 +212,7 @@ again:
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		self = SYMBOL_ALIAS(self);
+		self = self->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -233,7 +233,7 @@ again:
 	switch (other->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		other = SYMBOL_ALIAS(other);
+		other = other->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -269,7 +269,7 @@ again:
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		self = SYMBOL_ALIAS(self);
+		self = self->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_THIS: {
@@ -332,7 +332,7 @@ again:
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		self = SYMBOL_ALIAS(self);
+		self = self->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -367,7 +367,7 @@ again:
 	switch (self->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		self = SYMBOL_ALIAS(self);
+		self = self->s_alias;
 		goto again;
 
 	case SYMBOL_TYPE_CATTR:
@@ -1090,7 +1090,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 			      : new_local_symbol(other_sym->s_name, &other_sym->s_decl);
 			if unlikely(!sym)
 				goto err;
-			SYMBOL_TYPE(sym) = SYMBOL_TYPE_ARG;
+			sym->s_type = SYMBOL_TYPE_ARG;
 			ASSERT(other_sym->s_symid == (uint16_t)i);
 			sym->s_flag  = SYMBOL_FALLOC;
 			sym->s_symid = (uint16_t)i;
@@ -1126,7 +1126,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 link_forward_symbol(struct symbol *__restrict self) {
 	DeeScopeObject *iter;
-	if (SYMBOL_TYPE(self) != SYMBOL_TYPE_FWD)
+	if (self->s_type != SYMBOL_TYPE_FWD)
 		return 0;
 	iter = current_scope->s_prev;
 	for (; iter; iter = iter->s_prev) {

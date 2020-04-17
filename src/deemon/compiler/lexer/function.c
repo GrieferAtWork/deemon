@@ -531,7 +531,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		funcself_symbol = new_local_symbol(name, name_loc);
 		if unlikely(!funcself_symbol)
 			goto err;
-		SYMBOL_TYPE(funcself_symbol) = SYMBOL_TYPE_MYFUNC;
+		funcself_symbol->s_type = SYMBOL_TYPE_MYFUNC;
 	}
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 	/* Declaration meta-information */
@@ -546,7 +546,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		if unlikely(parse_arglist())
 			goto err_flags_decl;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == ')') ? (yield() < 0) : WARN(W_EXPECTED_RPAREN_AFTER_ARGLIST))
+		if (skip(')', W_EXPECTED_RPAREN_AFTER_ARGLIST))
 			goto err_decl;
 	} else if (!allow_missing_params) {
 		if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
@@ -612,7 +612,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
+		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_xcode_decl;
 		if (pneed_semi)
 			*pneed_semi = false;
@@ -720,7 +720,7 @@ ast_parse_function_noscope_noargs(bool *pneed_semi) {
 		code = ast_putddi(ast_parse_statements_until(AST_FMULTIPLE_KEEPLAST, '}'), &brace_loc);
 		TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
-		if unlikely(likely(tok == '}') ? (yield() < 0) : WARN(W_EXPECTED_RBRACE_AFTER_FUNCTION))
+		if (skip('}', W_EXPECTED_RBRACE_AFTER_FUNCTION))
 			goto err_xcode;
 		if (pneed_semi)
 			*pneed_semi = false;

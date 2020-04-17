@@ -75,11 +75,6 @@
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
-#ifndef CONFIG_HAVE_strend
-#define CONFIG_HAVE_strend 1
-#define strend(x) ((x) + strlen(x))
-#endif /* !CONFIG_HAVE_strend */
-
 #ifndef PATH_MAX
 #ifdef PATHMAX
 #   define PATH_MAX PATHMAX

@@ -1842,7 +1842,7 @@ push_a_if_used:
 			enter_expr = self->a_operator.o_op0;
 			if (enter_expr->a_type == AST_SYM) {
 				struct symbol *sym = SYMBOL_UNWIND_ALIAS(enter_expr->a_sym);
-				if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_STACK &&
+				if (sym->s_type == SYMBOL_TYPE_STACK &&
 				    !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
 				    (sym->s_flag & SYMBOL_FALLOC) &&
 				    SYMBOL_STACK_OFFSET(sym) == current_assembler.a_stackcur - 1) {

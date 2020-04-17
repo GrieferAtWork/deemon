@@ -31,32 +31,62 @@
 #include <string.h>
 
 /* Figure out how to get alloca() (if it is even available) */
+
+#ifdef CONFIG_NO_ALLOCA_H
+#undef CONFIG_HAVE_ALLOCA_H
+#elif !defined(CONFIG_HAVE_ALLOCA_H) && \
+      (__has_include(<alloca.h>) || (defined(__NO_has_include) && ((defined(__CYGWIN__) || \
+       defined(__CYGWIN32__)) || (defined(__linux__) || defined(__linux) || defined(linux)) || \
+       defined(__KOS__))))
+#define CONFIG_HAVE_ALLOCA_H 1
+#endif
+
+#ifdef CONFIG_NO_MALLOC_H
+#undef CONFIG_HAVE_MALLOC_H
+#elif !defined(CONFIG_HAVE_MALLOC_H) && \
+      (__has_include(<malloc.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       (defined(__CYGWIN__) || defined(__CYGWIN32__)) || (defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_MALLOC_H 1
+#endif
+
+#ifdef CONFIG_HAVE_ALLOCA_H
+#include <alloca.h>
+#endif /* CONFIG_HAVE_ALLOCA_H */
+
+#ifdef CONFIG_HAVE_MALLOC_H
+#include <malloc.h>
+#endif /* CONFIG_HAVE_MALLOC_H */
+
 #ifdef CONFIG_NO_alloca
 #undef CONFIG_HAVE_alloca
-#else /* CONFIG_NO_alloca */
-#ifndef alloca
-#ifdef Dee_Alloca
-#define alloca  Dee_Alloca
-#elif defined(__GNUC__) || __has_builtin(__builtin_alloca)
-#define alloca(x) __builtin_alloca(x)
-#elif __has_include(<alloca.h>)
-#include <alloca.h>
-#elif defined(_MSC_VER) && (defined(__NO_has_include) || __has_include(<malloc.h>))
-#include <malloc.h>
-#ifndef alloca
-#define alloca  _alloca
-#endif /* !alloca */
-#else
-#include <hybrid/__alloca.h>
-#if defined(__hybrid_alloca) && !defined(alloca)
-#define alloca(x) __hybrid_alloca(x)
-#endif /* __hybrid_alloca && !alloca */
-#endif
-#endif /* !alloca */
-#ifdef alloca
+#elif !defined(CONFIG_HAVE_alloca) && \
+      (defined(alloca) || defined(__alloca_defined) || defined(CONFIG_HAVE_ALLOCA_H))
 #define CONFIG_HAVE_alloca 1
-#endif /* alloca */
-#endif /* !CONFIG_NO_alloca */
+#endif
+
+#ifdef CONFIG_NO__alloca
+#undef CONFIG_HAVE__alloca
+#elif !defined(CONFIG_HAVE__alloca) && \
+      (defined(_alloca) || defined(___alloca_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__alloca 1
+#endif
+
+/* Try to substitute alloca() with alternatives */
+#ifndef CONFIG_HAVE_alloca
+#ifdef CONFIG_HAVE__alloca
+#define CONFIG_HAVE_alloca 1
+#define alloca _alloca
+#elif __has_builtin(__builtin_alloca)
+#define alloca __builtin_alloca
+#else /* ... */
+#include <hybrid/__alloca.h>
+#ifdef __hybrid_alloca
+#define CONFIG_HAVE_alloca 1
+#define alloca __hybrid_alloca
+#endif /* __hybrid_alloca */
+#endif /* !... */
+#endif /* !CONFIG_HAVE_alloca */
 
 #endif /* __CC__ */
 
@@ -671,10 +701,10 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
 #endif /* CONFIG_BUILDING_DEEMON && !__PIC__ */
 
 
-
+/* Define the deemon api's alloca() function (if it can be implemented) */
 #if !defined(Dee_Alloca) && defined(CONFIG_HAVE_alloca)
 #ifdef NO_DBG_ALIGNMENT
-#define Dee_Alloca(x)     alloca(x)
+#define Dee_Alloca(x) alloca(x)
 #else /* NO_DBG_ALIGNMENT */
 FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 	DBG_ALIGNMENT_ENABLE();

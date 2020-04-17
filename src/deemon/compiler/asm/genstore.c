@@ -275,10 +275,10 @@ check_getattr_sym:
 					break;
 				}
 			}
-			switch (SYMBOL_TYPE(sym)) {
+			switch (sym->s_type) {
 
 			case SYMBOL_TYPE_ALIAS:
-				sym = SYMBOL_ALIAS(sym);
+				sym = sym->s_alias;
 				goto check_getattr_sym;
 
 			case SYMBOL_TYPE_THIS:
@@ -453,10 +453,10 @@ check_boundattr_sym:
 					break;
 				}
 			}
-			switch (SYMBOL_TYPE(sym)) {
+			switch (sym->s_type) {
 
 			case SYMBOL_TYPE_ALIAS:
-				sym = SYMBOL_ALIAS(sym);
+				sym = sym->s_alias;
 				goto check_boundattr_sym;
 
 			case SYMBOL_TYPE_MYMOD: {
@@ -576,7 +576,7 @@ check_delattr_sym:
 			switch (sym->s_type) {
 
 			case SYMBOL_TYPE_ALIAS:
-				sym = SYMBOL_ALIAS(sym);
+				sym = sym->s_alias;
 				goto check_delattr_sym;
 
 			case SYMBOL_TYPE_THIS:
@@ -973,10 +973,10 @@ check_base_symbol_class:
 					break;
 				}
 			}
-			switch (SYMBOL_TYPE(sym)) {
+			switch (sym->s_type) {
 
 			case SYMBOL_TYPE_ALIAS:
-				sym = SYMBOL_ALIAS(sym);
+				sym = sym->s_alias;
 				goto check_base_symbol_class;
 
 			case SYMBOL_TYPE_THIS:
@@ -1284,10 +1284,10 @@ check_src_sym_class:
 			goto err;
 		return asm_gpush_ref_p((uint16_t)symid);
 	}
-	switch (SYMBOL_TYPE(src_sym)) {
+	switch (src_sym->s_type) {
 
 	case SYMBOL_TYPE_ALIAS:
-		src_sym = SYMBOL_ALIAS(src_sym);
+		src_sym = src_sym->s_alias;
 		goto check_src_sym_class;
 
 	case SYMBOL_TYPE_STACK:
@@ -1546,10 +1546,10 @@ again:
 			return asm_gmov_sym_ast(dst_sym, src, dst);
 
 check_dst_sym_class:
-		switch (SYMBOL_TYPE(dst_sym)) {
+		switch (dst_sym->s_type) {
 
 		case SYMBOL_TYPE_ALIAS:
-			dst_sym = SYMBOL_ALIAS(dst_sym);
+			dst_sym = dst_sym->s_alias;
 			goto check_dst_sym_class;
 
 		case SYMBOL_TYPE_CATTR:
@@ -1650,10 +1650,10 @@ check_dst_sym_class:
 			int32_t symid;
 check_dst_sym_class_hybrid:
 			if (!SYMBOL_MUST_REFERENCE(dst_sym)) {
-				switch (SYMBOL_TYPE(dst_sym)) {
+				switch (dst_sym->s_type) {
 
 				case SYMBOL_TYPE_ALIAS:
-					dst_sym = SYMBOL_ALIAS(dst_sym);
+					dst_sym = dst_sym->s_alias;
 					goto check_dst_sym_class_hybrid;
 
 				case SYMBOL_TYPE_GLOBAL:
@@ -1919,7 +1919,7 @@ asm_gpop_expr(struct ast *__restrict self) {
 					goto err;
 				if (base->a_type == AST_SYM) {
 					struct symbol *sym = SYMBOL_UNWIND_ALIAS(base->a_sym);
-					if (SYMBOL_TYPE(sym) == SYMBOL_TYPE_THIS &&
+					if (sym->s_type == SYMBOL_TYPE_THIS &&
 					    !SYMBOL_MUST_REFERENCE_TYPEMAY(sym)) {
 						if (asm_putddi(self))
 							goto err;

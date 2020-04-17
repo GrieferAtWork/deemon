@@ -186,7 +186,7 @@ follow_jmp(instruction_t *__restrict jmp,
 #define CONFIG_LOG_PEEPHOLE_OPTS 1
 #define CONFIG_LOG_PEEPHOLE_SOURCE 1
 #define CONFIG_VALIDATE_STACK_DEPTH 1
-#endif
+#endif /* !NDEBUG */
 
 #if defined(CONFIG_LOG_PEEPHOLE_OPTS) || defined(CONFIG_VALIDATE_STACK_DEPTH)
 PRIVATE ATTR_NOINLINE void DCALL
@@ -211,11 +211,9 @@ do_print:
 	if (current_assembler.a_ddi.da_checkc &&
 	    iter[-1].dc_sym->as_addr == addr)
 		goto do_print;
-	DEE_DPRINT("??"
-	           "?(??"
-	           "?) : ");
+	DEE_DPRINT("?(?) : ");
 }
-#endif
+#endif /* CONFIG_LOG_PEEPHOLE_OPTS || CONFIG_VALIDATE_STACK_DEPTH */
 
 
 #ifdef CONFIG_VALIDATE_STACK_DEPTH
@@ -246,9 +244,9 @@ validate_stack_depth(code_addr_t ip, uint16_t stacksz) {
 		}
 	}
 }
-#else
+#else /* CONFIG_VALIDATE_STACK_DEPTH */
 #define validate_stack_depth(ip, stacksz) (void)0
-#endif
+#endif /* !CONFIG_VALIDATE_STACK_DEPTH */
 
 
 #ifdef CONFIG_LOG_PEEPHOLE_OPTS
@@ -304,7 +302,7 @@ peephole_opt2(char const *file, int line, instruction_t *addr_ptr, instruction_t
 	            (code_addr_t)(addr_ptr - sc_main.sec_begin),
 	            (code_addr_t)(addr_ptr2 - sc_main.sec_begin));
 }
-#endif
+#endif /* CONFIG_LOG_PEEPHOLE_OPTS */
 
 
 PRIVATE void DCALL
@@ -458,7 +456,10 @@ INTERN WUNUSED int DCALL asm_peephole(void) {
 
 	/* Allocate a bitset that describes which
 	 * bytes of code should not be optimized. */
-	protected_code = (uint8_t *)Dee_TryCalloc(((code_size_t)(sc_main.sec_iter - sc_main.sec_begin) + 8) / 8);
+	protected_code = (uint8_t *)Dee_TryCalloc(((code_size_t)(sc_main.sec_iter -
+	                                                         sc_main.sec_begin) +
+	                                           8) /
+	                                          8);
 	if unlikely(!protected_code)
 		goto done_raw;
 	{
@@ -634,6 +635,7 @@ do_adjstack_optimization:
 			case ASM16_EXTERN & 0xff:
 				after_prefix = iter + 6;
 				goto do_basic_optimize_after_prefix;
+
 			case ASM16_LOCAL & 0xff:
 			case ASM16_GLOBAL & 0xff:
 			case ASM16_STATIC & 0xff:
@@ -1377,9 +1379,11 @@ do_switch_after_prefix_opcode:
 				case ASM_POP_LOCAL:
 					temp[0] = ASM_LOCAL;
 					goto do_optimize_popmov_8bit;
+
 				case ASM_POP_GLOBAL:
 					temp[0] = ASM_GLOBAL;
 					goto do_optimize_popmov_8bit;
+
 				case ASM_POP_STATIC:
 					temp[0] = ASM_STATIC;
 do_optimize_popmov_8bit:
@@ -1417,9 +1421,11 @@ do_optimize_popmov_8bit:
 					case ASM16_POP_LOCAL & 0xff:
 						temp[1] = ASM16_LOCAL & 0xff;
 						goto do_optimize_popmov_16bit;
+
 					case ASM16_POP_GLOBAL & 0xff:
 						temp[1] = ASM16_GLOBAL & 0xff;
 						goto do_optimize_popmov_16bit;
+
 					case ASM16_POP_STATIC & 0xff:
 						temp[1] = ASM16_STATIC & 0xff;
 do_optimize_popmov_16bit:
@@ -1456,7 +1462,6 @@ do_optimize_popmov_16bit:
 						goto continue_at_iter;
 					}	break;
 
-
 					default: break;
 					}
 					break;
@@ -1492,14 +1497,14 @@ do_optimize_popmov_16bit:
 		case ASM_GETMEMBER_THIS_R:
 		case ASM16_GETMEMBER_THIS_R:
 			/* Optimize the following: 
-			 *   >> dup
-			 *   >> *    // Any sequence of code that doesn't make use of absolute
-			 *   >>      // stack offsets >= the stacksz value before `dup' and
-			 *   >>      // doesn't access any stack object below dup.
-			 *   >>      // With these restrictions, the code must be able to run
-			 *   >>      // without regards to the currently stack alignment, so long
-			 *   >>      // that it doesn't exceed specifications (max-stack-size).
-			 *   >> pop
+			 *  >> dup
+			 *  >> *    // Any sequence of code that doesn't make use of absolute
+			 *  >>      // stack offsets >= the stacksz value before `dup' and
+			 *  >>      // doesn't access any stack object below dup.
+			 *  >>      // With these restrictions, the code must be able to run
+			 *  >>      // without regards to the currently stack alignment, so long
+			 *  >>      // that it doesn't exceed specifications (max-stack-size).
+			 *  >> pop
 			 * This is the optimization that implements what is referred to in
 			 * the documentation of `ASM_FSTACKDISP' to optimize the following:
 			 *  >>    dup      #0      // Copy `x' for print
@@ -2047,8 +2052,7 @@ do_pop_merge_optimization:
 				validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
 				goto continue_at_iter;
 			}
-}
-break;
+		}	break;
 
 
 		{
@@ -2080,24 +2084,30 @@ break;
 			 * >> dup
 			 * >> pop
 			 * >> print pop, nl
-			 * 
-			 * Which can then be optimized again to get the perfect assembly:
+			 *
+			 * Which can then be optimized again into:
 			 * >> push  $10
 			 * >> print pop, nl
+			 *
+			 * And finally, optimized into:
+			 * >> print $10, nl
 			 */
 		case ASM_POP_EXTERN:
 			pop_imma = *(uint8_t *)(iter + 1);
 			pop_immb = *(uint8_t *)(iter + 2);
 			goto do_pop_push_optimization2;
+
 		case ASM16_POP_EXTERN:
 			pop_imma = UNALIGNED_GETLE16((uint16_t *)(iter + 2));
 			pop_immb = UNALIGNED_GETLE16((uint16_t *)(iter + 4));
 			goto do_pop_push_optimization2;
+
 		case ASM_POP_STATIC:
 		case ASM_POP_GLOBAL:
 		case ASM_POP_LOCAL:
 			pop_imma = *(uint8_t *)(iter + 1);
 			goto do_pop_push_optimization;
+
 		case ASM16_POP_STATIC:
 		case ASM16_POP_GLOBAL:
 		case ASM16_POP_LOCAL:

@@ -706,21 +706,81 @@
                                     * >> PUSH(POP() == POP()); */
 #define ASM_CMP_NE            0x61 /* [1][-2,+1]   `cmp ne, top, pop'                   - Compare the two top-most objects on the stack and push the result.
                                     * >> PUSH(POP() != POP()); */
-/* TODO: Change the order of compare instructions:
- *       eq, ne
- *       ge, lo
- *       le, gr
- *       This way, bit#0^1 inverts logic, and bit#0=1
- *       means that top and pop are non-equal
+/* TODO: PREFIX+ASM_CMP_EQ:  `cmp eq, top, PREFIX'
+ *                           `cmp req, PREFIX, top'
+ *                           `PREFIX: cmp eq, top'
+ *
+ * TODO: PREFIX+ASM_CMP_NE:  `cmp ne, top, PREFIX'
+ *                           `cmp rne, PREFIX, top'
+ *                           `PREFIX: cmp ne, top'
+ *
+ * TODO: Reverse compare and compare with constant:
+ *   - ASM_CMP_REQ:          `cmp req, top, pop'
+ *                           `cmp req, top, PREFIX'
+ *                           `cmp eq, PREFIX, top'
+ *                           `PREFIX: cmp req, top'
+ *
+ *   - ASM_CMP_RNE:          `cmp rne, top, pop'
+ *                           `cmp rne, top, PREFIX'
+ *                           `cmp ne, PREFIX, top'
+ *                           `PREFIX: cmp rne, top'
+ *
+ *   - ASM_CMP_EQ_C:         `cmp eq, top, const <imm8>'
+ *                           `cmp req, const <imm8>, top'
+ *                           `push cmp eq, PREFIX, const <imm8>'
+ *                           `push cmp req, const <imm8>, PREFIX'
+ *                           `PREFIX: push cmp eq, const <imm8>'
+ *
+ *   - ASM_CMP_EQ_C16:       `cmp eq, top, const <imm16>'
+ *                           `cmp req, const <imm16>, top'
+ *                           `push cmp eq, PREFIX, const <imm16>'
+ *                           `push cmp req, const <imm16>, PREFIX'
+ *                           `PREFIX: push cmp eq, const <imm16>'
+ *
+ *   - ASM_CMP_NE_C:         `cmp ne, top, const <imm8>'
+ *                           `cmp rne, const <imm8>, top'
+ *                           `push cmp ne, PREFIX, const <imm8>'
+ *                           `push cmp rne, const <imm8>, PREFIX'
+ *                           `PREFIX: push cmp ne, const <imm8>'
+ *
+ *   - ASM_CMP_NE_C16:       `cmp ne, top, const <imm16>'
+ *                           `cmp rne, const <imm16>, top'
+ *                           `push cmp ne, PREFIX, const <imm16>'
+ *                           `push cmp rne, const <imm16>, PREFIX'
+ *                           `PREFIX: push cmp ne, const <imm16>'
+ *
+ *   - ASM_CMP_REQ_C:        `cmp req, top, const <imm8>'
+ *                           `cmp eq, const <imm8>, top'
+ *                           `push cmp req, PREFIX, const <imm8>'
+ *                           `push cmp eq, const <imm8>, PREFIX'
+ *                           `PREFIX: push cmp req, const <imm8>'
+ *
+ *   - ASM_CMP_REQ_C16:      `cmp req, top, const <imm16>'
+ *                           `cmp eq, const <imm16>, top'
+ *                           `push cmp req, PREFIX, const <imm16>'
+ *                           `push cmp eq, const <imm16>, PREFIX'
+ *                           `PREFIX: push cmp req, const <imm16>'
+ *
+ *   - ASM_CMP_RNE_C:        `cmp rne, top, const <imm8>'
+ *                           `cmp ne, const <imm8>, top'
+ *                           `push cmp rne, PREFIX, const <imm8>'
+ *                           `push cmp ne, const <imm8>, PREFIX'
+ *                           `PREFIX: push cmp rne, const <imm8>'
+ *
+ *   - ASM_CMP_RNE_C16:      `cmp rne, top, const <imm16>'
+ *                           `cmp ne, const <imm16>, top'
+ *                           `push cmp rne, PREFIX, const <imm16>'
+ *                           `push cmp ne, const <imm16>, PREFIX'
+ *                           `PREFIX: push cmp rne, const <imm16>'
  */
-#define ASM_CMP_LO            0x62 /* [1][-2,+1]   `cmp lo, top, pop'                   - Compare the two top-most objects on the stack and push the result.
-                                    * >> PUSH(POP() < POP()); */
-#define ASM_CMP_LE            0x63 /* [1][-2,+1]   `cmp le, top, pop'                   - Compare the two top-most objects on the stack and push the result.
-                                    * >> PUSH(POP() <= POP()); */
-#define ASM_CMP_GR            0x64 /* [1][-2,+1]   `cmp gr, top, pop'                   - Compare the two top-most objects on the stack and push the result.
-                                    * >> PUSH(POP() > POP()); */
-#define ASM_CMP_GE            0x65 /* [1][-2,+1]   `cmp ge, top, pop'                   - Compare the two top-most objects on the stack and push the result.
+#define ASM_CMP_GE            0x62 /* [1][-2,+1]   `cmp ge, top, pop'                   - Compare the two top-most objects on the stack and push the result.
                                     * >> PUSH(POP() >= POP()); */
+#define ASM_CMP_LO            0x63 /* [1][-2,+1]   `cmp lo, top, pop'                   - Compare the two top-most objects on the stack and push the result.
+                                    * >> PUSH(POP() < POP()); */
+#define ASM_CMP_LE            0x64 /* [1][-2,+1]   `cmp le, top, pop'                   - Compare the two top-most objects on the stack and push the result.
+                                    * >> PUSH(POP() <= POP()); */
+#define ASM_CMP_GR            0x65 /* [1][-2,+1]   `cmp gr, top, pop'                   - Compare the two top-most objects on the stack and push the result.
+                                    * >> PUSH(POP() > POP()); */
 #define ASM_CLASS_C           0x66 /* [2][-1,+1]   `class top, const <imm8>'            - Construct a new class type, using `pop' as base, and `const <imm8>' as class's descriptor. */
 #define ASM_CLASS_GC          0x67 /* [3][-0,+1]   `push class global <imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `global <imm8>' as base. */
 #define ASM_CLASS_EC          0x68 /* [4][-0,+1]   `push class extern <imm8>:<imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `extern <imm8>:<imm8>' as base. */

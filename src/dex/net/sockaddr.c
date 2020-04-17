@@ -34,6 +34,7 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -41,11 +42,10 @@
 
 DECL_BEGIN
 
-#if defined(__USE_KOS) && !defined(CONFIG_NO_CTYPE)
+/* Use libc functions for case-insensitive UTF-8 string compare when available. */
+#ifdef CONFIG_HAVE_memcasecmp
 #define MEMCASEEQ(a, b, s) (memcasecmp(a, b, s) == 0)
-#elif defined(_MSC_VER) && !defined(CONFIG_NO_CTYPE)
-#define MEMCASEEQ(a, b, s) (_memicmp(a, b, s) == 0)
-#else
+#else /* CONFIG_HAVE_memcasecmp */
 #define MEMCASEEQ(a, b, s) dee_memcaseeq((uint8_t *)(a), (uint8_t *)(b), s)
 LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	while (s--) {
@@ -56,7 +56,7 @@ LOCAL bool dee_memcaseeq(uint8_t const *a, uint8_t const *b, size_t s) {
 	}
 	return true;
 }
-#endif
+#endif /* !CONFIG_HAVE_memcasecmp */
 
 
 struct msg_desc {

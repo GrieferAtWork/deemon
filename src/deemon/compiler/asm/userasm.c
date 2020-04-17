@@ -59,23 +59,27 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 	dssize_t temp, result = 0;
 	char const *raw_operand_string = NULL;
 	if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
-		if unlikely(ascii_printer_putc(printer, '['))
-			goto err_m1;
+		temp = ascii_printer_putc(printer, '[');
+		if unlikely(temp)
+			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACEFLAG) {
-		if unlikely(ascii_printer_putc(printer, '{'))
-			goto err_m1;
+		temp = ascii_printer_putc(printer, '{');
+		if unlikely(temp)
+			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FIMMVAL) {
-		if unlikely(ascii_printer_putc(printer, '$'))
-			goto err_m1;
+		temp = ascii_printer_putc(printer, '$');
+		if unlikely(temp)
+			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FSTACKFLAG) {
-		if unlikely(ascii_printer_putc(printer, '#'))
-			goto err_m1;
+		temp = ascii_printer_putc(printer, '#');
+		if unlikely(temp)
+			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FSTACKFLAG2) {
@@ -99,35 +103,44 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 		goto do_raw_string;
 
 	case OPERAND_CLASS_REF:
-		temp = ascii_printer_printf(printer, "ref %u", (unsigned int)self->io_symid);
+		temp = ascii_printer_printf(printer, "ref %u",
+		                            (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_ARG:
-		temp = ascii_printer_printf(printer, "arg %u", (unsigned int)self->io_symid);
+		temp = ascii_printer_printf(printer, "arg %u",
+		                            (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_CONST:
-		temp = ascii_printer_printf(printer, "const %u", (unsigned int)self->io_symid);
+		temp = ascii_printer_printf(printer, "const %u",
+		                            (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_STATIC:
-		temp = ascii_printer_printf(printer, "static %u", (unsigned int)self->io_symid);
+		temp = ascii_printer_printf(printer, "static %u",
+		                            (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_MODULE:
-		temp = ascii_printer_printf(printer, "module %u", (unsigned int)self->io_symid);
+		temp = ascii_printer_printf(printer, "module %u",
+		                            (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_EXTERN:
-		temp = ascii_printer_printf(printer, "extern %u", (unsigned int)self->io_extern.io_modid, (unsigned int)self->io_extern.io_symid);
+		temp = ascii_printer_printf(printer, "extern %u:%u",
+		                            (unsigned int)self->io_extern.io_modid,
+		                            (unsigned int)self->io_extern.io_symid);
 		break;
 
 	case OPERAND_CLASS_GLOBAL:
-		temp = ascii_printer_printf(printer, "global %u", (unsigned int)self->io_symid);
+		temp = ascii_printer_printf(printer, "global %u",
+		                            (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_LOCAL:
-		temp = ascii_printer_printf(printer, "local %u", (unsigned int)self->io_symid);
+		temp = ascii_printer_printf(printer, "local %u",
+		                            (unsigned int)self->io_symid);
 		break;
 
 	case OPERAND_CLASS_SDISP8:
@@ -147,7 +160,7 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 			struct TPPKeyword *name;
 			char const *mode   = ".PC";
 			char const *suffix = " + ";
-			name               = self->io_intexpr.ie_sym->as_uname;
+			name = self->io_intexpr.ie_sym->as_uname;
 			if (self->io_intexpr.ie_rel == ASM_OVERLOAD_FSTKABS ||
 			    self->io_intexpr.ie_rel == ASM_OVERLOAD_FSTKDSP)
 				mode = ".SP";
@@ -160,7 +173,8 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 				                            name->k_name, mode, suffix);
 			} else {
 				temp = ascii_printer_printf(printer, ".L<%p>%s%s",
-				                            self->io_intexpr.ie_sym, mode, suffix);
+				                            self->io_intexpr.ie_sym,
+				                            mode, suffix);
 			}
 			if (!self->io_intexpr.ie_val)
 				break;
@@ -319,17 +333,15 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 
 	case OPERAND_CLASS_VARKWDS:
 		raw_operand_string = "varkwds";
-		goto do_raw_string;
-
-	default:
-		temp = ascii_printer_printf(printer, "??"
-		                                     "?(%u)",
-		                            (unsigned int)self->io_class);
-		break;
 do_raw_string:
 		temp = ascii_printer_print(printer,
 		                           raw_operand_string,
 		                           strlen(raw_operand_string));
+		break;
+
+	default:
+		temp = ascii_printer_printf(printer, "??" "?(%u)",
+		                            (unsigned int)self->io_class);
 		break;
 	}
 	if unlikely(temp < 0)
@@ -342,19 +354,18 @@ do_raw_string:
 		result += temp;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACEFLAG) {
-		if unlikely(ascii_printer_putc(printer, '}'))
-			goto err_m1;
+		temp = ascii_printer_putc(printer, '}');
+		if unlikely(temp)
+			goto err;
 		++result;
 	}
 	if (self->io_class & OPERAND_CLASS_FBRACKETFLAG) {
-		if unlikely(ascii_printer_putc(printer, ']'))
-			goto err_m1;
+		temp = ascii_printer_putc(printer, ']');
+		if unlikely(temp)
+			goto err;
 		++result;
 	}
-
 	return result;
-err_m1:
-	temp = -1;
 err:
 	return temp;
 }
@@ -401,8 +412,7 @@ asm_invocation_print(struct asm_invocation *__restrict self,
 			break;
 
 		default:
-			temp = ascii_printer_printf(printer, "??"
-			                                     "?(%u) %u:%u: ",
+			temp = ascii_printer_printf(printer, "??" "?(%u) %u:%u: ",
 			                            (unsigned int)self->ai_prefix,
 			                            (unsigned int)self->ai_prefix_id1,
 			                            (unsigned int)self->ai_prefix_id2);
@@ -420,23 +430,22 @@ asm_invocation_print(struct asm_invocation *__restrict self,
 	result += temp;
 	for (i = 0; i < self->ai_opcount; ++i) {
 		if (i == 0) {
-			if (ascii_printer_putc(printer, ' '))
-				goto err_m1;
+			temp = ascii_printer_putc(printer, ' ');
+			if unlikely(temp)
+				goto err;
 			++result;
 		} else {
 			temp = ASCII_PRINTER_PRINT(printer, ", ");
-			if (temp < 0)
+			if unlikely(temp < 0)
 				goto err;
 			result += temp;
 		}
 		temp = asm_invoke_operand_print(&self->ai_ops[i], printer);
-		if (temp < 0)
+		if unlikely(temp < 0)
 			goto err;
 		result += temp;
 	}
 	return result;
-err_m1:
-	temp = -1;
 err:
 	return temp;
 }
@@ -494,7 +503,8 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 		imm_rel ^= ASM_OVERLOAD_FREL_DSPBIT;
 	}
 	/* The stack-prefix instruction uses absolute addressing. */
-	switch (UNALIGNED_GET16(&oop->aoo_class) & (OPERAND_CLASS_FSPADD | OPERAND_CLASS_FSPSUB)) {
+	switch (UNALIGNED_GET16(&oop->aoo_class) & (OPERAND_CLASS_FSPADD |
+	                                            OPERAND_CLASS_FSPSUB)) {
 
 	case OPERAND_CLASS_FSPADD: /* `SP + imm' */
 		imm_val -= current_assembler.a_stackcur;
@@ -507,6 +517,7 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 	case OPERAND_CLASS_FSUBSP: /* `imm - SP' */
 		imm_val += current_assembler.a_stackcur;
 		break;
+
 	default: break;
 	}
 
@@ -724,16 +735,15 @@ nope:
 }
 
 struct reldesc {
-	uint16_t rd_rel8;
-	uint16_t rd_rel16;
-	uint16_t rd_rel32;
+	uint16_t rd_rel8;  /* 8-bit relocation */
+	uint16_t rd_rel16; /* 16-bit relocation */
+	uint16_t rd_rel32; /* 32-bit relocation */
 };
 
 /* Relocation type descriptors.
  * The index is one of `ASM_OVERLOAD_FREL*' or `ASM_OVERLOAD_FSTK*'
  * Unsupported relocations are encoded as `R_DMN_NONE' */
-PRIVATE struct reldesc const
-reldescs[ASM_OVERLOAD_FRELMSK+1] = {
+PRIVATE struct reldesc const reldescs[ASM_OVERLOAD_FRELMSK + 1] = {
 	/* [ASM_OVERLOAD_FRELABS] = */ { R_DMN_ABS8, R_DMN_ABS16, R_DMN_ABS32 },
 	/* [ASM_OVERLOAD_FRELDSP] = */ { R_DMN_DISP8, R_DMN_DISP16, R_DMN_DISP32 },
 	/* [ASM_OVERLOAD_FSTKABS] = */ { R_DMN_STCK8, R_DMN_STCK16, R_DMN_NONE },
@@ -743,7 +753,7 @@ reldescs[ASM_OVERLOAD_FRELMSK+1] = {
 /* @param: flags: Set of `ASM_OVERLOAD_F*'
  * @param: bits:  One of `8', `16' or `32' */
 #define asm_putrel_f(flags, sym, bits) \
-	asm_putrel(reldescs[(flags)&ASM_OVERLOAD_FRELMSK].rd_rel##bits, sym, 0)
+	asm_putrel(reldescs[(flags) & ASM_OVERLOAD_FRELMSK].rd_rel##bits, sym, 0)
 
 
 INTERN WUNUSED NONNULL((1, 2)) int FCALL
@@ -1304,25 +1314,19 @@ struct cleanup_mode {
 
 
 #ifndef NDEBUG
-#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym, lid)                   \
-	(memset((sym), 0xcc, sizeof(struct symbol)),                 \
-	 (sym)->s_decl.l_file = NULL,                                \
-	 (sym)->s_scope       = (DeeScopeObject *)current_basescope, \
-	 (sym)->s_nread = (sym)->s_nwrite = 1,                       \
-	 (sym)->s_nbound                  = 0,                       \
-	 (sym)->s_type                    = SYMBOL_TYPE_LOCAL,       \
-	 (sym)->s_flag                    = SYMBOL_FALLOC,           \
-	 (sym)->s_symid                   = (lid))
+#define DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym) memset(sym, 0xcc, sizeof(struct symbol))
 #else /* NDEBUG */
-#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym, lid)                   \
-	((sym)->s_decl.l_file = NULL,                                \
-	 (sym)->s_scope       = (DeeScopeObject *)current_basescope, \
-	 (sym)->s_nread = (sym)->s_nwrite = 1,                       \
-	 (sym)->s_nbound                  = 0,                       \
-	 (sym)->s_type                    = SYMBOL_TYPE_LOCAL,       \
-	 (sym)->s_flag                    = SYMBOL_FALLOC,           \
-	 (sym)->s_symid                   = (lid))
+#define DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym) (void)0
 #endif /* !NDEBUG */
+#define INITIALIZE_FAKE_LOCAL_SYMBOL(sym, lid)               \
+	(DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym),                  \
+	 (sym)->s_decl.l_file = NULL,                            \
+	 (sym)->s_scope   = (DeeScopeObject *)current_basescope, \
+	 (sym)->s_nread   = (sym)->s_nwrite = 1,                 \
+	 (sym)->s_nbound  = 0,                                   \
+	 (sym)->s_type    = SYMBOL_TYPE_LOCAL,                   \
+	 (sym)->s_flag    = SYMBOL_FALLOC,                       \
+	 (sym)->s_symid   = (lid))
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1433,7 +1437,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_EXCEPT)
+		if (sym->s_type != SYMBOL_TYPE_EXCEPT)
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
@@ -1446,7 +1450,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_MODULE)
+		if (sym->s_type != SYMBOL_TYPE_MODULE)
 			goto next_option;
 		mid = asm_msymid(sym);
 		if unlikely(mid < 0)
@@ -1458,7 +1462,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_THIS)
+		if (sym->s_type != SYMBOL_TYPE_THIS)
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
@@ -1470,7 +1474,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_MYMOD)
+		if (sym->s_type != SYMBOL_TYPE_MYMOD)
 			goto next_option;
 		result = &str_this_module;
 		Dee_Incref(result);
@@ -1480,7 +1484,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_MYFUNC)
+		if (sym->s_type != SYMBOL_TYPE_MYFUNC)
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
@@ -1529,7 +1533,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG)
+		if (sym->s_type != SYMBOL_TYPE_ARG)
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
@@ -1543,7 +1547,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG)
+		if (sym->s_type != SYMBOL_TYPE_ARG)
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
@@ -1556,7 +1560,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_ARG)
+		if (sym->s_type != SYMBOL_TYPE_ARG)
 			goto next_option;
 		if (SYMBOL_MUST_REFERENCE_TYPEMAY(sym))
 			goto next_option;
@@ -1601,7 +1605,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (SYMBOL_TYPE(sym) != SYMBOL_TYPE_EXTERN)
+		if (sym->s_type != SYMBOL_TYPE_EXTERN)
 			goto next_option;
 		if (SYMBOL_EXTERN_SYMBOL(sym)->ss_flags & MODSYM_FPROPERTY)
 			goto next_option;

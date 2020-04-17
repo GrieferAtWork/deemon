@@ -39,20 +39,26 @@
 #define _XOPEN_SOURCE   500
 #endif /* !_XOPEN_SOURCE */
 
-#include <deemon/api.h>
+#include <deemon/file.h> /* DEESYSTEM_FILE_USE_* */
 
 /* TODO: Select implementations on a per-function basis! */
 
 /* Select the host-specific filesystem implementation. */
-#ifdef CONFIG_HOST_WINDOWS
-#include "windows.c.inl"
-#elif defined(CONFIG_HOST_UNIX)
-#include "unix.c.inl"
-#elif !defined(CONFIG_NO_STDIO)
-#include "stdio.c.inl"
-#else
-#include "generic.c.inl"
-#endif
 
+#ifdef DEESYSTEM_FILE_USE_WINDOWS
+#include "windows.c.inl"
+#endif /* DEESYSTEM_FILE_USE_WINDOWS */
+
+#ifdef DEESYSTEM_FILE_USE_UNIX
+#include "unix.c.inl"
+#endif /* DEESYSTEM_FILE_USE_UNIX */
+
+#ifdef DEESYSTEM_FILE_USE_STDIO
+#include "stdio.c.inl"
+#endif /* DEESYSTEM_FILE_USE_STDIO */
+
+#ifdef DEESYSTEM_FILE_USE_STUB
+#include "generic.c.inl"
+#endif /* DEESYSTEM_FILE_USE_STUB */
 
 #endif /* !GUARD_DEX_FS_HOST_C */
