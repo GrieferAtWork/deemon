@@ -2795,7 +2795,7 @@ local function generateFunctionParams(fp: File, fun: Function) {
 @@The main interface for accessing the documentation API provided by deemon
 @@Documentation text is addressed using unambiguos paths structures as follows:
 @@
-@@The string is split into segments separated by ${"/"}
+@@The string is split into segments separated by @"/"
 @@
 @@Dangling leading and trailing slashes are ignored.
 @@
@@ -2822,14 +2822,14 @@ local function generateFunctionParams(fp: File, fun: Function) {
 @@| @"op:" | Real operator name (e.g. @"eq" instead of @"==")  |
 @@+--------+---------------------------------------------------+
 @@
-@@Furthermore, child-nodes (attributes) can be reached using #child, and all existing
+@@Furthermore, child-nodes (attributes) can be reached using @child, and all existing
 @@child nodes can be enumerated by using the doc-node as a sequence-like object.
 @@
 @@Some restrictions apply to Doc-nodes, most notably the restriction that the object
-@@being documented must somehow by addressible as a module export, meaning that private (local)
-@@functions or classes usually cannot be addressed, and that builtin objects used by the
-@@deemon core, which aren't actually exported from the builtin deemon module cannot be
-@@addressed without the use of the :rt module.
+@@being documented must somehow by addressible as a module export, meaning that private
+@@(local) functions or classes usually cannot be addressed, and that builtin objects
+@@used by the deemon core, which aren't actually exported from the builtin deemon
+@@module cannot be addressed without the use of the :rt module.
 class Doc: WeakRefAble {
 
 	@@A universally, unique path that can be used to address this Doc item
@@ -3724,7 +3724,7 @@ set_is_type:
 	}
 
 	@@Enumerate all of the child operators of a type-like object
-	private enumerate_operators_sections(): {string: {DocSection...}} {
+	private enumerateOperatorSections(): {string: {DocSection...}} {
 		local result: {string: {DocSection...}} = Dict();
 		for (local s: allsections) {
 			for (local name, opsec: s.enumerateOperatorSections()) {
@@ -3791,7 +3791,7 @@ set_is_type:
 	@@Enumerate the child nodes used to represent operators of @this when @istype is @true
 	private enumerateOperators(): {Doc...} {
 		if (m_operator_sections !is bound)
-			m_operator_sections = enumerate_operators_sections();
+			m_operator_sections = enumerateOperatorSections();
 		for (local name, sect: m_operator_sections)
 			yield Doc(this, "op:" + name, sect);
 	}

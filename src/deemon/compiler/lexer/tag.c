@@ -321,8 +321,8 @@ INTERN int (DCALL parse_tags)(void) {
 		}
 		token.t_file->f_pos = doc_end;
 		if unlikely(unicode_printer_print(&current_tags.at_doc, doc_start,
-			                               (size_t)(doc_end - doc_start)) < 0)
-		goto err;
+		                                  (size_t)(doc_end - doc_start)) < 0)
+			goto err;
 		if unlikely(unicode_printer_putascii(&current_tags.at_doc, '\n'))
 			goto err;
 		if (yield() < 0)

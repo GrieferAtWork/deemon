@@ -3329,6 +3329,8 @@ Dee_utf8_readchar_rev(char const **__restrict pend,
 	uint32_t result;
 	char const *end = *pend;
 	uint8_t seqlen  = 1;
+	if (end <= begin)
+		return 0;
 	while (end > begin &&
 	       ((unsigned char)*--end & 0xc0) == 0x80 &&
 	       seqlen < 8)

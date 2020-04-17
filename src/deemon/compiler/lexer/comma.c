@@ -38,6 +38,10 @@
 #include <deemon/tuple.h>
 #include <deemon/util/string.h>
 
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#include <deemon/compiler/doctext.h>
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
@@ -366,12 +370,30 @@ next_expr:
 		{
 			struct ast_tags_printers temp;
 			AST_TAGS_BACKUP_PRINTERS(temp);
-			current = ast_parse_function(function_name, &need_semi, false, &loc
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
-			                             ,
-			                             &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
-			);
+			{
+				struct ast_annotations annotations;
+				ast_annotations_get(&annotations);
+				if unlikely(basescope_push()) {
+err_function_anno:
+					ast_annotations_free(&annotations);
+					goto err;
+				}
+				current_basescope->bs_flags |= current_tags.at_code_flags;
+				current = ast_parse_function_noscope(function_name, &need_semi, false, &loc, &decl);
+				/* Compile documentation text */
+				if (current && unlikely(doctext_compile(&temp.at_doc))) {
+					ast_decref(current);
+					current = NULL;
+				}
+				basescope_pop();
+				if unlikely(!current)
+					goto err_function_anno;
+				current = ast_annotations_apply(&annotations, current);
+			}
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+			current = ast_parse_function(function_name, &need_semi, false, &loc);
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 			AST_TAGS_RESTORE_PRINTERS(temp);
 		}
 		if unlikely(!current)
@@ -491,19 +513,24 @@ next_expr:
 					if (var_symbol->s_decltype.da_type == DAST_NONE) {
 						/* Try to extract documentation information from the C-declaration's type specifier. */
 						switch (current->a_type) {
+
 						case AST_SYM:
 							var_symbol->s_decltype.da_type   = DAST_SYMBOL;
 							var_symbol->s_decltype.da_symbol = current->a_sym;
 							symbol_incref(current->a_sym);
 							break;
+
 						case AST_CONSTEXPR:
 							var_symbol->s_decltype.da_type  = DAST_CONST;
 							var_symbol->s_decltype.da_const = current->a_constexpr;
 							Dee_Incref(current->a_constexpr);
 							break;
+
 						default: break;
 						}
 					}
+					if unlikely(doctext_compile(&current_tags.at_doc))
+						goto err_current;
 					/* Package together documentation tags for this variable symbol. */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
 					if unlikely(!var_symbol->s_global.g_doc)
@@ -660,6 +687,8 @@ err_args:
 				if (var_symbol->s_type == SYMBOL_TYPE_GLOBAL &&
 				    !var_symbol->s_global.g_doc) {
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+					if unlikely(doctext_compile(&current_tags.at_doc))
+						goto err_current;
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
 #else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc();

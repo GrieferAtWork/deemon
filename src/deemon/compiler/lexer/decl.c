@@ -809,7 +809,52 @@ INTDEF int DCALL decl_ast_escapetext32(uint32_t const *__restrict text, size_t t
 #include "decl-escape-text-impl.c.inl"
 #define N 32
 #include "decl-escape-text-impl.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
+
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+/* Escape documentation text from "Encoded Documentation Text"
+ * into "Fully Encoded Documentation Text" */
+INTERN int DCALL
+doctext_escape(struct unicode_printer *__restrict doctext) {
+	if (!UNICODE_PRINTER_ISEMPTY(doctext)) {
+		struct unicode_printer result = UNICODE_PRINTER_INIT;
+		switch (doctext->up_flags & UNICODE_PRINTER_FWIDTH) {
+
+		CASE_WIDTH_1BYTE:
+			if unlikely(decl_ast_escapetext8((uint8_t *)doctext->up_buffer,
+			                                 doctext->up_length,
+			                                 &result, doctext))
+				goto err_r;
+			break;
+
+		CASE_WIDTH_2BYTE:
+			if unlikely(decl_ast_escapetext16((uint16_t *)doctext->up_buffer,
+			                                  doctext->up_length,
+			                                  &result, doctext))
+				goto err_r;
+			break;
+
+		CASE_WIDTH_4BYTE:
+			if unlikely(decl_ast_escapetext32((uint32_t *)doctext->up_buffer,
+			                                  doctext->up_length,
+			                                  &result, doctext))
+				goto err_r;
+			break;
+		}
+		__IF0 {
+err_r:
+			unicode_printer_fini(&result);
+			goto err;
+		}
+		/* Have the printer re-inherit itself. */
+		unicode_printer_fini(doctext);
+		memcpy(doctext, &result, sizeof(struct unicode_printer));
+	}
+	return 0;
+err:
+	return -1;
+}
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 
 
 /* Pack together the current documentation string. */

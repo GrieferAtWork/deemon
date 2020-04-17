@@ -29,6 +29,10 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#include <deemon/compiler/doctext.h>
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+
 DECL_BEGIN
 
 PRIVATE int DCALL skip_argument_name(void) {

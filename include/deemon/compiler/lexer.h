@@ -547,6 +547,12 @@ INTDEF WUNUSED DREF DeeObject *DCALL ast_tags_doc(struct decl_ast const *decl);
 INTDEF WUNUSED DREF DeeObject *DCALL ast_tags_doc(void);
 #endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+/* Escape documentation text from "Encoded Documentation Text"
+ * into "Fully Encoded Documentation Text" */
+INTDEF int DCALL doctext_escape(struct unicode_printer *__restrict doctext);
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+
 /* Add a new annotation to the current set of tags. */
 INTDEF int (DCALL ast_annotations_add)(struct ast *__restrict func, uint16_t flag);
 

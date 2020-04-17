@@ -32,6 +32,10 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#include <deemon/compiler/doctext.h>
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
@@ -469,6 +473,8 @@ class_maker_addmember(struct class_maker *__restrict self,
 		 *      been fully declared, at which point we'd
 		 *      have to wait much longer, presumably until
 		 *      code starts getting assembled. */
+		if unlikely(doctext_compile(&current_tags.at_doc))
+			goto err;
 		attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc(decl);
 #else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 		attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc();
@@ -869,7 +875,7 @@ class_maker_pack(struct class_maker *__restrict self) {
 		                                                            COMPILER_OFFSETOF(DeeClassDescriptorObject, cd_iattr_list) +
 		                                                            1 * sizeof(struct class_attribute));
 		if likely(new_desc)
-			self->cm_desc                = new_desc;
+			self->cm_desc = new_desc;
 		self->cm_desc->cd_iattr_mask = 0;
 		ASSERT(!self->cm_desc->cd_iattr_list[0].ca_name);
 	}
@@ -877,6 +883,12 @@ class_maker_pack(struct class_maker *__restrict self) {
 	/* Create a new branch for the documentation string (if it exists). */
 	if (UNICODE_PRINTER_LENGTH(&self->cm_doc) != 0) {
 		DREF DeeStringObject *doc_str;
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+		if unlikely(doctext_compile(&self->cm_doc))
+			goto err;
+		if unlikely(doctext_escape(&self->cm_doc))
+			goto err;
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 		doc_str = (DREF DeeStringObject *)unicode_printer_pack(&self->cm_doc);
 		unicode_printer_init(&self->cm_doc);
 		if unlikely(!doc_str)
@@ -2304,7 +2316,19 @@ err_property:
 				if (is_class_member) {
 					/* Parse a new function in the class scope. */
 					AST_TAGS_BACKUP_PRINTERS(temp);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+					if unlikely(basescope_push())
+						goto err_anno;
+					current_basescope->bs_flags |= current_tags.at_code_flags;
+					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl);
+					if (init_ast && unlikely(doctext_compile(&temp.at_doc))) {
+						ast_decref(init_ast);
+						init_ast = NULL;
+					}
+					basescope_pop();
+#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					init_ast = ast_parse_function(member_name, &need_semi, false, &loc, &decl);
+#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					AST_TAGS_RESTORE_PRINTERS(temp);
 				} else {
 					if unlikely(class_maker_push_methscope(&maker))
@@ -2313,6 +2337,12 @@ err_property:
 					AST_TAGS_BACKUP_PRINTERS(temp);
 					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl);
 					AST_TAGS_RESTORE_PRINTERS(temp);
+#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+					if (init_ast && unlikely(doctext_compile(&current_tags.at_doc))) {
+						ast_decref(init_ast);
+						init_ast = NULL;
+					}
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
 					basescope_pop();
 				}
 				if unlikely(!init_ast)

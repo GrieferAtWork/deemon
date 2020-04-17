@@ -212,6 +212,7 @@
     <ClCompile Include="..\src\deemon\compiler\lexer\comma.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\decl.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\del.c" />
+    <ClCompile Include="..\src\deemon\compiler\lexer\doctext.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\expression.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\function.c" />
     <ClCompile Include="..\src\deemon\compiler\lexer\hybrid.c" />
@@ -338,6 +339,7 @@
   <ItemGroup>
     <None Include="..\.clang-format" />
     <None Include="..\cpp.hint" />
+    <None Include="..\include\deemon\compiler\doctext.h" />
     <None Include="..\include\deemon\compiler\lexer.def" />
     <None Include="..\include\deemon\ctypes-abi.h" />
     <None Include="..\include\deemon\cxx\bytes.h" />

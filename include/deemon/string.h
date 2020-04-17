@@ -1974,46 +1974,46 @@ LOCAL WUNUSED ATTR_CONST uint8_t DCALL _DeeUni_SwapCase8(uint8_t ch) {
 #define DeeUni_IsSymCont unicode_issymcont
 #endif /* CONFIG_HAVE_UNICODE_H */
 #ifndef DeeUni_IsAlpha
-#define DeeUni_IsAlpha(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FALPHA)
+#define DeeUni_IsAlpha(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FALPHA)
 #endif /* !DeeUni_IsAlpha */
 #ifndef DeeUni_IsLower
-#define DeeUni_IsLower(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FLOWER)
+#define DeeUni_IsLower(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FLOWER)
 #endif /* !DeeUni_IsLower */
 #ifndef DeeUni_IsUpper
-#define DeeUni_IsUpper(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FUPPER)
+#define DeeUni_IsUpper(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FUPPER)
 #endif /* !DeeUni_IsUpper */
 #ifndef DeeUni_IsAlnum
-#define DeeUni_IsAlnum(ch)    (DeeUni_Flags(ch) & (Dee_UNICODE_FALPHA|Dee_UNICODE_FDECIMAL))
+#define DeeUni_IsAlnum(ch) (DeeUni_Flags(ch) & (Dee_UNICODE_FALPHA | Dee_UNICODE_FDECIMAL))
 #endif /* !DeeUni_IsAlnum */
 #ifndef DeeUni_IsSpace
-#define DeeUni_IsSpace(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FSPACE)
+#define DeeUni_IsSpace(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FSPACE)
 #endif /* !DeeUni_IsSpace */
 #ifndef DeeUni_IsTab
-#define DeeUni_IsTab(ch)      ((ch) == 9)
+#define DeeUni_IsTab(ch) ((ch) == 9)
 #endif /* !DeeUni_IsTab */
 #ifndef DeeUni_IsLF
-#define DeeUni_IsLF(ch)       (DeeUni_Flags(ch) & Dee_UNICODE_FLF)
+#define DeeUni_IsLF(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FLF)
 #endif /* !DeeUni_IsLF */
 #ifndef DeeUni_IsPrint
-#define DeeUni_IsPrint(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FPRINT)
+#define DeeUni_IsPrint(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FPRINT)
 #endif /* !DeeUni_IsPrint */
 #ifndef DeeUni_IsDigit
-#define DeeUni_IsDigit(ch)    (DeeUni_Flags(ch) & Dee_UNICODE_FDIGIT)
+#define DeeUni_IsDigit(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FDIGIT)
 #endif /* !DeeUni_IsDigit */
 #ifndef DeeUni_IsDecimal
-#define DeeUni_IsDecimal(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_FDECIMAL)
+#define DeeUni_IsDecimal(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FDECIMAL)
 #endif /* !DeeUni_IsDecimal */
 #ifndef DeeUni_IsNumeric
-#define DeeUni_IsNumeric(ch)  (DeeUni_Flags(ch) & (Dee_UNICODE_FDIGIT|Dee_UNICODE_FDECIMAL))
+#define DeeUni_IsNumeric(ch) (DeeUni_Flags(ch) & (Dee_UNICODE_FDIGIT | Dee_UNICODE_FDECIMAL))
 #endif /* !DeeUni_IsNumeric */
 #ifndef DeeUni_IsTitle
-#define DeeUni_IsTitle(ch)    (DeeUni_Flags(ch) & (Dee_UNICODE_FTITLE|Dee_UNICODE_FUPPER))
+#define DeeUni_IsTitle(ch) (DeeUni_Flags(ch) & (Dee_UNICODE_FTITLE | Dee_UNICODE_FUPPER))
 #endif /* !DeeUni_IsTitle */
 #ifndef DeeUni_IsSymStrt
-#define DeeUni_IsSymStrt(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_FSYMSTRT)
+#define DeeUni_IsSymStrt(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FSYMSTRT)
 #endif /* !DeeUni_IsSymStrt */
 #ifndef DeeUni_IsSymCont
-#define DeeUni_IsSymCont(ch)  (DeeUni_Flags(ch) & Dee_UNICODE_FSYMCONT)
+#define DeeUni_IsSymCont(ch) (DeeUni_Flags(ch) & Dee_UNICODE_FSYMCONT)
 #endif /* !DeeUni_IsSymCont */
 #define DeeUni_IsDecimalX(ch, x)                               \
 	(sizeof(ch) == 1 ? ((uint8_t)(ch) == (uint8_t)('0' + (x))) \
@@ -2095,10 +2095,14 @@ NONNULL((1)) void Dee_ascii_printer_fini(struct Dee_ascii_printer *__restrict se
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 Dee_ascii_printer_print(void *__restrict self, char const *__restrict data, size_t datalen);
 
-DFUNDEF WUNUSED NONNULL((1)) char *DCALL Dee_ascii_printer_alloc(struct Dee_ascii_printer *__restrict self, size_t datalen);
+DFUNDEF WUNUSED NONNULL((1)) char *DCALL
+Dee_ascii_printer_alloc(struct Dee_ascii_printer *__restrict self, size_t datalen);
+
 /* Release the last `datalen' bytes from the printer to be
  * re-used in subsequent calls, or be truncated eventually. */
-DFUNDEF NONNULL((1)) void DCALL Dee_ascii_printer_release(struct Dee_ascii_printer *__restrict self, size_t datalen);
+DFUNDEF NONNULL((1)) void DCALL
+Dee_ascii_printer_release(struct Dee_ascii_printer *__restrict self, size_t datalen);
+
 
 #ifdef __INTELLISENSE__
 WUNUSED NONNULL((1, 2)) Dee_ssize_t Dee_ascii_printer_printf(struct Dee_ascii_printer *__restrict self, char const *__restrict format, ...);
@@ -2107,7 +2111,7 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t Dee_ascii_printer_vprintf(struct Dee_ascii_p
 #else /* __INTELLISENSE__ */
 #define Dee_ascii_printer_printf(self, ...)           DeeFormat_Printf(&Dee_ascii_printer_print, self, __VA_ARGS__)
 #define Dee_ascii_printer_vprintf(self, format, args) DeeFormat_VPrintf(&Dee_ascii_printer_print, self, format, args)
-#define Dee_ASCII_PRINTER_PRINT(self, S) Dee_ascii_printer_print(self, S, COMPILER_STRLEN(S))
+#define Dee_ASCII_PRINTER_PRINT(self, S)              Dee_ascii_printer_print(self, S, COMPILER_STRLEN(S))
 #endif /* !__INTELLISENSE__ */
 
 /* Print a single character, returning -1 on error or 0 on success. */
@@ -2520,22 +2524,22 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
  * considering the intended usage case in something like this:
  * >> Dee_ssize_t print_pwd(struct Dee_unicode_printer *__restrict printer) {
  * >>     size_t bufsize = 256;
- * >>     char *buffer,*new_buffer;
- * >>     buffer = Dee_unicode_printer_alloc_utf8(printer,bufsize);
+ * >>     char *buffer, *new_buffer;
+ * >>     buffer = Dee_unicode_printer_alloc_utf8(printer, bufsize);
  * >>     if unlikely(!buffer) goto err;
- * >>     while unlikely(!getcwd(buffer,bufsize)) {
+ * >>     while unlikely(!getcwd(buffer, bufsize)) {
  * >>         if (errno != ERANGE) {
  * >>             ...
  * >>             goto err_buffer;
  * >>         }
  * >>         bufsize *= 2;
- * >>         new_buffer = Dee_unicode_printer_resize_utf8(printer,buffer,bufsize);
+ * >>         new_buffer = Dee_unicode_printer_resize_utf8(printer, buffer, bufsize);
  * >>         if unlikely(!new_buffer) goto err_buffer;
  * >>         buffer = new_buffer;
  * >>     }
- * >>     return Dee_unicode_printer_confirm_utf8(printer,buffer,strlen(buffer));
+ * >>     return Dee_unicode_printer_confirm_utf8(printer, buffer, strlen(buffer));
  * >> err_buffer:
- * >>     Dee_unicode_printer_free_utf8(printer,buffer);
+ * >>     Dee_unicode_printer_free_utf8(printer, buffer);
  * >> err:
  * >>     return -1;
  * >> }
@@ -2595,19 +2599,19 @@ WUNUSED NONNULL((1)) Dee_wchar_t *(Dee_unicode_printer_tryresize_wchar)(struct D
         NONNULL((1)) void (Dee_unicode_printer_free_wchar)(struct Dee_unicode_printer *__restrict self, Dee_wchar_t *buf);                              /* Dee_Free()-like */
 WUNUSED NONNULL((1)) Dee_ssize_t (Dee_unicode_printer_confirm_wchar)(struct Dee_unicode_printer *__restrict self, /*inherit(always)*/ Dee_wchar_t *buf, size_t final_length);
 #elif __SIZEOF_WCHAR_T__ == 2
-#define Dee_unicode_printer_alloc_wchar(self,length)             ((Dee_wchar_t *)Dee_unicode_printer_alloc_utf16(self,length))
-#define Dee_unicode_printer_tryalloc_wchar(self,length)          ((Dee_wchar_t *)Dee_unicode_printer_tryalloc_utf16(self,length))
-#define Dee_unicode_printer_resize_wchar(self,buf,new_length)    ((Dee_wchar_t *)Dee_unicode_printer_resize_utf16(self,(uint16_t *)(buf),new_length))
-#define Dee_unicode_printer_tryresize_wchar(self,buf,new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf16(self,(uint16_t *)(buf),new_length))
-#define Dee_unicode_printer_free_wchar(self,buf)                   Dee_unicode_printer_free_utf16(self,(uint16_t *)(buf))
-#define Dee_unicode_printer_confirm_wchar(self,buf,final_length)   Dee_unicode_printer_confirm_utf16(self,(uint16_t *)(buf),final_length)
+#define Dee_unicode_printer_alloc_wchar(self, length)              ((Dee_wchar_t *)Dee_unicode_printer_alloc_utf16(self, length))
+#define Dee_unicode_printer_tryalloc_wchar(self, length)           ((Dee_wchar_t *)Dee_unicode_printer_tryalloc_utf16(self, length))
+#define Dee_unicode_printer_resize_wchar(self, buf, new_length)    ((Dee_wchar_t *)Dee_unicode_printer_resize_utf16(self, (uint16_t *)(buf), new_length))
+#define Dee_unicode_printer_tryresize_wchar(self, buf, new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf16(self, (uint16_t *)(buf), new_length))
+#define Dee_unicode_printer_free_wchar(self, buf)                  Dee_unicode_printer_free_utf16(self, (uint16_t *)(buf))
+#define Dee_unicode_printer_confirm_wchar(self, buf, final_length) Dee_unicode_printer_confirm_utf16(self, (uint16_t *)(buf), final_length)
 #else /* __SIZEOF_WCHAR_T__ == 2 */
-#define Dee_unicode_printer_alloc_wchar(self,length)             ((Dee_wchar_t *)Dee_unicode_printer_alloc_utf32(self,length))
-#define Dee_unicode_printer_tryalloc_wchar(self,length)          ((Dee_wchar_t *)Dee_unicode_printer_tryalloc_utf32(self,length))
-#define Dee_unicode_printer_resize_wchar(self,buf,new_length)    ((Dee_wchar_t *)Dee_unicode_printer_resize_utf32(self,(uint32_t *)(buf),new_length))
-#define Dee_unicode_printer_tryresize_wchar(self,buf,new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf32(self,(uint32_t *)(buf),new_length))
-#define Dee_unicode_printer_free_wchar(self,buf)                   Dee_unicode_printer_free_utf32(self,(uint32_t *)(buf))
-#define Dee_unicode_printer_confirm_wchar(self,buf,final_length)   Dee_unicode_printer_confirm_utf32(self,(uint32_t *)(buf),final_length)
+#define Dee_unicode_printer_alloc_wchar(self, length)              ((Dee_wchar_t *)Dee_unicode_printer_alloc_utf32(self, length))
+#define Dee_unicode_printer_tryalloc_wchar(self, length)           ((Dee_wchar_t *)Dee_unicode_printer_tryalloc_utf32(self, length))
+#define Dee_unicode_printer_resize_wchar(self, buf, new_length)    ((Dee_wchar_t *)Dee_unicode_printer_resize_utf32(self, (uint32_t *)(buf), new_length))
+#define Dee_unicode_printer_tryresize_wchar(self, buf, new_length) ((Dee_wchar_t *)Dee_unicode_printer_tryresize_utf32(self, (uint32_t *)(buf), new_length))
+#define Dee_unicode_printer_free_wchar(self, buf)                  Dee_unicode_printer_free_utf32(self, (uint32_t *)(buf))
+#define Dee_unicode_printer_confirm_wchar(self, buf, final_length) Dee_unicode_printer_confirm_utf32(self, (uint32_t *)(buf), final_length)
 #endif /* __SIZEOF_WCHAR_T__ != 2 */
 
 #if 0
@@ -2648,6 +2652,15 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 DFUNDEF NONNULL((1)) void
 (DCALL Dee_unicode_printer_memmove)(struct Dee_unicode_printer *__restrict self,
                                     size_t dst, size_t src, size_t length);
+
+/* Erase `count' characters at index `i' from the given unicode_printer `self' */
+#define Dee_unicode_printer_erase(self, i, count)                                           \
+	(void)(Dee_unicode_printer_memmove(self, i, (i) + (count),                              \
+	                                   Dee_UNICODE_PRINTER_LENGTH(self) - ((i) + (count))), \
+	       (self)->up_length -= (count))
+#ifdef DEE_SOURCE
+#define unicode_printer_erase Dee_unicode_printer_erase
+#endif /* DEE_SOURCE */
 
 
 

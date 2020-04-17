@@ -1889,6 +1889,27 @@ PUBLIC void (_Dee_dprintf)(char const *__restrict format, ...) {
 #endif /* !NDEBUG */
 }
 
+PUBLIC Dee_ssize_t
+(DCALL _Dee_dprinter)(void *arg, char const *__restrict data, size_t datalen) {
+#ifdef NDEBUG
+	(void)arg;
+	(void)data;
+	(void)datalen;
+#else /* NDEBUG */
+	Dee_ssize_t result;
+	if (_Dee_dprint_enabled == 2)
+		determine_is_dprint_enabled();
+	if (!_Dee_dprint_enabled)
+		return (Dee_ssize_t)datalen;
+	result = debug_printer(arg, data, datalen);
+	if (result < 0) {
+		DeeError_Handled(ERROR_HANDLED_RESTORE);
+		result = 0;
+	}
+	return result;
+#endif /* !NDEBUG */
+}
+
 
 #ifdef NDEBUG
 PUBLIC void (_DeeAssert_Failf)(char const *UNUSED(expr),

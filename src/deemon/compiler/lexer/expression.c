@@ -895,8 +895,8 @@ do_else_branch:
 #ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
 		                            ,
 		                            NULL
-#endif
-		);
+#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+		                            );
 	}	break;
 
 	{

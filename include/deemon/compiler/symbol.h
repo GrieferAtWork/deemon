@@ -242,7 +242,7 @@ struct class_attribute;
  *   ?.              --- Referring to the current type in an operator or static/instance member.
  *   ?N              --- Referring to `none' (or in this context: `type none')
  *   ?O              --- Referring to `object from deemon'
- *   ?#<NAME>        --- Referring to a a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
+ *   ?#<NAME>        --- Referring to a field <DECODED_NAME> of the surrounding component (the type of a member/operator, or module or a global, etc., that is expected to contain the type at runtime)
  *   ?D<NAME>        --- Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
  *   ?U<NAME>        --- Referring to an undefined/private symbol
  *   ?G<NAME>        --- Referring to a global symbol exported from the associated module
@@ -267,9 +267,9 @@ struct class_attribute;
  *   In all of the aforementioned encodings, <NAME> is encoded as follows:
  *   >> if (!name.issymbol()) {
  *   >>     for (local x: r'\?!{}|,()<>[]=')
- *   >>          name = name.replace(x,r'\' + x);
- *   >>     name = name.replace(r"->",r"-\>");
- *   >>     name = name.replace("\n","\\\n"); // For any type of line-feed
+ *   >>          name = name.replace(x, r'\' + x);
+ *   >>     name = name.replace(r"->", r"-\>");
+ *   >>     name = name.replace("\n", "\\\n"); // For any type of line-feed
  *   >>     name = "{" + name + "}";
  *   >> }
  *   Decoding then happens in the reverse direction, decoding \ escape sequences
@@ -425,21 +425,31 @@ struct decl_ast {
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 };
-struct decl_arg_ast {
-	struct TPPKeyword *da_name; /* [1..1] Argument name */
-	struct decl_ast    da_type; /* Argument type */
-};
+
 #ifdef CONFIG_BUILDING_DEEMON
 /* Finalize the given declaration ast. */
 INTDEF void DCALL decl_ast_fini(struct decl_ast *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL decl_ast_copy(struct decl_ast *__restrict self, struct decl_ast const *__restrict other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+decl_ast_copy(struct decl_ast *__restrict self,
+              struct decl_ast const *__restrict other);
 
 /* If `self' refers to a constant object, return that object.
  * Otherwise, return `NULL' */
-INTDEF WUNUSED NONNULL((1)) DeeObject *DCALL decl_ast_getobj(struct decl_ast const *__restrict self);
-INTDEF WUNUSED NONNULL((1)) bool DCALL decl_ast_isnone(struct decl_ast const *__restrict self); /* Check if `self' refers to `none' or `type none' */
-INTDEF WUNUSED NONNULL((1)) bool DCALL decl_ast_isobject(struct decl_ast const *__restrict self); /* Check if `self' refers to `object from deemon' */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL decl_ast_istype(struct decl_ast const *__restrict self, DeeTypeObject *__restrict tp); /* Check if `self' is the given `tp' */
+INTDEF WUNUSED NONNULL((1)) DeeObject *DCALL
+decl_ast_getobj(struct decl_ast const *__restrict self);
+
+/* Check if `self' refers to `none' or `type none' */
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+decl_ast_isnone(struct decl_ast const *__restrict self);
+
+/* Check if `self' refers to `object from deemon' */
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+decl_ast_isobject(struct decl_ast const *__restrict self);
+
+/* Check if `self' is the given `tp' */
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+decl_ast_istype(struct decl_ast const *__restrict self,
+                DeeTypeObject *__restrict tp);
 
 /* Check if the given declaration AST contains information that can't be inferred
  * from non-documentation sources (such as argument names, types, etc.) */
@@ -451,8 +461,9 @@ decl_ast_print(struct decl_ast const *__restrict self,
                struct unicode_printer *__restrict printer);
 
 /* Check if `a' and `b' are exactly identical. */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL decl_ast_equal(struct decl_ast const *__restrict a,
-                                 struct decl_ast const *__restrict b);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+decl_ast_equal(struct decl_ast const *__restrict a,
+               struct decl_ast const *__restrict b);
 
 /* Parse a declaration expression. */
 INTDEF WUNUSED NONNULL((1)) int DCALL decl_ast_parse(struct decl_ast *__restrict self);
