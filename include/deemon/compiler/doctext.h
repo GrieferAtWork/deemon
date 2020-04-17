@@ -126,7 +126,7 @@ DECL_BEGIN
  *
  * As such, \ can be used to escape the following characters such that \ is removed,
  * and the escaped character looses any special meaning:
- *     \ _ @ ` [ ] ( ) - + | =
+ *     \ _ @ ` [ ] ( ) - + | = ~ * #
  *
  *     0 1 2 3 4 5 6 7 8 9 . :  (Only if the character appeared at the beginning of a line, or
  *                               was preceded by only other decimal, \, . or : characters (i.e.
@@ -242,8 +242,8 @@ DECL_BEGIN
  *         >> @@ - First item
  *         >> @@ - Second item
  *         >> @@   Second line of second item
- *         >> @@    - Inner linst item 1
- *         >> @@    - Inner linst item 2
+ *         >> @@    - Inner list item 1
+ *         >> @@    - Inner list item 2
  *         >> @@ - Third item
  *         The last line here contains less whitespace than the previous line. As such, the inner
  *         list is terminated, and the next line is part of the outer list.
@@ -266,7 +266,7 @@ DECL_BEGIN
  *     of the list control indicator of the first line from all other lines:
  *     >> @@ - First line
  *     >> @@   Second line
- *     The list item body is gets parsed here is:
+ *     Here, the list item body gets parsed as:
  *          " First line\n Second line"
  *
  *

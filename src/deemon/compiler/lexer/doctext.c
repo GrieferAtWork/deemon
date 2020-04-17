@@ -172,17 +172,19 @@ find_nonescaped_match(/*utf-8*/ char const *text,
 /* Print the given text...end whilst escaping the
  * following characters by prefixing a # to each of them:
  *      # $ % & ~ ^ { } [ ] | ? * @ - +
+ * Additionally, skip over \-characters that are followed by one of:
+ *      \ _ @ ` [ ] ( ) - + | = ~ * #
  */
 PRIVATE NONNULL((1, 2, 3)) int DCALL
 print_escaped(struct unicode_printer *__restrict printer,
               /*utf-8*/ char const *text,
               /*utf-8*/ char const *end) {
-	char const *iter, *flush_start;
-	iter = flush_start = text;
+	char const *flush_start;
+	flush_start = text;
 	for (;;) {
 		uint32_t ch;
 		char const *ch_start;
-		ch_start = iter;
+		ch_start = text;
 		ch = utf8_readchar((char const **)&text, end);
 		if (!ch && (text >= end))
 			break;
@@ -193,9 +195,25 @@ print_escaped(struct unicode_printer *__restrict printer,
 			if unlikely(unicode_printer_print(printer, flush_start,
 			                                  (size_t)(ch_start - flush_start)) < 0)
 				goto err;
+do_escape_ch:
 			if unlikely(unicode_printer_putascii(printer, '#'))
 				goto err;
 			flush_start = ch_start;
+		}
+		if (ch == '\\') {
+			if unlikely(unicode_printer_print(printer, flush_start,
+			                                  (size_t)(ch_start - flush_start)) < 0)
+				goto err;
+			flush_start = ch_start;
+			ch_start    = text;
+			ch = utf8_readchar((char const **)&text, end);
+			if (ch == '[' || ch == ']' || ch == '|' || ch == '~' ||
+			    ch == '*' || ch == '@' || ch == '-' || ch == '+' ||
+			    ch == '#')
+				goto do_escape_ch;
+			if (ch == '\\' || ch == '_' || ch == '`' ||
+			    ch == '(' || ch == ')' || ch == '=')
+				flush_start = ch_start;
 		}
 	}
 	if unlikely(unicode_printer_print(printer, flush_start,
