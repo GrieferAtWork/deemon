@@ -838,11 +838,11 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 	 * scopes share the same memory location for said variable:
 	 * >> {
 	 * >>     int x = 4;
-	 * >>     printf("%p\n",&x);
+	 * >>     printf("%p\n", &x);
 	 * >> }
 	 * >> {
 	 * >>     int y = 5;
-	 * >>     printf("%p\n",&y); // Regardless of optimization level, MSVC refuses to have
+	 * >>     printf("%p\n", &y); // Regardless of optimization level, MSVC refuses to have
 	 * >>                        // `y' share the same memory location with `x', even though
 	 * >>                        // The C standard 100% allows a compiler to do this.
 	 * >> }

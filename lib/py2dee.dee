@@ -1435,10 +1435,10 @@ do_load_string_input:
 @@>
 @@>local glob = Dict();
 @@>exec(r'
-@@>def foo(x,y):
+@@>def foo(x, y):
 @@>	print(x + y)
 @@>def bar():
-@@>	foo(10,20)
+@@>	foo(10, 20)
 @@>',globals: glob);
 @@>
 @@>glob["foo"](7,8);  /* prints `15' */

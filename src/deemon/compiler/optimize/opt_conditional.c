@@ -401,7 +401,7 @@ optimize_conditional_bool_predictable_inherit_multiple:
 			/* Optimize when both branches are in use and both are constant expressions:
 			 * >> get_cond() ? 10 : 20;
 			 * Optimize to:
-			 * >> pack(10,20)[!!get_cond()]; */
+			 * >> pack(10, 20)[!!get_cond()]; */
 			DREF DeeObject *argument_packet;
 			/* Special case: If both values are boolean, we can apply a bool-matrix. */
 			if (DeeBool_Check(tt->a_constexpr) &&

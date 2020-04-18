@@ -467,7 +467,7 @@ INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert);
 /* The compiler will generate calls to these functions during explicit
  * invocation of operators when the argument count is not known at
  * compile-time:
- * >> args = pack(10,20);
+ * >> args = pack(10, 20);
  * >> print operator + (args...);
  */
 PRIVATE WUNUSED DREF DeeObject *DCALL /* POsOrADd */

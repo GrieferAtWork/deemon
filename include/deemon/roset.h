@@ -47,14 +47,14 @@ DECL_BEGIN
  * by compiler optimizations in order to optimize generic set expressions
  * in various locations, when sequence arguments are constant.
  * The main usage case is to optimize code such as:
- * >> if (get_item() in [10,20,17,19,11,3]) {
+ * >> if (get_item() in [10, 20, 17, 19, 11, 3]) {
  * >>     print "Well... It's one of 'em!";
  * >> }
  * ASM:
  * >>     push  @_roset { 10, 20, 17, 19, 11, 3 }
  * >>     push  call global @get_item, #0
  * >>     contains top, pop
- * >>     jf    1f
+ * >>     jf    pop, 1f
  * >>     print @"Well... It's one of 'em!", nl
  * >> 1:
  * As the name implies, this type of set is read-only, in a sense being
@@ -62,11 +62,7 @@ DECL_BEGIN
  * Because read-only sets cannot be modified, this allows them to operate
  * using an inline hash-vector, as well as not requiring the use of any
  * sort of lock.
- * NOTE: `_roset' is not exported by deemon, as it is an implementation-specific
- *        sequence type that is not required to implement the deemon standard
- *        programming interface.
- *        However GriferAtWork's implementation uses it to solve the problem
- *        caused by having HashSet objects appear as constant variables. */
+ * NOTE: `_roset' is exported as `deemon.HashSet.Frozen'. */
 typedef struct Dee_roset_object DeeRoSetObject;
 
 struct Dee_roset_item {

@@ -740,7 +740,7 @@ check_getattr_base_symbol_class_small:
 					     * exactly 2 arguments) */
 					    argc <= ((current_assembler.a_stackmax - current_assembler.a_stackcur) +
 					             ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) ? 2 : 16))) {
-						/* `(this as ...).foobar(10,20,30)'
+						/* `(this as ...).foobar(10, 20, 30)'
 						 * -> Check if we can make use of `ASM_SUPERGETATTR_THIS_RC' instructions. */
 						struct ast *type_expr = function_self->a_action.a_act1;
 						int32_t type_rid;

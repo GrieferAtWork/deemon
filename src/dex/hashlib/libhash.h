@@ -35,7 +35,7 @@ struct dhashalgo32;
 struct dhashalgo64;
 struct dhashalgon;
 
-/* Prototypes for 1,2,4 and 8-byte hash functions. */
+/* Prototypes for 1, 2, 4 and 8-byte hash functions. */
 typedef WUNUSED NONNULL((1, 3)) uint8_t (DCALL *dhashfunc8_t)(struct dhashalgo8 const *__restrict self, uint8_t  start, void const *__restrict data, size_t datasize);
 typedef WUNUSED NONNULL((1, 3)) uint16_t (DCALL *dhashfunc16_t)(struct dhashalgo16 const *__restrict self, uint16_t start, void const *__restrict data, size_t datasize);
 typedef WUNUSED NONNULL((1, 3)) uint32_t (DCALL *dhashfunc32_t)(struct dhashalgo32 const *__restrict self, uint32_t start, void const *__restrict data, size_t datasize);

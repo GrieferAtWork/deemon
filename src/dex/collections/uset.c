@@ -784,7 +784,7 @@ PRIVATE struct type_getset uset_getsets[] = {
 
 PRIVATE struct type_member uset_class_members[] = {
 	TYPE_MEMBER_CONST("Iterator", &USetIterator_Type),
-	//TODO:TYPE_MEMBER_CONST("Frozen",&URoSet_Type),
+	//TODO:TYPE_MEMBER_CONST("Frozen", &URoSet_Type),
 	TYPE_MEMBER_END
 };
 

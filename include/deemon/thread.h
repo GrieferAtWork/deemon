@@ -181,7 +181,7 @@ struct Dee_deep_assoc_entry {
 struct Dee_deep_assoc {
 	/* During deepcopy operations, it should be noted that there
 	 * exists the chance that some recursive object is being copied:
-	 * >> local my_list = [10,20];
+	 * >> local my_list = [10, 20];
 	 * >> my_list.append(my_list);
 	 * >> local dup = deepcopy my_list; // Here.
 	 * To deal with this, the `deepcopy' operator must be able

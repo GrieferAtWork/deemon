@@ -39,9 +39,7 @@
 #endif /* !CONFIG_NO_THREADS */
 
 #include <stddef.h>
-#ifdef __KOS_SYSTEM_HEADERS__
 #include <hybrid/minmax.h>
-#endif
 #include <hybrid/overflow.h>
 
 #include "../runtime/runtime_error.h"
@@ -52,7 +50,7 @@
 #define CONFIG_TUPLE_CACHE_MAXSIZE  0
 #undef CONFIG_TUPLE_CACHE_MAXCOUNT
 #define CONFIG_TUPLE_CACHE_MAXCOUNT 0
-#endif
+#endif /* CONFIG_NO_CACHES || CONFIG_NO_TUPLE_CACHES */
 
 /* The max amount of tuples per cache */
 #ifndef CONFIG_TUPLE_CACHE_MAXSIZE
@@ -1533,7 +1531,7 @@ PRIVATE struct type_method tuple_class_methods[] = {
 };
 
 PRIVATE struct type_member tuple_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator",&DeeTupleIterator_Type),
+	TYPE_MEMBER_CONST("Iterator", &DeeTupleIterator_Type),
 	TYPE_MEMBER_END
 };
 

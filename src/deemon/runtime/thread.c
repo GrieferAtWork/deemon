@@ -42,9 +42,9 @@
  * >>     int old;
  * >>     (void)arg;
  * >>     // Allow the thread to be canceled at any time.
- * >>     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS,&old);
+ * >>     pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, &old);
  * >>     for (;;) {
- * >>         __atomic_fetch_add(&test_atomic,1,__ATOMIC_SEQ_CST);
+ * >>         __atomic_fetch_add(&test_atomic, 1, __ATOMIC_SEQ_CST);
  * >>     }
  * >> }
  * >> 

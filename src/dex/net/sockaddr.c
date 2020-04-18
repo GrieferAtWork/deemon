@@ -1469,7 +1469,7 @@ do_generic_string_2:
 			DeeError_Throwf(&DeeError_TypeError,
 			                "Constructing address family %K requires "
 #ifdef AF_INET
-			                "1,2 or 5 "
+			                "1, 2 or 5 "
 #elif defined(AF_INET6)
 			                "1 or 2 "
 #else

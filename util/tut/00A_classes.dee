@@ -349,7 +349,7 @@ public:
 
 print MyList.my_class_member; /* Class member */
 
-local i = MyList(10,20,30);
+local i = MyList(10, 20, 30);
 i.myMemberFunction();
 i.append(42);
 print repr i;
@@ -412,11 +412,11 @@ class Point {
 }
 
 print repr Point();           /* Point(z: 7) */
-print repr Point(10,20);      /* Point(x: 10, y: 20, z: 7) */
+print repr Point(10, 20);     /* Point(x: 10, y: 20, z: 7) */
 print repr Point(y: 16);      /* Point(y: 16, z: 7) */
 print repr Point(x: 0, y: 0); /* Point(x: 0, y: 0, z: 7) */
 print repr Point(z: 0);       /* Point(z: 0) */
-print repr Point(0,0,0);      /* Point(x: 0, y: 0, z: 0) */
+print repr Point(0, 0, 0);    /* Point(x: 0, y: 0, z: 0) */
 
 
 

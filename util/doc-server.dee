@@ -19,13 +19,14 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
+import doctext;
 import * from doc;
 import * from net;
 import * from deemon;
 import util;
 import fs;
 
-function write_page_head(fp,title) {
+function writePageHeader(fp: File, title: string) {
 	fp <<
 		"<!DOCTYPE html>\r\n"
 		"<html>\r\n"
@@ -35,33 +36,33 @@ function write_page_head(fp,title) {
 			"\t<title>{}</title>\r\n"
 		"</head>\r\n"
 		"<body>\r\n"
-		.format({
-		title
-	});
+		.format({ title });
 }
-function write_page_tail(fp) {
+function writePageFooter(fp) {
 	fp << "</body>\r\n</html>\r\n";
 }
-function escape_html(text) {
+function escapeSpecialHtmlCharacters(text) {
 	return text
 		.replace("<", "&lt;")
 		.replace(">", "&gt;")
 		.replace("\n", "<br />\r\n");
 }
 
-global doc_cache = Dict();
-function get_doc_path(path) {
+global docObjectCache: {string: Doc} = Dict();
+function getDocByPath(path: string): Doc {
 	path = path.lstrip("/");
-	local result = doc_cache.get(path);
-	if (result is none)
-		doc_cache[path] = result = Doc(path);
+	local result = docObjectCache.get(path);
+	if (result is none) {
+		result = Doc(path);
+		docObjectCache[path] = result;
+	}
 	return result;
 }
 
 @@Print a type reference
-function print_typeref(fp: File, t: TypeRef) {
+function printTypeRef(fp: File, t: TypeRef) {
 	local p = t.path;
-	local s = escape_html(str t);
+	local s = escapeSpecialHtmlCharacters(str t);
 	if (p is none) {
 		fp << s;
 	} else {
@@ -70,60 +71,66 @@ function print_typeref(fp: File, t: TypeRef) {
 }
 
 @@Print a type reference
-function print_typeexpr(fp: File, t: TypeExpr) {
+function printTypeExpr(fp: File, t: TypeExpr) {
 	switch (t.kind) {
+
 	case "E":
-		return print_typeref(fp, t.Etyperef);
+		return printTypeRef(fp, t.Etyperef);
+
 	case "C":
-		print_typeexpr(fp, t.Ccelltype);
+		printTypeExpr(fp, t.Ccelltype);
 		fp << " with ";
-		print_typeexpr(fp, t.Citemtype);
+		printTypeExpr(fp, t.Citemtype);
 		break;
+
 	case "T":
 		if (#t.Ttypes == 1) {
 			fp << "(";
-			print_typeexpr(fp, t.Ttypes[0]);
+			printTypeExpr(fp, t.Ttypes[0]);
 			fp << ",)";
 		} else {
 			fp << "(";
 			local is_first = true;
 			for (local x: t.Ttypes) {
-				if (!is_first) fp << ",";
+				if (!is_first) fp << ", ";
 				is_first = false;
-				print_typeexpr(fp, x);
+				printTypeExpr(fp, x);
 			}
 			fp << ")";
 		}
 		break;
+
 	case "X": {
 		local is_first = true;
 		for (local x: t.Xtypes) {
 			if (!is_first) fp << " | ";
 			is_first = false;
-			print_typeexpr(fp, x);
+			printTypeExpr(fp, x);
 		}
 	}	break;
+
 	case "S":
 		fp << "{";
-		print_typeexpr(fp,t.Stype);
+		printTypeExpr(fp,t.Stype);
 		fp << "...}";
 		break;
+
 	default:
-		fp << "<div class=\"broken_link\"><i>"
-		   << escape_html(t.docstring)
-		   << "</i></div>";
+		fp	<< "<div class=\"BrokenLink\"><i>"
+			<< escapeSpecialHtmlCharacters(t.docstring)
+			<< "</i></div>";
 		break;
 	}
 }
 
 @@Print a doc expression
-function print_expr(fp: File, t: Expression) {
+function printExpression(fp: File, t: Expression) {
 	/* TODO */
-	fp << escape_html(str t);
+	fp << escapeSpecialHtmlCharacters(str t);
 }
 
 @@Print Declaration parameters (if any), as well as the return type
-function print_decl_params(fp: File, decl: Declaration) {
+function printDeclarationParameters(fp: File, decl: Declaration) {
 	if (decl.isdeleted) {
 		fp << " = del";
 		return;
@@ -141,18 +148,18 @@ function print_decl_params(fp: File, decl: Declaration) {
 			is_first = false;
 			if (par.isvarkwds)
 				fp << "**";
-			fp << "<i>" << escape_html(par.name) << "</i>";
+			fp << "<i>" << escapeSpecialHtmlCharacters(par.name) << "</i>";
 			if (par.isvarargs) {
 				fp << "...";
 			} else if (par.isoptional) {
 				fp << "?";
 			}
 			fp << ": ";
-			print_typeexpr(fp, par.typ);
+			printTypeExpr(fp, par.typ);
 			local def = par.defexpr;
 			if (def !is none) {
 				fp << " = ";
-				print_expr(fp, def);
+				printExpression(fp, def);
 			}
 		}
 		fp << ")";
@@ -160,29 +167,37 @@ function print_decl_params(fp: File, decl: Declaration) {
 	local ret = decl.ret;
 	if (decl.istypeexplicit || !ret.isnone) {
 		fp << ": ";
-		print_typeexpr(fp, ret);
+		printTypeExpr(fp, ret);
 	}
 }
 
 @@Print a given text segment
-function print_text(fp: File, t: TextSegment) {
-	fp << escape_html(t.docstring);
+function printTextSegment(fp: File, t: TextSegment) {
+	fp << "<div class=\"TextSegment\">";
+	/* TODO: Do this proper! */
+	fp << "<code>";
+	fp << escapeSpecialHtmlCharacters(str(t).replace(" ", "&nbsp;"));
+	fp << "</code>";
+	
+	fp << "</div>";
 }
 
 
-function get_module_page(fp: File, path: {string...}) {
-	local d = get_doc_path("/".join(path));
-	write_page_head(fp, d.prettypath);
+@@Lookup a page for the /module/ sub-directory, and write that page to @fp
+@@@param: path: The already-split components of the path to lookup
+function getModuleRootSubPage(fp: File, path: {string...}) {
+	local d = getDocByPath("/".join(path));
+	writePageHeader(fp, d.prettypath);
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>";
-	local link_path = "/modules";
+	local linkPath = "/modules";
 	for (local x: path[:-1]) {
-		link_path = "{}/{}".format({ link_path, x });
+		linkPath = "{}/{}".format({ linkPath, x });
 		local name_start = x.find(":");
 		fp << "<li><a href=\"{}\">&gt;{}</a></li>".format({
-			link_path,
-			name_start >= 0 ? x[name_start+1:] : x
+			linkPath,
+			name_start >= 0 ? x[name_start + 1:] : x
 		});
 	}
 	fp << "<li><a href=\"/modules{}\">&gt;{}</a></li>".format({
@@ -210,18 +225,19 @@ function get_module_page(fp: File, path: {string...}) {
 		}
 	}
 	fp << "</h2><hr>\r\n<div>";
-	local pretty_name = d.name;
+	local prettyName = d.name;
+	local isFirst = true;
 	for (local sect: d.docsections) {
 		for (local seg: sect.segments) {
 			if (seg is Declaration) {
 				fp << "<div><code>" << d.kind << " ";
-				fp << pretty_name;
-				if (!pretty_name[#pretty_name-1].issymcont())
+				fp << prettyName;
+				if (!prettyName.issymcont(#prettyName - 1))
 					fp << " ";
-				print_decl_params(fp, seg);
+				printDeclarationParameters(fp, seg);
 				fp << "</code></div>\r\n";
 			} else {
-				print_text(fp, seg);
+				printTextSegment(fp, seg);
 			}
 		}
 	}
@@ -232,7 +248,7 @@ function get_module_page(fp: File, path: {string...}) {
 		if (child.isprivate)
 			continue; /* Don't enumerate private members. */
 		local child_link = "/modules" + child.path;
-		local pretty_name = child.name;
+		local prettyName = child.name;
 		local has_descls = false;
 		//TODO:local tooltip = get_tooltip_text(d, text);
 		for (local d: child.decls) {
@@ -240,40 +256,41 @@ function get_module_page(fp: File, path: {string...}) {
 			fp << "<tr><td>" << child.kind << "</td><td><div><code>";
 			//TODO:if (tooltip !is none)
 			//TODO:	fp << "<div class=\"tooltip\">";
-			fp << "<a href=" << repr child_link << ">" << escape_html(pretty_name) << "</a>";
+			fp << "<a href=" << repr child_link << ">" << escapeSpecialHtmlCharacters(prettyName) << "</a>";
 			//TODO:if (tooltip !is none) {
 			//TODO:	fp	<< "<span class=\"tooltiptext\">"
 			//TODO:		<< tooltip
 			//TODO:		<< "</span></div>";
 			//TODO:}
-			if (!pretty_name[#pretty_name-1].issymcont())
+			if (!prettyName.issymcont(#prettyName - 1))
 				fp << " ";
-			print_decl_params(fp, d);
+			printDeclarationParameters(fp, d);
 			fp << "</code></div></td></tr>\r\n";
 		}
 		if (!has_descls) {
 			fp << "<tr><td>" << child.kind << "</td><td><div><code>";
-			fp << "<a href=" << repr child_link << ">" << escape_html(pretty_name) << "</a>";
+			fp << "<a href=" << repr child_link << ">" << escapeSpecialHtmlCharacters(prettyName) << "</a>";
 			fp << "</code></div></td></tr>\r\n";
 		}
 	}
 	fp << "</table></div></main>\r\n";
-	write_page_tail(fp);
+	writePageFooter(fp);
 }
 
-function ls_modules_path(p: string, prefix: string, show_all: bool = false): {string...} {
+function listModulesInPath(
+		p: string, prefix: string, showAll: bool = false): {string...} {
 	import fs;
 	try {
 		for (local f: fs.dir(p)) {
 			local path = fs.joinpath(p, f);
-			if (f.startswith("_") && !show_all)
+			if (f.startswith("_") && !showAll)
 				continue; /* Hidden symbol (e.g. `_codecs') */
 			if (fs.stat.isdir(path)) {
 				/* Skip files found in /include-folders. */
-				if (f == "include" && !show_all)
+				if (f == "include" && !showAll)
 					continue;
 				local new_prefix = "{}{}.".format({ prefix, f });
-				for (local x: ls_modules_path(path, prefix))
+				for (local x: listModulesInPath(path, prefix))
 					yield new_prefix + x;
 				continue;
 			}
@@ -290,20 +307,20 @@ function ls_modules_path(p: string, prefix: string, show_all: bool = false): {st
 	}
 }
 
-function ls_modules(): {string...} {
+function enumerateGlobalModules(): {string...} {
 	yield "deemon";
-	for (local p: Module.path) {
-		yield ls_modules_path(p,"")...;
-	}
+	for (local p: Module.path)
+		yield listModulesInPath(p, "")...;
 }
 
-function get_modules_list(fp: File) {
-	write_page_head(fp, "Modules");
+@@Print the /modules page
+function getModulesPage(fp: File) {
+	writePageHeader(fp, "Modules");
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>"
 		"</ul></nav>\r\n<main>\r\n";
-	for (local name: ls_modules()) {
+	for (local name: enumerateGlobalModules()) {
 		fp	<< "<div class=\"module_item\"><a href=\"/modules/"
 			<< name
 			<< "\">"
@@ -311,11 +328,12 @@ function get_modules_list(fp: File) {
 			<< "</a></div>\r\n";
 	}
 	fp << "</main>";
-	write_page_tail(fp);
+	writePageFooter(fp);
 }
 
-function get_home_page(fp: File) {
-	write_page_head(fp, "Home");
+@@Print the root (home) page
+function getHomePage(fp: File) {
+	writePageHeader(fp, "Home");
 	fp << "<nav><ul>"
 		"<li><a href=\"/\">home</a></li><li class=\"sep\">|</li>"
 		"<li><a href=\"/modules\">modules</a></li>"
@@ -323,93 +341,95 @@ function get_home_page(fp: File) {
 		"<h1>Deemon Documentation</h1>\r\n"
 		"<a href=\"/modules\">List of all modules</a><br />\r\n"
 		"</main>";
-	write_page_tail(fp);
+	writePageFooter(fp);
 }
 
 
-function get_page(fp: File, path: string) {
+@@Get a page, given its @path
+function getPage(fp: File, path: string) {
 	path = path.strip("/").strip();
 	path = path.split("/");
 	if (!path)
-		return get_home_page(fp);
+		return getHomePage(fp);
 	if (path[0] == "modules") {
 		if (#path >= 2) {
-			return get_module_page(fp, path[1:]);
+			return getModuleRootSubPage(fp, path[1:]);
 		}
-		return get_modules_list(fp);
+		return getModulesPage(fp);
 	}
-	throw "Missing page: {!r}".format({ path });
+	throw Error("Missing page: {!r}".format({ path }));
 }
 
 
-function ClientThreadMain(con) {
+@@The thread main function for 
+function ClientThreadMain(con: socket) {
 	print "New connection:", con;
 	try {
 		try {
-			try for (;;) {
-				local msg = con.recv();
-				if (!msg)
-					break; /* The other end disconnected gracefully */
-				local command = msg.splitlines()[0];
-				local fp = File.Writer();
-				local protocol = command[#command-8:];
-				if (!command.startswith("GET") ||
-				     protocol !in ["HTTP/1.1", "HTTP/1.0"]) {
-					print "Bad command:", repr command;
-					fp << protocol << " 400 Bad Request\r\n";
-				} else {
-					command = command[3:#command-8].strip();
-					local content;
-					local content_type = "text/html";
-					if (command == "/style.css") {
-						content = File.open(fs.headof(__FILE__) + "/style.css", "r").read();
-						content_type = "text/css";
+			try {
+				for (;;) {
+					local msg = con.recv();
+					if (!msg)
+						break; /* The other end disconnected gracefully */
+					local command = msg.splitlines()[0];
+					local fp = File.Writer();
+					local protocol = command[#command - 8:];
+					if (!command.startswith("GET") ||
+					     protocol !in ["HTTP/1.1", "HTTP/1.0"]) {
+						print "Bad command:", repr command;
+						fp << protocol << " 400 Bad Request\r\n";
 					} else {
-						content = File.Writer();
-						get_page(content, command);
-						content = content.string.encode("utf-8");
+						command = command[3:#command - 8].strip();
+						local content;
+						local content_type = "text/html";
+						if (command == "/style.css") {
+							content = File.open(
+								fs.headof(__FILE__) + "/style.css",
+								"r").read();
+							content_type = "text/css";
+						} else {
+							content = File.Writer();
+							getPage(content, command);
+							content = content.string.encode("utf-8");
+						}
+						fp << protocol << " 200 OK\r\n"
+							"Content-Length: {}\r\n"
+							"Content-Type: {}; charset=UTF-8\r\n"
+							"\r\n".format({ #content, content_type });
+						fp.write(content);
 					}
-					fp << protocol << " 200 OK\r\n"
-						"Content-Length: {}\r\n"
-						"Content-Type: {}; charset=UTF-8\r\n"
-						"\r\n".format({ #content, content_type });
-					fp.write(content);
-				}
-				con.send(fp.string.encode("UTF-8"));
-				if (protocol == "HTTP/1.0") {
-					/* Don't allow for connection re-use.
-					 * If the we didn't do this, the client wouldn't get the
-					 * memo on the entire document having been delivered. */
-					break;
+					con.send(fp.string.encode("UTF-8"));
+					if (protocol == "HTTP/1.0") {
+						/* Don't allow for connection re-use.
+						 * If the we didn't do this, the client wouldn't get the
+						 * memo on the entire document having been delivered. */
+						break;
+					}
 				}
 			} catch (e...) {
-				local err_out = File.Writer();
-				local err_content = File.Writer();
-				write_page_head(err_content, e);
-				err_content <<
+				File.Writer outputFp;
+				File.Writer errorFp;
+				writePageHeader(errorFp, e);
+				errorFp <<
 					"<main>\r\n"
 					"<h2>DOC Server crashed</h2><br />"
 					"<hr>";
-				if (e !is string) {
-					err_content
-						<< "<b>"
-						<< str(type e)
-						<< "</b>: ";
-				}
-				err_content
+				if (e !is string)
+					errorFp << "<b>" << str(type e) << "</b>: ";
+				errorFp
 					<< (e is string ? e : repr e).replace("\n", "<br />\r\n")
 					<< "<hr>"
 					<< repr(Traceback.current).replace("\n", "<br />\r\n")
 					<< "<hr></main>\r\n";
-				write_page_tail(err_content);
-				err_content = err_content.string.encode("utf-8");
-				err_out <<
+				writePageFooter(errorFp);
+				errorFp = errorFp.string.encode("utf-8");
+				outputFp <<
 					"HTTP/1.1 200 OK\r\n"
 					"Content-Length: {}\r\n"
 					"Content-Type: text/html; charset=UTF-8\r\n"
-					"\r\n".format({ #err_content });
-				err_out.write(err_content);
-				con.send(err_out.string);
+					"\r\n".format({ #errorFp });
+				outputFp.write(errorFp);
+				con.send(outputFp.string);
 				throw;
 			}
 		} finally {
@@ -451,7 +471,7 @@ try {
 		th.detach();
 	}
 } finally {
-	doc_cache.clear();
+	docObjectCache.clear();
 }
 #endif
 

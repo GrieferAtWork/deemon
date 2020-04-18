@@ -472,7 +472,7 @@ asm_invocation_tostring(struct asm_invocation *__restrict self,
 
 
 #ifdef __COMPILER_HAVE_PRAGMA_PACK
-#pragma pack(push,1)
+#pragma pack(push, 1)
 #endif /* __COMPILER_HAVE_PRAGMA_PACK */
 struct __ATTR_PACKED asm_overload_operand {
 	uint16_t  aoo_class;  /* The operand class. - One of `OPERAND_CLASS_*' */

@@ -817,11 +817,11 @@ INTDEF WUNUSED DREF DeeObject *FCALL JITLexer_EvalArgumentList(JITLexer *__restr
 INTDEF int FCALL JITLexer_SkipArgumentList(JITLexer *__restrict self);
 
 /* Evaluate a keyword label list and return a valid mapping for keywords to values.
- * >> foo(10,20,x: 30, y: 40);
- *                 ^        ^
- *              ^
- *              +--- first_label_name == "x: 30, y...."
- *                   first_label_size == 1 */
+ * >> foo(10, 20, x: 30, y: 40);
+ *                   ^        ^
+ *                ^
+ *                +--- first_label_name == "x: 30, y...."
+ *                     first_label_size == 1 */
 INTDEF WUNUSED DREF DeeObject *FCALL
 JITLexer_EvalKeywordLabelList(JITLexer *__restrict self,
                               char const *__restrict first_label_name,
@@ -836,12 +836,12 @@ INTDEF WUNUSED DREF /*Module*/ DeeObject *FCALL JITLexer_EvalModule(JITLexer *__
 
 /* Parse a comma-separated list of expressions,
  * as well as assignment/inplace expressions.
- * >> foo = 42;             // (foo = (42));
- * >> foo += 42;            // (foo += (42));
- * >> foo,bar = (10,20)...; // (foo,bar = (10,20)...);
- * >> foo,bar = 10;         // (foo,(bar = 10));
- * >> { 10 }                // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * >> { "foo": 10 }         // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> foo = 42;               // (foo = (42));
+ * >> foo += 42;              // (foo += (42));
+ * >> foo, bar = (10, 20)...; // (foo, bar = (10, 20)...);
+ * >> foo, bar = 10;          // (foo, (bar = 10));
+ * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * @param: mode:      Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
  * @param: seq_type:  The type of sequence to generate (one of `DeeTuple_Type' or `DeeList_Type')
  *                    When `NULL', evaluate to the last comma-expression.

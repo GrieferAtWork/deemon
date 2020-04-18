@@ -81,9 +81,9 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
 	if (IsDebuggerPresent()) {
 #ifdef __ARCH_PAGESIZE_MIN
 		/* (ab-)use the fact that the kernel can't keep us from reading
-		 *  beyond the end of a buffer so long as that memory location
-		 *  is located within the same page as the last byte of said
-		 *  buffer (Trust me... I've written by own OS) */
+		 * beyond the end of a buffer so long as that memory location
+		 * is located within the same page as the last byte of said
+		 * buffer (Trust me... I've written by own OS) */
 		if ((bufsize <= 1000) && /* There seems to be some kind of limit here... */
 		    (((uintptr_t)buffer + bufsize) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) ==
 		    (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) &&

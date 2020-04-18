@@ -1218,9 +1218,9 @@ asm_gunpack_expr(struct ast *__restrict src,
                  struct ast *__restrict ddi_ast) {
 	/* Unwind inner sequence-expand expressions.
 	 * This optimizes:
-	 * >> `(x,y,z) = [(10,20,30)...];'
+	 * >> `(x, y, z) = [(10, 20, 30)...];'
 	 * Into:
-	 * >> `(x,y,z) = (10,20,30);'
+	 * >> `(x, y, z) = (10, 20, 30);'
 	 */
 	for (;;) {
 		struct ast *inner;
@@ -1821,7 +1821,7 @@ check_dst_sym_class_hybrid:
 	 *  >>    move assign top, pop // Move-assign the second list.
 	 * Essentially, this would look like this:
 	 *  >> local my_list = [];
-	 *  >> my_list := [10,20,my_list]; */
+	 *  >> my_list := [10, 20, my_list]; */
 	if (asm_gpop_expr_enter(dst))
 		goto err;
 	if (ast_genasm(src, ASM_G_FPUSHRES))

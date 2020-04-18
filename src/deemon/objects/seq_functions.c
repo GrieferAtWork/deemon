@@ -1573,7 +1573,7 @@ DeeSeq_CountSeq(DeeObject *self,
 	(void)seq;
 	(void)key;
 	/*
-	 * >> function copy_iterator(seq,iter,i) {
+	 * >> function copy_iterator(seq, iter, i) {
 	 * >>     try {
 	 * >>         return copy iter;
 	 * >>     } catch (Error.RuntimeError.NotImplemented |
@@ -1584,11 +1584,11 @@ DeeSeq_CountSeq(DeeObject *self,
 	 * >>         return result;
 	 * >>     }
 	 * >> }
-	 * >> function iter_same(a,b) {
+	 * >> function iter_same(a, b) {
 	 * >>     try {
 	 * >>         foreach(local elem_b: b) {
 	 * >>             local elem_a = a.operator __next__();
-	 * >>             if (!key(elem_a,elem_b))
+	 * >>             if (!key(elem_a, elem_b))
 	 * >>                 return false;
 	 * >>         }
 	 * >>     } catch (Signal.StopIteration) {
@@ -1609,9 +1609,9 @@ DeeSeq_CountSeq(DeeObject *self,
 	 * >> local i = 0;
 	 * >> foreach(local elem: iter) {
 	 * >>     ++i;
-	 * >>     if (key(elem,first)) {
-	 * >>         if (iter_same(copy_iterator(self,iter,i),
-	 * >>                       copy_iterator(seq,head,1)))
+	 * >>     if (key(elem, first)) {
+	 * >>         if (iter_same(copy_iterator(self, iter, i),
+	 * >>                       copy_iterator(seq, head, 1)))
 	 * >>             ++result;
 	 * >>     }
 	 * >> }

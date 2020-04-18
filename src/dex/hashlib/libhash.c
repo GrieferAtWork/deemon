@@ -219,21 +219,21 @@ def_crc(["CRC-8/LTE"],                 8, 0x9b, 0x00, false, false, 0x00);
 // >> https://en.wikipedia.org/wiki/Polynomial_representations_of_cyclic_redundancy_checks
 def_crc(["CRC-8/MAXIM", "DOW-CRC", "CRC-8/DALLAS"], 8, 0x31, 0x00, true, true, 0x00);
 
-def_crc(["CRC-8/OPENSAFETY"],          8, 0x2f, 0x00, false, false, 0x00);
-def_crc(["CRC-8/ROHC"],                8, 0x07, 0xff, true, true, 0x00);
-def_crc(["CRC-8/SAE-J1850"],           8, 0x1d, 0xff, false, false, 0xff);
-def_crc(["CRC-8/WCDMA"],               8, 0x9b, 0x00, true, true, 0x00);
-def_crc(["CRC-10"],                   10, 0x233, 0x000, false, false, 0x000);
-def_crc(["CRC-10/CDMA2000"],          10, 0x3d9, 0x3ff, false, false, 0x000);
-def_crc(["CRC-11"],                   11, 0x385, 0x01a, false, false, 0x000);
-def_crc(["CRC-11/UMTS"],              11, 0x307, 0x000, false, false, 0x000);
-def_crc(["CRC-12/CDMA2000"],          12, 0xf13, 0xfff, false, false, 0x000);
-def_crc(["CRC-12/DECT","X-CRC-12"],   12, 0x80f, 0x000, false, false, 0x000);
-def_crc(["CRC-12/UMTS","CRC-12/3GPP"],12, 0x80f, 0x000, false, true, 0x000);
-def_crc(["CRC-13/BBC"],               13, 0x1cf5, 0x0000, false, false, 0x0000);
-def_crc(["CRC-14/DARC"],              14, 0x0805, 0x0000, true, true, 0x0000);
-def_crc(["CRC-15"],                   15, 0x4599, 0x0000, false, false, 0x0000);
-def_crc(["CRC-15/MPT1327"],           15, 0x6815, 0x0000, false, false, 0x0001);
+def_crc(["CRC-8/OPENSAFETY"],           8, 0x2f, 0x00, false, false, 0x00);
+def_crc(["CRC-8/ROHC"],                 8, 0x07, 0xff, true, true, 0x00);
+def_crc(["CRC-8/SAE-J1850"],            8, 0x1d, 0xff, false, false, 0xff);
+def_crc(["CRC-8/WCDMA"],                8, 0x9b, 0x00, true, true, 0x00);
+def_crc(["CRC-10"],                    10, 0x233, 0x000, false, false, 0x000);
+def_crc(["CRC-10/CDMA2000"],           10, 0x3d9, 0x3ff, false, false, 0x000);
+def_crc(["CRC-11"],                    11, 0x385, 0x01a, false, false, 0x000);
+def_crc(["CRC-11/UMTS"],               11, 0x307, 0x000, false, false, 0x000);
+def_crc(["CRC-12/CDMA2000"],           12, 0xf13, 0xfff, false, false, 0x000);
+def_crc(["CRC-12/DECT","X-CRC-12"],    12, 0x80f, 0x000, false, false, 0x000);
+def_crc(["CRC-12/UMTS","CRC-12/3GPP"], 12, 0x80f, 0x000, false, true, 0x000);
+def_crc(["CRC-13/BBC"],                13, 0x1cf5, 0x0000, false, false, 0x0000);
+def_crc(["CRC-14/DARC"],               14, 0x0805, 0x0000, true, true, 0x0000);
+def_crc(["CRC-15"],                    15, 0x4599, 0x0000, false, false, 0x0000);
+def_crc(["CRC-15/MPT1327"],            15, 0x6815, 0x0000, false, false, 0x0001);
 
 // Added 'CRC-16/IBM' alias, as referenced here: https://users.ece.cmu.edu/~koopman/crc/crc16.html
 def_crc(["ARC", "CRC-16", "CRC-IBM", "CRC-16/ARC", "CRC-16/LHA", "CRC-16/IBM"], 16, 0x8005, 0x0000, true, true, 0x0000);
@@ -266,13 +266,13 @@ def_crc(["CRC-16/DECT-X", "X-CRC-16"], 16, 0x0589, 0x0000, false, false, 0x0000)
 def_crc(["CRC-16/DNP", "CRC-DNP"],     16, 0x3d65, 0x0000, true, true, 0xffff);
 
 def_crc(["CRC-16/EN-13757"],          16, 0x3d65, 0x0000, false, false, 0xffff);
-def_crc(["CRC-16/GENIBUS", "CRC-16/EPC", "CRC-16/I-CODE", "CRC-16/DARC"],16, 0x1021, 0xffff, false, false, 0xffff);
+def_crc(["CRC-16/GENIBUS", "CRC-16/EPC", "CRC-16/I-CODE", "CRC-16/DARC"], 16, 0x1021, 0xffff, false, false, 0xffff);
 def_crc(["CRC-16/LJ1200"],            16, 0x6f63, 0x0000, false, false, 0x0000);
 def_crc(["CRC-16/MAXIM"],             16, 0x8005, 0x0000, true, true, 0xffff);
 def_crc(["CRC-16/MCRF4XX"],           16, 0x1021, 0xffff, true, true, 0x0000);
 def_crc(["CRC-16/OPENSAFETY-A"],      16, 0x5935, 0x0000, false, false, 0x0000);
 def_crc(["CRC-16/OPENSAFETY-B"],      16, 0x755b, 0x0000, false, false, 0x0000);
-def_crc(["CRC-16/PROFIBUS", "CRC-16/IEC-61158-2"],16, 0x1dcf, 0xffff, false, false, 0xffff);
+def_crc(["CRC-16/PROFIBUS", "CRC-16/IEC-61158-2"], 16, 0x1dcf, 0xffff, false, false, 0xffff);
 
 // v This one gave me quite the headache...
 //   - While the best source for all the other algorithms was
@@ -286,25 +286,25 @@ def_crc(["CRC-16/PROFIBUS", "CRC-16/IEC-61158-2"],16, 0x1dcf, 0xffff, false, fal
 //         Dunno why someone did that, though, but it might be 
 //   EDIT: Thank goodness I noticed that bit-order, because as
 //         it turns out, that bug is present in a bunch of algos.
-assert DEEMON_REFLECT(0xb2aa,16) == 0x554d; // Just so you know...
+assert DEEMON_REFLECT(0xb2aa, 16) == 0x554d; // Just so you know...
 def_crc(["CRC-16/RIELLO"],            16, 0x1021, 0x554d, true, true, 0x0000);
-//def_crc(["CRC-16/RIELLO"],            16, 0x1021, 0xb2aa, true, true, 0x0000);
+//f_crc(["CRC-16/RIELLO"],            16, 0x1021, 0xb2aa, true, true, 0x0000);
 
 def_crc(["CRC-16/T10-DIF"],           16, 0x8bb7, 0x0000, false, false, 0x0000);
 def_crc(["CRC-16/TELEDISK"],          16, 0xa097, 0x0000, false, false, 0x0000);
 
 // Again: Same incorrect bit-order as with 'CRC-16/RIELLO'
-assert DEEMON_REFLECT(0x89ec,16) == 0x3791; // Just so you know...
+assert DEEMON_REFLECT(0x89ec, 16) == 0x3791; // Just so you know...
 def_crc(["CRC-16/TMS37157"],          16, 0x1021, 0x3791, true, true, 0x0000);
-//def_crc(["CRC-16/TMS37157"],          16, 0x1021, 0x89ec, true, true, 0x0000);
+//f_crc(["CRC-16/TMS37157"],          16, 0x1021, 0x89ec, true, true, 0x0000);
 
 def_crc(["CRC-16/USB"],               16, 0x8005, 0xffff, true, true, 0xffff);
 
 // After figuring out what the deal was with 'CRC-16/RIELLO', I tried the
 // same thing with this one's intial value. And lookie-lookie: it worked
-assert DEEMON_REFLECT(0xc6c6,16) == 0x6363; // Just so you know...
+assert DEEMON_REFLECT(0xc6c6, 16) == 0x6363; // Just so you know...
 def_crc(["CRC-A"],                    16, 0x1021, 0x6363, true, true, 0x0000);
-//def_crc(["CRC-A"],                    16, 0x1021, 0xc6c6, true, true, 0x0000);
+//f_crc(["CRC-A"],                    16, 0x1021, 0xc6c6, true, true, 0x0000);
 
 // v After tinkering with https://www.lammertbies.nl/comm/info/crc-calculation.html,
 //   it seemed like this one needed to get its bytes swapped.
@@ -327,7 +327,7 @@ def_crc(["CRC-31/PHILIPS"],            31, 0x04c11db7, 0x7fffffff, false, false,
 // >> https://users.ece.cmu.edu/~koopman/crc/crc32.html (referenced this as 'CRC-32/IEEE-802.3')
 // >> https://www.autosar.org/fileadmin/files/releases/4-2/software-architecture/safety-and-security/standard/AUTOSAR_SWS_CRCLibrary.pdf (contains freaking readable IEEE-802.3 specs on page 25/48)
 def_crc(["CRC-32","CRC-32/ADCCP","PKZIP","CRC-32/IEEE-802.3",
-         "IEEE-802.3"],32,0x04c11db7,0xffffffff,true,true,0xffffffff);
+         "IEEE-802.3"], 32, 0x04c11db7, 0xffffffff, true, true, 0xffffffff);
 
 def_crc(["CRC-32/AUTOSAR"],            32, 0xf4acfb13, 0xffffffff, true, true, 0xffffffff);
 def_crc(["CRC-32/BZIP2", "CRC-32/AAL5", "CRC-32/DECT-B", "B-CRC-32"], 32, 0x04c11db7, 0xffffffff, false, false, 0xffffffff);

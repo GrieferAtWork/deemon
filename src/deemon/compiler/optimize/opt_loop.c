@@ -227,7 +227,7 @@ err_entry_assumptions:
 		 * >>     } while (i < 10);
 		 * >> }
 		 * Optimize to:
-		 * >> for (local i: [0:10,1])
+		 * >> for (local i: [0:10, 1])
 		 * >>     print i;
 		 */
 	} else {

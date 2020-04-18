@@ -43,20 +43,20 @@
 DECL_BEGIN
 
 /* Intended sequence behavior:
->> print repr([0:7] as sequence);    // { 0, 1, 2, 3, 4, 5, 6 }
->> print repr([0:7,1] as sequence);  // { 0, 1, 2, 3, 4, 5, 6 }
->> print repr([0:7,2] as sequence);  // { 0, 2, 4, 6 }
->> print repr([0:7,3] as sequence);  // { 0, 3, 6 }
->> print repr([0:7,-1] as sequence); // { }
->> print repr([0:7,-2] as sequence); // { }
->> print repr([0:7,-3] as sequence); // { }
->> print repr([7:0] as sequence);    // { }
->> print repr([7:0,1] as sequence);  // { }
->> print repr([7:0,2] as sequence);  // { }
->> print repr([7:0,3] as sequence);  // { }
->> print repr([7:0,-1] as sequence); // { 7, 6, 5, 4, 3, 2, 1 }
->> print repr([7:0,-2] as sequence); // { 7, 5, 3, 1 }
->> print repr([7:0,-3] as sequence); // { 7, 4, 1 }
+>> print repr([0:7] as sequence);     // { 0, 1, 2, 3, 4, 5, 6 }
+>> print repr([0:7, 1] as sequence);  // { 0, 1, 2, 3, 4, 5, 6 }
+>> print repr([0:7, 2] as sequence);  // { 0, 2, 4, 6 }
+>> print repr([0:7, 3] as sequence);  // { 0, 3, 6 }
+>> print repr([0:7, -1] as sequence); // { }
+>> print repr([0:7, -2] as sequence); // { }
+>> print repr([0:7, -3] as sequence); // { }
+>> print repr([7:0] as sequence);     // { }
+>> print repr([7:0, 1] as sequence);  // { }
+>> print repr([7:0, 2] as sequence);  // { }
+>> print repr([7:0, 3] as sequence);  // { }
+>> print repr([7:0, -1] as sequence); // { 7, 6, 5, 4, 3, 2, 1 }
+>> print repr([7:0, -2] as sequence); // { 7, 5, 3, 1 }
+>> print repr([7:0, -3] as sequence); // { 7, 4, 1 }
 Implementation:
 function range(start,end,step?) {
 	if (step !is bound) {
@@ -356,9 +356,8 @@ PRIVATE struct type_member ri_members[] = {
 };
 
 #define DEFINE_RANGEITERATOR_COMPARE(name, compare_object)                         \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                  \
-	name(RangeIterator *__restrict self,                                           \
-	     RangeIterator *__restrict other) {                                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                          \
+	name(RangeIterator *self, RangeIterator *other) {                              \
 		DREF DeeObject *my_index, *ot_index, *result;                              \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqRangeIterator_Type)) \
 			goto err;                                                              \
@@ -378,9 +377,8 @@ PRIVATE struct type_member ri_members[] = {
 		return NULL;                                                               \
 	}
 #define DEFINE_RANGEITERATOR_COMPARE_R(name, compare_object)                       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                  \
-	name(RangeIterator *__restrict self,                                           \
-	     RangeIterator *__restrict other) {                                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                          \
+	name(RangeIterator *self, RangeIterator *other) {                              \
 		DREF DeeObject *my_index, *ot_index, *result;                              \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqRangeIterator_Type)) \
 			goto err;                                                              \
@@ -501,8 +499,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-range_contains(Range *self,
-               DeeObject *index) {
+range_contains(Range *self, DeeObject *index) {
 	DREF DeeObject *temp, *temp2, *temp3;
 	int error;
 	if likely(!self->r_rev) {
@@ -699,9 +696,9 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-range_getrange(Range *__restrict self,
-               DeeObject *__restrict start,
-               DeeObject *__restrict end) {
+range_getrange(Range *self,
+               DeeObject *start,
+               DeeObject *end) {
 	int error;
 	DREF Range *result;
 	DREF DeeObject *new_start, *new_end, *temp;
@@ -1086,7 +1083,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 
 
 #ifdef CONFIG_NO_THREADS
-#define READ_INDEX(x)             (x)->iri_index
+#define READ_INDEX(x) (x)->iri_index
 #else /* CONFIG_NO_THREADS */
 #define READ_INDEX(x) ATOMIC_READ((x)->iri_index)
 #endif /* !CONFIG_NO_THREADS */
@@ -1192,9 +1189,8 @@ PRIVATE struct type_member iri_members[] = {
 };
 
 #define DEFINE_IRI_COMPARE(name, op)                                     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                        \
-	name(IntRangeIterator *__restrict self,                              \
-	     IntRangeIterator *__restrict other) {                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
+	name(IntRangeIterator *self, IntRangeIterator *other) {              \
 		if (DeeObject_AssertTypeExact(other, &SeqIntRangeIterator_Type)) \
 			goto err;                                                    \
 		return_bool(READ_INDEX(self) op READ_INDEX(other));              \
@@ -1202,9 +1198,8 @@ PRIVATE struct type_member iri_members[] = {
 		return NULL;                                                     \
 	}
 #define DEFINE_IRI_COMPARE_R(name, op)                                   \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                        \
-	name(IntRangeIterator *__restrict self,                              \
-	     IntRangeIterator *__restrict other) {                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
+	name(IntRangeIterator *self, IntRangeIterator *other) {              \
 		if (DeeObject_AssertTypeExact(other, &SeqIntRangeIterator_Type)) \
 			goto err;                                                    \
 		return_bool(self->iri_step >= 0                                  \

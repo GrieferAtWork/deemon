@@ -360,13 +360,13 @@ DeeError_InstallKeyboardInterrupt(void) {
 	signal(SIGINT, &sigint_handler);
 }
 
-#else
+#else /* ... */
 
 INTERN void DCALL
 DeeError_InstallKeyboardInterrupt(void) {
 }
 
-#endif
+#endif /* !... */
 #endif /* !CONFIG_NO_THREADS */
 #endif /* !CONFIG_NO_KEYBOARD_INTERRUPT */
 

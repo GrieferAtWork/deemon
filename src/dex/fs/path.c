@@ -41,13 +41,13 @@ DECL_BEGIN
 #define SEP_S                "\\"
 #define ISSEP(x)     ((x) == '\\' || (x) == '/')
 #define ISABS(x)     ((x)[0] && (x)[1] == ':')
-#define ISABS_STR(x) (DeeString_WLEN(x) >= 2 && DeeString_GetChar(x,1) == ':')
+#define ISABS_STR(x) (DeeString_WLEN(x) >= 2 && DeeString_GetChar(x, 1) == ':')
 #else /* CONFIG_HOST_WINDOWS */
 #define SEP                  '/'
 #define SEP_S                "/"
 #define ISSEP(x)     ((x) == '/')
 #define ISABS(x)     ((x)[0] == '/')
-#define ISABS_STR(x) (DeeString_WLEN(x) >= 1 && DeeString_GetChar(x,0) == '/')
+#define ISABS_STR(x) (DeeString_WLEN(x) >= 1 && DeeString_GetChar(x, 0) == '/')
 #endif /* !CONFIG_HOST_WINDOWS */
 
 

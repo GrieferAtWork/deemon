@@ -270,9 +270,9 @@ struct Dee_ddi_state {
 /* Enumerate all the frames of a given DDI-state from most- to least-recent:
  * >> struct Dee_ddi_state state;
  * >> struct Dee_ddi_xregs *iter;
- * >> DDI_STATE_DO(iter,&state) {
+ * >> DDI_STATE_DO(iter, &state) {
  * >>     printf("line = %d\n",iter->dx_base.dr_lno);
- * >> } DDI_STATE_WHILE(iter,&state);
+ * >> } DDI_STATE_WHILE(iter, &state);
  */
 #define Dee_DDI_STATE_DO(ddi_xregs_iter, self)                 \
 	(ddi_xregs_iter) = &Dee_DDI_STATE_FIRSTSAVE(self)->s_save; \

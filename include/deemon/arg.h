@@ -60,7 +60,7 @@ DECL_BEGIN
  * >> my_function(DeeObject *__restrict UNUSED(self),
  * >>             size_t argc, DeeObject *const *argv) {
  * >>     int a,b,c = 5;
- * >>     if (DeeArg_Unpack(argc, argv,"dd|d:my_function",&a,&b,&c))
+ * >>     if (DeeArg_Unpack(argc, argv,"dd|d:my_function", &a, &b, &c))
  * >>         return NULL;
  * >>     return DeeInt_NewInt(a+b+c);
  * >> }
@@ -96,7 +96,7 @@ struct dee_kwds_object {
 	 * look at the last couple of names of arguments and
 	 * perform a lookup of them within this object:
 	 * Usercode:
-	 * >> foo(10,20,func: operator +);
+	 * >> foo(10, 20, func: operator +);
 	 * ASM:
 	 * >> push  $10
 	 * >> push  $20
@@ -105,11 +105,11 @@ struct dee_kwds_object {
 	 * foo (in C):
 	 * >> PRIVATE WUNUSED DREF DeeObject *DCALL
 	 * >> foo(size_t argc, DeeObject *const *argv, DeeObject *kw) {
-	 * >>     DeeObject *x,*y,*func = Dee_None;
+	 * >>     DeeObject *x, *y, *func = Dee_None;
 	 * >>     PRIVATE struct dee_keyword kwlist[] = { K(x), K(y), K(func), KEND };
-	 * >>     if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"oo|o:foo",&x, &y,&func))
+	 * >>     if (DeeArg_UnpackKw(argc, argv, kw, kwlist,"oo|o:foo", &x, &y, &func))
 	 * >>         return -1;
-	 * >>     return DeeObject_CallPack(func,2,x,y);
+	 * >>     return DeeObject_CallPack(func, 2, x, y);
 	 * >> }
 	 * With that in mind, indices of a Kwds object refer to the
 	 * last `kw_size' arguments of the associated argument list,

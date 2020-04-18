@@ -30,6 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -67,11 +68,12 @@
 #include "runtime_error.h"
 
 #ifndef NDEBUG
-#ifdef __KOS_SYSTEM_HEADERS__
+#ifdef CONFIG_HAVE_MALLOC_H
 #include <malloc.h>
-#elif defined(_MSC_VER)
+#endif /* CONFIG_HAVE_MALLOC_H */
+#ifdef CONFIG_HAVE_CRTDBG_H
 #include <crtdbg.h>
-#endif
+#endif /* CONFIG_HAVE_CRTDBG_H */
 #endif /* !NDEBUG */
 
 DECL_BEGIN
@@ -1763,9 +1765,9 @@ debug_printer(void *UNUSED(closure),
 	size_t result = bufsize;
 #ifdef __ARCH_PAGESIZE_MIN
 	/* (ab-)use the fact that the kernel can't keep us from reading
-	 *  beyond the end of a buffer so long as that memory location
-	 *  is located within the same page as the last byte of said
-	 *  buffer (Trust me... I've written by own OS) */
+	 * beyond the end of a buffer so long as that memory location
+	 * is located within the same page as the last byte of said
+	 * buffer (Trust me... I've written by own OS) */
 	if ((bufsize <= 1000) && /* There seems to be some kind of limitation by `OutputDebugStringA()' here... */
 	    (((uintptr_t)buffer + bufsize) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) ==
 	    (((uintptr_t)buffer + bufsize - 1) & ~(uintptr_t)(__ARCH_PAGESIZE_MIN - 1)) &&

@@ -94,11 +94,17 @@
 #define __has_include(x) 0
 #endif /* !__has_include */
 
-#if (defined(_MSC_VER) || __has_include(<crtdbg.h>) || \
-    (defined(__NO_has_include) && defined(__KOS_SYSTEM_HEADERS__))) && \
-    !defined(NDEBUG)
+#ifdef CONFIG_NO_CRTDBG_H
+#undef CONFIG_HAVE_CRTDBG_H
+#elif !defined(CONFIG_HAVE_CRTDBG_H) && \
+      (__has_include(<crtdbg.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       defined(__KOS_SYSTEM_HEADERS__))))
+#define CONFIG_HAVE_CRTDBG_H 1
+#endif
+
+#if defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG)
 #define _CRTDBG_MAP_ALLOC 1 /* Enable debug-malloc */
-#endif /* _MSC_VER && !NDEBUG */
+#endif /* CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 
 #define DEE_VERSION_API      200
 #define DEE_VERSION_COMPILER 200
@@ -113,9 +119,10 @@
 #ifdef __CC__
 #include <stdarg.h>
 
-#ifdef _CRTDBG_MAP_ALLOC
+#if (defined(_CRTDBG_MAP_ALLOC) && \
+     defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
 #include <crtdbg.h>
-#endif /* _CRTDBG_MAP_ALLOC */
+#endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 #endif /* __CC__ */
 
 #ifdef _MSC_VER
@@ -320,7 +327,7 @@ extern void (__debugbreak)(void);
 
 #ifdef __GNUC__
 /* Define if the compiler allows labels to be
- * addressed: `foo: printf("foo = %p",&&foo);'
+ * addressed: `foo: printf("foo = %p", &&foo);'
  * ... as well as such addresses to be used
  * by `goto': `void *ip = &&foo; goto *ip;' */
 #define CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS 1

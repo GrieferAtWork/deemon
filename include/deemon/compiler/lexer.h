@@ -165,12 +165,12 @@ INTDEF struct symbol *FCALL ast_parse_import_single_sym(struct TPPKeyword *__res
 
 /* Parse a comma-separated list of expressions,
  * as well as assignment/inplace expressions.
- * >> foo = 42;             // (foo = (42));
- * >> foo += 42;            // (foo += (42));
- * >> foo,bar = (10,20)...; // (foo,bar = (10,20)...);
- * >> foo,bar = 10;         // (foo,(bar = 10));
- * >> { 10 }                // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
- * >> { "foo": 10 }         // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> foo = 42;               // (foo = (42));
+ * >> foo += 42;              // (foo += (42));
+ * >> foo, bar = (10, 20)...; // (foo ,bar = (10, 20)...);
+ * >> foo, bar = 10;          // (foo, (bar = 10));
+ * >> { 10 }                  // (List { 10 }); // When `AST_COMMA_ALLOWBRACE' is set
+ * >> { "foo": 10 }           // (Dict { "foo": 10 }); // When `AST_COMMA_ALLOWBRACE' is set
  * @param: mode:      Set of `AST_COMMA_*'     - What is allowed and when should we pack values.
  * @param: flags:     Set of `AST_FMULTIPLE_*' - How should multiple values be packaged.
  * @param: pout_mode: When non-NULL, instead of parsing a `;' when required,

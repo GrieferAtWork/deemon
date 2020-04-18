@@ -189,8 +189,8 @@ struct va_list_struct { va_list vl_ap; };
  *                    ] 's';      // DeeString_New(va_arg(char *));
  *
  * Example:
- * >> Dee_Packf("(d<d>Os)",10,20,DeeInt_NewInt(42),"foobar");
- * >> // (10,<20>,42,"foobar")
+ * >> Dee_Packf("(d<d>Os)", 10, 20, DeeInt_NewInt(42), "foobar");
+ * >> // (10, <20>, 42, "foobar")
  */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *
 Dee_Packf(char const *__restrict format, ...);

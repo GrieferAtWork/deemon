@@ -171,9 +171,10 @@ DECL_BEGIN
  * not revealed and is subject to change in the future.
  * Code expecting certain types of sequences (or mutable sequence for that)
  * should always perform an explicit cast to the desired sequence type:
- * >> local a = [5,10,20,30,5];
+ * >> local a = [5, 10, 20, 30, 5];
  * >> local b = a.strip(5);
- * >> for (local x: b) print x; // 10 20 30
+ * >> for (local x: b)
+ * >>     print x; // 10 20 30
  * >> print type b; // Undefined and subject to change
  * >> b = [b...]; // Explicit cast to list; same as `b = list(b);'
  * HINT: Instantiating `seq' as-is will yield `Dee_EmptySeq',

@@ -115,7 +115,8 @@ th {
 	margin: 20px 0px 10px 0px;
 	border-bottom: 10px solid #d9d6db;
 }
-.source {
+
+.Source {
 	font-family: Courier New;
 	font-size: 18px;
 	background-color: black;
@@ -124,14 +125,16 @@ th {
 	padding: 5px;
 	text-align: left;
 }
-.inline_source {
+
+.InlineSource {
 	font-family: Courier New;
 	color: white;
 	border: 0px;
 	padding: 0px;
 	display: inline;
 }
-.broken_link {
+
+.BrokenLink {
 	color: rgb(231, 101, 101);
 	border: 0px;
 	padding: 0px;

@@ -1831,7 +1831,7 @@ kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
 
 /* Print the object types passed by the given argument list.
  * If given, also include keyword names & types from `kw'
- * >> foo(10,1.0,"bar",enabled: true);
+ * >> foo(10, 1.0, "bar", enabled: true);
  * Printed: "int, float, string, enabled: bool" */
 PUBLIC WUNUSED NONNULL((1)) dssize_t
 (DCALL DeeFormat_PrintArgumentTypesKw)(dformatprinter printer, void *arg,

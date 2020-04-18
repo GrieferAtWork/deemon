@@ -260,7 +260,7 @@ PRIVATE struct type_seq gcset_seq = {
 };
 
 PRIVATE struct type_member gcset_class_members[] = {
-    TYPE_MEMBER_CONST("Iterator",&DeeGCSetIterator_Type),
+    TYPE_MEMBER_CONST("Iterator", &DeeGCSetIterator_Type),
     TYPE_MEMBER_END
 };
 

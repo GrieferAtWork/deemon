@@ -78,7 +78,7 @@ enum {
 
 
 #ifdef __COMPILER_HAVE_PRAGMA_PACK
-#pragma pack(push,1)
+#pragma pack(push, 1)
 #endif /* __COMPILER_HAVE_PRAGMA_PACK */
 struct __ATTR_PACKED mnemonic_db {
 #define INSTR(name, overloads)                           \

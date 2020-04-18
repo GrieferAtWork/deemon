@@ -4088,7 +4088,7 @@ err:
 
 
 
-/* Print raw 8,16 or 32-bit sequences of unicode characters.
+/* Print raw 8, 16 or 32-bit sequences of unicode characters.
  *  - `unicode_printer_print8' prints characters from the range U+0000 .. U+00FF (aka. latin-1)
  *  - `unicode_printer_print16' prints characters from the range U+0000 .. U+FFFF
  *  - `unicode_printer_print32' prints characters from the range U+0000 .. U+10FFFF (FFFFFFFF)

@@ -567,7 +567,7 @@ PUBLIC NONNULL((1)) void DCALL DeeString_FreeWidth(DeeObject *__restrict self);
 DFUNDEF /*latin-1*/ uint8_t *DCALL DeeString_AsBytes(DeeObject *__restrict self, bool allow_invalid);
 #define DeeString_AsLatin1(self, allow_invalid) DeeString_AsBytes(self, allow_invalid)
 
-/* Quickly access the 1,2 or 4-byte variants of a given string, allowing
+/* Quickly access the 1, 2 or 4-byte variants of a given string, allowing
  * for the assumption that all characters of the string are guarantied to
  * fit the requested amount of bytes. */
 DFUNDEF uint16_t *(DCALL DeeString_As2Byte)(DeeObject *__restrict self);
@@ -2398,7 +2398,7 @@ WUNUSED NONNULL((1)) int
 /* Append UTF-8 text to the back of the given printer.
  * An incomplete UTF-8 sequences can be completed by future uses of this function.
  * HINT: This function is intentionally designed as compatible with `Dee_formatprinter_t'
- *       >> DeeObject_Print(ob, &Dee_unicode_printer_print,&printer);
+ *       >> DeeObject_Print(ob, &Dee_unicode_printer_print, &printer);
  * @return: textlen: Successfully appended the string.
  * @return: -1:      Failed to append the string. */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
@@ -2479,7 +2479,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
                                         DeeObject *__restrict string);
 
 
-/* Print raw 8,16 or 32-bit-per-character sequences, consisting of unicode characters.
+/* Print raw 8, 16 or 32-bit-per-character sequences, consisting of unicode characters.
  *  - `Dee_unicode_printer_print8' prints characters from the range U+0000 .. U+00FF (aka. latin-1)
  *  - `Dee_unicode_printer_print16' prints characters from the range U+0000 .. U+FFFF
  *  - `Dee_unicode_printer_print32' prints characters from the range U+0000 .. U+10FFFF (really is FFFFFFFF)

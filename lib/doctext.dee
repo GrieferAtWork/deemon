@@ -42,19 +42,6 @@ local function unEscapePoundCharacters(text: string): string {
 	return fp.string;
 }
 
-@@Check if a pound at @pos in @text is non-escaped, meaning that
-@@in a text @"a##b", the pound is ecaped, but isn't in @"a#b"
-local function isPoundAtPosEscaped(text: string, pos: int): bool {
-	local result = true;
-	while (pos > 0) {
-		--pos;
-		if (text[pos] != "#")
-			break;
-		result = !result;
-	}
-	return result;
-}
-
 @@Find the first unmatched @closeCh after @start
 local function findNonEscapedMatch(
 		text: string, openCh: string, closeCh: string,
@@ -67,6 +54,15 @@ local function findNonEscapedMatch(
 		local ch = text[start];
 		if (ch == "#") {
 			start += 2;
+			continue;
+		}
+		if (ch == "?") {
+			++start;
+			if (start >= end)
+				break;
+			/* Special case ?# doesn't escape the next character! */
+			if (text[start] == "#")
+				++start;
 			continue;
 		}
 		if (ch == openCh)
@@ -93,6 +89,15 @@ local function findSameLevelNonEscaped(
 		local ch = text[start];
 		if (ch == "#") {
 			start += 2;
+			continue;
+		}
+		if (ch == "?") {
+			++start;
+			if (start >= end)
+				break;
+			/* Special case ?# doesn't escape the next character! */
+			if (text[start] == "#")
+				++start;
 			continue;
 		}
 		if (ch in "{[") {
@@ -267,9 +272,9 @@ class Code {
 			if (language == "deemon") {
 				p.appendNormal("".join(
 					for (local l: usedBody.splitlines(true))
-						">> " + l) + "\n");
+						">> " + l));
 			} else {
-				p.appendNormal("```\n{}\n```\n".format({ usedBody }));
+				p.appendNormal("```\n{}\n```".format({ usedBody }));
 			}
 		} else if (usedBody && (usedBody[0] in "\'\"" || usedBody.isdecimal(0))) {
 			p.append(usedBody);
@@ -1020,7 +1025,8 @@ do_dollar_symcont:
 						 * when row counts don't match. And while this
 						 * this shouldn't happen, handle this case by
 						 * forcing the correct row length. */
-						row.resize(rowLength, filler: "");
+						print "WARNING:", repr row;
+						row.resize(rowLength, filler: ("", { "" }));
 					}
 					rows.append(row);
 					row = [];

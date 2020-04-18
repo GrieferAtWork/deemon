@@ -1380,7 +1380,7 @@ PRIVATE struct type_seq string_seq = {
 };
 
 PRIVATE struct type_member string_class_members[] = {
-	TYPE_MEMBER_CONST("Iterator",&StringIterator_Type),
+	TYPE_MEMBER_CONST("Iterator", &StringIterator_Type),
 	TYPE_MEMBER_END
 };
 

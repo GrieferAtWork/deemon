@@ -192,6 +192,7 @@ header("string.h", stdc);
 header("wchar.h", stdc);
 header("dlfcn.h", unix);
 
+header_nostdinc("crtdbg.h", addparen(msvc) + " || defined(__KOS_SYSTEM_HEADERS__)");
 header_nostdinc("float.h", stdc);
 header_nostdinc("limits.h", stdc);
 header_nostdinc("setjmp.h", stdc);
@@ -1080,6 +1081,14 @@ functest("_alloca()", msvc);
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
 #define CONFIG_HAVE_DLFCN_H 1
+#endif
+
+#ifdef CONFIG_NO_CRTDBG_H
+#undef CONFIG_HAVE_CRTDBG_H
+#elif !defined(CONFIG_HAVE_CRTDBG_H) && \
+      (__has_include(<crtdbg.h>) || (defined(__NO_has_include) && (defined(_MSC_VER) || \
+       defined(__KOS_SYSTEM_HEADERS__))))
+#define CONFIG_HAVE_CRTDBG_H 1
 #endif
 
 #ifdef CONFIG_NO_FLOAT_H

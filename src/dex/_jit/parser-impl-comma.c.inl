@@ -322,21 +322,21 @@ err_var_symbol:
 			JITLexer_Yield(self);
 
 			/* Allow syntax like this:
-			 * >> List my_list;
-			 * >> int my_int = 42;
-			 * >> MyClass my_instance(10,20,30);
-			 * >> Thread my_thread = []{
+			 * >> List myList;
+			 * >> int myInt = 42;
+			 * >> MyClass myInstance(10, 20, 30);
+			 * >> Thread myThread = []{
 			 * >>     print "Thread execution...";
 			 * >> };
-			 * >> my_thread.start();
+			 * >> myThread.start();
 			 * Same as:
-			 * >> local my_list = List();
-			 * >> local my_int = int(42);
-			 * >> local my_instance = MyClass(10,20,30);
-			 * >> local my_thread = Thread([]{
+			 * >> local myList = List();
+			 * >> local myInt = int(42);
+			 * >> local myInstance = MyClass(10, 20, 30);
+			 * >> local myThread = Thread([]{
 			 * >>     print "Thread execution...";
 			 * >> });
-			 * >> my_thread.start();
+			 * >> myThread.start();
 			 * Now that C compatibility is gone, there's no ambiguity to this!
 			 */
 			if (self->jl_tok == '=' || self->jl_tok == '{') {

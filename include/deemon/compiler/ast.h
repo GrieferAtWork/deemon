@@ -461,10 +461,10 @@ struct ast {
 		                                * >>#if IDENTICAL_STACK_DEPTHS
 		                                * >>     push     const @{ "foo": 1f.SP, "bar": 2f }
 		                                * >>#else
-		                                * >>     push     const @{ "foo": (1f.SP,1f.PC), "bar": (2f.SP,2f.PC) }
+		                                * >>     push     const @{ "foo": (1f.SP, 1f.PC), "bar": (2f.SP, 2f.PC) }
 		                                * >>#endif
 		                                * >>     push     <s_expr>
-		                                * >>     push     @(3f.SP,3f.PC) // Default case
+		                                * >>     push     @(3f.SP, 3f.PC) // Default case
 		                                * >>     callattr top, @"get", #2
 		                                * >>#if IDENTICAL_STACK_DEPTHS
 		                                * >>     jmp      pop
@@ -486,7 +486,7 @@ struct ast {
 		                                * >>     push     $3
 		                                * >>     cmp      gr, top, pop
 		                                * >>     jt       4f
-		                                * >>     push     const @(1f,2f,3f)
+		                                * >>     push     const @(1f, 2f, 3f)
 		                                * >>     swap
 		                                * >>     getitem  top, pop
 		                                * >>     jmp      pop

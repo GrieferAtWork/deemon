@@ -3781,7 +3781,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "del[](index:?Dint)->\n"
 	                         "@throw IndexError @index is out of bounds\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
-	                         "Delete the @index'th item from @this List. (same as ${this.erase(index,1)})\n"
+	                         "Delete the @index'th item from @this List. (same as ${this.erase(index, 1)})\n"
 	                         "\n"
 	                         "[]=(index:?Dint,ob)->\n"
 	                         "@throw IndexError @index is out of bounds\n"

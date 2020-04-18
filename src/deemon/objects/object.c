@@ -2292,7 +2292,8 @@ PRIVATE struct type_getset object_getsets[] = {
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the instance object "
 	      "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
-	      "For non-user-defined classes (aka. when ${this.class.__isclass__} is :false), an empty sequence is returned\n"
+	      "For non-user-defined classes (aka. when ${this.class.__isclass__} "
+	      "is :false), an empty sequence is returned\n"
 	      "The class-attribute table can be accessed through :Type.__ctable__") },
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	{ "id", &object_id_get, NULL, NULL,
@@ -2322,9 +2323,10 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	                        "\n"
 	                        "str->\n"
 	                        "Returns the name of the object's Type\n"
-	                        ">operator str(): string {\n"
-	                        "> return str type this;\n"
-	                        ">}\n"
+	                        "${"
+	                        "operator str(): string {\n"
+	                        "	return str type this;\n"
+	                        "}}\n"
 	                        ),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
@@ -2673,6 +2675,7 @@ unpack_init_info(DeeObject *__restrict info,
 	DREF DeeObject *sentinal;
 	if likely(DeeTuple_Check(info)) {
 		switch (DeeTuple_SIZE(info)) {
+
 		case 1:
 			*pinit_fields = DeeTuple_GET(info, 0);
 			if (DeeNone_Check(*pinit_fields))
@@ -2680,6 +2683,7 @@ unpack_init_info(DeeObject *__restrict info,
 			*pinit_args = Dee_EmptyTuple;
 			*pinit_kw   = NULL;
 			break;
+
 		case 2:
 			*pinit_fields = DeeTuple_GET(info, 0);
 			*pinit_args   = DeeTuple_GET(info, 1);
@@ -2689,6 +2693,7 @@ unpack_init_info(DeeObject *__restrict info,
 				*pinit_args = Dee_EmptyTuple;
 			*pinit_kw = NULL;
 			break;
+
 		case 3:
 			*pinit_fields = DeeTuple_GET(info, 0);
 			*pinit_args   = DeeTuple_GET(info, 1);
@@ -2700,6 +2705,7 @@ unpack_init_info(DeeObject *__restrict info,
 			if (DeeNone_Check(*pinit_kw))
 				*pinit_kw = NULL;
 			break;
+
 		default:
 			return err_invalid_unpack_size_minmax(info, 1, 3, DeeTuple_SIZE(info));
 		}
@@ -3445,7 +3451,9 @@ PRIVATE struct type_method type_methods[] = {
 	      "Returns :true if @this Type is equal to, or a base of @other\n"
 	      "If @other isn't a Type, :false is returned\n"
 	      "Using baseof, the behavior of ${x is y} can be approximated as:\n"
-	      ">print y.baseof(type(x)); // print x is y;"),
+	      "${"
+	      "print y.baseof(type(x)); // print x is y;"
+	      "}"),
 	  TYPE_METHOD_FKWDS },
 	{ "derivedfrom", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom,
 	  DOC("(other:?DType)->?Dbool\n"
@@ -3455,12 +3463,17 @@ PRIVATE struct type_method type_methods[] = {
 	{ "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_newinstance,
 	  DOC("(fields!!)->\n"
 	      "Allocate a new instance of @this Type and initialize members in accordance ot @fields\n"
-	      ">class MyClass {\n"
-	      "> member foo;\n"
-	      "> this = del; /* Delete the regular constructor. */\n"
-	      ">}\n"
-	      ">local x = MyClass.newinstance(foo: 42);\n"
-	      ">print x.foo;\n"
+
+	      "${"
+	      "class MyClass {\n"
+	      "	member foo;\n"
+	      "	this = del; /* Delete the regular constructor. */\n"
+	      "}\n"
+	      "local x = MyClass.newinstance(foo: 42);\n"
+	      "print x.foo;\n"
+	      "}"
+
+
 	      "\n"
 	      "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type,({(string,object)...},)...} */
 	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type,({(string,object)...},none)...} */
@@ -3471,67 +3484,75 @@ PRIVATE struct type_method type_methods[] = {
 	      "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type,(none,tuple,none)...} */
 	      "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type,(none,tuple,mapping)...} */
 	      "@throw TypeError No superargs tuple was provided for one of the Type's bases, when that base "
-	      "has a mandatory constructor that can't be invoked without any arguments. "
-	      "Note that a user-defined class never has a mandatory constructor, with this "
-	      "only affecting builtin types such as :InstanceMethod or :property\n"
+	      /**/ "has a mandatory constructor that can't be invoked without any arguments. "
+	      /**/ "Note that a user-defined class never has a mandatory constructor, with this "
+	      /**/ "only affecting builtin types such as :InstanceMethod or :property\n"
+
 	      "A extended way of constructing and initializing a Type, that involves providing explicit "
-	      "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
-	      "mappings to-be used for construction of one of the Type's sub-classes (allowing to provide "
-	      "for explicit argument lists when one of the Type's bases has a mandatory constructor)\n"
-	      ">import list from deemon;\n"
-	      ">class MyList: List {\n"
-	      "> this = del;\n"
-	      "> member mylist_member;\n"
-	      "> appendmember() {\n"
-	      ">  this.append(mylist_member);\n"
-	      "> }\n"
-	      ">}\n"
-	      ">local x = MyList.newinstance({\n"
-	      "> MyList: ({ \"mylist_member\" : \"abc\" },none),\n"
-	      "> list:   ({ },pack([10,20,30])),\n"
-	      ">});\n"
-	      ">print repr x;          /* [10,20,30] */\n"
-	      ">print x.mylist_member; /* \"abc\" */\n"
-	      ">x.appendmember();\n"
-	      ">print repr x;          /* [10,20,30,\"abc\"] */"),
+	      /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
+	      /**/ "mappings to-be used for construction of one of the Type's sub-classes (allowing to provide "
+	      /**/ "for explicit argument lists when one of the Type's bases has a mandatory constructor)\n"
+
+	      "${"
+	      "import List from deemon;\n"
+	      "class MyList: List {\n"
+	      "	this = del;\n"
+	      "	member mylist_member;\n"
+	      "	appendmember() {\n"
+	      "		this.append(mylist_member);\n"
+	      "	}\n"
+	      "}\n"
+	      "local x = MyList.newinstance({\n"
+	      "	MyList: ({ \"mylist_member\" : \"abc\" }, none),\n"
+	      "	List:   ({ }, pack([10, 20, 30])),\n"
+	      "});\n"
+	      "print repr x;          /* [10, 20, 30] */\n"
+	      "print x.mylist_member; /* \"abc\" */\n"
+	      "x.appendmember();\n"
+	      "print repr x;          /* [10, 20, 30, \"abc\"] */"
+	      "}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Returns :true if this type, or one of its sub-classes defines an "
 	      "instance-attribute @name, and doesn't define any attribute-operators. "
 	      "Otherwise, return :false\n"
-	      ">function hasattribute(name) {\n"
-	      "> import attribute from deemon;\n"
-	      "> return attribute.exists(this,name,\"ic\",\"ic\")\n"
-	      ">}\n"
+
+	      "${"
+	      "function hasattribute(name) {\n"
+	      "	import attribute from deemon;\n"
+	      "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
+	      "}}\n"
+
 	      "Note that this function only searches instance-attributes, meaning that class/static "
-	      "attributes/members such as :string.Iterator are not matched, whereas something like :string.find is\n"
+	      /**/ "attributes/members such as :string.Iterator are not matched, whereas something like :string.find is\n"
 	      "Note that this function is quite similar to #hasinstanceattr, however unlike "
-	      "that function, this function will stop searching the base-classes of @this Type "
-	      "when one of that types implements one of the attribute operators."),
+	      /**/ "that function, this function will stop searching the base-classes of @this Type "
+	      /**/ "when one of that types implements one of the attribute operators."),
 	  TYPE_METHOD_FKWDS },
 	{ "hasprivateattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasprivateattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
 	      "Similar to #hasattribute, but only looks at attributes declared by "
-	      "@this Type, excluding any defined by a sub-class.\n"
-	      ">function hasattribute(name) {\n"
-	      "> import attribute from deemon;\n"
-	      "> return attribute.exists(this,name,\"ic\",\"ic\",this)\n"
-	      ">}"),
+	      /**/ "@this Type, excluding any defined by a sub-class.\n"
+	      "${"
+	      "function hasattribute(name) {\n"
+	      "	import attribute from deemon;\n"
+	      "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
+	      "}}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
 	      "Returns :true if instances of @this Type implement an operator @name, "
-	      "or :false if not, or if @name is not recognized as an operator provided "
-	      "available for the Type-Type that is ${type this}\n"
+	      /**/ "or :false if not, or if @name is not recognized as an operator "
+	      /**/ "available for the Type-Type that is ${type this}\n"
 	      "Note that this function also looks at the operators of "
-	      "base-classes, as well as that a user-defined class that has "
-	      "explicitly deleted an operator will cause this function to "
-	      "return true, indicative of that operator being implemented "
-	      "to cause an error to be thrown when invoked.\n"
+	      /**/ "base-classes, as well as that a user-defined class that has "
+	      /**/ "explicitly deleted an operator will cause this function to "
+	      /**/ "return true, indicative of that operator being implemented "
+	      /**/ "to cause an error to be thrown when invoked.\n"
 	      "The given @name is the so-called real operator name, "
-	      "as listed under Name in the following table:\n"
+	      /**/ "as listed under Name in the following table:\n"
 	      "#T{Name|Symbolical name|Prototype~"
 	      "$\"constructor\"|$\"this\"|${this(args!)}&"
 	      "$\"copy\"|$\"copy\"|${copy()}&"
@@ -3599,35 +3620,39 @@ PRIVATE struct type_method type_methods[] = {
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
 	      "Returns :true if instances of @this Type implement an operator @name, "
-	      "or :false if not, or if @name is not recognized as an operator provided "
-	      "available for the Type-Type that is ${type this}\n"
+	      /**/ "or :false if not, or if @name is not recognized as an operator provided "
+	      /**/ "available for the Type-Type that is ${type this}\n"
 	      "Note that this function intentionally don't look at operators of "
-	      "base-classes (which is instead done by #hasoperator), meaning that "
-	      "inherited operators are not included, with the exception of explicitly "
-	      "inherited constructors\n"
+	      /**/ "base-classes (which is instead done by #hasoperator), meaning that "
+	      /**/ "inherited operators are not included, with the exception of explicitly "
+	      /**/ "inherited constructors\n"
 	      "For a list of operator names, see #hasoperator"),
 	  TYPE_METHOD_FKWDS },
 	{ meth_getinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_getinstanceattr,
 	  DOC("(name:?Dstring)->\n"
 	      "Lookup an attribute @name that is implemented by instances of @this Type\n"
 	      "Normally, such attributes can also be accessed using regular attribute lookup, "
-	      "however in ambiguous cases where both the Type, as well as instances implement "
-	      "an attribute of the same name (s.a. :Dict.c:keys vs. :Dict.i:keys), using regular "
-	      "attribute lookup on the Type (as in ${Dict.keys}) will always return the Type-attribute, "
-	      "rather than a wrapper around the instance attribute.\n"
+	      /**/ "however in ambiguous cases where both the Type, as well as instances implement "
+	      /**/ "an attribute of the same name (s.a. :Dict.c:keys vs. :Dict.i:keys), using regular "
+	      /**/ "attribute lookup on the Type (as in ${Dict.keys}) will always return the Type-attribute, "
+	      /**/ "rather than a wrapper around the instance attribute.\n"
 	      "In such cases, this function may be used to explicitly lookup the instance variant:\n"
-	      ">import Dict from deemon;\n"
-	      ">local dict_keys_function = Dict.getinstanceattr(\"keys\");\n"
-	      ">local my_dict_instance = Dict();\n"
-	      ">my_dict_instance[\"foo\"] = \"bar\";\n"
-	      ">// Same as `my_dict_instance.keys()' -- { \"foo\" }\n"
-	      ">print repr dict_keys_function(my_dict_instance);\n"
+
+	      "${"
+	      "import Dict from deemon;\n"
+	      "local dict_keys_function = Dict.getinstanceattr(\"keys\");\n"
+	      "local my_dict_instance = Dict();\n"
+	      "my_dict_instance[\"foo\"] = \"bar\";\n"
+	      "// Same as `my_dict_instance.keys()' -- { \"foo\" }\n"
+	      "print repr dict_keys_function(my_dict_instance);"
+	      "}\n"
+
 	      "Note that one minor exception exists to the default lookup rule, and it relates to how "
 	      "attributes of :Type itself are queried (such as in the expression ${(type_ from deemon).baseof}).\n"
-	      "In this case, access is always made as an instance-bound, meaning that for this purpose, :Type "
-	      "is considered an instance of :Type (typetype), rather than the type of :Type (typetype) (I know that sounds complicated, "
-	      "but without this rule, ${(type_ from deemon).baseof} would return a class method object taking 2 "
-	      "arguments, rather than the intended single argument)\n"
+	      "In this case, access is always made as an instance-bound, meaning that for this purpose, "
+	      ":Type is considered an instance of :Type (typetype), rather than the type of :Type (typetype) "
+	      "(I know that sounds complicated, but without this rule, ${(type_ from deemon).baseof} would "
+	      "return a class method object taking 2 arguments, rather than the intended single argument)\n"
 	      "Also note that the `*instanceattr' functions will not check for types that have overwritten "
 	      "one of the attribute-operators, but will continue search for matching attribute names, even "
 	      "if those attributes would normally have been overshadowed by attribute callbacks"),
@@ -3939,48 +3964,49 @@ PRIVATE struct type_getset type_getsets[] = {
 	{ "__issingleton__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_issingleton, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Check if @this Type describes a singleton object, requiring that @this type not be "
-	      "implementing a constructor (or be deleting its constructor), as well as not be one "
-	      "of the special internal types used to represent implementation-specific wrapper "
-	      "objects for C attributes, or be generated by the compiler, such as code objects, "
-	      "class descriptors or DDI information providers") },
+	      /**/ "implementing a constructor (or be deleting its constructor), as well as not be one "
+	      /**/ "of the special internal types used to represent implementation-specific wrapper "
+	      /**/ "objects for C attributes, or be generated by the compiler, such as code objects, "
+	      /**/ "class descriptors or DDI information providers") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
 	      "Return the module used to define @this Type, or :none if the module cannot "
-	      "be determined, which may be the case if the Type doesn't have any defining "
-	      "features such as operators, or class/instance member functions") },
+	      /**/ "be determined, which may be the case if the Type doesn't have any defining "
+	      /**/ "features such as operators, or class/instance member functions") },
 	{ "__ctable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_ctable, NULL, NULL,
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the class object table, "
-	      "as referenced by :rt.ClassDescriptor.attribute.addr\n"
+	      /**/ "as referenced by :rt.ClassDescriptor.attribute.addr\n"
 	      "For non-user-defined classes (aka. #__isclass__ is :false), an empty sequence is returned\n"
 	      "The instance-attribute table can be accessed through :Object.__itable__") },
 	{ "__operators__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operators, NULL, NULL,
 	  DOC("->?S?X2?Dstring?Dint\n"
 	      "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
 	      "This member functions such that the member function #hasprivateoperator can be implemented as:\n"
-	      ">function hasprivateoperator(name: string | int): bool {\n"
-	      "> return name in this.__operators__;\n"
-	      ">}\n"
+	      "${"
+	      "function hasprivateoperator(name: string | int): bool {\n"
+	      "	return name in this.__operators__;\n"
+	      "}}\n"
 	      "Also note that this set doesn't differentiate between overwritten and deleted operators, "
-	      "as for this purpose any deleted operator is considered to be implemented as throwing a "
-	      ":NotImplemented exception\n"
+	      /**/ "as for this purpose any deleted operator is considered to be implemented as throwing a "
+	      /**/ ":NotImplemented exception\n"
 	      "Additionally, this set also includes automatically generated operators for user-classes, "
-	      "meaning that pretty much any user-class will always have its compare, assignment, as well "
-	      "as constructor and destructor operators overwritten, even when the user didn't actually "
-	      "define any of them\n"
+	      /**/ "meaning that pretty much any user-class will always have its compare, assignment, as well "
+	      /**/ "as constructor and destructor operators overwritten, even when the user didn't actually "
+	      /**/ "define any of them\n"
 	      "For the purposes of human-readable information, is is recommended to use #__class__.operators "
-	      "when @this Type is a user-defined class (aka. #__isclass__ is :true), and only use #__operators__ "
-	      "for all other types that this doesn't apply to") },
+	      /**/ "when @this Type is a user-defined class (aka. #__isclass__ is :true), and only use #__operators__ "
+	      /**/ "for all other types that this doesn't apply to") },
 	{ "__operatorids__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operatorids, NULL, NULL,
 	  DOC("->?S?Dint\n"
 	      "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
 	      "This is the same as #__operators__, but the runtime will not attempt to translate known "
-	      "operator ids to their user-friendly name, as described in #hasoperator") },
+	      /**/ "operator ids to their user-friendly name, as described in #hasoperator") },
 	{ "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Returns the heap allocation size of instances of @this Type, or :none when @this Type cannot "
-	      "be instantiated, is a singletone (such as :none), or has variable-length instances (#isvariable)") },
+	      /**/ "be instantiated, is a singletone (such as :none), or has variable-length instances (#isvariable)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
@@ -4092,7 +4118,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Type),
 	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the Type of anything "
-	                        "that is also a Type, such as :int or :list, and even itself"),
+	                         "that is also a Type, such as :int or :List, and even itself"),
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,

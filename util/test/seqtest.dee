@@ -37,7 +37,7 @@ function testSequenceType(typ: Type, cls: string) {
 			Tuple { 10, 20, 30 },
 			Tuple { 10, "foo", 30 },
 			"faosdhfasidanhiawn",
-			Tuple { (), (0,), (0,1,), (0,1,2,3,) },
+			Tuple { (), (0,), (0, 1), (0, 1, 2, 3) },
 			"faosdhfasidanhiawnfaosdhfasidanhiawnfaosdhfasidanhiawnfaosdhfasidanhiawn",
 		}) {
 			for (local typTestInput: {

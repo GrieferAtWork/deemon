@@ -551,21 +551,21 @@ err_function_anno:
 				goto err_current;
 
 			/* Allow syntax like this:
-			 * >> list my_list;
-			 * >> int my_int = 42;
-			 * >> MyClass my_instance(10,20,30);
-			 * >> thread my_thread = []{
+			 * >> List myList;
+			 * >> int myInt = 42;
+			 * >> MyClass myInstance(10, 20, 30);
+			 * >> Thread myThread = []{
 			 * >>     print "Thread execution...";
 			 * >> };
-			 * >> my_thread.start();
+			 * >> myThread.start();
 			 * Same as:
-			 * >> local my_list = list();
-			 * >> local my_int = int(42);
-			 * >> local my_instance = MyClass(10,20,30);
-			 * >> local my_thread = thread([]{
+			 * >> local myList = List();
+			 * >> local myInt = int(42);
+			 * >> local myInstance = MyClass(10, 20, 30);
+			 * >> local myThread = Thread([]{
 			 * >>     print "Thread execution...";
 			 * >> });
-			 * >> my_thread.start();
+			 * >> myThread.start();
 			 * Now that C compatibility is gone, there's no ambiguity to this!
 			 */
 			if (tok == '=' || tok == '{') {

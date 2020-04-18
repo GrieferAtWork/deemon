@@ -307,57 +307,69 @@ PRIVATE struct type_seq scope_seq = {
 };
 
 PRIVATE struct type_member scope_class_members[] = {
-    TYPE_MEMBER_CONST("Symbol",&DeeCompilerSymbol_Type),
-    TYPE_MEMBER_END
+	TYPE_MEMBER_CONST("Symbol", &DeeCompilerSymbol_Type),
+	TYPE_MEMBER_END
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_newanon(DeeCompilerScopeObject *self, size_t argc, DeeObject *const *argv) {
- DREF DeeObject *result = NULL; struct symbol *sym;
- COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_Unpack(argc, argv,":newanon"))
-     goto done;
- sym = new_unnamed_symbol_in_scope(self->ci_value);
- if unlikely(!sym) goto done;
- sym->s_type = SYMBOL_TYPE_NONE;
- result = DeeCompiler_GetSymbol(sym);
+	DREF DeeObject *result = NULL;
+	struct symbol *sym;
+	COMPILER_BEGIN(self->ci_compiler);
+	if (DeeArg_Unpack(argc, argv, ":newanon"))
+		goto done;
+	sym = new_unnamed_symbol_in_scope(self->ci_value);
+	if unlikely(!sym)
+		goto done;
+	sym->s_type = SYMBOL_TYPE_NONE;
+	result      = DeeCompiler_GetSymbol(sym);
 done:
- COMPILER_END();
- return result;
+	COMPILER_END();
+	return result;
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 scope_newlocal(DeeCompilerScopeObject *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
- DREF DeeObject *result = NULL; struct symbol *sym; struct TPPKeyword *kwd;
- DeeObject *name,*loc = NULL; bool requirenew = true; char *name_utf8;
- PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
- COMPILER_BEGIN(self->ci_compiler);
- if (DeeArg_UnpackKw(argc, argv, kw,kwlist,"o|bo:newlocal",&name,&requirenew,&loc) ||
-     DeeObject_AssertTypeExact(name,&DeeString_Type) ||
-    (name_utf8 = DeeString_AsUtf8(name)) == NULL)
-     goto done;
- kwd = TPPLexer_LookupKeyword(name_utf8,WSTR_LENGTH(name_utf8),1);
- if unlikely(!kwd) goto done;
- sym = get_local_symbol_in_scope(self->ci_value,kwd);
- if unlikely(sym) {
-  if (requirenew) {
-   DeeError_Throwf(&DeeError_ValueError,
-                   "Local symbol %r has already been defined");
-   goto done;
-  }
- } else {
-  struct ast_loc symloc;
-  if unlikely(get_astloc_from_obj(loc,&symloc)) goto done;
-  sym = new_local_symbol_in_scope(self->ci_value,kwd,&symloc);
-  if unlikely(!sym) goto done;
-  sym->s_type = SYMBOL_TYPE_NONE;
- }
- result = DeeCompiler_GetSymbol(sym);
+	DREF DeeObject *result = NULL;
+	struct symbol *sym;
+	struct TPPKeyword *kwd;
+	DeeObject *name, *loc = NULL;
+	bool requirenew = true;
+	char *name_utf8;
+	PRIVATE struct keyword kwlist[] = { K(name), K(requirenew), K(loc), KEND };
+	COMPILER_BEGIN(self->ci_compiler);
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|bo:newlocal", &name, &requirenew, &loc))
+		goto done;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto done;
+	name_utf8 = DeeString_AsUtf8(name);
+	if unlikely(!name_utf8)
+		goto done;
+	kwd = TPPLexer_LookupKeyword(name_utf8, WSTR_LENGTH(name_utf8), 1);
+	if unlikely(!kwd)
+		goto done;
+	sym = get_local_symbol_in_scope(self->ci_value, kwd);
+	if unlikely(sym) {
+		if (requirenew) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Local symbol %r has already been defined");
+			goto done;
+		}
+	} else {
+		struct ast_loc symloc;
+		if unlikely(get_astloc_from_obj(loc, &symloc))
+			goto done;
+		sym = new_local_symbol_in_scope(self->ci_value, kwd, &symloc);
+		if unlikely(!sym)
+			goto done;
+		sym->s_type = SYMBOL_TYPE_NONE;
+	}
+	result = DeeCompiler_GetSymbol(sym);
 done:
- COMPILER_END();
- return result;
+	COMPILER_END();
+	return result;
 }
 
 PRIVATE struct type_method scope_methods[] = {
@@ -365,19 +377,20 @@ PRIVATE struct type_method scope_methods[] = {
 	  DOC("->?ASymbol?Ert:Compiler\n"
 	      "Construct a new anonymous symbol, and add it as part of @this scope\n"
 	      "The symbol isn't given a name (when queried it will have an empty name), and "
-	      "will otherwise behave just like a symbol that has been deleted (s.a. ?#{op:delitem})\n"
+	      /**/ "will otherwise behave just like a symbol that has been deleted (s.a. ?#{op:delitem})\n"
 	      "The symbol can however be used to hold values just like any other symbol, "
-	      "meaning that this is the type of symbol that should be used to hold hidden "
-	      "values, as used by $with-statements\n"
-	      "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)") },
+	      /**/ "meaning that this is the type of symbol that should be used to hold hidden "
+	      /**/ "values, as used by $with-statements\n"
+	      "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)") },
 	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&scope_newlocal,
 	  DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
-	      "@param loc The declaration position of the symbol, omitted to use the current token position, or :none when not available\n"
+	      "@param loc The declaration position of the symbol, omitted to use the current "
+	      /*      */ "token position, or :none when not available\n"
 	      "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"
 	      "Lookup, or create a new local symbol named @name\n"
 	      "If another symbol with that same name already exists, either return that "
-	      "symbol when @requirenew is :false, or throw a :ValueError otherwise\n"
-	      "New symbols are created with $\"none\"-typing (s.a. #symbol.kind)"),
+	      /**/ "symbol when @requirenew is :false, or throw a :ValueError otherwise\n"
+	      "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
@@ -403,7 +416,7 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 	                         "contains(name:?Dstring)->?Dbool\n"
 	                         "contains(sym:?ASymbol?Ert:Compiler)->?Dbool\n"
 	                         "Returns :true if @this scope contains a given symbol @sym, "
-	                         "or some symbol with a name matching the given @name\n"
+	                         /**/ "or some symbol with a name matching the given @name\n"
 	                         "\n"
 	                         "[](string name)->symbol\n"
 	                         "@throw ValueError No symbol matching @name is contained within @this scope\n"

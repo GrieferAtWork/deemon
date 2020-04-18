@@ -450,7 +450,7 @@ generic_operator_optimizations:
 		if (has_cast_constructor(function) &&
 		    ast_predict_type(cast_expr) == (DeeTypeObject *)function) {
 			/* Certain types of calls can be optimized away:
-			 * >> local x = list([10,20,30]); // Optimize to `x = [10,20,30]' */
+			 * >> local x = List([10, 20, 30]); // Optimize to `x = [10, 20, 30]' */
 			OPTIMIZE_VERBOSE("Discard no-op cast-style function call to %k\n", function);
 			/* We can simply get rid of this function call! */
 			if (ast_assign(self, cast_expr))
@@ -460,7 +460,7 @@ generic_operator_optimizations:
 		if (cast_expr->a_type == AST_MULTIPLE &&
 		    cast_expr->a_flag != AST_FMULTIPLE_KEEPLAST) {
 			/* Propagate explicit cast calls to underlying sequence types:
-			 * >> tuple([10,20,30]); // Optimize to `pack(10,20,30)' */
+			 * >> tuple([10, 20, 30]); // Optimize to `pack(10, 20, 30)' */
 			uint16_t new_kind;
 			if (function == (DeeObject *)&DeeTuple_Type)
 				new_kind = AST_FMULTIPLE_TUPLE;

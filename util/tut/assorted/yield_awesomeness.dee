@@ -35,7 +35,7 @@ function yfunc(x) {
 
 print "Creating generator";
 generator = yfunc(42);
-print "Creating iteartor";
+print "Creating iterator";
 iterator = generator.operator iter();
 print "Begin iteration";
 

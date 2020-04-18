@@ -507,13 +507,13 @@ not_a_cast:
 		bool second_paren;
 		uint16_t out_mode;
 		/* Special handling for the following cases:
-		 * >> (float)();              // Call with 0 arguments
-		 * >> (float)(42);            // Call with 1 argument `42'
-		 * >> (float)((42),);         // Call with 1 argument `42'
-		 * >> (float)(10,20,30);      // Call with 3 arguments `10,20,30'
-		 * >> (float)(pack 10,20,30); // Call with 1 argument `(10,20,30)'
+		 * >> (float)();                // Call with 0 arguments
+		 * >> (float)(42);              // Call with 1 argument `42'
+		 * >> (float)((42),);           // Call with 1 argument `42'
+		 * >> (float)(10, 20, 30);      // Call with 3 arguments `10, 20, 30'
+		 * >> (float)(pack 10, 20, 30); // Call with 1 argument `(10, 20, 30)'
 		 * Without this handling, the 4th line would be compiled as
-		 * `float(pack(10,20,30))', when we want it to be `float(10,20,30)' */
+		 * `float(pack(10, 20, 30))', when we want it to be `float(10, 20, 30)' */
 		LOAD_LVALUE(lhs, err);
 		JITLexer_Yield(self);
 		if (self->jl_tok == ')') {
