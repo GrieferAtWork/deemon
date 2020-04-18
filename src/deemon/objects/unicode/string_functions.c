@@ -1552,8 +1552,10 @@ DeeString_Indent(DeeObject *self,
 	ASSERT_OBJECT_TYPE_EXACT(filler, &DeeString_Type);
 	/* Simple case: if the filler, or self-string are
 	 *              empty, nothing would get inserted! */
-	if unlikely(DeeString_IsEmpty(filler) || DeeString_IsEmpty(self))
+	if unlikely(DeeString_IsEmpty(filler))
 		return_reference_(self);
+	if unlikely(DeeString_IsEmpty(self))
+		return_reference_(filler);
 	{
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		union dcharptr flush_start, iter, end;
@@ -10090,28 +10092,27 @@ INTERN struct type_method string_methods[] = {
 	      "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
 	      "Decode @this string, re-interpreting its underlying character bytes as @codec\n"
-	      "Prior to processing, @codec is normalized as follows:\n"
-	      ">name = name.lower().replace(\"_\",\"-\");\n"
-	      ">if (name.startswith(\"iso-\"))\n"
-	      "> name = \"iso\"+name[4:];\n"
-	      ">else if (name.startswith(\"cp-\")) {\n"
-	      "> name = \"cp\"+name[3:];\n"
-	      ">}\n"
+	      "Prior to processing, @codec is normalized as follows:\n${"
+	      "name = name.lower().replace(\"_\",\"-\");\n"
+	      "if (name.startswith(\"iso-\"))\n"
+	      "	name = \"iso\"+name[4:];\n"
+	      "else if (name.startswith(\"cp-\")) {\n"
+	      "	name = \"cp\"+name[3:];\n"
+	      "}}\n"
 	      "Following that, @codec is compared against the following list of builtin codecs\n"
-	      "%{table Codec Name|Aliases|Return type|Description\n"
+	      "#T{Codec Name|Aliases|Return type|Description~"
 	      "$\"ascii\"|$\"646\", $\"us-ascii\"|Same as $this|"
-	      "Validate that all character of @this are apart of the unicode range U+0000 - U+007F\n"
+	          "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
 	      "$\"latin-1\"|$\"iso8859-1\", $\"iso8859\", $\"8859\", $\"cp819\", $\"latin\", $\"latin1\", $\"l1\"|Same as $this|"
-	      "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF\n"
-	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:string|Decode ${this.bytes()} as a UTF-8 encoded byte sequence\n"
-	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in host-endian\n"
-	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in little-endian\n"
-	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in big-endian\n"
-	      "$\"utf-32\"|$\"utf32\", $\"u32\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in host-endian\n"
-	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in little-endian\n"
-	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in big-endian\n"
-	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|:string|Decode a backslash-escaped string after stripping an optional leading and trailing $\"\\\"\" or $\"\\\'\" character\n"
-	      "}\n"
+	          "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
+	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:string|Decode ${this.bytes()} as a UTF-8 encoded byte sequence&"
+	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in host-endian&"
+	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in little-endian&"
+	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in big-endian&"
+	      "$\"utf-32\"|$\"utf32\", $\"u32\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in host-endian&"
+	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in little-endian&"
+	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:string|Decode ${this.bytes()} as a UTF-32 sequence, encoded in big-endian&"
+	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|:string|Decode a backslash-escaped string after stripping an optional leading and trailing $\"\\\"\" or $\"\\\'\" character}\n"
 	      "If the given @codec is not apart of this list, a call is made to :codecs:decode"),
 	  TYPE_METHOD_FKWDS },
 	{ "encode",
@@ -10121,28 +10122,27 @@ INTERN struct type_method string_methods[] = {
 	      "@throw UnicodeEncodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
 	      "Encode @this string, re-interpreting its underlying character bytes as @codec\n"
-	      "Prior to processing, @codec is normalized as follows:\n"
-	      ">name = name.lower().replace(\"_\",\"-\");\n"
-	      ">if (name.startswith(\"iso-\"))\n"
-	      "> name = \"iso\"+name[4:];\n"
-	      ">else if (name.startswith(\"cp-\")) {\n"
-	      "> name = \"cp\"+name[3:];\n"
-	      ">}\n"
+	      "Prior to processing, @codec is normalized as follows:\n${"
+	      "name = name.lower().replace(\"_\",\"-\");\n"
+	      "if (name.startswith(\"iso-\"))\n"
+	      "	name = \"iso\"+name[4:];\n"
+	      "else if (name.startswith(\"cp-\")) {\n"
+	      "	name = \"cp\"+name[3:];\n"
+	      "}}\n"
 	      "Following that, @codec is compared against the following list of builtin codecs\n"
-	      "%{table Codec Name|Aliases|Return type|Description\n"
+	      "#T{Codec Name|Aliases|Return type|Description~"
 	      "$\"ascii\"|$\"646\", $\"us-ascii\"|Same as $this|"
-	      "Validate that all character of @this are apart of the unicode range U+0000 - U+007F\n"
+	          "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
 	      "$\"latin-1\"|$\"iso8859-1\", $\"iso8859\", $\"8859\", $\"cp819\", $\"latin\", $\"latin1\", $\"l1\"|Same as $this|"
-	      "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF\n"
-	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:Bytes|Encode character of @this string as a UTF-8 encoded byte sequence\n"
-	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:Bytes|Encode 'as a UTF-16 sequence, encoded in host-endian\n"
-	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in little-endian\n"
-	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in big-endian\n"
-	      "$\"utf-32\"|$\"utf32\", $\"u32\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in host-endian\n"
-	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in little-endian\n"
-	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in big-endian\n"
-	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|:string|Encode @this string as a backslash-escaped string. This is similar to #op:repr, however the string is not surrounded by $\"\\\"\"-characters\n"
-	      "}\n"
+	          "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
+	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:Bytes|Encode character of @this string as a UTF-8 encoded byte sequence&"
+	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:Bytes|Encode 'as a UTF-16 sequence, encoded in host-endian&"
+	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in little-endian&"
+	      "$\"utf-16-be\"|$\"utf16-be\", $\"u16-be\", $\"utf-16be\", $\"utf16be\", $\"u16be\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in big-endian&"
+	      "$\"utf-32\"|$\"utf32\", $\"u32\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in host-endian&"
+	      "$\"utf-32-le\"|$\"utf32-le\", $\"u32-le\", $\"utf-32le\", $\"utf32le\", $\"u32le\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in little-endian&"
+	      "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|:Bytes|Encode @this string as a UTF-32 sequence, encoded in big-endian&"
+	      "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|:string|Encode @this string as a backslash-escaped string. This is similar to ?#{op:repr}, however the string is not surrounded by $\"\\\"\"-characters}\n"
 	      "If the given @codec is not apart of this list, a call is made to :codecs:encode"),
 	  TYPE_METHOD_FKWDS },
 	{ "bytes",
@@ -10150,7 +10150,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(allow_invalid=!f)->?DBytes\n"
 	      "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
 	      "@throw ValueError @allow_invalid is :false, and @this string contains characters above $0xff\n"
-	      "Returns a read-only bytes representation of the characters within ${this.substr(start,end)}, "
+	      "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
 	      "using a single byte per character. A character greater than $0xff either causes : ValueError "
 	      "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
 	      "$\"?\" in the returned Bytes object") },
@@ -10174,32 +10174,31 @@ INTERN struct type_method string_methods[] = {
 	      "Like most other ways of formatting strings, all text outside of format specifiers is simply "
 	      "copied into the output string. Special rules are applied to text found inside or curly-braces ($\"{...}\")\n"
 	      "In order to escape either $\"{\" or $\"}\" characters, use $\"{{\" and $\"}}\" respectively\n"
-	      "Processing of text inside of curly-brace is split into 2 parts, both of which are optional and separated by $\":\":\n"
-	      "-The object selection expression part\n"
-	      "-The object spec string portion (which may contain further $\"{...}\"-blocks that are expanded beforehand)\n"
-	      "%{table Selection expression|Description\n"
+	      "Processing of text inside of curly-brace is split into 2 parts, both of which are optional and separated by $\":\":\n#L-{"
+	      "The object selection expression part|"
+	      "The object spec string portion (which may contain further $\"{...}\"-blocks that are expanded beforehand)}\n"
+	      "#T{Selection expression|Description~"
 	      "$\"{}\"|Lazily create an iterator $iter as ${args.operator iter()} when encountered the "
-	      "first time, then invoke ${iter.operator next()} and use its return value as format object\n"
-	      "$\"{foo}\"|Use ${args[\"foo\"]} as format object\n"
-	      "$\"{42}\"|Use ${args[42]} as format object\n"
-	      "$\"{(x)}\"|Alias for $\"{x}\"\n"
-	      "$\"{x.<expr>}\"|With $x being another selection expression, use ${x.operator . (<expr>)} (whitespace before and after $\".\" is ignored)\n"
-	      "$\"{x[<expr>]}\"|With $x being another selection expression, use ${x.operator [] (<expr>)} (whitespace before and after $\"[\" and $\"]\" is ignored)\n"
-	      "$\"{x[<expr>:]}\"|With $x being another selection expression, use ${x.operator [:] (<expr>,none)} (whitespace before and after $\"[\" and $\"]\" is ignored)\n"
-	      "$\"{x[:<expr>]}\"|With $x being another selection expression, use ${x.operator [:] (none,<expr>)} (whitespace before and after $\"[\" and $\"]\" is ignored)\n"
-	      "$\"{x[<expr1>:<expr2>]}\"|With $x being another selection expression, use ${x.operator [:] (<expr1>,<expr2>)} (whitespace before and after $\"[\", $\":\" and $\"]\" is ignored)\n"
-	      "$\"{x(<expr1>,<expr2>,[...])}\"|With $x being another selection expression, use ${x(<expr1>,<expr2>,[...])} (whitespace before and after $\"(\", $\",\" and $\")\" is ignored)\n"
-	      "$\"{x(<expr1>,<expr2>...)}\"|With $x being another selection expression, use ${x(<expr1>,<expr2>...)} (i.e. you're able to use expand expressions here) (whitespace before and after $\"(\", $\",\", $\"...\" and $\")\" is ignored)\n"
-	      "$\"{x ? <expr1> : <expr2>}\"|With $x being another selection expression, use sub-expression <expr1> if ${x.operator bool()} is true, or <expr2> otherwise (whitespace before and after $\"?\" and $\":\" is ignored)\n"
-	      "$\"{x ? : <expr2>}\"|Re-use $x as true-result, similar to $\"{x ? {x} : <expr2>}\" (whitespace before and after $\"?\" and $\":\" is ignored)\n"
-	      "$\"{x ? <expr1>}\"|Use :none as false-result\" (whitespace before and after $\"?\" is ignored)\n"
-	      "}\n"
+	      "first time, then invoke ${iter.operator next()} and use its return value as format object&"
+	      "$\"{foo}\"|Use ${args[\"foo\"]} as format object&"
+	      "$\"{42}\"|Use ${args[42]} as format object&"
+	      "$\"{(x)}\"|Alias for $\"{x}\"&"
+	      "$\"{x.<expr>}\"|With $x being another selection expression, use ${x.operator . (<expr>)} (whitespace before and after $\".\" is ignored)&"
+	      "$\"{x[<expr>]}\"|With $x being another selection expression, use ${x.operator [] (<expr>)} (whitespace before and after $\"[\" and $\"]\" is ignored)&"
+	      "$\"{x[<expr>:]}\"|With $x being another selection expression, use ${x.operator [:] (<expr>,none)} (whitespace before and after $\"[\" and $\"]\" is ignored)&"
+	      "$\"{x[:<expr>]}\"|With $x being another selection expression, use ${x.operator [:] (none,<expr>)} (whitespace before and after $\"[\" and $\"]\" is ignored)&"
+	      "$\"{x[<expr1>:<expr2>]}\"|With $x being another selection expression, use ${x.operator [:] (<expr1>,<expr2>)} (whitespace before and after $\"[\", $\":\" and $\"]\" is ignored)&"
+	      "$\"{x(<expr1>,<expr2>,[...])}\"|With $x being another selection expression, use ${x(<expr1>,<expr2>,[...])} (whitespace before and after $\"(\", $\",\" and $\")\" is ignored)&"
+	      "$\"{x(<expr1>,<expr2>...)}\"|With $x being another selection expression, use ${x(<expr1>,<expr2>...)} (i.e. you're able to use expand expressions here) (whitespace before and after $\"(\", $\",\", $\"...\" and $\")\" is ignored)&"
+	      "$\"{x ? <expr1> : <expr2>}\"|With $x being another selection expression, use sub-expression <expr1> if ${x.operator bool()} is true, or <expr2> otherwise (whitespace before and after $\"?\" and $\":\" is ignored)&"
+	      "$\"{x ? : <expr2>}\"|Re-use $x as true-result, similar to $\"{x ? {x} : <expr2>}\" (whitespace before and after $\"?\" and $\":\" is ignored)&"
+	      "$\"{x ? <expr1>}\"|Use :none as false-result\" (whitespace before and after $\"?\" is ignored)}\n"
 	      "Sub-expressions in selections strings (the ${<expr>} above). "
 	      "Note however that the angle brackets are not part of the syntax, "
 	      "but used to highlight association:\n"
-	      "%{table Sub-expression|Description\n"
-	      "$\"42\"|Evaluates to ${int(42)}\n"
-	      "$\"foobar\"|Evaluates to $\"foobar\"\n"
+	      "#T{Sub-expression|Description~"
+	      "$\"42\"|Evaluates to ${int(42)}&"
+	      "$\"foobar\"|Evaluates to $\"foobar\"&"
 	      "$\"{x}\"|Evaluates to the object selected by another selection expression $x}\n"
 	      "Once an object to-be formatted has been selected, the way in which it should "
 	      "then be formatted can be altered through use of spec string portion\n"
@@ -10213,17 +10212,17 @@ INTERN struct type_method string_methods[] = {
 	      "When used, :Object.__format__ provides the following functionality, with a "
 	      ":ValueError being thrown for anything else, or anything not matching these "
 	      "criteria\n"
-	      "%{table Spec option|Description\n"
-	      "$\"{:42}\"|Will append ${selected_object.operator str().ljust(42)} to the resulting string (s.a. #ljust)\n"
-	      "$\"{:<42}\"|Same as $\"{:42}\"\n"
-	      "$\"{:>42}\"|Will append ${selected_object.operator str().rjust(42)} to the resulting string (s.a. #rjust)\n"
-	      "$\"{:^42}\"|Will append ${selected_object.operator str().center(42)} to the resulting string (s.a. #center)\n"
-	      "$\"{:=42}\"|Will append ${selected_object.operator str().zfill(42)} to the resulting string (s.a. #zfill)\n"
-	      "$\"{:42:foo}\"|Will append ${selected_object.operator str().ljust(42,\"foo\")} to the resulting string (s.a. #ljust)\n"
-	      "$\"{:<42:foo}\"|Same as $\"{:42:foo}\"\n"
-	      "$\"{:>42:foo}\"|Will append ${selected_object.operator str().rjust(42,\"foo\")} to the resulting string (s.a. #rjust)\n"
-	      "$\"{:^42:foo}\"|Will append ${selected_object.operator str().center(42,\"foo\")} to the resulting string (s.a. #center)\n"
-	      "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42,\"foo\")} to the resulting string (s.a. #zfill)}") },
+	      "#T{Spec option|Description~"
+	      "$\"{:42}\"|Will append ${selected_object.operator str().ljust(42)} to the resulting string (s.a. ?#ljust)&"
+	      "$\"{:<42}\"|Same as $\"{:42}\"&"
+	      "$\"{:>42}\"|Will append ${selected_object.operator str().rjust(42)} to the resulting string (s.a. ?#rjust)&"
+	      "$\"{:^42}\"|Will append ${selected_object.operator str().center(42)} to the resulting string (s.a. ?#center)&"
+	      "$\"{:=42}\"|Will append ${selected_object.operator str().zfill(42)} to the resulting string (s.a. ?#zfill)&"
+	      "$\"{:42:foo}\"|Will append ${selected_object.operator str().ljust(42, \"foo\")} to the resulting string (s.a. ?#ljust)&"
+	      "$\"{:<42:foo}\"|Same as $\"{:42:foo}\"&"
+	      "$\"{:>42:foo}\"|Will append ${selected_object.operator str().rjust(42, \"foo\")} to the resulting string (s.a. ?#rjust)&"
+	      "$\"{:^42:foo}\"|Will append ${selected_object.operator str().center(42, \"foo\")} to the resulting string (s.a. ?#center)&"
+	      "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42, \"foo\")} to the resulting string (s.a. ?#zfill)}") },
 	{ "scanf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_scanf,
 	  DOC("(format:?.)->?S?O\n"
@@ -10236,16 +10235,16 @@ INTERN struct type_method string_methods[] = {
 	      "Scanf command blocks are structured as ${%[*][width]pattern}\n"
 	      "Besides this, for convenience and better unicode integration, the following changes "
 	      "have been made to C's regular scanf function:\n"
-	      "%{table Format pattern|Yielded type|Description\n"
-	      "$\" \"|-|Skip any number of characters from input data for which #isspace returns :true (${r\"\\s*\"})\n"
-	      "$\"\\n\"|-|Skip any kind of line-feed, including $\"\\r\\n\", as well as any character for which #islf returns :true (${r\"\\n\"})\n"
-	      "$\"%o\"|:int|Match up to `width' characters with ${r\"[+-]*(?\\d<8)+\"} and yield the result as an octal integer\n"
-	      "$\"%d\"|:int|Match up to `width' characters with ${r\"[+-]*(?\\d<10)+\"} and yield the result as an decimal integer\n"
-	      "$\"%x\", $\"%p\"|:int|Match up to `width' characters with ${r\"[+-]*((?\\d<16)|[a-fA-F])+\"} and yield the result as a hexadecimal integer\n"
-	      "$\"%i\", $\"%u\"|:int|Match up to `width' characters with ${r\"[+-]*((?\\d=0)([xX](?\\d<16)+|[bB](?\\d<2)+)|(?\\d<10)+)\"} and yield the result as an integer with automatic radix\n"
-	      "$\"%s\"|:string|Match up to `width' characters with ${r\"\\S+\"} and return them as a string\n"
-	      "$\"%c\"|:string|Consume exactly `width' (see above) or one characters and return them as a string\n"
-	      "$\"%[...]\"|:string|Similar to the regex (s.a. #rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")}\n"
+	      "#T{Format pattern|Yielded type|Description~"
+	      "$\" \"|-|Skip any number of characters from input data for which ?#isspace returns :true ($r\"\\s*\")&"
+	      "$\"\\n\"|-|Skip any kind of line-feed, including $\"\\r\\n\", as well as any character for which ?#islf returns :true ($r\"\\n\")&"
+	      "$\"%o\"|:int|Match up to `width' characters with $r\"[+-]*(?\\d<8)+\" and yield the result as an octal integer&"
+	      "$\"%d\"|:int|Match up to `width' characters with $r\"[+-]*(?\\d<10)+\" and yield the result as an decimal integer&"
+	      "$\"%x\", $\"%p\"|:int|Match up to `width' characters with $r\"[+-]*((?\\d<16)|[a-fA-F])+\" and yield the result as a hexadecimal integer&"
+	      "$\"%i\", $\"%u\"|:int|Match up to `width' characters with $r\"[+-]*((?\\d=0)([xX](?\\d<16)+|[bB](?\\d<2)+)|(?\\d<10)+)\" and yield the result as an integer with automatic radix&"
+	      "$\"%s\"|:string|Match up to `width' characters with $r\"\\S+\" and return them as a string&"
+	      "$\"%c\"|:string|Consume exactly `width' (see above) or one characters and return them as a string&"
+	      "$\"%[...]\"|:string|Similar to the regex (s.a. ?#rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")}\n"
 	      "Integer-width modifiers ($\"h\", $\"hh\", $\"l\", $\"ll\", $\"j\", $\"z\", "
 	      "$\"t\", $\"L\", $\"I\", $\"I8\", $\"I16\", $\"I32\" and $\"I64\") are ignored") },
 
@@ -10265,7 +10264,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all "
-	      "characters in ${this.substr(start,end)} are printable") },
+	      "characters in ${this.substr(start, end)} are printable") },
 	{ "isalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isalpha,
 	  DOC("->?Dbool\n"
@@ -10274,7 +10273,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are alphabetical") },
+	      "in ${this.substr(start, end)} are alphabetical") },
 	{ "isspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isspace,
 	  DOC("->?Dbool\n"
@@ -10283,7 +10282,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are space-characters") },
+	      "in ${this.substr(start, end)} are space-characters") },
 	{ "islf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_islf,
 	  DOC("->?Dbool\n"
@@ -10292,7 +10291,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are line-feeds") },
+	      "in ${this.substr(start, end)} are line-feeds") },
 	{ "islower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_islower,
 	  DOC("->?Dbool\n"
@@ -10301,7 +10300,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are lower-case") },
+	      "in ${this.substr(start, end)} are lower-case") },
 	{ "isupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isupper,
 	  DOC("->?Dbool\n"
@@ -10310,7 +10309,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are upper-case") },
+	      "in ${this.substr(start, end)} are upper-case") },
 	{ "iscntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_iscntrl,
 	  DOC("->?Dbool\n"
@@ -10319,7 +10318,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are control characters") },
+	      "in ${this.substr(start, end)} are control characters") },
 	{ "isdigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isdigit,
 	  DOC("->?Dbool\n"
@@ -10328,7 +10327,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are digits") },
+	      "in ${this.substr(start, end)} are digits") },
 	{ "isdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isdecimal,
 	  DOC("->?Dbool\n"
@@ -10337,7 +10336,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are dicimal characters") },
+	      "in ${this.substr(start, end)} are dicimal characters") },
 	{ "issymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymstrt,
 	  DOC("->?Dbool\n"
@@ -10346,7 +10345,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} can be used to start a symbol name") },
+	      "in ${this.substr(start, end)} can be used to start a symbol name") },
 	{ "issymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymcont,
 	  DOC("->?Dbool\n"
@@ -10355,7 +10354,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} can be used to continue a symbol name") },
+	      "in ${this.substr(start, end)} can be used to continue a symbol name") },
 	{ "isalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isalnum,
 	  DOC("->?Dbool\n"
@@ -10364,7 +10363,7 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} are alpha-numerical") },
+	      "in ${this.substr(start, end)} are alpha-numerical") },
 	{ "isnumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isnumeric,
 	  DOC("->?Dbool\n"
@@ -10373,40 +10372,40 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IndexError The given @index is larger than ${#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
-	      "in ${this.substr(start,end)} qualify as digit or decimal characters\n"
-	      "This function is the logical union of #isdigit and #isdecimal") },
+	      "in ${this.substr(start, end)} qualify as digit or decimal characters\n"
+	      "This function is the logical union of ?#isdigit and ?#isdecimal") },
 	{ "istitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_istitle,
 	  DOC("(index:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${?#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if the character at ${this[index]} has title-casing\n"
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
+	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
 	      "follows title-casing, meaning that space is followed by title-case, "
 	      "with all remaining characters not being title-case") },
 	{ "issymbol",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymbol,
 	  DOC("(index:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${?#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if the character at ${this[index]} can be used "
 	      "to start a symbol name. Same as ${this.issymstrt(index)}\n"
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
+	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
 	      "is a valid symbol name") },
 	{ "isascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isascii,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${?#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start,end)} "
+	      "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start, end)} "
 	      "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 	{ "asnumber",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asnumber,
@@ -10419,15 +10418,15 @@ INTERN struct type_method string_methods[] = {
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
 	      "Return the numeric value of the @index'th or only character of @this string, "
-	      "or throw a :ValueError or return @defl if that character isn't #isnumeric\n"
-	      ">print \"5\".isdigit();   /* true */\n"
-	      ">print \"5\".isdecimal(); /* true */\n"
-	      ">print \"5\".isnumeric(); /* true */\n"
-	      ">print \"5\".asnumber();  /* 5 */\n"
-	      ">print \"\xC2\xB2\".isdigit();   /* true */\n"
-	      ">print \"\xC2\xB2\".isdecimal(); /* false */\n"
-	      ">print \"\xC2\xB2\".isnumeric(); /* true */\n"
-	      ">print \"\xC2\xB2\".asnumber();  /* 2 */") },
+	      "or throw a :ValueError or return @defl if that character isn't ?#isnumeric\n${"
+	      "print \"5\".isdigit();   /* true */\n"
+	      "print \"5\".isdecimal(); /* true */\n"
+	      "print \"5\".isnumeric(); /* true */\n"
+	      "print \"5\".asnumber();  /* 5 */\n"
+	      "print \"\xC2\xB2\".isdigit();   /* true */\n"
+	      "print \"\xC2\xB2\".isdecimal(); /* false */\n"
+	      "print \"\xC2\xB2\".isnumeric(); /* true */\n"
+	      "print \"\xC2\xB2\".asnumber();  /* 2 */}") },
 	{ "asdigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asdigit,
 	  DOC("->?Dint\n"
@@ -10438,7 +10437,7 @@ INTERN struct type_method string_methods[] = {
 	      "(index:?Dint,defl)->\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
-	      "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric") },
+	      "Same as ?#asnumber, but only succeed if the selected character matches ?#isdigit, rather than ?#isnumeric") },
 	{ "asdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asdecimal,
 	  DOC("->?Dint\n"
@@ -10449,96 +10448,96 @@ INTERN struct type_method string_methods[] = {
 	      "(index:?Dint,defl)->\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
-	      "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric") },
+	      "Same as ?#asnumber, but only succeed if the selected character matches ?#isdecimal, rather than ?#isnumeric") },
 
 	{ "isanyprint",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyprint,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is printable"),
+	      "${this.substr(start, end)} is printable"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalpha,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is alphabetical"),
+	      "${this.substr(start, end)} is alphabetical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyspace,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a space character"),
+	      "${this.substr(start, end)} is a space character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylf,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a line-feeds"),
+	      "${this.substr(start, end)} is a line-feeds"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylower,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is lower-case"),
+	      "${this.substr(start, end)} is lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyupper,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is upper-case"),
+	      "${this.substr(start, end)} is upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanycntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanycntrl,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a control character"),
+	      "${this.substr(start, end)} is a control character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydigit,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a digit"),
+	      "${this.substr(start, end)} is a digit"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydecimal,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a dicimal character"),
+	      "${this.substr(start, end)} is a dicimal character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymstrt,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} can be used to start a symbol name"),
+	      "${this.substr(start, end)} can be used to start a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymcont,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} can be used to continue a symbol name"),
+	      "${this.substr(start, end)} can be used to continue a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalnum,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is alpha-numerical"),
+	      "${this.substr(start, end)} is alpha-numerical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanynumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanynumeric,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} qualifies as digit or decimal characters"),
+	      "${this.substr(start, end)} qualifies as digit or decimal characters"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanytitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanytitle,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} has title-casing"),
+	      "${this.substr(start, end)} has title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyascii,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in ${this.substr(start,end)} is "
+	      "Returns :true if any character in ${this.substr(start, end)} is "
 	      "an ascii character, that is has an ordinal value ${<= 0x7f}"),
 	  TYPE_METHOD_FKWDS },
 
@@ -10574,19 +10573,18 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Returns @this string with its casing folded.\n"
 	      "The equivalent of the string returned by this function is what is "
-	      "used by the case-insensitive string APIs, such as #casefind\n"
+	      "used by the case-insensitive string APIs, such as ?#casefind\n"
 	      "The case folding algorithm implemented matches what "
-	      "%{link https://www.w3.org/International/wiki/Case_folding unicode} "
+	      "#A{unicode|https://www.w3.org/International/wiki/Case_folding} "
 	      "describes as full case folding\n"
-	      "At its core, case-folding a string is fairly similar to #lower, however "
+	      "At its core, case-folding a string is fairly similar to ?#lower, however "
 	      "the differences start to appear when characters such as $\"\xC3\x9F\" are being "
 	      "used, $\"\xC3\x9F\" being a german character that doesn't have a lower- or upper-case "
 	      "variant, however in the absence of unicode support is often written as $\"ss\".\n"
 	      "The obvious problem here is that this alternative representation uses 2 characters "
-	      "where previously there was only one. #casefold solves this problem by replacing $\"\xC3\x9F\" "
-	      "with $\"ss\", allowing functions such as #casecompare to indicate equal strings in "
-	      "cases such as ${\"Stra\xC3\x9F"
-	      "e\".casecompare(\"Strasse\") == 0}"),
+	      "where previously there was only one. ?#casefold solves this problem by replacing $\"\xC3\x9F\" "
+	      "with $\"ss\", allowing functions such as ?#casecompare to indicate equal strings in "
+	      "cases such as $\"Stra\xc3\x9f" "e\".casecompare(\"Strasse\") == 0}"),
 	  TYPE_METHOD_FKWDS },
 
 	/* Case-sensitive query functions */
@@ -10598,45 +10596,45 @@ INTERN struct type_method string_methods[] = {
 	{ "find",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_find,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
-	      "Find the first instance of @needle within ${this.substr(start,end)}, "
+	      "Find the first instance of @needle within ${this.substr(start, end)}, "
 	      "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "rfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rfind,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
-	      "Find the last instance of @needle within ${this.substr(start,end)}, "
+	      "Find the last instance of @needle within ${this.substr(start, end)}, "
 	      "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "index",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_index,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
-	      "Find the first instance of @needle within ${this.substr(start,end)}, "
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Find the first instance of @needle within ${this.substr(start, end)}, "
 	      "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "rindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rindex,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
-	      "Find the last instance of @needle within ${this.substr(start,end)}, "
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Find the last instance of @needle within ${this.substr(start, end)}, "
 	      "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "findall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_findall,
 	  DOC("(needle:?.,start=!0,end=!-1)->?S?Dint\n"
-	      "Find all instances of @needle within ${this.substr(start,end)}, "
+	      "Find all instances of @needle within ${this.substr(start, end)}, "
 	      "and return their starting indeces as a sequence"),
 	  TYPE_METHOD_FKWDS },
 	{ "count",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_count,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
-	      "Count the number of instances of @needle that exist within ${this.substr(start,end)}, "
+	      "Count the number of instances of @needle that exist within ${this.substr(start, end)}, "
 	      "and return now many were found"),
 	  TYPE_METHOD_FKWDS },
 	{ "contains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_contains_f,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Check if @needle can be found within ${this.substr(start,end)}, and return a boolean indicative of that"),
+	      "Check if @needle can be found within ${this.substr(start, end)}, and return a boolean indicative of that"),
 	  TYPE_METHOD_FKWDS },
 	{ "substr",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_substr,
@@ -10644,18 +10642,18 @@ INTERN struct type_method string_methods[] = {
 	      "Similar to ${this[start:end]}, however only integer-convertible objects may "
 	      "be passed (passing :none will invoke ${(int)none}, which results in $0), and "
 	      "passing negative values for either @start or @end will cause :int.SIZE_MAX to "
-	      "be used for that argument:\n"
-	      ">s = \"foo bar foobar\";\n"
-	      ">print repr s.substr(0,1);    /* \"f\" */\n"
-	      ">print repr s[0:1];           /* \"f\" */\n"
-	      ">print repr s.substr(0,#s);   /* \"foo bar foobar\" */\n"
-	      ">print repr s[0:#s];          /* \"foo bar foobar\" */\n"
-	      ">print repr s.substr(0,1234); /* \"foo bar foobar\" */\n"
-	      ">print repr s[0:1234];        /* \"foo bar foobar\" */\n"
-	      ">print repr s.substr(0,-1);   /* \"foo bar foobar\" -- Negative indices intentionally underflow into positive infinity */\n"
-	      ">print repr s[0:-1];          /* \"foo bar fooba\" */\n"
+	      "be used for that argument:\n${"
+	      "s = \"foo bar foobar\";\n"
+	      "print repr s.substr(0,1);    /* \"f\" */\n"
+	      "print repr s[0:1];           /* \"f\" */\n"
+	      "print repr s.substr(0,?#s);   /* \"foo bar foobar\" */\n"
+	      "print repr s[0:?#s];          /* \"foo bar foobar\" */\n"
+	      "print repr s.substr(0,1234); /* \"foo bar foobar\" */\n"
+	      "print repr s[0:1234];        /* \"foo bar foobar\" */\n"
+	      "print repr s.substr(0,-1);   /* \"foo bar foobar\" -- Negative indices intentionally underflow into positive infinity */\n"
+	      "print repr s[0:-1];          /* \"foo bar fooba\" */}\n"
 	      "Also note that this way of interpreting integer indices is mirrored by all other "
-	      "string functions that allow start/end-style arguments, including #find, #compare, "
+	      "string functions that allow start/end-style arguments, including ?#find, ?#compare, "
 	      "as well as many others"),
 	  TYPE_METHOD_FKWDS },
 	{ "strip",
@@ -10676,48 +10674,48 @@ INTERN struct type_method string_methods[] = {
 	{ "sstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_sstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Strip all leading and trailing instances of @needle from @this string\n"
-	      ">local result = this;\n"
-	      ">while (result.startswith(needle))\n"
-	      "> result = result[#needle:];\n"
-	      ">while (result.endswith(needle))\n"
-	      "> result = result[:#result-#needle];") },
+	      "Strip all leading and trailing instances of @needle from @this string\n${"
+	      "local result = this;\n"
+	      "while (result.startswith(needle))\n"
+	      " result = result[#needle:];\n"
+	      "while (result.endswith(needle))\n"
+	      " result = result[:#result - #needle];}") },
 	{ "lsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_lsstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Strip all leading instances of @needle from @this string\n"
-	      ">local result = this;\n"
-	      ">while (result.startswith(needle))\n"
-	      "> result = result[#needle:];") },
+	      "Strip all leading instances of @needle from @this string\n${"
+	      "local result = this;\n"
+	      "while (result.startswith(needle))\n"
+	      " result = result[#needle:];}") },
 	{ "rsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rsstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Strip all trailing instances of @needle from @this string\n"
-	      ">local result = this;\n"
-	      ">while (result.endswith(needle))\n"
-	      "> result = result[:#result-#needle];") },
+	      "Strip all trailing instances of @needle from @this string\n${"
+	      "local result = this;\n"
+	      "while (result.endswith(needle))\n"
+	      " result = result[:#result - #needle];}") },
 	{ "startswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_startswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start,end)} starts with @needle"),
+	      "Return :true if the sub-string ${this.substr(start, end)} starts with @needle"),
 	  TYPE_METHOD_FKWDS },
 	{ "endswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_endswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start,end)} ends with @needle"),
+	      "Return :true if the sub-string ${this.substr(start, end)} ends with @needle"),
 	  TYPE_METHOD_FKWDS },
 	{ "partition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_parition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Search for the first instance of @needle within ${this.substr(start,end)} and "
-	      "return a 3-element sequence of strings ${(this[:pos],needle,this[pos+#needle:])}.\n"
+	      "Search for the first instance of @needle within ${this.substr(start, end)} and "
+	      "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + #needle:])}.\n"
 	      "If @needle could not be found, ${(this,\"\",\"\")} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "rpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rparition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Search for the last instance of @needle within ${this.substr(start,end)} and "
-	      "return a 3-element sequence of strings ${(this[:pos],needle,this[pos+#needle:])}.\n"
+	      "Search for the last instance of @needle within ${this.substr(start, end)} and "
+	      "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + #needle:])}.\n"
 	      "If @needle could not be found, ${(this,\"\",\"\")} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "compare",
@@ -10732,12 +10730,12 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Performs a version-string comparison. This is similar to #compare, but rather than "
+	      "Performs a version-string comparison. This is similar to ?#compare, but rather than "
 	      "performing a strict lexicographical comparison, the numbers found in the strings "
 	      "being compared are comparsed as a whole, solving the common problem seen in applications "
-	      "such as file navigators showing a file order of `foo1.txt', `foo10.txt', `foo11.txt', `foo2.txt', etc...\n"
+	      "such as file navigators showing a file order of #C{foo1.txt}, #C{foo10.txt}, #C{foo11.txt}, #C{foo2.txt}, etc...\n"
 	      "This function is a portable implementation of the GNU function "
-	      "%{link https://linux.die.net/man/3/strverscmp strverscmp}, "
+	      "#A{strverscmp|https://linux.die.net/man/3/strverscmp}, "
 	      "for which you may follow the link for further details") },
 	{ "wildcompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_wildcompare,
@@ -10745,7 +10743,7 @@ INTERN struct type_method string_methods[] = {
 	      "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "Perform a wild-character-enabled comparising of the sub-string ${left = this.substr(my_start,my_end)} "
-	      "with ${right = pattern.substr(pattern_start,pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
+	      "with ${right = pattern.substr(pattern_start, pattern_end)}, returning ${< 0} if ${left < right}, ${> 0} "
 	      "if ${left > right}, or ${== 0} if they are equal\n"
 	      "Wild-compare characters are only parsed from @pattern, allowing $\"?\" to "
 	      "be matched with any single character from @this, and $\"*\" to be matched to "
@@ -10762,131 +10760,131 @@ INTERN struct type_method string_methods[] = {
 	      "the score is to $0, the more alike they are\n"
 	      "The intended use of this function is for auto-completion, as well as warning "
 	      "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
-	      "Note that there is another version #casefuzzycompare that also ignores casing") },
+	      "Note that there is another version ?#casefuzzycompare that also ignores casing") },
 	{ "wmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_wmatch,
 	  DOC("(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "Same as #wildcompare, returning :true where #wildcompare would return $0, and :false in all pattern cases") },
+	      "Same as ?#wildcompare, returning :true where ?#wildcompare would return $0, and :false in all pattern cases") },
 
 	/* Case-insensitive query functions */
 	{ "casereplace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casereplace,
 	  DOC("(find:?.,replace:?.,max:?Dint=!A!Dint!PSIZE_MAX)->?Dint\n"
-	      "Same as #replace, however perform a case-folded search (s.a. #casefold)"),
+	      "Same as ?#replace, however perform a case-folded search (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefind,
 	  DOC("(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as #find, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)\n"
+	      "Same as ?#find, however perform a case-folded search and return the start and end indices of the match (s.a. ?#casefold)\n"
 	      "If no match if found, :none is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserfind,
 	  DOC("(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as #rfind, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)\n"
+	      "Same as ?#rfind, however perform a case-folded search and return the start and end indices of the match (s.a. ?#casefold)\n"
 	      "If no match if found, :none is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseindex,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "Same as #index, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)"),
+	      "Same as ?#index, however perform a case-folded search and return the start and end indices of the match (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserindex,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "Same as #rindex, however perform a case-folded search and return the start and end indices of the match (s.a. #casefold)"),
+	      "Same as ?#rindex, however perform a case-folded search and return the start and end indices of the match (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefindall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefindall,
 	  DOC("(needle:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
-	      "Same as #findall, however perform a case-folded search and return the star and end indices of matches (s.a. #casefold)"),
+	      "Same as ?#findall, however perform a case-folded search and return the star and end indices of matches (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casecount,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dint\n"
-	      "Same as #count, however perform a case-folded search (s.a. #casefold)"),
+	      "Same as ?#count, however perform a case-folded search (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecontains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casecontains_f,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Same as #contains, however perform a case-folded search (s.a. #casefold)"),
+	      "Same as ?#contains, however perform a case-folded search (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casestrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casestrip,
 	  DOC("(mask?:?.)->?.\n"
-	      "Same as #strip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
+	      "Same as ?#strip, however perform a case-folded search when @mask is given (s.a. ?#casefold)") },
 	{ "caselstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caselstrip,
 	  DOC("(mask?:?.)->?.\n"
-	      "Same as #lstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
+	      "Same as ?#lstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)") },
 	{ "caserstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserstrip,
 	  DOC("(mask?:?.)->?.\n"
-	      "Same as #rstrip, however perform a case-folded search when @mask is given (s.a. #casefold)") },
+	      "Same as ?#rstrip, however perform a case-folded search when @mask is given (s.a. ?#casefold)") },
 	{ "casesstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casesstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Same as #sstrip, however perform a case-folded search (s.a. #casefold)") },
+	      "Same as ?#sstrip, however perform a case-folded search (s.a. ?#casefold)") },
 	{ "caselsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caselsstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Same as #lsstrip, however perform a case-folded search (s.a. #casefold)") },
+	      "Same as ?#lsstrip, however perform a case-folded search (s.a. ?#casefold)") },
 	{ "casersstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casersstrip,
 	  DOC("(needle:?.)->?.\n"
-	      "Same as #rsstrip, however perform a case-folded search (s.a. #casefold)") },
+	      "Same as ?#rsstrip, however perform a case-folded search (s.a. ?#casefold)") },
 	{ "casestartswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casestartswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Same as #startswith, however perform a case-folded search (s.a. #casefold)"),
+	      "Same as ?#startswith, however perform a case-folded search (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseendswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseendswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Same as #endswith, however perform a case-folded search (s.a. #casefold)"),
+	      "Same as ?#endswith, however perform a case-folded search (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casepartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseparition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as #partition, however perform a case-folded search (s.a. #casefold)"),
+	      "Same as ?#partition, however perform a case-folded search (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserparition,
 	  DOC("(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as #rpartition, however perform a case-folded search (s.a. #casefold)"),
+	      "Same as ?#rpartition, however perform a case-folded search (s.a. ?#casefold)"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casecompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #compare, however compare strings with their casing folded (s.a. #casefold)") },
+	      "Same as ?#compare, however compare strings with their casing folded (s.a. ?#casefold)") },
 	{ "casevercompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casevercompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #vercompare, however compare strings with their casing folded (s.a. #casefold)") },
+	      "Same as ?#vercompare, however compare strings with their casing folded (s.a. ?#casefold)") },
 	{ "casewildcompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casewildcompare,
 	  DOC("(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dint\n"
-	      "Same as #wildcompare, however compare strings with their casing folded (s.a. #casefold)") },
+	      "Same as ?#wildcompare, however compare strings with their casing folded (s.a. ?#casefold)") },
 	{ "casefuzzycompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefuzzycompare,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #fuzzycompare, however compare strings with their casing folded (s.a. #casefold)") },
+	      "Same as ?#fuzzycompare, however compare strings with their casing folded (s.a. ?#casefold)") },
 	{ "casewmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casewmatch,
 	  DOC("(pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,pattern_start=!0,pattern_end=!-1)->?Dbool\n"
-	      "Same as #wmatch, however compare strings with their casing folded (s.a. #casefold)") },
+	      "Same as ?#wmatch, however compare strings with their casing folded (s.a. ?#casefold)") },
 
 	/* String alignment functions. */
 	{ "center",
@@ -10912,7 +10910,7 @@ INTERN struct type_method string_methods[] = {
 	{ "reversed",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reversed,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Return the sub-string ${this.substr(start,end)} with its character order reversed"),
+	      "Return the sub-string ${this.substr(start, end)} with its character order reversed"),
 	  TYPE_METHOD_FKWDS },
 	{ "expandtabs",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_expandtabs,
@@ -10938,7 +10936,7 @@ INTERN struct type_method string_methods[] = {
 	{ "casesplit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casesplit,
 	  DOC("(sep:?.)->?S?.\n"
-	      "Same as #split, however perform a case-folded search") },
+	      "Same as ?#split, however perform a case-folded search") },
 	{ "splitlines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_splitlines,
 	  DOC("(keepends=!f)->?S?.\n"
@@ -10953,14 +10951,14 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(filler=!P{\t})->?.\n"
 	      "Using @this string as result, insert @filler at the front, as well as after "
 	      "every linefeed with the exception of one that may be located at its end\n"
-	      "The inteded use is for generating strings from structured data, such as HTML:\n"
-	      ">text = get_html();\n"
-	      ">text = \"<html>\n{}\n</html>\".format({ text.strip().indent() });") },
+	      "The inteded use is for generating strings from structured data, such as HTML:\n${"
+	      "text = get_html();\n"
+	      "text = \"<html>\n{}\n</html>\".format({ text.strip().indent() });}") },
 	{ "dedent",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_dedent,
 	  DOC("(max_chars=!1,mask?:?.)->?.\n"
 	      "Using @this string as result, remove up to @max_chars whitespace "
-	      "(s.a. #isspace) characters, or if given: characters apart of @mask "
+	      "(s.a. ?#isspace) characters, or if given: characters apart of @mask "
 	      "from the front, as well as following any linefeed") },
 
 	/* Common-character search functions. */
@@ -10982,107 +10980,107 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #common, however perform a case-folded search") },
+	      "Same as ?#common, however perform a case-folded search") },
 	{ "casercommon",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casercommon,
 	  DOC("(other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?.,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #rcommon, however perform a case-folded search") },
+	      "Same as ?#rcommon, however perform a case-folded search") },
 
 	/* Find match character sequences */
 	{ "findmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_findmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	      "Similar to #find, but do a recursive search for the "
-	      "first @close that doesn't have a match @{open}:\n"
-	      ">s = \"foo(bar(),baz(42),7).strip()\";\n"
-	      ">lcol = s.find(\"(\");\n"
-	      ">print lcol; /* 3 */\n"
-	      ">mtch = s.findmatch(\"(\",\")\",lcol+1);\n"
-	      ">print repr s[lcol:mtch+1]; /* \"(bar(),baz(42),7)\" */\n"
-	      "If no @close without a match @open exists, ${-1} is returned\n"
+	      "Similar to ?#find, but do a recursive search for the "
+	      "first @close that doesn't have a match @{open}:\n${"
+	      "s = \"foo(bar(),baz(42),7).strip()\";\n"
+	      "lcol = s.find(\"(\");\n"
+	      "print lcol; /* 3 */\n"
+	      "mtch = s.findmatch(\"(\",\")\",lcol+1);\n"
+	      "print repr s[lcol:mtch+1]; /* \"(bar(),baz(42),7)\" */}\n"
+	      "If no @close without a match @open exists, $-1 is returned\n"
 	      "Note that @open and @close are not restricted to single-character "
 	      "strings, are allowed to be of any length") },
 	{ "indexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_indexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
-	      "Same as #findmatch, but throw an :IndexError instead of "
+	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start, end)}\n"
+	      "Same as ?#findmatch, but throw an :IndexError instead of "
 	      "returning ${-1} if no @close without a match @open exists") },
 	{ "casefindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casefindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as #findmatch, however perform a case-folded search and return the start and end indices of the match\n"
+	      "Same as ?#findmatch, however perform a case-folded search and return the start and end indices of the match\n"
 	      "If no match if found, :none is returned") },
 	{ "caseindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
-	      "Same as #indexmatch, however perform a case-folded search and return the start and end indices of the match") },
+	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start, end)}\n"
+	      "Same as ?#indexmatch, however perform a case-folded search and return the start and end indices of the match") },
 	{ "rfindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rfindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	      "Similar to #findmatch, but operate in a mirrored fashion, searching for the "
-	      "last instance of @open that has no match @close within ${this.substr(start,end)}:\n"
-	      ">s = \"get_string().foo(bar(),baz(42),7).length\";\n"
-	      ">lcol = s.find(\")\");\n"
-	      ">print lcol; /* 19 */\n"
-	      ">mtch = s.rfindmatch(\"(\",\")\",0,lcol);\n"
-	      ">print repr s[mtch:lcol+1]; /* \"(bar(),baz(42),7)\" */\n"
+	      "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
+	      "last instance of @open that has no match @close within ${this.substr(start, end)}:\n${"
+	      "s = \"get_string().foo(bar(), baz(42), 7).length\";\n"
+	      "lcol = s.find(\")\");\n"
+	      "print lcol; /* 19 */\n"
+	      "mtch = s.rfindmatch(\"(\", \")\", 0, lcol);\n"
+	      "print repr s[mtch:lcol + 1]; /* \"(bar(), baz(42), 7)\" */}\n"
 	      "If no @open without a match @close exists, ${-1} is returned") },
 	{ "rindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
-	      "Same as #rfindmatch, but throw an :IndexError instead of "
+	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start, end)}\n"
+	      "Same as ?#rfindmatch, but throw an :IndexError instead of "
 	      "returning ${-1} if no @open without a match @close exists") },
 	{ "caserfindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserfindmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as #rfindmatch, however perform a case-folded search and return the start and end indices of the match\n"
+	      "Same as ?#rfindmatch, however perform a case-folded search and return the start and end indices of the match\n"
 	      "If no match if found, :none is returned") },
 	{ "caserindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
-	      "Same as #rindexmatch, however perform a case-folded search and return the start and end indices of the match") },
+	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start, end)}\n"
+	      "Same as ?#rindexmatch, however perform a case-folded search and return the start and end indices of the match") },
 
 	/* Using the find-match functionality, also provide a partitioning version */
 	{ "partitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_partitionmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "A hybrid between #find, #findmatch and #partition that returns the strings surrounding "
+	      "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
 	      "the matched string portion, the first being the substring prior to the match, "
 	      "the second being the matched string itself (including the @open and @close strings), "
-	      "and the third being the substring after the match:\n"
-	      ">s = \"foo {x,y,{13,19,42,{}},w} -- tail {}\";\n"
-	      ">print repr s.partitionmatch(\"{\",\"\"); /* { \"foo \", \"{x,y,{13,19,42,{}},w}\", \" -- tail {}\" } */\n"
-	      "If no matching @open + @close pair could be found, ${(this[start:end],\"\",\"\")} is returned\n"
-	      ">function partitionmatch(open, close, start = 0, end = -1) {\n"
-	      "> local j;\n"
-	      "> local i = this.find(open,start,end);\n"
-	      "> if (i < 0 || (j = this.findmatch(open,close,i+#open,end)) < 0)\n"
-	      ">  return (this.substr(start,end),\"\",\"\");\n"
-	      "> return (this.substr(start,i),this.substr(i,j+#close),this.substr(j+#close,end))\n"
-	      ">}") },
+	      "and the third being the substring after the match:\n${"
+	      "s = \"foo { x, y, { 13, 19, 42, { } }, w } -- tail {}\";\n"
+	      "print repr s.partitionmatch(\"{\",\"\"); /* { \"foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail {}\" } */\n"
+	      "f no matching @open + @close pair could be found, ${(this[start:end], \"\", \"\")} is returned\n"
+	      "function partitionmatch(open: string, close: string, start: int = 0, end: int = -1) {\n"
+	      "	local j;\n"
+	      "	local i = this.find(open, start, end);\n"
+	      "	if (i < 0 || (j = this.findmatch(open, close, i + #open, end)) < 0)\n"
+	      "		return (this.substr(start, end), \"\", \"\");\n"
+	      "	return (this.substr(start, i), this.substr(i, j + #close), this.substr(j + #close, end))\n"
+	      "}}") },
 	{ "rpartitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rpartitionmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "A hybrid between #rfind, #rfindmatch and #rpartition that returns the strings surrounding "
+	      "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
 	      "the matched string portion, the first being the substring prior to the match, "
 	      "the second being the matched string itself (including the @open and @close strings), "
-	      "and the third being the substring after the match:\n"
-	      ">s = \"{} foo {x,y,{13,19,42,{}},w} -- tail\";\n"
-	      ">print repr s.rpartitionmatch(\"{\",\"\"); /* { \"{} foo \", \"{x,y,{13,19,42,{}},w}\", \" -- tail\" } */\n"
-	      "If no matching @open + @close pair could be found, ${(this[start:end],\"\",\"\")} is returned\n"
-	      ">function rpartitionmatch(open, close, start = 0, end = -1) {\n"
-	      "> local i;\n"
-	      "> local j = this.rfind(close,start,end);\n"
-	      "> if (j < 0 || (i = this.rfindmatch(open,close,start,j)) < 0)\n"
-	      ">  return (this.substr(start,end),\"\",\"\");\n"
-	      "> return (this.substr(start,i),this.substr(i,j+#close),this.substr(j+#close,end))\n"
-	      ">}") },
+	      "and the third being the substring after the match:\n${"
+	      "s = \"{ } foo { x, y, { 13, 19, 42, { } }, w } -- tail\";\n"
+	      "print repr s.rpartitionmatch(\"{\", \"\"); /* { \"{ } foo \", \"{ x, y, { 13, 19, 42, { } }, w }\", \" -- tail\" } */}\n"
+	      "If no matching @open + @close pair could be found, ${(this[start:end],\"\",\"\")} is returned\n${"
+	      "function rpartitionmatch(open: string, close: string, start: int = 0, end: int = -1) {\n"
+	      "	local i;\n"
+	      "	local j = this.rfind(close, start, end);\n"
+	      "	if (j < 0 || (i = this.rfindmatch(open, close, start, j)) < 0)\n"
+	      "		return (this.substr(start, end),\"\",\"\");\n"
+	      "	return (this.substr(start, i), this.substr(i, j + #close), this.substr(j + #close, end))\n"
+	      "}}") },
 	{ "casepartitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_casepartitionmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T3?.?.?.\n"
@@ -11098,7 +11096,7 @@ INTERN struct type_method string_methods[] = {
 	      "Split @this string into segments, each exactly @substring_length characters long, with the "
 	      "last segment containing the remaining characters and having a length of between "
 	      "$1 and @substring_length characters.\n"
-	      "This function is similar to #distribute, but instead of being given the "
+	      "This function is similar to ?#distribute, but instead of being given the "
 	      "length of sub-strings and figuring out their amount, this function takes "
 	      "the amount of sub-strings and figures out their lengths") },
 	{ "distribute",
@@ -11107,7 +11105,7 @@ INTERN struct type_method string_methods[] = {
 	      "Split @this string into @substring_count similarly sized sub-strings, each with a "
 	      "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
 	      "sub-string containing all remaining characters.\n"
-	      "This function is similar to #segments, but instead of being given the "
+	      "This function is similar to ?#segments, but instead of being given the "
 	      "amount of sub-strings and figuring out their lengths, this function takes "
 	      "the length of sub-strings and figures out their amount") },
 
@@ -11117,123 +11115,122 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dint\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "@return The number of leading characters in ${this.substr(start,end)} "
+	      "@return The number of leading characters in ${this.substr(start, end)} "
 	      "matched by @pattern, or $0 if @pattern could not be fully matched\n"
-	      "Check if ${this.substr(start,end)} string matches the given regular expression @pattern\n"
+	      "Check if ${this.substr(start, end)} string matches the given regular expression @pattern\n"
 	      "When specified, @rules must be a comma-separated and case-insensitive string "
 	      "consisting of a set of the following Name-options, or a tightly packed set of the "
 	      "following Short-options:\n"
-	      "%{table Name|Short|Inline|Description\n"
-	      "$\"DOTALL\"|$\"s\"|$\"s\"|The $\".\" regex meta-character matches anything (including new-lines, which otherwise wouldn't be matched)\n"
-	      "$\"MULTILINE\"|$\"m\"|$\"m\"|Allow $\"^\" to match immediately after a line-feed, rather than just at the start of the string\n"
+	      "#T{Name|Short|Inline|Description~"
+	      "$\"DOTALL\"|$\"s\"|$\"s\"|The $\".\" regex meta-character matches anything (including new-lines, which otherwise wouldn't be matched)&"
+	      "$\"MULTILINE\"|$\"m\"|$\"m\"|Allow $\"^\" to match immediately after a line-feed, rather than just at the start of the string&"
 	      "$\"NOCASE\"|$\"i\"|$\"i\"|Ignore casing when matching single characters, as well as characters in ranges (e.g.: $\"[a-z]\")}\n"
 	      "The builtin regular expression API for strings spans across the following functions:\n"
-	      "%{table Function|Non-regex Variant|Description\n"
-	      "#rematch|#common|Count how many character at the start of a sub-string match a regex pattern\n"
-	      "#rematches|#equal|Check that a given sub-string match the regex pattern exactly\n"
-	      "#refind|#find|Find the first sub-range matched by a regex pattern\n"
-	      "#rerfind|#rfind|Find the last sub-range matched by a regex pattern\n"
-	      "#reindex|#index|Same as #refind, but throws an error if not found\n"
-	      "#rerindex|#rindex|Same as #rerfind, but throws an error if not found\n"
-	      "#relocate|-|Same as #refind, but return the sub-string that was matched, rather than its indices\n"
-	      "#rerlocate|-|Same as #rerfind, but return the sub-string that was matched, rather than its indices\n"
-	      "#repartition|#partition|Same as #relocate, but return a 3-tuple of strings (before_match,match,after_match)\n"
-	      "#rerpartition|#rpartition|Same as #rerlocate, but return a 3-tuple of strings (before_match,match,after_match)\n"
-	      "#rereplace|#replace|Find and replace all sub-ranges matched by a regex pattern with a different string\n"
-	      "#refindall|#findall|Enumerate all sub-ranges matched by a regex pattern in ascending order\n"
-	      "#relocateall|-|Enumerate all sub-strings matched by a regex pattern in ascending order\n"
-	      "#resplit|#split|Enumerate all sub-strings matched by a regex pattern in ascending order\n"
-	      "#restartswith|#startswith|Check if @this string starts with a regular expression\n"
-	      "#reendswith|#endswith|Check if @this string ends with a regular expression\n"
-	      "#recontains|#contains|Check if @this stirng contains a regular expression anywhere\n"
-	      "#recount|#count|Count the number of occurances of a regular expression\n"
-	      "#restrip|#strip|Strip all leading and trailing regular expression matches\n"
-	      "#relstrip|#lstrip|Strip all leading regular expression matches\n"
-	      "#rerstrip|#rstrip|Strip all trailing regular expression matches\n"
-	      "}\n"
+	      "#T{Function|Non-regex Variant|Description~"
+	      "?#rematch|?#common|Count how many character at the start of a sub-string match a regex pattern&"
+	      "?#rematches|?#equal|Check that a given sub-string match the regex pattern exactly&"
+	      "?#refind|?#find|Find the first sub-range matched by a regex pattern&"
+	      "?#rerfind|?#rfind|Find the last sub-range matched by a regex pattern&"
+	      "?#reindex|?#index|Same as ?#refind, but throws an error if not found&"
+	      "?#rerindex|?#rindex|Same as ?#rerfind, but throws an error if not found&"
+	      "?#relocate|-|Same as ?#refind, but return the sub-string that was matched, rather than its indices&"
+	      "?#rerlocate|-|Same as ?#rerfind, but return the sub-string that was matched, rather than its indices&"
+	      "?#repartition|?#partition|Same as ?#relocate, but return a 3-tuple of strings (before_match,match,after_match)&"
+	      "?#rerpartition|?#rpartition|Same as ?#rerlocate, but return a 3-tuple of strings (before_match,match,after_match)&"
+	      "?#rereplace|?#replace|Find and replace all sub-ranges matched by a regex pattern with a different string&"
+	      "?#refindall|?#findall|Enumerate all sub-ranges matched by a regex pattern in ascending order&"
+	      "?#relocateall|-|Enumerate all sub-strings matched by a regex pattern in ascending order&"
+	      "?#resplit|?#split|Enumerate all sub-strings matched by a regex pattern in ascending order&"
+	      "?#restartswith|?#startswith|Check if @this string starts with a regular expression&"
+	      "?#reendswith|?#endswith|Check if @this string ends with a regular expression&"
+	      "?#recontains|?#contains|Check if @this stirng contains a regular expression anywhere&"
+	      "?#recount|?#count|Count the number of occurances of a regular expression&"
+	      "?#restrip|?#strip|Strip all leading and trailing regular expression matches&"
+	      "?#relstrip|?#lstrip|Strip all leading regular expression matches&"
+	      "?#rerstrip|?#rstrip|Strip all trailing regular expression matches}\n"
 	      "Deemon implements support for the following regex matching functions:\n"
-	      "%{table Feature|Description\n"
-	      "${r\".\"}|Match anything except for newlines. When $\"DOTALL\" is enabled, match anything including newlines\n"
-	      "${r\"^\"}|Match at the start of the string. When $\"MULTILINE\", also match at the start of lines (${r\"(?<=\\A|\\n)\"})\n"
-	      "${r\"$\"}|Match at the end of the string. When $\"MULTILINE\", also match at the end of lines (${r\"(?=\\Z|\\n)\"})\n"
-	      "${r\"\\A\"}|Match only at the start of the string\n"
-	      "${r\"\\Z\"}|Match only at the end of the string\n"
-	      "${r\"(x...|y...)\"}|Match either `x...' or `y...' (Note special behavior when repeated)\n"
-	      "${r\"(?...)\"}|Regex extension (see below)\n"
-	      "${r\"[...]\"}|Match any character apart of `...' (also accept the `a-z' notation, as well as any of the ${r\"\\...\"}) functions below\n"
-	      "${r\"\\d\"}|Match any character $ch with ${ch.isdigit()}\n"
-	      "${r\"\\D\"}|Match any character $ch with ${!ch.isdigit()}\n"
-	      "${r\"\\s\"}|Match any character $ch with ${ch.isspace()}\n"
-	      "${r\"\\S\"}|Match any character $ch with ${!ch.isspace()}\n"
-	      "${r\"\\w\"}|Match any character $ch with ${ch.issymstrt() || ch.issymcont()}\n"
-	      "${r\"\\W\"}|Match any character $ch with ${!ch.issymstrt() && !ch.issymcont()}\n"
-	      "${r\"\\n\"}|Match any character $ch with ${ch.islf()} (NOTE: deemon-specific extension)\n"
-	      "${r\"\\N\"}|Match any character $ch with ${!ch.islf()} (NOTE: deemon-specific extension)\n"
-	      "${r\"\\a\"}|Match the character ${string.chr(0x07)} aka $\"\\a\"\n"
-	      "${r\"\\b\"}|Match the character ${string.chr(0x08)} aka $\"\\b\"\n"
-	      "${r\"\\f\"}|Match the character ${string.chr(0x0c)} aka $\"\\f\"\n"
-	      "${r\"\\r\"}|Match the character ${string.chr(0x0d)} aka $\"\\r\"\n"
-	      "${r\"\\t\"}|Match the character ${string.chr(0x09)} aka $\"\\t\"\n"
-	      "${r\"\\v\"}|Match the character ${string.chr(0x0b)} aka $\"\\v\"\n"
-	      "${r\"\\e\"}|Match the character ${string.chr(0x1b)} aka $\"\\e\"\n"
-	      "${r\"\\[...]\"}|Match a character via its explicit unicode traits (see below)\n"
-	      "${r\"\\...\"}|For anything else, match `...' exactly\n"
-	      "${r\"...\"}|Match the given character `...' exactly}\n"
+	      "#T{Feature|Description~"
+	      "$r\".\"|Match anything except for newlines. When $\"DOTALL\" is enabled, match anything including newlines&"
+	      "$r\"^\"|Match at the start of the string. When $\"MULTILINE\", also match at the start of lines (${r\"(?<=\\A|\\n)\"})&"
+	      "$r\"$\"|Match at the end of the string. When $\"MULTILINE\", also match at the end of lines (${r\"(?=\\Z|\\n)\"})&"
+	      "$r\"\\A\"|Match only at the start of the string&"
+	      "$r\"\\Z\"|Match only at the end of the string&"
+	      "$r\"(x...#|y...)\"|Match either `x...' or `y...' (Note special behavior when repeated)&"
+	      "$r\"(?...)\"|Regex extension (see below)&"
+	      "$r\"[...]\"|Match any character apart of `...' (also accept the `a-z' notation, as well as any of the ${r\"\\...\"}) functions below&"
+	      "$r\"\\d\"|Match any character $ch with ${ch.isdigit()}&"
+	      "$r\"\\D\"|Match any character $ch with ${!ch.isdigit()}&"
+	      "$r\"\\s\"|Match any character $ch with ${ch.isspace()}&"
+	      "$r\"\\S\"|Match any character $ch with ${!ch.isspace()}&"
+	      "$r\"\\w\"|Match any character $ch with ${ch.issymstrt() || ch.issymcont()}&"
+	      "$r\"\\W\"|Match any character $ch with ${!ch.issymstrt() && !ch.issymcont()}&"
+	      "$r\"\\n\"|Match any character $ch with ${ch.islf()} (NOTE: deemon-specific extension)&"
+	      "$r\"\\N\"|Match any character $ch with ${!ch.islf()} (NOTE: deemon-specific extension)&"
+	      "$r\"\\a\"|Match the character ${string.chr(0x07)} aka $\"\\a\"&"
+	      "$r\"\\b\"|Match the character ${string.chr(0x08)} aka $\"\\b\"&"
+	      "$r\"\\f\"|Match the character ${string.chr(0x0c)} aka $\"\\f\"&"
+	      "$r\"\\r\"|Match the character ${string.chr(0x0d)} aka $\"\\r\"&"
+	      "$r\"\\t\"|Match the character ${string.chr(0x09)} aka $\"\\t\"&"
+	      "$r\"\\v\"|Match the character ${string.chr(0x0b)} aka $\"\\v\"&"
+	      "$r\"\\e\"|Match the character ${string.chr(0x1b)} aka $\"\\e\"&"
+	      "$r\"\\[...]\"|Match a character via its explicit unicode traits (see below)&"
+	      "$r\"\\...\"|For anything else, match `...' exactly&"
+	      "$r\"...\"|Match the given character `...' exactly}\n"
 	      "Deemon implements support for the following regex repetition suffixes:\n"
-	      "%{table Suffix|Min|Max|Greedy\n"
-	      "${r\"*\"}|$0|$INF|$true\n"
-	      "${r\"*?\"}|$0|$INF|$false\n"
-	      "${r\"+\"}|$1|$INF|$true\n"
-	      "${r\"+?\"}|$1|$INF|$false\n"
-	      "${r\"?\"}|$0|$1|$true\n"
-	      "${r\"??\"}|$0|$1|$false\n"
-	      "${r\"{m}\"}|$m|$m|$true\n"
-	      "${r\"{m}?\"}|$m|$m|$false\n"
-	      "${r\"{,n}\"}|$0|$n|$true\n"
-	      "${r\"{,n}?\"}|$0|$n|$false\n"
-	      "${r\"{m,}\"}|$m|$INF|$true\n"
-	      "${r\"{m,}?\"}|$m|$INF|$false\n"
-	      "${r\"{m,n}\"}|$m|$n|$true\n"
-	      "${r\"{m,n}?\"}|$m|$n|$false}\n"
+	      "#T{Suffix|Min|Max|Greedy~"
+	      "$r\"*\"|$0|$INF|$true&"
+	      "$r\"*?\"|$0|$INF|$false&"
+	      "$r\"+\"|$1|$INF|$true&"
+	      "$r\"+?\"|$1|$INF|$false&"
+	      "$r\"?\"|$0|$1|$true&"
+	      "$r\"??\"|$0|$1|$false&"
+	      "$r\"{m}\"|$m|$m|$true&"
+	      "$r\"{m}?\"|$m|$m|$false&"
+	      "$r\"{,n}\"|$0|$n|$true&"
+	      "$r\"{,n}?\"|$0|$n|$false&"
+	      "$r\"{m,}\"|$m|$INF|$true&"
+	      "$r\"{m,}?\"|$m|$INF|$false&"
+	      "$r\"{m,n}\"|$m|$n|$true&"
+	      "$r\"{m,n}?\"|$m|$n|$false}\n"
 	      "Deemon implements support for the following regex extensions (which also include some deemon-specific ones):\n"
-	      "%{table Extension|Description\n"
-	      "${r\"(?<=...)\"}|Positive look-behind assertion (Ensure that the current data position is preceded by `...')\n"
-	      "${r\"(?<!...)\"}|Negative look-behind assertion (Ensure that the current data position isn't preceded by `...')\n"
-	      "${r\"(?=...)\"}|Positive look-ahead assertion (Ensure that `...' follows the current data position)\n"
-	      "${r\"(?!...)\"}|Negative look-ahead assertion (Ensure that `...' doesn't follow the current data position)\n"
-	      "${r\"(?~ims)\"}|Set/delete regex flags (each character corresponding to the `Inline' column above). "
-	      "Each rule may be prefixed by `~' in order to unset that flag. e.g. $\"(?i~m)\" or $\"(?~mi~s)\"\n"
-	      "${r\"(?#...)\"}|Comment\n"
-	      "${r\"(?\\d=7)\"}|Match any unicode digit-like character with a value equal to $7\n"
-	      "${r\"(?\\d>2)\"}, ${r\"(?\\d>=3)\"}|Match any unicode digit-like character with a value of at least $3\n"
-	      "${r\"(?\\d<7)\"}, ${r\"(?\\d<=6)\"}|Match any unicode digit-like character with a value of at most $6\n"
-	      "${r\"(?\\d>=2<=6)\"}, ${r\"(?\\d<=6>=2)\"}, ${r\"(?\\d>1<7)\"}, ${r\"(?\\d<7>1)\"}|Match any unicode digit-like character with a value between $2 and $6}\n"
+	      "#T{Extension|Description~"
+	      "$r\"(?<=...)\"|Positive look-behind assertion (Ensure that the current data position is preceded by `...')&"
+	      "$r\"(?<!...)\"|Negative look-behind assertion (Ensure that the current data position isn't preceded by `...')&"
+	      "$r\"(?=...)\"|Positive look-ahead assertion (Ensure that `...' follows the current data position)&"
+	      "$r\"(?!...)\"|Negative look-ahead assertion (Ensure that `...' doesn't follow the current data position)&"
+	      "$r\"(?~ims)\"|Set/delete regex flags (each character corresponding to the `Inline' column above). "
+	      "Each rule may be prefixed by `~' in order to unset that flag. e.g. $\"(?i#~m)\" or $\"(?#~mi#~s)\"&"
+	      "$r\"(?#...)\"|Comment&"
+	      "$r\"(?\\d=7)\"|Match any unicode digit-like character with a value equal to $7&"
+	      "$r\"(?\\d>2)\", $r\"(?\\d>=3)\"|Match any unicode digit-like character with a value of at least $3&"
+	      "$r\"(?\\d<7)\", $r\"(?\\d<=6)\"|Match any unicode digit-like character with a value of at most $6&"
+	      "$r\"(?\\d>=2<=6)\", $r\"(?\\d<=6>=2)\", $r\"(?\\d>1<7)\", $r\"(?\\d<7>1)\"|Match any unicode digit-like character with a value between $2 and $6}\n"
 	      "As an extension, deemon implements unicode trait-based character matching "
-	      "through ${r\"\\[...]\"}, where ${r\"...\"} is encoded as follows, where TRAITS "
+	      "through $r\"\\[...]\", where $r\"...\" is encoded as follows, where TRAITS "
 	      "is a tightly packed string of characters acting as flags, which are described further below:\n"
-	      "%{table Encoding|Description\n"
-	      "${r\"\\[TRAITS]\"}|Match characters implementing all of the given TRAITS (see below)\n"
-	      "${r\"\\[+TRAITS]\"}|Match characters implementing any of the given TRAITS (see below)\n"
-	      "${r\"\\[^TRAITS]\"}|Match characters implementing none of the given TRAITS (see below)\n"
-	      "${r\"\\[WANTED-UNWANTED]\"}|Match characters implementing all of WANTED, but none of UNWANTED (see below)}\n"
-	      "%{table Trait-Character|Function|Description\n"
-	      "${\"p\"}|#isprint|Is the character printable or SPC\n"
-	      "${\"a\"}|#isalpha|Is the character alphabetic\n"
-	      "${\"c\"}|#isspace|Is the character a space-character\n"
-	      "${\"n\"}|#islf|Is the character a line-feed (Warning: Unlike ${r\"\\n\"}, doesn't match $\"\\r\\n\" as a single line-feed)\n"
-	      "${\"l\"}|#islower|Is the character lower-case\n"
-	      "${\"u\"}|#isupper|Is the character upper-case\n"
-	      "${\"t\"}|#istitle|Is the character title-case\n"
-	      "${\"c\"}|#iscntrl|Is the character a control character\n"
-	      "${\"d\"}|#isdecimal|Is the character a decimal (e.g. $\"2\" (two))\n"
-	      "${\"D\"}|#isdigit|Is the character a digit (e.g. $\"²\" (square))\n"
-	      "${\"0\"}|#issymstrt|Is the character allowed as start of a symbol\n"
-	      "${\"1\"}|#issymcont|Is the character allowed as continuation of a symbol}\n"
-	      "%{table Example pattern|Description\n"
-	      "${text.relocateall(r\"\\[0]\\[1]*\")}|Locate all unicode-compliant symbol names\n"
-	      "${text.relocateall(r\"(?<!\\[1])\\[d]\\[1]*\")}|Locate all c-compliant integer literal ($\"12\", $\"0x12\" or $\"0x12ul\")\n"
-	      "${text.relocateall(r\"(?<!\\[1])\\[u]\\[l]*(?!\\[0])\")}|Locate all words starting with an uppcase letter\n"
-	      "${text.relocateall(r\'\"(\\.|.)*\"\')}|Locate all c-compliant string constants\n"
+	      "#T{Encoding|Description~"
+	      "$r\"\\[TRAITS]\"|Match characters implementing all of the given TRAITS (see below)&"
+	      "$r\"\\[+TRAITS]\"|Match characters implementing any of the given TRAITS (see below)&"
+	      "$r\"\\[^TRAITS]\"|Match characters implementing none of the given TRAITS (see below)&"
+	      "$r\"\\[WANTED-UNWANTED]\"|Match characters implementing all of WANTED, but none of UNWANTED (see below)}\n"
+	      "#T{Trait-Character|Function|Description~"
+	      "$\"p\"|#isprint|Is the character printable or SPC&"
+	      "$\"a\"|#isalpha|Is the character alphabetic&"
+	      "$\"c\"|#isspace|Is the character a space-character&"
+	      "$\"n\"|#islf|Is the character a line-feed (Warning: Unlike $r\"\\n\", doesn't match $\"\\r\\n\" as a single line-feed)&"
+	      "$\"l\"|#islower|Is the character lower-case&"
+	      "$\"u\"|#isupper|Is the character upper-case&"
+	      "$\"t\"|#istitle|Is the character title-case&"
+	      "$\"c\"|#iscntrl|Is the character a control character&"
+	      "$\"d\"|#isdecimal|Is the character a decimal (e.g. $\"2\" (two))&"
+	      "$\"D\"|#isdigit|Is the character a digit (e.g. $\"²\" (square))&"
+	      "$\"0\"|#issymstrt|Is the character allowed as start of a symbol&"
+	      "$\"1\"|#issymcont|Is the character allowed as continuation of a symbol}\n"
+	      "#T{Example pattern|Description~"
+	      "${text.relocateall(r\"\\[0]\\[1]*\")}|Locate all unicode-compliant symbol names&"
+	      "${text.relocateall(r\"(?<!\\[1])\\[d]\\[1]*\")}|Locate all c-compliant integer literal ($\"12\", $\"0x12\" or $\"0x12ul\")&"
+	      "${text.relocateall(r\"(?<!\\[1])\\[u]\\[l]*(?!\\[0])\")}|Locate all words starting with an uppcase letter&"
+	      "${text.relocateall(r\'\"(\\.|.)*\"\')}|Locate all c-compliant string constants&"
 	      "${text.relocateall(r\"(?s)/\\*.*\\*/\")}|Locate all c-like comments}\n"
 	      "In order to improve performance for repetitious data, deemon's regex implementation "
 	      "has a minor quirk when it comes to groups containing $\"|\" to indicate multiple variants "
@@ -11246,118 +11243,118 @@ INTERN struct type_method string_methods[] = {
 	      "become the new primary variant, and the process is repeated.\n"
 	      "This design decision was done on purpose in order to more efficiently match repetitious data, "
 	      "however when presented with multiple variants in a repeating context, it will not always be "
-	      "the first variant that gets matched.\n"
-	      ">local data = \"bar,  foobar\";\n"
-	      ">/* When faced by multiple variants, deemon will always\n"
-	      "> * preferr a variant that matched before the current:\n"
-	      "> *  - Available variants: r\",\", r\" f\", r\" \"\n"
-	      "> *  - ...\n"
-	      "> *  - Try variant #0\n"
-	      "> *    Match: \"bar,  foobar\"\n"
-	      "> *               ^ Variant #0\n"
-	      "> *    Remaining data: \"  foobar\"\n"
-	      "> *    Set primary variant: #0\n"
-	      "> *  - Try variant #0\n"
-	      "> *    Missmatch (Primary variant)\n"
-	      "> *    Search for new primary variant\n"
-	      "> *  - Try variant #1\n"
-	      "> *    Missmatch (\"  foobar\".startswith(\" f\") == false)\n"
-	      "> *  - Try variant #2\n"
-	      "> *    Match\n"
-	      "> *    Set primary variant: #3\n"
-	      "> *    Remaining data: \" foobar\"\n"
-	      "> *  - Try variant #2\n"
-	      "> *    Match\n"
-	      "> *    Remaining data: \"foobar\"\n"
-	      "> *  - Try variant #2\n"
-	      "> *    Missmatch (Primary variant)\n"
-	      "> *    Search for new primary variant\n"
-	      "> *  - ...\n"
-	      "> * -> At this point, none of the variants continue to match\n"
-	      "> *    and the resulting match-range doesn't include the `f'\n"
-	      "> *    because variant #1 (despite having a higher precedence\n"
-	      "> *    than variant #2) was never checked for \" foobar\"\n"
-	      "> * -> This quirk can only ever be a problem in badly written\n"
-	      "> *    expressions that contain multiple variants where a variant\n"
-	      "> *    with a lower index starts with the same condition as another\n"
-	      "> *    with a greater index\n"
-	      "> *    This example should really be written as r\"(,| f?)+\", which\n"
-	      "> *    wold never even run into this problem in the first place. */\n"
-	      ">print repr data.relocateall(r\"(,| f| )+\"); /* { \",  \" } */\n"
-	      ">\n"
-	      ">/* This regular expression doesn't have the quirk due to the double-parenthesis, \n"
-	      "> * which leaves the outter (repeating) group to only have 1 variant, which it will\n"
-	      "> * then always execute linearly, meaning that for each repetition, `,' is checked\n"
-	      "> * first, followed by ` f', and finally ` '\n"
-	      "> *  - ...\n"
-	      "> *  - Try variant #0\n"
-	      "> *    - Try variant #0.1\n"
-	      "> *    - Try variant #0.2\n"
-	      "> *    - Try variant #0.3\n"
-	      "> *  - ...\n"
-	      "> * -> Since The repeating group has only 1 variant, that variant\n"
-	      "> *    is always the primary one, and checked as a whole when being\n"
-	      "> *    repeated */\n"
-	      ">print repr data.relocateall(r\"((,| f| ))+\"); /* { \",  f\" } */") },
+	      "the first variant that gets matched.\n${"
+	      "local data = \"bar,  foobar\";\n"
+	      "/* When faced by multiple variants, deemon will always\n"
+	      " * preferr a variant that matched before the current:\n"
+	      " *  - Available variants: r\",\", r\" f\", r\" \"\n"
+	      " *  - ...\n"
+	      " *  - Try variant ##0\n"
+	      " *    Match: \"bar,  foobar\"\n"
+	      " *               ^ Variant ##0\n"
+	      " *    Remaining data: \"  foobar\"\n"
+	      " *    Set primary variant: ##0\n"
+	      " *  - Try variant ##0\n"
+	      " *    Missmatch (Primary variant)\n"
+	      " *    Search for new primary variant\n"
+	      " *  - Try variant ##1\n"
+	      " *    Missmatch (\"  foobar\".startswith(\" f\") == false)\n"
+	      " *  - Try variant ##2\n"
+	      " *    Match\n"
+	      " *    Set primary variant: ##3\n"
+	      " *    Remaining data: \" foobar\"\n"
+	      " *  - Try variant ##2\n"
+	      " *    Match\n"
+	      " *    Remaining data: \"foobar\"\n"
+	      " *  - Try variant #2\n"
+	      " *    Missmatch (Primary variant)\n"
+	      " *    Search for new primary variant\n"
+	      " *  - ...\n"
+	      " * -\\> At this point, none of the variants continue to match\n"
+	      " *    and the resulting match-range doesn't include the `f'\n"
+	      " *    because variant ##1 (despite having a higher precedence\n"
+	      " *    than variant ##2) was never checked for \" foobar\"\n"
+	      " * -\\> This quirk can only ever be a problem in badly written\n"
+	      " *    expressions that contain multiple variants where a variant\n"
+	      " *    with a lower index starts with the same condition as another\n"
+	      " *    with a greater index\n"
+	      " *    This example should really be written as r\"(,| f?)+\", which\n"
+	      " *    wold never even run into this problem in the first place. */\n"
+	      "print repr data.relocateall(r\"(,| f| )+\"); /* { \",  \" } */\n"
+	      "\\\n"
+	      "/* This regular expression doesn't have the quirk due to the double-parenthesis, \n"
+	      " * which leaves the outter (repeating) group to only have 1 variant, which it will\n"
+	      " * then always execute linearly, meaning that for each repetition, `,' is checked\n"
+	      " * first, followed by ` f', and finally ` '\n"
+	      " *  - ...\n"
+	      " *  - Try variant ##0\n"
+	      " *    - Try variant ##0.1\n"
+	      " *    - Try variant ##0.2\n"
+	      " *    - Try variant ##0.3\n"
+	      " *  - ...\n"
+	      " * -\\> Since The repeating group has only 1 variant, that variant\n"
+	      " *    is always the primary one, and checked as a whole when being\n"
+	      " *    repeated */\n"
+	      "print repr data.relocateall(r\"((,| f| ))+\"); /* { \",  f\" } */}") },
 	{ "rematches",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rematches,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Check if @pattern matches the entirety of the specified range of @this string\n"
-	      "This function behaves identical to ${this.rematch(...) == #this}") },
+	      "This function behaves identical to ${this.rematch(...) == ?#this}") },
 	{ "refind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refind,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Find the first sub-string matched by @pattern, and return its start/end indices, or :none if no match exists\n"
-	      "Note that using :none in an expand expression will result in whatever number of targets are required:\n"
-	      ">/* If the pattern count not be matched, both `start' and `end' will be `none' singleton */\n"
-	      ">local start,end = data.refind(r\"\\b\\w\\b\")...;\n"
-	      ">/* Since `none' is equal to `0' when casted to `int', calling `substr' with none-arguments\n"
-	      "> * is the same as calling `data.substr(0,0)', meaning that this an empty string will be\n"
-	      "> * returned when `refind' didn't manage to find anything.\n"
-	      "> * Note however that `operator [:]' functions differently, as it interprets `none' as a\n"
-	      "> * placeholder for either `0' of `#data', so calling `data[start:end]' would re-produce\n"
-	      "> * `data' itself in the event of `refind' having failed. */\n"
-	      ">print repr data.substr(start,end);") },
+	      "Note that using :none in an expand expression will result in whatever number of targets are required:\n${"
+	      "/* If the pattern count not be matched, both `start' and `end' will be `none' singleton */\n"
+	      "local start,end = data.refind(r\"\\b\\w\\b\")...;\n"
+	      "/* Since `none' is equal to `0' when casted to `int', calling `substr' with none-arguments\n"
+	      " * is the same as calling `data.substr(0, 0)', meaning that this an empty string will be\n"
+	      " * returned when `refind' didn't manage to find anything.\n"
+	      " * Note however that `operator [:]' functions differently, as it interprets `none' as a\n"
+	      " * placeholder for either `0' of `#data', so calling `data[start:end]' would re-produce\n"
+	      " * `data' itself in the event of `refind' having failed. */\n"
+	      "print repr data.substr(start, end);}") },
 	{ "rerfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerfind,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?X2?T2?Dint?Dint?N\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Find the last sub-string matched by @pattern, and return its start/end indices, or :none if no match exists (s.a. #refind)") },
 	{ "reindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reindex,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as #refind, but throw an :IndexError when no match can be found") },
+	      "Same as ?#refind, but throw an :IndexError when no match can be found") },
 	{ "rerindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerindex,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "@throw IndexError No substring matching the given @pattern could be found\n"
-	      "Same as #rerfind, but throw an :IndexError when no match can be found") },
+	      "Same as ?#rerfind, but throw an :IndexError when no match can be found") },
 	{ "relocate",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocate,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Same as ${this.substr(this.refind(pattern,start,end,rules)...)}\n"
 	      "In other words: return the first sub-string matched by the "
@@ -11367,8 +11364,8 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerlocate,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Same as ${this.substr(this.rerfind(pattern,start,end,rules)...)}\n"
 	      "In other words: return the last sub-string matched by the "
@@ -11377,28 +11374,38 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_repartition,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "A hybrid between #refind and #partition\n"
-	      ">function repartition(pattern,start,end,rules) {\n"
-	      "> local start,end = this.refind(pattern,start,end,rules)...;\n"
-	      "> if (start is none) return (this,\"\",\"\");\n"
-	      "> return (this.substr(0,start),this.substr(start,end),this.substr(end,-1));\n"
-	      ">}") },
+	      "A hybrid between ?#refind and ?#partition\n${"
+	      "function repartition(pattern: string, start: int, end: int, rules: string) {\n"
+	      "	local start, end = this.refind(pattern, start, end, rules)...;\n"
+	      "	if (start is none)\n"
+	      "		return (this,\"\",\"\");\n"
+	      "	return (\n"
+	      "		this.substr(0,start),\n"
+	      "		this.substr(start, end),\n"
+	      "		this.substr(end,-1)\n"
+	      "	);\n"
+	      "}}") },
 	{ "rerpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerpartition,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T3?.?.?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "A hybrid between #rrefind and #rpartition\n"
-	      ">function rerpartition(pattern,start,end,rules) {\n"
-	      "> local start,end = this.rerfind(pattern,start,end,rules)...;\n"
-	      "> if (start is none) return (this,\"\",\"\");\n"
-	      "> return (this.substr(0,start),this.substr(start,end),this.substr(end,-1));\n"
-	      ">}") },
+	      "A hybrid between ?#rerfind and ?#rpartition\n${"
+	      "function rerpartition(pattern: string, start: int, end: int, rules: string) {\n"
+	      "	local start, end = this.rerfind(pattern, start, end, rules)...;\n"
+	      "	if (start is none)\n"
+	      "		return (this,\"\",\"\");\n"
+	      "	return (\n"
+	      "		this.substr(0, start),\n"
+	      "		this.substr(start, end), \n"
+	      "		this.substr(end, -1)\n"
+	      "	);\n"
+	      "}}") },
 	{ "rereplace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rereplace,
 	  DOC("(pattern:?.,replace_str:?.,max_count:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
@@ -11415,7 +11422,7 @@ INTERN struct type_method string_methods[] = {
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
 	      "@param rules The regular expression rules (s.a. #rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to #refind, but return a sequence of all matches found within ${this.substr(start,end)}\n"
+	      "Similar to #refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
 	      "Note that the matches returned are ordered ascendingly") },
 	{ "relocateall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocateall,
@@ -11425,7 +11432,7 @@ INTERN struct type_method string_methods[] = {
 	      "@param rules The regular expression rules (s.a. #rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to #relocate, but return a sequence of all matched "
-	      "sub-strings found within ${this.substr(start,end)}\n"
+	      "sub-strings found within ${this.substr(start, end)}\n"
 	      "Note that the matches returned are ordered ascendingly\n"
 	      "This function has nothing to do with relocations! - it's pronounced R.E. locate all") },
 	{ "resplit",
@@ -11436,10 +11443,10 @@ INTERN struct type_method string_methods[] = {
 	      "@param rules The regular expression rules (s.a. #rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
 	      "Similar to #split, but use a regular expression in order to "
-	      "express the sections of the string around which to perform the split\n"
-	      ">local data = \"10 , 20,30 40, 50\";\n"
-	      ">for (local x: data.resplit(\"(\\\\s*,?)+\\\\s*\"))\n"
-	      "> print x; /* `10' `20' `30' `40' `50' */\n"
+	      "express the sections of the string around which to perform the split\n${"
+	      "local data = \"10 , 20,30 40, 50\";\n"
+	      "for (local x: data.resplit(\"(\\\\s*,?)+\\\\s*\"))\n"
+	      " print x; /* `10' `20' `30' `40' `50' */}\n"
 	      "If you wish to do the reverse and enumerate matches, rather than the "
 	      "strings between matches, use #relocateall instead, which also behaves "
 	      "as a sequence") },
@@ -11450,10 +11457,10 @@ INTERN struct type_method string_methods[] = {
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
 	      "@param rules The regular expression rules (s.a. #rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this string starts with a regular expression described by @pattern (s.a. #startswith)\n"
-	      ">function restartswith(pattern) {\n"
-	      "> return this.rematch(pattern) != 0;\n"
-	      ">}") },
+	      "Check if @this string starts with a regular expression described by @pattern (s.a. #startswith)\n${"
+	      "function restartswith(pattern) {\n"
+	      " return this.rematch(pattern) != 0;\n"
+	      "}}") },
 	{ "reendswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reendswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
@@ -11461,11 +11468,11 @@ INTERN struct type_method string_methods[] = {
 	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
 	      "@param rules The regular expression rules (s.a. #rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this string ends with a regular expression described by @pattern (s.a. #endswith)\n"
-	      ">function restartswith(pattern) {\n"
-	      "> local rpos = this.rerfind(pattern);\n"
-	      "> return rpos !is none && rpos[1] == #this;\n"
-	      ">}") },
+	      "Check if @this string ends with a regular expression described by @pattern (s.a. #endswith)\n${"
+	      "function restartswith(pattern) {\n"
+	      "	local rpos = this.rerfind(pattern);\n"
+	      "	return rpos !is none && rpos[1] == #this;\n"
+	      "}}") },
 	{ "restrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"

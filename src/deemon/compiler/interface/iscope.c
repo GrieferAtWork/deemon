@@ -365,7 +365,7 @@ PRIVATE struct type_method scope_methods[] = {
 	  DOC("->?ASymbol?Ert:Compiler\n"
 	      "Construct a new anonymous symbol, and add it as part of @this scope\n"
 	      "The symbol isn't given a name (when queried it will have an empty name), and "
-	      "will otherwise behave just like a symbol that has been deleted (s.a. #op:delitem)\n"
+	      "will otherwise behave just like a symbol that has been deleted (s.a. ?#{op:delitem})\n"
 	      "The symbol can however be used to hold values just like any other symbol, "
 	      "meaning that this is the type of symbol that should be used to hold hidden "
 	      "values, as used by $with-statements\n"

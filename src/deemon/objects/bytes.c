@@ -1808,7 +1808,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "end of the memory found in @ob, using an intentional integer underflow\n"
 	                         "Whether or not a Bytes object is read-only, or writable "
 	                         "can be determined using #iswritable and #isreadonly\n"
-	                         "Additionally, a Bytes object can be made writable by creating a copy (a.s. #op:copy), "
+	                         "Additionally, a Bytes object can be made writable by creating a copy (a.s. ?#{op:copy}), "
 	                         "or by using #makewritable, which will not create a new Bytes object, but re-return "
 	                         "the same object, if it was already writable\n"
 	                         "\n"

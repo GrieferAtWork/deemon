@@ -3761,7 +3761,7 @@ INTERN struct type_method bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_makewritable,
 	  DOC("->?.\n"
 	      "Either re-return @this Bytes object is it already #iswritable, or create a "
-	      "copy (s.a. #op:copy) and return it:\n"
+	      "copy (s.a. ?#{op:copy}) and return it:\n"
 	      ">function makewritable() {\n"
 	      "> if (this.iswritable)\n"
 	      ">  return this;\n"
@@ -4091,7 +4091,7 @@ INTERN struct type_method bytes_methods[] = {
 	{ "casefold",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lower,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Alias for #{lower}. This function exists to match :string.casefold in "
+	      "Alias for ?#{lower}. This function exists to match :string.casefold in "
 	      "order to improve binary compatibility between :Bytes and :string objects"),
 	  TYPE_METHOD_FKWDS },
 

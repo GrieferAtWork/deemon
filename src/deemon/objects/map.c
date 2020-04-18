@@ -1155,19 +1155,19 @@ PRIVATE struct type_getset map_getsets[] = {
 	  NULL,
 	  NULL,
 	  DOC("->?DIterator\n"
-	      "Returns an iterator for #{keys}. Same as ${this.keys.operator iter()}") },
+	      "Returns an iterator for ?#{keys}. Same as ${this.keys.operator iter()}") },
 	{ "itervalues",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_itervalues,
 	  NULL,
 	  NULL,
 	  DOC("->?DIterator\n"
-	      "Returns an iterator for #{values}. Same as ${this.values.operator iter()}") },
+	      "Returns an iterator for ?#{values}. Same as ${this.values.operator iter()}") },
 	{ "iteritems",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&map_iteritems,
 	  NULL,
 	  NULL,
 	  DOC("->?DIterator\n"
-	      "Returns an iterator for #{items}. Same as ${this.items.operator iter()}") },
+	      "Returns an iterator for ?#{items}. Same as ${this.items.operator iter()}") },
 	{ DeeString_STR(&str_first),
 	  &DeeMap_GetFirst,
 	  &DeeMap_DelFirst,

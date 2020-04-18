@@ -2557,7 +2557,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "the socket address from which the data originates as the first of 2 :tuple "
 	      "arguments, the second being the text regularly returned #recv\n"
 	      "The given @timeout_microseconds can be passed as either $0 to try-receive pending packages, "
-	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is #{close}ed, or "
+	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
 	      "as any other integer value to specify how long to wait before returning ${(none,\"\")}") },
 	{ "recvfrominto",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvfrominto,
@@ -2645,7 +2645,7 @@ PRIVATE struct type_getset socket_getsets[] = {
 	{ "wasclosed",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_wasclosed, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this socket has been #{close}ed") },
+	      "Returns :true if @this socket has been ?#{close}ed") },
 	{ NULL }
 };
 
@@ -2654,9 +2654,9 @@ PRIVATE struct type_member socket_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("isbound", STRUCT_CONST, Socket, s_state, SOCKET_FBOUND,
 	                         "Returns :true if @this socket has been bound (s.a. #bind)"),
 	TYPE_MEMBER_BITFIELD_DOC("isconnected", STRUCT_CONST, Socket, s_state, SOCKET_FCONNECTED,
-	                         "Returns :true if @this socket has been #{connect}ed"),
+	                         "Returns :true if @this socket has been ?#{connect}ed"),
 	TYPE_MEMBER_BITFIELD_DOC("islistening", STRUCT_CONST, Socket, s_state, SOCKET_FLISTENING,
-	                         "Returns :true if @this socket is #{listen}ing for incoming connections"),
+	                         "Returns :true if @this socket is ?#{listen}ing for incoming connections"),
 	TYPE_MEMBER_FIELD_DOC("sock_af", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeSocketObject, s_sockaddr.sa.sa_family),
 	                      "The socket's address family as a system-specific integer id\n"
 	                      "Usually one of AF_*, the name of which can be determined using :getafname"),
@@ -2790,7 +2790,7 @@ INTERN DeeTypeObject DeeSocket_Type = {
 	                         "@throw NetError.NoSupport The given socket type @type cannot be used with protocol @proto\n"
 	                         "@throw NetError Failed to create a new socket descriptor\n"
 	                         "@throw ValueError $\"AF_AUTO\" cannot be used as address family in the socket constructor\n"
-	                         "Constructs and allocates a new socket descriptor that has yet to be #bound or be #{connect}ed\n"
+	                         "Constructs and allocates a new socket descriptor that has yet to be #bound or be ?#{connect}ed\n"
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns :true indicative of the socket not having been closed (s.a. #wasclosed)"),

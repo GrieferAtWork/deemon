@@ -118,7 +118,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL debugfile_get(void) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
-	/* Considering its purpose, always act as though debug_file
+	/* Considering its purpose, always act as though _DebugFile
 	 * is a TTY device, just so automatic buffer interfaces will
 	 * act as line-oriented buffers. */
 	return_true;
@@ -133,7 +133,7 @@ PRIVATE struct type_getset debug_file_getsets[] = {
 PRIVATE DeeFileTypeObject DebugFile_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */ "debug_file",
+		/* .tp_name     = */ "_DebugFile",
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE,
 		/* .tp_weakrefs = */ 0,
@@ -274,10 +274,10 @@ done:
 
 
 PRIVATE DWORD const generic_access[4] = {
-	/* [OPEN_FRDONLY] = */FILE_GENERIC_READ,
-	/* [OPEN_FWRONLY] = */FILE_GENERIC_WRITE,
-	/* [OPEN_FRDWR]   = */FILE_GENERIC_READ|FILE_GENERIC_WRITE,
-	/* [0x3]          = */FILE_GENERIC_READ|FILE_GENERIC_WRITE
+	/* [OPEN_FRDONLY] = */ FILE_GENERIC_READ,
+	/* [OPEN_FWRONLY] = */ FILE_GENERIC_WRITE,
+	/* [OPEN_FRDWR]   = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE,
+	/* [0x3]          = */ FILE_GENERIC_READ | FILE_GENERIC_WRITE
 };
 
 
@@ -1200,7 +1200,7 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_doc      = */ DOC("(handle:?X3?Dint?DFile?Ewin32:HANDLE,inherit=!f,duplicate=!f)\n"
 		                         "Construct a new SystemFile wrapper for @handle. When @inherit is "
 		                         ":true, the given @handle is inherited (and automatically closed "
-		                         "once the returned :File is destroyed or #{close}ed. When @duplicate "
+		                         "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
 		                         "is :true, the given @handle is duplicated, and the duplicated copy "
 		                         "will be stored inside (in this case, @inherit is ignored)"),
 		/* .tp_flags    = */ TP_FNORMAL,

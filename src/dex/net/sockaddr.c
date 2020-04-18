@@ -1813,7 +1813,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	                     "@throw NetError.HostNotFound.NoHostAddress The @host exists, but offers no address matching the required family\n"
 	                     "@throw NetError.HostNotFound Failed to find the host described by @host_and_port or @host and @port\n"
 	                     "@throw NetError An unknown error caused the hostname lookup to fail\n"
-	                     "@param host_and_port The host and port semarated by a ${\":\"} character\n"
+	                     "@param host_and_port The host and port separated by a $\":\" character\n"
 	                     "Always accepted is a host+port argument part encoded in strings\n"
 #if defined(AF_INET) || defined(AF_INET6)
 	                     "Note that this is the preferred way of encoding "
@@ -1829,14 +1829,14 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 #ifdef AF_INET
 	                     "The following special names are recognized as case-insensitive IPv4 host names, "
 	                     "following an optional prefix `INADDR', as well as any number of underscores:\n"
-	                     "%{table Name|Value\n"
-	                     "$\"ANY\"|$\"0.0.0.0\"\n"
-	                     "$\"LOCALHOST\"|$\"127.0.0.1\"\n"
-	                     "$\"LOOPBACK\"|$\"127.0.0.1\"\n"
-	                     "$\"BROADCAST\"|$\"255.255.255.255\"\n"
-	                     "$\"NONE\"|$\"255.255.255.255\"\n"
-	                     "$\"UNSPEC_GROUP\"|$\"14.0.0.0\"\n"
-	                     "$\"ALLHOSTS_GROUP\"|$\"14.0.0.1\"\n"
+	                     "#T{Name|Value~"
+	                     "$\"ANY\"|$\"0.0.0.0\"&"
+	                     "$\"LOCALHOST\"|$\"127.0.0.1\"&"
+	                     "$\"LOOPBACK\"|$\"127.0.0.1\"&"
+	                     "$\"BROADCAST\"|$\"255.255.255.255\"&"
+	                     "$\"NONE\"|$\"255.255.255.255\"&"
+	                     "$\"UNSPEC_GROUP\"|$\"14.0.0.0\"&"
+	                     "$\"ALLHOSTS_GROUP\"|$\"14.0.0.1\"&"
 	                     "$\"MAX_LOCAL_GROUP\"|$\"14.0.0.255\"}\n"
 #endif /* AF_INET */
 #ifdef AF_INET6
@@ -1846,9 +1846,9 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	                     "The following special names are recognized as case-insensitive IPv6 host names, "
 	                     "following an optional prefix $\"IN6ADDR\", as well as any number of underscores:\n"
 #endif /* !AF_INET */
-	                     "%{table Name|Value\n"
-	                     "$\"ANY\"|$\"::0\"\n"
-	                     "$\"LOCALHOST\"|$\"::1\"\n"
+	                     "#T{Name|Value~"
+	                     "$\"ANY\"|$\"::0\"&"
+	                     "$\"LOCALHOST\"|$\"::1\"&"
 	                     "$\"LOOPBACK\"|$\"::1\"}\n"
 #endif /* AF_INET6 */
 #endif /* AF_INET || AF_INET6 */

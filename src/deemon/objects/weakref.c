@@ -350,7 +350,7 @@ PRIVATE struct type_getset ob_weakref_getsets[] = {
 	{ "alive",
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&ob_weakref_alive, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Alias for #op:bool") },
+	      "Alias for ?#{op:bool}") },
 	{ NULL }
 };
 

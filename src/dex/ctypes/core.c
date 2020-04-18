@@ -211,7 +211,7 @@ PRIVATE struct type_method stype_methods[] = {
 	      "@param calling_convention The name of the calling convention\n"
 	      "Construct a new function prototype, using @types as argument, @this "
 	      "as return type, and @calling_convention as calling convention\n"
-	      "Note that unlike #{operator ()}, certain types from the deemon core are "
+	      "Note that unlike ?#{op:call}, certain types from the deemon core are "
 	      "also accepted as argument types, such as :deemon:bool inplace of :bool") },
 	{ "vfunc", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&stype_vfunc,
 	  DOC("(types!:?DType)->function_type\n"

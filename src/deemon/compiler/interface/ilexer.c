@@ -530,15 +530,15 @@ keyword_id(DeeCompilerItemObject *__restrict self) {
 	done:                                                                                                             \
 		return result;                                                                                                \
 	}
-DEFINE_KEYWORD_FLAG_FUNCTIONS(has_attribute, TPP_KEYWORDFLAG_HAS_ATTRIBUTE)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(has_builtin, TPP_KEYWORDFLAG_HAS_BUILTIN)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(has_cpp_attribute, TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(has_declspec_attribute, TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(has_extension, TPP_KEYWORDFLAG_HAS_EXTENSION)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(has_feature, TPP_KEYWORDFLAG_HAS_FEATURE)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(is_deprecated, TPP_KEYWORDFLAG_IS_DEPRECATED)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(is_poisoned, TPP_KEYWORDFLAG_IS_POISONED)
-DEFINE_KEYWORD_FLAG_FUNCTIONS(has_tpp_builtin, TPP_KEYWORDFLAG_HAS_TPP_BUILTIN)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(hasattribute, TPP_KEYWORDFLAG_HAS_ATTRIBUTE)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(hasbuiltin, TPP_KEYWORDFLAG_HAS_BUILTIN)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(hascppattribute, TPP_KEYWORDFLAG_HAS_CPP_ATTRIBUTE)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(hasdeclspecattribute, TPP_KEYWORDFLAG_HAS_DECLSPEC_ATTRIBUTE)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(hasextension, TPP_KEYWORDFLAG_HAS_EXTENSION)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(hasfeature, TPP_KEYWORDFLAG_HAS_FEATURE)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(isdeprecated, TPP_KEYWORDFLAG_IS_DEPRECATED)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(ispoisoned, TPP_KEYWORDFLAG_IS_POISONED)
+DEFINE_KEYWORD_FLAG_FUNCTIONS(hastppbuiltin, TPP_KEYWORDFLAG_HAS_TPP_BUILTIN)
 #undef DEFINE_KEYWORD_FLAG_FUNCTIONS
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -668,7 +668,7 @@ PRIVATE struct type_getset keyword_getsets[] = {
 	{ "name",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_str, NULL, NULL,
 	  DOC("->?Dstring\n"
-	      "Returns the name of @this keyword. Same as #op:str") },
+	      "Returns the name of @this keyword. Same as ?#{op:str}") },
 	{ "hash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_hash, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -703,66 +703,66 @@ PRIVATE struct type_getset keyword_getsets[] = {
 	      "to, the next time it is invoked with @this keyword.\n"
 	      "Note however, that reading this field will _not_ modify the counter, unlike "
 	      "accessing it though ${__TPP_COUNTER}, which will increment it once every time") },
-	{ "has_attribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_has_attribute,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_has_attribute,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_has_attribute,
+	{ "hasattribute",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasattribute,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasattribute,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasattribute,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the has-attribute flag of @this keyword\n"
 	      "The has-attribute flag can then be queried via the ${__has_attribute()} builtin macro") },
-	{ "has_builtin",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_has_builtin,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_has_builtin,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_has_builtin,
+	{ "hasbuiltin",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasbuiltin,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasbuiltin,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasbuiltin,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the has-builtin flag of @this keyword\n"
 	      "The has-builtin flag can then be queried via the ${__has_builtin()} builtin macro") },
-	{ "has_cpp_attribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_has_cpp_attribute,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_has_cpp_attribute,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_has_cpp_attribute,
+	{ "hascppattribute",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hascppattribute,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hascppattribute,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hascppattribute,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the has-cpp_attribute flag of @this keyword\n"
 	      "The has-cpp_attribute flag can then be queried via the ${__has_cpp_attribute()} builtin macro") },
-	{ "has_declspec_attribute",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_has_declspec_attribute,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_has_declspec_attribute,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_has_declspec_attribute,
+	{ "hasdeclspecattribute",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasdeclspecattribute,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasdeclspecattribute,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasdeclspecattribute,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the has-declspec_attribute flag of @this keyword\n"
 	      "The has-declspec_attribute flag can then be queried via the ${__has_declspec_attribute()} builtin macro") },
-	{ "has_extension",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_has_extension,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_has_extension,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_has_extension,
+	{ "hasextension",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasextension,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasextension,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasextension,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the has-extension flag of @this keyword\n"
 	      "The has-extension flag can then be queried via the ${__has_extension()} builtin macro") },
-	{ "has_feature",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_has_feature,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_has_feature,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_has_feature,
+	{ "hasfeature",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hasfeature,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hasfeature,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hasfeature,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the has-feature flag of @this keyword\n"
 	      "The has-feature flag can then be queried via the ${__has_feature()} builtin macro") },
-	{ "is_deprecated",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_is_deprecated,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_is_deprecated,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_is_deprecated,
+	{ "isdeprecated",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_isdeprecated,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_isdeprecated,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_isdeprecated,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the is-deprecated flag of @this keyword\n"
 	      "The is-deprecated flag can then be queried via the ${__is_deprecated()} builtin macro") },
-	{ "is_poisoned",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_is_poisoned,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_is_poisoned,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_is_poisoned,
+	{ "ispoisoned",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_ispoisoned,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_ispoisoned,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_ispoisoned,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the is-poisoned flag of @this keyword\n"
 	      "The is-poisoned flag can then be queried via the ${__is_poisoned()} builtin macro") },
-	{ "has_tpp_builtin",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_has_tpp_builtin,
-	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_has_tpp_builtin,
-	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_has_tpp_builtin,
+	{ "hastppbuiltin",
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_get_hastppbuiltin,
+	  (int (DCALL *)(DeeObject *__restrict))&keyword_del_hastppbuiltin,
+	  (int (DCALL *)(DeeObject *, DeeObject *))&keyword_set_hastppbuiltin,
 	  DOC("->?Dbool\n"
 	      "Get, del (set to :false), or set the has-tpp_builtin flag of @this keyword\n"
 	      "The has-tpp_builtin flag can then be queried via the ${__has_tpp_builtin()} builtin macro") },
@@ -1057,7 +1057,7 @@ lexer_set_flags(DeeCompilerWrapperObject *__restrict self,
 }
 
 #define DEFINE_LEXER_FLAG_FUNCTIONS(name, flag)                        \
-	INTERN WUNUSED DREF DeeObject *DCALL                                       \
+	INTERN WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
 	lexer_get_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		DREF DeeObject *result;                                        \
 		COMPILER_BEGIN(self->cw_compiler);                             \
@@ -1066,16 +1066,16 @@ lexer_set_flags(DeeCompilerWrapperObject *__restrict self,
 		COMPILER_END();                                                \
 		return result;                                                 \
 	}                                                                  \
-	INTERN int DCALL                                                   \
+	INTERN WUNUSED WUNUSED NONNULL((1)) int DCALL                      \
 	lexer_del_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		COMPILER_BEGIN(self->cw_compiler);                             \
 		TPPLexer_Current->l_flags &= ~flag;                            \
 		COMPILER_END();                                                \
 		return 0;                                                      \
 	}                                                                  \
-	INTERN int DCALL                                                   \
-	lexer_set_##name(DeeCompilerWrapperObject *__restrict self,        \
-	                 DeeObject *__restrict value) {                    \
+	INTERN WUNUSED NONNULL((1, 2)) int DCALL                           \
+	lexer_set_##name(DeeCompilerWrapperObject *self,                   \
+	                 DeeObject *value) {                               \
 		int newval = DeeObject_Bool(value);                            \
 		if unlikely(newval < 0)                                        \
 			return -1;                                                 \
@@ -1468,15 +1468,15 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	{ "file",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
 	  DOC("->?X2?#File?N\n"
-	      "Returns the currently active file, or :none if no file is currently active. Same as #token.id") },
+	      "Returns the currently active file, or :none if no file is currently active. Same as ?Aid?#token") },
 	{ "textfile",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textfile, NULL, NULL,
 	  DOC("->?X2?#File?N\n"
-	      "Same as #File, but return the first non-macro file") },
+	      "Same as ?#File, but return the first non-macro file") },
 	{ "basefile",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_basefile, NULL, NULL,
 	  DOC("->?X2?#File?N\n"
-	      "Similar to #File, but return the base-file (that is the first included file) instead") },
+	      "Similar to ?#File, but return the base-file (that is the first included file) instead") },
 	{ "textposition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textposition, NULL, NULL,
 	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
@@ -1487,21 +1487,21 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	{ "textendposition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_textendposition, NULL, NULL,
 	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Same as #textposition, however when the current file isn't the result of an expanded macro, "
+	      "Same as ?#textposition, however when the current file isn't the result of an expanded macro, "
 	      "the returned values refer to the end of the current token, rather than its beginning\n"
 	      "In the event that no text file is currently loaded, :none is returned instead") },
 	{ "tokenposition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenposition, NULL, NULL,
 	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Similar to #textposition, however in the event of the current token originating "
+	      "Similar to ?#textposition, however in the event of the current token originating "
 	      "from a macro, return the source position of that token within the macro, rather "
 	      "than the source position of the macro being invoked\n"
-	      "Same as #token.position") },
+	      "Same as ?Aposition?#token") },
 	{ "tokenendposition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
 	  DOC("->?X2?T3?#File?Dint?Dint?N\n"
-	      "Same as #tokenposition, however return the end position of the current token\n"
-	      "Same as #token.endposition") },
+	      "Same as ?#tokenposition, however return the end position of the current token\n"
+	      "Same as ?Aendposition?#token") },
 	{ "atstartofline",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -1522,39 +1522,39 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wantcomments,
 	  DOC("->?Dbool\n"
 	      "Configure if comment tokens should, or shouldn't be emit\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "wantspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wantspace,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_wantspace,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wantspace,
 	  DOC("->?Dbool\n"
 	      "Configure if space-tokens should, or shouldn't be emit\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "wantlf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wantlf,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_wantlf,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wantlf,
 	  DOC("->?Dbool\n"
 	      "Configure if line-feed-tokens should, or shouldn't be emit\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "noseek_on_eob",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_noseek_on_eob,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_noseek_on_eob,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_noseek_on_eob,
 	  DOC("->?Dbool\n"
-	      "When :true, don't seek the next chunk (s.a. #File.nextchunk) "
+	      "When :true, don't seek the next chunk (s.a. ?#File.nextchunk) "
 	      "when the current one ends. Instead, indicate EOF by setting the "
-	      "current #token.id to $0\n"
-	      "Note: This field is preserved by #flags") },
+	      "current ?Aid?#token to $0\n"
+	      "Note: This field is preserved by ?#flags") },
 	{ "nopop_on_eof",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nopop_on_eof,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nopop_on_eof,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nopop_on_eof,
 	  DOC("->?Dbool\n"
-	      "When :true, don't automatically pop the current #File when it signals "
+	      "When :true, don't automatically pop the current ?#File when it signals "
 	      "eof in order to continue parsing older files, but instead propagate the "
-	      "EOF by setting the current #token.id to $0\n"
-	      "Note: This field is preserved by #flags") },
+	      "EOF by setting the current ?Aid?#token to $0\n"
+	      "Note: This field is preserved by ?#flags") },
 	{ "keepmacrospace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_keepmacrospace,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_keepmacrospace,
@@ -1563,16 +1563,16 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "When :true, don't strip whitespace surrounding the text of macros, but "
 	      "keep that whitespace as part of the macro's definition, re-propagating "
 	      "it every time that macro is expanded\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "nonblocking",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nonblocking,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nonblocking,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nonblocking,
 	  DOC("->?Dbool\n"
 	      "When :true, operate in non-blocking mode when loading new chunks from "
-	      "files, which essentically means that whenever #File.nextchunk is called, "
+	      "files, which essentically means that whenever ?#File.nextchunk is called, "
 	      "the $nonblocking argument is set to this value\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "terminatestringlf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_terminatestringlf,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_terminatestringlf,
@@ -1581,9 +1581,9 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "When :true, regular strings are terminated by line-feeds, which will also "
 	      "cause a warning/error to be emit, alongside the incomplete token still "
 	      "packaged as a complete string\n"
-	      "Note that this also affects #File.nextchunk, in that incomplete strings "
+	      "Note that this also affects ?#File.nextchunk, in that incomplete strings "
 	      "near the end of the input stream can also be terminted by line-feeds\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "nodirectives",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nodirectives,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nodirectives,
@@ -1591,25 +1591,25 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "When :true, don't process preprocessor directives, but rather "
 	      "re-emit the ${#...} sequences as regular token sequences\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "nomacros",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nomacros,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nomacros,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nomacros,
 	  DOC("->?Dbool\n"
 	      "When :true, do not expand user-defined macros. Note however that "
-	      "builtin macros are still expanded, unless #nobuiltinmacros is also "
+	      "builtin macros are still expanded, unless ?#nobuiltinmacros is also "
 	      "set to :true\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "nobuiltinmacros",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nobuiltinmacros,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nobuiltinmacros,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nobuiltinmacros,
 	  DOC("->?Dbool\n"
 	      "When :true, do not expand builtin macros. Note however that "
-	      "user-defined macros are still expanded, unless #nomacros is also "
+	      "user-defined macros are still expanded, unless ?#nomacros is also "
 	      "set to :true\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "asmcomments",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_asmcomments,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_asmcomments,
@@ -1621,27 +1621,27 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "at the start of a line, only (and optionally) preceded by whitespace "
 	      "still holds, meaning that assembly-like comments are only recognized "
 	      "when they are found at the start of a line, too\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "directives_noown_lf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_directives_noown_lf,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_directives_noown_lf,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_directives_noown_lf,
 	  DOC("->?Dbool\n"
 	      "When :true, the line-feeds used to terminate a preprocessor directive "
-	      "will be re-emit as a regular token (when #wantlf is :true). Otherwise, "
+	      "will be re-emit as a regular token (when ?#wantlf is :true). Otherwise, "
 	      "that token will be considered to be apart of the directive and not be "
-	      "emit to the caller of #next or #nextpp\n"
-	      "Note: This field is preserved by #flags") },
+	      "emit to the caller of ?#next or ?#nextpp\n"
+	      "Note: This field is preserved by ?#flags") },
 	{ "comments_noown_lf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_comments_noown_lf,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_comments_noown_lf,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_comments_noown_lf,
 	  DOC("->?Dbool\n"
 	      "When :true, the line-feeds used to terminate line-comments "
-	      "will be re-emit as a regular token (when #wantlf is :true). Otherwise, "
+	      "will be re-emit as a regular token (when ?#wantlf is :true). Otherwise, "
 	      "that token will be considered to be apart of the comment and not be "
-	      "emit to the caller of #next, #nextpp or #nextraw\n"
-	      "Note: This field is preserved by #flags") },
+	      "emit to the caller of ?#next, ?#nextpp or ?#nextraw\n"
+	      "Note: This field is preserved by ?#flags") },
 	{ "printmessagelocation",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_printmessagelocation,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_printmessagelocation,
@@ -1649,7 +1649,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "When :true, print the source location before "
 	      "the message in ${#pragma message} directives\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "printmessagenolf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_printmessagenolf,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_printmessagenolf,
@@ -1657,7 +1657,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "When :true, don't append a trailing line-feed after "
 	      "messages printed using ${#pragma message}\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "parseincludestring",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_parseincludestring,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_parseincludestring,
@@ -1667,9 +1667,9 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "all strings as though they were raw string literals, meaning that a "
 	      "backslash-escape sequences are not recognized\n"
 	      "The inteded use for this is to parse the string of an ${#include} directive\n"
-	      "Note that this flag also affects the behavior of #token.decodestring, which "
+	      "Note that this flag also affects the behavior of ?Adecodestring?#token, which "
 	      "won't not recognize escape sequences for non-raw string literals, either\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "nolegacyguards",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nolegacyguards,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nolegacyguards,
@@ -1679,29 +1679,29 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "that is an ${#include} guard created by surrounding an entire source file with "
 	      "a single ${#ifndef} block\n"
 	      "This flag does not, however, affect the functionality of ${#pragma once}\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "werror",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_werror,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_werror,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_werror,
 	  DOC("->?Dbool\n"
 	      "When :true, turn all warnings into errors\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "wsystemheaders",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_wsystemheaders,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_wsystemheaders,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_wsystemheaders,
 	  DOC("->?Dbool\n"
-	      "When :true, ignore #File.issystemheader, and still produce "
+	      "When :true, ignore ?#File.issystemheader, and still produce "
 	      "warnings in files marked as system headers\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "nodeprecated",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nodeprecated,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nodeprecated,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nodeprecated,
 	  DOC("->?Dbool\n"
-	      "When :true, don't emit warnings for keywords marked as #Keyword.is_deprecated or #Keyword.is_poisoned\n"
-	      "Note: This field is preserved by #flags") },
+	      "When :true, don't emit warnings for keywords marked as ?#Keyword.isdeprecated or ?#Keyword.ispoisoned\n"
+	      "Note: This field is preserved by ?#flags") },
 	{ "msvcmessages",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_msvcmessages,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_msvcmessages,
@@ -1709,7 +1709,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "When :true, the file+line+column in warning and error messages is printed "
 	      "as $\"file(line,column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "nowarnings",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nowarnings,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nowarnings,
@@ -1717,14 +1717,14 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "When :true, the file+line+column in warning and error messages is printed "
 	      "as $\"file(line,column) : \". Otherwise it is printed as $\"file:line:column: \"\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 	{ "noencoding",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_noencoding,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_noencoding,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_noencoding,
 	  DOC("->?Dbool\n"
 	      "When :true, don't decode input text prior to processing it\n"
-	      "This essentically means that whenever #File.nextchunk is called, "
+	      "This essentically means that whenever ?#File.nextchunk is called, "
 	      "the $binary is set to this value") },
 	{ "reemitunknownpragma",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_reemitunknownpragma,
@@ -1732,7 +1732,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_reemitunknownpragma,
 	  DOC("->?Dbool\n"
 	      "When :true, unknown pragma directives are re-emit, rather than consumed\n"
-	      "Note: This field is preserved by #flags") },
+	      "Note: This field is preserved by ?#flags") },
 #if 0
 	{ "charunsigned",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_charunsigned,
@@ -1748,24 +1748,24 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eofonparen,
 	  DOC("->?Dbool\n"
 	      "When :true, end-of-file is signalled when a matching right-parenthesis "
-	      "token is $\")\" is countered (s.a. #eofparen)\n"
-	      "Note: This field is preserved by #flags") },
+	      "token is $\")\" is countered (s.a. ?#eofparen)\n"
+	      "Note: This field is preserved by ?#flags") },
 	{ "eofparen",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eofparen,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_eofparen,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eofparen,
 	  DOC("->?Dint\n"
-	      "Used in conjunction with #{eofonparen}: The amount of unmatched $\")\" tokens "
+	      "Used in conjunction with ?#{eofonparen}: The amount of unmatched $\")\" tokens "
 	      "to let through before the next $\")\" token will result in EOF being indicated "
-	      "by setting #token.id to $0") },
+	      "by setting ?Aid?#token to $0") },
 	{ "eobfile",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eobfile,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_eobfile,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eobfile,
 	  DOC("->?#File\n"
 	      "When bound, prevent seek-on-end-of-block (that is performing a call to "
-	      "#File.nextchunk) when the current is equal to #eobfile\n"
-	      "This is essentially the same as setting #noseek_on_eob to :true, however "
+	      "#File.nextchunk) when the current is equal to ?#eobfile\n"
+	      "This is essentially the same as setting ?#noseek_on_eob to :true, however "
 	      "rather than affecting all files, it only affect a specific file") },
 	{ "eoffile",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_eoffile,
@@ -1773,15 +1773,15 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_eoffile,
 	  DOC("->?#File\n"
 	      "When bound, prevent pop-on-end-of-file (that is popping the current "
-	      "file, as done by #popfile) when the current is equal to #eoffile\n"
-	      "This is essentially the same as setting #nopop_on_eof to :true, however "
+	      "file, as done by ?#popfile) when the current is equal to ?#eoffile\n"
+	      "This is essentially the same as setting ?#nopop_on_eof to :true, however "
 	      "rather than affecting all files, it only affect a specific file") },
 	{ "macrolimit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_macrolimit,
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_macrolimit,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_macrolimit,
 	  DOC("->?Dint\n"
-	      "The max number of times that a recursive macro (s.a. #File.allowselfexpansion) "
+	      "The max number of times that a recursive macro (s.a. ?#File.allowselfexpansion) "
 	      "is allowed to appear on the macro stack, before an error is emit, and further "
 	      "expansion is prevented (defaults to $" PP_STR(TPPLEXER_DEFAULT_LIMIT_MREC) ", "
 	                                                                                  "which is also restored when deleting this property)") },
@@ -1808,7 +1808,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "The total number of errors that have already been emit\n"
 	      "When non-zero, later compilation steps should throw a "
 	      "compiler error, rather than proceeding with compilation\n"
-	      "When this value exceeds #maxerrors, a :CompilerError is "
+	      "When this value exceeds ?#maxerrors, a :CompilerError is "
 	      "thrown immediately") },
 	{ "maxerrors",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_maxerrors,
@@ -1831,7 +1831,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_tabsize,
 	  DOC("->?Dint\n"
 	      "The counter value returned and incremented by the "
-	      "${__COUNTER__} builtin macro") },
+	      "$__COUNTER__ builtin macro") },
 	{ NULL }
 };
 
@@ -2084,7 +2084,7 @@ err:
 
 DOC_DEF(lexer_getxkwd_doc,
         "(name:?Dstring,create=!t)->?X2?#Keyword?N\n"
-        "Same as #getkwd, however the given @name may contain escaped "
+        "Same as ?#getkwd, however the given @name may contain escaped "
         "line-feeds that are removed prior to it being used to lookup "
         "a keyword");
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2256,16 +2256,16 @@ PRIVATE struct type_method lexer_methods[] = {
 	      "(filename:?Dstring,filename:?Dstring=!N)\n"
 	      "Include a new file, pushing its contents onto the ${#include}-stack\n"
 	      "Note that when including a file with the current token being $0 (as indicate of EOF), "
-	      "you must call one of the #next-functions in order to load the first token of the newly "
+	      "you must call one of the ?#next-functions in order to load the first token of the newly "
 	      "pushed file. - Failing to do so will cause the compiler to not function properly, as it "
-	      "will think that no input data is available, causing compiler error to be produced:\n"
-	      ">import Compiler from rt;\n"
-	      ">import File from deemon;\n"
-	      ">local com = Compiler();\n"
-	      ">com.lexer.include(File.open(\"input.dee\"));\n"
-	      ">com.lexer.next(); /* Don't forget to always load the first token */\n"
-	      ">local ast = com.parser.parse_allstmt();\n"
-	      ">print ast;\n"
+	      "will think that no input data is available, causing compiler error to be produced:\n${"
+	      "import Compiler from rt;\n"
+	      "import File from deemon;\n"
+	      "local com = Compiler();\n"
+	      "com.lexer.include(File.open(\"input.dee\"));\n"
+	      "com.lexer.next(); /* Don't forget to always load the first token */\n"
+	      "local ast = com.parser.parse_allstmt();\n"
+	      "print ast;}\n"
 	      "Hint: In order to tokenize source code from a string, use :File.Reader") },
 	{ "nextraw",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_nextraw,
@@ -2282,15 +2282,15 @@ PRIVATE struct type_method lexer_methods[] = {
 	{ "nextraw_nb",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_nextraw_nb,
 	  DOC("->?Dint\n"
-	      "Load the next token and return its id while trying not to block (s.a. #nonblocking) (no macros, or preprocessor directives are processed)") },
+	      "Load the next token and return its id while trying not to block (s.a. ?#nonblocking) (no macros, or preprocessor directives are processed)") },
 	{ "nextpp_nb",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_nextpp_nb,
 	  DOC("->?Dint\n"
-	      "Load the next token and return its id while trying not to block (s.a. #nonblocking) (no macros are processed)") },
+	      "Load the next token and return its id while trying not to block (s.a. ?#nonblocking) (no macros are processed)") },
 	{ "next_nb",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_next_nb,
 	  DOC("->?Dint\n"
-	      "Load the next token and return its id while trying not to block (s.a. #nonblocking)") },
+	      "Load the next token and return its id while trying not to block (s.a. ?#nonblocking)") },
 	{ "seterr",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_seterr,
 	  DOC("->?Dbool\n"
@@ -2302,7 +2302,7 @@ PRIVATE struct type_method lexer_methods[] = {
 	{ "popfile",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_popfile,
 	  DOC("->?Dbool\n"
-	      "Pop the last-#{include}d file and switch back to the file before then (s.a. #File)") },
+	      "Pop the last-?#{include}d file and switch back to the file before then (s.a. ?#File)") },
 	{ "getkwd",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_getkwd,
 	  DOC_GET(lexer_getkwd_doc),
@@ -3030,8 +3030,8 @@ PRIVATE struct type_getset lexer_token_getsets[] = {
 	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
 	      "Returns the keyword associated with the current token, or "
 	      ":none if the current token doesn't have an associated keyword\n"
-	      "When setting this field, both the token's #Keyword, as well "
-	      "as its #id field are set to the given value") },
+	      "When setting this field, both the token's ?#Keyword, as well "
+	      "as its ?#id field are set to the given value") },
 	{ "file",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_file, NULL, NULL,
 	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
@@ -3043,7 +3043,7 @@ PRIVATE struct type_getset lexer_token_getsets[] = {
 	{ "endposition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_tokenendposition, NULL, NULL,
 	  DOC("->?X2?T3?AFile?ALexer?Ert:Compiler?Dint?Dint?N\n"
-	      "Same as #position, however return the end position of the current token") },
+	      "Same as ?#position, however return the end position of the current token") },
 	{ "atstartofline",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_atstartofline, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -3172,24 +3172,23 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Token",
 	/* .tp_doc      = */ DOC("str->\n"
-	                         "Returns a string representation for the #id of @this token\n"
-	                         "For most tokens, this is equivalent to #text, with the exception of the following:\n"
-	                         "%{table Str-value|Token|Description\n"
-	                         "$\"\"|${<EOF>}|End-of-file is encoded as an empty string\n"
-	                         "$\"\\\'\"|$\'x\'|Character tokens have a single-quote as str-id\n"
-	                         "$\"\\\"\"|$\"foo\"|String tokens have a double-quote as str-id (including raw string literals)\n"
-	                         "$\"0\"|$42|Integer tokens have use the digit 0 as str-id\n"
-	                         "$\".0\"|${1.5}|Floating point tokens are encoded as `.0' as str-id\n"
-	                         "$\"\n\"|${<LF>}|Any kind of line-feed token is encoded as an LF-character\n"
-	                         "$\" \"|${<SPACE>}|A space-sequence of any sort of length is encoded as a single space character\n"
-	                         "$\"//\"|${<COMMENT>}|Any kind of comment token is encoded as 2 forward slashes `//'\n"
-	                         "}\n"
+	                         "Returns a string representation for the ?#id of @this token\n"
+	                         "For most tokens, this is equivalent to ?#text, with the exception of the following:\n"
+	                         "#T{Str-value|Token|Description~"
+	                         "$\"\"|${<EOF>}|End-of-file is encoded as an empty string&"
+	                         "$\"\\\'\"|$\'x\'|Character tokens have a single-quote as str-id&"
+	                         "$\"\\\"\"|$\"foo\"|String tokens have a double-quote as str-id (including raw string literals)&"
+	                         "$\"0\"|$42|Integer tokens have use the digit 0 as str-id&"
+	                         "$\".0\"|${1.5}|Floating point tokens are encoded as `.0' as str-id&"
+	                         "$\"\n\"|${<LF>}|Any kind of line-feed token is encoded as an LF-character&"
+	                         "$\" \"|${<SPACE>}|A space-sequence of any sort of length is encoded as a single space character&"
+	                         "$\"//\"|${<COMMENT>}|Any kind of comment token is encoded as 2 forward slashes `//'}\n"
 	                         "\n"
 	                         "repr->\n"
 	                         "Same as ${repr this.text}\n"
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this token has a non-negative and non-zero #id\n"
+	                         "Returns :true if @this token has a non-negative and non-zero ?#id\n"
 	                         "\n"
 	                         "hash->\n"
 	                         "Returns the hash value of ${str this}\n"
@@ -3197,7 +3196,7 @@ INTERN DeeTypeObject DeeCompilerLexerToken_Type = {
 	                         "==(name:?Dstring)->\n"
 	                         "!=(name:?Dstring)->\n"
 	                         "Compare ${str this} with the given @name\n"
-	                         "This operator, alongside #op:hash allows tokens to be used in switch-statements\n"
+	                         "This operator, alongside ?#{op:hash} allows tokens to be used in switch-statements\n"
 	                         ">switch (com.lexer.token) {\n"
 	                         ">case \"foobar\":\n"
 	                         "> print \"keyword: foobar\";\n"
@@ -4352,19 +4351,19 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_istext, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this File is a text-file (as opposed "
-	      "to the result of macro expansion (s.a. #ismacro), or some other kind of file)") },
+	      "to the result of macro expansion (s.a. ?#ismacro), or some other kind of file)") },
 	{ "ismacro",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_ismacro, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this File is a macro-file (as opposed "
-	      "to a text-file (s.a. #istext), or some other kind of file)") },
+	      "to a text-file (s.a. ?#istext), or some other kind of file)") },
 	{ "isexpanded",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isexpand, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this File is an expanded function-like macro-file, "
 	      "or the result of injecting custom text into the token stream\n"
-	      "Note that functions and getsets related to #ismacro cannot be used "
-	      "when #isexpanded is :true, and that #ismacro will return :false when "
+	      "Note that functions and getsets related to ?#ismacro cannot be used "
+	      "when ?#isexpanded is :true, and that ?#ismacro will return :false when "
 	      "this field evaluates to :true") },
 	{ "origin",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_origin, NULL, NULL,
@@ -4396,15 +4395,15 @@ PRIVATE struct type_getset file_getsets[] = {
 	      "Returns the filename of a text file, or the filename of the file containing the "
 	      "definition of the @this macro\n"
 	      "In the event that a ${#line} directive was used to override the filename, the "
-	      "overwritten name is returned. If this isn't intended, use #realfilename instead\n"
+	      "overwritten name is returned. If this isn't intended, use ?#realfilename instead\n"
 	      "In text-files, this field may be written to override the current file name, while "
-	      "deleting it will restore #realfilename as the used filename") },
+	      "deleting it will restore ?#realfilename as the used filename") },
 	{ "realfilename",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_realfilename, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Returns the real filename of a text file, or the real filename of the file "
 	      "containing the definition of the @this macro\n"
-	      "This is the original, real filename, whereas the name returned by #Filename "
+	      "This is the original, real filename, whereas the name returned by ?#Filename "
 	      "is the one which may have been overwritten by a ${#line} directive") },
 	{ "name",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_name, NULL, NULL,
@@ -4416,20 +4415,20 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&file_dellineoffset,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setlineoffset,
 	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, del(set to zero), or set the line-offset within @this "
-	      "text file, as can also be set by the #line directive") },
+	      "text file, as can also be set by the ?#line directive") },
 	{ "stream",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_stream, NULL, NULL,
 	  DOC("->?DFile\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Returns the file stream from which data is read into @this File") },
 	{ "guard",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getguard,
 	  (int (DCALL *)(DeeObject *__restrict))&file_delguard,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setguard,
 	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, delete, or set a keyword that is checked for being defined "
 	      "before allowing @this File to be included by ${#include} again\n"
 	      "In the event of the keyword having an associated macro that is also "
@@ -4440,28 +4439,28 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&file_delnewguard,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setnewguard,
 	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
-	      "Get, delete, or set a keyword that will be set as #guard (if no guard has "
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
+	      "Get, delete, or set a keyword that will be set as ?#guard (if no guard has "
 	      "already been set) once @this File is popped from the ${#include}-stack, and "
-	      "#disallowguard is :false") },
+	      "?#disallowguard is :false") },
 	{ "includecount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_includecount, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Return the number of times that @this File exists within the ${#include}-stack") },
 	{ "readcount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_readcount, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Returns the number of bytes already read from the underlying source stream") },
 	{ "disallowguard",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getdisallowguard,
 	  (int (DCALL *)(DeeObject *__restrict))&file_deldisallowguard,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setdisallowguard,
 	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, del (set to false), or set @this File's disallow-guard property.\n"
-	      "When set to :false, #newguard will be applied as #guard when the file is "
+	      "When set to :false, ?#newguard will be applied as ?#guard when the file is "
 	      "popped, allowing the lexer to remember a potential file guard.\n"
 	      "This flag is set to :true automatically when an outer-most ${#ifndef}-block "
 	      "ends, following which more non-whitespace text is encountered, thus "
@@ -4471,7 +4470,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&file_delissystemheader,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setissystemheader,
 	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, del (set to false), or set if @this File is considered a system header\n"
 	      "When :true, all non-error warnings are suppressed\n"
 	      "This flag is usually set by a ${#pragma GCC system_header} directive") },
@@ -4480,62 +4479,62 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&file_delnonblocking,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setnonblocking,
 	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a text file (#istext is :false)\n"
+	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, del (set to false), or set if the underlying stream allows "
 	      "for non-blocking I/O, and should be performed in non-blocking mode "
-	      "when #nextchunk is called with $nonblocking set to :true and when "
+	      "when ?#nextchunk is called with $nonblocking set to :true and when "
 	      "no incomplete string, or comment exists at the end of currently "
 	      "loaded text") },
 	{ "isfunctionmacro",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isfunctionmacro, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this File is a function-like macro-file\n"
-	      "Note that in this case, #ismacro will also return :true") },
+	      "Note that in this case, ?#ismacro will also return :true") },
 	{ "iskeywordmacro",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_iskeywordmacro, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this File is a keyword-like macro-file\n"
-	      "Note that in this case, #ismacro will also return :true") },
+	      "Note that in this case, ?#ismacro will also return :true") },
 	{ "definitionsfile",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_definitionsfile, NULL, NULL,
 	  DOC("->?X2?.?N\n"
-	      "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
+	      "@throw ValueError @this File isn't a macro file (?#ismacro is :false)\n"
 	      "Returns the file that was used to define @this macro, or return :none if "
 	      "the macro was defined through other means, such as via the commandline") },
 	{ "definitionsposition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_definitionsposition, NULL, NULL,
 	  DOC("->?X2?T2?Dint?Dint?N\n"
-	      "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
+	      "@throw ValueError @this File isn't a macro file (?#ismacro is :false)\n"
 	      "Return the (line,column) pair of the definition location of @this macro file\n"
 	      "Macros not defined through files will return ${(0,0)}") },
 	{ "previousdefinition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_previousdefinition, NULL, NULL,
 	  DOC("->?X2?.?N\n"
-	      "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
+	      "@throw ValueError @this File isn't a macro file (?#ismacro is :false)\n"
 	      "Return the previous definition of pushed macro (as created by ${#pragma push_macro(\"foo\")})\n"
 	      "If the macro hasn't been pushed, or is the oldest variant, :none is returned") },
 	{ "pushcount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_pushcount, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a macro file (#ismacro is :false)\n"
+	      "@throw ValueError @this File isn't a macro file (?#ismacro is :false)\n"
 	      "The amount of times ${#pragma push_macro(\"foo\")} was repeated without actually "
 	      "providing a new definition of the macro. Used to handle recursive use of that pragma") },
 	{ "keywordexpandorigin",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_keywordexpandorigin, NULL, NULL,
 	  DOC("->?.\n"
-	      "@throw ValueError @this File isn't a keyword-like macro file (#iskeywordmacro is :false)\n"
+	      "@throw ValueError @this File isn't a keyword-like macro file (?#iskeywordmacro is :false)\n"
 	      "The originating file of a keyword-like macro") },
 	{ "isvariadicmacro",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_isvariadicmacro, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this File is a function-like macro-file (s.a. "
-	      "#isfunctionmacro) taking a variable number of arguments") },
+	      "?#isfunctionmacro) taking a variable number of arguments") },
 	{ "allowselfexpansion",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getallowselfexpansion,
 	  (int (DCALL *)(DeeObject *__restrict))&file_delallowselfexpansion,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setallowselfexpansion,
 	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
+	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is :false)\n"
 	      "Get, del (set to :false), or set if @this function-like macro is allowed to expand to itself\n"
 	      "This flag is set for newly defined macros when the $\"macro-recursion\" extension is enabled, "
 	      "and is cleared when that extension is disabled (default)\n"
@@ -4547,7 +4546,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&file_delkeepargumentspace,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setkeepargumentspace,
 	  DOC("->?Dbool\n"
-	      "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
+	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is :false)\n"
 	      "Get, del (set to :false), or set if whitespace surrounding arguments passed "
 	      "to @this function-like macro should be kept, or trimmed.\n"
 	      "This flag is set for newly defined macros when the $\"macro-argument-whitespace\" extension "
@@ -4563,20 +4562,20 @@ PRIVATE struct type_getset file_getsets[] = {
 	  NULL,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&file_setfunctionmacrovariant,
 	  DOC("->?Dstring\n"
-	      "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
+	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is :false)\n"
 	      "@throw ValueError Attempted to set a value not apart of ${(\"(\",\"[\",\"{\",\"<\")}\n"
 	      "Get or set the type of parenthesis used to start the argument list of @this function-like macro") },
 	{ "functionmacroargc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_functionmacroargc, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
+	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is :false)\n"
 	      "Return the number of (non-variadic) argument taken by @this function-like macro") },
 	{ "functionmacroexpansions",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_functionmacroexpansions, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "@throw ValueError @this File isn't a function-like macro file (#isfunctionmacro is :false)\n"
+	      "@throw ValueError @this File isn't a function-like macro file (?#isfunctionmacro is :false)\n"
 	      "Return the number of times that @this function-like macro is being expanded\n"
-	      "Note that normally only function-like macros with #allowselfexpansion set to :true "
+	      "Note that normally only function-like macros with ?#allowselfexpansion set to :true "
 	      "can ever be expanded more than once at the same time") },
 	{ NULL }
 };
@@ -4618,9 +4617,9 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("(extend=!f,binary=!f,nonblocking=!f)->?Dbool\n"
 	      "@return Returns :true if data was read, or :false if the EOF of the input stream has been reached\n"
 	      "Try to load the next, or @extend the current chunk of loaded data, by reading a "
-	      "new chunk from #{stream}. When @binary is :true, don't try to decode unicode data, "
+	      "new chunk from ?#stream. When @binary is :true, don't try to decode unicode data, "
 	      "but read data as-is, without decoding it. When @nonblocking is :true, and the "
-	      "#nonblocking is :true as well, try to read data without blocking when waiting for "
+	      "?#nonblocking is :true as well, try to read data without blocking when waiting for "
 	      "new data, thus potentially returning :false, even when the actual end-of-file hasn't "
 	      "been reached, yet"),
 	  TYPE_METHOD_FKWDS },

@@ -965,12 +965,12 @@ not_a_link:
 			after_lparen  = lstrip_whitespace(after_lparen, before_rparen);
 			before_rparen = rstrip_whitespace(after_lparen, before_rparen);
 			PRINT("#A{", 3);
-			/* Print the link text. */
-			if unlikely(print_escaped(result_printer, after_lparen, before_rparen))
-				goto err;
-			PUTASCII('|');
 			/* Print the link body */
 			if unlikely(do_compile(after_lbracket, before_rbracket, result_printer, NULL))
+				goto err;
+			PUTASCII('|');
+			/* Print the link text. */
+			if unlikely(print_escaped(result_printer, after_lparen, before_rparen))
 				goto err;
 			PUTASCII('}');
 			/* If there was trailing space within the link text, re-insert that space after the link. */

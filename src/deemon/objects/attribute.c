@@ -165,7 +165,7 @@ PRIVATE struct type_member attr_members[] = {
 	                         "exposes it as a wrapper for an instance member (e.g. ${string.find} is an unbound "
 	                         "wrapper (aka. ${Attribute(string,\"find\").iswrapper == true}) for the instance function, "
 	                         "member or property that would be bound in ${\"foo\".find} (aka. "
-	                         "${Attribute(\"foo\",\"find\").iswrapper == false}))"),
+	                         "${Attribute(\"foo\", \"find\").iswrapper == false}))"),
 	TYPE_MEMBER_BITFIELD_DOC("isinstance", STRUCT_CONST, Attr, a_info.a_perm, ATTR_IMEMBER,
 	                         "Check if accessing this Attribute requires an instance of the declaring object "
 	                         "#decl, rather than being an Attribute of the declaring object #decl itself.\n"
@@ -321,15 +321,15 @@ PRIVATE struct type_getset attr_getsets[] = {
 	{ "flags", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Return a set of characters descripting the flags of @this Attribute:\n"
-	      "%{table Character|Mnemonic|Field|Flag description\n"
-	      "$\"g\"|get|#canget|The Attribute has a way of being read from\n"
-	      "$\"d\"|del|#candel|The Attribute has a way of being deleted\n"
-	      "$\"s\"|set|#canset|The Attribute has a way of being written to\n"
-	      "$\"f\"|function|#cancall|The Attribute is intended to be called as a function\n"
-	      "$\"i\"|instance|#isinstance|The Attribute requires an instance of the declaring object\n"
-	      "$\"c\"|class|#isclass|The Attribute is accessed though the declaring type #decl\n"
-	      "$\"h\"|hidden|#isprivate|The Attribute is considered to be private\n"
-	      "$\"p\"|property|#isproperty|The Attribute is property-like\n"
+	      "#T{Character|Mnemonic|Field|Flag description~"
+	      "$\"g\"|get|#canget|The Attribute has a way of being read from&"
+	      "$\"d\"|del|#candel|The Attribute has a way of being deleted&"
+	      "$\"s\"|set|#canset|The Attribute has a way of being written to&"
+	      "$\"f\"|function|#cancall|The Attribute is intended to be called as a function&"
+	      "$\"i\"|instance|#isinstance|The Attribute requires an instance of the declaring object&"
+	      "$\"c\"|class|#isclass|The Attribute is accessed though the declaring type #decl&"
+	      "$\"h\"|hidden|#isprivate|The Attribute is considered to be private&"
+	      "$\"p\"|property|#isproperty|The Attribute is property-like&"
 	      "$\"w\"|wrapper|#iswrapper|The Attribute is provided by the type as a class member that wraps around an instance member}") },
 	{ NULL }
 };
@@ -573,7 +573,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 	{ "exists", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_exists,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
-	      "Taking the same arguments as #op:constructor, check if the an attribute matching "
+	      "Taking the same arguments as ?#{op:constructor}, check if the an attribute matching "
 	      "the given arguments exists, returning :true/:false indicative of this\n"
 	      ">static function exists(ob,name,flagmask = \"\",flagval = \"\",decl?) {\n"
 	      "> import Error from deemon;\n"
@@ -588,7 +588,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_lookup,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
-	      "Same as #op:constructor, but return :none if the attribute doesn't exist\n"
+	      "Same as ?#{op:constructor}, but return :none if the attribute doesn't exist\n"
 	      ">static function lookup(ob,name,flagmask = \"\",flagval = \"\",decl?) {\n"
 	      "> import Error from deemon;\n"
 	      "> try {\n"

@@ -1316,40 +1316,48 @@ PRIVATE struct type_method file_class_methods[] = {
 	      "@throw UnsupportedAPI Filesystem access has been disabled, or $\"creat\" was passed and the filesystem hosting @path does not support the creation of new files\n"
 	      "@throw FSError Failed to open the given @path for some reason\n"
 	      "@param mode The unix-like permissions to be set for newly created files\n"
+
 	      "Consults the filesystem to open or create a given @path, using the given @oflags\n"
+
 	      "Mode is implemented as a comma-separated list of open options that include "
-	      "those described by the C standard, allowing the basic $\"r\", $\"w\", $\"a\" "
-	      "as well as each followed by an additional $\"+\", also supporting the "
-	      "$\"b\" and $\"x\" modifiers, as well as the suggested $\"t\" flag\n"
+	      /**/ "those described by the C standard, allowing the basic $\"r\", $\"w\", $\"a\" "
+	      /**/ "as well as each followed by an additional $\"+\", also supporting the "
+	      /**/ "$\"b\" and $\"x\" modifiers, as well as the suggested $\"t\" flag\n"
+
 	      "In addition to this, any of the comma-separated options can be one of the following "
-	      "strings to better fine-tune the exact open-behavior, if supported by the host:\n"
-	      "%{table Flag String|Description\n"
-	      "$\"rdonly\", $\"R\"|Open for read-only (default)\n"
-	      "$\"wronly\", $\"W\"|Open for write access only\n"
-	      "$\"rdwr\", $\"RW\"|Open for both reading and writing\n"
-	      "$\"creat\", $\"C\"|Create the file if it doesn't exist already\n"
-	      "$\"excl\", $\"X\"|When used with $\"creat\", fail if the file already exists\n"
-	      "$\"trunc\", $\"T\"|Truncate an existing file to a length of $0 before opening it\n"
-	      "$\"append\", $\"A\"|Write operations always append data to the end of the file}\n"
+	      /**/ "strings to better fine-tune the exact open-behavior, if supported by the host:\n"
+
+	      "#T{Flag String|Description~"
+	      /**/ "$\"rdonly\", $\"R\"|Open for read-only (default)&"
+	      /**/ "$\"wronly\", $\"W\"|Open for write access only&"
+	      /**/ "$\"rdwr\", $\"RW\"|Open for both reading and writing&"
+	      /**/ "$\"creat\", $\"C\"|Create the file if it doesn't exist already&"
+	      /**/ "$\"excl\", $\"X\"|When used with $\"creat\", fail if the file already exists&"
+	      /**/ "$\"trunc\", $\"T\"|Truncate an existing file to a length of $0 before opening it&"
+	      /**/ "$\"append\", $\"A\"|Write operations always append data to the end of the file}\n"
+
 	      "Additionally, the following flags are accepted, but ignored if the host doesn't support them:\n"
-	      "%{table Flag String|Description\n"
-	      "$\"nonblock\", $\"NB\"|Don't block when attempting to read/write\n"
-	      "$\"sync\", $\"S\"|Write operations block until all data has been written to disk\n"
-	      "$\"direct\", $\"D\"|Bypass system buffers and directly pass data to the kernel when writing\n"
-	      "$\"nofollow\", $\"NF\"|Do not follow symbolic links\n"
-	      "$\"noatime\", $\"NA\"|Do not update access times\n"
-	      "$\"cloexec\", $\"CE\"|Do not inherit the file in child processes\n"
-	      "$\"xread\", $\"XR\"|Request exclusive read access\n"
-	      "$\"xwrite\", $\"XW\"|Request exclusive write access\n"
-	      "$\"hidden\", $\"H\"|Set a host-specific hidden-file flag when creating a new file (if the host uses a flag to track this attribute)}\n"
+	      "#T{Flag String|Description~"
+	      /**/ "$\"nonblock\", $\"NB\"|Don't block when attempting to read/write&"
+	      /**/ "$\"sync\", $\"S\"|Write operations block until all data has been written to disk&"
+	      /**/ "$\"direct\", $\"D\"|Bypass system buffers and directly pass data to the kernel when writing&"
+	      /**/ "$\"nofollow\", $\"NF\"|Do not follow symbolic links&"
+	      /**/ "$\"noatime\", $\"NA\"|Do not update access times&"
+	      /**/ "$\"cloexec\", $\"CE\"|Do not inherit the file in child processes&"
+	      /**/ "$\"xread\", $\"XR\"|Request exclusive read access&"
+	      /**/ "$\"xwrite\", $\"XW\"|Request exclusive write access&"
+	      /**/ "$\"hidden\", $\"H\"|Set a host-specific hidden-file flag when creating a new file (if the host uses a flag to track this attribute)}\n"
+
 	      "The following flags may be passed to modify buffering behavior:\n"
-	      "%{table Flag String|Description\n"
-	      "$\"binary\"|Open the file in binary mode (default, unless an STD-C modifier is used, in which case it that must contain the $\"b\" flag)\n"
-	      "$\"text\"|Open the file in text mode (default if an STD-C modifier was used)\n"
-	      "$\"nobuf\"|Do not wrap the returned file in a buffer (Also implied when $\"direct\" is passed)}\n"
+	      "#T{Flag String|Description~"
+	      /**/ "$\"binary\"|Open the file in binary mode (default, unless an STD-C modifier is used, in which case it that must contain the $\"b\" flag)&"
+	      /**/ "$\"text\"|Open the file in text mode (default if an STD-C modifier was used)&"
+	      /**/ "$\"nobuf\"|Do not wrap the returned file in a buffer (Also implied when $\"direct\" is passed)}\n"
+
 	      "Not that unlike in many other places, case is NOT ignored for these options\n"
+
 	      "In addition to the string-based options for @oflags, an integer bit-set may be "
-	      "passed consisting of `OPEN_F*' flags that can be found in deemon's system headers"),
+	      /**/ "passed consisting of `OPEN_F*' flags that can be found in deemon's system headers"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
@@ -1609,11 +1617,13 @@ PRIVATE struct type_getset file_class_getsets[] = {
 	  DOC("->?DFile\n"
 	      "The standard output stream\n"
 	      "This is also what $print statements will write to when used "
-	      "without an explicit file target:\n"
-	      ">print \"foo\";\n"
-	      ">// Same as:\n"
-	      ">import File from deemon;\n"
-	      ">print File.stdout: \"foo\";\n") },
+	      /**/ "without an explicit file target:\n"
+	      "${"
+	      /**/ "print \"foo\";\n"
+	      /**/ "// Same as:\n"
+	      /**/ "import File from deemon;\n"
+	      /**/ "print File.stdout: \"foo\";"
+	      "}") },
 	{ "stderr",
 	  &file_class_get_stderr,
 	  &file_class_del_stderr,
@@ -1641,7 +1651,8 @@ PRIVATE struct type_getset file_class_getsets[] = {
 	  NULL, NULL,
 	  DOC("->?DFile\n"
 	      "A standard stream that usually simply aliases the "
-	      "default #stderr, but should be used for debug-output\n"
+	      /**/ "default #stderr, but should be used for debug-output\n"
+
 	      "Note that unlike the other streams, this one can't be redirected") },
 	{ DeeString_STR(&str_Joined),
 	  &file_class_getjoined, NULL, NULL,
@@ -1676,14 +1687,17 @@ PRIVATE struct type_member file_class_members[] = {
 	TYPE_MEMBER_CONST("System", (DeeObject *)&DeeSystemFile_Type),
 	TYPE_MEMBER_CONST_DOC("io", (DeeObject *)&DeeFile_Type,
 	                      "Deprecated alias for backwards-compatible access to "
-	                      "std-streams that used to be located in ${file.io.stdxxx}\n"
-	                      "Starting with deemon v200, these streams can now be found "
-	                      "under ${file.stdxxx} and the ${file.io} type has been "
-	                      "renamed to #system\n"
-	                      "With that in mind, this field is now simply an alias for :file"),
-	TYPE_MEMBER_CONST_DOC("SEEK_SET", (DeeObject *)&file_SEEK_SET, "Deprecated argument for #seek\nInstead, pass it the string $\"set\""),
-	TYPE_MEMBER_CONST_DOC("SEEK_CUR", (DeeObject *)&file_SEEK_CUR, "Deprecated argument for #seek\nInstead, pass it the string $\"cur\""),
-	TYPE_MEMBER_CONST_DOC("SEEK_END", (DeeObject *)&file_SEEK_END, "Deprecated argument for #seek\nInstead, pass it the string $\"end\""),
+	                      /**/ "std-streams that used to be located in ${file.io.stdxxx}\n"
+	                      /**/ "Starting with deemon v200, these streams can now be found "
+	                      /**/ "under ${file.stdxxx} and the ${file.io} type has been "
+	                      /**/ "renamed to #system\n"
+	                      /**/ "With that in mind, this field is now simply an alias for :file"),
+	TYPE_MEMBER_CONST_DOC("SEEK_SET", (DeeObject *)&file_SEEK_SET,
+	                      "Deprecated argument for #seek (Use the string $\"set\" instead"),
+	TYPE_MEMBER_CONST_DOC("SEEK_CUR", (DeeObject *)&file_SEEK_CUR,
+	                      "Deprecated argument for #seek (Use the string $\"cur\" instead"),
+	TYPE_MEMBER_CONST_DOC("SEEK_END", (DeeObject *)&file_SEEK_END,
+	                      "Deprecated argument for #seek (Use the string $\"end\" instead"),
 	TYPE_MEMBER_END
 };
 
@@ -2099,57 +2113,60 @@ PRIVATE struct type_method file_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_read,
 	  DOC("(maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Read and return at most @maxbytes of data from the file stream. "
-	      "When @readall is :true, keep on reading data until the buffer is full, or the "
-	      "read-callback returns ${0}, rather than until it returns something other than the "
-	      "internal buffer size used when reading data."),
+	      /**/ "When @readall is :true, keep on reading data until the buffer is full, or the "
+	      /**/ "read-callback returns $0, rather than until it returns something other than the "
+	      /**/ "internal buffer size used when reading data."),
 	  TYPE_METHOD_FKWDS },
 	{ "readinto",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_readinto,
 	  DOC("(dst:?DBytes,readall=!f)->?Dint\n"
 	      "Read data into the given buffer @dst and return the number of bytes read. "
-	      "When @readall is :true, keep on reading data until the buffer is full, or the "
-	      "read-callback returns ${0}, rather than until it returns something other than the "
-	      "requested read size."),
+	      /**/ "When @readall is :true, keep on reading data until the buffer is full, or the "
+	      /**/ "read-callback returns $0, rather than until it returns something other than the "
+	      /**/ "requested read size."),
 	  TYPE_METHOD_FKWDS },
 	{ "write",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
 	  DOC("(data:?DBytes,writeall=!t)->?Dint\n"
 	      "Write @data to the file stream and return the actual number of bytes written. "
-	      "When @writeall is :true, keep writing data until the write-callback "
-	      "returns $0 or until all data has been written, rather than invoke "
-	      "the write-callback only a single time."),
+	      /**/ "When @writeall is :true, keep writing data until the write-callback "
+	      /**/ "returns $0 or until all data has been written, rather than invoke "
+	      /**/ "the write-callback only a single time."),
 	  TYPE_METHOD_FKWDS },
 	{ "pread",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Similar to #read, but read data from a given file-offset "
-	      "@pos, rather than from the current file position"),
+	      /**/ "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "preadinto",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_preadinto,
 	  DOC("(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
 	      "Similar to #readinto, but read data from a given file-offset "
-	      "@pos, rather than from the current file position"),
+	      /**/ "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "pwrite",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pwrite,
 	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
 	      "Similar to #write, but write data to a given file-offset "
-	      "@pos, rather than at the current file position"),
+	      /**/ "@pos, rather than at the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "seek",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_seek,
 	  DOC("(off:?Dint,whence=!PSET)->?Dint\n"
 	      "(off:?Dint,whence:?Dint)->?Dint\n"
 	      "@throw ValueError The given string passed as seek mode @whence was not recognized\n"
+
 	      "Change the current file pointer according to @off and @whence "
-	      "before returning its absolute offset within the file.\n"
+	      /**/ "before returning its absolute offset within the file.\n"
+
 	      "When a string is given for @whence, it may be one of the following "
-	      "case-insensitive values, optionally prefixed with $\"SEEK_\"\n"
-	      "%{table Whence-name|Description\n"
-	      "$\"SET\"|Set the file pointer to an absolute in-file position\n"
-	      "$\"CUR\"|Adjust the file pointer relative to its previous position\n"
-	      "$\"END\"|Set the file pointer relative to the end of the stream}"),
+	      /**/ "case-insensitive values, optionally prefixed with $\"SEEK_\"\n"
+
+	      "#T{Whence-name|Description~"
+	      /**/ "$\"SET\"|Set the file pointer to an absolute in-file position&"
+	      /**/ "$\"CUR\"|Adjust the file pointer relative to its previous position&"
+	      /**/ "$\"END\"|Set the file pointer relative to the end of the stream}"),
 	  TYPE_METHOD_FKWDS },
 	{ "tell",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_tell,
@@ -2164,8 +2181,8 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("->?Dint\n"
 	      "(size:?Dint)->?Dint\n"
 	      "Truncate the file to a new length of @size bytes. "
-	      "When no argument is given, the file's length is truncated "
-	      "to its current position (#tell), rather than the one given") },
+	      /**/ "When no argument is given, the file's length is truncated "
+	      /**/ "to its current position (#tell), rather than the one given") },
 	{ "sync",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_sync,
 	  DOC("()\n"
@@ -2178,18 +2195,18 @@ PRIVATE struct type_method file_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_getc,
 	  DOC("->?Dint\n"
 	      "Read and return a single character (byte) from then file, "
-	      "or return ${-1} if the file's end has been reached") },
+	      /**/ "or return ${-1} if the file's end has been reached") },
 	{ "ungetc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_ungetc,
 	  DOC("(ch:?Dint)->?Dbool\n"
 	      "Unget a given character @ch to be re-read the next time #getc or #read is called. "
-	      "If the file's start has already been reached, :false is returned and the character "
-	      "will not be re-read from this file") },
+	      /**/ "If the file's start has already been reached, :false is returned and the character "
+	      /**/ "will not be re-read from this file") },
 	{ "putc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_putc,
 	  DOC("(byte:?Dint)->?Dbool\n"
 	      "Append a single @byte at the end of @this File, returning :true on "
-	      "success, or :false if the file has entered an end-of-file state") },
+	      /**/ "success, or :false if the file has entered an end-of-file state") },
 	{ DeeString_STR(&str_size), &file_size,
 	  DOC("->?Dint\n"
 	      "Returns the size (in bytes) of the file stream") },
@@ -2198,6 +2215,7 @@ PRIVATE struct type_method file_methods[] = {
 	  DOC("(keeplf:?Dbool)->?DBytes\n"
 	      "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
 	      "Read one line from the file stream, but read at most @maxbytes bytes.\n"
+
 	      "When @keeplf is :false, strip the trailing linefeed from the returned Bytes object") },
 
 	/* Deprecated functions. */
@@ -2216,7 +2234,7 @@ PRIVATE struct type_method file_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "readallat", &file_readallat,
 	  DOC("(pos:?Dint,maxbytes=!-1)->?DBytes\n"
-	      "Deprecated alias for ${this.pread(pos,maxbytes,true)}") },
+	      "Deprecated alias for ${this.pread(pos, maxbytes, true)}") },
 	{ "setpos",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_seek,
 	  DOC("(pos:?Dint)->?Dint\n"
@@ -2317,66 +2335,107 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
 		/* .tp_name     = */ DeeString_STR(&str_File),
 		/* .tp_doc      = */ DOC("The base class for all file types\n"
+
 		                         "Types derived from this are able to implement a variety of "
 		                         "new operators related to file operations, which are then "
 		                         "used by the member functions and other operators provided "
 		                         "by this type, or can also be used directly:\n"
-		                         "%{table Operator prototype|Description\n"
-		                         "${operator read(size: int): Bytes}|Reads up to size bytes and returns a buffer (usually a :string) containing read data\n"
-		                         "${operator write(buf: bytes): int}|Writes data from buf into the file and returns the number of bytes written\n"
-		                         "${operator seek(off: int, whence: int): int}|Moves the file pointer relative to whence, "
-		                                                                      "which is one of #SEEK_SET, #SEEK_CUR or #SEEK_END. "
-		                                                                      "The return value of this operator is the new, "
-		                                                                      "absolute file position within the stream\n"
-		                         "${operator sync(): none}|Synchronize unwritten data with lower-level components\n"
-		                         "${operator trunc(int newsize): none}|Truncate, or pre-allocate file memory to match a length of newsize\n"
-		                         "${operator close(): none}|Close the file. This operator is invoked during destruction, but "
-		                                                   "can also be invoked before then using the #close member function\n"
-		                         "${operator pread(size: int, pos: int): bytes}|Similar to ${operator read}, but data is read from the given absolute file position pos\n"
-		                         "${operator pwrite(buf: bytes, pos: int): int}|Similar to ${operator write}, but data is written to the given absolute file position pos\n"
-		                         "${operator getc(): int}|Reads, and returns a single byte from the stream (Usually the same as ${operator read(1)}). "
-		                                                     "If EOF has been reached, a negative value is returned\n"
-		                         "${operator ungetc(ch: int): bool}|Returns a previously read character to the stream, allowing it to be read once again. "
-		                                                           "This functionality isn't provided by many file types, but #buffer supports it, thereby "
-		                                                           "allowing you to wrap practically any file into a buffer to enable support for ungetc, "
-		                                                           "which is a dependency for #{readline}. "
-		                                                           "If the character could be returned, :true is returned. Otherwise :false is\n"
-		                         "${operator putc(ch: int): bool}|Write a single byte to the stream (Usually the same as ${operator write((uint8_t from ctypes)ch)}). "
-		                                                         "Returns :true if the byte was successfully written, or :false if EOF was reached}\n"
+
+		                         "#T{Operator prototype|Description~"
+		                         /**/ "${operator read(size: int): Bytes}|"
+		                         /**/ "Reads up to size bytes and returns a buffer (usually a :string) containing read data"
+		                         "&"
+		                         /**/ "${operator write(buf: bytes): int}|"
+		                         /**/ "Writes data from buf into the file and returns the number of bytes written"
+		                         "&"
+		                         /**/ "${operator seek(off: int, whence: int): int}|"
+		                         /**/ "Moves the file pointer relative to whence, "
+		                         /**/ /**/ "which is one of #SEEK_SET, #SEEK_CUR or #SEEK_END. "
+		                         /**/ /**/ "The return value of this operator is the new, "
+		                         /**/ /**/ "absolute file position within the stream"
+		                         "&"
+		                         /**/ "${operator sync(): none}|"
+		                         /**/ "Synchronize unwritten data with lower-level components"
+		                         "&"
+		                         /**/ "${operator trunc(int newsize): none}|"
+		                         /**/ "Truncate, or pre-allocate file memory to match a length of newsize"
+		                         "&"
+		                         /**/ "${operator close(): none}|"
+		                         /**/ "Close the file. This operator is invoked during destruction, but "
+		                         /**/ /**/ "can also be invoked before then using the #close member function"
+		                         "&"
+		                         /**/ "${operator pread(size: int, pos: int): bytes}|"
+		                         /**/ "Similar to ${operator read}, but data is read from the given "
+		                         /**/ /**/ "absolute file position pos"
+		                         "&"
+		                         /**/ "${operator pwrite(buf: bytes, pos: int): int}|"
+		                         /**/ "Similar to ${operator write}, but data is written to the given "
+		                         /**/ /**/ "absolute file position pos"
+		                         "&"
+		                         /**/ "${operator getc(): int}|"
+		                         /**/ "Reads, and returns a single byte from the stream (Usually the same "
+		                         /**/ /**/ "as ${operator read(1)}). If EOF has been reached, a negative value "
+		                         /**/ /**/ "is returned"
+		                         "&"
+		                         /**/ "${operator ungetc(ch: int): bool}|"
+		                         /**/ "Returns a previously read character to the stream, allowing it to be "
+		                         /**/ /**/ "read once again. This functionality isn't provided by many file types, "
+		                         /**/ /**/ "but #buffer supports it, thereby allowing you to wrap practically any "
+		                         /**/ /**/ "file into a buffer to enable support for ungetc, which is a dependency "
+		                         /**/ /**/ "for ?#readline. If the character could be returned, :true is returned. "
+		                         /**/ /**/ "Otherwise :false is"
+		                         "&"
+		                         /**/ "${operator putc(ch: int): bool}|"
+		                         /**/ "Write a single byte to the stream (Usually the same as ${operator write"
+		                         /**/ /**/ "((uint8_t from ctypes)ch)}). Returns :true if the byte was successfully "
+		                         /**/ /**/ "written, or :false if EOF was reached"
+		                         "}\n"
+
+
 		                         "\n"
 		                         "()\n"
 		                         "Default-construct the File base-class\n"
+
+
 		                         "\n"
 		                         "iter->?.\n"
 		                         "Returns an iterator that allows for line-wise processing of "
-		                         "file data, making use of the the #readline member function\n"
+		                         /**/ "file data, making use of the the #readline member function\n"
 		                         "The returned lines have their trailing line-feeds stripped\n"
-		                         "Note that because a File cannot be iterated multiple times "
-		                         "without additional work being done, as well as the fact that "
-		                         "this type of iteration isn't thread-save, :File isn't derived "
-		                         "from :Sequence, meaning that abstract Sequence functions are "
-		                         "not implicitly provided, but would have to be invoked like "
-		                         "${Sequence.find(File.open(\"foo.txt\"),\"find this line\")}\n"
+		                         /**/ "Note that because a File cannot be iterated multiple times "
+		                         /**/ "without additional work being done, as well as the fact that "
+		                         /**/ "this type of iteration isn't thread-save, :File isn't derived "
+		                         /**/ "from :Sequence, meaning that abstract Sequence functions are "
+		                         /**/ "not implicitly provided, but would have to be invoked like "
+		                         /**/ "${Sequence.find(File.open(\"foo.txt\"),\"find this line\")}\n"
 		                         "Note that because isn't derived from :Sequence, the returned "
-		                         "iterator also isn't required to be derived from :Iterator\n"
+		                         /**/ "iterator also isn't required to be derived from :Iterator\n"
+
+
 		                         "\n"
 		                         "next->?DBytes\n"
 		                         "Alias for #readline, allowing for line-wise reading of lines\n"
 		                         "Note that the trailing linefeed is always included in this\n"
+
+
 		                         "\n"
 		                         "<<(ob)->\n"
 		                         "@return Always re-returns @this File\n"
 		                         "Same as ${print this: ob,;}\n"
+
+
 		                         "\n"
 		                         ">>(buf:?DBytes)->\n"
 		                         "@throw FSError Failed to fill the entirety of @buf\n"
 		                         "@return Always re-returns @this File\n"
-		                         "Same as ${this.readinto(buf,true)}\n"
+		                         "Same as ${this.readinto(buf, true)}\n"
+
+
 		                         "\n"
 		                         "leave->\n"
 		                         "Invokes ${this.operator close()}\n"
 		                         "Note that due to this operators presence, an "
-		                         "implicit enter-operator exists, which is a no-op"),
+		                         /**/ "implicit enter-operator exists, which is a no-op"),
 		/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,

@@ -65,7 +65,7 @@ DECL_BEGIN
 	    "Query information on a given @path, file stream @fp "                  \
 	    "or file descriptor @fd (if supported by the host)\n"                   \
 	    "If you wish to test the existing and type of a type, "                 \
-	    "consider using stat's class methods such as #{isdir}. "                \
+	    "consider using stat's class methods such as ?#{isdir}. "               \
 	    "Note however that stat instances also implement these "                \
 	    "methods as general purpose property checks that do not "               \
 	    "require calculation of #st_mode")

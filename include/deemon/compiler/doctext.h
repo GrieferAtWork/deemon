@@ -409,24 +409,32 @@ DECL_BEGIN
  *     Will be rendered such that a clickable link for `List' appears within flow-text
  *     Formating rules:
  *       - The format starts with an @-character that is followed by one of:
- *         - "- or '-character:  (`@"Hello"')
- *           Encoded the same as '```deemon\n"Hello"```' would be
+ *         - "- or '-character (normal string; allow \-escape):
+ *           @"foo"  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
+ *           @'foo'  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
+ *         - r, followed by a "- or '-character (raw string; no \-escape):
+ *           @r"foo"  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
+ *           @r'foo'  Encoded as '```deemon\n"Foo"```'  (except that no new-line is inserted)
  *         - A digit:
- *           `@123'    Encoded as "```deemon\n123```"
- *           `@123.'   Encoded as "```deemon\n123```."
- *           `@123.4'  Encoded as "```deemon\n123.4```"
- *           `@123. 4' Encoded as "```deemon\n123```. 4"
+ *           @123    Encoded as "```deemon\n123```"  (except that no new-line is inserted)
+ *           @123.   Encoded as "```deemon\n123```."  (except that no new-line is inserted)
+ *           @123.4  Encoded as "```deemon\n123.4```"  (except that no new-line is inserted)
+ *           @123. 4 Encoded as "```deemon\n123```. 4"  (except that no new-line is inserted)
+ *         - A - or + followed by a digit:
+ *           @-123    Encoded as "```deemon\n-123```"  (except that no new-line is inserted)
+ *           @-123.   Encoded as "```deemon\n-123```."  (except that no new-line is inserted)
+ *           @-123.4  Encoded as "```deemon\n-123.4```"  (except that no new-line is inserted)
+ *           @-123. 4 Encoded as "```deemon\n-123```. 4"  (except that no new-line is inserted)
  *         - A keyword:
- *           `@foo'    Resolves to a clickable symbol `foo' in the context of the component
- *                     being annotated by the documentation text. Note that in the case of
- *                     a function, this also allows function arguments to be annotated!
- *           `@foo()'  Same a pure keyword, but annotate as a function-call
+ *           @foo    Resolves to a clickable symbol `foo' in the context of the component
+ *                   being annotated by the documentation text. Note that in the case of
+ *                   a function, this also allows function arguments to be annotated!
+ *           @foo()  Same a pure keyword, but annotate as a function-call
  *         - A ( [ or {-character:
- *           `@(foo)'       Same as `@foo', though allows white-space in the expression that should
- *                          be scanned for components to-be annotated.
- *           `@(foo, bar)'  A tuple expression (```deemon\n(foo, bar)```)
- *           `@[foo]'       An array expression (```deemon\n[foo]```)
- *           `@{foo}'       An sequence expression (```deemon\n{foo}```)
+ *           @(foo)          Same as `@foo'
+ *           @(foo, bar)     A tuple expression (```deemon\n(foo, bar)```)
+ *           @[foo]          An array expression (```deemon\n[foo]```)
+ *           @{foo}          An sequence expression (```deemon\n{foo}```)
  *     In general, any deemon expression can be high-lit/annotated using this scheme, whilst
  *     also allowing keywords to be clicked in the associated representation, as well as making
  *     special provisioning for external symbol references to show up properly.
@@ -486,7 +494,7 @@ DECL_BEGIN
  *                 be given by having list elements start with {ELEM_PREFIX}
  *
  *   - Hyper-links
- *         #A{LINK|BODY}
+ *         #A{BODY|LINK}
  *             Syntax:
  *               - The LINK text is not processed recursively, but is the actual
  *                 hyper-link location (with things like |-characters escaped as #|)
@@ -508,10 +516,13 @@ DECL_BEGIN
  *                 should be high-lit the same way as #C{echo Hello}, meaning that unknown names
  *                 should appear as abstract code
  *               - The $BODY form accepts the following strings for BODY:
- *                 - symstrt + symcont...                       (Symbol name)
- *                 - decimal + (decimal | '.')...               (Integer or float constant)
- *                 - '"' + (('\\' any) | (any & !'"')) + '"'    (String constant)
- *                 - '\'' + (('\\' any) | (any & !'"')) + '\''  (String constant)
+ *                 - $foo    -- symstrt + symcont...                       (Symbol name)
+ *                 - $1.2    -- decimal + (decimal | '.')...               (Integer or float constant)
+ *                 - $-1.2   -- ('-' | '+') + decimal + (decimal | '.')... (Integer or float constant)
+ *                 - $"foo"  -- '"' + (('\\' any) | (any & !'"')) + '"'    (String constant)
+ *                 - $'foo'  -- '\'' + (('\\' any) | (any & !'\'')) + '\'' (String constant)
+ *                 - $r"foo" -- 'r' + '"' + (any & !'"') + '"'             (Raw string constant)
+ *                 - $r'foo' -- 'r' + '\'' + (any & !'\'') + '\''          (Raw string constant)
  *
  *   - Tables
  *         #T{BODY11|BODY12|BODY13~BODY21|BODY22|BODY23&BODY31|BODY32|BODY33}

@@ -977,7 +977,7 @@ PRIVATE struct type_getset code_getsets[] = {
 	{ "__operatorname__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_operatorname, NULL, NULL,
 	  DOC("->?X3?Dstring?Dint?N\n"
-	      "Same as #__operator__, but instead try to return the unambiguous name of the "
+	      "Same as ?#__operator__, but instead try to return the unambiguous name of the "
 	      "operator, though still return its ID if the operator isn't recognized as being "
 	      "part of the standard (s.a. :Function.__operatorname__)") },
 	{ "__property__",
@@ -1826,8 +1826,8 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "@param text The bytecode that should be executed by the code\n"
 	                         "@param module The module to-be used as the declaring module\n"
 	                         "@param statics An indexable sequence containing the static variables that are to be made available to the code\n"
-	                         "@param except A sequence of (startpc\\: :int, endpc\\: :int, entrypc\\: :int, entrysp\\: :int, flags\\: :string \\| :int = \"\", mask\\: :Type = none)-"
-	                                       "tuples, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
+	                         "@param except A sequence of ${(startpc#: :int, endpc#: :int, entrypc#: :int, entrysp#: :int, flags#: :string #| :int = \"\", mask#: :Type = none)}-"
+	                                       ":{Tuple}s, with `flags' being a comma-separated string of $\"finally\", $\"interrupt\", $\"handled\"\n"
 	                         "@param nlocal The number of local variables to-be allocated for every frame\n"
 	                         "@param nstack The amount of stack space to be allocated for every frame\n"
 	                         "@param argc The max number of dedicated arguments taken by the function (must be >= ${#defaults} and == ${#keywords} if those are given). "

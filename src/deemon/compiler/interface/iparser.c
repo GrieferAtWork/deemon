@@ -46,7 +46,7 @@ PRIVATE struct keyword suffix_kwlist[] = { K(head), KEND };
 
 PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 #define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(name, func, IF_SUFFIX, is_suffix)  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                       \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                          \
 	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                  \
 	              DeeObject *const *argv, DeeObject *kw) {                      \
 		DREF DeeObject *result = NULL;                                          \
@@ -86,7 +86,7 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		return result;                                                          \
 	}
 #define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(name, func)                                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                     \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL                                        \
 	parser_##name(DeeCompilerWrapperObject *self, size_t argc,                                \
 	              DeeObject *const *argv, DeeObject *kw) {                                    \
 		DREF DeeObject *result = NULL;                                                        \
@@ -311,7 +311,7 @@ PRIVATE struct type_method parser_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_assign,
 	  DOC("(lookupmode=!P{})->?AAst?Ert:Compiler\n"
 	      "(lookupmode=!0)->?AAst?Ert:Compiler\n"
-	      "Alias for #parse_assign"),
+	      "Alias for ?#parse_assign"),
 	  TYPE_METHOD_FKWDS },
 	{ "parse_unarytail",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_unarytail,
@@ -401,13 +401,13 @@ PRIVATE struct type_method parser_methods[] = {
 	{ "parse_stmt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_stmt,
 	  DOC("(bool nonblocking=false)->?AAst?Ert:Compiler\n"
-	      "Parse a statement or #parse_comma expression"),
+	      "Parse a statement or ?#parse_comma expression"),
 	  TYPE_METHOD_FKWDS },
 	{ "parse_allstmt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&parser_parse_allstmt,
 	  DOC("(end=!P{})->?AAst?Ert:Compiler\n"
 	      "(end=!0)->?AAst?Ert:Compiler\n"
-	      "Parse statements (#parse_stmt) and pack them togerther into "
+	      "Parse statements (?#parse_stmt) and pack them togerther into "
 	      "a multiple/keep-last branch, until the input file ends, or "
 	      "a token equal to @end (s.a. :Compiler.lexer.token.op:eq) is "
 	      "encountered at the start of a statement"),
@@ -462,44 +462,43 @@ PRIVATE struct type_member parser_class_members[] = {
 INTERN DeeTypeObject DeeCompilerParser_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Parser",
-	/* .tp_doc      = */ DOC("Parse data from the input token stream (:Compiler.lexer) of the associated #compiler\n"
+	/* .tp_doc      = */ DOC("Parse data from the input token stream (:Compiler.lexer) of the associated ?#compiler\n"
 	                         "For more information on what exactly is parsed by individual `parse_*' functions, see the "
 	                         "following table, or consult the `/lib/LANGUAGE.txt' file within the deemon source tree\n"
-	                         "%{table Function|Example|Description\n"
-	                         "#parse_unaryhead|${[foo].bar}, ${[42] + 7}, ${[(10 + 20)]}, ${[[]{ return 42; }]}|Parse the head of a unary expression, including unary prefix operators, and the unary operand itself\n"
-	                         "#parse_unary|${[foo.bar]}, ${[getitems(a,b,c)]}|Parse a whole unary expression\n"
-	                         "#parse_prod|${[x * y / z % v ** w]}|Parse product expressions (using #parse_unary for operands)\n"
-	                         "#parse_sum|${[x + y - z]}|Parse sum expressions (using #parse_prod for operands)\n"
-	                         "#parse_shift|${[x << y >> z]}|Parse shift expressions (using #parse_sum for operands)\n"
-	                         "#parse_cmp|${[x < y <= z > v >= w]}|Parse compare expressions (non-equal) (using #parse_shift for operands)\n"
-	                         "#parse_cmpeq|${[x == y != z === a !== b is c in d !is e !in f]}|Parse compare expressions (equal) and in/is-expressions (using #parse_cmp for operands)\n"
-	                         "#parse_and|${[x & y]}|Parse bit-wise and expressions (using #parse_cmpeq for operands)\n"
-	                         "#parse_xor|${[x ^ y]}|Parse bit-wise xor expressions (using #parse_and for operands)\n"
-	                         "#parse_or|${[x | y]}|Parse bit-wise or expressions (using #parse_xor for operands)\n"
-	                         "#parse_as|${[x as y]}|Parse bit-wise or expressions (using #parse_or for operands)\n"
-	                         "#parse_land|${[x && y]}|Parse logical and expressions (using #parse_as for operands)\n"
-	                         "#parse_lor|${[x || y]}|Parse logical or expressions (using #parse_land for operands)\n"
-	                         "#parse_cond|${[x ? y : z]}, ${[x ? : z]}, ${[x ? y]}, ${[x ? y : ]}|Parse conditional expressions (using #parse_lor for `x', and #parse_cond for `y' and `z')\n"
-	                         "#parse_assign|${[x := y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Parse assignment expressions (using #parse_cond for operands)\n"
-	                         "#parse_expr|-|Alias for #parse_assign\n"
-	                         "#parse_unarytail|${foo[.bar]}, ${getitems[(a,b,c)]}|Parse the tail of a unary expression, including all tightly bound suffix expressions\n"
-	                         "#parse_prodtail|${x [* y / z % v ** w]}|Given a #parse_unary operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_sumtail|${x [+ y - z]}|Given a #parse_prod operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_shifttail|${x [<< y >> z]}|Given a #parse_sum operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_cmptail|${x [< y <= z > v >= w]}|Given a #parse_shift operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_cmpeqtail|${x [== y != z === a !== b is c in d !is e !in f]}|Given a #parse_cmp operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_andtail|${x [& y]}|Given a #parse_cmpeq operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_xortail|${x [^ y]}|Given a #parse_and operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_ortail|${x [| y]}|Given a #parse_xor operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_astail|${x [as y]}|Given a #parse_or operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_landtail|${x [&& y]}|Given a #parse_as operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_lortail|${x [|| y]}|Given a #parse_land operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_condtail|${x [? y : z]}, ${x [? : z]}, ${x [? y]}, ${x [? y : ]}|Given a #parse_lor operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_assigntail|${x [:= y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Given a #parse_cond operand `x', parse the suffix also parsed by #parse_prod\n"
-	                         "#parse_exprtail|${x [<any-non-unary-tail> y]}|Does the work of all the *-tail functions, excluding #{parse_unarytail}\n"
-	                         "#parse_maptail|${{x [: y, v: w]}}|Process the tail in a generic mapping expression. - No-op when the current token isn't a $\":\"\n"
-	                         "#parse_seqtail|${{x [, y, z]}}|Process the tail in a generic sequence expression. - No-op when the current token isn't a $\",\"\n"
-	                         "}\n"
+	                         "#T{Function|Example|Description~"
+	                         "?#parse_unaryhead|${[foo].bar}, ${[42] + 7}, ${[(10 + 20)]}, ${[[]{ return 42; }]}|Parse the head of a unary expression, including unary prefix operators, and the unary operand itself&"
+	                         "?#parse_unary|${[foo.bar]}, ${[getitems(a,b,c)]}|Parse a whole unary expression&"
+	                         "?#parse_prod|${[x * y / z % v ** w]}|Parse product expressions (using ?#parse_unary for operands)&"
+	                         "?#parse_sum|${[x + y - z]}|Parse sum expressions (using ?#parse_prod for operands)&"
+	                         "?#parse_shift|${[x << y >> z]}|Parse shift expressions (using ?#parse_sum for operands)&"
+	                         "?#parse_cmp|${[x < y <= z > v >= w]}|Parse compare expressions (non-equal) (using ?#parse_shift for operands)&"
+	                         "?#parse_cmpeq|${[x == y != z === a !== b is c in d !is e !in f]}|Parse compare expressions (equal) and in/is-expressions (using ?#parse_cmp for operands)&"
+	                         "?#parse_and|${[x & y]}|Parse bit-wise and expressions (using ?#parse_cmpeq for operands)&"
+	                         "?#parse_xor|${[x ^ y]}|Parse bit-wise xor expressions (using ?#parse_and for operands)&"
+	                         "?#parse_or|${[x | y]}|Parse bit-wise or expressions (using ?#parse_xor for operands)&"
+	                         "?#parse_as|${[x as y]}|Parse bit-wise or expressions (using ?#parse_or for operands)&"
+	                         "?#parse_land|${[x && y]}|Parse logical and expressions (using ?#parse_as for operands)&"
+	                         "?#parse_lor|${[x || y]}|Parse logical or expressions (using ?#parse_land for operands)&"
+	                         "?#parse_cond|${[x ? y : z]}, ${[x ? : z]}, ${[x ? y]}, ${[x ? y : ]}|Parse conditional expressions (using ?#parse_lor for `x', and ?#parse_cond for `y' and `z')&"
+	                         "?#parse_assign|${[x := y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Parse assignment expressions (using ?#parse_cond for operands)&"
+	                         "?#parse_expr|-|Alias for ?#parse_assign&"
+	                         "?#parse_unarytail|${foo[.bar]}, ${getitems[(a,b,c)]}|Parse the tail of a unary expression, including all tightly bound suffix expressions&"
+	                         "?#parse_prodtail|${x [* y / z % v ** w]}|Given a ?#parse_unary operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_sumtail|${x [+ y - z]}|Given a ?#parse_prod operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_shifttail|${x [<< y >> z]}|Given a ?#parse_sum operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_cmptail|${x [< y <= z > v >= w]}|Given a ?#parse_shift operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_cmpeqtail|${x [== y != z === a !== b is c in d !is e !in f]}|Given a ?#parse_cmp operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_andtail|${x [& y]}|Given a ?#parse_cmpeq operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_xortail|${x [^ y]}|Given a ?#parse_and operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_ortail|${x [| y]}|Given a ?#parse_xor operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_astail|${x [as y]}|Given a ?#parse_or operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_landtail|${x [&& y]}|Given a ?#parse_as operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_lortail|${x [|| y]}|Given a ?#parse_land operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_condtail|${x [? y : z]}, ${x [? : z]}, ${x [? y]}, ${x [? y : ]}|Given a ?#parse_lor operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_assigntail|${x [:= y += z -= v += w /= a %= b <<= c >>= d &= e |= f ^= g **= h]}|Given a ?#parse_cond operand `x', parse the suffix also parsed by ?#parse_prod&"
+	                         "?#parse_exprtail|${x [<any-non-unary-tail> y]}|Does the work of all the *-tail functions, excluding ?#parse_unarytail&"
+	                         "?#parse_maptail|${{x [: y, v: w]}}|Process the tail in a generic mapping expression. - No-op when the current token isn't a $\":\"&"
+	                         "?#parse_seqtail|${{x [, y, z]}}|Process the tail in a generic sequence expression. - No-op when the current token isn't a $\",\"}\n"
 	                         "Note the processed portion of an expression is written in []-brackets\n"
 	                         "In order to explain what tail parsers do, look at this example:\n"
 	                         ">/* input: \"a.foo + 14 * 7 ? x : y-7\" */\n"

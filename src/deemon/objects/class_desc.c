@@ -855,10 +855,10 @@ PRIVATE struct type_getset ca_getsets[] = {
 	      "that may be stored at #addr + 0, with that callback being the getter\n"
 	      "Otherwise, up to 3 indices within the associated object table are used by "
 	      "@this attribute, each of which may be left unbound:\n"
-	      "%{table Offset|Callback\n"
-	      "$" PP_STR(CLASS_GETSET_GET) "|The getter callback ($get)\n"
-	                                   "$" PP_STR(CLASS_GETSET_DEL) "|The delete callback ($del)\n"
-	                                                                "$" PP_STR(CLASS_GETSET_SET) "|The setter callback ($set)}") },
+	      "#T{Offset|Callback|Description~"
+	      "$" PP_STR(CLASS_GETSET_GET) "|$get|The getter callback&"
+	      "$" PP_STR(CLASS_GETSET_DEL) "|$del|The delete callback&"
+	      "$" PP_STR(CLASS_GETSET_SET) "|$set|The setter callback}") },
 	{ "isclassmem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isclassmem, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Set if #addr is an index into the class object table, rather than into the "
@@ -873,13 +873,13 @@ PRIVATE struct type_getset ca_getsets[] = {
 	{ "flags", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Returns a comma-separated string describing the flags of @this class attribute\n"
-	      "%{table Flag|Property\n"
-	      "$\"private\"|#isprivate\n"
-	      "$\"final\"|#isfinal\n"
-	      "$\"readonly\"|#isreadonly\n"
-	      "$\"method\"|#ismethod\n"
-	      "$\"property\"|#isproperty\n"
-	      "$\"classns\"|#isclassns}\n") },
+	      "#T{Flag|Property~"
+	      "$\"private\"|#isprivate&"
+	      "$\"final\"|#isfinal&"
+	      "$\"readonly\"|#isreadonly&"
+	      "$\"method\"|#ismethod&"
+	      "$\"property\"|#isproperty&"
+	      "$\"classns\"|#isclassns}") },
 	{ NULL }
 };
 
@@ -1311,14 +1311,14 @@ PRIVATE struct type_getset cd_getsets[] = {
 	  DOC("->?Dstring\n"
 	      "Return a comma-separated string of flags used to describe the combination of properties described by "
 	      "#isfinal, #isinterrupt, #hassuperconstructor, #__hassuperkwds__, #__isinttruncated__, and #__hasmoveany__\n"
-	      "%{table Flag|Property\n"
-	      "$\"final\"|#isfinal\n"
-	      "$\"interrupt\"|#isinterrupt\n"
-	      "$\"superctor\"|#hassuperconstructor\n"
-	      "$\"superkwds\"|#__hassuperkwds__\n"
-	      "$\"autoinit\"|#__hasautoinit__\n"
-	      "$\"inttrunc\"|#__isinttruncated__\n"
-	      "$\"moveany\"|#__hasmoveany__\n}") },
+	      "#T{Flag|Property~"
+	      "$\"final\"|#isfinal&"
+	      "$\"interrupt\"|#isinterrupt&"
+	      "$\"superctor\"|#hassuperconstructor&"
+	      "$\"superkwds\"|#__hassuperkwds__&"
+	      "$\"autoinit\"|#__hasautoinit__&"
+	      "$\"inttrunc\"|#__isinttruncated__&"
+	      "$\"moveany\"|#__hasmoveany__}") },
 	{ DeeString_STR(&str_operators),
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
 	  DOC("->?#OperatorTable\n"

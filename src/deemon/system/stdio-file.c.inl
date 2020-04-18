@@ -166,7 +166,7 @@ PRIVATE struct type_getset debug_file_getsets[] = {
 PRIVATE DeeFileTypeObject DebugFile_Type = {
 	/* .ft_base = */ {
 		OBJECT_HEAD_INIT(&DeeFileType_Type),
-		/* .tp_name     = */ "debug_file",
+		/* .tp_name     = */ "_DebugFile",
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE,
 		/* .tp_weakrefs = */ 0,
@@ -973,11 +973,11 @@ PRIVATE struct type_method sysfile_methods[] = {
 	{ "flush",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sysfile_flush,
 	  DOC("()\n"
-	      "An alias for #sync used for compatibility with :File.Buffer") },
+	      "An alias for #sync used for compatibility with ?ABuffer?DFile") },
 	{ "setbuf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&sysfile_setbuf,
 	  DOC("(string mode,size=!0)\n"
-	      "Set the buffering mode in a manner that is compatible with :File.Buffer.setbuf") },
+	      "Set the buffering mode in a manner that is compatible with ?Asetbuf?ABuffer?DFile") },
 	{ NULL }
 };
 

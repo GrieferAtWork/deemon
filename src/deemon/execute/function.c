@@ -533,10 +533,10 @@ PRIVATE struct type_getset function_getsets[] = {
 	      "Returns an integer describing the kind if @this function is part of a property or getset, "
 	      "or returns :none if the function's property could not be found, or if the function isn't "
 	      "declared as a property callback\n"
-	      "%{table Id|Callback|Compatible prototype\n"
-	      "$" PP_STR(CLASS_GETSET_GET) "|Getter callback|${function get() -> object}\n"
-	                                   "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${function delete() -> none}\n"
-	                                                                "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${function set(object value) -> none}}") },
+	      "#T{Id|Callback|Compatible prototype~"
+	      "$" PP_STR(CLASS_GETSET_GET) "|Getter callback|${get(): Object}&"
+	      "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${del(): none}&"
+	      "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${set(value: Object): none}}") },
 	{ "__refs__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_refs, NULL, NULL,
 	  DOC("->?S?O\n"

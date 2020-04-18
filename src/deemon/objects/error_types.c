@@ -695,7 +695,7 @@ INIT_CUSTOM_ERROR("BufferError", NULL, TP_FNORMAL | TP_FINHERITCTOR, &DeeError_V
 PRIVATE struct type_member systemerror_class_members[] = {
 	TYPE_MEMBER_CONST("UnsupportedAPI", &DeeError_UnsupportedAPI),
 	TYPE_MEMBER_CONST("FSError", &DeeError_FSError),
-	TYPE_MEMBER_CONST_DOC("IOError", &DeeError_FSError, "Deprecated alias for #FSError"),
+	TYPE_MEMBER_CONST_DOC("IOError", &DeeError_FSError, "Deprecated alias for ?#FSError"),
 	TYPE_MEMBER_END
 };
 
@@ -972,19 +972,19 @@ PRIVATE struct type_getset systemerror_getsets[] = {
 	{ "strerrorname",
 	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerrorname, NULL, NULL,
 	  DOC("->?Dstring\n"
-	      "The name of the associated #errno (s.a. :posix:strerrorname)\n"
-	      "Returns :none if #errno doesn't have a known name") },
+	      "The name of the associated #errno (s.a. ?Eposix:strerrorname)\n"
+	      "Returns ?Dnone if ?#errno doesn't have a known name") },
 	{ "strerror",
 	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerror, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "A description of the associated #errno (s.a. :posix:strerror)\n"
-	      "Returns :none if #errno doesn't have a description") },
+	      "A description of the associated #errno (s.a. ?Eposix:strerror)\n"
+	      "Returns ?Dnone if ?#errno doesn't have a description") },
 #ifdef CONFIG_HOST_WINDOWS
 	{ "nterrmsg_np",
 	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getnterrmsg_np, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "A description of the associated #nterr_np (s.a. :win32:FormatErrorMessage)\n"
-	      "Returns :none if no message description is available") },
+	      "A description of the associated #nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
+	      "Returns ?Dnone if no message description is available") },
 #endif /* CONFIG_HOST_WINDOWS */
 	{ NULL }
 };
@@ -992,11 +992,11 @@ PRIVATE struct type_getset systemerror_getsets[] = {
 PRIVATE struct type_member systemerror_members[] = {
 	TYPE_MEMBER_FIELD_DOC("errno", STRUCT_CONST | STRUCT_INT,
 	                      offsetof(DeeSystemErrorObject, se_errno),
-	                      "The associated system errno value (one of `E*' from :posix)"),
+	                      "The associated system errno value (one of #C{E*} from ?R!Mposix])"),
 #ifdef CONFIG_HOST_WINDOWS
 	TYPE_MEMBER_FIELD_DOC("nterr_np", STRUCT_CONST | STRUCT_UINT32_T,
 	                      offsetof(DeeSystemErrorObject, se_lasterror),
-	                      "The windows-specific error code, as returned by :win32:GetLastError"),
+	                      "The windows-specific error code, as returned by ?Ewin32:GetLastError"),
 #endif /* CONFIG_HOST_WINDOWS */
 	TYPE_MEMBER_END
 };
@@ -1200,15 +1200,15 @@ PRIVATE struct type_method appexit_class_methods[] = {
 	{ "exit", &appexit_class_exit,
 	  DOC("()\n"
 	      "(exitcode:?Dint,invoke_atexit=!t)\n"
-	      "Terminate execution of deemon after invoking #atexit callbacks when @invoke_atexit is :true\n"
-	      "Termination is done using the C $exit or $_exit functions, if available. However if these "
+	      "Terminate execution of deemon after invoking ?#atexit callbacks when @invoke_atexit is ?Dtrue\n"
+	      "Termination is done using the C #Cexit or #C_exit functions, if available. However if these "
 	      "functions are not provided by the host, an :AppExit error is thrown instead\n"
-	      "When no @exitcode is given, the host's default default value of EXIT_FAILURE, or $1 is used\n"
+	      "When no @exitcode is given, the host's default default value of #CEXIT_FAILURE, or $1 is used\n"
 	      "This function never returns normally") },
 	{ "atexit", &appexit_class_atexit,
 	  DOC("(callback:?DCallable,args=!T0)\n"
 	      "@throw RuntimeError Additional atexit-callbacks can no longer be registered\n"
-	      "@throw NotImplemented Deemon was built without support for #atexit\n"
+	      "@throw NotImplemented Deemon was built without support for ?#atexit\n"
 	      "Register a given @callback to be executed before deemon terminates") },
 	{ NULL }
 };
@@ -1217,7 +1217,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "AppExit",
 	/* .tp_doc      = */ DOC("An AppExit object is a special kind of interrupt that "
-	                         "is not derived from :Object, and has no base class at "
+	                         "is not derived from ?O, and has no base class at "
 	                         "all. It's purpose is to allow user-code to throw an "
 	                         "instance of it and have the stack unwind itself, alongside "
 	                         "all existing objects being destroyed normally before deemon "
@@ -1226,7 +1226,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	                         "()\n"
 	                         "(exitcode:?Dint)\n"
 	                         "Construct a new AppExit object using the given @exitcode "
-	                         "or the host's default value for EXIT_FAILURE, or $1"),
+	                         "or the host's default value for #CEXIT_FAILURE, or $1"),
 	/* .tp_flags    = */ TP_FFINAL|TP_FINTERRUPT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

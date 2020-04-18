@@ -3011,11 +3011,11 @@ PRIVATE struct type_method int_methods[] = {
 	      "@throw ValueError The given @mode was not recognized\n"
 	      "@throw NotImplemented The given @radix cannot be represented\n"
 	      "Convert @this integer to a string, using @radix as base and a "
-	      "character-options set @mode for which the following control "
-	      "characters are recognized\n"
-	      "%{table Option|Description\n"
-	      "$\"u\", $\"X\"|Digits above $10 are printed in upper-case\n"
-	      "$\"n\", $\"#\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")\n"
+	      /**/ "character-options set @mode for which the following control "
+	      /**/ "characters are recognized\n"
+	      "#T{Option|Description~"
+	      "$\"u\", $\"X\"|Digits above $10 are printed in upper-case&"
+	      "$\"n\", $\"#\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
 	      "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hex",
