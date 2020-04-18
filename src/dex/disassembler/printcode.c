@@ -284,10 +284,10 @@ err:
 #define LINE_HORI      0x71
 #define HAVE_PRINT_BOX 1
 
-PRIVATE unsigned char const corner_top[] = { 0xe2, 0x94, 0x8c };
-PRIVATE unsigned char const line_vert[] = { 0xe2, 0x94, 0x82 };
+PRIVATE unsigned char const corner_top[]    = { 0xe2, 0x94, 0x8c };
+PRIVATE unsigned char const line_vert[]     = { 0xe2, 0x94, 0x82 };
 PRIVATE unsigned char const corner_bottom[] = { 0xe2, 0x94, 0x94 };
-PRIVATE unsigned char const line_hori[] = { 0xe2, 0x94, 0x80 };
+PRIVATE unsigned char const line_hori[]     = { 0xe2, 0x94, 0x80 };
 
 PRIVATE dssize_t DCALL
 print_box(dformatprinter printer, void *arg,

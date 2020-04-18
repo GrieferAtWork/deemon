@@ -545,6 +545,14 @@ DECL_BEGIN
  *                 that came before or come after is encoded, rendering that list causes weak
  *                 undefined behavior, in that it is up to the renderer what to do with superfluous
  *                 cells, or cells that are missing.
+ *               - At the start of a cell, an additional {...} block may be placed where ...
+ *                 is a comma-separated list of additional renderer options. - The following
+ *                 list of options is recognized:
+ *                 - tl, t, tr, l, c, r, bl, b, br -- Set the alignment of the cell's contents. (default: tl)
+ *                 - ...                           -- Any other rendering option should silently
+ *                                                    by ignored by the rendering engine in order
+ *                                                    to allow for forward-compatibility with
+ *                                                    future options.
  *
  *   - Symbol references
  *         ?Dint

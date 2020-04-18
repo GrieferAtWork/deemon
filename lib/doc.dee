@@ -176,8 +176,8 @@ local function splitDocSections(text: string): {string...} {
 }
 
 @@Check if a backslash at @pos in @text is non-escaped, meaning
-@@that in a text $r"a\\b", the backslash is ecaped, but isn't in $r"a\b"
-local function isBackslashAt(text: string, pos: int): bool {
+@@that in a text @r"a\\b", the backslash is ecaped, but isn't in @r"a\b"
+local function isBackslashAtPosEscaped(text: string, pos: int): bool {
 	local result = true;
 	while (pos > 0) {
 		--pos;
@@ -188,15 +188,16 @@ local function isBackslashAt(text: string, pos: int): bool {
 	return result;
 }
 
-@@Try to find @tofind in @text, but ensure that it isn't prefixed by an unmatched backslash
-@@If @tofind could not be found, return @-1 instead.
-local function findNonEscaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
+@@Try to find @tofind in @text, but ensure that it isn't prefixed by an
+@@unmatched backslash. If @tofind could not be found, return @-1 instead.
+local function findNonEscaped(
+		text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
 		local result = text.find(tofind, start, end);
 		if (result < 0)
 			break;
 		if (result && text[result - 1] == "\\" &&
-		    isBackslashAt(text, result - 1)) {
+		    isBackslashAtPosEscaped(text, result - 1)) {
 			start = result + 1;
 			continue;
 		}
@@ -206,7 +207,8 @@ local function findNonEscaped(text: string, tofind: string, start: int = 0, end:
 }
 
 @@Similar to @findNonEscaped, but search from the right
-local function rfindNonEscaped(text: string, tofind: string, start: int = 0, end: int = -1): int {
+local function rfindNonEscaped(
+		text: string, tofind: string, start: int = 0, end: int = -1): int {
 	for (;;) {
 		local result = text.rfind(tofind, start, end);
 		if (result < 0)
@@ -2513,56 +2515,30 @@ class TextSegment: WeakRefAble {
 		, docstring(ds)
 	{}
 
-	/* TODO: Standartize documentation text section formatting
-	 *       Now that the job of creating doc strings has been off-loaded onto
-	 *       the compiler, we could (in theory) get rid of all those different
-	 *       special tags which may appear in doc texts, and instead unify
-	 *       everything to use some kind of compiler-generated symbol addressing
-	 *       syntax, which could then make use of compile-time symbol resolution
-	 *       to remove all of the complexity that is currently required to referr
-	 *       to different types of symbols.
-	 *       Resolution itself should then happen in the context of the function
-	 *       being documented, thus allowing
-	 * Proposal:
-	 *   Use `@' for this purpose. - `@' is already used in GATW's assembly
-	 *   implementation in order to inline user-level expressions within operands.
-	 *   An example use of this could then look like this:
-	 *
-	 * >> import * from deemon;
-	 * >> import util;
-	 * >>
-	 * >> @@Take 2 argument @x and @y and return the lower of the 2
-	 * >> @@This is done through use of @(min from util), re-using
-	 * >> @@its @int-typed return value to return from this function.
-	 * >> function myfunc(x: int, y: int): int {
-	 * >>     return util.min(x, y);
-	 * >> }
-	 *
-	 * The idea here is that when the compiler generates the TextSegment-part
-	 * of the associated documenation string, it can resolve those identifiers
-	 * in relation to where they appear in the actual source-file.
-	 * CON:
-	 *   - This would interfere with user-doc function tags,
-	 *     such as `@throws Foo' or @param / @arg
-	 *     This could be prevented by having special behavior when @
-	 *     appears at the start of a line, but now it's starting to
-	 *     look really ugly:
-	 *     >> @@Description goes here
-	 *     >> @@@param x An integer value
-	 *     >> @@@param y An integer value
-	 *     >> @@@return The lower of @x and @y
-	 *     >> function myfunc(x: int, y: int): int {
-	 *     >>     return util.min(x, y);
-	 *     >> }
-	 *   - This uglyness however has already become inadvertible ever-since
-	 *     the (still good & correct) decision was made to move from @"..."
-	 *     like doc strings to instead use @@...<LF>, which is something that
-	 *     looks way better.
-	 */
+	private member m_parts: {(string | Object)...};
 
-	@@Returns @docstring
+	@@Enumerate all of different parts that make up this text segment
+	operator for(): {(string | Object)...} {
+		if (m_parts !is bound) {
+			local dc = import("doctext");
+			m_parts = Tuple(dc.splitTextSegment(
+				docstring: this.docstring,
+				docsect: this.docsect.lock(none)));
+		}
+		return m_parts;
+	}
+
+	function printConsoleString(p/*: ConsolePrinter*/) {
+		for (local part: this)
+			p << part;
+	}
+
+	@@Returns the formated documentation string of this text segment
 	operator str(): string {
-		return docstring;
+		local dc = import("doctext");
+		local p = dc.ConsolePrinter();
+		printConsoleString(p);
+		return p.fp.string;
 	}
 
 	@@Returns a string representation of how @this TextSegment can be created

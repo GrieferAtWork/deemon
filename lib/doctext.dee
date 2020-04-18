@@ -1,0 +1,1068 @@
+/* Copyright (c) 2018-2020 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from doc;
+
+#define DEFAULT_CONSOLE_WIDTH 80
+
+local function unEscapePoundCharacters(text: string): string {
+	if ("#" !in text)
+		return text;
+	local i = 0, len = #text;
+	local flushStart = 0;
+	File.Writer fp;
+	while (i < len) {
+		local ch = text[i];
+		++i;
+		if (ch != "#")
+			continue;
+		fp << text[flushStart:i - 1];
+		flushStart = i;
+		++i;
+	}
+	fp << text[flushStart:];
+	return fp.string;
+}
+
+@@Check if a pound at @pos in @text is non-escaped, meaning that
+@@in a text @"a##b", the pound is ecaped, but isn't in @"a#b"
+local function isPoundAtPosEscaped(text: string, pos: int): bool {
+	local result = true;
+	while (pos > 0) {
+		--pos;
+		if (text[pos] != "#")
+			break;
+		result = !result;
+	}
+	return result;
+}
+
+@@Find the first unmatched @closeCh after @start
+local function findNonEscapedMatch(
+		text: string, openCh: string, closeCh: string,
+		start: int = 0, end: int = -1): int {
+	local recursion = 0;
+	local len = #text;
+	if (end < 0 || end > len)
+		end = len;
+	while (start < end) {
+		local ch = text[start];
+		if (ch == "#") {
+			start += 2;
+			continue;
+		}
+		if (ch == openCh)
+			++recursion;
+		else if (ch == closeCh) {
+			if (!recursion)
+				return start;
+			--recursion;
+		}
+		++start;
+	}
+	return -1;
+}
+
+@@Find the first instance of one of @findChrs within the same @"[...]" and @"{...}"
+@@level as @start, that isn't escaped by a being pre-fixed with "#"
+local function findSameLevelNonEscaped(
+		text: string, findChrs: string,
+		start: int = 0, end: int = -1): int {
+	local len = #text;
+	if (end < 0 || end > len)
+		end = len;
+	while (start < end) {
+		local ch = text[start];
+		if (ch == "#") {
+			start += 2;
+			continue;
+		}
+		if (ch in "{[") {
+			/* Skip over child levels */
+			start = findNonEscapedMatch(text, ch, {
+				"{" : "}",
+				"[" : "]",
+			}[ch], start + 1, end);
+			if (start < 0)
+				break;
+			++start;
+			continue;
+		}
+		if (ch in "}]")
+			break; /* The paren't level has ended */
+		if (ch in findChrs)
+			return start;
+		++start;
+	}
+	return -1;
+}
+
+@@Find the first instance of @findCh, that
+@@isn't escaped by a being pre-fixed with "\\"
+local function findNonBackslashEscaped(
+		text: string, findCh: string,
+		start: int = 0, end: int = -1): int {
+	local len = #text;
+	if (end < 0 || end > len)
+		end = len;
+	while (start < end) {
+		local ch = text[start];
+		if (ch == "\\") {
+			start += 2;
+			continue;
+		}
+		if (ch == findCh)
+			return start;
+		++start;
+	}
+	return -1;
+}
+
+
+@@Split string at the nearest whitespace position before @maxSplitPosition,
+@@or split it at @(maxSplitPosition - 1) and insert a "-"-character before
+@@returning 2 strings for the first and second half around the split
+function splitStripBefore(s: string, maxSplitPosition: int): (string, string) {
+	if (maxSplitPosition >= #s)
+		return (s, ""); /* Shouldn't happen... */
+	if (!maxSplitPosition)
+		return ("", s); /* Shouldn't happen... */
+	local splitPos = maxSplitPosition;
+	while (splitPos && !s.isspace(splitPos - 1))
+		--splitPos;
+	if (!splitPos) {
+		splitPos = maxSplitPosition - 1;
+		if (!splitPos)
+			return ("", s); /* Shouldn't happen... */
+		local lo = s[:splitPos];
+		if (lo.issymcont(#lo - 1))
+			lo = lo + "-";
+		return (lo, s[splitPos:].lstrip());
+	}
+	return (
+		s[:splitPos].rstrip(),
+		s[splitPos:].lstrip()
+	);
+}
+
+class ConsolePrinter {
+	this = default;
+
+	public member fp: File = File.Writer();
+	public member maxWidth: int = DEFAULT_CONSOLE_WIDTH;
+	public member currentLineInUse: int = 0;
+
+	public property currentLineAvail: int = {
+		get(): int {
+			return maxWidth - currentLineInUse;
+		}
+	}
+
+	public operator << (e: string | Object): ConsolePrinter {
+		return append(e);
+	}
+
+	public function appendNormal(e: string | Object): ConsolePrinter {
+		return append(e, lf: "\n");
+	}
+
+	public function append(e: string | Object, lf: string = "\n\n"): ConsolePrinter {
+		if (e is string) {
+			local isFirst = true;
+			for (local l: e.splitlines(false)) {
+				if (!isFirst) {
+					fp << lf;
+					currentLineInUse = 0;
+				}
+				isFirst = false;
+again_handle_l:
+				local avail = maxWidth - currentLineInUse;
+				local linelen = #l;
+				if (linelen <= avail) {
+					fp << l;
+					currentLineInUse += linelen;
+				} else {
+					local lo;
+					lo, l = splitStripBefore(l, avail)...;
+					fp << lo << "\n";
+					currentLineInUse = 0;
+					goto again_handle_l;
+				}
+			}
+		} else {
+			e.printConsoleString(this);
+		}
+		return this;
+	}
+
+	public function appendall(items: {(string | Object)...}): ConsolePrinter {
+		for (local e: items)
+			append(e);
+		return this;
+	}
+
+}
+
+function createConsoleString(
+		obj: string | Object,
+		maxWidth: int = DEFAULT_CONSOLE_WIDTH): string {
+	local p = ConsolePrinter();
+	p.append(obj);
+	return p.fp.string;
+}
+
+
+
+class Header {
+	this = default;
+
+	@@The header type of this header (@1, @2, @3, @4, @5 or @6)
+	@@Lower numbers should be rendered bigger than greater numbers
+	public member size: int;
+
+	@@The body that is being formatted by this header.
+	public member body: {(string | Object)...};
+
+	function printConsoleString(p: ConsolePrinter) {
+		p << ("#" * size) << " ";
+		p.appendall(body);
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+}
+
+class Code {
+	this = default;
+
+	@@Name of the language for which syntax highlighting should be performed
+	@@When no language was specified, set to @"" (empty string) instead.
+	public member language: string;
+
+	@@Code body (the text that should be written as the actual code)
+	public member body: string;
+
+	function printConsoleString(p: ConsolePrinter) {
+		local usedBody = body.rstrip().unifylines();
+		if ("\n" in usedBody) {
+			if (language == "deemon") {
+				p.appendNormal("".join(
+					for (local l: usedBody.splitlines(true))
+						">> " + l) + "\n");
+			} else {
+				p.appendNormal("```\n{}\n```\n".format({ usedBody }));
+			}
+		} else if (usedBody && (usedBody[0] in "\'\"" || usedBody.isdecimal(0))) {
+			p.append(usedBody);
+		} else {
+			p.append("`{}'".format({ usedBody }));
+		}
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+}
+
+class HyperLink {
+	this = default;
+
+	@@The text of the actual, clickable link
+	public member link: string;
+
+	@@The body of what is the clickable link
+	public member body: {(string | Object)...};
+
+	function printConsoleString(p: ConsolePrinter) {
+		(p << "[").appendall(body) << "](" << link << ")";
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+
+}
+
+class List {
+	this = default;
+
+	@@List items @{(prefix: string, body: {(string | Object)...})...}
+	public member items: {(string, {(string | Object)...})...};
+
+	function printConsoleString(p: ConsolePrinter) {
+		local longestPrefixLength = items.each[0].length > ...;
+		local longestPrefixLengthFull = longestPrefixLength  + 2;
+		local indentSpaces = " " * longestPrefixLengthFull;
+		local isFirst = true;
+		for (local prefix, body: items) {
+			prefix = prefix.ljust(longestPrefixLength);
+			if (!isFirst)
+				p.appendNormal("\n");
+			p << " " << prefix << " ";
+			p.appendNormal(
+				ConsolePrinter(maxWidth: p.currentLineAvail)
+				.appendall(body)
+				.fp
+				.string
+				.indent(indentSpaces)
+				[longestPrefixLengthFull:]);
+			isFirst = false;
+		}
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+}
+
+
+class Emphasis {
+	this = default;
+
+	@@The kind of emphasis
+	@@+-------+-------------------+
+	@@| kind  | Intended behavior |
+	@@+-------+-------------------+
+	@@| @"B"  | _Bold_            |
+	@@|       |                   |
+	@@| @"I"  | *Italic*          |
+	@@|       |                   |
+	@@| @"S"  | ~Strikethrough~   |
+	@@+-------+-------------------+
+	public member kind: string;
+
+	@@The body that is being formatted
+	public member body: {(string | Object)...};
+
+	public function toConsoleString(maxWidth: int): string {
+		local usedBody = "".join(body);
+		local ekind = { "B" : "_", "I" : "*", "S" : "~" }[kind];
+		if (usedBody.isanyspace())
+			ekind = ekind + ekind;
+		return "{}{}{}".format({ ekind, usedBody, ekind });
+	}
+
+	function printConsoleString(p: ConsolePrinter) {
+		local usedBody = "".join(body);
+		local ekind = { "B" : "_", "I" : "*", "S" : "~" }[kind];
+		if (usedBody.isanyspace())
+			ekind = ekind + ekind;
+		p << ekind << usedBody << ekind;
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+}
+
+
+@@Given a @","-seperated list of options @opt, find and return the first
+@@of the following options:
+@@    @"tl", @"t", @"tr", @"l", @"c", @"r", @"bl", @"b", @"br"
+function getOrientationFromTableCellRenderOptions(opt: string): string {
+	final local ORIENTATION_OPTIONS = {
+		"tl", "t", "tr", "l", "c", "r", "bl", "b", "br" };
+	for (local o: opt.split(",")) {
+		if (o in ORIENTATION_OPTIONS)
+			return o;
+	}
+	return "tl"; /* Default to top-left */
+}
+
+@@Return a set of (hori_orientation, vert_orientation), where
+@@both values are integers:
+@@  - $0  Align left/up
+@@  - $1  Align centered
+@@  - $2  Align right/down
+function evalTableOrientationOption(opt: string): (int, int) {
+	return {
+		"tl" : (0, 0),
+		"t"  : (1, 0),
+		"tr" : (2, 0),
+		"l"  : (0, 1),
+		"c"  : (1, 1),
+		"r"  : (2, 1),
+		"bl" : (0, 2),
+		"b"  : (1, 2),
+		"br" : (2, 2),
+	}[opt];
+}
+
+
+class Table {
+	this = default;
+
+	@@The table cells
+	@@> local renderopt: string, body: {(string | Object)...} = tab.cells[row][column]...;
+	public member cells: {{(string, {(string | Object)...})...}...};
+
+	@@Set of row numbers that should be rendered as thick,
+	@@where @0 referrs to the bottom of the first row.
+	public member thickRows: Set with int;
+
+	@@Return the # of rows of this table (always non-zero)
+	public property rows: int = {
+		get(): int {
+			return #cells;
+		}
+	}
+
+	@@Return the # of columns of this table (always non-zero)
+	public property columns: int = {
+		get(): int {
+			return #cells.first;
+		}
+	}
+
+	function createSubTable(
+			minRow: int, minColumn: int,
+			maxRow: int, maxColumn: int): Table {
+		local result = Table();
+		result.thickRows = HashSet();
+		for (local r: this.thickRows) {
+			if (r >= minRow && r <= maxRow)
+				result.thickRows.insert(r);
+		}
+		result.cells = this.cells[minRow:maxRow + 1];
+		local rowCount = #result.cells;
+		for (local i: [:rowCount]) {
+			local row = result.cells[i];
+			row = row[minColumn:maxColumn + 1];
+			result.cells[i] = row;
+		}
+		return result;
+	}
+
+	@@Return the character-widths for individual columns when a
+	@@total horizontal space of @availWidth characters is available.
+	public function calculateConsoleColumnWidth(availWidth: int): {int...} {
+		local nColumns = this.columns;
+		local perColumn = availWidth / nColumns;
+		local unused = availWidth % nColumns;
+		local result = [perColumn] * nColumns;
+		for (local i: [:unused])
+			++result[i];
+		local nRows = this.rows;
+		local truncatedColumns = HashSet();
+		local availableSpace = 0;
+		for (local i: [:nColumns]) {
+			local p = ConsolePrinter(maxWidth: 0xffffffffffffffff);
+			for (local j: [:nRows])
+				p.appendall(cells[j][i][1]).appendNormal("\n");
+			/* Find the length of the longest line. */
+			p = p.fp.string.splitlines(false).each.length > ...;
+			local currentAssignment = result[i];
+			if (currentAssignment > p) {
+				availableSpace += currentAssignment - p;
+				result[i] = p;
+				truncatedColumns.insert(i);
+			}
+		}
+		if (availableSpace) {
+			/* Distribute space that became available over all cells */
+			local numNonTruncatedColumns = nColumns - #truncatedColumns;
+			if (numNonTruncatedColumns) {
+				local availableSpacePerColumn =
+					availableSpace / numNonTruncatedColumns;
+				local availableSpaceOverflow =
+					availableSpace % numNonTruncatedColumns;
+				for (local i: [:nColumns]) {
+					if (i in truncatedColumns)
+						continue;
+					local width = result[i] + availableSpacePerColumn;
+					if (availableSpaceOverflow) {
+						++width;
+						--availableSpaceOverflow;
+					}
+					result[i] = width;
+				}
+			}
+		}
+		return result;
+	}
+
+	function printConsoleString(p: ConsolePrinter) {
+		local nColumns = columns;
+		local minWidth = 2 + (nColumns * 4);
+		local borderWidth = 1 + (nColumns * 3);
+		if (p.currentLineAvail < minWidth)
+			p.appendNormal("\n");
+		if (p.currentLineAvail < minWidth) {
+			/* Split the table in the middle. */
+			local splitColumn = nColumns / 2;
+			if (!splitColumn)
+				throw Error("Not enough console space");
+			local lhs = createSubTable(0, 0, rows - 1, splitColumn - 1);
+			local rhs = createSubTable(0, splitColumn, rows - 1, nColumns - 1);
+			lhs.printConsoleString(p);
+			p.appendNormal("\n");
+			rhs.printConsoleString(p);
+			return;
+		}
+		local columnsWidths = calculateConsoleColumnWidth(
+			p.currentLineAvail - borderWidth);
+		p.append("\u2554"); /* DOUBLE-DOWN-AND-RIGHT */
+		local isFirstColumn = true;
+		for (local w: columnsWidths) {
+			if (!isFirstColumn)
+				p.append("\u2564"); /* DOWN-SINGLE-AND-HORIZONTAL-DOUBLE */
+			p.append("\u2550" * (w + 2)); /* DOUBLE-HORIZONTAL */
+			isFirstColumn = false;
+		}
+		p.appendNormal("\u2557\n"); /* DOUBLE-DOWN-AND-LEFT */
+		for (local rowNumber: [:rows]) {
+			local row: {(string, {(string | Object)...})...} = cells[rowNumber];
+			if (rowNumber) {
+				local isThick = (rowNumber - 1) in thickRows;
+				p.append(
+					"\u255F"  /* VERTICAL-DOUBLE-AND-RIGHT-SINGLE */
+					"\u2560"  /* DOUBLE-VERTICAL-AND-RIGHT */
+					[isThick]);
+				local isFirstColumn = true;
+				for (local w: columnsWidths) {
+					if (!isFirstColumn) {
+						p.append(
+							"\u253C" /* LIGHT-VERTICAL-AND-HORIZONTAL */
+							"\u256A" /* VERTICAL-SINGLE-AND-HORIZONTAL-DOUBLE */
+							[isThick]);
+					}
+					p.append(
+						"\u2500" /* LIGHT-HORIZONTAL */
+						"\u2550" /* DOUBLE-HORIZONTAL */
+						[isThick] * (w + 2));
+					isFirstColumn = false;
+				}
+				p.append(
+					"\u2562" /* VERTICAL-DOUBLE-AND-LEFT-SINGLE */
+					"\u2563" /* DOUBLE-VERTICAL-AND-LEFT */
+					[isThick]);
+				p.appendNormal("\n");
+			}
+			local cellLines = [none] * nColumns;
+			local reqLines = 0;
+			/* Print the lines for all cells & figure out
+			 * how many lines will be needed in total. */
+			for (local column: [:nColumns]) {
+				local cellPrinter = ConsolePrinter(
+					maxWidth: columnsWidths[column]);
+				cellPrinter.appendall(row[column][1]);
+				local lines = Tuple(cellPrinter.fp.string.splitlines(false));
+				cellLines[column] = lines;
+				lines = #lines;
+				if (reqLines < lines)
+					reqLines = lines;
+			}
+			/* Print cell lines */
+			for (local lno: [:reqLines]) {
+				p.append("\u2551 "); /* DOUBLE-DOWN */
+				local isFirstColumn = true;
+				for (local column: [:nColumns]) {
+					if (!isFirstColumn)
+						p.append(" \u2502 "); /* LIGHT-VERTICAL */
+					isFirstColumn = false;
+					local opt = row[column][0];
+					local orient = evalTableOrientationOption(
+						getOrientationFromTableCellRenderOptions(opt));
+					local lines = cellLines[column];
+					local effectiveLno = lno;
+					switch (orient[1]) {
+					case 1:
+						/* Align to the center */
+						effectiveLno = lno - (reqLines - #lines) / 2;
+						break;
+					case 2:
+						/* Align to the bottom */
+						effectiveLno = lno - (reqLines - #lines);
+						break;
+					default: break;
+					}
+					local line =
+						(effectiveLno < 0 || effectiveLno >= #lines)
+						? ""
+						: lines[effectiveLno];
+					line = line.operator . ({
+						0 : "ljust",
+						1 : "center",
+						2 : "rjust",
+					}[orient[0]])(columnsWidths[column]);
+					p.append(line);
+				}
+				p.appendNormal(" \u2551\n"); /* DOUBLE-DOWN */
+			}
+		}
+		p.append("\u255A"); /* DOUBLE-UP-AND-RIGHT */
+		local isFirstColumn = true;
+		for (local w: columnsWidths) {
+			if (!isFirstColumn)
+				p.append("\u2567"); /* UP-SINGLE-AND-HORIZONTAL-DOUBLE */
+			p.append("\u2550" * (w + 2)); /* DOUBLE-HORIZONTAL */
+			isFirstColumn = false;
+		}
+		p.appendNormal("\u255D\n"); /* DOUBLE-UP-AND-LEFT */
+	}
+
+	operator str(): string {
+		return createConsoleString(this);
+	}
+
+}
+
+
+
+
+
+function splitTextSegment(
+		docstring: string, docsect: DocSection,
+		i: int = 0, end: int = -1)
+	: {(string | Object)...}
+{
+	local flushStart = i;
+	{
+		local len = #docstring;
+		if (end < 0 || end > len)
+			end = len;
+	}
+#define FLUSHTO(pos) { if (flushStart < (pos)) yield unEscapePoundCharacters(docstring[flushStart:pos]); }
+continue_at_i:
+	while (i < end) {
+		local ch = docstring[i];
+		switch (ch) {
+
+		case "$": {
+			local dollarStart = i;
+			++i;
+			if (i >= end)
+				goto done;
+			ch = docstring[i];
+			local bodyStart, bodyEnd;
+			switch (ch) {
+
+			case "{": {
+				bodyStart = i + 1;
+				bodyEnd = findNonEscapedMatch(docstring, "{", "}", bodyStart);
+				if (bodyEnd < 0)
+					goto continue_at_i;
+				i = bodyEnd + 1;
+			}	break;
+
+			case "r": {
+				/* Raw string literal */
+				bodyStart = i;
+				++i;
+				if (i >= end)
+					goto done;
+				ch = docstring[i];
+				if (ch !in ["\'", "\""])
+					goto do_dollar_symcont;
+				++i;
+				if (i >= end)
+					goto continue_at_i;
+				bodyEnd = docstring.find(ch, i, end);
+				if (bodyEnd < 0)
+					goto continue_at_i;
+				++bodyEnd;
+				i = bodyEnd;
+			}	break;
+
+			case "\'":
+			case "\"": {
+				/* String literal */
+				bodyStart = i;
+				++i;
+				if (i >= end)
+					goto done;
+				bodyEnd = findNonBackslashEscaped(docstring, ch, i, end);
+				if (bodyEnd < 0)
+					goto continue_at_i;
+				++bodyEnd;
+				i = bodyEnd;
+			}	break;
+
+			case "+":
+			case "-":
+				bodyStart = i;
+				++i;
+				if (i >= end)
+					goto done;
+				if (docstring.isdecimal(i))
+					goto do_dollar_decimal;
+				break;
+
+			default:
+				if (ch.isdecimal()) {
+					bodyStart = i;
+do_dollar_decimal:
+					for (;;) {
+						++i;
+						if (i >= end)
+							break;
+						if (docstring.isdecimal(i))
+							continue;
+						if (docstring[i] == ".")
+							continue;
+						break;
+					}
+					/* Strip trailing .-characters */
+					while (i > bodyStart && docstring[i - 1] == ".")
+						--i;
+					bodyEnd = i;
+					break;
+				}
+				if (ch.issymstrt()) {
+					bodyStart = i;
+					for (;;) {
+						++i;
+						if (i >= end)
+							break;
+do_dollar_symcont:
+						if (!docstring.issymcont(i))
+							break;
+					}
+					bodyEnd = i;
+					break;
+				}
+				goto continue_at_i;
+			}
+			FLUSHTO(dollarStart);
+			yield Code(
+				language: "deemon",
+				body: unEscapePoundCharacters(
+					docstring[bodyStart:bodyEnd]));
+			flushStart = i;
+		}	break;
+
+		case "#": {
+			local poundStart = i;
+			++i;
+			if (i >= end)
+				goto continue_after_poundStart;
+			ch = docstring[i];
+			switch (ch) {
+
+			case "B":
+			case "I":
+			case "S": {
+				/* Emphasis */
+				local kind = ch;
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				ch = docstring[i];
+				local bodyStart, bodyEnd;
+				if (ch == "{") {
+					bodyStart = i + 1;
+					bodyEnd = findNonEscapedMatch(docstring, "{", "}", bodyStart, end);
+					if (bodyEnd < 0)
+						goto continue_after_poundStart;
+					i = bodyEnd + 1;
+				} else {
+					if (!ch.issymstrt())
+						goto continue_after_poundStart;
+					bodyStart = i;
+					for (;;) {
+						++i;
+						if (i >= end)
+							break;
+						if (!docstring.issymcont(i))
+							break;
+					}
+					bodyEnd = i;
+				}
+				FLUSHTO(poundStart);
+				yield Emphasis(
+					kind: kind,
+					body: splitTextSegment(
+						docstring, docsect,
+						bodyStart, bodyEnd));
+				flushStart = i;
+			}	break;
+
+			case "A": {
+				/* HyperLink */
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				if (docstring[i] != "{")
+					goto continue_after_poundStart;
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				local bodyStart = i;
+				local bodyEnd = findSameLevelNonEscaped(docstring, "|", i, end);
+				if (bodyEnd < 0)
+					goto continue_after_poundStart;
+				local linkStart = bodyEnd + 1;
+				local linkEnd = findNonEscapedMatch(docstring, "{", "}", linkStart, end);
+				if (linkEnd < 0)
+					goto continue_after_poundStart;
+				FLUSHTO(poundStart);
+				yield HyperLink(
+					link: unEscapePoundCharacters(
+						docstring[linkStart:linkEnd]),
+					body: splitTextSegment(
+						docstring, docsect,
+						bodyStart, bodyEnd));
+				i = linkEnd + 1;
+				flushStart = i;
+			}	break;
+
+			case "C": {
+				/* Inlined code */
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				ch = docstring[i];
+				local language = "";
+				if (ch == "[") {
+					local langEnd = findNonEscapedMatch(docstring, "[", "]", i + 1, end);
+					if (langEnd < 0)
+						goto continue_after_poundStart;
+					language = docstring[i + 1:langEnd];
+					i = langEnd + 1;
+					if (i >= end)
+						goto continue_after_poundStart;
+					ch = docstring[i];
+				}
+				local bodyStart, bodyEnd;
+				if (ch == "{") {
+					bodyStart = i + 1;
+					bodyEnd = findNonEscapedMatch(docstring, "{", "}", bodyStart, end);
+					if (bodyEnd < 0)
+						goto continue_after_poundStart;
+					i = bodyEnd + 1;
+				} else {
+					if (!ch.issymstrt())
+						goto continue_after_poundStart;
+					bodyStart = i;
+					for (;;) {
+						++i;
+						if (i >= end)
+							break;
+						if (!docstring.issymcont(i))
+							break;
+					}
+					bodyEnd = i;
+				}
+				FLUSHTO(poundStart);
+				yield Code(
+					language: language,
+					body: unEscapePoundCharacters(
+						docstring[bodyStart:bodyEnd]));
+				flushStart = i;
+			}	break;
+
+			case "H": {
+				/* Header */
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				local n = docstring[i];
+				if (n !in "123456")
+					goto continue_after_poundStart;
+				n = int(n);
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				ch = docstring[i];
+				local bodyStart, bodyEnd;
+				if (ch == "{") {
+					bodyStart = i + 1;
+					bodyEnd = findNonEscapedMatch(docstring, "{", "}", bodyStart, end);
+					if (bodyEnd < 0)
+						goto continue_after_poundStart;
+					i = bodyEnd + 1;
+				} else {
+					if (!ch.issymstrt())
+						goto continue_after_poundStart;
+					bodyStart = i;
+					for (;;) {
+						++i;
+						if (i >= end)
+							break;
+						if (!docstring.issymcont(i))
+							break;
+					}
+					bodyEnd = i;
+				}
+				FLUSHTO(poundStart);
+				yield Header(
+					size: n,
+					body: splitTextSegment(
+						docstring, docsect,
+						bodyStart, bodyEnd));
+				flushStart = i;
+			}	break;
+
+			case "L": {
+				/* List */
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				local commonListPrefix = "-";
+				ch = docstring[i];
+				if (ch in "-+*") {
+					commonListPrefix = ch;
+					++i;
+					if (i >= end)
+						goto continue_after_poundStart;
+					ch = docstring[i];
+				}
+				if (ch != "{")
+					goto continue_after_poundStart;
+				++i;
+				local listItems: {(string, {(string | Object)...})...} = [];
+				local bodyEnd = findNonEscapedMatch(docstring, "{", "}", i, end);
+				if (bodyEnd < 0)
+					goto continue_after_poundStart;
+				while (i < bodyEnd) {
+					local elemStart = i;
+					local elemEnd = findSameLevelNonEscaped(
+						docstring, "|", elemStart, bodyEnd);
+					if (elemEnd < 0)
+						elemEnd = bodyEnd;
+					local elemPrefix = commonListPrefix;
+					if (elemStart < elemEnd && docstring[elemStart] == "{") {
+						local prefixStart = elemStart + 1;
+						local prefixEnd = findNonEscapedMatch(
+							docstring, "{", "}", prefixStart, elemEnd);
+						if (prefixEnd < 0)
+							goto continue_after_poundStart;
+						elemPrefix = docstring[prefixStart:prefixEnd];
+						elemStart = prefixEnd + 1;
+					}
+					listItems.append((
+						elemPrefix,
+						splitTextSegment(
+							docstring, docsect,
+							elemStart, elemEnd)
+					));
+					i = elemEnd + 1;
+				}
+				FLUSHTO(poundStart);
+				yield List(items: listItems);
+				i = bodyEnd + 1;
+				flushStart = i;
+			}	break;
+
+			case "T": {
+				/* Table */
+				++i;
+				if (i >= end)
+					goto continue_after_poundStart;
+				if (docstring[i] != "{")
+					goto continue_after_poundStart;
+				++i;
+				local tableEnd = findNonEscapedMatch(
+					docstring, "{", "}", i, end);
+				if (tableEnd < 0)
+					goto continue_after_poundStart;
+				local rowLength: int = none;
+				local row = [];
+				local rows = [];
+				local thickRows = HashSet();
+				while (i < tableEnd) {
+					local cellStart = i;
+					local cellEnd = findSameLevelNonEscaped(
+						docstring, "|~&", cellStart, tableEnd);
+					if (cellEnd < 0)
+						cellEnd = tableEnd;
+					local renderOptions = "";
+					if (cellStart < cellEnd) {
+						ch = docstring[cellStart];
+						if (ch == "{") {
+							local optStart = cellStart + 1;
+							local optEnd = findNonEscapedMatch(
+								docstring, "{", "}", optStart, cellEnd);
+							if (optEnd < 0)
+								goto continue_after_poundStart;
+							renderOptions = unEscapePoundCharacters(
+								docstring[optStart:optEnd]);
+							cellStart = optEnd + 1;
+						}
+					}
+					/* Append the new cell */
+					row.append((
+						renderOptions,
+						splitTextSegment(
+							docstring, docsect,
+							cellStart, cellEnd)
+					));
+					i = cellEnd + 1;
+					local marker = docstring[cellEnd];
+					if (marker == "|")
+						continue;
+					/* Complete the current row */
+					if (marker == "~")
+						thickRows.insert(#rows); /* Thick row */
+					if (rowLength is none) {
+						rowLength = #row;
+					} else if (rowLength != #row) {
+						/* The specs require weak undefined behavior
+						 * when row counts don't match. And while this
+						 * this shouldn't happen, handle this case by
+						 * forcing the correct row length. */
+						row.resize(rowLength, filler: "");
+					}
+					rows.append(row);
+					row = [];
+				}
+				if (!rows)
+					rows = [[""]]; /* Shouldn't happen... */
+				FLUSHTO(poundStart);
+				yield Table(
+					cells: rows,
+					thickRows: thickRows);
+				i = tableEnd + 1;
+				flushStart = i;
+			}	break;
+
+			default:
+continue_after_poundStart:
+				i = poundStart + 1;
+				goto continue_at_i;
+			}
+		}	break;
+
+		default:
+			++i;
+			break;
+		}
+	}
+done:
+	if (flushStart < end)
+		yield unEscapePoundCharacters(docstring[flushStart:end]);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
