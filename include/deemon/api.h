@@ -473,8 +473,8 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
  *          Additionally, `ident' may be `this' to refer to the self-argument in
  *          a member function that is implemented as a this-call.
  *
- *    - #ident
- *    - #{ident}
+ *    - ?#ident
+ *    - ?#{ident}
  *        - `ident' may only contain `UNICODE_FSYMSTRT->UNICODE_FSYMCONT' characters.
  *        - Used to refer to another attribute `ident' within the
  *          same type (member-doc) / module (module-symbol-doc)

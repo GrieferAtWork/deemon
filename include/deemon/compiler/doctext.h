@@ -126,12 +126,12 @@ DECL_BEGIN
  *
  * As such, \ can be used to escape the following characters such that \ is removed,
  * and the escaped character looses any special meaning:
- *     \ _ @ ` [ ] ( ) - + | = ~ * #
+ *     \ _ @ ` [ ] ( ) - + | = ~ * # :
  *
- *     0 1 2 3 4 5 6 7 8 9 . :  (Only if the character appeared at the beginning of a line, or
- *                               was preceded by only other decimal, \, . or : characters (i.e.
- *                               would have been apart of a possibly already broken ordered list))
- *                               HINT: Any character matching `DeeUni_IsDecimal()' is considered
+ *     0 1 2 3 4 5 6 7 8 9 .  (Only if the character appeared at the beginning of a line, or
+ *                             was preceded by only other decimal, \, . or : characters (i.e.
+ *                             would have been apart of a possibly already broken ordered list))
+ *                             HINT: Any character matching `DeeUni_IsDecimal()' is considered
  *
  * Additionally, ' ' (or any other ) can be escaped to force the insertion of an additional
  * or specific space character.
@@ -174,6 +174,24 @@ DECL_BEGIN
  *     Output:
  *     >> First line Second line
  *     >> Third line
+ *
+ *   - When one line is followed by another line with more indentation, a line-feed
+ *     is also inserted, and the indentation is kept:
+ *     >> @@First line
+ *     >> @@      Second line
+ *     >> @@      Third line
+ *     Output:
+ *     >> First line
+ *     >>         Second line Third line
+ *     An exception to this rule is when the line prior to the indented line contains
+ *     a `:' character preceded by `.', <space> or <issymcont>:
+ *     >> @@First line
+ *     >> @@
+ *     >> @@NOTE: Second line
+ *     >> @@      Third line
+ *     Output:
+ *     >> First line
+ *     >> NOTE: Second line Third line
  *
  *   - Multiple consecutive line-feeds are replaced by having one of the line-feeds be
  *     removed, while the remainder of line-feeds is kept (though the one removed line-feed
@@ -287,7 +305,7 @@ DECL_BEGIN
  *
  *
  *   - Inline code (with- and without deemon syntax highlighting)
- *     >> @@Highlight `code` differently
+ *     >> @@Highlight `code`, `code', ``code`` and ```code``` differently
  *     >> @@
  *     >> @@```
  *     >> @@Highlight this part the same as code above
@@ -404,8 +422,11 @@ DECL_BEGIN
  *                     a function, this also allows function arguments to be annotated!
  *           `@foo()'  Same a pure keyword, but annotate as a function-call
  *         - A ( [ or {-character:
- *           `@(foo)'  Same as `@foo', though allows white-space in the expression that should
- *                     be scanned for components to-be annotated.
+ *           `@(foo)'       Same as `@foo', though allows white-space in the expression that should
+ *                          be scanned for components to-be annotated.
+ *           `@(foo, bar)'  A tuple expression (```deemon\n(foo, bar)```)
+ *           `@[foo]'       An array expression (```deemon\n[foo]```)
+ *           `@{foo}'       An sequence expression (```deemon\n{foo}```)
  *     In general, any deemon expression can be high-lit/annotated using this scheme, whilst
  *     also allowing keywords to be clicked in the associated representation, as well as making
  *     special provisioning for external symbol references to show up properly.
@@ -427,7 +448,7 @@ DECL_BEGIN
  * All other characters are part of raw flow-text and will be encoded on a 1-on-1 basis.
  *
  * Characters that need escaping in raw text (by being prefixed by a #-character)
- *    # $ % & ~ ^ { } [ ] | ? * @ - +
+ *    # $ % & ~ ^ { } [ ] | ? * @ - + :
  *
  * Note that some of these characters aren't currently used by the encoding syntax,
  * however may find use in the future, so they already having to be escaped is done
@@ -486,6 +507,11 @@ DECL_BEGIN
  *                 ensure forward compatibility, unknown languages such as #C[bash]{echo Hello}
  *                 should be high-lit the same way as #C{echo Hello}, meaning that unknown names
  *                 should appear as abstract code
+ *               - The $BODY form accepts the following strings for BODY:
+ *                 - symstrt + symcont...                       (Symbol name)
+ *                 - decimal + (decimal | '.')...               (Integer or float constant)
+ *                 - '"' + (('\\' any) | (any & !'"')) + '"'    (String constant)
+ *                 - '\'' + (('\\' any) | (any & !'"')) + '\''  (String constant)
  *
  *   - Tables
  *         #T{BODY11|BODY12|BODY13~BODY21|BODY22|BODY23&BODY31|BODY32|BODY33}
@@ -512,13 +538,14 @@ DECL_BEGIN
  *   - Symbol references
  *         ?Dint
  *         ?N
- *         ?R!Afoo  (Argument reference)
- *         %Afoo    (Argument reference; same as ?R!Afoo)
- *         %A{foo}  (Argument reference; same as ?R!A{foo})
+ *         ?R!Afoo]         (Argument reference)
+ *         ?R!Mposix]       (Module reference)
+ *         ?#foo            (Referring to a field <DECODED_NAME> of the surrounding component)
+ *         ?#{op:call}      (Referring to the call-operator of the surrounding type)
  *             Syntax:
  *               - Any TYPE-ENCODING can directly be embedded in flow-text.
  *                 s.a. /include/deemon/compiler/symbol.h for the syntax of these.
- *               - Note that %Afoo and ?R!Afoo use different escaping rules for how
+ *               - Note that @foo and ?R!Afoo use different escaping rules for how
  *                 the foo portion must be encoded. For the example name `foo' they
  *                 may be identical, and as a matter of fact: for any argument name
  *                 that matches issymbol() this is the case, but for anything else
@@ -540,6 +567,28 @@ DECL_BEGIN
  *                 >> }
  *                 This is required, since doctext bodies have different requirements as
  *                 to which characters need to be escaped than declaration headers do.
+ *
+ *   - Symbol reference aliases
+ *       - @foo, @{foo}
+ *         Argument reference: same as ?R!A{foo}
+ *         @this, @{this}
+ *         Argument reference: the this-argument
+ *
+ *       - :foo, :{foo}
+ *         Multi-purpose. Same as the first match from (in order):
+ *             - ?Gfoo           (Globals within the current module)
+ *             - ?Dfoo           (Globals within the deemon module)
+ *             - ?Eerrors:foo    (The name of a builtin Error or Signal class)
+ *             - ?R!Mfoo]        (The name of another module)
+ *
+ *       - :foo.bar, :{foo.bar}
+ *         Same as :foo, but pre-fixed with ?Abar (NOTE: This can be repeated):
+ *             - ?Abar?Gfoo
+ *             - ?Abar?Dfoo
+ *             - ?Abar?Eerrors:foo
+ *             - ?Abar?R!Mfoo]
+ *
+ *
  */
 
 /* Compile documentation text in `doctext' into itself.

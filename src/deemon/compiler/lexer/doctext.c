@@ -171,9 +171,9 @@ find_nonescaped_match(/*utf-8*/ char const *text,
 
 /* Print the given text...end whilst escaping the
  * following characters by prefixing a # to each of them:
- *      # $ % & ~ ^ { } [ ] | ? * @ - +
+ *      # $ % & ~ ^ { } [ ] | ? * @ - + :
  * Additionally, skip over \-characters that are followed by one of:
- *      \ _ @ ` [ ] ( ) - + | = ~ * #
+ *      \ _ @ ` [ ] ( ) - + | = ~ * # :
  */
 PRIVATE NONNULL((1, 2, 3)) int DCALL
 print_escaped(struct unicode_printer *__restrict printer,
@@ -191,7 +191,7 @@ print_escaped(struct unicode_printer *__restrict printer,
 		if (ch == '#' || ch == '$' || ch == '%' || ch == '&' || ch == '~' ||
 		    ch == '^' || ch == '{' || ch == '}' || ch == '[' || ch == ']' ||
 		    ch == '|' || ch == '?' || ch == '*' || ch == '@' || ch == '-' ||
-		    ch == '+') {
+		    ch == '+' || ch == ':') {
 			if unlikely(unicode_printer_print(printer, flush_start,
 			                                  (size_t)(ch_start - flush_start)) < 0)
 				goto err;
@@ -209,7 +209,7 @@ do_escape_ch:
 			ch = utf8_readchar((char const **)&text, end);
 			if (ch == '[' || ch == ']' || ch == '|' || ch == '~' ||
 			    ch == '*' || ch == '@' || ch == '-' || ch == '+' ||
-			    ch == '#')
+			    ch == '#' || ch == ':')
 				goto do_escape_ch;
 			if (ch == '\\' || ch == '_' || ch == '`' ||
 			    ch == '(' || ch == ')' || ch == '=')
@@ -222,6 +222,120 @@ do_escape_ch:
 	return 0;
 err:
 	return -1;
+}
+
+/* Same as `print_escaped()', but skip the first `num_characters'
+ * at the start, and after every line-feed not followed by another
+ * linefeed after less than that many characters.
+ * All lines are also right-stripped of trailing space characters.
+ * This function is used to dedent ```-style multi-line code blocks. */
+PRIVATE NONNULL((1, 2, 3)) int DCALL
+print_escaped_dedent(struct unicode_printer *__restrict printer,
+                     /*utf-8*/ char const *text,
+                     /*utf-8*/ char const *end,
+                     size_t num_characters) {
+	if (!num_characters)
+		return print_escaped(printer, text, end);
+	else {
+		size_t nskip;
+		nskip = num_characters;
+		for (;;) {
+			uint32_t ch;
+			char const *ch_start;
+			ch_start = text;
+			ch = utf8_readchar((char const **)&text, end);
+			if (nskip) {
+				if (DeeUni_IsLF(ch)) {
+					/* Empty line (reset the counter) */
+do_reset_on_newline:
+					if unlikely(unicode_printer_put32(printer, ch))
+						goto err;
+					nskip = num_characters;
+				} else {
+					/* Must skip additional leading characters. */
+					--nskip;
+				}
+				continue;
+			}
+			if (DeeUni_IsLF(ch))
+				goto do_reset_on_newline;
+			/* Print the current line starting with `text' and until the trailing line-feed.
+			 * Do so only if there is more than only whitespace within the actual line. */
+			{
+				char const *current_line_start;
+				char const *current_line_end;
+				current_line_start = ch_start;
+				for (;;) {
+					ch_start = text;
+					ch = utf8_readchar((char const **)&text, end);
+					if (DeeUni_IsLF(ch))
+						break;
+					if (!ch && (text >= end)) {
+						ch_start = text;
+						break;
+					}
+				}
+				/* Strip trailing whitespace. */
+				current_line_end = ch_start;
+				current_line_end = rstrip_whitespace(current_line_start, current_line_end);
+				if unlikely(print_escaped(printer, current_line_start, current_line_end))
+					goto err;
+			}
+			if (!ch)
+				break;
+			goto do_reset_on_newline;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Find # of leading whitespace characters of the line containing the
+ * least of them, and return that number while also updating `*ptext'
+ * to point to the start (before potential leading whitespace) of the
+ * first line that contains anything other than only whitespace. */
+PRIVATE NONNULL((1, 2)) size_t DCALL
+find_least_indentation_and_strip_empty_leading_lines(/*utf-8*/ char const **__restrict ptext,
+                                                     /*utf-8*/ char const *end) {
+	char const *text = *ptext;
+	size_t min_line_leading_spaces = (size_t)-1;
+	size_t current_line_leading_spaces = 0;
+	for (;;) {
+		uint32_t ch;
+		ch = utf8_readchar((char const **)&text, end);
+		if (DeeUni_IsLF(ch)) {
+			if (min_line_leading_spaces == (size_t)-1)
+				*ptext = text; /* Skip an empty leading line */
+			current_line_leading_spaces = 0;
+			continue;
+		}
+		if (DeeUni_IsSpace(ch)) {
+			++current_line_leading_spaces;
+			continue;
+		}
+		/* Non-space, non-line-feed character found.
+		 * NOTE: Also do this when the end of the block is found! */
+		if (min_line_leading_spaces > current_line_leading_spaces) {
+			min_line_leading_spaces = current_line_leading_spaces;
+			if (!min_line_leading_spaces)
+				goto done;
+		}
+		/* Scan ahead until the end of the block, or until a
+		 * line-feed character is found. */
+		for (;;) {
+			if (!ch && (text >= end))
+				goto done;
+			ch = utf8_readchar((char const **)&text, end);
+			if (DeeUni_IsLF(ch))
+				break;
+		}
+		/* Continue on with scanning this line. */
+		current_line_leading_spaces = 0;
+	}
+done:
+	ASSERT(min_line_leading_spaces != (size_t)-1);
+	return min_line_leading_spaces;
 }
 
 
@@ -324,7 +438,7 @@ do_switch_ch:
 		 * Escaping is done by inserting an additional `#' character */
 		case '$': case '%': case '&': case '#':
 		case '^': case '{': case '}': case '+':
-		case ']': case '|': case '?': case '-':
+		case ']': case '|': case '?': case '-': case ':':
 			/* NOTE: '*', '~' and '@' are markdown format characters and handled separately. */
 escape_current_character:
 			FLUSHTO(ch_start);
@@ -388,8 +502,60 @@ check_ch_after_lf:
 				if (next_line_leading_spaces < current_line_leading_spaces) {
 					/* The next line is indented less -> Join via line-feed */
 					PUTASCII('\n'); /* Force a line-feed here. */
+				} else if (next_line_leading_spaces > current_line_leading_spaces){
+					/* The next line is indented more -> Join via line-feed,
+					 * and keep the next line's extra indentation */
+
+					/* Special handling for this case:
+					 * >> Foobar barfoo fuz fuz fuz fuz
+					 * >>
+					 * >> NOTE: Very important note that
+					 * >>       you should remember
+					 * With the current rules, this is encoded as:
+					 * "Foobar barfoo fuz fuz fuz fuz\nNOTE: Very important note that\n      you should remember"
+					 * When that was intended was actually:
+					 * "Foobar barfoo fuz fuz fuz fuz\nNOTE: Very important note that you should remember"
+					 * Check for this case by looking at the character posistion at:
+					 *   current_line_start_after_whitespace +[utf8] (next_line_leading_spaces -
+					 *                                                current_line_leading_spaces)
+					 * If that character position descbides a non-whitespace character,
+					 * and is preceded by the following sequence:
+					 *     (`.', <space> or <issymcont>) : <optional_space>
+					 * Then we mustn't insert a line-feed here, but join the two lines with a space. */
+					char const *prev_line_start;
+					char const *prev_line_end, *temp;
+					size_t count = next_line_leading_spaces - current_line_leading_spaces;
+					prev_line_start = current_line_start_after_whitespace;
+					prev_line_end   = current_line_start_after_whitespace;
+					do {
+						ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
+						if (!ch && (prev_line_end <= prev_line_start))
+							goto do_join_with_linefeed;
+						if (DeeUni_IsLF(ch))
+							goto do_join_with_linefeed;
+					} while (--count);
+					/* Check if `prev_line_end' points to a non-whitespace character. */
+					temp = prev_line_end;
+					ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
+					if (DeeUni_IsSpace(ch))
+						goto do_join_with_linefeed;
+					prev_line_end = temp;
+					/* Skip whitespace found prior to `prev_line_end' */
+					prev_line_end = rstrip_whitespace(prev_line_start, prev_line_end);
+					/* Check if there's a :-character before `prev_line_end' */
+					ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
+					if (ch != ':')
+						goto do_join_with_linefeed;
+					/* Check if the :-character is preceded by `.', <space> or <issymcont>
+					 * If it is, then we must join the two lines via space */
+					ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
+					if (DeeUni_IsSymCont(ch) || DeeUni_IsSpace(ch) || ch == '.')
+						goto do_join_with_space;
+do_join_with_linefeed:
+					PUTASCII('\n'); /* Force a line-feed here. */
 				} else {
 					/* The next line is the same or more -> Join via space */
+do_join_with_space:
 					PUTASCII(' '); /* Force a space character */
 					flush_start = ch_start;
 				}
@@ -531,6 +697,7 @@ set_iter_as_start_of_line_after_explicit_linefeed:
 			case '_':  /* _Bold_ */
 			case '@':  /* Reference */
 			case '`':  /* Code */
+			case ':':  /* List & Notes */
 			case '[': case ']': /* Link */
 			case '(': case ')': /* Link */
 			case '-': case '+': /* List / Table */
@@ -542,7 +709,7 @@ escape_remove_backslash_and_keep_next_char:
 
 			case '0': case '1': case '2': case '3': case '4':
 			case '5': case '6': case '7': case '8': case '9':
-			case '.': case ':': /* List */
+			case '.':
 check_ordered_list_digit:
 				/* Ordered list (only at the start of a line) */
 				if (ch_start == current_line_start_after_whitespace)
@@ -716,17 +883,17 @@ check_ordered_list_digit:
 			ch_start = iter;
 			ch = utf8_readchar((char const **)&iter, end);
 			{
-				bool need_brace;
+				bool need_braces;
 				/* Special case: The component is followed by more symbol-continue characters.
 				 * In this case, we must still enclose our portion with braces, so-as to prevent
 				 * the follow-up text also being considered apart of our construct! */
-				need_brace = DeeUni_IsSymCont(ch) || !is_symbol(body_start, body_end);
-				if (need_brace)
+				need_braces = DeeUni_IsSymCont(ch) || !is_symbol(body_start, body_end);
+				if (need_braces)
 					PUTASCII('{');
 				/* Recursively compile the contained body. */
 				if unlikely(do_compile(body_start, body_end, result_printer, NULL))
 					goto err;
-				if (need_brace)
+				if (need_braces)
 					PUTASCII('}');
 			}
 			goto do_switch_ch;
@@ -825,25 +992,181 @@ not_a_link:
 		}
 
 		case '`': {
-			/* TODO: Code */
-			char const *before_left_backtick;
-			char const *after_left_backtick;
+			/* Code */
+			char const *before_left_backtick, *after_left_backtick;
+			char const *before_right_backtick;
 			before_left_backtick = ch_start;
 			after_left_backtick  = iter;
 			ch = utf8_readchar((char const **)&iter, end);
 			if (ch == '`') {
+				char const *temp = iter;
 				ch = utf8_readchar((char const **)&iter, end);
 				if (ch == '`') {
-					/* TODO: Extended code block. */
+					char const *end_of_first_line;
+					after_left_backtick = iter;
+					/* Extended code block. (with optional language-specific highlighting)
+					 * This type of block can span multiple lines. */
+					end_of_first_line = NULL;
+					for (;;) {
+						before_right_backtick = iter;
+						ch = utf8_readchar((char const **)&iter, end);
+						if (!ch && (iter >= end))
+							goto not_a_code;
+						if (DeeUni_IsLF(ch) && !end_of_first_line)
+							end_of_first_line = before_right_backtick;
+						if (ch != '`')
+							continue;
+						ch = utf8_readchar((char const **)&iter, end);
+						if (ch != '`')
+							continue;
+						ch = utf8_readchar((char const **)&iter, end);
+						if (ch == '`')
+							break;
+					}
+					/* Check for a valid syntax name, as well as how many
+					 * leading space characters should be removed from each line.
+					 * The syntax here is that anything that appears on the first
+					 * line (immediately after the initial ```) is considered to
+					 * be the name of the language for which highlighting is to be
+					 * provided. */
+					if (end_of_first_line) {
+						char const *before_syntax_name;
+						char const *after_syntax_name;
+						char const *start_of_second_line;
+						size_t smallest_indentation;
+						before_syntax_name   = after_left_backtick;
+						after_syntax_name    = end_of_first_line;
+						/* Strip leading/trailing whitespace from the syntax name. */
+						before_syntax_name = lstrip_whitespace(before_syntax_name, after_syntax_name);
+						after_syntax_name  = rstrip_whitespace(before_syntax_name, after_syntax_name);
+						/* Skip the line-feed between the first and second line in
+						 * order to determine the true start of the second line. */
+						start_of_second_line = end_of_first_line;
+						ch = utf8_readchar((char const **)&start_of_second_line, before_right_backtick);
+						if (ch == '\r') {
+							char const *temp = start_of_second_line;
+							ch = utf8_readchar((char const **)&start_of_second_line, before_right_backtick);
+							if (ch != '\n')
+								start_of_second_line = temp;
+						}
+						/* Find the smallest indentation between:
+						 *    start_of_second_line ... before_right_backtick
+						 * During this search, include the indentation of the last line as well,
+						 * in that the indentation of the trailing ``` will also be considered! */
+						smallest_indentation = find_least_indentation_and_strip_empty_leading_lines(&start_of_second_line,
+						                                                                            before_right_backtick);
+						if (before_left_backtick == current_line_start_after_whitespace) {
+							/* If the first line's ```-sequence appears at the start of that
+							 * line, then also consider the indentation on that line for how
+							 * to figure out the actual # of leading spaces to strip from every
+							 * line. */
+							if (smallest_indentation > current_line_leading_spaces)
+								smallest_indentation = current_line_leading_spaces;
+						}
+						/* Strip trailing whitespace from the code block. */
+						before_right_backtick = rstrip_whitespace(start_of_second_line, before_right_backtick);
+						FLUSHTO(before_left_backtick);
+						/* If we're not already at the start of our own line, then insert a
+						 * manual line-feed such that the code-block appears on its own line. */
+						if (before_left_backtick != current_line_start_after_whitespace) {
+							strip_trailing_whitespace_until(result_printer, result_printer_origlen);
+							PUTASCII('\n');
+						}
+						flush_start = iter;
+						ch_start    = iter;
+						ch          = utf8_readchar((char const **)&iter, end);
+						{
+							bool need_braces;
+							need_braces = DeeUni_IsSymCont(ch) ||
+							              !is_symbol(start_of_second_line,
+							                         before_right_backtick);
+							/* Select encoding based on syntax name. */
+							if (before_syntax_name >= after_syntax_name) {
+								PRINT("#C", 2); /* No special syntax name */
+							} else if (before_syntax_name + 6 == after_syntax_name &&
+							           memcmp(before_syntax_name, "deemon", 6 * sizeof(char)) == 0) {
+								PUTASCII('$'); /* Deemon syntax */
+							} else {
+								PRINT("#C[", 3); /* Custom syntax */
+								if unlikely(print_escaped(result_printer,
+								                          before_syntax_name,
+								                          after_syntax_name))
+									goto err;
+								PUTASCII(']');
+							}
+							if (need_braces)
+								PUTASCII('{');
+							if unlikely(print_escaped_dedent(result_printer,
+							                                 start_of_second_line,
+							                                 before_right_backtick,
+							                                 smallest_indentation))
+								goto err;
+							if (need_braces)
+								PUTASCII('}');
+						}
+						/* Use the common indentation of the code-block to affect how
+						 * further text is arranged in concern to block breaks. */
+						current_line_leading_spaces = smallest_indentation;
+						goto do_switch_ch;
+					}
+				} else {
+					/* 2 backticks behave the same as a single backtick, except that this
+					 * type of block must also be terminated by 2 backticks, rather than one. */
+					after_left_backtick = temp;
+					for (;;) {
+						if (!ch && (iter >= end))
+							goto not_a_code;
+						if (DeeUni_IsLF(ch))
+							goto not_a_code;
+						before_right_backtick = iter;
+						ch = utf8_readchar((char const **)&iter, end);
+						if (ch != '`')
+							continue;
+						ch = utf8_readchar((char const **)&iter, end);
+						if (ch == '`')
+							break;
+					}
 				}
-not_a_code:
-				iter = after_left_backtick;
-				break;
+			} else {
+				/* Single-backtick code block. */
+				for (;;) {
+					if (!ch && (iter >= end))
+						goto not_a_code;
+					if (DeeUni_IsLF(ch))
+						goto not_a_code;
+					before_right_backtick = iter;
+					ch = utf8_readchar((char const **)&iter, end);
+					if (ch == '`' || ch == '\'')
+						break;
+				}
 			}
-
-
-			goto not_a_code;
-		}	break;
+			after_left_backtick   = lstrip_whitespace(after_left_backtick, before_right_backtick);
+			before_right_backtick = rstrip_whitespace(after_left_backtick, before_right_backtick);
+			FLUSHTO(before_left_backtick);
+			/* Update flush pointers and read the next character (needs to be done to see
+			 * if we have to force braces because the next character would continue a symbol) */
+			flush_start = iter;
+			ch_start    = iter;
+			ch          = utf8_readchar((char const **)&iter, end);
+			/* Print the code contents as an escaped string (but don't re-parse the contents). */
+			{
+				bool need_braces;
+				need_braces = DeeUni_IsSymCont(ch) ||
+				              !is_symbol(after_left_backtick,
+				                         before_right_backtick);
+				PRINT("#C", 2);
+				if (need_braces)
+					PUTASCII('{');
+				if unlikely(print_escaped(result_printer, after_left_backtick, before_right_backtick))
+					goto err;
+				if (need_braces)
+					PUTASCII('}');
+			}
+			goto do_switch_ch;
+not_a_code:
+			iter = after_left_backtick;
+			break;
+		}
 
 		case '@':
 			/* TODO: Reference */
