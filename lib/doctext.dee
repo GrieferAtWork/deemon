@@ -663,7 +663,7 @@ continue_at_i:
 
 			case "{": {
 				bodyStart = i + 1;
-				bodyEnd = findNonEscapedMatch(docstring, "{", "}", bodyStart);
+				bodyEnd = findNonEscapedMatch(docstring, "{", "}", bodyStart, end);
 				if (bodyEnd < 0)
 					goto continue_at_i;
 				i = bodyEnd + 1;
@@ -1054,8 +1054,7 @@ continue_after_poundStart:
 		}
 	}
 done:
-	if (flushStart < end)
-		yield unEscapePoundCharacters(docstring[flushStart:end]);
+	FLUSHTO(end);
 }
 
 

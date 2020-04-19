@@ -288,7 +288,7 @@ local final OPERATOR_DEFAULTS: {string: string} = {
 	"eq" : "(other:?.)->?Dbool", "ne" : "(other:?.)->?Dbool",
 	"lo" : "(other:?.)->?Dbool", "le" : "(other:?.)->?Dbool",
 	"gr" : "(other:?.)->?Dbool", "ge" : "(other:?.)->?Dbool",
-	"iter" : "()->?Aiterator?.", "contains" : "(item)->?Dbool",
+	"iter" : "()->?AIterator?.", "contains" : "(item)->?Dbool",
 	"getitem" : "(index:?Dint)->", "delitem" : "(index:?Dint)->?N",
 	"setitem" : "(index:?Dint,value)->?N", "getrange" : "(start:?Dint,end:?Dint)->?S?O",
 	"delrange" : "(start:?Dint,end:?Dint)->?N", "setrange" : "(start:?Dint,end:?Dint,values:?S?O)->?N",

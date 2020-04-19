@@ -26,6 +26,235 @@ import * from deemon;
 import util;
 import fs;
 
+global final STYLE_CSS: string =
+r"a:link {
+	color: #a1ccf7;
+}
+a:visited {
+	color: #c2ccd6;
+}
+a:hover {
+	color: blue;
+}
+
+nav {
+	position: -webkit-sticky;
+	position: sticky;
+	top: 0px;
+	box-shadow: 0px 4px 4px 0px rgba(0,0,0,.3);
+	border-bottom: 2px solid #8c8593;
+	background-color: #d9d6db;
+	color: black;
+	padding: 0px;
+	margin: 0px;
+	font-size: 30px;
+	font-family: Courier New;
+	z-index: 1; /* Keep the nav-bar at the fore-front */
+}
+
+nav ul {
+	list-style-type: none;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+	overflow: hidden;
+}
+nav ul li {
+	float: left;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+}
+nav ul li a {
+	display: block;
+	padding: 2px 8px;
+	margin: 0px;
+	padding: 0px;
+	border: 0px;
+	text-decoration: none; /* Gets rid of link underlines */
+}
+nav ul li a:hover {
+	color: white;
+	background-color: deepskyblue;
+}
+
+.sep {
+	padding: 0px 10px;
+}
+
+nav a:link {
+	color: black;
+}
+nav a:visited {
+	color: #4d4d4d;
+}
+nav a:hover {
+	color: blue;
+}
+
+code {
+	font-family: Courier New;
+}
+
+
+body {
+	background-color: #666666;
+	color: #e6e6e6;
+	margin: 0px;
+}
+main {
+	width: 1000px;
+	margin: auto;
+	border: 1px solid black;
+	background-color: #4d4d4d;
+	padding: 8px;
+	box-shadow: 0px 0px 4px 4px rgba(0,0,0,.2);
+}
+var {
+	font-style: normal;
+	font-family: Courier New;
+}
+table {
+	background-color: #595959;
+	border-collapse: collapse;
+	border: 1px solid black;
+}
+table, th, td {
+	margin: 0px;
+	padding: 3px;
+}
+td {
+	vertical-align: top;
+	text-align: left;
+}
+tr:hover {
+	background-color: #666666;
+}
+th {
+	background-color: #333333;
+	color: white;
+}
+
+.category_title {
+	font-size: 30px;
+	margin: 20px 0px 10px 0px;
+	border-bottom: 10px solid #d9d6db;
+}
+
+.FlowList {
+	margin: 0px;
+}
+
+.Source {
+	font-family: Courier New;
+	font-size: 18px;
+	background-color: black;
+	color: white;
+	border: 2px solid green;
+	padding: 5px;
+	text-align: left;
+}
+
+.InlineSource {
+	font-family: Courier New;
+	color: white;
+	background-color: #444444;
+	border: 0px;
+	padding: 0px;
+	display: inline;
+}
+
+.BrokenLink {
+	color: rgb(231, 101, 101);
+	border: 0px;
+	padding: 0px;
+	display: inline;
+}
+
+.h_kwd {
+	color: rgb(255, 128, 0);
+	font-weight: bold;
+}
+.h_kwd2 {
+	color: rgb(0, 255, 255);
+	font-weight: bold;
+}
+.h_string {
+	color: rgb(0, 255, 0);
+}
+.h_rawstring {
+	color: rgb(255, 181, 98);
+}
+.h_comment {
+	color: rgb(0, 255, 64);
+}
+.h_number {
+	color: rgb(255, 128, 64);
+}
+.h_symbol {
+	color: rgb(255, 255, 0);
+}
+.doc_tag {
+}
+
+.tooltip {
+	position: relative;
+	display: inline-block;
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+	visibility: hidden;
+	background-color: #555;
+	width: 300px;
+	color: #fff;
+	text-align: center;
+	padding: 5px;
+	margin: 5px;
+	border-radius: 6px;
+	border: 1px solid black;
+	box-shadow: 2px 2px 4px 4px rgba(0,0,0,.2);
+
+	/* Position the tooltip text */
+	position: absolute;
+	z-index: 1;
+	top: -50%;
+
+	/* Fade in tooltip */
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+.tooltip .autotooltiptext {
+	visibility: hidden;
+	background-color: #555;
+	color: #fff;
+	text-align: center;
+	padding: 5px;
+	margin: 5px;
+	border-radius: 6px;
+	border: 1px solid black;
+	box-shadow: 2px 2px 4px 4px rgba(0,0,0,.2);
+
+	/* Position the tooltip text */
+	position: absolute;
+	z-index: 1;
+	top: -50%;
+
+	/* Fade in tooltip */
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+	visibility: visible;
+	opacity: 1;
+}
+.tooltip:hover .autotooltiptext {
+	visibility: visible;
+	opacity: 1;
+}";
+
 function writePageHeader(fp: File, title: string) {
 	fp <<
 		"<!DOCTYPE html>\r\n"
@@ -123,10 +352,169 @@ function printTypeExpr(fp: File, t: TypeExpr) {
 	}
 }
 
+global final DEEMON_KEYWORD_CSS_CLASSES = {
+	"pack" : "h_kwd", "str" : "h_kwd", "repr" : "h_kwd", "copy" : "h_kwd",
+	"deepcopy" : "h_kwd", "type" : "h_kwd", "try" : "h_kwd", "catch" : "h_kwd",
+	"throw" : "h_kwd", "finally" : "h_kwd", "in" : "h_kwd", "is" : "h_kwd",
+	"as" : "h_kwd", "from" : "h_kwd", "import" : "h_kwd", "print" : "h_kwd",
+	"del" : "h_kwd", "return" : "h_kwd", "yield" : "h_kwd", "break" : "h_kwd",
+	"continue" : "h_kwd", "goto" : "h_kwd", "for" : "h_kwd", "foreach" : "h_kwd",
+	"while" : "h_kwd", "do" : "h_kwd", "switch" : "h_kwd", "case" : "h_kwd",
+	"default" : "h_kwd", "assert" : "h_kwd", "with" : "h_kwd", "if" : "h_kwd",
+	"else" : "h_kwd", "elif" : "h_kwd", "true" : "h_kwd", "false" : "h_kwd",
+	"none" : "h_kwd", "this" : "h_kwd", "super" : "h_kwd", "bound" : "h_kwd",
+
+	"function" : "h_kwd2", "global" : "h_kwd2", "local" : "h_kwd2", "static" : "h_kwd2",
+	"__nth" : "h_kwd2", "__stack" : "h_kwd2", "final" : "h_kwd2", "class" : "h_kwd2",
+	"extends" : "h_kwd2", "private" : "h_kwd2", "public" : "h_kwd2",
+	"operator" : "h_kwd2", "property" : "h_kwd2", "member" : "h_kwd2",
+};
+
+function checkDeecodeSourceCodePartForOperator(text: string): (string | none, string) {
+	for (local ch: text) {
+		if (ch in [
+			"=", "<", ">", "?", ":", "+", "-", "*", "/", "%", ".", ",", ";", 
+			"#", "(", ")", "[", "]", "{", "}", "~", "@", "&", "|", "^", "!"])
+			return ("h_symbol", text);
+		if (!ch.isspace())
+			break;
+	}
+	return (none, text);
+}
+
+@@Split deemon source code into its individual tokens,
+@@returning a pair of `(CSS_CLASS, TOKEN_REPR)`.
+@@If some token is just a user-defined literal, return @none as `CSS_CLASS`
+function splitDeemonSourceCodeTokens(text: string): {(string | none, string)...} {
+	text = text.unifylines().expandtabs(4);
+	local end = #text;
+	local i = 0;
+	local flushStart = 0;
+#define FLUSHTO(pos)                                                             \
+	{                                                                            \
+		if (flushStart < (pos))                                                  \
+			yield checkDeecodeSourceCodePartForOperator(text[flushStart:(pos)]); \
+	}
+	while (i < end) {
+		local tokStart = i;
+		local ch = text[i];
+		++i;
+		if (ch == "r" && i < end) {
+			local endch = text[i];
+			if (endch in ["\"", "\'"]) {
+				/* Raw string literal */
+				local strend = text.find(endch, i + 1);
+				if (strend >= 0) {
+					i = strend + 1;
+					FLUSHTO(tokStart);
+					yield ("h_rawstring", text[tokStart:i]);
+					flushStart = i;
+					continue;
+				}
+			}
+		}
+		/* Check for identifiers */
+		if (ch.issymstrt()) {
+			while (i < end && text.issymcont(i))
+				++i;
+			local ident = text[tokStart:i];
+			FLUSHTO(tokStart);
+			yield (DEEMON_KEYWORD_CSS_CLASSES.get(ident), ident);
+			flushStart = i;
+			continue;
+		}
+		if (ch.isdecimal()) {
+continue_decimal:
+			while (i < end && text.isalnum(i))
+				++i;
+			if (i + 1 < end && text[i] == "." && text.isalnum(i + 1)) {
+				i += 2;
+				goto continue_decimal;
+			}
+			FLUSHTO(tokStart);
+			yield ("h_number", text[tokStart:i]);
+			flushStart = i;
+			continue;
+		}
+		if (ch in ["\"", "\'"]) {
+			for (;;) {
+				if (i >= end)
+					goto not_a_string;
+				local ch2 = text[i];
+				++i;
+				if (ch2 == ch)
+					break;
+				if (ch2 == "\\")
+					++i;
+			}
+			FLUSHTO(tokStart);
+			yield ("h_string", text[tokStart:i]);
+			flushStart = i;
+			continue;
+		}
+not_a_string:
+		if (ch == "/" && i < end) {
+			/* Check for comments. */
+			ch = text[i];
+			if (ch == "*") {
+				local commentEnd = text.find("*/", i + 1, end);
+				if (commentEnd >= 0) {
+					commentEnd += 2;
+					FLUSHTO(tokStart);
+					yield ("h_comment", text[tokStart:commentEnd]);
+					flushStart = commentEnd;
+					i = commentEnd;
+					continue;
+				}
+			} else if (ch == "/") {
+				local commentEnd = text.find("\n", i + 1, end);
+				if (commentEnd < 0)
+					commentEnd = end;
+				FLUSHTO(tokStart);
+				yield ("h_comment", text[tokStart:commentEnd]);
+				flushStart = commentEnd;
+				i = commentEnd;
+				continue;
+			}
+		}
+	}
+	if (flushStart < end)
+		yield checkDeecodeSourceCodePartForOperator(text[flushStart:end]);
+}
+
+@@Print deemon code with syntax highlighting
+function doPrintDeemonCodeBlock(fp: File, body: string) {
+	for (local cssClass, text: splitDeemonSourceCodeTokens(body)) {
+		text = text.replace(" ", "&nbsp;");
+		text = escapeSpecialHtmlCharacters(text);
+		if (cssClass !is none) {
+			fp << "<var class=\"" << cssClass << "\">" << text << "</var>";
+		} else {
+			fp << text;
+		}
+	}
+}
+
+@@Print deemon code with syntax highlighting
+function printDeemonCodeBlock(fp: File, body: string, isLongBody: bool = none) {
+	if (isLongBody is none)
+		isLongBody = "\n" in body || fp.string.endswith("\n");
+	if (isLongBody) {
+		fp << "<div class=\"Source\">";
+		doPrintDeemonCodeBlock(fp, body);
+		fp << "</div>";
+	} else {
+		fp << "<code class=\"InlineSource\">";
+		doPrintDeemonCodeBlock(fp, body);
+		fp << "</code>";
+	}
+}
+
 @@Print a doc expression
 function printExpression(fp: File, t: Expression) {
-	/* TODO */
-	fp << escapeSpecialHtmlCharacters(str t);
+	/* XXX: Could this be done better? */
+	//fp << escapeSpecialHtmlCharacters(str t);
+	doPrintDeemonCodeBlock(fp, str(t));
 }
 
 @@Print Declaration parameters (if any), as well as the return type
@@ -171,14 +559,121 @@ function printDeclarationParameters(fp: File, decl: Declaration) {
 	}
 }
 
+global printTextSegmentElement;
+global printTextSegmentElements;
+
+@@Print a text segment element, which is either a
+@@string, or one of the special types from @doctext
+function printTextSegmentElement(fp: File, t: Object) {
+	if (t is string) {
+		fp << escapeSpecialHtmlCharacters(t.replace("\n", "\n\n"));
+		return;
+	}
+	if (t is doctext.Code) {
+		if (t.language == "deemon") {
+			printDeemonCodeBlock(fp, t.body);
+			return;
+		}
+		/* Default case: use <code>-blocks */
+		fp << "<code>";
+		fp << escapeSpecialHtmlCharacters(t.body);
+		fp << "</code>";
+		return;
+	}
+	if (t is doctext.HyperLink) {
+		fp << "<a href=" << repr(t.link) << ">";
+		printTextSegmentElements(fp, t.body);
+		fp << "</a>";
+		return;
+	}
+	if (t is doctext.Emphasis) {
+		local tag = {
+			"B" : "b",
+			"I" : "i",
+			"S" : "strike",
+		}[t.kind];
+		fp << "<" << tag << ">";
+		printTextSegmentElements(fp, t.body);
+		fp << "</" << tag << ">";
+		return;
+	}
+	if (t is doctext.List) {
+		local commonPrefix = none;
+		for (local prefix, none: t.items) {
+			if (commonPrefix is none)
+				commonPrefix = prefix;
+			else if (commonPrefix != prefix) {
+				commonPrefix = none;
+				break;
+			}
+		}
+		if (commonPrefix !is none) {
+			local style = {
+				"-" : "disc",
+				"+" : "square",
+				"*" : "circle",
+			}.get(commonPrefix);
+			if (style is none)
+				commonPrefix = none;
+			else {
+				fp	<< "<ul class=\"FlowList\" style=\"list-style-type:"
+					<< style << ";\">";
+			}
+		}
+		if (commonPrefix is none)
+			fp << "<ul class=\"FlowList\" style=\"list-style-type:none;\">";
+		for (local prefix, body: t.items) {
+			fp << "<li>";
+			if (commonPrefix is none) {
+				fp << "<table><tr><td><b>";
+				fp << escapeSpecialHtmlCharacters(prefix);
+				fp << "</b></td><td>";
+				printTextSegmentElements(fp, body);
+				fp << "</td></tr></table>";
+			} else {
+				printTextSegmentElements(fp, body);
+			}
+			fp << "</li>\r\n";
+		}
+		fp << "</ul>";
+		return;
+	}
+	if (t is doctext.Table) {
+		fp << "<table>";
+		for (local rowIndex: [:t.rows]) {
+			local row = t.cells[rowIndex];
+			fp << "<tr>";
+			local isThick = rowIndex in t.thickRows;
+			for (local opt, cell: row) {
+				fp << ["<td>", "<th>"][isThick];
+				printTextSegmentElements(fp, cell);
+				fp << ["</td>", "</th>"][isThick];
+			}
+			fp << "</tr>\r\n";
+		}
+		fp << "</table>";
+		return;
+	}
+	if (t is doctext.Header) {
+		fp << "<h" << t.size << ">";
+		printTextSegmentElements(fp, t.body);
+		fp << "</h" << t.size << ">";
+		return;
+	}
+	
+	/* Fallback... */
+	fp << escapeSpecialHtmlCharacters(str(t));
+}
+
+function printTextSegmentElements(fp: File, elems: {string | Object...}) {
+	for (local e: elems)
+		printTextSegmentElement(fp, e);
+}
+
 @@Print a given text segment
 function printTextSegment(fp: File, t: TextSegment) {
 	fp << "<div class=\"TextSegment\">";
-	/* TODO: Do this proper! */
-	fp << "<code>";
-	fp << escapeSpecialHtmlCharacters(str(t).replace(" ", "&nbsp;"));
-	fp << "</code>";
-	
+	printTextSegmentElements(fp, t);
 	fp << "</div>";
 }
 
@@ -247,16 +742,17 @@ function getModuleRootSubPage(fp: File, path: {string...}) {
 	for (local child: children) {
 		if (child.isprivate)
 			continue; /* Don't enumerate private members. */
-		local child_link = "/modules" + child.path;
+		local childLink = "/modules" + child.path;
 		local prettyName = child.name;
-		local has_descls = false;
+		local hasDecl = false;
 		//TODO:local tooltip = get_tooltip_text(d, text);
 		for (local d: child.decls) {
-			has_descls = true;
+			hasDecl = true;
 			fp << "<tr><td>" << child.kind << "</td><td><div><code>";
 			//TODO:if (tooltip !is none)
 			//TODO:	fp << "<div class=\"tooltip\">";
-			fp << "<a href=" << repr child_link << ">" << escapeSpecialHtmlCharacters(prettyName) << "</a>";
+			fp << "<a href=" << repr childLink << ">"
+				<< escapeSpecialHtmlCharacters(prettyName) << "</a>";
 			//TODO:if (tooltip !is none) {
 			//TODO:	fp	<< "<span class=\"tooltiptext\">"
 			//TODO:		<< tooltip
@@ -267,9 +763,9 @@ function getModuleRootSubPage(fp: File, path: {string...}) {
 			printDeclarationParameters(fp, d);
 			fp << "</code></div></td></tr>\r\n";
 		}
-		if (!has_descls) {
+		if (!hasDecl) {
 			fp << "<tr><td>" << child.kind << "</td><td><div><code>";
-			fp << "<a href=" << repr child_link << ">" << escapeSpecialHtmlCharacters(prettyName) << "</a>";
+			fp << "<a href=" << repr childLink << ">" << escapeSpecialHtmlCharacters(prettyName) << "</a>";
 			fp << "</code></div></td></tr>\r\n";
 		}
 	}
@@ -361,7 +857,7 @@ function getPage(fp: File, path: string) {
 }
 
 
-@@The thread main function for 
+@@The thread main function for
 function ClientThreadMain(con: socket) {
 	print "New connection:", con;
 	try {
@@ -383,9 +879,7 @@ function ClientThreadMain(con: socket) {
 						local content;
 						local content_type = "text/html";
 						if (command == "/style.css") {
-							content = File.open(
-								fs.headof(__FILE__) + "/style.css",
-								"r").read();
+							content = STYLE_CSS.encode("utf-8");
 							content_type = "text/css";
 						} else {
 							content = File.Writer();
