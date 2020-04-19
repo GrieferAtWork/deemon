@@ -377,6 +377,7 @@ next_expr:
 				if unlikely(basescope_push()) {
 err_function_anno:
 					ast_annotations_free(&annotations);
+					AST_TAGS_RESTORE_PRINTERS(temp);
 					goto err;
 				}
 				current_basescope->bs_flags |= current_tags.at_code_flags;
