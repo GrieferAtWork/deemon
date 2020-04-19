@@ -298,7 +298,7 @@ local final OPERATOR_DEFAULTS: {string: string} = {
 };
 
 @@Lookup table to convert pretty operator names to their real counterparts
-local final OPERATOR_NAMES: {string: string} = {
+global final OPERATOR_NAMES: {string: string} = {
 	"this" : "constructor", "~this" : "destructor", ":=" : "assign",
 	"move:=" : "moveassign", ":=move" : "moveassign", "++" : "inc",
 	"--" : "dec", "#" : "size", "~" : "inv", "+" : none, "-" : none,
@@ -314,7 +314,8 @@ local final OPERATOR_NAMES: {string: string} = {
 	"del." : "delattr", "lt" : "lo", "gt" : "gr",
 };
 
-local final PRETTY_OPERATOR_NAMES: {string: string} = {
+@@Lookup table for converting from real operator names to pretty names
+global final PRETTY_OPERATOR_NAMES: {string: string} = {
 	"assign" : " :=", "moveassign" : "move :=", "size" : "#",
 	"inv" : "~", "add" : "+", "sub" : "-", "pos" : "+", "neg" : "-",
 	"mul" : "*", "div" : "/", "mod" : "%", "shl" : "<<",
@@ -2515,17 +2516,14 @@ class TextSegment: WeakRefAble {
 		, docstring(ds)
 	{}
 
-	private member m_parts: {(string | Object)...};
-
 	@@Enumerate all of different parts that make up this text segment
 	operator for(): {(string | Object)...} {
-		if (m_parts !is bound) {
-			local dc = import("doctext");
-			m_parts = Tuple(dc.splitTextSegment(
-				docstring: this.docstring,
-				docsect: this.docsect.lock(none)));
-		}
-		return m_parts;
+		local dc = import("doctext");
+		local doc = this.docsect.lock(none).docnode.lock(none);
+		return dc.splitTextSegment(
+			docstring: this.docstring,
+			mypath: (doc.path, doc.istype)
+		);
 	}
 
 	function printConsoleString(p/*: ConsolePrinter*/) {

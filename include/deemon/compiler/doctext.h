@@ -555,57 +555,70 @@ DECL_BEGIN
  *                                                    future options.
  *
  *   - Symbol references
- *         ?Dint
- *         ?N
- *         ?R!Afoo]         (Argument reference)
- *         ?R!Mposix]       (Module reference)
- *         ?#foo            (Referring to a field <DECODED_NAME> of the surrounding component)
- *         ?#{op:call}      (Referring to the call-operator of the surrounding type)
- *             Syntax:
- *               - Any TYPE-ENCODING can directly be embedded in flow-text.
- *                 s.a. /include/deemon/compiler/symbol.h for the syntax of these.
- *               - Note that @foo and ?R!Afoo use different escaping rules for how
- *                 the foo portion must be encoded. For the example name `foo' they
- *                 may be identical, and as a matter of fact: for any argument name
- *                 that matches issymbol() this is the case, but for anything else
- *                 this isn't the case.
- *               - Note however that the method used for <DECODED_NAME> is slightly different:
- *                 Normal symbol name escape method:
- *                 >> if (!name.issymbol()) {
- *                 >>     for (local x: r'\?!{}|,()<>[]=')
- *                 >>          name = name.replace(x, r'\' + x);
- *                 >>     name = name.replace(r"->", r"-\>");
- *                 >>     name = name.replace("\n", "\\\n"); // For any type of line-feed
- *                 >>     name = "{" + name + "}";
- *                 >> }
- *                 Doctext symbol name escape method:
- *                 >> if (!name.issymbol()) {
- *                 >>     for (local x: r'#$%&~^{}[]|?*@-+')
- *                 >>          name = name.replace(x, r'#' + x);
- *                 >>     name = "{" + name + "}";
- *                 >> }
- *                 This is required, since doctext bodies have different requirements as
- *                 to which characters need to be escaped than declaration headers do.
+ *         ?.                   The current type in the documentation of a type-header, operator, or this-function
+ *                              For global (non-class) symbols, this references the current module the same as `?M{.}'
+ *         ?Mposix              Module reference to `import("posix")'
+ *         ?M{posix}            ...
+ *         ?M{.}                Module reference to the current module
+ *         ?Afoo?<ref>          Reference to an attribute `foo' of ?<ref> (where `ref' must be one of those that start with `?')
+ *         ?A{foo}?<ref>        ...   (e.g. ?Aid?O for `deemon.Object.id')
+ *         ?Eposix:errno        Same as ?Aerrno?Mposix
+ *         ?E{posix}:errno      Same as ?Aerrno?M{posix}
+ *         ?Eposix:{errno}      Same as ?A{errno}?Mposix
+ *         ?E{posix}:{errno}    Same as ?A{errno}?M{posix}
+ *         ?#foo                Same as ?Afoo?.
+ *         ?#{foo}              Same as ?A{foo}?.
+ *         ?#{op:call}          Same as ?A{op:call}?.
+ *         ?Gfoo                Same as ?Afoo?M{.}
+ *         ?G{foo}              Same as ?A{foo}?M{.}
+ *         ?Dint                Same as ?Edeemon:int
+ *         ?D{int}              Same as ?Edeemon:{int}
+ *         ?O                   Same as ?Edeemon:Object
+ *         ?N                   Same as ?Edeemon:none
+ *         ?R!Afoo]             Same as @foo     (argument reference)
+ *         ?R!A{foo}]           Same as @{foo}   (argument reference)
+ *         ?R!r]                Same as ?Dtrue
+ *         ?R!f]                Same as ?Dfalse
+ *         ?R!Dint]             Same as ?Dint
+ *         ?R!D{int}]           Same as ?D{int}
+ *         ?R!Eposix:errno]     Same as ?Eposix:errno
+ *         ?R!E{posix}:errno]   Same as ?E{posix}:errno
+ *         ?R!Eposix:{errno}]   Same as ?Eposix:{errno}
+ *         ?R!E{posix}:{errno}] Same as ?E{posix}:{errno}
+ *         ?R!Gfoo]             Same as ?Gfoo
+ *         ?R!G{foo}]           Same as ?G{foo}
+ *         ?R!Mposix]           Same as ?Mposix
+ *         ?R!M{posix}]         Same as ?M{posix}
+ *         ?R!M{.}]             Same as ?M{.}
+ *         ?R!N]                Same as ?N
+ *         ?R!#foo]             Same as ?#foo
+ *         ?R!#{foo}]           Same as ?#{foo}
+ *         ?R!#{op:call}]       Same as ?#{op:call}
+ *         @foo                 Reference to an argument `foo' of the current function (only allowed for function doc texts)
+ *         @{foo}               ...
+ *         @this                Reference to the hidden this-argument
+ *         @{this}              ...
+ *         :foo                 Multi-purpose. Same as the first match from (in order):
+ *                               - ?Dfoo         (Globals within the deemon module)
+ *                               - ?Eerrors:foo  (The name of a builtin Error or Signal class)
+ *         :{foo}               ...
+ *         :foo.bar             Multi-purpose. Same as the first match from (in order):
+ *                               - ?Abar?Dfoo         (Globals within the deemon module)
+ *                               - ?Abar?Eerrors:foo  (The name of a builtin Error or Signal class)
+ *                              Note that this way of chaining attributes can be extended indefinitely
+ *         :{foo.bar}           ...
+ *         :deemon:Object.id    Same as ?Aid?Edeemon:Object
+ *         :{deemon:Object.id}  ...
  *
- *   - Symbol reference aliases
- *       - @foo, @{foo}
- *         Argument reference: same as ?R!A{foo}
- *         @this, @{this}
- *         Argument reference: the this-argument
+ *     When no {}-block is used, the string must allow for issymbol().
+ *     Otherwise, when a {}-block is used, the contained string `name'
+ *     is escaped as follows:
+ *     >> if (!name.issymbol()) {
+ *     >>     for (local x: r'#$%&~^{}[]|?*@-+')
+ *     >>          name = name.replace(x, r'#' + x);
+ *     >>     name = "{" + name + "}";
+ *     >> }
  *
- *       - :foo, :{foo}
- *         Multi-purpose. Same as the first match from (in order):
- *             - ?Gfoo           (Globals within the current module)
- *             - ?Dfoo           (Globals within the deemon module)
- *             - ?Eerrors:foo    (The name of a builtin Error or Signal class)
- *             - ?R!Mfoo]        (The name of another module)
- *
- *       - :foo.bar, :{foo.bar}
- *         Same as :foo, but pre-fixed with ?Abar (NOTE: This can be repeated):
- *             - ?Abar?Gfoo
- *             - ?Abar?Dfoo
- *             - ?Abar?Eerrors:foo
- *             - ?Abar?R!Mfoo]
  *
  *
  */

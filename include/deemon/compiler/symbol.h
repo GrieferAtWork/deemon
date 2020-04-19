@@ -291,7 +291,7 @@ struct class_attribute;
  *       "f"                        // The false builtin constant
  *       "A" EXPR EXPR |            // FIRST_EXPR.operator . (SECOND_EXPR)
  *       "A" <NAME>                 // Referring to another argument <DECODED_NAME>
- *       "B" EXPR EXPR |            // boundattr(FIRST_EXPR,SECOND_EXPR)
+ *       "B" EXPR EXPR |            // boundattr(FIRST_EXPR, SECOND_EXPR)
  *       "B" <NAME>                 // Referring to true/false indicative of the is-bound state of another argument <DECODED_NAME>
  *       "C" EXPR |                 // copy(EXPR)
  *       "D" <NAME>                 // Referring to a symbol exported from the `deemon' module (import("deemon").<DECODED_NAME>)
@@ -304,7 +304,7 @@ struct class_attribute;
  *       "M" <NAME>                 // Referring to a module  (import("<DECODED_NAME>"))
  *       "N"                        // The none builtin constant
  *       "O" EXPR |                 // type(EXPR)
- *       "P" <NAME> |               // Pfoo (where `foo' is en-/decoded the same way a <NAME> would)
+ *       "P" <NAME> |               // "foo" (where `foo' is en-/decoded the same way a <NAME> would)
  *       "Q" EXPR |                 // EXPR.operator hash()
  *       "R" EXPR |                 // repr(EXPR)
  *       "S" EXPR EXPR |            // FIRST_EXPR is SECOND_EXPR
