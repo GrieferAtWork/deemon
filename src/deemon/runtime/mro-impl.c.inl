@@ -3293,7 +3293,7 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 			goto not_found;
 		}
 		result->a_decl     = (DREF DeeObject *)member_decl;
-		result->a_doc      = doc;
+		result->a_doc      = doc; /* Inherit reference. */
 		result->a_perm     = perm;
 		result->a_attrtype = member_type; /* Inherit reference. */
 		return 0;
@@ -3509,7 +3509,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 			goto not_found;
 		}
 		result->a_decl     = (DREF DeeObject *)member_decl;
-		result->a_doc      = doc;
+		result->a_doc      = doc; /* Inherit reference. */
 		result->a_perm     = perm;
 		result->a_attrtype = member_type; /* Inherit reference. */
 		return 0;
@@ -4224,6 +4224,7 @@ type_method_findattr(struct membercache *cache, DeeTypeObject *decl,
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		membercache_addmethod(cache, decl, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_decl     = (DREF DeeObject *)decl;
 		result->a_perm     = perm;
@@ -4253,6 +4254,7 @@ DeeType_FindInstanceMethodAttr(DeeTypeObject *tp_invoker,
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_decl     = (DREF DeeObject *)tp_self;
 		result->a_perm     = perm;
@@ -4287,6 +4289,7 @@ type_getset_findattr(struct membercache *cache, DeeTypeObject *decl,
 		if (!streq(chain->gs_name, rules->alr_name))
 			continue;
 		membercache_addgetset(cache, decl, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->gs_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)decl;
@@ -4319,6 +4322,7 @@ DeeType_FindInstanceGetSetAttr(DeeTypeObject *tp_invoker,
 		if (!streq(chain->gs_name, rules->alr_name))
 			continue;
 		membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->gs_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)tp_self;
@@ -4346,6 +4350,7 @@ type_member_findattr(struct membercache *cache, DeeTypeObject *decl,
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		membercache_addmember(cache, decl, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)decl;
@@ -4376,6 +4381,7 @@ DeeType_FindInstanceMemberAttr(DeeTypeObject *tp_invoker,
 		if (!streq(chain->m_name, rules->alr_name))
 			continue;
 		membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, rules->alr_hash, chain);
+		ASSERT(!(perm & ATTR_DOCOBJ));
 		result->a_doc      = chain->m_doc;
 		result->a_perm     = flags;
 		result->a_decl     = (DREF DeeObject *)tp_self;

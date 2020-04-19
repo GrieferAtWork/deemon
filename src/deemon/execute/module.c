@@ -1249,6 +1249,8 @@ DeeModule_FindAttrString(DeeModuleObject *__restrict self,
 				result->a_doc      = MODULE_SYMBOL_GETDOCSTR(doc_sym);
 				result->a_perm     = perm;
 				result->a_attrtype = attr_type; /* Inherit reference. */
+				if (perm & ATTR_DOCOBJ)
+					Dee_Incref(Dee_attribute_info_docobj(result));
 				Dee_Incref(self);
 				return 0;
 			}

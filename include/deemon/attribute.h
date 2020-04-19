@@ -98,7 +98,7 @@ typedef struct Dee_enumattr_iterator_object DeeEnumAttrIteratorObject;
 
 struct Dee_attribute_info {
 	DREF DeeObject     *a_decl;     /* [1..1] The type defining the attribute. */
-	char const         *a_doc;      /* [0..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
+	char const         *a_doc;      /* [0..1][if(a_perm & ATTR_DOCOBJ, DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                                 * The documentation string of the attribute (when known).
 	                                 * NOTE: This may also be an empty string, which should be
 	                                 *       interpreted as no documentation string being there at all.
@@ -108,10 +108,12 @@ struct Dee_attribute_info {
 	uint16_t            a_perm;     /* Set of `ATTR_*' flags, describing the attribute's behavior. */
 	DREF DeeTypeObject *a_attrtype; /* [0..1] The typing of this attribute. */
 };
-#define Dee_attribute_info_fini(self)                                           \
-	(Dee_Decref((self)->a_decl), Dee_XDecref((self)->a_attrtype),               \
-	 ((self)->a_perm & ATTR_DOCOBJ)                                             \
-	 ? Dee_Decref(COMPILER_CONTAINER_OF((self)->a_doc, DeeStringObject, s_str)) \
+#define Dee_attribute_info_docobj(self) \
+	COMPILER_CONTAINER_OF((self)->a_doc, DeeStringObject, s_str)
+#define Dee_attribute_info_fini(self)                             \
+	(Dee_Decref((self)->a_decl), Dee_XDecref((self)->a_attrtype), \
+	 ((self)->a_perm & ATTR_DOCOBJ)                               \
+	 ? Dee_Decref(Dee_attribute_info_docobj(self))                \
 	 : (void)0)
 
 
