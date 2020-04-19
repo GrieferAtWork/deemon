@@ -62,6 +62,12 @@ none_call(void *UNUSED(a), size_t UNUSED(b), void *UNUSED(c)) {
 	return_none;
 }
 
+PRIVATE WUNUSED DREF DeeObject *DCALL
+none_call_kw(void *UNUSED(a), size_t UNUSED(b),
+             void *UNUSED(c), void *UNUSED(d)) {
+	return_none;
+}
+
 INTERN int DCALL
 none_i1(void *UNUSED(a)) {
 	return 0;
@@ -346,7 +352,8 @@ PUBLIC DeeTypeObject DeeNone_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&none_call_kw
 };
 
 PUBLIC DeeNoneObject DeeNone_Singleton = {
