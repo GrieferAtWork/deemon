@@ -2313,6 +2313,7 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 			}
 			if (error_mode == STRING_ERROR_FIGNORE) {
 				--end;
+				--length;
 				memmove(iter, iter + 1, (end - iter) * sizeof(char));
 				continue;
 			}

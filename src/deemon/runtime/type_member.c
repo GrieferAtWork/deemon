@@ -495,14 +495,16 @@ handle_null_ob:
 				goto is_unbound;
 			}
 		}
-		return DeeString_New(cstr);
+		return DeeString_NewAutoUtf8(cstr);
 	}	break;
 
-	CASE(STRUCT_STRING):
-		return DeeString_New(&FIELD(char));
+	CASE(STRUCT_STRING): {
+		char const *str = &FIELD(char);
+		return DeeString_NewUtf8(str, strlen(str), STRING_ERROR_FIGNORE);
+	}
 
 	CASE(STRUCT_CHAR):
-		return DeeString_NewSized(&FIELD(char), 1);
+		return DeeString_Chr(FIELD(unsigned char));
 
 	CASE(STRUCT_BOOL8):
 		return_bool(FIELD(uint8_t) != 0);

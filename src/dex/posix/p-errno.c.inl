@@ -474,10 +474,14 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum) {
 					if (!DeeInt_TryAsInt(iter->ds_obj, &eval))
 						break;
 					if (eval == errnum) {
+						char const *docstring;
 						/* Found it! Now to simply return the doc string */
-						if (!iter->ds_doc)
+						docstring = iter->ds_doc;
+						if (!docstring)
 							break;
-						return DeeString_New(iter->ds_doc);
+						return DeeString_NewUtf8(docstring,
+						                         strlen(docstring),
+						                         STRING_ERROR_FIGNORE);
 					}
 				} while ((++iter, iter->ds_name &&
 				                  SYMBOL_NAME_IS_ERRNO(iter->ds_name)));

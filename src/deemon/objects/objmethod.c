@@ -300,7 +300,7 @@ objmethod_get_doc(DeeObjMethodObject *__restrict self) {
 	doc = DeeObjMethod_GetDoc((DeeObject *)self);
 	if unlikely(!doc)
 		return_none;
-	return DeeString_NewAuto(doc);
+	return DeeString_NewAutoUtf8(doc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
@@ -1093,7 +1093,7 @@ clsmethod_get_doc(DeeClsMethodObject *__restrict self) {
 	doc = DeeClsMethod_GetDoc((DeeObject *)self);
 	if (!doc)
 		return_none;
-	return DeeString_NewAuto(doc);
+	return DeeString_NewAutoUtf8(doc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1518,7 +1518,7 @@ clsproperty_get_doc(DeeClsPropertyObject *__restrict self) {
 	doc = DeeClsProperty_GetDoc((DeeObject *)self);
 	if (!doc)
 		return_none;
-	return DeeString_NewAuto(doc);
+	return DeeString_NewAutoUtf8(doc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2072,7 +2072,7 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 			member = cmethod_gettypefield(module, &type, self->cm_func);
 			if (member) {
 				if (member->m_doc) {
-					result = DeeString_NewAuto(member->m_doc);
+					result = DeeString_NewAutoUtf8(member->m_doc);
 				} else {
 					result = Dee_None;
 					Dee_Incref(Dee_None);

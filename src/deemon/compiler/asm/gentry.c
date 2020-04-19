@@ -354,7 +354,7 @@ gen_guard:
 					 * >>             // This is where we are right now.
 					 * >>             //   - If we got here from `break', we must hold
 					 * >>             //     off from jumping to `Loop_end' because of
-					 * >>             //     the outter finally block, but we can not
+					 * >>             //     the outer finally block, but we can not
 					 * >>             //     blindly jump there all the time, because
 					 * >>             //     then we'd always skip `Leaving_inner_finally'
 					 * >>             //   - To fix this, we must compare the address that is
@@ -373,7 +373,7 @@ gen_guard:
 					 * >>             // HINT: `Outter_finally' is named `next_finally'
 					 * >>         }
 					 * >>         print "Leaving_inner_finally";
-					 * >>         print "Entering outter finally normally";
+					 * >>         print "Entering outer finally normally";
 					 * >>     } finally { // push addrof(Loop_last)
 					 * >>         print "Outter_finally";
 					 * >>         // jmp pop (Can be served blindly in this case)
