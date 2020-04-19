@@ -549,7 +549,7 @@ INTERN struct type_method set_methods[] = {
 	      "Same as ${this.operator & (with_)}") },
 	{ "isdisjoint", &set_isdisjoint,
 	  DOC("(with_:?.)->?Dbool\n"
-	      "Returns :true if ${#(this & with_) == 0}\n"
+	      "Returns :true if ${##(this & with_) == 0}\n"
 	      "In other words: If @this and @with_ have no items in common") },
 	{ "union", &set_union,
 	  DOC("(with_:?.)->?.\n"
@@ -640,7 +640,7 @@ PRIVATE struct type_getset set_class_getsets[] = {
 	  NULL,
 	  NULL,
 	  DOC("->?DType\n"
-	      "Returns the type of sequence returned by the #i:frozen property") },
+	      "Returns the type of sequence returned by the ?#frozen property") },
 	{ NULL }
 };
 
@@ -955,10 +955,12 @@ PUBLIC DeeTypeObject DeeSet_Type = {
 	                        "Its main purpose is for being used in conjunction with "
 	                        "${operator &} in order to create a sub-set that doesn't "
 	                        "contain a certain set of sub-elements:\n"
-	                        ">import Set from deemon;\n"
-	                        ">local x = { 10, 11, 15, 20, 30 };\n"
-	                        ">local y = { 11, 15 };\n"
-	                        ">print repr((x as Set) & ~(y as Set)); // { 10, 20, 30 }"),
+	                        "${"
+	                        "import Set from deemon;\n"
+	                        "local x = { 10, 11, 15, 20, 30 };\n"
+	                        "local y = { 11, 15 };\n"
+	                        "print repr((x as Set) & ~(y as Set)); // { 10, 20, 30 }"
+	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

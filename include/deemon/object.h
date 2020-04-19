@@ -2277,10 +2277,10 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_CallTupleKw(D
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTuple(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTupleKw(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args, DeeObject *kw);
 #else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
-#define DeeObject_CallTuple(self,args)                    DeeObject_Call(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
-#define DeeObject_CallTupleKw(self,args,kw)               DeeObject_CallKw(self,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
-#define DeeObject_ThisCallTuple(self,this_arg,args)       DeeObject_ThisCall(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args))
-#define DeeObject_ThisCallTupleKw(self,this_arg,args,kw)  DeeObject_ThisCallKw(self,this_arg,DeeTuple_SIZE(args),DeeTuple_ELEM(args),kw)
+#define DeeObject_CallTuple(self, args)                     DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_CallTupleKw(self, args, kw)               DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeObject_ThisCallTuple(self, this_arg, args)       DeeObject_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_ThisCallTupleKw(self, this_arg, args, kw) DeeObject_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
 
 /* Generate and return the hash of a given object. */

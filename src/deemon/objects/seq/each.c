@@ -266,23 +266,23 @@ err:
 	return NULL;
 }
 
-#define DEFINE_SEQ_EACH_UNARY(name, op)           \
-	PRIVATE WUNUSED DREF SeqEachOperator *DCALL           \
-	name(SeqEachBase *__restrict self) {          \
-		return seqeach_makeop0(self->se_seq, op); \
+#define DEFINE_SEQ_EACH_UNARY(name, op)                      \
+	PRIVATE WUNUSED NONNULL((1)) DREF SeqEachOperator *DCALL \
+	name(SeqEachBase *__restrict self) {                     \
+		return seqeach_makeop0(self->se_seq, op);            \
 	}
-#define DEFINE_SEQ_EACH_BINARY(name, op)                              \
-	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                               \
-	name(SeqEachBase *__restrict self, DeeObject *__restrict other) { \
-		Dee_Incref(other);                                            \
-		return seqeach_makeop1(self->se_seq, op, other);              \
+#define DEFINE_SEQ_EACH_BINARY(name, op)                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF SeqEachOperator *DCALL \
+	name(SeqEachBase *self, DeeObject *other) {                 \
+		Dee_Incref(other);                                      \
+		return seqeach_makeop1(self->se_seq, op, other);        \
 	}
-#define DEFINE_SEQ_EACH_TRINARY(name, op)                                                  \
-	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                                                    \
-	name(SeqEachBase *__restrict self, DeeObject *__restrict a, DeeObject *__restrict b) { \
-		Dee_Incref(a);                                                                     \
-		Dee_Incref(b);                                                                     \
-		return seqeach_makeop2(self->se_seq, op, a, b);                                    \
+#define DEFINE_SEQ_EACH_TRINARY(name, op)                          \
+	PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF SeqEachOperator *DCALL \
+	name(SeqEachBase *self, DeeObject *a, DeeObject *b) {          \
+		Dee_Incref(a);                                             \
+		Dee_Incref(b);                                             \
+		return seqeach_makeop2(self->se_seq, op, a, b);            \
 	}
 DEFINE_SEQ_EACH_UNARY(se_iter_next, OPERATOR_ITERNEXT)
 DEFINE_SEQ_EACH_UNARY(se_inv, OPERATOR_INV)
@@ -312,7 +312,7 @@ DEFINE_SEQ_EACH_BINARY(se_getitem, OPERATOR_GETITEM)
 DEFINE_SEQ_EACH_TRINARY(se_getrange, OPERATOR_GETRANGE)
 
 #define DEFINE_SEQ_EACH_UNARY_INPLACE(name, func)          \
-	PRIVATE int DCALL                                      \
+	PRIVATE NONNULL((1)) int DCALL                         \
 	name(SeqEachBase **__restrict pself) {                 \
 		size_t i, size;                                    \
 		DeeObject *seq = (*pself)->se_seq;                 \
@@ -340,33 +340,33 @@ DEFINE_SEQ_EACH_TRINARY(se_getrange, OPERATOR_GETRANGE)
 		return -1;                                         \
 	}
 
-#define DEFINE_SEQ_EACH_BINARY_INPLACE(name, func)                      \
-	PRIVATE int DCALL                                                   \
-	name(SeqEachBase **__restrict pself, DeeObject *__restrict other) { \
-		size_t i, size;                                                 \
-		DeeObject *seq = (*pself)->se_seq;                              \
-		DREF DeeObject *elem;                                           \
-		size = DeeObject_Size(seq);                                     \
-		if unlikely(size == (size_t)-1)                                 \
-			goto err;                                                   \
-		for (i = 0; i < size; ++i) {                                    \
-			elem = DeeObject_GetItemIndex(seq, i);                      \
-			if unlikely(!elem) {                                        \
-				if (DeeError_Catch(&DeeError_UnboundItem))              \
-					continue;                                           \
-				goto err;                                               \
-			}                                                           \
-			if (func(&elem, other))                                     \
-				goto err_elem;                                          \
-			if (DeeObject_SetItemIndex(seq, i, elem))                   \
-				goto err_elem;                                          \
-			Dee_Decref(elem);                                           \
-		}                                                               \
-		return 0;                                                       \
-	err_elem:                                                           \
-		Dee_Decref(elem);                                               \
-	err:                                                                \
-		return -1;                                                      \
+#define DEFINE_SEQ_EACH_BINARY_INPLACE(name, func)           \
+	PRIVATE NONNULL((1, 2)) int DCALL                        \
+	name(SeqEachBase **__restrict pself, DeeObject *other) { \
+		size_t i, size;                                      \
+		DeeObject *seq = (*pself)->se_seq;                   \
+		DREF DeeObject *elem;                                \
+		size = DeeObject_Size(seq);                          \
+		if unlikely(size == (size_t)-1)                      \
+			goto err;                                        \
+		for (i = 0; i < size; ++i) {                         \
+			elem = DeeObject_GetItemIndex(seq, i);           \
+			if unlikely(!elem) {                             \
+				if (DeeError_Catch(&DeeError_UnboundItem))   \
+					continue;                                \
+				goto err;                                    \
+			}                                                \
+			if (func(&elem, other))                          \
+				goto err_elem;                               \
+			if (DeeObject_SetItemIndex(seq, i, elem))        \
+				goto err_elem;                               \
+			Dee_Decref(elem);                                \
+		}                                                    \
+		return 0;                                            \
+	err_elem:                                                \
+		Dee_Decref(elem);                                    \
+	err:                                                     \
+		return -1;                                           \
 	}
 DEFINE_SEQ_EACH_UNARY_INPLACE(se_inc, DeeObject_Inc)
 DEFINE_SEQ_EACH_UNARY_INPLACE(se_dec, DeeObject_Dec)
@@ -785,23 +785,23 @@ err:
 }
 
 
-#define DEFINE_SEW_UNARY(name, op)        \
-	PRIVATE WUNUSED DREF SeqEachOperator *DCALL   \
-	name(DeeObject *__restrict self) {    \
-		return seqeach_makeop0(self, op); \
+#define DEFINE_SEW_UNARY(name, op)                           \
+	PRIVATE WUNUSED NONNULL((1)) DREF SeqEachOperator *DCALL \
+	name(DeeObject *__restrict self) {                       \
+		return seqeach_makeop0(self, op);                    \
 	}
-#define DEFINE_SEW_BINARY(name, op)                                 \
-	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                             \
-	name(DeeObject *__restrict self, DeeObject *__restrict other) { \
-		Dee_Incref(other);                                          \
-		return seqeach_makeop1(self, op, other);                    \
+#define DEFINE_SEW_BINARY(name, op)                             \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF SeqEachOperator *DCALL \
+	name(DeeObject *self, DeeObject *other) {                   \
+		Dee_Incref(other);                                      \
+		return seqeach_makeop1(self, op, other);                \
 	}
-#define DEFINE_SEW_TRINARY(name, op)                                                     \
-	PRIVATE WUNUSED DREF SeqEachOperator *DCALL                                                  \
-	name(DeeObject *__restrict self, DeeObject *__restrict a, DeeObject *__restrict b) { \
-		Dee_Incref(a);                                                                   \
-		Dee_Incref(b);                                                                   \
-		return seqeach_makeop2(self, op, a, b);                                          \
+#define DEFINE_SEW_TRINARY(name, op)                               \
+	PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF SeqEachOperator *DCALL \
+	name(DeeObject *self, DeeObject *a, DeeObject *b) {            \
+		Dee_Incref(a);                                             \
+		Dee_Incref(b);                                             \
+		return seqeach_makeop2(self, op, a, b);                    \
 	}
 DEFINE_SEW_UNARY(sew_iter_next, OPERATOR_ITERNEXT)
 DEFINE_SEW_UNARY(sew_inv, OPERATOR_INV)
@@ -874,9 +874,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-seo_setitem_for_inplace(SeqEachOperator *__restrict self,
-                        DeeObject *__restrict baseelem,
-                        DeeObject *__restrict value) {
+seo_setitem_for_inplace(SeqEachOperator *self,
+                        DeeObject *baseelem,
+                        DeeObject *value) {
 	switch (self->so_opname) {
 		/* Only a select few operators can be used for inplace. */
 
@@ -902,7 +902,7 @@ seo_setitem_for_inplace(SeqEachOperator *__restrict self,
 
 
 #define DEFINE_SEO_UNARY_INPLACE(name, func, op)                   \
-	PRIVATE int DCALL                                              \
+	PRIVATE NONNULL((1)) int DCALL                                 \
 	name(SeqEachOperator **__restrict pself) {                     \
 		size_t i, size;                                            \
 		SeqEachOperator *seq = *pself;                             \
@@ -932,35 +932,35 @@ seo_setitem_for_inplace(SeqEachOperator *__restrict self,
 		return -1;                                                 \
 	}
 
-#define DEFINE_SEO_BINARY_INPLACE(name, func, op)                           \
-	PRIVATE int DCALL                                                       \
-	name(SeqEachOperator **__restrict pself, DeeObject *__restrict other) { \
-		size_t i, size;                                                     \
-		SeqEachOperator *seq = *pself;                                      \
-		DREF DeeObject *elem, *baseelem;                                    \
-		size = DeeObject_Size(seq->se_seq);                                 \
-		if unlikely(size == (size_t)-1)                                     \
-			goto err;                                                       \
-		for (i = 0; i < size; ++i) {                                        \
-			elem = seo_getitem_for_inplace(seq, &baseelem, i, op);          \
-			if unlikely(!elem) {                                            \
-				if (DeeError_Catch(&DeeError_UnboundItem))                  \
-					continue;                                               \
-				goto err;                                                   \
-			}                                                               \
-			if (func(&elem, other))                                         \
-				goto err_elem;                                              \
-			if (seo_setitem_for_inplace(seq, baseelem, elem))               \
-				goto err_elem;                                              \
-			Dee_Decref(baseelem);                                           \
-			Dee_Decref(elem);                                               \
-		}                                                                   \
-		return 0;                                                           \
-	err_elem:                                                               \
-		Dee_Decref(baseelem);                                               \
-		Dee_Decref(elem);                                                   \
-	err:                                                                    \
-		return -1;                                                          \
+#define DEFINE_SEO_BINARY_INPLACE(name, func, op)                  \
+	PRIVATE NONNULL((1, 2)) int DCALL                              \
+	name(SeqEachOperator **__restrict pself, DeeObject *other) {   \
+		size_t i, size;                                            \
+		SeqEachOperator *seq = *pself;                             \
+		DREF DeeObject *elem, *baseelem;                           \
+		size = DeeObject_Size(seq->se_seq);                        \
+		if unlikely(size == (size_t)-1)                            \
+			goto err;                                              \
+		for (i = 0; i < size; ++i) {                               \
+			elem = seo_getitem_for_inplace(seq, &baseelem, i, op); \
+			if unlikely(!elem) {                                   \
+				if (DeeError_Catch(&DeeError_UnboundItem))         \
+					continue;                                      \
+				goto err;                                          \
+			}                                                      \
+			if (func(&elem, other))                                \
+				goto err_elem;                                     \
+			if (seo_setitem_for_inplace(seq, baseelem, elem))      \
+				goto err_elem;                                     \
+			Dee_Decref(baseelem);                                  \
+			Dee_Decref(elem);                                      \
+		}                                                          \
+		return 0;                                                  \
+	err_elem:                                                      \
+		Dee_Decref(baseelem);                                      \
+		Dee_Decref(elem);                                          \
+	err:                                                           \
+		return -1;                                                 \
 	}
 DEFINE_SEO_UNARY_INPLACE(seo_inc, DeeObject_Inc, OPERATOR_INC)
 DEFINE_SEO_UNARY_INPLACE(seo_dec, DeeObject_Dec, OPERATOR_DEC)
@@ -1362,27 +1362,25 @@ sewi_bool(SeqEachIterator *__restrict self) {
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #define DEFINE_SEWI_COMPARE(name, func)                       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                             \
-	name(SeqEachIterator *__restrict self,                    \
-	     SeqEachIterator *__restrict other) {                 \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
+	name(SeqEachIterator *self, SeqEachIterator *other) {     \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			goto err;                                         \
 		return func(self->ei_iter, other->ei_iter);           \
 	err:                                                      \
 		return NULL;                                          \
 	}
-#else
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 #define DEFINE_SEWI_COMPARE(name, func)                                      \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                            \
-	name(SeqEachIterator *__restrict self,                                   \
-	     SeqEachIterator *__restrict other) {                                \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                    \
+	name(SeqEachIterator *self, SeqEachIterator *other) {                    \
 		if (DeeObject_AssertTypeExact(other, &SeqEachOperatorIterator_Type)) \
 			goto err;                                                        \
 		return func(self->ei_iter, other->ei_iter);                          \
 	err:                                                                     \
 		return NULL;                                                         \
 	}
-#endif
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 DEFINE_SEWI_COMPARE(sewi_eq, DeeObject_CompareEqObject)
 DEFINE_SEWI_COMPARE(sewi_ne, DeeObject_CompareNeObject)
 DEFINE_SEWI_COMPARE(sewi_lo, DeeObject_CompareLoObject)
@@ -1680,6 +1678,6 @@ DECL_END
 #define DEFINE_CALLATTRKW 1
 #include "each-fastpass.c.inl"
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_EACH_C */

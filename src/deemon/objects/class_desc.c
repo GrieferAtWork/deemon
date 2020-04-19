@@ -822,7 +822,7 @@ PRIVATE struct type_getset ca_getsets[] = {
 	{ "addr", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getaddr, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "Index into the class/instance object table, where @this attribute is stored\n"
-	      "When #isclassmem or #isclassns are :true, this index and any index offset from it "
+	      "When ?#isclassmem or ?#isclassns are :true, this index and any index offset from it "
 	      "refer to the class object table. Otherwise, the instance object table is dereferenced\n"
 	      "This is done so-as to allow instance attributes such as member functions to be stored "
 	      "within the class itself, rather than having to be copied into each and every instance "
@@ -844,15 +844,15 @@ PRIVATE struct type_getset ca_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class attribute referrs to a method\n"
 	      "When set, reading from the attribute will return a an object "
-	      "${InstanceMethod(obj.MEMBER_TABLE[this.addr],obj)}\n"
+	      "${InstanceMethod(obj.MEMBER_TABLE[this.addr], obj)}\n"
 	      "Note however that this is rarely ever required to be done, as method attributes "
 	      "are usually called directly, in which case a callattr instruction can silently "
 	      "prepend the this-argument before the passed argument list") },
 	{ "isproperty", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isproperty, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Evaluates to :true if @this class attribute was defined as a property\n"
-	      "When this is the case, a #readonly attribute only has a single callback "
-	      "that may be stored at #addr + 0, with that callback being the getter\n"
+	      "When this is the case, a ?#readonly attribute only has a single callback "
+	      "that may be stored at ?#addr + 0, with that callback being the getter\n"
 	      "Otherwise, up to 3 indices within the associated object table are used by "
 	      "@this attribute, each of which may be left unbound:\n"
 	      "#T{Offset|Callback|Description~"
@@ -861,8 +861,8 @@ PRIVATE struct type_getset ca_getsets[] = {
 	      "$" PP_STR(CLASS_GETSET_SET) "|$set|The setter callback}") },
 	{ "isclassmem", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_isclassmem, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Set if #addr is an index into the class object table, rather than into the "
-	      "instance object table. Note however that when #isclassns") },
+	      "Set if ?#addr is an index into the class object table, rather than into the "
+	      "instance object table. Note however that when ?#isclassns") },
 	{ "isclassns", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ca_getisclassns, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this class attribute is exclusive to the "
@@ -874,12 +874,12 @@ PRIVATE struct type_getset ca_getsets[] = {
 	  DOC("->?Dstring\n"
 	      "Returns a comma-separated string describing the flags of @this class attribute\n"
 	      "#T{Flag|Property~"
-	      "$\"private\"|#isprivate&"
-	      "$\"final\"|#isfinal&"
-	      "$\"readonly\"|#isreadonly&"
-	      "$\"method\"|#ismethod&"
-	      "$\"property\"|#isproperty&"
-	      "$\"classns\"|#isclassns}") },
+	      "$\"private\"|?#isprivate&"
+	      "$\"final\"|?#isfinal&"
+	      "$\"readonly\"|?#isreadonly&"
+	      "$\"method\"|?#ismethod&"
+	      "$\"property\"|?#isproperty&"
+	      "$\"classns\"|?#isclassns}") },
 	{ NULL }
 };
 
@@ -1310,15 +1310,15 @@ PRIVATE struct type_getset cd_getsets[] = {
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Return a comma-separated string of flags used to describe the combination of properties described by "
-	      "#isfinal, #isinterrupt, #hassuperconstructor, #__hassuperkwds__, #__isinttruncated__, and #__hasmoveany__\n"
+	      "?#isfinal, ?#isinterrupt, ?#hassuperconstructor, ?#__hassuperkwds__, ?#__isinttruncated__, and ?#__hasmoveany__\n"
 	      "#T{Flag|Property~"
-	      "$\"final\"|#isfinal&"
-	      "$\"interrupt\"|#isinterrupt&"
-	      "$\"superctor\"|#hassuperconstructor&"
-	      "$\"superkwds\"|#__hassuperkwds__&"
-	      "$\"autoinit\"|#__hasautoinit__&"
-	      "$\"inttrunc\"|#__isinttruncated__&"
-	      "$\"moveany\"|#__hasmoveany__}") },
+	      "$\"final\"|?#isfinal&"
+	      "$\"interrupt\"|?#isinterrupt&"
+	      "$\"superctor\"|?#hassuperconstructor&"
+	      "$\"superkwds\"|?#__hassuperkwds__&"
+	      "$\"autoinit\"|?#__hasautoinit__&"
+	      "$\"inttrunc\"|?#__isinttruncated__&"
+	      "$\"moveany\"|?#__hasmoveany__}") },
 	{ DeeString_STR(&str_operators),
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_operators, NULL, NULL,
 	  DOC("->?#OperatorTable\n"
@@ -1329,11 +1329,11 @@ PRIVATE struct type_getset cd_getsets[] = {
 	{ "iattr",
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_iattr, NULL, NULL,
 	  DOC("->?#AttributeTable\n"
-	      "Enumerate user-defined instance attributes as a mapping-like :deemon:string-#Attribute sequence") },
+	      "Enumerate user-defined instance attributes as a mapping-like ?Dstring-?#Attribute sequence") },
 	{ "cattr",
 	  (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_cattr, NULL, NULL,
 	  DOC("->?#AttributeTable\n"
-	      "Enumerate user-defined class ($static) attributes as a mapping-like :deemon:string-#Attribute sequence") },
+	      "Enumerate user-defined class ($static) attributes as a mapping-like ?Dstring-?#Attribute sequence") },
 	{ NULL }
 };
 
@@ -1354,8 +1354,8 @@ PRIVATE struct type_member cd_members[] = {
 	                         "In user-defined classes, this behavior is encoded as ${this = super;}"),
 #ifdef CLASS_TP_FSUPERKWDS
 	TYPE_MEMBER_BITFIELD_DOC("__hassuperkwds__", STRUCT_CONST, ClassDescriptor, cd_flags, CLASS_TP_FSUPERKWDS,
-	                         "Evaluates to :true if the super-args operator of @this class returns a tuple (args,kwds) "
-	                         "that should be used to invoke the super-constructor as ${super(args...,**kwds)}\n"
+	                         "Evaluates to :true if the super-args operator of @this class returns a tuple (args, kwds) "
+	                         "that should be used to invoke the super-constructor as ${super(args..., **kwds)}\n"
 	                         "Otherwise, the super-args operator simply returns args and the super-constructor "
 	                         "is called as ${super(args...)}"),
 #endif /* CLASS_TP_FSUPERKWDS */
@@ -1995,13 +1995,13 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	                         "@throw ValueError An attribute or operator is bound to an out-of-bounds object table index\n"
 	                         "@throw IntergerOverflow A used object table index exceeds the hard limit of $0xffff (unsigned 16-bit)\n"
 	                         "Create a new class descriptor\n"
-	                         "The given @flags is a comma-separated string of flags as described in #flags\n"
+	                         "The given @flags is a comma-separated string of flags as described in ?#flags\n"
 	                         "The given @isize and @csize determine the allocated sizes of the instance class "
 	                         "member tables. - When omitted, these sizes are automatically calculated by "
 	                         "determining the greatest used table indices within @operators, @iattr and @cattr\n"
 	                         "Note that both @iattr and @cattr take mappings of attribute names to one either "
 	                         "the associated table_index, or a tuple of (table_index,flags[,doc]), where flags is "
-	                         "a comma-separated string of flags as described in #Attribute.flags\n"
+	                         "a comma-separated string of flags as described in ?Aflags?#Attribute\n"
 	                         "Hint: Once created, a _ClassDescriptor object can be used "
 	                         "with :rt:makeclass to create custom class types at runtime"),
 	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL,

@@ -68,7 +68,7 @@ DECL_BEGIN
 	    "consider using stat's class methods such as ?#{isdir}. "               \
 	    "Note however that stat instances also implement these "                \
 	    "methods as general purpose property checks that do not "               \
-	    "require calculation of #st_mode")
+	    "require calculation of ?#st_mode")
 #define S_LStat_tp_name "lstat"
 #define S_LStat_tp_doc                                                          \
 	DOC("(path:?Dstring)\n"                                                     \

@@ -372,9 +372,9 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Property),
 	/* .tp_doc      = */ DOC("(getter:?DCallable=!N,delete:?DCallable=!N,setter:?DCallable=!N)\n"
-	                        "\n"
-	                        "call(args!)->\n"
-	                        "Same as ${this.get(args...)}"),
+	                         "\n"
+	                         "call(args!)->\n"
+	                         "Same as ${this.get(args...)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

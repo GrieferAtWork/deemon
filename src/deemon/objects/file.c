@@ -1309,11 +1309,15 @@ PRIVATE struct type_method file_class_methods[] = {
 	  DOC("(path:?Dstring,oflags=!Pr,mode=!0644)->?.\n"
 	      "(path:?Dstring,oflags:?Dint,mode=!0644)->?.\n"
 	      "@interrupt\n"
-	      "@throw FileExists The passed @oflags contains both $\"creat\" and $\"excl\", but the given @path already existed\n"
+	      "@throw FileExists The passed @oflags contains both $\"creat\" and "
+	      /*             */ "$\"excl\", but the given @path already existed\n"
 	      "@throw FileNotFound The given @path could not be found\n"
-	      "@throw FileAccessError The current user does not have permissions to access the given @path in the requested manner\n"
-	      "@throw ReadOnlyFile Write-access, or create-file was requested, but the filesystem hosting @path is mounted as read-only\n"
-	      "@throw UnsupportedAPI Filesystem access has been disabled, or $\"creat\" was passed and the filesystem hosting @path does not support the creation of new files\n"
+	      "@throw FileAccessError The current user does not have permissions to "
+	      /*                  */ "access the given @path in the requested manner\n"
+	      "@throw ReadOnlyFile Write-access, or create-file was requested, but the "
+	      /*               */ "filesystem hosting @path is mounted as read-only\n"
+	      "@throw UnsupportedAPI Filesystem access has been disabled, or $\"creat\" was passed and the "
+	      /*                 */ "filesystem hosting @path does not support the creation of new files\n"
 	      "@throw FSError Failed to open the given @path for some reason\n"
 	      "@param mode The unix-like permissions to be set for newly created files\n"
 
@@ -1690,14 +1694,14 @@ PRIVATE struct type_member file_class_members[] = {
 	                      /**/ "std-streams that used to be located in ${file.io.stdxxx}\n"
 	                      /**/ "Starting with deemon v200, these streams can now be found "
 	                      /**/ "under ${file.stdxxx} and the ${file.io} type has been "
-	                      /**/ "renamed to #system\n"
+	                      /**/ "renamed to ?#System\n"
 	                      /**/ "With that in mind, this field is now simply an alias for :file"),
 	TYPE_MEMBER_CONST_DOC("SEEK_SET", (DeeObject *)&file_SEEK_SET,
-	                      "Deprecated argument for #seek (Use the string $\"set\" instead"),
+	                      "Deprecated argument for #?seek (Use the string $\"set\" instead"),
 	TYPE_MEMBER_CONST_DOC("SEEK_CUR", (DeeObject *)&file_SEEK_CUR,
-	                      "Deprecated argument for #seek (Use the string $\"cur\" instead"),
+	                      "Deprecated argument for #?seek (Use the string $\"cur\" instead"),
 	TYPE_MEMBER_CONST_DOC("SEEK_END", (DeeObject *)&file_SEEK_END,
-	                      "Deprecated argument for #seek (Use the string $\"end\" instead"),
+	                      "Deprecated argument for #?seek (Use the string $\"end\" instead"),
 	TYPE_MEMBER_END
 };
 
@@ -2136,19 +2140,19 @@ PRIVATE struct type_method file_methods[] = {
 	{ "pread",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
-	      "Similar to #read, but read data from a given file-offset "
+	      "Similar to ?#read, but read data from a given file-offset "
 	      /**/ "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "preadinto",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_preadinto,
 	  DOC("(dst:?DBytes,pos:?Dint,readall=!f)->?DBytes\n"
-	      "Similar to #readinto, but read data from a given file-offset "
+	      "Similar to ?#readinto, but read data from a given file-offset "
 	      /**/ "@pos, rather than from the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "pwrite",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pwrite,
 	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
-	      "Similar to #write, but write data to a given file-offset "
+	      "Similar to ?#write, but write data to a given file-offset "
 	      /**/ "@pos, rather than at the current file position"),
 	  TYPE_METHOD_FKWDS },
 	{ "seek",
@@ -2171,18 +2175,18 @@ PRIVATE struct type_method file_methods[] = {
 	{ "tell",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_tell,
 	  DOC("->?Dint\n"
-	      "Same as calling #seek as ${this.seek(0,\"CUR\")}") },
+	      "Same as calling ?#seek as ${this.seek(0,\"CUR\")}") },
 	{ "rewind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_rewind,
 	  DOC("()\n"
-	      "Same as calling #seek as ${this.seek(0,\"SET\")}") },
+	      "Same as calling ?#seek as ${this.seek(0,\"SET\")}") },
 	{ "trunc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_trunc,
 	  DOC("->?Dint\n"
 	      "(size:?Dint)->?Dint\n"
 	      "Truncate the file to a new length of @size bytes. "
 	      /**/ "When no argument is given, the file's length is truncated "
-	      /**/ "to its current position (#tell), rather than the one given") },
+	      /**/ "to its current position (?#tell), rather than the one given") },
 	{ "sync",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_sync,
 	  DOC("()\n"
@@ -2199,7 +2203,7 @@ PRIVATE struct type_method file_methods[] = {
 	{ "ungetc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_ungetc,
 	  DOC("(ch:?Dint)->?Dbool\n"
-	      "Unget a given character @ch to be re-read the next time #getc or #read is called. "
+	      "Unget a given character @ch to be re-read the next time ?#getc or ?#read is called. "
 	      /**/ "If the file's start has already been reached, :false is returned and the character "
 	      /**/ "will not be re-read from this file") },
 	{ "putc",
@@ -2225,12 +2229,12 @@ PRIVATE struct type_method file_methods[] = {
 	{ "readat",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
-	      "Deprecated alias for #pread"),
+	      "Deprecated alias for ?#pread"),
 	  TYPE_METHOD_FKWDS },
 	{ "writeat",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pwrite,
 	  DOC("(data:?DBytes,pos:?Dint,writeall=!t)->?Dint\n"
-	      "Deprecated alias for #pwrite"),
+	      "Deprecated alias for ?#pwrite"),
 	  TYPE_METHOD_FKWDS },
 	{ "readallat", &file_readallat,
 	  DOC("(pos:?Dint,maxbytes=!-1)->?DBytes\n"
@@ -2238,15 +2242,15 @@ PRIVATE struct type_method file_methods[] = {
 	{ "setpos",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_seek,
 	  DOC("(pos:?Dint)->?Dint\n"
-	      "Deprecated alias for #seek"),
+	      "Deprecated alias for ?#seek"),
 	  TYPE_METHOD_FKWDS },
 	{ "flush", &file_sync,
 	  DOC("()\n"
-	      "Deprecated alias for #sync") },
+	      "Deprecated alias for ?#sync") },
 	{ "puts",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
 	  DOC("(data:?DBytes)->?Dint\n"
-	      "Deprecated alias for #write"),
+	      "Deprecated alias for ?#write"),
 	  TYPE_METHOD_FKWDS },
 
 	{ NULL }
@@ -2350,7 +2354,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         "&"
 		                         /**/ "${operator seek(off: int, whence: int): int}|"
 		                         /**/ "Moves the file pointer relative to whence, "
-		                         /**/ /**/ "which is one of #SEEK_SET, #SEEK_CUR or #SEEK_END. "
+		                         /**/ /**/ "which is one of ?#SEEK_SET, ?#SEEK_CUR or ?#SEEK_END. "
 		                         /**/ /**/ "The return value of this operator is the new, "
 		                         /**/ /**/ "absolute file position within the stream"
 		                         "&"
@@ -2362,7 +2366,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         "&"
 		                         /**/ "${operator close(): none}|"
 		                         /**/ "Close the file. This operator is invoked during destruction, but "
-		                         /**/ /**/ "can also be invoked before then using the #close member function"
+		                         /**/ /**/ "can also be invoked before then using the ?#close member function"
 		                         "&"
 		                         /**/ "${operator pread(size: int, pos: int): bytes}|"
 		                         /**/ "Similar to ${operator read}, but data is read from the given "
@@ -2380,7 +2384,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ "${operator ungetc(ch: int): bool}|"
 		                         /**/ "Returns a previously read character to the stream, allowing it to be "
 		                         /**/ /**/ "read once again. This functionality isn't provided by many file types, "
-		                         /**/ /**/ "but #buffer supports it, thereby allowing you to wrap practically any "
+		                         /**/ /**/ "but ?#buffer supports it, thereby allowing you to wrap practically any "
 		                         /**/ /**/ "file into a buffer to enable support for ungetc, which is a dependency "
 		                         /**/ /**/ "for ?#readline. If the character could be returned, :true is returned. "
 		                         /**/ /**/ "Otherwise :false is"
@@ -2391,16 +2395,14 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ /**/ "written, or :false if EOF was reached"
 		                         "}\n"
 
-
 		                         "\n"
 		                         "()\n"
 		                         "Default-construct the File base-class\n"
 
-
 		                         "\n"
 		                         "iter->?.\n"
 		                         "Returns an iterator that allows for line-wise processing of "
-		                         /**/ "file data, making use of the the #readline member function\n"
+		                         /**/ "file data, making use of the the ?#readline member function\n"
 		                         "The returned lines have their trailing line-feeds stripped\n"
 		                         /**/ "Note that because a File cannot be iterated multiple times "
 		                         /**/ "without additional work being done, as well as the fact that "
@@ -2411,25 +2413,21 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         "Note that because isn't derived from :Sequence, the returned "
 		                         /**/ "iterator also isn't required to be derived from :Iterator\n"
 
-
 		                         "\n"
 		                         "next->?DBytes\n"
-		                         "Alias for #readline, allowing for line-wise reading of lines\n"
+		                         "Alias for ?#readline, allowing for line-wise reading of lines\n"
 		                         "Note that the trailing linefeed is always included in this\n"
-
 
 		                         "\n"
 		                         "<<(ob)->\n"
 		                         "@return Always re-returns @this File\n"
 		                         "Same as ${print this: ob,;}\n"
 
-
 		                         "\n"
 		                         ">>(buf:?DBytes)->\n"
 		                         "@throw FSError Failed to fill the entirety of @buf\n"
 		                         "@return Always re-returns @this File\n"
 		                         "Same as ${this.readinto(buf, true)}\n"
-
 
 		                         "\n"
 		                         "leave->\n"

@@ -31,15 +31,15 @@ DECL_BEGIN
 	DOC("(exe:?X3?Dint?DFile?Dstring,args?:?S?Dstring)\n"                                     \
 	    "@param args A sequence of :{string}s that should be passed as secondary arguments. " \
 	    "When provided, @exe is prepended first, however the full argument list "             \
-	    "can be overwritten using the #argv property\n"                                       \
+	    "can be overwritten using the ?#argv property\n"                                      \
 	    "Construct a new, non-started process for application @exe\n"                         \
 	    "If provided, additional arguments @args are passed "                                 \
 	    "to the process's C-level ${main()} function\n"                                       \
-	    "To start a process, invoke the #start function, prior to which "                     \
-	    "you are able to override/redirect the full commandline (#cmdline), "                 \
-	    "the full argument list (#argv, including the implicit initial "                      \
+	    "To start a process, invoke the ?#start function, prior to which "                    \
+	    "you are able to override/redirect the full commandline (?#cmdline), "                \
+	    "the full argument list (?#argv, including the implicit initial "                     \
 	    "argument that normally defaults to @exe), or the standard file "                     \
-	    "streams (#stdin, #stdout, #stderr) using :pipe readers/writers.")
+	    "streams (?#stdin, ?#stdout, ?#stderr) using :pipe readers/writers.")
 #define S_Process_function_start_name "start"
 #define S_Process_function_start_doc                                                       \
 	DOC("->?Dbool\n"                                                                       \
@@ -79,13 +79,13 @@ DECL_BEGIN
 	DOC("->?X2?Dint?N\n"                                                    \
 	    "@throw ValueError @this process was never started\n"               \
 	    "@throw SystemError Failed to join @this process for some reason\n" \
-	    "Same as #join, but don't check for interrupts and fail immediately")
+	    "Same as ?#join, but don't check for interrupts and fail immediately")
 #define S_Process_function_timedjoin_name "timedjoin"
 #define S_Process_function_timedjoin_doc                                    \
 	DOC("(timeout_in_microseconds:?Dint)->?X2?Dint?N\n"                     \
 	    "@throw ValueError @this process was never started\n"               \
 	    "@throw SystemError Failed to join @this process for some reason\n" \
-	    "Same as #join, but only attempt to join for a given @timeout_in_microseconds")
+	    "Same as ?#join, but only attempt to join for a given @timeout_in_microseconds")
 #define S_Process_getset_hasstarted_name "hasstarted"
 #define S_Process_getset_hasstarted_doc \
 	DOC("->?Dbool\n"                    \
@@ -161,7 +161,7 @@ DECL_BEGIN
 #define S_Process_class_function_self_name "self"
 #define S_Process_class_function_self_doc \
 	DOC("->?.\n"                          \
-	    "Deprecated alias for #current")
+	    "Deprecated alias for ?#current")
 #define S_Process_member_current_name "current"
 #define S_Process_member_current_doc NULL
 

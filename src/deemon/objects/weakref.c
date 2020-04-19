@@ -371,11 +371,9 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_WeakRef),
 	/* .tp_doc      = */ DOC("A weak reference to another object implementing WeakRef functionality\n"
 
-
 	                         "\n"
 	                         "()\n"
 	                         "Construct an unbound weak reference\n"
-
 
 	                         "\n"
 	                         "(obj,callback?:?DCallable)\n"
@@ -395,12 +393,10 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         /**/ "object being revived when accessed (@callback is only invoked once the bound "
 	                         /**/ "object has passed the point of no return and can no longer be revived)\n"
 
-
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns true if the weak reference is currently bound. Note however that this "
 	                         /**/ "information is volatile and may not longer be up-to-date by the time the operator returns\n"
-
 
 	                         "\n"
 	                         "==(other:?X2?.?N)->\n"
@@ -413,12 +409,10 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         /**/ "Otherwise, compare the pointed-to object of @this weak reference to "
 	                         /**/ "that of @other\n"
 
-
 	                         "\n"
 	                         ":=(other:?X2?.?O)->\n"
 	                         "@throw TypeError The given @other does not implement weak referencing support\n"
 	                         "Assign the value of @other to @this WeakRef object\n"
-
 
 	                         "\n"
 	                         "move:=->\n"

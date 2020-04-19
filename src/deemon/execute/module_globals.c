@@ -109,9 +109,8 @@ mei_visit(ModuleExportsIterator *__restrict self, dvisit_t proc, void *arg) {
 
 
 #define DEFINE_MEI_COMPARE(name, op)                                       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
-	name(ModuleExportsIterator *__restrict self,                           \
-	     ModuleExportsIterator *__restrict other) {                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(ModuleExportsIterator *self, ModuleExportsIterator *other) {      \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
 			return NULL;                                                   \
 		return_bool_(READ_INDEX(self) op READ_INDEX(other));               \
@@ -791,8 +790,7 @@ mg_size(ModuleGlobals *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-mg_get(ModuleGlobals *self,
-       DeeObject *index_ob) {
+mg_get(ModuleGlobals *self, DeeObject *index_ob) {
 	size_t index;
 	DREF DeeObject *result;
 	DeeModuleObject *module = self->mg_module;
@@ -819,10 +817,8 @@ mg_get(ModuleGlobals *self,
 	return result;
 }
 
-PRIVATE int DCALL
-mg_set(ModuleGlobals *__restrict self,
-       DeeObject *__restrict index_ob,
-       DeeObject *value) {
+PRIVATE NONNULL((1, 2)) int DCALL
+mg_set(ModuleGlobals *self, DeeObject *index_ob, DeeObject *value) {
 	size_t index;
 	DREF DeeObject *result;
 	DeeModuleObject *module = self->mg_module;
@@ -845,8 +841,7 @@ mg_set(ModuleGlobals *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mg_del(ModuleGlobals *__restrict self,
-       DeeObject *__restrict index_ob) {
+mg_del(ModuleGlobals *self, DeeObject *index_ob) {
 	return mg_set(self, index_ob, NULL);
 }
 

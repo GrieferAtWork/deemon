@@ -1255,10 +1255,18 @@ PRIVATE struct type_getset map_class_getsets[] = {
 };
 
 PRIVATE struct type_member map_class_members[] = {
-	TYPE_MEMBER_CONST_DOC("Proxy", &DeeMappingProxy_Type, "->?DType\nThe common base-class of #c:keys, #c:values and #c:items"),
-	TYPE_MEMBER_CONST_DOC("Keys", &DeeMappingKeys_Type, "->?DType\nThe return type of the #i:keys member function"),
-	TYPE_MEMBER_CONST_DOC("Values", &DeeMappingValues_Type, "->?DType\nThe return type of the #i:values member function"),
-	TYPE_MEMBER_CONST_DOC("Items", &DeeMappingItems_Type, "->?DType\nThe return type of the #i:items member function"),
+	TYPE_MEMBER_CONST_DOC("Proxy", &DeeMappingProxy_Type,
+	                      "->?DType\n"
+	                      "The common base-class of ?#Keys, ?#Values and ?#Items"),
+	TYPE_MEMBER_CONST_DOC("Keys", &DeeMappingKeys_Type,
+	                      "->?DType\n"
+	                      "The return type of the ?#keys member function"),
+	TYPE_MEMBER_CONST_DOC("Values", &DeeMappingValues_Type,
+	                      "->?DType\n"
+	                      "The return type of the ?#values member function"),
+	TYPE_MEMBER_CONST_DOC("Items", &DeeMappingItems_Type,
+	                      "->?DType\n"
+	                      "The return type of the ?#items member function"),
 	TYPE_MEMBER_END
 };
 
@@ -1272,16 +1280,19 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	                         "type that wishes to implement a key-value protocol\n"
 	                         "An object derived from this class must implement ${operator iter}, "
 	                         "and preferrably (but optionally) or ${operator []} (getitem)\n"
-	                         "The abstract declaration of a mapping-like sequence is ${{{object,object}...}}\n"
+	                         "The abstract declaration of a mapping-like sequence is ${{{object, object}...}}\n"
+
 	                         "\n"
 	                         "()\n"
 	                         "A no-op default constructor that is implicitly called by sub-classes\n"
 	                         "When invoked manually, a general-purpose, empty Mapping is returned\n"
+
 	                         "\n"
 	                         "repr->\n"
 	                         "Returns the representation of all sequence elements, "
 	                         "using abstract mapping syntax\n"
 	                         "e.g.: ${{ \"foo\": 10, \"bar\": \"baz\" }}\n"
+
 	                         "\n"
 	                         "[:]->!D\n"
 	                         "\n"

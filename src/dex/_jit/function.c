@@ -1053,7 +1053,7 @@ PRIVATE struct type_member jf_members[] = {
 	                         "that doesn't appear as part of a recursively defined inner function)"),
 	TYPE_MEMBER_BITFIELD_DOC("isretexpr", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FRETEXPR,
 	                         "Evaluates to :true if @this function was defined like ${[] -> 42}, meaning "
-	                         "that #__text__ is merely the expression that should be returned by the function\n"
+	                         "that ?#__text__ is merely the expression that should be returned by the function\n"
 	                         "When :false, the function was defined like ${[] { return 42; }}"),
 	TYPE_MEMBER_FIELD_DOC("__impbase__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
@@ -1062,10 +1062,10 @@ PRIVATE struct type_member jf_members[] = {
 	                      "->?X2?S?T2?Dstring?O?N"),
 	TYPE_MEMBER_FIELD_DOC("__module__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
-	                      "Alias for #__impbase__"),
+	                      "Alias for ?#__impbase__"),
 	TYPE_MEMBER_FIELD_DOC("__source__", STRUCT_OBJECT, offsetof(JITFunction, jf_source),
 	                      "->?X3?Dstring?DBytes?O\n"
-	                      "Returns the object that owns the source code executed by @this function (s.a. #__text__)"),
+	                      "Returns the object that owns the source code executed by @this function (s.a. ?#__text__)"),
 	TYPE_MEMBER_FIELD_DOC("__argc_min__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(JITFunction, jf_argc_min),
 	                      "Min amount of arguments required to execute @this function"),
 	TYPE_MEMBER_FIELD_DOC("__argc_max__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(JITFunction, jf_argc_max),

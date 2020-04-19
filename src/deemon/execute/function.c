@@ -524,7 +524,7 @@ PRIVATE struct type_getset function_getsets[] = {
 	{ "__operatorname__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_operatorname, NULL, NULL,
 	  DOC("->?X3?Dstring?Dint?N\n"
-	      "Same as #__operator__, but instead try to return the unambiguous name of the "
+	      "Same as ?#__operator__, but instead try to return the unambiguous name of the "
 	      "operator, though still return its ID if the operator isn't recognized as being "
 	      "part of the standard") },
 	{ "__property__",
@@ -1065,43 +1065,43 @@ PRIVATE struct type_getset yf_getsets[] = {
 	{ "__code__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_code, NULL, NULL,
 	  DOC("->?Ert:Code\n"
-	      "Alias for :Function.__code__ though #__func__") },
+	      "Alias for :Function.__code__ though ?#__func__") },
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__name__ though #__func__") },
+	      "Alias for :Function.__name__ though ?#__func__") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__doc__ though #__func__") },
+	      "Alias for :Function.__doc__ though ?#__func__") },
 	{ DeeString_STR(&str___type__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
-	      "Alias for :Function.__type__ though #__func__") },
+	      "Alias for :Function.__type__ though ?#__func__") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_module, NULL, NULL,
 	  DOC("->?DModule\n"
-	      "Alias for :Function.__module__ though #__func__") },
+	      "Alias for :Function.__module__ though ?#__func__") },
 	{ "__operator__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_operator, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Alias for :Function.__operator__ though #__func__") },
+	      "Alias for :Function.__operator__ though ?#__func__") },
 	{ "__operatorname__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_operatorname, NULL, NULL,
 	  DOC("->?X3?Dstring?Dint?N\n"
-	      "Alias for :Function.__operatorname__ though #__func__") },
+	      "Alias for :Function.__operatorname__ though ?#__func__") },
 	{ "__property__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_property, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Alias for :Function.__property__ though #__func__") },
+	      "Alias for :Function.__property__ though ?#__func__") },
 	{ "__refs__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_refs, NULL, NULL,
 	  DOC("->?S?O\n"
-	      "Alias for :Function.__refs__ though #__func__") },
+	      "Alias for :Function.__refs__ though ?#__func__") },
 	{ DeeString_STR(&str___kwds__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_get_kwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
-	      "Alias for :Function.__kwds__ though #__func__") },
+	      "Alias for :Function.__kwds__ though ?#__func__") },
 	{ NULL }
 };
 
@@ -1820,7 +1820,7 @@ PRIVATE struct type_getset yfi_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getyfunc, NULL, NULL,
 	  DOC("->?S?O\n"
-	      "Alias for #__yfunc__") },
+	      "Alias for ?#__yfunc__") },
 #endif /* !CONFIG_NO_THREADS */
 	{ "__frame__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getframe, NULL, NULL,
@@ -1853,35 +1853,35 @@ PRIVATE struct type_getset yfi_getsets[] = {
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__name__ though #__func__") },
+	      "Alias for :Function.__name__ though ?#__func__") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getdoc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__doc__ though #__func__") },
+	      "Alias for :Function.__doc__ though ?#__func__") },
 	{ DeeString_STR(&str___kwds__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
-	      "Alias for :Function.__kwds__ though #__func__") },
+	      "Alias for :Function.__kwds__ though ?#__func__") },
 	{ DeeString_STR(&str___type__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_gettype, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
-	      "Alias for :Function.__type__ though #__func__") },
+	      "Alias for :Function.__type__ though ?#__func__") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getmodule, NULL, NULL,
 	  DOC("->?DModule\n"
-	      "Alias for :Function.__module__ though #__func__") },
+	      "Alias for :Function.__module__ though ?#__func__") },
 	{ "__operator__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getoperator, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Alias for :Function.__operator__ though #__func__") },
+	      "Alias for :Function.__operator__ though ?#__func__") },
 	{ "__operatorname__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getoperatorname, NULL, NULL,
 	  DOC("->?X3?Dstring?Dint?N\n"
-	      "Alias for :Function.__operatorname__ though #__func__") },
+	      "Alias for :Function.__operatorname__ though ?#__func__") },
 	{ "__property__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfi_getproperty, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Alias for :Function.__property__ though #__func__") },
+	      "Alias for :Function.__property__ though ?#__func__") },
 	{ NULL }
 };
 

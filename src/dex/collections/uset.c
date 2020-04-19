@@ -190,9 +190,8 @@ usetiterator_bool(USetIterator *__restrict self) {
 }
 
 #define DEFINE_ITERATOR_COMPARE(name, op)                             \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                     \
-	name(USetIterator *__restrict self,                               \
-	     USetIterator *__restrict other) {                            \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
+	name(USetIterator *self, USetIterator *other) {                   \
 		if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self))) \
 			goto err;                                                 \
 		return_bool(READ_ITEM(self) op READ_ITEM(other));             \
@@ -1239,7 +1238,7 @@ PRIVATE struct type_method uset_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_pop,
 	  DOC("->\n"
 	      "@throw ValueError The set is empty\n"
-	      "Pop a random item from the set and return it (alias for #pop)") },
+	      "Pop a random item from the set and return it (alias for ?#pop)") },
 	{ "unify",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_unify,
 	  DOC("(ob)->\n"
@@ -1261,11 +1260,11 @@ PRIVATE struct type_method uset_methods[] = {
 	{ "add",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_insert,
 	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for #insert") },
+	      "Deprecated alias for ?#insert") },
 	{ "discard",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_remove,
 	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for #remove") },
+	      "Deprecated alias for ?#remove") },
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&uset_sizeof,
 	  DOC("->?Dint") },
@@ -1282,31 +1281,39 @@ INTERN DeeTypeObject USet_Type = {
 	/* .tp_name     = */ "UniqueSet",
 	/* .tp_doc      = */ DOC("A mutable set-like container that uses @?Aid?O "
 	                         "and ${x === y} to detect/prevent duplicates\n"
+
 	                         "\n"
 	                         "()\n"
 	                         "Create an empty set\n"
+
 	                         "\n"
 	                         "(items:?S?O)\n"
 	                         "Create a new set populated with elements from @items\n"
+
 	                         "\n"
 	                         "copy->\n"
 	                         "Returns a shallow copy of @this set\n"
+
 	                         "\n"
 	                         "deepcopy->\n"
 	                         "Returns a deep copy of @this set\n"
+
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns :true if @this set is non-empty\n"
+
 	                         "\n"
 	                         "contains->\n"
 	                         "Returns :true if @item is apart of @this set\n"
+
 	                         "\n"
 	                         "#->\n"
 	                         "Returns the number of items apart of @this set\n"
+
 	                         "\n"
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all items "
-	                         "in @this set, following a random order\n"),
+	                         "in @this set, following a random order"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeHashSetObject),
 	/* .tp_features = */ TF_NONE,

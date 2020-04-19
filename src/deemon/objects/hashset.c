@@ -1260,9 +1260,8 @@ setiterator_bool(SetIterator *__restrict self) {
 }
 
 #define DEFINE_ITERATOR_COMPARE(name, op)                                    \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                            \
-	name(SetIterator *__restrict self,                                       \
-	     SetIterator *__restrict other) {                                    \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                    \
+	name(SetIterator *self, SetIterator *other) {                            \
 		if (DeeObject_AssertType((DeeObject *)other, &HashSetIterator_Type)) \
 			goto err;                                                        \
 		return_bool(READ_ITEM(self) op READ_ITEM(other));                    \
@@ -1544,7 +1543,7 @@ INTERN DeeTypeObject HashSetIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */setiterator_members,
+	/* .tp_members       = */ setiterator_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1805,7 +1804,7 @@ PRIVATE struct type_method set_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_pop,
 	  DOC("->\n"
 	      "@throw ValueError The set is empty\n"
-	      "Pop a random item from the set and return it (alias for #pop)") },
+	      "Pop a random item from the set and return it (alias for ?#pop)") },
 	{ "unify",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_unify,
 	  DOC("(ob)->\n"
@@ -1827,11 +1826,11 @@ PRIVATE struct type_method set_methods[] = {
 	{ "add",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
 	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for #insert") },
+	      "Deprecated alias for ?#insert") },
 	{ "discard",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
 	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for #remove") },
+	      "Deprecated alias for ?#remove") },
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&hashset_sizeof,
 	  DOC("->?Dint") },
@@ -1840,7 +1839,7 @@ PRIVATE struct type_method set_methods[] = {
 	{ "insert_all",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_update,
 	  DOC("(ob)->?Dbool\n"
-	      "Deprecated alias for #update") },
+	      "Deprecated alias for ?#update") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	{ NULL }
 };
@@ -1896,31 +1895,39 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_HashSet),
 	/* .tp_doc      = */ DOC("A mutable set-like container that uses hashing to detect/prevent duplicates\n"
+
 	                         "\n"
 	                         "()\n"
 	                         "Create an empty HashSet\n"
+
 	                         "\n"
 	                         "(items:?S?O)\n"
 	                         "Create a new HashSet populated with elements from @items\n"
+
 	                         "\n"
 	                         "copy->\n"
 	                         "Returns a shallow copy of @this HashSet\n"
+
 	                         "\n"
 	                         "deepcopy->\n"
 	                         "Returns a deep copy of @this HashSet\n"
+
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns :true if @this HashSet is non-empty\n"
+
 	                         "\n"
 	                         "contains->\n"
 	                         "Returns :true if @item is apart of @this HashSet\n"
+
 	                         "\n"
 	                         "#->\n"
 	                         "Returns the number of items apart of @this HashSet\n"
+
 	                         "\n"
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating all items "
-	                         "in @this HashSet, following a random order\n"),
+	                         "in @this HashSet, following a random order"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Set),
 	/* .tp_features = */ TF_NONE,

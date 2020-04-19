@@ -1082,7 +1082,7 @@ PRIVATE struct type_method writer_methods[] = {
 	{ "pack",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_get,
 	  DOC("->?Dstring\n"
-	      "Deprecated alias for reading from #string") },
+	      "Deprecated alias for reading from ?#string") },
 	{ DeeString_STR(&str_size),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&writer_size,
 	  DOC("->?Dint\n"

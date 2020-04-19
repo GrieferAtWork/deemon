@@ -972,18 +972,18 @@ PRIVATE struct type_getset systemerror_getsets[] = {
 	{ "strerrorname",
 	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerrorname, NULL, NULL,
 	  DOC("->?Dstring\n"
-	      "The name of the associated #errno (s.a. ?Eposix:strerrorname)\n"
+	      "The name of the associated ?#errno (s.a. ?Eposix:strerrorname)\n"
 	      "Returns ?Dnone if ?#errno doesn't have a known name") },
 	{ "strerror",
 	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getstrerror, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "A description of the associated #errno (s.a. ?Eposix:strerror)\n"
+	      "A description of the associated ?#errno (s.a. ?Eposix:strerror)\n"
 	      "Returns ?Dnone if ?#errno doesn't have a description") },
 #ifdef CONFIG_HOST_WINDOWS
 	{ "nterrmsg_np",
 	  (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&systemerror_getnterrmsg_np, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "A description of the associated #nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
+	      "A description of the associated ?#nterr_np (s.a. ?Ewin32:FormatErrorMessage)\n"
 	      "Returns ?Dnone if no message description is available") },
 #endif /* CONFIG_HOST_WINDOWS */
 	{ NULL }

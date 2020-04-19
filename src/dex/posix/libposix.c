@@ -177,13 +177,13 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* File control */
 	D(POSIX_OPEN_DEF_DOC("Open a given @filename using @oflags (a set of ${O_*} flags), and @mode (describing "
-	                     "the posix permissions to apply to a newly created file when #O_CREAT is given)"))
-	D(POSIX__OPEN_DEF_DOC("Same as #open, but whereas #open will automatically set the #O_OBTAIN_DIR and #O_BINARY "
+	                     "the posix permissions to apply to a newly created file when ?GO_CREAT is given)"))
+	D(POSIX__OPEN_DEF_DOC("Same as ?Gopen, but whereas ?Gopen will automatically set the ?GO_OBTAIN_DIR and ?GO_BINARY "
 	                      "flags on platforms that define them in order to better standartize behavior of this "
 	                      "function on those system, this function will not make any changes to the given @oflags"))
 	D(POSIX_CREAT_DEF_DOC("Create a new file (same as ${open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)})"))
-	D(POSIX__CREAT_DEF_DOC("Same as #creat, but on systems that define #O_BINARY, that flag is also passed "
-	                       "via the internal @oflags list eventually passed to #open (or rather #_open)"))
+	D(POSIX__CREAT_DEF_DOC("Same as ?Gcreat, but on systems that define ?GO_BINARY, that flag is also passed "
+	                       "via the internal @oflags list eventually passed to ?Gopen (or rather ?G_open)"))
 	D(POSIX_READ_DEF_DOC("Read up to @count bytes into @buf\n"
 	                     "When @buf is given, return the actual number of read bytes. "
 	                     "Otherwise, read into a new :Bytes object that is then returned"))
@@ -354,7 +354,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_CLEARENV_DEF)
 
 	/* Python-like helper functions */
-	D(POSIX_CPU_COUNT_DEF_DOC("Returns the # of available processors on the host machine"))
+	D(POSIX_CPU_COUNT_DEF_DOC("Returns the ## of available processors on the host machine"))
 	/* TODO: get_inheritable() */
 	/* TODO: set_inheritable() */
 
@@ -440,14 +440,14 @@ PRIVATE struct dex_symbol symbols[] = {
 #undef DEFINE_LIBFS_ALIAS_ALT
 
 	/* Application exit control */
-	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before #exit (Same as :deemon:Error.AppExit.atexit)"))
-	D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking #atexit callbacks\n"
+	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as :deemon:Error.AppExit.atexit)"))
+	D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking ?Gatexit callbacks\n"
 	                     "Termination is done using the C $exit or $_Exit functions, if available. However if these "
 	                     "functions are not provided by the host, an :AppExit error is thrown instead\n"
-	                     "When no @exitcode is given, the host's default default value of #EXIT_FAILURE, or $1 is used\n"
+	                     "When no @exitcode is given, the host's default default value of ?GEXIT_FAILURE, or $1 is used\n"
 	                     "This function never returns normally"))
-	D(POSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking #atexit callbacks (s.a. #exit)"))
-	D(POSIX_ABORT_DEF_DOC("Same as #_Exit when passing #EXIT_FAILURE"))
+	D(POSIX__EXIT_DEF_DOC("Terminate execution of deemon without invoking ?Gatexit callbacks (s.a. ?Gexit)"))
+	D(POSIX_ABORT_DEF_DOC("Same as ?G_Exit when passing ?GEXIT_FAILURE"))
 
 	/* *_FILENO values */
 	D(POSIX_FD_DEFS)
@@ -472,10 +472,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	        "Read/write the C errno thread-local variable") }, )
 	D({ NULL, (DeeObject *)&posix_errno_del, MODSYM_FNORMAL }, )
 	D({ NULL, (DeeObject *)&posix_errno_set, MODSYM_FNORMAL }, )
-	D(POSIX_STRERROR_DEF_DOC("Return the name of a given @errnum (which defaults to #errno), "
+	D(POSIX_STRERROR_DEF_DOC("Return the name of a given @errnum (which defaults to ?Gerrno), "
 	                         "or return :none if the error doesn't have an associated name"))
-	D(POSIX_STRERRORNAME_DEF_DOC("Similar to #strerror, but instead of returning the message "
-	                             "associated with a given @errnum (which defaults to #errno), "
+	D(POSIX_STRERRORNAME_DEF_DOC("Similar to ?Gstrerror, but instead of returning the message "
+	                             "associated with a given @errnum (which defaults to ?Gerrno), "
 	                             "return the name (e.g. $\"ENOENT\") of the error as a string\n"
 	                             "If the given error number is not recognized, return :none instead"))
 

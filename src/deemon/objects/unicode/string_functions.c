@@ -10092,7 +10092,8 @@ INTERN struct type_method string_methods[] = {
 	      "@throw UnicodeDecodeError @this string could not be decoded as @codec and @errors was set to $\"strict\"\n"
 	      "@param errors The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"\n"
 	      "Decode @this string, re-interpreting its underlying character bytes as @codec\n"
-	      "Prior to processing, @codec is normalized as follows:\n${"
+	      "Prior to processing, @codec is normalized as follows:\n"
+	      "${"
 	      "name = name.lower().replace(\"_\", \"-\");\n"
 	      "if (name.startswith(\"iso-\"))\n"
 	      "	name = \"iso\" + name[4:];\n"
@@ -10102,9 +10103,9 @@ INTERN struct type_method string_methods[] = {
 	      "Following that, @codec is compared against the following list of builtin codecs\n"
 	      "#T{Codec Name|Aliases|Return type|Description~"
 	      "$\"ascii\"|$\"646\", $\"us-ascii\"|Same as $this|"
-	          "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
+	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
 	      "$\"latin-1\"|$\"iso8859-1\", $\"iso8859\", $\"8859\", $\"cp819\", $\"latin\", $\"latin1\", $\"l1\"|Same as $this|"
-	          "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
+	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
 	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:string|Decode ${this.bytes()} as a UTF-8 encoded byte sequence&"
 	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in host-endian&"
 	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:string|Decode ${this.bytes()} as a UTF-16 sequence, encoded in little-endian&"
@@ -10132,9 +10133,9 @@ INTERN struct type_method string_methods[] = {
 	      "Following that, @codec is compared against the following list of builtin codecs\n"
 	      "#T{Codec Name|Aliases|Return type|Description~"
 	      "$\"ascii\"|$\"646\", $\"us-ascii\"|Same as $this|"
-	          "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
+	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+007F&"
 	      "$\"latin-1\"|$\"iso8859-1\", $\"iso8859\", $\"8859\", $\"cp819\", $\"latin\", $\"latin1\", $\"l1\"|Same as $this|"
-	          "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
+	      /**/ "Validate that all character of @this are apart of the unicode range U+0000 - U+00FF&"
 	      "$\"utf-8\"|$\"utf8\", $\"u8\", $\"utf\"|:Bytes|Encode character of @this string as a UTF-8 encoded byte sequence&"
 	      "$\"utf-16\"|$\"utf16\", $\"u16\"|:Bytes|Encode 'as a UTF-16 sequence, encoded in host-endian&"
 	      "$\"utf-16-le\"|$\"utf16-le\", $\"u16-le\", $\"utf-16le\", $\"utf16le\", $\"u16le\"|:Bytes|Encode @this string as a UTF-16 sequence, encoded in little-endian&"
@@ -10162,7 +10163,7 @@ INTERN struct type_method string_methods[] = {
 	      "\n"
 	      "(index:?Dint)->?Dint\n"
 	      "@throw IntegerOverflow The given @index is lower than $0\n"
-	      "@throw IndexError The given @index is greater than ${#this}\n"
+	      "@throw IndexError The given @index is greater than ${##this}\n"
 	      "Returns the ordinal integral value of the @index'th character of @this string") },
 
 	/* String formatting / scanning. */
@@ -10309,7 +10310,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all "
 	      /**/ "characters in ${this.substr(start, end)} are printable") },
@@ -10318,7 +10319,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are alphabetical") },
@@ -10327,7 +10328,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are space-characters") },
@@ -10336,7 +10337,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are line-feeds") },
@@ -10345,7 +10346,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are lower-case") },
@@ -10354,7 +10355,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are upper-case") },
@@ -10363,7 +10364,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are control characters") },
@@ -10372,7 +10373,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are digits") },
@@ -10381,7 +10382,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are dicimal characters") },
@@ -10390,7 +10391,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} can be used to start a symbol name") },
@@ -10399,7 +10400,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} can be used to continue a symbol name") },
@@ -10408,7 +10409,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are alpha-numerical") },
@@ -10417,7 +10418,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} qualify as digit or decimal characters\n"
@@ -11233,7 +11234,7 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_distribute,
 	  DOC("(substring_count:?Dint)->?S?.\n"
 	      "Split @this string into @substring_count similarly sized sub-strings, each with a "
-	      /**/ "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
+	      /**/ "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
 	      /**/ "sub-string containing all remaining characters.\n"
 	      "This function is similar to ?#segments, but instead of being given the "
 	      /**/ "amount of sub-strings and figuring out their lengths, this function takes "
@@ -11547,28 +11548,28 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rereplace,
 	  DOC("(pattern:?.,replace_str:?.,max_count:?Dint=!A!Dint!PSIZE_MAX,rules=!P{})->?.\n"
 	      "(pattern:?.,replace_str:?.,rules=!P{},max_count:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to #replace, however the string to search for is implemented as a regular expression "
+	      "Similar to ?#replace, however the string to search for is implemented as a regular expression "
 	      "pattern, with the sub-string matched by it then getting replaced by @replace_str") },
 	{ "refindall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_refindall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?T2?Dint?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to #refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
+	      "Similar to ?#refind, but return a sequence of all matches found within ${this.substr(start, end)}\n"
 	      "Note that the matches returned are ordered ascendingly") },
 	{ "relocateall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relocateall,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to #relocate, but return a sequence of all matched "
+	      "Similar to ?#relocate, but return a sequence of all matched "
 	      "sub-strings found within ${this.substr(start, end)}\n"
 	      "Note that the matches returned are ordered ascendingly\n"
 	      "This function has nothing to do with relocations! - it's pronounced R.E. locate all") },
@@ -11576,10 +11577,10 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_resplit,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?S?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?S?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Similar to #split, but use a regular expression in order to "
+	      "Similar to ?#split, but use a regular expression in order to "
 	      "express the sections of the string around which to perform the split\n"
 
 	      "${"
@@ -11589,16 +11590,16 @@ INTERN struct type_method string_methods[] = {
 	      "}\n"
 
 	      "If you wish to do the reverse and enumerate matches, rather than the "
-	      "strings between matches, use #relocateall instead, which also behaves "
+	      "strings between matches, use ?#relocateall instead, which also behaves "
 	      "as a sequence") },
 	{ "restartswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restartswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this string starts with a regular expression described by @pattern (s.a. #startswith)\n"
+	      "Check if @this string starts with a regular expression described by @pattern (s.a. ?#startswith)\n"
 	      "${"
 	      "function restartswith(pattern: string) {\n"
 	      "	return this.rematch(pattern: string) != 0;\n"
@@ -11607,56 +11608,56 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reendswith,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this string ends with a regular expression described by @pattern (s.a. #endswith)\n"
+	      "Check if @this string ends with a regular expression described by @pattern (s.a. ?#endswith)\n"
 	      "${"
 	      "function restartswith(pattern: string) {\n"
 	      "	local rpos = this.rerfind(pattern);\n"
-	      "	return rpos !is none && rpos[1] == #this;\n"
+	      "	return rpos !is none && rpos[1] == ##this;\n"
 	      "}}") },
 	{ "restrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_restrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading and trailing matches for @pattern from @this string and return the result (s.a. #strip)") },
+	      "Strip all leading and trailing matches for @pattern from @this string and return the result (s.a. ?#strip)") },
 	{ "relstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_relstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all leading matches for @pattern from @this string and return the result (s.a. #lstrip)") },
+	      "Strip all leading matches for @pattern from @this string and return the result (s.a. ?#lstrip)") },
 	{ "rerstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_rerstrip,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?.\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?.\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Strip all trailing matches for @pattern from @this string and return the result (s.a. #lstrip)") },
+	      "Strip all trailing matches for @pattern from @this string and return the result (s.a. ?#lstrip)") },
 	{ "recount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recount,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dint\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dint\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Count the number of matches of a given regular expression @pattern (s.a. #count)\n"
-	      "Hint: This is the same as ${#this.refindall(pattern)} or ${#this.relocateall(pattern)}") },
+	      "Count the number of matches of a given regular expression @pattern (s.a. ?#count)\n"
+	      "Hint: This is the same as ${##this.refindall(pattern)} or ${##this.relocateall(pattern)}") },
 	{ "recontains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_recontains,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?Dbool\n"
 	      "(pattern:?.,rules:?.,start=!0,end=!-1)->?Dbool\n"
-	      "@param pattern The regular expression patterm (s.a. #rematch)\n"
-	      "@param rules The regular expression rules (s.a. #rematch)\n"
+	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
+	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Check if @this contains a match for the given regular expression @pattern (s.a. #contains)\n"
+	      "Check if @this contains a match for the given regular expression @pattern (s.a. ?#contains)\n"
 	      "Hint: This is the same as ${!!this.refindall(pattern)} or ${!!this.relocateall(pattern)}") },
 
 	{ "__sizeof__",
@@ -11667,7 +11668,7 @@ INTERN struct type_method string_methods[] = {
 	{ "reverse",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reversed,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Deprecated alias for #reversed"),
+	      "Deprecated alias for ?#reversed"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
@@ -12255,6 +12256,6 @@ DECL_END
 
 /* Include this last! */
 #include "bytes_functions.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_C */

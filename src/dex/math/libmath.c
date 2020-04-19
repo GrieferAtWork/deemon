@@ -518,16 +518,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "tgamma", (DeeObject *)&math_tgamma, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the gamma function of @x") },
 	{ "lgamma", (DeeObject *)&math_lgamma, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the natural logarithm of the absolute value of the gamma function of @x") },
 	{ "remainder", (DeeObject *)&math_remainder, MODSYM_FNORMAL, DOC("(numer:?Dfloat,denom:?Dfloat)->?Dfloat\nReturns the floating-point remainder of numer/denom (rounded to nearest)") },
-	{ "remquo", (DeeObject *)&math_remquo, MODSYM_FNORMAL, DOC("(numer:?Dfloat,denom:?Dfloat)->?T2?Dfloat?Dint\nReturns the same as #remainder, but additionally returns the quotient internally used to determine its result") },
+	{ "remquo", (DeeObject *)&math_remquo, MODSYM_FNORMAL, DOC("(numer:?Dfloat,denom:?Dfloat)->?T2?Dfloat?Dint\nReturns the same as ?#remainder, but additionally returns the quotient internally used to determine its result") },
 	{ "nextafter", (DeeObject *)&math_nextafter, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the next representable value after @x in the direction of @y") },
 	{ "fdim", (DeeObject *)&math_fdim, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the positive difference between @x and @y") },
 	{ "signbit", (DeeObject *)&math_signbit, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dbool\nReturns whether the sign of @x is negative") },
-	{ "isgreater", (DeeObject *)&math_isgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than @y, returning :false if either is #nan") },
-	{ "isgreaterequal", (DeeObject *)&math_isgreaterequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than or equal to @y, returning :false if either is #nan") },
-	{ "isless", (DeeObject *)&math_isless, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than @y, returning :false if either is #nan") },
-	{ "islessequal", (DeeObject *)&math_islessequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or equal to @y, returning :false if either is #nan") },
-	{ "islessgreater", (DeeObject *)&math_islessgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or greater than @y, returning :false if either is #nan") },
-	{ "isunordered", (DeeObject *)&math_isunordered, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns :true if either @x or @y is #nan") },
+	{ "isgreater", (DeeObject *)&math_isgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than @y, returning :false if either is ?#nan") },
+	{ "isgreaterequal", (DeeObject *)&math_isgreaterequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than or equal to @y, returning :false if either is ?#nan") },
+	{ "isless", (DeeObject *)&math_isless, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than @y, returning :false if either is ?#nan") },
+	{ "islessequal", (DeeObject *)&math_islessequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or equal to @y, returning :false if either is ?#nan") },
+	{ "islessgreater", (DeeObject *)&math_islessgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or greater than @y, returning :false if either is ?#nan") },
+	{ "isunordered", (DeeObject *)&math_isunordered, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns :true if either @x or @y is ?#nan") },
 	{ NULL }
 };
 

@@ -2964,7 +2964,7 @@ PRIVATE struct type_method int_class_methods[] = {
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
 	      "or $none (for host-endian)\n"
 	      "@throw ValueError The given @byteorder string isn't recognized\n"
-	      "The inverse of #tobytes, decoding a given bytes buffer @bytes to construct an integer"),
+	      "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to construct an integer"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
@@ -3015,21 +3015,21 @@ PRIVATE struct type_method int_methods[] = {
 	      /**/ "characters are recognized\n"
 	      "#T{Option|Description~"
 	      "$\"u\", $\"X\"|Digits above $10 are printed in upper-case&"
-	      "$\"n\", $\"#\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
+	      "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
 	      "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers}"),
 	  TYPE_METHOD_FKWDS },
 	{ "hex",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_hex,
 	  DOC("->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(16,\"n\")} (s.a. #tostr)") },
+	      "Short-hand alias for ${this.tostr(16,\"n\")} (s.a. ?#tostr)") },
 	{ "bin",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bin,
 	  DOC("->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(2,\"n\")} (s.a. #tostr)") },
+	      "Short-hand alias for ${this.tostr(2,\"n\")} (s.a. ?#tostr)") },
 	{ "oct",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_oct,
 	  DOC("->?Dstring\n"
-	      "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. #tostr)") },
+	      "Short-hand alias for ${this.tostr(8,\"n\")} (s.a. ?#tostr)") },
 	{ "tobytes",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_tobytes,
 	  DOC("(length:?Dint,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
@@ -3167,13 +3167,16 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "with whole numbers of an arbitrary precision\n"
 	                         "Note that integers themself are immutable, and that "
 	                         "inplace operators will change the pointed-object object\n"
+
 	                         "\n"
 	                         "()\n"
 	                         "Returns the integer constant $0\n"
+
 	                         "\n"
 	                         "(ob)\n"
 	                         "@throw NotImplemented The given @ob does not implement ${operator int}\n"
 	                         "Converts @ob into an integer\n"
+
 	                         "\n"
 	                         "(s:?Dstring,radix=!0)\n"
 	                         "(s:?DBytes,radix=!0)\n"
@@ -3182,13 +3185,16 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         "Convert the given :string or :Bytes object @s into an integer\n"
 	                         "When @radix is $0, automatically detect it based on a prefix such as $\"0x\". "
 	                         "Otherwise, use @radix as it is provided\n"
+
 	                         "\n"
 	                         "str->\n"
 	                         "repr->\n"
 	                         "Returns @this integer as a decimal-encoded string. Same as ${this.tostr()}\n"
+
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns :true if @this integer is non-zero\n"
+
 	                         "\n"
 	                         "==->\n"
 	                         "!=->\n"
@@ -3197,56 +3203,69 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 	                         ">->\n"
 	                         ">=->\n"
 	                         "Compare @this integer with @other and return the result\n"
+
 	                         "\n"
 	                         "int->\n"
 	                         "pos->\n"
 	                         "Re-return @this integer\n"
+
 	                         "\n"
 	                         "inv->\n"
 	                         "Return the result of ${-(this + 1)}. This matches the mathematical "
 	                         "equivalent of a bit-wise inversion in 2'th complement arithmetic\n"
+
 	                         "\n"
 	                         "neg->\n"
 	                         "Return @this integer with its sign prefix inverted\n"
+
 	                         "\n"
 	                         "add->\n"
 	                         "Return the result of the addition between @this and @other\n"
+
 	                         "\n"
 	                         "sub->\n"
 	                         "Return the result of subtracting @other from @this\n"
+
 	                         "\n"
 	                         "*->\n"
 	                         "Multiply @this by @other and return the result\n"
+
 	                         "\n"
 	                         "/->\n"
 	                         "@throw DivideByZero The given @other is $0\n"
 	                         "Divide @this by @other and return the truncated result\n"
+
 	                         "\n"
 	                         "%->\n"
 	                         "@throw DivideByZero The given @other is $0\n"
 	                         "Divide @this by @other and return the remainder\n"
+
 	                         "\n"
 	                         "<<(count:?Dint)->\n"
 	                         "@throw NegativeShift The given @count is lower than $0\n"
 	                         "Shift the bits of @this left a total of @count times\n"
+
 	                         "\n"
 	                         ">>(count:?Dint)->\n"
 	                         "@throw NegativeShift The given @count is lower than $0\n"
 	                         "Shift the bits of @this right a total of @count times. "
 	                         "All bits that fall off of the end are discarded\n"
+
 	                         "\n"
 	                         "&->\n"
 	                         "Return the result of a bit-wise and between @this and @other\n"
+
 	                         "\n"
 	                         "|->\n"
 	                         "Return the result of a bit-wise or between @this and @other\n"
+
 	                         "\n"
 	                         "^->\n"
 	                         "Return the result of a bit-wise exclusive-or between @this and @other\n"
+
 	                         "\n"
 	                         "**->\n"
-	                         "Return @this by the power of @other\n"
-	                         "\n"),
+	                         "Return @this by the power of @other"),
 	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

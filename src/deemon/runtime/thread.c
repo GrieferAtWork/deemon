@@ -2928,13 +2928,13 @@ PRIVATE struct type_method thread_methods[] = {
 	      "@throw ValueError @this thread was never started\n"
 	      "@throw SystemError Failed to join @this thread for some reason\n"
 	      "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	      "Same as #join, but don't check for interrupts and fail immediately") },
+	      "Same as ?#join, but don't check for interrupts and fail immediately") },
 	{ "timedjoin", &thread_timedjoin,
 	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
 	      "@throw ValueError @this thread was never started\n"
 	      "@throw SystemError Failed to join @this thread for some reason\n"
 	      "@throw ThreadCrash The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error\n"
-	      "Same as #join, but only attempt to join for a given @timeout_in_microseconds") },
+	      "Same as ?#join, but only attempt to join for a given @timeout_in_microseconds") },
 	{ "interrupt", &thread_interrupt,
 	  DOC("->?Dbool\n"
 	      "(signal)->?Dbool\n"
@@ -2944,46 +2944,50 @@ PRIVATE struct type_method thread_methods[] = {
 	      "Throws the given @signal or an instance of :Interrupt within @this thread, "
 	      "or schedule the given @async_func to be called asynchronously using @async_args\n"
 	      "Calling the function with no arguments is identical to:\n"
-	      ">import Signal from deemon;\n"
-	      ">this.interrupt(Signal.Interrupt());\n"
+	      "${"
+	      "import Signal from deemon;\n"
+	      "this.interrupt(Signal.Interrupt());"
+	      "}\n"
 	      "Calling the function with a single arguments is identical to:\n"
-	      ">this.interrupt(function(signal){\n"
-	      ">\tthrow signal;\n"
-	      ">},pack(signal));\n"
+	      "${"
+	      "this.interrupt([](signal) {\n"
+	      "	throw signal;\n"
+	      "}, (signal,));"
+	      "}\n"
 	      "Note that interrupts delivered by this function are processed at random points during "
 	      "execution of the thread, with the only guaranty that is made being that they will always "
 	      "be handled sooner or later, no matter what the associated thread may be doing, even if "
 	      "what it is doing is executing an infinite loop ${for (;;) { }}\n"
 	      "Though it should be noted that a thread that terminated due to an unhandled "
 	      "exception may not get a chance to execute all remaining interrupts before stopping\n"
-	      "Also note that remaining interrupts may still be executing once #terminated already "
+	      "Also note that remaining interrupts may still be executing once ?#terminated already "
 	      "returns :true, as indicative of the thread no longer being able to receive new interrupts. "
-	      "However to truely ensure that all interrupts have been processed, you must #join @this thread\n"
-	      "User-code may also check for interrupts explicitly by calling `:thread.check_interrupt'") },
+	      "However to truely ensure that all interrupts have been processed, you must ?#join @this thread\n"
+	      "User-code may also check for interrupts explicitly by calling ?#check_interrupt") },
 
 	{ "started", &thread_started,
 	  DOC("->?Dbool\n"
-	      "Deprecated alias for #hasstarted") },
+	      "Deprecated alias for ?#hasstarted") },
 	{ "detached", &thread_detached,
 	  DOC("->?Dbool\n"
-	      "Deprecated alias for #wasdetached") },
+	      "Deprecated alias for ?#wasdetached") },
 	{ "terminated", &thread_terminated,
 	  DOC("->?Dbool\n"
-	      "Deprecated alias for #hasterminated") },
+	      "Deprecated alias for ?#hasterminated") },
 	{ "interrupted", &thread_interrupted,
 	  DOC("->?Dbool\n"
-	      "Deprecated alias for #wasinterrupted") },
+	      "Deprecated alias for ?#wasinterrupted") },
 	{ "crashed", &thread_crashed,
 	  DOC("->?Dbool\n"
-	      "Deprecated alias for #hascrashed") },
+	      "Deprecated alias for ?#hascrashed") },
 
 	/* Old, deprecated function names for backwards compatibility */
 	{ "try_join", &thread_tryjoin,
 	  DOC("->?T2?Dbool?O\n"
-	      "Old, deprecated name for #tryjoin") },
+	      "Old, deprecated name for ?#tryjoin") },
 	{ "timed_join", &thread_timedjoin,
 	  DOC("(timeout_in_microseconds:?Dint)->?T2?Dbool?O\n"
-	      "Old, deprecated name for #timedjoin") },
+	      "Old, deprecated name for ?#timedjoin") },
 	{ "crash_error", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&thread_crash_error,
 	  DOC("->?X2?O?N\n"
 	      "Deprecated function that does the same as ${this.crashinfo.first()[0]}") },
@@ -3097,11 +3101,11 @@ PRIVATE struct type_member thread_class_members[] = {
 PRIVATE struct type_method thread_class_methods[] = {
 	{ "self", &thread_self,
 	  DOC("->?.\n"
-	      "Deprecated alias for #current") },
+	      "Deprecated alias for ?#current") },
 	{ "selfid", &thread_selfid,
 	  DOC("->?Dint\n"
 	      "@throw SystemError The system does not provide a way to query thread ids\n"
-	      "Deprecated alias for ${thread.current.id}") },
+	      "Deprecated alias for ${Thread.current.id}") },
 	{ "check_interrupt", &thread_check_interrupt,
 	  DOC("()\n"
 	      "@interrupt\n"
@@ -3414,13 +3418,13 @@ PRIVATE struct type_getset thread_getsets[] = {
 	      "member function, write-access to this field is denied in sub-classes of :thread and only granted "
 	      "to exact instances\n"
 	      "@throw ValueError Attempted to delete or set the attribute when @this thread has already been started\n"
-	      "The callback arguments that are passed to #callback when the thread is started\n"
+	      "The callback arguments that are passed to ?#callback when the thread is started\n"
 	      "Deleting this member or setting :none is the same as setting an empty tuple") },
 	{ "result",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&thread_result_get, NULL, NULL,
 	  DOC("@throw ValueError @this thread has not terminated yet\n"
 	      "Return the result value of @this thread once it has terminated\n"
-	      "This is similar to what is returned by #join, but in the event that "
+	      "This is similar to what is returned by ?#join, but in the event that "
 	      "the thread terminated because it crashed, :none is returned rather "
 	      "than all the errors that caused the thread to crash being encapsulated and propagated") },
 	{ "crashinfo",
@@ -3428,11 +3432,11 @@ PRIVATE struct type_getset thread_getsets[] = {
 	  DOC("->?S?T2?O?DTraceback\n"
 	      "@throw ValueEror @this thread hasn't terminated yet\n"
 	      "Returns a sequence of 2-element tuples describing the errors that were "
-	      "active when the thread crashed (s.a. #hascrashed), or an empty sequence when "
+	      "active when the thread crashed (s.a. ?#hascrashed), or an empty sequence when "
 	      "the thread didn't crash\n"
 	      "The first element of each tuple is the error that was ${throw}n, and the "
 	      "second element is the accompanying traceback, or :none when not known.\n"
-	      "This function replaces the deprecated #crash_error and #crash_traceback "
+	      "This function replaces the deprecated ?#crash_error and ?#crash_traceback "
 	      "functions that did something similar prior to deemon 200\n"
 	      "When iterated, elements of the returned sequence identify errors that "
 	      "caused the crash from most to least recently thrown") },
@@ -3450,13 +3454,13 @@ PRIVATE struct type_getset thread_getsets[] = {
 	{ "isrunning",
 	  &thread_isrunning, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this thread is current running (i.e. #hasstarted, but hasn't #hasterminated)") },
+	      "Returns :true if @this thread is current running (i.e. ?#hasstarted, but hasn't ?#hasterminated)") },
 	{ "hascrashed",
 	  &thread_hascrashed, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns :true if @this thread has crashed, that "
-	      "is having #hasterminated while errors were still active\n"
-	      "When :true, attempting to #join @this thread will cause all of the "
+	      "is having ?#hasterminated while errors were still active\n"
+	      "When :true, attempting to ?#join @this thread will cause all of the "
 	      "errors to be rethrown in the calling thread as a :ThreadCrash error") },
 #endif /* !CONFIG_NO_THREADS */
 	{ NULL }
@@ -3482,7 +3486,7 @@ PRIVATE struct type_member thread_members[] = {
 	                      "The name of the thread, or :none when none was assigned"),
 	TYPE_MEMBER_CONST_DOC("isrunning", Dee_True,
 	                      "Returns :true if @this thread is current running (i.e. "
-	                      "#hasstarted, but hasn't #hasterminated)"),
+	                      "?#hasstarted, but hasn't ?#hasterminated)"),
 	TYPE_MEMBER_CONST_DOC("hasstarted", Dee_True,
 	                      "Returns :true if @this thread has been started"),
 	TYPE_MEMBER_CONST_DOC("wasdetached", Dee_False,
@@ -3493,8 +3497,8 @@ PRIVATE struct type_member thread_members[] = {
 	                      "Returns :true if interrupts are pending for @this thread"),
 	TYPE_MEMBER_CONST_DOC("hascrashed", Dee_False,
 	                      "Returns :true if @this thread has crashed, that "
-	                      "is having #hasterminated while errors were still active\n"
-	                      "When :true, attempting to #join @this thread will cause all of the "
+	                      "is having ?#hasterminated while errors were still active\n"
+	                      "When :true, attempting to ?#join @this thread will cause all of the "
 	                      "errors to be rethrown in the calling thread as a :ThreadCrash error"),
 #endif /* CONFIG_NO_THREADS */
 	TYPE_MEMBER_END

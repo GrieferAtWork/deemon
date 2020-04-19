@@ -226,9 +226,8 @@ refaiter_getseq(ReSequenceIterator *__restrict self) {
 #define REITER_GETDATAPTR(x) ATOMIC_READ((x)->re_args.re_dataptr)
 
 #define DEFINE_REFA_COMPARE(name, op)                                      \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
-	name(ReSequenceIterator *__restrict self,                              \
-	     ReSequenceIterator *__restrict other) {                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(ReSequenceIterator *self, ReSequenceIterator *other) {            \
 		char *x, *y;                                                       \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
 			goto err;                                                      \

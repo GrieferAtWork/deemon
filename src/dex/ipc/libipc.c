@@ -33,10 +33,10 @@
 #   include "windows.c.inl"
 #elif defined(CONFIG_HOST_UNIX)
 #   include "unix.c.inl"
-#else
+#else /* ... */
 #   include "generic.c.inl"
 #   include "generic-pipe.c.inl"
-#endif
+#endif /* !... */
 #endif /* !__INTELLISENSE__ */
 
 

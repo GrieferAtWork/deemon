@@ -121,9 +121,8 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 
 
 #define DEFINE_BSI_COMPARE(name, op)                                       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
-	name(BytesSplitIterator *__restrict self,                              \
-	     BytesSplitIterator *__restrict other) {                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(BytesSplitIterator *self, BytesSplitIterator *other) {            \
 		uint8_t *x, *y;                                                    \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
 			goto err;                                                      \
@@ -883,8 +882,8 @@ INTERN DeeTypeObject BytesLineSplitIterator_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */blsi_getsets,
-	/* .tp_members       = */blsi_members,
+	/* .tp_getsets       = */ blsi_getsets,
+	/* .tp_members       = */ blsi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

@@ -241,7 +241,7 @@ err:
 
 PRIVATE struct type_method pointer_methods[] = {
 	/* Methods for backwards-compatibility with deemon 100+ */
-	{ "__deref__", &struct_deref_func, DOC("->pointer\nDeprecated alias for #ind") },
+	{ "__deref__", &struct_deref_func, DOC("->pointer\nDeprecated alias for ?#ind") },
 	{ NULL }
 };
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
@@ -362,19 +362,19 @@ lvalue_double(DeeLValueTypeObject *__restrict tp_self,
 		return DeeStruct_Xxx(tp_self->lt_orig, ptr.ptr);                               \
 	}
 #define DEFINE_BINARY_LVALUE_OPERATOR(Treturn, error_return, lvalue_xxx, DeeStruct_Xxx) \
-	PRIVATE Treturn DCALL                                                               \
-	lvalue_xxx(DeeLValueTypeObject *__restrict tp_self,                                 \
+	PRIVATE NONNULL((1, 3)) Treturn DCALL                                               \
+	lvalue_xxx(DeeLValueTypeObject *tp_self,                                            \
 	           union pointer *self,                                                     \
-	           DeeObject *__restrict other) {                                           \
+	           DeeObject *other) {                                                      \
 		union pointer ptr;                                                              \
 		CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return error_return);                  \
 		return DeeStruct_Xxx(tp_self->lt_orig, ptr.ptr, other);                         \
 	}
 #define DEFINE_TRINARY_LVALUE_OPERATOR(Treturn, error_return, lvalue_xxx, DeeStruct_Xxx) \
-	PRIVATE Treturn DCALL                                                                \
-	lvalue_xxx(DeeLValueTypeObject *__restrict tp_self,                                  \
+	PRIVATE NONNULL((1, 3, 4)) Treturn DCALL                                             \
+	lvalue_xxx(DeeLValueTypeObject *tp_self,                                             \
 	           union pointer *self,                                                      \
-	           DeeObject *__restrict a, DeeObject *__restrict b) {                       \
+	           DeeObject *a, DeeObject *b) {                                             \
 		union pointer ptr;                                                               \
 		CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return error_return);                   \
 		return DeeStruct_Xxx(tp_self->lt_orig, ptr.ptr, a, b);                           \
@@ -426,10 +426,10 @@ DEFINE_TRINARY_LVALUE_OPERATOR(int, -1, lvalue_setitem, DeeStruct_SetItem)
 DEFINE_TRINARY_LVALUE_OPERATOR(DREF DeeObject *, NULL, lvalue_getrange, DeeStruct_GetRange)
 DEFINE_TRINARY_LVALUE_OPERATOR(int, -1, lvalue_delrange, DeeStruct_DelRange)
 
-PRIVATE int DCALL
-lvalue_setrange(DeeLValueTypeObject *__restrict tp_self,
-                union pointer *self, DeeObject *__restrict begin,
-                DeeObject *__restrict end, DeeObject *__restrict value) {
+PRIVATE NONNULL((1, 3, 4, 5)) int DCALL
+lvalue_setrange(DeeLValueTypeObject *tp_self,
+                union pointer *self, DeeObject *begin,
+                DeeObject *end, DeeObject *value) {
 	union pointer ptr;
 	CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return -1);
 	return DeeStruct_SetRange(tp_self->lt_orig, ptr.ptr, begin, end, value);
@@ -439,7 +439,7 @@ DEFINE_BINARY_LVALUE_OPERATOR(DREF DeeObject *, NULL, lvalue_getattr, DeeStruct_
 DEFINE_BINARY_LVALUE_OPERATOR(int, -1, lvalue_delattr, DeeStruct_DelAttr)
 DEFINE_TRINARY_LVALUE_OPERATOR(int, -1, lvalue_setattr, DeeStruct_SetAttr)
 
-PRIVATE dssize_t DCALL
+PRIVATE NONNULL((1, 2)) dssize_t DCALL
 lvalue_enumattr(DeeLValueTypeObject *__restrict tp_self,
                 denum_t proc, void *arg) {
 	return DeeStruct_EnumAttr(tp_self->lt_orig, proc, arg);
@@ -548,11 +548,14 @@ lvalue_alignof(struct lvalue_object *__restrict self) {
 
 PRIVATE struct type_getset lvalue_getsets[] = {
 	{ "ref", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_ref, NULL, NULL,
-	  DOC("->?Gpointer\nReturns a pointer for the object referred to by @this :lvalue") },
+	  DOC("->?Gpointer\n"
+	      "Returns a pointer for the object referred to by @this :lvalue") },
 	{ "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_sizeof, NULL, NULL,
-	  DOC("->?Dint\nReturns the size of the structured objected pointed to by @this :lvalue") },
+	  DOC("->?Dint\n"
+	      "Returns the size of the structured objected pointed to by @this :lvalue") },
 	{ "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_alignof, NULL, NULL,
-	  DOC("->?Dint\nReturns the alignment of the structured objected pointed to by @this :lvalue") },
+	  DOC("->?Dint\n"
+	      "Returns the alignment of the structured objected pointed to by @this :lvalue") },
 	{ NULL }
 };
 

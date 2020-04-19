@@ -1593,8 +1593,8 @@ PRIVATE struct type_method buffer_methods[] = {
 	{ "flush",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_flush,
 	  DOC("()\n"
-	      "Similar to #sync, but never synchronize the underlying file, regardless "
-	      "of whether or not $\"nosync\" was passed to the constructor, or #setbuf") },
+	      "Similar to ?#sync, but never synchronize the underlying file, regardless "
+	      "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf") },
 	{ "setbuf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&buffer_setbuf,
 	  DOC("(mode:?Dstring,size=!0)\n"
@@ -1611,11 +1611,11 @@ PRIVATE struct type_method buffer_methods[] = {
 	      "$\"line\"|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written&"
 	      "$\"none\"|Use no buffering at all when @size is ${0}, or use a fixed-length buffer of @size bytes. "
 	      /*     */ "Note that even when the no buffer is allocated, the runtime guaranties "
-	      /*     */ "that #ungetc can be used to return and re-read at least 1 byte&"
+	      /*     */ "that ?#ungetc can be used to return and re-read at least 1 byte&"
 	      "$\"keep\"|Keep using the old buffering model, but allow the buffer size to be changed}\n"
 	      "Additionally, @mode may be prefixed with one or more of the following case-insensitive strings:\n"
 	      "#T{Prefix|Description~"
-	      "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke #sync on @this buffer's #file whenever the buffer is synced}"),
+	      "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke ?#sync on @this buffer's ?#file whenever the buffer is synced}"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
@@ -1735,11 +1735,11 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		                         "$\"line\"|Use line-buffering, automatically synchronizing the buffer whenever a linefeed is written&"
 		                         "$\"none\"|Use no buffering at all when @size is $0, or use a fixed-length buffer of @size bytes. "
 		                         /*     */ "Note that even when the no buffer is allocated, the runtime guaranties "
-		                         /*     */ "that #ungetc can be used to return and re-read at least 1 byte}\n"
+		                         /*     */ "that ?#ungetc can be used to return and re-read at least 1 byte}\n"
 		                         "Additionally, @mode may be prefixed with one or more of the following case-insensitive strings:\n"
 		                         "#T{Prefix|Description~"
-		                         "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke #sync on the buffer's "
-		                         /*                                */ "#file whenever the buffer is synced&"
+		                         "$\"s\", $\"s-\", $\"s,\", $\"sync,\"|Also invoke ?#sync on the buffer's "
+		                         /*                                */ "?#file whenever the buffer is synced&"
 		                         "$\"c\", $\"c-\", $\"c,\", $\"close,\"|When the buffer is closed using ${operator close}, "
 		                         /*                                */  "also invoke that same operator on the contained file&"
 		                         "$\"ro\", $\"ro-\", $\"ro,\", $\"readonly,\"|Disable write-access to the underlying @fp}\n"
@@ -1751,7 +1751,7 @@ PUBLIC DeeFileTypeObject DeeFileBuffer_Type = {
 		                         "fp.sync(); /* Commit data to disk */"
 		                         "}\n"
 		                         "The most notably useful feature made possible through use of buffers is "
-		                         "the possibility of adding #getc and #ungetc support to file types that "
+		                         "the possibility of adding ?#getc and ?#ungetc support to file types that "
 		                         "normally wouldn't support the later\n"
 		                         "During initialization, deemon will assign the standard "
 		                         "streams :File.stdin, :File.stdout and :File.stderr as follows:\n"

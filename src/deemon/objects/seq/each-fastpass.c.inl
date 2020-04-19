@@ -44,9 +44,9 @@
 #define STRUCT_TYPE          SeqEachCallAttrKw
 #define TYPE_OBJECT          SeqEachCallAttrKw_Type
 #define ITERATOR_TYPE_OBJECT SeqEachCallAttrKwIterator_Type
-#else
+#else /* ... */
 #error "No mode defined"
-#endif
+#endif /* !... */
 
 
 DECL_BEGIN
@@ -230,9 +230,9 @@ PRIVATE struct type_math sew_math = {
 #define sec_math sew_math
 #elif defined(DEFINE_CALLATTRKW)
 #define sek_math sew_math
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 
 #endif /* !DEFINE_GETATTR */
 
@@ -273,9 +273,9 @@ F(transform)(STRUCT_TYPE *__restrict self,
 	                              self->sg_argc,
 	                              self->sg_argv,
 	                              self->sg_kw);
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 	Dee_Decref(elem);
 	return result;
 }
@@ -541,9 +541,9 @@ F(init)(size_t argc, DeeObject *const *argv) {
 	DeeObject *kw = Dee_EmptyMapping;
 	if (DeeArg_Unpack(argc, argv, "oo|oo:_SeqEachCallAttrKw", &seq, &attr, &args, &kw))
 		goto err;
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
@@ -570,9 +570,9 @@ err:
 	return NULL;
 }
 
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 
 #ifdef DEFINE_GETATTR
 PRIVATE WUNUSED DREF SeqEachCallAttr *DCALL
@@ -590,7 +590,7 @@ F(call_kw)(STRUCT_TYPE *__restrict self, size_t argc,
 	                                                       (DeeObject *)self->sg_attr,
 	                                                       argc, argv, kw);
 }
-#endif
+#endif /* DEFINE_GETATTR */
 
 INTERN DeeTypeObject TYPE_OBJECT = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -612,9 +612,9 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 	                         "(seq:?DSequence,attr:?Dstring,args=!T0,kw:?S?T2?Dstring?O=!T0)"),
 #define TYPE_FLAGS (TP_FNORMAL | TP_FFINAL | TP_FMOVEANY | TP_FVARIABLE)
 	/* .tp_flags    = */TYPE_FLAGS,
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -628,7 +628,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 				/* .tp_any_ctor  = */ (void *)&F(init),
 				TYPE_FIXED_ALLOCATOR(STRUCT_TYPE)
 			}
-#else
+#else /* !(TYPE_FLAGS & TP_FVARIABLE) */
 			/* .tp_var = */ {
 				/* .tp_ctor      = */ (void *)&F(ctor),
 				/* .tp_copy_ctor = */ (void *)&F(copy),
@@ -636,7 +636,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 				/* .tp_any_ctor  = */ (void *)&F(init),
 				/* .tp_free      = */ (void *)NULL
 			}
-#endif
+#endif /* TYPE_FLAGS & TP_FVARIABLE */
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&F(fini),
 		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_assign,
@@ -706,9 +706,9 @@ Fi(init)(SeqEachIterator *__restrict self,
 #elif defined(DEFINE_CALLATTRKW)
 	if (DeeArg_Unpack(argc, argv, "o:_SeqEachCallAttrIteratorKw", &self->ei_each))
 		goto err;
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 	if (DeeObject_AssertTypeExact(self->ei_each, &TYPE_OBJECT))
 		goto err;
 	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
@@ -728,9 +728,9 @@ PRIVATE struct type_member Fi(members)[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttr"),
 #elif defined(DEFINE_CALLATTRKW)
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_each), "->?Ert:SeqEachCallAttrKw"),
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(SeqEachIterator, ei_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
@@ -758,9 +758,9 @@ INTERN DeeTypeObject ITERATOR_TYPE_OBJECT = {
 #elif defined(DEFINE_CALLATTRKW)
 	/* .tp_name     = */ "_SeqEachCallAttrIteratorKw",
 	/* .tp_doc      = */ DOC("(seq?:?Ert:SeqEachCallAttrKw)"),
-#else
+#else /* ... */
 #error "Unsupported mode"
-#endif
+#endif /* !... */
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

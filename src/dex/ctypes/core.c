@@ -218,7 +218,7 @@ PRIVATE struct type_method stype_methods[] = {
 	      "(calling_convention:?Dstring,types!:?DType)->function_type\n"
 	      "@throw ValueError The given @calling_convention is unknown, or not supported by the host\n"
 	      "@param calling_convention The name of the calling convention\n"
-	      "Same as #func, but enable support for varrgs") },
+	      "Same as ?#func, but enable support for varrgs") },
 	{ NULL }
 	//{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
 	//{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_return_false, DOC("->?Dbool\nDeprecated (always returns :false)") },
@@ -250,7 +250,7 @@ PRIVATE struct type_getset stype_getsets[] = {
 	{ "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stype_alignof, NULL, NULL,
 	  DOC("->?Dint\nReturns the alignment of @this :structured_type in bytes") },
 	{ "pointer", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&DeeSType_Pointer, NULL, NULL,
-	  DOC("->?GPointerType\nAlias for #ptr") },
+	  DOC("->?GPointerType\nAlias for ?#ptr") },
 	{ NULL }
 };
 
@@ -1009,7 +1009,9 @@ err:
 
 PRIVATE struct type_method struct_methods[] = {
 	/* Methods for backwards-compatibility with deemon 100+ */
-	{ "__ref__", &struct_ref_func, DOC("->pointer\nDeprecated alias for #ref") },
+	{ "__ref__", &struct_ref_func,
+	  DOC("->pointer\n"
+	      "Deprecated alias for ?#ref") },
 	{ NULL }
 };
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

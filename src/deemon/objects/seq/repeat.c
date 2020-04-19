@@ -136,9 +136,8 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 
 
 #define DEFINE_REPEATITER_CMP(name, check_diffnum, if_sameiter, compare_iter)       \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                   \
-	name(RepeatIterator *__restrict self,                                           \
-	     RepeatIterator *__restrict other) {                                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
+	name(RepeatIterator *self, RepeatIterator *other) {                             \
 		DREF DeeObject *my_iter, *ot_iter;                                          \
 		DREF DeeObject *result;                                                     \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqRepeatIterator_Type)) \
@@ -1002,9 +1001,9 @@ repeatitem_get(RepeatItem *self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-repeatitem_getrange(RepeatItem *__restrict self,
-                    DeeObject *__restrict start_ob,
-                    DeeObject *__restrict end_ob) {
+repeatitem_getrange(RepeatItem *self,
+                    DeeObject *start_ob,
+                    DeeObject *end_ob) {
 	dssize_t start, end;
 	if (DeeObject_AsSSize(start_ob, &start))
 		goto err;

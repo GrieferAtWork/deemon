@@ -102,9 +102,8 @@ PRIVATE struct type_member transiter_members[] = {
 };
 
 #define DEFINE_COMPARE(name, base, opname)                                                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                           \
-	name(TransformationIterator *__restrict self,                                           \
-	     TransformationIterator *__restrict other) {                                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                   \
+	name(TransformationIterator *self, TransformationIterator *other) {                     \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqTransformationIterator_Type)) \
 			goto err;                                                                       \
 		if (self->ti_func != other->ti_func) {                                              \

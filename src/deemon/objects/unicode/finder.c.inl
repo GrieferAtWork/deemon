@@ -378,9 +378,8 @@ PRIVATE struct type_member scfi_members[] = {
 
 
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
-	name(StringFindIterator *__restrict self,                              \
-	     StringFindIterator *__restrict other) {                           \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(StringFindIterator *self, StringFindIterator *other) {            \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
 			return NULL;                                                   \
 		return_bool(READ_PTR(self) op READ_PTR(other));                    \

@@ -163,9 +163,8 @@ blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, op)                               \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                             \
-	name(BlackListVarkwdsIterator *__restrict self,                           \
-	     BlackListVarkwdsIterator *__restrict other) {                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                     \
+	name(BlackListVarkwdsIterator *self, BlackListVarkwdsIterator *other) {   \
 		if (DeeObject_AssertTypeExact(other, &BlackListVarkwdsIterator_Type)) \
 			goto err;                                                         \
 		return_bool(BLVI_GETITER(self) op BLVI_GETITER(other));               \
@@ -1171,9 +1170,8 @@ err_r:
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, func)                             \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                             \
-	name(BlackListMappingIterator *__restrict self,                           \
-	     BlackListMappingIterator *__restrict other) {                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                     \
+	name(BlackListMappingIterator *self, BlackListMappingIterator *other) {   \
 		if (DeeObject_AssertTypeExact(other, &BlackListMappingIterator_Type)) \
 			goto err;                                                         \
 		return func(self->mi_iter, other->mi_iter);                           \

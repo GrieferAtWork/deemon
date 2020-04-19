@@ -1170,7 +1170,7 @@ again:
 	@@The input text to tokenize
 	public final member text: string;
 
-	@@The length of the input text (${#this.text})
+	@@The length of the input text (${##this.text})
 	public final member len: int;
 
 	@@Real intentation of the current line

@@ -142,9 +142,8 @@ err_r:
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                         \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                   \
-	name(FilterIterator *__restrict self,                                           \
-	     FilterIterator *__restrict other) {                                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
+	name(FilterIterator *self, FilterIterator *other) {                             \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqFilterIterator_Type)) \
 			goto err;                                                               \
 		return compare_object(self->fi_iter, other->fi_iter);                       \

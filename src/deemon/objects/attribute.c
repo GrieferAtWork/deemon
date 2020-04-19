@@ -168,13 +168,13 @@ PRIVATE struct type_member attr_members[] = {
 	                         "${Attribute(\"foo\", \"find\").iswrapper == false}))"),
 	TYPE_MEMBER_BITFIELD_DOC("isinstance", STRUCT_CONST, Attr, a_info.a_perm, ATTR_IMEMBER,
 	                         "Check if accessing this Attribute requires an instance of the declaring object "
-	                         "#decl, rather than being an Attribute of the declaring object #decl itself.\n"
+	                         "?#decl, rather than being an Attribute of the declaring object ?#decl itself.\n"
 	                         "Note that practically all attributes, such as member functions, are available as both "
 	                         "instance and class Attribute, while in other cases an Attribute will evaluate to different "
 	                         "objects depending on being invoked on a class or an instance (such as :Dict.keys)"),
 	TYPE_MEMBER_BITFIELD_DOC("isclass", STRUCT_CONST, Attr, a_info.a_perm, ATTR_CMEMBER,
-	                         "Check if access to this Attribute must be made though the declaring type #decl.\n"
-	                         "To test if an Attribute can only be accessed through an instance, use #isinstance instead"),
+	                         "Check if access to this Attribute must be made though the declaring type ?#decl.\n"
+	                         "To test if an Attribute can only be accessed through an instance, use ?#isinstance instead"),
 	TYPE_MEMBER_END
 };
 
@@ -322,15 +322,15 @@ PRIVATE struct type_getset attr_getsets[] = {
 	  DOC("->?Dstring\n"
 	      "Return a set of characters descripting the flags of @this Attribute:\n"
 	      "#T{Character|Mnemonic|Field|Flag description~"
-	      "$\"g\"|get|#canget|The Attribute has a way of being read from&"
-	      "$\"d\"|del|#candel|The Attribute has a way of being deleted&"
-	      "$\"s\"|set|#canset|The Attribute has a way of being written to&"
-	      "$\"f\"|function|#cancall|The Attribute is intended to be called as a function&"
-	      "$\"i\"|instance|#isinstance|The Attribute requires an instance of the declaring object&"
-	      "$\"c\"|class|#isclass|The Attribute is accessed though the declaring type #decl&"
-	      "$\"h\"|hidden|#isprivate|The Attribute is considered to be private&"
-	      "$\"p\"|property|#isproperty|The Attribute is property-like&"
-	      "$\"w\"|wrapper|#iswrapper|The Attribute is provided by the type as a class member that wraps around an instance member}") },
+	      "$\"g\"|get|?#canget|The Attribute has a way of being read from&"
+	      "$\"d\"|del|?#candel|The Attribute has a way of being deleted&"
+	      "$\"s\"|set|?#canset|The Attribute has a way of being written to&"
+	      "$\"f\"|function|?#cancall|The Attribute is intended to be called as a function&"
+	      "$\"i\"|instance|?#isinstance|The Attribute requires an instance of the declaring object&"
+	      "$\"c\"|class|?#isclass|The Attribute is accessed though the declaring type ?#decl&"
+	      "$\"h\"|hidden|?#isprivate|The Attribute is considered to be private&"
+	      "$\"p\"|property|?#isproperty|The Attribute is property-like&"
+	      "$\"w\"|wrapper|?#iswrapper|The Attribute is provided by the type as a class member that wraps around an instance member}") },
 	{ NULL }
 };
 
@@ -575,28 +575,30 @@ PRIVATE struct type_method attr_class_methods[] = {
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Taking the same arguments as ?#{op:constructor}, check if the an attribute matching "
 	      "the given arguments exists, returning :true/:false indicative of this\n"
-	      ">static function exists(ob,name,flagmask = \"\",flagval = \"\",decl?) {\n"
-	      "> import Error from deemon;\n"
-	      "> try {\n"
-	      ">  attribute(ob,name,flagmask,flagval,decl);\n"
-	      "> } catch (Error.AttributeError) {\n"
-	      ">  return false;\n"
-	      "> }\n"
-	      "> return true;\n"
-	      ">}"),
+	      "${"
+	      "static function exists(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
+	      "	import Error from deemon;\n"
+	      "	try {\n"
+	      "		attribute(ob, name, flagmask, flagval, decl);\n"
+	      "	} catch (Error.AttributeError) {\n"
+	      "		return false;\n"
+	      "	}\n"
+	      "	return true;\n"
+	      "}}"),
 	  TYPE_METHOD_FKWDS },
 	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_lookup,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Same as ?#{op:constructor}, but return :none if the attribute doesn't exist\n"
-	      ">static function lookup(ob,name,flagmask = \"\",flagval = \"\",decl?) {\n"
-	      "> import Error from deemon;\n"
-	      "> try {\n"
-	      ">  return attribute(ob,name,flagmask,flagval,decl);\n"
-	      "> } catch (Error.AttributeError) {\n"
-	      ">  return none;\n"
-	      "> }\n"
-	      ">}"),
+	      "${"
+	      "static function lookup(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
+	      "	import Error from deemon;\n"
+	      "	try {\n"
+	      "		return attribute(ob, name, flagmask, flagval, decl);\n"
+	      "	} catch (Error.AttributeError) {\n"
+	      "		return none;\n"
+	      "	}\n"
+	      "}}"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
@@ -607,10 +609,11 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Attribute),
 	/* .tp_doc      = */ DOC("The descriptor object for abstract object attributes\n"
+
 	                         "\n"
 	                         "(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)\n"
-	                         "@param flagmask Set of attribute flags to mask when searching for matches (s.a. #flags)\n"
-	                         "@param flagval Set of attribute flags required when searching for matches (s.a. #flags) "
+	                         "@param flagmask Set of attribute flags to mask when searching for matches (s.a. ?#flags)\n"
+	                         "@param flagval Set of attribute flags required when searching for matches (s.a. ?#flags) "
 	                                        "(When only this is given, and @flagmask is omit (as possible when "
 	                                        "using keyword arguments), flagmask is set to @flagval)\n"
 	                         "@throw AttributeError No attribute matching the specified restrictions could be found\n"
@@ -618,30 +621,33 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	                         "Lookup an Attribute enumerated by ${enumattr(ob)} or ${enumattr(tp)}, matching "
 	                         "the given @name, as well as having its set of flags match @flagval, when masked by @flagmask\n"
 	                         "Additionally, @decl may be specified to narrow down valid matches to only those declared by it\n"
-	                         ">function findattr(ob,name,flagmask,flagval,decl?) {\n"
-	                         "> import enumattr, Error, HashSet from deemon;\n"
-	                         "> flagmask = HashSet(flagmask);\n"
-	                         "> for (local attr: enumattr(ob)) {\n"
-	                         ">  if (attr.name != name)\n"
-	                         ">   continue;\n"
-	                         ">  if (decl is bound && attr.decl !== decl)\n"
-	                         ">   continue;\n"
-	                         ">  if ((flagmask & attr.flags) != flagval)\n"
-	                         ">   continue;\n"
-	                         ">  return attr;\n"
-	                         "> }\n"
-	                         "> throw Error.AttributeError(...);\n"
-	                         ">}\n"
+	                         "${"
+	                         "function findattr(ob,name,flagmask,flagval,decl?) {\n"
+	                         "	import enumattr, Error, HashSet from deemon;\n"
+	                         "	flagmask = HashSet(flagmask);\n"
+	                         "	for (local attr: enumattr(ob)) {\n"
+	                         "		if (attr.name != name)\n"
+	                         "			continue;\n"
+	                         "		if (decl is bound && attr.decl !== decl)\n"
+	                         "			continue;\n"
+	                         "		if ((flagmask & attr.flags) != flagval)\n"
+	                         "			continue;\n"
+	                         "		return attr;\n"
+	                         "	}\n"
+	                         "	throw Error.AttributeError(...);\n"
+	                         "}}\n"
 	                         "Using @flagmask and @flagval, you can easily restrict a search to only class-, or instance-attributes:\n"
-	                         ">import Attribute, Dict from deemon;\n"
-	                         ">/* The class-variant (Attribute cannot be accessed from an instance) */\n"
-	                         ">print repr Attribute(Dict,\"keys\",\"i\",\"\");\n"
-	                         ">/* The class-variant (Attribute is a wrapper) */\n"
-	                         ">print repr Attribute(Dict,\"keys\",\"w\");\n"
-	                         ">/* The instance-variant (Attribute can be accessed from an instance) */\n"
-	                         ">print repr Attribute(Dict,\"keys\",\"i\");\n"
-	                         ">/* The instance-variant (Attribute isn't a wrapper) */\n"
-	                         ">print repr Attribute(Dict,\"keys\",\"w\",\"\");\n"),
+	                         "${"
+	                         "import Attribute, Dict from deemon;\n"
+	                         "/* The class-variant (Attribute cannot be accessed from an instance) */\n"
+	                         "print repr Attribute(Dict, \"keys\", \"i\", \"\");\n"
+	                         "/* The class-variant (Attribute is a wrapper) */\n"
+	                         "print repr Attribute(Dict, \"keys\", \"w\");\n"
+	                         "/* The instance-variant (Attribute can be accessed from an instance) */\n"
+	                         "print repr Attribute(Dict, \"keys\", \"i\");\n"
+	                         "/* The instance-variant (Attribute isn't a wrapper) */\n"
+	                         "print repr Attribute(Dict, \"keys\", \"w\", \"\");"
+	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -901,9 +907,11 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_enumattr),
 	/* .tp_doc      = */ DOC("(tp:?DType)\n"
 	                         "Enumerate attributes of the :Type @tp and its bases\n"
+
 	                         "\n"
 	                         "(ob)\n"
-	                         "Same as ${enumattr(type(ob),ob)}\n"
+	                         "Same as ${enumattr(type(ob), ob)}\n"
+
 	                         "\n"
 	                         "(tp:?DType,ob)\n"
 	                         "Create a new sequence for enumerating the :{attribute}s of a given object.\n"

@@ -269,7 +269,7 @@ cell_hash(Cell *__restrict self) {
 
 
 #define DEFINE_CELL_COMPARE(name, op)                                \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                    \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL            \
 	name(Cell *self, Cell *other) {                                  \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeCell_Type)) \
 			return NULL;                                             \
@@ -446,6 +446,7 @@ PRIVATE struct type_method cell_methods[] = {
 	  DOC("->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "Returns the contained value of the Cell\n"
+
 	      "\n"
 	      "(def)->\n"
 	      "Returns the contained value of the Cell or @def when it is empty") },
@@ -458,6 +459,7 @@ PRIVATE struct type_method cell_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_pop,
 	  DOC("->\n"
 	      "@throw ValueError The Cell was empty\n"
+
 	      "\n"
 	      "(def)->\n"
 	      "Pop and return the previously contained object, @def, or throw a ValueError") },
@@ -471,6 +473,7 @@ PRIVATE struct type_method cell_methods[] = {
 	  DOC("(value)->\n"
 	      "@throw ValueError @this Cell is empty\n"
 	      "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
+
 	      "\n"
 	      "(value,def)->\n"
 	      "Returns the contained value of the Cell or @def when it is empty") },
@@ -483,16 +486,20 @@ PRIVATE struct type_method cell_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpxch,
 	  DOC("(old_value,new_value)->\n"
 	      "@throw ValueError @this Cell is empty\n"
+
 	      "\n"
 	      "(old_value,new_value,def)->\n"
 	      "Do an id-compare of the stored object against @old_value and overwrite "
 	      "that object with @new_value when they match. Otherwise, don't modify the "
 	      "stored object. In both cases, return the previously stored object, @def, or throw a :{ValueError}.\n"
 	      "This is equivalent to the atomic execution of the following:\n"
-	      ">local result = this.old_value;\n"
-	      ">if (this && result === old_value)\n"
-	      ">    this.value = new_value;\n"
-	      ">return result\n"
+	      "${"
+	      "local result = this.old_value;\n"
+	      "if (this && result === old_value)\n"
+	      "    this.value = new_value;\n"
+	      "return result;"
+	      "}\n"
+
 	      "\n"
 	      "(new_value)->?Dbool\n"
 	      "Return :true and atomically set @new_value as stored object only "
@@ -503,17 +510,17 @@ PRIVATE struct type_method cell_methods[] = {
 	      "(old_value,new_value)->?Dbool\n"
 	      "Atomically check if the stored value equals @old_value and return :true "
 	      "alongside storing @new_value if this is the case. Otherwise, return :false\n"
-	      "When @new_value is omit, the function behaves identical to #cmpdel") },
+	      "When @new_value is omit, the function behaves identical to ?#cmpdel") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "del",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_delete,
 	  DOC("->?Dbool\n"
-	      "Deprecated alias for #delete") },
+	      "Deprecated alias for ?#delete") },
 	{ "exchange",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_xch,
 	  DOC("(value)->\n"
 	      "(value,def)->\n"
-	      "Deprecated alias for #xch") },
+	      "Deprecated alias for ?#xch") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	{ NULL }
 };
@@ -526,9 +533,11 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Cell),
 	/* .tp_doc      = */ DOC("A 1-layer indirection allowing for referral to another object\n"
+
 	                         "\n"
 	                         "()\n"
 	                         "Create a new, empty Cell\n"
+
 	                         "\n"
 	                         "(obj)\n"
 	                         "Create a new Cell containing @obj"),

@@ -324,7 +324,7 @@ PRIVATE struct type_getset im_getsets[] = {
 	  DOC("->?X2?DModule?N\n"
 	      "The type within which the bound function was defined "
 	      "(alias for :Function.__module__ though ${__func__.__module__})\n"
-	      "If something other than a user-level function was set for #__func__, "
+	      "If something other than a user-level function was set for ?#__func__, "
 	      "a $\"__module__\" attribute will be loaded from it, with its value "
 	      "then forwarded") },
 	{ NULL }
@@ -346,10 +346,11 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_InstanceMethod),
 	/* .tp_doc      = */ DOC("(func:?DCallable,thisarg)\n"
 	                         "Construct an object-bound instance method that can be used to invoke @func\n"
+
 	                         "\n"
 	                         "call(args!)->\n"
 	                         "Invoke the $func used to construct @this "
-	                         "InstanceMethod as ${func(thisarg,args...)}"),
+	                         "InstanceMethod as ${func(thisarg, args...)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

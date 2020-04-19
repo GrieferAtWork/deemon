@@ -718,7 +718,7 @@ PRIVATE struct type_method tls_methods[] = {
 	{ "exchange",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_xch,
 	  DOC("(ob)->\n"
-	      "Deprecated alias for #xch") },
+	      "Deprecated alias for ?#xch") },
 	{ NULL }
 };
 
@@ -742,6 +742,7 @@ INTERN DeeTypeObject DeeTls_Type = {
 	                         "You may pass :none for @factory to pre-initialize the TLS value to :none\n"
 	                         "When given, @factory is invoked as ${factory()} upon first access on a "
 	                         "per-thread basis, using its return value as initial value for the TLS\n"
+
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns :true if the TLS variable has been bound in the calling thread"),

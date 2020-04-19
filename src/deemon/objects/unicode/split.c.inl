@@ -191,9 +191,8 @@ splititer_bool(StringSplitIterator *__restrict self) {
 }
 
 #define DEFINE_SPLITITER_CMP(name, op)                                     \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
-	name(StringSplitIterator *__restrict self,                             \
-	     StringSplitIterator *__restrict other) {                          \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(StringSplitIterator *self, StringSplitIterator *other) {          \
 		uint8_t *x, *y;                                                    \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
 			goto err;                                                      \

@@ -6129,7 +6129,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_GETLASTERROR_DEF
 	LIBWIN32_SETLASTERROR_DEF
 	LIBWIN32_FORMATERRORMESSAGE_DEF_DOC("Return a human-readable error message associated with "
-	                                    "the given @dwError (as returned by #GetLastError)")
+	                                    "the given @dwError (as returned by ?GGetLastError)")
 
 	/* Handle-related functions. */
 	LIBWIN32_CLOSEHANDLE_DEF
@@ -6146,7 +6146,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_GETDISKFREESPACEEX_DEF_DOC("Returns a tuple (uFreeBytesAvailableToCaller, uTotalNumberOfBytes, uTotalNumberOfFreeBytes)")
 	LIBWIN32_GETTEMPPATH_DEF_DOC("Returns a string containing a temporary path")
 	LIBWIN32_GETDLLDIRECTORY_DEF_DOC("Returns a string describing the windows DLL directory")
-	LIBWIN32_SETDLLDIRECTORY_DEF_DOC("Set the windows DLL directory, as used when loading dynamic libraries, and as returned by #GetDllDirectory")
+	LIBWIN32_SETDLLDIRECTORY_DEF_DOC("Set the windows DLL directory, as used when loading dynamic libraries, and as returned by ?GGetDllDirectory")
 	LIBWIN32_GETFILETYPE_DEF_DOC("Return one of `FILE_TYPE_*'")
 	LIBWIN32_GETFILESIZE_DEF_DOC("Return the size of the given @hFile")
 	LIBWIN32_GETDRIVETYPE_DEF_DOC("Returns the type of drive of @lpRootPathName (one of `DRIVE_*')")
@@ -6155,7 +6155,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_GETCOMPRESSEDFILESIZE_DEF
 	LIBWIN32_FLUSHFILEBUFFERS_DEF
 	LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF
-	LIBWIN32_GETFILENAMEOFHANDLE_DEF_DOC("Convenience wrapper for #GetFinalPathNameByHandle that also supports the "
+	LIBWIN32_GETFILENAMEOFHANDLE_DEF_DOC("Convenience wrapper for ?GGetFinalPathNameByHandle that also supports the "
 	                                     "${GetMappedFileName(MapViewOfFile(CreateFileMapping(hFile)))} workaround "
 	                                     "that is required on Windows XP, and always tries to return a canonically "
 	                                     "correct filename without any $\"\\\\.\\\"-like prefix")
@@ -6204,7 +6204,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC("Returns the system windows directory ($\"C:\\\\Windows\")")
 	LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC("Returns the windows SysWOW64 directory ($\"C:\\\\Windows\\\\SysWOW64\")")
 	LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC("Returns a list of known system drives ($({ r\"C:\\\", r\"D:\\\", r\"E:\\\" }))")
-	LIBWIN32_QUERYDOSDEVICE_DEF_DOC("Returns a list of DOS devices mounted under the given drive (which should be one of #GetLogicalDriveStrings)")
+	LIBWIN32_QUERYDOSDEVICE_DEF_DOC("Returns a list of DOS devices mounted under the given drive (which should be one of ?GGetLogicalDriveStrings)")
 
 	/* DLL functions */
 	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module")

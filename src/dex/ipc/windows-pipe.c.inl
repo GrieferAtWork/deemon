@@ -32,6 +32,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/filetypes.h>
+#include <deemon/system.h>
 #include <deemon/tuple.h>
 
 #include <string.h>

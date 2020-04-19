@@ -682,7 +682,7 @@ PRIVATE struct type_getset keyword_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_oldmacrofile, NULL, NULL,
 	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
 	      "Returns the latest old macro file, that is the first macro "
-	      "file definition that is preserved when ${#pragma push_macro(\"foo\")} is used") },
+	      "file definition that is preserved when ${##pragma push_macro(\"foo\")} is used") },
 	{ "defmacrofile",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&keyword_defmacrofile, NULL, NULL,
 	  DOC("->?X2?AFile?ALexer?Ert:Compiler?N\n"
@@ -1590,7 +1590,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nodirectives,
 	  DOC("->?Dbool\n"
 	      "When :true, don't process preprocessor directives, but rather "
-	      "re-emit the ${#...} sequences as regular token sequences\n"
+	      "re-emit the ${##...} sequences as regular token sequences\n"
 	      "Note: This field is preserved by ?#flags") },
 	{ "nomacros",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_nomacros,
@@ -1648,7 +1648,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_printmessagelocation,
 	  DOC("->?Dbool\n"
 	      "When :true, print the source location before "
-	      "the message in ${#pragma message} directives\n"
+	      "the message in ${##pragma message} directives\n"
 	      "Note: This field is preserved by ?#flags") },
 	{ "printmessagenolf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_printmessagenolf,
@@ -1656,7 +1656,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_printmessagenolf,
 	  DOC("->?Dbool\n"
 	      "When :true, don't append a trailing line-feed after "
-	      "messages printed using ${#pragma message}\n"
+	      "messages printed using ${##pragma message}\n"
 	      "Note: This field is preserved by ?#flags") },
 	{ "parseincludestring",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_parseincludestring,
@@ -1666,7 +1666,7 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	      "Parse strings are include-strings, which has the same behavior as parsing "
 	      "all strings as though they were raw string literals, meaning that a "
 	      "backslash-escape sequences are not recognized\n"
-	      "The inteded use for this is to parse the string of an ${#include} directive\n"
+	      "The inteded use for this is to parse the string of an ${##include} directive\n"
 	      "Note that this flag also affects the behavior of ?Adecodestring?#token, which "
 	      "won't not recognize escape sequences for non-raw string literals, either\n"
 	      "Note: This field is preserved by ?#flags") },
@@ -1675,10 +1675,10 @@ PRIVATE struct type_getset lexer_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&lexer_del_nolegacyguards,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&lexer_set_nolegacyguards,
 	  DOC("->?Dbool\n"
-	      "When :true, don't automatically try to detect legacy-style ${#include} guards, "
-	      "that is an ${#include} guard created by surrounding an entire source file with "
-	      "a single ${#ifndef} block\n"
-	      "This flag does not, however, affect the functionality of ${#pragma once}\n"
+	      "When :true, don't automatically try to detect legacy-style ${##include} guards, "
+	      "that is an ${##include} guard created by surrounding an entire source file with "
+	      "a single ${##ifndef} block\n"
+	      "This flag does not, however, affect the functionality of ${##pragma once}\n"
 	      "Note: This field is preserved by ?#flags") },
 	{ "werror",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lexer_get_werror,
@@ -2254,7 +2254,7 @@ PRIVATE struct type_method lexer_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_include,
 	  DOC("(stream:?DFile,filename:?Dstring=!N)\n"
 	      "(filename:?Dstring,filename:?Dstring=!N)\n"
-	      "Include a new file, pushing its contents onto the ${#include}-stack\n"
+	      "Include a new file, pushing its contents onto the ${##include}-stack\n"
 	      "Note that when including a file with the current token being $0 (as indicate of EOF), "
 	      "you must call one of the ?#next-functions in order to load the first token of the newly "
 	      "pushed file. - Failing to do so will cause the compiler to not function properly, as it "
@@ -2331,7 +2331,7 @@ PRIVATE struct type_method lexer_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_addassert,
 	  DOC("(predicate:?Dstring,answer:?Dstring)\n"
 	      "Define an assertion @answer for a given @predicate, such that "
-	      "${#if #predicate(answer)} evaluates to :true when encountered "
+	      "${##if #predicate(answer)} evaluates to :true when encountered "
 	      "within a preprcessor expression"),
 	  TYPE_METHOD_FKWDS },
 	{ "delassert",
@@ -2339,7 +2339,7 @@ PRIVATE struct type_method lexer_methods[] = {
 	  DOC("(predicate:?Dstring,answer?:?Dstring)->?Dbool\n"
 	      "@return Returns :true when at least 1 answer got deleted for the given @predicate\n"
 	      "Delete an assertion @answer, or all assertions made for a given "
-	      "@predicate, such that ${#if #predicate(answer)} no longer evaluates "
+	      "@predicate, such that ${##if #predicate(answer)} no longer evaluates "
 	      "to :true when encountered within a preprcessor expression"),
 	  TYPE_METHOD_FKWDS },
 	/* TODO */
@@ -2664,12 +2664,12 @@ PRIVATE struct type_method lexer_syspaths_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_push,
 	  DOC("()\n"
 	      "Push (remember) the current state of system include paths\n"
-	      "This is the same as using ${#pragma TPP include_path(push)}") },
+	      "This is the same as using ${##pragma TPP include_path(push)}") },
 	{ DeeString_STR(&str_pop),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_pop,
 	  DOC("->?Dbool\n"
 	      "Pop (restore) a previously pushed system include path state\n"
-	      "This is the same as using ${#pragma TPP include_path(pop)}") },
+	      "This is the same as using ${##pragma TPP include_path(pop)}") },
 	{ DeeString_STR(&str_insert),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&lexer_syspaths_insert,
 	  DOC("(path:?Dstring)->?Dbool\n"
@@ -4398,7 +4398,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	      "@throw ValueError Attempted to delete, or set the filename of a non-text file\n"
 	      "Returns the filename of a text file, or the filename of the file containing the "
 	      "definition of the @this macro\n"
-	      "In the event that a ${#line} directive was used to override the filename, the "
+	      "In the event that a ${##line} directive was used to override the filename, the "
 	      "overwritten name is returned. If this isn't intended, use ?#realfilename instead\n"
 	      "In text-files, this field may be written to override the current file name, while "
 	      "deleting it will restore ?#realfilename as the used filename") },
@@ -4408,7 +4408,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	      "Returns the real filename of a text file, or the real filename of the file "
 	      "containing the definition of the @this macro\n"
 	      "This is the original, real filename, whereas the name returned by ?#Filename "
-	      "is the one which may have been overwritten by a ${#line} directive") },
+	      "is the one which may have been overwritten by a ${##line} directive") },
 	{ "name",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_name, NULL, NULL,
 	  DOC("->?Dstring\n"
@@ -4434,7 +4434,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
 	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, delete, or set a keyword that is checked for being defined "
-	      "before allowing @this File to be included by ${#include} again\n"
+	      "before allowing @this File to be included by ${##include} again\n"
 	      "In the event of the keyword having an associated macro that is also "
 	      "defined, the file will not be included, but simply be skipped.\n"
 	      "Setting :none is the same as deleting the guard, and :none is returned if no guard is set") },
@@ -4445,13 +4445,13 @@ PRIVATE struct type_getset file_getsets[] = {
 	  DOC("->?X2?AKeyword?ALexer?Ert:Compiler?N\n"
 	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, delete, or set a keyword that will be set as ?#guard (if no guard has "
-	      "already been set) once @this File is popped from the ${#include}-stack, and "
+	      "already been set) once @this File is popped from the ${##include}-stack, and "
 	      "?#disallowguard is :false") },
 	{ "includecount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_includecount, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
-	      "Return the number of times that @this File exists within the ${#include}-stack") },
+	      "Return the number of times that @this File exists within the ${##include}-stack") },
 	{ "readcount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_readcount, NULL, NULL,
 	  DOC("->?Dint\n"
@@ -4466,7 +4466,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	      "Get, del (set to false), or set @this File's disallow-guard property.\n"
 	      "When set to :false, ?#newguard will be applied as ?#guard when the file is "
 	      "popped, allowing the lexer to remember a potential file guard.\n"
-	      "This flag is set to :true automatically when an outer-most ${#ifndef}-block "
+	      "This flag is set to :true automatically when an outer-most ${##ifndef}-block "
 	      "ends, following which more non-whitespace text is encountered, thus "
 	      "preventing the creation of a guard for the file") },
 	{ "issystemheader",
@@ -4477,7 +4477,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	      "@throw ValueError @this File isn't a text file (?#istext is :false)\n"
 	      "Get, del (set to false), or set if @this File is considered a system header\n"
 	      "When :true, all non-error warnings are suppressed\n"
-	      "This flag is usually set by a ${#pragma GCC system_header} directive") },
+	      "This flag is usually set by a ${##pragma GCC system_header} directive") },
 	{ "nonblocking",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getnonblocking,
 	  (int (DCALL *)(DeeObject *__restrict))&file_delnonblocking,
@@ -4515,13 +4515,13 @@ PRIVATE struct type_getset file_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_previousdefinition, NULL, NULL,
 	  DOC("->?X2?.?N\n"
 	      "@throw ValueError @this File isn't a macro file (?#ismacro is :false)\n"
-	      "Return the previous definition of pushed macro (as created by ${#pragma push_macro(\"foo\")})\n"
+	      "Return the previous definition of pushed macro (as created by ${##pragma push_macro(\"foo\")})\n"
 	      "If the macro hasn't been pushed, or is the oldest variant, :none is returned") },
 	{ "pushcount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_pushcount, NULL, NULL,
 	  DOC("->?Dint\n"
 	      "@throw ValueError @this File isn't a macro file (?#ismacro is :false)\n"
-	      "The amount of times ${#pragma push_macro(\"foo\")} was repeated without actually "
+	      "The amount of times ${##pragma push_macro(\"foo\")} was repeated without actually "
 	      "providing a new definition of the macro. Used to handle recursive use of that pragma") },
 	{ "keywordexpandorigin",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_keywordexpandorigin, NULL, NULL,
@@ -4544,7 +4544,7 @@ PRIVATE struct type_getset file_getsets[] = {
 	      "and is cleared when that extension is disabled (default)\n"
 	      "When set, the macro's body may contain another reference to the function itself, which is then "
 	      "expanded again, so-long as the arguments passed differ from all expansions that are already "
-	      "apart of the current macro-expansion (${#include}) stack.") },
+	      "apart of the current macro-expansion (${##include}) stack.") },
 	{ "keepargumentspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_getkeepargumentspace,
 	  (int (DCALL *)(DeeObject *__restrict))&file_delkeepargumentspace,

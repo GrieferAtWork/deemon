@@ -663,12 +663,12 @@ INTDEF NONNULL((1)) void DCALL interactivemodule_lockread(DeeModuleObject *__res
 INTDEF NONNULL((1)) void DCALL interactivemodule_lockwrite(DeeModuleObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL interactivemodule_lockendread(DeeModuleObject *__restrict self);
 INTDEF NONNULL((1)) void DCALL interactivemodule_lockendwrite(DeeModuleObject *__restrict self);
-#else
+#else /* !CONFIG_NO_THREADS */
 #deifne interactivemodule_lockread(self)     (void)0
 #deifne interactivemodule_lockwrite(self)    (void)0
 #deifne interactivemodule_lockendread(self)  (void)0
 #deifne interactivemodule_lockendwrite(self) (void)0
-#endif
+#endif /* CONFIG_NO_THREADS */
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1340,19 +1340,21 @@ PRIVATE struct type_getset module_getsets[] = {
 	      "Returns a modifiable mapping-like object containing @this "
 	      "Module's global variables accessible by name (and enumerable)\n"
 	      "Note that only existing exports can be modified, however no new symbols can be added:\n"
-	      ">import util;\n"
-	      ">print util.min;                // function\n"
-	      ">print util.__exports__[\"min\"]; // function\n"
-	      ">del util.min;\n"
-	      ">assert \"min\" !in util.__exports__;\n"
-	      ">util.__exports__[\"min\"] = 42;\n"
-	      ">print util.min;                // 42") },
+	      "${"
+	      "import util;\n"
+	      "print util.min;                /* function */\n"
+	      "print util.__exports__[\"min\"]; /* function */\n"
+	      "del util.min;\n"
+	      "assert \"min\" !in util.__exports__;\n"
+	      "util.__exports__[\"min\"] = 42;\n"
+	      "print util.min;                /* 42 */"
+	      "}") },
 	{ "__imports__", (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_imports, NULL, NULL,
 	  DOC("->?S?DModule\n"
 	      "Returns an immutable sequence of all other modules imported by this one") },
 	{ "__globals__", &DeeModule_ViewGlobals, NULL, NULL,
 	  DOC("->?S?O\n"
-	      "Similar to #__exports__, however global variables are addressed using their "
+	      "Similar to ?#__exports__, however global variables are addressed using their "
 	      "internal index. Using this, anonymous global variables (such as property callbacks) "
 	      "can be accessed and modified") },
 	{ "__code__",
@@ -1395,7 +1397,7 @@ PRIVATE struct type_getset module_class_getsets[] = {
 	/* Deprecated aliases to emulate the old `dexmodule' builtin type. */
 	{ "search_path", &module_class_getpath, NULL, &module_class_setpath,
 	  DOC("->?DList\n"
-	      "Deprecated alias for #path") },
+	      "Deprecated alias for ?#path") },
 	{ NULL }
 };
 

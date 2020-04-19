@@ -398,9 +398,8 @@ PRIVATE struct type_nii traceiter_nii = {
 };
 
 #define DEFINE_TRACEITER_COMPARE(name, op)                                \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                         \
-	name(TraceIterator *__restrict self,                                  \
-	     TraceIterator *__restrict other) {                               \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
+	name(TraceIterator *self, TraceIterator *other) {                     \
 		if (DeeObject_AssertTypeExact(other, &DeeTracebackIterator_Type)) \
 			goto err;                                                     \
 		return_bool(READ_NEXT(other) op READ_NEXT(self));                 \
@@ -466,7 +465,7 @@ INTERN DeeTypeObject DeeTracebackIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */traceiter_members,
+	/* .tp_members       = */ traceiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -795,12 +794,12 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */traceback_methods,
+	/* .tp_methods       = */ traceback_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */traceback_class_getsets,
-	/* .tp_class_members = */traceback_class_members
+	/* .tp_class_getsets = */ traceback_class_getsets,
+	/* .tp_class_members = */ traceback_class_members
 };
 
 

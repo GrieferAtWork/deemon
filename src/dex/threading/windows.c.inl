@@ -283,10 +283,10 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 	                         "\n"
 	                         "enter->\n"
 	                         "@interrupt\n"
-	                         "Same as #wait\n"
+	                         "Same as ?#wait\n"
 	                         "\n"
 	                         "leave->\n"
-	                         "Same as #post"),
+	                         "Same as ?#post"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -501,10 +501,10 @@ INTERN DeeTypeObject DeeMutex_Type = {
 	/* .tp_doc      = */ DOC("Construct a new mutex (mutual exclusion) object\n"
 	                         "\n"
 	                         "enter->\n"
-	                         "Same as #acquire\n"
+	                         "Same as ?#acquire\n"
 	                         "\n"
 	                         "leave->\n"
-	                         "Same as #release"),
+	                         "Same as ?#release"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

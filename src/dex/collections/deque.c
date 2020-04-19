@@ -678,7 +678,7 @@ err_restart_collect:
 	Deque_LockEndRead(other);
 	iter = copy;
 	/* Free memory for all buckets already allocated. */
-	if (iter)
+	if (iter) {
 		for (;;) {
 			size_t i, count;
 			next = iter->db_next;
@@ -697,6 +697,7 @@ err_restart_collect:
 				break;
 			iter = next;
 		}
+	}
 	/* Collect memory for the missing bucket. */
 	if (!Dee_CollectMemory(SIZEOF_BUCKET(self->d_bucket_sz)))
 		return -1;
@@ -1456,34 +1457,42 @@ PRIVATE struct type_method deq_methods[] = {
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the first @num_items items left by 1:\n"
-	      ">import deque from collections;\n"
-	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      ">x.llrot(3);\n"
-	      ">print repr x; /* { 20, 30, 10, 40, 50 } */") },
+	      "${"
+	      "import deque from collections;\n"
+	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	      "x.llrot(3);\n"
+	      "print repr x; /* { 20, 30, 10, 40, 50 } */"
+	      "}") },
 	{ "lrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_lrrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the first @num_items items right by 1:\n"
-	      ">import deque from collections;\n"
-	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      ">x.lrrot(3);\n"
-	      ">print repr x; /* { 30, 10, 20, 40, 50 } */") },
+	      "${"
+	      "import deque from collections;\n"
+	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	      "x.lrrot(3);\n"
+	      "print repr x; /* { 30, 10, 20, 40, 50 } */"
+	      "}") },
 	{ "rlrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_rlrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the last @num_items items left by 1:\n"
-	      ">import deque from collections;\n"
-	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      ">x.rlrot(3);\n"
-	      ">print repr x; /* { 10, 20, 40, 50, 30 } */") },
+	      "${"
+	      "import deque from collections;\n"
+	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	      "x.rlrot(3);\n"
+	      "print repr x; /* { 10, 20, 40, 50, 30 } */"
+	      "}") },
 	{ "rrrot", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_rrrot,
 	  DOC("(num_items:?Dint)\n"
 	      "@throw IndexError @this deque contain less than @num_items items\n"
 	      "Rotate the last @num_items items right by 1:\n"
-	      ">import deque from collections;\n"
-	      ">local x = deque({ 10, 20, 30, 40, 50 });\n"
-	      ">x.rrrot(3);\n"
-	      ">print repr x; /* { 10, 20, 50, 30, 40 } */") },
+	      "${"
+	      "import deque from collections;\n"
+	      "local x = deque({ 10, 20, 30, 40, 50 });\n"
+	      "x.rrrot(3);\n"
+	      "print repr x; /* { 10, 20, 50, 30, 40 } */"
+	      "}") },
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&deq_sizeof,
 	  DOC("->?Dint") },
@@ -1502,17 +1511,19 @@ INTERN DeeTypeObject Deque_Type = {
 	/* .tp_doc      = */ DOC("A double-ended queue that allows for O(1) insertion and removal at the front "
 	                         "and back, while still providing a decently fast index-based item lookup, "
 	                         "as well as fast iteration both in forward, as well as in reverse\n"
-	                         "A Deque in its purest form (with a #bucketsize of $1) is really nothing "
+	                         "A Deque in its purest form (with a ?#bucketsize of $1) is really nothing "
 	                         "but a doubly-linked list. However instead of every node only ever containing "
-	                         "a single item, each is a pre-allocated vector of up to #bucketsize objects, "
+	                         "a single item, each is a pre-allocated vector of up to ?#bucketsize objects, "
 	                         "meaning that an index-based lookup takes at most O(floor((n / bucketsize) / 2).\n"
 	                         "The second division by 2 is done because indices closer to the end of the Deque "
 	                         "are searched for from its end, rather than its start\n"
 	                         "However, inserting or erasure anywhere else is quite expensive, "
 	                         "as doing so requires items to be moved around a lot\n"
+
 	                         "\n"
 	                         "()\n"
 	                         "Construct an empty Deque\n"
+
 	                         "\n"
 	                         "(seq:?S?O)\n"
 	                         "(seq:?S?O,bucketsize:?Dint)\n"
@@ -1521,39 +1532,49 @@ INTERN DeeTypeObject Deque_Type = {
 	                         "When @bucketsize is omitted, an implementation-specific "
 	                         "default value is used, which may also depend on other "
 	                         "environmental factors selected to maximize performance\n"
+
 	                         "\n"
 	                         "copy->\n"
 	                         "Returns a shallow copy of all elements of @this Deque\n"
+
 	                         "\n"
 	                         "deepcopy->\n"
 	                         "Returns a deep copy of all elements of @this Deque\n"
+
 	                         "\n"
 	                         ":=(other:?S?O)->\n"
 	                         "Assign all the elements from @other to @this Deque\n"
+
 	                         "\n"
 	                         "move:=->\n"
 	                         "Move all the elements from @other into @this Deque, clearing @other in the process\n"
+
 	                         "\n"
 	                         "bool->\n"
 	                         "Returns :true if @this Deque is non-empty. :false otherwise\n"
+
 	                         "\n"
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating the elements of @this Deque in ascending order\n"
+
 	                         "\n"
 	                         "[]->\n"
 	                         "@throw IndexError @index is greater that the length of @this Deque\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Returns the @index'th item of @this Deque\n"
+
 	                         "\n"
 	                         "[]=->\n"
 	                         "@throw IndexError @index is greater that the length of @this Deque\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Set the @index'th item of @this Deque to @item\n"
+
 	                         "\n"
 	                         "del[]->\n"
 	                         "@throw IndexError @index is greater that the length of @this Deque\n"
 	                         "@throw IntegerOverflow @index is negative or too large\n"
 	                         "Same as ${this.pop(index)} for positive values for @index\n"
+
 	                         "\n"
 	                         "contains->\n"
 	                         "Returns :true if @item is apart of this Deque, :false otherwise"),
@@ -1774,7 +1795,7 @@ PRIVATE struct type_getset deqiter_getsets[] = {
 	  NULL,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&deqiter_setindex_ob,
 	  DOC("->?X2?Dint?N\n"
-	      "Get/set the index of @this iterator within its associated :Deque\n"
+	      "Get/set the index of @this iterator within its associated ?GDeque\n"
 	      "When :none, the iterator has been invalidated, possibly due to the "
 	      "deque having changed") },
 	{ NULL }

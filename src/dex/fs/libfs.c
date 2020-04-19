@@ -1286,13 +1286,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "keyword-style macros that exist in directories. When addressed, simply imagine "
 	      "their name being replaced with @target_text, at which point the resulting path "
 	      "is then re-evaluated:\n"
-	      ">import symlink from fs;\n"
-	      ">import File from deemon;\n"
-	      ">symlink(\"../foo\",\"/path/to/link\");\n"
-	      ">/* \"/path/to/[link]/file.txt\" */\n"
-	      ">/* \"/path/to/[../foo]/file.txt\" */\n"
-	      ">/* \"/path/foo/file.txt\" */\n"
-	      ">File.open(\"/path/to/link/file.txt\");\n"
+	      "${"
+	      "import symlink from fs;\n"
+	      "import File from deemon;\n"
+	      "symlink(\"../foo\", \"/path/to/link\");\n"
+	      "/* \"/path/to/[link]/file.txt\" */\n"
+	      "/* \"/path/to/[../foo]/file.txt\" */\n"
+	      "/* \"/path/foo/file.txt\" */\n"
+	      "File.open(\"/path/to/link/file.txt\");"
+	      "}\n"
 	      "Because of the fact that some filesystem support alternative path separators, "
 	      "those seperators may not be allowed to appear in symbolic link texts. If this "
 	      "is the case and if @format_target is :true, the given @target_text will be "
@@ -1315,86 +1317,102 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "headof", (DeeObject *)&libfs_headof, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dstring\n"
 	      "@return The head of a path, that is the directory without the filename\n"
-	      ">import headof from fs;\n"
-	      ">print headof(\"bar.txt\");        /* \"\" */\n"
-	      ">print headof(\"/foo/bar.txt\");   /* \"/foo/\" */\n"
-	      ">print headof(\"C:/foo/bar.txt\"); /* \"C:/foo/\" */") },
+	      "${"
+	      "import headof from fs;\n"
+	      "print headof(\"bar.txt\");        /* \"\" */\n"
+	      "print headof(\"/foo/bar.txt\");   /* \"/foo/\" */\n"
+	      "print headof(\"C:/foo/bar.txt\"); /* \"C:/foo/\" */"
+	      "}") },
 	{ "tailof", (DeeObject *)&libfs_tailof, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dstring\n"
 	      "@return The tail of a path, that is the filename + extension\n"
-	      ">import tailof from fs;\n"
-	      ">print tailof(\"bar.txt\");        /* \"bar.txt\" */\n"
-	      ">print tailof(\"/foo/bar.txt\");   /* \"bar.txt\" */\n"
-	      ">print tailof(\"C:/foo/bar.txt\"); /* \"bar.txt\" */") },
+	      "${"
+	      "import tailof from fs;\n"
+	      "print tailof(\"bar.txt\");        /* \"bar.txt\" */\n"
+	      "print tailof(\"/foo/bar.txt\");   /* \"bar.txt\" */\n"
+	      "print tailof(\"C:/foo/bar.txt\"); /* \"bar.txt\" */"
+	      "}") },
 	{ "fileof", (DeeObject *)&libfs_fileof, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dstring\n"
 	      "@return The file portion of a path, excluding the file extension\n"
-	      ">import fileof from fs;\n"
-	      ">print fileof(\"bar.txt\");        /* \"bar\" */\n"
-	      ">print fileof(\"/foo/bar.txt\");   /* \"bar\" */\n"
-	      ">print fileof(\"C:/foo/bar.txt\"); /* \"bar\" */") },
+	      "${"
+	      "import fileof from fs;\n"
+	      "print fileof(\"bar.txt\");        /* \"bar\" */\n"
+	      "print fileof(\"/foo/bar.txt\");   /* \"bar\" */\n"
+	      "print fileof(\"C:/foo/bar.txt\"); /* \"bar\" */"
+	      "}") },
 	{ "extof", (DeeObject *)&libfs_extof, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dstring\n"
 	      "@return The extension of a path, including the leading $\".\" character\n"
-	      ">import extof from fs;\n"
-	      ">print extof(\"bar.txt\");        /* \".txt\" */\n"
-	      ">print extof(\"/foo/bar.txt\");   /* \".txt\" */\n"
-	      ">print extof(\"C:/foo/bar.txt\"); /* \".txt\" */") },
+	      "${"
+	      "import extof from fs;\n"
+	      "print extof(\"bar.txt\");        /* \".txt\" */\n"
+	      "print extof(\"/foo/bar.txt\");   /* \".txt\" */\n"
+	      "print extof(\"C:/foo/bar.txt\"); /* \".txt\" */"
+	      "}") },
 	{ "driveof", (DeeObject *)&libfs_driveof, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dstring\n"
 	      "@return The drive portion of an absolute path on windows, or $\"/\" on other platforms\n"
-	      ">import driveof from fs;\n"
-	      ">print driveof(\"bar.txt\");        /* \"\" or \"/\" */\n"
-	      ">print driveof(\"/foo/bar.txt\");   /* \"\" or \"/\" */\n"
-	      ">print driveof(\"C:/foo/bar.txt\"); /* \"C:/\" or \"/\" */") },
+	      "${"
+	      "import driveof from fs;\n"
+	      "print driveof(\"bar.txt\");        /* \"\" or \"/\" */\n"
+	      "print driveof(\"/foo/bar.txt\");   /* \"\" or \"/\" */\n"
+	      "print driveof(\"C:/foo/bar.txt\"); /* \"C:/\" or \"/\" */"
+	      "}") },
 	{ "inctrail", (DeeObject *)&libfs_inctrail, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dstring\n"
 	      "@return The path with a trailing slash included\n"
-	      ">import inctrail from fs;\n"
-	      ">print inctrail(\"/foo/bar/\"); /* \"/foo/bar/\" */\n"
-	      ">print inctrail(\"/foo/bar\");  /* \"/foo/bar/\" */") },
+	      "${"
+	      "import inctrail from fs;\n"
+	      "print inctrail(\"/foo/bar/\"); /* \"/foo/bar/\" */\n"
+	      "print inctrail(\"/foo/bar\");  /* \"/foo/bar/\" */"
+	      "}") },
 	{ "exctrail", (DeeObject *)&libfs_exctrail, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dstring\n"
 	      "@return The path with a trailing slash excluded\n"
-	      ">import exctrail from fs;\n"
-	      ">print exctrail(\"/foo/bar/\"); /* \"/foo/bar\" */\n"
-	      ">print exctrail(\"/foo/bar\");  /* \"/foo/bar\" */") },
+	      "${"
+	      "import exctrail from fs;\n"
+	      "print exctrail(\"/foo/bar/\"); /* \"/foo/bar\" */\n"
+	      "print exctrail(\"/foo/bar\");  /* \"/foo/bar\" */"
+	      "}") },
 	{ "abspath", (DeeObject *)&libfs_abspath, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring,cwd=!P{.})->?Dstring\n"
 	      "@interrupt\n"
 	      "Makes @path an absolute path, using @cwd as the base point for the relative disposition\n"
 	      "If @path was already relative to begin with, it is forced to become relative "
-	      "as the result of calling #relpath with it and the return value of #getcwd\n"
+	      "as the result of calling ?Grelpath with it and the return value of ?Ggetcwd\n"
 	      "If @cwd is relative, if will be forced to become absolute as the result of "
-	      "calling #abspath with @cwd as first and the return value of #getcwd as second argument\n"
-	      ">import abspath from fs;\n"
-	      ">print abspath(\"../user/bar\",\"/home/foobar\"); /* \"/home/user/bar\" */") },
+	      "calling ?Gabspath with @cwd as first and the return value of ?Ggetcwd as second argument\n"
+	      "${"
+	      "import abspath from fs;\n"
+	      "print abspath(\"../user/bar\",\"/home/foobar\"); /* \"/home/user/bar\" */"
+	      "}") },
 	{ "relpath", (DeeObject *)&libfs_relpath, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring,cwd=!P{.})->?Dstring\n"
 	      "@interrupt\n"
 	      "Creates a relative path leading to @path and originating from @cwd\n"
 	      "If @path was already relative to begin with, it is forced to become absolute "
-	      "as the result of calling #abspath with it and the return value of #getcwd\n"
+	      "as the result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
 	      "If @cwd is relative, if will be forced into an absolute path as the "
-	      "result of calling #abspath with it and the return value of #getcwd\n"
+	      "result of calling ?Gabspath with it and the return value of ?Ggetcwd\n"
 	      "When running on a windows host, in the event that @path is located on a "
-	      "different #driveof than @cwd, @path will be re-returned as is") },
+	      "different ?Gdriveof than @cwd, @path will be re-returned as is") },
 	{ "isabs", (DeeObject *)&libfs_isabs, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dbool\n"
 	      "Returns :true if the given @path is considered to be absolute") },
 	{ "isrel", (DeeObject *)&libfs_isrel, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dbool\n"
-	      "Returns the inverse of #isabs") },
+	      "Returns the inverse of ?Gisabs") },
 	{ "issep", (DeeObject *)&libfs_issep, MODSYM_FNORMAL,
 	  DOC("(str:?Dstring)->?Dbool\n"
 	      "Returns :true if the given @str is recognized as a path "
 	      "seperator (Usually $\"/\" and/or $\"\\\")\n"
 	      "The host's primary and secondary seperator "
-	      "values can be read from ?#SEP and ?#ALTSEP") },
+	      "values can be read from ?GSEP and ?GALTSEP") },
 	{ "joinpath", (DeeObject *)&libfs_joinpath, MODSYM_FNORMAL,
 	  DOC("(paths!:?Dstring)->?Dstring\n"
 	      "Joins all @paths passed through varargs to generate a full path. "
-	      "For this purpose, all path elements are joined with ?#SEP, "
+	      "For this purpose, all path elements are joined with ?GSEP, "
 	      "after removal of additional slashes and spaces surrounding the given @paths") },
 	{ "expand", (DeeObject *)&libfs_expand, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring,env:?DMapping=!Genviron)->?Dstring\n"
@@ -1411,8 +1429,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "$\"v\"|Expand $\"$<nam>\" and $\"${<nam>}\" to ${env[nam]}&"
 	      "$\"V\"|Expand $\"%<nam>%\" to ${env[nam]}&"
 	      "$\"p\"|Expand $\".\" and $\"..\" folders names while also deleting multiple consecutive "
-	      /*  */ "slashes, as well as all whitespace surrounding them. On hosts with an ?#ALTSEP differing "
-	      /*  */ "from ?#SEP, all occurrances of ?#ALTSEP are also replaced with ?#SEP. "
+	      /*  */ "slashes, as well as all whitespace surrounding them. On hosts with an ?GALTSEP differing "
+	      /*  */ "from ?GSEP, all occurrances of ?GALTSEP are also replaced with ?GSEP. "
 	      /*  */ "This option, alongside $\"c\" and $\"a\" should be used before a path-string can be considered "
 	      /*  */ "uniform and suitable to be used as key in a hash-table used for mapping files to objects. "
 	      /*  */ "Note that the deemon core uses an option similar to this to implement the mapping "
@@ -1430,11 +1448,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("->?Dstring\n"
 	      "The host's primary path seperator. On windows that is "
 	      "$\"\\\" while on most other hosts it is $\"/\"\n"
-	      "If supported by the host, an alternative seperator can be read from ?#ALTSEP\n"
-	      "Additionally, a string can be testing for being a seperator by calling #issep") },
+	      "If supported by the host, an alternative seperator can be read from ?GALTSEP\n"
+	      "Additionally, a string can be testing for being a seperator by calling ?Gissep") },
 	{ "ALTSEP", (DeeObject *)&libfs_sep, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "The alternative path seperator or an alias for ?#SEP "
+	      "The alternative path seperator or an alias for ?GSEP "
 	      "if the host only supports a single type of seperator") },
 	{ "DELIM", (DeeObject *)&libfs_delim, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"

@@ -247,19 +247,19 @@ PRIVATE struct type_getset jy_getsets[] = {
 	{ "__name__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__name__ though #__func__") },
+	      "Alias for ?A__name__?GFunction though ?#__func__") },
 	{ "__doc__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getdoc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__doc__ though #__func__") },
+	      "Alias for ?A__doc__?GFunction though ?#__func__") },
 	{ "__kwds__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
-	      "Alias for :Function.__kwds__ though #__func__") },
+	      "Alias for ?A__kwds__?GFunction though ?#__func__") },
 	{ "__text__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_gettext, NULL, NULL,
 	  DOC("->?Dstring\n"
-	      "Alias for :Function.__text__ though #__func__") },
+	      "Alias for ?A__text__?GFunction though ?#__func__") },
 	{ "__args__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jy_getargs, NULL, NULL,
 	  DOC("->?S?O\n"
@@ -1904,19 +1904,19 @@ PRIVATE struct type_getset ji_getsets[] = {
 	{ "__name__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__name__ though #__func__") },
+	      "Alias for ?A__name__?GFunction though ?#__func__") },
 	{ "__doc__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getdoc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Alias for :Function.__doc__ though #__func__") },
+	      "Alias for ?A__doc__?GFunction though ?#__func__") },
 	{ "__kwds__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring\n"
-	      "Alias for :Function.__kwds__ though #__func__") },
+	      "Alias for ?A__kwds__?GFunction though ?#__func__") },
 	{ "__text__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ji_gettext, NULL, NULL,
 	  DOC("->?Dstring\n"
-	      "Alias for :Function.__text__ though #__func__") },
+	      "Alias for ?A__text__?GFunction though ?#__func__") },
 	/* TODO: __refs__ */
 	{ NULL }
 };
@@ -1924,7 +1924,7 @@ PRIVATE struct type_getset ji_getsets[] = {
 PRIVATE struct type_member ji_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(JITYieldFunctionIterator, ji_func),
 	                      "->?GYieldFunction\n"
-	                      "Alias for #__yfunc__"),
+	                      "Alias for ?#__yfunc__"),
 	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT, offsetof(JITYieldFunctionIterator, ji_func),
 	                      "->?GYieldFunction\n"
 	                      "The underlying yield-function"),

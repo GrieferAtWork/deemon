@@ -1905,7 +1905,7 @@ PRIVATE struct type_method dict_methods[] = {
 	/* Old function names. */
 	{ "insert_all", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
 	  DOC("(items:?S?T2?O?O)\n"
-	      "A deprecated alias for #update") },
+	      "A deprecated alias for ?#update") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	{ NULL }
 };
@@ -1979,7 +1979,8 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	                         "\n"
 	                         "(items:?S?T2?O?O)\n"
 	                         "Create a new Dict, using key-items pairs extracted from @items.\n"
-	                         "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this Dict"),
+	                         "Iterate @items and unpack each element into 2 others, using them "
+	                         "as key and value to insert into @this Dict"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Dict),
 	/* .tp_features = */ TF_NONE,

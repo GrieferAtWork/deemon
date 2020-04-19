@@ -1803,7 +1803,7 @@ INTERN DeeTypeObject DeeSockAddr_Type = {
 	                     "Note that many functions from :socket also accept @args as arguments to various functions\n"
 	                     "\n"
 	                     "(args!,other:?Dsockaddr)\n"
-	                     "@throw ValueError The @other socket uses a #family incompatible to the previously specified family\n"
+	                     "@throw ValueError The @other socket uses a ?#family incompatible to the previously specified family\n"
 	                     "@param other The @other socket address that should be duplicated\n"
 	                     "Always accepted is another socket address that is duplicated\n"
 	                     "\n"

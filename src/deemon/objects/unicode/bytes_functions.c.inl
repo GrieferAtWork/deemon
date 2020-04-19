@@ -3713,17 +3713,18 @@ INTERN struct type_method bytes_methods[] = {
 	{ "bytes",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_substr,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Same as #substr (here for ABI compatibility with :string.bytes)"),
+	      "Same as ?#substr (here for ABI compatibility with :string.bytes)"),
 	  TYPE_METHOD_FKWDS },
 	{ "ord",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_ord,
 	  DOC("->?Dint\n"
 	      "@throw ValueError The length of @this Bytes object is not equal to $1\n"
 	      "Same as ${this[0]}\n"
+
 	      "\n"
 	      "(index:?Dint)->?Dint\n"
 	      "@throw IntegerOverflow The given @index is lower than $0\n"
-	      "@throw IndexError The given @index is greater than ${#this}\n"
+	      "@throw IndexError The given @index is greater than ${##this}\n"
 	      "Same as ${this[index]}") },
 
 	/* Bytes-specific functions. */
@@ -3731,49 +3732,48 @@ INTERN struct type_method bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_resized,
 	  DOC("(new_size:?Dint,filler?:?Dint)->?.\n"
 	      "Return a new writable Bytes object with a length of @new_size, and its "
-	      "first ${(#this,new_size) < ...} bytes initialized from ${this.substr(0,new_size)}, "
+	      "first ${(##this, new_size) < ...} bytes initialized from ${this.substr(0, new_size)}, "
 	      "with the remainder then either left uninitialized, or initialized to @filler\n"
 	      "Note that because a Bytes object cannot be resized in-line, code using this function "
 	      "must make use of the returned Bytes object:\n"
-	      ">local x = \"foobar\";\n"
-	      ">local y = x.bytes();\n"
-	      ">print repr y; /* \"foobar\" */\n"
-	      ">y = y.resized(16,\"?\".ord());\n"
-	      ">print repr y; /* \"foobar??"
-	      "??"
-	      "??"
-	      "??"
-	      "??\" */") },
+	      "${"
+	      "local x = \"foobar\";\n"
+	      "local y = x.bytes();\n"
+	      "print repr y; /* \"foobar\" */\n"
+	      "y = y.resized(16, \"?\".ord());\n"
+	      "print repr y; /* \"foobar??" "??" "??" "??" "??\" */"
+	      "}") },
 	{ "reverse",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reverse,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #reversed, but modifications are performed "
+	      "Same as ?#reversed, but modifications are performed "
 	      "in-line, before @this Bytes object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "makereadonly",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_makereadonly,
 	  DOC("->?.\n"
-	      "The inverse of #makewritable, either re-returning @this Bytes object if it "
+	      "The inverse of ?#makewritable, either re-returning @this Bytes object if it "
 	      "already is read-only, or construct a view for the data contained within @this "
 	      "Bytes object, but making that view read-only") },
 	{ "makewritable",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_makewritable,
 	  DOC("->?.\n"
-	      "Either re-return @this Bytes object is it already #iswritable, or create a "
+	      "Either re-return @this Bytes object is it already ?#iswritable, or create a "
 	      "copy (s.a. ?#{op:copy}) and return it:\n"
-	      ">function makewritable() {\n"
-	      "> if (this.iswritable)\n"
-	      ">  return this;\n"
-	      "> return copy this;\n"
-	      ">}") },
+	      "${"
+	      "function makewritable() {\n"
+	      "	if (this.iswritable)\n"
+	      "		return this;\n"
+	      "	return copy this;\n"
+	      "}}") },
 	{ "hex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_hex,
 	  DOC("(start=!0,end=!-1)->?Dstring\n"
 	      "Returns a hex-encoded string for the bytes contained within "
-	      "${this.substr(start,end)}, that is a string containing 2 characters "
+	      "${this.substr(start, end)}, that is a string containing 2 characters "
 	      "for each encoded byte, both of which are lower-case hexadecimal digits\n"
-	      "The returned string is formatted such that #fromhex can be used to decode "
+	      "The returned string is formatted such that ?#fromhex can be used to decode "
 	      "it into another Bytes object"),
 	  TYPE_METHOD_FKWDS },
 
@@ -3791,149 +3791,151 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if $this, ${this[index]}, or all "
-	      "characters in ${this.substr(start,end)} are printable") },
+	      "characters in ${this.substr(start, end)} are printable") },
 	{ "isalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isalpha,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are alphabetical") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are alphabetical") },
 	{ "isspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isspace,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are space-characters") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are space-characters") },
 	{ "islf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_islf,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are line-feeds") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are line-feeds") },
 	{ "islower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_islower,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are lower-case") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are lower-case") },
 	{ "isupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isupper,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are upper-case") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are upper-case") },
 	{ "iscntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_iscntrl,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are control characters") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are control characters") },
 	{ "isdigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isdigit,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are digits") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are digits") },
 	{ "isdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isdecimal,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are dicimal characters") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are dicimal characters") },
 	{ "issymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymstrt,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} can be used to start a symbol name") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} can be used to start a symbol name") },
 	{ "issymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymcont,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} can be used to continue a symbol name") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} can be used to continue a symbol name") },
 	{ "isalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isalnum,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} are alpha-numerical") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} are alpha-numerical") },
 	{ "isnumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isnumeric,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted as ASCII characters) "
-	      "in ${this.substr(start,end)} qualify as digit or decimal characters") },
+	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "as ASCII characters) in ${this.substr(start, end)} qualify as digit or decimal characters") },
 	{ "istitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_istitle,
 	  DOC("(index:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if the character at ${this[index]} has title-casing\n"
+
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
+	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
 	      "follows title-casing, meaning that space is followed by upper-case") },
 	{ "issymbol",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymbol,
 	  DOC("(index:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "Returns :true if the character at ${this[index]} can be used "
 	      "to start a symbol name. Same as ${this.issymstrt(index)}\n"
+
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start,end)} "
+	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
 	      "is a valid symbol name") },
 	{ "isascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isascii,
 	  DOC("->?Dbool\n"
 	      "(index:?Dint)->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "@throw IndexError The given @index is larger than ${#this}\n"
+	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start,end)} "
+	      "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start, end)} "
 	      "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 	{ "asnumber",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asnumber,
@@ -3957,7 +3959,8 @@ INTERN struct type_method bytes_methods[] = {
 	      "(index:?Dint,defl)->\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
-	      "Same as #asnumber, but only succeed if the selected character matches #isdigit, rather than #isnumeric") },
+	      "Same as ?#asnumber, but only succeed if the selected character "
+	      "matches ?#isdigit, rather than ?#isnumeric") },
 	{ "asdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asdecimal,
 	  DOC("->?Dint\n"
@@ -3968,96 +3971,97 @@ INTERN struct type_method bytes_methods[] = {
 	      "(index:?Dint,defl)->\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
 	      "@throw IndexError The given @index is out of bounds\n"
-	      "Same as #asnumber, but only succeed if the selected character matches #isdecimal, rather than #isnumeric") },
+	      "Same as ?#asnumber, but only succeed if the selected character "
+	      "matches ?#isdecimal, rather than ?#isnumeric") },
 
 	{ "isanyprint",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyprint,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is printable"),
+	      "${this.substr(start, end)} is printable"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyalpha,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is alphabetical"),
+	      "${this.substr(start, end)} is alphabetical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyspace,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a space character"),
+	      "${this.substr(start, end)} is a space character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanylf,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a line-feeds"),
+	      "${this.substr(start, end)} is a line-feeds"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanylower,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is lower-case"),
+	      "${this.substr(start, end)} is lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyupper,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is upper-case"),
+	      "${this.substr(start, end)} is upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanycntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanycntrl,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a control character"),
+	      "${this.substr(start, end)} is a control character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanydigit,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a digit"),
+	      "${this.substr(start, end)} is a digit"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanydecimal,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is a dicimal character"),
+	      "${this.substr(start, end)} is a dicimal character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanysymstrt,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} can be used to start a symbol name"),
+	      "${this.substr(start, end)} can be used to start a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanysymcont,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} can be used to continue a symbol name"),
+	      "${this.substr(start, end)} can be used to continue a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyalnum,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} is alpha-numerical"),
+	      "${this.substr(start, end)} is alpha-numerical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanynumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanynumeric,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} qualifies as digit or decimal characters"),
+	      "${this.substr(start, end)} qualifies as digit or decimal characters"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanytitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanytitle,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
 	      "Returns :true if any character in "
-	      "${this.substr(start,end)} has title-casing"),
+	      "${this.substr(start, end)} has title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyascii,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in ${this.substr(start,end)} are "
+	      "Returns :true if any character in ${this.substr(start, end)} are "
 	      "ascii-characters, that is have an ordinal value ${<= 0x7f}"),
 	  TYPE_METHOD_FKWDS },
 
@@ -4100,37 +4104,37 @@ INTERN struct type_method bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tolower,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #lower, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "Same as ?#lower, but character modifications are performed in-place, and @this Bytes object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "toupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toupper,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #upper, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "Same as ?#upper, but character modifications are performed in-place, and @this Bytes object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "totitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_totitle,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #title, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "Same as ?#title, but character modifications are performed in-place, and @this Bytes object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "tocapitalize",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tocapitalize,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #capitalize, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "Same as ?#capitalize, but character modifications are performed in-place, and @this Bytes object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "toswapcase",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_toswapcase,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #swapcase, but character modifications are performed in-place, and @this Bytes object is re-returned"),
+	      "Same as ?#swapcase, but character modifications are performed in-place, and @this Bytes object is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "tocasefold",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tolower,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Alias for #tolower, here to coincide with #casefold existing as an alias for #lower"),
+	      "Alias for ?#tolower, here to coincide with ?#casefold existing as an alias for ?#lower"),
 	  TYPE_METHOD_FKWDS },
 
 	/* Case-sensitive query functions */
@@ -4148,14 +4152,14 @@ INTERN struct type_method bytes_methods[] = {
 	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
 	      "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #replace, but the Bytes object is modified in-place, and @this is re-returned"),
+	      "Same as ?#replace, but the Bytes object is modified in-place, and @this is re-returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "find",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_find,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start,end)}, "
+	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	      "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "rfind",
@@ -4163,39 +4167,39 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
 	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start,end)}, "
+	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	      "and return its starting index, or ${-1} if no such position exists"),
 	  TYPE_METHOD_FKWDS },
 	{ "index",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_index,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
-	      "Find the first instance of @needle that exists within ${this.substr(start,end)}, "
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
 	      "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "rindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindex,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
-	      "Find the last instance of @needle that exists within ${this.substr(start,end)}, "
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
 	      "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
 	{ "findall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findall,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?Dint\n"
-	      "Find all instances of @needle within ${this.substr(start,end)}, "
+	      "Find all instances of @needle within ${this.substr(start, end)}, "
 	      "and return their starting indeces as a sequence"),
 	  TYPE_METHOD_FKWDS },
 	{ "count",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_count,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Count the number of instances of @needle that exists within ${this.substr(start,end)}, "
+	      "Count the number of instances of @needle that exists within ${this.substr(start, end)}, "
 	      "and return now many were found"),
 	  TYPE_METHOD_FKWDS },
 	{ "contains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_contains_f,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Check if @needle can be found within ${this.substr(start,end)}, and return a boolean indicative of that"),
+	      "Check if @needle can be found within ${this.substr(start, end)}, and return a boolean indicative of that"),
 	  TYPE_METHOD_FKWDS },
 	{ "substr",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_substr,
@@ -4223,47 +4227,53 @@ INTERN struct type_method bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_sstrip,
 	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
 	      "Strip all leading and trailing instances of @other from @this string\n"
-	      ">local result = this;\n"
-	      ">while (result.startswith(other))\n"
-	      "> result = result[#other:];\n"
-	      ">while (result.endswith(other))\n"
-	      "> result = result[:#result-#other];") },
+	      "${"
+	      "local result = this;\n"
+	      "while (result.startswith(other))\n"
+	      "	result = result[##other:];\n"
+	      "while (result.endswith(other))\n"
+	      "	result = result[:##result - ##other];"
+	      "}") },
 	{ "lsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_lsstrip,
 	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
 	      "Strip all leading instances of @other from @this string\n"
-	      ">local result = this;\n"
-	      ">while (result.startswith(other))\n"
-	      "> result = result[#other:];") },
+	      "${"
+	      "local result = this;\n"
+	      "while (result.startswith(other))\n"
+	      "	result = result[##other:];"
+	      "}") },
 	{ "rsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rsstrip,
 	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
 	      "Strip all trailing instances of @other from @this string\n"
-	      ">local result = this;\n"
-	      ">while (result.endswith(other))\n"
-	      "> result = result[:#result-#other];") },
+	      "${"
+	      "local result = this;\n"
+	      "while (result.endswith(other))\n"
+	      "	result = result[:##result - ##other];"
+	      "}") },
 	{ "startswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_startswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start,end)} starts with @other"),
+	      "Return :true if the sub-string ${this.substr(start, end)} starts with @other"),
 	  TYPE_METHOD_FKWDS },
 	{ "endswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_endswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start,end)} ends with @other"),
+	      "Return :true if the sub-string ${this.substr(start, end)} ends with @other"),
 	  TYPE_METHOD_FKWDS },
 	{ "partition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_parition,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Search for the first instance of @needle within ${this.substr(start,end)} and "
-	      "return a 3-element sequence of byte objects ${(this[:pos],needle,this[pos+#needle:])}.\n"
+	      "Search for the first instance of @needle within ${this.substr(start, end)} and "
+	      "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	      "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "rpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rparition,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Search for the last instance of @needle within ${this.substr(start,end)} and "
-	      "return a 3-element sequence of strings ${(this[:pos],needle,this[pos+#needle:])}.\n"
+	      "Search for the last instance of @needle within ${this.substr(start, end)} and "
+	      "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	      "If @needle could not be found, ${(this,\"\".bytes(),\"\".bytes())} is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "compare",
@@ -4278,12 +4288,13 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Performs a version-string comparison. This is similar to #compare, but rather than "
+	      "Performs a version-string comparison. This is similar to ?#compare, but rather than "
 	      "performing a strict lexicographical comparison, the numbers found in the strings "
 	      "being compared are comparsed as a whole, solving the common problem seen in applications "
-	      "such as file navigators showing a file order of `foo1.txt', `foo10.txt', `foo11.txt', `foo2.txt', etc...\n"
+	      "such as file navigators showing a file order of $\"foo1.txt\", $\"foo10.txt\", "
+	      "$\"foo11.txt\", $\"foo2.txt\", etc...\n"
 	      "This function is a portable implementation of the GNU function "
-	      "%{link https://linux.die.net/man/3/strverscmp strverscmp}, "
+	      "#A{strverscmp|https://linux.die.net/man/3/strverscmp}, "
 	      "for which you may follow the link for further details") },
 	{ "wildcompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_wildcompare,
@@ -4308,13 +4319,13 @@ INTERN struct type_method bytes_methods[] = {
 	      "the score is to $0, the more alike they are\n"
 	      "The intended use of this function is for auto-completion, as well as warning "
 	      "messages and recommendations in the sense of I-dont-know-foo-but-did-you-mean-bar\n"
-	      "Note that there is another version #casefuzzycompare that also ignores casing") },
+	      "Note that there is another version ?#casefuzzycompare that also ignores casing") },
 	{ "wmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_wmatch,
 	  DOC("(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "Same as #wildcompare, returning :true where #wildcompare would return $0, and :false in all pattern cases") },
+	      "Same as ?#wildcompare, returning :true where ?#wildcompare would return $0, and :false in all pattern cases") },
 
 	/* Case-insensitive query functions */
 	{ "casereplace",
@@ -4322,7 +4333,7 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(find:?X3?.?Dstring?Dint,replace:?X3?.?Dstring?Dint,max:?Dint=!A!Dint!PSIZE_MAX)->?.\n"
 	      "@throw ValueError The given @find or @replace is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
-	      "Same as #replace, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#replace, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "tocasereplace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_tocasereplace,
@@ -4331,15 +4342,15 @@ INTERN struct type_method bytes_methods[] = {
 	      "@throw IntegerOverflow The given @find or @replace is an integer lower than $0, or greater than $0xff\n"
 	      "@throw ValueError The number of bytes specified by @find and @replace are not identical\n"
 	      "@throw BufferError @this Bytes object is not writable\n"
-	      "Same as #toreplace, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#toreplace, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefind,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Same as #find, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #needle}\n"
+	      "Same as ?#find, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
 	      "If no match if found, :none is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserfind",
@@ -4347,114 +4358,114 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
-	      "Same as #rfind, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #needle}\n"
+	      "Same as ?#rfind, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
 	      "If no match if found, :none is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindex,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
-	      "Same as #index, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Same as ?#index, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindex,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @needle can be found within ${this.substr(start,end)}\n"
-	      "Same as #rindex, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Same as ?#rindex, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefindall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindall,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?T2?Dint?Dint\n"
-	      "Same as #findall, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #needle}"),
+	      "Same as ?#findall, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecount",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casecount,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Same as #count, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#count, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecontains",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casecontains_f,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Same as #contains, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#contains, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "casestrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casestrip,
 	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as #strip, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#strip, however ascii-casing is ignored during character comparisons") },
 	{ "caselstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselstrip,
 	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as #lstrip, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#lstrip, however ascii-casing is ignored during character comparisons") },
 	{ "caserstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserstrip,
 	  DOC("(mask?:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as #rstrip, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#rstrip, however ascii-casing is ignored during character comparisons") },
 	{ "casesstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesstrip,
 	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as #sstrip, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#sstrip, however ascii-casing is ignored during character comparisons") },
 	{ "caselsstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caselsstrip,
 	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as #lsstrip, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#lsstrip, however ascii-casing is ignored during character comparisons") },
 	{ "casersstrip",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casersstrip,
 	  DOC("(other:?X3?.?Dstring?Dint)->?.\n"
-	      "Same as #rsstrip, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#rsstrip, however ascii-casing is ignored during character comparisons") },
 	{ "casestartswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casestartswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Same as #startswith, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#startswith, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseendswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseendswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Same as #endswith, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#endswith, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "casepartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseparition,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as #partition, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#partition, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserpartition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserparition,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as #rpartition, however ascii-casing is ignored during character comparisons"),
+	      "Same as ?#rpartition, however ascii-casing is ignored during character comparisons"),
 	  TYPE_METHOD_FKWDS },
 	{ "casecompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casecompare,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #compare, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#compare, however ascii-casing is ignored during character comparisons") },
 	{ "casevercompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casevercompare,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #vercompare, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#vercompare, however ascii-casing is ignored during character comparisons") },
 	{ "casewildcompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casewildcompare,
 	  DOC("(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #wildcompare, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#wildcompare, however ascii-casing is ignored during character comparisons") },
 	{ "casefuzzycompare",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefuzzycompare,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #fuzzycompare, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#fuzzycompare, however ascii-casing is ignored during character comparisons") },
 	{ "casewmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casewmatch,
 	  DOC("(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "Same as #casewmatch, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#casewmatch, however ascii-casing is ignored during character comparisons") },
 
 	/* Bytes alignment functions. */
 	{ "center",
@@ -4480,7 +4491,7 @@ INTERN struct type_method bytes_methods[] = {
 	{ "reversed",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_reversed,
 	  DOC("(start=!0,end=!-1)->?.\n"
-	      "Return a copy of the sub-string ${this.substr(start,end)} with its byte order reversed"),
+	      "Return a copy of the sub-string ${this.substr(start, end)} with its byte order reversed"),
 	  TYPE_METHOD_FKWDS },
 	{ "expandtabs",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_expandtabs,
@@ -4510,14 +4521,14 @@ INTERN struct type_method bytes_methods[] = {
 	      "Split @this Bytes object at each instance of @sep, "
 	      "returning a sequence of the resulting parts\n"
 	      "The returned bytes objects are views of @this byte object, meaning they "
-	      "have the same #iswritable characteristics as @this, and refer to the same "
+	      "have the same ?#iswritable characteristics as @this, and refer to the same "
 	      "memory") },
 	{ "casesplit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casesplit,
 	  DOC("(needle:?X3?.?Dstring?Dint)->?S?.\n"
-	      "Same as #split, however ascii-casing is ignored during character comparisons\n"
+	      "Same as ?#split, however ascii-casing is ignored during character comparisons\n"
 	      "The returned bytes objects are views of @this byte object, meaning they "
-	      "have the same #iswritable characteristics as @this, and refer to the same "
+	      "have the same ?#iswritable characteristics as @this, and refer to the same "
 	      "memory") },
 	{ "splitlines",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_splitlines,
@@ -4528,7 +4539,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "original, trailing line-feed appended\n"
 	      "This function recognizes $\"\\n\", $\"\\r\" and $\"\\r\\n\" as linefeed sequences\n"
 	      "The returned bytes objects are views of @this byte object, meaning they "
-	      "have the same #iswritable characteristics as @this, and refer to the same "
+	      "have the same ?#iswritable characteristics as @this, and refer to the same "
 	      "memory") },
 
 	/* String indentation. */
@@ -4543,7 +4554,7 @@ INTERN struct type_method bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_dedent,
 	  DOC("(max_chars=!1,mask?:?X3?.?Dstring?Dint)->?.\n"
 	      "Using @this string as result, remove up to @max_chars whitespace "
-	      "(s.a. #isspace) characters, or if given: characters apart of @mask "
+	      "(s.a. ?#isspace) characters, or if given: characters apart of @mask "
 	      "from the front, as well as following any linefeed") },
 
 	/* Common-character search functions. */
@@ -4565,73 +4576,75 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #common, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#common, however ascii-casing is ignored during character comparisons") },
 	{ "casercommon",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casercommon,
 	  DOC("(other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
 	      "(my_start:?Dint,my_end:?Dint,other:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dint\n"
-	      "Same as #rcommon, however ascii-casing is ignored during character comparisons") },
+	      "Same as ?#rcommon, however ascii-casing is ignored during character comparisons") },
 
 	/* Find match character sequences */
 	{ "findmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Similar to #find, but do a recursive search for the "
+	      "Similar to ?#find, but do a recursive search for the "
 	      "first @close that doesn't have a match @{open}\n"
 	      "For more information, see :string.findmatch") },
 	{ "indexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
-	      "Same as #findmatch, but throw an :IndexError instead of "
+	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start, end)}\n"
+	      "Same as ?#findmatch, but throw an :IndexError instead of "
 	      "returning ${-1} if no @close without a match @open exists") },
 	{ "casefindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as #findmatch, however casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #close}\n"
+	      "Same as ?#findmatch, however casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ?#close}\n"
 	      "If no match if found, :none is returned") },
 	{ "caseindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start,end)}\n"
-	      "Same as #indexmatch, however casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #close}") },
+	      "@throw IndexError No instance of @close without a match @open exists within ${this.substr(start, end)}\n"
+	      "Same as ?#indexmatch, however casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ?#close}") },
 	{ "rfindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfindmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "Similar to #findmatch, but operate in a mirrored fashion, searching for the "
-	      "last instance of @open that has no match @close within ${this.substr(start,end)}:\n"
-	      ">s = \"get_string().foo(bar(),baz(42),7).length\";\n"
-	      ">lcol = s.find(\")\");\n"
-	      ">print lcol; /* 19 */\n"
-	      ">mtch = s.rfindmatch(\"(\",\")\",0,lcol);\n"
-	      ">print repr s[mtch:lcol+1]; /* \"(bar(),baz(42),7)\" */\n"
+	      "Similar to ?#findmatch, but operate in a mirrored fashion, searching for the "
+	      "last instance of @open that has no match @close within ${this.substr(start, end)}:\n"
+	      "${"
+	      "s = \"get_string().foo(bar(),baz(42),7).length\";\n"
+	      "lcol = s.find(\")\");\n"
+	      "print lcol; /* 19 */\n"
+	      "mtch = s.rfindmatch(\"(\",\")\",0,lcol);\n"
+	      "print repr s[mtch:lcol+1]; /* \"(bar(),baz(42),7)\" */"
+	      "}\n"
 	      "If no @open without a match @close exists, ${-1} is returned") },
 	{ "rindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
-	      "Same as #rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a match @close exists") },
+	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start, end)}\n"
+	      "Same as ?#rfindmatch, but throw an :IndexError instead of returning ${-1} if no @open without a match @close exists") },
 	{ "caserfindmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserfindmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
-	      "Same as #rfindmatch, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #open}\n"
+	      "Same as ?#rfindmatch, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ?#open}\n"
 	      "If no match if found, :none is returned") },
 	{ "caserindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
-	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start,end)}\n"
-	      "Same as #rindexmatch, however ascii-casing is ignored during character comparisons\n"
-	      "Upon success, the second returned integer is equal to ${return[0] + #open}") },
+	      "@throw IndexError No instance of @open without a match @close exists within ${this.substr(start, end)}\n"
+	      "Same as ?#rindexmatch, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ?#open}") },
 
 	/* Using the find-match functionality, also provide a partitioning version */
 	{ "partitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_partitionmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "A hybrid between #find, #findmatch and #partition that returns the strings surrounding "
+	      "A hybrid between ?#find, ?#findmatch and ?#partition that returns the strings surrounding "
 	      "the matched string portion, the first being the substring prior to the match, "
 	      "the second being the matched string itself (including the @open and @close strings), "
 	      "and the third being the substring after the match\n"
@@ -4639,7 +4652,7 @@ INTERN struct type_method bytes_methods[] = {
 	{ "rpartitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rpartitionmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "A hybrid between #rfind, #rfindmatch and #rpartition that returns the strings surrounding "
+	      "A hybrid between ?#rfind, ?#rfindmatch and ?#rpartition that returns the strings surrounding "
 	      "the matched string portion, the first being the substring prior to the match, "
 	      "the second being the matched string itself (including the @open and @close strings), "
 	      "and the third being the substring after the match.\n"
@@ -4647,11 +4660,11 @@ INTERN struct type_method bytes_methods[] = {
 	{ "casepartitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casepartitionmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as #partitionmatch, however casing is ignored during character comparisons") },
+	      "Same as ?#partitionmatch, however casing is ignored during character comparisons") },
 	{ "caserpartitionmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserpartitionmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
-	      "Same as #rpartitionmatch, however casing is ignored during character comparisons") },
+	      "Same as ?#rpartitionmatch, however casing is ignored during character comparisons") },
 
 	{ "segments",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_segments,
@@ -4659,16 +4672,16 @@ INTERN struct type_method bytes_methods[] = {
 	      "Split @this Bytes object into segments, each exactly @substring_length characters long, with the "
 	      "last segment containing the remaining characters and having a length of between "
 	      "$1 and @substring_length characters.\n"
-	      "This function is similar to #distribute, but instead of being given the "
+	      "This function is similar to ?#distribute, but instead of being given the "
 	      "length of sub-strings and figuring out their amount, this function takes "
 	      "the amount of sub-strings and figures out their lengths") },
 	{ "distribute",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_distribute,
 	  DOC("(substring_count:?Dint)->?S?.\n"
 	      "Split @this Bytes object into @substring_count similarly sized sub-strings, each with a "
-	      "length of ${(#this + (substring_count - 1)) / substring_count}, followed by a last, optional "
+	      "length of ${(##this + (substring_count - 1)) / substring_count}, followed by a last, optional "
 	      "sub-string containing all remaining characters.\n"
-	      "This function is similar to #segments, but instead of being given the "
+	      "This function is similar to ?#segments, but instead of being given the "
 	      "amount of sub-strings and figuring out their lengths, this function takes "
 	      "the length of sub-strings and figures out their amount") },
 
@@ -4686,6 +4699,6 @@ DECL_END
 #include "bytes_split.c.inl"
 #include "bytes_segments.c.inl"
 #include "bytes_finder.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_UNICODE_BYTES_FUNCTIONS_C_INL */

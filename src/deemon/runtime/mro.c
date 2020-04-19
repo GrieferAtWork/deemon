@@ -20,7 +20,6 @@
 #ifndef GUARD_DEEMON_RUNTIME_MRO_C
 #define GUARD_DEEMON_RUNTIME_MRO_C 1
 
-#include <deemon/instancemethod.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -28,6 +27,7 @@
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/instancemethod.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -42,7 +42,8 @@ DECL_BEGIN
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE DEFINE_RWLOCK(membercache_list_lock);
-#endif
+#endif /* !CONFIG_NO_THREADS */
+
 /* [0..1][lock(membercache_list_lock)]
  *  Linked list of all existing type-member caches. */
 PRIVATE struct membercache *membercache_list;
@@ -355,7 +356,7 @@ membercache_addinstanceattrib(struct membercache *self,
 #define MRO_LEN 1
 #include "mro-impl.c.inl"
 #include "mro-impl.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

@@ -674,14 +674,14 @@ err_preprinter:
 			GETARG();
 			if (DeeObject_AsDouble(in_arg, &value))
 				goto err;
-#if F_LJUST == DEEFLOAT_PRINT_FLJUST && \
-F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
-F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
-F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
-F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
-F_HASPREC == DEEFLOAT_PRINT_FPRECISION
+#if (F_LJUST == DEEFLOAT_PRINT_FLJUST &&     \
+     F_SIGN == DEEFLOAT_PRINT_FSIGN &&       \
+     F_SPACE == DEEFLOAT_PRINT_FSPACE &&     \
+     F_PADZERO == DEEFLOAT_PRINT_FPADZERO && \
+     F_HASWIDTH == DEEFLOAT_PRINT_FWIDTH &&  \
+     F_HASPREC == DEEFLOAT_PRINT_FPRECISION)
 			temp = DeeFloat_Print(value, printer, arg, width, precision, flags);
-#else
+#else /* F_... == DEEFLOAT_PRINT_F... */
 			{
 				unsigned int float_flags = DEEFLOAT_PRINT_FNORMAL;
 				if (flags & F_LJUST)
@@ -698,7 +698,7 @@ F_HASPREC == DEEFLOAT_PRINT_FPRECISION
 					float_flags |= DEEFLOAT_PRINT_FPRECISION;
 				temp = DeeFloat_Print(value, printer, arg, width, precision, float_flags);
 			}
-#endif
+#endif /* F_... != DEEFLOAT_PRINT_F... */
 			if unlikely(temp < 0)
 				goto err;
 			result += temp;

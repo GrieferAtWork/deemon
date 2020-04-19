@@ -227,13 +227,13 @@ float_hash(Float *__restrict self) {
 #endif /* _MSC_VER */
 
 
-#define DEFINE_FLOAT_CMP(name, op)                              \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                       \
-	name(Float *__restrict self, DeeObject *__restrict other) { \
-		double other_val;                                       \
-		if (DeeObject_AsDouble(other, &other_val))              \
-			return NULL;                                        \
-		return_bool(self->f_value op other_val);                \
+#define DEFINE_FLOAT_CMP(name, op)                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(Float *self, DeeObject *other) {                 \
+		double other_val;                                 \
+		if (DeeObject_AsDouble(other, &other_val))        \
+			return NULL;                                  \
+		return_bool(self->f_value op other_val);          \
 	}
 DEFINE_FLOAT_CMP(float_eq, ==)
 DEFINE_FLOAT_CMP(float_ne, !=)
@@ -363,6 +363,6 @@ DECL_END
 #include "float-print.c.inl"
 #endif /* __COMPILER_HAVE_LONGDOUBLE */
 #include "float-print.c.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_FLOAT_C */

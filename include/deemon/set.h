@@ -56,7 +56,7 @@ DECL_BEGIN
  *     Returns the intersection of @this and @other
  * 
  * isdisjoint(set other): bool;
- *     Returns :true if ${#(this & other) == 0}
+ *     Returns :true if ${##(this & other) == 0}
  *     In other words: If @this and @other have no items in common.
  *
  * union(set other) -> set;

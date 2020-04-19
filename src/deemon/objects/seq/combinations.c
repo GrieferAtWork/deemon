@@ -265,9 +265,8 @@ PRIVATE struct type_member comiter_members[] = {
 
 #ifdef CONFIG_NO_THREADS
 #define DEFINE_COMITER_COMPARE(name, if_diff_combi, op)             \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
-	name(CombinationsIterator *__restrict self,                     \
-	     CombinationsIterator *__restrict other) {                  \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
+	name(CombinationsIterator *self, CombinationsIterator *other) { \
 		int result;                                                 \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))       \
 			goto err;                                               \
@@ -279,11 +278,10 @@ PRIVATE struct type_member comiter_members[] = {
 	err:                                                            \
 		return NULL;                                                \
 	}
-#else
+#else /* CONFIG_NO_THREADS */
 #define DEFINE_COMITER_COMPARE(name, if_diff_combi, op)             \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                   \
-	name(CombinationsIterator *__restrict self,                     \
-	     CombinationsIterator *__restrict other) {                  \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
+	name(CombinationsIterator *self, CombinationsIterator *other) { \
 		int result;                                                 \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))       \
 			goto err;                                               \
@@ -307,7 +305,7 @@ PRIVATE struct type_member comiter_members[] = {
 	err:                                                            \
 		return NULL;                                                \
 	}
-#endif
+#endif /* !CONFIG_NO_THREADS */
 DEFINE_COMITER_COMPARE(comiter_eq, return_false, ==)
 DEFINE_COMITER_COMPARE(comiter_ne, return_true, !=)
 DEFINE_COMITER_COMPARE(comiter_lo, return_bool(self->ci_combi < other->ci_combi), <)

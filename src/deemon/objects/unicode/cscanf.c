@@ -557,7 +557,9 @@ PRIVATE struct type_cmp ssi_cmp = {
 };
 
 PRIVATE struct type_member ssi_members[] = {
-	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(StringScanIterator, si_scanner), "->?Ert:StringScan"),
+	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT,
+	                      offsetof(StringScanIterator, si_scanner),
+	                      "->?Ert:StringScan"),
 	TYPE_MEMBER_END
 };
 

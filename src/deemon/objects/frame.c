@@ -598,7 +598,7 @@ PRIVATE struct type_getset frame_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getlocation, NULL, NULL,
 	  DOC("->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
 	      "Returns a sequence of tuples describing the Frame location, "
-	      "the first of which is identical to (#file,#line,#col,#name)\n"
+	      "the first of which is identical to (?#file, ?#line, ?#col, ?#name)\n"
 	      "Rarely ever does the location consist of more than a single "
 	      "location tuple, however if a function call has been inlined "
 	      "as a call from another location, the compiler will generate DDI "
@@ -641,8 +641,8 @@ PRIVATE struct type_getset frame_getsets[] = {
 	  DOC("->?Dint\n"
 	      "@throw ReferenceError The Frame has continued execution, or was otherwise released\n"
 	      "@throw ValueError The stack depth was undefined and could not be determined\n"
-	      "Get the current stack depth (same as ${#this.__stack__})\n"
-	      "To modify this value, use #__stack__ to append/pop objects") },
+	      "Get the current stack depth (same as ${##this.__stack__})\n"
+	      "To modify this value, use ?#__stack__ to append/pop objects") },
 	/* TODO: __stack__ (read-write, custom, modifiable & resizable, sequence-like object)
 	 * TODO: __args__ (readonly, custom, sequence-like object for accessing arguments)
 	 *                 -> reading is the same as it would for the `push arg ...' instruction

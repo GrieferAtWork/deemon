@@ -175,9 +175,8 @@ err:
 
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                          \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                    \
-	name(LocatorIterator *__restrict self,                                           \
-	     LocatorIterator *__restrict other) {                                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                            \
+	name(LocatorIterator *self, LocatorIterator *other) {                            \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqLocatorIterator_Type)) \
 			goto err;                                                                \
 		return compare_object(self->li_iter, other->li_iter);                        \

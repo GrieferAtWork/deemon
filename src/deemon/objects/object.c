@@ -2198,7 +2198,7 @@ PRIVATE struct type_method object_methods[] = {
 	{ meth_le+2,         &object_le, DOC("(other)->\n@return The result of ${this.operator <= (other)}") },
 	{ meth_gr+2,         &object_gr, DOC("(other)->\n@return The result of ${this.operator > (other)}") },
 	{ meth_ge+2,         &object_ge, DOC("(other)->\n@return The result of ${this.operator >= (other)}") },
-	{ meth_size+1,       &object_size, DOC("->\n@return The result of ${this.operator # ()}") },
+	{ meth_size+1,       &object_size, DOC("->\n@return The result of ${this.operator ## ()}") },
 	{ meth_contains+2,   &object_contains, DOC("(item)->\n@return The result of ${this.operator contains (item)}") },
 	{ meth_getitem+2,    &object_getitem, DOC("(index)->\n@return The result of ${this.operator [] (index)}") },
 	{ meth_delitem+2,    &object_delitem, DOC("(index)\nInvokes ${this.operator del[] (index)}") },
@@ -2218,15 +2218,15 @@ PRIVATE struct type_method object_methods[] = {
 	  DOC("(format:?Dstring)->?Dstring\nFormat @this object. (s.a. :string.format)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Aliases for backwards compatibility with deemon < v200 */
-	{ "__iterself__",    &object_iterself, DOC("->\nDeprecated alias for #__iter__") },
-	{ "__iternext__",    &object_iternext, DOC("->\nDeprecated alias for #__next__") },
+	{ "__iterself__",    &object_iterself, DOC("->\nDeprecated alias for ?#__iter__") },
+	{ "__iternext__",    &object_iternext, DOC("->\nDeprecated alias for ?#__next__") },
 	/* Deprecated function for backwards compatibility with deemon < v200 */
-	{ "__move__",        &object_copy, DOC("->\nDeprecated alias for #__copy__") },
-	{ "__lt__",          &object_lo, DOC("(other)->\nDeprecated alias for #__lo__") },
-	{ "__gt__",          &object_gr, DOC("(other)->\nDeprecated alias for #__gr__") },
+	{ "__move__",        &object_copy, DOC("->\nDeprecated alias for ?#__copy__") },
+	{ "__lt__",          &object_lo, DOC("(other)->\nDeprecated alias for ?#__lo__") },
+	{ "__gt__",          &object_gr, DOC("(other)->\nDeprecated alias for ?#__gr__") },
 	{ "__not__",         &object_not, DOC("->?Dbool\nDeprecated alias for ${!this}") },
 	{ "__is__",          &object_is, DOC("(tp:?DType)->?Dbool\n(tp:?N)->?Dbool\nDeprecated alias for ${this is tp}") },
-	{ "__deepequals__",  &object_eq, DOC("(other)->\nDeprecated alias for #__eq__") },
+	{ "__deepequals__",  &object_eq, DOC("(other)->\nDeprecated alias for ?#__eq__") },
 	{ "__inc__",         &object_inc, DOC("->\nDeprecated alias for ${({ local temp = this; ++temp; if (temp !== this) this := temp; this; })}") },
 	{ "__dec__",         &object_dec, DOC("->\nDeprecated alias for ${({ local temp = this; --temp; if (temp !== this) this := temp; this; })}") },
 	{ "__incpost__",     &object_incpost, DOC("->\nDeprecated alias for ${({ local res = copy this; local temp = this; ++temp; if (temp !== this) this := temp; res; })}") },
@@ -2261,7 +2261,8 @@ object_id_get(DeeObject *__restrict self) {
 
 PRIVATE DEFINE_CLSPROPERTY(object_id_get_cobj, &DeeObject_Type, &object_id_get, NULL, NULL);
 PRIVATE struct type_member object_class_members[] = {
-	TYPE_MEMBER_CONST_DOC("id", &object_id_get_cobj, "Alias for #id to speed up expressions such as ${Object.id}"),
+	TYPE_MEMBER_CONST_DOC("id", &object_id_get_cobj,
+	                      "Alias for ?#id to speed up expressions such as ${Object.id}"),
 	TYPE_MEMBER_END
 };
 
@@ -2274,16 +2275,16 @@ PRIVATE struct type_getset object_getsets[] = {
 	{ DeeString_STR(&str_this),
 	  &DeeObject_NewRef, NULL, NULL,
 	  DOC("Always re-return @this object") },
-#else
+#else /* CONFIG_LANGUAGE_NO_ASM */
 	{ "this",
 	  &DeeObject_NewRef, NULL, NULL,
 	  DOC("Always re-return @this object") },
-#endif
+#endif /* !CONFIG_LANGUAGE_NO_ASM */
 	{ DeeString_STR(&str_class),
 	  &object_class_get, NULL, NULL,
 	  DOC("->?DType\n"
 	      "Returns the class of @this Type, which is usually identical to "
-	      "#type, however in the case of a super-proxy, the viewed Type is "
+	      "?#type, however in the case of a super-proxy, the viewed Type is "
 	      "returned, rather than the actual Type") },
 	{ "super", &DeeSuper_Of, NULL, NULL,
 	  DOC("->?Dsuper\n"
@@ -2308,7 +2309,7 @@ PRIVATE struct type_member object_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__refcnt__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_refcnt),
 	                      "->?Dint\nThe number of references currently existing for this object"),
 	TYPE_MEMBER_FIELD_DOC("__type__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_type),
-	                      "->?DType\nAlias for #type"),
+	                      "->?DType\nAlias for ?#type"),
 	TYPE_MEMBER_END
 };
 
@@ -2317,17 +2318,18 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Object),
 	/* .tp_doc      = */ DOC("The base class of all regular objects\n"
-	                        "\n"
-	                        "()\n"
-	                        "Construct a new object (no-op constructor)\n"
-	                        "\n"
-	                        "str->\n"
-	                        "Returns the name of the object's Type\n"
-	                        "${"
-	                        "operator str(): string {\n"
-	                        "	return str type this;\n"
-	                        "}}\n"
-	                        ),
+
+	                         "\n"
+	                         "()\n"
+	                         "Construct a new object (no-op constructor)\n"
+
+	                         "\n"
+	                         "str->\n"
+	                         "Returns the name of the object's Type\n"
+	                         "${"
+	                         "operator str(): string {\n"
+	                         "	return str type this;\n"
+	                         "}}\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -3463,7 +3465,6 @@ PRIVATE struct type_method type_methods[] = {
 	{ "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_newinstance,
 	  DOC("(fields!!)->\n"
 	      "Allocate a new instance of @this Type and initialize members in accordance ot @fields\n"
-
 	      "${"
 	      "class MyClass {\n"
 	      "	member foo;\n"
@@ -3472,7 +3473,6 @@ PRIVATE struct type_method type_methods[] = {
 	      "local x = MyClass.newinstance(foo: 42);\n"
 	      "print x.foo;\n"
 	      "}"
-
 
 	      "\n"
 	      "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type,({(string,object)...},)...} */
@@ -3557,7 +3557,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "$\"constructor\"|$\"this\"|${this(args!)}&"
 	      "$\"copy\"|$\"copy\"|${copy()}&"
 	      "$\"deepcopy\"|$\"deepcopy\"|${deepcopy()}&"
-	      "$\"destructor\"|$\"~this\"|${~this()}&"
+	      "$\"destructor\"|$\"#~this\"|${##~this()}&"
 	      "$\"assign\"|$\":=\"|${operator := (other)}&"
 	      "$\"str\"|$\"str\"|${operator str(): string}&"
 	      "$\"repr\"|$\"repr\"|${operator repr(): string}&"
@@ -3566,7 +3566,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "$\"next\"|$\"next\"|${operator next(): Object}&"
 	      "$\"int\"|$\"int\"|${operator int(): int}&"
 	      "$\"float\"|$\"float\"|${operator float(): float}&"
-	      "$\"inv\"|$\"~\"|${operator ~ (): Object}&"
+	      "$\"inv\"|$\"#~\"|${operator #~ (): Object}&"
 	      "$\"pos\"|$\"+\"|${operator + (): Object}&"
 	      "$\"neg\"|$\"-\"|${operator - (): Object}&"
 	      "$\"add\"|$\"+\"|${operator + (other): Object}&"
@@ -3578,7 +3578,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "$\"shr\"|$\">>\"|${operator >> (other): Object}&"
 	      "$\"and\"|$\"#&\"|${operator #& (other): Object}&"
 	      "$\"or\"|$\"#|\"|${operator #| (other): Object}&"
-	      "$\"xor\"|$\"#^\"|${operator #^ (other): Object}&"
+	      "$\"xor\"|$\"^\"|${operator ^ (other): Object}&"
 	      "$\"pow\"|$\"**\"|${operator ** (other): Object}&"
 	      "$\"inc\"|$\"++\"|${operator ++ (): Object}&"
 	      "$\"dec\"|$\"--\"|${operator -- (): Object}&"
@@ -3659,34 +3659,34 @@ PRIVATE struct type_method type_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ meth_callinstanceattr, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_callinstanceattr,
 	  DOC("(name:?Dstring,args!)->\n"
-	      "s.a. #getinstanceattr"),
+	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
 	{ meth_hasinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasinstanceattr,
 	  DOC("(name:?Dstring)->?Dbool\n"
-	      "s.a. #getinstanceattr"),
+	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
 	{ meth_boundinstanceattr + 4, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_boundinstanceattr,
 	  DOC("(name:?Dstring,allow_missing=!t)->?Dbool\n"
-	      "s.a. #getinstanceattr"),
+	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
 	{ meth_delinstanceattr + 2, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_delinstanceattr,
 	  DOC("(name:?Dstring)\n"
-	      "s.a. #getinstanceattr"),
+	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
 	{ meth_setinstanceattr + 3, (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_setinstanceattr,
 	  DOC("(name:?Dstring,value)->\n"
-	      "s.a. #getinstanceattr"),
+	      "s.a. ?#getinstanceattr"),
 	  TYPE_METHOD_FKWDS },
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	{ "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom, DOC("(other:?DType)->?Dbool\nDeprecated alias for #derivedfrom"), TYPE_METHOD_FKWDS },
+	{ "same_or_derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom, DOC("(other:?DType)->?Dbool\nDeprecated alias for ?#derivedfrom"), TYPE_METHOD_FKWDS },
 	{ "derived_from", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom_not_same, DOC("(other:?DType)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}") },
-	{ "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for #__isvariable__") },
-	{ "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for #__iscustom__") },
-	{ "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for #__isgc__") },
-	{ "is_final", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_final, DOC("->?Dbool\nDeprecated alias for #isfinal") },
-	{ "is_class", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_class, DOC("->?Dbool\nDeprecated alias for #__isclass__") },
+	{ "is_vartype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_vartype, DOC("->?Dbool\nDeprecated alias for ?#__isvariable__") },
+	{ "is_heaptype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_heaptype, DOC("->?Dbool\nDeprecated alias for ?#__iscustom__") },
+	{ "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for ?#__isgc__") },
+	{ "is_final", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_final, DOC("->?Dbool\nDeprecated alias for ?#isfinal") },
+	{ "is_class", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_class, DOC("->?Dbool\nDeprecated alias for ?#__isclass__") },
 	{ "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
 	{ "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
 	{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
@@ -3959,7 +3959,7 @@ PRIVATE struct type_getset type_getsets[] = {
 	 */
 	{ "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
 	  DOC("->?Ert:ClassDescriptor\n"
-	      "@throw AttributeError @this typeType is a user-defined class (s.a. #__isclass__)\n"
+	      "@throw AttributeError @this typeType is a user-defined class (s.a. ?#__isclass__)\n"
 	      "Returns the internal class-descriptor descriptor for a user-defined class") },
 	{ "__issingleton__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_issingleton, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -3978,12 +3978,12 @@ PRIVATE struct type_getset type_getsets[] = {
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the class object table, "
 	      /**/ "as referenced by :rt.ClassDescriptor.attribute.addr\n"
-	      "For non-user-defined classes (aka. #__isclass__ is :false), an empty sequence is returned\n"
+	      "For non-user-defined classes (aka. ?#__isclass__ is :false), an empty sequence is returned\n"
 	      "The instance-attribute table can be accessed through :Object.__itable__") },
 	{ "__operators__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operators, NULL, NULL,
 	  DOC("->?S?X2?Dstring?Dint\n"
 	      "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
-	      "This member functions such that the member function #hasprivateoperator can be implemented as:\n"
+	      "This member functions such that the member function ?#hasprivateoperator can be implemented as:\n"
 	      "${"
 	      "function hasprivateoperator(name: string | int): bool {\n"
 	      "	return name in this.__operators__;\n"
@@ -3995,22 +3995,22 @@ PRIVATE struct type_getset type_getsets[] = {
 	      /**/ "meaning that pretty much any user-class will always have its compare, assignment, as well "
 	      /**/ "as constructor and destructor operators overwritten, even when the user didn't actually "
 	      /**/ "define any of them\n"
-	      "For the purposes of human-readable information, is is recommended to use #__class__.operators "
-	      /**/ "when @this Type is a user-defined class (aka. #__isclass__ is :true), and only use #__operators__ "
+	      "For the purposes of human-readable information, is is recommended to use ?Aoperators?#__class__ "
+	      /**/ "when @this Type is a user-defined class (aka. ?#__isclass__ is :true), and only use ?#__operators__ "
 	      /**/ "for all other types that this doesn't apply to") },
 	{ "__operatorids__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operatorids, NULL, NULL,
 	  DOC("->?S?Dint\n"
 	      "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
-	      "This is the same as #__operators__, but the runtime will not attempt to translate known "
-	      /**/ "operator ids to their user-friendly name, as described in #hasoperator") },
+	      "This is the same as ?#__operators__, but the runtime will not attempt to translate known "
+	      /**/ "operator ids to their user-friendly name, as described in ?#hasoperator") },
 	{ "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Returns the heap allocation size of instances of @this Type, or :none when @this Type cannot "
-	      /**/ "be instantiated, is a singletone (such as :none), or has variable-length instances (#isvariable)") },
+	      /**/ "be instantiated, is a singletone (such as :none), or has variable-length instances (?#isvariable)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Deprecated alias for #__instancesize__") },
+	      "Deprecated alias for ?#__instancesize__") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	{ "__istypetype__", &type_istypetype, NULL, NULL, DOC("->?Dbool") },
 	{ "__isvarargconstructible__", &type_isvarargconstructible, NULL, NULL, DOC("->?Dbool") },

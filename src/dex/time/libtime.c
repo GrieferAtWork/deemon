@@ -1356,7 +1356,7 @@ PRIVATE struct type_method time_methods[] = {
 	      "Format @this time object using a given strftime-style @format string") },
 	{ "__format__", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_doformat,
 	  DOC("(format:?Dstring)->?Dstring\n"
-	      "Internal alias for #format") },
+	      "Internal alias for ?#format") },
 	{ NULL }
 };
 
@@ -1617,7 +1617,7 @@ PRIVATE struct type_getset time_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&time_timepart_set,
 	  DOC("->?GTime\n"
 	      "Read/write the time portion of @this time object, that is everything below the "
-	      "day-threshold, including #hour, #minute, #second, #millisecond and #microsecond\n"
+	      "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
 	      "When setting, the passed objected is interpreted as an integer describing the "
 	      "number of microsecond since the day began") },
 	{ "datepart",
@@ -1625,9 +1625,9 @@ PRIVATE struct type_getset time_getsets[] = {
 	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&time_datepart_set,
 	  DOC("->?GTime\n"
-	      "@throw ValueError Attempted to assign a time value with a non-zero #timepart\n"
+	      "@throw ValueError Attempted to assign a time value with a non-zero ?#timepart\n"
 	      "Read/write the date portion of @this time object, that is everything "
-	      "above the day-threshold, including #mday, #month and #year\n"
+	      "above the day-threshold, including ?#mday, ?#month and ?#year\n"
 	      "When setting, the passed objected is interpreted as an integer "
 	      "describing the number of microsecond since 1.1.0000") },
 	{ timestr_mic, &time_getas_mic, &time_delas_mic, &time_setas_mic, DOC_GET(docof_timeas) },
@@ -1684,21 +1684,21 @@ PRIVATE struct type_getset time_getsets[] = {
 	{ timestr_decades, &time_getas_dec, &time_delas_dec, &time_setas_dec, DOC_GET(docof_timeas) },
 	{ timestr_centuries, &time_getas_cen, &time_delas_cen, &time_setas_cen, DOC_GET(docof_timeas) },
 	{ timestr_millenia, &time_getas_mll, &time_delas_mll, &time_setas_mll, DOC_GET(docof_timeas) },
-	{ "mweek", &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC("->?GTime\nMiddle-way alias for #monthweek") },
-	{ "yweek", &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC("->?GTime\nMiddle-way alias for #yearweek") },
+	{ "mweek", &time_getas_mwek, &time_delas_mwek, &time_setas_mwek, DOC("->?GTime\nMiddle-way alias for ?#monthweek") },
+	{ "yweek", &time_getas_ywek, &time_delas_ywek, &time_setas_ywek, DOC("->?GTime\nMiddle-way alias for ?#yearweek") },
 	/* Deprecated names/functions. */
-	{ "msecond", &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC("->?GTime\nDeprecated alias for #mic / #millisecond") },
-	{ "mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC("->?GTime\nDeprecated alias for #mics / #milliseconds") },
+	{ "msecond", &time_getas_mil, &time_delas_mil, &time_setas_mil, DOC("->?GTime\nDeprecated alias for ?#mic / ?#millisecond") },
+	{ "mseconds", &time_getas_mils, &time_delas_mils, &time_setas_mils, DOC("->?GTime\nDeprecated alias for ?#mics / ?#milliseconds") },
 	{ "time",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_timepart_get,
 	  (int (DCALL *)(DeeObject *__restrict))&time_timepart_del,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&time_timepart_set,
-	  DOC("->?GTime\nDeprecated alias for #timepart") },
+	  DOC("->?GTime\nDeprecated alias for ?#timepart") },
 	{ "part",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_datepart_get,
 	  (int (DCALL *)(DeeObject *__restrict))&time_datepart_del,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&time_datepart_set,
-	  DOC("->?GTime\nDeprecated alias for #datepart") },
+	  DOC("->?GTime\nDeprecated alias for ?#datepart") },
 	{ "time_t",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_get_time_t,
 	  (int (DCALL *)(DeeObject *__restrict))&time_del_time_t,
@@ -2418,15 +2418,18 @@ INTERN DeeTypeObject DeeTime_Type = {
 	/* .tp_doc      = */ DOC("(year=!0,month=!0,day=!0,hour=!0,minute=!0,"
 	                          "second=!0,millisecond=!0,microsecond=!0)\n"
 	                          "Construct a new time object from the given arguments.\n"
+
 	                          "\n"
 	                          "str->\n"
 	                          "Returns value of @this time object when it was constructed to "
 	                          "represent an explicit view (such as through use of :time:days, "
 	                          "or through a sub-view such as :days), or return the time "
 	                          "represented in a human-readable fashion\n"
+
 	                          "\n"
 	                          "repr->\n"
 	                          "Returns a string representation of the components of @this time object\n"
+
 	                          "\n"
 	                          "int->\n"
 	                          "Returns the value of @this time object as an offset from 1.1.0000 in microseconds\n"

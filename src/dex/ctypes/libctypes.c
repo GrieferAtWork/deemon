@@ -657,7 +657,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Returns the size of a given structured type or object in bytes\n"
 	      "\n"
 	      "(ob:?DBytes)->?Dint\n"
-	      "Returns the size of the given :Bytes ob, which is the same as ${#ob}") },
+	      "Returns the size of the given :Bytes ob, which is the same as ${##ob}") },
 	{ "alignof", (DeeObject *)&ctypes_alignof, MODSYM_FNORMAL,
 	  DOC("(ob:?GStructuredType)->?Dint\n"
 	      "(ob:?GStructured)->?Dint\n"
@@ -936,10 +936,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Return a pointer to the end of a given @str") },
 	{ "strnlen", (DeeObject *)&ctypes_strnlen, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as #strlen, but limit the max number of scanned characters to @maxlen") },
+	      "Same as ?Gstrlen, but limit the max number of scanned characters to @maxlen") },
 	{ "strnend", (DeeObject *)&ctypes_strnend, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strend, but limit the max number of scanned characters to @maxlen") },
+	      "Same as ?Gstrend, but limit the max number of scanned characters to @maxlen") },
 	{ "strchr", (DeeObject *)&ctypes_strchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
 	      "Search for the first character equal to @needle within @haystack\n"
@@ -950,53 +950,53 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "If no such character exists, return a NULL-pointer instead") },
 	{ "strnchr", (DeeObject *)&ctypes_strnchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strchr, but limit the max number of scanned characters to @maxlen") },
+	      "Same as ?Gstrchr, but limit the max number of scanned characters to @maxlen") },
 	{ "strnrchr", (DeeObject *)&ctypes_strnrchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strrchr, but limit the max number of scanned characters to @maxlen") },
+	      "Same as ?Gstrrchr, but limit the max number of scanned characters to @maxlen") },
 	{ "stroff", (DeeObject *)&ctypes_stroff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
-	      "Same #strchr, but return the offset of the found character from @haystack, or ${strlen(haystack)} if @needle wasn't found") },
+	      "Same ?Gstrchr, but return the offset of the found character from @haystack, or ${strlen(haystack)} if @needle wasn't found") },
 	{ "strroff", (DeeObject *)&ctypes_strroff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Dint\n"
-	      "Same #strrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
+	      "Same ?Gstrrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
 	{ "strnoff", (DeeObject *)&ctypes_strnoff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
-	      "Same #strnchr, but return the offset of the found character from @haystack, or ${strnlen(haystack,maxlen)} if @needle wasn't found") },
+	      "Same ?Gstrnchr, but return the offset of the found character from @haystack, or ${strnlen(haystack,maxlen)} if @needle wasn't found") },
 	{ "strnroff", (DeeObject *)&ctypes_strnroff, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Dint\n"
-	      "Same #strnrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
+	      "Same ?Gstrnrchr, but return the offset of the found character from @haystack, or ${size_t.max} if @needle wasn't found") },
 	{ "strchrnul", (DeeObject *)&ctypes_strchrnul, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strchr, but return ${strend(haystack)} if @needle wasn't found") },
+	      "Same as ?Gstrchr, but return ${strend(haystack)} if @needle wasn't found") },
 	{ "strrchrnul", (DeeObject *)&ctypes_strrchrnul, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strrchr, but return ${haystack-1} if @needle wasn't found") },
+	      "Same as ?Gstrrchr, but return ${haystack - 1} if @needle wasn't found") },
 	{ "strnchrnul", (DeeObject *)&ctypes_strnchrnul, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strnchr, but return ${strnend(haystack,maxlen)} if @needle wasn't found") },
+	      "Same as ?Gstrnchr, but return ${strnend(haystack,maxlen)} if @needle wasn't found") },
 	{ "strnrchrnul", (DeeObject *)&ctypes_strnrchrnul, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strnrchr, but return ${haystack-1} if @needle wasn't found") },
+	      "Same as ?Gstrnrchr, but return ${haystack - 1} if @needle wasn't found") },
 	{ "strcmp", (DeeObject *)&ctypes_strcmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
 	      "Compare the given strings @a and @b, returning ${<0}, "
 	      "${==0} or ${>0} indicative of their relation to one-another") },
 	{ "strncmp", (DeeObject *)&ctypes_strncmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as #strcmp, but limit the max number of compared characters to @maxlen") },
+	      "Same as ?Gstrcmp, but limit the max number of compared characters to @maxlen") },
 	{ "strcasecmp", (DeeObject *)&ctypes_strcasecmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Same as #strcmp, but ignore casing") },
+	      "Same as ?Gstrcmp, but ignore casing") },
 	{ "strncasecmp", (DeeObject *)&ctypes_strncasecmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as #strncmp, but ignore casing") },
+	      "Same as ?Gstrncmp, but ignore casing") },
 	{ "strcpy", (DeeObject *)&ctypes_strcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ${(char.ptr)memcpy(dst,src,(strlen(src)+1)*sizeof(char))}") },
+	      "Same as ${(char.ptr)memcpy(dst,src,(strlen(src) + 1) * sizeof(char))}") },
 	{ "strcat", (DeeObject *)&ctypes_strcat, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ${({ local r = dst; strcpy(strend(dst),src); (char.ptr)r; })}") },
+	      "Same as ${({ local r = dst; strcpy(strend(dst), src); (char.ptr)r; })}") },
 	{ "strncpy", (DeeObject *)&ctypes_strncpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
@@ -1010,45 +1010,47 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "strncat", (DeeObject *)&ctypes_strncat, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
-	      ">function strncat(dst,src,count) {\n"
-	      "> import * from ctypes;\n"
-	      "> local srclen = strnlen(src,count);\n"
-	      "> local buf = strend(dst);\n"
-	      "> memcpy(buf,src,srclen * sizeof(char));\n"
-	      "> buf[srclen] = 0;\n"
-	      "> return dst;\n"
-	      ">}") },
+	      "${"
+	      "function strncat(dst, src, count) {\n"
+	      "	import * from ctypes;\n"
+	      "	local srclen = strnlen(src, count);\n"
+	      "	local buf = strend(dst);\n"
+	      "	memcpy(buf, src, srclen * sizeof(char));\n"
+	      "	buf[srclen] = 0;\n"
+	      "	return dst;\n"
+	      "}}") },
 	{ "stpcpy", (DeeObject *)&ctypes_stpcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Same as ${(char.ptr)mempcpy(dst,src,(strlen(src) + 1) * sizeof(char)) - 1}") },
 	{ "stpncpy", (DeeObject *)&ctypes_stpncpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
-	      ">function stpncpy(dst,src,dstsize) {\n"
-	      "> import * from ctypes;\n"
-	      "> local srclen = strnlen(src,dstsize);\n"
-	      "> memcpy(dst,src,srclen * sizeof(char));\n"
-	      "> memset(dst + srclen,0,(dstsize - srclen) * sizeof(char));\n"
-	      "> return dst + srclen;\n"
-	      ">}") },
+	      "${"
+	      "function stpncpy(dst, src, dstsize) {\n"
+	      "	import * from ctypes;\n"
+	      "	local srclen = strnlen(src, dstsize);\n"
+	      "	memcpy(dst, src, srclen * sizeof(char));\n"
+	      "	memset(dst + srclen, 0, (dstsize - srclen) * sizeof(char));\n"
+	      "	return dst + srclen;\n"
+	      "}}") },
 	{ "strstr", (DeeObject *)&ctypes_strstr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Find the first instance of @needle contained within @haystack, or return a NULL-pointer if none exists") },
 	{ "strcasestr", (DeeObject *)&ctypes_strcasestr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as #strstr, but ignore casing") },
+	      "Same as ?Gstrstr, but ignore casing") },
 	{ "strverscmp", (DeeObject *)&ctypes_strverscmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Same as #strcmp, but do special handling for version strings (s.a. :string.vercompare)") },
+	      "Same as ?Gstrcmp, but do special handling for version strings (s.a. :string.vercompare)") },
 	{ "strtok", (DeeObject *)&ctypes_strtok, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,delim:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Split @str at each occurance of @delim and return the resulting strings individually") },
 	{ "index", (DeeObject *)&ctypes_index, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strchr, but return ${strend(haystack)} when @needle is $0") },
+	      "Same as ?Gstrchr, but return ${strend(haystack)} when @needle is $0") },
 	{ "rindex", (DeeObject *)&ctypes_rindex, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gchar,needle:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strrchr, but return ${strend(haystack)} when @needle is $0") },
+	      "Same as ?Gstrrchr, but return ${strend(haystack)} when @needle is $0") },
 	{ "strspn", (DeeObject *)&ctypes_strspn, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,accept:?Aptr?Gchar)->?Dint\n"
 	      "Returns the offset to the first character in @str that is also "
@@ -1066,13 +1068,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Compare @a and @b using the currently set locale") },
 	{ "strncoll", (DeeObject *)&ctypes_strncoll, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as #strcoll, but limit the number of scanned characters to @maxlen") },
+	      "Same as ?Gstrcoll, but limit the number of scanned characters to @maxlen") },
 	{ "strcasecoll", (DeeObject *)&ctypes_strcasecoll, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar)->?Dint\n"
-	      "Same as #strcoll, but ignore casing") },
+	      "Same as ?Gstrcoll, but ignore casing") },
 	{ "strncasecoll", (DeeObject *)&ctypes_strncasecoll, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gchar,b:?Aptr?Gchar,maxlen:?Dint)->?Dint\n"
-	      "Same as #strcasecoll, but limit the number of scanned characters to @maxlen") },
+	      "Same as ?Gstrcasecoll, but limit the number of scanned characters to @maxlen") },
 	{ "strxfrm", (DeeObject *)&ctypes_strxfrm, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,num:?Dint)->?Dint\n"
 	      "Transform up to @num characters from @src, using the current locale, and "
@@ -1094,7 +1096,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Set all characters in @str to @chr and re-return the given @str") },
 	{ "strnset", (DeeObject *)&ctypes_strnset, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,chr:?Dint,maxlen:?Dint)->?Aptr?Gchar\n"
-	      "Same as #strset, but limit the operator to up to @maxlen characters") },
+	      "Same as ?Gstrset, but limit the operator to up to @maxlen characters") },
 	{ "strfry", (DeeObject *)&ctypes_strfry, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "xor all characters within @str with $42, implementing _very_ simplistic encryption") },

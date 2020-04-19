@@ -1270,8 +1270,8 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */kwclsmethod_getsets,
-	/* .tp_members       = */kwclsmethod_members,
+	/* .tp_getsets       = */ kwclsmethod_getsets,
+	/* .tp_members       = */ kwclsmethod_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
@@ -2292,7 +2292,8 @@ PRIVATE ATTR_NORETURN void DCALL
 fatal_invalid_except(DeeObject *__restrict return_value,
                      uint16_t excepted, void *callback_addr) {
 	DEE_DPRINTF("Exception depth was improperly modified:\n"
-	            "After a return value %p from C-function %p, the exception depth should have been %u, but was actually %u\n"
+	            "After a return value %p from C-function %p, the exception "
+	            "depth should have been %u, but was actually %u\n"
 	            "For details, see the C documentation of `DeeCMethod_CallFunc'",
 	            return_value, callback_addr, excepted, DeeThread_Self()->t_exceptsz);
 	BREAKPOINT();

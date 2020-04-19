@@ -2419,8 +2419,8 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError Failed to shutdown @this socket\n"
 	      "@throw FileClosed @this socket has already been closed\n"
 	      "Closes the socket's file descriptor. When @shutdown_socket is a non-empty :string, "
-	      "#shutdown will automatically be invoked on @this socket if it hasn't before\n"
-	      "Note that in the event that #shutdown has already been called, ") },
+	      "?#shutdown will automatically be invoked on @this socket if it hasn't before\n"
+	      "Note that in the event that ?#shutdown has already been called, ") },
 	{ "shutdown",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_shutdown,
 	  DOC("(how:?Dint)\n"
@@ -2470,10 +2470,10 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.IsConnected The socket is already connected\n"
 	      "@throw NetError Failed to start listening for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param max_backlog The max number of connections to queue before #accept must be called to acknowledge them. "
+	      "@param max_backlog The max number of connections to queue before ?#accept must be called to acknowledge them. "
 	      "When negative, use a default backlog that can be configured with the environment variable "
 	      "${(int from deemon)((environ from fs)[\"DEEMON_MAXBACKLOG\"])}\n"
-	      "Start listening for incoming connections on @this socket, preferrable after it has been #bound\n"
+	      "Start listening for incoming connections on @this socket, preferrable after it has been ?#bound\n"
 	      "Note that calling this function may require the user to whitelist deemon in their firewall") },
 	{ "accept",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_accept,
@@ -2484,7 +2484,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
 	      "@throw NetError Failed to start accept a connection for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param timeout_microseconds The timeout describing for how long #accept should wait before returning :none. "
+	      "@param timeout_microseconds The timeout describing for how long ?#accept should wait before returning :none. "
 	      "You may pass ${-1} for an infinite timeout or $0 to fail immediately.\n"
 	      "@return A new socket object describing the connection to the new client, or :none when @timeout_microseconds has passed\n"
 	      "Accept new incoming connections on a listening socket") },
@@ -2497,7 +2497,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
 	      "@throw NetError Failed to start accept a connection for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "Same as calling #accept with a timeout_microseconds argument of ${0}") },
+	      "Same as calling ?#accept with a timeout_microseconds argument of ${0}") },
 	{ "recv",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recv,
 	  DOC("(flags:?Dstring)->?DBytes\n"
@@ -2537,7 +2537,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out\n"
 	      "@throw NetError Failed to receive data for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
+	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
 	      "Same as #recv, but received data is written into the given buffer @dst") },
 	{ "recvfrom",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_recvfrom,
@@ -2552,10 +2552,10 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
 	      "@throw NetError Failed to receive data for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
-	      "Same as #recv, but uses the recvfrom system call to read data, also returning "
+	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
+	      "Same as ?#recv, but uses the recvfrom system call to read data, also returning "
 	      "the socket address from which the data originates as the first of 2 :tuple "
-	      "arguments, the second being the text regularly returned #recv\n"
+	      "arguments, the second being the text regularly returned ?#recv\n"
 	      "The given @timeout_microseconds can be passed as either $0 to try-receive pending packages, "
 	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
 	      "as any other integer value to specify how long to wait before returning ${(none,\"\")}") },
@@ -2571,8 +2571,8 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.ConnectReset.TimedOut The connection to the peer timed out (Note to be confused with @timeout_microseconds expiring; see below)\n"
 	      "@throw NetError Failed to receive data for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
-	      "Same as #recvfrom, buf read received data into the given buffer @dst") },
+	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
+	      "Same as ?#recvfrom, buf read received data into the given buffer @dst") },
 	{ "send",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_send,
 	  DOC("(data:?DBytes,flags=!P{})->?Dint\n"
@@ -2588,7 +2588,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
 	      "@throw NetError Failed to send data for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
+	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
 	      "@return The total number of bytes that was sent\n"
 	      "Send @data over the network to the peer of a connected socket") },
 	{ "sendto",
@@ -2608,17 +2608,17 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.NetUnreachable No route to the connected peer could be established\n"
 	      "@throw NetError Failed to send data for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param flags A set of flags used during delivery. See #recv for information on the string-encoded version\n"
+	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
 	      "@param target A tuple consisting of arguments which can be used to construct a :sockaddr object, or a single argument used for "
 	      "the same purpose in ${target = target is tuple ? sockaddr(this.sock_af,target...) : sockaddr(this.sock_af,target)}.\n"
 	      "@return The total number of bytes that was sent\n"
-	      "Same as #send, but used to transmit data to a specific network target, rather than one that is already connected.") },
+	      "Same as ?#send, but used to transmit data to a specific network target, rather than one that is already connected.") },
 	{ "wasshutdown",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_wasshutdown,
 	  DOC("(how:?Dint)->?Dbool\n"
 	      "(how=!?rw)->?Dbool\n"
-	      "Returns :true if @this socket has been #shutdown according to @how (inclusive when multiple modes are specified)\n"
-	      "See #shutdown for possible values that may be passed to @how") },
+	      "Returns :true if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
+	      "See ?#shutdown for possible values that may be passed to @how") },
 	{ "fileno", /* TODO: Use DeeSysFD_INT_GETSET / DeeSysFD_HANDLE_GETSET for this! */
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_fileno,
 	  DOC("->?Dint\n"
@@ -2652,7 +2652,7 @@ PRIVATE struct type_getset socket_getsets[] = {
 
 PRIVATE struct type_member socket_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("isbound", STRUCT_CONST, Socket, s_state, SOCKET_FBOUND,
-	                         "Returns :true if @this socket has been bound (s.a. #bind)"),
+	                         "Returns :true if @this socket has been bound (s.a. ?#bind)"),
 	TYPE_MEMBER_BITFIELD_DOC("isconnected", STRUCT_CONST, Socket, s_state, SOCKET_FCONNECTED,
 	                         "Returns :true if @this socket has been ?#{connect}ed"),
 	TYPE_MEMBER_BITFIELD_DOC("islistening", STRUCT_CONST, Socket, s_state, SOCKET_FLISTENING,
@@ -2785,15 +2785,16 @@ INTERN DeeTypeObject DeeSocket_Type = {
 	                         "@param af The socket address family (e.g.: $\"AF_INET\" or $\"AF_INET6\").\n"
 	                         "          NOTE: When possible, deemon will automatically configure $\"AF_INET6\" sockets to be "
 	                                         "able to accept clients in dualstack mode (that is: allowing connections made using both IPv4 and IPv6)\n"
-	                         "                To simplify this further, you may use #tcp to easily create an IPv6-ready server or client\n"
+	                         "                To simplify this further, you may use ?#tcp to easily create an IPv6-ready server or client\n"
 	                         "@throw NetError.NoSupport The given protocol @proto cannot be used with the given address family @af\n"
 	                         "@throw NetError.NoSupport The given socket type @type cannot be used with protocol @proto\n"
 	                         "@throw NetError Failed to create a new socket descriptor\n"
 	                         "@throw ValueError $\"AF_AUTO\" cannot be used as address family in the socket constructor\n"
-	                         "Constructs and allocates a new socket descriptor that has yet to be #bound or be ?#{connect}ed\n"
+	                         "Constructs and allocates a new socket descriptor that has yet to be ?#bound or be ?#{connect}ed\n"
+
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true indicative of the socket not having been closed (s.a. #wasclosed)"),
+	                         "Returns :true indicative of the socket not having been closed (s.a. ?#wasclosed)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
