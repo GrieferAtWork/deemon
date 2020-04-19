@@ -655,6 +655,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(ob:?GStructured)->?Dint\n"
 	      "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
 	      "Returns the size of a given structured type or object in bytes\n"
+
 	      "\n"
 	      "(ob:?DBytes)->?Dint\n"
 	      "Returns the size of the given :Bytes ob, which is the same as ${##ob}") },
@@ -726,17 +727,17 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "@throw NoMemory Insufficient memory to allocate ${count * size} bytes\n"
-	      "@throw IntegerOverflow The given @count and @size overflow :size_t when multiplied\n"
-	      "Same as :malloc, but rather than leaving the newly allocated memory uninitialized, "
-	      "fill it with all zeroes, the same way ${memset(malloc(size),0,size)} would\n"
+	      "@throw IntegerOverflow The given @count and @size overflow ?Gsize_t when multiplied\n"
+	      "Same as ?Gmalloc, but rather than leaving the newly allocated memory uninitialized, "
+	      "fill it with all zeroes, the same way ${memset(malloc(size), 0, size)} would\n"
 	      "If the product of @count and @size equals ${0}, a minimal-sized heap-block is allocated, "
 	      "however the caller must still assume that the memory range they are allowed to access "
 	      "is non-existant") },
 	{ "realloc", (DeeObject *)&ctypes_realloc, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
 	      "@throw NoMemory Insufficient memory to allocate @size bytes\n"
-	      "Given a heap-pointer previously allocated using either :malloc, :calloc or "
-	      "a prior call to :realloc, change its size to @size, either releasing then "
+	      "Given a heap-pointer previously allocated using either ?Gmalloc, ?Gcalloc or "
+	      "a prior call to ?Grealloc, change its size to @size, either releasing then "
 	      "unused trailing memory resulting from the difference between its old size "
 	      "and a smaller, newer size, or try to extend it if its new size is larger "
 	      "than its own, in which case a collision with another block located at the "
@@ -745,89 +746,89 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "In all cases, a pointer to the new heap block is returned, which may be "
 	      "identical to the old block\n"
 	      "If a NULL-pointer is passed for @ptr, the function behaves the same as "
-	      "a call to :malloc with the given @{size}. Alternatively, if a valid heap "
+	      "a call to ?Gmalloc with the given @{size}. Alternatively, if a valid heap "
 	      "pointer is passed for @ptr, and @size is passed as ${0}, the heap block is "
 	      "truncated to a minimal size and a heap block is returned that is semantically "
 	      "equivalent to one returned by ${malloc(0)}\n"
 	      "In the event of failure, the pre-existing heap-block passed for @ptr will remain unchanged") },
 	{ "free", (DeeObject *)&ctypes_free, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?Gvoid)\n"
-	      "Release a previously allocated heap-block returned by one of :malloc, :calloc or :realloc\n"
+	      "Release a previously allocated heap-block returned by one of ?Gmalloc, ?Gcalloc or ?Grealloc\n"
 	      "If a NULL-pointer is passed for @ptr, this function has no effect and returns immediately") },
 	{ "trymalloc", (DeeObject *)&ctypes_trymalloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :malloc, but return a NULL-pointer if allocation isn't "
+	      "Same as ?Gmalloc, but return a NULL-pointer if allocation isn't "
 	      "possible due to lack of memory, rather than throwing a :NoMemory error") },
 	{ "trycalloc", (DeeObject *)&ctypes_trycalloc, MODSYM_FNORMAL,
 	  DOC("(size:?Dint)->?Aptr?Gvoid\n"
 	      "(count:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :calloc, but return a NULL-pointer if allocation isn't "
+	      "Same as ?Gcalloc, but return a NULL-pointer if allocation isn't "
 	      "possible due to lack of memory, rather than throwing a :NoMemory error") },
 	{ "tryrealloc", (DeeObject *)&ctypes_tryrealloc, MODSYM_FNORMAL,
 	  DOC("(ptr:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :realloc, but return a NULL-pointer if allocation isn't "
+	      "Same as ?Grealloc, but return a NULL-pointer if allocation isn't "
 	      "possible due to lack of memory, rather than throwing a :NoMemory error\n"
 	      "In this event, the pre-existing heap-block passed for @ptr is not freed") },
 	{ "strdup", (DeeObject *)&ctypes_strdup, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!Amax!Gsize_t)->?Aptr?Gchar\n"
 	      "@throw NoMemory Insufficient memory\n"
 	      "Duplicate the given @str into a heap-allocated memory block\n"
-	      ">function strndup(str,maxlen?) {\n"
-	      "> import * from ctypes;\n"
-	      "> if (maxlen !is bound)\n"
-	      ">  maxlen = size_t.max;\n"
-	      "> local len = strnlen(str,maxlen) * sizeof(char);\n"
-	      "> local res = (char.ptr)memcpy(malloc(len + sizeof(char)),str,len);\n"
-	      "> res[len] = 0;\n"
-	      "> return res;\n"
-	      ">}") },
+	      "${"
+	      "function strndup(str: char.ptr, maxlen?: int): char.ptr {\n"
+	      "	if (maxlen !is bound)\n"
+	      "		maxlen = size_t.max;\n"
+	      "	local len = strnlen(str, maxlen) * sizeof(char);\n"
+	      "	local res = (char.ptr)memcpy(malloc(len + sizeof(char)), str, len);\n"
+	      "	res[len] = 0;\n"
+	      "	return res;\n"
+	      "}}") },
 	{ "trystrdup", (DeeObject *)&ctypes_trystrdup, MODSYM_FNORMAL,
 	  DOC("(str:?Aptr?Gchar,maxlen:?Dint=!Amax!Gsize_t)->?Aptr?Gchar\n"
 	      "Try to duplicate the given @str into a heap-allocated memory block\n"
-	      ">function trystrndup(str,maxlen?) {\n"
-	      "> import * from ctypes;\n"
-	      "> if (maxlen !is bound)\n"
-	      ">  maxlen = size_t.max;\n"
-	      "> local len = strnlen(str,maxlen) * sizeof(char);\n"
-	      "> local res = (char.ptr)trymalloc(len + sizeof(char));\n"
-	      "> if (res) {\n"
-	      ">  memcpy(res,str,len);\n"
-	      ">  res[len] = 0;\n"
-	      "> }\n"
-	      "> return res;\n"
-	      ">}") },
+	      "${"
+	      "function trystrndup(str: char.ptr, maxlen?: int): char.ptr {\n"
+	      "	if (maxlen !is bound)\n"
+	      "		maxlen = size_t.max;\n"
+	      "	local len = strnlen(str, maxlen) * sizeof(char);\n"
+	      "	local res = (char.ptr)trymalloc(len + sizeof(char));\n"
+	      "	if (res) {\n"
+	      "		memcpy(res, str, len);\n"
+	      "		res[len] = 0;\n"
+	      "	}\n"
+	      "	return res;\n"
+	      "}}") },
 
 
 
 	{ "memcpy", (DeeObject *)&ctypes_memcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns @dst as a :void.ptr\n"
+	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"
 	      "Copies @n bytes of memory from @src to @dst\n"
 	      "Note that the source and destination ranges may not overlap") },
 	{ "mempcpy", (DeeObject *)&ctypes_mempcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns ${dst + size} as a :void.ptr\n"
-	      "Same as :memcpy, but returns ${dst + size}") },
+	      "@return Always re-returns ${dst + size} as a ?Aptr?Gvoid\n"
+	      "Same as ?Gmemcpy, but returns ${dst + size}") },
 	{ "memccpy", (DeeObject *)&ctypes_memccpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,needle:?Dint,size:?Dint)->?Aptr?Gvoid\n"
 	      "@return The last modified by in @dst\n"
-	      "Same as :memcpy, but stop after a byte equal to @needle is encountered in @src") },
+	      "Same as ?Gmemcpy, but stop after a byte equal to @needle is encountered in @src") },
 	{ "memset", (DeeObject *)&ctypes_memset, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns @dst as a :void.ptr\n"
+	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"
 	      "Set every byte in the range @dst+@size to equal @byte") },
 	{ "mempset", (DeeObject *)&ctypes_mempset, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,byte:?Dint,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns ${dst + size} as a :void.ptr\n"
+	      "@return Always re-returns ${dst + size} as a ?Aptr?Gvoid\n"
 	      "Same as :memset, but returns ${dst + size}") },
 	{ "memmove", (DeeObject *)&ctypes_memmove, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns @dst as a :void.ptr\n"
-	      "Same as :memcpy, but the source and destination ranges are allowed to overlap") },
+	      "@return Always re-returns @dst as a ?Aptr?Gvoid\n"
+	      "Same as ?Gmemcpy, but the source and destination ranges are allowed to overlap") },
 	{ "mempmove", (DeeObject *)&ctypes_mempmove, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
-	      "@return Always re-returns ${dst + size} as a :void.ptr\n"
-	      "Same as :memcpy, but returns ${dst + size}") },
+	      "@return Always re-returns ${dst + size} as a ?Aptr?Gvoid\n"
+	      "Same as ?Gmemcpy, but returns ${dst + size}") },
 	{ "memchr", (DeeObject *)&ctypes_memchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
 	      "Return a pointer to the first byte in the specified @haystack+@haystack_size "
@@ -855,46 +856,46 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "the host provides support for a MMU") },
 	{ "rawmemlen", (DeeObject *)&ctypes_rawmemlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as :rawmemchr, but return the offset from @haystack") },
+	      "Same as ?Grawmemchr, but return the offset from @haystack") },
 	{ "rawmemrchr", (DeeObject *)&ctypes_rawmemrchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
 	      "Same as :rawmemchr, but search in reverse, starting with ${haystack[-1]}\n"
-	      "You can think of this function as a variant of :memrend that operates "
+	      "You can think of this function as a variant of ?Gmemrend that operates "
 	      "on a buffer that spans the entirety of the available address space") },
 	{ "rawmemrlen", (DeeObject *)&ctypes_rawmemrlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as :rawmemrchr, but return the positive (unsigned) offset of the "
+	      "Same as ?Grawmemrchr, but return the positive (unsigned) offset of the "
 	      "matching byte, such that ${haystack + return} points to the byte in question") },
 	{ "memxchr", (DeeObject *)&ctypes_memxchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memchr, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Gmemchr, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "memxlen", (DeeObject *)&ctypes_memxlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
-	      "Same as :memlen, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Gmemlen, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "memxend", (DeeObject *)&ctypes_memxend, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memend, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Gmemend, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "memxrchr", (DeeObject *)&ctypes_memxrchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memrchr, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Gmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "memxrlen", (DeeObject *)&ctypes_memxrlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Dint\n"
-	      "Same as :memrlen, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Gmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "memxrend", (DeeObject *)&ctypes_memxrend, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint,haystack_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memrend, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Gmemrend, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "rawmemxchr", (DeeObject *)&ctypes_rawmemxchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :rawmemchr, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Grawmemchr, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "rawmemxlen", (DeeObject *)&ctypes_rawmemxlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as :rawmemlen, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Grawmemlen, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "rawmemxrchr", (DeeObject *)&ctypes_rawmemxrchr, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :rawmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Grawmemrchr, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "rawmemxrlen", (DeeObject *)&ctypes_rawmemxrlen, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,needle:?Dint)->?Dint\n"
-	      "Same as :rawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
+	      "Same as ?Grawmemrlen, but instead of comparing bytes for being equal, compare them for being different") },
 	{ "memcmp", (DeeObject *)&ctypes_memcmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,haystack_size:?Dint)->?Dint\n"
 	      "Compare bytes from 2 buffers in @a and @b of equal haystack_size @haystack_size, and "
@@ -903,8 +904,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "is true, and ${== 0} no such byte exists") },
 	{ "memcasecmp", (DeeObject *)&ctypes_memcasecmp, MODSYM_FNORMAL,
 	  DOC("(a:?Aptr?Gvoid,b:?Aptr?Gvoid,haystack_size:?Dint)->?Dint\n"
-	      "Same as :memcmp, but bytes are casted as ASCII characters into a "
-	      "common casing prior to comparison") },
+	      "Same as ?Gmemcmp, but bytes are casted as ASCII characters "
+	      "into a common casing prior to comparison") },
 	{ "memmem", (DeeObject *)&ctypes_memmem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
 	      "Search for the first memory block in @haystack+@haystack_size that is equal to @needle+@needle_size "
@@ -913,14 +914,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "If no such memory block exists, or @needle_size is $0, return a NULL-pointer instead") },
 	{ "memcasemem", (DeeObject *)&ctypes_memcasemem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memmem, but perform case-insensitive comparisons, using :memcasecmp instead of :memcmp") },
+	      "Same as ?Gmemmem, but perform case-insensitive comparisons, using ?Gmemcasecmp instead of ?Gmemcmp") },
 	{ "memrmem", (DeeObject *)&ctypes_memrmem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memmem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
+	      "Same as ?Gmemmem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
 	      "When @needle_size is $0, always return a NULL-pointer") },
 	{ "memcasermem", (DeeObject *)&ctypes_memcasermem, MODSYM_FNORMAL,
 	  DOC("(haystack:?Aptr?Gvoid,haystack_size:?Dint,needle:?Aptr?Gvoid,needle_size:?Dint)->?Aptr?Gvoid\n"
-	      "Same as :memcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
+	      "Same as ?Gmemcasemem, but in case more than 1 match exists, return a pointer to the last, rather than the first\n"
 	      "When @needle_size is $0, always return a NULL-pointer") },
 	{ "memrev", (DeeObject *)&ctypes_memrev, MODSYM_FNORMAL,
 	  DOC("(buf:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"
@@ -993,26 +994,25 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Same as ?Gstrncmp, but ignore casing") },
 	{ "strcpy", (DeeObject *)&ctypes_strcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ${(char.ptr)memcpy(dst,src,(strlen(src) + 1) * sizeof(char))}") },
+	      "Same as ${(char.ptr)memcpy(dst, src, (strlen(src) + 1) * sizeof(char))}") },
 	{ "strcat", (DeeObject *)&ctypes_strcat, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
 	      "Same as ${({ local r = dst; strcpy(strend(dst), src); (char.ptr)r; })}") },
 	{ "strncpy", (DeeObject *)&ctypes_strncpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
-	      ">function strncpy(dst,src,count) {\n"
-	      "> import * from ctypes;\n"
-	      "> local srclen = strnlen(src,count);\n"
-	      "> memcpy(dst,src,srclen * sizeof(char));\n"
-	      "> memset(dst + strlen,0,(count - srclen) * sizeof(char));\n"
-	      "> return dst;\n"
-	      ">}") },
+	      "${"
+	      "function strncpy(dst: char.ptr, src: char.ptr, count: int): char.ptr {\n"
+	      "	local srclen = strnlen(src, count);\n"
+	      "	memcpy(dst, src, srclen * sizeof(char));\n"
+	      "	memset(dst + strlen, 0, (count - srclen) * sizeof(char));\n"
+	      "	return dst;\n"
+	      "}}") },
 	{ "strncat", (DeeObject *)&ctypes_strncat, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,count:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
 	      "${"
-	      "function strncat(dst, src, count) {\n"
-	      "	import * from ctypes;\n"
+	      "function strncat(dst: char.ptr, src: char.ptr, count: int): char.ptr {\n"
 	      "	local srclen = strnlen(src, count);\n"
 	      "	local buf = strend(dst);\n"
 	      "	memcpy(buf, src, srclen * sizeof(char));\n"
@@ -1021,13 +1021,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "}}") },
 	{ "stpcpy", (DeeObject *)&ctypes_stpcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
-	      "Same as ${(char.ptr)mempcpy(dst,src,(strlen(src) + 1) * sizeof(char)) - 1}") },
+	      "Same as ${(char.ptr)mempcpy(dst, src, (strlen(src) + 1) * sizeof(char)) - 1}") },
 	{ "stpncpy", (DeeObject *)&ctypes_stpncpy, MODSYM_FNORMAL,
-	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar)->?Aptr?Gchar\n"
+	  DOC("(dst:?Aptr?Gchar,src:?Aptr?Gchar,dstsize:?Dint)->?Aptr?Gchar\n"
 	      "Implemented as:\n"
 	      "${"
-	      "function stpncpy(dst, src, dstsize) {\n"
-	      "	import * from ctypes;\n"
+	      "function stpncpy(dst: char.ptr, src: char.ptr, dstsize: int): char.ptr {\n"
 	      "	local srclen = strnlen(src, dstsize);\n"
 	      "	memcpy(dst, src, srclen * sizeof(char));\n"
 	      "	memset(dst + srclen, 0, (dstsize - srclen) * sizeof(char));\n"
@@ -1108,65 +1107,64 @@ PRIVATE struct dex_symbol symbols[] = {
 };
 
 #ifndef NDEBUG
-PRIVATE DeeSTypeObject *static_ctypes[] = {
-	(DeeSTypeObject *)&DeeStructured_Type,
-	(DeeSTypeObject *)&DeePointer_Type,
-	(DeeSTypeObject *)&DeeLValue_Type,
-	(DeeSTypeObject *)&DeeArray_Type,
-	(DeeSTypeObject *)&DeeCFunction_Type,
-	(DeeSTypeObject *)&DeeCVoid_Type,
-	(DeeSTypeObject *)&DeeCChar_Type,
-	(DeeSTypeObject *)&DeeCWChar_Type,
-	(DeeSTypeObject *)&DeeCChar16_Type,
-	(DeeSTypeObject *)&DeeCChar32_Type,
-	(DeeSTypeObject *)&DeeCBool_Type,
-	(DeeSTypeObject *)&DeeCInt8_Type,
-	(DeeSTypeObject *)&DeeCInt16_Type,
-	(DeeSTypeObject *)&DeeCInt32_Type,
-	(DeeSTypeObject *)&DeeCInt64_Type,
-	(DeeSTypeObject *)&DeeCUInt8_Type,
-	(DeeSTypeObject *)&DeeCUInt16_Type,
-	(DeeSTypeObject *)&DeeCUInt32_Type,
-	(DeeSTypeObject *)&DeeCUInt64_Type,
-	(DeeSTypeObject *)&DeeCFloat_Type,
-	(DeeSTypeObject *)&DeeCDouble_Type,
-	(DeeSTypeObject *)&DeeCLDouble_Type,
-#ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
-	(DeeSTypeObject *)&DeeCSChar_Type,
-	(DeeSTypeObject *)&DeeCUChar_Type,
-#endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
-
-#ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
-	(DeeSTypeObject *)&DeeCShort_Type,
-	(DeeSTypeObject *)&DeeCUShort_Type,
-#endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
-
-#ifdef CONFIG_INT_NEEDS_OWN_TYPE
-	(DeeSTypeObject *)&DeeCInt_Type,
-	(DeeSTypeObject *)&DeeCUInt_Type,
-#endif /* CONFIG_INT_NEEDS_OWN_TYPE */
-
-#ifdef CONFIG_LONG_NEEDS_OWN_TYPE
-	(DeeSTypeObject *)&DeeCLong_Type,
-	(DeeSTypeObject *)&DeeCULong_Type,
-#endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
-
-#ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
-	(DeeSTypeObject *)&DeeCLLong_Type,
-	(DeeSTypeObject *)&DeeCULLong_Type,
-#endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
-};
+PRIVATE void DCALL
+libctypes_fini_type(DeeSTypeObject *__restrict self) {
+	Dee_Free(self->st_array.sa_list);
+#ifndef CONFIG_NO_CFUNCTION
+	Dee_Free(self->st_cfunction.sf_list);
+#endif /* !CONFIG_NO_CFUNCTION */
+}
 
 PRIVATE void DCALL
 libctypes_fini(DeeDexObject *__restrict UNUSED(self)) {
-	size_t i;
-	/* Create caches of static C-types, so they don't show up as leaks. */
-	for (i = 0; i < COMPILER_LENOF(static_ctypes); ++i) {
-		Dee_Free(static_ctypes[i]->st_array.sa_list);
-#ifndef CONFIG_NO_CFUNCTION
-		Dee_Free(static_ctypes[i]->st_cfunction.sf_list);
-#endif /* !CONFIG_NO_CFUNCTION */
-	}
+	/* Clear caches for static C-types, so they don't show up as leaks. */
+	libctypes_fini_type((DeeSTypeObject *)&DeeStructured_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeePointer_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeLValue_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeArray_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCFunction_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCVoid_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCChar_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCWChar_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCChar16_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCChar32_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCBool_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCInt8_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCInt16_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCInt32_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCInt64_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt8_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt16_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt32_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt64_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCFloat_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCDouble_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCLDouble_Type);
+
+#ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
+	libctypes_fini_type((DeeSTypeObject *)&DeeCSChar_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCUChar_Type);
+#endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
+	libctypes_fini_type((DeeSTypeObject *)&DeeCShort_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCUShort_Type);
+#endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_INT_NEEDS_OWN_TYPE
+	libctypes_fini_type((DeeSTypeObject *)&DeeCInt_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCUInt_Type);
+#endif /* CONFIG_INT_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_LONG_NEEDS_OWN_TYPE
+	libctypes_fini_type((DeeSTypeObject *)&DeeCLong_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCULong_Type);
+#endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
+
+#ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
+	libctypes_fini_type((DeeSTypeObject *)&DeeCLLong_Type);
+	libctypes_fini_type((DeeSTypeObject *)&DeeCULLong_Type);
+#endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 }
 #endif /* !NDEBUG */
 

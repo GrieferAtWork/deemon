@@ -814,7 +814,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	                         "Move all the elements from @other into @this FixedList, changing all of them to unbound in @other\n"
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this FixedList is non-empty. :false otherwise\n"
+	                         "Returns ?t if @this FixedList is non-empty. ?f otherwise\n"
 	                         "\n"
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating the elements of @this FixedList in ascending order\n"
@@ -835,7 +835,7 @@ INTERN DeeTypeObject FixedList_Type = {
 	                         "Mark the @index'th element of @this FixedList as unbound\n"
 	                         "\n"
 	                         "contains->\n"
-	                         "Returns :true if @item is apart of @this FixedList, :false otherwise"),
+	                         "Returns ?t if @item is apart of @this FixedList, ?f otherwise"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC|TP_FVARIABLE,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(FixedList),
 	/* .tp_features = */ TF_NONE,

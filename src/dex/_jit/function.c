@@ -1021,7 +1021,7 @@ PRIVATE struct type_getset jf_getsets[] = {
 	  DOC("->?X2?Dstring?N") },
 	{ "__doc__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getdoc, NULL, NULL,
-	  DOC("->?N\nAlways returns :none (doc strings aren't processed in JIT code)") },
+	  DOC("->?N\nAlways returns ?N (doc strings aren't processed in JIT code)") },
 	{ "__kwds__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jf_getkwds, NULL, NULL,
 	  DOC("->?S?Dstring") },
@@ -1052,9 +1052,9 @@ PRIVATE struct type_member jf_members[] = {
 	                         "Check if @this function behaves as yielding (i.e. contains a yield statement "
 	                         "that doesn't appear as part of a recursively defined inner function)"),
 	TYPE_MEMBER_BITFIELD_DOC("isretexpr", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FRETEXPR,
-	                         "Evaluates to :true if @this function was defined like ${[] -> 42}, meaning "
+	                         "Evaluates to ?t if @this function was defined like ${[] -> 42}, meaning "
 	                         "that ?#__text__ is merely the expression that should be returned by the function\n"
-	                         "When :false, the function was defined like ${[] { return 42; }}"),
+	                         "When ?f, the function was defined like ${[] { return 42; }}"),
 	TYPE_MEMBER_FIELD_DOC("__impbase__", STRUCT_OBJECT_OPT, offsetof(JITFunction, jf_impbase),
 	                      "->?X2?DModule?N\n"
 	                      "Returns the module used for relative module imports"),

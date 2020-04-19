@@ -607,23 +607,23 @@ PRIVATE struct type_getset frame_getsets[] = {
 	{ "file",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfile, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "The filename of this Frame's source file, or :none when indeterminate") },
+	      "The filename of this Frame's source file, or ?N when indeterminate") },
 	{ "line",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getline, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "The line number within this Frame's source file, or :none when indeterminate") },
+	      "The line number within this Frame's source file, or ?N when indeterminate") },
 	{ "col",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcol, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "The column offset within this Frame's source file, or :none when indeterminate") },
+	      "The column offset within this Frame's source file, or ?N when indeterminate") },
 	{ "name",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "The name of this Frame's function, or :none when indeterminate") },
+	      "The name of this Frame's function, or ?N when indeterminate") },
 	{ "func",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfunc, NULL, NULL,
 	  DOC("->?X2?Dfunction?N\n"
-	      "Returns the function that is referenced by @this Frame, or :none if not available") },
+	      "Returns the function that is referenced by @this Frame, or ?N if not available") },
 	{ "__code__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcode, NULL, NULL,
 	  DOC("->?Ert:Code\n"
@@ -678,7 +678,7 @@ PRIVATE struct type_getset frame_getsets[] = {
 PRIVATE struct type_member frame_members[] = {
 	TYPE_MEMBER_FIELD("__owner__", STRUCT_OBJECT, offsetof(Frame, f_owner)),
 	TYPE_MEMBER_BITFIELD_DOC("__iswritable__", STRUCT_CONST, Frame, f_flags, DEEFRAME_FWRITABLE,
-	                         "Evaluates to :true if @this Frame is writable"),
+	                         "Evaluates to ?t if @this Frame is writable"),
 	TYPE_MEMBER_END
 };
 

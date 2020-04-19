@@ -2442,7 +2442,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError Failed to bind @this socket for some unknown reason\n"
 	      "@throw FileClosed @this socket has already been closed\n"
 	      "Binds @this socket to a given address.\n"
-	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
+	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating ?Gsockaddr") },
 	{ "connect",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_connect,
 	  DOC("(args!)\n"
@@ -2460,7 +2460,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError Failed to connect @this socket for some unknown reason\n"
 	      "@throw FileClosed @this socket has already been closed\n"
 	      "Connect @this socket with a given address.\n"
-	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating :sockaddr") },
+	      "Accepted arguments are the same as ${sockaddr(this.sock_af,args...)} when creating ?Gsockaddr") },
 	{ "listen",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_listen,
 	  DOC("(max_backlog=!-1)\n"
@@ -2484,9 +2484,9 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError.NoSupport The type of @this socket does not allow accepting of incoming connections\n"
 	      "@throw NetError Failed to start accept a connection for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
-	      "@param timeout_microseconds The timeout describing for how long ?#accept should wait before returning :none. "
+	      "@param timeout_microseconds The timeout describing for how long ?#accept should wait before returning ?N. "
 	      "You may pass ${-1} for an infinite timeout or $0 to fail immediately.\n"
-	      "@return A new socket object describing the connection to the new client, or :none when @timeout_microseconds has passed\n"
+	      "@return A new socket object describing the connection to the new client, or ?N when @timeout_microseconds has passed\n"
 	      "Accept new incoming connections on a listening socket") },
 	{ "tryaccept",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_tryaccept,
@@ -2554,7 +2554,7 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
 	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
 	      "Same as ?#recv, but uses the recvfrom system call to read data, also returning "
-	      "the socket address from which the data originates as the first of 2 :tuple "
+	      "the socket address from which the data originates as the first of 2 :Tuple "
 	      "arguments, the second being the text regularly returned ?#recv\n"
 	      "The given @timeout_microseconds can be passed as either $0 to try-receive pending packages, "
 	      "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
@@ -2609,15 +2609,15 @@ PRIVATE struct type_method socket_methods[] = {
 	      "@throw NetError Failed to send data for some reason\n"
 	      "@throw FileClosed @this socket has already been closed or was shut down\n"
 	      "@param flags A set of flags used during delivery. See ?#recv for information on the string-encoded version\n"
-	      "@param target A tuple consisting of arguments which can be used to construct a :sockaddr object, or a single argument used for "
-	      "the same purpose in ${target = target is tuple ? sockaddr(this.sock_af,target...) : sockaddr(this.sock_af,target)}.\n"
+	      "@param target A tuple consisting of arguments which can be used to construct a ?Gsockaddr object, or a single argument used for "
+	      "the same purpose in ${target = target is Tuple ? sockaddr(this.sock_af,target...) : sockaddr(this.sock_af,target)}.\n"
 	      "@return The total number of bytes that was sent\n"
 	      "Same as ?#send, but used to transmit data to a specific network target, rather than one that is already connected.") },
 	{ "wasshutdown",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_wasshutdown,
 	  DOC("(how:?Dint)->?Dbool\n"
 	      "(how=!?rw)->?Dbool\n"
-	      "Returns :true if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
+	      "Returns ?t if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
 	      "See ?#shutdown for possible values that may be passed to @how") },
 	{ "fileno", /* TODO: Use DeeSysFD_INT_GETSET / DeeSysFD_HANDLE_GETSET for this! */
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&socket_fileno,
@@ -2645,27 +2645,27 @@ PRIVATE struct type_getset socket_getsets[] = {
 	{ "wasclosed",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&socket_wasclosed, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this socket has been ?#{close}ed") },
+	      "Returns ?t if @this socket has been ?#{close}ed") },
 	{ NULL }
 };
 
 
 PRIVATE struct type_member socket_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("isbound", STRUCT_CONST, Socket, s_state, SOCKET_FBOUND,
-	                         "Returns :true if @this socket has been bound (s.a. ?#bind)"),
+	                         "Returns ?t if @this socket has been bound (s.a. ?#bind)"),
 	TYPE_MEMBER_BITFIELD_DOC("isconnected", STRUCT_CONST, Socket, s_state, SOCKET_FCONNECTED,
-	                         "Returns :true if @this socket has been ?#{connect}ed"),
+	                         "Returns ?t if @this socket has been ?#{connect}ed"),
 	TYPE_MEMBER_BITFIELD_DOC("islistening", STRUCT_CONST, Socket, s_state, SOCKET_FLISTENING,
-	                         "Returns :true if @this socket is ?#{listen}ing for incoming connections"),
+	                         "Returns ?t if @this socket is ?#{listen}ing for incoming connections"),
 	TYPE_MEMBER_FIELD_DOC("sock_af", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeSocketObject, s_sockaddr.sa.sa_family),
 	                      "The socket's address family as a system-specific integer id\n"
-	                      "Usually one of AF_*, the name of which can be determined using :getafname"),
+	                      "Usually one of AF_*, the name of which can be determined using ?Ggetafname"),
 	TYPE_MEMBER_FIELD_DOC("sock_type", STRUCT_CONST | STRUCT_INT, offsetof(DeeSocketObject, s_type),
 	                      "The socket's type as a system-specific integer id\n"
-	                      "Usually one of SOCK_*, the name of which can be determined using :gettypename"),
+	                      "Usually one of SOCK_*, the name of which can be determined using ?Ggettypename"),
 	TYPE_MEMBER_FIELD_DOC("sock_proto", STRUCT_CONST | STRUCT_INT, offsetof(DeeSocketObject, s_type),
 	                      "The socket's protocol as a system-specific integer id\n"
-	                      "Usually one of *PROTO_*, the name of which can be determined using :getprotoname"),
+	                      "Usually one of *PROTO_*, the name of which can be determined using ?Ggetprotoname"),
 	TYPE_MEMBER_END
 };
 
@@ -2780,7 +2780,7 @@ INTERN DeeTypeObject DeeSocket_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "socket",
 	/* .tp_doc      = */ DOC("(af:?X2?Dint?Dstring,type:?X2?Dint?Dstring=!N,proto:?X2?Dint?Dstring=!N)\n"
-	                         "@param proto The protocol to use for the socket, or :none or $0 to use the default\n"
+	                         "@param proto The protocol to use for the socket, or ?N or $0 to use the default\n"
 	                         "@param type The socket type, or none to use $\"SOCK_STREAM\"\n"
 	                         "@param af The socket address family (e.g.: $\"AF_INET\" or $\"AF_INET6\").\n"
 	                         "          NOTE: When possible, deemon will automatically configure $\"AF_INET6\" sockets to be "
@@ -2794,7 +2794,7 @@ INTERN DeeTypeObject DeeSocket_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true indicative of the socket not having been closed (s.a. ?#wasclosed)"),
+	                         "Returns ?t indicative of the socket not having been closed (s.a. ?#wasclosed)"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

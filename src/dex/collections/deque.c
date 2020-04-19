@@ -1551,7 +1551,7 @@ INTERN DeeTypeObject Deque_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this Deque is non-empty. :false otherwise\n"
+	                         "Returns ?t if @this Deque is non-empty. ?f otherwise\n"
 
 	                         "\n"
 	                         "iter->\n"
@@ -1577,7 +1577,7 @@ INTERN DeeTypeObject Deque_Type = {
 
 	                         "\n"
 	                         "contains->\n"
-	                         "Returns :true if @item is apart of this Deque, :false otherwise"),
+	                         "Returns ?t if @item is apart of this Deque, ?f otherwise"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(Deque),
 	/* .tp_features = */ TF_NONE,
@@ -1796,7 +1796,7 @@ PRIVATE struct type_getset deqiter_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&deqiter_setindex_ob,
 	  DOC("->?X2?Dint?N\n"
 	      "Get/set the index of @this iterator within its associated ?GDeque\n"
-	      "When :none, the iterator has been invalidated, possibly due to the "
+	      "When ?N, the iterator has been invalidated, possibly due to the "
 	      "deque having changed") },
 	{ NULL }
 };

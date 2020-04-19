@@ -834,9 +834,9 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_name     = */ "_SystemFile",
 		/* .tp_doc      = */ DOC("(fd:?X2?Dint?DFile,inherit=!f,duplicate=!f)\n"
 		                         "Construct a new SystemFile wrapper for @fd. When @inherit is "
-		                         ":true, the given @fd is inherited (and automatically closed "
+		                         "?t, the given @fd is inherited (and automatically closed "
 		                         "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
-		                         "is :true, the given @fd is duplicated, and the duplicated copy "
+		                         "is ?t, the given @fd is duplicated, and the duplicated copy "
 		                         "will be stored inside (in this case, @inherit is ignored)"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,

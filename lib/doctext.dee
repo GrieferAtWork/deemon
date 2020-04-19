@@ -745,6 +745,27 @@ function resolveCollonReferenceShortcut(name: string): string | none {
 			name.replace(".", "/")
 		});
 	}
+	if (candidates) {
+		/* If there are multiple candidates, check if the described
+		 * objects match. - If they do, then simply use any one of
+		 * of them as path!
+		 * This is important for something like `:Error', which can
+		 * be resolved both by the deemon- and errors-module, and
+		 * it wouldn't matter which module actually gets resolved! */
+		local obj, isFirst = true;
+		for (local none, c: candidates) {
+			if (isFirst) {
+				obj = c;
+			} else {
+				/* Do a same-object-compare here! */
+				if (obj !== c)
+					goto different_objects;
+				isFirst = false;
+			}
+		}
+		return candidates[0][0];
+	}
+different_objects:
 	/* Ambiguous, or undeterminable */
 	return none;
 }
@@ -1437,6 +1458,14 @@ again_parse_character_after_question:
 				ref = "/deemon/none";
 				break;
 
+			case "t":
+				ref = "/deemon/true";
+				break;
+
+			case "f":
+				ref = "/deemon/false";
+				break;
+
 			case "R": {
 				/* Type-Expression-like aliases & alternatives */
 				if (i >= end)
@@ -1555,7 +1584,7 @@ again_parse_character_after_question:
 					}
 				}	break;
 
-				case "r":
+				case "t":
 					ref = "/deemon/true";
 					break;
 

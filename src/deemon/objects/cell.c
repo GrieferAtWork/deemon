@@ -453,8 +453,8 @@ PRIVATE struct type_method cell_methods[] = {
 	{ "delete",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_delete,
 	  DOC("->?Dbool\n"
-	      "Delete the value stored in @this Cell, returning :true if "
-	      "the Cell wasn't empty before, or :false if it already was") },
+	      "Delete the value stored in @this Cell, returning ?t if "
+	      "the Cell wasn't empty before, or ?f if it already was") },
 	{ DeeString_STR(&str_pop),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_pop,
 	  DOC("->\n"
@@ -466,7 +466,7 @@ PRIVATE struct type_method cell_methods[] = {
 	{ DeeString_STR(&str_set),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_set,
 	  DOC("(value)->?Dbool\n"
-	      "Set (override) @this Cell's value, returning :true if a previous value "
+	      "Set (override) @this Cell's value, returning ?t if a previous value "
 	      "has been overwritten, or :falue if no value had been set before") },
 	{ DeeString_STR(&str_xch),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_xch,
@@ -481,7 +481,7 @@ PRIVATE struct type_method cell_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpdel,
 	  DOC("(old_value)->?Dbool\n"
 	      "Atomically check if the stored object's id matches @{old_value}. If this is "
-	      "the case, delete the stored object and return :{true}. Otherwise, return :false") },
+	      "the case, delete the stored object and return :{true}. Otherwise, return ?f") },
 	{ "cmpxch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpxch,
 	  DOC("(old_value,new_value)->\n"
@@ -502,14 +502,14 @@ PRIVATE struct type_method cell_methods[] = {
 
 	      "\n"
 	      "(new_value)->?Dbool\n"
-	      "Return :true and atomically set @new_value as stored object only "
-	      "if no object had been set before. Otherwise, return :false") },
+	      "Return ?t and atomically set @new_value as stored object only "
+	      "if no object had been set before. Otherwise, return ?f") },
 	{ "cmpset",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpset,
 	  DOC("(old_value)->?Dbool\n"
 	      "(old_value,new_value)->?Dbool\n"
-	      "Atomically check if the stored value equals @old_value and return :true "
-	      "alongside storing @new_value if this is the case. Otherwise, return :false\n"
+	      "Atomically check if the stored value equals @old_value and return ?t "
+	      "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
 	      "When @new_value is omit, the function behaves identical to ?#cmpdel") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "del",

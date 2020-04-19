@@ -1043,7 +1043,7 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
  *              are available as `...' (3 dots using in an expression)
  *              my_module.dee:
  *              >> print [...];  // [10, 20, 30]
- *              DeeObject_Callf(DeeModule_GetRoot(my_module,true), "ddd", 10, 20, 30);
+ *              DeeObject_Callf(DeeModule_GetRoot(my_module, true), "ddd", 10, 20, 30);
  * @return: NULL: Failed to create a function object for the module's root code object. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Callable*/ DeeObject *DCALL
 DeeModule_GetRoot(/*Module*/ DeeObject *__restrict self,

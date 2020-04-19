@@ -365,11 +365,11 @@ PRIVATE struct dex_symbol symbols[] = {
 /* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
-	    DOC(proto "Alias for :fs." libfs_name) }, )
+	    DOC(proto "Alias for ?Efs:" libfs_name) }, )
 #define DEFINE_LIBFS_ALIAS_S_ALT(altname, name, proto)                            \
 	D({ altname,                                                                  \
 	    (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
-	    DOC(proto "Alias for :fs." #name) }, )
+	    DOC(proto "Alias for ?Efs:" #name) }, )
 #define DEFINE_LIBFS_ALIAS(name, libfs_name, proto) \
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
@@ -440,7 +440,7 @@ PRIVATE struct dex_symbol symbols[] = {
 #undef DEFINE_LIBFS_ALIAS_ALT
 
 	/* Application exit control */
-	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as :deemon:Error.AppExit.atexit)"))
+	D(POSIX_ATEXIT_DEF_DOC("Register a callback to-be invoked before ?Gexit (Same as :AppExit.atexit)"))
 	D(POSIX_EXIT_DEF_DOC("Terminate execution of deemon after invoking ?Gatexit callbacks\n"
 	                     "Termination is done using the C $exit or $_Exit functions, if available. However if these "
 	                     "functions are not provided by the host, an :AppExit error is thrown instead\n"
@@ -473,11 +473,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	D({ NULL, (DeeObject *)&posix_errno_del, MODSYM_FNORMAL }, )
 	D({ NULL, (DeeObject *)&posix_errno_set, MODSYM_FNORMAL }, )
 	D(POSIX_STRERROR_DEF_DOC("Return the name of a given @errnum (which defaults to ?Gerrno), "
-	                         "or return :none if the error doesn't have an associated name"))
+	                         "or return ?N if the error doesn't have an associated name"))
 	D(POSIX_STRERRORNAME_DEF_DOC("Similar to ?Gstrerror, but instead of returning the message "
 	                             "associated with a given @errnum (which defaults to ?Gerrno), "
 	                             "return the name (e.g. $\"ENOENT\") of the error as a string\n"
-	                             "If the given error number is not recognized, return :none instead"))
+	                             "If the given error number is not recognized, return ?N instead"))
 
 	{ NULL }
 };

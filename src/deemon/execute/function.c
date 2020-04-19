@@ -498,16 +498,16 @@ PRIVATE struct type_getset function_getsets[] = {
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Returns the name of @this function, or :none if unknown") },
+	      "Returns the name of @this function, or ?N if unknown") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Returns the documentation string of @this function, or :none if unknown") },
+	      "Returns the documentation string of @this function, or ?N if unknown") },
 	{ DeeString_STR(&str___type__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
 	      "Try to determine if @this function is defined as part of a user-defined class, "
-	      "and if it is, return that class type, or :none if that class couldn't be found, "
+	      "and if it is, return that class type, or ?N if that class couldn't be found, "
 	      "or if @this function is defined as stand-alone") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_module, NULL, NULL,
@@ -518,7 +518,7 @@ PRIVATE struct type_getset function_getsets[] = {
 	  DOC("->?X2?Dint?N\n"
 	      "Try to determine if @this function is defined as part of a user-defined class, "
 	      "and if so, if it is used to define an operator callback. If that is the case, "
-	      "return the internal ID of the operator that @this function provides, or :none "
+	      "return the internal ID of the operator that @this function provides, or ?N "
 	      "if that class couldn't be found, @this function is defined as stand-alone, or "
 	      "defined as a class- or instance-method") },
 	{ "__operatorname__",
@@ -531,7 +531,7 @@ PRIVATE struct type_getset function_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&function_get_property, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Returns an integer describing the kind if @this function is part of a property or getset, "
-	      "or returns :none if the function's property could not be found, or if the function isn't "
+	      "or returns ?N if the function's property could not be found, or if the function isn't "
 	      "declared as a property callback\n"
 	      "#T{Id|Callback|Compatible prototype~"
 	      "$" PP_STR(CLASS_GETSET_GET) "|Getter callback|${get(): Object}&"

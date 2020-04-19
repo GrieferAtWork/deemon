@@ -418,7 +418,7 @@ INTERN DeeTypeObject DeeCompilerSymbol_Type = {
 	                         "Returns a human-readable representation of the symbol\n"
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if #kind isn't $\"none\"\n"
+	                         "Returns ?t if #kind isn't $\"none\"\n"
 	                         "\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,

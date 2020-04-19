@@ -1199,9 +1199,9 @@ PUBLIC DeeFileTypeObject DeeSystemFile_Type = {
 		/* .tp_name     = */ "_SystemFile",
 		/* .tp_doc      = */ DOC("(handle:?X3?Dint?DFile?Ewin32:HANDLE,inherit=!f,duplicate=!f)\n"
 		                         "Construct a new SystemFile wrapper for @handle. When @inherit is "
-		                         ":true, the given @handle is inherited (and automatically closed "
+		                         "?t, the given @handle is inherited (and automatically closed "
 		                         "once the returned :File is destroyed or ?#{close}ed. When @duplicate "
-		                         "is :true, the given @handle is duplicated, and the duplicated copy "
+		                         "is ?t, the given @handle is duplicated, and the duplicated copy "
 		                         "will be stored inside (in this case, @inherit is ignored)"),
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,

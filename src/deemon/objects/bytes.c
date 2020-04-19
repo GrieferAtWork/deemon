@@ -1470,11 +1470,11 @@ PRIVATE struct type_getset bytes_getsets[] = {
 	{ "isreadonly",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_isreadonly, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this Bytes object cannot be written to") },
+	      "Evaluates to ?t if @this Bytes object cannot be written to") },
 	{ "iswritable",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this Bytes object not be written to (the inverse of ?#isreadonly)") },
+	      "Evaluates to ?t if @this Bytes object not be written to (the inverse of ?#isreadonly)") },
 	{ "ismutable",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iswritable, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -1748,7 +1748,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
 	      "than $0, or greater than $0xff\n"
 	      "Convert the items of the given sequence @seq into integers, "
 	      "and construct a writable Bytes object from their values\n"
-	      "Passing :none for @seq will return an empty Bytes object") },
+	      "Passing ?N for @seq will return an empty Bytes object") },
 	{ "fromhex", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_fromhex,
 	  DOC("(hex_string:?Dstring)->?.\n"
 	      "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
@@ -1871,7 +1871,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "@throw BufferError @this Bytes object is not writable\n"
 	                         "@throw UnpackError The length of the given @data does not equal ${##this}\n"
 	                         "Assign the contents of @data to @this Bytes object\n"
-	                         "You may pass :none for @data to clear all bytes of @this buffer\n"
+	                         "You may pass ?N for @data to clear all bytes of @this buffer\n"
 
 	                         "\n"
 	                         "[](index:?Dint)->?Dint\n"
@@ -1904,7 +1904,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "@throw UnpackError The length of the given sequence @data does not match the number of bytes, that is ${end-start}. "
 	                         /*              */ "If any, and how many bytes of @this Bytes object were already modified is undefined\n"
 	                         "Assign values to a given range of bytes\n"
-	                         "You may pass :none to fill the entire range with zero-bytes\n"
+	                         "You may pass ?N to fill the entire range with zero-bytes\n"
 
 	                         "\n"
 	                         "del[:]->\n"
@@ -1930,7 +1930,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this Bytes object is non-empty\n"
+	                         "Returns ?t if @this Bytes object is non-empty\n"
 
 	                         "\n"
 	                         "add->\n"

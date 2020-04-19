@@ -1350,7 +1350,7 @@ PRIVATE struct type_method time_methods[] = {
 	      "Re-return @this time object using a given representation\n"
 	      "Views of all available representation can also be generated "
 	      "using properties of the same names, meaning that this function "
-	      "could also be implemented using $__getattr__") },
+	      "could also be implemented using ?Eoperators:getattr") },
 	{ "format", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_doformat,
 	  DOC("(format:?Dstring)->?Dstring\n"
 	      "Format @this time object using a given strftime-style @format string") },
@@ -1601,14 +1601,16 @@ PRIVATE struct type_getset time_getsets[] = {
 	  DOC("->?Dint\n"
 	      "Returns the integer value of the selected time representation\n"
 	      "This differs from the regular int-operator which always return the time in microseconds:\n"
-	      ">import * from time;\n"
-	      ">local x = days(2);\n"
-	      ">print x;        // 2 days\n"
-	      ">print int(x);   // 2*24*60*60*1000*1000\n"
-	      ">print x.intval; // 2") },
+	      "${"
+	      "import * from time;\n"
+	      "local x = days(2);\n"
+	      "print x;        // 2 days\n"
+	      "print int(x);   // 2*24*60*60*1000*1000\n"
+	      "print x.intval; // 2"
+	      "}") },
 	{ "isdst", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&time_isdst, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if DaylightSavingsTime is in active at @this time\n"
+	      "Returns ?t if DaylightSavingsTime is in active at @this time\n"
 	      "Note that this implementation does not perform any special "
 	      "handling no matter if daylight savings is active or not") },
 	{ "timepart",
@@ -2227,22 +2229,22 @@ time_class_freq(DeeObject *UNUSED(self),
 PRIVATE struct type_method time_class_methods[] = {
 	/* For backwards compatibility with the old deemon (which
 	 * did everything as part of the `time' builtin type) */
-	{ "now", &time_class_now, DOC("->?GTime\nDeprecated. Use :time:now instead") },
-	{ "tick", &time_class_tick, DOC("->?GTime\nDeprecated. Use :time:tick instead") },
+	{ "now", &time_class_now, DOC("->?GTime\nDeprecated. Use ?Gnow instead") },
+	{ "tick", &time_class_tick, DOC("->?GTime\nDeprecated. Use ?Gtick instead") },
 	{ "freq", &time_class_freq, DOC("->?Dint\nDeprecated. Always returns ${1000000}") },
 	{ "time", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_class_maketime,
 	  DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?GTime\n"
-	      "Deprecated. Use :maketime instead"),
+	      "Deprecated. Use ?Gmaketime instead"),
 	  TYPE_METHOD_FKWDS },
 	{ "date", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_class_makedate,
 	  DOC("(year=!0,month=!0,day=!0)->?GTime\n"
-	      "Deprecated. Use :makedate instead"),
+	      "Deprecated. Use ?Gmakedate instead"),
 	  TYPE_METHOD_FKWDS },
 	{ "from_time_t", &time_class_from_time_t,
 	  DOC("(time_t_value:?Dint)->?GTime\n"
 	      "Deprecated") },
 #define ADD_INTERVAL_CALLBACK(name, func) \
-	{ name, &time_class_##func, DOC("(value:?Dint)->?GTime\nDeprecated. Use :time:" #func " instead") }
+	{ name, &time_class_##func, DOC("(value:?Dint)->?GTime\nDeprecated. Use ?G" #func " instead") }
 	ADD_INTERVAL_CALLBACK("mseconds", milliseconds),
 	ADD_INTERVAL_CALLBACK(timestr_seconds, seconds),
 	ADD_INTERVAL_CALLBACK(timestr_minutes, minutes),
@@ -2422,8 +2424,8 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                          "\n"
 	                          "str->\n"
 	                          "Returns value of @this time object when it was constructed to "
-	                          "represent an explicit view (such as through use of :time:days, "
-	                          "or through a sub-view such as :days), or return the time "
+	                          "represent an explicit view (such as through use of ?Gdays, "
+	                          "or through a sub-view such as ?#days), or return the time "
 	                          "represented in a human-readable fashion\n"
 
 	                          "\n"
@@ -2434,7 +2436,7 @@ INTERN DeeTypeObject DeeTime_Type = {
 	                          "int->\n"
 	                          "Returns the value of @this time object as an offset from 1.1.0000 in microseconds\n"
 	                          "This operator allows time objects to be passed to system functions that take integer "
-	                          "timeouts in microseconds, such as :thread.sleep or :net:socket.accept"),
+	                          "timeouts in microseconds, such as :Thread.sleep or ?Aaccept?Enet:socket"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

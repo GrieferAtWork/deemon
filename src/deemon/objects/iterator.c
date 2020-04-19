@@ -846,9 +846,9 @@ PRIVATE struct type_method iterator_methods[] = {
 	  &iterator_prev,
 	  DOC("->?Dbool\n"
 	      "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Rewind @this Iterator to the previous item, returning :false if "
+	      "Rewind @this Iterator to the previous item, returning ?f if "
 	      /**/ "@this Iterator had already been positioned at the start of its sequence, "
-	      /**/ "or :true otherwise\n"
+	      /**/ "or ?t otherwise\n"
 
 	      "${"
 	      "function prev(): bool {\n"
@@ -2115,17 +2115,17 @@ PRIVATE struct type_getset iterator_getsets[] = {
 	      "?#revert|${function revert(step: int)}|Revert the Iterator by $step (same as ?#{op:isub})\n"
 	      "?#advance|${function advance(step: int)}|Advance the Iterator by $step (which may be negative) (same as ?#{op:iadd})\n"
 	      "?#index|${property index: int = { get(); set(); }}|Get/set the exact index of the Iterator within its sequence\n"
-	      "?#prev|${function prev(): bool}|Decrement the Iterator's position, returning :false if the Iterator had already been fully unwound and :true otherwise\n"
+	      "?#prev|${function prev(): bool}|Decrement the Iterator's position, returning ?f if the Iterator had already been fully unwound and ?t otherwise\n"
 	      "?#rewind|${function rewind()}|Rewind the Iterator fully}\n"
 	      "The minimum requirement for access to the entire feature-set is provision of ?#index and ?#{op:next}, "
 	      /**/ "at which point all functions will have become unlocked\n"
 	      "Hint: If a sub-class wishes to implement any of the above functions, without being considered "
-	      /**/ "to be bi-directional, it should override this property and have it evaluate to :false") },
+	      /**/ "to be bi-directional, it should override this property and have it evaluate to ?f") },
 	{ DeeString_STR(&str_hasprev),
 	  &iterator_get_hasprev, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "@throw NotImplemented @this Iterator isn't bi-directional (s.a. ?#isbidirectional)\n"
-	      "Returns :true if @this Iterator has a predecessor\n"
+	      "Returns ?t if @this Iterator has a predecessor\n"
 
 	      "${"
 	      "property hasprev: bool = {\n"
@@ -2153,7 +2153,7 @@ PRIVATE struct type_getset iterator_getsets[] = {
 	{ DeeString_STR(&str_hasnext),
 	  &iterator_get_hasnext, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this Iterator has a successor (alias for ?#{op:bool})") },
+	      "Returns ?t if @this Iterator has a successor (alias for ?#{op:bool})") },
 	{ DeeString_STR(&str_index),
 	  &iterator_get_index, NULL,
 	  &iterator_set_index,
@@ -2444,7 +2444,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :false if @this Iterator has been exhausted, or :true otherwise.\n"
+	                         "Returns ?f if @this Iterator has been exhausted, or ?t otherwise.\n"
 	                         "${"
 	                         "operator bool() {\n"
 	                         "	local c = copy this;\n"
@@ -2526,7 +2526,7 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         ">->\n"
 	                         ">=->\n"
 	                         "@throw TypeError The types of @other and @this don't match\n"
-	                         "Compare @this Iterator with @other, returning :true/:false "
+	                         "Compare @this Iterator with @other, returning ?t/?f "
 	                         /**/ "indicate of the remaining number of elements left to be yielded.\n"
 	                         "Various iterator sub-classes also override these operators, and their "
 	                         /**/ "behavior in respect to the types (and more importantly: the underlying "

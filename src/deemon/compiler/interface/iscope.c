@@ -168,7 +168,7 @@ PRIVATE struct type_getset scope_getsets[] = {
 	      "Returns the nearest base-scope that @this scope is apart of") },
 	{ "prev", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_getprev, NULL, NULL,
 	  DOC("->?X2?AScope?Ert:Compiler?N\n"
-	      "Returns a the parent of @this scope, or :none if @this scope is the root-scope") },
+	      "Returns a the parent of @this scope, or ?N if @this scope is the root-scope") },
 	{ "isclassscope",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scope_get_isclassscope, NULL, NULL,
 	  DOC("->?Dbool\n"
@@ -385,11 +385,11 @@ PRIVATE struct type_method scope_methods[] = {
 	{ "newlocal", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&scope_newlocal,
 	  DOC("(name:?Dstring,requirenew=!t,loc?:?T3?AFile?ALexer?Ert:Compiler?Dint?Dint)->?ASymbol?Ert:Compiler\n"
 	      "@param loc The declaration position of the symbol, omitted to use the current "
-	      /*      */ "token position, or :none when not available\n"
-	      "@throw ValueError @requirenew is :true, and another symbol @name already exists\n"
+	      /*      */ "token position, or ?N when not available\n"
+	      "@throw ValueError @requirenew is ?t, and another symbol @name already exists\n"
 	      "Lookup, or create a new local symbol named @name\n"
 	      "If another symbol with that same name already exists, either return that "
-	      /**/ "symbol when @requirenew is :false, or throw a :ValueError otherwise\n"
+	      /**/ "symbol when @requirenew is ?f, or throw a :ValueError otherwise\n"
 	      "New symbols are created with $\"none\"-typing (s.a. ?Akind?#symbol)"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
@@ -408,14 +408,14 @@ INTERN DeeTypeObject DeeCompilerScope_Type = {
 	                         "Returns the number of symbols found within @this scope\n"
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this scope is non-empty\n"
+	                         "Returns ?t if @this scope is non-empty\n"
 	                         "\n"
 	                         "repr->\n"
 	                         "Returns a unique, human-readable representation of @this scope\n"
 	                         "\n"
 	                         "contains(name:?Dstring)->?Dbool\n"
 	                         "contains(sym:?ASymbol?Ert:Compiler)->?Dbool\n"
-	                         "Returns :true if @this scope contains a given symbol @sym, "
+	                         "Returns ?t if @this scope contains a given symbol @sym, "
 	                         /**/ "or some symbol with a name matching the given @name\n"
 	                         "\n"
 	                         "[](string name)->symbol\n"

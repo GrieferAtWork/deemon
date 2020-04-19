@@ -280,10 +280,12 @@ INTERN DeeTypeObject DeeSemaphore_Type = {
 	/* .tp_name     = */ "Semaphore",
 	/* .tp_doc      = */ DOC("(num_tickets=!0)\n"
 	                         "Construct a new semaphore with @num_tickets initial tickets\n"
+
 	                         "\n"
 	                         "enter->\n"
 	                         "@interrupt\n"
 	                         "Same as ?#wait\n"
+
 	                         "\n"
 	                         "leave->\n"
 	                         "Same as ?#post"),
@@ -482,11 +484,11 @@ PRIVATE struct type_method mutex_methods[] = {
 	{ "tryacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_tryacquire,
 	  DOC("->?Dbool\n"
 	      "Try to recursive acquire an exclusive lock but fail and "
-	      "return :false if this is not possible without blocking") },
+	      "return ?f if this is not possible without blocking") },
 	{ "timedacquire", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_timedacquire,
 	  DOC("(timeout_microseconds:?Dint)->?Dbool\n"
 	      "Try to recursive acquire an exclusive lock but fail and "
-	      "return :false if the given @timeout_microseconds has passed") },
+	      "return ?f if the given @timeout_microseconds has passed") },
 	{ "release", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&mutex_release,
 	  DOC("()\n"
 	      "@throw RuntimeError The calling thread has not acquired the mutex\n"

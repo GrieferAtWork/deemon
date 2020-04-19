@@ -124,7 +124,7 @@ PRIVATE WUNUSED size_t DCALL tls_alloc(void) {
 	size_t result;
 again:
 	rwlock_write(&tls_reglock);
-	ASSERTF(tls_nexti >= tls_count, "Inconsistent TLS state");
+	ASSERTF(tls_nexti >= tls_count, "Inconsistent Tls state");
 	if (tls_nexti != tls_count) {
 		/* Not all existing indices are in use. */
 		uint8_t *iter = tls_inuse + (tls_nexti + 7) / 8;
@@ -177,7 +177,7 @@ done:
 PRIVATE void DCALL tls_free(size_t index) {
 	rwlock_write(&tls_reglock);
 	ASSERTF(tls_count, "No indices allocated");
-	ASSERTF(tls_nexti >= tls_count, "Inconsistent TLS state");
+	ASSERTF(tls_nexti >= tls_count, "Inconsistent Tls state");
 	ASSERTF(index <= tls_nexti, "Invalid index");
 	ASSERTF((tls_inuse[index / 8] & (1 << (index % 8))), "The index wasn't allocated");
 
@@ -235,7 +235,7 @@ tls_visit(Tls *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE ATTR_COLD int DCALL err_tls_unbound(void) {
 	return DeeError_Throwf(&DeeError_UnboundAttribute,
-	                       "The TLS variable has been unbound");
+	                       "The Tls variable has been unbound");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -635,10 +635,10 @@ PRIVATE struct type_getset tls_getsets[] = {
 	{ "value", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tls_getvalue,
 	  (int (DCALL *)(DeeObject *__restrict))&tls_delvalue,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&tls_setvalue,
-	  DOC("@throw AttributeError The TLS variable isn't bound, or has already been unbound\n"
-	      "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
-	      "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
-	      "If no factory has been defined, the TLS is initialized as unbound and any attempt "
+	  DOC("@throw AttributeError The Tls variable isn't bound, or has already been unbound\n"
+	      "Read/write access to the object assigned to this Tls variable slot in the calling thread\n"
+	      "If a factory has been defined, it will be invoked upon first access, unless that access is setting the Tls value.\n"
+	      "If no factory has been defined, the Tls is initialized as unbound and any attempt "
 	      "to read or delete it will cause an :AttributeError to be thrown") },
 	{ NULL }
 };
@@ -692,27 +692,27 @@ PRIVATE struct type_method tls_methods[] = {
 	{ "get",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_get,
 	  DOC("->\n"
-	      "@throw UnboundAttribute The TLS variable isn't bound\n"
+	      "@throw UnboundAttribute The Tls variable isn't bound\n"
 	      "Return the stored object. Same as ${this.item}") },
 	{ "delete",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_delete,
 	  DOC("->?Dbool\n"
-	      "Unbind the TLS variable slot, returning :false if "
-	      "it had already been unbound and :true otherwise") },
+	      "Unbind the Tls variable slot, returning ?f if "
+	      "it had already been unbound and ?t otherwise") },
 	{ "set",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_set,
 	  DOC("(ob)\n"
-	      "Set the TLS variable. Same as ${this.item = ob}") },
+	      "Set the Tls variable. Same as ${this.item = ob}") },
 	{ "xch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_xch,
 	  DOC("(ob)->\n"
-	      "@throw AttributeError The TLS variable had already been unbound\n"
-	      "Exchange the stored TLS value with @ob and return the old value") },
+	      "@throw AttributeError The Tls variable had already been unbound\n"
+	      "Exchange the stored Tls value with @ob and return the old value") },
 	{ "pop",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&tls_pop,
 	  DOC("->\n"
-	      "@throw AttributeError The TLS variable had already been unbound\n"
-	      "Unbind the stored TLS object and return the previously stored object") },
+	      "@throw AttributeError The Tls variable had already been unbound\n"
+	      "Unbind the stored Tls object and return the previously stored object") },
 
 	/* Deprecated functions. */
 	{ "exchange",
@@ -739,13 +739,13 @@ INTERN DeeTypeObject DeeTls_Type = {
 	                         "(factory:?DCallable)\n"
 	                         "Construct a new tls descriptor using an optional @factory that "
 	                         "is used to construct the default values of per-thread variables\n"
-	                         "You may pass :none for @factory to pre-initialize the TLS value to :none\n"
+	                         "You may pass ?N for @factory to pre-initialize the Tls value to ?N\n"
 	                         "When given, @factory is invoked as ${factory()} upon first access on a "
-	                         "per-thread basis, using its return value as initial value for the TLS\n"
+	                         "per-thread basis, using its return value as initial value for the Tls\n"
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if the TLS variable has been bound in the calling thread"),
+	                         "Returns ?t if the Tls variable has been bound in the calling thread"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

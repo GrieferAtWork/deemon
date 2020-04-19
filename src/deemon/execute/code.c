@@ -950,16 +950,16 @@ PRIVATE struct type_getset code_getsets[] = {
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Returns the name of @this code object, or :none if unknown (s.a. :Function.__name__)") },
+	      "Returns the name of @this code object, or ?N if unknown (s.a. :Function.__name__)") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Returns the documentation string of @this code object, or :none if unknown (s.a. :Function.__doc__)") },
+	      "Returns the documentation string of @this code object, or ?N if unknown (s.a. :Function.__doc__)") },
 	{ DeeString_STR(&str___type__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
 	      "Try to determine if @this code object is defined as part of a user-defined class, "
-	      "and if it is, return that class type, or :none if that class couldn't be found, "
+	      "and if it is, return that class type, or ?N if that class couldn't be found, "
 	      "or if @this code object is defined as stand-alone (s.a. :Function.__type__)") },
 	{ DeeString_STR(&str___kwds__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_kwds, NULL, NULL,
@@ -971,7 +971,7 @@ PRIVATE struct type_getset code_getsets[] = {
 	  DOC("->?X2?Dint?N\n"
 	      "Try to determine if @this code object is defined as part of a user-defined class, "
 	      "and if so, if it is used to define an operator callback. If that is the case, "
-	      "return the internal ID of the operator that @this code object provides, or :none "
+	      "return the internal ID of the operator that @this code object provides, or ?N "
 	      "if that class couldn't be found, @this code object is defined as stand-alone, or "
 	      "defined as a class- or instance-method (s.a. :Function.__operator__)") },
 	{ "__operatorname__",
@@ -984,7 +984,7 @@ PRIVATE struct type_getset code_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_get_property, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
 	      "Returns an integer describing the kind if @this code is part of a property or getset, "
-	      "or returns :none if the function's property could not be found, or if the function isn't "
+	      "or returns ?N if the function's property could not be found, or if the function isn't "
 	      "declared as a property callback (s.a. :Function.__property__)") },
 	{ "__default__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&code_getdefault, NULL, NULL,
@@ -1811,7 +1811,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Code",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "Return a singleton, stub code object that always returns :none\n"
+	                         "Return a singleton, stub code object that always returns ?N\n"
 	                         "\n"
 	                         "(text:?DBytes=!N,module:?DModule=!N,statics:?S?O=!N,"
 	                         "except:?S?X3?T4?Dint?Dint?Dint?Dint"

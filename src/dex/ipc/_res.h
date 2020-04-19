@@ -39,7 +39,7 @@ DECL_BEGIN
 	    "you are able to override/redirect the full commandline (?#cmdline), "                \
 	    "the full argument list (?#argv, including the implicit initial "                     \
 	    "argument that normally defaults to @exe), or the standard file "                     \
-	    "streams (?#stdin, ?#stdout, ?#stderr) using :pipe readers/writers.")
+	    "streams (?#stdin, ?#stdout, ?#stderr) using ?GPipe readers/writers.")
 #define S_Process_function_start_name "start"
 #define S_Process_function_start_doc                                                       \
 	DOC("->?Dbool\n"                                                                       \
@@ -55,16 +55,16 @@ DECL_BEGIN
 	    "@throw ValueError @this process was never started\n"                     \
 	    "@throw ValueError @this process is not a child of the calling process\n" \
 	    "@throw SystemError Failed to detach @this process for some reason\n"     \
-	    "@return true: The :process has been detached\n"                          \
-	    "@return false: The :process was already detached\n"                      \
+	    "@return true: The ?GProcess has been detached\n"                         \
+	    "@return false: The ?GProcess was already detached\n"                     \
 	    "Detaches @this process")
 #define S_Process_function_terminate_name "terminate"
 #define S_Process_function_terminate_doc                                         \
 	DOC("(exitcode=!0)->?Dbool\n"                                                \
 	    "@throw ValueError @this process was never started\n"                    \
 	    "@throw SystemError Failed to terminate @this process for some reason\n" \
-	    "@return true: The :process has been terminated\n"                       \
-	    "@return false: The :process was already terminated\n"                   \
+	    "@return true: The ?Gprocess has been terminated\n"                      \
+	    "@return false: The ?Gprocess was already terminated\n"                  \
 	    "Terminate @this process with the given @exitcode")
 #define S_Process_function_join_name "join"
 #define S_Process_function_join_doc                                         \
@@ -89,19 +89,19 @@ DECL_BEGIN
 #define S_Process_getset_hasstarted_name "hasstarted"
 #define S_Process_getset_hasstarted_doc \
 	DOC("->?Dbool\n"                    \
-	    "Returns :true if @this process was started")
+	    "Returns ?t if @this process was started")
 #define S_Process_getset_wasdetached_name "wasdetached"
 #define S_Process_getset_wasdetached_doc \
 	DOC("->?Dbool\n"                     \
-	    "Returns :true if @this process has been detached")
+	    "Returns ?t if @this process has been detached")
 #define S_Process_getset_hasterminated_name "hasterminated"
 #define S_Process_getset_hasterminated_doc \
 	DOC("->?Dbool\n"                       \
-	    "Returns :true if @this process has terminated")
+	    "Returns ?t if @this process has terminated")
 #define S_Process_getset_isachild_name "isachild"
 #define S_Process_getset_isachild_doc \
 	DOC("->?Dbool\n"                  \
-	    "Returns :true if @this process is a child of the calling process")
+	    "Returns ?t if @this process is a child of the calling process")
 #define S_Process_getset_id_name "id"
 #define S_Process_getset_id_doc                                                       \
 	DOC("->?Dint\n"                                                                   \

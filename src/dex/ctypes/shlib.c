@@ -327,7 +327,8 @@ err:
 
 PRIVATE struct type_method shlib_methods[] = {
 	{ "base", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&shlib_base,
-	  DOC("->?Aptr?Gvoid\nReturns the base address of the shared library") },
+	  DOC("->?Aptr?Gvoid\n"
+	      "Returns the base address of the shared library") },
 	{ NULL }
 };
 

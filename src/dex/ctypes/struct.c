@@ -286,7 +286,7 @@ PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL
 struct_type_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *fields_or_name, *fields = NULL;
 	unsigned int flags = STRUCT_TYPE_FNORMAL; /* TODO */
-	if (DeeArg_Unpack(argc, argv, "o|o:struct_type", &fields_or_name, &fields))
+	if (DeeArg_Unpack(argc, argv, "o|o?GStructType", &fields_or_name, &fields))
 		return NULL;
 	return fields
 	       ? (DeeObject_AssertTypeExact(fields_or_name, &DeeString_Type)
@@ -437,7 +437,7 @@ PRIVATE struct type_method struct_type_methods[] = {
 };
 
 PRIVATE struct type_member struct_type_members[] = {
-	TYPE_MEMBER_CONST_DOC("isstruct", Dee_True, "Returns :true if @this :structured_type is a :struct_type"),
+	TYPE_MEMBER_CONST_DOC("isstruct", Dee_True, "Returns ?t if @this ?GStructuredType is a ?GStructType"),
 	TYPE_MEMBER_END
 };
 

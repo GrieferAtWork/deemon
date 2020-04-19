@@ -327,10 +327,10 @@ DOC_DEF(objmethod_get_func_doc,
         "The unbound class-function that is being bound by this object-method");
 DOC_DEF(objmethod_get_name_doc,
         "->?X2?Dstring?N\n"
-        "The name of the function, or :none if unknown");
+        "The name of the function, or ?N if unknown");
 DOC_DEF(objmethod_get_doc_doc,
         "->?X2?Dstring?N\n"
-        "The documentation string of the function being bound, or :none if unknown");
+        "The documentation string of the function being bound, or ?N if unknown");
 DOC_DEF(objmethod_get_kwds_doc,
         "->?S?Dstring\n"
         "Returns a sequence of keyword argument names accepted by @this function\n"
@@ -340,7 +340,7 @@ DOC_DEF(objmethod_get_type_doc,
         "The type implementing the function that is being bound");
 DOC_DEF(objmethod_get_module_doc,
         "->?X2?DModule?N\n"
-        "The module implementing the function that is being bound, or :none if unknown");
+        "The module implementing the function that is being bound, or ?N if unknown");
 
 PRIVATE struct type_getset objmethod_getsets[] = {
 	{ "__func__",
@@ -1119,15 +1119,15 @@ PRIVATE struct type_getset kwclsmethod_getsets[] = {
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "The name of @this method, or :none if unknown") },
+	      "The name of @this method, or ?N if unknown") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "The documentation string of @this method, or :none if unknown") },
+	      "The documentation string of @this method, or ?N if unknown") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmethod_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
-	      "The module implementing @this method, or :none if unknown") },
+	      "The module implementing @this method, or ?N if unknown") },
 	{ NULL }
 };
 #define clsmethod_get_kwds_doc objmethod_get_kwds_doc
@@ -1549,27 +1549,27 @@ PRIVATE struct type_getset clsproperty_getsets[] = {
 	{ "canget",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canget, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this property has a getter callback") },
+	      "Returns ?t if @this property has a getter callback") },
 	{ "candel",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_candel, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this property has a delete callback") },
+	      "Returns ?t if @this property has a delete callback") },
 	{ "canset",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsproperty_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this property has a setter callback") },
+	      "Returns ?t if @this property has a setter callback") },
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "The name of @this property, or :none if unknown") },
+	      "The name of @this property, or ?N if unknown") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "The documentation string of @this property, or :none if unknown") },
+	      "The documentation string of @this property, or ?N if unknown") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsproperty_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
-	      "The module implementing @this property, or :none if unknown") },
+	      "The module implementing @this property, or ?N if unknown") },
 	{ NULL }
 };
 
@@ -1770,8 +1770,8 @@ PRIVATE struct type_member clsmember_members[] = {
 	                      "The name of @this member"),
 	TYPE_MEMBER_FIELD_DOC("__doc__", STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeClsMemberObject, cm_memb.m_doc),
 	                      "->?X2?Dstring?N\n"
-	                      "The documentation string of @this member, or :none if unknown"),
-	TYPE_MEMBER_CONST_DOC("canget", Dee_True, "Always evaluates to :true"),
+	                      "The documentation string of @this member, or ?N if unknown"),
+	TYPE_MEMBER_CONST_DOC("canget", Dee_True, "Always evaluates to ?t"),
 	TYPE_MEMBER_END
 };
 
@@ -1797,11 +1797,11 @@ PRIVATE struct type_getset clsmember_getsets[] = {
 	      "Alias for #canset") },
 	{ "canset", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&clsmember_canset, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this member can be modified") },
+	      "Returns ?t if @this member can be modified") },
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *))&clsmember_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
-	      "The module implementing @this member, or :none if unknown") },
+	      "The module implementing @this member, or ?N if unknown") },
 	{ NULL }
 };
 
@@ -2098,21 +2098,21 @@ PRIVATE struct type_getset kwcmethod_getsets[] = {
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
-	      "Returns the module defining @this method, or :none if that module could not be determined") },
+	      "Returns the module defining @this method, or ?N if that module could not be determined") },
 	{ DeeString_STR(&str___type__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_type, NULL, NULL,
 	  DOC("->?X2?DType?N\n"
-	      "Returns the type as part of which @this method was declared, or :none "
+	      "Returns the type as part of which @this method was declared, or ?N "
 	      "if @this method was declared as part of a module, or if the type could "
 	      "not be located") },
 	{ DeeString_STR(&str___name__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_name, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Returns the name of @this method, or :none if unknown") },
+	      "Returns the name of @this method, or ?N if unknown") },
 	{ DeeString_STR(&str___doc__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cmethod_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "Returns the documentation string of @this method, or :none if unknown") },
+	      "Returns the documentation string of @this method, or ?N if unknown") },
 	{ NULL }
 };
 

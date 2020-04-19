@@ -2813,7 +2813,7 @@ WUNUSED NONNULL((1, 2)) Dee_ssize_t (Dee_unicode_printer_printobjectrepr)(struct
  * >>     name = "cp"+name[3:];
  * >> }
  * >> if (has_builtin_codec(name))
- * >>     return builtin_encode(self,name,error_mode); // or decode...
+ * >>     return builtin_encode(self, name, error_mode); // or decode...
  * The following is a list of the recognized builtin codecs,
  * as well as the types of objects returned by either.
  *  - "ascii", "646", "us-ascii"

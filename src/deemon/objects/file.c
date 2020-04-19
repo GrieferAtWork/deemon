@@ -2117,7 +2117,7 @@ PRIVATE struct type_method file_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_read,
 	  DOC("(maxbytes=!-1,readall=!f)->?DBytes\n"
 	      "Read and return at most @maxbytes of data from the file stream. "
-	      /**/ "When @readall is :true, keep on reading data until the buffer is full, or the "
+	      /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
 	      /**/ "read-callback returns $0, rather than until it returns something other than the "
 	      /**/ "internal buffer size used when reading data."),
 	  TYPE_METHOD_FKWDS },
@@ -2125,7 +2125,7 @@ PRIVATE struct type_method file_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_readinto,
 	  DOC("(dst:?DBytes,readall=!f)->?Dint\n"
 	      "Read data into the given buffer @dst and return the number of bytes read. "
-	      /**/ "When @readall is :true, keep on reading data until the buffer is full, or the "
+	      /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
 	      /**/ "read-callback returns $0, rather than until it returns something other than the "
 	      /**/ "requested read size."),
 	  TYPE_METHOD_FKWDS },
@@ -2133,7 +2133,7 @@ PRIVATE struct type_method file_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_write,
 	  DOC("(data:?DBytes,writeall=!t)->?Dint\n"
 	      "Write @data to the file stream and return the actual number of bytes written. "
-	      /**/ "When @writeall is :true, keep writing data until the write-callback "
+	      /**/ "When @writeall is ?t, keep writing data until the write-callback "
 	      /**/ "returns $0 or until all data has been written, rather than invoke "
 	      /**/ "the write-callback only a single time."),
 	  TYPE_METHOD_FKWDS },
@@ -2204,13 +2204,13 @@ PRIVATE struct type_method file_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_ungetc,
 	  DOC("(ch:?Dint)->?Dbool\n"
 	      "Unget a given character @ch to be re-read the next time ?#getc or ?#read is called. "
-	      /**/ "If the file's start has already been reached, :false is returned and the character "
+	      /**/ "If the file's start has already been reached, ?f is returned and the character "
 	      /**/ "will not be re-read from this file") },
 	{ "putc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_putc,
 	  DOC("(byte:?Dint)->?Dbool\n"
-	      "Append a single @byte at the end of @this File, returning :true on "
-	      /**/ "success, or :false if the file has entered an end-of-file state") },
+	      "Append a single @byte at the end of @this File, returning ?t on "
+	      /**/ "success, or ?f if the file has entered an end-of-file state") },
 	{ DeeString_STR(&str_size), &file_size,
 	  DOC("->?Dint\n"
 	      "Returns the size (in bytes) of the file stream") },
@@ -2220,12 +2220,12 @@ PRIVATE struct type_method file_methods[] = {
 	      "(maxbytes=!-1,keeplf=!t)->?DBytes\n"
 	      "Read one line from the file stream, but read at most @maxbytes bytes.\n"
 
-	      "When @keeplf is :false, strip the trailing linefeed from the returned Bytes object") },
+	      "When @keeplf is ?f, strip the trailing linefeed from the returned Bytes object") },
 
 	/* Deprecated functions. */
 	{ "readall", &file_readall,
 	  DOC("(maxbytes=!-1)->?DBytes\n"
-	      "Deprecated alias for ${this.read(maxbytes,true)}") },
+	      "Deprecated alias for ${this.read(maxbytes, true)}") },
 	{ "readat",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&file_pread,
 	  DOC("(pos:?Dint,maxbytes=!-1,readall=!f)->?DBytes\n"
@@ -2386,13 +2386,13 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ /**/ "read once again. This functionality isn't provided by many file types, "
 		                         /**/ /**/ "but ?#buffer supports it, thereby allowing you to wrap practically any "
 		                         /**/ /**/ "file into a buffer to enable support for ungetc, which is a dependency "
-		                         /**/ /**/ "for ?#readline. If the character could be returned, :true is returned. "
-		                         /**/ /**/ "Otherwise :false is"
+		                         /**/ /**/ "for ?#readline. If the character could be returned, ?t is returned. "
+		                         /**/ /**/ "Otherwise ?f is"
 		                         "&"
 		                         /**/ "${operator putc(ch: int): bool}|"
 		                         /**/ "Write a single byte to the stream (Usually the same as ${operator write"
-		                         /**/ /**/ "((uint8_t from ctypes)ch)}). Returns :true if the byte was successfully "
-		                         /**/ /**/ "written, or :false if EOF was reached"
+		                         /**/ /**/ "((uint8_t from ctypes)ch)}). Returns ?t if the byte was successfully "
+		                         /**/ /**/ "written, or ?f if EOF was reached"
 		                         "}\n"
 
 		                         "\n"

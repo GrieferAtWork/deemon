@@ -464,70 +464,198 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *   - http://www.cplusplus.com/reference/cmath
 	 * Other comments I wrote myself.
 	 */
-	{ "acos", (DeeObject *)&math_acos, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the arc cosine of @x") },
-	{ "acosh", (DeeObject *)&math_acosh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the area hyperbolic cosine of @x") },
-	{ "asin", (DeeObject *)&math_asin, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the arc sinus of @x") },
-	{ "asinh", (DeeObject *)&math_asinh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the area hyperbolic sine of @x") },
-	{ "atan", (DeeObject *)&math_atan, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the arc tangent of @x") },
-	{ "atan2", (DeeObject *)&math_atan2, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the arc tangent of @x and @y") },
-	{ "atanh", (DeeObject *)&math_atanh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the area hyperbolic tangent of @x") },
-	{ "cbrt", (DeeObject *)&math_cbrt, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the cubic root of @x") },
-	{ "ceil", (DeeObject *)&math_ceil, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns @x rounded to the next greater decimal") },
-	{ "copysign", (DeeObject *)&math_copysign, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturn @x with the sign copied from @y") },
-	{ "cos", (DeeObject *)&math_cos, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the cosine of @x") },
-	{ "cosh", (DeeObject *)&math_cosh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the hyperbolic cosine of @x") },
-	{ "erf", (DeeObject *)&math_erf, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the error of @x") },
-	{ "erfc", (DeeObject *)&math_erfc, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the complementary error of @x") },
-	{ "exp", (DeeObject *)&math_exp, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the exponential of @x") },
-	{ "exp2", (DeeObject *)&math_exp2, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the binary exponential of @x") },
-	{ "expm1", (DeeObject *)&math_expm1, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the exponential of @x minus ${1.0}") },
-	{ "fabs", (DeeObject *)&math_fabs, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the absolute value of @x") },
-	{ "floor", (DeeObject *)&math_floor, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns @x rounded to the next smaller decimal") },
-	{ "fmod", (DeeObject *)&math_fmod, MODSYM_FNORMAL, DOC("(x:?Dfloat,x:?Dfloat)->?Dfloat\nReturns the floating point remainder of @x divided by @y") },
-	{ "frexp", (DeeObject *)&math_frexp, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dint\nReturns the mantissa and exponent of @x") },
-	{ "ilogb", (DeeObject *)&math_ilogb, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dint\nreturn binary logarithm of @x") },
-	{ "inf", (DeeObject *)&math_inf, MODSYM_FNORMAL, DOC("->?Dfloat\nA special floating point value, representing INFinity") },
-	{ "isfinite", (DeeObject *)&math_isfinite, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dbool\nReturns :true if @x is infinite") },
-	{ "isinf", (DeeObject *)&math_isinf, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dbool\nReturns :true if @x is infinite") },
-	{ "isnan", (DeeObject *)&math_isnan, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dbool\nReturns :true if @x is NotANumber") },
-	{ "isnormal", (DeeObject *)&math_isnormal, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dbool\nReturns :true if @x is a normal number") },
-	{ "ldexp", (DeeObject *)&math_ldexp, MODSYM_FNORMAL, DOC("(float significand,exponent:?Dint)->?Dfloat\nGenerate value from significand and exponent of @x") },
-	{ "log", (DeeObject *)&math_log, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the natural logarithm of @x") },
-	{ "log10", (DeeObject *)&math_log10, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the common logarithm of @x") },
-	{ "log1p", (DeeObject *)&math_log1p, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the logarithm of @x logarithm plus ${1.0}") },
-	{ "log2", (DeeObject *)&math_log2, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the binary logarithm of @x") },
-	{ "logb", (DeeObject *)&math_logb, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the floating-point base logarithm of @x") },
-	{ "modf", (DeeObject *)&math_modf, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns the fractional and integral parts of @x") },
-	{ "nan", (DeeObject *)&math_nan, MODSYM_FNORMAL, DOC("->?Dfloat\nA special floating point value, representing NotANumber") },
-	{ "tau", (DeeObject *)&math_tau, MODSYM_FNORMAL, DOC("->?Dfloat\nThe mathematical constant TAU ${pi * 2}") },
-	{ "pi", (DeeObject *)&math_pi, MODSYM_FNORMAL, DOC("->?Dfloat\nThe mathematical constant PI") },
-	{ "e", (DeeObject *)&math_e, MODSYM_FNORMAL, DOC("->?Dfloat\nThe mathematical constant E") },
-	{ "pow", (DeeObject *)&math_pow, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns @x to the power of @y") },
-	{ "round", (DeeObject *)&math_round, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns @x rounded to the next nearest decimal") },
-	{ "sin", (DeeObject *)&math_sin, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the sinus of @x") },
-	{ "sinh", (DeeObject *)&math_sinh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the hyperbolic sinus of @x") },
-	{ "sqrt", (DeeObject *)&math_sqrt, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the square root of @x") },
-	{ "tan", (DeeObject *)&math_tan, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the tangent of @x") },
-	{ "tanh", (DeeObject *)&math_tanh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the hyperbolic tangent of @x") },
-	{ "sincos", (DeeObject *)&math_sincos, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(sin(x),cos(x))}") },
-	{ "asincos", (DeeObject *)&math_asincos, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(asin(x),acos(x))}") },
-	{ "sincosh", (DeeObject *)&math_sincosh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(sinh(x),cosh(x))}") },
-	{ "asincosh", (DeeObject *)&math_asincosh, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\nReturns a tuple equivalent to ${(asinh(x),acosh(x))}") },
-	{ "scalbn", (DeeObject *)&math_scalbn, MODSYM_FNORMAL, DOC("(x:?Dfloat,n:?Dint)->?Dfloat\nScales @x by :float.radix raised to the power of @n") },
-	{ "hypot", (DeeObject *)&math_hypot, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the hypotenuse of a right-angled triangle whose legs are @x and @y") },
-	{ "tgamma", (DeeObject *)&math_tgamma, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the gamma function of @x") },
-	{ "lgamma", (DeeObject *)&math_lgamma, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dfloat\nReturns the natural logarithm of the absolute value of the gamma function of @x") },
-	{ "remainder", (DeeObject *)&math_remainder, MODSYM_FNORMAL, DOC("(numer:?Dfloat,denom:?Dfloat)->?Dfloat\nReturns the floating-point remainder of numer/denom (rounded to nearest)") },
-	{ "remquo", (DeeObject *)&math_remquo, MODSYM_FNORMAL, DOC("(numer:?Dfloat,denom:?Dfloat)->?T2?Dfloat?Dint\nReturns the same as ?#remainder, but additionally returns the quotient internally used to determine its result") },
-	{ "nextafter", (DeeObject *)&math_nextafter, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the next representable value after @x in the direction of @y") },
-	{ "fdim", (DeeObject *)&math_fdim, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\nReturns the positive difference between @x and @y") },
-	{ "signbit", (DeeObject *)&math_signbit, MODSYM_FNORMAL, DOC("(x:?Dfloat)->?Dbool\nReturns whether the sign of @x is negative") },
-	{ "isgreater", (DeeObject *)&math_isgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than @y, returning :false if either is ?#nan") },
-	{ "isgreaterequal", (DeeObject *)&math_isgreaterequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is greater than or equal to @y, returning :false if either is ?#nan") },
-	{ "isless", (DeeObject *)&math_isless, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than @y, returning :false if either is ?#nan") },
-	{ "islessequal", (DeeObject *)&math_islessequal, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or equal to @y, returning :false if either is ?#nan") },
-	{ "islessgreater", (DeeObject *)&math_islessgreater, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns whether @x is less than or greater than @y, returning :false if either is ?#nan") },
-	{ "isunordered", (DeeObject *)&math_isunordered, MODSYM_FNORMAL, DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\nReturns :true if either @x or @y is ?#nan") },
+	{ "acos", (DeeObject *)&math_acos, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the arc cosine of @x") },
+	{ "acosh", (DeeObject *)&math_acosh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the area hyperbolic cosine of @x") },
+	{ "asin", (DeeObject *)&math_asin, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the arc sinus of @x") },
+	{ "asinh", (DeeObject *)&math_asinh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the area hyperbolic sine of @x") },
+	{ "atan", (DeeObject *)&math_atan, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the arc tangent of @x") },
+	{ "atan2", (DeeObject *)&math_atan2, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
+	      "Returns the arc tangent of @x and @y") },
+	{ "atanh", (DeeObject *)&math_atanh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the area hyperbolic tangent of @x") },
+	{ "cbrt", (DeeObject *)&math_cbrt, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the cubic root of @x") },
+	{ "ceil", (DeeObject *)&math_ceil, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns @x rounded to the next greater decimal") },
+	{ "copysign", (DeeObject *)&math_copysign, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
+	      "Return @x with the sign copied from @y") },
+	{ "cos", (DeeObject *)&math_cos, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the cosine of @x") },
+	{ "cosh", (DeeObject *)&math_cosh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the hyperbolic cosine of @x") },
+	{ "erf", (DeeObject *)&math_erf, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the error of @x") },
+	{ "erfc", (DeeObject *)&math_erfc, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the complementary error of @x") },
+	{ "exp", (DeeObject *)&math_exp, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the exponential of @x") },
+	{ "exp2", (DeeObject *)&math_exp2, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the binary exponential of @x") },
+	{ "expm1", (DeeObject *)&math_expm1, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the exponential of @x minus ${1.0}") },
+	{ "fabs", (DeeObject *)&math_fabs, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the absolute value of @x") },
+	{ "floor", (DeeObject *)&math_floor, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns @x rounded to the next smaller decimal") },
+	{ "fmod", (DeeObject *)&math_fmod, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,x:?Dfloat)->?Dfloat\n"
+	      "Returns the floating point remainder of @x divided by @y") },
+	{ "frexp", (DeeObject *)&math_frexp, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?T2?Dfloat?Dint\n"
+	      "Returns the mantissa and exponent of @x") },
+	{ "ilogb", (DeeObject *)&math_ilogb, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dint\n"
+	      "return binary logarithm of @x") },
+	{ "inf", (DeeObject *)&math_inf, MODSYM_FNORMAL,
+	  DOC("->?Dfloat\n"
+	      "A special floating point value, representing INFinity") },
+	{ "isfinite", (DeeObject *)&math_isfinite, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dbool\n"
+	      "Returns ?t if @x is infinite") },
+	{ "isinf", (DeeObject *)&math_isinf, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dbool\n"
+	      "Returns ?t if @x is infinite") },
+	{ "isnan", (DeeObject *)&math_isnan, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dbool\n"
+	      "Returns ?t if @x is NotANumber") },
+	{ "isnormal", (DeeObject *)&math_isnormal, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dbool\n"
+	      "Returns ?t if @x is a normal number") },
+	{ "ldexp", (DeeObject *)&math_ldexp, MODSYM_FNORMAL,
+	  DOC("(float significand,exponent:?Dint)->?Dfloat\n"
+	      "Generate value from significand and exponent of @x") },
+	{ "log", (DeeObject *)&math_log, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the natural logarithm of @x") },
+	{ "log10", (DeeObject *)&math_log10, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the common logarithm of @x") },
+	{ "log1p", (DeeObject *)&math_log1p, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the logarithm of @x logarithm plus ${1.0}") },
+	{ "log2", (DeeObject *)&math_log2, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the binary logarithm of @x") },
+	{ "logb", (DeeObject *)&math_logb, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the floating-point base logarithm of @x") },
+	{ "modf", (DeeObject *)&math_modf, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
+	      "Returns the fractional and integral parts of @x") },
+	{ "nan", (DeeObject *)&math_nan, MODSYM_FNORMAL,
+	  DOC("->?Dfloat\n"
+	      "A special floating point value, representing NotANumber") },
+	{ "tau", (DeeObject *)&math_tau, MODSYM_FNORMAL,
+	  DOC("->?Dfloat\n"
+	      "The mathematical constant TAU ${pi * 2}") },
+	{ "pi", (DeeObject *)&math_pi, MODSYM_FNORMAL,
+	  DOC("->?Dfloat\n"
+	      "The mathematical constant PI") },
+	{ "e", (DeeObject *)&math_e, MODSYM_FNORMAL,
+	  DOC("->?Dfloat\n"
+	      "The mathematical constant E") },
+	{ "pow", (DeeObject *)&math_pow, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
+	      "Returns @x to the power of @y") },
+	{ "round", (DeeObject *)&math_round, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns @x rounded to the next nearest decimal") },
+	{ "sin", (DeeObject *)&math_sin, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the sinus of @x") },
+	{ "sinh", (DeeObject *)&math_sinh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the hyperbolic sinus of @x") },
+	{ "sqrt", (DeeObject *)&math_sqrt, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the square root of @x") },
+	{ "tan", (DeeObject *)&math_tan, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the tangent of @x") },
+	{ "tanh", (DeeObject *)&math_tanh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the hyperbolic tangent of @x") },
+	{ "sincos", (DeeObject *)&math_sincos, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
+	      "Returns a tuple equivalent to ${(sin(x),cos(x))}") },
+	{ "asincos", (DeeObject *)&math_asincos, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
+	      "Returns a tuple equivalent to ${(asin(x),acos(x))}") },
+	{ "sincosh", (DeeObject *)&math_sincosh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
+	      "Returns a tuple equivalent to ${(sinh(x),cosh(x))}") },
+	{ "asincosh", (DeeObject *)&math_asincosh, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
+	      "Returns a tuple equivalent to ${(asinh(x),acosh(x))}") },
+	{ "scalbn", (DeeObject *)&math_scalbn, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,n:?Dint)->?Dfloat\n"
+	      "Scales @x by :float.radix raised to the power of @n") },
+	{ "hypot", (DeeObject *)&math_hypot, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
+	      "Returns the hypotenuse of a right-angled triangle whose legs are @x and @y") },
+	{ "tgamma", (DeeObject *)&math_tgamma, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the gamma function of @x") },
+	{ "lgamma", (DeeObject *)&math_lgamma, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dfloat\n"
+	      "Returns the natural logarithm of the absolute value of the gamma function of @x") },
+	{ "remainder", (DeeObject *)&math_remainder, MODSYM_FNORMAL,
+	  DOC("(numer:?Dfloat,denom:?Dfloat)->?Dfloat\n"
+	      "Returns the floating-point remainder of numer/denom (rounded to nearest)") },
+	{ "remquo", (DeeObject *)&math_remquo, MODSYM_FNORMAL,
+	  DOC("(numer:?Dfloat,denom:?Dfloat)->?T2?Dfloat?Dint\n"
+	      "Returns the same as ?#remainder, but additionally returns the quotient internally used to determine its result") },
+	{ "nextafter", (DeeObject *)&math_nextafter, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
+	      "Returns the next representable value after @x in the direction of @y") },
+	{ "fdim", (DeeObject *)&math_fdim, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
+	      "Returns the positive difference between @x and @y") },
+	{ "signbit", (DeeObject *)&math_signbit, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat)->?Dbool\n"
+	      "Returns whether the sign of @x is negative") },
+	{ "isgreater", (DeeObject *)&math_isgreater, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
+	      "Returns whether @x is greater than @y, returning ?f if either is ?#nan") },
+	{ "isgreaterequal", (DeeObject *)&math_isgreaterequal, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
+	      "Returns whether @x is greater than or equal to @y, returning ?f if either is ?#nan") },
+	{ "isless", (DeeObject *)&math_isless, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
+	      "Returns whether @x is less than @y, returning ?f if either is ?#nan") },
+	{ "islessequal", (DeeObject *)&math_islessequal, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
+	      "Returns whether @x is less than or equal to @y, returning ?f if either is ?#nan") },
+	{ "islessgreater", (DeeObject *)&math_islessgreater, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
+	      "Returns whether @x is less than or greater than @y, returning ?f if either is ?#nan") },
+	{ "isunordered", (DeeObject *)&math_isunordered, MODSYM_FNORMAL,
+	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
+	      "Returns ?t if either @x or @y is ?#nan") },
 	{ NULL }
 };
 

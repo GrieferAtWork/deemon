@@ -41,7 +41,7 @@ for (local l: file.open("../../../include/deemon/asm.h")) {
 	}
 }
 print "static void *const basic_targets[256] = {";
-for (local i,name: util::enumerate(codes)) {
+for (local i, name: util::enumerate(codes)) {
 	if (name is none || name.startswith("RESERVED")) {
 		print ("\t/" "* 0x%.2I8x *" "/" % i),"&&unknown_instruction,";
 	} else {
@@ -50,7 +50,7 @@ for (local i,name: util::enumerate(codes)) {
 }
 print "};";
 print "static void *const f0_targets[256] = {";
-for (local i,name: util::enumerate(codes_f0)) {
+for (local i, name: util::enumerate(codes_f0)) {
 	if (name is none || name.startswith("RESERVED")) {
 		print ("\t/" "* 0x%.2I8x *" "/" % i),"&&unknown_instruction,";
 	} else {

@@ -1640,11 +1640,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	  ,
 	  MODSYM_FNORMAL,
 	  DOC("->?Dbool\n"
-	      "A boolean that is :true if the deemon interpreter supports "
+	      "A boolean that is ?t if the deemon interpreter supports "
 	      "an unlimited stack limit, meaning that #setstacklimit can "
 	      "be used to set a stack limit of to up $0xffff ($65535), which "
 	      "is the hard limit\n"
-	      "When :false, setting the stack limit higher than the default "
+	      "When ?f, setting the stack limit higher than the default "
 	      "may lead to hard crashes of the deemon interpreter, causing "
 	      "the user-script and hosting application to crash in an undefined "
 	      "manner.\n"
@@ -1736,19 +1736,19 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "MappingKeys", (DeeObject *)&librt_get_MappingKeys, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the keys of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
-	      "by :deemon:mapping.i:keys") }, /* DeeMappingKeys_Type */
+	      "by :Mapping.keys") }, /* DeeMappingKeys_Type */
 	{ "MappingKeysIterator", (DeeObject *)&librt_get_MappingKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Iterator type for ?#MappingKeys") }, /* DeeMappingProxyIterator_Type */
 	{ "MappingValues", (DeeObject *)&librt_get_MappingValues, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the values of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
-	      "by :deemon:mapping.i:values") }, /* DeeMappingValues_Type */
+	      "by :Mapping.values") }, /* DeeMappingValues_Type */
 	{ "MappingValuesIterator", (DeeObject *)&librt_get_MappingValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Iterator type for ?#MappingValues") }, /* DeeMappingProxyIterator_Type */
 	{ "MappingItems", (DeeObject *)&librt_get_MappingItems, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the items (key-value pairs) of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
-	      "by :deemon:mapping.i:items") }, /* DeeMappingItems_Type */
+	      "by :Mapping.items") }, /* DeeMappingItems_Type */
 	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Iterator type for ?#MappingItems") }, /* DeeMappingProxyIterator_Type */
 
@@ -1823,8 +1823,8 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Internal types used to drive the garbage collector */
 	{ "GCSet", (DeeObject *)&librt_get_GCSet, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR, /* DeeGCSet_Type */
-	  DOC("The set-like type returned by :deemon:gc.referred, :deemon:gc.referredgc, "
-	      ":deemon:gc.reachable, :deemon:gc.reachablegc and :deemon:gc.referring") },
+	  DOC("The set-like type returned by :gc.referred, :gc.referredgc, "
+	      ":gc.reachable, :gc.reachablegc and :gc.referring") },
 	{ "GCSetIterator", (DeeObject *)&librt_get_GCSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Iterator for ?#GCSet") }, /* DeeGCSetIterator_Type */
 
@@ -1962,7 +1962,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "GCSet_empty", (DeeObject *)&librt_get_GCSet_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Special instance of ?#GCSet that is used to describe an empty set of objects") }, /* DeeGCSet_Empty */
 	{ "GCEnum_singleton", &DeeGCEnumTracked_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
-	  DOC("The gc-singleton which can also be found under :deemon:gc") }, /* DeeGCEnumTracked_Singleton */
+	  DOC("The gc-singleton which can also be found under :gc") }, /* DeeGCEnumTracked_Singleton */
 	{ "GCEnum", (DeeObject *)&librt_get_GCEnum, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("The result of ${type(gc from deemon)}") }, /* GCEnum_Type */
 

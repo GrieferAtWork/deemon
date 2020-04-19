@@ -1813,7 +1813,7 @@ PRIVATE struct type_method set_methods[] = {
 	{ DeeString_STR(&str_insert),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
 	  DOC("(ob)->?Dbool\n"
-	      "Returns :true if the object wasn't apart of the set before") },
+	      "Returns ?t if the object wasn't apart of the set before") },
 	{ "update",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_update,
 	  DOC("(items:?S?O)->?Dint\n"
@@ -1821,7 +1821,7 @@ PRIVATE struct type_method set_methods[] = {
 	{ DeeString_STR(&str_remove),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
 	  DOC("(ob)->?Dbool\n"
-	      "Returns :true if the object was removed from the set") },
+	      "Returns ?t if the object was removed from the set") },
 	/* Alternative function names. */
 	{ "add",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,
@@ -1914,11 +1914,11 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this HashSet is non-empty\n"
+	                         "Returns ?t if @this HashSet is non-empty\n"
 
 	                         "\n"
 	                         "contains->\n"
-	                         "Returns :true if @item is apart of @this HashSet\n"
+	                         "Returns ?t if @item is apart of @this HashSet\n"
 
 	                         "\n"
 	                         "#->\n"

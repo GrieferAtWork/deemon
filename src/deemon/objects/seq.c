@@ -1918,7 +1918,7 @@ INTERN struct type_method seq_methods[] = {
 	{ "empty",
 	  &seq_empty,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this Sequence is empty\n"
+	      "Returns ?t if @this Sequence is empty\n"
 	      "Implemented as (s.a. ?#{op:bool}):\n"
 	      "${"
 	      "function empty() {\n"
@@ -1928,7 +1928,7 @@ INTERN struct type_method seq_methods[] = {
 	{ DeeString_STR(&str_nonempty),
 	  &seq_nonempty,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this Sequence is non-empty\n"
+	      "Returns ?t if @this Sequence is non-empty\n"
 	      "Implemented as (s.a. ?#{op:bool}):\n"
 	      "${"
 	      "function nonempty() {\n"
@@ -1942,7 +1942,7 @@ INTERN struct type_method seq_methods[] = {
 	      "Combines consecutive elements of @this Sequence by passing them as pairs of 2 to @merger, "
 	      "then re-using its return value in the next invocation, before finally returning its last "
 	      "return value. If the Sequence consists of only 1 element, @merger is never invoked.\n"
-	      "If the Sequence is empty, :none is returned\n"
+	      "If the Sequence is empty, ?N is returned\n"
 	      "When given, @init is used as the initial lhs-operand, "
 	      "rather than the first element of the Sequence\n"
 	      "${"
@@ -1962,7 +1962,7 @@ INTERN struct type_method seq_methods[] = {
 	  &seq_filter,
 	  DOC("(keep:?DCallable)->?DSequence\n"
 	      "@param keep A key function which is called for each element of @this Sequence"
-	      "Returns a sub-Sequence of all elements for which ${keep(elem)} evaluates to :true\n"
+	      "Returns a sub-Sequence of all elements for which ${keep(elem)} evaluates to ?t\n"
 	      "Semantically, this is identical to ${(for (local x: this) if (keep(x)) x)}\n"
 	      "${"
 	      "function filter(keep) {\n"
@@ -1972,7 +1972,7 @@ INTERN struct type_method seq_methods[] = {
 	      "}}") },
 	{ "sum",
 	  &seq_sum,
-	  DOC("->\nReturns the sum of all elements, or :none if the Sequence is empty\n"
+	  DOC("->\nReturns the sum of all elements, or ?N if the Sequence is empty\n"
 	      "This, alongside :string.join is the preferred way of merging lists of strings "
 	      "into a single string\n"
 	      "${"
@@ -1990,8 +1990,8 @@ INTERN struct type_method seq_methods[] = {
 	{ "any",
 	  &seq_any,
 	  DOC("->?Dbool\n"
-	      "Returns :true if any element of @this Sequence evaluates to :{true}\n"
-	      "If @this Sequence is empty, :false is returned\n"
+	      "Returns ?t if any element of @this Sequence evaluates to :{true}\n"
+	      "If @this Sequence is empty, ?f is returned\n"
 	      "This function has the same effect as ${this || ...}\n"
 	      "${"
 	      "function any() {\n"
@@ -2003,8 +2003,8 @@ INTERN struct type_method seq_methods[] = {
 	{ "all",
 	  &seq_all,
 	  DOC("->?Dbool\n"
-	      "Returns :true if all elements of @this Sequence evaluate to :{true}\n"
-	      "If @this Sequence is empty, :true is returned\n"
+	      "Returns ?t if all elements of @this Sequence evaluate to :{true}\n"
+	      "If @this Sequence is empty, ?t is returned\n"
 	      "This function has the same effect as ${this && ...}\n"
 	      "${"
 	      "function all() {\n"
@@ -2016,8 +2016,8 @@ INTERN struct type_method seq_methods[] = {
 	{ "parity",
 	  &seq_parity,
 	  DOC("->?Dbool\n"
-	      "Returns :true or :false indicative of the parity of Sequence elements that are :true\n"
-	      "If @this Sequence is empty, :false is returned\n"
+	      "Returns ?t or ?f indicative of the parity of Sequence elements that are ?t\n"
+	      "If @this Sequence is empty, ?f is returned\n"
 	      "Parity here refers to ${##this.filter([](x) -\\> !!x) % 2}\n"
 	      "${"
 	      "function parity() {\n"
@@ -2032,7 +2032,7 @@ INTERN struct type_method seq_methods[] = {
 	  DOC("(key:?DCallable=!N)->\n"
 	      "@param key A key function for transforming Sequence elements\n"
 	      "Returns the smallest element of @this Sequence\n"
-	      "If @this Sequence is empty, :none is returned\n"
+	      "If @this Sequence is empty, ?N is returned\n"
 	      "When no @key is given, this function has the same effect as ${this < ...}\n"
 	      "${"
 	      "function min(key = none) {\n"
@@ -2063,7 +2063,7 @@ INTERN struct type_method seq_methods[] = {
 	  DOC("(key:?DCallable=!N)->\n"
 	      "@param key A key function for transforming Sequence elements\n"
 	      "Returns the greatest element of @this Sequence\n"
-	      "If @this Sequence is empty, :none is returned\n"
+	      "If @this Sequence is empty, ?N is returned\n"
 	      "This function has the same effect as ${this > ...}\n"
 	      "${"
 	      "function max(key) {\n"
@@ -2198,7 +2198,7 @@ INTERN struct type_method seq_methods[] = {
 	  DOC("(elem,key:?DCallable=!N)->?Dbool\n"
 	      "@param elem The element to search for\n"
 	      "@param key A key function for transforming Sequence elements\n"
-	      "Returns :true if @this Sequence contains an element matching @elem\n"
+	      "Returns ?t if @this Sequence contains an element matching @elem\n"
 	      "${"
 	      "function contains(elem, key: Callable) {\n"
 	      "	if (key is none)\n"
@@ -2215,19 +2215,19 @@ INTERN struct type_method seq_methods[] = {
 	  DOC("(elem,key:?DCallable=!N)->?Dbool\n"
 	      "@param elem The element to compare against\n"
 	      "@param key A key function for transforming Sequence elements\n"
-	      "Returns :true / :false indicative of @this Sequence's first element matching :elem\n"
+	      "Returns ?t / ?f indicative of @this Sequence's first element matching :elem\n"
 	      "The implementation of this is derived from #first, where the found is then compared "
 	      "against @elem, potentially through use of @{key}: ${key(first) == key(elem)} or ${first == elem}, "
-	      "however instead of throwing a :ValueError when the Sequence is empty, :false is returned") },
+	      "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned") },
 	{ "endswith",
 	  &seq_endswith,
 	  DOC("(elem,key:?DCallable=!N)->?Dbool\n"
 	      "@param elem The element to compare against\n"
 	      "@param key A key function for transforming Sequence elements\n"
-	      "Returns :true / :false indicative of @this Sequence's last element matching :elem\n"
+	      "Returns ?t / ?f indicative of @this Sequence's last element matching :elem\n"
 	      "The implementation of this is derived from #last, where the found is then compared "
 	      "against @elem, potentially through use of @{key}: ${key(last) == key(elem)} or ${last == elem}, "
-	      "however instead of throwing a :ValueError when the Sequence is empty, :false is returned") },
+	      "however instead of throwing a :ValueError when the Sequence is empty, ?f is returned") },
 	{ "find",
 	  &seq_find,
 	  DOC("(elem,key:?DCallable=!N)->?Dint\n"
@@ -2513,7 +2513,7 @@ INTERN struct type_method seq_methods[] = {
 	      "@throw IntegerOverflow @r is negative, or too large\n"
 	      "Same as #combinations, however the order of elements must "
 	      "not be enforced, though indices may not be repeated\n"
-	      "When @r is :none, ${##this} is used instead\n"
+	      "When @r is ?N, ${##this} is used instead\n"
 	      ">/* { (\"A\", \"B\"), (\"A\", \"C\"), "
 	      "(\"B\", \"A\"), (\"B\", \"C\"), "
 	      "(\"C\", \"A\"), (\"C\", \"B\") } */\n"
@@ -2890,7 +2890,7 @@ INTERN struct type_method seq_methods[] = {
 	      "@param key A key function for transforming Sequence elements\n"
 	      "@throw SequenceError @this Sequence is immutable\n"
 	      "For mutable sequences only: Find the first instance of @elem and remove it, "
-	      "returning :true if an element got removed, or :false if @elem could not be found\n"
+	      "returning ?t if an element got removed, or ?f if @elem could not be found\n"
 	      "Depending on the nearest implemented group of operators, "
 	      "one of the following implementations is chosen\n"
 	      "For ${operator del[]}:\n"
@@ -2979,7 +2979,7 @@ INTERN struct type_method seq_methods[] = {
 	      "@param key A key function for transforming Sequence elements\n"
 	      "@throw SequenceError @this Sequence is immutable\n"
 	      "For mutable sequences only: Find the last instance of @elem and remove it, "
-	      "returning :true if an element got removed, or :false if @elem could not be found\n"
+	      "returning ?t if an element got removed, or ?f if @elem could not be found\n"
 	      "Depending on the nearest implemented group of operators, "
 	      "one of the following implementations is chosen\n"
 	      "For ${operator del[]}:\n"
@@ -3218,7 +3218,7 @@ INTERN struct type_method seq_methods[] = {
 	      "@param key A key function for transforming Sequence elements\n"
 	      "@throw SequenceError @this Sequence is immutable\n"
 	      "For mutable sequences only: Remove all elements within the given sub-range, "
-	      "for which ${should(elem)} evaluates to :true, and return the number "
+	      "for which ${should(elem)} evaluates to ?t, and return the number "
 	      "of elements found (and consequently removed)\n"
 	      "Depending on the nearest implemented group of operators, "
 	      "one of the following implementations is chosen\n"
@@ -3624,7 +3624,7 @@ PRIVATE struct type_getset seq_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "Try to determine if @this Sequence is mutable by looking at operators and "
 	      "member functions implemented by sub-classes. Note however that this property "
-	      "indicating :true does not necessarily guaranty that elements of the Sequence "
+	      "indicating ?t does not necessarily guaranty that elements of the Sequence "
 	      "can actually be manipulated, only that a sub-class provides special behavior "
 	      "for at least one of the following: ?#{op:setitem}, ?#{op:delitem}, ?#{op:setrange}, "
 	      "?#{op:delrange}, ?#append, ?#extend, ?#insert, ?#insertall, ?#erase, ?#remove, "
@@ -3634,7 +3634,7 @@ PRIVATE struct type_getset seq_getsets[] = {
 	  DOC("->?Dbool\n"
 	      "Similar to ?#ismutable, but tries to determine if @this Sequence is resizable by "
 	      "looking at member functions implemented by sub-classes. Note however that this "
-	      "property indicating :true does not necessarily guaranty that elements of the "
+	      "property indicating ?t does not necessarily guaranty that elements of the "
 	      "Sequence can actually be manipulated, only that a sub-class provides special "
 	      "behavior for at least one of the following: ?#append, ?#extend, ?#insert, ?#insertall, "
 	      "?#erase, ?#pop, ?#resize, ?#pushfront, ?#pushback, ?#popfront or ?#popback") },
@@ -3838,7 +3838,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true/:false indicative of @this Sequence being non-empty\n"
+	                         "Returns ?t/?f indicative of @this Sequence being non-empty\n"
 	                         "Same as the ?#nonempty member function\n"
 	                         "Depending on the nearest implemented group of operators, "
 	                         "one of the following implementations is chosen\n"
@@ -3924,7 +3924,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         "!=->\n"
 	                         ">->\n"
 	                         ">=->\n"
-	                         "Returns :true/:false indicative of a lexicographical comparison between @this and @other\n"
+	                         "Returns ?t/?f indicative of a lexicographical comparison between @this and @other\n"
 	                         "Note that the operators ${this != other} is implemented as ${!(this == other)}, "
 	                         "${this > other} as ${!(this <= other)}, and ${this >= other} and ${!(this < other)}, "
 	                         "meaning that it is sufficient to only implement ${==}, ${<} and ${<=} for full "
@@ -3984,7 +3984,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 
 	                         "\n"
 	                         "contains->\n"
-	                         "Returns :true/:false indicative of @item being apart of @this Sequence\n"
+	                         "Returns ?t/?f indicative of @item being apart of @this Sequence\n"
 	                         "This operator is an alias for the #contains member function, "
 	                         "which allows the use of an additional key function\n"
 	                         "When not implemented by a sub-class, this operator is implemented as defined by :Sequence as follows\n"

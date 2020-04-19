@@ -2918,7 +2918,7 @@ class Doc: WeakRefAble {
 				if (par is none) {
 					result = name;
 					if (isoperator)
-						result = "operator " + PRETTY_OPERATOR_NAMES.get(name,name);
+						result = "operator " + PRETTY_OPERATOR_NAMES.get(name, name);
 					return result;
 				}
 				result = par.prettypath;

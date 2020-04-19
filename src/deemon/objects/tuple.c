@@ -1941,7 +1941,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this Tuple is non-empty\n"
+	                         "Returns ?t if @this Tuple is non-empty\n"
 
 	                         "\n"
 	                         "+->\n"
@@ -1976,7 +1976,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 
 	                         "\n"
 	                         "contains->\n"
-	                         "Returns :true if @elem is apart of @this Tuple, or @false otherwise\n"
+	                         "Returns ?t if @elem is apart of @this Tuple, or @false otherwise\n"
 
 	                         "\n"
 	                         "[]->\n"
@@ -1987,7 +1987,7 @@ PUBLIC DeeTypeObject DeeTuple_Type = {
 	                         "\n"
 	                         "[:]->?.\n"
 	                         "Returns a new Tuple for the given subrange, following the usual rules for "
-	                         "negative @start or @end values, as well as :none being passed for either "
+	                         "negative @start or @end values, as well as ?N being passed for either "
 	                         "(s.a. :Sequence.op:getrange)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,

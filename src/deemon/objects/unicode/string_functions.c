@@ -10150,7 +10150,7 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_bytes,
 	  DOC("(allow_invalid=!f)->?DBytes\n"
 	      "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
-	      "@throw ValueError @allow_invalid is :false, and @this string contains characters above $0xff\n"
+	      "@throw ValueError @allow_invalid is ?f, and @this string contains characters above $0xff\n"
 	      "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
 	      "using a single byte per character. A character greater than $0xff either causes : ValueError "
 	      "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
@@ -10225,7 +10225,7 @@ INTERN struct type_method string_methods[] = {
 	      /*                        */ "$\"?\" and $\":\" is ignored)&"
 	      "$\"{x ? : <expr2>}\"|Re-use $x as true-result, similar to $\"{x ? {x} : <expr2>}\" "
 	      /*                */ "(whitespace before and after $\"?\" and $\":\" is ignored)&"
-	      "$\"{x ? <expr1>}\"|Use :none as false-result\" (whitespace before and after "
+	      "$\"{x ? <expr1>}\"|Use ?N as false-result\" (whitespace before and after "
 	      /*              */ "$\"?\" is ignored)}\n"
 
 	      "Sub-expressions in selections strings (the ${<expr>} above). "
@@ -10283,8 +10283,8 @@ INTERN struct type_method string_methods[] = {
 	      /**/ "have been made to C's regular scanf function:\n"
 
 	      "#T{Format pattern|Yielded type|Description~"
-	      "$\" \"|-|Skip any number of characters from input data for which ?#isspace returns :true ($r\"\\s*\")&"
-	      "$\"\\n\"|-|Skip any kind of line-feed, including $\"\\r\\n\", as well as any character for which ?#islf returns :true ($r\"\\n\")&"
+	      "$\" \"|-|Skip any number of characters from input data for which ?#isspace returns ?t ($r\"\\s*\")&"
+	      "$\"\\n\"|-|Skip any kind of line-feed, including $\"\\r\\n\", as well as any character for which ?#islf returns ?t ($r\"\\n\")&"
 	      "$\"%o\"|:int|Match up to `width' characters with $r\"[+-]*(?\\d<8)+\" and yield the result as an octal integer&"
 	      "$\"%d\"|:int|Match up to `width' characters with $r\"[+-]*(?\\d<10)+\" and yield the result as an decimal integer&"
 	      "$\"%x\", $\"%p\"|:int|Match up to `width' characters with $r\"[+-]*((?\\d<16)|[a-fA-F])+\" and yield the result as a hexadecimal integer&"
@@ -10312,7 +10312,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all "
+	      "Returns ?t if $this, ${this[index]}, or all "
 	      /**/ "characters in ${this.substr(start, end)} are printable") },
 	{ "isalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isalpha,
@@ -10321,7 +10321,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are alphabetical") },
 	{ "isspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isspace,
@@ -10330,7 +10330,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are space-characters") },
 	{ "islf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_islf,
@@ -10339,7 +10339,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are line-feeds") },
 	{ "islower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_islower,
@@ -10348,7 +10348,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are lower-case") },
 	{ "isupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isupper,
@@ -10357,7 +10357,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are upper-case") },
 	{ "iscntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_iscntrl,
@@ -10366,7 +10366,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are control characters") },
 	{ "isdigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isdigit,
@@ -10375,7 +10375,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are digits") },
 	{ "isdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isdecimal,
@@ -10384,7 +10384,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are dicimal characters") },
 	{ "issymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymstrt,
@@ -10393,7 +10393,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} can be used to start a symbol name") },
 	{ "issymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_issymcont,
@@ -10402,7 +10402,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} can be used to continue a symbol name") },
 	{ "isalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isalnum,
@@ -10411,7 +10411,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} are alpha-numerical") },
 	{ "isnumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isnumeric,
@@ -10420,7 +10420,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters "
+	      "Returns ?t if $this, ${this[index]}, or all characters "
 	      /**/ "in ${this.substr(start, end)} qualify as digit or decimal characters\n"
 
 	      "This function is the logical union of ?#isdigit and ?#isdecimal") },
@@ -10429,12 +10429,12 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(index:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${?#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if the character at ${this[index]} has title-casing\n"
+	      "Returns ?t if the character at ${this[index]} has title-casing\n"
 
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
+	      "Returns ?t if $this, or the sub-string ${this.substr(start, end)} "
 	      /**/ "follows title-casing, meaning that space is followed by title-case, "
 	      /**/ "with all remaining characters not being title-case") },
 	{ "issymbol",
@@ -10442,13 +10442,13 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(index:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${?#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if the character at ${this[index]} can be used "
+	      "Returns ?t if the character at ${this[index]} can be used "
 	      /**/ "to start a symbol name. Same as ${this.issymstrt(index)}\n"
 
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
+	      "Returns ?t if $this, or the sub-string ${this.substr(start, end)} "
 	      /**/ "is a valid symbol name") },
 	{ "isascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isascii,
@@ -10457,7 +10457,7 @@ INTERN struct type_method string_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${?#this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start, end)} "
+	      "Returns ?t if $this, ${this[index]}, or all characters in ${this.substr(start, end)} "
 	      /**/ "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 	{ "asnumber",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_asnumber,
@@ -10507,91 +10507,91 @@ INTERN struct type_method string_methods[] = {
 	{ "isanyprint",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyprint,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is printable"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalpha,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is alphabetical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyspace,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a space character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylf,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a line-feeds"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanylower,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyupper,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanycntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanycntrl,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a control character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydigit,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a digit"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanydecimal,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a dicimal character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymstrt,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} can be used to start a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanysymcont,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} can be used to continue a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyalnum,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is alpha-numerical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanynumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanynumeric,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} qualifies as digit or decimal characters"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanytitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanytitle,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} has title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_isanyascii,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in ${this.substr(start, end)} is "
+	      "Returns ?t if any character in ${this.substr(start, end)} is "
 	      /**/ "an ascii character, that is has an ordinal value ${<= 0x7f}"),
 	  TYPE_METHOD_FKWDS },
 
@@ -10699,7 +10699,7 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_substr,
 	  DOC("(start=!0,end=!-1)->?.\n"
 	      "Similar to ${this[start:end]}, however only integer-convertible objects may "
-	      /**/ "be passed (passing :none will invoke ${(int)none}, which results in $0), and "
+	      /**/ "be passed (passing ?N will invoke ${(int)none}, which results in $0), and "
 	      /**/ "passing negative values for either @start or @end will cause :int.SIZE_MAX to "
 	      /**/ "be used for that argument:\n"
 
@@ -10775,12 +10775,12 @@ INTERN struct type_method string_methods[] = {
 	{ "startswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_startswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start, end)} starts with @needle"),
+	      "Return ?t if the sub-string ${this.substr(start, end)} starts with @needle"),
 	  TYPE_METHOD_FKWDS },
 	{ "endswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_endswith,
 	  DOC("(needle:?.,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start, end)} ends with @needle"),
+	      "Return ?t if the sub-string ${this.substr(start, end)} ends with @needle"),
 	  TYPE_METHOD_FKWDS },
 	{ "partition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_parition,
@@ -10850,8 +10850,8 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?.,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "Same as ?#wildcompare, returning :true where ?#wildcompare would return $0, "
-	      /**/ "and :false in all pattern cases") },
+	      "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, "
+	      /**/ "and ?f in all pattern cases") },
 
 	/* Case-insensitive query functions */
 	{ "casereplace",
@@ -10864,14 +10864,14 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as ?#find, however perform a case-folded search and return the start and end "
 	      /**/ "indices of the match (s.a. ?#casefold)\n"
-	      "If no match if found, :none is returned"),
+	      "If no match if found, ?N is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserfind,
 	  DOC("(needle:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as ?#rfind, however perform a case-folded search and return the start and end "
 	      /**/ "indices of the match (s.a. ?#casefold)\n"
-	      "If no match if found, :none is returned"),
+	      "If no match if found, ?N is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseindex,
@@ -11032,8 +11032,8 @@ INTERN struct type_method string_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_splitlines,
 	  DOC("(keepends=!f)->?S?.\n"
 	      "Split @this string at each linefeed, returning a sequence of all contained lines\n"
-	      "When @keepends is :false, this is identical to ${this.unifylines().split(\"\\n\")}\n"
-	      "When @keepends is :true, items found in the returned sequence will still have their "
+	      "When @keepends is ?f, this is identical to ${this.unifylines().split(\"\\n\")}\n"
+	      "When @keepends is ?t, items found in the returned sequence will still have their "
 	      /**/ "original, trailing line-feed appended") },
 
 	/* String indentation. */
@@ -11112,7 +11112,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as ?#findmatch, however perform a case-folded search and "
 	      /**/ "return the start and end indices of the match\n"
-	      "If no match if found, :none is returned") },
+	      "If no match if found, ?N is returned") },
 	{ "caseindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caseindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
@@ -11148,7 +11148,7 @@ INTERN struct type_method string_methods[] = {
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as ?#rfindmatch, however perform a case-folded search and "
 	      /**/ "return the start and end indices of the match\n"
-	      "If no match if found, :none is returned") },
+	      "If no match if found, ?N is returned") },
 	{ "caserindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_caserindexmatch,
 	  DOC("(open:?.,close:?.,start=!0,end=!-1)->?T2?Dint?Dint\n"
@@ -11452,8 +11452,8 @@ INTERN struct type_method string_methods[] = {
 	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Find the first sub-string matched by @pattern, and return its start/end indices, or :none if no match exists\n"
-	      "Note that using :none in an expand expression will result in whatever number of targets are required:\n${"
+	      "Find the first sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists\n"
+	      "Note that using ?N in an expand expression will result in whatever number of targets are required:\n${"
 	      "/* If the pattern count not be matched, both `start' and `end' will be `none' singleton */\n"
 	      "local start,end = data.refind(r\"\\b\\w\\b\")...;\n"
 	      "/* Since `none' is equal to `0' when casted to `int', calling `substr' with none-arguments\n"
@@ -11470,7 +11470,7 @@ INTERN struct type_method string_methods[] = {
 	      "@param pattern The regular expression patterm (s.a. ?#rematch)\n"
 	      "@param rules The regular expression rules (s.a. ?#rematch)\n"
 	      "@throw ValueError The given @pattern is malformed\n"
-	      "Find the last sub-string matched by @pattern, and return its start/end indices, or :none if no match exists (s.a. #refind)") },
+	      "Find the last sub-string matched by @pattern, and return its start/end indices, or ?N if no match exists (s.a. #refind)") },
 	{ "reindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&string_reindex,
 	  DOC("(pattern:?.,start=!0,end=!-1,rules=!P{})->?T2?Dint?Dint\n"

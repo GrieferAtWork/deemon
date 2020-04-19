@@ -215,7 +215,8 @@ PRIVATE struct type_getset pointer_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pointer_get_deref,
 	  (int (DCALL *)(DeeObject *__restrict))&pointer_del_deref,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&pointer_set_deref,
-	  DOC("->?GLValue\nGet/clear/set the dereferenced memory location of @this pointer") },
+	  DOC("->?GLValue\n"
+	      "Get/clear/set the dereferenced memory location of @this pointer") },
 	{ NULL }
 };
 
@@ -241,7 +242,9 @@ err:
 
 PRIVATE struct type_method pointer_methods[] = {
 	/* Methods for backwards-compatibility with deemon 100+ */
-	{ "__deref__", &struct_deref_func, DOC("->pointer\nDeprecated alias for ?#ind") },
+	{ "__deref__", &struct_deref_func,
+	  DOC("->pointer\n"
+	      "Deprecated alias for ?#ind") },
 	{ NULL }
 };
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
@@ -549,13 +552,13 @@ lvalue_alignof(struct lvalue_object *__restrict self) {
 PRIVATE struct type_getset lvalue_getsets[] = {
 	{ "ref", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_ref, NULL, NULL,
 	  DOC("->?Gpointer\n"
-	      "Returns a pointer for the object referred to by @this :lvalue") },
+	      "Returns a pointer for the object referred to by @this ?GLValue") },
 	{ "sizeof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_sizeof, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "Returns the size of the structured objected pointed to by @this :lvalue") },
+	      "Returns the size of the structured objected pointed to by @this ?GLValue") },
 	{ "alignof", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&lvalue_alignof, NULL, NULL,
 	  DOC("->?Dint\n"
-	      "Returns the alignment of the structured objected pointed to by @this :lvalue") },
+	      "Returns the alignment of the structured objected pointed to by @this ?GLValue") },
 	{ NULL }
 };
 

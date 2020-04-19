@@ -1035,7 +1035,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Other mapping operations known from :Dict can be used "
 	      "to delete (${del environ[...]}), set (${environ[...] = ...}) and "
 	      "check for the existance of (${... in environ}) environment variables, "
-	      "as well as enumerating all variables (${for (key,item: environ) ...})") },
+	      "as well as enumerating all variables (${for (key, item: environ) ...})") },
 	{ "gettmp", (DeeObject *)&libfs_gettmp, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
 	      "@interrupt\n"
@@ -1297,7 +1297,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "}\n"
 	      "Because of the fact that some filesystem support alternative path separators, "
 	      "those seperators may not be allowed to appear in symbolic link texts. If this "
-	      "is the case and if @format_target is :true, the given @target_text will be "
+	      "is the case and if @format_target is ?t, the given @target_text will be "
 	      "normalized to fix inconsistencies that might otherwise prevent the link from "
 	      "functioning properly") },
 	{ "readlink", (DeeObject *)&libfs_readlink, MODSYM_FNORMAL,
@@ -1399,13 +1399,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "different ?Gdriveof than @cwd, @path will be re-returned as is") },
 	{ "isabs", (DeeObject *)&libfs_isabs, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dbool\n"
-	      "Returns :true if the given @path is considered to be absolute") },
+	      "Returns ?t if the given @path is considered to be absolute") },
 	{ "isrel", (DeeObject *)&libfs_isrel, MODSYM_FNORMAL,
 	  DOC("(path:?Dstring)->?Dbool\n"
 	      "Returns the inverse of ?Gisabs") },
 	{ "issep", (DeeObject *)&libfs_issep, MODSYM_FNORMAL,
 	  DOC("(str:?Dstring)->?Dbool\n"
-	      "Returns :true if the given @str is recognized as a path "
+	      "Returns ?t if the given @str is recognized as a path "
 	      "seperator (Usually $\"/\" and/or $\"\\\")\n"
 	      "The host's primary and secondary seperator "
 	      "values can be read from ?GSEP and ?GALTSEP") },
@@ -1460,20 +1460,20 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "found in environment variables, most notably ${environ[\"PATH\"]}") },
 	{ "DEV_NULL", (DeeObject *)&libfs_DEV_NULL, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "A special filename accepted by :posix:open to return a data sink") },
+	      "A special filename accepted by ?Eposix:open to return a data sink") },
 	{ "DEV_TTY", (DeeObject *)&libfs_DEV_TTY, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "A special filename accepted by :posix:open to return a "
+	      "A special filename accepted by ?Eposix:open to return a "
 	      "handle to the calling process's controlling terminal") },
 	{ "DEV_STDIN", (DeeObject *)&libfs_DEV_STDIN, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "A special filename accepted by :posix:open to return a handle to :File.stdin") },
+	      "A special filename accepted by ?Eposix:open to return a handle to :File.stdin") },
 	{ "DEV_STDOUT", (DeeObject *)&libfs_DEV_STDOUT, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "A special filename accepted by :posix:open to return a handle to :File.stdout") },
+	      "A special filename accepted by ?Eposix:open to return a handle to :File.stdout") },
 	{ "DEV_STDERR", (DeeObject *)&libfs_DEV_STDERR, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "A special filename accepted by :posix:open to return a handle to :File.stderr") },
+	      "A special filename accepted by ?Eposix:open to return a handle to :File.stderr") },
 
 	/* stat.st_mode bits. */
 	LIBFS_S_IFMT_DEF

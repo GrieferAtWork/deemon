@@ -190,7 +190,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(name:?Dstring)->?Dint\n"
 	      "@throw NetError.NoSupport The given @name is not recognized by this library\n"
 	      "Return the system-dependent ID of a given address family @name, or re-return the given @id.\n"
-	      "The given @name is encoded the same way as the first constructor argument for :socket") },
+	      "The given @name is encoded the same way as the first constructor argument for ?Gsocket") },
 	{ "gettypename", (DeeObject *)&lib_gettypename, MODSYM_FREADONLY,
 	  DOC("(typ:?Dint)->?Dstring\n"
 	      "(typ:?Dint)->?Dint\n"
@@ -201,7 +201,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(name:?Dstring)->?Dint\n"
 	      "@throw NetError.NoSupport The given @name is not recognized by this library\n"
 	      "Return the system-dependent ID of a given socket type @name, or re-return the given @type.\n"
-	      "The given @name is encoded the same way as the second constructor argument for :socket") },
+	      "The given @name is encoded the same way as the second constructor argument for ?Gsocket") },
 	{ "getprotoname", (DeeObject *)&lib_getprotoname, MODSYM_FREADONLY,
 	  DOC("(proto:?Dint)->?Dstring\n"
 	      "(proto:?Dint)->?Dint\n"
@@ -212,7 +212,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(name:?Dstring)->?Dint\n"
 	      "@throw NetError.NoSupport The given @name is not recognized by this library\n"
 	      "Return the system-dependent ID of a given protocol name @name, or re-return the given @proto.\n"
-	      "The given @name is encoded the same way as the third constructor argument for :socket") },
+	      "The given @name is encoded the same way as the third constructor argument for ?Gsocket") },
 	{ "getmsgflagsname", (DeeObject *)&lib_getmsgflagsname, MODSYM_FREADONLY,
 	  DOC("(msgflags:?Dint)->?Dstring\n"
 	      "(msgflags:?Dint)->?Dint\n"
@@ -223,7 +223,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "(flags:?Dstring)->?Dint\n"
 	      "@throw NetError.NoSupport The given @flags contains at least one flag that is not recognized by this library\n"
 	      "Return a system-dependent set of flags for given message flags @flags, or re-return the given @flags.\n"
-	      "The given @flags is encoded the same way as the flags argument passed to :socket.recv") },
+	      "The given @flags is encoded the same way as the flags argument passed to ?Arecv?Gsocket") },
 	{ "ntoh16", (DeeObject *)&lib_ntoh16, MODSYM_FREADONLY,
 	  DOC("(x:?Dint)->?Dint\n"
 	      "Convert a 16-bit integer @x from network-endian to host-endian") },

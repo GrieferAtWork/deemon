@@ -2174,8 +2174,8 @@ PRIVATE struct type_method object_methods[] = {
 	{ meth_str+1,        &object_dostr, DOC("->?Dstring\n@return: @this converted to a :string") },
 	{ meth_repr+1,       &object_dorepr, DOC("->?Dstring\n@return: The :string representation of @this") },
 	{ meth_bool+1,       &object_bool, DOC("->?Dbool\n@return: The :bool value of @this") },
-	{ meth_call+2,       &object_call, DOC("(args:?DTuple)->\nCall @this using the given @args :tuple") },
-	{ meth_thiscall+4,   &object_thiscall, DOC("(this_arg,args:?DTuple)->\nDo a this-call on @this using the given @this_arg and @args :tuple") },
+	{ meth_call+2,       &object_call, DOC("(args:?DTuple)->\nCall @this using the given @args :Tuple") },
+	{ meth_thiscall+4,   &object_thiscall, DOC("(this_arg,args:?DTuple)->\nDo a this-call on @this using the given @this_arg and @args :Tuple") },
 	{ meth_hash+1,       &object_hash, DOC("->?Dint\n@return The hash-value of @this") },
 	{ meth_int+1,        &object_int, DOC("->?Dint\n@return The integer-value of @this") },
 	{ meth_inv+1,        &object_inv, DOC("->\n@return The result of ${this.operator ~ ()}") },
@@ -2210,7 +2210,7 @@ PRIVATE struct type_method object_methods[] = {
 	{ meth_iternext+1,   &object_iternext, DOC("->\n@return The result of ${this.operator next()}") },
 	{ meth_getattr+2,    &object_getattr, DOC("(name:?Dstring)->\n@return The result of ${this.operator . (name)}") },
 	{ meth_callattr,     &object_callattr, DOC("(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}") },
-	{ meth_hasattr+2,    &object_hasattr, DOC("(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning :true or :false indicative of this") },
+	{ meth_hasattr+2,    &object_hasattr, DOC("(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning ?t or ?f indicative of this") },
 	{ meth_delattr+2,    &object_delattr, DOC("(name:?Dstring)\nInvokes ${this.operator del . (name)}") },
 	{ meth_setattr+3,    &object_setattr, DOC("(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name,value)}") },
 	{ meth_enumattr+1,   &object_enumattr, DOC("()->?S?DAttribute\n@return Same as ${deemon.enumattr(this)}") },
@@ -2294,7 +2294,7 @@ PRIVATE struct type_getset object_getsets[] = {
 	      "Returns an indexable sequence describing the instance object "
 	      "table, as referenced by :rt.ClassDescriptor.attribute.addr\n"
 	      "For non-user-defined classes (aka. when ${this.class.__isclass__} "
-	      "is :false), an empty sequence is returned\n"
+	      "is ?f), an empty sequence is returned\n"
 	      "The class-attribute table can be accessed through :Type.__ctable__") },
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	{ "id", &object_id_get, NULL, NULL,
@@ -3450,8 +3450,8 @@ type_is_superbase(DeeTypeObject *self, size_t argc,
 PRIVATE struct type_method type_methods[] = {
 	{ "baseof", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_baseof,
 	  DOC("(other:?DType)->?Dbool\n"
-	      "Returns :true if @this Type is equal to, or a base of @other\n"
-	      "If @other isn't a Type, :false is returned\n"
+	      "Returns ?t if @this Type is equal to, or a base of @other\n"
+	      "If @other isn't a Type, ?f is returned\n"
 	      "Using baseof, the behavior of ${x is y} can be approximated as:\n"
 	      "${"
 	      "print y.baseof(type(x)); // print x is y;"
@@ -3459,8 +3459,8 @@ PRIVATE struct type_method type_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "derivedfrom", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_derivedfrom,
 	  DOC("(other:?DType)->?Dbool\n"
-	      "Returns :true if @this Type is equal to, or has been derived from @other\n"
-	      "If @other isn't a Type, :false is returned"),
+	      "Returns ?t if @this Type is equal to, or has been derived from @other\n"
+	      "If @other isn't a Type, ?f is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "newinstance", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_newinstance,
 	  DOC("(fields!!)->\n"
@@ -3514,9 +3514,9 @@ PRIVATE struct type_method type_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "hasattribute", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasattribute,
 	  DOC("(name:?Dstring)->?Dbool\n"
-	      "Returns :true if this type, or one of its sub-classes defines an "
+	      "Returns ?t if this type, or one of its sub-classes defines an "
 	      "instance-attribute @name, and doesn't define any attribute-operators. "
-	      "Otherwise, return :false\n"
+	      "Otherwise, return ?f\n"
 
 	      "${"
 	      "function hasattribute(name) {\n"
@@ -3543,8 +3543,8 @@ PRIVATE struct type_method type_methods[] = {
 	{ "hasoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
-	      "Returns :true if instances of @this Type implement an operator @name, "
-	      /**/ "or :false if not, or if @name is not recognized as an operator "
+	      "Returns ?t if instances of @this Type implement an operator @name, "
+	      /**/ "or ?f if not, or if @name is not recognized as an operator "
 	      /**/ "available for the Type-Type that is ${type this}\n"
 	      "Note that this function also looks at the operators of "
 	      /**/ "base-classes, as well as that a user-defined class that has "
@@ -3619,8 +3619,8 @@ PRIVATE struct type_method type_methods[] = {
 	{ "hasprivateoperator", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_hasprivateoperator,
 	  DOC("(name:?Dint)->?Dbool\n"
 	      "(name:?Dstring)->?Dbool\n"
-	      "Returns :true if instances of @this Type implement an operator @name, "
-	      /**/ "or :false if not, or if @name is not recognized as an operator provided "
+	      "Returns ?t if instances of @this Type implement an operator @name, "
+	      /**/ "or ?f if not, or if @name is not recognized as an operator provided "
 	      /**/ "available for the Type-Type that is ${type this}\n"
 	      "Note that this function intentionally don't look at operators of "
 	      /**/ "base-classes (which is instead done by #hasoperator), meaning that "
@@ -3687,8 +3687,8 @@ PRIVATE struct type_method type_methods[] = {
 	{ "is_gctype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_gctype, DOC("->?Dbool\nDeprecated alias for ?#__isgc__") },
 	{ "is_final", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_final, DOC("->?Dbool\nDeprecated alias for ?#isfinal") },
 	{ "is_class", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_class, DOC("->?Dbool\nDeprecated alias for ?#__isclass__") },
-	{ "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns :true)") },
-	{ "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns :false)") },
+	{ "is_complete", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_complete, DOC("->?Dbool\nDeprecated (always returns ?t)") },
+	{ "is_classtype", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_classtype, DOC("->?Dbool\nDeprecated (always returns ?f)") },
 	{ "is_pointer", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_pointer, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}") },
 	{ "is_lvalue", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_lvalue, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}") },
 	{ "is_structured", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&type_is_structured, DOC("->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}") },
@@ -3945,7 +3945,7 @@ PRIVATE struct type_member type_members[] = {
 PRIVATE struct type_getset type_getsets[] = {
 	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_isbuffer, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this Type implements the buffer interface\n"
+	      "Returns ?t if @this Type implements the buffer interface\n"
 	      "The most prominent Type to which this applies is :Bytes, however other types also support this") },
 	/* TODO: __mro__->?S?DType
 	 *    - Returns a sequence proxy detailing the method
@@ -3971,14 +3971,14 @@ PRIVATE struct type_getset type_getsets[] = {
 	{ DeeString_STR(&str___module__),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_module, NULL, NULL,
 	  DOC("->?X2?DModule?N\n"
-	      "Return the module used to define @this Type, or :none if the module cannot "
+	      "Return the module used to define @this Type, or ?N if the module cannot "
 	      /**/ "be determined, which may be the case if the Type doesn't have any defining "
 	      /**/ "features such as operators, or class/instance member functions") },
 	{ "__ctable__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_ctable, NULL, NULL,
 	  DOC("->?AObjectTable?Ert:ClassDescriptor\n"
 	      "Returns an indexable sequence describing the class object table, "
 	      /**/ "as referenced by :rt.ClassDescriptor.attribute.addr\n"
-	      "For non-user-defined classes (aka. ?#__isclass__ is :false), an empty sequence is returned\n"
+	      "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"
 	      "The instance-attribute table can be accessed through :Object.__itable__") },
 	{ "__operators__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operators, NULL, NULL,
 	  DOC("->?S?X2?Dstring?Dint\n"
@@ -3996,7 +3996,7 @@ PRIVATE struct type_getset type_getsets[] = {
 	      /**/ "as constructor and destructor operators overwritten, even when the user didn't actually "
 	      /**/ "define any of them\n"
 	      "For the purposes of human-readable information, is is recommended to use ?Aoperators?#__class__ "
-	      /**/ "when @this Type is a user-defined class (aka. ?#__isclass__ is :true), and only use ?#__operators__ "
+	      /**/ "when @this Type is a user-defined class (aka. ?#__isclass__ is ?t), and only use ?#__operators__ "
 	      /**/ "for all other types that this doesn't apply to") },
 	{ "__operatorids__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_operatorids, NULL, NULL,
 	  DOC("->?S?Dint\n"
@@ -4005,8 +4005,8 @@ PRIVATE struct type_getset type_getsets[] = {
 	      /**/ "operator ids to their user-friendly name, as described in ?#hasoperator") },
 	{ "__instancesize__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "Returns the heap allocation size of instances of @this Type, or :none when @this Type cannot "
-	      /**/ "be instantiated, is a singletone (such as :none), or has variable-length instances (?#isvariable)") },
+	      "Returns the heap allocation size of instances of @this Type, or ?N when @this Type cannot "
+	      /**/ "be instantiated, is a singletone (such as ?N), or has variable-length instances (?#isvariable)") },
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	{ "__instance_size__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_instancesize, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"

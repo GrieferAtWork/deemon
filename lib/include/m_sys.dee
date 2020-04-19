@@ -22,7 +22,7 @@ import * from deemon;
 import rt;
 
 final global exit = Error.AppExit.exit;
-final global function _exit(exitcode: int = 1) -> exit(exitcode,false);
-final global function fatal() -> exit(1,false);
+final global function _exit(exitcode: int = 1) -> exit(exitcode, false);
+final global function fatal() -> exit(1, false);
 final global atexit = Error.AppExit.atexit;
 final global argv = rt.argv;

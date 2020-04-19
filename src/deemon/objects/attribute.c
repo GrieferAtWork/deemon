@@ -142,7 +142,7 @@ PRIVATE struct type_member attr_members[] = {
 	                      "The type or object that is declaring this Attribute"),
 	TYPE_MEMBER_FIELD_DOC("attrtype", STRUCT_OBJECT_OPT, offsetof(Attr, a_info.a_attrtype),
 	                      "->?X2?DType?N\n"
-	                      "The type of this Attribute, or :none if not known"),
+	                      "The type of this Attribute, or ?N if not known"),
 	TYPE_MEMBER_BITFIELD_DOC("canget", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMGET,
 	                         "Check if the Attribute has a way of being read from"),
 	TYPE_MEMBER_BITFIELD_DOC("candel", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMDEL,
@@ -150,7 +150,7 @@ PRIVATE struct type_member attr_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("canset", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMSET,
 	                         "Check if the Attribute has a way of being written to"),
 	TYPE_MEMBER_BITFIELD_DOC("cancall", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PERMCALL,
-	                         "Returns :true if the Attribute is intended to be called as a function. "
+	                         "Returns ?t if the Attribute is intended to be called as a function. "
 	                         "Note that this feature alone does not meant that the Attribute really can, or "
 	                         "cannot be called, only that calling it as a function might be the inteded use."),
 	TYPE_MEMBER_BITFIELD_DOC("isprivate", STRUCT_CONST, Attr, a_info.a_perm, ATTR_PRIVATE,
@@ -317,7 +317,7 @@ PRIVATE struct type_getset attr_getsets[] = {
 	      "The name of this Attribute") },
 	{ "doc", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_get_doc, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
-	      "The documentation string of this Attribute, or :none when no documentation is present") },
+	      "The documentation string of this Attribute, or ?N when no documentation is present") },
 	{ "flags", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&attr_getflags, NULL, NULL,
 	  DOC("->?Dstring\n"
 	      "Return a set of characters descripting the flags of @this Attribute:\n"
@@ -574,7 +574,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?Dbool\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
 	      "Taking the same arguments as ?#{op:constructor}, check if the an attribute matching "
-	      "the given arguments exists, returning :true/:false indicative of this\n"
+	      "the given arguments exists, returning ?t/?f indicative of this\n"
 	      "${"
 	      "static function exists(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
 	      "	import Error from deemon;\n"
@@ -589,7 +589,7 @@ PRIVATE struct type_method attr_class_methods[] = {
 	{ "lookup", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&attribute_lookup,
 	  DOC("(ob,name:?Dstring,flagmask:?X2?Dint?Dstring=!P{},flagval:?X2?Dint?Dstring=!VAflagmask,decl?)->?X2?.?N\n"
 	      "@throw ValueError The given @flagmask or @flagval contains an unrecognized flag character\n"
-	      "Same as ?#{op:constructor}, but return :none if the attribute doesn't exist\n"
+	      "Same as ?#{op:constructor}, but return ?N if the attribute doesn't exist\n"
 	      "${"
 	      "static function lookup(ob, name, flagmask = \"\", flagval = \"\", decl?) {\n"
 	      "	import Error from deemon;\n"
@@ -622,7 +622,8 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	                         "the given @name, as well as having its set of flags match @flagval, when masked by @flagmask\n"
 	                         "Additionally, @decl may be specified to narrow down valid matches to only those declared by it\n"
 	                         "${"
-	                         "function findattr(ob,name,flagmask,flagval,decl?) {\n"
+	                         "function findattr(ob: Object, name: string, flagmask: int | string,\n"
+	                         "                  flagval: int | string, decl?: Object): Attribute {\n"
 	                         "	import enumattr, Error, HashSet from deemon;\n"
 	                         "	flagmask = HashSet(flagmask);\n"
 	                         "	for (local attr: enumattr(ob)) {\n"

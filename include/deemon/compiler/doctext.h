@@ -575,10 +575,12 @@ DECL_BEGIN
  *         ?D{int}              Same as ?Edeemon:{int}
  *         ?O                   Same as ?Edeemon:Object
  *         ?N                   Same as ?Edeemon:none
+ *         ?t                   Same as ?Edeemon?t
+ *         ?f                   Same as ?Edeemon?f
  *         ?R!Afoo]             Same as @foo     (argument reference)
  *         ?R!A{foo}]           Same as @{foo}   (argument reference)
- *         ?R!r]                Same as ?Dtrue
- *         ?R!f]                Same as ?Dfalse
+ *         ?R!t]                Same as ?t
+ *         ?R!f]                Same as ?f
  *         ?R!Dint]             Same as ?Dint
  *         ?R!D{int}]           Same as ?D{int}
  *         ?R!Eposix:errno]     Same as ?Eposix:errno

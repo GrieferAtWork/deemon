@@ -805,7 +805,7 @@ PRIVATE DeeTypeObject DeeHandle_Type = {
 	/* .tp_name     = */ "HANDLE",
 	/* .tp_doc      = */ DOC("(hHandle:?Dint=!GINVALID_HANDLE_VALUE)\n"
 	                         "(hHandle:?Aptr?Ectypes:void)\n"
-	                         "NOTE: Passing :none for @hHandle will also "
+	                         "NOTE: Passing ?N for @hHandle will also "
 	                         "initialize the HANDLE as :INVALID_HANDLE_VALUE"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
@@ -6118,12 +6118,12 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Error-related functions. */
 	LIBWIN32_GETHANDLE_DEF_DOC("Return the underlying system handle that is bound to the given object\n"
-	                           " - When :none is given, always return ${HANDLE(0)}\n"
+	                           " - When ?N is given, always return ${HANDLE(0)}\n"
 	                           " - When an :int is given, return the result of ${get_osfhandle(ob)}\n"
 	                           " - When the given object has an attribute $" DeeSysFD_HANDLE_GETSET ", return ${ob." DeeSysFD_HANDLE_GETSET "}\n"
 	                           " - When the given object has an attribute $" DeeSysFD_INT_GETSET ", return ${get_osfhandle(ob." DeeSysFD_HANDLE_GETSET ")}\n"
-	                           " - When another :HANDLE object is given, re-return that object\n"
-	                           "Note that these sames steps are also performed by all other functions taking :HANDLE input arguments")
+	                           " - When another ?GHANDLE object is given, re-return that object\n"
+	                           "Note that these sames steps are also performed by all other functions taking ?GHANDLE input arguments")
 
 	/* Error-related functions. */
 	LIBWIN32_GETLASTERROR_DEF
@@ -6199,15 +6199,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	LIBWIN32_REMOVEDIRECTORY_DEF
 	LIBWIN32_CREATEDIRECTORY_DEF
 	LIBWIN32_DELETEFILE_DEF
-	LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC("Returns the windows system directory ($\"C:\\\\Windows\\\\system32\")")
-	LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC("Returns the windows system directory ($\"C:\\\\Windows\")")
-	LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC("Returns the system windows directory ($\"C:\\\\Windows\")")
-	LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC("Returns the windows SysWOW64 directory ($\"C:\\\\Windows\\\\SysWOW64\")")
+	LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC("Returns the windows system directory ($r\"C:\\Windows\\system32\")")
+	LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC("Returns the windows system directory ($r\"C:\\Windows\")")
+	LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC("Returns the system windows directory ($r\"C:\\Windows\")")
+	LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC("Returns the windows SysWOW64 directory ($r\"C:\\Windows\\SysWOW64\")")
 	LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC("Returns a list of known system drives ($({ r\"C:\\\", r\"D:\\\", r\"E:\\\" }))")
 	LIBWIN32_QUERYDOSDEVICE_DEF_DOC("Returns a list of DOS devices mounted under the given drive (which should be one of ?GGetLogicalDriveStrings)")
 
 	/* DLL functions */
-	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns :none upon error, or the name of the module")
+	LIBWIN32_GETMODULEFILENAME_DEF_DOC("Returns ?N upon error, or the name of the module")
 	LIBWIN32_GETMAPPEDFILENAME_DEF
 
 	/* Named pipe API. */

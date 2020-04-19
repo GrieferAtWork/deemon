@@ -3752,7 +3752,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this List is non-empty\n"
+	                         "Returns ?t if @this List is non-empty\n"
 
 	                         "\n"
 	                         "repr->\n"
@@ -3833,7 +3833,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 
 	                         "\n"
 	                         "contains->\n"
-	                         "Returns :true if @elem is apart of @this List\n"
+	                         "Returns ?t if @elem is apart of @this List\n"
 
 	                         "\n"
 	                         "<(other:?X2?.?S?O)->\n"

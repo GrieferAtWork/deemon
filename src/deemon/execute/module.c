@@ -1366,16 +1366,16 @@ PRIVATE struct type_getset module_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_path, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "@throw ValueError The Module hasn't been fully loaded\n"
-	      "Returns the absolute filesystem path of the Module's source file, or :none "
+	      "Returns the absolute filesystem path of the Module's source file, or ?N "
 	      "if the Module wasn't created from a file accessible via the filesystem") },
 	{ "__isglobal__",
 	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_isglobal, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this Module is global (i.e. can be accessed as ${import(this.__name__)})") },
+	      "Returns ?t if @this Module is global (i.e. can be accessed as ${import(this.__name__)})") },
 	{ "__haspath__",
 	  (DREF DeeObject *(DCALL *)(DREF DeeObject *__restrict))&module_get_haspath, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Returns :true if @this Module has a path found within the filesystem") },
+	      "Returns ?t if @this Module has a path found within the filesystem") },
 	{ NULL }
 };
 

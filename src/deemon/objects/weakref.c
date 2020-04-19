@@ -334,7 +334,7 @@ PRIVATE struct type_method ob_weakref_methods[] = {
 	{ "try_lock", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&ob_weakref_try_lock,
 	  DOC("()\n"
 	      "->\n"
-	      "Deprecated alias for ?#lock with passing :none (${this.lock(none)})") },
+	      "Deprecated alias for ?#lock with passing ?N (${this.lock(none)})") },
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	{ NULL }
 };
@@ -405,7 +405,7 @@ PUBLIC DeeTypeObject DeeWeakRef_Type = {
 	                         "<=(other:?X2?.?N)->\n"
 	                         ">(other:?X2?.?N)->\n"
 	                         ">=(other:?X2?.?N)->\n"
-	                         "When compared with :none, test for the pointed-to object being bound. "
+	                         "When compared with ?N, test for the pointed-to object being bound. "
 	                         /**/ "Otherwise, compare the pointed-to object of @this weak reference to "
 	                         /**/ "that of @other\n"
 

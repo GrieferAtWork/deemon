@@ -24,7 +24,7 @@
 final global __builtin_exit = (Error from "deemon").operator . ("AppExit").operator . ("exit");
 #pragma pop_macro("final", "global", "Error", "from", "operator")
 #define __PRIVATE_builtin__exit0() __PRIVATE_builtin__exit1(1)
-#define __PRIVATE_builtin__exit1(exitcode) __builtin_exit(exitcode,false)
+#define __PRIVATE_builtin__exit1(exitcode) __builtin_exit(exitcode, false)
 #define __builtin__exit(...) __PRIVATE_builtin__exit##__VA_NARGS__(__VA_ARGS__)
 
 

@@ -3040,7 +3040,7 @@ PRIVATE struct type_method int_methods[] = {
 	      "@throw ValueError The given @byteorder string isn't recognized\n"
 	      "Returns the data of @this integer as a @length bytes long "
 	      "writable Bytes object that is disjunct from @this integer.\n"
-	      "When @signed is :false, throw an :IntegerOverflow if @this "
+	      "When @signed is ?f, throw an :IntegerOverflow if @this "
 	      "integer is negative. Otherwise use two's complement to encode "
 	      "negative integers"),
 	  TYPE_METHOD_FKWDS },
@@ -3193,7 +3193,7 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this integer is non-zero\n"
+	                         "Returns ?t if @this integer is non-zero\n"
 
 	                         "\n"
 	                         "==->\n"

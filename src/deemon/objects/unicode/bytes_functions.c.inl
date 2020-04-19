@@ -3793,7 +3793,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all "
+	      "Returns ?t if $this, ${this[index]}, or all "
 	      "characters in ${this.substr(start, end)} are printable") },
 	{ "isalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isalpha,
@@ -3802,7 +3802,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are alphabetical") },
 	{ "isspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isspace,
@@ -3811,7 +3811,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are space-characters") },
 	{ "islf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_islf,
@@ -3820,7 +3820,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are line-feeds") },
 	{ "islower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_islower,
@@ -3829,7 +3829,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are lower-case") },
 	{ "isupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isupper,
@@ -3838,7 +3838,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are upper-case") },
 	{ "iscntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_iscntrl,
@@ -3847,7 +3847,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are control characters") },
 	{ "isdigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isdigit,
@@ -3856,7 +3856,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are digits") },
 	{ "isdecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isdecimal,
@@ -3865,7 +3865,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are dicimal characters") },
 	{ "issymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymstrt,
@@ -3874,7 +3874,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} can be used to start a symbol name") },
 	{ "issymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymcont,
@@ -3883,7 +3883,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} can be used to continue a symbol name") },
 	{ "isalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isalnum,
@@ -3892,7 +3892,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} are alpha-numerical") },
 	{ "isnumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isnumeric,
@@ -3901,32 +3901,32 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all bytes (when interpreted "
+	      "Returns ?t if $this, ${this[index]}, or all bytes (when interpreted "
 	      "as ASCII characters) in ${this.substr(start, end)} qualify as digit or decimal characters") },
 	{ "istitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_istitle,
 	  DOC("(index:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if the character at ${this[index]} has title-casing\n"
+	      "Returns ?t if the character at ${this[index]} has title-casing\n"
 
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
+	      "Returns ?t if $this, or the sub-string ${this.substr(start, end)} "
 	      "follows title-casing, meaning that space is followed by upper-case") },
 	{ "issymbol",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_issymbol,
 	  DOC("(index:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if the character at ${this[index]} can be used "
+	      "Returns ?t if the character at ${this[index]} can be used "
 	      "to start a symbol name. Same as ${this.issymstrt(index)}\n"
 
 	      "\n"
 	      "->?Dbool\n"
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
-	      "Returns :true if $this, or the sub-string ${this.substr(start, end)} "
+	      "Returns ?t if $this, or the sub-string ${this.substr(start, end)} "
 	      "is a valid symbol name") },
 	{ "isascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isascii,
@@ -3935,7 +3935,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "(start:?Dint,end:?Dint)->?Dbool\n"
 	      "@throw IndexError The given @index is larger than ${##this}\n"
 	      "@throw IntegerOverflow The given @index is negative or too large\n"
-	      "Returns :true if $this, ${this[index]}, or all characters in ${this.substr(start, end)} "
+	      "Returns ?t if $this, ${this[index]}, or all characters in ${this.substr(start, end)} "
 	      "are ascii-characters, that is have an ordinal value ${<= 0x7f}") },
 	{ "asnumber",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_asnumber,
@@ -3977,91 +3977,91 @@ INTERN struct type_method bytes_methods[] = {
 	{ "isanyprint",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyprint,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is printable"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalpha",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyalpha,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is alphabetical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyspace",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyspace,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a space character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylf",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanylf,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a line-feeds"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanylower",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanylower,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is lower-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyupper",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyupper,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is upper-case"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanycntrl",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanycntrl,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a control character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydigit",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanydigit,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a digit"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanydecimal",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanydecimal,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is a dicimal character"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymstrt",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanysymstrt,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} can be used to start a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanysymcont",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanysymcont,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} can be used to continue a symbol name"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyalnum",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyalnum,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} is alpha-numerical"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanynumeric",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanynumeric,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} qualifies as digit or decimal characters"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanytitle",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanytitle,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in "
+	      "Returns ?t if any character in "
 	      "${this.substr(start, end)} has title-casing"),
 	  TYPE_METHOD_FKWDS },
 	{ "isanyascii",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_isanyascii,
 	  DOC("(start=!0,end=!-1)->?Dbool\n"
-	      "Returns :true if any character in ${this.substr(start, end)} are "
+	      "Returns ?t if any character in ${this.substr(start, end)} are "
 	      "ascii-characters, that is have an ordinal value ${<= 0x7f}"),
 	  TYPE_METHOD_FKWDS },
 
@@ -4255,12 +4255,12 @@ INTERN struct type_method bytes_methods[] = {
 	{ "startswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_startswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start, end)} starts with @other"),
+	      "Return ?t if the sub-string ${this.substr(start, end)} starts with @other"),
 	  TYPE_METHOD_FKWDS },
 	{ "endswith",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_endswith,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
-	      "Return :true if the sub-string ${this.substr(start, end)} ends with @other"),
+	      "Return ?t if the sub-string ${this.substr(start, end)} ends with @other"),
 	  TYPE_METHOD_FKWDS },
 	{ "partition",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_parition,
@@ -4325,7 +4325,7 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
 	      "(my_start:?Dint,my_end:?Dint,pattern:?X2?.?Dstring,other_start=!0,other_end=!-1)->?Dbool\n"
-	      "Same as ?#wildcompare, returning :true where ?#wildcompare would return $0, and :false in all pattern cases") },
+	      "Same as ?#wildcompare, returning ?t where ?#wildcompare would return $0, and ?f in all pattern cases") },
 
 	/* Case-insensitive query functions */
 	{ "casereplace",
@@ -4351,7 +4351,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	      "Same as ?#find, however ascii-casing is ignored during character comparisons\n"
 	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
-	      "If no match if found, :none is returned"),
+	      "If no match if found, ?N is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caserfind",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserfind,
@@ -4360,7 +4360,7 @@ INTERN struct type_method bytes_methods[] = {
 	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
 	      "Same as ?#rfind, however ascii-casing is ignored during character comparisons\n"
 	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
-	      "If no match if found, :none is returned"),
+	      "If no match if found, ?N is returned"),
 	  TYPE_METHOD_FKWDS },
 	{ "caseindex",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindex,
@@ -4534,8 +4534,8 @@ INTERN struct type_method bytes_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_splitlines,
 	  DOC("(keepends=!f)->?S?.\n"
 	      "Split @this Bytes object at each linefeed, returning a sequence of all contained lines\n"
-	      "When @keepends is :false, this is identical to ${this.unifylines().split(\"\\n\")}\n"
-	      "When @keepends is :true, items found in the returned sequence will still have their "
+	      "When @keepends is ?f, this is identical to ${this.unifylines().split(\"\\n\")}\n"
+	      "When @keepends is ?t, items found in the returned sequence will still have their "
 	      "original, trailing line-feed appended\n"
 	      "This function recognizes $\"\\n\", $\"\\r\" and $\"\\r\\n\" as linefeed sequences\n"
 	      "The returned bytes objects are views of @this byte object, meaning they "
@@ -4602,7 +4602,7 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as ?#findmatch, however casing is ignored during character comparisons\n"
 	      "Upon success, the second returned integer is equal to ${return[0] + ?#close}\n"
-	      "If no match if found, :none is returned") },
+	      "If no match if found, ?N is returned") },
 	{ "caseindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
@@ -4632,7 +4632,7 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
 	      "Same as ?#rfindmatch, however ascii-casing is ignored during character comparisons\n"
 	      "Upon success, the second returned integer is equal to ${return[0] + ?#open}\n"
-	      "If no match if found, :none is returned") },
+	      "If no match if found, ?N is returned") },
 	{ "caserindexmatch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindexmatch,
 	  DOC("(open:?X3?.?Dstring?Dint,close:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"

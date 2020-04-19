@@ -1500,11 +1500,11 @@ PRIVATE struct type_getset string_getsets[] = {
 	{ "__hashed__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hashed, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this string has been hashed") },
+	      "Evaluates to ?t if @this string has been hashed") },
 	{ "__hasutf__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_hasutf, NULL, NULL,
 	  DOC("->?Dbool\n"
-	      "Evaluates to :true if @this string owns a UTF container") },
+	      "Evaluates to ?t if @this string owns a UTF container") },
 	{ DeeString_STR(&str_first),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_getfirst, NULL, NULL,
 	  DOC("->?.\n"
@@ -1566,7 +1566,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 
 	                         "\n"
 	                         "bool->\n"
-	                         "Returns :true if @this string is non-empty\n"
+	                         "Returns ?t if @this string is non-empty\n"
 	                         "${"
 	                         "operator bool() {\n"
 	                         "	return ##this != 0;\n"
@@ -1617,7 +1617,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 
 	                         "\n"
 	                         "contains(substr:?X2?.?DBytes)->\n"
-	                         "Returns :true if @substr is apart of @this string\n"
+	                         "Returns ?t if @substr is apart of @this string\n"
 	                         "${"
 	                         ">print \"foo\" in \"bar\";    /* false */\n"
 	                         ">print \"foo\" in \"foobar\"; /* true */"
@@ -1640,7 +1640,7 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "If @start is greater than, or equal to @end, an empty string is returned\n"
 	                         "If either @start or @end is negative, ${##this} is added before "
 	                         "further index transformations are performed\n"
-	                         "As per convention, :none may be passed for @end as an alias for ${##this}\n"
+	                         "As per convention, ?N may be passed for @end as an alias for ${##this}\n"
 	                         "${"
 	                         "print \"foo\"[:-1];      /* \"fo\" */\n"
 	                         "print \"bar\"[1:];       /* \"ar\" */\n"

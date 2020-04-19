@@ -78,7 +78,8 @@ DECL_BEGIN
 	    "@interrupt\n"                                                          \
 	    "@throw FileNotFound The given @path or @fp could not be found\n"       \
 	    "@throw SystemError Failed to query file information for some reason\n" \
-	    "Same as its base type :stat, but query information without dereferencing the final link")
+	    "Same as its base type ?Gstat, but query information without "          \
+	    "dereferencing the final link")
 #define S_Stat_getset_st_dev_name "st_dev"
 #define S_Stat_getset_st_dev_doc                                                        \
 	DOC("->?Dint\n"                                                                     \
@@ -93,7 +94,7 @@ DECL_BEGIN
 #define S_Stat_getset_st_mode_doc                                                        \
 	DOC("->?Dint\n"                                                                      \
 	    "Returns a bitset describing the access permissions and mode of the stat-file. " \
-	    "For more information, see :S_IFMT")
+	    "For more information, see ?GS_IFMT")
 #define S_Stat_getset_st_nlink_name "st_nlink"
 #define S_Stat_getset_st_nlink_doc \
 	DOC("->?Dint\n"                \
@@ -174,95 +175,95 @@ DECL_BEGIN
 	    "(fd:?Dint)->?Dbool\n"                                               \
 	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                             \
 	    "@interrupt\n"                                                       \
-	    "Taking the same arguments as the constructor of :stat, "            \
+	    "Taking the same arguments as the constructor of ?Gstat, "           \
 	    "check if the referred file exists, or if the given file described " \
-	    "can be used with :stat")
+	    "can be used with ?Gstat")
 #define S_Stat_class_function_isdir_name "isdir"
-#define S_Stat_class_function_isdir_doc                           \
-	DOC("(path:?Dstring)->?Dbool\n"                               \
-	    "(fp:?DFile)->?Dbool\n"                                   \
-	    "(fd:?Dint)->?Dbool\n"                                    \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
-	    "@interrupt\n"                                            \
-	    "Taking the same arguments as the constructor of :stat, " \
+#define S_Stat_class_function_isdir_doc                            \
+	DOC("(path:?Dstring)->?Dbool\n"                                \
+	    "(fp:?DFile)->?Dbool\n"                                    \
+	    "(fd:?Dint)->?Dbool\n"                                     \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                   \
+	    "@interrupt\n"                                             \
+	    "Taking the same arguments as the constructor of ?Gstat, " \
 	    "check if the passed parameters refer to an existing directory")
 #define S_Stat_class_function_ischr_name "ischr"
-#define S_Stat_class_function_ischr_doc                           \
-	DOC("(path:?Dstring)->?Dbool\n"                               \
-	    "(fp:?DFile)->?Dbool\n"                                   \
-	    "(fd:?Dint)->?Dbool\n"                                    \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
-	    "@interrupt\n"                                            \
-	    "Taking the same arguments as the constructor of :stat, " \
+#define S_Stat_class_function_ischr_doc                            \
+	DOC("(path:?Dstring)->?Dbool\n"                                \
+	    "(fp:?DFile)->?Dbool\n"                                    \
+	    "(fd:?Dint)->?Dbool\n"                                     \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                   \
+	    "@interrupt\n"                                             \
+	    "Taking the same arguments as the constructor of ?Gstat, " \
 	    "check if the passed parameters refer to an existing character device")
 #define S_Stat_class_function_isblk_name "isblk"
-#define S_Stat_class_function_isblk_doc                           \
-	DOC("(path:?Dstring)->?Dbool\n"                               \
-	    "(fp:?DFile)->?Dbool\n"                                   \
-	    "(fd:?Dint)->?Dbool\n"                                    \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
-	    "@interrupt\n"                                            \
-	    "Taking the same arguments as the constructor of :stat, " \
+#define S_Stat_class_function_isblk_doc                            \
+	DOC("(path:?Dstring)->?Dbool\n"                                \
+	    "(fp:?DFile)->?Dbool\n"                                    \
+	    "(fd:?Dint)->?Dbool\n"                                     \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                   \
+	    "@interrupt\n"                                             \
+	    "Taking the same arguments as the constructor of ?Gstat, " \
 	    "check if the passed parameters refer to an existing block device")
 #define S_Stat_class_function_isreg_name "isreg"
-#define S_Stat_class_function_isreg_doc                           \
-	DOC("(path:?Dstring)->?Dbool\n"                               \
-	    "(fp:?DFile)->?Dbool\n"                                   \
-	    "(fd:?Dint)->?Dbool\n"                                    \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
-	    "@interrupt\n"                                            \
-	    "Taking the same arguments as the constructor of :stat, " \
+#define S_Stat_class_function_isreg_doc                            \
+	DOC("(path:?Dstring)->?Dbool\n"                                \
+	    "(fp:?DFile)->?Dbool\n"                                    \
+	    "(fd:?Dint)->?Dbool\n"                                     \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                   \
+	    "@interrupt\n"                                             \
+	    "Taking the same arguments as the constructor of ?Gstat, " \
 	    "check if the passed parameters refer to an existing regular file")
 #define S_Stat_class_function_isfifo_name "isfifo"
-#define S_Stat_class_function_isfifo_doc                          \
-	DOC("(path:?Dstring)->?Dbool\n"                               \
-	    "(fp:?DFile)->?Dbool\n"                                   \
-	    "(fd:?Dint)->?Dbool\n"                                    \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
-	    "@interrupt\n"                                            \
-	    "Taking the same arguments as the constructor of :stat, " \
+#define S_Stat_class_function_isfifo_doc                           \
+	DOC("(path:?Dstring)->?Dbool\n"                                \
+	    "(fp:?DFile)->?Dbool\n"                                    \
+	    "(fd:?Dint)->?Dbool\n"                                     \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                   \
+	    "@interrupt\n"                                             \
+	    "Taking the same arguments as the constructor of ?Gstat, " \
 	    "check if the passed parameters refer to an existing pipe")
 #define S_Stat_class_function_islnk_name "islnk"
-#define S_Stat_class_function_islnk_doc                           \
-	DOC("(path:?Dstring)->?Dbool\n"                               \
-	    "(fp:?DFile)->?Dbool\n"                                   \
-	    "(fd:?Dint)->?Dbool\n"                                    \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
-	    "@interrupt\n"                                            \
-	    "Taking the same arguments as the constructor of :stat, " \
+#define S_Stat_class_function_islnk_doc                            \
+	DOC("(path:?Dstring)->?Dbool\n"                                \
+	    "(fp:?DFile)->?Dbool\n"                                    \
+	    "(fd:?Dint)->?Dbool\n"                                     \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                   \
+	    "@interrupt\n"                                             \
+	    "Taking the same arguments as the constructor of ?Gstat, " \
 	    "check if the passed parameters refer to an existing symbolic link")
 #define S_Stat_class_function_issock_name "issock"
-#define S_Stat_class_function_issock_doc                          \
-	DOC("(path:?Dstring)->?Dbool\n"                               \
-	    "(fp:?DFile)->?Dbool\n"                                   \
-	    "(fd:?Dint)->?Dbool\n"                                    \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                  \
-	    "@interrupt\n"                                            \
-	    "Taking the same arguments as the constructor of :stat, " \
+#define S_Stat_class_function_issock_doc                           \
+	DOC("(path:?Dstring)->?Dbool\n"                                \
+	    "(fp:?DFile)->?Dbool\n"                                    \
+	    "(fd:?Dint)->?Dbool\n"                                     \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                   \
+	    "@interrupt\n"                                             \
+	    "Taking the same arguments as the constructor of ?Gstat, " \
 	    "check if the passed parameters refer to an existing socket")
 #define S_Stat_class_function_ishidden_name "ishidden"
-#define S_Stat_class_function_ishidden_doc                                  \
-	DOC("(path:?Dstring)->?Dbool\n"                                         \
-	    "(fp:?DFile)->?Dbool\n"                                             \
-	    "(fd:?Dint)->?Dbool\n"                                              \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                            \
-	    "@interrupt\n"                                                      \
-	    "Taking the same arguments as the constructor of "                  \
-	    ":stat, check if the passed parameters refer to a hidden file. "    \
-	    "If the filesystem encodes the hidden-attribute as part of the "    \
-	    "filename, this function always returns :false if the path-string " \
+#define S_Stat_class_function_ishidden_doc                               \
+	DOC("(path:?Dstring)->?Dbool\n"                                      \
+	    "(fp:?DFile)->?Dbool\n"                                          \
+	    "(fd:?Dint)->?Dbool\n"                                           \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                         \
+	    "@interrupt\n"                                                   \
+	    "Taking the same arguments as the constructor of "               \
+	    ":stat, check if the passed parameters refer to a hidden file. " \
+	    "If the filesystem encodes the hidden-attribute as part of the " \
+	    "filename, this function always returns ?f if the path-string "  \
 	    "of the file described by the passed arguments cannot be determined")
 #define S_Stat_class_function_isexe_name "isexe"
-#define S_Stat_class_function_isexe_doc                                       \
-	DOC("(path:?Dstring)->?Dbool\n"                                           \
-	    "(fp:?DFile)->?Dbool\n"                                               \
-	    "(fd:?Dint)->?Dbool\n"                                                \
-	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                              \
-	    "@interrupt\n"                                                        \
-	    "Taking the same arguments as the constructor of "                    \
-	    ":stat, check if the passed parameters refer to an executable file. " \
-	    "If the filesystem encodes the executable-attribute as part of the "  \
-	    "filename, this function always returns :false if the path-string "   \
+#define S_Stat_class_function_isexe_doc                                      \
+	DOC("(path:?Dstring)->?Dbool\n"                                          \
+	    "(fp:?DFile)->?Dbool\n"                                              \
+	    "(fd:?Dint)->?Dbool\n"                                               \
+	    "(dfd:?Dint,path:?Dstring,atflags=!0)\n"                             \
+	    "@interrupt\n"                                                       \
+	    "Taking the same arguments as the constructor of ?Gstat, "           \
+	    "check if the passed parameters refer to an executable file. "       \
+	    "If the filesystem encodes the executable-attribute as part of the " \
+	    "filename, this function always returns ?f if the path-string "      \
 	    "of the file described by the passed arguments cannot be determined")
 
 

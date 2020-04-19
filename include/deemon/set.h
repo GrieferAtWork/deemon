@@ -40,7 +40,7 @@ DECL_BEGIN
  *     and code should be optimized for that code, however this
  *     is not a requirement.
  *   - operator contains(ob: object): bool:
- *     Returns :true if @ob is apart of @this set
+ *     Returns ?t if @ob is apart of @this set
  *   - The getitem operator is not implemented.
  *   - The getrange operator is not implemented.
  *
@@ -56,7 +56,7 @@ DECL_BEGIN
  *     Returns the intersection of @this and @other
  * 
  * isdisjoint(set other): bool;
- *     Returns :true if ${##(this & other) == 0}
+ *     Returns ?t if ${##(this & other) == 0}
  *     In other words: If @this and @other have no items in common.
  *
  * union(set other) -> set;
@@ -71,10 +71,10 @@ DECL_BEGIN
  * 
  * issubset(set other): bool;
  * operator <= (set other): bool;
- *     Returns :true if all items found in @this set can also be found in @other
+ *     Returns ?t if all items found in @this set can also be found in @other
  * 
  * operator == (set other): bool;
- *     Returns :true if @this set contains the same
+ *     Returns ?t if @this set contains the same
  *     items as @other, and not any more than that
  * 
  * operator < (set other): bool;
@@ -82,7 +82,7 @@ DECL_BEGIN
  *
  * issuperset(set other): bool;
  * operator >= (set other): bool;
- *     Returns :true if all items found in @other can also be found in @this set
+ *     Returns ?t if all items found in @other can also be found in @this set
  *
  * operator ~ () -> set;
  *     Returns a symbolic set that behaves as though it contained

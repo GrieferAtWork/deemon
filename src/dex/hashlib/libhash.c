@@ -351,7 +351,7 @@ def_crc(["CRC-64/XZ"],                 64, 0x42f0e1eba9ea3693, 0xfffffffffffffff
 // Some more unspecific crcs from here: http://crcmod.sourceforge.net/crcmod.predefined.html
 // NOTE: These we fitted to match the reveng name format
 //crc-64 	0x1000000000000001B 	True 	0x0000000000000000 	0x0000000000000000 	0x46A5A9388A5BEFFE
-def_crc(["CRC-64/JONES"],             64,0xAD93D23594C935A9,0xffffffffffffffff,true,true,0x0000000000000000);
+def_crc(["CRC-64/JONES"],             64,0xAD93D23594C935A9,0xffffffffffffffff, true, true,0x0000000000000000);
 
 // Some more asorted CRC algorithms from across the internet
 

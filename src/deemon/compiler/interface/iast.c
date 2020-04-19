@@ -5088,7 +5088,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setmultiple_typing,
 	  DOC("->?DType\n"
 	      "@throw TypeError ?#kind isn't $\"multiple\"\n"
-	      "@throw TypeError Attempted to set a typing that is neither :none, nor one of the type listed in :Compiler.makemultiple\n"
+	      "@throw TypeError Attempted to set a typing that is neither ?N, nor one of the type listed in :Compiler.makemultiple\n"
 	      "Get or set the typing of a @ multi-branch ast") },
 	{ "returnast",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getreturnast,
@@ -5100,7 +5100,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute No return expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the ast describing the expression returned by @this branch\n"
-	      "Additionally, you may assign :none to delete the throw expression and have the branch return :none") },
+	      "Additionally, you may assign ?N to delete the throw expression and have the branch return ?N") },
 	{ "yieldast",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getyieldast,
 	  NULL,
@@ -5120,7 +5120,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute No throw expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the ast describing the expression thrown by @this branch\n"
-	      "Additionally, you may assign :none to delete the throw expression and turn the branch into a re-throw") },
+	      "Additionally, you may assign ?N to delete the throw expression and turn the branch into a re-throw") },
 	{ "tryguard",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_gettryguard,
 	  NULL,
@@ -5186,7 +5186,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute No condition expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the continue-condition of @this loop (${for (; loopcond; loopnext) looploop})\n"
-	      "Additionally, you may assign :none to delete the condition, causing it to always be true") },
+	      "Additionally, you may assign ?N to delete the condition, causing it to always be true") },
 	{ "loopnext",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopnext,
 	  (int (DCALL *)(DeeObject *__restrict))&ast_delloopnext,
@@ -5198,7 +5198,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute No advance expression expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the optional advance expression of @this loop (${for (; loopcond; loopnext) looploop})\n"
-	      "Additionally, you may assign :none to delete the expression") },
+	      "Additionally, you may assign ?N to delete the expression") },
 	{ "looploop",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getlooploop,
 	  (int (DCALL *)(DeeObject *__restrict))&ast_dellooploop,
@@ -5209,7 +5209,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute No loop block expression has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the block executed by @this loop (${for (; loopcond; loopnext) looploop})\n"
-	      "Additionally, you may assign :none to delete the block") },
+	      "Additionally, you may assign ?N to delete the block") },
 	{ "loopelem",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopelem,
 	  (int (DCALL *)(DeeObject *__restrict))&ast_delloopelem,
@@ -5221,7 +5221,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute No loop element has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the foreach element of @this loop (${foreach (loopelem: loopiter) looploop})\n"
-	      "Additionally, you may assign :none to delete the element, causing its value to be discarded immediately") },
+	      "Additionally, you may assign ?N to delete the element, causing its value to be discarded immediately") },
 	{ "loopiter",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getloopiter, NULL,
 	  (int (DCALL *)(DeeObject *, DeeObject *))&ast_setloopiter,
@@ -5249,7 +5249,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw TypeError ?#kind isn't $\"loop\"\n"
 	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
 	      "@throw UnboundAttribute No loop advance expression has been bound\n"
-	      "@throw AttributeError Attempted to unbind or assign :none to ?#loopiter\n"
+	      "@throw AttributeError Attempted to unbind or assign ?N to ?#loopiter\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Alias for accessing either the advance expression of a regular loop (#loopnext), or the iterator of foreach-loop (#loopiter)") },
 	{ "loopctlisbreak",
@@ -5275,8 +5275,8 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
 	      "@throw UnboundAttribute No true-branch has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the branch taken when ?#conditionalcond evaluates to :true\n"
-	      "Additionally, you may assign :none to unbind the branch, or ?#conditionalcond to re-use "
+	      "Get, del or set the branch taken when ?#conditionalcond evaluates to ?t\n"
+	      "Additionally, you may assign ?N to unbind the branch, or ?#conditionalcond to re-use "
 	      "the value resulting from the conditiona branch as result of the true-branch") },
 	{ "conditionalff",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalff,
@@ -5287,8 +5287,8 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw TypeError Attempted to set an :Compiler.ast associated with a different compiler\n"
 	      "@throw UnboundAttribute No false-branch has been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
-	      "Get, del or set the branch taken when ?#conditionalcond evaluates to :false\n"
-	      "Additionally, you may assign :none to unbind the branch, or ?#conditionalcond to re-use "
+	      "Get, del or set the branch taken when ?#conditionalcond evaluates to ?f\n"
+	      "Additionally, you may assign ?N to unbind the branch, or ?#conditionalcond to re-use "
 	      "the value resulting from the conditiona branch as result of the false-branch") },
 	{ "conditionalflags",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getconditionalflags,
@@ -5372,7 +5372,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute The operator function hasn't been bound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the binding of the operator function loaded by this branch\n"
-	      "Additionally, you may assign :none to unbind the binding, causing the operator "
+	      "Additionally, you may assign ?N to unbind the binding, causing the operator "
 	      "to be loaded as an unbound function") },
 	{ "operatorname",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorname,
@@ -5401,7 +5401,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute The second operand has been unbound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the second operand used for invoking ?#operatorname\n"
-	      "Additionally, you may assign :none to unbind the operand") },
+	      "Additionally, you may assign ?N to unbind the operand") },
 	{ "operatorc",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorc,
 	  (int (DCALL *)(DeeObject *__restrict))&ast_deloperatorc,
@@ -5412,7 +5412,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute The third operand has been unbound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the second third used for invoking ?#operatorname\n"
-	      "Additionally, you may assign :none to unbind the operand") },
+	      "Additionally, you may assign ?N to unbind the operand") },
 	{ "operatord",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatord,
 	  (int (DCALL *)(DeeObject *__restrict))&ast_deloperatord,
@@ -5423,7 +5423,7 @@ PRIVATE struct type_getset ast_getsets[] = {
 	      "@throw UnboundAttribute The fourth operand has been unbound\n"
 	      "@throw ReferenceError Attempted to set a sub-branch apart of a different base-scope than @this\n"
 	      "Get, del or set the second fourth used for invoking ?#operatorname\n"
-	      "Additionally, you may assign :none to unbind the operand") },
+	      "Additionally, you may assign ?N to unbind the operand") },
 	{ "operatorflags",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ast_getoperatorflags,
 	  NULL,

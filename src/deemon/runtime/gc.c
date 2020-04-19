@@ -1606,7 +1606,7 @@ PRIVATE struct type_method gcenum_methods[] = {
 	      "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to") },
 	{ "isreferring", &gcenum_isreferring,
 	  DOC("(from,to)->?Dbool\n"
-	      "Returns :true if @to is referred to by @from, or :false otherwise") },
+	      "Returns ?t if @to is referred to by @from, or ?f otherwise") },
 	{ NULL }
 };
 
