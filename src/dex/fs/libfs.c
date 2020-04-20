@@ -1296,7 +1296,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "File.open(\"/path/to/link/file.txt\");"
 	      "}\n"
 	      "Because of the fact that some filesystem support alternative path separators, "
-	      "those seperators may not be allowed to appear in symbolic link texts. If this "
+	      "those separators may not be allowed to appear in symbolic link texts. If this "
 	      "is the case and if @format_target is ?t, the given @target_text will be "
 	      "normalized to fix inconsistencies that might otherwise prevent the link from "
 	      "functioning properly") },

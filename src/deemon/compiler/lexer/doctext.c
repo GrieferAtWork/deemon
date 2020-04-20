@@ -616,7 +616,7 @@ check_ch_after_lf:
 					 * "Foobar barfoo fuz fuz fuz fuz\nNOTE: Very important note that\n      you should remember"
 					 * When that was intended was actually:
 					 * "Foobar barfoo fuz fuz fuz fuz\nNOTE: Very important note that you should remember"
-					 * Check for this case by looking at the character posistion at:
+					 * Check for this case by looking at the character position at:
 					 *   current_line_start_after_whitespace +[utf8] (next_line_leading_spaces -
 					 *                                                current_line_leading_spaces)
 					 * If that character position descbides a non-whitespace character,
@@ -682,14 +682,16 @@ do_switch_ch_at_start_of_line:
 				uint32_t horizontal_ch;
 				uint32_t vertical_ch;
 				size_t column_count;
-				char const *table_top_left; /* Pointer to the top-left corner of the table */
+				char const *table_top_left;     /* Pointer to the top-left corner of the table */
+				char const *current_table_line; /* Pointer to the start of the first cell on the current line */
 				bool corner_ch_is_known;
 				/* Tables must appear at the start of lines. */
 				ASSERT(ch_start == current_line_start_after_whitespace);
-				corner_ch      = ch;
-				vertical_ch    = 0;
-				horizontal_ch  = 0;
-				table_top_left = ch_start;
+				corner_ch          = ch;
+				vertical_ch        = 0;
+				horizontal_ch      = 0;
+				table_top_left     = ch_start;
+				current_table_line = ch_start;
 				/* Seek ahead to the start of the first cell. */
 				for (;;) {
 					ch_start = iter;
@@ -816,13 +818,14 @@ do_switch_ch_at_start_of_line:
 				 *       iter points after that same character! */
 				{
 					struct table_column {
-						struct unicode_printer tc_body; /* The inner body of the cell. */
+						struct unicode_printer tc_body;      /* The inner body of the cell. */
+						size_t                 tc_linestart; /* Offset at the start of the current line. */
 					};
 					/* The buffer for the compiled contents of the table. */
 					struct unicode_printer table_output = UNICODE_PRINTER_INIT;
 					struct table_column *columns; /* [1..column_count][owned] Vector of column buffers. */
 					size_t column_index;
-					bool need_thin_seperator = false;
+					bool need_thin_separator = false;
 					char const *nextline_start = NULL;
 
 					/* Allocate & initialize buffers for all of the columns. */
@@ -834,10 +837,24 @@ do_switch_ch_at_start_of_line:
 					for (column_index = 0; column_index < column_count; ++column_index)
 						unicode_printer_init(&columns[column_index].tc_body);
 					for (;;) {
+						/* Pointer to the start of the first cell on the previous table line
+						 * (used for matching vertical characters in a count-miss-match scenario)
+						 * In such a szenario, the posisiton of corner or vertical characters
+						 * is compared against other vertical characters on the current line,
+						 * in order to figure out which vertical characters should actually be
+						 * used as separators. */
+						char const *previous_table_line;
 						bool has_nonempty_cell;
 scan_table_line:
 						/* NOTE: ch/ch_start point at the first character of the left-most
 						 *       cell of the current row; iter points after that same character! */
+						previous_table_line = current_table_line;
+						current_table_line  = ch_start;
+						for (column_index = 0; column_index < column_count; ++column_index) {
+							/* Backup the line-start-offset so we can re-wind should we need to
+							 * re-scan the line due to a vertical character overflow. */
+							columns[column_index].tc_linestart = columns[column_index].tc_body.up_length;
+						}
 						column_index = 0;
 						has_nonempty_cell = false;
 						for (;;) {
@@ -867,6 +884,123 @@ do_handle_end_of_line_in_table_line:
 										goto got_table_line;
 									}
 									/* Wrong # of cells */
+do_handle_wrong_number_of_cells:
+									/* Keep track of column indentations:
+									 * If we did that, then whenever a line contains the wrong
+									 * # of vertical characters, we could try to re-parse that
+									 * line such that we try to see if there are characters at
+									 * the expected positions, and if they are, then be lenient
+									 * and even allow something like this:
+									 * >> @@|-----------------|------------|-----|------------|
+									 * >> @@| Pipe characters | More Pipes | ... | Even more! |
+									 * >> @@|-----------------|------------|-----|------------|
+									 * >> @@|||||||||||||||||||||||||||||||||||||||||||||||||||
+									 * >> @@|-----------------|------------|-----|------------| */
+									if (column_index < column_count) {
+										/* If there are less cells, then we already know that something
+										 * went wrong, as the vertical-character-matching method can only
+										 * be used to account for cases where there are too many such
+										 * characters within some line. */
+										goto not_a_table2_or_done_table;
+									}
+									/* Reset cell offsets to go back to the start of the current line. */
+									for (column_index = 0; column_index < column_count; ++column_index) {
+										/* Backup the line-start-offset so we can re-wind should we need to
+										 * re-scan the line due to a vertical character overflow. */
+										columns[column_index].tc_body.up_length = columns[column_index].tc_linestart;
+									}
+									{
+										char const *prev_line_iter;
+										uint32_t prev_line_ch;
+										uint32_t prev_line_separator_ch;
+										column_index = 0;
+										iter           = current_table_line;
+										cell_start     = current_table_line;
+										prev_line_iter = previous_table_line;
+										prev_line_separator_ch = vertical_ch;
+										prev_line_ch = utf8_readchar((char const **)&prev_line_iter, end);
+										/* Handle the case where the previous line is actually a thick
+										 * separator or table top/bottom border, in which case we must
+										 * match against corner characters. */
+										if (prev_line_ch == corner_ch)
+											prev_line_separator_ch = corner_ch;
+										prev_line_iter = previous_table_line;
+										for (;;) {
+											bool prev_line_ch_was_escaped;
+											prev_line_ch_was_escaped = false;
+continue_table_extended_scan_after_escape:
+											ch_start     = iter;
+											ch           = utf8_readchar((char const **)&iter, end);
+											prev_line_ch = utf8_readchar((char const **)&prev_line_iter, end);
+											if (DeeUni_IsLF(ch) || (!ch && iter >= end))
+												break;
+											if (DeeUni_IsLF(prev_line_ch)) {
+												/* Make sure that the current only contains whitespace from
+												 * this point forth. If such is the case, then we've succeeded
+												 * in doing this manual match-up. */
+												for (;;) {
+													if (DeeUni_IsLF(ch))
+														break;
+													if (!DeeUni_IsSpace(ch))
+														goto not_a_table2_or_done_table;
+													ch_start = iter;
+													ch = utf8_readchar((char const **)&iter, end);
+												}
+												ASSERT(column_index == column_count);
+												break;
+											}
+											/* Check if the previous (correct) line had a separator character
+											 * at this offset. - if it did, the consider a vertical character
+											 * at the same position */
+											if (prev_line_ch != prev_line_separator_ch) {
+												if (prev_line_ch == '\\') {
+													prev_line_ch_was_escaped = true;
+													goto continue_table_extended_scan_after_escape;
+												}
+												continue;
+											}
+											if (prev_line_ch_was_escaped)
+												continue; /* Skip escaped seperator characters. */
+											if (ch != vertical_ch)
+												goto not_a_table2_or_done_table; /* Nope! No vertical char at this position */
+											if (column_index >= column_count)
+												goto not_a_table2_or_done_table; /* Too many cells (shouldn't happen?) */
+											cell_end = ch_start;
+											cell_end = rstrip_whitespace(cell_start, cell_end);
+											/* Append the current line to our cell */
+											if unlikely(reprint_but_unescape_backslash_pipe(&columns[column_index].tc_body,
+											                                                cell_start, cell_end))
+												goto err_table;
+											/* Append trailing new-line characters to this column */
+											if unlikely(unicode_printer_putascii(&columns[column_index].tc_body, '\n'))
+												goto err_table;
+											++column_index;
+											cell_start = iter;
+										}
+										/* Check if got the correct cell count this time */
+										if (column_index != column_count)
+											goto not_a_table2_or_done_table;
+										/* Deal with windows-style line-feeds */
+										if (ch == '\r') {
+											char const *temp = iter;
+											ch = utf8_readchar((char const **)&iter, end);
+											if (ch != '\n')
+												iter = temp;
+											else {
+												ch_start = temp;
+											}
+										}
+									}
+									/* At this point, ch/ch_start point at the line-feed character that followed
+									 * the end of the table line; iter points after that same character */
+
+									/* Success! we've managed to parse the line correctly!
+									 * However, in case the next line has the same problem, change the current
+									 * table line to remain the previous (correctly aligned) one, just in case
+									 * the actual next line contains more unmatched vertical characters. */
+									current_table_line = previous_table_line;
+									has_nonempty_cell  = true;
+									goto got_table_line;
 not_a_table2_or_done_table:
 									if (UNICODE_PRINTER_ISEMPTY(&table_output))
 										goto not_a_table2;
@@ -906,7 +1040,7 @@ not_a_table2_or_done_table:
 							}
 							/* Make sure there aren't more columns all-of-the-sudden */
 							if unlikely(column_index >= column_count)
-								goto not_a_table2_or_done_table;
+								goto do_handle_wrong_number_of_cells;
 							if (!has_nonempty_cell) {
 								/* Append empty lines to all cells already written as empty. */
 								size_t i;
@@ -940,7 +1074,7 @@ not_a_table2_or_done_table:
 							 *   '~'  Thick separator
 							 *   '&'  Thin separator
 							 *   0    Table end */
-							char row_seperator;
+							char row_separator;
 got_table_line:
 							/* At this point, ch/ch_start point at the line-feed character that followed
 							 * the end of the table line; iter points after that same character */
@@ -955,7 +1089,7 @@ got_table_line:
 							}
 							/* When an empty line appears in all columns, switch to a new line */
 							if (!has_nonempty_cell)
-								need_thin_seperator = true;
+								need_thin_separator = true;
 							/* ch/ch_start now point at the first non-whitespace character of the next line. */
 							if (ch == vertical_ch) {
 								char const *nextline_firstcell_start;
@@ -963,9 +1097,9 @@ got_table_line:
 								ch_start = iter;
 								ch = utf8_readchar((char const **)&iter, end);
 								if (corner_ch_is_known && corner_ch != vertical_ch) {
-extend_table_row_or_insert_thin_seperator:
-									if (need_thin_seperator) {
-										row_seperator = '&';
+extend_table_row_or_insert_thin_separator:
+									if (need_thin_separator) {
+										row_separator = '&';
 										goto end_table_row;
 									}
 									goto scan_table_line; /* This definitely is still part of the same row! */
@@ -999,7 +1133,7 @@ continue_row_at_nextline_firstcell_start:
 										ch_start = nextline_firstcell_start;
 										iter     = nextline_firstcell_start;
 										ch       = utf8_readchar((char const **)&iter, end);
-										goto extend_table_row_or_insert_thin_seperator;
+										goto extend_table_row_or_insert_thin_separator;
 									}
 									ch = utf8_readchar((char const **)&iter, end);
 								}
@@ -1009,7 +1143,7 @@ continue_row_at_nextline_firstcell_start:
 								if (!did_encounter_horizontal_character)
 									goto continue_row_at_nextline_firstcell_start;
 								/* This row contains a thick separator. */
-								row_seperator = '~';
+								row_separator = '~';
 								/* Scan until the end of this row. */
 								column_index = 1;
 								for (;;) {
@@ -1049,13 +1183,13 @@ continue_row_at_nextline_firstcell_start:
 								 *       after the thick row. Next, skip some optional whitespace and update
 								 *       ch/ch_start to point at the first character of the left-most cell.
 								 *       If the next line doesn't continue the table, set `iter' to `nextline_start'
-								 *       and `row_seperator' to 0 */
+								 *       and `row_separator' to 0 */
 								for (;;) {
 									if (DeeUni_IsLF(ch)) {
 thick_border_is_actually_table_end:
 										/* Table end */
 										iter = nextline_start;
-										row_seperator = 0;
+										row_separator = 0;
 										goto end_table_row;
 									}
 									if (DeeUni_IsSpace(ch)) {
@@ -1073,7 +1207,7 @@ thick_border_is_actually_table_end:
 							} else if (ch == corner_ch) {
 								/* Thick line! */
 do_handle_corner_ch_as_thick_row:
-								row_seperator = '~';
+								row_separator = '~';
 								/* Scan until the end of this line. */
 								/* NOTE: Must be able to handle this case:
 								 * >> +-----+-----+
@@ -1137,10 +1271,22 @@ do_handle_corner_ch_as_thick_row:
 								goto do_handle_corner_ch_as_thick_row;
 							} else {
 set_end_of_table:
-								row_seperator = 0; /* End-of-table */
+								row_separator = 0; /* End-of-table */
 								iter = nextline_start;
 							}
 end_table_row:
+							/* Special case: Don't all an all-empty row to be appended when the
+							 *               table doesn't have any contents, and all columns
+							 *               are currently empty. */
+							if (row_separator == 0 && !has_nonempty_cell &&
+							    UNICODE_PRINTER_ISEMPTY(&table_output)) {
+								for (column_index = 0; column_index < column_count; ++column_index) {
+									if (!UNICODE_PRINTER_ISEMPTY(&columns[column_index].tc_body))
+										goto table_has_nonempty_column;
+								}
+								goto not_a_table2;
+							}
+table_has_nonempty_column:
 							/* NOTE: ch/ch_start point at the first character of the left-most
 							 *       cell of the current row; iter points after that same character! */
 							/* Compile the current row */
@@ -1157,18 +1303,21 @@ end_table_row:
 								unicode_printer_fini(&columns[column_index].tc_body);
 								unicode_printer_init(&columns[column_index].tc_body);
 							}
-							if (row_seperator == 0)
+							if (row_separator == 0)
 								goto done_table;
 							/* Terminate the row with either a thin, or a thick separator. */
-							if unlikely(unicode_printer_putascii(&table_output, row_seperator))
+							if unlikely(unicode_printer_putascii(&table_output, row_separator))
 								goto err_table;
-							need_thin_seperator = false;
+							need_thin_separator = false;
 						}
 						/* NOTE: ch/ch_start point at the first character of the left-most
 						 *       cell of the current row; iter points after that same character! */
 						goto scan_table_line;
 					} /* for (;;) */
 done_table:
+					/* Make sure that the table isn't entirely empty! */
+					if (UNICODE_PRINTER_ISEMPTY(&table_output))
+						goto not_a_table2;
 					/* NOTE: At this point, `iter' points at the start of
 					 *       line immediately following the table. */
 #ifndef NDEBUG
