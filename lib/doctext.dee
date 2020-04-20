@@ -1245,6 +1245,7 @@ continue_after_poundStart:
 				local rows = [];
 				local thickRows = HashSet();
 				while (i < tableEnd) {
+continue_table_after_pipe:
 					local cellStart = i;
 					local cellEnd = findSameLevelNonEscaped(
 						docstring, "|~&", cellStart, tableEnd);
@@ -1272,12 +1273,14 @@ continue_after_poundStart:
 							cellStart, cellEnd)
 					));
 					i = cellEnd + 1;
-					local marker = docstring[cellEnd];
-					if (marker == "|")
-						continue;
+					if (cellEnd < tableEnd) {
+						local marker = docstring[cellEnd];
+						if (marker == "|")
+							goto continue_table_after_pipe;
+						if (marker == "~")
+							thickRows.insert(#rows); /* Thick row */
+					}
 					/* Complete the current row */
-					if (marker == "~")
-						thickRows.insert(#rows); /* Thick row */
 					if (rowLength is none) {
 						rowLength = #row;
 					} else if (rowLength != #row) {
@@ -1285,7 +1288,9 @@ continue_after_poundStart:
 						 * when row counts don't match. And while this
 						 * this shouldn't happen, handle this case by
 						 * forcing the correct row length. */
-						print "WARNING:", repr row;
+						print File.stderr:
+							("WARNING: Wrong # of rows (", rowLength, " != ", #row,
+							") in: ", repr row);
 						row.resize(rowLength, filler: ("", { "" }));
 					}
 					rows.append(row);
