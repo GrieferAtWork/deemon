@@ -1754,7 +1754,7 @@ PRIVATE struct type_method bytes_class_methods[] = {
 	      "@throw ValueError The given @hex_string contains non-hexadecimal and non-space characters\n"
 	      "@throw ValueError The given @hex_string contains an unbalanced hexadecimal digit\n"
 	      "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "
-	      "or $\"A\" and $\"F\", or optional space characters seperating pairs of such characters.\n"
+	      "or $\"A\" and $\"F\", or optional space characters separating pairs of such characters.\n"
 	      "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
 	      "the resulting Bytes object.\n"
 	      "Note that this function is also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "

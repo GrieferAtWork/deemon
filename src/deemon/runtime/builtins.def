@@ -90,7 +90,7 @@ BUILTIN_REUSE(WeakRef, &DeeWeakRef_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 
 /* Abstract base classes. */
 BUILTIN_REUSE(Sequence, &DeeSeq_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
-BUILTIN_REUSE(Mapping, &DeeMapping_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR) /* TODO: Rename to Map */
+BUILTIN_REUSE(Mapping, &DeeMapping_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 BUILTIN_REUSE(Set, &DeeSet_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 BUILTIN_REUSE(Iterator, &DeeIterator_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 BUILTIN_REUSE(Callable, &DeeCallable_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
@@ -99,11 +99,19 @@ BUILTIN_REUSE(Numeric, &DeeNumeric_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 /* XXX: This one should be removed when classes have been overhauled to
  *      include weakref-functionality as an option flag during class
  *      creation.
- * > How about this this: Extend the class feature byte to 16-bit, or have
- *   one of the first 8 bits act as an extension bit that enables the second
- *   byte. (we simply need more that 8 bits to fit everything...)
- *   Or better yet, make member table fields mandatory and free up 2 bits,
- *   one of which could be used for this very purpose!
+ * >> How about this this: Extend the class feature byte to 16-bit, or have
+ *    one of the first 8 bits act as an extension bit that enables the second
+ *    byte. (we simply need more that 8 bits to fit everything...)
+ *    Or better yet, make member table fields mandatory and free up 2 bits,
+ *    one of which could be used for this very purpose!
+ * XXX: Then what should the syntax look like for declaring a user-class as
+ *      being WeakRefAble? Should it look like this:
+ *      >> @[weakref]
+ *      >> class MyClass {
+ *      >>     this = default;
+ *      >> };
+ *      >> local a = MyClass();
+ *      >> local b = WeakRef(a);
  */
 BUILTIN_REUSE(WeakRefAble, &DeeWeakRefAble_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR)
 
@@ -178,9 +186,11 @@ BUILTIN_DOC(boundattr, &builtin_boundattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "@return Indicative of attribute @attr of @ob currently being bound\n"
             "If the attribute doesn't exist, return ?f, or throw an :AttributeError, "
             "depending on the given @allow_missing\n"
-            ">import boundattr from deemon;\n"
-            ">print boundattr(foo,\"bar\", true);\n"
-            ">print foo.bar is bound; /* Functionally equivalent */\n")
+            "${"
+            "import boundattr from deemon;\n"
+            "print boundattr(foo,\"bar\", true);\n"
+            "print foo.bar is bound; /* Functionally equivalent */"
+            "}")
 
 /* Check if a given object item is bound.
  * >> bounditem(ob: object, index: int | object, allow_missing: bool = true): bool; */
@@ -192,9 +202,10 @@ BUILTIN_DOC(bounditem, &builtin_bounditem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "@return Indicative of item @index or @key of @ob currently being bound\n"
             "If the item doesn't exist, return ?f, or throw an :IndexError or :KeyError, "
             "depending on the given @allow_missing\n"
-            ">import bounditem from deemon;\n"
-            ">print bounditem(foo,42, true);\n"
-            ">print foo[42] is bound; /* Functionally equivalent */\n")
+            "${"
+            "import bounditem from deemon;\n"
+            "print bounditem(foo,42, true);\n"
+            "print foo[42] is bound; /* Functionally equivalent */}")
 
 /* Load a module, given its name.
  * >> import(module_name: string, base?: Module) -> string;
@@ -204,7 +215,7 @@ BUILTIN_DOC_REUSE(import, &builtin_import, MODSYM_FNORMAL,
                   "(module_name:?Dstring,base?:?DModule)->?DModule\n"
                   "@throw ValueError The given @module_name is invalid\n"
                   "@throw FileNotFound The named @module_name could not be found\n"
-                  "@return The :module associated with the given @module_name")
+                  "@return The :Module associated with the given @module_name")
 
 
 /* TODO: Add more options to this function */
@@ -214,13 +225,13 @@ BUILTIN_DOC_REUSE(exec, &builtin_exec, MODSYM_FNORMAL,
                   "This type of evaluation is much more restrictive than evaluation of "
                   "normal user-code, as rather than being parsed, optimized, assembled "
                   "and linked into a full byte-code object, execution happens with the "
-                  "help of a seperate JIT compiler\n"
+                  "help of a separate JIT compiler\n"
                   "Note however that this compiler will never support preprocessor features "
                   "such as directives, macros or escaped line-feeds, as well as other "
                   "language-level features such as goto-labels or true support for type "
                   "annotations\n"
-                  "The given @expr is either evaluated as an expression or statement, i.e. both "
-                  "$\"10 + 20\" and $\"print 42;\" are accepted")
+                  "The given @expr is either evaluated as an expression or statement, "
+                  "i.e. both $\"10 + 20\" and $\"print 42;\" are accepted")
 
 
 /* Builtin runtime operator helpers. */

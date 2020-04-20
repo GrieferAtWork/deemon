@@ -886,11 +886,11 @@ do_handle_end_of_line_in_table_line:
 									/* Wrong # of cells */
 do_handle_wrong_number_of_cells:
 									/* Keep track of column indentations:
-									 * If we did that, then whenever a line contains the wrong
-									 * # of vertical characters, we could try to re-parse that
-									 * line such that we try to see if there are characters at
-									 * the expected positions, and if they are, then be lenient
-									 * and even allow something like this:
+									 * By doing this, whenever a line contains the wrong # of
+									 * vertical characters, we can try to re-parse that line
+									 * such that we try to see if there are vertical characters
+									 * at the expected positions, and if they are, then we can
+									 * be lenient and even allow something like this:
 									 * >> @@|-----------------|------------|-----|------------|
 									 * >> @@| Pipe characters | More Pipes | ... | Even more! |
 									 * >> @@|-----------------|------------|-----|------------|
@@ -960,7 +960,7 @@ continue_table_extended_scan_after_escape:
 												continue;
 											}
 											if (prev_line_ch_was_escaped)
-												continue; /* Skip escaped seperator characters. */
+												continue; /* Skip escaped separator characters. */
 											if (ch != vertical_ch)
 												goto not_a_table2_or_done_table; /* Nope! No vertical char at this position */
 											if (column_index >= column_count)

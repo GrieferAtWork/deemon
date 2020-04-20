@@ -350,7 +350,7 @@ print barfoo;
  * >> #define END   }
  * Meaning that every BEGIN-END block has its own options-copy derived
  * from options of the surrounding scope, while still being entirely
- * seperate.
+ * separate.
  */
 
 
