@@ -100,15 +100,35 @@ no:
 PRIVATE NONNULL((1)) void DCALL
 strip_trailing_whitespace_until(struct unicode_printer *__restrict printer,
                                 size_t stop_at) {
-	size_t len = UNICODE_PRINTER_LENGTH(printer);
-	while (len > stop_at) {
+	size_t len = printer->up_length;
+	for (;;) {
 		uint32_t ch;
-		--len;
-		ch = UNICODE_PRINTER_GETCHAR(printer, len);
+		if (len <= stop_at)
+			break;
+		ch = UNICODE_PRINTER_GETCHAR(printer, len - 1);
+		if (DeeUni_IsLF(ch))
+			break;
 		if (!DeeUni_IsSpace(ch))
 			break;
-		printer->up_length = len;
+		--len;
 	}
+	printer->up_length = len;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+strip_trailing_whitespace(struct unicode_printer *__restrict printer,
+                          size_t stop_at) {
+	size_t len = printer->up_length;
+	for (;;) {
+		uint32_t ch;
+		if (len <= stop_at)
+			break;
+		ch = UNICODE_PRINTER_GETCHAR(printer, len - 1);
+		if (!DeeUni_IsSpace(ch))
+			break;
+		--len;
+	}
+	printer->up_length = len;
 }
 
 PRIVATE NONNULL((1, 2)) bool DCALL
@@ -166,6 +186,45 @@ find_nonescaped_match(/*utf-8*/ char const *text,
 		}
 	}
 	return NULL;
+}
+
+
+/* Print the given string `text ... end' to `printer', but unescape
+ * all \|-sequences into |-characters. - This function is used by the
+ * line-printer functions used by tables. */
+PRIVATE NONNULL((1, 2, 3)) int DCALL
+reprint_but_unescape_backslash_pipe(struct unicode_printer *__restrict printer,
+                                    /*utf-8*/ char const *text,
+                                    /*utf-8*/ char const *end) {
+	char const *flush_start;
+	flush_start = text;
+	for (;;) {
+		uint32_t ch;
+		char const *ch_start, *escape_start;
+		ch_start = text;
+		ch = utf8_readchar((char const **)&text, end);
+		if (!ch && (text >= end))
+			break;
+		if (ch != '\\')
+			continue;
+		escape_start = text;
+		ch = utf8_readchar((char const **)&text, end);
+		if (!ch && (text >= end))
+			break;
+		if (ch == '|' || ch == '\\') {
+			/* Escape */
+			if unlikely(unicode_printer_print(printer, flush_start,
+			                                  (size_t)(ch_start - flush_start)) < 0)
+				goto err;
+			flush_start = escape_start;
+		}
+	}
+	if unlikely(unicode_printer_print(printer, flush_start,
+	                                  (size_t)(end - flush_start)) < 0)
+		goto err;
+	return 0;
+err:
+	return -1;
 }
 
 
@@ -343,6 +402,57 @@ PRIVATE NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
            /*utf-8*/ char const *end,
            struct unicode_printer *__restrict result_printer,
+           /*nullable*/ struct unicode_printer *source_printer);
+
+/* Compile the string from `source_printer' and write the result to `result_printer'
+ * NOTE: This function is allowed to modify `source_printer' */
+PRIVATE NONNULL((1, 2)) int DCALL
+do_compile_printer_to_printer(struct unicode_printer *__restrict result_printer,
+                              struct unicode_printer *__restrict source_printer) {
+	if likely((source_printer->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE) {
+		/* Directly compile the original documentation text. */
+		return do_compile((/*utf-8*/ char const *)source_printer->up_buffer,
+		                  (/*utf-8*/ char const *)source_printer->up_buffer + source_printer->up_length,
+		                  result_printer, source_printer);
+	} else {
+		/* Re-package as a 1-byte, utf-8 string. */
+		DREF DeeStringObject *rawtext;
+		/*utf-8*/ char const *rawutf8;
+		rawtext = (DREF DeeStringObject *)unicode_printer_pack(source_printer);
+		unicode_printer_init(source_printer);
+		if unlikely(!rawtext)
+			goto err;
+		/* Convert to utf-8 */
+		rawutf8 = DeeString_AsUtf8((DeeObject *)rawtext);
+		if unlikely(!rawutf8) {
+err_rawtext:
+			Dee_Decref_likely(rawtext);
+			goto err;
+		}
+		/* Compile the utf-8 variant of the documentation string. */
+		if unlikely(do_compile(rawutf8, rawutf8 + WSTR_LENGTH(rawutf8),
+		                       result_printer, NULL))
+			goto err_rawtext;
+		Dee_Decref_likely(rawtext);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+#define table_iscorner(ch) ((ch) == '+')
+#define table_ishori(ch)   ((ch) == '-' || (ch) == '=')
+#define table_isvert(ch)   ((ch) == '|')
+#define table_casecorner case '+'
+#define table_casehori   case '-': case '='
+#define table_casevert   case '|'
+
+
+
+PRIVATE NONNULL((1, 2, 3)) int DCALL
+do_compile(/*utf-8*/ char const *text,
+           /*utf-8*/ char const *end,
+           struct unicode_printer *__restrict result_printer,
            /*nullable*/ struct unicode_printer *source_printer) {
 	uint32_t ch;
 	char const *ch_start;
@@ -378,16 +488,7 @@ do_compile(/*utf-8*/ char const *text,
 #define PRINTASCII(ptr, len) DO(unicode_printer_printascii(result_printer, ptr, len))
 
 	/* Strip trailing whitespace. */
-	for (;;) {
-		char const *old_end;
-		uint32_t ch;
-		old_end = end;
-		ch = utf8_readchar_rev((char const **)&end, text);
-		if (DeeUni_IsSpace(ch) || DeeUni_IsLF(ch))
-			continue;
-		end = old_end;
-		break;
-	}
+	end = rstrip_whitespace(text, end);
 	iter                        = text;
 	current_line_start          = text;
 	current_line_leading_spaces = 0;
@@ -524,32 +625,33 @@ check_ch_after_lf:
 					 * Then we mustn't insert a line-feed here, but join the two lines with a space. */
 					char const *prev_line_start;
 					char const *prev_line_end, *temp;
+					uint32_t temp_ch;
 					size_t count = next_line_leading_spaces - current_line_leading_spaces;
 					prev_line_start = current_line_start_after_whitespace;
 					prev_line_end   = current_line_start_after_whitespace;
 					do {
-						ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
-						if (!ch && (prev_line_end <= prev_line_start))
+						temp_ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
+						if (!temp_ch && (prev_line_end <= prev_line_start))
 							goto do_join_with_linefeed;
-						if (DeeUni_IsLF(ch))
+						if (DeeUni_IsLF(temp_ch))
 							goto do_join_with_linefeed;
 					} while (--count);
 					/* Check if `prev_line_end' points to a non-whitespace character. */
 					temp = prev_line_end;
-					ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
-					if (DeeUni_IsSpace(ch))
+					temp_ch = utf8_readchar((char const **)&prev_line_end, next_line_start);
+					if (DeeUni_IsSpace(temp_ch))
 						goto do_join_with_linefeed;
 					prev_line_end = temp;
 					/* Skip whitespace found prior to `prev_line_end' */
 					prev_line_end = rstrip_whitespace(prev_line_start, prev_line_end);
 					/* Check if there's a :-character before `prev_line_end' */
-					ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
-					if (ch != ':')
+					temp_ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
+					if (temp_ch != ':')
 						goto do_join_with_linefeed;
 					/* Check if the :-character is preceded by `.', <space> or <issymcont>
 					 * If it is, then we must join the two lines via space */
-					ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
-					if (DeeUni_IsSymCont(ch) || DeeUni_IsSpace(ch) || ch == '.')
+					temp_ch = utf8_readchar_rev((char const **)&prev_line_end, prev_line_start);
+					if (DeeUni_IsSymCont(temp_ch) || DeeUni_IsSpace(temp_ch) || temp_ch == '.')
 						goto do_join_with_space;
 do_join_with_linefeed:
 					PUTASCII('\n'); /* Force a line-feed here. */
@@ -573,17 +675,577 @@ do_switch_ch_at_start_of_line:
 				/* TODO: Header */
 				break;
 
-				/* TODO: When starting a List or Table, `result_printer' must be modified
-				 *       such that all trailing white-space characters are first stripped,
-				 *       before an additional line-feed is inserted (if no line-feed was
-				 *       present already). */
+			table_casevert:
+			table_casecorner: {
+				/* Table */
+				uint32_t corner_ch;
+				uint32_t horizontal_ch;
+				uint32_t vertical_ch;
+				size_t column_count;
+				char const *table_top_left; /* Pointer to the top-left corner of the table */
+				bool corner_ch_is_known;
+				/* Tables must appear at the start of lines. */
+				ASSERT(ch_start == current_line_start_after_whitespace);
+				corner_ch      = ch;
+				vertical_ch    = 0;
+				horizontal_ch  = 0;
+				table_top_left = ch_start;
+				/* Seek ahead to the start of the first cell. */
+				for (;;) {
+					ch_start = iter;
+					ch       = utf8_readchar((char const **)&iter, end);
+					if (!ch && (iter >= end))
+						goto not_a_table;
+					if (DeeUni_IsLF(ch))
+						goto not_a_table;
+					if (DeeUni_IsSpace(ch))
+						continue;
+					if (table_ishori(ch)) {
+						/* With a top-border present, the corner
+						 * character used is known to be valid. */
+						corner_ch_is_known = true;
+						horizontal_ch = (char)(unsigned char)ch;
+						/* A top-border is present.
+						 * Ensure that the current line contains only `corner_ch',
+						 * `-', `=' and space characters, as well as count the #
+						 * of remaining `corner_ch'-characters as `column_count' */
+						column_count = 0;
+						for (;;) {
+							ch = utf8_readchar((char const **)&iter, end);
+							if (DeeUni_IsLF(ch)) {
+								/* Deal with windows-style line-feeds */
+								if (ch == '\r') {
+									char const *temp = iter;
+									ch = utf8_readchar((char const **)&iter, end);
+									if (ch != '\n')
+										iter = temp;
+								}
+								break; /* End of the top-border. */
+							}
+							if (DeeUni_IsSpace(ch) || ch == horizontal_ch)
+								continue;
+							if (ch != corner_ch)
+								goto not_a_table;
+							++column_count;
+						}
+						if (!column_count)
+							goto not_a_table; /* Need at least 1 column! */
+						/* A top border was present, and we did parse it.
+						 * Now we must move on to the start of the first cell. */
+						for (;;) {
+							ch = utf8_readchar((char const **)&iter, end);
+							if (DeeUni_IsLF(ch) || (!ch && iter >= end))
+								goto not_a_table;
+							if (DeeUni_IsSpace(ch))
+								continue;
+							if (table_isvert(ch))
+								break;
+							goto not_a_table;
+						}
+						vertical_ch = ch;
+						/* Skip additional whitespace at the start of the first cell. */
+						for (;;) {
+							ch_start = iter;
+							ch = utf8_readchar((char const **)&iter, end);
+							if (DeeUni_IsLF(ch) || (!ch && iter >= end))
+								goto not_a_table;
+							if (!DeeUni_IsSpace(ch))
+								break;
+						}
+						break;
+					} else {
+						uint32_t scan_ch;
+						char const *scan_iter;
+						/* No top-border present. - This must (presumably) be start of the top-left! */
+						if (table_iscorner(corner_ch))
+							goto not_a_table; /* +-corners require the top-border be present */
+						/* Without a top-border, and | as (premature) corner character, the actual
+						 * corner character of the table may still change to `+' once a thick line
+						 * is encountered. */
+						corner_ch_is_known = false;
+						column_count = 0;
+						/* Figure out the correct # of cells by counting the number
+						 * of non-escaped |-characters on the current line. */
+						scan_ch   = ch;
+						scan_iter = iter;
+						for (;;) {
+							if (DeeUni_IsLF(scan_ch) || (!scan_ch && scan_iter >= end))
+								break;
+							if (vertical_ch) {
+								if (scan_ch == vertical_ch)
+									++column_count;
+							} else if (table_isvert(scan_ch)) {
+								vertical_ch = scan_ch;
+								++column_count;
+							}
+							if (scan_ch == '\\') {
+								scan_ch = utf8_readchar((char const **)&scan_iter, end);
+								if (DeeUni_IsLF(scan_ch) || (!scan_ch && scan_iter >= end))
+									break;
+							}
+							/* TODO: Try to recognize special control blocks and skip over them:
+							 *       A |-character inside of @(foo | bar) should automatically
+							 *       be escaped, and similar should happen for `foo | bar' (i.e.
+							 *       inlined code) */
+							scan_ch = utf8_readchar((char const **)&scan_iter, end);
+						}
+						if (!column_count)
+							goto not_a_table;
+						/*if (ch == vertical_ch)
+							break;*/ /* No top-border is present, and the top-left cell is empty. */
+						break;
+					}
+				}
+				/* NOTE: ch/ch_start point at the first non-whitespace character of the top-left cell;
+				 *       iter points after that same character! */
+				ASSERT(vertical_ch);
+				iter = ch_start;
+				for (;;) {
+					uint32_t prev_ch;
+					char const *prev_iter = iter;
+					/* Rewind whitespace characters. */
+					prev_ch = utf8_readchar_rev((char const **)&iter, table_top_left);
+					if (DeeUni_IsSpace(prev_ch))
+						continue;
+					iter     = prev_iter;
+					ch_start = prev_iter;
+					ch       = utf8_readchar((char const **)&iter, table_top_left);
+					break;
+				}
+				/* NOTE: ch/ch_start point at the first character of the top-left cell;
+				 *       iter points after that same character! */
+				{
+					struct table_column {
+						struct unicode_printer tc_body; /* The inner body of the cell. */
+					};
+					/* The buffer for the compiled contents of the table. */
+					struct unicode_printer table_output = UNICODE_PRINTER_INIT;
+					struct table_column *columns; /* [1..column_count][owned] Vector of column buffers. */
+					size_t column_index;
+					bool need_thin_seperator = false;
+					char const *nextline_start = NULL;
 
-			case '|':
+					/* Allocate & initialize buffers for all of the columns. */
+					columns = (struct table_column *)Dee_Malloc(column_count *
+					                                            sizeof(struct table_column));
+					if unlikely(!columns)
+						goto err_table_output;
+					/* Initialize printers for the cells. */
+					for (column_index = 0; column_index < column_count; ++column_index)
+						unicode_printer_init(&columns[column_index].tc_body);
+					for (;;) {
+						bool has_nonempty_cell;
+scan_table_line:
+						/* NOTE: ch/ch_start point at the first character of the left-most
+						 *       cell of the current row; iter points after that same character! */
+						column_index = 0;
+						has_nonempty_cell = false;
+						for (;;) {
+							bool has_escaped_vert;
+							char const *cell_start;
+							char const *cell_end;
+							cell_start = ch_start;
+							has_escaped_vert = false;
+							/* Parse cell lines */
+							while (ch != vertical_ch) {
+								if (DeeUni_IsLF(ch) || (!ch && (iter >= end))) {
+do_handle_end_of_line_in_table_line:
+									cell_start = lstrip_whitespace(cell_start, iter);
+									if (cell_start < iter)
+										goto not_a_table2_or_done_table; /* Garbage after the table? */
+									/* End-of-line */
+									if (column_index == column_count) {
+										/* Deal with windows-style line-feeds */
+										if (ch == '\r') {
+											char const *temp = iter;
+											ch = utf8_readchar((char const **)&iter, end);
+											if (ch != '\n') {
+												iter = temp;
+												/*ch = '\r';*/
+											}
+										}
+										goto got_table_line;
+									}
+									/* Wrong # of cells */
+not_a_table2_or_done_table:
+									if (UNICODE_PRINTER_ISEMPTY(&table_output))
+										goto not_a_table2;
+									if (!nextline_start)
+										goto not_a_table2;
+									/* Finalize partially written cells. */
+									for (column_index = 0; column_index < column_count; ++column_index)
+										unicode_printer_fini(&columns[column_index].tc_body);
+									iter = nextline_start;
+									goto done_table_nochk_columns;
+								}
+								/* Ignore |-characters that are pre-fixed by \-characters */
+								if (ch == '\\') {
+									ch_start = iter;
+									ch = utf8_readchar((char const **)&iter, end);
+									if (DeeUni_IsLF(ch) || (!ch && (iter >= end)))
+										goto do_handle_end_of_line_in_table_line;
+									if (ch == vertical_ch)
+										has_escaped_vert = true;
+								}
+								/* TODO: Try to recognize special control blocks and skip over them:
+								 *       A |-character inside of @(foo | bar) should automatically
+								 *       be escaped, and similar should happen for `foo | bar' (i.e.
+								 *       inlined code) */
+								ch_start = iter;
+								ch = utf8_readchar((char const **)&iter, end);
+							}
+							/* Figure out where the contents of the current cell end. */
+							cell_end = ch_start;
+							cell_end = rstrip_whitespace(cell_start, cell_end);
+							if (cell_start >= cell_end) {
+								/* Empty cell. */
+								++column_index;
+								ch_start = iter;
+								ch = utf8_readchar((char const **)&iter, end);
+								continue;
+							}
+							/* Make sure there aren't more columns all-of-the-sudden */
+							if unlikely(column_index >= column_count)
+								goto not_a_table2_or_done_table;
+							if (!has_nonempty_cell) {
+								/* Append empty lines to all cells already written as empty. */
+								size_t i;
+								for (i = 0; i < column_index; ++i) {
+									if unlikely(unicode_printer_putascii(&columns[i].tc_body, '\n'))
+										goto err_table;
+								}
+								has_nonempty_cell = true;
+							}
+							/* Append the current line to our cell */
+							if (has_escaped_vert) {
+								/* Unescape \|-sequences to single |-characters */
+								if unlikely(reprint_but_unescape_backslash_pipe(&columns[column_index].tc_body,
+								                                                cell_start, cell_end))
+									goto err_table;
+							} else {
+								if unlikely(unicode_printer_print(&columns[column_index].tc_body,
+								                                  cell_start, (size_t)(cell_end - cell_start)) < 0)
+									goto err_table;
+							}
+							/* Append trailing new-line characters to this column */
+							if unlikely(unicode_printer_putascii(&columns[column_index].tc_body, '\n'))
+								goto err_table;
+							/* Move on to the next cell */
+							++column_index;
+							ch_start = iter;
+							ch = utf8_readchar((char const **)&iter, end);
+						} /* for (;;) */
+						{
+							/* Table row separator:
+							 *   '~'  Thick separator
+							 *   '&'  Thin separator
+							 *   0    Table end */
+							char row_seperator;
+got_table_line:
+							/* At this point, ch/ch_start point at the line-feed character that followed
+							 * the end of the table line; iter points after that same character */
+							nextline_start = iter;
+							/* Skip leading spaces at the start of the next line. */
+							for (;;) {
+								ch_start = iter;
+								ch = utf8_readchar((char const **)&iter, end);
+								if (DeeUni_IsSpace(ch) && !DeeUni_IsLF(ch))
+									continue;
+								break;
+							}
+							/* When an empty line appears in all columns, switch to a new line */
+							if (!has_nonempty_cell)
+								need_thin_seperator = true;
+							/* ch/ch_start now point at the first non-whitespace character of the next line. */
+							if (ch == vertical_ch) {
+								char const *nextline_firstcell_start;
+								bool did_encounter_horizontal_character;
+								ch_start = iter;
+								ch = utf8_readchar((char const **)&iter, end);
+								if (corner_ch_is_known && corner_ch != vertical_ch) {
+extend_table_row_or_insert_thin_seperator:
+									if (need_thin_seperator) {
+										row_seperator = '&';
+										goto end_table_row;
+									}
+									goto scan_table_line; /* This definitely is still part of the same row! */
+								}
+								/* iter now pointer at the first character after the |-character at the start
+								 * of a row that can either be a thick separator, or a continuation of the
+								 * current row.
+								 * We can differentiate the two by checking if the first cell contains only
+								 * whitespace, and at least 1 instance of `horizontal_ch'. If this is the case,
+								 * then it's a thick separator. - Otherwise, it is a normal row that might possibly
+								 * be entirely empty (if the later is the case, then the next time `got_table_line'
+								 * is jumped to, `has_nonempty_cell' will be `false', and the line will be checked
+								 * accordingly) */
+								nextline_firstcell_start = ch_start;
+								did_encounter_horizontal_character = false;
+								for (;;) {
+									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
+										goto set_end_of_table;
+									if (DeeUni_IsSpace(ch))
+										/* continue */;
+									else if (ch == vertical_ch)
+										break; /* end-of-cell */
+									else if (ch == horizontal_ch)
+										did_encounter_horizontal_character = true;
+									else if (table_ishori(ch) && !horizontal_ch) {
+										horizontal_ch                      = ch;
+										did_encounter_horizontal_character = true;
+									} else {
+										/* Non-empty cell. */
+continue_row_at_nextline_firstcell_start:
+										ch_start = nextline_firstcell_start;
+										iter     = nextline_firstcell_start;
+										ch       = utf8_readchar((char const **)&iter, end);
+										goto extend_table_row_or_insert_thin_seperator;
+									}
+									ch = utf8_readchar((char const **)&iter, end);
+								}
+								/* If we didn't encounter any horizontal characters, then the
+								 * cell is entirely empty, which we must handle as a row that
+								 * may potentially contain more text in later cells. */
+								if (!did_encounter_horizontal_character)
+									goto continue_row_at_nextline_firstcell_start;
+								/* This row contains a thick separator. */
+								row_seperator = '~';
+								/* Scan until the end of this row. */
+								column_index = 1;
+								for (;;) {
+									ch = utf8_readchar((char const **)&iter, end);
+									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
+										break;
+									if (DeeUni_IsSpace(ch))
+										continue;
+									if (ch == vertical_ch) {
+										if (column_index >= column_count)
+											goto set_end_of_table;
+										++column_index;
+										continue;
+									}
+									if (ch == horizontal_ch)
+										continue;
+									if (table_ishori(ch) && !horizontal_ch) {
+										horizontal_ch = ch;
+										continue;
+									}
+									/* Some other character (unexpected / not allowed) */
+									goto set_end_of_table;
+								}
+								if (column_index != column_count)
+									goto set_end_of_table;
+								/* Deal with windows-line-feeds */
+								if (ch == '\r') {
+									char const *temp = iter;
+									ch = utf8_readchar((char const **)&iter, end);
+									if (ch != '\n')
+										iter = temp;
+								}
+								ch_start = iter;
+								ch       = utf8_readchar((char const **)&iter, end);
+								nextline_start = iter;
+								/* NOTE: ch/ch_start point at the first character of the line that followed
+								 *       after the thick row. Next, skip some optional whitespace and update
+								 *       ch/ch_start to point at the first character of the left-most cell.
+								 *       If the next line doesn't continue the table, set `iter' to `nextline_start'
+								 *       and `row_seperator' to 0 */
+								for (;;) {
+									if (DeeUni_IsLF(ch)) {
+thick_border_is_actually_table_end:
+										/* Table end */
+										iter = nextline_start;
+										row_seperator = 0;
+										goto end_table_row;
+									}
+									if (DeeUni_IsSpace(ch)) {
+										ch_start = iter;
+										ch = utf8_readchar((char const **)&iter, end);
+										continue;
+									}
+									if (ch != vertical_ch)
+										goto thick_border_is_actually_table_end;
+									/* First character after the initial <vertical_ch> */
+									ch_start = iter;
+									ch = utf8_readchar((char const **)&iter, end);
+									break;
+								}
+							} else if (ch == corner_ch) {
+								/* Thick line! */
+do_handle_corner_ch_as_thick_row:
+								row_seperator = '~';
+								/* Scan until the end of this line. */
+								/* NOTE: Must be able to handle this case:
+								 * >> +-----+-----+
+								 * >> | Foo | Bar |
+								 * >> | Foo | Bar |
+								 * >> + Foo
+								 * >> + Bar
+								 * This is a table without a footer, that is immediately
+								 * followed by a +-style list. This is a valid construct! */
+								/* ch/ch_start now point at the first non-whitespace character of the next line. */
+								column_index = 0;
+								for (;;) {
+									ch = utf8_readchar((char const **)&iter, end);
+									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
+										break;
+									if (DeeUni_IsSpace(ch))
+										continue;
+									if (ch == horizontal_ch)
+										continue;
+									if (!horizontal_ch && (ch == '=' || ch == '-')) {
+										horizontal_ch = ch;
+										continue;
+									}
+									if (ch == corner_ch) {
+										if (column_index >= column_count)
+											goto set_end_of_table;
+										++column_index;
+										continue;
+									}
+									/* Anything else? -> Mark the end of the table. */
+									goto set_end_of_table;
+								}
+								if (column_index != column_count)
+									goto set_end_of_table;
+								/* All right! the thick row was parsed. - Now check if the table
+								 * continues, or if the thick row was actually the table's footer */
+								nextline_start = iter;
+								if (ch == '\r') {
+									ch = utf8_readchar((char const **)&iter, end);
+									if (ch != '\n')
+										iter = nextline_start;
+								}
+								/* Skip leading whitespace. */
+								for (;;) {
+									ch = utf8_readchar((char const **)&iter, end);
+									if (DeeUni_IsLF(ch) || (!ch && iter >= end))
+										goto set_end_of_table;
+									if (DeeUni_IsSpace(ch))
+										continue;
+									if (ch == vertical_ch)
+										break; /* Next row start here! */
+									/* Something else? -> End the table */
+									goto set_end_of_table;
+								}
+								/* Read the first character for the first cell after the thick separator. */
+								ch_start = iter;
+								ch = utf8_readchar((char const **)&iter, end);
+							} else if (table_iscorner(ch) && !corner_ch_is_known) {
+								corner_ch_is_known = true;
+								corner_ch          = ch;
+								goto do_handle_corner_ch_as_thick_row;
+							} else {
+set_end_of_table:
+								row_seperator = 0; /* End-of-table */
+								iter = nextline_start;
+							}
+end_table_row:
+							/* NOTE: ch/ch_start point at the first character of the left-most
+							 *       cell of the current row; iter points after that same character! */
+							/* Compile the current row */
+							for (column_index = 0; column_index < column_count; ++column_index) {
+								if (column_index != 0) {
+									/* Write the cell separator. */
+									if unlikely(unicode_printer_putascii(&table_output, '|'))
+										goto err_table;
+								}
+								/* compile and write output to `table_output' */
+								if unlikely(do_compile_printer_to_printer(&table_output,
+								                                          &columns[column_index].tc_body))
+									goto err_table;
+								unicode_printer_fini(&columns[column_index].tc_body);
+								unicode_printer_init(&columns[column_index].tc_body);
+							}
+							if (row_seperator == 0)
+								goto done_table;
+							/* Terminate the row with either a thin, or a thick separator. */
+							if unlikely(unicode_printer_putascii(&table_output, row_seperator))
+								goto err_table;
+							need_thin_seperator = false;
+						}
+						/* NOTE: ch/ch_start point at the first character of the left-most
+						 *       cell of the current row; iter points after that same character! */
+						goto scan_table_line;
+					} /* for (;;) */
+done_table:
+					/* NOTE: At this point, `iter' points at the start of
+					 *       line immediately following the table. */
+#ifndef NDEBUG
+					/* Make sure that all column buffers are empty when the table ends. */
+					for (column_index = 0; column_index < column_count; ++column_index)
+						ASSERT(UNICODE_PRINTER_ISEMPTY(&columns[column_index].tc_body));
+#endif /* !NDEBUG */
+done_table_nochk_columns:
+					Dee_Free(columns);
+					/* Flush to the start of the table. */
+					if unlikely(unicode_printer_print(result_printer, flush_start,
+					                                  (size_t)(table_top_left - flush_start)) < 0)
+						goto err_table_output;
+					/* Strip trailing whitespace from the result printer. */
+					strip_trailing_whitespace_until(result_printer,
+					                                result_printer_origlen);
+					/* Insert a linefeed before the table (if not there already) */
+					if (result_printer->up_length > result_printer_origlen &&
+					    !DeeUni_IsLF(UNICODE_PRINTER_GETCHAR(result_printer, result_printer->up_length - 1))) {
+						if unlikely(unicode_printer_putascii(result_printer, '\n'))
+							goto err_table_output;
+					}
+					if (current_line_start_after_whitespace > current_line_start) {
+						/* Insert leading whitespace found prior to the table.
+						 * This is the indentation of the table itself.
+						 * This may be de-dented once again in the final output. */
+						if unlikely(unicode_printer_print(result_printer, current_line_start,
+						                                  (size_t)(current_line_start_after_whitespace - current_line_start)) < 0)
+							goto err_table_output;
+					}
+					/* Write the table header */
+					if unlikely(unicode_printer_printascii(result_printer, "#T{", 3) < 0)
+						goto err_table_output;
+					/* Print the compiled table contents into the result printer. */
+					if unlikely(unicode_printer_printinto(&table_output,
+					                                      &unicode_printer_print,
+					                                      result_printer) < 0)
+						goto err_table_output;
+					/* Write the table footer */
+					if unlikely(unicode_printer_printascii(result_printer, "}\n", 2) < 0)
+						goto err_table_output;
+					/* Destroy the table output buffer. */
+					unicode_printer_fini(&table_output);
+					/* Read the first character that is no longer apart of the table. */
+					flush_start = iter;
+					ch_start    = iter;
+					ch = utf8_readchar((char const **)&iter, end);
+					goto scan_newline_with_first_ch_and_explicit_linefeed;
+err_table:
+					for (column_index = 0; column_index < column_count; ++column_index)
+						unicode_printer_fini(&columns[column_index].tc_body);
+					Dee_Free(columns);
+err_table_output:
+					unicode_printer_fini(&table_output);
+					goto err;
+not_a_table2:
+					unicode_printer_fini(&table_output);
+					for (column_index = 0; column_index < column_count; ++column_index)
+						unicode_printer_fini(&columns[column_index].tc_body);
+					Dee_Free(columns);
+				}
+not_a_table:
+				ch_start = table_top_left;
+				iter     = table_top_left;
+				ch = utf8_readchar((char const **)&iter, end);
+#if table_iscorner('+') || table_isvert('+')
+				if (ch == '+')
+					goto check_for_list;
+#endif /* table_iscorner('+') || table_isvert('+') */
+			}	break;
+
+#if !table_iscorner('+') && table_isvert('+')
 			case '+':
-				; /* TODO: Table */
-				ATTR_FALLTHROUGH
+#endif /* !table_iscorner('+') && !table_isvert('+') */
 			case '-':
 			case '*':
+check_for_list:
 				/* TODO: Unordered list */
 				/* NOTE: Be careful, as `*' can also be used for italics! */
 				break;
@@ -624,7 +1286,8 @@ do_switch_ch_at_start_of_line:
 					orig_ch_start = ch_start;
 					trailing_space_character = utf8_readchar_rev((char const **)&ch_start, flush_start);
 					if (trailing_space_character == 0 && (ch_start <= flush_start)) {
-						strip_trailing_whitespace_until(result_printer, result_printer_origlen);
+						strip_trailing_whitespace_until(result_printer,
+						                                result_printer_origlen);
 						break;
 					}
 					if (DeeUni_IsSpace(trailing_space_character))
@@ -692,17 +1355,70 @@ set_iter_as_start_of_line_after_explicit_linefeed:
 				ch = utf8_readchar((char const **)&iter, end);
 				goto scan_newline_with_first_ch_and_explicit_linefeed;
 
+			/* ESCAPED INPUT:  \ _ @ ` [ ] ( ) - + | = ~ * # : */
+			/* ESCAPED OUTPUT: # $ % & ~ ^ { } [ ] | ? * @ - + : */
+
+
+				/* Characters that need escaping in output only. */
+			case '$': case '%': case '&': case '^':
+			case '{': case '}': case '?':
+				FLUSHTO(escaped_ch_start);
+				PUTASCII('#');
+				flush_start = escaped_ch_start;
+				break;
+
+				/* Characters that need escaping in input & output. */
+			case '@': /* tags */
+			case '[': /* Hyper-links */
+			case ']': /* Hyper-links */
+			case ':': /* Lists */
+			case '+': /* Lists */
+			case '-': /* Lists */
+			case '|': /* Tables */
+			case '#': /* Headers */
+				FLUSHTO(ch_start);
+				PUTASCII('#');
+				flush_start = escaped_ch_start;
+				break;
+
+				/* INPUT-ONLY-ESCAPE and INPUT-OUTPUT-ESCAPE. (with extended range) */
+			case '_':  /* _Bold_ */
+			case '`':  /* `Code` */
+			case '*':  /* Lists and *Italics* */
+			case '~':  /* ~Strikethrough~ */
+				FLUSHTO(ch_start);
+				if (ch == '~' || ch == '*') /* INPUT-OUTPUT-ESCAPE */
+					PUTASCII('#');
+				flush_start = escaped_ch_start;
+				/* Check if this is escaping an extended block. */
+				ch_start = iter;
+				ch = utf8_readchar((char const **)&iter, end);
+				if (ch == escaped_ch) {
+					if (ch == '`') {
+						/* Code-blocks can appear with 3 backticks, in
+						 * which case we must escape all 3 of them here! */
+						char const *temp;
+						temp     = ch_start;
+						ch_start = iter;
+						ch = utf8_readchar((char const **)&iter, end);
+						if (ch != '`') {
+							ch_start = temp;
+							iter     = temp;
+							ch = utf8_readchar((char const **)&iter, end);
+						}
+					}
+					goto do_switch_ch; /* Yes -> Also escape the second character */
+				}
+				goto do_read_and_switch_ch;
+
+
+				/* INPUT-ONLY-ESCAPE. */
 			case ' ':  /* Escape space characters to force them to be kept */
 			case '\\': /* Escape the escape character itself to force it to be inserted */
-			case '_':  /* _Bold_ */
-			case '@':  /* Reference */
-			case '`':  /* Code */
-			case ':':  /* List & Notes */
-			case '[': case ']': /* Link */
-			case '(': case ')': /* Link */
-			case '-': case '+': /* List / Table */
-			case '|': case '=': /* Table */
-escape_remove_backslash_and_keep_next_char:
+			case '(':  /* Hyper-links */
+			case ')':  /* Hyper-links */
+			case '=':  /* Lists */
+escape_inputonly:
 				FLUSHTO(ch_start);
 				flush_start = escaped_ch_start;
 				break;
@@ -713,32 +1429,19 @@ escape_remove_backslash_and_keep_next_char:
 check_ordered_list_digit:
 				/* Ordered list (only at the start of a line) */
 				if (ch_start == current_line_start_after_whitespace)
-					goto escape_remove_backslash_and_keep_next_char;
+					goto escape_inputonly;
 				/* Also allow the backslash to appear somewhere where
 				 * it is only preceded by digits or . or : characters */
 				if (contains_only_decimals_dot_collon_or_backslash(current_line_start_after_whitespace,
 				                                                   ch_start))
-					goto escape_remove_backslash_and_keep_next_char;
+					goto escape_inputonly;
 				break;
-
-			case '~': /* ~Strikethrough~ */
-			case '*': /* *Italic* or List */
-			case '#': /* Header */
-				FLUSHTO(ch_start);
-				PUTASCII('#');
-				flush_start = escaped_ch_start;
-				/* Check if this is escaping an extended block. */
-				ch_start = iter;
-				ch = utf8_readchar((char const **)&iter, end);
-				if (ch == escaped_ch)
-					goto do_switch_ch; /* Yes -> Also escape the second character */
-				goto do_read_and_switch_ch;
 
 			default:
 				if (DeeUni_IsLF(escaped_ch))
-					goto escape_remove_backslash_and_keep_next_char;
+					goto escape_inputonly;
 				if (DeeUni_IsSpace(escaped_ch))
-					goto escape_remove_backslash_and_keep_next_char;
+					goto escape_inputonly;
 				if (DeeUni_IsDecimal(escaped_ch))
 					goto check_ordered_list_digit;
 				/* Fallback: Don't remove anything (including the backslash) */
@@ -964,7 +1667,7 @@ not_a_link:
 			/* Strip whitespace from the link portion. */
 			after_lparen  = lstrip_whitespace(after_lparen, before_rparen);
 			before_rparen = rstrip_whitespace(after_lparen, before_rparen);
-			PRINT("#A{", 3);
+			PRINTASCII("#A{", 3);
 			/* Print the link body */
 			if unlikely(do_compile(after_lbracket, before_rbracket, result_printer, NULL))
 				goto err;
@@ -1069,7 +1772,8 @@ not_a_link:
 						/* If we're not already at the start of our own line, then insert a
 						 * manual line-feed such that the code-block appears on its own line. */
 						if (before_left_backtick != current_line_start_after_whitespace) {
-							strip_trailing_whitespace_until(result_printer, result_printer_origlen);
+							strip_trailing_whitespace_until(result_printer,
+							                                result_printer_origlen);
 							PUTASCII('\n');
 						}
 						flush_start = iter;
@@ -1082,12 +1786,12 @@ not_a_link:
 							                         before_right_backtick);
 							/* Select encoding based on syntax name. */
 							if (before_syntax_name >= after_syntax_name) {
-								PRINT("#C", 2); /* No special syntax name */
+								PRINTASCII("#C", 2); /* No special syntax name */
 							} else if (before_syntax_name + 6 == after_syntax_name &&
 							           memcmp(before_syntax_name, "deemon", 6 * sizeof(char)) == 0) {
 								PUTASCII('$'); /* Deemon syntax */
 							} else {
-								PRINT("#C[", 3); /* Custom syntax */
+								PRINTASCII("#C[", 3); /* Custom syntax */
 								if unlikely(print_escaped(result_printer,
 								                          before_syntax_name,
 								                          after_syntax_name))
@@ -1107,6 +1811,39 @@ not_a_link:
 						/* Use the common indentation of the code-block to affect how
 						 * further text is arranged in concern to block breaks. */
 						current_line_leading_spaces = smallest_indentation;
+						/* If the character following the code-block is a line-feed, force
+						 * that line-feed to appear in the output documentation text. */
+						if (DeeUni_IsLF(ch)) {
+do_handle_autoescaped_linefeed:
+							if (ch == '\r') {
+								char const *temp = iter;
+								ch = utf8_readchar((char const **)&iter, end);
+								if (ch != '\n')
+									iter = temp;
+							}
+							strip_trailing_whitespace_until(result_printer,
+							                                result_printer_origlen);
+							PUTASCII('\n');
+							/* Read the first character from the next line. */
+							flush_start = iter;
+							ch_start    = iter;
+							ch = utf8_readchar((char const **)&iter, end);
+							goto scan_newline_with_first_ch_and_explicit_linefeed;
+						} else if (DeeUni_IsSpace(ch)) {
+							/* Allow for trailing space before an eventual line-feed */
+							char const *temp = ch_start;
+							for (;;) {
+								ch = utf8_readchar((char const **)&iter, end);
+								if (DeeUni_IsLF(ch))
+									goto do_handle_autoescaped_linefeed;
+								if (DeeUni_IsSpace(ch))
+									continue;
+								break;
+							}
+							ch_start = temp;
+							iter     = temp;
+							ch = utf8_readchar((char const **)&iter, end);
+						}
 						goto do_switch_ch;
 					}
 				} else {
@@ -1154,7 +1891,7 @@ not_a_link:
 				need_braces = DeeUni_IsSymCont(ch) ||
 				              !is_symbol(after_left_backtick,
 				                         before_right_backtick);
-				PRINT("#C", 2);
+				PRINTASCII("#C", 2);
 				if (need_braces)
 					PUTASCII('{');
 				if unlikely(print_escaped(result_printer, after_left_backtick, before_right_backtick))
@@ -1189,6 +1926,7 @@ not_a_code:
 					second_space = utf8_readchar((char const **)&iter, end);
 					if (DeeUni_IsLF(second_space)) {
 						FLUSHTO(before_first_space);
+						ch = second_space;
 						goto do_set_current_line_noflush;
 					}
 					if (!DeeUni_IsSpace(second_space)) {
@@ -1215,6 +1953,7 @@ done:
 	if (flush_start == text && UNICODE_PRINTER_ISEMPTY(result_printer) && source_printer) {
 		/* Steal all data from the source printer (that way we don't have to copy anything!). */
 		memcpy(result_printer, source_printer, sizeof(struct unicode_printer));
+		result_printer->up_length = (size_t)(end - text);
 		unicode_printer_init(source_printer);
 	} else {
 		if unlikely(unicode_printer_print(result_printer, flush_start,
@@ -1222,6 +1961,8 @@ done:
 			goto err;
 	}
 done_dontflush:
+	/* Strip all trailing whitespace from the printer. */
+	strip_trailing_whitespace(result_printer, result_printer_origlen);
 	if (min_line_leading_spaces != 0) {
 		/* Take everything after `result_printer_origlen' and
 		 * delete the first `min_line_leading_spaces' characters
@@ -1239,10 +1980,34 @@ done_dontflush:
 				ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
 				if (ch == '\n')
 					++i;
+			} else if (ch == '{') {
+				/* Skip non-escaped {}-pairs here! - Those belong to inner constructs,
+				 * and may contain line-feed characters which we must ignore! */
+				size_t recursion = 0;
+				for (;;) {
+					if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+						goto done_return_now;
+					ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+					++i;
+					if (ch == '#')
+						++i;
+					else if (ch == '{')
+						++recursion;
+					else if (ch == '}') {
+						if (!recursion)
+							break;
+						--recursion;
+					}
+				}
+			} else if (ch == '#' && i < UNICODE_PRINTER_LENGTH(result_printer)) {
+				ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+				if (ch == '{')
+					++i; /* Escaped brace (ignore) */
 			}
 			unicode_printer_erase(result_printer, i, min_line_leading_spaces);
 		}
 	}
+done_return_now:
 	return 0;
 err:
 	return -1;

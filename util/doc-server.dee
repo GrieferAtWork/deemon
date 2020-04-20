@@ -496,9 +496,7 @@ function doPrintDeemonCodeBlock(fp: File, body: string) {
 }
 
 @@Print deemon code with syntax highlighting
-function printDeemonCodeBlock(fp: File, body: string, isLongBody: bool = none) {
-	if (isLongBody is none)
-		isLongBody = "\n" in body || fp.string.endswith("\n");
+function printDeemonCodeBlock(fp: File, body: string, isLongBody: bool) {
 	if (isLongBody) {
 		fp << "<div class=\"Source\">";
 		doPrintDeemonCodeBlock(fp, body);
@@ -571,7 +569,7 @@ function printTextSegmentElement(fp: File, t: Object) {
 	}
 	if (t is doctext.Code) {
 		if (t.language == "deemon") {
-			printDeemonCodeBlock(fp, t.body);
+			printDeemonCodeBlock(fp, t.body, t.indentation !is none);
 			return;
 		}
 		/* Default case: use <code>-blocks */

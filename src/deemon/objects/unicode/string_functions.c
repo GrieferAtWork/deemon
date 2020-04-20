@@ -7583,9 +7583,9 @@ err:
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_Split(DeeObject *self, DeeObject *seperator);
+DeeString_Split(DeeObject *self, DeeObject *separator);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeString_CaseSplit(DeeObject *self, DeeObject *seperator);
+DeeString_CaseSplit(DeeObject *self, DeeObject *separator);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_split(String *self, size_t argc, DeeObject *const *argv) {

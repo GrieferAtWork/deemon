@@ -266,15 +266,23 @@ class Code {
 	@@Code body (the text that should be written as the actual code)
 	public member body: string;
 
+	@@Indentation of a multi-line inline code block (or @none if single-line)
+	public member indentation: int | none;
+
 	function printConsoleString(p: ConsolePrinter) {
 		local usedBody = body.rstrip().unifylines();
-		if ("\n" in usedBody) {
+		if (indentation !is none) {
+			local usedIndent = " " * indentation;
 			if (language == "deemon") {
-				p.appendNormal("".join(
+				p.appendNormal(usedIndent.join(
 					for (local l: usedBody.splitlines(true))
 						">> " + l));
 			} else {
-				p.appendNormal("```\n{}\n```".format({ usedBody }));
+				p.appendNormal("```{}\n{}\n{}```".format({
+					language,
+					usedBody.indent(usedIndent),
+					usedIndent
+				}));
 			}
 		} else if (usedBody && (usedBody[0] in "\'\"" || usedBody.isdecimal(0))) {
 			p.append(usedBody);
@@ -793,6 +801,46 @@ function getCurrentTypePath(mypath: (string, bool)): string {
 }
 
 
+function findStartOfLine(
+		docstring: string, start: int, partStart: int): int | none {
+	for (;;) {
+		if (partStart <= start)
+			return start;
+		local newpos = partStart - 1;
+		if (docstring.islf(newpos))
+			return partStart;
+		if (!docstring.isspace(newpos))
+			break;
+		partStart = newpos;
+	}
+	return false;
+}
+
+function appearsAtEndOfLine(
+		docstring: string, end: int, partEnd: int): bool {
+	for (;;) {
+		if (partEnd >= end)
+			return true;
+		if (docstring.islf(partEnd))
+			return true;
+		if (!docstring.isspace(partEnd))
+			break;
+		++partEnd;
+	}
+	return false;
+}
+
+function claculateComponentIndentation(
+		docstring: string, start: int, end: int,
+		partStart: int, partEnd: int): int | none {
+	if (!appearsAtEndOfLine(docstring, end, partEnd))
+		return none;
+	local result = findStartOfLine(docstring, start, partStart);
+	if (result !is none)
+		result = partStart - result;
+	return result;
+}
+
 
 @@A given @docstring belonging to a @TextSegment such that special formating
 @@constructs are replaced with dedicated format representation objects, which
@@ -813,21 +861,21 @@ function getCurrentTypePath(mypath: (string, bool)): string {
 @@|                                | - @"#I{BODY}" or @"#IBODY"             |
 @@|                                | - @"#S{BODY}" or @"#SBODY"             |
 @@|                                |                                        |
-@@| @List                          | - @"#L-{BODY1|BODY2|BODY3}"            |
-@@|                                | - @"#L+{BODY1|BODY2|BODY3}"            |
-@@|                                | - @"#L*{BODY1|BODY2|BODY3}"            |
-@@|                                | - @"#L{{1.}BODY1|{2.}BODY2|{3.}BODY3}" |
+@@| @List                          | - @"#L-{BODY1\|BODY2\|BODY3}"          |
+@@|                                | - @"#L+{BODY1\|BODY2\|BODY3}"          |
+@@|                                | - @"#L*{BODY1\|BODY2\|BODY3}"          |
+@@|                                | - @"#L{{1.}BODY1\|{2.}BODY2\|{3.}BODY3}" |
 @@|                                |                                        |
-@@| @HyperLink                     | #A{BODY|LINK}                          |
+@@| @HyperLink                     | #A{BODY\|LINK}                         |
 @@|                                |                                        |
 @@| @Code                          | - @"#C{BODY}" or @"#CBODY"             |
 @@|                                | - @"#C[deemon]{BODY}" or               |
 @@|                                |   @"#C[deemon]BODY"                    |
 @@|                                | - @"${BODY}" or @"$BODY"               |
 @@|                                |                                        |
-@@| @Table                         | @("#T{BODY11|BODY12|BODY13~"           |
-@@|                                |      "BODY21|BODY22|BODY23&|"          |
-@@|                                |      "BODY31|BODY32|BODY33}")          |
+@@| @Table                         | @("#T{BODY11\|BODY12\|BODY13~"         |
+@@|                                |      "BODY21\|BODY22\|BODY23&\|"       |
+@@|                                |      "BODY31\|BODY32\|BODY33}")        |
 @@|                                |                                        |
 @@| @ArgumentReference             | @"@foo" or @"@{foo}"                   |
 @@|                                |                                        |
@@ -846,8 +894,11 @@ function splitTextSegment(
 		if (end < 0 || end > len)
 			end = len;
 	}
-#define FLUSHTO(pos) \
-	{ if (flushStart < (pos)) yield unEscapePoundCharacters(docstring[flushStart:pos]); }
+#define FLUSHTO(pos)                                                  \
+	{                                                                 \
+		if (flushStart < (pos))                                       \
+			yield unEscapePoundCharacters(docstring[flushStart:pos]); \
+	}
 continue_at_i:
 	while (i < end) {
 		local ch = docstring[i];
@@ -952,15 +1003,20 @@ do_dollar_symcont:
 			yield Code(
 				language: "deemon",
 				body: unEscapePoundCharacters(
-					docstring[bodyStart:bodyEnd]));
+					docstring[bodyStart:bodyEnd]),
+				indentation: claculateComponentIndentation(
+					docstring, flushStart, end, dollarStart, i));
 			flushStart = i;
 		}	break;
 
 		case "#": {
 			local poundStart = i;
 			++i;
-			if (i >= end)
-				goto continue_after_poundStart;
+			if (i >= end) {
+continue_after_poundStart:
+				i = poundStart + 1;
+				goto continue_at_i;
+			}
 			ch = docstring[i];
 			switch (ch) {
 
@@ -1072,7 +1128,10 @@ do_dollar_symcont:
 				yield Code(
 					language: language,
 					body: unEscapePoundCharacters(
-						docstring[bodyStart:bodyEnd]));
+						docstring[bodyStart:bodyEnd]),
+					indentation: claculateComponentIndentation(
+						docstring, flushStart, end, poundStart, i)
+				);
 				flushStart = i;
 			}	break;
 
@@ -1233,7 +1292,7 @@ do_dollar_symcont:
 					row = [];
 				}
 				if (!rows)
-					rows = [[""]]; /* Shouldn't happen... */
+					rows = [[("", { "" })]]; /* Shouldn't happen... */
 				FLUSHTO(poundStart);
 				yield Table(
 					cells: rows,
@@ -1243,8 +1302,8 @@ do_dollar_symcont:
 			}	break;
 
 			default:
-continue_after_poundStart:
-				i = poundStart + 1;
+				/* Escape one character */
+				++i;
 				goto continue_at_i;
 			}
 		}	break;

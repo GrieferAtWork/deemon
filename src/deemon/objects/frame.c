@@ -656,7 +656,7 @@ PRIVATE struct type_getset frame_getsets[] = {
 	 * TODO: __names__ (Access to a mapping-like object for converting local/stack
 	 *                  names to indices into the `__variables__' sequence)
 	 *                  >> local vars = f.__variables__;
-	 *                  >> for (local name,addr: f.__names__) {
+	 *                  >> for (local name, addr: f.__names__) {
 	 *                  >>     print "{}@{} = {}".format({
 	 *                  >>         name,
 	 *                  >>         addr,

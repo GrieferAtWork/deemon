@@ -232,7 +232,7 @@ do_float_normal_width:
 	if ((flags & (DEEFLOAT_PRINT_FWIDTH | DEEFLOAT_PRINT_FLJUST)) ==
 	    (DEEFLOAT_PRINT_FWIDTH) &&
 	    (width > total_len)) {
-		/* Insert a missing decimal seperator. */
+		/* Insert a missing decimal separator. */
 		if (flags & DEEFLOAT_PRINT_FPADZERO && max_prec == 0) {
 			buf[0] = '.';
 			temp   = (*printer)(arg, buf, 1);

@@ -1406,8 +1406,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "issep", (DeeObject *)&libfs_issep, MODSYM_FNORMAL,
 	  DOC("(str:?Dstring)->?Dbool\n"
 	      "Returns ?t if the given @str is recognized as a path "
-	      "seperator (Usually $\"/\" and/or $\"\\\")\n"
-	      "The host's primary and secondary seperator "
+	      "separator (Usually $\"/\" and/or $\"\\\")\n"
+	      "The host's primary and secondary separator "
 	      "values can be read from ?GSEP and ?GALTSEP") },
 	{ "joinpath", (DeeObject *)&libfs_joinpath, MODSYM_FNORMAL,
 	  DOC("(paths!:?Dstring)->?Dstring\n"
@@ -1446,14 +1446,14 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Passing the same option more than once is allowed and simply ignored") },
 	{ "SEP", (DeeObject *)&libfs_sep, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "The host's primary path seperator. On windows that is "
+	      "The host's primary path separator. On windows that is "
 	      "$\"\\\" while on most other hosts it is $\"/\"\n"
-	      "If supported by the host, an alternative seperator can be read from ?GALTSEP\n"
-	      "Additionally, a string can be testing for being a seperator by calling ?Gissep") },
+	      "If supported by the host, an alternative separator can be read from ?GALTSEP\n"
+	      "Additionally, a string can be testing for being a separator by calling ?Gissep") },
 	{ "ALTSEP", (DeeObject *)&libfs_sep, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
-	      "The alternative path seperator or an alias for ?GSEP "
-	      "if the host only supports a single type of seperator") },
+	      "The alternative path separator or an alias for ?GSEP "
+	      "if the host only supports a single type of separator") },
 	{ "DELIM", (DeeObject *)&libfs_delim, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
 	      "A string used to delimit individual paths in path-listings often "

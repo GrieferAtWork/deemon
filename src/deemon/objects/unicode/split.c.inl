@@ -46,7 +46,7 @@ typedef struct {
 	uint8_t          *s_begin; /* [1..1][const] The starting address of the width string of `s_split->s_str'. */
 	uint8_t          *s_end;   /* [1..1][const] The end address of the width string of `s_split->s_str'. */
 	uint8_t          *s_sep;   /* [1..1][const] The starting address of the `s_enc'-encoded string of `s_split->s_sep'. */
-	size_t            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of seperator string. */
+	size_t            s_sepsz; /* [1..1][const][== WSTR_LENGTH(s_sep)] The length of separator string. */
 	int               s_width; /* [const] The width of `s_split->s_str' */
 } StringSplitIterator;
 
@@ -548,18 +548,18 @@ INTERN DeeTypeObject StringCaseSplit_Type = {
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_Split(DeeObject *self,
-                DeeObject *seperator) {
+                DeeObject *separator) {
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	ASSERT_OBJECT_TYPE_EXACT(seperator, &DeeString_Type);
+	ASSERT_OBJECT_TYPE_EXACT(separator, &DeeString_Type);
 	result = DeeObject_MALLOC(StringSplit);
 	if unlikely(!result)
 		goto done;
 	DeeObject_Init(result, &StringSplit_Type);
 	Dee_Incref(self);
-	Dee_Incref(seperator);
+	Dee_Incref(separator);
 	result->s_str = (DREF DeeStringObject *)self;      /* Inherit */
-	result->s_sep = (DREF DeeStringObject *)seperator; /* Inherit */
+	result->s_sep = (DREF DeeStringObject *)separator; /* Inherit */
 done:
 	return (DREF DeeObject *)result;
 }
@@ -567,19 +567,19 @@ done:
 /* @return: An abstract sequence type for enumerating the segments of a split string. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeString_CaseSplit(DeeObject *self,
-                    DeeObject *seperator) {
+                    DeeObject *separator) {
 	DREF StringSplit *result;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
-	ASSERT_OBJECT_TYPE_EXACT(seperator, &DeeString_Type);
+	ASSERT_OBJECT_TYPE_EXACT(separator, &DeeString_Type);
 	result = DeeObject_MALLOC(StringSplit);
 	if unlikely(!result)
 		goto done;
 	/* Same as the regular split(), but use the case-insensitive sequence type. */
 	DeeObject_Init(result, &StringCaseSplit_Type);
 	Dee_Incref(self);
-	Dee_Incref(seperator);
+	Dee_Incref(separator);
 	result->s_str = (DREF DeeStringObject *)self;      /* Inherit */
-	result->s_sep = (DREF DeeStringObject *)seperator; /* Inherit */
+	result->s_sep = (DREF DeeStringObject *)separator; /* Inherit */
 done:
 	return (DREF DeeObject *)result;
 }

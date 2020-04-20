@@ -570,7 +570,7 @@ parse_next_ch:
 				}
 			}
 		}
-		/* Space -> Argument seperator. */
+		/* Space -> Argument separator. */
 		if (DeeUni_IsSpace(ch)) {
 			*cmdline = '\0'; /* Terminate the previous argument. */
 			/* Invoke the caller's function with this new argument. */
