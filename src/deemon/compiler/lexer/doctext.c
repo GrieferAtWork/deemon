@@ -325,9 +325,9 @@ err:
 
 /* Print the given text...end whilst escaping the
  * following characters by prefixing a # to each of them:
- *      # $ % & ~ ^ { } [ ] | ? * @ - + : >
+ *      # $ % & ~ ^ { } [ ] | ? * @ - + :
  * Additionally, skip over \-characters that are followed by one of:
- *      \ _ @ ` [ ] ( ) - + | = ~ * # :
+ *      \ _ @ ` [ ] ( ) - + | = ~ * # : >
  */
 PRIVATE NONNULL((1, 2, 3)) int DCALL
 print_escaped(struct unicode_printer *__restrict printer,
