@@ -272,6 +272,8 @@ function writePageFooter(fp) {
 }
 function escapeSpecialHtmlCharacters(text) {
 	return text
+		.unifylines()
+		.replace("&", "&amp;")
 		.replace("<", "&lt;")
 		.replace(">", "&gt;")
 		.replace("\n", "<br />\r\n");

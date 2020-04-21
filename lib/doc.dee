@@ -2768,17 +2768,13 @@ local function generateFunctionParams(fp: File, fun: Function) {
 
 @@The main interface for accessing the documentation API provided by deemon
 @@Documentation text is addressed using unambiguos paths structures as follows:
-@@
-@@The string is split into segments separated by @"/"
-@@
-@@Dangling leading and trailing slashes are ignored.
-@@
-@@The first segment is a module name that describes which module to search
-@@for the documenation strings. If no slash follows, the Doc node will refer
-@@to that module as a whole
-@@
-@@Otherwise, the remaining segment are walked left-to-right and used to dereference
-@@attribute names of their respective object.
+@@ - The string is split into segments separated by @"/"
+@@ - Dangling leading and trailing slashes are ignored.
+@@ - The first segment is a module name that describes which module to search
+@@   for the documenation strings. If no slash follows, the Doc node will refer
+@@   to that module as a whole
+@@ - Otherwise, the remaining segment are walked left-to-right and used to dereference
+@@   attribute names of their respective object.
 @@
 @@These attributes can optionally be prefixed with one of the following
 @@modifiers in order to address different attributes namespaces:

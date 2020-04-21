@@ -46,35 +46,21 @@ class OldUserClass
 {
 
 	@@A Dict mapping old member variables to their proper names
-	private m_members: {string: Object} = Dict();
+	private member m_members: {string: Object} = Dict();
 
-	operator . (name: string): Object {
+	public operator . (name: string): Object {
 		return m_members[name];
 	}
 
-	operator del. (name: string) {
+	public operator del. (name: string) {
 		del m_members[name];
 	}
 
-	operator .= (name: string, value: Object) {
+	public operator .= (name: string, value: Object) {
 		m_members[name] = value;
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

@@ -31,6 +31,82 @@
 
 DECL_BEGIN
 
+
+/* Skip the whitespace+@@ sequence following an escaped line-feed resulting from a
+ * left-over of TPP allowing escaped line-feeds in the same manner as we do here,
+ * however it causing the next documentation string line to appear in our text,
+ * meaning that we have to somehow filter out that text.
+ * @param: iter: Pointer to the first character of the next line.
+ * @return: * :  Pointer after the leading @@-sequence on the next line. */
+PRIVATE ATTR_RETNONNULL NONNULL((1, 2)) char const *DCALL
+skip_tpp_comment_line_prefix_after_escaped_linefeed(char const *iter,
+                                                    char const *end) {
+	char const *orig_line_start;
+	orig_line_start = iter;
+	for (;;) {
+		uint32_t ch;
+		ch = utf8_readchar((char const **)&iter, end);
+		if (DeeUni_IsLF(ch) || !ch)
+			break;
+		if (DeeUni_IsSpace(ch))
+			continue;
+		if (ch == '/') {
+			/* Another special case: C-style comments could appear before
+			 * the start of the documentation string on this line. - Since
+			 * we're trying to act like TPP hadn't escaped the linefeed, we
+			 * must also remove such a comment. */
+			ch = utf8_readchar((char const **)&iter, end);
+			if (ch != '*')
+				break;
+			do {
+				ch = utf8_readchar((char const **)&iter, end);
+again_search_for_c_comment_end_after_escaped_linefeed:
+				;
+			} while (ch && ch != '*');
+			if (ch != '*')
+				break;
+			ch = utf8_readchar((char const **)&iter, end);
+			if (ch != '/')
+				goto again_search_for_c_comment_end_after_escaped_linefeed;
+			continue;
+		}
+		if (ch == '@') {
+			ch = utf8_readchar((char const **)&iter, end);
+			if (ch != '@')
+				break;
+			/* The double-@ has been found! */
+			goto done;
+		}
+	}
+	iter = orig_line_start;
+done:
+	return iter;
+}
+
+/* Erase up to `count' white-space characters starting at `i'
+ * NOTE: Less characters may be erased if a non-whitespace character
+ *       is countered before `count' characters have been erased.
+ *       This function is used for the removal of common leading space
+ *       characters in documentation text, where blind erasing of characters
+ *       cannot be done safely due to the implicit line-feeds that are
+ *       be inserted prior to Lists and Tables not located at the start
+ *       of their respective documentation text areas.
+ * @return: *: The actual # of erased characters. */
+PRIVATE NONNULL((1)) size_t DCALL
+unicode_printer_erase_whitespace(struct unicode_printer *__restrict self,
+                                 size_t i, size_t count) {
+	size_t real_count;
+	for (real_count = 0; real_count < count; ++real_count) {
+		uint32_t ch;
+		ch = UNICODE_PRINTER_GETCHAR(self, i + real_count);
+		if (!DeeUni_IsSpace(ch))
+			break;
+	}
+	unicode_printer_erase(self, i, real_count);
+	return real_count;
+}
+
+
 /* Returns a new pointer for `start' */
 PRIVATE NONNULL((1, 2)) /*utf-8*/ char const *DCALL
 lstrip_whitespace(/*utf-8*/ char const *start,
@@ -108,6 +184,22 @@ strip_trailing_whitespace_until(struct unicode_printer *__restrict printer,
 		ch = UNICODE_PRINTER_GETCHAR(printer, len - 1);
 		if (DeeUni_IsLF(ch))
 			break;
+		if (!DeeUni_IsSpace(ch))
+			break;
+		--len;
+	}
+	printer->up_length = len;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+strip_all_trailing_whitespace_until(struct unicode_printer *__restrict printer,
+                                    size_t stop_at) {
+	size_t len = printer->up_length;
+	for (;;) {
+		uint32_t ch;
+		if (len <= stop_at)
+			break;
+		ch = UNICODE_PRINTER_GETCHAR(printer, len - 1);
 		if (!DeeUni_IsSpace(ch))
 			break;
 		--len;
@@ -212,6 +304,9 @@ reprint_but_unescape_backslash_pipe(struct unicode_printer *__restrict printer,
 		if (!ch && (text >= end))
 			break;
 		if (ch == '|' || ch == '\\') {
+			/* TODO: \\ should only be escaped in the case of \\\|
+			 *       Otherwise, something like "\\ " would cause the
+			 *       space character to become escaped during re-parse */
 			/* Escape */
 			if unlikely(unicode_printer_print(printer, flush_start,
 			                                  (size_t)(ch_start - flush_start)) < 0)
@@ -230,7 +325,7 @@ err:
 
 /* Print the given text...end whilst escaping the
  * following characters by prefixing a # to each of them:
- *      # $ % & ~ ^ { } [ ] | ? * @ - + :
+ *      # $ % & ~ ^ { } [ ] | ? * @ - + : >
  * Additionally, skip over \-characters that are followed by one of:
  *      \ _ @ ` [ ] ( ) - + | = ~ * # :
  */
@@ -271,7 +366,8 @@ do_escape_ch:
 			    ch == '#' || ch == ':')
 				goto do_escape_ch;
 			if (ch == '\\' || ch == '_' || ch == '`' ||
-			    ch == '(' || ch == ')' || ch == '=')
+			    ch == '(' || ch == ')' || ch == '=' ||
+			    ch == '>')
 				flush_start = ch_start;
 		}
 	}
@@ -462,6 +558,7 @@ do_compile(/*utf-8*/ char const *text,
 	size_t result_printer_origlen;
 	size_t current_line_leading_spaces; /* # of leading spaces within the current line */
 	size_t min_line_leading_spaces;     /* Lowest # of leading spaces in any line */
+	bool should_strip_leading_space = true;
 #define DO(expr)                \
 	do {                        \
 		if unlikely((expr) < 0) \
@@ -568,6 +665,7 @@ do_set_current_line_noflush:
 			 * in which case we must print a single line-feed for the 2 line,
 			 * followed by possibly more line-feeds for any additional lines
 			 * followed there-after. */
+scan_newline_with_first_ch_and_implicit_linefeed:
 			has_explicit_linefeed = false;
 			__IF0 {
 scan_newline_with_first_ch_and_explicit_linefeed:
@@ -670,6 +768,11 @@ do_join_with_space:
 				min_line_leading_spaces = current_line_leading_spaces;
 do_switch_ch_at_start_of_line:
 			switch (ch) {
+
+			case '>':
+				/* TODO: Line-wise deemon code (multiple lines are consecutive
+				 *       so-long as they use the same # of leading >-characters) */
+				goto escape_current_character;
 
 			case '#':
 				/* TODO: Header */
@@ -1275,8 +1378,8 @@ set_end_of_table:
 								iter = nextline_start;
 							}
 end_table_row:
-							/* Special case: Don't all an all-empty row to be appended when the
-							 *               table doesn't have any contents, and all columns
+							/* Special case: Don't allow an end-of-table when the table
+							 *               doesn't have any contents, and all columns
 							 *               are currently empty. */
 							if (row_separator == 0 && !has_nonempty_cell &&
 							    UNICODE_PRINTER_ISEMPTY(&table_output)) {
@@ -1332,22 +1435,10 @@ done_table_nochk_columns:
 					                                  (size_t)(table_top_left - flush_start)) < 0)
 						goto err_table_output;
 					/* Strip trailing whitespace from the result printer. */
-					strip_trailing_whitespace_until(result_printer,
-					                                result_printer_origlen);
-					/* Insert a linefeed before the table (if not there already) */
-					if (result_printer->up_length > result_printer_origlen &&
-					    !DeeUni_IsLF(UNICODE_PRINTER_GETCHAR(result_printer, result_printer->up_length - 1))) {
-						if unlikely(unicode_printer_putascii(result_printer, '\n'))
-							goto err_table_output;
-					}
-					if (current_line_start_after_whitespace > current_line_start) {
-						/* Insert leading whitespace found prior to the table.
-						 * This is the indentation of the table itself.
-						 * This may be de-dented once again in the final output. */
-						if unlikely(unicode_printer_print(result_printer, current_line_start,
-						                                  (size_t)(current_line_start_after_whitespace - current_line_start)) < 0)
-							goto err_table_output;
-					}
+					strip_all_trailing_whitespace_until(result_printer,
+					                                    result_printer_origlen);
+					if (result_printer->up_length <= result_printer_origlen)
+						should_strip_leading_space = false;
 					/* Write the table header */
 					if unlikely(unicode_printer_printascii(result_printer, "#T{", 3) < 0)
 						goto err_table_output;
@@ -1357,7 +1448,7 @@ done_table_nochk_columns:
 					                                      result_printer) < 0)
 						goto err_table_output;
 					/* Write the table footer */
-					if unlikely(unicode_printer_printascii(result_printer, "}\n", 2) < 0)
+					if unlikely(unicode_printer_putascii(result_printer, '}'))
 						goto err_table_output;
 					/* Destroy the table output buffer. */
 					unicode_printer_fini(&table_output);
@@ -1365,7 +1456,7 @@ done_table_nochk_columns:
 					flush_start = iter;
 					ch_start    = iter;
 					ch = utf8_readchar((char const **)&iter, end);
-					goto scan_newline_with_first_ch_and_explicit_linefeed;
+					goto scan_newline_with_first_ch_and_implicit_linefeed;
 err_table:
 					for (column_index = 0; column_index < column_count; ++column_index)
 						unicode_printer_fini(&columns[column_index].tc_body);
@@ -1394,17 +1485,355 @@ not_a_table:
 #endif /* !table_iscorner('+') && !table_isvert('+') */
 			case '-':
 			case '*':
-check_for_list:
-				/* TODO: Unordered list */
-				/* NOTE: Be careful, as `*' can also be used for italics! */
-				break;
-
 			case '0': case '1': case '2': case '3': case '4':
-			case '5': case '6': case '7': case '8': case '9':
-				/* TODO: Ordered list */
-				break;
+			case '5': case '6': case '7': case '8': case '9': {
+				char const *list_firstline_start;
+				uint32_t list_prefix_ch;
+				size_t list_prefix_indent;  /* Character-indentation of the first list prefix character */
+				size_t list_element_indent; /* Character-indentation of the start of the first list element's body */
+				bool is_ordered_list;
+				char const *item_prefix_start;
+				char const *item_prefix_end;
+check_for_list:
+				list_prefix_ch  = ch;
+				is_ordered_list = ch >= '0' && ch <= '9';
+				list_firstline_start = ch_start;
+				ch = utf8_readchar((char const **)&iter, end);
+				/* Scan the list item prefix of an ordered list. */
+				item_prefix_start  = NULL;
+				item_prefix_end    = NULL;
+				list_prefix_indent = current_line_leading_spaces;
+				if (is_ordered_list) {
+					item_prefix_start = list_firstline_start;
+					/* Scan ahead until the first `:', or a `.' followed by whitespace */
+					list_element_indent = current_line_leading_spaces + 3;
+					for (;;) {
+						if (ch == ':') {
+							item_prefix_end = iter;
+							ch = utf8_readchar((char const **)&iter, end);
+							if (!DeeUni_IsSpace(ch))
+								goto not_a_list;
+							list_prefix_ch  = ':';
+							goto got_space_after_list_start;; /* Got it! */
+						}
+						if (ch == '.') {
+							/* Check if the next character is whitespace. */
+							item_prefix_end = iter;
+							ch = utf8_readchar((char const **)&iter, end);
+							if (!DeeUni_IsSpace(ch)) {
+								++list_element_indent;
+								continue;
+							}
+							list_prefix_ch = '.';
+							goto got_space_after_list_start;
+						}
+						/* Only decimal characters (and '.') are allowed in here! */
+						if (!DeeUni_IsDecimal(ch))
+							goto not_a_list;
+						ch = utf8_readchar((char const **)&iter, end);
+						++list_element_indent;
+					}
+				}
+				/* Make sure that there is at least 1 whitespace character after the list head
+				 * NOTE: This check also guards against lines starting with ** (extended italic),
+				 *       and *foo* (single-word italic), both of which require that the character
+				 *       following after the *-character not be a space-character
+				 * NOTE: Also disallow list introduction characters followed by a line-feed.
+				 *       One might argue that this would describe a list item without a body,
+				 *       but I would argue that such a thing wouldn't make sense... */
+				if (!DeeUni_IsSpace(ch) || DeeUni_IsLF(ch)) {
+not_a_list:
+					ch_start = list_firstline_start;
+					iter     = list_firstline_start;
+					ch = utf8_readchar((char const **)&iter, end);
+					break;
+				}
+				/* Figure out the common indentation of list elements.
+				 * Right now we're `current_line_leading_spaces + 2' characters
+				 * into our current line (+1 for `list_prefix_ch'; +1 for the 1
+				 * mandatory space character after `list_prefix_ch')
+				 * Onto this number, we must now add any additional whitespace
+				 * that may still appear before the first non-space character
+				 * is countered.
+				 * If we manage to encounter a line-feed character before some
+				 * other non-whitespace character is encountered, then this isn't
+				 * actually a list, but just a random line consisting only of the
+				 * used list prefix character... */
+				list_element_indent = current_line_leading_spaces + 2;
+got_space_after_list_start:
+				for (;;) {
+					ch_start = iter;
+					ch = utf8_readchar((char const **)&iter, end);
+					if (DeeUni_IsLF(ch))
+						goto not_a_list;
+					if (!DeeUni_IsSpace(ch))
+						break;
+					++list_element_indent;
+				}
+				/* At this point, ch/ch_start point at the first character of the list element body. */
+				/* Yes, we are dealing with a list */
+				FLUSHTO(list_firstline_start);
+				strip_all_trailing_whitespace_until(result_printer, result_printer_origlen);
+				/* Write the list header */
+				if (result_printer->up_length <= result_printer_origlen)
+					should_strip_leading_space = false;
+				PRINTASCII("#L", 2);
+				if (!is_ordered_list)
+					PUTASCII((char)(unsigned char)list_prefix_ch);
+				PUTASCII('{');
+list_begin_next_line:
+				if (is_ordered_list) {
+					/* Print the custom element prefix for the ordered list item. */
+					PUTASCII('{');
+					PRINT(item_prefix_start, (size_t)(item_prefix_end - item_prefix_start));
+					PUTASCII('}');
+				}
+				/* At this point, we've reached the start of the first list item, which
+				 * begins at `ch_start' (which points to the first character of the list
+				 * element (where that character is some non-space character))
+				 * The list item ends with the first non-empty line that contains some
+				 * non-whitespace character within its initial `list_element_indent'
+				 * characters:
+				 *        ch_start points here
+				 *        v
+				 * >>@@ - element 1
+				 * >>@@   element 1 line 2
+				 * >>@@   element 1 line 3
+				 * >>@@
+				 * >>@@   element 1 line 4
+				 * >>@@ - element 2
+				 *      ^
+				 *      non-whitespace character here; body of the first element is:
+				 *          "element 1\nelement 1 line 2\nelement 1 line 3\n\nelement 1 line 4"
+				 * HINT: In this example, `list_element_indent == 3' */
+				{
+					struct unicode_printer item_printer = UNICODE_PRINTER_INIT;
+					bool has_next_item;
+					for (;;) {
+						char const *list_line_start;
+						char const *list_line_end;
+						size_t nextline_indentation;
+list_continue_current_line:
+						list_line_start = ch_start;
+						/* Find the end of the current line (which is known to be apart of the list!) */
+						for (;;) {
+							if (DeeUni_IsLF(ch) || (!ch && iter >= end)) {
+								/* Deal with windows-style line-feeds */
+								if (ch == '\r') {
+									char const *temp = iter;
+									ch = utf8_readchar((char const **)&iter, end);
+									if (ch != '\n')
+										iter = temp;
+								}
+								list_line_end = iter;
+								break; /* End was found! */
+							}
+							if (ch == '\\') {
+								/* Deal with escaped line-feeds */
+								ch = utf8_readchar((char const **)&iter, end);
+								if (DeeUni_IsLF(ch)) {
+									/* Deal with windows-style line-feeds */
+									if (ch == '\r') {
+										char const *temp = iter;
+										ch = utf8_readchar((char const **)&iter, end);
+										if (ch != '\n')
+											iter = temp;
+									}
+									/* Skip the leading TPP comment line prefix. */
+									list_line_end = iter;
+									iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
+									break;
+								}
+								continue;
+							}
+							ch = utf8_readchar((char const **)&iter, end);
+						}
+						/* At this point, ch is the line-feed at the end of the current list element
+						 * line (and iter points after the line-feed). - As such, we commit everything
+						 * from `list_line_start' up until `list_line_end' (so-as to include the line-feed) to
+						 * `item_printer', so-as to be re-parsed once the entirety of the current list
+						 * item has been gathered. */
+						if unlikely(unicode_printer_print(&item_printer, list_line_start,
+						                                  (size_t)(list_line_end - list_line_start)) < 0)
+							goto err_item_printer;
+						list_line_start = iter;
+						/* Check if current line (where `iter' points to its first character) is:
+						 *    - A continuation of the same list item (as indicative of having a whitespace
+						 *      indentation of at least `list_element_indent' characters).
+						 *      In this case, set `ch_start' to the `list_element_indent'th character
+						 *      of the line and jump to `list_continue_current_line'
+						 *    - A new list item (as indicated by having a white-space indentation that
+						 *      is equal to `list_prefix_indent', followed by a prefix appropriate for
+						 *      the requirements set by `is_ordered_list' and `list_prefix_ch')
+						 *      In this case, update `item_prefix_start' and `item_prefix_end' (when
+						 *      `is_ordered_list' is true), have ch/ch_start point at the first character
+						 *      of the next list item's body, set `has_next_item' to `true' and jump to
+						 *      `do_append_list_item'
+						 *    - Something else, indicative of the list being terminated.
+						 *      In this case, set `has_next_item' to `false', restore `iter = list_line_start',
+						 *      and jump to `do_append_list_item' (or jump to `end_of_list', which does the same) */
+						nextline_indentation = 0;
+						for (;;) {
+							ch_start = iter;
+							ch = utf8_readchar((char const **)&iter, end);
+							if (DeeUni_IsLF(ch)) {
+								/* Special case: The line may be shorter, but it only contains whitespace.
+								 *               This is counted as an insert-marker for an explicit line-feed! */
+								if unlikely(unicode_printer_putascii(&item_printer, '\n'))
+									goto err_item_printer;
+								/* Deal with windows-style line-feeds */
+								if (ch == '\r') {
+									char const *temp = iter;
+									ch = utf8_readchar((char const **)&iter, end);
+									if (ch != '\n')
+										iter = temp;
+								}
+								ch_start = iter;
+								goto list_continue_current_line;
+							}
+							if (DeeUni_IsSpace(ch)) {
+								/* Continuation of the previous line. */
+								if (nextline_indentation >= list_element_indent)
+									goto list_continue_current_line;
+								++nextline_indentation;
+								continue;
+							}
+							if (ch == '\\') {
+								/* Check for escaped line-feeds */
+								char const *temp, *temp2;
+								temp  = iter;
+								temp2 = ch_start;
+								ch_start = iter;
+								ch = utf8_readchar((char const **)&iter, end);
+								if (DeeUni_IsLF(ch)) {
+									if unlikely(unicode_printer_putascii(&item_printer, '\n'))
+										goto err_item_printer;
+									/* Deal with windows-style line-feeds */
+									if (ch == '\r') {
+										char const *temp = iter;
+										ch = utf8_readchar((char const **)&iter, end);
+										if (ch != '\n')
+											iter = temp;
+									}
+									iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
+									ch_start = iter;
+									goto list_continue_current_line;
+								}
+								iter     = temp;
+								ch_start = temp2;
+								ch       = '\\';
+							}
+							break;
+						}
+						/* If the indent matches the element indent, then this is a continuation! */
+						if (nextline_indentation == list_element_indent)
+							goto list_continue_current_line;
+						/* If the current indentation doesn't match the list prefix indent,
+						 * then we know for certain the list has been terminated. */
+						if (nextline_indentation != list_prefix_indent) {
+end_of_list:
+							iter          = list_line_start;
+							has_next_item = false;
+							goto do_append_list_item;
+						}
+						if (!is_ordered_list) {
+							/* Simple case: The list continues if `ch == list_prefix_ch' */
+							if (ch != list_prefix_ch)
+								goto end_of_list;
+						} else {
+							/* Complicated case: ordered list.
+							 * In this case, make sure that the range beginning at `ch_start',
+							 * and spanning exactly `list_element_indent - list_prefix_indent',
+							 * characters after being stripped or trailing whitespace, and a
+							 * mandatory trailing `list_prefix_ch'-character, contains only
+							 * Decimal and '.' characters, and doesn't begin with '.' */
+							item_prefix_start = ch_start;
+							if (!DeeUni_IsDecimal(ch))
+								goto end_of_list;
+							for (;;) {
+								if (DeeUni_IsDecimal(ch)) {
+continue_scan_order_list_prefix:
+									ch = utf8_readchar((char const **)&iter, end);
+									++nextline_indentation;
+									if (nextline_indentation >= list_element_indent)
+										goto end_of_list; /* Indentation has grown too large... */
+									continue;
+								}
+								if (ch == '.') {
+									/* A .-character can appear in the middle, even when `list_prefix_ch'
+									 * is equal to `.', so-long as that .-character isn't followed by a
+									 * non-decimal and non-. character */
+									if (ch != list_prefix_ch)
+										goto continue_scan_order_list_prefix; /* Handle like any other allowed character in this case! */
+again_handle_dot_in_ordered_list_prefix:
+									ch_start = iter;
+									ch = utf8_readchar((char const **)&iter, end);
+									++nextline_indentation;
+									if (nextline_indentation >= list_element_indent)
+										goto end_of_list; /* Indentation has grown too large... */
+									if (DeeUni_IsDecimal(ch))
+										goto continue_scan_order_list_prefix;
+									if (ch == '.')
+										goto again_handle_dot_in_ordered_list_prefix;
+									item_prefix_end = ch_start;
+									goto skip_whitespace_after_list_item_prefix;
+								}
+								if (ch == list_prefix_ch)
+									break; /* Found the prefix character! */
+								goto end_of_list; /* Unexpected character */
+							}
+							item_prefix_end = iter;
+						}
+						/* Append the current item, but continue the current list. */
+						ch_start = iter;
+						ch = utf8_readchar((char const **)&iter, end);
+						++nextline_indentation;
+skip_whitespace_after_list_item_prefix:
+						while (nextline_indentation < list_element_indent) {
+							if (!DeeUni_IsSpace(ch) || DeeUni_IsLF(ch))
+								goto end_of_list;
+							ch_start = iter;
+							ch = utf8_readchar((char const **)&iter, end);
+							++nextline_indentation;
+						}
+						if (nextline_indentation != list_element_indent)
+							goto end_of_list;
+						has_next_item = true;
+						goto do_append_list_item;
+					}
+					/* Re-parse the list item contents and append them to the result printer. */
+do_append_list_item:
+					if unlikely(do_compile_printer_to_printer(result_printer,
+					                                          &item_printer)) {
+err_item_printer:
+						unicode_printer_fini(&item_printer);
+						goto err;
+					}
+					unicode_printer_fini(&item_printer);
+					/* If the list has more items, then continue parsing them!
+					 * NOTE: At this point, ch/ch_start point at the first character
+					 *       of the next list element's body. */
+					if (has_next_item) {
+						PUTASCII('|');
+						goto list_begin_next_line;
+					}
+				}
+				/* Write the list footer */
+				PUTASCII('}');
+				/* At this point, iter point at the first character of the first line
+				 * following the end of the last list element, and iter points after
+				 * that same character. */
+				ch_start = iter;
+				ch       = utf8_readchar((char const **)&iter, end);
+				/* Continue parsing with the explicit line-feed in mind */
+				goto scan_newline_with_first_ch_and_implicit_linefeed;
+			}	break;
 
 			default:
+				/* Ordered lists can be started with any decimal-like character.
+				 * The case only handles ASCII decimals, but unicode may define more than that! */
+				if (DeeUni_IsDecimal(ch))
+					goto check_for_list;
 				break;
 			}
 			/*goto do_switch_ch_after_whitespace_or_lf;*/
@@ -1418,6 +1847,18 @@ check_for_list:
 			escaped_ch_start = iter;
 			escaped_ch = utf8_readchar((char const **)&iter, end);
 			switch (escaped_ch) {
+
+			case 0:
+				if (iter < end)
+					break;
+				/* Special case: Trying to escape EOF is the same as trying to escape a line-feed,
+				 *               only that in this case nothing actually gets inserted (though the
+				 *               backslash still gets removed)
+				 *               This behavior is necessary when escaping a line-feed in a special
+				 *               location, such as at the end of a list item body... */
+				FLUSHTO(ch_start);
+				flush_start = escaped_ch_start;
+				goto done;
 
 			case '\r': {
 				/* When escaping a line-feed, also check for windows-style linefeeds */
@@ -1459,46 +1900,7 @@ check_for_list:
 				 * Try to work around this quirk, and hide this fact by scanning ahead to check for the
 				 * double-@@, setting the `flush_start' pointer after it to act as through that's where
 				 * the line actually began. */
-				{
-					char const *orig_line_start;
-					orig_line_start = iter;
-					for (;;) {
-						ch = utf8_readchar((char const **)&iter, end);
-						if (DeeUni_IsLF(ch) || !ch)
-							break;
-						if (DeeUni_IsSpace(ch))
-							continue;
-						if (ch == '/') {
-							/* Another special case: C-style comments could appear before
-							 * the start of the documentation string on this line. - Since
-							 * we're trying to act like TPP hadn't escaped the linefeed, we
-							 * must also remove such a comment. */
-							ch = utf8_readchar((char const **)&iter, end);
-							if (ch != '*')
-								break;
-							do {
-								ch = utf8_readchar((char const **)&iter, end);
-again_search_for_c_comment_end_after_escaped_linefeed:
-								;
-							} while (ch && ch != '*');
-							if (ch != '*')
-								break;
-							ch = utf8_readchar((char const **)&iter, end);
-							if (ch != '/')
-								goto again_search_for_c_comment_end_after_escaped_linefeed;
-							continue;
-						}
-						if (ch == '@') {
-							ch = utf8_readchar((char const **)&iter, end);
-							if (ch != '@')
-								break;
-							/* The double-@ has been found! */
-							goto set_iter_as_start_of_line_after_explicit_linefeed;
-						}
-					}
-					iter = orig_line_start;
-				}
-set_iter_as_start_of_line_after_explicit_linefeed:
+				iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
 				flush_start = iter;
 				ch_start    = iter;
 				ch = utf8_readchar((char const **)&iter, end);
@@ -1566,6 +1968,7 @@ set_iter_as_start_of_line_after_explicit_linefeed:
 			case '\\': /* Escape the escape character itself to force it to be inserted */
 			case '(':  /* Hyper-links */
 			case ')':  /* Hyper-links */
+			case '>':  /* Deemon source code blocks */
 			case '=':  /* Lists */
 escape_inputonly:
 				FLUSHTO(ch_start);
@@ -2117,43 +2520,84 @@ done_dontflush:
 		 * delete the first `min_line_leading_spaces' characters
 		 * at the start, and after every line-feed found thereafter. */
 		size_t i = result_printer_origlen;
-		unicode_printer_erase(result_printer, i, min_line_leading_spaces);
+		if (should_strip_leading_space)
+			unicode_printer_erase_whitespace(result_printer, i, min_line_leading_spaces);
 		while (i < UNICODE_PRINTER_LENGTH(result_printer)) {
 			uint32_t ch;
 			ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
 			++i;
-			if (!DeeUni_IsLF(ch))
+			if (!DeeUni_IsLF(ch)) {
+				if (ch == '{') {
+					/* Skip non-escaped {}-pairs here! - Those belong to inner constructs,
+					 * and may contain line-feed characters which we must ignore! */
+					size_t recursion = 0;
+					for (;;) {
+						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+							goto done_return_now;
+						ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+						++i;
+						if (ch == '#')
+							++i;
+						else if (ch == '{')
+							++recursion;
+						else if (ch == '}') {
+							if (!recursion)
+								break;
+							--recursion;
+						}
+					}
+				} else if (ch == '#' && i < UNICODE_PRINTER_LENGTH(result_printer)) {
+					ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+					if (ch == '{' || ch == '#')
+						++i; /* Escaped brace/pound (ignore) */
+					else if (ch == 'T' || ch == 'L') {
+						size_t recursion;
+						/* Tables and Lists are followed by implicit line-feeds.
+						 * As such, we must also strip common whitespace following
+						 * the end of one of these constructs! */
+						++i;
+						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+							goto done_return_now; /* Shouldn't happen... */
+						if (ch == 'L' && UNICODE_PRINTER_GETCHAR(result_printer, i) != '{') {
+							++i;
+							if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+								goto done_return_now; /* Shouldn't happen... */
+						}
+						if (UNICODE_PRINTER_GETCHAR(result_printer, i) != '{')
+							continue; /* Shouldn't happen... */
+						/* Find the matching brace character. */
+						++i;
+						recursion = 0;
+						for (;;) {
+							if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+								goto done_return_now;
+							ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+							++i;
+							if (ch == '#')
+								++i;
+							else if (ch == '{')
+								++recursion;
+							else if (ch == '}') {
+								if (!recursion)
+									break;
+								--recursion;
+							}
+						}
+						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
+							goto done_return_now;
+						goto do_erase_after_linefeed;
+					}
+				}
 				continue;
+			}
 			if (ch == '\r') {
 				/* Check if the next character is a \n, in which case: erase after that one */
 				ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
 				if (ch == '\n')
 					++i;
-			} else if (ch == '{') {
-				/* Skip non-escaped {}-pairs here! - Those belong to inner constructs,
-				 * and may contain line-feed characters which we must ignore! */
-				size_t recursion = 0;
-				for (;;) {
-					if (i >= UNICODE_PRINTER_LENGTH(result_printer))
-						goto done_return_now;
-					ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
-					++i;
-					if (ch == '#')
-						++i;
-					else if (ch == '{')
-						++recursion;
-					else if (ch == '}') {
-						if (!recursion)
-							break;
-						--recursion;
-					}
-				}
-			} else if (ch == '#' && i < UNICODE_PRINTER_LENGTH(result_printer)) {
-				ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
-				if (ch == '{')
-					++i; /* Escaped brace (ignore) */
 			}
-			unicode_printer_erase(result_printer, i, min_line_leading_spaces);
+do_erase_after_linefeed:
+			unicode_printer_erase_whitespace(result_printer, i, min_line_leading_spaces);
 		}
 	}
 done_return_now:

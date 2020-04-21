@@ -321,16 +321,26 @@ class List {
 	@@List items @{(prefix: string, body: {(string | Object)...})...}
 	public member items: {(string, {(string | Object)...})...};
 
+	@@Set to @true if this @List should be be preceded by a line-feed
+	public member hasLeadingLineFeed: bool;
+
+	@@Set to @true if this @List should be be followed by a line-feed
+	public member hasTrailingLineFeed: bool;
+
 	function printConsoleString(p: ConsolePrinter) {
 		local longestPrefixLength = items.each[0].length > ...;
 		local longestPrefixLengthFull = longestPrefixLength  + 2;
 		local indentSpaces = " " * longestPrefixLengthFull;
+		if (hasLeadingLineFeed)
+			p.appendNormal("\n");
 		local isFirst = true;
 		for (local prefix, body: items) {
-			prefix = prefix.ljust(longestPrefixLength);
 			if (!isFirst)
 				p.appendNormal("\n");
+			prefix = prefix.ljust(longestPrefixLength);
 			p << " " << prefix << " ";
+			if (!p.currentLineAvail)
+				p << "\n"; /* Shouldn't happen */
 			p.appendNormal(
 				ConsolePrinter(maxWidth: p.currentLineAvail)
 				.appendall(body)
@@ -340,6 +350,8 @@ class List {
 				[longestPrefixLengthFull:]);
 			isFirst = false;
 		}
+		if (hasTrailingLineFeed)
+			p.appendNormal("\n");
 	}
 
 	operator str(): string {
@@ -432,6 +444,12 @@ class Table {
 	@@where @0 referrs to the bottom of the first row.
 	public member thickRows: Set with int;
 
+	@@Set to @true if this @Table should be be preceded by a line-feed
+	public member hasLeadingLineFeed: bool;
+
+	@@Set to @true if this @Table should be be followed by a line-feed
+	public member hasTrailingLineFeed: bool;
+
 	@@Return the # of rows of this table (always non-zero)
 	public property rows: int = {
 		get(): int {
@@ -517,7 +535,7 @@ class Table {
 		local nColumns = columns;
 		local minWidth = 2 + (nColumns * 4);
 		local borderWidth = 1 + (nColumns * 3);
-		if (p.currentLineAvail < minWidth)
+		if (hasLeadingLineFeed)
 			p.appendNormal("\n");
 		if (p.currentLineAvail < minWidth) {
 			/* Split the table in the middle. */
@@ -527,7 +545,6 @@ class Table {
 			local lhs = createSubTable(0, 0, rows - 1, splitColumn - 1);
 			local rhs = createSubTable(0, splitColumn, rows - 1, nColumns - 1);
 			lhs.printConsoleString(p);
-			p.appendNormal("\n");
 			rhs.printConsoleString(p);
 			return;
 		}
@@ -630,7 +647,9 @@ class Table {
 			p.append("\u2550" * (w + 2)); /* DOUBLE-HORIZONTAL */
 			isFirstColumn = false;
 		}
-		p.appendNormal("\u255D\n"); /* DOUBLE-UP-AND-LEFT */
+		p.append("\u255D"); /* DOUBLE-UP-AND-LEFT */
+		if (hasTrailingLineFeed)
+			p.appendNormal("\n");
 	}
 
 	operator str(): string {
@@ -813,7 +832,7 @@ function findStartOfLine(
 			break;
 		partStart = newpos;
 	}
-	return false;
+	return none;
 }
 
 function appearsAtEndOfLine(
@@ -836,11 +855,20 @@ function claculateComponentIndentation(
 	if (!appearsAtEndOfLine(docstring, end, partEnd))
 		return none;
 	local result = findStartOfLine(docstring, start, partStart);
-	if (result !is none)
+	if (result !is none) {
 		result = partStart - result;
+		if (result == 0) {
+			if (start == partStart && end == partEnd) {
+				/* Handle the special case where start==partStart && end==partEnd
+				 * In this case, the indentation is none if body body contains no
+				 * linefeeds, but is 0 if it does contain any. */
+				if (!docstring.contains("\n", partStart, partEnd))
+					result = none;
+			}
+		}
+	}
 	return result;
 }
-
 
 @@A given @docstring belonging to a @TextSegment such that special formating
 @@constructs are replaced with dedicated format representation objects, which
@@ -855,7 +883,7 @@ function claculateComponentIndentation(
 @@+--------------------------------+----------------------------------------+
 @@| Component representation class |  Component syntax                      |
 @@+--------------------------------+----------------------------------------+
-@@| @Header                        | @"#Hn{BODY}" or @"#HnBODY"             |
+@@| @Header                        | - @"#Hn{BODY}" or @"#HnBODY"           |
 @@|                                |                                        |
 @@| @Emphasis                      | - @"#B{BODY}" or @"#BBODY"             |
 @@|                                | - @"#I{BODY}" or @"#IBODY"             |
@@ -866,29 +894,30 @@ function claculateComponentIndentation(
 @@|                                | - @"#L*{BODY1|BODY2|BODY3}"            |
 @@|                                | - @"#L{{1.}BODY1|{2.}BODY2|{3.}BODY3}" |
 @@|                                |                                        |
-@@| @HyperLink                     | #A{BODY|LINK}                          |
+@@| @HyperLink                     | - #A{BODY|LINK}                        |
 @@|                                |                                        |
 @@| @Code                          | - @"#C{BODY}" or @"#CBODY"             |
 @@|                                | - @"#C[deemon]{BODY}" or               |
 @@|                                |   @"#C[deemon]BODY"                    |
 @@|                                | - @"${BODY}" or @"$BODY"               |
 @@|                                |                                        |
-@@| @Table                         | @("#T{BODY11|BODY12|BODY13~"           |
+@@| @Table                         | - @("#T{BODY11|BODY12|BODY13~"         |
 @@|                                |      "BODY21|BODY22|BODY23&|"          |
 @@|                                |      "BODY31|BODY32|BODY33}")          |
 @@|                                |                                        |
-@@| @ArgumentReference             | @"@foo" or @"@{foo}"                   |
+@@| @ArgumentReference             | - @"@foo" or @"@{foo}"                 |
 @@|                                |                                        |
-@@| @ExternalReference             | @"?..." (too many to list)             |
+@@| @ExternalReference             | - @"?..." (too many to list)           |
 @@|                                |                                        |
-@@| @string                        | ...                                    |
+@@| @string                        | - ...                                  |
 @@+--------------------------------+----------------------------------------+
 function splitTextSegment(
 		docstring: string, mypath: (string, bool),
-		i: int = 0, end: int = -1)
+		start: int = 0, end: int = -1)
 	: {(string | Object)...}
 {
-	local flushStart = i;
+	local i = start;
+	local flushStart = start;
 	{
 		local len = #docstring;
 		if (end < 0 || end > len)
@@ -1005,7 +1034,7 @@ do_dollar_symcont:
 				body: unEscapePoundCharacters(
 					docstring[bodyStart:bodyEnd]),
 				indentation: claculateComponentIndentation(
-					docstring, flushStart, end, dollarStart, i));
+					docstring, start, end, dollarStart, i));
 			flushStart = i;
 		}	break;
 
@@ -1130,7 +1159,7 @@ continue_after_poundStart:
 					body: unEscapePoundCharacters(
 						docstring[bodyStart:bodyEnd]),
 					indentation: claculateComponentIndentation(
-						docstring, flushStart, end, poundStart, i)
+						docstring, start, end, poundStart, i)
 				);
 				flushStart = i;
 			}	break;
@@ -1223,8 +1252,11 @@ continue_after_poundStart:
 					i = elemEnd + 1;
 				}
 				FLUSHTO(poundStart);
-				yield List(items: listItems);
 				i = bodyEnd + 1;
+				yield List(
+					items:               listItems,
+					hasLeadingLineFeed:  poundStart > start,
+					hasTrailingLineFeed: i < end);
 				flushStart = i;
 			}	break;
 
@@ -1299,10 +1331,12 @@ continue_table_after_pipe:
 				if (!rows)
 					rows = [[("", { "" })]]; /* Shouldn't happen... */
 				FLUSHTO(poundStart);
-				yield Table(
-					cells: rows,
-					thickRows: thickRows);
 				i = tableEnd + 1;
+				yield Table(
+					cells:               rows,
+					thickRows:           thickRows,
+					hasLeadingLineFeed:  poundStart > start,
+					hasTrailingLineFeed: i < end);
 				flushStart = i;
 			}	break;
 

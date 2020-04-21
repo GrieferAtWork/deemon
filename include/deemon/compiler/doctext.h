@@ -126,7 +126,7 @@ DECL_BEGIN
  *
  * As such, \ can be used to escape the following characters such that \ is removed,
  * and the escaped character looses any special meaning:
- *     \ _ @ ` [ ] ( ) - + | = ~ * # :
+ *     \ _ @ ` [ ] ( ) - + | = ~ * # : >
  *
  *     0 1 2 3 4 5 6 7 8 9 .  (Only if the character appeared at the beginning of a line, or
  *                             was preceded by only other decimal, \, . or : characters (i.e.
@@ -244,7 +244,7 @@ DECL_BEGIN
  *     >> - First unordered item
  *     >> - Second unordered item
  *     Lists cone in 2 forms:
- *       - Numbered:  each line begins with a decimal number, followed by (the same) . : or .:
+ *       - Numbered:  each line begins with a decimal number, followed by (the same) . or :
  *                    These numbers don't necessarily have to be incremental, nor does there
  *                    need to be only a single decimal number (so-long as decimals are only
  *                    ever separated by `.' characters; i.e. `1.1.3:' is a valid list item start)

@@ -26,7 +26,8 @@
 
 import * from deemon;
 
-@@Bind a given @operator_function to execute the associated operator for a specific type @tp only:
+@@Bind a given @operator_function to execute the
+@@associated operator for a specific type @tp only:
 @@>import bind from operators;
 @@>import * from deemon;
 @@>local sequence_add = bind(Sequence, operator +);
@@ -143,7 +144,7 @@ function putc(self: File, c: int from deemon): int from deemon -> self.operator 
 	__has_feature(deemon_inline_assembly)
 
 @[gatw.doc("(a,b?)->")]
-@[gatw.doc("pos(a) or add(a,b)")]
+@[gatw.doc("Performs as either ${pos(a)} or ${add(a, b)}")]
 function __pooad(a, b...) {
 	__asm__({
 		push   arg @a
@@ -163,7 +164,7 @@ function __pooad(a, b...) {
 }
 
 @[gatw.doc("(a,b?)->")]
-@[gatw.doc("neg(a) or sub(a,b)")]
+@[gatw.doc("Performs as either ${neg(a)} or ${sub(a, b)}")]
 function __neosb(a, b...) {
 	__asm__({
 		push   arg @a
@@ -183,7 +184,7 @@ function __neosb(a, b...) {
 }
 
 @[gatw.doc("(seq,index,opt?)->")]
-@[gatw.doc("getitem(seq,index) or setitem(seq,index,opt)")]
+@[gatw.doc("Performs as either ${getitem(seq, index)} or ${setitem(seq, index, opt)}")]
 function __giosi(seq, index, opt...) {
 	__asm__({
 		push   arg @seq
@@ -205,7 +206,7 @@ function __giosi(seq, index, opt...) {
 }
 
 @[gatw.doc("(seq,start,end,opt?)->")]
-@[gatw.doc("getrange(seq,start,end) or setrange(seq,start,end,opt)")]
+@[gatw.doc("Performs as either ${getrange(seq, start, end)} or ${setrange(seq, start, end, opt)}")]
 function __grosr(seq, start, end, opt...) {
 	__asm__({
 		push   arg @seq
@@ -229,7 +230,7 @@ function __grosr(seq, start, end, opt...) {
 }
 
 @[gatw.doc("(obj,attr,opt?)->")]
-@[gatw.doc("getattr(obj,attr) or setattr(obj,attr,opt)")]
+@[gatw.doc("Performs as either ${getattr(obj, attr)} or ${setattr(obj, attr, opt)}")]
 function __gaosa(obj, attr, opt...) {
 	__asm__({
 		push   arg @obj
@@ -251,27 +252,27 @@ function __gaosa(obj, attr, opt...) {
 }
 #else
 
-@@pos(a) or add(a, b)
+@@Performs as either @pos(a) or @add(a, b)
 function __pooad(a, b?) {
 	return b !is bound ? pos(a) : add(a, b);
 }
 
-@@neg(a) or sub(a, b)
+@@Performs as either @neg(a) or @sub(a, b)
 function __neosb(a, b?) {
 	return b !is bound ? neg(a) : sub(a, b);
 }
 
-@@getitem(seq, index) or setitem(seq, index, opt)
+@@Performs as either @getitem(seq, index) or @setitem(seq, index, opt)
 function __giosi(seq, index, opt?) {
 	return opt !is bound ? getitem(seq, index) : setitem(seq, index, opt);
 }
 
-@@getrange(seq, begin, end) or setrange(seq, begin, end, opt)
+@@Performs as either @getrange(seq, begin, end) or @setrange(seq, begin, end, opt)
 function __grosr(seq, begin, end, opt?) {
 	return opt !is bound ? getrange(seq, begin, end) : setrange(seq, begin, end, opt);
 }
 
-@@getattr(obj, attr) or setattr(obj, attr, opt)
+@@Performs as either @getattr(obj, attr) or @setattr(obj, attr, opt)
 function __gaosa(obj, attr, opt?) {
 	return opt !is bound ? getattr(obj, attr) : setattr(obj, attr, opt);
 }
@@ -280,8 +281,13 @@ function __gaosa(obj, attr, opt?) {
 
 
 @@Operator fallback function.
-@@Any operator not exported as its S-name will invoke this function, passing its implementation-specific ID as first argument with all the other arguments following thereafter.
-@@Additionally, any operator with an unknown S-name calls this function to implement its callback.
+@@
+@@Any operator not exported as its S-name will invoke this function, passing its
+@@implementation-specific ID as first argument with all the other arguments following
+@@thereafter.
+@@
+@@Additionally, any operator with an unknown S-name
+@@calls this function to implement its callback.
 function operator(id: int from deemon, args...) {
 	throw Error.TypeError("Cannot invoke unknown operator #%X" % id);
 }
