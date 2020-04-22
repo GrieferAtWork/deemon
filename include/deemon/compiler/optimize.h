@@ -273,13 +273,15 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL ast_equal(struct ast *__restrict a, st
  * on the latter, nor does it invoke any side-effects that could
  * have any influence on the other.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `false'. */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL ast_can_exchange(struct ast *__restrict first,
-                                   struct ast *__restrict second);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+ast_can_exchange(struct ast *__restrict first,
+                 struct ast *__restrict second);
 
 /* Check if the given ast `self' makes use of `sym' in any way.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, the always returns `true'. */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL ast_uses_symbol(struct ast *__restrict self,
-                                  struct symbol *__restrict sym);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+ast_uses_symbol(struct ast *__restrict self,
+                struct symbol *__restrict sym);
 
 /* Do a shallow assignment of `other' onto `self' */
 INTDEF int (DCALL ast_assign)(struct ast *__restrict self,
@@ -296,8 +298,9 @@ INTDEF void DCALL ast_fini_contents(struct ast *__restrict self);
 /* Copy scope and DDI information from `src' and assign them to `ast'.
  * When `ast' is NULL, don't do anything.
  * @return: * : Always re-returns `ast' */
-INTDEF struct ast *DCALL ast_setscope_and_ddi(struct ast *self,
-                                              struct ast *__restrict src);
+INTDEF struct ast *DCALL
+ast_setscope_and_ddi(struct ast *self,
+                     struct ast *__restrict src);
 
 /* Internal optimization helpers... */
 INTDEF WUNUSED NONNULL((1)) bool DCALL ast_has_sideeffects(struct ast *__restrict self);
@@ -305,7 +308,8 @@ INTDEF WUNUSED NONNULL((1)) bool DCALL ast_is_nothrow(struct ast *__restrict sel
 
 /* Check if a given ast `self' is, or contains a `goto' branch,
  * or a `break' / `continue' branch when `consider_loopctl' is set. */
-INTDEF WUNUSED NONNULL((1)) bool DCALL ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+ast_contains_goto(struct ast *__restrict self, uint16_t consider_loopctl);
 #define AST_CONTAINS_GOTO_CONSIDER_NONE     0x00
 #define AST_CONTAINS_GOTO_CONSIDER_CONTINUE 0x01
 #define AST_CONTAINS_GOTO_CONSIDER_BREAK    0x02

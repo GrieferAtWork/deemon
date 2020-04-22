@@ -252,7 +252,34 @@ after_multiple_constexpr:
 			break;
 		}
 	} else {
-		/* Try to optimize something like `[10,[x,y]...]' to `[10,x,y]' */
+		if (self->a_multiple.m_astc == 1 &&
+		    self->a_multiple.m_astv[0]->a_type == AST_EXPAND) {
+			/* Something like `{ x... }' can be optimized to `x' when
+			 * it is already  known that `x' has some sequence typing. */
+			struct ast *expanded_expr;
+			DeeTypeObject *expanded_type;
+			DeeTypeObject *needed_type;
+			if (self->a_flag == AST_FMULTIPLE_TUPLE)
+				needed_type = &DeeTuple_Type;
+			else if (self->a_flag == AST_FMULTIPLE_GENERIC)
+				needed_type = &DeeSeq_Type;
+			else {
+				goto done_seq_cast_optimization;
+			}
+			expanded_expr = self->a_multiple.m_astv[0]->a_expand;
+			expanded_type = ast_predict_type(expanded_expr);
+			if (expanded_type &&
+			    DeeType_IsInherited(expanded_type, needed_type)) {
+				if (ast_assign(self, expanded_expr))
+					goto err;
+				OPTIMIZE_VERBOSE("Replace `{ x... }' with `x' of type %k\n",
+				                 expanded_type);
+				goto did_optimize;
+			}
+		}
+done_seq_cast_optimization:
+
+		/* Try to optimize something like `[10, [x, y]...]' to `[10, x, y]' */
 		end = (iter = self->a_multiple.m_astv) + self->a_multiple.m_astc;
 continue_inline_at_iter:
 		for (; iter < end; ++iter) {

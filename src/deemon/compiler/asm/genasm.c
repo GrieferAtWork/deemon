@@ -697,7 +697,7 @@ done_push_none:
 			goto done;
 		}
 
-		/* TODO: `{ foo... }' currently compiles as:
+		/* `{ foo... }' normally compiles as:
 		 * >> push   @foo
 		 * >> cast   top, Tuple
 		 *
@@ -722,6 +722,25 @@ done_push_none:
 		 * during construction, so this ~optimization~ would probably not work in
 		 * favor of program speed...
 		 */
+		if (self->a_multiple.m_astc == 1 &&
+		    !(current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) &&
+		    self->a_flag == AST_FMULTIPLE_GENERIC &&
+		    (*iter)->a_type == AST_EXPAND && PUSH_RESULT) {
+			int32_t deemon_modid;
+			struct ast *expandexpr = (*iter)->a_expand;
+			if (ast_genasm(expandexpr, ASM_G_FPUSHRES))
+				goto err;
+			deemon_modid = asm_newmodule(DeeModule_GetDeemon());
+			if unlikely(deemon_modid < 0)
+				goto err;
+			if (asm_putddi(self))
+				goto err;
+			if (asm_gpush_extern((uint16_t)deemon_modid, id_Sequence))
+				goto err;
+			if (asm_gsuper())
+				goto err;
+			break;
+		}
 
 		/* When `need_all' is true, we must push the results of all elements onto the stack. */
 		need_all           = (self->a_flag != AST_FMULTIPLE_KEEPLAST) ? PUSH_RESULT : ASM_G_FNORMAL;
