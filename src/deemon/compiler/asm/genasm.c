@@ -46,6 +46,18 @@
 
 #include "../../runtime/builtin.h"
 
+#ifndef __INTELLISENSE__
+#include "genasm-yield.c.inl"
+#else /* !__INTELLISENSE__ */
+DECL_BEGIN
+
+PRIVATE WUNUSED NONNULL((1, 2)) int
+(DCALL ast_genasm_yield)(struct ast *__restrict yieldexpr,
+                         struct ast *__restrict ddi);
+
+DECL_END
+#endif /* __INTELLISENSE__ */
+
 DECL_BEGIN
 
 STATIC_ASSERT(ASM_NOT & 1);
@@ -58,7 +70,7 @@ STATIC_ASSERT((ASM_INCPOST & 0xff00) == (ASM_DECPOST & 0xff00));
 /* Quick translation table for most basic operator instruction codes. */
 #ifdef _MSC_VER
 extern
-#endif
+#endif /*  _MSC_VER */
 INTERN instruction_t const operator_instr_table[] = {
 	/* [OPERATOR_CONSTRUCTOR] = */ 0,
 	/* [OPERATOR_COPY]        = */ ASM_COPY,
@@ -865,40 +877,8 @@ done_fake_none:
 		break;
 
 	case AST_YIELD:
-		if (self->a_yield->a_type == AST_EXPAND) {
-			/* Special case: Must do a YIELDALL when the
-			 *               expression is an expand-expression. */
-			/* TODO: By default, the compiler will encode a regular, old `yield foo;' as `yield (foo,)...;',
-			 *       so without special handling here, that would always be assembled as:
-			 *       >> push   @foo
-			 *       >> push   pack Tuple, #1
-			 *       >> iterself top
-			 *       >> yield  foreach, pop
-			 *       Special handling for this should exist here, but another optimization should
-			 *       also see the an AST-optimization that collapses yield-statements with expand-
-			 *       single-sequence operands. */
-			if (ast_genasm(self->a_yield->a_expand, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(self))
-				goto err;
-			if (asm_giterself())
-				goto err;
-			if (asm_gyieldall())
-				goto err;
-		} else if (self->a_yield->a_type == AST_SYM &&
-		           asm_can_prefix_symbol_for_read(self->a_yield->a_sym)) {
-			if (asm_putddi(self))
-				goto err;
-			if (asm_gprefix_symbol_for_read(self->a_yield->a_sym, self->a_yield))
-				goto err;
-			if (asm_gyield_p())
-				goto err;
-		} else {
-			if (ast_genasm(self->a_yield, ASM_G_FPUSHRES) ||
-			    asm_putddi(self) ||
-			    asm_gyield())
-				goto err;
-		}
+		if unlikely(ast_genasm_yield(self->a_yield, self))
+			goto err;
 		goto done_push_none;
 
 	case AST_THROW:

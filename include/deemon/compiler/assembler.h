@@ -1163,6 +1163,14 @@ INTDEF int DCALL asm_gunwind(void);
 	     : asm_putimm16_16(ASM_FUNCTION_C_16, (uint16_t)(code_cid), (uint16_t)((n_refs)-1)))))
 
 
+/* Prefix instructions. */
+#define asm_pstack(sto)               (asm_put816(ASM_STACK, sto))
+#define asm_pstatic(sid)              (asm_putsid16(ASM16_STATIC, sid))
+#define asm_pconst(cid)               (asm_put816(ASM_STATIC, cid))
+#define asm_pextern(mid, gid)         (asm_put881616(ASM_EXTERN, mid, gid))
+#define asm_pglobal(gid)              (asm_put816(ASM_GLOBAL, gid))
+#define asm_plocal(lid)               (asm_put816(ASM_LOCAL, lid))
+
 /* Macros for generating instructions. */
 #define asm_gret_none()               (asm_put(ASM_RET_NONE))
 #define asm_gret()                    (asm_decsp(), asm_put(ASM_RET))
@@ -1461,13 +1469,6 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gcall_tuple_kwds()                         (asm_dddicsp(), asm_put16(ASM_CALL_TUPLE_KWDS))
 #define asm_gcallattr_kwds(n)                          (asm_subsp((n)+3), asm_incsp(), Dee_ASSERT((n)<=UINT8_MAX), (asm_put(ASM_EXTENDED1) || asm_putimm8(ASM_CALLATTR_KWDS & 0xff, (uint8_t)(n))))
 #define asm_gcallattr_tuple_kwds()                     (asm_ddddicsp(), asm_put16(ASM_CALLATTR_TUPLE_KWDS))
-
-/* Prefix instructions. */
-#define asm_pstack(sto)               (asm_put816(ASM_STACK, sto))
-#define asm_pstatic(sid)              (asm_putsid16(ASM16_STATIC, sid))
-#define asm_pextern(mid, gid)         (asm_put881616(ASM_EXTERN, mid, gid))
-#define asm_pglobal(gid)              (asm_put816(ASM_GLOBAL, gid))
-#define asm_plocal(lid)               (asm_put816(ASM_LOCAL, lid))
 
 /* Instructions available with and without a Prefix instruction.
  * NOTE: With prefix, these instructions will operate as in-place. */

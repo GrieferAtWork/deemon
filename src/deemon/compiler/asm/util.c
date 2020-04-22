@@ -639,8 +639,9 @@ err:
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__restrict sym,
-                                    struct ast *__restrict warn_ast) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+asm_check_thiscall(struct symbol *__restrict sym,
+                   struct ast *__restrict warn_ast) {
 	/* Throw a compiler-error when one attempts to
 	 * access an instance member from a class method.
 	 * We must check this now because at runtime, the fast-mode interpreter

@@ -1199,8 +1199,8 @@
     <None Include="..\include\deemon\compiler\doctext.h">
       <Filter>include\deemon\compiler</Filter>
     </None>
-    <None Include="..\src\deemon\compiler\lexer\doctext.c">
-      <Filter>src\deemon\compiler\lexer</Filter>
+    <None Include="..\src\deemon\compiler\asm\genasm-yield.c.inl">
+      <Filter>src\deemon\compiler\asm</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

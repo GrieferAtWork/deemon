@@ -170,8 +170,9 @@ again:
 		/* TODO: Using assumptions, we could also track if a symbol if a symbol is bound? */
 		break;
 
-	case AST_RETURN:
 	case AST_YIELD:
+		/* TODO: `yield { foo }...' -> `yield foo' */
+	case AST_RETURN:
 	case AST_THROW:
 		if (self->a_return &&
 		    ast_optimize(stack, self->a_return, true))

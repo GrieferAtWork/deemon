@@ -826,7 +826,7 @@ DeeFastSeq_GetSize(DeeObject *__restrict self);
 
 /* Returns the `index'th item of `self'.
  * The caller is responsible that `index < DeeFastSeq_GetSize(self)' when
- * `self' is an immutable sequence (anything other than `list' and `_sharedvector').
+ * `self' is an immutable sequence (anything other than `List' and `_SharedVector').
  * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize(self)'
  *          returned something other than `DEE_FASTSEQ_NOTFAST'. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL

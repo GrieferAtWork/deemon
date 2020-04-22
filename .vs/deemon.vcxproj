@@ -346,6 +346,7 @@
     <None Include="..\include\deemon\system-error.h" />
     <None Include="..\include\deemon\system-features.h" />
     <None Include="..\include\deemon\system.h" />
+    <None Include="..\src\deemon\compiler\asm\genasm-yield.c.inl" />
     <None Include="..\src\deemon\compiler\asm\genstore-setup.c.inl" />
     <None Include="..\src\deemon\compiler\asm\userdb.def" />
     <CustomBuild Include="..\src\deemon\execute\asm\altstack-x86_64.S">
