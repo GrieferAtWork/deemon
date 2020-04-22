@@ -1621,7 +1621,7 @@ abs_stack_any:
 		if (self->a_type != AST_SYM)
 			goto next_option;
 		sym = SYMBOL_UNWIND_ALIAS(self->a_sym);
-		if (sym->s_type != SYMBOL_TYPE_EXTERN)
+		if (sym->s_type != SYMBOL_TYPE_GLOBAL)
 			goto next_option;
 		if (mode == OPTION_MODE_INPUT)
 			gid = asm_gsymid_for_read(sym, self);
