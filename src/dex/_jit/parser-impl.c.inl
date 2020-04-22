@@ -108,7 +108,7 @@
 #define ERROR                        NULL
 #define RETURN_TYPE                  DREF DeeObject *
 #define DECREF(x)                    Dee_Decref(x)
-#define DECREF_MAYBE_LVALUE(x)       ((x) == JIT_LVALUE || Dee_Decref(x))
+#define DECREF_MAYBE_LVALUE(x)       ((x) == JIT_LVALUE || (Dee_Decref(x), 0))
 #define LHS_OR_OK                    lhs
 #define ISOK(x)                      likely(x)
 #define ISERR(x)                     unlikely(!(x))

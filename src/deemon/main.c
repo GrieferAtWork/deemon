@@ -48,15 +48,7 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#else /* CONFIG_HOST_WINDOWS */
-#ifdef _MSC_VER
-#undef chdir
-#include <direct.h> /* chdir() */
-#define chdir _chdir
-#else /* _MSC_VER */
-#include <unistd.h> /* chdir() */
-#endif /* !_MSC_VER */
-#endif /* !CONFIG_HOST_WINDOWS */
+#endif /* CONFIG_HOST_WINDOWS */
 
 #include "cmdline.h"
 #include "runtime/runtime_error.h"
@@ -381,7 +373,9 @@ PRIVATE int DCALL cmd_traditional(char *UNUSED(arg)) {
 
 PRIVATE int DCALL cmd_L(char *arg) {
 	int result;
-	DREF DeeObject *path = DeeString_New(arg);
+	DREF DeeObject *path;
+	path = DeeString_NewUtf8(arg, strlen(arg),
+	                         STRING_ERROR_FIGNORE);
 	if unlikely(!path)
 		return -1;
 	result = DeeList_Append(DeeModule_GetPath(), path);
@@ -538,13 +532,15 @@ PRIVATE int DCALL cmd_message_format(char *arg) {
 
 PRIVATE int DCALL cmdpp_name(char *arg) {
 	Dee_XDecref(script_options.co_filename);
-	script_options.co_filename = (DeeStringObject *)DeeString_New(arg);
+	script_options.co_filename = (DeeStringObject *)DeeString_NewUtf8(arg, strlen(arg),
+	                                                                  STRING_ERROR_FIGNORE);
 	return script_options.co_filename ? 0 : -1;
 }
 
 PRIVATE int DCALL cmd_name(char *arg) {
 	Dee_XDecref(script_options.co_rootname);
-	script_options.co_rootname = (DeeStringObject *)DeeString_New(arg);
+	script_options.co_rootname = (DeeStringObject *)DeeString_NewUtf8(arg, strlen(arg),
+	                                                                  STRING_ERROR_FIGNORE);
 	return script_options.co_rootname ? 0 : -1;
 }
 
@@ -1142,7 +1138,10 @@ int main(int argc, char *argv[]) {
 		if unlikely(!sys_argv)
 			goto err;
 		for (i = 0; i < (unsigned int)argc; ++i) {
-			DREF DeeObject *arg = DeeString_New(argv[i]);
+			DREF DeeObject *arg;
+			char *argstr = argv[i];
+			arg = DeeString_NewUtf8(argstr, strlen(argstr),
+			                        STRING_ERROR_FIGNORE);
 			if unlikely(!arg) {
 				while (i--)
 					Dee_Decref(DeeTuple_GET(sys_argv, i));
@@ -2052,7 +2051,9 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		opt.co_compiler |= (COMPILER_FKEEPLEXER | COMPILER_FKEEPERROR); /* Keep using the same lexer and errors! */
 		opt.co_assembler |= ASM_FNODEC;                                 /* Disable DEC file creation */
 		if (ddi_filename && ddi_filename != filename) {
-			opt.co_filename = (struct string_object *)DeeString_New(ddi_filename);
+			opt.co_filename = (struct string_object *)DeeString_NewUtf8(ddi_filename,
+			                                                            strlen(ddi_filename),
+			                                                            STRING_ERROR_FIGNORE);
 			if unlikely(!opt.co_filename)
 				goto err;
 		}
@@ -2427,7 +2428,8 @@ PRIVATE NONNULL((1)) bool DCALL os_trychdir(char *__restrict path) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	/* Try the wide-character version. */
-	pathob = DeeString_New(path);
+	pathob = DeeString_NewUtf8(path, strlen(path),
+	                           STRING_ERROR_FIGNORE);
 	if unlikely(!pathob)
 		goto err;
 	wpath = (LPWSTR)DeeString_AsWide(pathob);
@@ -2471,7 +2473,23 @@ err:
 #define IS_SEP(x) ((x) == '\\' || (x) == '/')
 #else /* CONFIG_HOST_WINDOWS */
 #define IS_SEP(x) ((x) == '/')
+#ifdef CONFIG_HAVE_chdir
 #define os_trychdir(path) (chdir(path) == 0)
+#else /* CONFIG_HAVE_chdir */
+PRIVATE bool DCALL os_trychdir(char const *path) {
+	/* Try to off-load the job to `fs.chdir()' (thus allowing the
+	 * user to override it if they know how we'd be able to do this) */
+	DREF DeeObject *result;
+	result = DeeModule_CallExternf("fs", "chdir", "s", path);
+	if (result) {
+		Dee_Decref(result);
+		return true;
+	}
+	DeeError_Handled(ERROR_HANDLED_RESTORE);
+	return false;
+}
+
+#endif /* !CONFIG_HAVE_chdir */
 #endif /* !CONFIG_HOST_WINDOWS */
 
 
@@ -2488,9 +2506,10 @@ dchdir_and_format_source_files(char *__restrict filename) {
 	 * >> import * from deemon;
 	 * >> for (local line: File.open("../../defs/mydef.def")) {
 	 * >>     line = line.strip();
-	 * >>     if (!line || line.startswith("#")) continue;
-	 * >>     local x,y = line.scanf("%d = %d")...;
-	 * >>     print "DEFINE("+x+","+y+")";
+	 * >>     if (!line || line.startswith("#"))
+	 * >>         continue;
+	 * >>     local x, y = line.scanf("%d = %d")...;
+	 * >>     print "DEFINE(" + x + ", " + y + ")";
 	 * >> }
 	 */
 	char *path_end;

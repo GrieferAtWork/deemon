@@ -145,7 +145,7 @@ local function encodeExpression(ob: Object): string | none {
 
 @@Generate the @n'th generic argument name, following the rules layed
 @@out for generating names for unknown arguments:
-@@Start by using each of abcdefghijklmnopqrstuvwxyz, the continue
+@@Start by using each of @"abcdefghijklmnopqrstuvwxyz", then continue
 @@by generating names aa ab ac, etc.
 @@Additionally, when @d is given, try to extract argument name information
 @@from keyword information meta-data taken from the Doc node's bound object.
@@ -266,7 +266,7 @@ local function decodeNameEnd(name: string, start: int = 0): int {
 
 
 
-@@Lookup table to convert pretty operator names to their real counterparts
+@@Lookup table to determine default prototypes for operators, given their names
 local final OPERATOR_DEFAULTS: {string: string} = {
 	"constructor" : "(args!)->?N", "copy" : "(other:?.)->?N", "deepcopy" : "(other:?.)->?N",
 	"destructor" : "()->?N", "assign" : "(other:?.)->?N", "moveassign" : "(other:?.)->?N",
@@ -382,7 +382,8 @@ local function getRealOperatorName(name: string, argc: int | none = none): strin
 @@Returns the Doc-like path for a given fully qualified type
 @@If no such path exists, return @none instead
 @@NOTE: The returned path includes a leading @"/"
-local function getQualifiedTypePath(docnode: WeakRef with Doc, qual: string): string | none {
+local function getQualifiedTypePath(
+		docnode: WeakRef with Doc, qual: string): string | none {
 	if (#qual >= 2) {
 		switch (qual[1]) {
 

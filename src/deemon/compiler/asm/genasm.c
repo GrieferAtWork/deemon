@@ -697,9 +697,36 @@ done_push_none:
 			goto done;
 		}
 
+		/* TODO: `{ foo... }' currently compiles as:
+		 * >> push   @foo
+		 * >> cast   top, Tuple
+		 *
+		 * However (when not optimizing for size), this can be done more efficiently
+		 * such that we compile the expression as `foo as Sequence from deemon' instead:
+		 * >> push   @foo
+		 * >> push   extern @deemon:@Sequence
+		 * >> super  top, pop
+		 *
+		 * The resulting assembly can then execute in O(1), but would still comply
+		 * with the (only) requirement of generic sequence expressions being that the
+		 * returned object be derived from `Sequence from deemon'!
+		 *
+		 * Something similar could be done for practically all generic sequence expression
+		 * containing expand expressions by wrapping them in yield-functions:
+		 * >> { 10, foo..., 20, bar..., 30 }
+		 * Could be compiled as:
+		 * >> []{ yield 10; yield foo...; yield 20; yield bar...; yield 30; }()
+		 * With the construction of the resulting sequence then being O(1) as well.
+		 * However, this method would introduce a lot of unavoidable overhead that
+		 * would likely be far greater than the overhead of iterating foo and bar
+		 * during construction, so this ~optimization~ would probably not work in
+		 * favor of program speed...
+		 */
+
 		/* When `need_all' is true, we must push the results of all elements onto the stack. */
-		need_all    = (self->a_flag != AST_FMULTIPLE_KEEPLAST) ? PUSH_RESULT : ASM_G_FNORMAL;
-		active_size = 0, expand_encountered = false;
+		need_all           = (self->a_flag != AST_FMULTIPLE_KEEPLAST) ? PUSH_RESULT : ASM_G_FNORMAL;
+		active_size        = 0;
+		expand_encountered = false;
 		for (; iter != end; ++iter) {
 			struct ast *elem = *iter;
 			/* Only need to push the last element when _we_ are supposed to push our result. */
@@ -822,8 +849,22 @@ done_fake_none:
 		if (self->a_yield->a_type == AST_EXPAND) {
 			/* Special case: Must do a YIELDALL when the
 			 *               expression is an expand-expression. */
-			if (ast_genasm(self->a_yield->a_expand, ASM_G_FPUSHRES) ||
-			    asm_putddi(self) || asm_giterself() || asm_gyieldall())
+			/* TODO: By default, the compiler will encode a regular, old `yield foo;' as `yield (foo,)...;',
+			 *       so without special handling here, that would always be assembled as:
+			 *       >> push   @foo
+			 *       >> push   pack Tuple, #1
+			 *       >> iterself top
+			 *       >> yield  foreach, pop
+			 *       Special handling for this should exist here, but another optimization should
+			 *       also see the an AST-optimization that collapses yield-statements with expand-
+			 *       single-sequence operands. */
+			if (ast_genasm(self->a_yield->a_expand, ASM_G_FPUSHRES))
+				goto err;
+			if (asm_putddi(self))
+				goto err;
+			if (asm_giterself())
+				goto err;
+			if (asm_gyieldall())
 				goto err;
 		} else if (self->a_yield->a_type == AST_SYM &&
 		           asm_can_prefix_symbol_for_read(self->a_yield->a_sym)) {
@@ -856,9 +897,11 @@ done_fake_none:
 			if (asm_gthrow_p())
 				goto err;
 		} else {
-			if (ast_genasm(self->a_throw, ASM_G_FPUSHRES) ||
-			    asm_putddi(self) ||
-			    asm_gthrow())
+			if (ast_genasm(self->a_throw, ASM_G_FPUSHRES))
+				goto err;
+			if (asm_putddi(self))
+				goto err;
+			if (asm_gthrow())
 				goto err;
 		}
 		goto done_fake_none;

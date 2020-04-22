@@ -944,6 +944,17 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_GetExtern(/*utf-8*/ char const *__restrict module_name,
                     /*utf-8*/ char const *__restrict global_name);
 
+/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExtern(...), ...)',
+ * that returns the return value of the call operation. */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeModule_CallExternf(/*utf-8*/ char const *__restrict module_name,
+                      /*utf-8*/ char const *__restrict global_name,
+                      char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_VCallExternf(/*utf-8*/ char const *__restrict module_name,
+                       /*utf-8*/ char const *__restrict global_name,
+                       char const *__restrict format, va_list args);
+
 
 /* Open a module using a relative module name
  * `module_name' that is based off of `module_pathname'

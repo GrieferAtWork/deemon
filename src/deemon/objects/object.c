@@ -3648,10 +3648,10 @@ PRIVATE struct type_method type_methods[] = {
 	      "}\n"
 
 	      "Note that one minor exception exists to the default lookup rule, and it relates to how "
-	      "attributes of :Type itself are queried (such as in the expression ${(type_ from deemon).baseof}).\n"
+	      "attributes of :Type itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
 	      "In this case, access is always made as an instance-bound, meaning that for this purpose, "
 	      ":Type is considered an instance of :Type (typetype), rather than the type of :Type (typetype) "
-	      "(I know that sounds complicated, but without this rule, ${(type_ from deemon).baseof} would "
+	      "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
 	      "return a class method object taking 2 arguments, rather than the intended single argument)\n"
 	      "Also note that the `*instanceattr' functions will not check for types that have overwritten "
 	      "one of the attribute-operators, but will continue search for matching attribute names, even "
@@ -3943,20 +3943,14 @@ PRIVATE struct type_member type_members[] = {
 };
 
 PRIVATE struct type_getset type_getsets[] = {
-	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject * __restrict)) & type_isbuffer, NULL, NULL,
+	{ "isbuffer", (DREF DeeObject * (DCALL *)(DeeObject *__restrict))&type_isbuffer, NULL, NULL,
 	  DOC("->?Dbool\n"
 	      "Returns ?t if @this Type implements the buffer interface\n"
 	      "The most prominent Type to which this applies is :Bytes, however other types also support this") },
-	/* TODO: __mro__->?S?DType
-	 *    - Returns a sequence proxy detailing the method
-	 *     (attribute) resolution order used for @this Type:
-	 *    >> property __mro__: {type_...} = {
-	 *    >>     get(): {type_...} {
-	 *    >>         for (local tp = this; tp !is none; tp = tp.__base__)
-	 *    >>             yield tp;
-	 *    >>     }
-	 *    >> }
-	 */
+	/* TODO: __bases__->?S?DType  Sequence of all of this type's bases, starting with the immediate ?#__base__,
+	 *                            followed by its base, and so on. */
+	/* TODO: __mro__->?S?DType    Method Resolution Order. Same as ?#__bases__, but preceded by @this
+	 *                            Type\n${{ this, __bases__... }}  */
 	{ "__class__", (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&type_get_classdesc, NULL, NULL,
 	  DOC("->?Ert:ClassDescriptor\n"
 	      "@throw AttributeError @this typeType is a user-defined class (s.a. ?#__isclass__)\n"

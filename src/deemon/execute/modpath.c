@@ -32,8 +32,8 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
@@ -2274,6 +2274,41 @@ DeeModule_GetExtern(/*utf-8*/ char const *__restrict module_name,
 	return result;
 err:
 	return NULL;
+}
+
+/* Helper wrapper for `DeeObject_Callf(DeeModule_GetExtern(...), ...)',
+ * that returns the return value of the call operation. */
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+DeeModule_CallExternf(/*utf-8*/ char const *__restrict module_name,
+                      /*utf-8*/ char const *__restrict global_name,
+                      char const *__restrict format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeModule_VCallExternf(module_name,
+	                                global_name,
+	                                format,
+	                                args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeModule_VCallExternf(/*utf-8*/ char const *__restrict module_name,
+                       /*utf-8*/ char const *__restrict global_name,
+                       char const *__restrict format, va_list args) {
+	DREF DeeObject *result;
+	result = DeeModule_GetExtern(module_name,
+	                             global_name);
+	if likely(result) {
+		DREF DeeObject *func_result;
+		func_result = DeeObject_VCallf(result,
+		                               format,
+		                               args);
+		Dee_Decref(result);
+		result = func_result;
+	}
+	return result;
 }
 
 

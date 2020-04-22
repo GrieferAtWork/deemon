@@ -361,6 +361,17 @@ again_compiler_subtag:
 				current_tags.at_expect |= AST_FCOND_UNLIKELY;
 			} else if (IS_TAG("copyable")) {
 				current_tags.at_code_flags |= CODE_FCOPYABLE;
+			} else if (IS_TAG("inline")) {
+				/* Optional tag to try to inline an annotated function.
+				 * The tag is ignored if inlining could alter the behavior
+				 * of the program. - only function that are local+final, or
+				 * local+implicit-final (write-once), or global+final can
+				 * be inlined.
+				 * Even then, this tag can be ignored, and even without
+				 * this tag, the compiler is allowed to inline functions
+				 * when inlining them is possible, and doing so is deemed
+				 * to be advantageous.
+				 * Compilers are allowed to simply ignore this tag. */
 			} else if (IS_TAG("optional")) {
 				if unlikely(yield() < 0)
 					goto err;

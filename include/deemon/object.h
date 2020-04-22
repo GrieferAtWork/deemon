@@ -22,10 +22,10 @@
 
 #include "api.h"
 
-#include <hybrid/__byteorder.h>
 #include <hybrid/__atomic.h>
-#include <hybrid/typecore.h>
+#include <hybrid/__byteorder.h>
 #include <hybrid/int128.h>
+#include <hybrid/typecore.h>
 
 #include <stdarg.h>
 #include <stdbool.h>
@@ -176,13 +176,13 @@ struct Dee_reftracker {
 };
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA \
 	struct Dee_reftracker *ob_trace; /* [0..1][owned][lock(WRITE_ONCE)] Tracked reference counter data. */
-#define DEE_OBJECT_OFFSETOF_DATA   (__SIZEOF_POINTER__*3)
+#define DEE_OBJECT_OFFSETOF_DATA  (__SIZEOF_POINTER__ * 3)
 #define DEE_REFTRACKER_UNTRACKED  ((struct Dee_reftracker  *)-1)
 
 DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #else /* CONFIG_TRACE_REFCHANGES */
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA  /* nothing */
-#define DEE_OBJECT_OFFSETOF_DATA   (__SIZEOF_POINTER__*2)
+#define DEE_OBJECT_OFFSETOF_DATA   (__SIZEOF_POINTER__ * 2)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 #define DEE_OBJECT_OFFSETOF_REFCNT  0
@@ -191,7 +191,7 @@ DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 
 
 #ifdef __INTELLISENSE__
-#define Dee_REQUIRES_OBJECT(x) ((void)&(x)->ob_refcnt,(x))
+#define Dee_REQUIRES_OBJECT(x) ((void)&(x)->ob_refcnt, (x))
 #else /* __INTELLISENSE__ */
 #define Dee_REQUIRES_OBJECT(x) (x)
 #endif /* !__INTELLISENSE__ */
@@ -343,6 +343,26 @@ struct Dee_weakref {
 #define WEAKREF      Dee_WEAKREF
 #endif /* DEE_SOURCE */
 
+/* The used NULL-pointer value for user-defined weakref callbacks.
+ * It is only important that bit#0 be clear during assignment, however
+ * a value distinct from NULL (or rather: 0) can be used to make it
+ * easier to detect invalid uses of weakref controllers. */
+#ifndef NDEBUG
+#if __SIZEOF_POINTER__ == 4
+#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+	(__UINT32_C(0xcccccccc) & ~__UINT32_C(1))
+#elif __SIZEOF_POINTER__ == 8
+#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+	(__UINT64_C(0xcccccccccccccccc) & ~__UINT32_C(1))
+#else
+#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+	((uintptr_t)-1 & ~(uintptr_t)1)
+#endif
+#else /* !NDEBUG */
+#define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
+	0
+#endif /* NDEBUG */
+
 
 /* Unlock a weakref from within a `wr_del' callback.
  * An invocation of this macro is _MANDATORY_ for any custom weakref
@@ -360,16 +380,16 @@ struct Dee_weakref {
  * >>     DREF MyObject *me;
  * >>     me = COMPILER_CONTAINER_OF(self, MyObject, o_ref);
  * >>     if (!Dee_IncrefIfNotZero(me)) {
- * >>         // Race condition: the weakref controller died while
- * >>         //                 the weakref itself is also dying.
+ * >>         // Race condition: the weakref controller died while the
+ * >>         //                 weakref'd object was being destroyed.
  * >>         DeeWeakref_UnlockCallback(self);
  * >>     } else {
  * >>         DREF MyObject *result;
  * >>         DeeWeakref_UnlockCallback(self);
  * >>         // At this point, we've unlocked the weakref after safely acquiring
  * >>         // a reference to the controlling object, meaning we're now safe to
- * >>         // execute arbitrary code, with the exception that we can't propagate
- * >>         // exceptions.
+ * >>         // execute arbitrary code, with the only caveat being that exceptions
+ * >>         // can't be propagated.
  * >>         result = DeeObject_Call(me->o_fun, 0, NULL);
  * >>         Dee_Decref(me);
  * >>         if unlikely(!result) {
@@ -381,44 +401,13 @@ struct Dee_weakref {
  * >>     }
  * >> }
  */
-#ifndef NDEBUG
-#if __SIZEOF_POINTER__ == 4 && __SIZEOF_LONG__ == 4
 #ifdef __cplusplus
 #define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct ::Dee_weakref *)((uintptr_t)0xccccccccul & ~1ul), __ATOMIC_RELEASE)
+	__hybrid_atomic_store((x)->wr_next, (struct ::Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
 #else /* __cplusplus */
 #define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct Dee_weakref *)((uintptr_t)0xccccccccul & ~1ul), __ATOMIC_RELEASE)
+	__hybrid_atomic_store((x)->wr_next, (struct Dee_weakref *)_DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR, __ATOMIC_RELEASE)
 #endif /* !__cplusplus */
-#elif __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG__ == 8
-#ifdef __cplusplus
-#define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct ::Dee_weakref *)((uintptr_t)0xccccccccccccccccul & ~1ul), __ATOMIC_RELEASE)
-#else /* __cplusplus */
-#define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct Dee_weakref *)((uintptr_t)0xccccccccccccccccul & ~1ul), __ATOMIC_RELEASE)
-#endif /* !__cplusplus */
-#elif defined(__SIZEOF_LONG_LONG__) && __SIZEOF_POINTER__ == 8 && __SIZEOF_LONG_LONG__ == 8
-#ifdef __cplusplus
-#define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct ::Dee_weakref *)((uintptr_t)0xccccccccccccccccull & ~1ul), __ATOMIC_RELEASE)
-#else /* __cplusplus */
-#define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct Dee_weakref *)((uintptr_t)0xccccccccccccccccull & ~1ul), __ATOMIC_RELEASE)
-#endif /* !__cplusplus */
-#else
-#ifdef __cplusplus
-#define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct ::Dee_weakref *)((uintptr_t)-1 & ~1ul), __ATOMIC_RELEASE)
-#else /* __cplusplus */
-#define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, (struct Dee_weakref *)((uintptr_t)-1 & ~1ul), __ATOMIC_RELEASE)
-#endif /* !__cplusplus */
-#endif
-#else /* !NDEBUG */
-#define DeeWeakref_UnlockCallback(x) \
-	__hybrid_atomic_store((x)->wr_next, NULL, __ATOMIC_RELEASE)
-#endif /* NDEBUG */
 
 
 
@@ -439,7 +428,7 @@ struct Dee_weakref_list {
  * destructors of types implementing weakref support!) */
 #define Dee_weakref_support_fini(x)                                    \
 	(__hybrid_atomic_load((x)->ob_weakrefs.wl_nodes, __ATOMIC_ACQUIRE) \
-	 ? (Dee_weakref_support_fini(&(x)->ob_weakrefs))                   \
+	 ? Dee_weakref_support_fini(&(x)->ob_weakrefs)                     \
 	 : (void)0)
 DFUNDEF NONNULL((1)) void (DCALL Dee_weakref_support_fini)(struct Dee_weakref_list *__restrict self);
 
@@ -580,8 +569,8 @@ DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy_d(DeeObject *__restrict self, 
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS || CONFIG_TRACE_REFCHANGES */
 
 /* Reference control macros as functions.
- * Use these (#undef'ing the macros) in dex modules that
- * should work independently of the deemon configuration. */
+ * Use these (#undef'ing the macros, or like `(Dee_Incref)(foo)') in dex
+ * modules that should work independently of the deemon configuration. */
 DFUNDEF NONNULL((1)) void (DCALL Dee_Incref)(DeeObject *__restrict ob);
 DFUNDEF NONNULL((1)) void (DCALL Dee_Incref_n)(DeeObject *__restrict ob, Dee_refcnt_t n);
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_IncrefIfNotZero)(DeeObject *__restrict ob);
@@ -594,14 +583,14 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict 
 
 
 #ifdef __INTELLISENSE__
-#define Dee_Incref_untraced(x)          (&(x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)     (((x)->ob_refcnt += (n)))
-#define Dee_Decref_untraced(x)          (&(x)->ob_refcnt)
-#define Dee_Decref_likely_untraced(x)   (&(x)->ob_refcnt)
-#define Dee_Decref_unlikely_untraced(x) (&(x)->ob_refcnt)
+#define Dee_Incref_untraced(x)          (void)(&(x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     (void)(((x)->ob_refcnt += (n)))
+#define Dee_Decref_untraced(x)          (void)(&(x)->ob_refcnt)
+#define Dee_Decref_likely_untraced(x)   (void)(&(x)->ob_refcnt)
+#define Dee_Decref_unlikely_untraced(x) (void)(&(x)->ob_refcnt)
 #define Dee_IncrefIfNotZero_untraced(x) (Dee_Incref(x), true)
-#define Dee_DecrefDokill_untraced(x)     Dee_Decref(x)
-#define Dee_DecrefNokill_untraced(x)     Dee_Decref(x)
+#define Dee_DecrefDokill_untraced(x)    (void)(&(x)->ob_refcnt)
+#define Dee_DecrefNokill_untraced(x)    (void)(&(x)->ob_refcnt)
 #define Dee_DecrefIfOne_untraced(x)     (Dee_Decref(x), true)
 #define Dee_DecrefIfNotOne_untraced(x)  (Dee_Decref(x), true)
 #define Dee_DecrefWasOk_untraced(x)     (Dee_Decref(x), true)
@@ -616,24 +605,24 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, cha
 #define _DeeRefcnt_IncFetch(x)    (++(x))
 #define _DeeRefcnt_DecFetch(x)    (--(x))
 #define _DeeRefcnt_AddFetch(x, n) ((x) += (n))
-#define _DeeRefcnt_FetchAdd(x, n) (((x) += (n))-(n))
+#define _DeeRefcnt_FetchAdd(x, n) (((x) += (n)) - (n))
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#define Dee_Incref_untraced(x)          ((x)->ob_refcnt++ || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Incref_n_untraced(x, n)     (_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Decref_untraced(x)          ((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)   (unlikely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x) (likely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_DecrefDokill_untraced(x)    (--(x)->ob_refcnt, DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    ((x)->ob_refcnt-- > 1 || (DeeFatal_BadDecref((DeeObject *)(x)), false))
+#define Dee_Incref_untraced(x)          (void)((x)->ob_refcnt++ || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
+#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
+#define Dee_Decref_untraced(x)          (void)((x)->ob_refcnt-- > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_likely_untraced(x)   (void)(unlikely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)(likely((x)->ob_refcnt-- > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_DecrefDokill_untraced(x)    (void)(--(x)->ob_refcnt, DeeObject_Destroy((DeeObject *)(x)))
+#define Dee_DecrefNokill_untraced(x)    (void)((x)->ob_refcnt-- > 1 || (DeeFatal_BadDecref((DeeObject *)(x)), 0))
 #define Dee_DecrefWasOk_untraced(x)     ((x)->ob_refcnt-- > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-#define Dee_Incref_untraced(x)          (++(x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)     ((x)->ob_refcnt+=(n))
-#define Dee_Decref_untraced(x)          (--(x)->ob_refcnt || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)   (unlikely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x) (likely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_DecrefDokill_untraced(x)    (DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    (--(x)->ob_refcnt)
+#define Dee_Incref_untraced(x)          (void)(++(x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     (void)((x)->ob_refcnt += (n))
+#define Dee_Decref_untraced(x)          (void)(--(x)->ob_refcnt || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_likely_untraced(x)   (void)(unlikely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)(likely(--(x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_DecrefDokill_untraced(x)    (void)(DeeObject_Destroy((DeeObject *)(x)))
+#define Dee_DecrefNokill_untraced(x)    (void)(--(x)->ob_refcnt)
 #define Dee_DecrefWasOk_untraced(x)     (--(x)->ob_refcnt ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
 #define Dee_DecrefIfOne_untraced(x)     ((x)->ob_refcnt == 1 ? ((x)->ob_refcnt = 0, DeeObject_Destroy((DeeObject *)(x)), true) : false)
@@ -644,15 +633,15 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, cha
 /* NOTE: The atomic functions from hybrid would work for this case just as well,  but
  *       they have a rather large compile-time overhead and add a lot of unnecessary
  *       debug information when the resulting code isn't getting optimized.
- *       Therefor,  we try to bypass them here to speed up compile-time and ease debugging. */
-#if __SIZEOF_POINTER__ == 4
-#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x))-1)
-#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x))+1)
+ *       Therefor, try to bypass them here to speed up compile-time and ease debugging. */
+#if __SIZEOF_POINTER__ == 4 && __SIZEOF_LONG__ == 4
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)) - 1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)) + 1)
 #   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement((long volatile *)&(x)))
 #   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement((long volatile *)&(x)))
 #elif __SIZEOF_POINTER__ == 8
-#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x))-1)
-#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x))+1)
+#   define _DeeRefcnt_FetchInc(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)) - 1)
+#   define _DeeRefcnt_FetchDec(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)) + 1)
 #   define _DeeRefcnt_IncFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedIncrement64((__int64 volatile *)&(x)))
 #   define _DeeRefcnt_DecFetch(x) ((Dee_refcnt_t)__NAMESPACE_INT_SYM _InterlockedDecrement64((__int64 volatile *)&(x)))
 #endif
@@ -668,23 +657,23 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, cha
 #define _DeeRefcnt_AddFetch(x, n) __hybrid_atomic_addfetch(x, n, __ATOMIC_SEQ_CST)
 #endif /* !_DeeRefcnt_FetchAdd */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#define Dee_Incref_untraced(x)          (_DeeRefcnt_FetchInc((x)->ob_refcnt) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Incref_n_untraced(x, n)     (_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), false))
-#define Dee_Decref_untraced(x)          (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)   (unlikely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x) (likely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), false))
+#define Dee_Incref_untraced(x)          (void)(_DeeRefcnt_FetchInc((x)->ob_refcnt) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
+#define Dee_Incref_n_untraced(x, n)     (void)(_DeeRefcnt_FetchAdd((x)->ob_refcnt, n) || (DeeFatal_BadIncref((DeeObject *)(x), __FILE__, __LINE__), 0))
+#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1) || (DeeObject_Destroy((DeeObject *)(x)), 0))
 #define Dee_DecrefDokill_untraced(x)    (_DeeRefcnt_FetchDec((x)->ob_refcnt), DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeFatal_BadDecref((DeeObject *)(x), __FILE__, __LINE__), false))
+#define Dee_DecrefNokill_untraced(x)    (void)(_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 || (DeeFatal_BadDecref((DeeObject *)(x), __FILE__, __LINE__), 0))
 #define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_FetchDec((x)->ob_refcnt) > 1 ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced_d((DeeObject *)(self), __FILE__, __LINE__)
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-#define Dee_Incref_untraced(x)          _DeeRefcnt_FetchInc((x)->ob_refcnt)
-#define Dee_Incref_n_untraced(x, n)     _DeeRefcnt_AddFetch((x)->ob_refcnt, n)
-#define Dee_Decref_untraced(x)          (_DeeRefcnt_DecFetch((x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_likely_untraced(x)   (unlikely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_Decref_unlikely_untraced(x) (likely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), false))
-#define Dee_DecrefDokill_untraced(x)    (DeeObject_Destroy((DeeObject *)(x)))
-#define Dee_DecrefNokill_untraced(x)    _DeeRefcnt_DecFetch((x)->ob_refcnt)
+#define Dee_Incref_untraced(x)          (void)_DeeRefcnt_FetchInc((x)->ob_refcnt)
+#define Dee_Incref_n_untraced(x, n)     (void)_DeeRefcnt_AddFetch((x)->ob_refcnt, n)
+#define Dee_Decref_untraced(x)          (void)(_DeeRefcnt_DecFetch((x)->ob_refcnt) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_likely_untraced(x)   (void)(unlikely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_Decref_unlikely_untraced(x) (void)(likely(_DeeRefcnt_DecFetch((x)->ob_refcnt)) || (DeeObject_Destroy((DeeObject *)(x)), 0))
+#define Dee_DecrefDokill_untraced(x)    DeeObject_Destroy((DeeObject *)(x))
+#define Dee_DecrefNokill_untraced(x)    (void)_DeeRefcnt_DecFetch((x)->ob_refcnt)
 #define Dee_DecrefWasOk_untraced(x)     (_DeeRefcnt_DecFetch((x)->ob_refcnt) ? false : (DeeObject_Destroy((DeeObject *)(x)), true))
 #define Dee_DecrefIfOne_untraced(self)  Dee_DecrefIfOne_untraced((DeeObject *)(self))
 #endif /* CONFIG_NO_BADREFCNT_CHECKS */
@@ -724,6 +713,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 	                                      __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
 	return true;
 }
+
 #ifndef __INTELLISENSE__
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
 LOCAL WUNUSED NONNULL((1)) bool
@@ -763,14 +753,14 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefIfNotOne_traced(DeeObject *__r
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__restrict ob, char const *file, int line);
 #define Dee_Decref_likely_traced(ob, file, line)   Dee_Decref_traced(ob, file, line)
 #define Dee_Decref_unlikely_traced(ob, file, line) Dee_Decref_traced(ob, file, line)
-#define Dee_Incref(x)          (Dee_Incref_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_Incref_n(x, n)     (Dee_Incref_n_traced((DeeObject *)(x), n, __FILE__, __LINE__), 0)
+#define Dee_Incref(x)           Dee_Incref_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_Incref_n(x, n)      Dee_Incref_n_traced((DeeObject *)(x), n, __FILE__, __LINE__)
 #define Dee_IncrefIfNotZero(x)  Dee_IncrefIfNotZero_traced((DeeObject *)(x), __FILE__, __LINE__)
-#define Dee_Decref(x)          (Dee_Decref_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_Decref_likely(x)   (Dee_Decref_likely_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_Decref_unlikely(x) (Dee_Decref_unlikely_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_DecrefDokill(x)    (Dee_DecrefDokill_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
-#define Dee_DecrefNokill(x)    (Dee_DecrefNokill_traced((DeeObject *)(x), __FILE__, __LINE__), 0)
+#define Dee_Decref(x)           Dee_Decref_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_Decref_likely(x)    Dee_Decref_likely_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_Decref_unlikely(x)  Dee_Decref_unlikely_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_DecrefDokill(x)     Dee_DecrefDokill_traced((DeeObject *)(x), __FILE__, __LINE__)
+#define Dee_DecrefNokill(x)     Dee_DecrefNokill_traced((DeeObject *)(x), __FILE__, __LINE__)
 #define Dee_DecrefIfOne(x)      Dee_DecrefIfOne_traced((DeeObject *)(x), __FILE__, __LINE__)
 #define Dee_DecrefIfNotOne(x)   Dee_DecrefIfNotOne_traced((DeeObject *)(x), __FILE__, __LINE__)
 #define Dee_DecrefWasOk(x)      Dee_DecrefWasOk_traced((DeeObject *)(x), __FILE__, __LINE__)
@@ -808,17 +798,17 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_Decref_unlikely(x)  Dee_Decref(x)
 #endif /* !Dee_Decref_unlikely */
 
-#define Dee_XIncref(x)          (!(x) || Dee_Incref(x))
-#define Dee_XDecref(x)          (!(x) || Dee_Decref(x))
-#define Dee_XDecref_likely(x)   (!(x) || Dee_Decref_likely(x))
-#define Dee_XDecref_unlikely(x) (!(x) || Dee_Decref_unlikely(x))
-#define Dee_XDecrefNokill(x)    (!(x) || Dee_DecrefNokill(x))
-#define Dee_Clear(x)            (Dee_Decref(x), (x) = NULL, 0)
-#define Dee_Clear_likely(x)     (Dee_Decref_likely(x), (x) = NULL, 0)
-#define Dee_Clear_unlikely(x)   (Dee_Decref_unlikely(x), (x) = NULL, 0)
-#define Dee_XClear(x)           (!(x) || Dee_Clear(x))
-#define Dee_XClear_likely(x)    (!(x) || Dee_Clear_likely(x))
-#define Dee_XClear_unlikely(x)  (!(x) || Dee_Clear_unlikely(x))
+#define Dee_XIncref(x)          (void)(!(x) || (Dee_Incref(x), 0))
+#define Dee_XDecref(x)          (void)(!(x) || (Dee_Decref(x), 0))
+#define Dee_XDecref_likely(x)   (void)(!(x) || (Dee_Decref_likely(x), 0))
+#define Dee_XDecref_unlikely(x) (void)(!(x) || (Dee_Decref_unlikely(x), 0))
+#define Dee_XDecrefNokill(x)    (void)(!(x) || (Dee_DecrefNokill(x), 0))
+#define Dee_Clear(x)            (void)(Dee_Decref(x), (x) = NULL)
+#define Dee_Clear_likely(x)     (void)(Dee_Decref_likely(x), (x) = NULL)
+#define Dee_Clear_unlikely(x)   (void)(Dee_Decref_unlikely(x), (x) = NULL)
+#define Dee_XClear(x)           (void)(!(x) || (Dee_Decref(x), (x) = NULL, 0))
+#define Dee_XClear_likely(x)    (void)(!(x) || (Dee_Decref_likely(x), (x) = NULL, 0))
+#define Dee_XClear_unlikely(x)  (void)(!(x) || (Dee_Decref_unlikely(x), (x) = NULL, 0))
 
 /* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
 #define Dee_return_reference(ob)                                              \
@@ -1484,7 +1474,6 @@ struct Dee_type_getset {
 #define STRUCT_CONST       Dee_STRUCT_CONST       /* FLAG: Read-only field. */
 #define STRUCT_INTEGER     Dee_STRUCT_INTEGER
 
-
 /* Helper macros for certain types. */
 #define STRUCT_CBOOL       Dee_STRUCT_BOOL(__SIZEOF_CHAR__)
 #define STRUCT_BOOLPTR     Dee_STRUCT_BOOL(__SIZEOF_POINTER__)
@@ -1677,8 +1666,8 @@ struct Dee_membercache {
 
 
 
-#define Dee_OPERATOR_USERCOUNT    0x003e /* Number of user-accessible operators. (Used by `class' types) */
-#define Dee_OPERATOR_EXTENDED(x) (0x1000+(x)) /* Extended operator codes. (Type-specific; may be re-used) */
+#define Dee_OPERATOR_USERCOUNT    0x003e        /* Number of user-accessible operators. (Used by `class' types) */
+#define Dee_OPERATOR_EXTENDED(x) (0x1000 + (x)) /* Extended operator codes. (Type-specific; may be re-used) */
 #ifdef DEE_SOURCE
 /* Universal operator codes. */
 #define OPERATOR_CONSTRUCTOR  0x0000 /* `operator this(args...): Object'                                  - `__constructor__' - `tp_any_ctor'. */
@@ -2058,6 +2047,14 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
+/* Inherit different groups of operators from base-classes, returning `true'
+ * if operators were inherited from some base class (even if those same operators
+ * had already been inherited previously), and `false' if no base-class provides
+ * the any of the specified operators (though note that inheriting constructors
+ * requires that all base classes carry the `Dee_TP_FINHERITCTOR' flag; else,
+ * a class without this flag cannot inherit constructs from its base, though
+ * can still provide its constructs to some derived class that does specify its
+ * intend of inheriting constructors) */
 INTDEF NONNULL((1)) bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
 INTDEF NONNULL((1)) bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
 INTDEF NONNULL((1)) bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr */
@@ -2096,8 +2093,8 @@ INTDEF NONNULL((1)) bool DCALL type_inherit_buffer(DeeTypeObject *__restrict sel
 
 
 /* Generic attribute lookup through `tp_self[->tp_base...]->tp_methods, tp_getsets, tp_members'
- * @return: -1 / ---   / NULL:      Error.
- * @return:  0 / true  / * :        OK.
+ * @return: -1 / ---   / NULL:          Error.
+ * @return:  0 / true  / * :            OK.
  * @return:  1 / false / Dee_ITER_DONE: Not found. */
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericGetAttrString(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TGenericGetAttrStringLen(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
@@ -2174,7 +2171,7 @@ DeeObject_Class(DeeObject *__restrict self);
 
 /* Return true if `test_type' is equal to, or derived from `inherited_type'
  * NOTE: When `inherited_type' is not a type, this function simply returns `false'
- * >> return inherited_type.baseof(test_type); */
+ * >> return inherited_type is Type && inherited_type.baseof(test_type); */
 DFUNDEF WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsInherited(DeeTypeObject *test_type,
                     DeeTypeObject *inherited_type);
@@ -2204,11 +2201,11 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF
  * This is highly useful due to the fact that practically the only
  * place where `DeeObject_InplaceDeepCopy()' might ever be encountered,
  * is in tp_deepload operators, where using it on a raw pointer is
- * not thread-safe considering the fact that the caller must probably
+ * not thread-safe, considering the fact that the caller must probably
  * be holding some kind of lock (presumably an `Dee_rwlock_t'), which must
  * be used in the following order to safely replace the field with a
  * deepcopy (the safe order of operations that is then performed by this helper):
- * >> DREF DeeObject *temp,*copy;
+ * >> DREF DeeObject *temp, *copy;
  * >> rwlock_read(plock);
  * >> temp = *pself;
  * >> #if IS_XDEEPCOPY
@@ -2216,7 +2213,7 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF
  * >>     rwlock_endread(plock);
  * >>     return 0;
  * >> }
- * >> #endif
+ * >> #endif // IS_XDEEPCOPY
  * >> Dee_Incref(temp);
  * >> rwlock_endread(plock);
  * >> copy = DeeObject_DeepCopy(temp);
@@ -2229,9 +2226,9 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeObject_InplaceDeepCopy(/*in|out*/ DREF
  * >> rwlock_endwrite(plock);
  * >> #if IS_XDEEPCOPY
  * >> Dee_XDecref(temp);
- * >> #else
+ * >> #else // IS_XDEEPCOPY
  * >> Dee_Decref(temp);
- * >> #endif
+ * >> #endif // !IS_XDEEPCOPY
  * >> return 0;
  */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_InplaceDeepCopyWithLock(/*in|out*/ DREF DeeObject **__restrict pself, Dee_rwlock_t *__restrict plock);
@@ -2270,7 +2267,15 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(De
  * >> }
  * // `my_tuple' will be re-used as `args',
  * // without the need to creating a new tuple
- * DeeObject_CallTuple(foo,my_tuple); */
+ * DeeObject_CallTuple(foo, my_tuple);
+ *
+ * User-code can test if deemon was compiled with this option enabled
+ * through use of code such as follows:
+ * >> function b(args...) -> Object.id(args);
+ * >> __asm__("" : "+x" (b)); // Ensure that the call to `b()' can't be inlined
+ * >> function a(args...) -> Object.id(args) == b(args...);
+ * >> print a(10, 20); // Prints `true' if `CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS' was enabled; else `false'
+ */
 #ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_CallTuple(DeeObject *self, /*Tuple*/ DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_CallTupleKw(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);

@@ -31,14 +31,14 @@
 #include "../runtime/strings.h"
 
 /* Define type-specific object operators. */
-#define DEFINE_TYPE_OPERATORS 1
+#define DEFINE_TYPED_OPERATORS 1
 #define PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
 #define DEFINE_OPERATOR(return, name, args) \
 	INTERN return DCALL DeeObject_T##name PRIVATE_EXPANDARGS args
 #define DEFINE_INTERNAL_OPERATOR(return, name, args) \
 	INTERN return DCALL DeeObject_T##name PRIVATE_EXPANDARGS args
 #include "../runtime/operator.c"
-#undef DEFINE_TYPE_OPERATORS
+#undef DEFINE_TYPED_OPERATORS
 
 
 DECL_BEGIN

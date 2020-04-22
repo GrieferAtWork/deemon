@@ -32,9 +32,9 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/tuple.h>
-#include <deemon/system.h>
 #include <deemon/system-features.h>
+#include <deemon/system.h>
+#include <deemon/tuple.h>
 
 #include "../runtime/strings.h"
 
@@ -331,6 +331,7 @@ PUBLIC DeeTypeObject DeeError_Error = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Error),
 	/* .tp_doc      = */ DOC("Base class for all errors thrown by the runtime\n"
+
 	                         "\n"
 	                         "(message?:?Dstring,inner?:?X2?DError?O)\n"
 	                         "Create a new error object with the given @message and @inner error"),
@@ -756,14 +757,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 systemerror_call_posix_function(DeeSystemErrorObject *__restrict self,
                                 char const *__restrict name) {
-	DREF DeeObject *result;
-	DREF DeeObject *posix_strerrorname;
-	posix_strerrorname = DeeModule_GetExtern("posix", name);
-	if unlikely(!posix_strerrorname)
-		return NULL;
-	result = DeeObject_Callf(posix_strerrorname, "d", self->se_errno);
-	Dee_Decref(posix_strerrorname);
-	return result;
+	return DeeModule_CallExternf("posix", name, "d", self->se_errno);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1222,6 +1216,7 @@ PUBLIC DeeTypeObject DeeError_AppExit = {
 	                         "instance of it and have the stack unwind itself, alongside "
 	                         "all existing objects being destroyed normally before deemon "
 	                         "will be terminated with the given exitcode\n"
+
 	                         "\n"
 	                         "()\n"
 	                         "(exitcode:?Dint)\n"
