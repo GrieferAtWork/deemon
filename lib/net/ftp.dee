@@ -21,11 +21,11 @@
 import * from deemon;
 import NetError, socket, sockaddr from net;
 
-local function recv_all(socket) {
-	local result = socket.recv();
+local function recvAll(sock: socket): Bytes {
+	local result = sock.recv();
 	local temp = result;
 	while (temp) {
-		temp = socket.recv();
+		temp = sock.recv();
 		result += temp;
 	}
 	return result;
@@ -34,13 +34,12 @@ local function recv_all(socket) {
 
 @@An object-oriented interface for working with the FTP protocol
 @@>local session = FTPClient()
-@@> .CONNECT("ftp.unicode.org")
-@@> .USER()
-@@> .PASS()
-@@> .CWD("/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS")
-@@>;
+@@>    .CONNECT("ftp.unicode.org")
+@@>    .USER()
+@@>    .PASS()
+@@>    .CWD("/Public/MAPPINGS/VENDORS/MICSFT/WINDOWS");
 @@>for (local line: session.LIST())
-@@> print repr line;
+@@>    print repr line;
 class FTPClient {
 
 	private member m_socket: socket;
@@ -54,7 +53,7 @@ class FTPClient {
 		m_verbose = verbose;
 	}
 
-	CONNECT(addr: string, port: int = 21): FTPClient {
+	function CONNECT(addr: string, port: int = 21): FTPClient {
 		m_socket.connect(addr, port);
 		local resp = m_socket.recv();
 		if (!resp.startswith("220 "))
@@ -64,7 +63,7 @@ class FTPClient {
 		return this;
 	}
 
-	USER(name: string = "anonymous"): FTPClient {
+	function USER(name: string = "anonymous"): FTPClient {
 		m_socket.send("USER {}\r\n".format({ name }));
 		local resp = m_socket.recv();
 		if (!resp.startswith("331 "))
@@ -74,7 +73,7 @@ class FTPClient {
 		return this;
 	}
 
-	PASS(pass: string = "mozilla@example.com"): FTPClient {
+	function PASS(pass: string = "mozilla@example.com"): FTPClient {
 		m_socket.send("PASS {}\r\n".format({ pass }));
 		local resp = m_socket.recv();
 		if (!resp.startswith("230 "))
@@ -84,19 +83,19 @@ class FTPClient {
 		return this;
 	}
 
-	PASV(): FTPClient {
+	function PASV(): FTPClient {
 		m_socket.send("PASV\r\n");
 		local resp = m_socket.recv();
 		if (!resp.startswith("227 "))
 			throw NetError("FTP passive mode failed: {!r}".format({ resp }));
-		local a, b, c, d, e, f = resp[resp.index("(")+1:].scanf("%d,%d,%d,%d,%d,%d")...;
+		local a, b, c, d, e, f = resp[resp.index("(") + 1:].scanf("%d,%d,%d,%d,%d,%d")...;
 		m_passv_address = sockaddr("INET", a, b, c, d, (e << 8) | f);
 		if (m_verbose)
 			print "PASV:", repr resp;
 		return this;
 	}
 
-	CWD(path: string): FTPClient {
+	function CWD(path: string): FTPClient {
 		m_socket.send("CWD {}\r\n".format({ path }));
 		local resp = m_socket.recv();
 		if (!resp.startswith("250 "))
@@ -106,36 +105,35 @@ class FTPClient {
 		return this;
 	}
 
-	private receive(command_name: string, command: string): string {
+	private function receive(commandName: string, command: string): string {
 		if (m_passv_address !is bound)
 			PASV();
 		m_socket.send(command);
-		local passive_socket = socket("INET", "STREAM", "TCP");
-		passive_socket.connect(m_passv_address);
+		local passiveSocket = socket("INET", "STREAM", "TCP");
+		passiveSocket.connect(m_passv_address);
 		del m_passv_address;
 		local resp = m_socket.recv();
 		if (!resp.startswith("150 "))
-			throw NetError("FTP {} failed: {!r}".format({ command_name, resp }));
+			throw NetError("FTP {} failed: {!r}".format({ commandName, resp }));
 		if (m_verbose)
-			print command_name + ":", repr resp;
-		local result = recv_all(passive_socket);
-		passive_socket.close();
+			print commandName + ":", repr resp;
+		local result = recvAll(passiveSocket);
+		passiveSocket.close();
 		local resp = m_socket.recv();
 		if (!resp.startswith("226 "))
-			throw NetError("FTP {} failed: {!r}".format({ command_name, resp }));
+			throw NetError("FTP {} failed: {!r}".format({ commandName, resp }));
 		if (m_verbose)
-			print command_name + ":", repr resp;
+			print commandName + ":", repr resp;
 		return result;
 	}
 
-	LIST(): {Bytes...} {
+	function LIST(): {Bytes...} {
 		return receive("LIST", "LIST\r\n").rstrip().splitlines();
 	}
 
-	RETR(filename: string): Bytes {
+	function RETR(filename: string): Bytes {
 		return receive("RETR", "RETR {}\r\n".format({ filename }));
 	}
-
 
 }
 

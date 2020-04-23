@@ -65,65 +65,74 @@ local longest_name = 0;
 local longest_name_f0 = 0;
 
 for (local l: file.open("../../../include/deemon/asm.h")) {
-	local name,code,misc;
-	try name,code,none,misc = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* [ %[^ \\]] ] %[^]")...;
-	catch (e...) {
-		try name,code,misc = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* %[^]")...;
-		catch (...) continue;
+	local name, code, misc;
+	try {
+		name, code, none, misc = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* [ %[^ \\]] ] %[^]")...;
+	} catch (e...) {
+		try {
+			name, code, misc = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* %[^]")...;
+		} catch (...) {
+			continue;
+		}
 	}
 	local desc;
-	try none,desc = misc.scanf(" [ %[^\\]] ] ` %[^\'] '")...;
-	catch (...) {
-		try desc = misc.scanf(" ` %[^\'] '")...;
-		catch (...) continue;
+	try {
+		none, desc = misc.scanf(" [ %[^\\]] ] ` %[^\'] '")...;
+	} catch (...) {
+		try {
+			desc = misc.scanf(" ` %[^\'] '")...;
+		} catch (...) {
+			continue;
+		}
 	}
-	code = (int)("0x"+code);
+	code = (int)("0x" + code);
 	desc = desc.strip();
 	local short_desc = desc;
-	if ("<" in short_desc) {
+	if ("<" in short_desc)
 		short_desc = desc.partition("<")[0];
-	}
 	short_desc = short_desc.strip();
-	if (short_desc.endswith("+/-")) short_desc = short_desc[:#short_desc-3].rstrip();
-	if (desc != short_desc) short_desc = short_desc+" ";
+	if (short_desc.endswith("+/-"))
+		short_desc = short_desc[:#short_desc - 3].rstrip();
+	if (desc != short_desc)
+		short_desc = short_desc + " ";
 	if (" " in short_desc) {
-		local a,none,b = short_desc.partition(" ")...;
-		short_desc = a.strip().ljust(MNEMONIC_MINWIDTH)+" "+b.strip();
+		local a, none, b = short_desc.partition(" ")...;
+		short_desc = a.strip().ljust(MNEMONIC_MINWIDTH) + " " + b.strip();
 	}
-	function strip_tail(x,y) {
-		if (x.endswith(y) && x.isspace(#x-(#y+1)))
-			return x[:#x-#y];
+	function strip_tail(x, y) {
+		if (x.endswith(y) && x.isspace(#x - (#y + 1)))
+			return x[:#x - #y];
 		return x;
 	}
-	short_desc = strip_tail(short_desc,"ref");
-	short_desc = strip_tail(short_desc,"arg");
-	short_desc = strip_tail(short_desc,"const");
-	short_desc = strip_tail(short_desc,"static");
-	short_desc = strip_tail(short_desc,"extern");
-	short_desc = strip_tail(short_desc,"global");
-	short_desc = strip_tail(short_desc,"module");
-	short_desc = strip_tail(short_desc,"local");
+	short_desc = strip_tail(short_desc, "ref");
+	short_desc = strip_tail(short_desc, "arg");
+	short_desc = strip_tail(short_desc, "const");
+	short_desc = strip_tail(short_desc, "static");
+	short_desc = strip_tail(short_desc, "extern");
+	short_desc = strip_tail(short_desc, "global");
+	short_desc = strip_tail(short_desc, "module");
+	short_desc = strip_tail(short_desc, "local");
 	//if (short_desc.endswith(" const"))
-	//    short_desc = short_desc[:#short_desc-#"const"];
+	//    short_desc = short_desc[:#short_desc - #"const"];
 	if (short_desc.endswith("$ ") ||
-		short_desc.endswith("# "))
-		short_desc = short_desc[:#short_desc-1];
+	    short_desc.endswith("# "))
+		short_desc = short_desc[:#short_desc - 1];
 	if (short_desc.endswith(",") ||
-		short_desc.endswith("#SP") ||
-		short_desc.endswith("#SP +") ||
-		short_desc.endswith("#SP -"))
+	    short_desc.endswith("#SP") ||
+	    short_desc.endswith("#SP +") ||
+	    short_desc.endswith("#SP -"))
 		short_desc = short_desc+" ";
 	local name_length = #short_desc;
 	if (short_desc.endswith("#")) {
-		name_length = (name_length-1)+#PREFIX_STACKEFFECT;
-		short_desc = (repr short_desc[:#short_desc-1])+" PREFIX_STACKEFFECT";
+		name_length = (name_length - 1) + #PREFIX_STACKEFFECT;
+		short_desc = (repr short_desc[:#short_desc - 1]) + " PREFIX_STACKEFFECT";
 	} else if (short_desc.endswith("$")) {
-		name_length = (name_length-1)+#PREFIX_INTEGERAL;
-		short_desc = (repr short_desc[:#short_desc-1])+" PREFIX_INTEGERAL";
+		name_length = (name_length - 1) + #PREFIX_INTEGERAL;
+		short_desc = (repr short_desc[:#short_desc - 1]) + " PREFIX_INTEGERAL";
 	} else {
 		short_desc = repr short_desc;
 	}
-	local data = pack(name,short_desc);
+	local data = pack(name, short_desc);
 	if (code < 256) {
 		if (codes[code] is none) {
 			codes[code] = data;
@@ -138,24 +147,25 @@ for (local l: file.open("../../../include/deemon/asm.h")) {
 		}
 	}
 }
-print "PRIVATE char const mnemonic_names[256]["+(longest_name+1)+"] = {";
-for (local id,data: util.enumerate(codes)) {
-		if (data is none) {
-		print ("\t/" "* 0x%.2I8x *" "/" % id)+" UNKNOWN_MNEMONIC, /" "* --- *" "/";
-		} else {
-		local name,desc = data...;
-		print ("\t/" "* 0x%.2I8x *" "/" % id)+" "+desc+", /" "* `ASM"+name+"' *" "/";
-		}
+print "PRIVATE char const mnemonic_names[256][" + (longest_name + 1) + "] = {";
+for (local id, data: util.enumerate(codes)) {
+	if (data is none) {
+		print ("\t/" "* 0x%.2I8x *" "/" % id) + " UNKNOWN_MNEMONIC, /" "* --- *" "/";
+	} else {
+		local name, desc = data...;
+		print ("\t/" "* 0x%.2I8x *" "/" % id) + " " + desc + ", /" "* `ASM" + name + "' *" "/";
+	}
 }
 print "};";
+print "";
 print "PRIVATE char const mnemonic_names_f0[256]["+(longest_name_f0+1)+"] = {";
 for (local id,data: util.enumerate(codes_f0)) {
-		if (data is none) {
-		print ("\t/" "* 0xf0%.2I8x *" "/" % id)+" UNKNOWN_MNEMONIC, /" "* --- *" "/";
-		} else {
-		local name,desc = data...;
-		print ("\t/" "* 0xf0%.2I8x *" "/" % id)+" "+desc+", /" "* `ASM"+name+"' *" "/";
-		}
+	if (data is none) {
+		print ("\t/" "* 0xf0%.2I8x *" "/" % id) + " UNKNOWN_MNEMONIC, /" "* --- *" "/";
+	} else {
+		local name, desc = data...;
+		print ("\t/" "* 0xf0%.2I8x *" "/" % id) + " " + desc + ", /" "* `ASM" + name + "' *" "/";
+	}
 }
 print "};";
 ]]]*/
@@ -417,6 +427,7 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0xfe */ "global ", /* `ASM_GLOBAL' */
 	/* 0xff */ "local  ", /* `ASM_LOCAL' */
 };
+
 PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf000 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf001 */ UNKNOWN_MNEMONIC, /* --- */

@@ -238,8 +238,8 @@ from ctypes import
 #pragma extension("-fold-style-classes")
 
 /* Enable old-style character literals, causing '\x12' to be compiled
- * as an alias for 0x12, preventing user-code to use 'foo' as an alias
- * for "foo"! */
+ * as an alias for 0x12, but preventing user-code to use 'foo' as an
+ * alias for "foo"! */
 #pragma extension("-fcharacter-literals")
 
 /* Not necessarily true, but legacy deemon was only ever built on
@@ -263,7 +263,7 @@ from ctypes import
  * >> fp.pack(); // You should use `fp.string' now
  * >> local my_cell = cell(42);
  * >> my_cell.del(); // You should use `del my_cell.value' now
- * There are more like this, you should get the item.
+ * There are more like this, you should get the idea.
  *
  * Deemon 200 on the other hand will now warn about the use
  * of reserved keywords as identifiers and attribute names,
@@ -289,9 +289,9 @@ from ctypes import
  * HINT: `__FORMAT_SCRIPT__' -- Defined for scripts found in comments by `deemon -F' */
 #if defined(__FORMAT__) && defined(__FORMAT_SCRIPT__)
 /* We're currently inside of an old-style format script.
- * Due to the way that the deemon 100+ execute these, and how
- * deemon 200+ does, there is a discrepency in the value of the
- * current working directory in relation of the DDI filename,
+ * Due to the way that deemon 100+ executed these, and how
+ * deemon 200+ does now, there is a discrepency in the value of
+ * the current working directory in relation to the DDI filename,
  * as well as the __FILE__ macro.
  * In deemon 200+, the PWD will have automatically been set to
  * the folder that the script being formated is located inside

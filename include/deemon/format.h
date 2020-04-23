@@ -328,7 +328,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int
  * printing has/would have stopped (excluding a terminating \0-character).
  * In the event that the buffer provided to `Dee_snprintf' is insufficient,
  * at most `bufsize' characters will have been written, and the exact required
- * size can be determined by `((return - buffer)+1)*sizeof(char)'.
+ * size can be determined by `((return - buffer) + 1) * sizeof(char)'.
  * In the event of an error (only possible when `format' contains
  * something like `%k' or `%r'), `NULL' will be returned. */
 DFUNDEF NONNULL((1, 2)) char *

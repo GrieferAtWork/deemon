@@ -1817,7 +1817,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* Internal types used to drive natively defined types */
 	{ "TypeOperators", (DeeObject *)&librt_get_TypeOperators, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Sequence type used to enumerate operators that have been overwritten by a given type\n"
-	      "A sequence of this type is returned by :deemon.type.i:__operators__ and :deemon.type.i:__operatorids__") }, /* TypeOperators_Type */
+	      "A sequence of this type is returned by :Type.__operators__ and :Type.__operatorids__") }, /* TypeOperators_Type */
 	{ "TypeOperatorsIterator", (DeeObject *)&librt_get_TypeOperatorsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Iterator type for ?#TypeOperators") }, /* TypeOperatorsIterator_Type */
 

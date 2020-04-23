@@ -1023,7 +1023,7 @@ struct base_scope_object {
 #define BASESCOPE_FSWITCH 0x0002       /* The parser is currently allowed to generate switch-labels. */
 	uint16_t            bs_cflags;     /* Compile-time scope flags (Set of `BASESCOPE_F*'). */
 #if __SIZEOF_POINTER__ > 4
-	uint16_t            bs_padding[(sizeof(void *)/2)-2];
+	uint16_t            bs_padding[(sizeof(void *) / 2) - 2];
 #endif /* __SIZEOF_POINTER__ > 4 */
 };
 

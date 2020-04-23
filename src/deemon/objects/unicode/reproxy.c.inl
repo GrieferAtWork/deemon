@@ -234,9 +234,9 @@ refaiter_getseq(ReSequenceIterator *__restrict self) {
 		x = REITER_GETDATAPTR(self);                                       \
 		y = REITER_GETDATAPTR(other);                                      \
 		if (!x)                                                            \
-			x = (char *)-1;                                                \
+			x = (char *)(uintptr_t)-1;                                     \
 		if (!y)                                                            \
-			y = (char *)-1;                                                \
+			y = (char *)(uintptr_t)-1;                                     \
 		return_bool(x op y);                                               \
 	err:                                                                   \
 		return NULL;                                                       \

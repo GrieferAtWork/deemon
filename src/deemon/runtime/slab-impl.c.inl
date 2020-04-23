@@ -69,7 +69,7 @@ typedef struct {
 } FUNC(SlabItem);
 
 
-#define SLAB_PAGE_INVALID    ((FUNC(SlabPage) *)-1)
+#define SLAB_PAGE_INVALID    ((FUNC(SlabPage) *)(uintptr_t)-1)
 typedef struct FUNC(slab_page) FUNC(SlabPage);
 struct FUNC(slab_page) {
 	FUNC(SlabItem)   sp_items[SLAB_ITEMCOUNT];

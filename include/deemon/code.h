@@ -235,7 +235,7 @@ struct Dee_ddi_xregs {
 	uint16_t             dx_spnama; /* Allocated amount of stack-item names. */
 	uint16_t             dx_lcnamc; /* [const][== ::co_localc] Number of local variable name registers. */
 #if __SIZEOF_POINTER__ > 4
-	uint16_t            _dx_pad[(sizeof(void *)/2)-2];
+	uint16_t            _dx_pad[(sizeof(void *) / 2) - 2];
 #endif /* __SIZEOF_POINTER__ > 4 */
 	uint16_t            *dx_spnamv; /* [0..MIN(dx_base.dr_usp,dx_spnama)|ALLOC(dx_spnama)]
 	                                 * [owned] Vector of stack-symbol name registers.
@@ -288,10 +288,10 @@ struct Dee_ddi_state {
 #define Dee_DDI_STATE_FNONAMES 0x0002 /* Don't keep track of bound symbol names */
 
 #define Dee_DDI_NEXT_DONE ((uint8_t *)0)  /* DDI Iteration stopped */
-#define Dee_DDI_NEXT_ERR  ((uint8_t *)-1) /* An error occurred. */
+#define Dee_DDI_NEXT_ERR  ((uint8_t *)(uintptr_t)-1) /* An error occurred. */
 
 /* Check that `x != DDI_NEXT_DONE && x != DDI_NEXT_ERR' */
-#define Dee_DDI_ISOK(x)  (((uintptr_t)(x)-1) < (uintptr_t)-2l)
+#define Dee_DDI_ISOK(x)  (((uintptr_t)(x) - 1) < (uintptr_t)-2l)
 
 
 /* Initialize the given DDI register state from `code'.
@@ -460,7 +460,7 @@ struct Dee_code_object {
 	uint16_t                 co_argc_min;    /* [const] Min amount of arguments required to execute this code. */
 	uint16_t                 co_argc_max;    /* [const][>= co_argc_min] Max amount of arguments accepted by this code (excluding a varargs argument). */
 	uint16_t                 co_padding;     /* ... */
-	uint32_t                 co_framesize;   /* [const][== (co_localc + X)*sizeof(DeeObject *)]
+	uint32_t                 co_framesize;   /* [const][== (co_localc + X) * sizeof(DeeObject *)]
 	                                          * Min amount of bytes of local storage required by assembly of this code object.
 	                                          * NOTE: `X' is the minimum stack depth required by this code object. */
 	Dee_code_size_t          co_codebytes;   /* [const] The total number of code bytes. */
@@ -660,7 +660,7 @@ struct Dee_code_frame_kwds {
 };
 
 
-#define Dee_CODE_FRAME_NOT_EXECUTING  ((struct Dee_code_frame *)-1)
+#define Dee_CODE_FRAME_NOT_EXECUTING  ((struct Dee_code_frame *)(uintptr_t)-1)
 #ifdef DEE_SOURCE
 #define CODE_FRAME_NOT_EXECUTING      Dee_CODE_FRAME_NOT_EXECUTING
 #endif /* DEE_SOURCE */

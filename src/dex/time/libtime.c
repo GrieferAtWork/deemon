@@ -1065,11 +1065,8 @@ print_number_2:
 				goto print_number_2;
 
 			case 'Y':
-#ifdef HAVE_128BIT_TIME
-				printf("%I64u", (dtime_half_t)time_getint(self, TIME_REPR_YER));
-#else /* HAVE_128BIT_TIME */
-				printf("%I32u", (dtime_half_t)time_getint(self, TIME_REPR_YER));
-#endif /* !HAVE_128BIT_TIME */
+				printf(DUTIME_HALF_PRINTF,
+				       (dtime_half_t)time_getint(self, TIME_REPR_YER));
 				break;
 
 				/* I don't understand this week-based stuff.
@@ -1916,20 +1913,16 @@ PRIVATE struct type_math time_math = {
 	/* .tp_pow    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-time_class_bits(DeeObject *__restrict UNUSED(self)) {
 #ifdef HAVE_128BIT_TIME
-	return DeeInt_NewAutoFit(128);
+PRIVATE DEFINE_INT15(time_class_bits, 128);
 #else /* HAVE_128BIT_TIME */
-	return DeeInt_NewAutoFit(64);
+PRIVATE DEFINE_INT15(time_class_bits, 64);
 #endif /* !HAVE_128BIT_TIME */
-}
 
-PRIVATE struct type_getset time_class_getsets[] = {
-	{ "bits", &time_class_bits, NULL, NULL,
-	  DOC("->?Dint\n"
-	      "@return The number of bits used by the implementation to represent a :time object") },
-	{ NULL }
+PRIVATE struct type_member time_class_members[] = {
+	TYPE_MEMBER_CONST_DOC("bits", &time_class_bits,
+	                      "The number of bits used by the implementation to represent a ?. object"),
+	TYPE_MEMBER_END
 };
 
 
@@ -2075,13 +2068,9 @@ f_libtime_makedate(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		KS(timestr_day),
 		KEND
 	};
-#ifdef HAVE_128BIT_TIME
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|I64uuu:makedate", &yer, &mon, &day))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    "|" DUTIME_HALF_UNPACK "uu:makedate", &yer, &mon, &day))
 		goto err;
-#else /* HAVE_128BIT_TIME */
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|I32uuu:makedate", &yer, &mon, &day))
-		goto err;
-#endif /* !HAVE_128BIT_TIME */
 	result = DeeObject_MALLOC(DeeTimeObject);
 	if unlikely(!result)
 		goto done;
@@ -2106,8 +2095,9 @@ f_libtime_makeanon(size_t argc, DeeObject *const *argv) {
 	DREF DeeTimeObject *result;
 #ifdef HAVE_128BIT_TIME
 	DeeObject *temp;
-	if (DeeArg_Unpack(argc, argv, "o:makeanon", &temp) ||
-	    object_as_time(temp, &value))
+	if (DeeArg_Unpack(argc, argv, "o:makeanon", &temp))
+		goto err;
+	if (object_as_time(temp, &value))
 		goto err;
 #else /* HAVE_128BIT_TIME */
 	if (DeeArg_Unpack(argc, argv, "I64u:makeanon", &value))
@@ -2229,22 +2219,30 @@ time_class_freq(DeeObject *UNUSED(self),
 PRIVATE struct type_method time_class_methods[] = {
 	/* For backwards compatibility with the old deemon (which
 	 * did everything as part of the `time' builtin type) */
-	{ "now", &time_class_now, DOC("->?GTime\nDeprecated. Use ?Gnow instead") },
-	{ "tick", &time_class_tick, DOC("->?GTime\nDeprecated. Use ?Gtick instead") },
-	{ "freq", &time_class_freq, DOC("->?Dint\nDeprecated. Always returns ${1000000}") },
+	{ "now", &time_class_now,
+	  DOC("->?.\n"
+	      "Deprecated. Use ?Gnow instead") },
+	{ "tick", &time_class_tick,
+	  DOC("->?.\n"
+	      "Deprecated. Use ?Gtick instead") },
+	{ "freq", &time_class_freq,
+	  DOC("->?Dint\n"
+	      "Deprecated. Always returns $1000000") },
 	{ "time", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_class_maketime,
-	  DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?GTime\n"
+	  DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?.\n"
 	      "Deprecated. Use ?Gmaketime instead"),
 	  TYPE_METHOD_FKWDS },
 	{ "date", (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&time_class_makedate,
-	  DOC("(year=!0,month=!0,day=!0)->?GTime\n"
+	  DOC("(year=!0,month=!0,day=!0)->?.\n"
 	      "Deprecated. Use ?Gmakedate instead"),
 	  TYPE_METHOD_FKWDS },
 	{ "from_time_t", &time_class_from_time_t,
-	  DOC("(time_t_value:?Dint)->?GTime\n"
+	  DOC("(time_t_value:?Dint)->?.\n"
 	      "Deprecated") },
 #define ADD_INTERVAL_CALLBACK(name, func) \
-	{ name, &time_class_##func, DOC("(value:?Dint)->?GTime\nDeprecated. Use ?G" #func " instead") }
+	{ name, &time_class_##func,           \
+	  DOC("(value:?Dint)->?.\n"           \
+		  "Deprecated. Use ?G" #func " instead") }
 	ADD_INTERVAL_CALLBACK("mseconds", milliseconds),
 	ADD_INTERVAL_CALLBACK(timestr_seconds, seconds),
 	ADD_INTERVAL_CALLBACK(timestr_minutes, minutes),
@@ -2285,9 +2283,9 @@ time_assign(DeeTimeObject *self, DeeTimeObject *other) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-time_init(DeeTimeObject *__restrict self,
-          size_t argc, DeeObject *const *argv,
-          DeeObject *kw) {
+time_init_kw(DeeTimeObject *__restrict self,
+             size_t argc, DeeObject *const *argv,
+             DeeObject *kw) {
 	dtime_half_t yer = 0;
 	unsigned int mon = 0, day = 0, hor = 0;
 	unsigned int min = 0, sec = 0, mil = 0, mic = 0;
@@ -2305,51 +2303,71 @@ time_init(DeeTimeObject *__restrict self,
 	self->t_kind = TIME_KIND(TIME_MICROSECONDS, TIME_REPR_NONE);
 	self->t_time = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
-#ifdef HAVE_128BIT_TIME
-	                    "|I64uuuuuuuu:time",
-#else /* HAVE_128BIT_TIME */
-	                    "|I32uuuuuuuu:time",
-#endif /* !HAVE_128BIT_TIME */
+	                    "|" DUTIME_HALF_UNPACK "uuuuuuu:time",
 	                    &yer, &mon, &day, &hor,
-	                    &min, &sec, &mil, &mic) ||
-	    (yer && time_setint(self, TIME_REPR_YER, yer)) ||
-	    (mon && time_setint(self, TIME_REPR_MON, mon)) ||
-	    (day && time_setint(self, TIME_REPR_MDAY, day)) ||
-	    (hor && time_setint(self, TIME_REPR_HOR, hor)) ||
-	    (min && time_setint(self, TIME_REPR_MIN, min)) ||
-	    (sec && time_setint(self, TIME_REPR_SEC, sec)) ||
-	    (mil && time_setint(self, TIME_REPR_MIL, mil)) ||
-	    (mic && time_setint(self, TIME_REPR_MIC, mic)))
-		return -1;
+	                    &min, &sec, &mil, &mic))
+		goto err;
+	if (yer) {
+		if unlikely(time_setint(self, TIME_REPR_YER, yer))
+			goto err;
+	}
+	if (mon) {
+		if unlikely(time_setint(self, TIME_REPR_MON, mon))
+			goto err;
+	}
+	if (day) {
+		if unlikely(time_setint(self, TIME_REPR_MDAY, day))
+			goto err;
+	}
+	if (hor) {
+		if unlikely(time_setint(self, TIME_REPR_HOR, hor))
+			goto err;
+	}
+	if (min) {
+		if unlikely(time_setint(self, TIME_REPR_MIN, min))
+			goto err;
+	}
+	if (sec) {
+		if unlikely(time_setint(self, TIME_REPR_SEC, sec))
+			goto err;
+	}
+	if (mil) {
+		if unlikely(time_setint(self, TIME_REPR_MIL, mil))
+			goto err;
+	}
+	if (mic) {
+		if unlikely(time_setint(self, TIME_REPR_MIC, mic))
+			goto err;
+	}
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_str(DeeTimeObject *__restrict self) {
+	DREF DeeObject *result;
 	dtime_t tmval;
 	if (self->t_repr == TIME_REPR_NONE)
 		return time_doformat_string(self, "%A, the %[n:mday] of %B %Y, %H:%M:%S");
 	tmval = time_getint(self, self->t_repr);
 	if (self->t_repr & TIME_REPR_PLURAL) {
-		return DeeString_Newf("%I64d %s",
-		                      tmval,
-		                      get_repr_name(tmval == 1 ? (uint8_t)(self->t_repr & ~(TIME_REPR_PLURAL))
-		                                               : (uint8_t)(self->t_repr | TIME_REPR_PLURAL)));
+		char const *reprname;
+		reprname = get_repr_name(tmval == 1
+		                         ? (uint8_t)(self->t_repr & ~(TIME_REPR_PLURAL))
+		                         : (uint8_t)(self->t_repr | TIME_REPR_PLURAL));
+		result = DeeString_Newf("%I64d %s", tmval, reprname);
 	} else {
-		return DeeString_Newf("%s %I64d",
-		                      get_repr_name(self->t_repr),
-		                      tmval);
+		char const *reprname;
+		reprname = get_repr_name(self->t_repr);
+		result = DeeString_Newf("%s %I64d", reprname, tmval);
 	}
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 time_repr(DeeTimeObject *__restrict self) {
-	return DeeString_Newf(""
-#ifdef HAVE_128BIT_TIME
-	                      "time(%I64u,%u,%u,%u,%u,%u,%u,%u)%s%s",
-#else /* HAVE_128BIT_TIME */
-	                      "time(%I32u,%u,%u,%u,%u,%u,%u,%u)%s%s",
-#endif /* !HAVE_128BIT_TIME */
+	return DeeString_Newf("time(" DUTIME_HALF_PRINTF ",%u,%u,%u,%u,%u,%u,%u)%s%s",
 	                      (dtime_half_t)time_getint(self, TIME_REPR_YER),
 	                      (unsigned int)time_getint(self, TIME_REPR_MON),
 	                      (unsigned int)time_getint(self, TIME_REPR_MDAY),
@@ -2387,13 +2405,15 @@ time_hash(DeeTimeObject *__restrict self) {
 #endif /* SIZEOF_DTIME_T != __SIZEOF_POINTER__ */
 }
 
-#define DEFINE_TIME_CMP(name, op)                 \
-	PRIVATE WUNUSED DREF DeeObject *DCALL         \
-	name(DeeTimeObject *self, DeeObject *other) { \
-		dtime_t val;                              \
-		if (object_as_time(other, &val))          \
-			return NULL;                          \
-		return_bool(DeeTime_Get(self) op val);    \
+#define DEFINE_TIME_CMP(name, op)                         \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(DeeTimeObject *self, DeeObject *other) {         \
+		dtime_t val;                                      \
+		if (object_as_time(other, &val))                  \
+			goto err;                                     \
+		return_bool(DeeTime_Get(self) op val);            \
+	err:                                                  \
+		return NULL;                                      \
 	}
 DEFINE_TIME_CMP(time_eq, ==)
 DEFINE_TIME_CMP(time_ne, !=)
@@ -2449,7 +2469,7 @@ INTERN DeeTypeObject DeeTime_Type = {
 				/* .tp_deep_ctor = */ (void *)&time_copy,
 				/* .tp_any_ctor  = */ NULL,
 				TYPE_FIXED_ALLOCATOR(DeeTimeObject),
-				/* .tp_any_ctor_kw = */ (void *)&time_init,
+				/* .tp_any_ctor_kw = */ (void *)&time_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ NULL,
@@ -2475,8 +2495,8 @@ INTERN DeeTypeObject DeeTime_Type = {
 	/* .tp_getsets       = */ time_getsets,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ time_class_methods,
-	/* .tp_class_getsets = */ time_class_getsets,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ time_class_members
 };
 
 
@@ -2502,12 +2522,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("(hour=!0,minute=!0,second=!0,millisecond=!0,microsecond=!0)->?GTime\n"
 	      "Construct a new :time object using the given arguments for the "
 	      "sub-day portion, while filling in the remainder as all zeroes:\n"
-	      ">Time from time(0,0,0,hour,minute,second,millisecond,microsecond)") },
+	      "${"
+	      "import Time from time;"
+	      "Time(0, 0, 0, hour, minute, second, millisecond, microsecond);"
+	      "}") },
 	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FNORMAL,
 	  DOC("(year=!0,month=!0,day=!0)->?GTime\n"
 	      "Construct a new :time object using the given arguments for the "
 	      "post-day portion, while filling in the remainder as all zeroes:\n"
-	      ">Time from time(year,month,day,0,0,0,0,0)") },
+	      "${"
+	      "import Time from time;"
+	      "Time(year, month, day, 0, 0, 0, 0, 0);"
+	      "}") },
 	{ "makeanon", (DeeObject *)&libtime_makeanon, MODSYM_FNORMAL,
 	  DOC("(microseconds:?Dint)->?GTime\n"
 	      "Construct a new anonymous (generic-representation) time object, "
@@ -2527,7 +2553,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	 */
 #define ADD_INTERVAL_CALLBACK(name, func)                 \
 	{ name, (DeeObject *)&libtime_##func, MODSYM_FNORMAL, \
-	  DOC("(value:?Dint)->?GTime\n@return A time interval of @value " #func) }
+	  DOC("(value:?Dint)->?GTime\n"                       \
+		  "@return A time interval of @value " #func) }
 	ADD_INTERVAL_CALLBACK(timestr_microseconds, microseconds),
 	ADD_INTERVAL_CALLBACK(timestr_milliseconds, milliseconds),
 	ADD_INTERVAL_CALLBACK(timestr_seconds, seconds),

@@ -99,7 +99,7 @@ struct class_member {
 	                              * NOTE: When set to (uint16_t)-1, rather than initializing a
 	                              *       class member, `cm_ast' is evaluated, with its result
 	                              *       simply being discarded. */
-	uint16_t         cm_pad[(sizeof(void *)/2)-1]; /* ... */
+	uint16_t         cm_pad[(sizeof(void *) / 2) - 1]; /* ... */
 };
 
 struct TPPFile;

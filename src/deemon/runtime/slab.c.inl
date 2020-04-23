@@ -397,7 +397,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 #define MAP_ANONYMOUS MAP_ANON
 #endif /* !MAP_ANONYMOUS && MAP_ANON */
 #ifndef MAP_FAILED
-#define MAP_FAILED ((void *)-1)
+#define MAP_FAILED ((void *)(uintptr_t)-1)
 #endif /* !MAP_FAILED */
 #ifndef MAP_PRIVATE
 #define MAP_PRIVATE 0

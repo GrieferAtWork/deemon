@@ -36,7 +36,7 @@ DECL_BEGIN
 #define TIMECALL FCALL
 
 #undef ceildiv
-#define ceildiv(x, y) (((x) + ((y)-1)) / (y))
+#define ceildiv(x, y) (((x) + ((y) - 1)) / (y))
 
 #if defined(__INT128_TYPE__) && defined(__UINT128_TYPE__)
 
@@ -46,6 +46,8 @@ typedef Dee_int128_t  dtime_t;
 typedef Dee_uint128_t dutime_t;
 typedef int64_t       dtime_half_t;
 typedef uint64_t      dutime_half_t;
+#define DUTIME_HALF_PRINTF "%I64u"
+#define DUTIME_HALF_UNPACK "I64u"
 
 #else /* __INT128_TYPE__ && __UINT128_TYPE__ */
 
@@ -58,6 +60,8 @@ typedef int64_t  dtime_t;
 typedef uint64_t dutime_t;
 typedef int32_t  dtime_half_t;
 typedef uint32_t dutime_half_t;
+#define DUTIME_HALF_PRINTF "%I32u"
+#define DUTIME_HALF_UNPACK "I32u"
 
 #endif /* !__INT128_TYPE__ || !__UINT128_TYPE__ */
 

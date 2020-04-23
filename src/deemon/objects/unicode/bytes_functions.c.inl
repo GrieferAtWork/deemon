@@ -4549,7 +4549,11 @@ INTERN struct type_method bytes_methods[] = {
 	      "Using @this Bytes object as result, insert @filler at the front, as well as after "
 	      "every ascii-linefeed with the exception of one that may be located at its end\n"
 	      "The inteded use is for generating strings from structured data, such as HTML:\n"
-	      ">text = \"<html>\n{}\n</html>\".format({ get_html_bytes().strip().indent() });") },
+	      "${"
+	      "text = \"<html>\n{}\n</html>\".format({\n"
+	      "	get_html_bytes().strip().indent()\n"
+	      "});"
+	      "}") },
 	{ "dedent",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_dedent,
 	  DOC("(max_chars=!1,mask?:?X3?.?Dstring?Dint)->?.\n"

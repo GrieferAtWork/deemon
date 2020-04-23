@@ -2077,16 +2077,16 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 		if (!hKernel32)
 			hKernel32 = LoadLibraryW(wKernel32Dll);
 		if (!hKernel32)
-			ATOMIC_WRITE(*(void **)&pdyn_GetFinalPathNameByHandleW, (void *)-1);
+			ATOMIC_WRITE(*(void **)&pdyn_GetFinalPathNameByHandleW, (void *)(uintptr_t)-1);
 		else {
 			LPGETFINALPATHNAMEBYHANDLEW func;
 			func = (LPGETFINALPATHNAMEBYHANDLEW)GetProcAddress(hKernel32, "GetFinalPathNameByHandleW");
 			if (!func)
-				*(void **)&func = (void *)-1;
+				*(void **)&func = (void *)(uintptr_t)-1;
 			ATOMIC_WRITE(pdyn_GetFinalPathNameByHandleW, func);
 		}
 	}
-	if (*(void **)&pdyn_GetFinalPathNameByHandleW == (void *)-1)
+	if (*(void **)&pdyn_GetFinalPathNameByHandleW == (void *)(uintptr_t)-1)
 		return 2;
 	/* Make use of `GetFinalPathNameByHandleW()' */
 	dwBufSize = PATH_MAX;
@@ -2243,10 +2243,10 @@ DeeNTSystem_PrintMappedFileName(struct Dee_unicode_printer *__restrict printer,
 			}
 		}
 		if (!lpGetMappedFileNameW)
-			*(void **)&lpGetMappedFileNameW = (void *)-1;
+			*(void **)&lpGetMappedFileNameW = (void *)(uintptr_t)-1;
 		ATOMIC_WRITE(pdyn_GetMappedFileNameW, lpGetMappedFileNameW);
 	}
-	if (*(void **)&pdyn_GetMappedFileNameW == (void *)-1)
+	if (*(void **)&pdyn_GetMappedFileNameW == (void *)(uintptr_t)-1)
 		return 2; /* Unsupported. */
 	/* Make use of `GetMappedFileNameW()' */
 	dwBufSize = PATH_MAX;

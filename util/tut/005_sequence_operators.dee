@@ -98,7 +98,7 @@ print repr [10, 20, 30, 40][:-1];   /* [10, 20, 30] */
  * Secondly, passing negative values for either `<start>' or `<end>' will
  * have that index be internally transformed to instead referr to that
  * value added to the length of the sequence:
- * In other words: `seq[:-1]' is the same as `seq[:-1+#seq]' aka. `seq[:#seq-1]' */
+ * In other words: `seq[:-1]' is the same as `seq[:-1 + #seq]' aka. `seq[:#seq - 1]' */
 
 
 

@@ -186,14 +186,14 @@
 #define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt; DeeFileTypeObject *ob_type;
 
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define WEAKREF_SUPPORT           struct Dee_weakref_list ob_weakrefs;
-#define Dee_WEAKREF_SUPPORT       struct Dee_weakref_list ob_weakrefs;
-#define WEAKREF(T)                struct Dee_weakref
-#define Dee_WEAKREF(T)            struct Dee_weakref
+#define WEAKREF_SUPPORT           struct weakref_list ob_weakrefs;
+#define Dee_WEAKREF_SUPPORT       struct weakref_list ob_weakrefs;
+#define WEAKREF(T)                struct weakref
+#define Dee_WEAKREF(T)            struct weakref
 #define DEFINE_KWDS(name, ...)                DeeKwdsObject name
 #define Dee_DEFINE_KWDS(name, ...)            DeeKwdsObject name
-#define DEFINE_KWLIST                         struct dee_keyword name[] = __VA_ARGS__
-#define Dee_DEFINE_KWLIST(name, ...)          struct dee_keyword name[] = __VA_ARGS__
+#define DEFINE_KWLIST                         struct keyword name[] = __VA_ARGS__
+#define Dee_DEFINE_KWLIST(name, ...)          struct keyword name[] = __VA_ARGS__
 #define DEFINE_BYTES(name, ...)               DeeBytesObject name
 #define Dee_DEFINE_BYTES(name, ...)           DeeBytesObject name
 #define DEFINE_BYTES_EX(name, ...)            DeeBytesObject name
@@ -204,3 +204,162 @@
 #define Dee_DEFINE_FUNCTION(name, ...)        DeeFunctionObject name
 #define DEFINE_FUNCTION_NOREFS(name, ...)     DeeFunctionObject name
 #define Dee_DEFINE_FUNCTION_NOREFS(name, ...) DeeFunctionObject name
+
+#define Dee_weakref          weakref
+#define Dee_object           object_
+#define Dee_type_object      type_object
+#define Dee_class_desc       class_desc
+#define Dee_membercache_slot membercache_slot
+#define Dee_membercache      membercache
+#define Dee_type_method      type_method
+#define Dee_type_getset      type_getset
+#define Dee_type_member      type_member
+#define Dee_type_constructor type_constructor
+#define Dee_type_cast        type_cast
+#define Dee_type_gc          type_gc
+#define Dee_type_math        type_math
+#define Dee_type_cmp         type_cmp
+#define Dee_type_nii         type_nii
+#define Dee_type_seq         type_seq
+#define Dee_type_nsi         type_nsi
+#define Dee_type_attr        type_attr
+#define Dee_type_with        type_with
+#define Dee_type_buffer      type_buffer
+#define Dee_weakref_list     weakref_list
+#define Dee_opinfo           opinfo
+
+#define Dee_compiler_object  compiler_object
+#define Dee_compiler_options compiler_options
+#define Dee_compiler_items   compiler_items
+
+#define dee_kwds_entry           kwds_entry
+#define dee_kwds_object          kwds_object
+#define dee_kwds_mapping_object  kwds_mapping_object
+#define dee_keyword              keyword
+
+#define Dee_attribute_object         attribute_object
+#define Dee_enumattr_object          enumattr_object
+#define Dee_enumattr_iterator_object enumattr_iterator_object
+#define Dee_attribute_info           attribute_info
+#define Dee_attribute_lookup_rules   attribute_lookup_rules
+
+#define Dee_bool_object bool_object
+
+#define Dee_bytes_object   bytes_object
+#define Dee_bytes_printer  bytes_printer
+
+#define Dee_cell_object  cell_object
+
+#define Dee_class_descriptor_object class_descriptor_object
+#define Dee_class_optable           class_optable
+#define Dee_instance_desc           instance_desc
+#define Dee_class_operator          class_operator
+#define Dee_class_attribute         class_attribute
+#define Dee_instancemember_object   instancemember_object
+
+#define Dee_code_frame                      code_frame
+#define Dee_tuple_object                    tuple_object
+#define Dee_module_object                   module_object
+#define Dee_code_object                     code_object
+#define Dee_function_object                 function_object
+#define Dee_yield_function_object           yield_function_object
+#define Dee_yield_function_iterator_object  yield_function_iterator_object
+#define Dee_ddi_object                      ddi_object
+#define Dee_except_handler                  except_handler
+#define Dee_ddi_regs                        ddi_regs
+#define Dee_ddi_xregs                       ddi_xregs
+#define Dee_ddi_saved                       ddi_saved
+#define Dee_ddi_state                       ddi_state
+#define Dee_ddi_exdat                       ddi_exdat
+
+#define Dee_dex_object       dex_object
+#define Dee_dex_symbol       dex_symbol
+#define Dee_dex              dex
+#define Dee_dex_notification dex_notification
+
+#define Dee_dict_item   dict_item
+#define Dee_dict_object dict_object
+
+#define Dee_error_object        error_object
+#define Dee_appexit_object      appexit_object
+#define Dee_threadexit_object   threadexit_object
+
+#define Dee_system_error_object   system_error_object
+#define Dee_nomemory_error_object nomemory_error_object
+#define Dee_compiler_error_object compiler_error_object
+#define Dee_compiler_error_loc    compiler_error_loc
+
+#define Dee_file_object        file_object
+#define Dee_filetype_object    filetype_object
+
+#define Dee_system_file_object         system_file_object
+#define Dee_file_buffer_object         file_buffer_object
+#define Dee_file_buffer_link           file_buffer_link
+#define Dee_memory_file_object         memory_file_object
+#define Dee_file_reader_object         file_reader_object
+#define Dee_file_writer_object         file_writer_object
+
+#define Dee_float_object float_object
+
+#define Dee_gc_head_raw gc_head_raw
+#define Dee_gc_head     gc_head
+
+#define Dee_hashset_item   hashset_item
+#define Dee_hashset_object hashset_object
+
+#define Dee_instance_method    instance_method
+
+#define Dee_int_object             int_object
+
+#define Dee_list_object list_object
+
+#define Dee_module_path_object    module_path_object
+#define Dee_module_symbol         module_symbol
+#define Dee_thread_object         thread_object
+
+#define Dee_none_object none_object
+
+#define Dee_objmethod_object   objmethod_object
+#define Dee_kwobjmethod_object kwobjmethod_object
+#define Dee_clsmethod_object   clsmethod_object
+#define Dee_kwclsmethod_object kwclsmethod_object
+#define Dee_clsproperty_object clsproperty_object
+#define Dee_clsmember_object   clsmember_object
+#define Dee_cmethod_object     cmethod_object
+#define Dee_kwcmethod_object   kwcmethod_object
+
+#define Dee_property_object property_object
+
+#define Dee_rodict_item   rodict_item
+#define Dee_rodict_object rodict_object
+
+#define Dee_roset_item   roset_item
+#define Dee_roset_object roset_object
+
+#define Dee_inverse_set_object inverse_set_object
+
+#define Dee_ascii_printer   ascii_printer
+#define Dee_unicode_printer unicode_printer
+#define Dee_string_utf      string_utf
+#define Dee_unitraits       unitraits
+#define Dee_regex_range     regex_range
+#define Dee_regex_range_ex  regex_range_ex
+#define Dee_regex_range_ptr regex_range_ptr
+
+#define Dee_charptr dcharptr
+
+#define Dee_super_object  super_object
+
+#define Dee_traceback_object      traceback_object
+#define Dee_except_frame          except_frame
+#define Dee_repr_frame            repr_frame
+#define Dee_trepr_frame           trepr_frame
+#define Dee_deep_assoc_entry      deep_assoc_entry
+#define Dee_deep_assoc            deep_assoc
+#define Dee_thread_interrupt      thread_interrupt
+
+#define Dee_tls_callback_hooks  tls_callback_hooks
+
+#define Dee_weakref_object     weakref_object
+#define Dee_weakrefable_object weakrefable_object
+

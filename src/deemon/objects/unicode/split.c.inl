@@ -199,9 +199,9 @@ splititer_bool(StringSplitIterator *__restrict self) {
 		x = GET_SPLIT_NEXT(self);                                          \
 		y = GET_SPLIT_NEXT(other);                                         \
 		if (!x)                                                            \
-			x = (uint8_t *)-1;                                             \
+			x = (uint8_t *)(uintptr_t)-1;                                  \
 		if (!y)                                                            \
-			y = (uint8_t *)-1;                                             \
+			y = (uint8_t *)(uintptr_t)-1;                                  \
 		return_bool(x op y);                                               \
 	err:                                                                   \
 		return NULL;                                                       \

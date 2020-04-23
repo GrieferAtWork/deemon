@@ -639,8 +639,8 @@ JITObjectTable_Create(JITObjectTable *__restrict self,
 
 /* Special values for `jc_retval' */
 #define JITCONTEXT_RETVAL_UNSET       NULL /* unset return value */
-#define JITCONTEXT_RETVAL_BREAK     ((DREF DeeObject *)-1) /* Unwind for loop break */
-#define JITCONTEXT_RETVAL_CONTINUE  ((DREF DeeObject *)-2) /* Unwind for loop continue */
+#define JITCONTEXT_RETVAL_BREAK     ((DREF DeeObject *)(uintptr_t)-1) /* Unwind for loop break */
+#define JITCONTEXT_RETVAL_CONTINUE  ((DREF DeeObject *)(uintptr_t)-2) /* Unwind for loop continue */
 #define JITCONTEXT_RETVAL_ISSET(x)  ((uintptr_t)(x) < (uintptr_t)-0xf)
 
 #define JITCONTEXT_FNORMAL 0x0000 /* Normal flags. */

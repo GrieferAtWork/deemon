@@ -299,11 +299,11 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 		                                   "QueryFullProcessImageNameW");
 		DBG_ALIGNMENT_ENABLE();
 		if (!func)
-			*(void **)&func = (void *)-1;
+			*(void **)&func = (void *)(uintptr_t)-1;
 		ATOMIC_CMPXCH(pQueryFullProcessImageNameW, NULL, func);
 	}
 	/* If the function is not supported, return ITER_DONE. */
-	if (*(void **)&func == (void *)-1)
+	if (*(void **)&func == (void *)(uintptr_t)-1)
 		return ITER_DONE;
 	buffer = DeeString_NewWideBuffer(bufsize);
 	if unlikely(!buffer)

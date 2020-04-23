@@ -1502,14 +1502,14 @@
  *                        must be negated: `final_result = -result';
  *                        This bit can only appear in the first byte.
  *    BYTE[0]     & 0x3f: Set the result value: `result = BYTE[0] & 0x3f'
- *    BYTE[x > 0] & 0x7f: Or' this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << (x*7)-1)'
+ *    BYTE[x > 0] & 0x7f: Or' this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << (x * 7) - 1)'
  *    BYTE[x]     & 0x80: If this bit is set, also parse `BYTE[x+1]'
  *                        If this bit is not set, stop parsing.
  * READ_ULEB():
  *    A function for reading an unsigned, arbitrary-precision integer from
  *    the input stream. (NOTE: `result' must be pre-initialized to `0')
  *    The integer is encoded as follows:
- *    BYTE[x] & 0x7f: Or this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << x*7)'
+ *    BYTE[x] & 0x7f: Or this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << x * 7)'
  *    BYTE[x] & 0x80: If this bit is set, also parse `BYTE[x+1]'
  *                    If this bit is not set, stop parsing.
  * HINT: When analyzing DDI information, you should realize that there is
@@ -1522,7 +1522,7 @@
  *       compiler to use whatever storage class it deems most efficient,
  *       without having to fear debug information ever degrading. */
 #define DDI_STOP          0x00 /* SPECIAL: End of information stream. */
-#define DDI_ADDUIP        0x01 /* `cur_state.uip += READ_ULEB()+1;' */
+#define DDI_ADDUIP        0x01 /* `cur_state.uip += READ_ULEB() + 1;' */
 #define DDI_ADDLNO        0x02 /* `cur_state.lno += READ_SLEB();' */
 #define DDI_SETCOL        0x03 /* `cur_state.col  = READ_SLEB();' */
 #define DDI_SETPATH       0x04 /* `cur_state.path = READ_ULEB();' */

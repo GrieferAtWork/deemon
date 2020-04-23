@@ -139,7 +139,7 @@ struct Dee_compiler_object {
 #define COMPILER_FMASK      0x0003        /* Mask of known flags. */
 #endif /* DEE_SOURCE */
 	uint16_t                cp_flags;     /* [const] Compiler flags (Set of `COMPILER_F*'). */
-	uint16_t               _cp_pad[(sizeof(void *)/2)-1]; /* ... */
+	uint16_t               _cp_pad[(sizeof(void *) / 2) - 1]; /* ... */
 	Dee_WEAKREF_SUPPORT
 #ifdef CONFIG_BUILDING_DEEMON
 	/* [OVERRIDE(*,[valid_if(self != DeeCompiler_Active.wr_obj)])] */

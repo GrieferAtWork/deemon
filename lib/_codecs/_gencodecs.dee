@@ -112,7 +112,7 @@ local session = FTPClient(none, true)
 function load_from_path(path) {
 	session.CWD(path);
 	for (local line: session.LIST()) {
-		local filename = str line[line.rindex(" ")+1:];
+		local filename = str line[line.rindex(" ") + 1:];
 		if (filename.lower() in ["readme.txt", "datedversions"])
 			continue;
 		local data_filename = "data/{}".format({ filename });

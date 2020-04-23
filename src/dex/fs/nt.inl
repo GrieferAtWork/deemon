@@ -530,10 +530,10 @@ nt_CreateSymbolicLink(DeeObject *__restrict lpSymlinkFileName,
 		                                       "CreateSymbolicLinkW");
 		DBG_ALIGNMENT_ENABLE();
 		if (!callback)
-			*(void **)&callback = (void *)-1;
+			*(void **)&callback = (void *)(uintptr_t)-1;
 		*(void **)&pCreateSymbolicLinkW = *(void **)&callback;
 	}
-	if (*(void **)&callback == (void *)-1) {
+	if (*(void **)&callback == (void *)(uintptr_t)-1) {
 		DeeError_Throwf(&DeeError_UnsupportedAPI,
 		                "The host operating system does "
 		                "not implement symbolic links");

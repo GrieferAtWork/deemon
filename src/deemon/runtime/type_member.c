@@ -523,8 +523,7 @@ handle_null_ob:
 	CASE(STRUCT_BOOLBIT2): CASE(STRUCT_BOOLBIT3):
 	CASE(STRUCT_BOOLBIT4): CASE(STRUCT_BOOLBIT5):
 	CASE(STRUCT_BOOLBIT6): CASE(STRUCT_BOOLBIT7):
-		return_bool((FIELD(uint8_t) & (0x01 << ((desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC)) -
-		                                        (STRUCT_BOOLBIT0 & ~(STRUCT_CONST | STRUCT_ATOMIC))))) != 0);
+		return_bool((FIELD(uint8_t) & STRUCT_BOOLBITMASK(desc->m_field.m_type & ~(STRUCT_CONST | STRUCT_ATOMIC))) != 0);
 #else /* __OPTIMIZE_SIZE__ */
 	CASE(STRUCT_BOOLBIT0): return_bool((FIELD(uint8_t) & 0x01) != 0);
 	CASE(STRUCT_BOOLBIT1): return_bool((FIELD(uint8_t) & 0x02) != 0);
@@ -711,8 +710,7 @@ type_member_set(struct type_member *desc,
 		boolval = DeeObject_Bool(value);
 		if unlikely(boolval < 0)
 			goto err;
-		mask = 0x01 << ((desc->m_field.m_type & ~(STRUCT_ATOMIC)) -
-		                (STRUCT_BOOLBIT0 & ~(STRUCT_ATOMIC)));
+		mask = Dee_STRUCT_BOOLBITMASK(desc->m_field.m_type & ~STRUCT_ATOMIC);
 		pfield = &FIELD(uint8_t);
 		if (boolval) {
 #ifndef CONFIG_NO_THREADS

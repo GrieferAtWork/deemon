@@ -194,7 +194,7 @@ DECL_BEGIN
 #ifdef MAP_FAILED
 #define ALTSTACK_ALLOC_FAILED MAP_FAILED
 #else /* MAP_FAILED */
-#define ALTSTACK_ALLOC_FAILED ((void *)-1)
+#define ALTSTACK_ALLOC_FAILED ((void *)(uintptr_t)-1)
 #endif /* !MAP_FAILED */
 #elif defined(EXEC_ALTSTACK_ALLOC_USE_MALLOC)
 #define ALTSTACK_ALLOC_FAILED NULL

@@ -275,7 +275,7 @@ struct Dee_class_attribute {
 	uint16_t                       ca_addr; /* [const] Attribute address within the instance / class table. */
 	uint16_t                       ca_flag; /* Class member flags (Set of `Dee_CLASS_ATTRIBUTE_F*') */
 #if __SIZEOF_POINTER__ > 4
-	uint16_t                       ca_pad[(sizeof(void *)/2)-2];
+	uint16_t                       ca_pad[(sizeof(void *) / 2) - 2];
 #endif /* __SIZEOF_POINTER__ > 4 */
 };
 #define Dee_CLASS_ATTRIBUTE_ALLOW_AUTOINIT(x)                                       \

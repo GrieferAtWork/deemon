@@ -967,8 +967,8 @@ done_fake_none:
 		 *    Using this, a finally block in a place such as that above
 		 *    must be entered after pushing the address of the instruction
 		 *    it should return to once done, meaning that `break' will
-		 *    push the address of `print "done";' and before entering the
-		 *    finally block during normal code-flow, the address of
+		 *    push the address of `print "done";', and before entering
+		 *    the finally block during normal code-flow, the address of
 		 *    `print "next";' is pushed instead.
 		 *    HINT: The implementation of this is further documented in `AST_TRY' above.
 		 */
@@ -980,9 +980,11 @@ done_fake_none:
 		    !(current_assembler.a_finflag & ASM_FINFLAG_NOLOOP)) {
 			/* Special case: Must push `ls_sym', but jump to `ls_fsym'. */
 			current_assembler.a_finflag |= ASM_FINFLAG_USED;
-			if (asm_gpush_abs(loopsym) ||
-			    asm_gpush_stk(loopsym) ||
-			    asm_gjmps(current_assembler.a_finsym))
+			if (asm_gpush_abs(loopsym))
+				goto err;
+			if (asm_gpush_stk(loopsym))
+				goto err;
+			if (asm_gjmps(current_assembler.a_finsym))
 				goto err;
 		} else {
 			if (asm_gjmps(loopsym))
@@ -1005,7 +1007,7 @@ done_fake_none:
 		invert_condition = false;
 
 		/* Special handling for boolean conditions.
-		 * NOTE: Be careful when condition re-use for this one! */
+		 * NOTE: Be careful about condition re-use for this one! */
 		if (self->a_conditional.c_cond->a_type == AST_BOOL &&
 		    self->a_conditional.c_tt != self->a_conditional.c_cond &&
 		    self->a_conditional.c_ff != self->a_conditional.c_cond) {
@@ -1047,7 +1049,7 @@ done_fake_none:
 				}
 				/*     push <cond>
 				 *    [dup]
-				 *     jt   1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
+				 *     jt   pop, 1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
 				 *    [pop]
 				 *    [push] <false-branch> / <true-branch>
 				 *1:   */
@@ -1062,7 +1064,7 @@ done_fake_none:
 				    current_assembler.a_curr != &current_assembler.a_sect[SECTION_COLD]) {
 					/*     push <cond>
 					 *    [dup]
-					 *     jf   .cold.1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
+					 *     jf   pop, .cold.1f  # Inverted by `invert_condition ^ (ast->a_conditional.c_ff == ast->a_conditional.c_cond)'
 					 *2:
 					 *
 					 *.cold.1:
@@ -1115,7 +1117,7 @@ done_fake_none:
 			           current_assembler.a_curr != &current_assembler.a_sect[SECTION_COLD]) {
 				/* Special case where one of the branches is placed in cold text. */
 				/*     push <cond>
-				 *     jf   .cold.1f  # Inverted by `invert_condition ^ <likely-branch == false-branch>'
+				 *     jf   pop, .cold.1f  # Inverted by `invert_condition ^ <likely-branch == false-branch>'
 				 *    [push] <likely-branch>
 				 *2:
 				 *
@@ -1179,9 +1181,9 @@ done_fake_none:
 					goto err;
 			} else {
 				/*     push <cond>
-				 *     jf   1f  # Inverted by `invert_condition'
+				 *     jf   pop, 1f  # Inverted by `invert_condition'
 				 *    [push] <true-branch>
-				 *     jmp  2f
+				 *     jmp  pop, 2f
 				 *1:  [push] <false-branch>
 				 *2:   */
 				struct asm_sym *ff_enter = asm_newsym();
@@ -1241,7 +1243,7 @@ done_fake_none:
 				/*    push <cond>
 				 *   [bool]
 				 *    dup
-				 *    jf   1f  # Inverted by `existing_branch == ast->a_conditional.c_ff'
+				 *    jf   pop, 1f  # Inverted by `existing_branch == ast->a_conditional.c_ff'
 				 *    pop
 				 *    push none
 				 *1: */
@@ -1268,7 +1270,7 @@ done_fake_none:
 				/*   [push none|false]
 				 *    push <cond>
 				 *   [bool]
-				 *    jf   1f    # Inverted by `existing_branch == ast->a_conditional.c_ff'
+				 *    jf   pop, 1f    # Inverted by `existing_branch == ast->a_conditional.c_ff'
 				 *   [pop]
 				 *   [push] <existing-branch>
 				 *1: */
@@ -1282,18 +1284,19 @@ done_fake_none:
 					 * when stack displacement is enabled.
 					 * Instead, we must rely on peephole optimization to then optimize
 					 * text like this:
-					 * >> push <cond>
+					 * >> push @condition
 					 * >> push none
 					 * >> swap
 					 * ... into this:
 					 * >> push none
-					 * >> push <cond>
+					 * >> push @condition
 					 * HINT: This uses the same facility that optimizes
 					 *      `a in b' --> `b.operator contains(a)'.
 					 */
-					if (current_assembler.a_flag & ASM_FSTACKDISP &&
-					    ast_genasm(condition, ASM_G_FPUSHRES))
-						goto err;
+					if (current_assembler.a_flag & ASM_FSTACKDISP) {
+						if (ast_genasm(condition, ASM_G_FPUSHRES))
+							goto err;
+					}
 					if (asm_putddi(self))
 						goto err;
 					if (self->a_flag & AST_FCOND_BOOL) {
@@ -1397,7 +1400,7 @@ done_fake_none:
 				goto err;
 			if (asm_putrel(R_DMN_DISP8, stop, 0))
 				goto err;
-			if (asm_put((instruction_t)(uint8_t)(int8_t)-1))
+			if (asm_put((instruction_t)(uint8_t)(int8_t) - 1))
 				goto err;
 			asm_incsp();
 			if (asm_gpop())
@@ -1406,7 +1409,7 @@ done_fake_none:
 				goto err;
 			if (asm_putrel(R_DMN_DISP8, loop, 0))
 				goto err;
-			if (asm_put((instruction_t)(uint8_t)(int8_t)-1))
+			if (asm_put((instruction_t)(uint8_t)(int8_t) - 1))
 				goto err;
 			asm_decsp(); /* FOREACH pops 1 element when jumping here */
 			asm_defsym(stop);
@@ -1425,8 +1428,8 @@ done_fake_none:
 			/* Only need to generate the operator function binding if
 			 * the result of the expression is actually being used! */
 			if unlikely(ast_gen_operator_func(self->a_operator_func.of_binding,
-				                               self, self->a_flag))
-			goto err;
+			                                  self, self->a_flag))
+				goto err;
 		} else if (self->a_operator_func.of_binding) {
 			/* Still generate code the binding-expression (in case it has side-effects) */
 			if (ast_genasm(self->a_operator_func.of_binding, ASM_G_FNORMAL))
@@ -1909,14 +1912,18 @@ push_a_if_used:
 			 *       be optimized away by the peephole optimizer. */
 			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;
-			if (asm_putddi(self) || asm_gleave())
+			if (asm_putddi(self))
+				goto err;
+			if (asm_gleave())
 				goto err;
 			goto done_push_none;
 
 		case OPERATOR_ITERNEXT:
 			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;
-			if (asm_putddi(self) || asm_giternext())
+			if (asm_putddi(self))
+				goto err;
+			if (asm_giternext())
 				goto err; /* This one's an extended instruction... */
 			goto pop_unused;
 

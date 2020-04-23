@@ -49,89 +49,89 @@ typedef DeeTypeObject Type;
 
 
 INTERN struct opinfo basic_opinfo[OPERATOR_USERCOUNT] = {
-	/* [OPERATOR_CONSTRUCTOR]  = */ { OPTYPE_SPECIAL,                               OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_any_ctor),  "this",         "constructor", "tp_any_ctor" },
-	/* [OPERATOR_COPY]         = */ { OPTYPE_SPECIAL,                               OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_copy_ctor), "copy",         "copy",        "tp_copy_ctor" },
-	/* [OPERATOR_DEEPCOPY]     = */ { OPTYPE_SPECIAL,                               OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_deep_ctor), "deepcopy",     "deepcopy",    "tp_deep_ctor" },
-	/* [OPERATOR_DESTRUCTOR]   = */ { OPTYPE_RVOID|OPTYPE_UNARY,                    OPCLASS_TYPE, 1, offsetof(Type,tp_init.tp_dtor),               "~this",        "destructor",  "tp_dtor" },
-	/* [OPERATOR_ASSIGN]       = */ { OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_assign),             ":=",           "assign",      "tp_assign" },
-	/* [OPERATOR_MOVEASSIGN]   = */ { OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_move_assign),        "move:=",       "moveassign",  "tp_move_assign" },
-	/* [OPERATOR_STR]          = */ { OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_str),                "str",          "str",         "tp_str" },
-	/* [OPERATOR_REPR]         = */ { OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_repr),               "repr",         "repr",        "tp_repr" },
-	/* [OPERATOR_BOOL]         = */ { OPTYPE_RINT|OPTYPE_UNARY,                     OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_bool),               "bool",         "bool",        "tp_bool" },
-	/* [OPERATOR_ITERNEXT]     = */ { OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_TYPE, 0, offsetof(Type,tp_iter_next),                  "next",         "next",        "tp_iter_next" },
-	/* [OPERATOR_CALL]         = */ { OPTYPE_ROBJECT|OPTYPE_BINARY|OPTYPE_VARIABLE, OPCLASS_TYPE, 0, offsetof(Type,tp_call),                       "()",           "call",        "tp_call" },
-	/* [OPERATOR_INT]          = */ { OPTYPE_SPECIAL,                               OPCLASS_MATH, 0, offsetof(struct type_math,tp_int),            "int",          "int",         "tp_int" },
-	/* [OPERATOR_FLOAT]        = */ { OPTYPE_DOUBLE,                                OPCLASS_MATH, 0, offsetof(struct type_math,tp_double),         "float",        "float",       "tp_double" },
-	/* [OPERATOR_INV]          = */ { OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_MATH, 0, offsetof(struct type_math,tp_inv),            "~",            "inv",         "tp_inv" },
-	/* [OPERATOR_POS]          = */ { OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_MATH, 0, offsetof(struct type_math,tp_pos),            "+",            "pos",         "tp_pos" },
-	/* [OPERATOR_NEG]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_neg),            "-",            "neg",         "tp_neg" },
-	/* [OPERATOR_ADD]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_add),            "+",            "add",         "tp_add" },
-	/* [OPERATOR_SUB]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_sub),            "-",            "sub",         "tp_sub" },
-	/* [OPERATOR_MUL]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_mul),            "*",            "mul",         "tp_mul" },
-	/* [OPERATOR_DIV]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_div),            "/",            "div",         "tp_div" },
-	/* [OPERATOR_MOD]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_mod),            "%",            "mod",         "tp_mod" },
-	/* [OPERATOR_SHL]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_shl),            "<<",           "shl",         "tp_shl" },
-	/* [OPERATOR_SHR]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_shr),            ">>",           "shr",         "tp_shr" },
-	/* [OPERATOR_AND]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_and),            "&",            "and",         "tp_and" },
-	/* [OPERATOR_OR]           = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_or),             "|",            "or",          "tp_or" },
-	/* [OPERATOR_XOR]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_xor),            "^",            "xor",         "tp_xor" },
-	/* [OPERATOR_POW]          = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_MATH, 0, offsetof(struct type_math,tp_pow),            "**",           "pow",         "tp_pow" },
-	/* [OPERATOR_INC]          = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math,tp_inc),            "++",           "inc",         "tp_inc" },
-	/* [OPERATOR_DEC]          = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math,tp_dec),            ",,",           "dec",         "tp_dec" },
-	/* [OPERATOR_INPLACE_ADD]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_add),    "+=",           "iadd",        "tp_inplace_add" },
-	/* [OPERATOR_INPLACE_SUB]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_sub),    ",=",           "isub",        "tp_inplace_sub" },
-	/* [OPERATOR_INPLACE_MUL]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_mul),    "*=",           "imul",        "tp_inplace_mul" },
-	/* [OPERATOR_INPLACE_DIV]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_div),    "/=",           "idiv",        "tp_inplace_div" },
-	/* [OPERATOR_INPLACE_MOD]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_mod),    "%=",           "imod",        "tp_inplace_mod" },
-	/* [OPERATOR_INPLACE_SHL]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_shl),    "<<=",          "ishl",        "tp_inplace_shl" },
-	/* [OPERATOR_INPLACE_SHR]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_shr),    ">>=",          "ishr",        "tp_inplace_shr" },
-	/* [OPERATOR_INPLACE_AND]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_and),    "&=",           "iand",        "tp_inplace_and" },
-	/* [OPERATOR_INPLACE_OR]   = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_or),     "|=",           "ior",         "tp_inplace_or" },
-	/* [OPERATOR_INPLACE_XOR]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_xor),    "^=",           "ixor",        "tp_inplace_xor" },
-	/* [OPERATOR_INPLACE_POW]  = */ { OPTYPE_RINT|OPTYPE_INPLACE|OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_pow),    "**=",          "ipow",        "tp_inplace_pow" },
-	/* [OPERATOR_HASH]         = */ { OPTYPE_RUINTPTR|OPTYPE_UNARY,                 OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_hash),            "hash",         "hash",        "tp_hash" },
-	/* [OPERATOR_EQ]           = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_eq),              "==",           "eq",          "tp_eq" },
-	/* [OPERATOR_NE]           = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_ne),              "!=",           "ne",          "tp_ne" },
-	/* [OPERATOR_LO]           = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_lo),              "<",            "lo",          "tp_lo" },
-	/* [OPERATOR_LE]           = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_le),              "<=",           "le",          "tp_le" },
-	/* [OPERATOR_GR]           = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_gr),              ">",            "gr",          "tp_gr" },
-	/* [OPERATOR_GE]           = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_ge),              ">=",           "ge",          "tp_ge" },
-	/* [OPERATOR_ITERSELF]     = */ { OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_iter_self),       "iter",         "iter",        "tp_iter_self" },
-	/* [OPERATOR_SIZE]         = */ { OPTYPE_ROBJECT|OPTYPE_UNARY,                  OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_size),            "#",            "size",        "tp_size" },
-	/* [OPERATOR_CONTAINS]     = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_contains),        "contains",     "contains",    "tp_contains" },
-	/* [OPERATOR_GETITEM]      = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_get),             "[]",           "getitem",     "tp_get" },
-	/* [OPERATOR_DELITEM]      = */ { OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_del),             "del[]",        "delitem",     "tp_del" },
-	/* [OPERATOR_SETITEM]      = */ { OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_set),             "[]=",          "setitem",     "tp_set" },
-	/* [OPERATOR_GETRANGE]     = */ { OPTYPE_ROBJECT|OPTYPE_TRINARY,                OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_get),       "[:]",          "getrange",    "tp_range_get" },
-	/* [OPERATOR_DELRANGE]     = */ { OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_del),       "del[:]",       "delrange",    "tp_range_del" },
-	/* [OPERATOR_SETRANGE]     = */ { OPTYPE_RINT|OPTYPE_QUAD,                      OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_set),       "[:]=",         "setrange",    "tp_range_set" },
-	/* [OPERATOR_GETATTR]      = */ { OPTYPE_ROBJECT|OPTYPE_BINARY,                 OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_getattr),        ".",            "getattr",     "tp_getattr" },
-	/* [OPERATOR_DELATTR]      = */ { OPTYPE_RINT|OPTYPE_BINARY,                    OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_delattr),        "del.",         "delattr",     "tp_delattr" },
-	/* [OPERATOR_SETATTR]      = */ { OPTYPE_RINT|OPTYPE_TRINARY,                   OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_setattr),        ".=",           "setattr",     "tp_setattr" },
-	/* [OPERATOR_ENUMATTR]     = */ { OPTYPE_ENUMATTR,                              OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_enumattr),       "...",          "enumattr",    "tp_enumattr" },
-	/* [OPERATOR_ENTER]        = */ { OPTYPE_RINT|OPTYPE_UNARY,                     OPCLASS_WITH, 0, offsetof(struct type_with,tp_enter),          "enter",        "enter",       "tp_enter" },
-	/* [OPERATOR_LEAVE]        = */ { OPTYPE_RINT|OPTYPE_UNARY,                     OPCLASS_WITH, 0, offsetof(struct type_with,tp_leave),          "leave",        "leave",       "tp_leave" }
+	/* [OPERATOR_CONSTRUCTOR]  = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_any_ctor),  "this",         "constructor", "tp_any_ctor" },
+	/* [OPERATOR_COPY]         = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_copy_ctor), "copy",         "copy",        "tp_copy_ctor" },
+	/* [OPERATOR_DEEPCOPY]     = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_alloc.tp_deep_ctor), "deepcopy",     "deepcopy",    "tp_deep_ctor" },
+	/* [OPERATOR_DESTRUCTOR]   = */ { OPTYPE_RVOID | OPTYPE_UNARY,                      OPCLASS_TYPE, 1, offsetof(Type,tp_init.tp_dtor),               "~this",        "destructor",  "tp_dtor" },
+	/* [OPERATOR_ASSIGN]       = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_assign),             ":=",           "assign",      "tp_assign" },
+	/* [OPERATOR_MOVEASSIGN]   = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_TYPE, 0, offsetof(Type,tp_init.tp_move_assign),        "move:=",       "moveassign",  "tp_move_assign" },
+	/* [OPERATOR_STR]          = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_str),                "str",          "str",         "tp_str" },
+	/* [OPERATOR_REPR]         = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_repr),               "repr",         "repr",        "tp_repr" },
+	/* [OPERATOR_BOOL]         = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_TYPE, 0, offsetof(Type,tp_cast.tp_bool),               "bool",         "bool",        "tp_bool" },
+	/* [OPERATOR_ITERNEXT]     = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type,tp_iter_next),                  "next",         "next",        "tp_iter_next" },
+	/* [OPERATOR_CALL]         = */ { OPTYPE_ROBJECT | OPTYPE_BINARY | OPTYPE_VARIABLE, OPCLASS_TYPE, 0, offsetof(Type,tp_call),                       "()",           "call",        "tp_call" },
+	/* [OPERATOR_INT]          = */ { OPTYPE_SPECIAL,                                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_int),            "int",          "int",         "tp_int" },
+	/* [OPERATOR_FLOAT]        = */ { OPTYPE_DOUBLE,                                    OPCLASS_MATH, 0, offsetof(struct type_math,tp_double),         "float",        "float",       "tp_double" },
+	/* [OPERATOR_INV]          = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_MATH, 0, offsetof(struct type_math,tp_inv),            "~",            "inv",         "tp_inv" },
+	/* [OPERATOR_POS]          = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_MATH, 0, offsetof(struct type_math,tp_pos),            "+",            "pos",         "tp_pos" },
+	/* [OPERATOR_NEG]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_neg),            "-",            "neg",         "tp_neg" },
+	/* [OPERATOR_ADD]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_add),            "+",            "add",         "tp_add" },
+	/* [OPERATOR_SUB]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_sub),            "-",            "sub",         "tp_sub" },
+	/* [OPERATOR_MUL]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_mul),            "*",            "mul",         "tp_mul" },
+	/* [OPERATOR_DIV]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_div),            "/",            "div",         "tp_div" },
+	/* [OPERATOR_MOD]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_mod),            "%",            "mod",         "tp_mod" },
+	/* [OPERATOR_SHL]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_shl),            "<<",           "shl",         "tp_shl" },
+	/* [OPERATOR_SHR]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_shr),            ">>",           "shr",         "tp_shr" },
+	/* [OPERATOR_AND]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_and),            "&",            "and",         "tp_and" },
+	/* [OPERATOR_OR]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_or),             " | ",            "or",          "tp_or" },
+	/* [OPERATOR_XOR]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_xor),            "^",            "xor",         "tp_xor" },
+	/* [OPERATOR_POW]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math,tp_pow),            "**",           "pow",         "tp_pow" },
+	/* [OPERATOR_INC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math,tp_inc),            "++",           "inc",         "tp_inc" },
+	/* [OPERATOR_DEC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math,tp_dec),            ",,",           "dec",         "tp_dec" },
+	/* [OPERATOR_INPLACE_ADD]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_add),    "+=",           "iadd",        "tp_inplace_add" },
+	/* [OPERATOR_INPLACE_SUB]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_sub),    ",=",           "isub",        "tp_inplace_sub" },
+	/* [OPERATOR_INPLACE_MUL]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_mul),    "*=",           "imul",        "tp_inplace_mul" },
+	/* [OPERATOR_INPLACE_DIV]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_div),    "/=",           "idiv",        "tp_inplace_div" },
+	/* [OPERATOR_INPLACE_MOD]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_mod),    "%=",           "imod",        "tp_inplace_mod" },
+	/* [OPERATOR_INPLACE_SHL]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_shl),    "<<=",          "ishl",        "tp_inplace_shl" },
+	/* [OPERATOR_INPLACE_SHR]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_shr),    ">>=",          "ishr",        "tp_inplace_shr" },
+	/* [OPERATOR_INPLACE_AND]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_and),    "&=",           "iand",        "tp_inplace_and" },
+	/* [OPERATOR_INPLACE_OR]   = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_or),     " | =",           "ior",         "tp_inplace_or" },
+	/* [OPERATOR_INPLACE_XOR]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_xor),    "^=",           "ixor",        "tp_inplace_xor" },
+	/* [OPERATOR_INPLACE_POW]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math,tp_inplace_pow),    "**=",          "ipow",        "tp_inplace_pow" },
+	/* [OPERATOR_HASH]         = */ { OPTYPE_RUINTPTR | OPTYPE_UNARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_hash),            "hash",         "hash",        "tp_hash" },
+	/* [OPERATOR_EQ]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_eq),              "==",           "eq",          "tp_eq" },
+	/* [OPERATOR_NE]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_ne),              "!=",           "ne",          "tp_ne" },
+	/* [OPERATOR_LO]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_lo),              "<",            "lo",          "tp_lo" },
+	/* [OPERATOR_LE]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_le),              "<=",           "le",          "tp_le" },
+	/* [OPERATOR_GR]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_gr),              ">",            "gr",          "tp_gr" },
+	/* [OPERATOR_GE]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp,tp_ge),              ">=",           "ge",          "tp_ge" },
+	/* [OPERATOR_ITERSELF]     = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_iter_self),       "iter",         "iter",        "tp_iter_self" },
+	/* [OPERATOR_SIZE]         = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_size),            "#",            "size",        "tp_size" },
+	/* [OPERATOR_CONTAINS]     = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_contains),        "contains",     "contains",    "tp_contains" },
+	/* [OPERATOR_GETITEM]      = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_get),             "[]",           "getitem",     "tp_get" },
+	/* [OPERATOR_DELITEM]      = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_del),             "del[]",        "delitem",     "tp_del" },
+	/* [OPERATOR_SETITEM]      = */ { OPTYPE_RINT | OPTYPE_TRINARY,                     OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_set),             "[]=",          "setitem",     "tp_set" },
+	/* [OPERATOR_GETRANGE]     = */ { OPTYPE_ROBJECT | OPTYPE_TRINARY,                  OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_get),       "[:]",          "getrange",    "tp_range_get" },
+	/* [OPERATOR_DELRANGE]     = */ { OPTYPE_RINT | OPTYPE_TRINARY,                     OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_del),       "del[:]",       "delrange",    "tp_range_del" },
+	/* [OPERATOR_SETRANGE]     = */ { OPTYPE_RINT | OPTYPE_QUAD,                        OPCLASS_SEQ,  0, offsetof(struct type_seq,tp_range_set),       "[:]=",         "setrange",    "tp_range_set" },
+	/* [OPERATOR_GETATTR]      = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_getattr),        ".",            "getattr",     "tp_getattr" },
+	/* [OPERATOR_DELATTR]      = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_delattr),        "del.",         "delattr",     "tp_delattr" },
+	/* [OPERATOR_SETATTR]      = */ { OPTYPE_RINT | OPTYPE_TRINARY,                     OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_setattr),        ".=",           "setattr",     "tp_setattr" },
+	/* [OPERATOR_ENUMATTR]     = */ { OPTYPE_ENUMATTR,                                  OPCLASS_ATTR, 0, offsetof(struct type_attr,tp_enumattr),       "...",          "enumattr",    "tp_enumattr" },
+	/* [OPERATOR_ENTER]        = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_WITH, 0, offsetof(struct type_with,tp_enter),          "enter",        "enter",       "tp_enter" },
+	/* [OPERATOR_LEAVE]        = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_WITH, 0, offsetof(struct type_with,tp_leave),          "leave",        "leave",       "tp_leave" }
 };
 
-PRIVATE struct opinfo private_opinfo[(OPERATOR_PRIVMAX-OPERATOR_PRIVMIN)+1] = {
-	/* [OPERATOR_VISIT  - OPERATOR_PRIVMIN] = */ { OPTYPE_VISIT,              OPCLASS_TYPE,   1, offsetof(Type,tp_visit),               "", "", "tp_visit" },
-	/* [OPERATOR_CLEAR  - OPERATOR_PRIVMIN] = */ { OPTYPE_RVOID|OPTYPE_UNARY, OPCLASS_GC,     1, offsetof(struct type_gc,tp_clear),     "", "", "tp_clear" },
-	/* [OPERATOR_PCLEAR - OPERATOR_PRIVMIN] = */ { OPTYPE_PCLEAR,             OPCLASS_GC,     1, offsetof(struct type_gc,tp_pclear),    "", "", "tp_pclear" },
-	/* [OPERATOR_GETBUF - OPERATOR_PRIVMIN] = */ { OPTYPE_GETBUF,             OPCLASS_BUFFER, 1, offsetof(struct type_buffer,tp_getbuf),"", "", "tp_getbuf" }
+PRIVATE struct opinfo private_opinfo[(OPERATOR_PRIVMAX - OPERATOR_PRIVMIN) + 1] = {
+	/* [OPERATOR_VISIT  - OPERATOR_PRIVMIN] = */ { OPTYPE_VISIT,                OPCLASS_TYPE,   1, offsetof(Type,tp_visit),               "", "", "tp_visit" },
+	/* [OPERATOR_CLEAR  - OPERATOR_PRIVMIN] = */ { OPTYPE_RVOID | OPTYPE_UNARY, OPCLASS_GC,     1, offsetof(struct type_gc,tp_clear),     "", "", "tp_clear" },
+	/* [OPERATOR_PCLEAR - OPERATOR_PRIVMIN] = */ { OPTYPE_PCLEAR,               OPCLASS_GC,     1, offsetof(struct type_gc,tp_pclear),    "", "", "tp_pclear" },
+	/* [OPERATOR_GETBUF - OPERATOR_PRIVMIN] = */ { OPTYPE_GETBUF,               OPCLASS_BUFFER, 1, offsetof(struct type_buffer,tp_getbuf),"", "", "tp_getbuf" }
 };
 
 INTERN struct opinfo file_opinfo[FILE_OPERATOR_COUNT] = {
-	/* [FILE_OPERATOR_READ   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,         OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_read),   "read",   "read",   "ft_read",   },
-	/* [FILE_OPERATOR_WRITE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,         OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_write),  "write",  "write",  "ft_write",  },
-	/* [FILE_OPERATOR_SEEK   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_SEEK,              OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_seek),   "seek",   "seek",   "ft_seek",   },
-	/* [FILE_OPERATOR_SYNC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT|OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_sync),   "sync",   "sync",   "ft_sync",   },
-	/* [FILE_OPERATOR_TRUNC  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_TRUNC,             OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_trunc),  "trunc",  "trunc",  "ft_trunc",  },
-	/* [FILE_OPERATOR_CLOSE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT|OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_close),  "close",  "close",  "ft_close",  },
-	/* [FILE_OPERATOR_PREAD  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_PREADWRITE,        OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_pread),  "pread",  "pread",  "ft_pread",  },
-	/* [FILE_OPERATOR_PWRITE - OPERATOR_EXTENDED(0)] = */ { OPTYPE_PREADWRITE,        OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_pwrite), "pwrite", "pwrite", "ft_pwrite", },
-	/* [FILE_OPERATOR_GETC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT|OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_getc),   "getc",   "getc",   "ft_getc",   },
-	/* [FILE_OPERATOR_UNGETC - OPERATOR_EXTENDED(0)] = */ { OPTYPE_UNGETPUT,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_ungetc), "ungetc", "ungetc", "ft_ungetc", },
-	/* [FILE_OPERATOR_PUTC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_UNGETPUT,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_putc),   "putc",   "putc",   "ft_putc",   }
+	/* [FILE_OPERATOR_READ   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_read),   "read",   "read",   "ft_read",   },
+	/* [FILE_OPERATOR_WRITE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_write),  "write",  "write",  "ft_write",  },
+	/* [FILE_OPERATOR_SEEK   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_SEEK,                OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_seek),   "seek",   "seek",   "ft_seek",   },
+	/* [FILE_OPERATOR_SYNC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT | OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_sync),   "sync",   "sync",   "ft_sync",   },
+	/* [FILE_OPERATOR_TRUNC  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_TRUNC,               OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_trunc),  "trunc",  "trunc",  "ft_trunc",  },
+	/* [FILE_OPERATOR_CLOSE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT | OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_close),  "close",  "close",  "ft_close",  },
+	/* [FILE_OPERATOR_PREAD  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_PREADWRITE,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_pread),  "pread",  "pread",  "ft_pread",  },
+	/* [FILE_OPERATOR_PWRITE - OPERATOR_EXTENDED(0)] = */ { OPTYPE_PREADWRITE,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_pwrite), "pwrite", "pwrite", "ft_pwrite", },
+	/* [FILE_OPERATOR_GETC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT | OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_getc),   "getc",   "getc",   "ft_getc",   },
+	/* [FILE_OPERATOR_UNGETC - OPERATOR_EXTENDED(0)] = */ { OPTYPE_UNGETPUT,            OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_ungetc), "ungetc", "ungetc", "ft_ungetc", },
+	/* [FILE_OPERATOR_PUTC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_UNGETPUT,            OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject,ft_putc),   "putc",   "putc",   "ft_putc",   }
 };
 
 PUBLIC WUNUSED NONNULL((2)) uint16_t DCALL
@@ -1069,8 +1069,9 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 						goto err;
 					if (end) {
 						dssize_t ibegin, iend;
-						if (DeeObject_AsSSize(begin, &ibegin) ||
-						    DeeObject_AsSSize(end, &iend))
+						if (DeeObject_AsSSize(begin, &ibegin))
+							goto err;
+						if (DeeObject_AsSSize(end, &iend))
 							goto err;
 						if ((size_t)iend > DeeString_SIZE(data) * sizeof(char))
 							iend = (dssize_t)DeeString_SIZE(data) * sizeof(char);
@@ -1137,8 +1138,9 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					if (DeeArg_Unpack(argc, argv, "o|o:__pread__", &a, &b))
 						goto err;
 					if (b) {
-						if (DeeObject_AsSize(a, &max_bytes) ||
-						    DeeObject_AsUInt64(b, &pos))
+						if (DeeObject_AsSize(a, &max_bytes))
+							goto err;
+						if (DeeObject_AsUInt64(b, &pos))
 							goto err;
 					} else {
 						max_bytes = (size_t)-1;
@@ -1159,9 +1161,11 @@ invoke_operator(DeeObject *self, DeeObject **pself,
 					/* TODO: Support for writing buffers */
 					if (c) {
 						dssize_t ibegin, iend;
-						if (DeeObject_AsSSize(a, &ibegin) ||
-						    DeeObject_AsSSize(b, &iend) ||
-						    DeeObject_AsUInt64(c, &pos))
+						if (DeeObject_AsSSize(a, &ibegin))
+							goto err;
+						if (DeeObject_AsSSize(b, &iend))
+							goto err;
+						if (DeeObject_AsUInt64(c, &pos))
 							goto err;
 						if ((size_t)iend > DeeString_SIZE(data) * sizeof(char))
 							iend = (dssize_t)DeeString_SIZE(data) * sizeof(char);
@@ -1407,6 +1411,13 @@ STATIC_ASSERT(COMPILER_OFFSETOF(TypeOperatorsIterator, to_type) ==
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 to_str(TypeOperators *__restrict self) {
+	return DeeString_Newf("Operator %ss for %k",
+	                      self->to_name ? "name" : "id",
+	                      self->to_type);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+to_repr(TypeOperators *__restrict self) {
 	return DeeString_Newf("%k.__operator%ss__",
 	                      self->to_type,
 	                      self->to_name ? "" : "id");
@@ -1627,7 +1638,7 @@ INTERN DeeTypeObject TypeOperators_Type = {
 	},
 	/* .tp_cast = */ {
 		/* .tp_str  = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_str,
-		/* .tp_repr = */ NULL,
+		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_repr,
 		/* .tp_bool = */ NULL
 	},
 	/* .tp_call          = */ NULL,

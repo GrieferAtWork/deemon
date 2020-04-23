@@ -177,7 +177,7 @@ struct Dee_reftracker {
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA \
 	struct Dee_reftracker *ob_trace; /* [0..1][owned][lock(WRITE_ONCE)] Tracked reference counter data. */
 #define DEE_OBJECT_OFFSETOF_DATA  (__SIZEOF_POINTER__ * 3)
-#define DEE_REFTRACKER_UNTRACKED  ((struct Dee_reftracker  *)-1)
+#define DEE_REFTRACKER_UNTRACKED  ((struct Dee_reftracker  *)(uintptr_t)-1)
 
 DFUNDEF void DCALL Dee_DumpReferenceLeaks(void);
 #else /* CONFIG_TRACE_REFCHANGES */
@@ -1408,6 +1408,7 @@ struct Dee_type_getset {
 	 (mask) == 0x20 ? Dee_STRUCT_BOOLBIT5 : (mask) == 0x10 ? Dee_STRUCT_BOOLBIT4 : \
 	 (mask) == 0x08 ? Dee_STRUCT_BOOLBIT3 : (mask) == 0x04 ? Dee_STRUCT_BOOLBIT2 : \
 	 (mask) == 0x02 ? Dee_STRUCT_BOOLBIT1 : Dee_STRUCT_BOOLBIT0)
+#define Dee_STRUCT_BOOLBITMASK(type) (1 << ((type) - Dee_STRUCT_BOOLBIT0))
 #define Dee_STRUCT_FLOAT       0x0040 /* `float' */
 #define Dee_STRUCT_DOUBLE      0x0041 /* `double' */
 #define Dee_STRUCT_LDOUBLE     0x0042 /* `long double' */
@@ -1460,6 +1461,7 @@ struct Dee_type_getset {
 #define STRUCT_BOOLBIT7    Dee_STRUCT_BOOLBIT7    /* `uint8_t & 0x80' (Accessible as `DeeBoolObject') */
 #define STRUCT_BOOL        Dee_STRUCT_BOOL
 #define STRUCT_BOOLBIT     Dee_STRUCT_BOOLBIT
+#define STRUCT_BOOLBITMASK Dee_STRUCT_BOOLBITMASK
 #define STRUCT_FLOAT       Dee_STRUCT_FLOAT       /* `float' */
 #define STRUCT_DOUBLE      Dee_STRUCT_DOUBLE      /* `double' */
 #define STRUCT_LDOUBLE     Dee_STRUCT_LDOUBLE     /* `long double' */
@@ -1500,6 +1502,12 @@ struct Dee_type_member {
 	union {
 		DeeObject        *m_const;  /* [valid_if(m_name[-1] == '!')][1..1] Constant. */
 		struct {
+			/* TODO: Use bit0=0 to indicate that m_const is used, and bit0=1 for offset-based!
+			 *       We can always assume an alignment of at least 2 bytes for `m_const', so
+			 *       this can always be done safely.
+			 * NOTE: Do still include a CONFIG option to use the m_name[-1]-method, though.
+			 *       Just in case there is some platform where pointers aren't at least 2-byte
+			 *       aligned... */
 			uint16_t      m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
 			uint16_t      m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
 		}                 m_field;
@@ -1952,7 +1960,7 @@ DeeObject_PInvokeOperator(DeeObject **__restrict pself, uint16_t name,
 #endif /* DEE_SOURCE */
 
 
-#define Dee_ITER_ISOK(x) (((uintptr_t)(x)-1) < (uintptr_t)-2l) /* `x != NULL && x != Dee_ITER_DONE' */
+#define Dee_ITER_ISOK(x) (((uintptr_t)(x) - 1) < (uintptr_t)-2l) /* `x != NULL && x != Dee_ITER_DONE' */
 #define Dee_ITER_DONE    ((DeeObject *)-1l) /* Returned when the iterator has been exhausted. */
 
 #ifdef DEE_SOURCE

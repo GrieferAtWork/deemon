@@ -141,7 +141,7 @@ libcmdline_fini(DeeDexObject *__restrict self) {
 PRIVATE bool DCALL libcmdline_init(void) {
 	void *lib = ATOMIC_READ(libcmdline);
 	if (lib) {
-		if (lib == (void *)-1)
+		if (lib == (void *)(uintptr_t)-1)
 			goto err;
 		return true;
 	}
@@ -158,7 +158,7 @@ PRIVATE bool DCALL libcmdline_init(void) {
 		dlclose(lib);
 	return true;
 err_disable:
-	ATOMIC_WRITE(libcmdline, (void *)-1);
+	ATOMIC_WRITE(libcmdline, (void *)(uintptr_t)-1);
 err:
 	DeeError_Throwf(&DeeError_NotImplemented,
 	                "Failed to load system library %q",

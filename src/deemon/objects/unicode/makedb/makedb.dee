@@ -27,34 +27,40 @@ fs::chdir(fs::path::head(__FILE__));
 local output_name = "../unicode_db.h";
 
 function ctypeof(x) {
-	if (x >= 8) return "uint64_t";
-	if (x >= 4) return "uint32_t";
-	if (x >= 2) return "uint16_t";
+	if (x >= 8)
+		return "uint64_t";
+	if (x >= 4)
+		return "uint32_t";
+	if (x >= 2)
+		return "uint16_t";
 	return "uint8_t";
 }
 
 #if __DEEMON__ < 200
-/* Workaround for the 32-bit, unsigned integers
+/* Workaround for the 32-bit, integers
  * not being unsigned in the old deemon */
 #define UNSIGNED(x) (unsigned int)x
-#else
+#else /* __DEEMON__ < 200 */
 #define UNSIGNED(x) x
-#endif
+#endif /* __DEEMON__ >= 200 */
 
 function elem_size(x) {
 	local m = util::max(x);
 	if (m is none) m = 0;
 	m = UNSIGNED(m) & UNSIGNED(0xffffffff);
-	if (m > UNSIGNED(0xffffffff)) return 8;
-	if (m > UNSIGNED(0xffff)) return 4;
-	if (m > UNSIGNED(0xff)) return 2;
+	if (m > UNSIGNED(0xffffffff))
+		return 8;
+	if (m > UNSIGNED(0xffff))
+		return 4;
+	if (m > UNSIGNED(0xff))
+		return 2;
 	return 1;
 }
 /* Split a sequence of ints into two smaller ones + a shift (int)
  * that can be used to store the original values more compactly,
  * while accessing the original values as follows:
  * >> local a, b, shift = return...;
- * >> tab[i] == b[(a[(unsigned)i >> shift] << shift) + (i & ((1 << shift)-1))];
+ * >> tab[i] == b[(a[(unsigned)i >> shift] << shift) + (i & ((1 << shift) - 1))];
  * HINT: If no mapping exists to optimize for this, shift will equal `0'. */
 function split_tables(tab) {
 	local max_shift = 0;
@@ -71,12 +77,12 @@ function split_tables(tab) {
 	local result_score = UNSIGNED(0xffffffff);
 	for (local shift: util::range(max_shift)) {
 		print "Testing shift", shift, "...",;
-		local size = 2**shift;
+		local size = 2 ** shift;
 		local a = [];
 		local b = [];
-		local cache = Dict();
+		local cache = dict();
 		for (local i: util::range(0, #tab, size)) {
-			local part = tab[i:i+size];
+			local part = tab[i:i + size];
 			local offset = cache.get(part);
 			if (offset is none) {
 				/* Add a new section. */
@@ -86,13 +92,13 @@ function split_tables(tab) {
 			}
 			a.append(offset >> shift);
 		}
-		local score = #a*elem_size(a)+#b*elem_size(b);
+		local score = #a * elem_size(a) + #b * elem_size(b);
 		if (score < result_score) {
 			/* Better fit. */
 			result = pack(a, b, shift);
 			result_score = score;
 		}
-		print " done (Score: "+score+"; a: "+#a+"; b: "+#b+")";
+		print " done (Score: "+score+"; a: " + #a + "; b: " + #b + ")";
 	}
 	return result;
 }
@@ -107,14 +113,15 @@ function read_lines(filename) {
 		if (com >= 0) {
 			line = line[:com].strip();
 		}
-		if (!line) continue;
+		if (!line)
+			continue;
 		yield line;
 	}
 }
 
 for (local line: read_lines("UnicodeData.txt")) {
 	local record = list(line.split(";"));
-	local id = (int)("0x"+record[0]);
+	local id = (int)("0x" + record[0]);
 	if (id >= #records) records.resize(id+1);
 	if (#record != 15)
 		print repr "ERROR: invalid record:", repr record;
@@ -122,7 +129,7 @@ for (local line: read_lines("UnicodeData.txt")) {
 }
 for (local x: records) {
 	if (x !is none) {
-		x.append(Dict()); /* [15] Extended traits. */
+		x.append(dict()); /* [15] Extended traits. */
 		x.append(none);   /* [16] case-folding sequence. */
 	}
 }
@@ -134,11 +141,11 @@ for (local line: read_lines("DerivedCoreProperties.txt")) {
 		attrib = attrib.strip();
 		if (".." in range) {
 			local begin, none, end = range.partition("..")...;
-			begin = (int)("0x"+begin.strip());
-			end = (int)("0x"+end.strip())+1;
+			begin = (int)("0x" + begin.strip());
+			end = (int)("0x" + end.strip()) + 1;
 			ids = util::range(begin, end);
 		} else {
-			ids = [(int)("0x"+range.strip())];
+			ids = [(int)("0x" + range.strip())];
 		}
 		for (local i: ids) {
 			local record = records[i];
@@ -199,8 +206,8 @@ print "done";
 /* Figure out flags. */
 local descriptors = list();
 local fold_descriptors = list();
-local fold_descriptors_map = Dict();
-local descriptor_cache = Dict();
+local fold_descriptors_map = dict();
+local descriptor_cache = dict();
 local descriptor_ids = [0] * #records;
 
 /* Enable symbol usage for underscore. */
@@ -209,7 +216,7 @@ function force_symbol_character(ord, traits) {
 	print repr x;
 	if (x is none) {
 		x = [none] * 16;
-		x[15] = Dict();
+		x[15] = dict();
 		records[ord] = x;
 	}
 	x = x[15];
@@ -231,7 +238,7 @@ for (local x: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"])
 
 for (local i, record: util::enumerate(records)) {
 	if ((i & 0x3ff) == 0) {
-		print "\rCalculating traits... %d%% (%d/%d)" % ((i*100)/#records, i, #records),;
+		print "\rCalculating traits... %d%% (%d/%d)" % ((i * 100) / #records, i, #records),;
 	}
 	local flags = 0;
 	local digit = 0;
@@ -239,65 +246,70 @@ for (local i, record: util::enumerate(records)) {
 	local upper = i;
 	local title = i;
 	local fold_sequence = none;
-	if (record !is none) try {
-		local category = record[2];
-		local bidirectional = record[4];
-		local properties = record[15];
-		if (category.startswith("L"))
-			flags |= UNICODE_FALPHA;
-		if (category == "Ll" || "Lowercase" in properties)
-			flags |= UNICODE_FLOWER;
-		if (category == "Lu" || "Uppercase" in properties)
-			flags |= UNICODE_FUPPER;
-		if (category == "Lt")
-			flags |= UNICODE_FTITLE;
-		if ("Line_Break" in properties || bidirectional == "B")
-			flags |= UNICODE_FLF;
-		if (category == "Zs" || bidirectional in ("WS", "B", "S"))
-			flags |= UNICODE_FSPACE;
-		if ((!category.startswith("C") &&
-		     !category.startswith("Z")) ||
-		   (int)("0x"+record[0]) == " ".ord())
-			flags |= UNICODE_FPRINT;
-		if (category.startswith("C"))
-			flags |= UNICODE_FCNTRL;
-		if ("XID_Start" in properties)
-			flags |= UNICODE_FSYMSTRT;
-		if ("XID_Continue" in properties)
-			flags |= UNICODE_FSYMCONT;
-		if (record[12]) upper = (int)("0x"+record[12]);
-		if (record[13]) lower = (int)("0x"+record[13]);
-		if (record[14]) title = (int)("0x"+record[14]);
-		if (record[7]) {
-			flags |= UNICODE_FDIGIT;
-			if (record[6])
+	if (record !is none) {
+		try {
+			local category = record[2];
+			local bidirectional = record[4];
+			local properties = record[15];
+			if (category.startswith("L"))
+				flags |= UNICODE_FALPHA;
+			if (category == "Ll" || "Lowercase" in properties)
+				flags |= UNICODE_FLOWER;
+			if (category == "Lu" || "Uppercase" in properties)
+				flags |= UNICODE_FUPPER;
+			if (category == "Lt")
+				flags |= UNICODE_FTITLE;
+			if ("Line_Break" in properties || bidirectional == "B")
+				flags |= UNICODE_FLF;
+			if (category == "Zs" || bidirectional in ("WS", "B", "S"))
+				flags |= UNICODE_FSPACE;
+			if ((!category.startswith("C") &&
+			     !category.startswith("Z")) ||
+			     (int)("0x" + record[0]) == " ".ord())
+				flags |= UNICODE_FPRINT;
+			if (category.startswith("C"))
+				flags |= UNICODE_FCNTRL;
+			if ("XID_Start" in properties)
+				flags |= UNICODE_FSYMSTRT;
+			if ("XID_Continue" in properties)
+				flags |= UNICODE_FSYMCONT;
+			if (record[12])
+				upper = (int)("0x" + record[12]);
+			if (record[13])
+				lower = (int)("0x" + record[13]);
+			if (record[14])
+				title = (int)("0x" + record[14]);
+			if (record[7]) {
+				flags |= UNICODE_FDIGIT;
+				if (record[6])
+					flags |= UNICODE_FDECIMAL;
+				digit = (int)(record[7]);
+			} else if (record[6]) {
 				flags |= UNICODE_FDECIMAL;
-			digit = (int)(record[7]);
-		} else if (record[6]) {
-			flags |= UNICODE_FDECIMAL;
-			digit = (int)(record[6]);
-		}
-		fold_sequence = record[16];
-		if (fold_sequence !is none) {
-			if (#fold_sequence == 1 && fold_sequence[0] == lower)
-				fold_sequence = 0xff; /* The fold sequence matches lowercase */
-			else {
-				local fold_id;
-				/* Add a new database entry for this fold sequence. */
-				fold_id = fold_descriptors_map.get(fold_sequence);
-				if (fold_id is none) {
-					fold_id = #fold_descriptors;
-					fold_descriptors.append(fold_sequence);
-					fold_descriptors_map[fold_sequence] = fold_id;
-				}
-				fold_sequence = fold_id;
+				digit = (int)(record[6]);
 			}
-		} else {
-			fold_sequence = 0xff; /* No fold extension is used. */
+			fold_sequence = record[16];
+			if (fold_sequence !is none) {
+				if (#fold_sequence == 1 && fold_sequence[0] == lower)
+					fold_sequence = 0xff; /* The fold sequence matches lowercase */
+				else {
+					local fold_id;
+					/* Add a new database entry for this fold sequence. */
+					fold_id = fold_descriptors_map.get(fold_sequence);
+					if (fold_id is none) {
+						fold_id = #fold_descriptors;
+						fold_descriptors.append(fold_sequence);
+						fold_descriptors_map[fold_sequence] = fold_id;
+					}
+					fold_sequence = fold_id;
+				}
+			} else {
+				fold_sequence = 0xff; /* No fold extension is used. */
+			}
+		} catch (...) {
+			print "Invalid record:", repr record;
+			throw;
 		}
-	} catch (...) {
-		print "Invalid record:", repr record;
-		throw;
 	}
 	local item = pack(flags, digit, fold_sequence, lower - i, upper - i, title - i);
 	local id = descriptor_cache.get(item);
@@ -335,7 +347,8 @@ function print_table(out, name, tab) {
 	print out: "static",ctypeof(elem_size(tab)),"const "+name+"[" + #tab + "] = {\n\t",;
 	for (local i, x: util::enumerate(tab)) {
 		print out: "0x%x, " % x,;
-		if ((i % 16) == 15) print out: "\n\t",;
+		if ((i % 16) == 15)
+			print out: "\n\t",;
 	}
 	print out: "\n};";
 }
@@ -343,7 +356,7 @@ function print_table(out, name, tab) {
 print out: "#define UNICODE_COUNT               ", "0x%x" % (#records);
 print out: "#define UNICODE_COUNT_VALID         ", "0x%x" % (#a << shift);
 print out: "#define SHIFT                       ", shift;
-print out: "#define TAB1_MASK                   ", "0x%x" % ((1 << shift)-1);
+print out: "#define TAB1_MASK                   ", "0x%x" % ((1 << shift) - 1);
 print out: "#define UNICODE_DESCRIPTOR_INDEX(ch)", "tab2[(tab1[(unsigned int)(ch) >> SHIFT] << SHIFT) + ((unsigned int)(ch) & TAB1_MASK)]";
 print out: "#define UNICODE_DESCRIPTOR(ch)      ", "descriptors[UNICODE_DESCRIPTOR_INDEX(ch)]";
 print_table(out, "tab1", a);

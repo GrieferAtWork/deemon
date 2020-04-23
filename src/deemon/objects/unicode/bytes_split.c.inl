@@ -129,9 +129,9 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 		x = READ_BSI_ITER(self);                                           \
 		y = READ_BSI_ITER(other);                                          \
 		if (!x)                                                            \
-			x = (uint8_t *)-1;                                             \
+			x = (uint8_t *)(uintptr_t)-1;                                  \
 		if (!y)                                                            \
-			y = (uint8_t *)-1;                                             \
+			y = (uint8_t *)(uintptr_t)-1;                                  \
 		return_bool(x op y);                                               \
 	err:                                                                   \
 		return NULL;                                                       \

@@ -284,7 +284,7 @@ DFUNDEF int DCALL nt_ThrowError(__ULONG32_TYPE__ dwError);
  * @return: DEESYSTEM_DLOPEN_FAILED: Failed to open the shared library. */
 DFUNDEF WUNUSED void *DCALL DeeSystem_DlOpen(/*String*/ DeeObject *__restrict filename);
 DFUNDEF WUNUSED void *DCALL DeeSystem_DlOpenString(/*utf-8*/ char const *filename);
-#define DEESYSTEM_DLOPEN_FAILED ((void *)-1)
+#define DEESYSTEM_DLOPEN_FAILED ((void *)(uintptr_t)-1)
 
 /* Lookup a symbol within a given shared library
  * Returns `NULL' if the symbol could not be found */

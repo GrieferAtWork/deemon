@@ -254,15 +254,15 @@ done:
 
 
 PRIVATE char attr_flags[] = {
-	/* [FFS(ATTR_PERMGET)-1]  = */ 'g',
-	/* [FFS(ATTR_PERMDEL)-1]  = */ 'd',
-	/* [FFS(ATTR_PERMSET)-1]  = */ 's',
-	/* [FFS(ATTR_PERMCALL)-1] = */ 'f',
-	/* [FFS(ATTR_IMEMBER)-1]  = */ 'i',
-	/* [FFS(ATTR_CMEMBER)-1]  = */ 'c',
-	/* [FFS(ATTR_PRIVATE)-1]  = */ 'h',
-	/* [FFS(ATTR_PROPERTY)-1] = */ 'p',
-	/* [FFS(ATTR_WRAPPER)-1]  = */ 'w',
+	/* [FFS(ATTR_PERMGET) - 1]  = */ 'g',
+	/* [FFS(ATTR_PERMDEL) - 1]  = */ 'd',
+	/* [FFS(ATTR_PERMSET) - 1]  = */ 's',
+	/* [FFS(ATTR_PERMCALL) - 1] = */ 'f',
+	/* [FFS(ATTR_IMEMBER) - 1]  = */ 'i',
+	/* [FFS(ATTR_CMEMBER) - 1]  = */ 'c',
+	/* [FFS(ATTR_PRIVATE) - 1]  = */ 'h',
+	/* [FFS(ATTR_PROPERTY) - 1] = */ 'p',
+	/* [FFS(ATTR_WRAPPER) - 1]  = */ 'w',
 };
 
 

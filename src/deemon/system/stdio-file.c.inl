@@ -370,7 +370,7 @@ PRIVATE SystemFile sysf_std[] = {
 	{ LFILE_OBJECT_HEAD_INIT(&DeeSystemFile_Type), NULL, NULL, NULL }
 #ifdef CONFIG_HOST_WINDOWS
 	,
-	{ LFILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)-1, NULL, NULL }
+	{ LFILE_OBJECT_HEAD_INIT(&DebugFile_Type), (DeeObject *)(uintptr_t)-1, NULL, NULL }
 #endif /* CONFIG_HOST_WINDOWS */
 };
 

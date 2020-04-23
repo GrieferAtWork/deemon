@@ -278,7 +278,7 @@ int skip(tok_t expected_tok, int wnum, ...);
 
 
 #define SKIP_WRAPLF(iter, end)                                 \
-	(*(iter) == '\\' && (iter) != (end)-1                      \
+	(*(iter) == '\\' && (iter) != (end) - 1                    \
 	 ? ((iter)[1] == '\n'                                      \
 	    ? ((iter) += 2, 1)                                     \
 	    : (iter)[1] == '\r'                                    \
