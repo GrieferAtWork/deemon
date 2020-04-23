@@ -48,9 +48,10 @@
 #endif /* !CONFIG_NO_STDLIB */
 
 /* Pull in some header to form artificial dependencies in order
- * to force the timestamp of the builtin `deemon' module from being
- * incremented if anything in those headers changed. */
+ * to force the timestamp of the builtin `deemon' module to be
+ * incremented if anything in these headers changed. */
 #include <deemon/asm.h>
+/**/
 
 #include "../runtime/builtin.h"
 

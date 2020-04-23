@@ -171,9 +171,9 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x08 */ "call   top, " PREFIX_STACKEFFECT, /* `ASM_CALL_KW' */
 	/* 0x09 */ "call   top, pop..., ", /* `ASM_CALL_TUPLE_KW' */
 	/* 0x0a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x0b */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x0c */ "push   bound ", /* `ASM_PUSH_BND_ARG' */
-	/* 0x0d */ "push   bound ", /* `ASM_PUSH_BND_EXTERN' */
+	/* 0x0b */ "push   bound ", /* `ASM_PUSH_BND_ARG' */
+	/* 0x0c */ "push   bound ", /* `ASM_PUSH_BND_EXTERN' */
+	/* 0x0d */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x0e */ "push   bound ", /* `ASM_PUSH_BND_GLOBAL' */
 	/* 0x0f */ "push   bound ", /* `ASM_PUSH_BND_LOCAL' */
 	/* 0x10 */ "jf     pop, ", /* `ASM_JF' */
@@ -203,25 +203,25 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x28 */ "super  top, pop", /* `ASM_SUPER' */
 	/* 0x29 */ "push   super this, ", /* `ASM_SUPER_THIS_R' */
 	/* 0x2a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x2b */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x2c */ "pop    ", /* `ASM_POP_STATIC' */
-	/* 0x2d */ "pop    ", /* `ASM_POP_EXTERN' */
+	/* 0x2b */ "pop    ", /* `ASM_POP_STATIC' */
+	/* 0x2c */ "pop    ", /* `ASM_POP_EXTERN' */
+	/* 0x2d */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x2e */ "pop    ", /* `ASM_POP_GLOBAL' */
 	/* 0x2f */ "pop    ", /* `ASM_POP_LOCAL' */
 	/* 0x30 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x31 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x32 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x33 */ "push   none", /* `ASM_PUSH_NONE' */
-	/* 0x34 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x35 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x36 */ "push   varargs", /* `ASM_PUSH_VARARGS' */
-	/* 0x37 */ "push   varkwds", /* `ASM_PUSH_VARKWDS' */
-	/* 0x38 */ "push   ", /* `ASM_PUSH_MODULE' */
-	/* 0x39 */ "push   ", /* `ASM_PUSH_ARG' */
-	/* 0x3a */ "push   ", /* `ASM_PUSH_CONST' */
-	/* 0x3b */ "push   ", /* `ASM_PUSH_REF' */
-	/* 0x3c */ "push   ", /* `ASM_PUSH_STATIC' */
-	/* 0x3d */ "push   ", /* `ASM_PUSH_EXTERN' */
+	/* 0x34 */ "push   varargs", /* `ASM_PUSH_VARARGS' */
+	/* 0x35 */ "push   varkwds", /* `ASM_PUSH_VARKWDS' */
+	/* 0x36 */ "push   ", /* `ASM_PUSH_MODULE' */
+	/* 0x37 */ "push   ", /* `ASM_PUSH_ARG' */
+	/* 0x38 */ "push   ", /* `ASM_PUSH_CONST' */
+	/* 0x39 */ "push   ", /* `ASM_PUSH_REF' */
+	/* 0x3a */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0x3b */ "push   ", /* `ASM_PUSH_STATIC' */
+	/* 0x3c */ "push   ", /* `ASM_PUSH_EXTERN' */
+	/* 0x3d */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x3e */ "push   ", /* `ASM_PUSH_GLOBAL' */
 	/* 0x3f */ "push   ", /* `ASM_PUSH_LOCAL' */
 	/* 0x40 */ "cast   top, Tuple", /* `ASM_CAST_TUPLE' */
@@ -410,10 +410,10 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0xf7 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf8 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf9 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xfa */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xfb */ "stack  " PREFIX_STACKEFFECT, /* `ASM_STACK' */
-	/* 0xfc */ "static ", /* `ASM_STATIC' */
-	/* 0xfd */ "extern ", /* `ASM_EXTERN' */
+	/* 0xfa */ "stack  " PREFIX_STACKEFFECT, /* `ASM_STACK' */
+	/* 0xfb */ "static ", /* `ASM_STATIC' */
+	/* 0xfc */ "extern ", /* `ASM_EXTERN' */
+	/* 0xfd */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xfe */ "global ", /* `ASM_GLOBAL' */
 	/* 0xff */ "local  ", /* `ASM_LOCAL' */
 };
@@ -429,9 +429,9 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf008 */ "call   top, " PREFIX_STACKEFFECT, /* `ASM16_CALL_KW' */
 	/* 0xf009 */ "call   top, pop..., ", /* `ASM16_CALL_TUPLE_KW' */
 	/* 0xf00a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf00b */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf00c */ "push   bound ", /* `ASM16_PUSH_BND_ARG' */
-	/* 0xf00d */ "push   bound ", /* `ASM16_PUSH_BND_EXTERN' */
+	/* 0xf00b */ "push   bound ", /* `ASM16_PUSH_BND_ARG' */
+	/* 0xf00c */ "push   bound ", /* `ASM16_PUSH_BND_EXTERN' */
+	/* 0xf00d */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf00e */ "push   bound ", /* `ASM16_PUSH_BND_GLOBAL' */
 	/* 0xf00f */ "push   bound ", /* `ASM16_PUSH_BND_LOCAL' */
 	/* 0xf010 */ UNKNOWN_MNEMONIC, /* --- */
@@ -461,25 +461,25 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf028 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf029 */ "push   super this, ", /* `ASM16_SUPER_THIS_R' */
 	/* 0xf02a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf02b */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf02c */ "pop    ", /* `ASM16_POP_STATIC' */
-	/* 0xf02d */ "pop    ", /* `ASM16_POP_EXTERN' */
+	/* 0xf02b */ "pop    ", /* `ASM16_POP_STATIC' */
+	/* 0xf02c */ "pop    ", /* `ASM16_POP_EXTERN' */
+	/* 0xf02d */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf02e */ "pop    ", /* `ASM16_POP_GLOBAL' */
 	/* 0xf02f */ "pop    ", /* `ASM16_POP_LOCAL' */
 	/* 0xf030 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf031 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf032 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf033 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf034 */ "push   except", /* `ASM_PUSH_EXCEPT' */
-	/* 0xf035 */ "push   this", /* `ASM_PUSH_THIS' */
-	/* 0xf036 */ "push   this_module", /* `ASM_PUSH_THIS_MODULE' */
-	/* 0xf037 */ "push   this_function", /* `ASM_PUSH_THIS_FUNCTION' */
-	/* 0xf038 */ "push   ", /* `ASM16_PUSH_MODULE' */
-	/* 0xf039 */ "push   ", /* `ASM16_PUSH_ARG' */
-	/* 0xf03a */ "push   ", /* `ASM16_PUSH_CONST' */
-	/* 0xf03b */ "push   ", /* `ASM16_PUSH_REF' */
-	/* 0xf03c */ "push   ", /* `ASM16_PUSH_STATIC' */
-	/* 0xf03d */ "push   ", /* `ASM16_PUSH_EXTERN' */
+	/* 0xf032 */ "push   except", /* `ASM_PUSH_EXCEPT' */
+	/* 0xf033 */ "push   this", /* `ASM_PUSH_THIS' */
+	/* 0xf034 */ "push   this_module", /* `ASM_PUSH_THIS_MODULE' */
+	/* 0xf035 */ "push   this_function", /* `ASM_PUSH_THIS_FUNCTION' */
+	/* 0xf036 */ "push   ", /* `ASM16_PUSH_MODULE' */
+	/* 0xf037 */ "push   ", /* `ASM16_PUSH_ARG' */
+	/* 0xf038 */ "push   ", /* `ASM16_PUSH_CONST' */
+	/* 0xf039 */ "push   ", /* `ASM16_PUSH_REF' */
+	/* 0xf03a */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf03b */ "push   ", /* `ASM16_PUSH_STATIC' */
+	/* 0xf03c */ "push   ", /* `ASM16_PUSH_EXTERN' */
+	/* 0xf03d */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf03e */ "push   ", /* `ASM16_PUSH_GLOBAL' */
 	/* 0xf03f */ "push   ", /* `ASM16_PUSH_LOCAL' */
 	/* 0xf040 */ "cast   top, HashSet", /* `ASM_CAST_HASHSET' */
@@ -668,10 +668,10 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf0f7 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0f8 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0f9 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf0fa */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf0fb */ "stack  " PREFIX_STACKEFFECT, /* `ASM16_STACK' */
-	/* 0xf0fc */ "static ", /* `ASM16_STATIC' */
-	/* 0xf0fd */ "extern ", /* `ASM16_EXTERN' */
+	/* 0xf0fa */ "stack  " PREFIX_STACKEFFECT, /* `ASM16_STACK' */
+	/* 0xf0fb */ "static ", /* `ASM16_STATIC' */
+	/* 0xf0fc */ "extern ", /* `ASM16_EXTERN' */
+	/* 0xf0fd */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0fe */ "global ", /* `ASM16_GLOBAL' */
 	/* 0xf0ff */ "local  ", /* `ASM16_LOCAL' */
 };
