@@ -1169,25 +1169,25 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 //[[[end]]]
 
 PRIVATE uint8_t const prefix_length[8] = {
-	1, /* ?          */
-	1, /* ?          */
-	1, /* ?          */
-	2, /* ASM_STACK  */
-	2, /* ASM_STATIC */
-	3, /* ASM_EXTERN */
-	2, /* ASM_GLOBAL */
-	2  /* ASM_LOCAL  */
+	/* [0xf8       - ASM_PREFIXMIN] */ 1,
+	/* [0xf9       - ASM_PREFIXMIN] */ 1,
+	/* [ASM_STACK  - ASM_PREFIXMIN] */ 2,
+	/* [0xfd       - ASM_PREFIXMIN] */ 1,
+	/* [ASM_STATIC - ASM_PREFIXMIN] */ 2,
+	/* [ASM_EXTERN - ASM_PREFIXMIN] */ 3,
+	/* [ASM_GLOBAL - ASM_PREFIXMIN] */ 2,
+	/* [ASM_LOCAL  - ASM_PREFIXMIN] */ 2
 };
 
 PRIVATE uint8_t const prefix_length_f0[8] = {
-	2, /* ?            */
-	2, /* ?            */
-	2, /* ?            */
-	4, /* ASM16_STACK  */
-	4, /* ASM16_STATIC */
-	6, /* ASM16_EXTERN */
-	4, /* ASM16_GLOBAL */
-	4  /* ASM16_LOCAL  */
+	/* [0xf0f8       - 0xf000 | ASM_PREFIXMIN] */ 2,
+	/* [0xf0f9       - 0xf000 | ASM_PREFIXMIN] */ 2,
+	/* [ASM16_STACK  - 0xf000 | ASM_PREFIXMIN] */ 4,
+	/* [0xf0fd       - 0xf000 | ASM_PREFIXMIN] */ 2,
+	/* [ASM16_STATIC - 0xf000 | ASM_PREFIXMIN] */ 4,
+	/* [ASM16_EXTERN - 0xf000 | ASM_PREFIXMIN] */ 6,
+	/* [ASM16_GLOBAL - 0xf000 | ASM_PREFIXMIN] */ 4,
+	/* [ASM16_LOCAL  - 0xf000 | ASM_PREFIXMIN] */ 4
 };
 
 
