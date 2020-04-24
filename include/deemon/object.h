@@ -172,7 +172,7 @@ struct Dee_reftracker {
 	struct Dee_reftracker  *rt_next;   /* [0..1][lock(INTERNAL(...))] Pointer to the next tracked object. */
 	DeeObject              *rt_obj;    /* [1..1][const] The object being tracked. */
 	struct Dee_refchanges  *rt_last;   /* [1..1][lock(ATOMIC)] The current refcnt-change set. */
-	struct Dee_refchanges   rt_first;  /* The current refcnt-change set. */
+	struct Dee_refchanges   rt_first;  /* The initial refcnt-change set. */
 };
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA \
 	struct Dee_reftracker *ob_trace; /* [0..1][owned][lock(WRITE_ONCE)] Tracked reference counter data. */
@@ -353,11 +353,11 @@ struct Dee_weakref {
 	(__UINT32_C(0xcccccccc) & ~__UINT32_C(1))
 #elif __SIZEOF_POINTER__ == 8
 #define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
-	(__UINT64_C(0xcccccccccccccccc) & ~__UINT32_C(1))
-#else
+	(__UINT64_C(0xcccccccccccccccc) & ~__UINT64_C(1))
+#else /* ... */
 #define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
 	((uintptr_t)-1 & ~(uintptr_t)1)
-#endif
+#endif /* !... */
 #else /* !NDEBUG */
 #define _DEE_PRIVATE_WEAKREF_UNLOCKCALLBACK_NULLPTR \
 	0
@@ -1508,8 +1508,16 @@ struct Dee_type_member {
 			 * NOTE: Do still include a CONFIG option to use the m_name[-1]-method, though.
 			 *       Just in case there is some platform where pointers aren't at least 2-byte
 			 *       aligned... */
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 			uint16_t      m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
 			uint16_t      m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#if __SIZEOF_POINTER__ > 4
+			uint16_t      m_pad[(__SIZEOF_POINTER__ - 2) / 2]; /* ... */
+#endif /* __SIZEOF_POINTER__ > 4 */
+			uint16_t      m_offset; /* [valid_if(m_name[-1] != '!')] Field offset (offsetof() field). */
+			uint16_t      m_type;   /* [valid_if(m_name[-1] != '!')] Field type (One of `STRUCT_*'). */
+#endif /* !... */
 		}                 m_field;
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
@@ -1533,43 +1541,59 @@ struct Dee_type_member {
 #define Dee_TYPE_MEMBER_CONST(name, value) Dee_TYPE_MEMBER_CONST_DOC(name, value, NULL)
 
 #ifdef UINT64_C
-#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)                                                    \
-	(((mask) == UINT8_C(0x01) || (mask) == UINT16_C(0x0100) ||                                    \
-	  (mask) == UINT32_C(0x010000) || (mask) == UINT32_C(0x01000000) ||                           \
-	  (mask) == UINT64_C(0x0100000000) || (mask) == UINT64_C(0x010000000000) ||                   \
-	  (mask) == UINT64_C(0x01000000000000) || (mask) == UINT64_C(0x0100000000000000))             \
-	 ? Dee_STRUCT_BOOLBIT0                                                                        \
-	 : ((mask) == UINT8_C(0x02) || (mask) == UINT16_C(0x0200) ||                                  \
-	    (mask) == UINT32_C(0x020000) || (mask) == UINT32_C(0x02000000) ||                         \
-	    (mask) == UINT64_C(0x0200000000) || (mask) == UINT64_C(0x020000000000) ||                 \
-	    (mask) == UINT64_C(0x02000000000000) || (mask) == UINT64_C(0x0200000000000000))           \
-	   ? Dee_STRUCT_BOOLBIT1                                                                      \
-	   : ((mask) == UINT8_C(0x04) || (mask) == UINT16_C(0x0400) ||                                \
-	      (mask) == UINT32_C(0x040000) || (mask) == UINT32_C(0x04000000) ||                       \
-	      (mask) == UINT64_C(0x0400000000) || (mask) == UINT64_C(0x040000000000) ||               \
-	      (mask) == UINT64_C(0x04000000000000) || (mask) == UINT64_C(0x0400000000000000))         \
-	     ? Dee_STRUCT_BOOLBIT2                                                                    \
-	     : ((mask) == UINT8_C(0x08) || (mask) == UINT16_C(0x0800) ||                              \
-	        (mask) == UINT32_C(0x080000) || (mask) == UINT32_C(0x08000000) ||                     \
-	        (mask) == UINT64_C(0x0800000000) || (mask) == UINT64_C(0x080000000000) ||             \
-	        (mask) == UINT64_C(0x08000000000000) || (mask) == UINT64_C(0x0800000000000000))       \
-	       ? Dee_STRUCT_BOOLBIT3                                                                  \
-	       : ((mask) == UINT8_C(0x10) || (mask) == UINT16_C(0x1000) ||                            \
-	          (mask) == UINT32_C(0x100000) || (mask) == UINT32_C(0x10000000) ||                   \
-	          (mask) == UINT64_C(0x1000000000) || (mask) == UINT64_C(0x100000000000) ||           \
-	          (mask) == UINT64_C(0x10000000000000) || (mask) == UINT64_C(0x1000000000000000))     \
-	         ? Dee_STRUCT_BOOLBIT4                                                                \
-	         : ((mask) == UINT8_C(0x20) || (mask) == UINT16_C(0x2000) ||                          \
-	            (mask) == UINT32_C(0x200000) || (mask) == UINT32_C(0x20000000) ||                 \
-	            (mask) == UINT64_C(0x2000000000) || (mask) == UINT64_C(0x200000000000) ||         \
-	            (mask) == UINT64_C(0x20000000000000) || (mask) == UINT64_C(0x2000000000000000))   \
-	           ? Dee_STRUCT_BOOLBIT5                                                              \
-	           : ((mask) == UINT8_C(0x40) || (mask) == UINT16_C(0x4000) ||                        \
-	              (mask) == UINT32_C(0x400000) || (mask) == UINT32_C(0x40000000) ||               \
-	              (mask) == UINT64_C(0x4000000000) || (mask) == UINT64_C(0x400000000000) ||       \
-	              (mask) == UINT64_C(0x40000000000000) || (mask) == UINT64_C(0x4000000000000000)) \
-	             ? Dee_STRUCT_BOOLBIT6                                                            \
-	             : Dee_STRUCT_BOOLBIT7)
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, err)                                               \
+	(((mask) == UINT8_C(0x01) || (mask) == UINT16_C(0x0100) ||                                      \
+	  (mask) == UINT32_C(0x010000) || (mask) == UINT32_C(0x01000000) ||                             \
+	  (mask) == UINT64_C(0x0100000000) || (mask) == UINT64_C(0x010000000000) ||                     \
+	  (mask) == UINT64_C(0x01000000000000) || (mask) == UINT64_C(0x0100000000000000))               \
+	 ? Dee_STRUCT_BOOLBIT0                                                                          \
+	 : ((mask) == UINT8_C(0x02) || (mask) == UINT16_C(0x0200) ||                                    \
+	    (mask) == UINT32_C(0x020000) || (mask) == UINT32_C(0x02000000) ||                           \
+	    (mask) == UINT64_C(0x0200000000) || (mask) == UINT64_C(0x020000000000) ||                   \
+	    (mask) == UINT64_C(0x02000000000000) || (mask) == UINT64_C(0x0200000000000000))             \
+	   ? Dee_STRUCT_BOOLBIT1                                                                        \
+	   : ((mask) == UINT8_C(0x04) || (mask) == UINT16_C(0x0400) ||                                  \
+	      (mask) == UINT32_C(0x040000) || (mask) == UINT32_C(0x04000000) ||                         \
+	      (mask) == UINT64_C(0x0400000000) || (mask) == UINT64_C(0x040000000000) ||                 \
+	      (mask) == UINT64_C(0x04000000000000) || (mask) == UINT64_C(0x0400000000000000))           \
+	     ? Dee_STRUCT_BOOLBIT2                                                                      \
+	     : ((mask) == UINT8_C(0x08) || (mask) == UINT16_C(0x0800) ||                                \
+	        (mask) == UINT32_C(0x080000) || (mask) == UINT32_C(0x08000000) ||                       \
+	        (mask) == UINT64_C(0x0800000000) || (mask) == UINT64_C(0x080000000000) ||               \
+	        (mask) == UINT64_C(0x08000000000000) || (mask) == UINT64_C(0x0800000000000000))         \
+	       ? Dee_STRUCT_BOOLBIT3                                                                    \
+	       : ((mask) == UINT8_C(0x10) || (mask) == UINT16_C(0x1000) ||                              \
+	          (mask) == UINT32_C(0x100000) || (mask) == UINT32_C(0x10000000) ||                     \
+	          (mask) == UINT64_C(0x1000000000) || (mask) == UINT64_C(0x100000000000) ||             \
+	          (mask) == UINT64_C(0x10000000000000) || (mask) == UINT64_C(0x1000000000000000))       \
+	         ? Dee_STRUCT_BOOLBIT4                                                                  \
+	         : ((mask) == UINT8_C(0x20) || (mask) == UINT16_C(0x2000) ||                            \
+	            (mask) == UINT32_C(0x200000) || (mask) == UINT32_C(0x20000000) ||                   \
+	            (mask) == UINT64_C(0x2000000000) || (mask) == UINT64_C(0x200000000000) ||           \
+	            (mask) == UINT64_C(0x20000000000000) || (mask) == UINT64_C(0x2000000000000000))     \
+	           ? Dee_STRUCT_BOOLBIT5                                                                \
+	           : ((mask) == UINT8_C(0x40) || (mask) == UINT16_C(0x4000) ||                          \
+	              (mask) == UINT32_C(0x400000) || (mask) == UINT32_C(0x40000000) ||                 \
+	              (mask) == UINT64_C(0x4000000000) || (mask) == UINT64_C(0x400000000000) ||         \
+	              (mask) == UINT64_C(0x40000000000000) || (mask) == UINT64_C(0x4000000000000000))   \
+	             ? Dee_STRUCT_BOOLBIT6                                                              \
+	             : err)
+#ifdef __INTELLISENSE__
+#define _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask, err)                                       \
+	_Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(                                                    \
+	mask, ((mask) == UINT8_C(0x80) || (mask) == UINT16_C(0x8000) ||                        \
+	       (mask) == UINT32_C(0x800000) || (mask) == UINT32_C(0x80000000) ||               \
+	       (mask) == UINT64_C(0x8000000000) || (mask) == UINT64_C(0x800000000000) ||       \
+	       (mask) == UINT64_C(0x80000000000000) || (mask) == UINT64_C(0x8000000000000000)) \
+	      ? Dee_STRUCT_BOOLBIT7                                                            \
+	      : err)
+#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask)               \
+	((int(*)[_Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask, -1)])0, \
+	 _Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, Dee_STRUCT_BOOLBIT7))
+#else /* __INTELLISENSE__ */
+#define Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC(mask) \
+	_Dee_PRIVATE_STRUCT_BOOLBIT_TRUNC0(mask, Dee_STRUCT_BOOLBIT7)
+#endif /* !__INTELLISENSE__ */
 #define Dee_PRIVATE_STRUCT_BOOLBIT_ADDEND(mask)    \
 	((mask)&UINT8_C(0xff)                          \
 	 ? 0                                           \
@@ -2327,7 +2351,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt64)(DeeObject *__rest
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsUInt128)(DeeObject *__restrict self, Dee_uint128_t *__restrict result);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AsDouble)(DeeObject *__restrict self, double *__restrict result);
 
-/* Cast-to-pointer conversion operator invocation. */
+/* Cast-to-integer conversion operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__restrict self);
 
 #define DEE_PRIVATE_OBJECT_AS_INT_1(self, result)  DeeObject_AsInt8(self, (int8_t *)(result))
@@ -2340,6 +2364,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Int)(DeeObject *__
 #define DEE_PRIVATE_OBJECT_AS_UINT_4(self, result) DeeObject_AsUInt32(self, (uint32_t *)(result))
 #define DEE_PRIVATE_OBJECT_AS_UINT_8(self, result) DeeObject_AsUInt64(self, (uint64_t *)(result))
 #define DEE_PRIVATE_OBJECT_AS_UINT(size)           DEE_PRIVATE_OBJECT_AS_UINT_##size
+
+/* Helper macros for converting objects to integers */
 #define DeeObject_AsXInt(size, self, result)       DEE_PRIVATE_OBJECT_AS_INT(size)(self, result)
 #define DeeObject_AsXUInt(size, self, result)      DEE_PRIVATE_OBJECT_AS_UINT(size)(self, result)
 #ifdef __CHAR_UNSIGNED__
@@ -2496,7 +2522,7 @@ DFUNDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeObject_SetRangeBeginIndex)(DeeO
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeObject_SetRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *value);
 
-/* Check if a given item exists (`deemon.hasitem(self,index)')
+/* Check if a given item exists (`deemon.hasitem(self, index)')
  * @return: 0:  Doesn't exist;
  * @return: 1:  Does exists;
  * @return: -1: Error. */
