@@ -87,7 +87,7 @@ ast_gen_symbol_inplace(struct symbol *__restrict sym,
 	if (asm_gpush_symbol(sym, ddi_ast))
 		goto err;
 	if (operand) {
-		if (ast_genasm(operand, ASM_G_FPUSHRES))
+		if (ast_genasm_one(operand, ASM_G_FPUSHRES))
 			goto err; /* sym, operand */
 		if (asm_putddi(ddi_ast))
 			goto err;
