@@ -1009,7 +1009,9 @@
 #endif /* !... */
 #endif
 
-/* Working storage class modifiers. */
+/* Working storage class modifiers.
+ * NOTE: When making any changes to these, you must also update `prefix_length'
+ *       and `prefix_length_f0' in `/deemon/src/deemon/compiler/instrlen.c' */
 /*      ASM_                  0xf8  *  --------                            - ------------------ */
 /*      ASM_                  0xf9  *  --------                            - ------------------ */
 #define ASM_STACK             0xfa /* `stack #<imm8>'                      - Use an Object located on the stack as storage class.
