@@ -742,8 +742,9 @@ code_visit(DeeCodeObject *__restrict self,
 
 PRIVATE NONNULL((1)) void DCALL
 code_clear(DeeCodeObject *__restrict self) {
-	DREF DeeObject *buffer[16], **iter = buffer;
-	size_t i; /* Clear out static variables. */
+	DREF DeeObject *buffer[16];
+	size_t i, bufi = 0;
+	/* Clear out static variables. */
 restart:
 	rwlock_write(&self->co_static_lock);
 	for (i = 0; i < self->co_staticc; ++i) {
@@ -762,22 +763,18 @@ restart:
 		}
 		Dee_Incref(self->co_staticv[i]);
 		if (!Dee_DecrefIfNotOne(ob)) {
-			*iter++ = ob;
-			if (iter == COMPILER_ENDOF(buffer)) {
+			buffer[bufi] = ob; /* Inherit reference */
+			++bufi;
+			if (bufi >= COMPILER_LENOF(buffer)) {
 				rwlock_endwrite(&self->co_static_lock);
-				while (iter != buffer) {
-					--iter;
-					Dee_Decref(*iter);
-				}
+				Dee_Decrefv(buffer, bufi);
+				bufi = 0;
 				goto restart;
 			}
 		}
 	}
 	rwlock_endwrite(&self->co_static_lock);
-	while (iter != buffer) {
-		--iter;
-		Dee_Decref(*iter);
-	}
+	Dee_Decrefv(buffer, bufi);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

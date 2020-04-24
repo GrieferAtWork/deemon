@@ -1777,6 +1777,20 @@ DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
+PUBLIC WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t
+(DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector,
+                        size_t object_count) {
+	size_t i;
+	Dee_hash_t result = 0;
+	for (i = 0; i < object_count; ++i) {
+		result ^= DeeObject_Hash(object_vector[i]);
+	}
+	return result;
+}
+#endif /* DEFINE_TYPED_OPERATORS */
+
+
+#ifndef DEFINE_TYPED_OPERATORS
 PUBLIC NONNULL((1, 2)) void DCALL
 DeeObject_Visit(DeeObject *__restrict self,
                 dvisit_t proc, void *arg) {

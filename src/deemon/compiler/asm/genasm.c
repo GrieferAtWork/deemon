@@ -224,16 +224,20 @@ ast_unwrap_effective(struct ast *__restrict self) {
 	       self->a_flag == AST_FMULTIPLE_KEEPLAST &&
 	       self->a_multiple.m_astc != 0 &&
 	       self->a_scope == current_assembler.a_scope) {
-		struct ast **iter, **end;
-		end = (iter = self->a_multiple.m_astv) +
-		      self->a_multiple.m_astc - 1;
-		for (; iter != end; ++iter) {
-			if (ast_genasm(*iter, ASM_G_FNORMAL))
-				return NULL;
+		size_t i, count;
+		struct ast **vector;
+		vector = self->a_multiple.m_astv;
+		count  = self->a_multiple.m_astc - 1;
+		for (i = 0; i < count; ++i) {
+			if (ast_genasm(vector[i], ASM_G_FNORMAL))
+				goto err;
 		}
-		self = *end;
+		ASSERT(i == count);
+		self = vector[i];
 	}
 	return self;
+err:
+	return NULL;
 }
 
 
@@ -338,6 +342,8 @@ ast_genprint(instruction_t mode,
              struct ast *__restrict print_expression,
              struct ast *__restrict ddi_ast) {
 	print_expression = ast_unwrap_effective(print_expression);
+	if unlikely(!print_expression)
+		goto err;
 	if (mode & PRINT_MODE_ALL) {
 		if (print_expression->a_type == AST_MULTIPLE &&
 		    print_expression->a_flag != AST_FMULTIPLE_KEEPLAST) {
@@ -352,7 +358,7 @@ empty_operand:
 				return ast_genprint_emptystring(mode, ddi_ast);
 			}
 			/* Print each expression individually. */
-			for (; iter != end; ++iter) {
+			for (; iter < end; ++iter) {
 				instruction_t item_mode;
 				item_mode = PRINT_MODE_SP | (mode & PRINT_MODE_FILE);
 				if (iter == end - 1)

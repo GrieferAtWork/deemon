@@ -135,7 +135,7 @@ latincache_clear(size_t max_clear) {
 again:
 	rwlock_write(&latin1_chars_lock);
 #endif /* !CONFIG_NO_THREADS */
-	for (; iter != COMPILER_ENDOF(latin1_chars); ++iter) {
+	for (; iter < COMPILER_ENDOF(latin1_chars); ++iter) {
 		DREF String *ob = *iter;
 		if (!ob)
 			continue;

@@ -209,7 +209,7 @@ DECL_BEGIN
 #else /* !__OPTIMIZE_SIZE__ */
 #define CONFIG_NO_CALLTUPLE_OPTIMIZATIONS 1
 #endif /* __OPTIMIZE_SIZE__ */
-#endif
+#endif /* !CONFIG_[NO_]CALLTUPLE_OPTIMIZATIONS */
 
 #if (!defined(CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS) && \
      !defined(CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS))
@@ -218,7 +218,7 @@ DECL_BEGIN
 #else /* !__OPTIMIZE_SIZE__ */
 #define CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS 1
 #endif /* __OPTIMIZE_SIZE__ */
-#endif
+#endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 
 #if (defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) ||            \

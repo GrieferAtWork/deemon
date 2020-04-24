@@ -159,7 +159,8 @@ catiterator_visit(CatIterator *__restrict self, dvisit_t proc, void *arg) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 catiterator_bool(CatIterator *__restrict self) {
 	int result;
-	DeeObject **iter, **end;
+	DeeObject *const *iterpos;
+	DeeObject *const *catend;
 	DREF DeeObject *curr;
 	rwlock_read(&self->c_lock);
 	curr = self->c_curr;
@@ -171,14 +172,14 @@ catiterator_bool(CatIterator *__restrict self) {
 	if (result != 0)
 		goto done;
 #ifndef CONFIG_NO_THREADS
-	iter = (DeeObject **)ATOMIC_READ(self->c_pseq);
+	iterpos = ATOMIC_READ(self->c_pseq);
 #else /* !CONFIG_NO_THREADS */
-	iter = (DeeObject **)self->c_pseq;
+	iterpos = self->c_pseq;
 #endif /* CONFIG_NO_THREADS */
 	/* Check if one of the upcoming sequences is non-empty. */
-	end = DeeTuple_ELEM(self->c_cat) + DeeTuple_SIZE(self->c_cat);
-	for (; iter < end; ++iter) {
-		result = DeeObject_Bool(*iter);
+	catend = DeeTuple_END(self->c_cat);
+	for (; iterpos < catend; ++iterpos) {
+		result = DeeObject_Bool(*iterpos);
 		if (result != 0)
 			break;
 	}
@@ -799,55 +800,43 @@ INTERN DeeTypeObject SeqConcat_Type = {
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeq_Concat(DeeObject *self, DeeObject *other) {
-	DREF DeeObject **dst, **iter, **end;
 	DREF DeeTupleObject *result;
 	/* Special handling for recursive cats. */
 	if (DeeObject_InstanceOf(self, &SeqConcat_Type)) {
+		size_t lhs_size;
+		lhs_size = DeeTuple_SIZE(self);
 		if (DeeObject_InstanceOf(other, &SeqConcat_Type)) {
-			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(DeeTuple_SIZE(self) +
-			                                                          DeeTuple_SIZE(other));
+			DREF DeeObject **dst;
+			size_t rhs_size;
+			rhs_size = DeeTuple_SIZE(other);
+			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(lhs_size +
+			                                                          rhs_size);
 			if unlikely(!result)
 				goto err;
-			dst = DeeTuple_ELEM(result);
-			end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
-			for (; iter != end; ++iter, ++dst) {
-				DeeObject *ob = *iter;
-				Dee_Incref(ob);
-				*dst = ob;
-			}
-			end = (iter = DeeTuple_ELEM(other)) + DeeTuple_SIZE(other);
-			for (; iter != end; ++iter, ++dst) {
-				DeeObject *ob = *iter;
-				Dee_Incref(ob);
-				*dst = ob;
-			}
+			dst = Dee_Movprefv(DeeTuple_ELEM(result),
+			                   DeeTuple_ELEM(self),
+			                   lhs_size);
+			Dee_Movrefv(dst, DeeTuple_ELEM(other), rhs_size);
 		} else {
-			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(DeeTuple_SIZE(self) + 1);
+			DREF DeeObject **dst;
+			result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(lhs_size + 1);
 			if unlikely(!result)
 				goto err;
-			dst = DeeTuple_ELEM(result);
-			end = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
-			for (; iter != end; ++iter, ++dst) {
-				DeeObject *ob = *iter;
-				Dee_Incref(ob);
-				*dst = ob;
-			}
+			dst = Dee_Movprefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), lhs_size);
 			*dst = other;
 			Dee_Incref(other);
 		}
 	} else if (DeeObject_InstanceOf(other, &SeqConcat_Type)) {
-		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(1 + DeeTuple_SIZE(other));
+		DREF DeeObject **dst;
+		size_t rhs_size;
+		rhs_size = DeeTuple_SIZE(other);
+		result = (DREF DeeTupleObject *)DeeTuple_NewUninitialized(1 + rhs_size);
 		if unlikely(!result)
 			goto err;
 		dst    = DeeTuple_ELEM(result);
 		*dst++ = self;
 		Dee_Incref(self);
-		end = (iter = DeeTuple_ELEM(other)) + DeeTuple_SIZE(other);
-		for (; iter != end; ++iter, ++dst) {
-			DeeObject *ob = *iter;
-			Dee_Incref(ob);
-			*dst = ob;
-		}
+		Dee_Movrefv(dst, DeeTuple_ELEM(other), rhs_size);
 	} else {
 		result = (DREF DeeTupleObject *)DeeTuple_Pack(2, self, other);
 		if unlikely(!result)

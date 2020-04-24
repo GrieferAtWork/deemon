@@ -28,13 +28,14 @@ DECL_BEGIN
 
 INTERN WUNUSED NONNULL((1)) bool DCALL
 ast_chk_multiple_hasexpand(struct ast *__restrict self) {
-	struct ast **iter, **end;
+	size_t i, count;
 	ASSERT_AST(self);
 	ASSERT(self->a_type == AST_MULTIPLE);
-	end = (iter = self->a_multiple.m_astv) +
-	      self->a_multiple.m_astc;
-	for (; iter != end; ++iter) {
-		if ((*iter)->a_type == AST_EXPAND)
+	count = self->a_multiple.m_astc;
+	for (i = 0; i < count; ++i) {
+		struct ast *elem;
+		elem = self->a_multiple.m_astv[i];
+		if (elem->a_type == AST_EXPAND)
 			return true;
 	}
 	return false;

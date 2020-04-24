@@ -52,6 +52,7 @@ struct Dee_tuple_object {
 #define DeeTuple_IsEmpty(ob)     ((DeeObject *)Dee_REQUIRES_OBJECT(ob) == Dee_EmptyTuple)
 #define DeeTuple_SIZE(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_size
 #define DeeTuple_ELEM(ob)        ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem
+#define DeeTuple_END(ob)         (((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem + ((DeeTupleObject *)(ob))->t_size)
 #define DeeTuple_GET(ob, i)      ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
 #define DeeTuple_SET(ob, i, v)   ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (v)
 

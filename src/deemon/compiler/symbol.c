@@ -727,13 +727,8 @@ base_scope_fini(DeeBaseScopeObject *__restrict self) {
 	}
 	cleanup_switch_cases(self->bs_swcase,
 	                     self->bs_swdefl);
-	{
-		DREF DeeObject **iter, **end;
-		end = (iter = self->bs_default) + (self->bs_argc_max -
-		                                   self->bs_argc_min);
-		for (; iter != end; ++iter)
-			Dee_XDecref(*iter);
-	}
+	Dee_XDecrefv(self->bs_default,
+	             (self->bs_argc_max - self->bs_argc_min));
 	Dee_Free(self->bs_default);
 	Dee_Free(self->bs_argv);
 }
@@ -744,13 +739,9 @@ base_scope_visit(DeeBaseScopeObject *__restrict self,
 	recursive_rwlock_read(&DeeCompiler_Lock);
 	ASSERT(self->bs_argc_max >= self->bs_argc_min);
 	visit_switch_cases(self->bs_swcase, proc, arg);
-	{
-		DREF DeeObject **iter, **end;
-		end = (iter = self->bs_default) + (self->bs_argc_max -
-		                                   self->bs_argc_min);
-		for (; iter != end; ++iter)
-			Dee_XVisit(*iter);
-	}
+	Dee_XVisitv(self->bs_default,
+	            self->bs_argc_max -
+	            self->bs_argc_min);
 	recursive_rwlock_endread(&DeeCompiler_Lock);
 }
 
@@ -840,17 +831,12 @@ PRIVATE NONNULL((1)) void DCALL
 root_scope_fini(DeeRootScopeObject *__restrict self) {
 	Dee_Decref(self->rs_module);
 	Dee_XDecref(self->rs_code);
-	{
-		DREF DeeModuleObject **iter, **end;
-		end = (iter = self->rs_importv) + self->rs_importc;
-		for (; iter != end; ++iter)
-			Dee_Decref(*iter);
-		Dee_Free(self->rs_importv);
-	}
+	Dee_Decrefv(self->rs_importv, self->rs_importc);
+	Dee_Free(self->rs_importv);
 	if (self->rs_bucketv != empty_module_buckets) {
 		struct module_symbol *iter, *end;
 		end = (iter = self->rs_bucketv) + (self->rs_bucketm + 1);
-		for (; iter != end; ++iter) {
+		for (; iter < end; ++iter) {
 			if (!MODULE_SYMBOL_GETNAMESTR(iter))
 				continue;
 			if (iter->ss_flags & MODSYM_FNAMEOBJ)

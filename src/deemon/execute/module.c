@@ -1488,9 +1488,9 @@ module_visit(DeeModuleObject *__restrict self,
 
 PRIVATE NONNULL((1)) void DCALL
 module_clear(DeeModuleObject *__restrict self) {
-	DREF DeeObject *buffer[16], **iter = buffer, **iter2;
+	DREF DeeObject *buffer[16];
 	DREF DeeCodeObject *root_code;
-	size_t i;
+	size_t i, bufi = 0;
 	rwlock_write(&self->mo_lock);
 	root_code     = self->mo_root;
 	self->mo_root = NULL;
@@ -1504,20 +1504,19 @@ restart:
 			continue;
 		self->mo_globalv[i] = NULL;
 		if (!Dee_DecrefIfNotOne(ob)) {
-			*iter++ = ob;
-			if (iter == COMPILER_ENDOF(buffer)) {
+			buffer[bufi] = ob;
+			++bufi;
+			if (bufi >= COMPILER_LENOF(buffer)) {
 				rwlock_endwrite(&self->mo_lock);
-				for (iter2 = buffer; iter2 < iter; ++iter2)
-					Dee_Decref(*iter2);
-				iter = buffer;
+				Dee_Decrefv(buffer, bufi);
+				bufi = 0;
 				rwlock_write(&self->mo_lock);
 				goto restart;
 			}
 		}
 	}
 	rwlock_endwrite(&self->mo_lock);
-	for (iter2 = buffer; iter2 < iter; ++iter2)
-		Dee_Decref(*iter2);
+	Dee_Decrefv(buffer, bufi);
 	Dee_XDecref(root_code);
 }
 

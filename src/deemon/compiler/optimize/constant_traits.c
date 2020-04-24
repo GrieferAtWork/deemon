@@ -188,11 +188,14 @@ again0:
 	}
 	if (type == &DeeTuple_Type) {
 		/* Allow tuples consisting only of other allowed types. */
-		DeeObject **iter, **end;
+		size_t i, count;
 		int result = CONSTEXPR_ALLOWED;
-		end        = (iter = DeeTuple_ELEM(self)) + DeeTuple_SIZE(self);
-		for (; iter != end; ++iter) {
-			int temp = allow_constexpr(*iter);
+		count = DeeTuple_SIZE(self);
+		for (i = 0; i < count; ++i) {
+			int temp;
+			DeeObject *elem;
+			elem = DeeTuple_GET(self, i);
+			temp = allow_constexpr(elem);
 			if (temp == CONSTEXPR_ILLEGAL)
 				goto illegal;
 			if (temp == CONSTEXPR_USECOPY)

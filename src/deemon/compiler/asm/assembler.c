@@ -2517,7 +2517,7 @@ asm_newconst_string(char const *__restrict str, size_t len) {
 	value = DeeString_NewSized(str, len);
 	if unlikely(!value)
 		goto err;
-	result                                                   = current_assembler.a_constc;
+	result = current_assembler.a_constc;
 	current_assembler.a_constv[current_assembler.a_constc++] = value; /* Inherit reference. */
 	return result;
 err:
@@ -2527,30 +2527,35 @@ err:
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_newconst(DeeObject *__restrict constvalue) {
 	int32_t result;
-	DREF DeeObject **iter, **end, *elem;
+	DREF DeeObject *elem;
 	ASSERT_OBJECT(constvalue);
 	if (!(current_assembler.a_flag & ASM_FNOREUSECONST)) {
 		/* Check if we've already got this exact constant. */
-		end = (iter = current_assembler.a_constv) + current_assembler.a_constc;
-		for (; iter != end; ++iter) {
-			elem = *iter;
+		uint16_t i, count;
+		DREF DeeObject **vec;
+		vec   = current_assembler.a_constv;
+		count = current_assembler.a_constc;
+		for (i = 0; i < count; ++i) {
+			elem = vec[i];
 			if (Dee_TYPE(elem) == Dee_TYPE(constvalue)) {
 				int error = DeeObject_CompareEq(constvalue, elem);
 				if (error != 0) {
 					if unlikely(error < 0)
-						return -1;
+						goto err;
 					/* Got a match for an existing instance! */
-					return (int32_t)(iter - current_assembler.a_constv);
+					return (int32_t)i;
 				}
 			}
 		}
 	}
 	if unlikely(check_resize_constants())
-		return -1;
-	result                                                   = current_assembler.a_constc;
+		goto err;
+	result = current_assembler.a_constc;
 	current_assembler.a_constv[current_assembler.a_constc++] = constvalue;
 	Dee_Incref(constvalue);
 	return result;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
@@ -2569,8 +2574,9 @@ asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym) {
 		if unlikely(new_statica < current_assembler.a_staticc) {
 			new_statica = current_assembler.a_staticc + 1;
 			if unlikely(new_statica < current_assembler.a_staticc) {
-				return DeeError_Throwf(&DeeError_CompilerError,
-				                       "Too many static variables");
+				DeeError_Throwf(&DeeError_CompilerError,
+				                "Too many static variables");
+				goto err;
 			}
 		}
 do_realloc:
@@ -2584,7 +2590,7 @@ do_realloc:
 			}
 			if (Dee_CollectMemory(new_statica * sizeof(DREF DeeObject *)))
 				goto do_realloc;
-			return -1;
+			goto err;
 		}
 		current_assembler.a_staticv = new_vector;
 		current_assembler.a_statica = new_statica;
@@ -2594,6 +2600,8 @@ do_realloc:
 	current_assembler.a_staticv[result].ss_sym  = sym;
 	Dee_Incref(initializer);
 	return result;
+err:
+	return -1;
 }
 
 PRIVATE ATTR_COLD int DCALL err_too_many_locals(void) {
@@ -2630,7 +2638,7 @@ do_realloc:
 			}
 			if (Dee_CollectMemory(new_size))
 				goto do_realloc;
-			return -1;
+			goto err;
 		}
 		current_assembler.a_localuse = new_bitset;
 		current_assembler.a_locala   = new_size;
@@ -2638,6 +2646,8 @@ do_realloc:
 	current_assembler.a_localuse[result / 8] |= 1 << (result % 8);
 end:
 	return (int32_t)result;
+err:
+	return -1;
 }
 
 INTERN WUNUSED int32_t DCALL asm_newlocal(void) {
@@ -3030,29 +3040,25 @@ do_realloc:
 
 INTERN WUNUSED NONNULL((1)) int32_t DCALL
 asm_newmodule(DeeModuleObject *__restrict mod) {
-	DREF DeeModuleObject **iter, **end;
 	uint16_t result;
 	ASSERT_OBJECT_TYPE(mod, &DeeModule_Type);
 	ASSERT_OBJECT_TYPE((DeeObject *)current_rootscope, &DeeRootScope_Type);
 	/* Check if this module has already been imported by the one calling.
 	 * Must be checking to ensure that any module is only ever imported once.
 	 * NOTE: Since modules cannot be copied, we can simply compare pointers here! */
-	end = (iter = current_rootscope->rs_importv) +
-	      current_rootscope->rs_importc;
-	for (; iter != end; ++iter) {
-		if (*iter == mod)
-			return (int32_t)(iter - current_rootscope->rs_importv);
+	for (result = 0; result < current_rootscope->rs_importc; ++result) {
+		if (current_rootscope->rs_importv[result] == mod)
+			goto done;
 	}
-	ASSERT(current_rootscope->rs_importc <=
-	       current_rootscope->rs_importa);
-	result = current_rootscope->rs_importc;
+	ASSERT(current_rootscope->rs_importc <= current_rootscope->rs_importa);
+	ASSERT(result == current_rootscope->rs_importc);
 	if unlikely(result == UINT16_MAX) {
 		/* Make sure not to exceed what can actually be done. */
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Too many imported modules");
-		return -1;
+		goto err;
 	}
-	if (result == current_rootscope->rs_importa) {
+	if (result >= current_rootscope->rs_importa) {
 		/* Must allocate more memory in the import vector. */
 		DREF DeeModuleObject **new_vector;
 		uint16_t new_size;
@@ -3073,7 +3079,7 @@ do_realloc:
 			}
 			if (Dee_CollectMemory(new_size * sizeof(DREF DeeModuleObject *)))
 				goto do_realloc;
-			return -1;
+			goto err;
 		}
 		current_rootscope->rs_importv = new_vector;
 		current_rootscope->rs_importa = new_size;
@@ -3082,7 +3088,10 @@ do_realloc:
 	Dee_Incref(mod);
 	current_rootscope->rs_importv[result] = mod;
 	++current_rootscope->rs_importc;
+done:
 	return result;
+err:
+	return -1;
 }
 
 
@@ -3227,7 +3236,6 @@ INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
 INTERN WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 code_docompile(struct ast *__restrict code_ast) {
 	int link_error;
-	unsigned int i;
 	ASSERT_AST(code_ast);
 	ASSERT_OBJECT_TYPE((DeeObject *)current_basescope, &DeeBaseScope_Type);
 
@@ -3235,21 +3243,21 @@ restart:
 	/* Generate code for copying modified arguments into locals. */
 	{
 		bool did_define_header_ddi = false;
-		struct symbol **iter, **end, *sym;
-		end = (iter = current_basescope->bs_argv) + current_basescope->bs_argc;
-		for (; iter != end; ++iter) {
-			sym = *iter;
+		struct symbol **vector, *sym;
+		uint16_t i, count;
+		count  = current_basescope->bs_argc;
+		vector = current_basescope->bs_argv;
+		for (i = 0; i < count; ++i) {
+			sym = vector[i];
 			SYMBOL_INPLACE_UNWIND_ALIAS(sym);
 			if (sym->s_type != SYMBOL_TYPE_ARG) {
-				uint16_t argid;
 do_savearg:
-				argid = (uint16_t)(iter - current_basescope->bs_argv);
 				if (!did_define_header_ddi) {
 					if (asm_putddi(code_ast))
 						goto err;
 					did_define_header_ddi = true;
 				}
-				if (asm_gmov_varg(sym, argid, code_ast, true))
+				if (asm_gmov_varg(sym, i, code_ast, true))
 					goto err;
 			} else if (sym->s_nwrite != 0) {
 				/* Must convert this one into a local variable. */
@@ -3270,14 +3278,17 @@ do_savearg:
 
 	/* For safety, pad all sections with a return instruction each.
 	 * NOTE: When not required, these instructions are later removed by peephole optimization. */
-	for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
-		if (i != SECTION_TEXT &&
-		    current_assembler.a_sect[i].sec_iter ==
-		    current_assembler.a_sect[i].sec_begin)
-			continue; /* Skip empty seconds. */
-		current_assembler.a_curr = &current_assembler.a_sect[i];
-		if (asm_put(ASM_RET_NONE))
-			goto err;
+	{
+		unsigned int i;
+		for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
+			if (i != SECTION_TEXT &&
+			    current_assembler.a_sect[i].sec_iter ==
+			    current_assembler.a_sect[i].sec_begin)
+				continue; /* Skip empty seconds. */
+			current_assembler.a_curr = &current_assembler.a_sect[i];
+			if (asm_put(ASM_RET_NONE))
+				goto err;
+		}
 	}
 
 	/* Make sure that all in-use user-labels have been defined.

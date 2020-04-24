@@ -1449,7 +1449,6 @@ yfi_copy(YFIterator *__restrict self,
          YFIterator *__restrict other) {
 	DeeCodeObject *code;
 	size_t stack_size;
-	DREF DeeObject **iter, **end, **src;
 again:
 	recursive_rwlock_write(&other->yi_lock);
 	/* Make sure that the function is actually copyable. */
@@ -1481,25 +1480,17 @@ again:
 			                                                           sizeof(DREF DeeObject *));
 			if unlikely(!self->yi_frame.cf_stack)
 				goto nomem;
-			src = other->yi_frame.cf_stack;
-			end = (iter = self->yi_frame.cf_stack) + self->yi_frame.cf_stacksz;
-			for (; iter != end; ++iter, ++src) {
-				DeeObject *ob = *src;
-				Dee_Incref(ob);
-				*iter = ob;
-			}
+			Dee_Movrefv(self->yi_frame.cf_stack,
+			            other->yi_frame.cf_stack,
+			            self->yi_frame.cf_stacksz);
 		}
 		self->yi_frame.cf_frame = (DREF DeeObject **)Dee_TryMalloc(code->co_framesize);
 		if unlikely(!self->yi_frame.cf_frame)
 			goto nomem_stack;
 		/* Copy local variables. */
-		src = other->yi_frame.cf_frame;
-		end = (iter = self->yi_frame.cf_frame) + code->co_localc;
-		for (; iter != end; ++iter, ++src) {
-			DeeObject *ob = *src;
-			*iter         = ob;
-			Dee_XIncref(ob);
-		}
+		Dee_Movrefv(self->yi_frame.cf_frame,
+		            other->yi_frame.cf_frame,
+		            code->co_localc);
 		if (!self->yi_frame.cf_stacksz) {
 			/* Relocate + copy a frame-shared stack. */
 			self->yi_frame.cf_stack = self->yi_frame.cf_frame + code->co_localc;
@@ -1509,13 +1500,9 @@ again:
 			        (code->co_framesize - code->co_localc * sizeof(DeeObject *)),
 			        "The stack is too large");
 			/* Copy the stack. */
-			src = other->yi_frame.cf_stack;
-			end = (iter = self->yi_frame.cf_stack) + stack_size;
-			for (; iter != end; ++iter, ++src) {
-				DeeObject *ob = *src;
-				Dee_Incref(ob);
-				*iter = ob;
-			}
+			Dee_Movrefv(self->yi_frame.cf_stack,
+			            other->yi_frame.cf_stack,
+			            stack_size);
 		} else {
 			*(uintptr_t *)&self->yi_frame.cf_sp += (uintptr_t)self->yi_frame.cf_stack;
 			stack_size = self->yi_frame.cf_stacksz;
@@ -1537,25 +1524,37 @@ again:
 	recursive_rwlock_endwrite(&other->yi_lock);
 	recursive_rwlock_init(&self->yi_lock);
 	if (code) {
-		DeeObject *this_arg = self->yi_frame.cf_this;
-		DeeObject *varargs  = (DeeObject *)self->yi_frame.cf_vargs;
-		size_t argc         = self->yi_frame.cf_argc;
-		DeeObject *const *argv    = self->yi_frame.cf_argv;
-		size_t refc         = self->yi_func->yf_func->fo_code->co_refc;
-		DeeObject **refv    = self->yi_func->yf_func->fo_refv;
+		DeeObject *this_arg;
+		DeeObject *varargs;
+		size_t i, argc, refc;
+		DeeObject *const *argv;
+		DeeObject **refv;
+		this_arg = self->yi_frame.cf_this;
+		varargs  = (DeeObject *)self->yi_frame.cf_vargs;
+		argc     = self->yi_frame.cf_argc;
+		argv     = self->yi_frame.cf_argv;
+		refc     = self->yi_func->yf_func->fo_code->co_refc;
+		refv     = self->yi_func->yf_func->fo_refv;
+
 		/* With all objects now referenced, we still have to replace
 		 * all locals and the stack with deep copies of themself. */
-		end = (iter = self->yi_frame.cf_stack) + stack_size;
-		for (; iter != end; ++iter) {
-			if (*iter != this_arg && *iter != varargs &&
-			    inplace_deepcopy_noarg(iter, argc, argv, refc, refv))
-				goto err;
+		for (i = 0; i < stack_size; ++i) {
+			DeeObject *elem;
+			elem = self->yi_frame.cf_stack[i];
+			if (elem != this_arg && elem != varargs) {
+				if (inplace_deepcopy_noarg(&self->yi_frame.cf_stack[i],
+				                           argc, argv, refc, refv))
+					goto err;
+			}
 		}
-		end = (iter = self->yi_frame.cf_frame) + code->co_localc;
-		for (; iter != end; ++iter) {
-			if (*iter != this_arg && *iter != varargs &&
-			    inplace_deepcopy_noarg(iter, argc, argv, refc, refv))
-				goto err;
+		for (i = 0; i < code->co_localc; ++i) {
+			DeeObject *elem;
+			elem = self->yi_frame.cf_frame[i];
+			if (elem != this_arg && elem != varargs) {
+				if (inplace_deepcopy_noarg(&self->yi_frame.cf_frame[i],
+				                           argc, argv, refc, refv))
+					goto err;
+			}
 		}
 		/* WARNING: There are some thing that we don't copy, such as the this-argument.
 		 *          Similarly, we also don't copy function input arguments! */
@@ -1568,10 +1567,10 @@ err:
 	return -1;
 nomem_stack:
 	if (self->yi_frame.cf_stacksz) {
-		uint16_t n = self->yi_frame.cf_stacksz;
-		while (n--)
-			Dee_Decref(self->yi_frame.cf_stack[n]);
-		Dee_Free(self->yi_frame.cf_stack);
+		DeeObject **vector;
+		vector = Dee_Decrefv(self->yi_frame.cf_stack,
+		                     self->yi_frame.cf_stacksz);
+		Dee_Free(vector);
 	}
 nomem:
 	recursive_rwlock_endwrite(&other->yi_lock);

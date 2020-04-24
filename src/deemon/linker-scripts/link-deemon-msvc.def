@@ -522,6 +522,7 @@ EXPORTS
 	DeeObject_HasItemString@12=_DeeObject_HasItemString@12
 	DeeObject_HasItemStringLen@16=_DeeObject_HasItemStringLen@16
 	DeeObject_Hash@4=_DeeObject_Hash@4
+	DeeObject_Hashv@8=_DeeObject_Hashv@8
 	DeeObject_Inc@4=_DeeObject_Inc@4
 	DeeObject_InplaceAdd@8=_DeeObject_InplaceAdd@8
 	DeeObject_InplaceAddInt@8=_DeeObject_InplaceAddInt@8
@@ -823,6 +824,8 @@ EXPORTS
 	Dee_DecrefWasOk@4=_Dee_DecrefWasOk@4
 	Dee_DecrefWasOk_traced@12=_Dee_DecrefWasOk_traced@12
 	Dee_Decref_traced@12=_Dee_Decref_traced@12
+	Dee_Decrefv@8=_Dee_Decrefv@8
+	Dee_Decrefv_traced@16=_Dee_Decrefv_traced@16
 	Dee_DeepCopyAddAssoc@8=_Dee_DeepCopyAddAssoc@8
 	Dee_DumpReferenceLeaks@0=_Dee_DumpReferenceLeaks@0
 	Dee_Exit@8=_Dee_Exit@8
@@ -844,8 +847,12 @@ EXPORTS
 	Dee_Incref_n@8=_Dee_Incref_n@8
 	Dee_Incref_n_traced@16=_Dee_Incref_n_traced@16
 	Dee_Incref_traced@12=_Dee_Incref_traced@12
+	Dee_Increfv@8=_Dee_Increfv@8
+	Dee_Increfv_traced@16=_Dee_Increfv_traced@16
 	Dee_Initialize@0=_Dee_Initialize@0
 	Dee_Malloc@4=_Dee_Malloc@4
+	Dee_Movrefv@12=_Dee_Movrefv@12
+	Dee_Movrefv_traced@20=_Dee_Movrefv_traced@20
 	Dee_OperatorFromName@8=_Dee_OperatorFromName@8
 	Dee_OperatorFromNameLen@12=_Dee_OperatorFromNameLen@12
 	Dee_OperatorInfo@8=_Dee_OperatorInfo@8

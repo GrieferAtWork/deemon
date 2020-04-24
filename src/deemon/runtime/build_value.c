@@ -490,22 +490,22 @@ do_string:
 
 
 	case '(': {
-		size_t num_args;
-		DeeObject **iter;
+		size_t i, num_args;
 		num_args = count_pack_args(format);
 		result   = DeeTuple_NewUninitialized(num_args);
 		if unlikely(!result)
 			break;
-		iter = DeeTuple_ELEM(result);
-		while (num_args--) {
-			if unlikely((*iter++ = Dee_VPPackf(&format, pargs)) == NULL) {
+		for (i = 0; i < num_args--; ++i) {
+			DREF DeeObject *elem;
+			elem = Dee_VPPackf(&format, pargs);
+			if unlikely(!elem) {
 				/* Propagate an error. */
-				while (--iter != DeeTuple_ELEM(result))
-					Dee_Decref(*iter);
+				Dee_Decrefv(DeeTuple_ELEM(result), i);
 				DeeTuple_FreeUninitialized(result);
 				result = NULL;
 				goto end;
 			}
+			DeeTuple_SET(result, i, elem);
 		}
 		ASSERTF(*format == ')', "Invalid format: `%s' (`%s')", format, *pformat);
 		++format;
@@ -934,22 +934,23 @@ again:
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeTuple_VNewf(char const *__restrict format, va_list args) {
 	struct va_list_struct *pargs;
-	DREF DeeObject *result, **iter;
-	size_t tuple_size = count_pack_args(format);
+	DREF DeeObject *result;
+	size_t i, tuple_size = count_pack_args(format);
 	pargs  = (struct va_list_struct *)VALIST_ADDR(args);
 	result = DeeTuple_NewUninitialized(tuple_size);
 	if unlikely(!result)
 		return NULL;
-	iter = DeeTuple_ELEM(result);
-	while (tuple_size--) {
-		if ((*iter++ = Dee_VPPackf((char const **)&format, pargs)) == NULL)
+	for (i = 0; tuple_size--; ++i) {
+		DREF DeeObject *elem;
+		elem = Dee_VPPackf((char const **)&format, pargs);
+		if unlikely(!elem)
 			goto err;
+		DeeTuple_SET(result, i, elem);
 	}
 	ASSERTF(!*format, "Invalid format: `%s'", format);
 	return result;
 err:
-	while (--iter != DeeTuple_ELEM(result))
-		Dee_Decref(*iter);
+	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 	Dee_VPPackf_Cleanup(format, pargs->vl_ap);
 	return NULL;

@@ -103,22 +103,19 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 			} else {
 				dst->cf_this = NULL;
 			}
-			if (!dst->cf_argc)
+			if (!dst->cf_argc) {
 				dst->cf_argv = NULL;
-			else if ((dst->cf_argv = (DREF DeeObject **)Dee_TryMalloc(dst->cf_argc *
-			                                                          sizeof(DREF DeeObject *))) != NULL) {
-				DeeObject *const *src_iter;
-				DREF DeeObject **iter, **end;
-				end = (iter = (DREF DeeObject **)dst->cf_argv) + dst->cf_argc;
-				src_iter = src->cf_argv;
-				for (; iter < end; ++iter, ++src_iter) {
-					if (*src_iter == dont_track_this) {
-						*iter = Dee_None;
-						Dee_Incref(Dee_None);
-					} else {
-						DeeObject *ob = *src_iter;
+			} else {
+				dst->cf_argv = (DREF DeeObject **)Dee_TryMalloc(dst->cf_argc *
+				                                                sizeof(DREF DeeObject *));
+				if (dst->cf_argv) {
+					size_t i;
+					for (i = 0; i < dst->cf_argc; ++i) {
+						DeeObject *ob = src->cf_argv[i];
+						if (ob == dont_track_this)
+							ob = Dee_None;
 						Dee_Incref(ob);
-						*iter = ob;
+						((DREF DeeObject **)dst->cf_argv)[i] = ob;
 					}
 				}
 			}
@@ -129,18 +126,13 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 			dst->cf_frame = (DREF DeeObject **)Dee_TryMalloc(code->co_localc *
 			                                                 sizeof(DREF DeeObject *));
 			if (dst->cf_frame) {
-				DREF DeeObject **iter, **end, **source_iter;
-				source_iter = src->cf_frame;
-				end         = (iter = dst->cf_frame) + code->co_localc;
-				for (; iter != end; ++iter, ++source_iter) {
-					if (*source_iter == dont_track_this) {
-						*iter = Dee_None;
-						Dee_Incref(Dee_None);
-					} else {
-						DeeObject *ob = *source_iter;
-						Dee_XIncref(ob);
-						*iter = ob;
-					}
+				size_t i;
+				for (i = 0; i < code->co_localc; ++i) {
+					DeeObject *ob = src->cf_frame[i];
+					if (ob == dont_track_this)
+						ob = Dee_None;
+					Dee_XIncref(ob);
+					dst->cf_frame[i] = ob;
 				}
 			}
 			/* At this point, the contents of the stack can't be trusted. */

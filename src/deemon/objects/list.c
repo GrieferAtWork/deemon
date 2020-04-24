@@ -64,12 +64,11 @@ INTDEF DeeTypeObject DeeListIterator_Type;
 
 PRIVATE NONNULL((1)) void DCALL
 list_fini(List *__restrict self) {
-	DeeObject **begin, **iter;
+	DeeObject **vector;
 	weakref_support_fini(self);
-	iter = (begin = DeeList_ELEM(self)) + DeeList_SIZE(self);
-	while (iter-- != begin)
-		Dee_Decref(*iter);
-	Dee_Free(begin);
+	vector = Dee_Decrefv(DeeList_ELEM(self),
+	                     DeeList_SIZE(self));
+	Dee_Free(vector);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -158,30 +157,29 @@ list_ctor(List *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 list_copy(List *__restrict self,
           List *__restrict other) {
-	DeeObject **iter, **end, **src;
+	DREF DeeObject **newvec;
+	size_t count;
 	ASSERT(self != other);
 	weakref_support_init(self);
 	rwlock_init(&self->l_lock);
 again:
 	DeeList_LockRead(other);
-	self->l_alloc = self->l_size = other->l_size;
-	self->l_elem = (DREF DeeObject **)Dee_TryMalloc(self->l_alloc *
-	                                                sizeof(DREF DeeObject *));
-	if unlikely(!self->l_elem) {
+	count = other->l_size;
+	newvec = (DREF DeeObject **)Dee_TryMalloc(count * sizeof(DREF DeeObject *));
+	if unlikely(!newvec) {
 		DeeList_LockEndRead(other);
-		if (Dee_CollectMemory(self->l_alloc * sizeof(DREF DeeObject *)))
+		if (Dee_CollectMemory(count * sizeof(DREF DeeObject *)))
 			goto again;
-		return -1;
+		goto err;
 	}
-	end = (iter = self->l_elem) + self->l_size;
-	src = other->l_elem;
-	for (; iter != end; ++iter, ++src) {
-		DeeObject *ob = *src;
-		Dee_Incref(ob);
-		*iter = ob;
-	}
+	/* Copy references */
+	self->l_elem  = Dee_Movrefv(newvec, DeeList_ELEM(other), count);
+	self->l_alloc = count;
+	self->l_size  = count;
 	DeeList_LockEndRead(other);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -893,42 +891,43 @@ PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeList_AppendVector)(DeeObject *self, size_t objc,
                              DeeObject *const *objv) {
 	int result = 0;
-	DeeObject **newvec, **iter, **end;
-	ASSERT_OBJECT(self);
-	ASSERT(DeeList_Check(self));
+	DeeObject **newvec;
+	DeeListObject *me;
+	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
+	me = (DeeListObject *)self;
 retry:
-	DeeList_LockWrite(self);
-	ASSERT(DeeList_CAPACITY(self) >= DeeList_SIZE(self));
-	if (DeeList_CAPACITY(self) < DeeList_SIZE(self) + objc) {
-		size_t newcap = DeeList_CAPACITY(self);
+	DeeList_LockWrite(me);
+	ASSERT(me->l_alloc >= me->l_size);
+	if (me->l_alloc < me->l_size + objc) {
+		size_t newcap = me->l_alloc;
 		if (!newcap)
 			newcap = 1; /* Must increase the list's capacity. */
-		while (newcap < DeeList_SIZE(self) + objc)
+		while (newcap < me->l_size + objc)
 			newcap *= 2;
-		newvec = (DeeObject **)Dee_TryRealloc(DeeList_ELEM(self),
+		newvec = (DeeObject **)Dee_TryRealloc(me->l_elem,
 		                                      newcap * sizeof(DeeObject *));
 		if unlikely(!newvec) {
 			/* Try again, but only attempt to allocate what we need. */
-			newcap = DeeList_SIZE(self) + objc;
-			newvec = (DeeObject **)Dee_TryRealloc(DeeList_ELEM(self),
+			newcap = me->l_size + objc;
+			newvec = (DeeObject **)Dee_TryRealloc(me->l_elem,
 			                                      newcap * sizeof(DeeObject *));
 			if unlikely(!newvec) {
-				DeeList_LockEndWrite(self);
+				DeeList_LockEndWrite(me);
 				/* Try to collect some memory, then try again. */
 				if (Dee_CollectMemory(objc * sizeof(DeeObject *)))
 					goto retry;
-				return -1;
+				goto err;
 			}
 		}
-		DeeList_CAPACITY(self) = newcap;
-		DeeList_ELEM(self)     = newvec;
+		me->l_alloc = newcap;
+		me->l_elem  = newvec;
 	}
-	end = (iter = DeeList_ELEM(self) + DeeList_SIZE(self)) + objc;
-	DeeList_SIZE(self) += objc;
-	for (; iter != end; ++iter, ++objv)
-		Dee_Incref(*iter = *objv);
-	DeeList_LockEndWrite(self);
+	/* Copy references */
+	Dee_Movrefv(me->l_elem + me->l_size, objv, objc);
+	DeeList_LockEndWrite(me);
 	return result;
+err:
+	return -1;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
@@ -1197,31 +1196,29 @@ err:
 PRIVATE NONNULL((1, 2)) void DCALL
 list_visit(List *__restrict self,
            dvisit_t proc, void *arg) {
-	DREF DeeObject **iter, **end;
 	DeeList_LockRead(self);
-	end = (iter = DeeList_ELEM(self)) + DeeList_SIZE(self);
-	for (; iter != end; ++iter)
-		Dee_Visit(*iter);
+	Dee_Visitv(DeeList_ELEM(self),
+	           DeeList_SIZE(self));
 	DeeList_LockEndRead(self);
 }
 
 PUBLIC NONNULL((1)) bool DCALL
 DeeList_Clear(DeeObject *__restrict self) {
 	List *me = (List *)self;
-	DREF DeeObject **vec, **iter, **end;
+	DREF DeeObject **vec = NULL;
+	size_t count;
 	DeeList_LockWrite(me);
-	if (me->l_size) {
-		end         = (vec = me->l_elem) + me->l_size;
-		me->l_alloc = me->l_size = 0;
-		me->l_elem               = NULL;
-	} else {
-		end = vec = NULL;
+	count = me->l_size;
+	if (count) {
+		vec = me->l_elem;
+		me->l_alloc = 0;
+		me->l_size  = 0;
+		me->l_elem  = NULL;
 	}
 	DeeList_LockEndWrite(me);
-	for (iter = vec; iter != end; ++iter)
-		Dee_Decref(*iter);
+	Dee_Decrefv(vec, count);
 	Dee_Free(vec);
-	return vec != NULL;
+	return count != 0;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -1313,8 +1310,8 @@ again:
 		DeeList_LockRead(self);
 		/* Check if the list was changed. */
 		if unlikely(end != self->l_elem + self->l_size ||
-			         iter < self->l_elem)
-		goto again;
+		            iter < self->l_elem)
+			goto again;
 	}
 	DeeList_LockEndRead(self);
 	return_false;
@@ -2649,13 +2646,14 @@ err:
 /* Reverse the order of the elements of `self' */
 PUBLIC NONNULL((1)) void DCALL
 DeeList_Reverse(DeeObject *__restrict self) {
-	DeeObject **iter, **end;
+	DeeObject **lo, **hi;
 	DeeList_LockWrite(self);
-	end = (iter = DeeList_ELEM(self)) + DeeList_SIZE(self);
-	while (iter < end) {
-		DeeObject *temp = *iter;
-		*iter++         = *--end;
-		*end            = temp;
+	hi = (lo = DeeList_ELEM(self)) + DeeList_SIZE(self);
+	while (lo < hi) {
+		DeeObject *temp;
+		temp  = *lo;
+		*lo++ = *--hi;
+		*hi   = temp;
 	}
 	DeeList_LockEndWrite(self);
 }

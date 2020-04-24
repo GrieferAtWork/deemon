@@ -995,13 +995,13 @@ enumattriter_fini(EnumAttrIter *__restrict self) {
 		ASSERT(iter >= self->ei_buffer);
 		ASSERT(iter <= COMPILER_ENDOF(self->ei_buffer));
 		/* Discard all remaining items. */
-		for (; iter != COMPILER_ENDOF(self->ei_buffer); ++iter)
+		for (; iter < COMPILER_ENDOF(self->ei_buffer); ++iter)
 			Dee_Decref(*iter);
 		self->ei_bufpos = (DREF Attr **)ITER_DONE; /* Indicate that we want to stop iteration. */
 		/* Resolve execution of the iterator normally. */
-		if ((error = setjmp(self->ei_break)) == 0) {
+		error = setjmp(self->ei_break);
+		if (error == 0)
 			longjmp(self->ei_continue, CNTSIG_STOP);
-		}
 		if (error == BRKSIG_ERROR)
 			DeeError_Handled(ERROR_HANDLED_RESTORE);
 	}
@@ -1016,7 +1016,7 @@ enumattriter_visit(EnumAttrIter *__restrict self, dvisit_t proc, void *arg) {
 	if (iter && iter != (DREF Attr **)ITER_DONE) {
 		ASSERT(iter >= self->ei_buffer);
 		ASSERT(iter <= COMPILER_ENDOF(self->ei_buffer));
-		for (; iter != COMPILER_ENDOF(self->ei_buffer); ++iter)
+		for (; iter < COMPILER_ENDOF(self->ei_buffer); ++iter)
 			Dee_Visit(*iter);
 	}
 #endif /* CONFIG_LONGJMP_ENUMATTR */

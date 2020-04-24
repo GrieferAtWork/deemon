@@ -60,7 +60,8 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 
 	default: {
 		size_t s1, s2;
-		DeeObject **iter1, **iter2;
+		DeeObject **iter1;
+		DeeObject **iter2;
 		s1    = objc / 2;
 		s2    = objc - s1;
 		error = mergesort_impl(temp, dst, src, s1);
@@ -152,7 +153,8 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 
 	default: {
 		size_t s1, s2;
-		DeeObject **iter1, **iter2;
+		DeeObject *const *iter1;
+		DeeObject *const *iter2;
 		s1    = objc / 2;
 		s2    = objc - s1;
 		error = mergesort_impl_p(temp, dst, src, s1, key);

@@ -255,19 +255,16 @@ INTERN DeeTypeObject SharedMapIterator_Type = {
 
 PRIVATE NONNULL((1)) void DCALL
 smap_fini(SharedMap *__restrict self) {
-	DREF DeeObject **begin, **iter;
-	iter = (begin = (DeeObject **)self->sm_vector) + self->sm_length * 2;
-	while (iter-- != begin)
-		Dee_Decref(*iter);
-	Dee_Free(begin);
+	DREF DeeObject **vector;
+	vector = Dee_Decrefv((DREF DeeObject **)self->sm_vector,
+	                     self->sm_length * 2);
+	Dee_Free(vector);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 smap_visit(SharedMap *__restrict self, dvisit_t proc, void *arg) {
-	DREF DeeObject **begin, **iter;
-	iter = (begin = (DeeObject **)self->sm_vector) + self->sm_length * 2;
-	while (iter-- != begin)
-		Dee_Visit(*iter);
+	Dee_Visitv((DeeObject **)self->sm_vector,
+	           self->sm_length * 2);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SharedMapIterator *DCALL
@@ -688,47 +685,48 @@ done:
  *       mirroring the behavior of adjstack/pop instructions. */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedMap_Decref(DeeObject *__restrict self) {
-	DREF DeeObject **begin, **iter;
-	DREF DeeObject **vector_copy;
+	size_t count;
+	DREF DeeObject **vector;
 	SharedMap *me = (SharedMap *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &SharedMap_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
-		iter = (begin = (DREF DeeObject **)me->sm_vector) + me->sm_length * 2;
-		while (iter-- != begin)
-			Dee_Decref(*iter);
+		vector = (DREF DeeObject **)me->sm_vector;
+		count  = me->sm_length * 2;
 		Dee_DecrefNokill(&SharedMap_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
+done_decref_vector:
+		Dee_Decrefv(vector, count);
 		return;
 	}
 	/* Difficult case: must duplicate the vector. */
 	rwlock_write(&me->sm_lock);
-	vector_copy = (DREF DeeObject **)Dee_TryMalloc(me->sm_length * 2 *
-	                                               sizeof(DREF DeeObject *));
-	if unlikely(!vector_copy)
+	vector = (DREF DeeObject **)Dee_TryMalloc(me->sm_length * 2 *
+	                                          sizeof(DREF DeeObject *));
+	if unlikely(!vector)
 		goto err_cannot_inherit;
 	/* Simply copy all the elements, transferring
 	 * all the references that they represent. */
-	MEMCPY_PTR(vector_copy, me->sm_vector, me->sm_length * 2);
+	MEMCPY_PTR(vector, me->sm_vector, me->sm_length * 2);
 	/* Give the SharedMap its very own copy
 	 * which it will take to its grave. */
-	me->sm_vector = (DeeSharedItem *)vector_copy;
+	me->sm_vector = (DeeSharedItem *)vector;
 	rwlock_endwrite(&me->sm_lock);
 	Dee_Decref(me);
 	return;
 
 err_cannot_inherit:
 	/* Special case: failed to create a copy that the vector may call its own. */
-	iter = (begin = (DREF DeeObject **)me->sm_vector) + me->sm_length * 2;
+	vector = (DREF DeeObject **)me->sm_vector;
+	count  = me->sm_length * 2;
 	/* Override with an empty vector. */
 	me->sm_vector = NULL;
 	me->sm_length = 0;
 	rwlock_endwrite(&me->sm_lock);
-	/* Destroy the items that the caller wanted the vector to inherit. */
-	while (iter-- != begin)
-		Dee_Decref(*iter);
 	Dee_Decref(me);
+	/* Destroy the items that the caller wanted the vector to inherit. */
+	goto done_decref_vector;
 }
 
 

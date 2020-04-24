@@ -545,6 +545,24 @@ typedef void (DCALL *Dee_visit_t)(DeeObject *__restrict self, void *arg);
 typedef Dee_visit_t  dvisit_t;
 #endif /* DEE_SOURCE */
 
+#define Dee_Visitv(object_vector, object_count)           \
+	do {                                                  \
+		size_t _dvv_i, _count = (object_count);           \
+		for (_dvv_i = 0; _dvv_i < _count; ++_dvv_i) {     \
+			DeeObject *_dvv_ob = (object_vector)[_dvv_i]; \
+			Dee_Visit(_dvv_ob);                           \
+		}                                                 \
+	} __WHILE0
+#define Dee_XVisitv(object_vector, object_count)          \
+	do {                                                  \
+		size_t _dvv_i, _count = (object_count);           \
+		for (_dvv_i = 0; _dvv_i < _count; ++_dvv_i) {     \
+			DeeObject *_dvv_ob = (object_vector)[_dvv_i]; \
+			Dee_XVisit(_dvv_ob);                          \
+		}                                                 \
+	} __WHILE0
+
+
 /* Used to undo object construction in generic sub-classes
  * after base classes had already been constructed when a
  * later constructor fails.
@@ -580,7 +598,6 @@ DFUNDEF NONNULL((1)) void (DCALL Dee_DecrefNokill)(DeeObject *__restrict ob);
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefIfOne)(DeeObject *__restrict ob);
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefIfNotOne)(DeeObject *__restrict ob);
 DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob);
-
 
 #ifdef __INTELLISENSE__
 #define Dee_Incref_untraced(x)          (void)(&(x)->ob_refcnt)
@@ -810,6 +827,30 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_XClear_likely(x)    (void)(!(x) || (Dee_Decref_likely(x), (x) = NULL, 0))
 #define Dee_XClear_unlikely(x)  (void)(!(x) || (Dee_Decref_unlikely(x), (x) = NULL, 0))
 
+#define Dee_XIncref_untraced(x)          (void)(!(x) || (Dee_Incref_untraced(x), 0))
+#define Dee_XDecref_untraced(x)          (void)(!(x) || (Dee_Decref_untraced(x), 0))
+#define Dee_XDecref_likely_untraced(x)   (void)(!(x) || (Dee_Decref_likely_untraced(x), 0))
+#define Dee_XDecref_unlikely_untraced(x) (void)(!(x) || (Dee_Decref_unlikely_untraced(x), 0))
+#define Dee_XDecrefNokill_untraced(x)    (void)(!(x) || (Dee_DecrefNokill_untraced(x), 0))
+#define Dee_Clear_untraced(x)            (void)(Dee_Decref_untraced(x), (x) = NULL)
+#define Dee_Clear_likely_untraced(x)     (void)(Dee_Decref_likely_untraced(x), (x) = NULL)
+#define Dee_Clear_unlikely_untraced(x)   (void)(Dee_Decref_unlikely_untraced(x), (x) = NULL)
+#define Dee_XClear_untraced(x)           (void)(!(x) || (Dee_Decref_untraced(x), (x) = NULL, 0))
+#define Dee_XClear_likely_untraced(x)    (void)(!(x) || (Dee_Decref_likely_untraced(x), (x) = NULL, 0))
+#define Dee_XClear_unlikely_untraced(x)  (void)(!(x) || (Dee_Decref_unlikely_untraced(x), (x) = NULL, 0))
+
+#define Dee_XIncref_traced(x, file, line)          (void)(!(x) || (Dee_Incref_traced(x, file, line), 0))
+#define Dee_XDecref_traced(x, file, line)          (void)(!(x) || (Dee_Decref_traced(x, file, line), 0))
+#define Dee_XDecref_likely_traced(x, file, line)   (void)(!(x) || (Dee_Decref_likely_traced(x, file, line), 0))
+#define Dee_XDecref_unlikely_traced(x, file, line) (void)(!(x) || (Dee_Decref_unlikely_traced(x, file, line), 0))
+#define Dee_XDecrefNokill_traced(x, file, line)    (void)(!(x) || (Dee_DecrefNokill_traced(x, file, line), 0))
+#define Dee_Clear_traced(x, file, line)            (void)(Dee_Decref_traced(x, file, line), (x) = NULL)
+#define Dee_Clear_likely_traced(x, file, line)     (void)(Dee_Decref_likely_traced(x, file, line), (x) = NULL)
+#define Dee_Clear_unlikely_traced(x, file, line)   (void)(Dee_Decref_unlikely_traced(x, file, line), (x) = NULL)
+#define Dee_XClear_traced(x, file, line)           (void)(!(x) || (Dee_Decref_traced(x, file, line), (x) = NULL, 0))
+#define Dee_XClear_likely_traced(x, file, line)    (void)(!(x) || (Dee_Decref_likely_traced(x, file, line), (x) = NULL, 0))
+#define Dee_XClear_unlikely_traced(x, file, line)  (void)(!(x) || (Dee_Decref_unlikely_traced(x, file, line), (x) = NULL, 0))
+
 /* NOTE: `(Dee_)return_reference()' only evaluates `ob' _once_! */
 #define Dee_return_reference(ob)                                              \
 	do {                                                                      \
@@ -827,6 +868,241 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define return_reference_  Dee_return_reference_
 #endif /* DEE_SOURCE */
 
+
+
+
+/* Increment the reference counter of every object from `object_vector...+=object_count'
+ * @return: * : Always re-returns the pointer to `object_vector' */
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+(DCALL Dee_Increfv)(DeeObject *const *__restrict object_vector,
+                    size_t object_count);
+
+/* Decrement the reference counter of every object from `object_vector...+=object_count'
+ * @return: * : Always re-returns the pointer to `object_vector' */
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject **
+(DCALL Dee_Decrefv)(DREF DeeObject *const *__restrict object_vector,
+                    size_t object_count);
+
+/* Copy object pointers from `src' to `dst' and increment
+ * the reference counter of every object that got copied.
+ * @return: * : Always re-returns the pointer to `dst' */
+DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+(DCALL Dee_Movrefv)(/*out:ref*/ DeeObject **__restrict dst,
+                    /*in*/ DeeObject *const *__restrict src,
+                    size_t object_count);
+
+
+LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+(DCALL Dee_XIncrefv)(DeeObject * /*nullable*/ const *__restrict object_vector,
+                     size_t object_count) {
+	while (object_count--) {
+		DREF DeeObject *ob;
+		ob = object_vector[object_count];
+		Dee_XIncref_untraced(ob);
+	}
+	return (DREF DeeObject **)object_vector;
+}
+
+LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+(DCALL Dee_XDecrefv)(DeeObject * /*nullable*/ const *__restrict object_vector,
+                     size_t object_count) {
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob;
+		ob = object_vector[i];
+		Dee_XDecref_untraced(ob);
+	}
+	return (DREF DeeObject **)object_vector;
+}
+
+LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+(DCALL Dee_XMovrefv)(/*out:ref*/ DeeObject * /*nullable*/ *__restrict dst,
+                     /*in*/ DeeObject * /*nullable*/ const *__restrict src,
+                     size_t object_count) {
+	while (object_count--) {
+		DREF DeeObject *ob;
+		ob = src[object_count];
+		Dee_XIncref_untraced(ob);
+		dst[object_count] = ob;
+	}
+	return dst;
+}
+
+
+
+#if (!defined(CONFIG_INLINE_INCREFV) && \
+     !defined(CONFIG_NO_INLINE_INCREFV))
+#ifndef __OPTIMIZE_SIZE__
+#define CONFIG_INLINE_INCREFV 1
+#else /* !__OPTIMIZE_SIZE__ */
+#define CONFIG_NO_INLINE_INCREFV 1
+#endif /* __OPTIMIZE_SIZE__ */
+#endif /* !CONFIG_[NO_]INLINE_INCREFV */
+
+#ifdef __INTELLISENSE__
+#define Dee_Increfv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_Decrefv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_Movrefv_untraced(dst, src, object_count)       ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
+#elif defined(CONFIG_INLINE_INCREFV)
+#define Dee_Increfv_untraced(object_vector, object_count) \
+	Dee_Increfv_untraced((DeeObject **)(object_vector), object_count)
+LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+(DCALL Dee_Increfv_untraced)(DeeObject *const *__restrict object_vector,
+                             size_t object_count) {
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob;
+		ob = object_vector[i];
+		Dee_Incref_untraced(ob);
+	}
+	return (DREF DeeObject **)object_vector;
+}
+
+#define Dee_Decrefv_untraced(object_vector, object_count) \
+	Dee_Decrefv_untraced((DREF DeeObject *const *)(object_vector), object_count)
+LOCAL ATTR_RETNONNULL NONNULL((1)) DeeObject **
+(DCALL Dee_Decrefv_untraced)(DREF DeeObject *const *__restrict object_vector,
+                             size_t object_count) {
+	while (object_count--) {
+		DREF DeeObject *ob;
+		ob = object_vector[object_count];
+		Dee_Decref_untraced(ob);
+	}
+	return (DREF DeeObject **)object_vector;
+}
+
+#define Dee_Movrefv_untraced(dst, src, object_count) \
+	Dee_Movrefv_untraced((DeeObject **)(dst), (DeeObject *const *)(src), object_count)
+LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+(DCALL Dee_Movrefv_untraced)(/*out:ref*/ DeeObject **__restrict dst,
+                             /*in*/ DeeObject *const *__restrict src,
+                             size_t object_count) {
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob;
+		ob = src[i];
+		Dee_Incref_untraced(ob);
+		dst[i] = ob;
+	}
+	return dst;
+}
+#else /* CONFIG_INLINE_INCREFV */
+#define Dee_Increfv_untraced(object_vector, object_count) (Dee_Increfv)((DeeObject *const *)(object_vector), object_count)
+#define Dee_Decrefv_untraced(object_vector, object_count) (Dee_Decrefv)((DeeObject *const *)(object_vector), object_count)
+#define Dee_Movrefv_untraced(dst, src, object_count)      (Dee_Movrefv)((DeeObject **)(dst), (DeeObject *const *)(src), object_count)
+#endif /* !CONFIG_INLINE_INCREFV */
+
+
+#ifdef __INTELLISENSE__
+#define Dee_XIncrefv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_XDecrefv_untraced(object_vector, object_count)  ((void)(object_count), (DeeObject **)&Dee_REQUIRES_OBJECT(*(object_vector)))
+#define Dee_XMovrefv_untraced(dst, src, object_count)       ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)&Dee_REQUIRES_OBJECT(*(dst)))
+#else /* __INTELLISENSE__ */
+#define Dee_XIncrefv_untraced(object_vector, object_count) (Dee_XIncrefv)((DeeObject *const *)(object_vector), object_count)
+#define Dee_XDecrefv_untraced(object_vector, object_count) (Dee_XDecrefv)((DeeObject *const *)(object_vector), object_count)
+#define Dee_XMovrefv_untraced(dst, src, object_count)      (Dee_XMovrefv)((DeeObject **)(dst), (DeeObject *const *)(src), object_count)
+#endif /* !__INTELLISENSE__ */
+
+
+
+#ifdef CONFIG_TRACE_REFCHANGES
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **(DCALL Dee_Increfv_traced)(DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DeeObject **(DCALL Dee_Decrefv_traced)(DREF DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
+DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **(DCALL Dee_Movrefv_traced)(/*out:ref*/ DeeObject **__restrict dst, /*in*/ DeeObject *const *__restrict src, size_t object_count, char const *file, int line);
+#define Dee_Increfv(object_vector, object_count) Dee_Increfv_traced((DeeObject *const *)(object_vector), object_count, __FILE__, __LINE__)
+#define Dee_Decrefv(object_vector, object_count) Dee_Decrefv_traced((DeeObject *const *)(object_vector), object_count, __FILE__, __LINE__)
+#define Dee_Movrefv(dst, src, object_count)      Dee_Movrefv_traced((DeeObject **)(dst), (DeeObject *const *)(src), object_count, __FILE__, __LINE__)
+
+#define Dee_XIncrefv_traced(object_vector, object_count, file, line) \
+	Dee_XIncrefv_traced((DeeObject **)(object_vector), object_count, file, line)
+LOCAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject **
+(DCALL Dee_XIncrefv_traced)(DeeObject *const *__restrict object_vector,
+                            size_t object_count, char const *file, int line) {
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob;
+		ob = object_vector[i];
+		Dee_Incref_traced(ob, file, line);
+	}
+	return (DREF DeeObject **)object_vector;
+}
+
+#define Dee_XDecrefv_traced(object_vector, object_count, file, line) \
+	Dee_XDecrefv_traced((DREF DeeObject *const *)(object_vector), object_count, file, line)
+LOCAL ATTR_RETNONNULL NONNULL((1)) DeeObject **
+(DCALL Dee_XDecrefv_traced)(DREF DeeObject *const *__restrict object_vector,
+                             size_t object_count, char const *file, int line) {
+	while (object_count--) {
+		DREF DeeObject *ob;
+		ob = object_vector[object_count];
+		Dee_Decref_traced(ob, file, line);
+	}
+	return (DREF DeeObject **)object_vector;
+}
+
+#define Dee_XMovrefv_traced(dst, src, object_count, file, line) \
+	Dee_XMovrefv_traced((DeeObject **)(dst), (DeeObject *const *)(src), object_count, file, line)
+LOCAL ATTR_RETNONNULL NONNULL((1, 2)) DREF DeeObject **
+(DCALL Dee_XMovrefv_traced)(/*out:ref*/ DeeObject **__restrict dst,
+                             /*in*/ DeeObject *const *__restrict src,
+                             size_t object_count, char const *file, int line) {
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob;
+		ob = src[i];
+		Dee_Incref_traced(ob, file, line);
+		dst[i] = ob;
+	}
+	return dst;
+}
+#else /* CONFIG_TRACE_REFCHANGES */
+#define Dee_Increfv_traced(object_vector, object_count, file, line)  Dee_Increfv_untraced(object_vector, object_count)
+#define Dee_Decrefv_traced(object_vector, object_count, file, line)  Dee_Decrefv_untraced(object_vector, object_count)
+#define Dee_Movrefv_traced(dst, src, object_count, file, line)       Dee_Movrefv_untraced(dst, src, object_count)
+#define Dee_Increfv(object_vector, object_count)                     Dee_Increfv_untraced(object_vector, object_count)
+#define Dee_Decrefv(object_vector, object_count)                     Dee_Decrefv_untraced(object_vector, object_count)
+#define Dee_Movrefv(dst, src, object_count)                          Dee_Movrefv_untraced(dst, src, object_count)
+#define Dee_XIncrefv_traced(object_vector, object_count, file, line) Dee_XIncrefv_untraced(object_vector, object_count)
+#define Dee_XDecrefv_traced(object_vector, object_count, file, line) Dee_XDecrefv_untraced(object_vector, object_count)
+#define Dee_XMovrefv_traced(dst, src, object_count, file, line)      Dee_XMovrefv_untraced(dst, src, object_count)
+#define Dee_XIncrefv(object_vector, object_count)                    Dee_XIncrefv_untraced(object_vector, object_count)
+#define Dee_XDecrefv(object_vector, object_count)                    Dee_XDecrefv_untraced(object_vector, object_count)
+#define Dee_XMovrefv(dst, src, object_count)                         Dee_XMovrefv_untraced(dst, src, object_count)
+#endif /* !CONFIG_TRACE_REFCHANGES */
+
+/* The likely/unlikely annotations are currently ignored for these... */
+#define Dee_Decrefv_likely(object_vector, object_count)                       Dee_Decrefv(object_vector, object_count)
+#define Dee_Decrefv_unlikely(object_vector, object_count)                     Dee_Decrefv(object_vector, object_count)
+#define Dee_Decrefv_untraced_likely(object_vector, object_count)              Dee_Decrefv_untraced(object_vector, object_count)
+#define Dee_Decrefv_untraced_unlikely(object_vector, object_count)            Dee_Decrefv_untraced(object_vector, object_count)
+#define Dee_Decrefv_traced_likely(object_vector, object_count, file, line)    Dee_Decrefv_traced(object_vector, object_count, file, line)
+#define Dee_Decrefv_traced_unlikely(object_vector, object_count, file, line)  Dee_Decrefv_traced(object_vector, object_count, file, line)
+#define Dee_XDecrefv_likely(object_vector, object_count)                      Dee_XDecrefv(object_vector, object_count)
+#define Dee_XDecrefv_unlikely(object_vector, object_count)                    Dee_XDecrefv(object_vector, object_count)
+#define Dee_XDecrefv_untraced_likely(object_vector, object_count)             Dee_XDecrefv_untraced(object_vector, object_count)
+#define Dee_XDecrefv_untraced_unlikely(object_vector, object_count)           Dee_XDecrefv_untraced(object_vector, object_count)
+#define Dee_XDecrefv_traced_likely(object_vector, object_count, file, line)   Dee_XDecrefv_traced(object_vector, object_count, file, line)
+#define Dee_XDecrefv_traced_unlikely(object_vector, object_count, file, line) Dee_XDecrefv_traced(object_vector, object_count, file, line)
+
+/* same as above, but return a pointer to the end of `object_vector' / `dst' */
+#define Dee_Incprefv_untraced(object_vector, object_count)            (Dee_Increfv_untraced(object_vector, object_count) + (object_count))
+#define Dee_Decprefv_untraced(object_vector, object_count)            (Dee_Decrefv_untraced(object_vector, object_count) + (object_count))
+#define Dee_Movprefv_untraced(dst, src, object_count)                 (Dee_Movrefv_untraced(dst, src, object_count) + (object_count))
+#define Dee_Incprefv_traced(object_vector, object_count, file, line)  (Dee_Increfv_traced(object_vector, object_count, file, line) + (object_count))
+#define Dee_Decprefv_traced(object_vector, object_count, file, line)  (Dee_Decrefv_traced(object_vector, object_count, file, line) + (object_count))
+#define Dee_Movprefv_traced(dst, src, object_count, file, line)       (Dee_Movrefv_traced(dst, src, object_count, file, line) + (object_count))
+#define Dee_Incprefv(object_vector, object_count)                     (Dee_Increfv(object_vector, object_count) + (object_count))
+#define Dee_Decprefv(object_vector, object_count)                     (Dee_Decrefv(object_vector, object_count) + (object_count))
+#define Dee_Movprefv(dst, src, object_count)                          (Dee_Movrefv(dst, src, object_count) + (object_count))
+#define Dee_XIncprefv_untraced(object_vector, object_count)           (Dee_XIncrefv_untraced(object_vector, object_count) + (object_count))
+#define Dee_XDecprefv_untraced(object_vector, object_count)           (Dee_XDecrefv_untraced(object_vector, object_count) + (object_count))
+#define Dee_XMovprefv_untraced(dst, src, object_count)                (Dee_XMovrefv_untraced(dst, src, object_count) + (object_count))
+#define Dee_XIncprefv_traced(object_vector, object_count, file, line) (Dee_XIncrefv_traced(object_vector, object_count, file, line) + (object_count))
+#define Dee_XDecprefv_traced(object_vector, object_count, file, line) (Dee_XDecrefv_traced(object_vector, object_count, file, line) + (object_count))
+#define Dee_XMovprefv_traced(dst, src, object_count, file, line)      (Dee_XMovrefv_traced(dst, src, object_count, file, line) + (object_count))
+#define Dee_XIncprefv(object_vector, object_count)                    (Dee_XIncrefv(object_vector, object_count) + (object_count))
+#define Dee_XDecprefv(object_vector, object_count)                    (Dee_XDecrefv(object_vector, object_count) + (object_count))
+#define Dee_XMovprefv(dst, src, object_count)                         (Dee_XMovrefv(dst, src, object_count) + (object_count))
 
 
 /* Callback prototype for enumerating object attributes.
@@ -2322,6 +2598,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTuple
 
 /* Generate and return the hash of a given object. */
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
+DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hashv)(DeeObject *const *__restrict object_vector, size_t object_count);
 
 /* GC operator invocation. */
 DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_Visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg);
