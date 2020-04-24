@@ -267,15 +267,27 @@ function writePageHeader(fp: File, title: string) {
 		"<body>\r\n"
 		.format({ title });
 }
+
 function writePageFooter(fp) {
 	fp << "</body>\r\n</html>\r\n";
 }
-function escapeSpecialHtmlCharacters(text) {
+
+function escapeSpecialHtmlCharactersNoLf(text: string): string {
 	return text
 		.unifylines()
 		.replace("&", "&amp;")
 		.replace("<", "&lt;")
-		.replace(">", "&gt;")
+		.replace(">", "&gt;");
+}
+
+function escapeSpecialHtmlCharacters(text: string): string {
+	return escapeSpecialHtmlCharactersNoLf(text)
+		.replace("\n", "<br />\r\n");
+}
+
+function escapeSpecialHtmlCharactersWithSpace(text: string): string {
+	return escapeSpecialHtmlCharactersNoLf(text)
+		.replace(" ", "&nbsp;")
 		.replace("\n", "<br />\r\n");
 }
 
@@ -487,8 +499,7 @@ not_a_string:
 @@Print deemon code with syntax highlighting
 function doPrintDeemonCodeBlock(fp: File, body: string) {
 	for (local cssClass, text: splitDeemonSourceCodeTokens(body)) {
-		text = text.replace(" ", "&nbsp;");
-		text = escapeSpecialHtmlCharacters(text);
+		text = escapeSpecialHtmlCharactersWithSpace(text);
 		if (cssClass !is none) {
 			fp << "<var class=\"" << cssClass << "\">" << text << "</var>";
 		} else {
