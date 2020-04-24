@@ -28,6 +28,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -38,7 +39,6 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/atomic.h>
@@ -50,27 +50,6 @@ STATIC_ASSERT_MSG(sizeof(char) == sizeof(uint8_t),"Probably won't work...");
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_1BYTE) == 1);
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_2BYTE) == 2);
 STATIC_ASSERT(STRING_SIZEOF_WIDTH(STRING_WIDTH_4BYTE) == 4);
-
-
-#ifndef __USE_KOS
-#define memcpyb(dst,src,n)             memcpy(dst,src,n)
-#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
-#ifdef __x86_64__
-extern void __movsw(unsigned short *, unsigned short const *, unsigned __int64);
-extern void __movsd(unsigned long *, unsigned long const *, unsigned __int64);
-#else /* __x86_64__ */
-extern void __movsw(unsigned short *, unsigned short const *, unsigned long);
-extern void __movsd(unsigned long *, unsigned long const *, unsigned long);
-#endif /* !__x86_64__ */
-#pragma intrinsic(__movsw)
-#pragma intrinsic(__movsd)
-#define memcpyw(dst,src,n) __movsw((unsigned short *)(dst),(unsigned short const *)(src),(size_t)(n))
-#define memcpyl(dst,src,n) __movsd((unsigned long *)(dst),(unsigned long const *)(src),(size_t)(n))
-#else /* _MSC_VER && (__i386__ || __x86_64__) */
-#define memcpyw(dst,src,n)             memcpy(dst,src,(n)*2)
-#define memcpyl(dst,src,n)             memcpy(dst,src,(n)*4)
-#endif /* !_MSC_VER || (!__i386__ && !__x86_64__) */
-#endif /* __USE_KOS */
 
 
 PUBLIC uint8_t const Dee_utf8_sequence_len[256] = {

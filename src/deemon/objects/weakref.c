@@ -233,9 +233,8 @@ ob_weakref_hash(WeakRef *__restrict self) {
 }
 
 #define DEFINE_WEAKREF_CMP(name, op)                                         \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                    \
-	name(WeakRef *self,                                                      \
-	     WeakRef *other) {                                                   \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                    \
+	name(WeakRef *self, WeakRef *other) {                                    \
 		if (DeeNone_Check(other))                                            \
 			return_bool((void *)LAZY_GETOBJ(self) op(void *) NULL);          \
 		if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeWeakRef_Type)) \

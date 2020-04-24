@@ -25,11 +25,9 @@
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/error.h>
-
-#include <string.h>
+#include <deemon/system-features.h>
 
 DECL_BEGIN
-
 
 
 struct late_cmd_option {
@@ -112,7 +110,7 @@ find_short_option(struct cmd_option *__restrict options,
 	for (; !CMD_OPTION_ISSENTINEL(options); ++options) {
 		if ((options->co_flags & req_mask) != req_flags)
 			continue; /* Invalid flags. */
-		if (memcmp(options->co_shortnam, name, name_len * sizeof(char)))
+		if (memcmp(options->co_shortnam, name, name_len * sizeof(char)) != 0)
 			continue; /* Different name. */
 		if (options->co_shortnam[name_len])
 			continue; /* Name too long. */
@@ -134,7 +132,7 @@ find_long_option(struct cmd_option *__restrict options,
 			continue; /* Invalid flags. */
 		if (!options->co_longname)
 			continue; /* No long name available. */
-		if (memcmp(options->co_longname, name, name_len * sizeof(char)))
+		if (memcmp(options->co_longname, name, name_len * sizeof(char)) != 0)
 			continue; /* Different name. */
 		if (options->co_longname[name_len])
 			continue; /* Name too long. */
@@ -284,7 +282,7 @@ has_opt:
 				for (dst = cmdline, i = 0; i < (unsigned int)argc; ++i) {
 					size_t len = strlen(argv[i]);
 					/* Copy the argument. */
-					memcpy(dst, argv[i], len * sizeof(char));
+					memcpyc(dst, argv[i], len, sizeof(char));
 					dst += len;
 					*dst++ = ' ';
 				}
@@ -323,9 +321,11 @@ has_opt:
 				if (iter[0] == '\\' && iter != argend - 1 && iter[1] == ',') {
 					/* Decode an escaped comma. */
 					--argend;
-					memmove(iter, iter + 1, (size_t)(argend - iter)); /* Delete the backslash. */
-					++iter;                                           /* Skip the comma. */
-					continue;                                         /* Continue parsing. */
+					memmovedownc(iter, iter + 1,
+					             (size_t)(argend - iter),
+					             sizeof(char)); /* Delete the backslash. */
+					++iter;                     /* Skip the comma. */
+					continue;                   /* Continue parsing. */
 				}
 				if (*iter == ',') {
 					/* Argument separator (split argument list). */

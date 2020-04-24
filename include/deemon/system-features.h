@@ -22,6 +22,7 @@
 
 #include "api.h"
 
+#include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
 #include <stddef.h>
@@ -98,6 +99,9 @@ function header_nostdinc(name, default_requirements = "") {
 function header(name, default_requirements = "") {
 	known_headers.append(name);
 	header_nostdinc(name, default_requirements);
+}
+function sizeof(name) {
+	// CONFIG_SIZEOF_ + name.upper()
 }
 
 #define var      func
@@ -714,8 +718,10 @@ functest('_stricmp("a", "A")', msvc);
 functest('stricmp("a", "A")');
 functest('strcasecmp("a", "A")', "defined(__USE_KOS)");
 
+func("memchr", stdc, test: "extern char *buf; void *p = memchr(buf, '!', 123); return p != NULL;");
 func("memrchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = memrchr(buf, '!', 123); return p != NULL;");
 func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawmemchr(buf, '!'); return p == buf;");
+functest('strlen("foo")', stdc);
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
 // NOTE: The GNU-variant of memmem() returns the start of the haystack
@@ -733,6 +739,48 @@ functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || 
 (func)("memrmem", "defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
 (func)("memcasemem", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
 (func)("memcasermem", "defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+
+(func)("memmemw", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memmeml", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memmemq", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memrmemw", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memrmeml", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memrmemq", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+
+func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(a, b, 16) == a;");
+func("memmove", stdc, test: "extern void *a; extern void const *b; return memmove(a, b, 16) == a;");
+func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
+
+func("memcpyc", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyc(a, b, 16, sizeof(char)); return 0;");
+func("memcpyw", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyw(a, b, 16); return 0;");
+func("memcpyl", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyl(a, b, 16); return 0;");
+func("memcpyq", "defined(__USE_KOS)", test: "extern char *a, *b; memcpyq(a, b, 16); return 0;");
+func("memmovec", "defined(__USE_KOS)", test: "extern char *a, *b; memmovec(a, b, 16, sizeof(char)); return 0;");
+func("memmovew", "defined(__USE_KOS)", test: "extern char *a, *b; memmovew(a, b, 16); return 0;");
+func("memmovel", "defined(__USE_KOS)", test: "extern char *a, *b; memmovel(a, b, 16); return 0;");
+func("memmoveq", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveq(a, b, 16); return 0;");
+func("memmoveup", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveup(a, b, 16); return 0;");
+func("memmoveupc", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupc(a, b, 16, sizeof(char)); return 0;");
+func("memmoveupw", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupw(a, b, 16); return 0;");
+func("memmoveupl", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupl(a, b, 16); return 0;");
+func("memmoveupq", "defined(__USE_KOS)", test: "extern char *a, *b; memmoveupq(a, b, 16); return 0;");
+func("memmovedown", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedown(a, b, 16); return 0;");
+func("memmovedownc", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownc(a, b, 16, sizeof(char)); return 0;");
+func("memmovedownw", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownw(a, b, 16); return 0;");
+func("memmovedownl", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownl(a, b, 16); return 0;");
+func("memmovedownq", "defined(__USE_KOS)", test: "extern char *a, *b; memmovedownq(a, b, 16); return 0;");
+func("memsetw", "defined(__USE_KOS)", test: "extern char *a; memsetw(a, 0xcc, 16); return 0;");
+func("memsetl", "defined(__USE_KOS)", test: "extern char *a; memsetl(a, 0xcc, 16); return 0;");
+func("memsetq", "defined(__USE_KOS)", test: "extern char *a; memsetq(a, 0xcc, 16); return 0;");
+func("memchrw", "defined(__USE_KOS)", test: "extern char *a; memchrw(a, 0xcc, 16); return 0;");
+func("memchrl", "defined(__USE_KOS)", test: "extern char *a; memchrl(a, 0xcc, 16); return 0;");
+func("memchrq", "defined(__USE_KOS)", test: "extern char *a; memchrq(a, 0xcc, 16); return 0;");
+func("memrchrw", "defined(__USE_KOS)", test: "extern char *a; memrchrw(a, 0xcc, 16); return 0;");
+func("memrchrl", "defined(__USE_KOS)", test: "extern char *a; memrchrl(a, 0xcc, 16); return 0;");
+func("memrchrq", "defined(__USE_KOS)", test: "extern char *a; memrchrq(a, 0xcc, 16); return 0;");
+func("memcmpw", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpw(a, b, 16) == 0;");
+func("memcmpl", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpl(a, b, 16) == 0;");
+func("memcmpq", "defined(__USE_KOS)", test: "extern void const *a, *b; return memcmpq(a, b, 16) == 0;");
 
 func("rawmemrchr", "defined(__USE_KOS)", test: "extern char *buf; void *p = rawmemrchr(buf, '!'); return p == buf - 1;");
 func("memend", "defined(__USE_KOS)", test: "extern char *buf; void *p = memend(buf, '!', 123); return p == buf;");
@@ -796,6 +844,8 @@ constant("HW_NCPU");
 
 functest("alloca()", "defined(CONFIG_HAVE_ALLOCA_H)");
 functest("_alloca()", msvc);
+
+sizeof("off_t");
 
 //END:FEATURES
 
@@ -5310,6 +5360,12 @@ functest("_alloca()", msvc);
 #define CONFIG_HAVE_strcasecmp 1
 #endif
 
+#ifdef CONFIG_NO_memchr
+#undef CONFIG_HAVE_memchr
+#else
+#define CONFIG_HAVE_memchr 1
+#endif
+
 #ifdef CONFIG_NO_memrchr
 #undef CONFIG_HAVE_memrchr
 #elif !defined(CONFIG_HAVE_memrchr) && \
@@ -5322,6 +5378,12 @@ functest("_alloca()", msvc);
 #elif !defined(CONFIG_HAVE_rawmemchr) && \
       (defined(rawmemchr) || defined(__rawmemchr_defined) || defined(__USE_GNU))
 #define CONFIG_HAVE_rawmemchr 1
+#endif
+
+#ifdef CONFIG_NO_strlen
+#undef CONFIG_HAVE_strlen
+#else
+#define CONFIG_HAVE_strlen 1
 #endif
 
 #ifdef CONFIG_NO_strnlen
@@ -5358,6 +5420,276 @@ functest("_alloca()", msvc);
 #elif !defined(CONFIG_HAVE_memcasermem) && \
       (defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
 #define CONFIG_HAVE_memcasermem 1
+#endif
+
+#ifdef CONFIG_NO_memmemw
+#undef CONFIG_HAVE_memmemw
+#elif !defined(CONFIG_HAVE_memmemw) && \
+      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memmemw 1
+#endif
+
+#ifdef CONFIG_NO_memmeml
+#undef CONFIG_HAVE_memmeml
+#elif !defined(CONFIG_HAVE_memmeml) && \
+      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memmeml 1
+#endif
+
+#ifdef CONFIG_NO_memmemq
+#undef CONFIG_HAVE_memmemq
+#elif !defined(CONFIG_HAVE_memmemq) && \
+      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memmemq 1
+#endif
+
+#ifdef CONFIG_NO_memrmemw
+#undef CONFIG_HAVE_memrmemw
+#elif !defined(CONFIG_HAVE_memrmemw) && \
+      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memrmemw 1
+#endif
+
+#ifdef CONFIG_NO_memrmeml
+#undef CONFIG_HAVE_memrmeml
+#elif !defined(CONFIG_HAVE_memrmeml) && \
+      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memrmeml 1
+#endif
+
+#ifdef CONFIG_NO_memrmemq
+#undef CONFIG_HAVE_memrmemq
+#elif !defined(CONFIG_HAVE_memrmemq) && \
+      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#define CONFIG_HAVE_memrmemq 1
+#endif
+
+#ifdef CONFIG_NO_memcpy
+#undef CONFIG_HAVE_memcpy
+#else
+#define CONFIG_HAVE_memcpy 1
+#endif
+
+#ifdef CONFIG_NO_memmove
+#undef CONFIG_HAVE_memmove
+#else
+#define CONFIG_HAVE_memmove 1
+#endif
+
+#ifdef CONFIG_NO_memcmp
+#undef CONFIG_HAVE_memcmp
+#else
+#define CONFIG_HAVE_memcmp 1
+#endif
+
+#ifdef CONFIG_NO_memcpyc
+#undef CONFIG_HAVE_memcpyc
+#elif !defined(CONFIG_HAVE_memcpyc) && \
+      (defined(memcpyc) || defined(__memcpyc_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcpyc 1
+#endif
+
+#ifdef CONFIG_NO_memcpyw
+#undef CONFIG_HAVE_memcpyw
+#elif !defined(CONFIG_HAVE_memcpyw) && \
+      (defined(memcpyw) || defined(__memcpyw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcpyw 1
+#endif
+
+#ifdef CONFIG_NO_memcpyl
+#undef CONFIG_HAVE_memcpyl
+#elif !defined(CONFIG_HAVE_memcpyl) && \
+      (defined(memcpyl) || defined(__memcpyl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcpyl 1
+#endif
+
+#ifdef CONFIG_NO_memcpyq
+#undef CONFIG_HAVE_memcpyq
+#elif !defined(CONFIG_HAVE_memcpyq) && \
+      (defined(memcpyq) || defined(__memcpyq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcpyq 1
+#endif
+
+#ifdef CONFIG_NO_memmovec
+#undef CONFIG_HAVE_memmovec
+#elif !defined(CONFIG_HAVE_memmovec) && \
+      (defined(memmovec) || defined(__memmovec_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovec 1
+#endif
+
+#ifdef CONFIG_NO_memmovew
+#undef CONFIG_HAVE_memmovew
+#elif !defined(CONFIG_HAVE_memmovew) && \
+      (defined(memmovew) || defined(__memmovew_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovew 1
+#endif
+
+#ifdef CONFIG_NO_memmovel
+#undef CONFIG_HAVE_memmovel
+#elif !defined(CONFIG_HAVE_memmovel) && \
+      (defined(memmovel) || defined(__memmovel_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovel 1
+#endif
+
+#ifdef CONFIG_NO_memmoveq
+#undef CONFIG_HAVE_memmoveq
+#elif !defined(CONFIG_HAVE_memmoveq) && \
+      (defined(memmoveq) || defined(__memmoveq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmoveq 1
+#endif
+
+#ifdef CONFIG_NO_memmoveup
+#undef CONFIG_HAVE_memmoveup
+#elif !defined(CONFIG_HAVE_memmoveup) && \
+      (defined(memmoveup) || defined(__memmoveup_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmoveup 1
+#endif
+
+#ifdef CONFIG_NO_memmoveupc
+#undef CONFIG_HAVE_memmoveupc
+#elif !defined(CONFIG_HAVE_memmoveupc) && \
+      (defined(memmoveupc) || defined(__memmoveupc_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmoveupc 1
+#endif
+
+#ifdef CONFIG_NO_memmoveupw
+#undef CONFIG_HAVE_memmoveupw
+#elif !defined(CONFIG_HAVE_memmoveupw) && \
+      (defined(memmoveupw) || defined(__memmoveupw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmoveupw 1
+#endif
+
+#ifdef CONFIG_NO_memmoveupl
+#undef CONFIG_HAVE_memmoveupl
+#elif !defined(CONFIG_HAVE_memmoveupl) && \
+      (defined(memmoveupl) || defined(__memmoveupl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmoveupl 1
+#endif
+
+#ifdef CONFIG_NO_memmoveupq
+#undef CONFIG_HAVE_memmoveupq
+#elif !defined(CONFIG_HAVE_memmoveupq) && \
+      (defined(memmoveupq) || defined(__memmoveupq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmoveupq 1
+#endif
+
+#ifdef CONFIG_NO_memmovedown
+#undef CONFIG_HAVE_memmovedown
+#elif !defined(CONFIG_HAVE_memmovedown) && \
+      (defined(memmovedown) || defined(__memmovedown_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovedown 1
+#endif
+
+#ifdef CONFIG_NO_memmovedownc
+#undef CONFIG_HAVE_memmovedownc
+#elif !defined(CONFIG_HAVE_memmovedownc) && \
+      (defined(memmovedownc) || defined(__memmovedownc_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovedownc 1
+#endif
+
+#ifdef CONFIG_NO_memmovedownw
+#undef CONFIG_HAVE_memmovedownw
+#elif !defined(CONFIG_HAVE_memmovedownw) && \
+      (defined(memmovedownw) || defined(__memmovedownw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovedownw 1
+#endif
+
+#ifdef CONFIG_NO_memmovedownl
+#undef CONFIG_HAVE_memmovedownl
+#elif !defined(CONFIG_HAVE_memmovedownl) && \
+      (defined(memmovedownl) || defined(__memmovedownl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovedownl 1
+#endif
+
+#ifdef CONFIG_NO_memmovedownq
+#undef CONFIG_HAVE_memmovedownq
+#elif !defined(CONFIG_HAVE_memmovedownq) && \
+      (defined(memmovedownq) || defined(__memmovedownq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memmovedownq 1
+#endif
+
+#ifdef CONFIG_NO_memsetw
+#undef CONFIG_HAVE_memsetw
+#elif !defined(CONFIG_HAVE_memsetw) && \
+      (defined(memsetw) || defined(__memsetw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memsetw 1
+#endif
+
+#ifdef CONFIG_NO_memsetl
+#undef CONFIG_HAVE_memsetl
+#elif !defined(CONFIG_HAVE_memsetl) && \
+      (defined(memsetl) || defined(__memsetl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memsetl 1
+#endif
+
+#ifdef CONFIG_NO_memsetq
+#undef CONFIG_HAVE_memsetq
+#elif !defined(CONFIG_HAVE_memsetq) && \
+      (defined(memsetq) || defined(__memsetq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memsetq 1
+#endif
+
+#ifdef CONFIG_NO_memchrw
+#undef CONFIG_HAVE_memchrw
+#elif !defined(CONFIG_HAVE_memchrw) && \
+      (defined(memchrw) || defined(__memchrw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memchrw 1
+#endif
+
+#ifdef CONFIG_NO_memchrl
+#undef CONFIG_HAVE_memchrl
+#elif !defined(CONFIG_HAVE_memchrl) && \
+      (defined(memchrl) || defined(__memchrl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memchrl 1
+#endif
+
+#ifdef CONFIG_NO_memchrq
+#undef CONFIG_HAVE_memchrq
+#elif !defined(CONFIG_HAVE_memchrq) && \
+      (defined(memchrq) || defined(__memchrq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memchrq 1
+#endif
+
+#ifdef CONFIG_NO_memrchrw
+#undef CONFIG_HAVE_memrchrw
+#elif !defined(CONFIG_HAVE_memrchrw) && \
+      (defined(memrchrw) || defined(__memrchrw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memrchrw 1
+#endif
+
+#ifdef CONFIG_NO_memrchrl
+#undef CONFIG_HAVE_memrchrl
+#elif !defined(CONFIG_HAVE_memrchrl) && \
+      (defined(memrchrl) || defined(__memrchrl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memrchrl 1
+#endif
+
+#ifdef CONFIG_NO_memrchrq
+#undef CONFIG_HAVE_memrchrq
+#elif !defined(CONFIG_HAVE_memrchrq) && \
+      (defined(memrchrq) || defined(__memrchrq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memrchrq 1
+#endif
+
+#ifdef CONFIG_NO_memcmpw
+#undef CONFIG_HAVE_memcmpw
+#elif !defined(CONFIG_HAVE_memcmpw) && \
+      (defined(memcmpw) || defined(__memcmpw_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcmpw 1
+#endif
+
+#ifdef CONFIG_NO_memcmpl
+#undef CONFIG_HAVE_memcmpl
+#elif !defined(CONFIG_HAVE_memcmpl) && \
+      (defined(memcmpl) || defined(__memcmpl_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcmpl 1
+#endif
+
+#ifdef CONFIG_NO_memcmpq
+#undef CONFIG_HAVE_memcmpq
+#elif !defined(CONFIG_HAVE_memcmpq) && \
+      (defined(memcmpq) || defined(__memcmpq_defined) || defined(__USE_KOS))
+#define CONFIG_HAVE_memcmpq 1
 #endif
 
 #ifdef CONFIG_NO_rawmemrchr
@@ -5783,336 +6115,403 @@ functest("_alloca()", msvc);
 /* Substitute some known function aliases */
 #if defined(CONFIG_HAVE__exit) && !defined(CONFIG_HAVE__Exit)
 #define CONFIG_HAVE__Exit 1
+#undef _Exit
 #define _Exit(exit_code) _exit(exit_code)
 #endif /* _Exit = _exit */
 
 #if defined(CONFIG_HAVE__execv) && !defined(CONFIG_HAVE_execv)
 #define CONFIG_HAVE_execv 1
+#undef execv
 #define execv _execv
 #endif /* execv = _execv */
 
 #if defined(CONFIG_HAVE__execve) && !defined(CONFIG_HAVE_execve)
 #define CONFIG_HAVE_execve 1
+#undef execve
 #define execve _execve
 #endif /* execve = _execve */
 
 #if defined(CONFIG_HAVE__execvp) && !defined(CONFIG_HAVE_execvp)
 #define CONFIG_HAVE_execvp 1
+#undef execvp
 #define execvp _execvp
 #endif /* execvp = _execvp */
 
 #if defined(CONFIG_HAVE__execvpe) && !defined(CONFIG_HAVE_execvpe)
 #define CONFIG_HAVE_execvpe 1
+#undef execvpe
 #define execvpe _execvpe
 #endif /* execvpe = _execvpe */
 
 #if defined(CONFIG_HAVE__wexecv) && !defined(CONFIG_HAVE_wexecv)
 #define CONFIG_HAVE_wexecv 1
+#undef wexecv
 #define wexecv _wexecv
 #endif /* wexecv = _wexecv */
 
 #if defined(CONFIG_HAVE__wexecve) && !defined(CONFIG_HAVE_wexecve)
 #define CONFIG_HAVE_wexecve 1
+#undef wexecve
 #define wexecve _wexecve
 #endif /* wexecve = _wexecve */
 
 #if defined(CONFIG_HAVE__wexecvp) && !defined(CONFIG_HAVE_wexecvp)
 #define CONFIG_HAVE_wexecvp 1
+#undef wexecvp
 #define wexecvp _wexecvp
 #endif /* wexecvp = _wexecvp */
 
 #if defined(CONFIG_HAVE__wexecvpe) && !defined(CONFIG_HAVE_wexecvpe)
 #define CONFIG_HAVE_wexecvpe 1
+#undef wexecvpe
 #define wexecvpe _wexecvpe
 #endif /* wexecvpe = _wexecvpe */
 
 #if defined(CONFIG_HAVE__spawnv) && !defined(CONFIG_HAVE_spawnv)
 #define CONFIG_HAVE_spawnv 1
+#undef spawnv
 #define spawnv _spawnv
 #endif /* spawnv = _spawnv */
 
 #if defined(CONFIG_HAVE__spawnve) && !defined(CONFIG_HAVE_spawnve)
 #define CONFIG_HAVE_spawnve 1
+#undef spawnve
 #define spawnve _spawnve
 #endif /* spawnve = _spawnve */
 
 #if defined(CONFIG_HAVE__spawnvp) && !defined(CONFIG_HAVE_spawnvp)
 #define CONFIG_HAVE_spawnvp 1
+#undef spawnvp
 #define spawnvp _spawnvp
 #endif /* spawnvp = _spawnvp */
 
 #if defined(CONFIG_HAVE__spawnvpe) && !defined(CONFIG_HAVE_spawnvpe)
 #define CONFIG_HAVE_spawnvpe 1
+#undef spawnvpe
 #define spawnvpe _spawnvpe
 #endif /* spawnvpe = _spawnvpe */
 
 #if defined(CONFIG_HAVE__wspawnv) && !defined(CONFIG_HAVE_wspawnv)
 #define CONFIG_HAVE_wspawnv 1
+#undef wspawnv
 #define wspawnv _wspawnv
 #endif /* wspawnv = _wspawnv */
 
 #if defined(CONFIG_HAVE__wspawnve) && !defined(CONFIG_HAVE_wspawnve)
 #define CONFIG_HAVE_wspawnve 1
+#undef wspawnve
 #define wspawnve _wspawnve
 #endif /* wspawnve = _wspawnve */
 
 #if defined(CONFIG_HAVE__wspawnvp) && !defined(CONFIG_HAVE_wspawnvp)
 #define CONFIG_HAVE_wspawnvp 1
+#undef wspawnvp
 #define wspawnvp _wspawnvp
 #endif /* wspawnvp = _wspawnvp */
 
 #if defined(CONFIG_HAVE__wspawnvpe) && !defined(CONFIG_HAVE_wspawnvpe)
 #define CONFIG_HAVE_wspawnvpe 1
+#undef wspawnvpe
 #define wspawnvpe _wspawnvpe
 #endif /* wspawnvpe = _wspawnvpe */
 
 #if defined(CONFIG_HAVE__wstat) && !defined(CONFIG_HAVE_wstat)
 #define CONFIG_HAVE_wstat 1
+#undef wstat
 #define wstat _wstat
 #endif /* wstat = _wstat */
 
 #if defined(CONFIG_HAVE__wstat64) && !defined(CONFIG_HAVE_wstat64)
 #define CONFIG_HAVE_wstat64 1
+#undef wstat64
 #define wstat64 _wstat64
 #endif /* wstat64 = _wstat64 */
 
 #if defined(CONFIG_HAVE__wlstat) && !defined(CONFIG_HAVE_wlstat)
 #define CONFIG_HAVE_wlstat 1
+#undef wlstat
 #define wlstat _wlstat
 #endif /* wlstat = _wlstat */
 
 #if defined(CONFIG_HAVE__wlstat64) && !defined(CONFIG_HAVE_wlstat64)
 #define CONFIG_HAVE_wlstat64 1
+#undef wlstat64
 #define wlstat64 _wlstat64
 #endif /* wlstat64 = _wlstat64 */
 
 #if defined(CONFIG_HAVE__cwait) && !defined(CONFIG_HAVE_cwait)
 #define CONFIG_HAVE_cwait 1
+#undef cwait
 #define cwait _cwait
 #endif /* cwait = _cwait */
 
 #if defined(CONFIG_HAVE__wsystem) && !defined(CONFIG_HAVE_wsystem)
 #define CONFIG_HAVE_wsystem 1
+#undef wsystem
 #define wsystem _wsystem
 #endif /* wsystem = _wsystem */
 
 #if defined(CONFIG_HAVE__open) && !defined(CONFIG_HAVE_open)
 #define CONFIG_HAVE_open 1
+#undef open
 #define open _open
 #endif /* open = _open */
 
 #if defined(CONFIG_HAVE__creat) && !defined(CONFIG_HAVE_creat)
 #define CONFIG_HAVE_creat 1
+#undef creat
 #define creat _creat
 #endif /* creat = _creat */
 
 #if defined(CONFIG_HAVE__chmod) && !defined(CONFIG_HAVE_chmod)
 #define CONFIG_HAVE_chmod 1
+#undef chmod
 #define chmod _chmod
 #endif /* chmod = _chmod */
 
 #if defined(CONFIG_HAVE__unlink) && !defined(CONFIG_HAVE_unlink)
 #define CONFIG_HAVE_unlink 1
+#undef unlink
 #define unlink _unlink
 #endif /* unlink = _unlink */
 
 #if defined(CONFIG_HAVE__wunlink) && !defined(CONFIG_HAVE_wunlink)
 #define CONFIG_HAVE_wunlink 1
+#undef wunlink
 #define wunlink _wunlink
 #endif /* wunlink = _wunlink */
 
 #if defined(CONFIG_HAVE__rmdir) && !defined(CONFIG_HAVE_rmdir)
 #define CONFIG_HAVE_rmdir 1
+#undef rmdir
 #define rmdir _rmdir
 #endif /* rmdir = _rmdir */
 
 #if defined(CONFIG_HAVE__wrmdir) && !defined(CONFIG_HAVE_wrmdir)
 #define CONFIG_HAVE_wrmdir 1
+#undef wrmdir
 #define wrmdir _wrmdir
 #endif /* wrmdir = _wrmdir */
 
 #if defined(CONFIG_HAVE__remove) && !defined(CONFIG_HAVE_remove)
 #define CONFIG_HAVE_remove 1
+#undef remove
 #define remove _remove
 #endif /* remove = _remove */
 
 #if defined(CONFIG_HAVE__wremove) && !defined(CONFIG_HAVE_wremove)
 #define CONFIG_HAVE_wremove 1
+#undef wremove
 #define wremove _wremove
 #endif /* wremove = _wremove */
 
 #if defined(CONFIG_HAVE__rename) && !defined(CONFIG_HAVE_rename)
 #define CONFIG_HAVE_rename 1
+#undef rename
 #define rename _rename
 #endif /* rename = _rename */
 
 #if defined(CONFIG_HAVE__wrename) && !defined(CONFIG_HAVE_wrename)
 #define CONFIG_HAVE_wrename 1
+#undef wrename
 #define wrename _wrename
 #endif /* wrename = _wrename */
 
 #if defined(CONFIG_HAVE__wopen) && !defined(CONFIG_HAVE_wopen)
 #define CONFIG_HAVE_wopen 1
+#undef wopen
 #define wopen _wopen
 #endif /* wopen = _wopen */
 
 #if defined(CONFIG_HAVE__read) && !defined(CONFIG_HAVE_read)
 #define CONFIG_HAVE_read 1
+#undef read
 #define read(fd, buf, bufsize) ((Dee_ssize_t)_read(fd, buf, (unsigned int)(bufsize)))
 #endif /* read = _read */
 
 #if defined(CONFIG_HAVE__write) && !defined(CONFIG_HAVE_write)
 #define CONFIG_HAVE_write 1
+#undef write
 #define write(fd, buf, bufsize) ((Dee_ssize_t)_write(fd, buf, (unsigned int)(bufsize)))
 #endif /* write = _write */
 
 #if defined(CONFIG_HAVE__lseek) && !defined(CONFIG_HAVE_lseek)
 #define CONFIG_HAVE_lseek 1
+#undef lseek
 #define lseek _lseek
 #endif /* lseek = _lseek */
 
 #if defined(CONFIG_HAVE__lseeki64) && !defined(CONFIG_HAVE_lseek64)
 #define CONFIG_HAVE_lseek64 1
+#undef lseek64
 #define lseek64 _lseeki64
 #endif /* lseek64 = _lseeki64 */
 
 #if defined(CONFIG_HAVE__lseek64) && !defined(CONFIG_HAVE_lseek64)
 #define CONFIG_HAVE_lseek64 1
+#undef lseek64
 #define lseek64 _lseek64
 #endif /* lseek64 = _lseek64 */
 
 #if defined(CONFIG_HAVE__close) && !defined(CONFIG_HAVE_close)
 #define CONFIG_HAVE_close 1
+#undef close
 #define close _close
 #endif /* close = _close */
 
 #if defined(CONFIG_HAVE__commit) && !defined(CONFIG_HAVE_fsync)
 #define CONFIG_HAVE_fsync 1
+#undef fsync
 #define fsync _commit
 #endif /* fsync = _commit */
 
 #if defined(CONFIG_HAVE__chsize) && !defined(CONFIG_HAVE_ftruncate)
 #define CONFIG_HAVE_ftruncate 1
+#undef ftruncate
 #define ftruncate _chsize
 #endif /* ftruncate = _chsize */
 
 #if defined(CONFIG_HAVE__chsize_s) && !defined(CONFIG_HAVE_ftruncate64)
 #define CONFIG_HAVE_ftruncate64 1
+#undef ftruncate64
 #define ftruncate64 _chsize_s
 #endif /* ftruncate64 = _chsize_s */
 
 #if defined(CONFIG_HAVE__chdir) && !defined(CONFIG_HAVE_chdir)
 #define CONFIG_HAVE_chdir 1
+#undef chdir
 #define chdir _chdir
 #endif /* chdir = _chdir */
 
 #if defined(CONFIG_HAVE__wchdir) && !defined(CONFIG_HAVE_wchdir)
 #define CONFIG_HAVE_wchdir 1
+#undef wchdir
 #define wchdir _wchdir
 #endif /* wchdir = _wchdir */
 
 #if defined(CONFIG_HAVE__getpid) && !defined(CONFIG_HAVE_getpid)
 #define CONFIG_HAVE_getpid 1
+#undef getpid
 #define getpid _getpid
 #endif /* getpid = _getpid */
 
 #if defined(CONFIG_HAVE__umask) && !defined(CONFIG_HAVE_umask)
 #define CONFIG_HAVE_umask 1
+#undef umask
 #define umask _umask
 #endif /* umask = _umask */
 
 #if defined(CONFIG_HAVE__dup) && !defined(CONFIG_HAVE_dup)
 #define CONFIG_HAVE_dup 1
+#undef dup
 #define dup _dup
 #endif /* dup = _dup */
 
 #if defined(CONFIG_HAVE__dup2) && !defined(CONFIG_HAVE_dup2)
 #define CONFIG_HAVE_dup2 1
+#undef dup2
 #define dup2 _dup2
 #endif /* dup2 = _dup2 */
 
 #if defined(CONFIG_HAVE__isatty) && !defined(CONFIG_HAVE_isatty)
 #define CONFIG_HAVE_isatty 1
+#undef isatty
 #define isatty _isatty
 #endif /* isatty = _isatty */
 
 #if defined(CONFIG_HAVE__getcwd) && !defined(CONFIG_HAVE_getcwd)
 #define CONFIG_HAVE_getcwd 1
+#undef getcwd
 #define getcwd _getcwd
 #endif /* getcwd = _getcwd */
 
 #if defined(CONFIG_HAVE__wgetcwd) && !defined(CONFIG_HAVE_wgetcwd)
 #define CONFIG_HAVE_wgetcwd 1
+#undef wgetcwd
 #define wgetcwd _wgetcwd
 #endif /* wgetcwd = _wgetcwd */
 
 #if defined(CONFIG_HAVE__access) && !defined(CONFIG_HAVE_access)
 #define CONFIG_HAVE_access 1
+#undef access
 #define access _access
 #endif /* access = _access */
 
 #if defined(CONFIG_HAVE__waccess) && !defined(CONFIG_HAVE_waccess)
 #define CONFIG_HAVE_waccess 1
+#undef waccess
 #define waccess _waccess
 #endif /* waccess = _waccess */
 
 #if defined(CONFIG_HAVE_euidaccess) && !defined(CONFIG_HAVE_eaccess)
 #define CONFIG_HAVE_eaccess 1
+#undef eaccess
 #define eaccess euidaccess
 #endif /* eaccess = euidaccess */
 
 #if defined(CONFIG_HAVE_eaccess) && !defined(CONFIG_HAVE_euidaccess)
 #define CONFIG_HAVE_euidaccess 1
+#undef euidaccess
 #define euidaccess eaccess
 #endif /* euidaccess = eaccess */
 
 #if defined(CONFIG_HAVE_fork) && !defined(CONFIG_HAVE_vfork)
 #define CONFIG_HAVE_vfork 1
+#undef vfork
 #define vfork fork
 #endif /* vfork = fork */
 
 #if defined(CONFIG_HAVE__pipe) && !defined(CONFIG_HAVE_pipe)
 #define CONFIG_HAVE_pipe 1
+#undef pipe
 #define pipe(fds) _pipe(fds, 4096, O_BINARY)
 #endif /* pipe = _pipe */
 
 #if defined(CONFIG_HAVE__mkdir) && !defined(CONFIG_HAVE_mkdir)
 #define CONFIG_HAVE_mkdir 1
+#undef mkdir
 #define mkdir(name, mode) _mkdir(name)
 #endif /* mkdir = _mkdir */
 
 #if defined(CONFIG_HAVE__wmkdir) && !defined(CONFIG_HAVE_wmkdir)
 #define CONFIG_HAVE_wmkdir 1
+#undef wmkdir
 #define wmkdir(name, mode) _wmkdir(name)
 #endif /* mkdir = _mkdir */
 
 #if defined(CONFIG_HAVE__fseeki64) && !defined(CONFIG_HAVE_fseeko64)
 #define CONFIG_HAVE_fseeko64 1
+#undef fseeko64
 #define fseeko64 _fseeki64
 #endif /* fseeko64 = _fseeki64 */
 
 #if defined(CONFIG_HAVE__fseek64) && !defined(CONFIG_HAVE_fseeko64)
 #define CONFIG_HAVE_fseeko64 1
+#undef fseeko64
 #define fseeko64 _fseek64
 #endif /* fseeko64 = _fseek64 */
 
 #if defined(CONFIG_HAVE_fseek64) && !defined(CONFIG_HAVE_fseeko64)
 #define CONFIG_HAVE_fseeko64 1
+#undef fseeko64
 #define fseeko64 fseek64
 #endif /* fseeko64 = fseek64 */
 
 #if defined(CONFIG_HAVE__ftelli64) && !defined(CONFIG_HAVE_ftello64)
 #define CONFIG_HAVE_ftello64 1
+#undef ftello64
 #define ftello64 _ftelli64
 #endif /* ftello64 = _ftelli64 */
 
 #if defined(CONFIG_HAVE__ftell64) && !defined(CONFIG_HAVE_ftello64)
 #define CONFIG_HAVE_ftello64 1
+#undef ftello64
 #define ftello64 _ftell64
 #endif /* ftello64 = _ftell64 */
 
 #if defined(CONFIG_HAVE_ftell64) && !defined(CONFIG_HAVE_ftello64)
 #define CONFIG_HAVE_ftello64 1
+#undef ftello64
 #define ftello64 ftell64
 #endif /* ftello64 = ftell64 */
 
@@ -6141,6 +6540,8 @@ functest("_alloca()", msvc);
     (CONFIG_SIZEOF_OFF_T <= __SIZEOF_LONG__)
 #define CONFIG_HAVE_fseeko 1
 #define CONFIG_HAVE_ftello 1
+#undef fseeko
+#undef ftello
 #define fseeko fseek
 #define ftello ftell
 #endif /* fseeko = fseek */
@@ -6148,6 +6549,8 @@ functest("_alloca()", msvc);
 #if defined(CONFIG_HAVE_fseeko64) && !defined(CONFIG_HAVE_fseeko)
 #define CONFIG_HAVE_fseeko 1
 #define CONFIG_HAVE_ftello 1
+#undef fseeko
+#undef ftello
 #define fseeko fseeko64
 #define ftello ftello64
 #endif /* fseeko = fseeko64 */
@@ -6155,74 +6558,93 @@ functest("_alloca()", msvc);
 #if !defined(CONFIG_HAVE_fseek) && defined(CONFIG_HAVE_fseeko)
 #define CONFIG_HAVE_fseek 1
 #define CONFIG_HAVE_ftell 1
+#undef fseek
+#undef ftell
 #define fseek fseeko
 #define ftell (long int)ftello
 #endif /* fseeko = fseeko64 */
 
 #if defined(CONFIG_HAVE__fileno) && !defined(CONFIG_HAVE_fileno)
 #define CONFIG_HAVE_fileno 1
+#undef fileno
 #define fileno _fileno
 #endif /* fileno = _fileno */
 
 #if defined(CONFIG_HAVE_getc) && !defined(CONFIG_HAVE_fgetc)
 #define CONFIG_HAVE_fgetc 1
+#undef fgetc
 #define fgetc getc
 #endif /* fgetc = getc */
+
 #if defined(CONFIG_HAVE_fgetc) && !defined(CONFIG_HAVE_getc)
 #define CONFIG_HAVE_getc 1
+#undef getc
 #define getc fgetc
 #endif /* getc = fgetc */
+
 #if defined(CONFIG_HAVE_putc) && !defined(CONFIG_HAVE_fputc)
 #define CONFIG_HAVE_fputc 1
+#undef fputc
 #define fputc putc
 #endif /* fputc = putc */
+
 #if defined(CONFIG_HAVE_fputc) && !defined(CONFIG_HAVE_putc)
 #define CONFIG_HAVE_putc 1
+#undef putc
 #define putc fputc
 #endif /* putc = fputc */
 
 #if defined(CONFIG_HAVE_MAP_ANON) && !defined(CONFIG_HAVE_MAP_ANONYMOUS)
 #define CONFIG_HAVE_MAP_ANONYMOUS 1
+#undef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
 #endif /* MAP_ANONYMOUS = MAP_ANON */
 
 #if defined(CONFIG_HAVE_MAP_ANONYMOUS) && !defined(CONFIG_HAVE_MAP_ANON)
 #define CONFIG_HAVE_MAP_ANON 1
+#undef MAP_ANON
 #define MAP_ANON MAP_ANONYMOUS
 #endif /* MAP_ANON = MAP_ANONYMOUS */
 
 #ifndef CONFIG_HAVE_environ
 #ifdef CONFIG_HAVE__environ
 #define CONFIG_HAVE_environ 1
+#undef environ
 #define environ    _environ
 #elif defined(CONFIG_HAVE___environ)
 #define CONFIG_HAVE_environ 1
+#undef environ
 #define environ   __environ
 #endif /* environ = __environ */
 #endif /* !CONFIG_HAVE_environ*/
 
 #if !defined(CONFIG_HAVE_execv) && defined(CONFIG_HAVE_execve) && defined(CONFIG_HAVE_environ)
 #define CONFIG_HAVE_execv 1
+#undef execv
 #define execv(path, argv) execve(path, argv, environ)
 #endif /* execv = execve */
 
 #if !defined(CONFIG_HAVE_execvp) && defined(CONFIG_HAVE_execvpe) && defined(CONFIG_HAVE_environ)
 #define CONFIG_HAVE_execpv 1
+#undef execvp
 #define execvp(path, argv) execvpe(path, argv, environ)
 #endif /* execvp = execvpe */
 
 #if !defined(CONFIG_HAVE_wexecv) && defined(CONFIG_HAVE_wexecve) && defined(CONFIG_HAVE_environ)
 #define CONFIG_HAVE_wexecv 1
+#undef wexecv
 #define wexecv(path, argv) wexecve(path, argv, environ)
 #endif /* wexecv = wexecve */
 
 #if !defined(CONFIG_HAVE_wexecvp) && defined(CONFIG_HAVE_wexecvpe) && defined(CONFIG_HAVE_environ)
 #define CONFIG_HAVE_wexecpv 1
+#undef wexecvp
 #define wexecvp(path, argv) wexecvpe(path, argv, environ)
 #endif /* wexecvp = wexecvpe */
 
 #if defined(CONFIG_HAVE__sysconf) && !defined(CONFIG_HAVE_sysconf)
 #define CONFIG_HAVE_sysconf 1
+#undef sysconf
 #define sysconf _sysconf
 #endif /* sysconf = _sysconf */
 
@@ -6805,22 +7227,26 @@ functest("_alloca()", msvc);
 
 #if defined(CONFIG_HAVE_open64) && !defined(CONFIG_HAVE_open)
 #define CONFIG_HAVE_open 1
+#undef open
 #define open open64
 #endif /* open = open64 */
 
 #if defined(CONFIG_HAVE_creat64) && !defined(CONFIG_HAVE_creat)
 #define CONFIG_HAVE_creat 1
+#undef creat
 #define creat creat64
 #endif /* creat = creat64 */
 
 #if defined(CONFIG_HAVE_open) && !defined(CONFIG_HAVE_open64) && defined(CONFIG_HAVE_O_LARGEFILE)
 #define CONFIG_HAVE_open64 1
+#undef open64
 #define open64(filename, oflags, ...) open(filename, (oflags) | O_LARGEFILE, ##__VA_ARGS__)
 #endif /* open64 = open */
 
 #if defined(CONFIG_HAVE_open) && !defined(CONFIG_HAVE_creat) && \
    (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
 #define CONFIG_HAVE_creat 1
+#undef creat
 #ifdef O_WRONLY
 #define creat(filename, mode) open(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
 #else /* O_WRONLY */
@@ -6831,6 +7257,7 @@ functest("_alloca()", msvc);
 #if defined(CONFIG_HAVE_open64) && !defined(CONFIG_HAVE_creat64) && \
    (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
 #define CONFIG_HAVE_creat64 1
+#undef creat64
 #ifdef O_WRONLY
 #define creat64(filename, mode) open64(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
 #else /* O_WRONLY */
@@ -6840,16 +7267,19 @@ functest("_alloca()", msvc);
 
 #if defined(CONFIG_HAVE_wopen) && !defined(CONFIG_HAVE_wopen64) && defined(CONFIG_HAVE_O_LARGEFILE)
 #define CONFIG_HAVE_wopen64 1
+#undef wopen64
 #define wopen64(filename, oflags, ...) wopen(filename, (oflags) | O_LARGEFILE, ##__VA_ARGS__)
 #endif /* wopen64 = wopen */
 
 #ifndef CONFIG_HAVE_wcreat
 #if defined(CONFIG_HAVE_wcreat64)
 #define CONFIG_HAVE_wcreat 1
+#undef wcreat
 #define wcreat wcreat64 /* wcreat = wcreat64 */
 #elif defined(CONFIG_HAVE_wopen) && \
      (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
 #define CONFIG_HAVE_wcreat 1
+#undef wcreat
 #ifdef O_WRONLY
 #define wcreat(filename, mode) wopen(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
 #else /* O_WRONLY */
@@ -6861,6 +7291,7 @@ functest("_alloca()", msvc);
 #if defined(CONFIG_HAVE_wopen64) && \
    (defined(O_CREAT) && (defined(O_WRONLY) || defined(O_RDWR)) && defined(O_TRUNC))
 #define CONFIG_HAVE_wcreat64 1
+#undef wcreat64
 #ifdef O_WRONLY
 #define wcreat64(filename, mode) wopen64(filename, O_CREAT | O_WRONLY | O_TRUNC, mode)
 #else /* O_WRONLY */
@@ -6870,31 +7301,37 @@ functest("_alloca()", msvc);
 
 #if !defined(CONFIG_HAVE_get_osfhandle) && defined(CONFIG_HAVE__get_osfhandle)
 #define CONFIG_HAVE_get_osfhandle 1
+#undef get_osfhandle
 #define get_osfhandle _get_osfhandle
 #endif /* get_osfhandle = _get_osfhandle */
 
 #if !defined(CONFIG_HAVE_open_osfhandle) && defined(CONFIG_HAVE__open_osfhandle)
 #define CONFIG_HAVE_open_osfhandle 1
+#undef open_osfhandle
 #define open_osfhandle _open_osfhandle
 #endif /* open_osfhandle = _open_osfhandle */
 
 #if defined(CONFIG_HAVE_pthread_suspend_np) && !defined(CONFIG_HAVE_pthread_suspend)
 #define CONFIG_HAVE_pthread_suspend 1
+#undef pthread_suspend
 #define pthread_suspend pthread_suspend_np
 #endif /* pthread_suspend = pthread_suspend_np */
 
 #if defined(CONFIG_HAVE_pthread_suspend) && !defined(CONFIG_HAVE_pthread_suspend_np)
 #define CONFIG_HAVE_pthread_suspend_np 1
+#undef pthread_suspend_np
 #define pthread_suspend_np pthread_suspend
 #endif /* pthread_suspend_np = pthread_suspend */
 
 #if defined(CONFIG_HAVE_pthread_unsuspend_np) && !defined(CONFIG_HAVE_pthread_continue)
 #define CONFIG_HAVE_pthread_continue 1
+#undef pthread_continue
 #define pthread_continue pthread_unsuspend_np
 #endif /* pthread_continue = pthread_unsuspend_np */
 
 #if defined(CONFIG_HAVE_pthread_continue) && !defined(CONFIG_HAVE_pthread_unsuspend_np)
 #define CONFIG_HAVE_pthread_unsuspend_np 1
+#undef pthread_unsuspend_np
 #define pthread_unsuspend_np pthread_continue
 #endif /* pthread_unsuspend_np = pthread_continue */
 
@@ -6909,26 +7346,31 @@ functest("_alloca()", msvc);
 
 #if defined(CONFIG_HAVE_pthread_setname_np) && !defined(CONFIG_HAVE_pthread_setname)
 #define CONFIG_HAVE_pthread_setname 1
+#undef pthread_setname
 #define pthread_setname pthread_setname_np
 #endif /* pthread_setname = pthread_setname_np */
 
 #if defined(CONFIG_HAVE_pthread_setname) && !defined(CONFIG_HAVE_pthread_setname_np)
 #define CONFIG_HAVE_pthread_setname_np 1
+#undef pthread_setname_np
 #define pthread_setname_np pthread_setname
 #endif /* pthread_setname_np = pthread_setname */
 
 #ifndef CONFIG_HAVE_abort
 #define CONFIG_HAVE_abort 1
+#undef abort
 #define abort() _DeeAssert_Fail(NULL, __FILE__, __LINE__)
 #endif /* !CONFIG_HAVE_abort */
 
 #if !defined(CONFIG_HAVE_pause) && defined(CONFIG_HAVE_select)
 #define CONFIG_HAVE_pause 1
+#undef pause
 #define pause() select(0, NULL, NULL, NULL, NULL)
 #endif /* pause = select */
 
 #if !defined(CONFIG_HAVE_doserrno) && defined(CONFIG_HAVE__doserrno)
 #define CONFIG_HAVE_doserrno 1
+#undef doserrno
 #define doserrno _doserrno
 #endif /* doserrno = _doserrno */
 
@@ -6965,18 +7407,30 @@ functest("_alloca()", msvc);
 #define EOK ENOERR
 #elif defined(ENOERROR)
 #define EOK ENOERROR
-#else
+#else /* ... */
 #define EOK 0
-#endif
-#endif
+#endif /* !... */
+#endif /* !EOK */
+
+#ifndef NULL
+#ifdef __NULLPTR
+#define NULL __NULLPTR
+#elif defined(__cplusplus)
+#define NULL 0
+#else /* __cplusplus */
+#define NULL ((void *)0)
+#endif /* !__cplusplus */
+#endif /* !NULL */
 
 #if defined(CONFIG_HAVE__errno) && !defined(CONFIG_HAVE_errno)
 #define CONFIG_HAVE_errno 1
+#undef errno
 #define errno _errno
 #endif /* errno = _errno */
 
 #if defined(CONFIG_HAVE___errno) && !defined(CONFIG_HAVE_errno)
 #define CONFIG_HAVE_errno 1
+#undef errno
 #define errno __errno
 #endif /* errno = __errno */
 
@@ -6991,105 +7445,237 @@ functest("_alloca()", msvc);
 
 #if !defined(CONFIG_HAVE_memcasecmp) && defined(CONFIG_HAVE__memicmp)
 #define CONFIG_HAVE_memcasecmp 1
+#undef memcasecmp
 #define memcasecmp _memicmp
 #endif /* memcasecmp = _memicmp */
 
 #if !defined(CONFIG_HAVE_memcasecmp) && defined(CONFIG_HAVE_memicmp)
 #define CONFIG_HAVE_memcasecmp 1
+#undef memcasecmp
 #define memcasecmp memicmp
 #endif /* memcasecmp = memicmp */
 
 #if !defined(CONFIG_HAVE_strcasecmp) && defined(CONFIG_HAVE__stricmp)
 #define CONFIG_HAVE_strcasecmp 1
+#undef strcasecmp
 #define strcasecmp _stricmp
 #endif /* strcasecmp = _stricmp */
 
 #if !defined(CONFIG_HAVE_strcasecmp) && defined(CONFIG_HAVE_stricmp)
 #define CONFIG_HAVE_strcasecmp 1
+#undef strcasecmp
 #define strcasecmp stricmp
 #endif /* strcasecmp = stricmp */
 
 #ifndef CONFIG_HAVE_tolower
 #define CONFIG_HAVE_tolower 1
+#undef tolower
 #define tolower(ch) ((ch) >= 'A' && (ch) <= 'Z' ? ((ch) + ('a' - 'A')) : (ch))
 #endif /* !CONFIG_HAVE_tolower */
 
 #ifndef CONFIG_HAVE_toupper
 #define CONFIG_HAVE_toupper 1
+#undef toupper
 #define toupper(ch) ((ch) >= 'a' && (ch) <= 'z' ? ((ch) - ('a' - 'A')) : (ch))
 #endif /* !CONFIG_HAVE_toupper */
 
 #ifndef CONFIG_HAVE_isupper
 #define CONFIG_HAVE_isupper 1
+#undef isupper
 #define isupper(ch) ((ch) >= 'A' && (ch) <= 'Z')
 #endif /* !CONFIG_HAVE_isupper */
 
 #ifndef CONFIG_HAVE_islower
 #define CONFIG_HAVE_islower 1
+#undef islower
 #define islower(ch) ((ch) >= 'a' && (ch) <= 'z')
 #endif /* !CONFIG_HAVE_islower */
 
 #ifndef CONFIG_HAVE_isalpha
 #define CONFIG_HAVE_isalpha 1
+#undef isalpha
 #define isalpha(ch) (islower(ch) || isupper(ch))
 #endif /* !CONFIG_HAVE_isalpha */
 
 #ifndef CONFIG_HAVE_isdigit
 #define CONFIG_HAVE_isdigit 1
+#undef isdigit
 #define isdigit(ch) ((ch) >= '0' && (ch) <= '9')
 #endif /* !CONFIG_HAVE_isdigit */
 
 #ifndef CONFIG_HAVE_isalnum
 #define CONFIG_HAVE_isalnum 1
+#undef isalnum
 #define isalnum(ch) (isalpha(ch) || isdigit(ch))
 #endif /* !CONFIG_HAVE_isalnum */
 
 
+/* Mandatory <string.h> features */
+#ifndef CONFIG_HAVE_strlen
+#define CONFIG_HAVE_strlen 1
+DECL_BEGIN
+#undef strlen
+#define strlen dee_strlen
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
+	size_t result;
+	for (result = 0; str[result]; ++result)
+		;
+	return result;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_strlen */
 
-#define DeeSystem_DEFINE_memrchr(name)                            \
-	LOCAL void *name(void const *__restrict p, int c, size_t n) { \
-		uint8_t *iter = (uint8_t *)p + n;                         \
-		while (iter != (uint8_t *)p) {                            \
-			if (*--iter == c)                                     \
-				return iter;                                      \
-		}                                                         \
-		return NULL;                                              \
+#ifndef CONFIG_HAVE_memcpy
+#define CONFIG_HAVE_memcpy 1
+DECL_BEGIN
+#undef memcpy
+#define memcpy dee_memcpy
+LOCAL WUNUSED NONNULL((1, 2)) void *
+dee_memcpy(void *__restrict dst, void const *__restrict src, size_t num_bytes) {
+	uint8_t *pdst = (uint8_t *)dst;
+	uint8_t const *psrc = (uint8_t const *)src;
+	while (num_bytes--)
+		*pdst++ = *psrc++;
+	return dst;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_memcpy */
+
+#ifndef CONFIG_HAVE_memmove
+#define CONFIG_HAVE_memmove 1
+DECL_BEGIN
+#undef memmove
+#define memmove dee_memmove
+LOCAL WUNUSED NONNULL((1, 2)) void *
+dee_memmove(void *dst, void const *src, size_t num_bytes) {
+	uint8_t *pdst;
+	uint8_t const *psrc;
+	if (dst <= src) {
+		pdst = (uint8_t *)dst;
+		psrc = (uint8_t const *)src;
+		while (num_bytes--)
+			*pdst++ = *psrc++;
+	} else {
+		pdst = (uint8_t *)dst + num_bytes;
+		psrc = (uint8_t const *)src + num_bytes;
+		while (num_bytes--)
+			*--pdst = *--psrc;
+	}
+	return dst;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_memmove */
+
+
+#define _DeeSystem_DEFINE_memchrT(rT, T, Tneedle, name)   \
+	LOCAL WUNUSED NONNULL((1)) rT *                       \
+	name(void const *__restrict p, Tneedle c, size_t n) { \
+		T const *hay_iter = (T const *)p;                 \
+		for (; n--; ++hay_iter) {                         \
+			if unlikely(*hay_iter == (T)c)                \
+				return (rT *)hay_iter;                    \
+		}                                                 \
+		return NULL;                                      \
 	}
 
-#define DeeSystem_DEFINE_memmem(name)                                                        \
-	LOCAL void *name(void const *__restrict haystack, size_t haystack_length,                \
-	                 void const *__restrict needle, size_t needle_length) {                  \
-		uint8_t *candidate;                                                                  \
-		uint8_t marker;                                                                      \
-		if unlikely(!needle_length || needle_length > haystack_length)                       \
-			return NULL;                                                                     \
-		haystack_length -= (needle_length - 1), marker = *(uint8_t *)needle;                 \
-		while ((candidate = (uint8_t *)memchr(haystack, marker, haystack_length)) != NULL) { \
-			if (memcmp(candidate, needle, needle_length) == 0)                               \
-				return (void *)candidate;                                                    \
-			++candidate;                                                                     \
-			haystack_length = ((uint8_t *)haystack + haystack_length) - candidate;           \
-			haystack        = (void const *)candidate;                                       \
-		}                                                                                    \
-		return NULL;                                                                         \
+#define _DeeSystem_DEFINE_memrchrT(rT, T, Tneedle, name)  \
+	LOCAL WUNUSED NONNULL((1)) rT *                       \
+	name(void const *__restrict p, Tneedle c, size_t n) { \
+		T const *iter = (T const *)p + n;                 \
+		while (iter != (T const *)p) {                    \
+			if unlikely(*--iter == (T)c)                  \
+				return (rT *)iter;                        \
+		}                                                 \
+		return NULL;                                      \
 	}
 
-#define DeeSystem_DEFINE_memrmem(name)                                              \
-	LOCAL void *name(void const *__restrict haystack, size_t haystack_length,       \
-	                 void const *__restrict needle, size_t needle_length) {         \
-		void const *candidate;                                                      \
-		uint8_t marker;                                                             \
-		if unlikely(!needle_length || needle_length > haystack_length)              \
-			return NULL;                                                            \
-		haystack_length -= needle_length - 1;                                       \
-		marker = *(uint8_t *)needle;                                                \
-		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) {  \
-			if (memcmp(candidate, needle, needle_length) == 0)                      \
-				return (void *)candidate;                                           \
-			haystack_length = (size_t)((uint8_t *)candidate - (uint8_t *)haystack); \
-		}                                                                           \
-		return NULL;                                                                \
+#define _DeeSystem_DEFINE_memcmpT(rT, T, name)        \
+	LOCAL WUNUSED NONNULL((1)) rT                     \
+	name(void const *s1, void const *s2, size_t n) {  \
+		T const *p1 = (T const *)s1;                  \
+		T const *p2 = (T const *)s2;                  \
+		T v1, v2;                                     \
+		v1 = v2 = 0;                                  \
+		while (n-- && ((v1 = *p1++) == (v2 = *p2++))) \
+			;                                         \
+		return (rT)v1 - (rT)v2;                       \
 	}
+
+#define DeeSystem_DEFINE_memrchr(name) _DeeSystem_DEFINE_memrchrT(void, uint8_t, int, name)
+#define DeeSystem_DEFINE_memrchrw(name) _DeeSystem_DEFINE_memrchrT(uint16_t, uint16_t, uint16_t, name)
+#define DeeSystem_DEFINE_memrchrl(name) _DeeSystem_DEFINE_memrchrT(uint32_t, uint32_t, uint32_t, name)
+#define DeeSystem_DEFINE_memrchrq(name) _DeeSystem_DEFINE_memrchrT(uint64_t, uint64_t, uint64_t, name)
+
+#define DeeSystem_DEFINE_memchrw(name) _DeeSystem_DEFINE_memchrT(uint16_t, uint16_t, uint16_t, name)
+#define DeeSystem_DEFINE_memchrl(name) _DeeSystem_DEFINE_memchrT(uint32_t, uint32_t, uint32_t, name)
+#define DeeSystem_DEFINE_memchrq(name) _DeeSystem_DEFINE_memchrT(uint64_t, uint64_t, uint64_t, name)
+
+#define DeeSystem_DEFINE_memcmpw(name) _DeeSystem_DEFINE_memcmpT(int16_t, int16_t, name)
+#define DeeSystem_DEFINE_memcmpl(name) _DeeSystem_DEFINE_memcmpT(int32_t, int32_t, name)
+#define DeeSystem_DEFINE_memcmpq(name) _DeeSystem_DEFINE_memcmpT(int64_t, int64_t, name)
+
+#ifndef CONFIG_HAVE_memchr
+#define CONFIG_HAVE_memchr 1
+DECL_BEGIN
+#undef memchr
+#define memchr dee_memchr
+_DeeSystem_DEFINE_memchrT(void, uint8_t, int, dee_memchr)
+DECL_END
+#endif /* !CONFIG_HAVE_memchr */
+
+#ifndef CONFIG_HAVE_memcmp
+#define CONFIG_HAVE_memcmp 1
+DECL_BEGIN
+#undef memcmp
+#define memcmp dee_memcmp
+_DeeSystem_DEFINE_memcmpT(int, uint8_t, dee_memcmp)
+DECL_END
+#endif /* !CONFIG_HAVE_memcmp */
+
+#define _DeeSystem_DEFINE_memmemT(rT, T, memchr, memeq, name)                          \
+	LOCAL rT *name(void const *__restrict haystack, size_t haystack_length,            \
+	               void const *__restrict needle, size_t needle_length) {              \
+		T *candidate;                                                                  \
+		T marker;                                                                      \
+		if unlikely(!needle_length || needle_length > haystack_length)                 \
+			return NULL;                                                               \
+		haystack_length -= (needle_length - 1), marker = *(T *)needle;                 \
+		while ((candidate = (T *)memchr(haystack, marker, haystack_length)) != NULL) { \
+			if (memeq(candidate, needle, needle_length))                               \
+				return (rT *)candidate;                                                \
+			++candidate;                                                               \
+			haystack_length = ((T *)haystack + haystack_length) - candidate;           \
+			haystack        = (void const *)candidate;                                 \
+		}                                                                              \
+		return NULL;                                                                   \
+	}
+
+#define _DeeSystem_DEFINE_memrmemT(rT, T, memrchr, memeq, name)                    \
+	LOCAL rT *name(void const *__restrict haystack, size_t haystack_length,        \
+	               void const *__restrict needle, size_t needle_length) {          \
+		void const *candidate;                                                     \
+		T marker;                                                                  \
+		if unlikely(!needle_length || needle_length > haystack_length)             \
+			return NULL;                                                           \
+		haystack_length -= needle_length - 1;                                      \
+		marker = *(T *)needle;                                                     \
+		while ((candidate = memrchr(haystack, marker, haystack_length)) != NULL) { \
+			if (memeq(candidate, needle, needle_length))                           \
+				return (rT *)candidate;                                            \
+			haystack_length = (size_t)((T *)candidate - (T *)haystack);            \
+		}                                                                          \
+		return NULL;                                                               \
+	}
+
+#define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void, uint8_t, memchr, 0 == memcmp, name)
+#define DeeSystem_DEFINE_memmemw(name, memchrw, memeqw) _DeeSystem_DEFINE_memmemT(uint16_t, uint16_t, memchrw, memeqw, name)
+#define DeeSystem_DEFINE_memmeml(name, memchrl, memeql) _DeeSystem_DEFINE_memmemT(uint32_t, uint32_t, memchrl, memeql, name)
+#define DeeSystem_DEFINE_memmemq(name, memchrq, memeqq) _DeeSystem_DEFINE_memmemT(uint64_t, uint64_t, memchrq, memeqq, name)
+
+#define DeeSystem_DEFINE_memrmem(name) _DeeSystem_DEFINE_memrmemT(void, uint8_t, memrchr, 0 == memcmp, name)
+#define DeeSystem_DEFINE_memrmemw(name, memrchrw, memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t, uint16_t, memrchrw, memeqw, name)
+#define DeeSystem_DEFINE_memrmeml(name, memrchrl, memeql) _DeeSystem_DEFINE_memrmemT(uint32_t, uint32_t, memrchrl, memeql, name)
+#define DeeSystem_DEFINE_memrmemq(name, memrchrq, memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t, uint64_t, memrchrq, memeqq, name)
 
 #define DeeSystem_DEFINE_strnlen(name)                              \
 	LOCAL size_t name(char const *__restrict str, size_t maxlen) {  \
@@ -7229,9 +7815,8 @@ functest("_alloca()", msvc);
 	                 void const *__restrict needle, size_t needle_len) {                \
 		void const *candidate;                                                          \
 		uint8_t marker1, marker2;                                                       \
-		if                                                                              \
-			unlikely(!needle_len || needle_len > haystack_len)                          \
-		return NULL;                                                                    \
+		if unlikely(!needle_len || needle_len > haystack_len)                           \
+			return NULL;                                                                \
 		haystack_len -= needle_len;                                                     \
 		marker1 = (uint8_t)tolower(*(uint8_t *)needle);                                 \
 		marker2 = (uint8_t)toupper(*(uint8_t *)needle);                                 \
@@ -7320,9 +7905,8 @@ functest("_alloca()", msvc);
 		while ((candidate = _##name##_memlowerrchr(haystack, marker, haystack_len)) != NULL) { \
 			if (memcasecmp(candidate, needle, needle_len) == 0)                                \
 				return (void *)candidate;                                                      \
-			if                                                                                 \
-				unlikely(candidate == haystack)                                                \
-			break;                                                                             \
+			if unlikely(candidate == haystack)                                                 \
+				break;                                                                         \
 			haystack_len = (((uintptr_t)candidate) - 1) - (uintptr_t)haystack;                 \
 		}                                                                                      \
 		return NULL;                                                                           \
@@ -7353,6 +7937,434 @@ functest("_alloca()", msvc);
 			}                                                                       \
 		}                                                                           \
 	}
+
+#define _DeeSystem_DEFINE_memsetT(T, name)                \
+	LOCAL void *name(void *__restrict p, T c, size_t n) { \
+		T *dst = (T *)p;                                  \
+		while (n--)                                       \
+			*dst++ = c;                                   \
+		return p;                                         \
+	}
+#define DeeSystem_DEFINE_memsetw(name) _DeeSystem_DEFINE_memsetT(uint16_t, name)
+#define DeeSystem_DEFINE_memsetl(name) _DeeSystem_DEFINE_memsetT(uint32_t, name)
+#define DeeSystem_DEFINE_memsetq(name) _DeeSystem_DEFINE_memsetT(uint64_t, name)
+
+
+#ifndef CONFIG_HAVE_memmoveup
+#define CONFIG_HAVE_memmoveup 1
+#undef memmoveup
+#define memmoveup(dst, src, n) memmove(dst, src, n)
+#endif /* !CONFIG_HAVE_memmoveup */
+
+#ifndef CONFIG_HAVE_memmovedown
+#define CONFIG_HAVE_memmovedown 1
+#undef memmovedown
+#define memmovedown(dst, src, n) memmove(dst, src, n)
+#endif /* !CONFIG_HAVE_memmovedown */
+
+
+/* KOS's multi-byte memory function extensions */
+#ifndef CONFIG_HAVE_memcpyw
+#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
+#define CONFIG_HAVE_memcpyw 1
+DECL_BEGIN
+#undef memcpyw
+#ifdef __x86_64__
+extern void __movsw(unsigned short *, unsigned short const *, unsigned __int64);
+#define memcpyw(dst, src, n) (__movsw((unsigned short *)(dst), (unsigned short const *)(src), (unsigned __int64)(n)), (void *)(dst))
+#else /* __x86_64__ */
+extern void __movsw(unsigned short *, unsigned short const *, unsigned int);
+#define memcpyw(dst, src, n) (__movsw((unsigned short *)(dst), (unsigned short const *)(src), (unsigned int)(n)), (void *)(dst))
+#endif /* !__x86_64__ */
+#pragma intrinsic(__movsw)
+DECL_END
+#endif /* _MSC_VER && (__i386__ || __x86_64__) */
+#endif /* !CONFIG_HAVE_memcpyw */
+
+#ifndef CONFIG_HAVE_memcpyl
+#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
+#define CONFIG_HAVE_memcpyl 1
+DECL_BEGIN
+#undef memcpyl
+#ifdef __x86_64__
+extern void __movsd(unsigned long *, unsigned long const *, unsigned __int64);
+#define memcpyl(dst, src, n) (__movsd((unsigned long *)(dst), (unsigned long const *)(src), (unsigned __int64)(n)), (void *)(dst))
+#else /* __x86_64__ */
+extern void __movsd(unsigned long *, unsigned long const *, unsigned int);
+#define memcpyl(dst, src, n) (__movsd((unsigned long *)(dst), (unsigned long const *)(src), (unsigned int)(n)), (void *)(dst))
+#endif /* !__x86_64__ */
+#pragma intrinsic(__movsd)
+DECL_END
+#endif /* _MSC_VER && (__i386__ || __x86_64__) */
+#endif /* !CONFIG_HAVE_memcpyl */
+
+#ifndef CONFIG_HAVE_memcpyq
+#if defined(_MSC_VER) && defined(__x86_64__)
+#define CONFIG_HAVE_memcpyq 1
+DECL_BEGIN
+extern void __movsq(unsigned long long *, unsigned long long const *, unsigned __int64);
+#undef memcpyq
+#define memcpyq(dst, src, n) (__movsq((unsigned long *)(dst), (unsigned long const *)(src), (unsigned __int64)(n)), (void *)(dst))
+#pragma intrinsic(__movsq)
+DECL_END
+#endif /* _MSC_VER && __x86_64__ */
+#endif /* !CONFIG_HAVE_memcpyq */
+
+#ifndef CONFIG_HAVE_memcpyc
+#define CONFIG_HAVE_memcpyc 1
+#undef memcpyc
+#if defined(CONFIG_HAVE_memcpyw) && defined(CONFIG_HAVE_memcpyl) && defined(CONFIG_HAVE_memcpyq)
+#define memcpyc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                            \
+	 ? (void *)memcpyw(dst, src, elem_count)     \
+	 : (elem_size) == 4                          \
+	   ? (void *)memcpyl(dst, src, elem_count)   \
+	   : (elem_size) == 8                        \
+	     ? (void *)memcpyq(dst, src, elem_count) \
+	     : memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memcpyw) && defined(CONFIG_HAVE_memcpyl)
+#define memcpyc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                            \
+	 ? (void *)memcpyw(dst, src, elem_count)     \
+	 : (elem_size) == 4                          \
+	   ? (void *)memcpyl(dst, src, elem_count)   \
+	   : memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memcpyw) && defined(CONFIG_HAVE_memcpyq)
+#define memcpyc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                            \
+	 ? (void *)memcpyw(dst, src, elem_count)     \
+	 : (elem_size) == 8                          \
+	   ? (void *)memcpyq(dst, src, elem_count)   \
+	   : memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memcpyl) && defined(CONFIG_HAVE_memcpyq)
+#define memcpyc(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                            \
+	 ? (void *)memcpyl(dst, src, elem_count)     \
+	 : (elem_size) == 8                          \
+	   ? (void *)memcpyq(dst, src, elem_count)   \
+	   : memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memcpyq)
+#define memcpyc(dst, src, elem_count, elem_size) \
+	((elem_size) == 8                            \
+	 ? (void *)memcpyq(dst, src, elem_count)     \
+	 : memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memcpyl)
+#define memcpyc(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                            \
+	 ? (void *)memcpyl(dst, src, elem_count)     \
+	 : memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memcpyw)
+#define memcpyc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                            \
+	 ? (void *)memcpyw(dst, src, elem_count)     \
+	 : memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#else /* ... */
+#define memcpyc(dst, src, elem_count, elem_size) \
+	memcpy(dst, src, (size_t)(elem_count) * (size_t)(elem_size))
+#endif /* !... */
+#endif /* !CONFIG_HAVE_memcpyc */
+
+#ifndef CONFIG_HAVE_memcpyw
+#define CONFIG_HAVE_memcpyw 1
+#undef memcpyw
+#define memcpyw(dst, src, n) memcpy(dst, src, (n)*2)
+#endif /* !CONFIG_HAVE_memcpyw */
+
+#ifndef CONFIG_HAVE_memcpyl
+#define CONFIG_HAVE_memcpyl 1
+#undef memcpyl
+#define memcpyl(dst, src, n) memcpy(dst, src, (n)*4)
+#endif /* !CONFIG_HAVE_memcpyl */
+
+#ifndef CONFIG_HAVE_memcpyq
+#define CONFIG_HAVE_memcpyq 1
+#undef memcpyq
+#define memcpyq(dst, src, n) memcpy(dst, src, (n)*8)
+#endif /* !CONFIG_HAVE_memcpyq */
+
+#ifndef CONFIG_HAVE_memmovec
+#define CONFIG_HAVE_memmovec 1
+#undef memmovec
+#if defined(CONFIG_HAVE_memmovew) && defined(CONFIG_HAVE_memmovel) && defined(CONFIG_HAVE_memmoveq)
+#define memmovec(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                             \
+	 ? (void *)memmovew(dst, src, elem_count)     \
+	 : (elem_size) == 4                           \
+	   ? (void *)memmovel(dst, src, elem_count)   \
+	   : (elem_size) == 8                         \
+	     ? (void *)memmoveq(dst, src, elem_count) \
+	     : memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovew) && defined(CONFIG_HAVE_memmovel)
+#define memmovec(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                             \
+	 ? (void *)memmovew(dst, src, elem_count)     \
+	 : (elem_size) == 4                           \
+	   ? (void *)memmovel(dst, src, elem_count)   \
+	   : memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovew) && defined(CONFIG_HAVE_memmoveq)
+#define memmovec(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                             \
+	 ? (void *)memmovew(dst, src, elem_count)     \
+	 : (elem_size) == 8                           \
+	   ? (void *)memmoveq(dst, src, elem_count)   \
+	   : memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovel) && defined(CONFIG_HAVE_memmoveq)
+#define memmovec(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                             \
+	 ? (void *)memmovel(dst, src, elem_count)     \
+	 : (elem_size) == 8                           \
+	   ? (void *)memmoveq(dst, src, elem_count)   \
+	   : memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmoveq)
+#define memmovec(dst, src, elem_count, elem_size) \
+	((elem_size) == 8                             \
+	 ? (void *)memmoveq(dst, src, elem_count)     \
+	 : memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovel)
+#define memmovec(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                             \
+	 ? (void *)memmovel(dst, src, elem_count)     \
+	 : memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovew)
+#define memmovec(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                             \
+	 ? (void *)memmovew(dst, src, elem_count)     \
+	 : memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#else /* ... */
+#define memmovec(dst, src, elem_count, elem_size) \
+	memmove(dst, src, (size_t)(elem_count) * (size_t)(elem_size))
+#endif /* !... */
+#endif /* !CONFIG_HAVE_memmovec */
+
+#ifndef CONFIG_HAVE_memmovew
+#define CONFIG_HAVE_memmovew 1
+#undef memmovew
+#define memmovew(dst, src, n) memmove(dst, src, (n)*2)
+#endif /* !CONFIG_HAVE_memmovew */
+
+#ifndef CONFIG_HAVE_memmovel
+#define CONFIG_HAVE_memmovel 1
+#undef memmovel
+#define memmovel(dst, src, n) memmove(dst, src, (n)*4)
+#endif /* !CONFIG_HAVE_memmovel */
+
+#ifndef CONFIG_HAVE_memmoveq
+#define CONFIG_HAVE_memmoveq 1
+#undef memmoveq
+#define memmoveq(dst, src, n) memmove(dst, src, (n)*8)
+#endif /* !CONFIG_HAVE_memmoveq */
+
+#ifndef CONFIG_HAVE_memmoveupc
+#define CONFIG_HAVE_memmoveupc 1
+#undef memmoveupc
+#if defined(CONFIG_HAVE_memmoveupw) && defined(CONFIG_HAVE_memmoveupl) && defined(CONFIG_HAVE_memmoveupq)
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                               \
+	 ? (void *)memmoveupw(dst, src, elem_count)     \
+	 : (elem_size) == 4                             \
+	   ? (void *)memmoveupl(dst, src, elem_count)   \
+	   : (elem_size) == 8                           \
+	     ? (void *)memmoveupq(dst, src, elem_count) \
+	     : memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmoveupw) && defined(CONFIG_HAVE_memmoveupl)
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                               \
+	 ? (void *)memmoveupw(dst, src, elem_count)     \
+	 : (elem_size) == 4                             \
+	   ? (void *)memmoveupl(dst, src, elem_count)   \
+	   : memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmoveupw) && defined(CONFIG_HAVE_memmoveupq)
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                               \
+	 ? (void *)memmoveupw(dst, src, elem_count)     \
+	 : (elem_size) == 8                             \
+	   ? (void *)memmoveupq(dst, src, elem_count)   \
+	   : memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmoveupl) && defined(CONFIG_HAVE_memmoveupq)
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                               \
+	 ? (void *)memmoveupl(dst, src, elem_count)     \
+	 : (elem_size) == 8                             \
+	   ? (void *)memmoveupq(dst, src, elem_count)   \
+	   : memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmoveupq)
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	((elem_size) == 8                               \
+	 ? (void *)memmoveupq(dst, src, elem_count)     \
+	 : memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmoveupl)
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                               \
+	 ? (void *)memmoveupl(dst, src, elem_count)     \
+	 : memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmoveupw)
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                               \
+	 ? (void *)memmoveupw(dst, src, elem_count)     \
+	 : memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#else /* ... */
+#define memmoveupc(dst, src, elem_count, elem_size) \
+	memmoveup(dst, src, (size_t)(elem_count) * (size_t)(elem_size))
+#endif /* !... */
+#endif /* !CONFIG_HAVE_memmoveupc */
+
+#ifndef CONFIG_HAVE_memmoveupw
+#define CONFIG_HAVE_memmoveupw 1
+#undef memmoveupw
+#define memmoveupw(dst, src, n) memmoveup(dst, src, (n)*2)
+#endif /* !CONFIG_HAVE_memmoveupw */
+
+#ifndef CONFIG_HAVE_memmoveupl
+#define CONFIG_HAVE_memmoveupl 1
+#undef memmoveupl
+#define memmoveupl(dst, src, n) memmoveup(dst, src, (n)*4)
+#endif /* !CONFIG_HAVE_memmoveupl */
+
+#ifndef CONFIG_HAVE_memmoveupq
+#define CONFIG_HAVE_memmoveupq 1
+#undef memmoveupq
+#define memmoveupq(dst, src, n) memmoveup(dst, src, (n)*8)
+#endif /* !CONFIG_HAVE_memmoveupq */
+
+#ifndef CONFIG_HAVE_memmovedownc
+#define CONFIG_HAVE_memmovedownc 1
+#undef memmovedownc
+#if defined(CONFIG_HAVE_memmovedownw) && defined(CONFIG_HAVE_memmovedownl) && defined(CONFIG_HAVE_memmovedownq)
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                                 \
+	 ? (void *)memmovedownw(dst, src, elem_count)     \
+	 : (elem_size) == 4                               \
+	   ? (void *)memmovedownl(dst, src, elem_count)   \
+	   : (elem_size) == 8                             \
+	     ? (void *)memmovedownq(dst, src, elem_count) \
+	     : memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovedownw) && defined(CONFIG_HAVE_memmovedownl)
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                                 \
+	 ? (void *)memmovedownw(dst, src, elem_count)     \
+	 : (elem_size) == 4                               \
+	   ? (void *)memmovedownl(dst, src, elem_count)   \
+	   : memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovedownw) && defined(CONFIG_HAVE_memmovedownq)
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                                 \
+	 ? (void *)memmovedownw(dst, src, elem_count)     \
+	 : (elem_size) == 8                               \
+	   ? (void *)memmovedownq(dst, src, elem_count)   \
+	   : memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovedownl) && defined(CONFIG_HAVE_memmovedownq)
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                                 \
+	 ? (void *)memmovedownl(dst, src, elem_count)     \
+	 : (elem_size) == 8                               \
+	   ? (void *)memmovedownq(dst, src, elem_count)   \
+	   : memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovedownq)
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	((elem_size) == 8                                 \
+	 ? (void *)memmovedownq(dst, src, elem_count)     \
+	 : memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovedownl)
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	((elem_size) == 4                                 \
+	 ? (void *)memmovedownl(dst, src, elem_count)     \
+	 : memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_memmovedownw)
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	((elem_size) == 2                                 \
+	 ? (void *)memmovedownw(dst, src, elem_count)     \
+	 : memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size)))
+#else /* ... */
+#define memmovedownc(dst, src, elem_count, elem_size) \
+	memmovedown(dst, src, (size_t)(elem_count) * (size_t)(elem_size))
+#endif /* !... */
+#endif /* !CONFIG_HAVE_memmovedownc */
+
+#ifndef CONFIG_HAVE_memmovedownw
+#define CONFIG_HAVE_memmovedownw 1
+#undef memmovedownw
+#define memmovedownw(dst, src, n) memmovedown(dst, src, (n)*2)
+#endif /* !CONFIG_HAVE_memmovedownw */
+
+#ifndef CONFIG_HAVE_memmovedownl
+#define CONFIG_HAVE_memmovedownl 1
+#undef memmovedownl
+#define memmovedownl(dst, src, n) memmovedown(dst, src, (n)*4)
+#endif /* !CONFIG_HAVE_memmovedownl */
+
+#ifndef CONFIG_HAVE_memmovedownq
+#define CONFIG_HAVE_memmovedownq 1
+#undef memmovedownq
+#define memmovedownq(dst, src, n) memmovedown(dst, src, (n)*8)
+#endif /* !CONFIG_HAVE_memmovedownq */
+
+#ifndef CONFIG_HAVE_memsetw
+#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
+#define CONFIG_HAVE_memsetw 1
+DECL_BEGIN
+#undef memsetw
+#ifdef __x86_64__
+extern void __stosw(unsigned short *, unsigned short, unsigned __int64);
+#define memsetw(dst, c, n) __stosw((unsigned short *)(dst), (unsigned short)(c), (unsigned __int64)(n))
+#else /* __x86_64__ */
+extern void __stosw(unsigned short *, unsigned short, unsigned int);
+#define memsetw(dst, c, n) __stosw((unsigned short *)(dst), (unsigned short)(c), (unsigned int)(n))
+#endif /* !__x86_64__ */
+#pragma intrinsic(__stosw)
+DECL_END
+#endif /* _MSC_VER && (__i386__ || __x86_64__) */
+#endif /* !CONFIG_HAVE_memsetw */
+
+#ifndef CONFIG_HAVE_memsetl
+#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
+#define CONFIG_HAVE_memsetl 1
+DECL_BEGIN
+#undef memsetl
+#ifdef __x86_64__
+extern void __stosd(unsigned long *, unsigned long, unsigned __int64);
+#define memsetl(dst, c, n) __stosd((unsigned long *)(dst), (unsigned long)(c), (unsigned __int64)(n))
+#else /* __x86_64__ */
+extern void __stosd(unsigned long *, unsigned long, unsigned int);
+#define memsetl(dst, c, n) __stosd((unsigned long *)(dst), (unsigned long)(c), (unsigned int)(n))
+#endif /* !__x86_64__ */
+#pragma intrinsic(__stosd)
+DECL_END
+#endif /* _MSC_VER && (__i386__ || __x86_64__) */
+#endif /* !CONFIG_HAVE_memsetl */
+
+#ifndef CONFIG_HAVE_memsetq
+#if defined(_MSC_VER) && defined(__x86_64__)
+#define CONFIG_HAVE_memsetq 1
+DECL_BEGIN
+extern void __stosq(unsigned long long *, unsigned long long, unsigned __int64);
+#undef memsetq
+#define memsetq(dst, c, n) __stosq((unsigned long long *)(dst), (unsigned long long)(c), (unsigned __int64)(n))
+#pragma intrinsic(__stosq)
+DECL_END
+#endif /* _MSC_VER && __x86_64__ */
+#endif /* !CONFIG_HAVE_memsetq */
+
+
+
+/* Single-byte variants of multi-byte string functions */
+#undef memcpyb
+#undef memmoveb
+#undef memmoveupb
+#undef memmovedownb
+#undef memsetb
+#undef memchrb
+#define memcpyb(dst, src, n)      ((uint8_t *)memcpy(dst, src, n))
+#define memmoveb(dst, src, n)     ((uint8_t *)memmove(dst, src, n))
+#define memmoveupb(dst, src, n)   ((uint8_t *)memmoveup(dst, src, n))
+#define memmovedownb(dst, src, n) ((uint8_t *)memmovedown(dst, src, n))
+#define memsetb(p, c, n)          ((uint8_t *)memset(p, c, n))
+#define memchrb(p, c, n)          ((uint8_t *)memchr(p, c, n))
+#define memcmpb(s1, s2, n)        ((int8_t)memcmp(s1, s2, n))
+
+
+//func("memsetw", "defined(__USE_KOS)", test: "extern char *a; memsetw(a, 0xcc, 16); return 0;");
+//func("memsetl", "defined(__USE_KOS)", test: "extern char *a; memsetl(a, 0xcc, 16); return 0;");
+//func("memsetq", "defined(__USE_KOS)", test: "extern char *a; memsetq(a, 0xcc, 16); return 0;");
 
 
 

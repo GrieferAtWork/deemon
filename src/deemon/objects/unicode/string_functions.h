@@ -54,184 +54,120 @@ DECL_BEGIN
 #define UNICODE_CR     13 /* '\r' */
 #define UNICODE_LF     10 /* '\n' */
 
+#define MEMEQB(a, b, s) (memcmpb(a, b, s) == 0)
+#ifdef CONFIG_HAVE_memcmpw
+#define MEMEQW(a, b, s) (memcmpw(a, b, s) == 0)
+#else /* CONFIG_HAVE_memcmpw */
+#define MEMEQW(a, b, s) (memcmp(a, b, (s)*2) == 0)
+#endif /* !CONFIG_HAVE_memcmpw */
+#ifdef CONFIG_HAVE_memcmpl
+#define MEMEQL(a, b, s) (memcmpl(a, b, s) == 0)
+#else /* CONFIG_HAVE_memcmpl */
+#define MEMEQL(a, b, s) (memcmp(a, b, (s)*4) == 0)
+#endif /* !CONFIG_HAVE_memcmpl */
+
+/* Basic aliases */
+#undef memrchrb
+#define memrchrb(p, c, n) ((uint8_t *)memrchr(p, c, n))
+#undef memmemb
+#define memmemb(haystack, haystack_length, needle, needle_length) \
+	((uint8_t *)memmem(haystack, haystack_length, needle, needle_length))
+#undef memrmemb
+#define memrmemb(haystack, haystack_length, needle, needle_length) \
+	((uint8_t *)memrmem(haystack, haystack_length, needle, needle_length))
+
+/* Suplement non-standard <string.h> functions */
 #ifndef CONFIG_HAVE_memrchr
 #define CONFIG_HAVE_memrchr 1
+#undef memrchr
 #define memrchr dee_memrchr
 DeeSystem_DEFINE_memrchr(dee_memrchr)
 #endif /* !CONFIG_HAVE_memrchr */
 
 #ifndef CONFIG_HAVE_memmem
 #define CONFIG_HAVE_memmem 1
+#undef memmem
 #define memmem  dee_memmem
 DeeSystem_DEFINE_memmem(dee_memmem)
 #endif /* !CONFIG_HAVE_memmem */
 
 #ifndef CONFIG_HAVE_memrmem
 #define CONFIG_HAVE_memrmem 1
+#undef memrmem
 #define memrmem dee_memrmem
 DeeSystem_DEFINE_memrmem(dee_memrmem)
 #endif /* !CONFIG_HAVE_memrmem */
 
-#ifndef __USE_KOS
-#define memmoveb(dst, src, n) memmove(dst, src, (n)*1)
-#define memmovew(dst, src, n) memmove(dst, src, (n)*2)
-#define memmovel(dst, src, n) memmove(dst, src, (n)*4)
+#ifndef CONFIG_HAVE_memsetw
+#define CONFIG_HAVE_memsetw 1
+#undef memsetw
+#define memsetw dee_memsetw
+DeeSystem_DEFINE_memsetw(dee_memsetw)
+#endif /* !CONFIG_HAVE_memsetw */
 
-#define memcpyb(dst, src, n) memcpy(dst, src, n)
-#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
-#ifdef __x86_64__
-extern void __movsw(unsigned short *, unsigned short const *, unsigned __int64);
-extern void __movsd(unsigned long *, unsigned long const *, unsigned __int64);
-extern void __stosw(unsigned short *, unsigned short, unsigned __int64);
-extern void __stosd(unsigned long *, unsigned long, unsigned __int64);
-#else /* __x86_64__ */
-extern void __movsw(unsigned short *, unsigned short const *, unsigned int);
-extern void __movsd(unsigned long *, unsigned long const *, unsigned int);
-extern void __stosw(unsigned short *, unsigned short, unsigned int);
-extern void __stosd(unsigned long *, unsigned long, unsigned int);
-#endif /* !__x86_64__ */
-#pragma intrinsic(__movsw)
-#pragma intrinsic(__movsd)
-#pragma intrinsic(__stosw)
-#pragma intrinsic(__stosd)
-#define memcpyw(dst, src, n) __movsw((unsigned short *)(dst), (unsigned short const *)(src), (size_t)(n))
-#define memcpyl(dst, src, n) __movsd((unsigned long *)(dst), (unsigned long const *)(src), (size_t)(n))
-#define memsetw(dst, c, n)   __stosw((unsigned short *)(dst), (unsigned short)(c), (size_t)(n))
-#define memsetl(dst, c, n)   __stosd((unsigned long *)(dst), (unsigned long)(c), (size_t)(n))
-#else /* _MSC_VER && (__i386__ || __x86_64__) */
-#define memcpyw(dst,src,n)             memcpy(dst,src,(n)*2)
-#define memcpyl(dst,src,n)             memcpy(dst,src,(n)*4)
-#define memsetw                    dee_memsetw
-#define memsetl                    dee_memsetl
-LOCAL void dee_memsetw(uint16_t *__restrict p, uint16_t c, size_t n) {
- while (n--) *p++ = c;
-}
+#ifndef CONFIG_HAVE_memsetl
+#define CONFIG_HAVE_memsetl 1
+#undef memsetl
+#define memsetl dee_memsetl
+DeeSystem_DEFINE_memsetl(dee_memsetl)
+#endif /* !CONFIG_HAVE_memsetl */
 
-LOCAL void dee_memsetl(uint32_t *__restrict p, uint32_t c, size_t n) {
- while (n--) *p++ = c;
-}
-#endif /* !_MSC_VER || (!__i386__ && !__x86_64__) */
-#define memsetb(p, c, n)  ((uint8_t *)memset(p, c, n))
-#define memchrb(p, c, n)  ((uint8_t *)memchr(p, c, n))
-#define memrchrb(p, c, n) ((uint8_t *)memrchr(p, c, n))
-#define memchrw           dee_memchrw
-#define memchrl           dee_memchrl
-#define memrchrw          dee_memrchrw
-#define memrchrl          dee_memrchrl
-LOCAL uint16_t *dee_memchrw(uint16_t const *__restrict p, uint16_t c, size_t n) {
-	for (; n--; ++p)
-		if (*p == c)
-			return (uint16_t *)p;
-	return NULL;
-}
+#ifndef CONFIG_HAVE_memchrw
+#define CONFIG_HAVE_memchrw 1
+#undef memchrw
+#define memchrw dee_memchrw
+DeeSystem_DEFINE_memchrw(dee_memchrw)
+#endif /* !CONFIG_HAVE_memchrw */
 
-LOCAL uint32_t *dee_memchrl(uint32_t const *__restrict p, uint32_t c, size_t n) {
-	for (; n--; ++p)
-		if (*p == c)
-			return (uint32_t *)p;
-	return NULL;
-}
+#ifndef CONFIG_HAVE_memrchrw
+#define CONFIG_HAVE_memrchrw 1
+#undef memrchrw
+#define memrchrw dee_memrchrw
+DeeSystem_DEFINE_memrchrw(dee_memrchrw)
+#endif /* !CONFIG_HAVE_memrchrw */
 
-LOCAL uint16_t *dee_memrchrw(uint16_t const *__restrict p, uint16_t c, size_t n) {
-	uint16_t *iter = (uint16_t *)p + n;
-	while (iter != (uint16_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
+#ifndef CONFIG_HAVE_memchrl
+#define CONFIG_HAVE_memchrl 1
+#undef memchrl
+#define memchrl dee_memchrl
+DeeSystem_DEFINE_memchrl(dee_memchrl)
+#endif /* !CONFIG_HAVE_memchrl */
 
-LOCAL uint32_t *dee_memrchrl(uint32_t const *__restrict p, uint32_t c, size_t n) {
-	uint32_t *iter = (uint32_t *)p + n;
-	while (iter != (uint32_t *)p) {
-		if (*--iter == c)
-			return iter;
-	}
-	return NULL;
-}
-#endif /* __USE_KOS */
+#ifndef CONFIG_HAVE_memrchrl
+#define CONFIG_HAVE_memrchrl 1
+#undef memrchrl
+#define memrchrl dee_memrchrl
+DeeSystem_DEFINE_memrchrl(dee_memrchrl)
+#endif /* !CONFIG_HAVE_memrchrl */
 
-#define MEMEQB(a, b, s) (memcmp(a, b, s) == 0)
-#ifdef __USE_KOS
-#define MEMEQW(a, b, s) (memcmpw((uint16_t *)(a), (uint16_t *)(b), s) == 0)
-#define MEMEQL(a, b, s) (memcmpl((uint32_t *)(a), (uint32_t *)(b), s) == 0)
-#else /* __USE_KOS */
-#define MEMEQW(a, b, s) (memcmp(a, b, (s)*2) == 0)
-#define MEMEQL(a, b, s) (memcmp(a, b, (s)*4) == 0)
-#endif /* !__USE_KOS */
+#ifndef CONFIG_HAVE_memmemw
+#define CONFIG_HAVE_memmemw 1
+#undef memmemw
+#define memmemw dee_memmemw
+DeeSystem_DEFINE_memmemw(dee_memmemw, memchrw, MEMEQW)
+#endif /* !CONFIG_HAVE_memmemw */
 
-#define memmemb(haystack, haystack_length, needle, needle_length) \
-	((uint8_t *)memmem(haystack, haystack_length, needle, needle_length))
-#define memrmemb(haystack, haystack_length, needle, needle_length) \
-	((uint8_t *)memrmem(haystack, haystack_length, needle, needle_length))
+#ifndef CONFIG_HAVE_memmeml
+#define CONFIG_HAVE_memmeml 1
+#undef memmeml
+#define memmeml dee_memmeml
+DeeSystem_DEFINE_memmeml(dee_memmeml, memchrl, MEMEQL)
+#endif /* !CONFIG_HAVE_memmeml */
 
-#define memmemw  dee_memmemw
-LOCAL uint16_t *dee_memmemw(uint16_t const *__restrict haystack, size_t haystack_length,
-                            uint16_t const *__restrict needle, size_t needle_length) {
-	uint16_t const *candidate;
-	uint16_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= needle_length - 1, marker = *(uint16_t *)needle;
-	while ((candidate = memchrw(haystack, marker, haystack_length)) != NULL) {
-		if (MEMEQW(candidate, needle, needle_length))
-			return (uint16_t *)candidate;
-		++candidate;
-		haystack_length = (haystack + haystack_length) - candidate;
-		haystack        = candidate;
-	}
-	return NULL;
-}
+#ifndef CONFIG_HAVE_memrmemw
+#define CONFIG_HAVE_memrmemw 1
+#undef memrmemw
+#define memrmemw dee_memrmemw
+DeeSystem_DEFINE_memrmemw(dee_memrmemw, memrchrw, MEMEQW)
+#endif /* !CONFIG_HAVE_memrmemw */
 
-#define memrmemw  dee_memrmemw
-LOCAL uint16_t *dee_memrmemw(uint16_t const *__restrict haystack, size_t haystack_length,
-                             uint16_t const *__restrict needle, size_t needle_length) {
-	uint16_t const *candidate;
-	uint16_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= needle_length - 1, marker = *(uint16_t *)needle;
-	while ((candidate = memrchrw(haystack, marker, haystack_length)) != NULL) {
-		if (MEMEQW(candidate, needle, needle_length))
-			return (uint16_t *)candidate;
-		haystack_length = candidate - haystack;
-	}
-	return NULL;
-}
+#ifndef CONFIG_HAVE_memrmeml
+#define CONFIG_HAVE_memrmeml 1
+#undef memrmeml
+#define memrmeml dee_memrmeml
+DeeSystem_DEFINE_memrmeml(dee_memrmeml, memrchrl, MEMEQL)
+#endif /* !CONFIG_HAVE_memrmeml */
 
-#define memmeml  dee_memmeml
-LOCAL uint32_t *dee_memmeml(uint32_t const *__restrict haystack, size_t haystack_length,
-                            uint32_t const *__restrict needle, size_t needle_length) {
-	uint32_t const *candidate;
-	uint32_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= needle_length - 1, marker = *(uint32_t *)needle;
-	while ((candidate = memchrl(haystack, marker, haystack_length)) != NULL) {
-		if (MEMEQL(candidate, needle, needle_length))
-			return (uint32_t *)candidate;
-		++candidate;
-		haystack_length = (haystack + haystack_length) - candidate;
-		haystack        = candidate;
-	}
-	return NULL;
-}
-
-#define memrmeml  dee_memrmeml
-LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystack_length,
-                             uint32_t const *__restrict needle, size_t needle_length) {
-	uint32_t const *candidate;
-	uint32_t marker;
-	if unlikely(!needle_length || needle_length > haystack_length)
-		return NULL;
-	haystack_length -= needle_length - 1, marker = *(uint32_t *)needle;
-	while ((candidate = memrchrl(haystack, marker, haystack_length)) != NULL) {
-		if (MEMEQL(candidate, needle, needle_length))
-			return (uint32_t *)candidate;
-		haystack_length = candidate - haystack;
-	}
-	return NULL;
-}
 
 
 
@@ -240,29 +176,21 @@ LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystac
 
 
 /* Case-insensitive string functions. */
-#define memcasechr(haystack, needle, haystack_length) \
-	dee_memcasechrb((uint8_t *)(haystack), (uint8_t)(needle), haystack_length)
-#define memcaserchr(haystack, needle, haystack_length) \
-	dee_memcaserchrb((uint8_t *)(haystack), (uint8_t)(needle), haystack_length)
-#define memcasechrb(haystack, needle, haystack_length) \
-	dee_memcasechrb(haystack, needle, haystack_length)
-#define memcaserchrb(haystack, needle, haystack_length) \
-	dee_memcaserchrb(haystack, needle, haystack_length)
-#define memcasechrw(haystack, needle, haystack_length) \
-	dee_memcasechrw(haystack, needle, haystack_length)
-#define memcaserchrw(haystack, needle, haystack_length) \
-	dee_memcaserchrw(haystack, needle, haystack_length)
-#define memcasechrl(haystack, needle, haystack_length) \
-	dee_memcasechrl(haystack, needle, haystack_length)
-#define memcaserchrl(haystack, needle, haystack_length) \
-	dee_memcaserchrl(haystack, needle, haystack_length)
+#define memcasechr(haystack, needle, haystack_length)   dee_memcasechrb((uint8_t *)(haystack), (uint8_t)(needle), haystack_length)
+#define memcaserchr(haystack, needle, haystack_length)  dee_memcaserchrb((uint8_t *)(haystack), (uint8_t)(needle), haystack_length)
+#define memcasechrb(haystack, needle, haystack_length)  dee_memcasechrb(haystack, needle, haystack_length)
+#define memcaserchrb(haystack, needle, haystack_length) dee_memcaserchrb(haystack, needle, haystack_length)
+#define memcasechrw(haystack, needle, haystack_length)  dee_memcasechrw(haystack, needle, haystack_length)
+#define memcaserchrw(haystack, needle, haystack_length) dee_memcaserchrw(haystack, needle, haystack_length)
+#define memcasechrl(haystack, needle, haystack_length)  dee_memcasechrl(haystack, needle, haystack_length)
+#define memcaserchrl(haystack, needle, haystack_length) dee_memcaserchrl(haystack, needle, haystack_length)
 
 #ifdef __INTELLISENSE__
 #define DEFINE_FOLD_COMPARE(name, T)               \
 	PRIVATE size_t DCALL                           \
 	name(T const *__restrict data, size_t datalen, \
 	     uint32_t fold[UNICODE_FOLDED_MAX], size_t fold_len);
-#else
+#else /* __INTELLISENSE__ */
 #define DEFINE_FOLD_COMPARE(name, T)                                             \
 	PRIVATE size_t DCALL                                                         \
 	name(T const *__restrict data, size_t datalen,                               \
@@ -396,7 +324,7 @@ LOCAL uint32_t *dee_memrmeml(uint32_t const *__restrict haystack, size_t haystac
 	ok_3:                                                                        \
 		return 3;                                                                \
 	}
-#endif
+#endif /* !__INTELLISENSE__ */
 DEFINE_FOLD_COMPARE(dee_foldcmpb, uint8_t)
 DEFINE_FOLD_COMPARE(dee_foldcmpw, uint16_t)
 DEFINE_FOLD_COMPARE(dee_foldcmpl, uint32_t)
@@ -491,7 +419,7 @@ uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderl &x);
 	__builtin_choose_expr(sizeof(*(x).uf_dataptr) == 2, unicode_foldreaderw_getc_back((struct unicode_foldreaderw *)&(x)), \
 	                                                    unicode_foldreaderl_getc_back((struct unicode_foldreaderl *)&(x))))
 
-#else
+#else /* !__NO_builtin_choose_expr */
 #define unicode_foldreader_getc(x)                                    \
 	(sizeof(*(x).uf_dataptr) == 1                                     \
 	 ? unicode_foldreaderb_getc((struct unicode_foldreaderb *)&(x))   \
@@ -504,7 +432,7 @@ uint32_t unicode_foldreader_getc_back(struct unicode_foldreaderl &x);
 	 : sizeof(*(x).uf_dataptr) == 2                                        \
 	   ? unicode_foldreaderw_getc_back((struct unicode_foldreaderw *)&(x)) \
 	   : unicode_foldreaderl_getc_back((struct unicode_foldreaderl *)&(x)))
-#endif
+#endif /* __NO_builtin_choose_expr */
 #define unicode_foldreader_init(x, data, len) \
 	((x).uf_dataptr = (data),                 \
 	 (x).uf_datalen = (len),                  \

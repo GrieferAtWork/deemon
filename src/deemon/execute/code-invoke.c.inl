@@ -93,7 +93,8 @@ kwds_find_index(DeeKwdsObject *__restrict self,
 			continue;
 		if (memcmp(DeeString_STR(entry->ke_name),
 		           DeeString_STR(name),
-		           DeeString_SIZE(name) * sizeof(char)) != 0)
+		           DeeString_SIZE(name) *
+		           sizeof(char)) != 0)
 			continue;
 		return entry->ke_index;
 	}
@@ -178,7 +179,9 @@ MY_FUNCTION_NAME(DeeFunctionObject *self
 		/* Special case: Invoke the function as a this-call. */
 		if unlikely(!GET_ARGC()) {
 			err_invalid_argc(DeeCode_NAME(code), 0, code->co_argc_min + 1,
-			                 code->co_flags & CODE_FVARARGS ? (size_t)-1 : ((size_t)code->co_argc_max + 1));
+			                 code->co_flags & CODE_FVARARGS
+			                 ? (size_t)-1
+			                 : ((size_t)code->co_argc_max + 1));
 			goto err;
 		}
 #ifdef CALL_KW
@@ -280,7 +283,9 @@ err_ex_frame:
 		/* ERROR: Invalid argument count! */
 		err_invalid_argc(DeeCode_NAME(code),
 		                 GET_ARGC(), code->co_argc_min,
-		                 code->co_flags & CODE_FVARARGS ? (size_t)-1 : (size_t)code->co_argc_max);
+		                 code->co_flags & CODE_FVARARGS
+		                 ? (size_t)-1
+		                 : (size_t)code->co_argc_max);
 		goto err;
 	}
 
@@ -324,8 +329,10 @@ err_ex_frame:
 			frame.cf_stacksz = 0;
 			result           = DeeCode_ExecFrameSafe(&frame);
 			/* Delete remaining stack objects. */
-			while (frame.cf_sp != frame.cf_stack)
-				--frame.cf_sp, Dee_Decref(*frame.cf_sp);
+			while (frame.cf_sp != frame.cf_stack) {
+				--frame.cf_sp;
+				Dee_Decref(*frame.cf_sp);
+			}
 			/* Safe code execution allows for stack-space extension into heap memory.
 			 * >> Free that memory now that `DeeCode_ExecFrameSafe()' has finished. */
 			if (frame.cf_stacksz)
@@ -334,12 +341,16 @@ err_ex_frame:
 		} else {
 			result = DeeCode_ExecFrameFast(&frame);
 			/* Delete remaining stack objects. */
-			while (frame.cf_sp != frame.cf_stack)
-				--frame.cf_sp, Dee_Decref(*frame.cf_sp);
+			while (frame.cf_sp != frame.cf_stack) {
+				--frame.cf_sp;
+				Dee_Decref(*frame.cf_sp);
+			}
 		}
 		/* Delete remaining local variables. */
-		while (frame.cf_sp != frame.cf_frame)
-			--frame.cf_sp, Dee_XDecref(*frame.cf_sp);
+		while (frame.cf_sp != frame.cf_frame) {
+			--frame.cf_sp;
+			Dee_XDecref(*frame.cf_sp);
+		}
 
 #ifdef Dee_Alloca
 		if (code->co_flags & CODE_FHEAPFRAME)

@@ -31,9 +31,11 @@
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/string.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
@@ -244,8 +246,10 @@ tuple_tp_free(void *__restrict ob) {
 			if (c->c_count < CONFIG_TUPLE_CACHE_MAXSIZE)
 #endif /* !CONFIG_NO_THREADS */
 			{
-				((struct cached_object *)ob)->co_next = c->c_head;
-				c->c_head                             = (struct cached_object *)ob;
+				struct cached_object *cob;
+				cob = (struct cached_object *)ob;
+				cob->co_next = c->c_head;
+				c->c_head    = cob;
 				++c->c_count;
 				UNLOCK(c->c_lock);
 				return;
@@ -324,8 +328,9 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 	/* Resize the old tuple. */
-	new_tuple = (DREF DeeTupleObject *)DeeObject_Realloc(self, offsetof(DeeTupleObject, t_elem) +
-	                                                           new_size * sizeof(DREF DeeObject *));
+	new_tuple = (DREF DeeTupleObject *)DeeObject_Realloc(self,
+	                                                     offsetof(DeeTupleObject, t_elem) +
+	                                                     new_size * sizeof(DREF DeeObject *));
 	if unlikely(!new_tuple)
 		return NULL;
 #ifndef NDEBUG

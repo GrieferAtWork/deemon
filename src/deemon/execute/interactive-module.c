@@ -578,10 +578,12 @@ done_assembler_fini:
 			DREF DeeObject **new_localv;
 			uint16_t req_localc = current_assembler.a_localc;
 			new_localv = (DREF DeeObject **)Dee_Realloc(self->im_frame.cf_frame,
-			                                            req_localc * sizeof(DREF DeeObject *));
+			                                            req_localc *
+			                                            sizeof(DREF DeeObject *));
 			if unlikely(!new_localv)
 				goto err_result;
-			MEMSET_PTR(new_localv + old_co_localc, 0, req_localc - old_co_localc);
+			MEMSET_PTR(new_localv + old_co_localc, 0,
+			           req_localc - old_co_localc);
 			/* Install the new stack. */
 			self->im_frame.cf_frame = new_localv;
 		}
@@ -591,7 +593,8 @@ done_assembler_fini:
 			DREF DeeObject **new_stackv;
 			uint16_t req_stacksz = current_assembler.a_stackmax;
 			new_stackv = (DREF DeeObject **)Dee_Realloc(self->im_frame.cf_stack,
-			                                            req_stacksz * sizeof(DREF DeeObject *));
+			                                            req_stacksz *
+			                                            sizeof(DREF DeeObject *));
 			if unlikely(!new_stackv)
 				goto err_result;
 			/* Install the new stack. */
