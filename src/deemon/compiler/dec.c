@@ -67,8 +67,9 @@ INTERN void DCALL dec_writer_init(void) {
 	unsigned int i;
 	/* ZERO-initialize everything. */
 	memset(&current_dec, 0, sizeof(struct dec_writer));
-	for (i = 0; i < DEC_SECTION_COUNT; ++i)
+	for (i = 0; i < DEC_SECTION_COUNT; ++i) {
 		current_dec.dw_sec_defl[i].ds_start.ds_sect = &current_dec.dw_sec_defl[i];
+	}
 }
 
 INTERN void DCALL dec_writer_fini(void) {
@@ -146,7 +147,8 @@ dec_allocstr(void const *__restrict data, size_t n_bytes) {
 	uint8_t *result;
 	/* Search for an existing instance that could be re-used. */
 	result = (uint8_t *)memmem(sec->ds_begin,
-	                           (size_t)(sec->ds_iter - sec->ds_begin),
+	                           (size_t)(sec->ds_iter -
+	                                    sec->ds_begin),
 	                           data, n_bytes);
 	if (!result) {
 		/* Append a new block of data if no existing one could be found. */
@@ -177,7 +179,9 @@ dec_reuseglobal_define(struct dec_sym *__restrict sym, size_t n_bytes) {
 		/* Search for an existing instance of the `data+=n_bytes'. */
 		DEC_FOREACH_SECTION(sec) {
 			uint8_t *existing_data;
-			existing_data = (uint8_t *)memmem(sec->ds_begin, (size_t)(sec->ds_iter - sec->ds_begin),
+			existing_data = (uint8_t *)memmem(sec->ds_begin,
+			                                  (size_t)(sec->ds_iter -
+			                                           sec->ds_begin),
 			                                  data, n_bytes);
 			if (!existing_data)
 				continue;
@@ -199,8 +203,12 @@ INTERN uint8_t *DCALL dec_reuselocal(size_t n_bytes) {
 	uint8_t *result;
 	ASSERT(dec_addr >= n_bytes);
 	result = (uint8_t *)memmem(dec_curr->ds_begin,
-	                           (dec_curr->ds_iter - dec_curr->ds_begin) - n_bytes,
-	                           dec_curr->ds_iter - n_bytes, n_bytes);
+	                           (dec_curr->ds_iter -
+	                            dec_curr->ds_begin) -
+	                           n_bytes,
+	                           dec_curr->ds_iter -
+	                           n_bytes,
+	                           n_bytes);
 	if (result) {
 		ASSERT(!n_bytes || result >= dec_curr->ds_begin);
 		ASSERT(!n_bytes || result < (dec_curr->ds_iter - n_bytes));
@@ -221,25 +229,31 @@ INTERN uint8_t *DCALL dec_reuselocal(size_t n_bytes) {
 INTERN int (DCALL dec_putb)(uint8_t byte) {
 	uint8_t *buf = dec_alloc(1);
 	if unlikely(!buf)
-		return -1;
+		goto err;
 	*buf = byte;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN int (DCALL dec_putw)(uint16_t host_endian_word) {
 	uint8_t *buf = dec_alloc(2);
 	if unlikely(!buf)
-		return -1;
+		goto err;
 	UNALIGNED_SETLE16((uint16_t *)buf, host_endian_word);
 	return 0;
+err:
+	return -1;
 }
 
 INTERN int (DCALL dec_putl)(uint32_t host_endian_dword) {
 	uint8_t *buf = dec_alloc(4);
 	if unlikely(!buf)
-		return -1;
+		goto err;
 	UNALIGNED_SETLE32((uint32_t *)buf, host_endian_dword);
 	return 0;
+err:
+	return -1;
 }
 
 INTERN int (DCALL dec_putsleb)(int value) {
@@ -296,9 +310,11 @@ INTERN int (DCALL dec_putieee754)(double value) {
 	buffer.value = value;
 	dst          = dec_alloc(8);
 	if unlikely(!dst)
-		return -1;
+		goto err;
 	UNALIGNED_SETLE64((uint64_t *)dst, buffer.data);
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -351,8 +367,9 @@ INTERN struct dec_rel *DCALL dec_newrel(void) {
 		if (!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		result = (struct dec_rel *)Dee_TryRealloc(sec->ds_relv, new_alloc *
-		                                                        sizeof(struct dec_rel));
+		result = (struct dec_rel *)Dee_TryRealloc(sec->ds_relv,
+		                                          new_alloc *
+		                                          sizeof(struct dec_rel));
 		if unlikely(!result) {
 			if (new_alloc != sec->ds_relc + 1) {
 				new_alloc = sec->ds_relc + 1;
@@ -382,26 +399,30 @@ done:
 INTERN int (DCALL dec_putrel)(uint8_t type, struct dec_sym *sym) {
 	struct dec_rel *rel = dec_newrel();
 	if unlikely(!rel)
-		return -1;
+		goto err;
 	ASSERT(rel == dec_curr->ds_relv ||
 	       rel[-1].dr_addr <= dec_addr);
 	rel->dr_sym  = sym;
 	rel->dr_addr = dec_addr;
 	rel->dr_type = type;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN int (DCALL dec_putrelat)(uint32_t addr, uint8_t type,
                                struct dec_sym *sym) {
 	struct dec_rel *rel = dec_newrel();
 	if unlikely(!rel)
-		return -1;
+		goto err;
 	ASSERT(rel == dec_curr->ds_relv ||
 	       rel[-1].dr_addr <= addr);
 	rel->dr_sym  = sym;
 	rel->dr_addr = addr;
 	rel->dr_type = type;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
@@ -542,7 +563,7 @@ sections_subsec(struct dec_section *start) {
 }
 
 /* Print usage information in DEC sections. */
-PRIVATE void (DCALL dec_print_usage)(DeeModuleObject *__restrict module) {
+PRIVATE void (DCALL dec_print_usage)(DeeModuleObject *__restrict mod) {
 #define PRINTF(...)                                                 \
 	do {                                                            \
 		if (DeeFile_Printf(DeeFile_DefaultStddbg, __VA_ARGS__) < 0) \
@@ -553,7 +574,7 @@ PRIVATE void (DCALL dec_print_usage)(DeeModuleObject *__restrict module) {
 	for (root_id = 0; root_id < DEC_SECTION_COUNT; ++root_id)
 		total_size += sections_size(&current_dec.dw_sec_defl[root_id]);
 	PRINTF("module %k (%k), %Iu bytes:\n",
-	       module->mo_name, module->mo_path, total_size);
+	       mod->mo_name, mod->mo_path, total_size);
 	for (root_id = 0; root_id < DEC_SECTION_COUNT; ++root_id) {
 		struct dec_section *sec = &current_dec.dw_sec_defl[root_id];
 		size_t sec_size         = sections_size(sec);
@@ -579,9 +600,9 @@ PRIVATE void (DCALL dec_print_usage)(DeeModuleObject *__restrict module) {
 err:
 	DeeError_Handled(ERROR_HANDLED_RESTORE);
 }
-#else
-#define dec_print_usage(module) (void)0
-#endif
+#else /* !NDEBUG && ... */
+#define dec_print_usage(mod) (void)0
+#endif /* NDEBUG || !... */
 
 
 INTERN int (DCALL dec_generate_and_link)(DeeModuleObject *__restrict module) {
@@ -600,9 +621,8 @@ again:
 		/* Relocation was truncated. - Set the `DEC_WRITE_FBIGFILE' flag and try again. */
 		if unlikely(current_dec.dw_flags & DEC_WRITE_FBIGFILE) {
 			/* This is bad... (and shouldn't actually happen!) */
-			DeeError_Throwf(&DeeError_NotImplemented,
-			                "DEC relocation was truncated");
-			result = -1;
+			result = DeeError_Throwf(&DeeError_NotImplemented,
+			                         "DEC relocation was truncated");
 			goto done;
 		}
 		/* Re-initialize the current DEC context and set the FBIGFILE flag. */

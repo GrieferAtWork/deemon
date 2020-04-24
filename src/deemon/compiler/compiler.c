@@ -48,16 +48,17 @@ PUBLIC struct weakref DeeCompiler_Active   = WEAKREF_INIT;
 PRIVATE DeeCompilerObject *compiler_loaded = NULL; /* == DeeCompiler_Active */
 
 PRIVATE void *DCALL memxch(void *a, void *b, size_t num_bytes) {
+	typedef unsigned int wordtype;
 	uint8_t *pa = (uint8_t *)a;
 	uint8_t *pb = (uint8_t *)b;
-	while (num_bytes >= sizeof(unsigned int)) {
-		unsigned int temp;
-		temp                = *(unsigned int *)pa;
-		*(unsigned int *)pa = *(unsigned int *)pb;
-		*(unsigned int *)pb = temp;
-		pa += sizeof(unsigned int);
-		pb += sizeof(unsigned int);
-		num_bytes -= sizeof(unsigned int);
+	while (num_bytes >= sizeof(wordtype)) {
+		wordtype temp;
+		temp            = *(wordtype *)pa;
+		*(wordtype *)pa = *(wordtype *)pb;
+		*(wordtype *)pb = temp;
+		pa += sizeof(wordtype);
+		pb += sizeof(wordtype);
+		num_bytes -= sizeof(wordtype);
 	}
 	while (num_bytes--) {
 		uint8_t temp;
@@ -319,8 +320,9 @@ compiler_visit(DeeCompilerObject *__restrict self, dvisit_t proc, void *arg) {
 	/* First: Make sure that the compiler is fully unloaded. */
 	DeeCompiler_Unload(self);
 
-	/* TODO: parser_errors_visit(&self->cp_errors,proc,arg); */
-	/* TODO: TPPLexer_Visit(&self->cp_lexer,proc,arg); */ // TPP uses DeeObject for its streams, meaning we're holding reference to those!
+	/* TODO: parser_errors_visit(&self->cp_errors, proc, arg); */
+	// TPP uses DeeObject for its streams, meaning we're holding reference to those!
+	/* TODO: TPPLexer_Visit(&self->cp_lexer, proc, arg); */
 	Dee_Visit(self->cp_scope);
 }
 

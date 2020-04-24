@@ -536,6 +536,11 @@ struct text_label {
 	unsigned int           tl_goto; /* The number of times this label is used as a goto target. */
 };
 
+#define text_label_name(self, is_case)        \
+	((is_case)                                \
+	 ? ((self)->tl_expr ? "case" : "default") \
+	 : (self)->tl_name->k_name)
+
 
 #undef CONFIG_SYMBOL_HAS_REFCNT
 #define CONFIG_SYMBOL_HAS_REFCNT 1

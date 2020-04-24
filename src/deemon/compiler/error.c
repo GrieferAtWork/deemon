@@ -129,7 +129,7 @@ print_warning_message(struct unicode_printer *__restrict _printer,
 #undef MARK
 #undef WARNF
 #undef PRINT_SYMBOL_DECLARATION
-#endif
+#endif /* !__INTELLISENSE__ */
 _warnf_end:
 	if (_temp_string)
 		TPPString_Decref(_temp_string);
@@ -206,10 +206,12 @@ parser_throw(struct compiler_error_object *__restrict error) {
 				goto err;
 			/* Special handling for ignoring certain errors. */
 			switch (mode) {
+
 			case 3:
 				if (error->ce_mode != Dee_COMPILER_ERROR_FATALITY_FORCEFATAL)
 					goto done;
 				break;
+
 			case 2:
 				if (error->ce_mode == Dee_COMPILER_ERROR_FATALITY_FATAL)
 					error->ce_mode = Dee_COMPILER_ERROR_FATALITY_WARNING;
@@ -298,9 +300,10 @@ INTERN int DCALL parser_rethrow(bool must_fail) {
 		ASSERT(caller->t_exceptsz >= current_parser_errors.pe_except);
 		if (caller->t_exceptsz != current_parser_errors.pe_except) {
 			/* There are additional errors. -> Discard all but the last. */
-			while (caller->t_exceptsz != current_parser_errors.pe_except + 1 &&
-			       DeeError_Print("Secondary error during compilation\n", ERROR_PRINT_DOHANDLE))
-				;
+			while (caller->t_exceptsz != current_parser_errors.pe_except + 1) {
+				if (!DeeError_Print("Secondary error during compilation\n", ERROR_PRINT_DOHANDLE))
+					break;
+			}
 			goto err;
 		}
 	}
@@ -328,8 +331,9 @@ handle_master:
 				if (new_count > current_parser_errors.pe_errora) {
 					/* Must allocate more vector space. */
 					DREF DeeCompilerErrorObject **new_vector;
-					new_vector = (DREF DeeCompilerErrorObject **)Dee_Realloc(current_parser_errors.pe_errorv, new_count *
-					                                                                                          sizeof(DREF DeeCompilerErrorObject *));
+					new_vector = (DREF DeeCompilerErrorObject **)Dee_Realloc(current_parser_errors.pe_errorv,
+					                                                         new_count *
+					                                                         sizeof(DREF DeeCompilerErrorObject *));
 					if unlikely(!new_vector)
 						goto err;
 					current_parser_errors.pe_errora = new_count;

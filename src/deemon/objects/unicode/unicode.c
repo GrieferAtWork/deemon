@@ -177,7 +177,7 @@ done:
 	return result;
 }
 
-PUBLIC WUNUSED DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch) {
+PUBLIC WUNUSED DREF DeeObject *(DCALL DeeString_Chr8)(uint8_t ch) {
 	DREF String *result;
 	rwlock_read(&latin1_chars_lock);
 	result = latin1_chars[ch];
@@ -2843,10 +2843,11 @@ err_r:
 }
 
 
-PUBLIC WUNUSED DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch) {
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_Chr16)(uint16_t ch) {
 	uint16_t *buffer;
 	if (ch <= 0xff)
-		return _DeeString_Chr8((uint8_t)ch);
+		return DeeString_Chr8((uint8_t)ch);
 	buffer = DeeString_New2ByteBuffer(1);
 	if unlikely(!buffer)
 		return NULL;
@@ -2854,9 +2855,10 @@ PUBLIC WUNUSED DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch) {
 	return DeeString_Pack2ByteBuffer(buffer);
 }
 
-PUBLIC WUNUSED DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch) {
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_Chr32)(uint32_t ch) {
 	if (ch <= 0xff)
-		return _DeeString_Chr8((uint8_t)ch);
+		return DeeString_Chr8((uint8_t)ch);
 	if (ch <= 0xffff) {
 		uint16_t *buffer;
 		buffer = DeeString_New2ByteBuffer(1);

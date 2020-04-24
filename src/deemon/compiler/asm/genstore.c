@@ -1570,10 +1570,12 @@ check_dst_sym_class:
 						goto err;
 					dst_sym->s_symid = (uint16_t)sid;
 					dst_sym->s_flag |= SYMBOL_FALLOC;
-					if (PUSH_RESULT &&
-					    (asm_putddi(ddi_ast) ||
-					     asm_gpush_static((uint16_t)sid)))
-						goto err;
+					if (PUSH_RESULT) {
+						if (asm_putddi(ddi_ast))
+							goto err;
+						if (asm_gpush_static((uint16_t)sid))
+							goto err;
+					}
 					goto done;
 				}
 				/* The source-expression cannot be evaluated at compile-time.
@@ -1636,9 +1638,12 @@ check_dst_sym_class:
 		case SYMBOL_TYPE_STACK:
 			if (ast_genasm(src, ASM_G_FPUSHRES))
 				goto err;
-			if (PUSH_RESULT &&
-			    (asm_putddi(ddi_ast) || asm_gdup()))
-				goto err;
+			if (PUSH_RESULT) {
+				if (asm_putddi(ddi_ast))
+					goto err;
+				if (asm_gdup())
+					goto err;
+			}
 			if (asm_putddi(dst))
 				goto err;
 			return asm_gpop_symbol(dst_sym, dst);

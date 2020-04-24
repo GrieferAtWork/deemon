@@ -20,6 +20,8 @@
 #ifndef GUARD_DEEMON_ASM_H
 #define GUARD_DEEMON_ASM_H 1
 
+#include "api.h"
+
 /* NOTE: Apply modifications using:
  * $ deemon -F src/deemon/compiler/instrlen.c
  * $ deemon -F src/deemon/execute/code-exec-targets.c.inl
@@ -400,6 +402,14 @@
                                     * >> PUSH(bool(IS_BOUND(GLOBAL(IMM8)))); */
 #define ASM_PUSH_BND_LOCAL    0x0f /* [2][-0,+1]   `push bound local <imm8>'            - Check if the local variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(LOCAL(IMM8)))); */
+
+/* Convert:
+ *   - ASM_JT   --> ASM_JF
+ *   - ASM_JF   --> ASM_JT
+ *   - ASM_JT16 --> ASM_JF16
+ *   - ASM_JF16 --> ASM_JT16 */
+#define ASM_JX_NOT(instr) ((instr) ^ 2)
+#define ASM_JX_NOTBIT                2
 
 /* Control-flow-related instructions. */
 #define ASM_JF                0x10 /* [2][-1,+0]   `jf pop, <Sdisp8>'                   - Pop one Object. If it evaluates to `false', add `<Sdisp8>' to the `REG_PC' of the next instruction.
@@ -1570,6 +1580,68 @@
                              * instruction.
                              * The 3rd byte is there for instruction such as
                              * `DDI_DEFLCNAME', which define 2 ULEBs (3 == 2*ULEB+1*STOP). */
+
+#ifdef __CC__
+#include <stdint.h>
+#include <stdbool.h>
+
+DECL_BEGIN
+
+#ifndef DEE_INSTRUCTION_T_DEFINED
+#define DEE_INSTRUCTION_T_DEFINED 1
+typedef __BYTE_TYPE__ Dee_instruction_t;
+#endif /* !DEE_INSTRUCTION_T_DEFINED */
+
+#ifdef DEE_SOURCE
+#ifndef INSTRUCTION_T_DEFINED
+#define INSTRUCTION_T_DEFINED 1
+typedef Dee_instruction_t instruction_t;
+#endif /* !INSTRUCTION_T_DEFINED */
+#endif /* DEE_SOURCE */
+
+/* Return a pointer to the instruction, given the base address of the previous one.
+ * >> Use this function if you want to enumerate instructions.
+ * NOTE: Unknown instructions will return a pointer to `pc + 1' */
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
+DeeAsm_NextInstr(instruction_t const *__restrict pc);
+
+/* Same as `DeeAsm_NextInstr()', but also keep track of the current stack depth.
+ * NOTE:    The affect of branch instructions is evaluated as the
+ *          fall-through path (aka. when the branch isn't taken).
+ * WARNING: This also goes for instructions that always take a branch! */
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
+DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
+                   /*in|out*/ uint16_t *__restrict pstacksz);
+
+/* Same as `DeeAsm_NextInstr', but also returns the effective stack effect (sub/add) of the instruction.
+ * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
+ * NOTES:
+ *   - Because some instruction's stack effect depends on the current stack depth.
+ *     That may sound weird, but think about how fixed-depth instructions behave,
+ *     this function also keeps track of the current stack depth. (e.g.: ASM_STACK)
+ *   - Since some instructions exist who's stack-effect depends on parameters
+ *     on known at runtime (e.g.: ASM_POP_POP), those instructions have an effective
+ *     stack-effect of 0, which sub/add effect addends that maximize the potential
+ *     influence (e.g.: `ASM_POP_POP': `*psp_sub = (*psp_sub = *pstacksz)+2,*pstacksz -= 2;')
+ *   - Before returning, `*pstacksz' will be adjusted to `(OLD(*pstacksz) - *psp_sub) + *psp_add' */
+DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3, 4)) instruction_t *DCALL
+DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
+                   /*in|out*/ uint16_t *__restrict pstacksz,
+                   /*out*/ uint16_t *__restrict psp_add,
+                   /*out*/ uint16_t *__restrict psp_sub);
+
+
+/* Check if the given instruction returns abnormally (that is: doesn't
+ * fall through to the follow-up instruction).
+ * @param: instr:      The instruction encoded in big-endian.
+ * @param: code_flags: Set of `CODE_F*' describing the execution mode. */
+DFUNDEF WUNUSED bool DCALL
+DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags);
+
+
+
+DECL_END
+#endif /* __CC__ */
 
 
 #endif /* !GUARD_DEEMON_ASM_H */

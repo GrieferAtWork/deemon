@@ -66,15 +66,18 @@ PRIVATE void DCALL ddi_load_symbols(void) {
 
 
 PRIVATE int checkpoint_compare(const void *a, const void *b) {
+	struct ddi_checkpoint *lhs;
+	struct ddi_checkpoint *rhs;
+	lhs = (struct ddi_checkpoint *)a;
+	rhs = (struct ddi_checkpoint *)b;
 #if __SIZEOF_INT__ > 4
-	return ((int)((struct ddi_checkpoint *)a)->dc_addr -
-	        (int)((struct ddi_checkpoint *)b)->dc_addr);
+	return ((int)lhs->dc_addr - (int)rhs->dc_addr);
 #else /* __SIZEOF_INT__ > 4 */
-	return (((struct ddi_checkpoint *)a)->dc_addr < ((struct ddi_checkpoint *)b)->dc_addr
-	        ? -1
-	        : ((struct ddi_checkpoint *)a)->dc_addr > ((struct ddi_checkpoint *)b)->dc_addr
-	          ? 1
-	          : 0);
+	if (lhs->dc_addr < rhs->dc_addr)
+		return -1;
+	if (lhs->dc_addr > rhs->dc_addr)
+		return 1;
+	return 0;
 #endif /* __SIZEOF_INT__ < 4 */
 }
 
@@ -110,17 +113,19 @@ find_or_alloc_offset(uint32_t **__restrict pvector,
 	if unlikely(size == max_size) {
 		DeeError_Throwf(&DeeError_CompilerError,
 		                "Too many paths/files for DDI");
-		return -1;
+		goto err;
 	}
 	/* Append a new value. */
 	vector = (uint32_t *)Dee_Realloc(vector, (size + 1) *
 	                                         sizeof(uint32_t));
 	if unlikely(!vector)
-		return -1;
+		goto err;
 	vector[size] = offset_value;
 	*pvector     = vector;
 	*psize       = size + 1;
 	return size;
+err:
+	return -1;
 }
 
 PRIVATE uint8_t *DCALL
@@ -295,10 +300,12 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	result_size = (current_assembler.a_sect[0].sec_iter -
 	               current_assembler.a_sect[0].sec_begin) *
 	              3;
-	result = (DeeDDIObject *)DeeObject_TryCalloc(offsetof(DeeDDIObject, d_ddi) + 1 + result_size);
+	result = (DeeDDIObject *)DeeObject_TryCalloc(offsetof(DeeDDIObject, d_ddi) +
+	                                             1 + result_size);
 	if unlikely(!result) {
 		result_size = 0;
-		result      = (DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) + 1 + result_size);
+		result = (DeeDDIObject *)DeeObject_Calloc(offsetof(DeeDDIObject, d_ddi) +
+		                                          1 + result_size);
 		if unlikely(!result)
 			return NULL;
 	}
@@ -669,8 +676,9 @@ err_xwriter:
 		uint32_t used_size = (uint32_t)(code_iter - result->d_ddi);
 		DeeDDIObject *new_result;
 		result->d_ddisize = used_size;
-		new_result = (DeeDDIObject *)DeeObject_TryRealloc(result, used_size +
-		                                                          offsetof(DeeDDIObject, d_ddi));
+		new_result = (DeeDDIObject *)DeeObject_TryRealloc(result,
+		                                                  used_size +
+		                                                  offsetof(DeeDDIObject, d_ddi));
 		if (new_result)
 			result = new_result;
 	}

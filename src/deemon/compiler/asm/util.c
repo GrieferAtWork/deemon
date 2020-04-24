@@ -150,8 +150,7 @@ again:
 	if unlikely(end < 0)
 		end += self->l_size;
 	if unlikely((size_t)begin >= self->l_size ||
-		         (size_t)begin >= (size_t)end)
-	{
+	            (size_t)begin >= (size_t)end) {
 		/* Empty list. */
 		DeeList_LockEndRead(self);
 		return DeeList_New();
@@ -237,9 +236,7 @@ INTERN int (DCALL asm_gpush_constexpr)(DeeObject *__restrict value) {
 	ASSERT_OBJECT(value);
 	if (DeeBool_Check(value)) {
 		/* Push a boolean builtin singleton. */
-		return (DeeBool_IsTrue(value)
-		        ? asm_gpush_true()
-		        : asm_gpush_false());
+		return asm_gpush_bool(DeeBool_IsTrue(value));
 	}
 	if (DeeNone_Check(value))
 		return asm_gpush_none();
@@ -650,8 +647,8 @@ asm_check_thiscall(struct symbol *__restrict sym,
 	 * But since we're trying to generate code for fast-mode, we need to check this now. */
 	if (asm_symbol_accessible(sym))
 		return 0;
-	/* TODO: Hint to the user that they may write `MyClass.symbol' instead of
-	 *      `symbol', if they to access the attribute in its unbound form:
+	/* Hint to the user that they may write `MyClass.symbol' instead of
+	 * `symbol', if they to access the attribute in its unbound form:
 	 * >> class MyClass {
 	 * >>     func() {
 	 * >>         print "Hello";
@@ -1400,9 +1397,7 @@ check_sym_class:
 	case SYMBOL_TYPE_ALIAS:
 		sym = sym->s_alias;
 		goto check_sym_class;
-	case SYMBOL_TYPE_ARG:
-
-	{
+	case SYMBOL_TYPE_ARG: {
 		DeeObject *defl;
 		if (sym->s_symid < current_basescope->bs_argc_min ||
 		    sym->s_symid >= current_basescope->bs_argc_max ||

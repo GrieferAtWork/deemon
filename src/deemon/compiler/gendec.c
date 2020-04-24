@@ -77,7 +77,7 @@ decgen_imports(DeeModuleObject *__restrict self) {
 	dec_curr = SC_IMPORTS;
 	if (dec_putw(self->mo_importc))
 		goto err; /* Dec_Strmap.i_len */
-	end            = (iter = (DeeModuleObject **)self->mo_importv) + self->mo_importc;
+	end = (iter = (DeeModuleObject **)self->mo_importv) + self->mo_importc;
 	module_pathstr = module_pathend = NULL;
 	for (; iter != end; ++iter) {
 		DeeModuleObject *mod = *iter;
@@ -251,7 +251,7 @@ decgen_globals(DeeModuleObject *__restrict self) {
 	struct dec_section *symtab; /* Vector of regular symbols (`Dec_GlbSym' in `Dec_Glbmap.g_map') */
 	struct dec_section *exttab; /* Vector of extended symbols (`Dec_GlbExt' in `Dec_Glbmap.g_ext') */
 	bool has_special_symbols = false;
-	symtab                   = dec_newsection_after(SC_GLOBALS);
+	symtab = dec_newsection_after(SC_GLOBALS);
 	if unlikely(!symtab)
 		goto err;
 	exttab = dec_newsection_after(symtab);
@@ -1466,6 +1466,7 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 						goto err;
 				}
 			}	break;
+
 			default:
 defl_xdat:
 				buf = dec_alloc(1 + opsize);
@@ -1810,16 +1811,26 @@ INTERN int (DCALL dec_putcode)(DeeCodeObject *__restrict self) {
 			goto err;
 		memcpy(pdesc, &descr, sizeof(Dec_Code));
 		/* Create relocations. */
-		if (static_sym && dec_putrelat(code_addr + offsetof(Dec_Code, co_staticoff), DECREL_ABS32, static_sym))
-			goto err;
-		if (except_sym && dec_putrelat(code_addr + offsetof(Dec_Code, co_exceptoff), DECREL_ABS32, except_sym))
-			goto err;
-		if (default_sym && dec_putrelat(code_addr + offsetof(Dec_Code, co_defaultoff), DECREL_ABS32, default_sym))
-			goto err;
-		if (ddi_sym && dec_putrelat(code_addr + offsetof(Dec_Code, co_ddioff), DECREL_ABS32, ddi_sym))
-			goto err;
-		if (kwd_sym && dec_putrelat(code_addr + offsetof(Dec_Code, co_kwdoff), DECREL_ABS32, kwd_sym))
-			goto err;
+		if (static_sym) {
+			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_staticoff), DECREL_ABS32, static_sym))
+				goto err;
+		}
+		if (except_sym) {
+			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_exceptoff), DECREL_ABS32, except_sym))
+				goto err;
+		}
+		if (default_sym) {
+			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_defaultoff), DECREL_ABS32, default_sym))
+				goto err;
+		}
+		if (ddi_sym) {
+			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_ddioff), DECREL_ABS32, ddi_sym))
+				goto err;
+		}
+		if (kwd_sym) {
+			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_kwdoff), DECREL_ABS32, kwd_sym))
+				goto err;
+		}
 		if (dec_putrelat(code_addr + offsetof(Dec_Code, co_textoff), DECREL_ABS32, text_sym))
 			goto err;
 	}

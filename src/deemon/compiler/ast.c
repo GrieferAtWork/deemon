@@ -186,6 +186,7 @@ done:
 INTERN void DCALL
 ast_incwrite(struct ast *__restrict self) {
 	switch (self->a_type) {
+
 	case AST_SYM:
 		ASSERT(self->a_sym);
 		if (self->a_flag++ == 0) {
@@ -193,16 +194,14 @@ ast_incwrite(struct ast *__restrict self) {
 			SYMBOL_INC_NWRITE(self->a_sym);
 		}
 		break;
-		{
-			struct ast **iter, **end;
-		case AST_MULTIPLE:
-			/* Multiple write targets (incref each individually) */
-			end = (iter = self->a_multiple.m_astv) +
-			      self->a_multiple.m_astc;
-			for (; iter != end; ++iter)
-				ast_incwrite(*iter);
-		}
-		break;
+
+	case AST_MULTIPLE: {
+		size_t i;
+		/* Multiple write targets (incref each individually) */
+		for (i = 0; i < self->a_multiple.m_astc; ++i)
+			ast_incwrite(self->a_multiple.m_astv[i]);
+	}	break;
+
 	default: break;
 	}
 }
@@ -210,19 +209,20 @@ ast_incwrite(struct ast *__restrict self) {
 INTERN void DCALL
 ast_incwriteonly(struct ast *__restrict self) {
 	switch (self->a_type) {
+
 	case AST_SYM:
 		ASSERT(self->a_sym);
 		if (self->a_flag++ == 0)
 			SYMBOL_INC_NWRITE(self->a_sym);
 		break;
+
 	case AST_MULTIPLE: {
-		struct ast **iter, **end;
+		size_t i;
 		/* Multiple write targets (incref each individually) */
-		end = (iter = self->a_multiple.m_astv) +
-		      self->a_multiple.m_astc;
-		for (; iter != end; ++iter)
-			ast_incwriteonly(*iter);
+		for (i = 0; i < self->a_multiple.m_astc; ++i)
+			ast_incwriteonly(self->a_multiple.m_astv[i]);
 	}	break;
+
 	default: break;
 	}
 }
@@ -230,6 +230,7 @@ ast_incwriteonly(struct ast *__restrict self) {
 INTERN void DCALL
 ast_decwrite(struct ast *__restrict self) {
 	switch (self->a_type) {
+
 	case AST_SYM:
 		ASSERT(self->a_sym);
 		ASSERT(self->a_flag);
@@ -238,14 +239,14 @@ ast_decwrite(struct ast *__restrict self) {
 			SYMBOL_INC_NREAD(self->a_sym);
 		}
 		break;
+
 	case AST_MULTIPLE: {
-		struct ast **iter, **end;
+		size_t i;
 		/* Multiple write targets (decref each individually) */
-		end = (iter = self->a_multiple.m_astv) +
-		      self->a_multiple.m_astc;
-		for (; iter != end; ++iter)
-			ast_decwrite(*iter);
+		for (i = 0; i < self->a_multiple.m_astc; ++i)
+			ast_decwrite(self->a_multiple.m_astv[i]);
 	}	break;
+
 	default: break;
 	}
 }
@@ -253,20 +254,21 @@ ast_decwrite(struct ast *__restrict self) {
 INTERN void DCALL
 ast_decwriteonly(struct ast *__restrict self) {
 	switch (self->a_type) {
+
 	case AST_SYM:
 		ASSERT(self->a_sym);
 		ASSERT(self->a_flag);
 		if (!--self->a_flag)
 			SYMBOL_DEC_NWRITE(self->a_sym);
 		break;
+
 	case AST_MULTIPLE: {
-		struct ast **iter, **end;
+		size_t i;
 		/* Multiple write targets (decref each individually) */
-		end = (iter = self->a_multiple.m_astv) +
-		      self->a_multiple.m_astc;
-		for (; iter != end; ++iter)
-			ast_decwriteonly(*iter);
+		for (i = 0; i < self->a_multiple.m_astc; ++i)
+			ast_decwriteonly(self->a_multiple.m_astv[i]);
 	}	break;
+
 	default: break;
 	}
 }
@@ -274,10 +276,10 @@ ast_decwriteonly(struct ast *__restrict self) {
 #ifdef CONFIG_NO_AST_DEBUG
 #define DEFINE_AST_GENERATOR(name, args) \
 	INTERN WUNUSED DREF struct ast *(DCALL name)args
-#else
+#else /* CONFIG_NO_AST_DEBUG */
 #define DEFINE_AST_GENERATOR(name, args) \
 	INTERN WUNUSED DREF struct ast *(DCALL name##_d)PRIVATE_AST_GENERATOR_UNPACK_ARGS args
-#endif
+#endif /* !CONFIG_NO_AST_DEBUG */
 
 
 DEFINE_AST_GENERATOR(ast_constexpr,
@@ -336,7 +338,8 @@ DEFINE_AST_GENERATOR(ast_operator_func,
                      (uint16_t operator_name, struct ast *binding)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(binding);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type                     = AST_OPERATOR_FUNC;
 		result->a_flag                     = operator_name;
 		result->a_operator_func.of_binding = binding;
@@ -346,8 +349,9 @@ DEFINE_AST_GENERATOR(ast_operator_func,
 	return result;
 }
 
-DEFINE_AST_GENERATOR(ast_multiple, (uint16_t flags, size_t exprc,
-                                    /*inherit*/ DREF struct ast **__restrict exprv)) {
+DEFINE_AST_GENERATOR(ast_multiple,
+                     (uint16_t flags, size_t exprc,
+                      /*inherit*/ DREF struct ast **__restrict exprv)) {
 	DREF struct ast *result;
 	/* Prevent AST ambiguity by not allowing
 	 * keep-last, single-element multiple ASTs.
@@ -356,8 +360,7 @@ DEFINE_AST_GENERATOR(ast_multiple, (uint16_t flags, size_t exprc,
 	 *        expressions, as well as special behavior surrounding
 	 *       `AST_EXPAND' expressions not being triggered. */
 	if unlikely(exprc == 1 && flags == AST_FMULTIPLE_KEEPLAST &&
-		         current_scope == exprv[0]->a_scope)
-	{
+	            current_scope == exprv[0]->a_scope) {
 		result = exprv[0]; /* Inherit reference. */
 got_result:
 		Dee_Free(exprv); /* We're supposed to ~inherit~ this on success. (So we simply discard it). */
@@ -378,7 +381,8 @@ got_result_maybe:
 			goto got_result_maybe;
 		}
 	}
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type            = AST_MULTIPLE;
 		result->a_flag            = flags;
 		result->a_multiple.m_astc = exprc;
@@ -392,7 +396,8 @@ DEFINE_AST_GENERATOR(ast_return,
                      (struct ast * return_expr)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(return_expr);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type   = AST_RETURN;
 		result->a_return = return_expr;
 		ast_xincref(return_expr);
@@ -405,7 +410,8 @@ DEFINE_AST_GENERATOR(ast_yield,
                      (struct ast * __restrict yield_expr)) {
 	DREF struct ast *result;
 	ASSERT_AST(yield_expr);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type   = AST_YIELD;
 		result->a_return = yield_expr;
 		ast_incref(yield_expr);
@@ -418,7 +424,8 @@ DEFINE_AST_GENERATOR(ast_throw,
                      (struct ast * throw_expr)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(throw_expr);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type   = AST_THROW;
 		result->a_return = throw_expr;
 		ast_xincref(throw_expr);
@@ -437,7 +444,8 @@ DEFINE_AST_GENERATOR(ast_try, (struct ast * __restrict guarded_expression, size_
 		ast_incref(guarded_expression);
 		return guarded_expression;
 	}
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type         = AST_TRY;
 		result->a_try.t_guard  = guarded_expression;
 		result->a_try.t_catchc = catchc;
@@ -480,7 +488,8 @@ DEFINE_AST_GENERATOR(ast_loop,
 	ASSERT_AST_OPT(elem_or_cond);
 	ASSERT_AST_OPT(iter_or_next);
 	ASSERT_AST_OPT(loop);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		/* Apply the unlikely-branch tag to loop expressions.
 		 * When set, the loop block is usually placed in cold text. */
 #if AST_FCOND_UNLIKELY == AST_FLOOP_UNLIKELY
@@ -506,7 +515,8 @@ DEFINE_AST_GENERATOR(ast_loop,
 
 DEFINE_AST_GENERATOR(ast_loopctl, (uint16_t flags)) {
 	DREF struct ast *result;
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type = AST_LOOPCTL;
 		result->a_flag = flags;
 		INIT_REF(result);
@@ -525,7 +535,8 @@ DEFINE_AST_GENERATOR(ast_conditional,
 	ASSERT_AST_OPT(ff_expr);
 	ASSERTF(tt_expr || ff_expr, "At least one must be present");
 	ASSERTF(tt_expr != ff_expr, "These can't be the same");
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type               = AST_CONDITIONAL;
 		result->a_flag               = flags;
 		result->a_conditional.c_cond = cond;
@@ -543,7 +554,8 @@ DEFINE_AST_GENERATOR(ast_bool,
                      (uint16_t flags, struct ast *__restrict expr)) {
 	DREF struct ast *result;
 	ASSERT_AST(expr);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type = AST_BOOL;
 		result->a_flag = flags;
 		result->a_bool = expr;
@@ -570,7 +582,8 @@ DEFINE_AST_GENERATOR(ast_expand,
 		return result;
 	}
 #endif
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type   = AST_EXPAND;
 		result->a_expand = expr;
 		ast_incref(expr);
@@ -585,7 +598,8 @@ DEFINE_AST_GENERATOR(ast_function,
 	DREF struct ast *result;
 	ASSERT_AST(function_code);
 	ASSERT_OBJECT_TYPE((DeeObject *)scope, &DeeBaseScope_Type);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type             = AST_FUNCTION;
 		result->a_function.f_code  = function_code;
 		result->a_function.f_scope = scope;
@@ -601,7 +615,8 @@ DEFINE_AST_GENERATOR(ast_operator1,
                       struct ast *__restrict opa)) {
 	DREF struct ast *result;
 	ASSERT_AST(opa);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		if (OPERATOR_ISINPLACE(operator_name))
 			ast_incwriteonly(opa);
 		result->a_type              = AST_OPERATOR;
@@ -624,7 +639,8 @@ DEFINE_AST_GENERATOR(ast_operator2,
 	DREF struct ast *result;
 	ASSERT_AST(opa);
 	ASSERT_AST(opb);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		if (OPERATOR_ISINPLACE(operator_name))
 			ast_incwriteonly(opa);
 		result->a_type              = AST_OPERATOR;
@@ -649,7 +665,8 @@ DEFINE_AST_GENERATOR(ast_operator3,
 	ASSERT_AST(opa);
 	ASSERT_AST(opb);
 	ASSERT_AST(opc);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		if (OPERATOR_ISINPLACE(operator_name))
 			ast_incwriteonly(opa);
 		result->a_type              = AST_OPERATOR;
@@ -678,7 +695,8 @@ DEFINE_AST_GENERATOR(ast_operator4,
 	ASSERT_AST(opb);
 	ASSERT_AST(opc);
 	ASSERT_AST(opd);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		if (OPERATOR_ISINPLACE(operator_name))
 			ast_incwriteonly(opa);
 		result->a_type              = AST_OPERATOR;
@@ -701,7 +719,8 @@ DEFINE_AST_GENERATOR(ast_action0,
                      (uint16_t action_flags)) {
 	DREF struct ast *result;
 	ASSERT(AST_FACTION_ARGC_GT(action_flags) == 0);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type          = AST_ACTION;
 		result->a_flag          = action_flags;
 		result->a_action.a_act0 = NULL;
@@ -718,7 +737,8 @@ DEFINE_AST_GENERATOR(ast_action1,
 	DREF struct ast *result;
 	ASSERT(AST_FACTION_ARGC_GT(action_flags) == 1);
 	ASSERT_AST(act0);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type          = AST_ACTION;
 		result->a_flag          = action_flags;
 		result->a_action.a_act0 = act0;
@@ -738,7 +758,8 @@ DEFINE_AST_GENERATOR(ast_action2,
 	ASSERT(AST_FACTION_ARGC_GT(action_flags) == 2);
 	ASSERT_AST(act0);
 	ASSERT_AST(act1);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type          = AST_ACTION;
 		result->a_flag          = action_flags;
 		result->a_action.a_act0 = act0;
@@ -764,7 +785,8 @@ DEFINE_AST_GENERATOR(ast_action3,
 	ASSERT_AST(act0);
 	ASSERT_AST(act1);
 	ASSERT_AST(act2);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type          = AST_ACTION;
 		result->a_flag          = action_flags;
 		result->a_action.a_act0 = act0;
@@ -787,7 +809,8 @@ DEFINE_AST_GENERATOR(ast_class,
 	ASSERT_AST_OPT(base);
 	ASSERT_AST(descriptor);
 	ASSERT(!memberc || memberv);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type             = AST_CLASS;
 		result->a_flag             = AST_FCLASS_NORMAL;
 		result->a_class.c_base     = base;
@@ -820,7 +843,8 @@ DEFINE_AST_GENERATOR(ast_label,
                       DeeBaseScopeObject *__restrict base_scope)) {
 	DREF struct ast *result;
 	ASSERT(lbl);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type          = AST_LABEL;
 		result->a_flag          = flags;
 		result->a_label.l_label = lbl;
@@ -835,7 +859,8 @@ DEFINE_AST_GENERATOR(ast_goto,
                       DeeBaseScopeObject *__restrict base_scope)) {
 	DREF struct ast *result;
 	ASSERT(lbl);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type         = AST_GOTO;
 		result->a_flag         = AST_FNORMAL;
 		result->a_goto.g_label = lbl;
@@ -854,7 +879,8 @@ DEFINE_AST_GENERATOR(ast_switch,
                       struct text_label *cases,
                       struct text_label *default_case)) {
 	DREF struct ast *result;
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		result->a_type             = AST_SWITCH;
 		result->a_flag             = flags;
 		result->a_switch.s_expr    = expr;
@@ -892,7 +918,8 @@ DEFINE_AST_GENERATOR(ast_assembly,
 	ASSERT(text);
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	ASSERT(!(num_o + num_i + num_l) || opv);
-	if likely((result = ast_new()) != NULL) {
+	result = ast_new();
+	if likely(result) {
 		size_t i;
 		/* Track the writes to output operands. */
 		for (i = 0; i < num_o; ++i) {
@@ -993,6 +1020,7 @@ do_xdecref_3:
 	case AST_OPERATOR_FUNC:
 		ast_xdecref(self->a_return);
 		break;
+
 	case AST_CONSTEXPR:
 		Dee_Decref(self->a_constexpr);
 		break;
@@ -1029,9 +1057,11 @@ do_xdecref_3:
 		ASSERTF(!self->a_flag, "At least some write-wrappers havn't been unwound.");
 		SYMBOL_DEC_NREAD(self->a_sym);
 		break;
+
 	case AST_UNBIND:
 		SYMBOL_DEC_NWRITE(self->a_unbind);
 		break;
+
 	case AST_BOUND:
 		SYMBOL_DEC_NBOUND(self->a_bound);
 		break;
@@ -1129,6 +1159,7 @@ do_xvisit_3:
 		if (self->a_return)
 			ast_visit(self->a_return);
 		break;
+
 	case AST_CONSTEXPR:
 		Dee_Visit(self->a_constexpr);
 		break;

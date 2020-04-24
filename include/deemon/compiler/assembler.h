@@ -59,8 +59,8 @@ struct ascii_printer;
                            * >> num_keep   = ar_value - ar_sym->as_hand;
                            * >> num_delete = ar_value - num_keep;
                            * >> iter       = target;
-                           * >> while (num_keep--)   iter = asm_nextinstr(iter);
-                           * >> while (num_delete--) target = iter,iter = asm_nextinstr(iter),DELETE_INSTRUCTION(target);
+                           * >> while (num_keep--)   iter = DeeAsm_NextInstr(iter);
+                           * >> while (num_delete--) target = iter, iter = DeeAsm_NextInstr(iter), DELETE_INSTRUCTION(target);
                            * During code generation, this is used to adjust for the exception
                            * handler offset required for cleaning up active exceptions/finally
                            * blocks before performing a jump to an unknown target:
@@ -474,11 +474,11 @@ asm_invocation_tostring(struct asm_invocation *__restrict self,
 #ifdef __COMPILER_HAVE_PRAGMA_PACK
 #pragma pack(push, 1)
 #endif /* __COMPILER_HAVE_PRAGMA_PACK */
-struct __ATTR_PACKED asm_overload_operand {
+struct ATTR_PACKED asm_overload_operand {
 	uint16_t  aoo_class;  /* The operand class. - One of `OPERAND_CLASS_*' */
 	int8_t    aoo_disp;   /* A disposition added to the operand before it is encoded. */
 };
-struct __ATTR_PACKED asm_overload {
+struct ATTR_PACKED asm_overload {
 	uint16_t                     ao_instr;   /* The instruction id, encoded in big-endian.
 	                                          * When the most significant 8 bits are clear, write as 8-bits.
 	                                          * NOTE: When equal to ASM_DELOP, no instruction should be generated. */
@@ -510,7 +510,7 @@ struct __ATTR_PACKED asm_overload {
 };
 
 #define ASM_MNEMONIC_MAXNAME 14
-struct __ATTR_PACKED asm_mnemonic {
+struct ATTR_PACKED asm_mnemonic {
 	char                am_name[ASM_MNEMONIC_MAXNAME]; /* Name of this instruction */
 	uint16_t            am_num_overloads;    /* [!0] The amount of overloads (NOTE: ZERO(0) is used to identify the sentinel) */
 	struct asm_overload am_overloads[1];     /* [am_num_overloads] The individual overloads of this mnemonic. */
@@ -1228,6 +1228,8 @@ INTDEF int DCALL asm_gunwind(void);
 #define asm_gpop_global_p(gid)        (asm_put816(ASM_POP_GLOBAL, gid))
 #define asm_gpop_local(lid)           (asm_decsp(), asm_put816(ASM_POP_LOCAL, lid))
 #define asm_gpop_local_p(lid)         (asm_put816(ASM_POP_LOCAL, lid))
+#define asm_gpush_bool(tt)            (asm_incsp(), asm_put16((tt) ? ASM_PUSH_TRUE : ASM_PUSH_FALSE))
+#define asm_gpush_bool_p(tt)          (asm_put16((tt) ? ASM_PUSH_TRUE : ASM_PUSH_FALSE))
 #define asm_gpush_true()              (asm_incsp(), asm_put16(ASM_PUSH_TRUE))
 #define asm_gpush_true_p()            (asm_put16(ASM_PUSH_TRUE))
 #define asm_gpush_false()             (asm_incsp(), asm_put16(ASM_PUSH_FALSE))
@@ -1704,54 +1706,6 @@ asm_gcall_kw_expr(struct ast *__restrict func,
                   struct ast *__restrict kwds,
                   struct ast *ddi_ast,
                   unsigned int gflags);
-
-
-/* Convert:
- *   - ASM_JT   --> ASM_JF
- *   - ASM_JF   --> ASM_JT
- *   - ASM_JT16 --> ASM_JF16
- *   - ASM_JF16 --> ASM_JT16
- */
-#define ASM_JX_NOT(instr) ((instr) ^ 2)
-#define ASM_JX_NOTBIT                2
-
-
-/* Return a pointer to the instruction, given the base address of the previous one.
- * >> Use this function if you want to enumerate instructions.
- * NOTE: Unknown instructions will return a pointer to `ip + 1' */
-DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
-asm_nextinstr(instruction_t const *__restrict ip);
-
-/* Same as `asm_nextinstr', but also keep track of the current stack depth.
- * NOTE:    The affect of branch instructions is evaluated as the
- *          fall-through path (aka. when the branch isn't taken).
- * WARNING: This also goes for instructions that always take a branch! */
-DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
-asm_nextinstr_sp(instruction_t const *__restrict ip,
-                 uint16_t *__restrict pstacksz);
-
-/* Check if the given instruction returns abnormally.
- * @param: instr:      The instruction encoded in big-endian.
- * @param: code_flags: Set of `CODE_F*' describing the execution mode. */
-DFUNDEF WUNUSED bool DCALL asm_isnoreturn(uint16_t instr, uint16_t code_flags);
-
-/* Same as `asm_nextinstr', but also returns the effective stack effect (sub/add) of the instruction.
- * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
- * NOTES:
- *   - Because some instruction's stack effect depends on the current stack depth.
- *     That may sound weird, but think about how fixed-depth instructions behave,
- *     this function also keeps track of the current stack depth. (e.g.: ASM_STACK)
- *   - Since some instructions exist who's stack-effect depends on parameters
- *     on known at runtime (e.g.: ASM_POP_POP), those instructions have an effective
- *     stack-effect of 0, which sub/add effect addends that maximize the potential
- *     influence (e.g.: `ASM_POP_POP': `*psp_sub = (*psp_sub = *pstacksz)+2,*pstacksz -= 2;')
- *   - Before returning, `*pstacksz' will be adjusted to `(OLD(*pstacksz) - *psp_sub) + *psp_add'
- */
-DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3, 4)) instruction_t *DCALL
-asm_nextinstr_ef(instruction_t const *__restrict ip,
-                 /*in|out*/ uint16_t *__restrict pstacksz,
-                 /*out*/ uint16_t *__restrict psp_add,
-                 /*out*/ uint16_t *__restrict psp_sub);
 
 /* Return usage information about a given local/static variable by the instruction pointed to by `ip'.
  * @return: * : Set of `ASM_USING_*' */

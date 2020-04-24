@@ -58,7 +58,7 @@ STATIC_ASSERT(!(ASM_FOREACH & 1));
 #define IP_ISCJMP(x) OP_ISCJMP(*(x))
 
 
-/* Similar to `asm_nextinstr()', but skip `ASM_DELOP'
+/* Similar to `DeeAsm_NextInstr()', but skip `ASM_DELOP'
  * WARNING: Do _NOT_ use this one for walking instructions for
  *          inter-opcode optimizations.
  *          While ASM_DELOP instruction will be deleted before too long,
@@ -67,11 +67,11 @@ STATIC_ASSERT(!(ASM_FOREACH & 1));
  *       -> Just use this one sparingly, and remember that ASM_DELOP instructions
  *          will be deleted before peephole will be invoked another time, so
  *          your optimization will still get its chance, even if you don't
- *          use `next_instr()' and instead use `asm_nextinstr()' everywhere. */
+ *          use `next_instr()' and instead use `DeeAsm_NextInstr()' everywhere. */
 LOCAL instruction_t *DCALL
 next_instr(instruction_t *__restrict iter) {
 	do {
-		iter = asm_nextinstr(iter);
+		iter = DeeAsm_NextInstr(iter);
 	} while (*iter == ASM_DELOP);
 	return iter;
 }
@@ -79,10 +79,10 @@ next_instr(instruction_t *__restrict iter) {
 LOCAL instruction_t *DCALL
 next_instr_sp(instruction_t *__restrict iter, uint16_t *__restrict pstacksz) {
 #if 1
-	return asm_nextinstr_sp(iter, pstacksz);
+	return DeeAsm_NextInstrSp(iter, pstacksz);
 #else
 	do {
-		iter = asm_nextinstr_sp(iter, pstacksz);
+		iter = DeeAsm_NextInstrSp(iter, pstacksz);
 	} while (*iter == ASM_DELOP);
 	return iter;
 #endif
@@ -407,7 +407,7 @@ switch_on_opcode:
 		}	break;
 
 		default:
-			iter = asm_nextinstr_sp(iter, &stacksz);
+			iter = DeeAsm_NextInstrSp(iter, &stacksz);
 			ASSERT(stacksz >= old_stacksz - 1);
 			break;
 		}
@@ -479,7 +479,7 @@ continue_at_iter:
 	validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
 	for (; iter < end;
 	     validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz),
-	     iter = asm_nextinstr_sp(iter, &stacksz),
+	     iter = DeeAsm_NextInstrSp(iter, &stacksz),
 	     validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz)) {
 		uint16_t opcode;
 		instruction_t *iiter = iter;
@@ -780,7 +780,7 @@ do_jmpf:
 							inplace_disp = (code_saddr_t) * (int8_t *)(jmp_target + 1) + 1;
 						}
 						relative_target += inplace_disp;
-						relative_target -= (code_saddr_t)(asm_nextinstr(after_prefix) - sc_main.sec_begin);
+						relative_target -= (code_saddr_t)(DeeAsm_NextInstr(after_prefix) - sc_main.sec_begin);
 						/* `relative_target' now contains the absolute (sign-extended)
 						 *  value that will eventually be written to operator of the
 						 *  instruction to-be forwarded.
@@ -880,7 +880,7 @@ do_noreturn_optimization:
 			code_addr_t nearest_symbol_addr = (code_addr_t)-1;
 			code_size_t text_size;
 			instruction_t *new_ip;
-			iter                     = asm_nextinstr_sp(iter, &stacksz);
+			iter                     = DeeAsm_NextInstrSp(iter, &stacksz);
 			current_symbol_addr      = (code_addr_t)(iter - sc_main.sec_begin);
 			struct asm_sym *sym_iter = current_assembler.a_syms;
 			for (; sym_iter; sym_iter = sym_iter->as_next) {
@@ -1046,7 +1046,7 @@ do_push_bool_optimizations:
 do_conditional_forward_optimization:
 				instr_jmp = iiter + 1;
 				if (IP_ISCJMP(instr_jmp)) {
-					instr_pop = asm_nextinstr(instr_jmp);
+					instr_pop = DeeAsm_NextInstr(instr_jmp);
 					ASSERT(!IS_PROTECTED(instr_pop));
 					if (!IS_PROTECTED(instr_pop) && (*(instr_pop + 0) == ASM_POP ||
 					                                 ((*(instr_pop + 0) == ASM_ADJSTACK) && *(int8_t *)(instr_pop + 1) < 0) ||
@@ -1255,7 +1255,7 @@ do_optimize_conditional_jump:
 			 *       is also required when generating 32-bit long jumps, we
 			 *       intentionally don't optimize `ASM32_JMP' instructions,
 			 *       so-as not to break bigcode mode. */
-			iiter = asm_nextinstr(after_prefix);
+			iiter = DeeAsm_NextInstr(after_prefix);
 			if ((*iiter == ASM_JMP || *iiter == ASM_JMP16) && !IS_PROTECTED(iiter)) {
 				struct asm_rel *cond_rel;
 				instruction_t *jmp_target = follow_jmp(after_prefix, &cond_rel);
@@ -1371,7 +1371,7 @@ do_switch_after_prefix_opcode:
 			 * Into:
 			 * >> mov  local @bar, arg @foo
 			 */
-			next_instruction = asm_nextinstr(iter);
+			next_instruction = DeeAsm_NextInstr(iter);
 			if (!IS_PROTECTED(next_instruction)) {
 				switch (next_instruction[0]) {
 					instruction_t temp[12];
@@ -1524,7 +1524,7 @@ do_unused_operand_optimization:
 			/* Figure out the absolute stack-address of the
 			 * greatest operand created by this instruction. */
 			validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
-			next_instruction = asm_nextinstr_sp(iter, &stacksz);
+			next_instruction = DeeAsm_NextInstrSp(iter, &stacksz);
 			validate_stack_depth((code_addr_t)(next_instruction - sc_main.sec_begin), stacksz);
 			/* The address of the last operand.
 			 * If the stack argument associated with this address is popped
@@ -1698,7 +1698,7 @@ do_unused_operand_optimization_ex:
 					total_adjustment += (int16_t)UNALIGNED_GETLE16((uint16_t *)(next_instruction + 2));
 				}
 				/* Delete existing assembly. */
-				continue_after = asm_nextinstr(next_instruction);
+				continue_after = DeeAsm_NextInstr(next_instruction);
 				delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
 				                (code_size_t)(continue_after - iter));
 				/* Write some new assembly to do this adjustment. */
@@ -1792,7 +1792,7 @@ do_unused_operand_optimization_ex:
 					 * We need to know this for certain because we need to know if the instruction can
 					 * affect the operand we're trying to optimize away. */
 					validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz);
-					next = asm_nextinstr_ef(iter, &stacksz, &sp_add, &sp_sub);
+					next = DeeAsm_NextInstrEf(iter, &stacksz, &sp_add, &sp_sub);
 					validate_stack_depth((code_addr_t)(next - sc_main.sec_begin), stacksz);
 					ASSERT(stacksz <= current_assembler.a_stackmax);
 					ASSERT(old_stacksz >= sp_sub);
@@ -2143,7 +2143,7 @@ do_pop_push_optimization2:
 					/* pop ?; push ?; --> dup; pop ?;
 					 * NOTE: If the current stack-depth was the old
 					 *       maximum, we must increase the max-depth! */
-					next = asm_nextinstr(next);
+					next = DeeAsm_NextInstr(next);
 					delete_assembly((code_addr_t)(iter - sc_main.sec_begin),
 					                (code_size_t)(next - iter));
 					stacksz      = next_stacksz + 2;
@@ -2267,7 +2267,7 @@ do_writeonly_symbol_optimization:
 				/* Optimization:
 				 *   - pop local ... (never read after this instruction was executed)
 				 *     >> pop */
-				for (; scanner < end; scanner = asm_nextinstr(scanner)) {
+				for (; scanner < end; scanner = DeeAsm_NextInstr(scanner)) {
 					unsigned int how;
 					/* NOTE: We can't follow jumps here  */
 					if (IP_ISJMP(scanner)) {
@@ -2278,7 +2278,7 @@ do_writeonly_symbol_optimization:
 scan_entire_text_for_local_readers:
 							/* Search the entire assembly for assignments to this variable. */
 							scanner = sc_main.sec_begin;
-							for (; scanner < end; scanner = asm_nextinstr(scanner)) {
+							for (; scanner < end; scanner = DeeAsm_NextInstr(scanner)) {
 								if (asm_uses_local(scanner, pop_imma) & ASM_USING_READ)
 									goto done_pop_optimization;
 							}
@@ -2414,7 +2414,7 @@ delete_symbol_store:
 				 *   - pop static ... (never read at all)
 				 *     >> pop */
 				instruction_t *scanner = sc_main.sec_begin;
-				for (; scanner < end; scanner = asm_nextinstr(scanner)) {
+				for (; scanner < end; scanner = DeeAsm_NextInstr(scanner)) {
 					if (asm_uses_static(scanner, pop_imma) & ASM_USING_READ)
 						goto done_pop_optimization;
 				}

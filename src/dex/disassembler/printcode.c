@@ -198,7 +198,7 @@ textjumps_collect(struct textjumps *__restrict self,
 	instruction_t *iter = instr_start;
 fast_continue:
 	for (; iter < instr_end;
-	     iter = asm_nextinstr(iter)) {
+	     iter = DeeAsm_NextInstr(iter)) {
 		uint16_t opcode;
 		int32_t offset;
 do_switch_on_iter:
@@ -240,7 +240,7 @@ do_switch_on_opcode:
 			offset = *(int8_t *)(iter + 1);
 do_relative_jump:
 			temp = iter;
-			iter = asm_nextinstr(iter);
+			iter = DeeAsm_NextInstr(iter);
 			if (textjumps_add(self, (code_addr_t)(temp - start_addr),
 			                  (code_addr_t)(iter - start_addr) + offset))
 				goto err;
@@ -792,23 +792,23 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 		new_stacksz = stacksz;
 		if (new_stacksz == (uint16_t)-1) {
 get_next_instruction_without_stack:
-			next = asm_nextinstr(iter);
+			next = DeeAsm_NextInstr(iter);
 		} else {
 			uint16_t opcode = *iter;
 			if (ASM_ISEXTENDED(opcode))
 				opcode = (opcode << 8) | iter[1];
-			if (asm_isnoreturn(opcode, code_flags)) {
+			if (DeeAsm_IsNoreturn(opcode, code_flags)) {
 				new_stacksz = (uint16_t)-1;
 				goto get_next_instruction_without_stack;
 			}
-			next = asm_nextinstr_sp(iter, &new_stacksz);
+			next = DeeAsm_NextInstrSp(iter, &new_stacksz);
 		}
 		if (!(flags & PCODE_FNOSKIPDELOP)) {
 			while (*iter == ASM_DELOP) {
 				if (next >= instr_end)
 					goto done;
 				iter = next;
-				next = asm_nextinstr(iter);
+				next = DeeAsm_NextInstr(iter);
 			}
 		}
 		/* Print jump labels */
@@ -891,7 +891,7 @@ prefix_except_prefix:
 							if (stacksz == (uint16_t)-1) {
 								/* Make use of handler stack information */
 								new_stacksz = stacksz = hand->eh_stack;
-								asm_nextinstr_sp(iter, &new_stacksz);
+								DeeAsm_NextInstrSp(iter, &new_stacksz);
 							}
 							printf(".except .L%s_%I16u_start, .L%s_%I16u_end, .L%s_%I16u_entry", name, i, name, i, name, i);
 							if (hand->eh_flags & EXCEPTION_HANDLER_FFINALLY)

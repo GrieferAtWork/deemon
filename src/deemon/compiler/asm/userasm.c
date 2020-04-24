@@ -871,24 +871,28 @@ got_overload: {
 		if (invoc->ai_prefix != ASM_EXTERN)
 			invoc->ai_prefix_id2 = 0;
 		/* Check if the prefix needs to be extended. */
-		if ((invoc->ai_prefix_id1 > UINT8_MAX ||
-		     invoc->ai_prefix_id2 > UINT8_MAX) &&
-		    (is_extended = true, asm_put(ASM_EXTENDED1)))
-			goto err;
+		if (invoc->ai_prefix_id1 > UINT8_MAX ||
+		    invoc->ai_prefix_id2 > UINT8_MAX) {
+			is_extended = true;
+			if (asm_put(ASM_EXTENDED1))
+				goto err;
+		}
 		if (asm_put(invoc->ai_prefix))
 			goto err;
 		if (is_extended) {
 			if (asm_put_data16(invoc->ai_prefix_id1))
 				goto err;
-			if (invoc->ai_prefix == ASM_EXTERN &&
-			    asm_put_data16(invoc->ai_prefix_id2))
-				goto err;
+			if (invoc->ai_prefix == ASM_EXTERN) {
+				if (asm_put_data16(invoc->ai_prefix_id2))
+					goto err;
+			}
 		} else {
 			if (asm_put_data8((uint8_t)invoc->ai_prefix_id1))
 				goto err;
-			if (invoc->ai_prefix == ASM_EXTERN &&
-			    asm_put_data8((uint8_t)invoc->ai_prefix_id2))
-				goto err;
+			if (invoc->ai_prefix == ASM_EXTERN) {
+				if (asm_put_data8((uint8_t)invoc->ai_prefix_id2))
+					goto err;
+			}
 		}
 	} else {
 		/* Emit prefix operands. */
@@ -945,12 +949,14 @@ got_overload: {
 				    invoc->ai_ops[i].io_extern.io_symid > UINT8_MAX) {
 					if (asm_put(ASM_EXTENDED1))
 						goto err;
-					if (asm_putimm16(ASM_EXTERN, invoc->ai_ops[i].io_extern.io_modid) ||
-					    asm_put_data16(invoc->ai_ops[i].io_extern.io_symid))
+					if (asm_putimm16(ASM_EXTERN, invoc->ai_ops[i].io_extern.io_modid))
+						goto err;
+					if (asm_put_data16(invoc->ai_ops[i].io_extern.io_symid))
 						goto err;
 				} else {
-					if (asm_putimm8(ASM_EXTERN, (uint8_t)invoc->ai_ops[i].io_extern.io_modid) ||
-					    asm_put_data8((uint8_t)invoc->ai_ops[i].io_extern.io_symid))
+					if (asm_putimm8(ASM_EXTERN, (uint8_t)invoc->ai_ops[i].io_extern.io_modid))
+						goto err;
+					if (asm_put_data8((uint8_t)invoc->ai_ops[i].io_extern.io_symid))
 						goto err;
 				}
 				break;
@@ -1171,7 +1177,7 @@ do_emit_instruction:
 
 	/* Finally, update the stack effect. */
 	old_sp    = current_assembler.a_stackcur;
-	instr_end = asm_nextinstr_ef(current_assembler.a_curr->sec_begin + instr_start,
+	instr_end = DeeAsm_NextInstrEf(current_assembler.a_curr->sec_begin + instr_start,
 	                             &current_assembler.a_stackcur, &sp_add, &sp_sub);
 	ASSERTF(instr_end == current_assembler.a_curr->sec_iter,
 	        "Generated instruction does not terminate properly");

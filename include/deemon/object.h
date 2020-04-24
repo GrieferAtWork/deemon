@@ -456,10 +456,10 @@ Dee_weakref_init(struct Dee_weakref *__restrict self,
                  Dee_weakref_callback_t callback);
 #else /* __INTELLISENSE__ */
 #define Dee_weakref_init(self, ob, callback) \
-	((self)->wr_del = (callback), _Dee_weakref_init(self, ob))
-DFUNDEF NONNULL((1, 2)) bool DCALL
-_Dee_weakref_init(struct Dee_weakref *__restrict self,
-                  DeeObject *__restrict ob);
+	((self)->wr_del = (callback), (Dee_weakref_init)(self, ob))
+DFUNDEF NONNULL((1, 2)) bool
+(DCALL Dee_weakref_init)(struct Dee_weakref *__restrict self,
+                         DeeObject *__restrict ob);
 #endif /* !__INTELLISENSE__ */
 
 /* Finalize a given weak reference. */

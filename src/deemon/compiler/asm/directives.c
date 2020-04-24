@@ -484,9 +484,9 @@ except_err_mask:
 			} else {
 				goto except_unknown_tag;
 			}
+#undef IS_TAG
 			if unlikely(yield() < 0)
 				goto except_err;
-#undef IS_TAG
 		}
 		except = asm_newexc();
 		if unlikely(!except)
@@ -709,7 +709,7 @@ do_handle_ddi:
 					ASSERT(sym->as_used >= 1);
 					if (sym->as_used > 1) {
 						if unlikely((sym = asm_newsym()) == NULL)
-							return -1;
+							goto err;
 						--ddi->dc_sym->as_used;
 						ddi->dc_sym = sym;
 						asm_defsym(sym);
@@ -719,8 +719,8 @@ do_handle_ddi:
 				}
 			}
 			if unlikely((sym = asm_newsym()) == NULL ||
-				         (ddi = asm_newddi()) == NULL)
-			return -1;
+			            (ddi = asm_newddi()) == NULL)
+				goto err;
 			/* Simply define the symbol at the current text position.
 			 * NOTE: Its actual address may change during later assembly phases. */
 			asm_defsym(sym);
@@ -782,17 +782,17 @@ do_handle_adjstack:
 		if unlikely(uasm_parse_intexpr(&new_depth, UASM_INTEXPR_FHASSP))
 			goto err;
 		if unlikely(new_depth.ie_sym &&
-			         WARN(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION))
-		goto err;
+		            WARN(W_UASM_STACK_DEPTH_DEPENDS_ON_SYMBOL_EXPRESSION))
+			goto err;
 		if unlikely((new_depth.ie_val < 0 || new_depth.ie_val > UINT16_MAX) &&
-			         WARN(W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val))
-		goto err;
+		            WARN(W_UASM_ILLEGAL_STACK_DEPTH, (long)new_depth.ie_val))
+			goto err;
 		/* Special case: If nothing changed, don't even sweat it. */
 		if (current_assembler.a_stackcur == (uint16_t)new_depth.ie_val &&
 		    !(current_userasm.ua_mode & USER_ASM_FSTKINV))
 			goto done;
 		/* Warn if the previous instruction does actually return. */
-		if unlikely(!asm_isnoreturn(current_userasm.ua_lasti, current_basescope->bs_flags)) {
+		if unlikely(!DeeAsm_IsNoreturn(current_userasm.ua_lasti, current_basescope->bs_flags)) {
 			if (WARN(W_UASM_POTENTIALLY_INCONSISTENT_STACK_DEPTH_ADJUSTMENT))
 				goto err;
 #if 1

@@ -21,26 +21,12 @@
 #define GUARD_DEX_FS_LIBDISASM_H 1
 
 #include <deemon/api.h>
+#include <deemon/asm.h>
 #include <deemon/code.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
 
 DECL_BEGIN
-
-/* Functions exported by the deemon core, but
- * not found in public portions of headers. */
-DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
-asm_nextinstr(instruction_t const *__restrict ip);
-DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
-asm_nextinstr_sp(instruction_t const *__restrict ip,
-                 uint16_t *__restrict pstacksz);
-DFUNDEF ATTR_RETNONNULL instruction_t *DCALL
-asm_nextinstr_ef(instruction_t const *__restrict ip,
-                 /*in|out*/ uint16_t *__restrict pstacksz,
-                 /*out*/ uint16_t *__restrict psp_add,
-                 /*out*/ uint16_t *__restrict psp_sub);
-DFUNDEF bool DCALL asm_isnoreturn(uint16_t instr, uint16_t code_flags);
-
 
 /* Special meanings for assembly text-bytes. */
 #define TEXTBYTE_LABELCLASS_NORMAL       0x00 /* No special meaning. */
@@ -103,9 +89,6 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 #define PCODE_FNOSKIPDELOP  0x2000 /* FLAG: Do not omit ASM_DELOP from output. */
 #define PCODE_FNOADDRESS    0x4000 /* FLAG: Do not print instruction addresses. */
 #define PCODE_FNOBYTES      0x8000 /* FLAG: Do not include raw text bytes in output. */
-
-
-
 
 DECL_END
 

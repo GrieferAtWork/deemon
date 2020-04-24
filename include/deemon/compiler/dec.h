@@ -265,9 +265,9 @@ INTDEF int (DCALL dec_write)(DeeObject *__restrict file_stream);
  *                       could not be encoded a DTYPE expression.
  * @return:  0: Successfully populated DEC sections.
  * @return: -1: An error occurred. */
-INTDEF int (DCALL dec_generate)(DeeModuleObject *__restrict module);
+INTDEF int (DCALL dec_generate)(DeeModuleObject *__restrict mod);
 /* Generate a link DEC text for the given module. */
-INTDEF int (DCALL dec_generate_and_link)(DeeModuleObject *__restrict module);
+INTDEF int (DCALL dec_generate_and_link)(DeeModuleObject *__restrict mod);
 
 /* Encode an object using DTYPE codes. */
 INTDEF int (DCALL dec_putobj)(DeeObject *self);
@@ -275,11 +275,11 @@ INTDEF int (DCALL dec_putcode)(DeeCodeObject *__restrict self);
 INTDEF int (DCALL dec_putobjv)(uint16_t count, DeeObject **__restrict vec); /* `Dec_Objects' */
 
 /* Create and emit a DEC file for the given module. */
-INTDEF int (DCALL dec_create)(DeeModuleObject *__restrict module);
+INTDEF int (DCALL dec_create)(DeeModuleObject *__restrict mod);
 
 #if 0
 /* Similar to `dec_create', but write data to the given `file_stream' */
-INTDEF int (DCALL dec_createfp)(DeeModuleObject *__restrict module,
+INTDEF int (DCALL dec_createfp)(DeeModuleObject *__restrict mod,
                                 DeeObject *__restrict file_stream);
 #endif
 
@@ -295,13 +295,13 @@ INTDEF int (DCALL dec_createfp)(DeeModuleObject *__restrict module,
 #define dec_putrelat(addr, type, sym) __builtin_expect(dec_putrelat(addr, type, sym), 0)
 #define dec_link()                    __builtin_expect(dec_link(), DECREL_NONE)
 #define dec_write(file_stream)        __builtin_expect(dec_write(file_stream), 0)
-#define dec_generate(module)          __builtin_expect(dec_generate(module), 0)
+#define dec_generate(mod)             __builtin_expect(dec_generate(mod), 0)
 #define dec_putobj(self)              __builtin_expect(dec_putobj(self), 0)
 #define dec_putcode(self)             __builtin_expect(dec_putcode(self), 0)
 #define dec_putobjv(count, vec)       __builtin_expect(dec_putobjv(count, vec), 0)
-#define dec_create(module)            __builtin_expect(dec_create(module), 0)
-#endif
-#endif
+#define dec_create(mod)               __builtin_expect(dec_create(mod), 0)
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
 
 DECL_END
 

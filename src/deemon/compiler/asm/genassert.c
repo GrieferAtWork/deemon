@@ -250,9 +250,15 @@ emit_instruction:
 		if ((gflags & ASM_G_FPUSHRES) && asm_gpop())
 			goto err; /* Pop the duplicated `condition' */
 		/* STACK: a, [b, [c, [d]]] */
-		if (message ? (ast_genasm_one(message, ASM_G_FPUSHRES) || asm_putddi(ddi_ast))
-		            : asm_gpush_none())
-			goto err;
+		if (message) {
+			if (ast_genasm_one(message, ASM_G_FPUSHRES))
+				goto err;
+			if (asm_putddi(ddi_ast))
+				goto err;
+		} else {
+			if (asm_gpush_none())
+				goto err;
+		}
 		/* STACK: a, [b, [c, [d]]], message */
 		if (asm_grrot(argc + 1))
 			goto err;

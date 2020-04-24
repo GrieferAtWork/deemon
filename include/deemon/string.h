@@ -1764,22 +1764,22 @@ DREF DeeObject *DeeString_Chr(uint8_t ch);
 DREF DeeObject *DeeString_Chr(uint16_t ch);
 DREF DeeObject *DeeString_Chr(uint32_t ch);
 }
-#else
+#else /* __INTELLISENSE__ && __cplusplus */
 #ifndef __NO_builtin_choose_expr
-#define DeeString_Chr(ch)                                                    \
-	__builtin_choose_expr(sizeof(ch) == 1, _DeeString_Chr8((uint8_t)(ch)),   \
-	__builtin_choose_expr(sizeof(ch) == 2, _DeeString_Chr16((uint16_t)(ch)), \
-	                                       _DeeString_Chr32((uint32_t)(ch))))
+#define DeeString_Chr(ch)                                                   \
+	__builtin_choose_expr(sizeof(ch) == 1, DeeString_Chr8((uint8_t)(ch)),   \
+	__builtin_choose_expr(sizeof(ch) == 2, DeeString_Chr16((uint16_t)(ch)), \
+	                                       DeeString_Chr32((uint32_t)(ch))))
 #else /* !__NO_builtin_choose_expr */
-#define DeeString_Chr(ch)                                 \
-	(sizeof(ch) == 1 ? _DeeString_Chr8((uint8_t)(ch)) :   \
-	 sizeof(ch) == 2 ? _DeeString_Chr16((uint16_t)(ch)) : \
-	                   _DeeString_Chr32((uint32_t)(ch)))
+#define DeeString_Chr(ch)                                \
+	(sizeof(ch) == 1 ? DeeString_Chr8((uint8_t)(ch)) :   \
+	 sizeof(ch) == 2 ? DeeString_Chr16((uint16_t)(ch)) : \
+	                   DeeString_Chr32((uint32_t)(ch)))
 #endif /* __NO_builtin_choose_expr */
-DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr8)(uint8_t ch);
-DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr16)(uint16_t ch);
-DFUNDEF WUNUSED DREF DeeObject *(DCALL _DeeString_Chr32)(uint32_t ch);
-#endif
+DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr8)(uint8_t ch);
+DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr16)(uint16_t ch);
+DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr32)(uint32_t ch);
+#endif /* !__INTELLISENSE__ || !__cplusplus */
 
 
 

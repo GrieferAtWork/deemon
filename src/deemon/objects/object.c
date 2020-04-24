@@ -221,15 +221,26 @@ LOCAL void DCALL ptrlock_unlock(void **__restrict self) {
 #endif
 
 
-PUBLIC NONNULL((1, 2)) bool DCALL
-_Dee_weakref_init(struct weakref *__restrict self,
-                  DeeObject *__restrict ob) {
+#ifdef __INTELLISENSE__
+PUBLIC NONNULL((1, 2)) bool
+(DCALL Dee_weakref_init)(struct weakref *__restrict self,
+                         DeeObject *__restrict ob,
+                         Dee_weakref_callback_t callback)
+#else /* __INTELLISENSE__ */
+PUBLIC NONNULL((1, 2)) bool
+(DCALL Dee_weakref_init)(struct weakref *__restrict self,
+                         DeeObject *__restrict ob)
+#endif /* !__INTELLISENSE__ */
+{
 	struct weakref_list *list;
 	struct weakref *next;
 	ASSERT(self);
 	ASSERT(ob);
 	ASSERT(ob->ob_refcnt);
 	ASSERT(IS_ALIGNED((uintptr_t)self, PTRLOCK_LOCK_MASK + 1));
+#ifdef __INTELLISENSE__
+	self->wr_del = callback;
+#endif /* __INTELLISENSE__ */
 again:
 	list = WEAKREFS_GET(ob);
 	if unlikely(!WEAKREFS_OK(list, ob))
@@ -3697,18 +3708,18 @@ PRIVATE struct type_method type_methods[] = {
 	      "Lookup an attribute @name that is implemented by instances of @this Type\n"
 	      "Normally, such attributes can also be accessed using regular attribute lookup, "
 	      /**/ "however in ambiguous cases where both the Type, as well as instances implement "
-	      /**/ "an attribute of the same name (s.a. :Dict.c:keys vs. :Dict.i:keys), using regular "
+	      /**/ "an attribute of the same name (s.a. :Dict.Keys vs. :Dict.keys), using regular "
 	      /**/ "attribute lookup on the Type (as in ${Dict.keys}) will always return the Type-attribute, "
 	      /**/ "rather than a wrapper around the instance attribute.\n"
 	      "In such cases, this function may be used to explicitly lookup the instance variant:\n"
 
 	      "${"
 	      "import Dict from deemon;\n"
-	      "local dict_keys_function = Dict.getinstanceattr(\"keys\");\n"
-	      "local my_dict_instance = Dict();\n"
-	      "my_dict_instance[\"foo\"] = \"bar\";\n"
-	      "// Same as `my_dict_instance.keys()' -- { \"foo\" }\n"
-	      "print repr dict_keys_function(my_dict_instance);"
+	      "local dictKeysFunction = Dict.getinstanceattr(\"keys\");\n"
+	      "local myDictInstance = Dict();\n"
+	      "myDictInstance[\"foo\"] = \"bar\";\n"
+	      "// Same as `myDictInstance.keys()' -- { \"foo\" }\n"
+	      "print repr dictKeysFunction(myDictInstance);"
 	      "}\n"
 
 	      "Note that one minor exception exists to the default lookup rule, and it relates to how "

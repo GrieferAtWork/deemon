@@ -162,13 +162,19 @@ typedef struct Dee_function_object DeeFunctionObject;
 typedef struct Dee_yield_function_object DeeYieldFunctionObject;
 typedef struct Dee_yield_function_iterator_object DeeYieldFunctionIteratorObject;
 typedef struct Dee_ddi_object DeeDDIObject;
+#ifndef DEE_INSTRUCTION_T_DEFINED
+#define DEE_INSTRUCTION_T_DEFINED 1
 typedef __BYTE_TYPE__ Dee_instruction_t;
+#endif /* !DEE_INSTRUCTION_T_DEFINED */
 typedef uint32_t Dee_code_addr_t;
 typedef uint32_t Dee_code_size_t;
 typedef int32_t Dee_code_saddr_t;
 
 #ifdef DEE_SOURCE
+#ifndef INSTRUCTION_T_DEFINED
+#define INSTRUCTION_T_DEFINED 1
 typedef Dee_instruction_t instruction_t;
+#endif /* !INSTRUCTION_T_DEFINED */
 typedef Dee_code_addr_t   code_addr_t;
 typedef Dee_code_size_t   code_size_t;
 typedef Dee_code_saddr_t  code_saddr_t;

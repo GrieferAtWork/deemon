@@ -770,10 +770,10 @@ uasm_parse_imm16(uint16_t features) {
 		goto err;
 	/* Warn if the parsed value is out-of-bounds. */
 	if unlikely((result.ie_sym || result.ie_val < 0 ||
-		          result.ie_val > UINT16_MAX ||
-		          result.ie_rel != (uint16_t)-1) &&
-		         WARN(W_UASM_EXPECTED_16BIT_IMMEDIATE_INTEGER))
-	goto err;
+	             result.ie_val > UINT16_MAX ||
+	             result.ie_rel != (uint16_t)-1) &&
+	            WARN(W_UASM_EXPECTED_16BIT_IMMEDIATE_INTEGER))
+		goto err;
 	return (int32_t)(uint32_t)(uint16_t)result.ie_val;
 err:
 	return -1;
@@ -868,11 +868,11 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_COLD void FCALL
+PRIVATE ATTR_COLD int FCALL
 err_unknown_symbol(struct TPPKeyword *__restrict name) {
-	DeeError_Throwf(&DeeError_CompilerError,
-	                "Unknown symbol `%s'",
-	                name->k_name);
+	return DeeError_Throwf(&DeeError_CompilerError,
+	                       "Unknown symbol `%s'",
+	                       name->k_name);
 }
 
 PRIVATE int32_t FCALL do_parse_global_operands(void) {
@@ -2020,9 +2020,10 @@ continue_line:
 				goto err;
 		}
 		/* Consume the `;' or `\n' token. */
-		if (likely(tok == ';' || tok == '\n') &&
-		    unlikely(yield() < 0))
-			goto err;
+		if likely(tok == ';' || tok == '\n') {
+			if unlikely(yield() < 0)
+				goto err;
+		}
 		/* Warn if this didn't go anywhere. */
 		if unlikely(old_num == token.t_num) {
 			if (WARN(W_UASM_PARSING_FAILED))

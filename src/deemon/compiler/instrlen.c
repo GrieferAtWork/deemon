@@ -69,7 +69,7 @@ for (local l: file.open("../../../include/deemon/asm.h")) {
 			updown = ",";
 		}
 	}
-	code = (int)("0x"+code);
+	code = (int)("0x" + code);
 	local data = pack(name, length, updown, desc);
 	if (code < 256) {
 		codes[code] = data;
@@ -81,6 +81,7 @@ for (local l: file.open("../../../include/deemon/asm.h")) {
 	if (longest_name < #name)
 		longest_name = #name;
 }
+
 function print_codes(codes, zero_f0, unknown_length) {
 	for (local id, data: util::enumerate(codes)) {
 			if (data is none) {
@@ -95,10 +96,11 @@ function print_codes(codes, zero_f0, unknown_length) {
 			}
 	}
 }
+
 function print_stack_effect(codes) {
 	for (local id, data: util::enumerate(codes)) {
 			if (data is none) {
-				print ("\t/" "* 0x%.2I8x *" "/" % id)+" STACK_EFFECT_UNDEF, /" "* --- *" "/";
+				print ("\t/" "* 0x%.2I8x *" "/" % id) + " STACK_EFFECT_UNDEF, /" "* --- *" "/";
 			} else {
 				local name, none, updown, desc = data...;
 				if (updown == "-n,+n+1")
@@ -115,7 +117,7 @@ function print_stack_effect(codes) {
 					up   = up.strip(" +");
 					if ("|" in up)
 						up = up.partition("|")[0];
-					print ("\t/" "* 0x%.2I8x *" "/" % id)+" STACK_EFFECT(" + down + ", " + up + "), /" "* `ASM"+name+"':" +
+					print ("\t/" "* 0x%.2I8x *" "/" % id) + " STACK_EFFECT(" + down + ", " + up + "), /" "* `ASM" + name + "':" +
 							(" " * (longest_name - #name)) + " `" + desc + "' *" "/";
 				}
 			}
@@ -124,12 +126,18 @@ function print_stack_effect(codes) {
 print "PRIVATE uint8_t const intr_len[256] = {";
 print_codes(codes, true, 1);
 print "};";
+print "";
+
 print "PRIVATE uint8_t const intr_len_f0[256] = {";
 print_codes(codes_f0, false, 2);
 print "};";
+print "";
+
 print "PRIVATE uint8_t const stack_effect[256] = {";
 print_stack_effect(codes);
 print "};";
+
+print "";
 print "PRIVATE uint8_t const stack_effect_f0[256] = {";
 print_stack_effect(codes_f0);
 print "};";
@@ -392,6 +400,7 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0xfe */ 0, /* --- */
 	/* 0xff */ 0, /* --- */
 };
+
 PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x00 */ 2, /* --- */
 	/* 0x01 */ 2, /* --- */
@@ -650,6 +659,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0xfe */ 2, /* --- */
 	/* 0xff */ 2, /* --- */
 };
+
 PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x00 */ STACK_EFFECT(0, 0), /* `ASM_RET_NONE':                `ret' */
 	/* 0x01 */ STACK_EFFECT(1, 0), /* `ASM_YIELD':                   `yield pop' */
@@ -908,6 +918,7 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0xfe */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0xff */ STACK_EFFECT_UNDEF, /* --- */
 };
+
 PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x00 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x01 */ STACK_EFFECT_UNDEF, /* --- */
@@ -1191,42 +1202,47 @@ PRIVATE uint8_t const prefix_length_f0[8] = {
 };
 
 
+/* Return a pointer to the instruction following `pc' */
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
-asm_nextinstr(instruction_t const *__restrict ip) {
+DeeAsm_NextInstr(instruction_t const *__restrict pc) {
 	uint8_t length;
 again:
-	length = intr_len[*ip];
+	length = intr_len[*pc];
 	if unlikely(!length) {
 		/* Prefix instruction. */
-		if (*ip >= ASM_PREFIXMIN) {
-			ip += prefix_length[*ip - ASM_PREFIXMIN];
+		if (*pc >= ASM_PREFIXMIN) {
+			pc += prefix_length[*pc - ASM_PREFIXMIN];
 			goto again;
 		}
 		/* Extended instruction sets. */
-		if (*ip == ASM_EXTENDED1) {
-			if (ip[1] >= ASM_PREFIXMIN) {
-				ip += prefix_length_f0[ip[1] - ASM_PREFIXMIN];
+		if (*pc == ASM_EXTENDED1) {
+			if (pc[1] >= ASM_PREFIXMIN) {
+				pc += prefix_length_f0[pc[1] - ASM_PREFIXMIN];
 				goto again;
 			}
 			/* First extended instruction set. */
-			length = intr_len_f0[ip[1]];
+			length = intr_len_f0[pc[1]];
 		} else {
 			/* Fallback: advance by one. */
 			length = 1;
 		}
 	}
-	return (instruction_t *)(ip + length);
+	return (instruction_t *)(pc + length);
 }
 
 
 
+/* Return if the given `instr' doesn't return normally (i.e. doesn't fall
+ * through to its successor instruction) when executed in a context where
+ * `code_flags' (which is the set of CODE_F* flags) is active. */
 PUBLIC WUNUSED bool DCALL
-asm_isnoreturn(uint16_t instr, uint16_t code_flags) {
+DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	bool result = false;
 	switch (instr) {
 
 	case ASM_RET:
-		/* In yielding code, the `ret' instruction does actually return. */
+		/* In yielding code, the `ret' instruction does actually
+		 * return, since it would actually be the `yield' instruction. */
 		if (code_flags & CODE_FYIELDING)
 			break;
 		ATTR_FALLTHROUGH
@@ -1247,18 +1263,18 @@ asm_isnoreturn(uint16_t instr, uint16_t code_flags) {
 }
 
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
-asm_nextinstr_sp(instruction_t const *__restrict ip,
+DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
                  uint16_t *__restrict pstacksz) {
 	uint16_t sp_add, sp_sub;
-	return asm_nextinstr_ef(ip, pstacksz, &sp_add, &sp_sub);
+	return DeeAsm_NextInstrEf(pc, pstacksz, &sp_add, &sp_sub);
 }
 
 PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3, 4)) instruction_t *DCALL
-asm_nextinstr_ef(instruction_t const *__restrict ip,
-                 uint16_t *__restrict pstacksz,
-                 uint16_t *__restrict psp_add,
-                 uint16_t *__restrict psp_sub) {
-	instruction_t op = *ip;
+DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
+                   uint16_t *__restrict pstacksz,
+                   uint16_t *__restrict psp_add,
+                   uint16_t *__restrict psp_sub) {
+	instruction_t op = *pc;
 	instruction_t const *prefix_ip;
 	uint16_t prefix_stack_sub;
 #ifndef NDEBUG
@@ -1268,7 +1284,7 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 
 	case ASM_ADJSTACK: {
 		int8_t effect;
-		effect = *(int8_t *)(ip + 1);
+		effect = *(int8_t *)(pc + 1);
 		*pstacksz += effect;
 		if (effect >= 0) {
 			*psp_add = (uint16_t)effect;
@@ -1281,17 +1297,17 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 
 	case ASM_LROT:
 	case ASM_RROT:
-		*psp_add = *psp_sub = (uint16_t)(*(uint8_t *)(ip + 1) + 3);
+		*psp_add = *psp_sub = (uint16_t)(*(uint8_t *)(pc + 1) + 3);
 		break;
 
 	case ASM_DUP_N:
-		*psp_sub = (uint16_t)(*(uint8_t *)(ip + 1) + 2);
+		*psp_sub = (uint16_t)(*(uint8_t *)(pc + 1) + 2);
 		*psp_add = *psp_sub + 1;
 		*pstacksz += 1;
 		break;
 
 	case ASM_POP_N:
-		*psp_add = (uint16_t)(*(uint8_t *)(ip + 1) + 1);
+		*psp_add = (uint16_t)(*(uint8_t *)(pc + 1) + 1);
 		*psp_sub = *psp_add + 1;
 		*pstacksz -= 1;
 		break;
@@ -1299,8 +1315,8 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 	case ASM_PACK_TUPLE:
 	case ASM_PACK_LIST:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(ip + 1);
-		*pstacksz -= *(uint8_t *)(ip + 1);
+		*psp_sub = *(uint8_t *)(pc + 1);
+		*pstacksz -= *(uint8_t *)(pc + 1);
 		++*pstacksz;
 		break;
 
@@ -1308,34 +1324,34 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 	case ASM_CALL_KW:
 	case ASM_EXTEND:
 		*psp_add = 1;
-		*psp_sub = 1 + *(uint8_t *)(ip + 1);
-		*pstacksz -= *(uint8_t *)(ip + 1);
+		*psp_sub = 1 + *(uint8_t *)(pc + 1);
+		*pstacksz -= *(uint8_t *)(pc + 1);
 		break;
 
 	case ASM_CALLCMEMBER_THIS_R:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(ip + 3);
-		*pstacksz -= *(uint8_t *)(ip + 3);
+		*psp_sub = *(uint8_t *)(pc + 3);
+		*pstacksz -= *(uint8_t *)(pc + 3);
 		++*pstacksz;
 		break;
 
 	case ASM_UNPACK:
 		*psp_sub = 1;
-		*psp_add = *(uint8_t *)(ip + 1);
-		*pstacksz += *(uint8_t *)(ip + 1);
+		*psp_add = *(uint8_t *)(pc + 1);
+		*pstacksz += *(uint8_t *)(pc + 1);
 		--*pstacksz;
 		break;
 
 	case ASM_FUNCTION_C_16:
 		*psp_add = 1;
-		*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+		*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(pc + 2));
 		*pstacksz -= (*psp_sub - 1);
 		break;
 
 	case ASM_CALLATTR:
 		*psp_add = 1;
-		*psp_sub = 2 + *(uint8_t *)(ip + 1);
-		*pstacksz -= 1 + *(uint8_t *)(ip + 1);
+		*psp_sub = 2 + *(uint8_t *)(pc + 1);
+		*pstacksz -= 1 + *(uint8_t *)(pc + 1);
 		break;
 
 	case ASM_CALLATTR_C_KW:
@@ -1343,13 +1359,13 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 	case ASM_CALLATTR_C:
 	case ASM_CALLATTR_C_SEQ:
 		*psp_add = 1;
-		*psp_sub = 1 + *(uint8_t *)(ip + 2);
+		*psp_sub = 1 + *(uint8_t *)(pc + 2);
 		*pstacksz -= (*psp_sub - 1);
 		break;
 
 	case ASM_CALLATTR_C_MAP:
 		*psp_add = 1;
-		*psp_sub = 1 + (uint16_t)(*(uint8_t *)(ip + 2) * 2);
+		*psp_sub = 1 + (uint16_t)(*(uint8_t *)(pc + 2) * 2);
 		*pstacksz -= (*psp_sub - 1);
 		break;
 
@@ -1357,31 +1373,31 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 	case ASM_CALL_GLOBAL:
 	case ASM_CALL_LOCAL:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(ip + 2);
-		*pstacksz -= *(uint8_t *)(ip + 2);
+		*psp_sub = *(uint8_t *)(pc + 2);
+		*pstacksz -= *(uint8_t *)(pc + 2);
 		*pstacksz += 1;
 		break;
 
 	case ASM_CALL_EXTERN:
 		*psp_add = 1;
-		*psp_sub = *(uint8_t *)(ip + 3);
-		*pstacksz -= *(uint8_t *)(ip + 3);
+		*psp_sub = *(uint8_t *)(pc + 3);
+		*pstacksz -= *(uint8_t *)(pc + 3);
 		*pstacksz += 1;
 		break;
 
 	case ASM_OPERATOR:
 		*psp_add = 1;
-		*psp_sub = 1 + *(uint8_t *)(ip + 2);
-		*pstacksz -= *(uint8_t *)(ip + 2);
+		*psp_sub = 1 + *(uint8_t *)(pc + 2);
+		*pstacksz -= *(uint8_t *)(pc + 2);
 		break;
 
 	case ASM_EXTENDED1:
-		op = ip[1];
+		op = pc[1];
 		switch (op) {
 
 		case ASM16_ADJSTACK & 0xff: {
 			int16_t effect;
-			effect = (int16_t)UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			effect = (int16_t)UNALIGNED_GETLE16((uint16_t *)(pc + 2));
 			*pstacksz += effect;
 			if (effect >= 0) {
 				*psp_add = (uint16_t)effect;
@@ -1394,17 +1410,17 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 
 		case ASM16_LROT & 0xff:
 		case ASM16_RROT & 0xff:
-			*psp_add = *psp_sub = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(ip + 2)) + 3);
+			*psp_add = *psp_sub = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(pc + 2)) + 3);
 			break;
 
 		case ASM16_DUP_N & 0xff:
-			*psp_sub = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(ip + 2)) + 2);
+			*psp_sub = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(pc + 2)) + 2);
 			*psp_add = *psp_sub + 1;
 			*pstacksz += 1;
 			break;
 
 		case ASM16_POP_N & 0xff:
-			*psp_add = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(ip + 2)) + 1);
+			*psp_add = (uint16_t)(UNALIGNED_GETLE16((uint16_t *)(pc + 2)) + 1);
 			*psp_sub = *psp_add + 1;
 			*pstacksz -= 1;
 			break;
@@ -1413,150 +1429,150 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 		case ASM16_PACK_LIST & 0xff:
 		case ASM16_PACK_HASHSET & 0xff:
 			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			*psp_sub = UNALIGNED_GETLE16((uint16_t *)(pc + 2));
 			*pstacksz -= *psp_sub;
 			*pstacksz += 1;
 			break;
 
 		case ASM16_UNPACK & 0xff:
 			*psp_sub = 1;
-			*psp_add = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			*psp_add = UNALIGNED_GETLE16((uint16_t *)(pc + 2));
 			*pstacksz += *psp_add;
 			*pstacksz -= 1;
 			break;
 
 		case ASM16_FUNCTION_C & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(ip + 4);
-			*pstacksz -= *(uint8_t *)(ip + 4);
+			*psp_sub = 1 + *(uint8_t *)(pc + 4);
+			*pstacksz -= *(uint8_t *)(pc + 4);
 			break;
 
 		case ASM16_FUNCTION_C_16 & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(ip + 4));
+			*psp_sub = 1 + UNALIGNED_GETLE16((uint16_t *)(pc + 4));
 			*pstacksz -= (*psp_sub - 1);
 			break;
 
 		case ASM_CALLATTR_KWDS & 0xff:
 			*psp_add = 1;
-			*psp_sub = 3 + *(uint8_t *)(ip + 2);
-			*pstacksz -= 2 + *(uint8_t *)(ip + 2);
+			*psp_sub = 3 + *(uint8_t *)(pc + 2);
+			*pstacksz -= 2 + *(uint8_t *)(pc + 2);
 			break;
 
 		case ASM16_CALLATTR_C_KW & 0xff:
 		case ASM16_CALLATTR_C & 0xff:
 		case ASM16_CALLATTR_C_SEQ & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(ip + 4);
-			*pstacksz -= *(uint8_t *)(ip + 4);
+			*psp_sub = 1 + *(uint8_t *)(pc + 4);
+			*pstacksz -= *(uint8_t *)(pc + 4);
 			break;
 
 		case ASM16_CALLATTR_C_MAP & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + (uint16_t)(*(uint8_t *)(ip + 4) * 2);
-			*pstacksz -= *(uint8_t *)(ip + 4);
+			*psp_sub = 1 + (uint16_t)(*(uint8_t *)(pc + 4) * 2);
+			*pstacksz -= *(uint8_t *)(pc + 4);
 			break;
 
 		case ASM16_CALLATTR_THIS_C & 0xff:
 		case ASM16_CALL_GLOBAL & 0xff:
 		case ASM16_CALL_LOCAL & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(ip + 4);
-			*pstacksz -= *(uint8_t *)(ip + 4);
+			*psp_sub = *(uint8_t *)(pc + 4);
+			*pstacksz -= *(uint8_t *)(pc + 4);
 			*pstacksz += 1;
 			break;
 
 		case ASM16_CALL_EXTERN & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(ip + 6);
-			*pstacksz -= *(uint8_t *)(ip + 6);
+			*psp_sub = *(uint8_t *)(pc + 6);
+			*pstacksz -= *(uint8_t *)(pc + 6);
 			*pstacksz += 1;
 			break;
 
 		case ASM16_CALL_KW & 0xff:
 		case ASM_CALL_SEQ & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(ip + 2);
-			*pstacksz -= *(uint8_t *)(ip + 2);
+			*psp_sub = 1 + *(uint8_t *)(pc + 2);
+			*pstacksz -= *(uint8_t *)(pc + 2);
 			break;
 
 		case ASM16_CALLCMEMBER_THIS_R & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(ip + 6);
-			*pstacksz -= *(uint8_t *)(ip + 6);
+			*psp_sub = *(uint8_t *)(pc + 6);
+			*pstacksz -= *(uint8_t *)(pc + 6);
 			++*pstacksz;
 			break;
 
 		case ASM_CALL_MAP & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + ((uint16_t) * (uint8_t *)(ip + 2) * 2);
-			*pstacksz -= ((uint16_t) * (uint8_t *)(ip + 2) * 2);
+			*psp_sub = 1 + ((uint16_t) * (uint8_t *)(pc + 2) * 2);
+			*pstacksz -= ((uint16_t) * (uint8_t *)(pc + 2) * 2);
 			break;
 
 		case ASM16_OPERATOR & 0xff:
 			*psp_add = 1;
-			*psp_sub = 1 + *(uint8_t *)(ip + 4);
-			*pstacksz -= *(uint8_t *)(ip + 4);
+			*psp_sub = 1 + *(uint8_t *)(pc + 4);
+			*pstacksz -= *(uint8_t *)(pc + 4);
 			break;
 
 		case ASM_PACK_HASHSET & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(ip + 2);
-			*pstacksz -= *(uint8_t *)(ip + 2);
+			*psp_sub = *(uint8_t *)(pc + 2);
+			*pstacksz -= *(uint8_t *)(pc + 2);
 			*pstacksz += 1;
 			break;
 
 		case ASM_PACK_DICT & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(ip + 2) * 2;
-			*pstacksz -= *(uint8_t *)(ip + 2) * 2;
+			*psp_sub = *(uint8_t *)(pc + 2) * 2;
+			*pstacksz -= *(uint8_t *)(pc + 2) * 2;
 			*pstacksz += 1;
 			break;
 
 		case ASM16_PACK_DICT & 0xff:
 			*psp_add = 1;
-			*psp_sub = UNALIGNED_GETLE16((uint16_t *)(ip + 2)) * 2;
+			*psp_sub = UNALIGNED_GETLE16((uint16_t *)(pc + 2)) * 2;
 			*pstacksz -= *psp_sub;
 			*pstacksz += 1;
 			break;
 
 		case ASM_VARARGS_UNPACK & 0xff:
-			*psp_add = *(uint8_t *)(ip + 2);
+			*psp_add = *(uint8_t *)(pc + 2);
 			*psp_sub = 0;
 			*pstacksz += *psp_add;
 			break;
 
 		case ASM_SUPERCALLATTR_THIS_RC & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(ip + 4);
+			*psp_sub = *(uint8_t *)(pc + 4);
 			*pstacksz += 1;
 			*pstacksz -= *psp_sub;
 			break;
 
 		case ASM16_SUPERCALLATTR_THIS_RC & 0xff:
 			*psp_add = 1;
-			*psp_sub = *(uint8_t *)(ip + 6);
+			*psp_sub = *(uint8_t *)(pc + 6);
 			*pstacksz += 1;
 			*pstacksz -= *psp_sub;
 			break;
 
 		case ASM16_STACK & 0xff: {
 			uint16_t sp_addr;
-			prefix_ip = ip + 4;
-			sp_addr   = UNALIGNED_GETLE16((uint16_t *)(ip + 2));
+			prefix_ip = pc + 4;
+			sp_addr   = UNALIGNED_GETLE16((uint16_t *)(pc + 2));
 			/* Calculate the relative stack effect for addressing this stack slot. */
 			prefix_stack_sub = (*pstacksz - sp_addr);
 			goto do_prefix;
 		}
 
 		case ASM16_EXTERN & 0xff:
-			prefix_ip = ip + 6;
+			prefix_ip = pc + 6;
 			goto do_prefix_nosp;
 
 		case ASM16_STATIC & 0xff:
 		case ASM16_GLOBAL & 0xff:
 		case ASM16_LOCAL & 0xff:
-			prefix_ip = ip + 4;
+			prefix_ip = pc + 4;
 			goto do_prefix_nosp;
 
 		default:
@@ -1569,21 +1585,21 @@ asm_nextinstr_ef(instruction_t const *__restrict ip,
 
 	case ASM_STACK: {
 		uint8_t sp_addr;
-		prefix_ip = ip + 2;
-		sp_addr   = *(uint8_t *)(ip + 1);
+		prefix_ip = pc + 2;
+		sp_addr   = *(uint8_t *)(pc + 1);
 		/* Calculate the relative stack effect for addressing this stack slot. */
 		prefix_stack_sub = (*pstacksz - sp_addr);
 		goto do_prefix;
 	}
 
 	case ASM_EXTERN:
-		prefix_ip = ip + 3;
+		prefix_ip = pc + 3;
 		goto do_prefix_nosp;
 
 	case ASM_STATIC:
 	case ASM_GLOBAL:
 	case ASM_LOCAL:
-		prefix_ip = ip + 2;
+		prefix_ip = pc + 2;
 do_prefix_nosp:
 		prefix_stack_sub = 0;
 do_prefix:
@@ -1736,13 +1752,13 @@ do_prefix:
 	/* Make sure that the stack was adjusted properly. */
 	ASSERT(*pstacksz == (uint16_t)((old_stacksz - *psp_sub) + *psp_add));
 #endif /* !NDEBUG */
-	return asm_nextinstr(ip);
+	return DeeAsm_NextInstr(pc);
 }
 
 PRIVATE unsigned int DCALL
-prefix_symbol_usage(instruction_t const *__restrict ip) {
+prefix_symbol_usage(instruction_t const *__restrict pc) {
 	unsigned int result;
-	switch (ip[0]) {
+	switch (pc[0]) {
 
 	case ASM_ADD:
 	case ASM_SUB:
@@ -1803,7 +1819,7 @@ prefix_symbol_usage(instruction_t const *__restrict ip) {
 		break;
 
 	case ASM_EXTENDED1:
-		switch (ip[1]) {
+		switch (pc[1]) {
 
 		case ASM_INCPOST & 0xff:
 		case ASM_DECPOST & 0xff:
@@ -1860,56 +1876,62 @@ prefix_symbol_usage(instruction_t const *__restrict ip) {
 
 
 INTERN WUNUSED NONNULL((1)) unsigned int DCALL
-asm_uses_local(instruction_t const *__restrict ip, uint16_t lid) {
+asm_uses_local(instruction_t const *__restrict pc, uint16_t lid) {
 	unsigned int result = 0;
-	switch (ip[0]) {
+	switch (pc[0]) {
 
 	case ASM_LOCAL:
-		if (*(uint8_t *)(ip + 1) == lid)
-			result = prefix_symbol_usage(ip + 2);
-		ip += 2;
+		if (*(uint8_t *)(pc + 1) == lid)
+			result = prefix_symbol_usage(pc + 2);
+		pc += 2;
 		goto check_prefix_core_usage;
 
 	case ASM_PUSH_BND_LOCAL:
 	case ASM_PUSH_LOCAL:
 	case ASM_CALL_LOCAL:
-		if (*(uint8_t *)(ip + 1) != lid)
+		if (*(uint8_t *)(pc + 1) != lid)
 			break;
 		result = ASM_USING_READ;
 		break;
+
 	case ASM_DEL_LOCAL:
 	case ASM_POP_LOCAL:
-		if (*(uint8_t *)(ip + 1) != lid)
+		if (*(uint8_t *)(pc + 1) != lid)
 			break;
 		result = ASM_USING_WRITE;
 		break;
 
 	case ASM_EXTENDED1:
-		switch (ip[1]) {
+		switch (pc[1]) {
+
 		case ASM16_PUSH_BND_LOCAL & 0xff:
 		case ASM16_PUSH_LOCAL & 0xff:
 		case ASM16_CALL_LOCAL & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != lid)
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != lid)
 				break;
 			result = ASM_USING_READ;
 			break;
+
 		case ASM16_DEL_LOCAL & 0xff:
 		case ASM16_POP_LOCAL & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != lid)
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != lid)
 				break;
 			result = ASM_USING_WRITE;
 			break;
+
 		case ASM16_LOCAL & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == lid)
-				result = prefix_symbol_usage(ip + 4);
-			ip += 4;
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == lid)
+				result = prefix_symbol_usage(pc + 4);
+			pc += 4;
 			goto check_prefix_core_usage;
+
 		case ASM16_STACK & 0xff:
 		case ASM16_STATIC & 0xff:
 		case ASM16_EXTERN & 0xff:
 		case ASM16_GLOBAL & 0xff:
-			ip += 4;
+			pc += 4;
 			goto check_prefix_core_usage;
+
 		default: break;
 		}
 		break;
@@ -1919,26 +1941,28 @@ asm_uses_local(instruction_t const *__restrict ip, uint16_t lid) {
 	case ASM_EXTERN:
 	case ASM_GLOBAL:
 check_prefix_core_usage:
-		switch (*ip) {
+		switch (*pc) {
 
 		case ASM_PUSH_LOCAL: /* mov PREFIX, local */
-			if (*(uint8_t *)(ip + 1) == lid)
+			if (*(uint8_t *)(pc + 1) == lid)
 				result |= ASM_USING_READ;
 			break;
+
 		case ASM_POP_LOCAL: /* mov local, PREFIX */
-			if (*(uint8_t *)(ip + 1) == lid)
+			if (*(uint8_t *)(pc + 1) == lid)
 				result |= ASM_USING_WRITE;
 			break;
 
 		case ASM_EXTENDED1:
-			switch (ip[1]) {
+			switch (pc[1]) {
 
 			case ASM16_PUSH_LOCAL & 0xff: /* mov PREFIX, local */
-				if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == lid)
+				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == lid)
 					result |= ASM_USING_READ;
 				break;
+
 			case ASM16_POP_LOCAL & 0xff: /* mov local, PREFIX */
-				if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == lid)
+				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == lid)
 					result |= ASM_USING_WRITE;
 				break;
 
@@ -1958,21 +1982,21 @@ check_prefix_core_usage:
 
 
 INTERN WUNUSED NONNULL((1)) unsigned int DCALL
-asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
+asm_uses_static(instruction_t const *__restrict pc, uint16_t sid) {
 	/* NOTE: This function also allows for tracking of constant variable usage. */
 	unsigned int result = 0;
-	switch (ip[0]) {
+	switch (pc[0]) {
 
 	case ASM_STATIC:
-		if (*(uint8_t *)(ip + 1) != sid)
+		if (*(uint8_t *)(pc + 1) != sid)
 			break;
-		result = prefix_symbol_usage(ip + 2);
-		result |= asm_uses_static(ip + 2, sid);
-		ip += 2;
+		result = prefix_symbol_usage(pc + 2);
+		result |= asm_uses_static(pc + 2, sid);
+		pc += 2;
 		goto check_prefix_core_usage;
 
 	case ASM_POP_STATIC:
-		if (*(uint8_t *)(ip + 1) != sid)
+		if (*(uint8_t *)(pc + 1) != sid)
 			break;
 		result = ASM_USING_WRITE;
 		break;
@@ -2001,66 +2025,66 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
 	case ASM_CALLATTR_C_TUPLE:
 	case ASM_CALLATTR_THIS_C:
 	case ASM_CALLATTR_THIS_C_TUPLE:
-		if (*(uint8_t *)(ip + 1) != sid)
+		if (*(uint8_t *)(pc + 1) != sid)
 			break;
 		result = ASM_USING_READ;
 		break;
 
 	case ASM_CLASS_C:
-		if (*(uint8_t *)(ip + 1) == sid) {
+		if (*(uint8_t *)(pc + 1) == sid) {
 			result = ASM_USING_READ;
 			break;
 		}
 		break;
 
 	case ASM_CLASS_GC:
-		if (*(uint8_t *)(ip + 2) == sid) {
+		if (*(uint8_t *)(pc + 2) == sid) {
 			result = ASM_USING_READ;
 			break;
 		}
 		break;
 
 	case ASM_CLASS_EC:
-		if (*(uint8_t *)(ip + 3) == sid) {
+		if (*(uint8_t *)(pc + 3) == sid) {
 			result = ASM_USING_READ;
 			break;
 		}
 		break;
 
 	case ASM_EXTENDED1:
-		switch (ip[1]) {
+		switch (pc[1]) {
 
 		case ASM16_CLASS_C & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == sid) {
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == sid) {
 				result = ASM_USING_READ;
 				break;
 			}
 			break;
 
 		case ASM16_CLASS_GC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 4)) == sid) {
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 4)) == sid) {
 				result = ASM_USING_READ;
 				break;
 			}
 			break;
 
 		case ASM16_CLASS_EC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 6)) == sid) {
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 6)) == sid) {
 				result = ASM_USING_READ;
 				break;
 			}
 			break;
 
 		case ASM16_STATIC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid)
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != sid)
 				break;
-			result = prefix_symbol_usage(ip + 4);
-			result |= asm_uses_static(ip + 4, sid);
-			ip += 4;
+			result = prefix_symbol_usage(pc + 4);
+			result |= asm_uses_static(pc + 4, sid);
+			pc += 4;
 			goto check_prefix_core_usage;
 
 		case ASM16_POP_STATIC & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid)
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != sid)
 				break;
 			result = ASM_USING_WRITE;
 			break;
@@ -2089,7 +2113,7 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
 		case ASM16_CALLATTR_C_TUPLE & 0xff:
 		case ASM16_CALLATTR_THIS_C & 0xff:
 		case ASM16_CALLATTR_THIS_C_TUPLE & 0xff:
-			if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) != sid)
+			if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) != sid)
 				break;
 			result = ASM_USING_READ;
 			break;
@@ -2098,7 +2122,7 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
 		case ASM16_LOCAL & 0xff:
 		case ASM16_EXTERN & 0xff:
 		case ASM16_GLOBAL & 0xff:
-			ip += 4;
+			pc += 4;
 			goto check_prefix_core_usage;
 
 		default: break;
@@ -2110,28 +2134,28 @@ asm_uses_static(instruction_t const *__restrict ip, uint16_t sid) {
 	case ASM_EXTERN:
 	case ASM_GLOBAL:
 check_prefix_core_usage:
-		switch (*ip) {
+		switch (*pc) {
 
 		case ASM_PUSH_STATIC: /* mov PREFIX, static */
 		case ASM_PUSH_CONST:  /* mov PREFIX, const */
-			if (*(uint8_t *)(ip + 1) == sid)
+			if (*(uint8_t *)(pc + 1) == sid)
 				result |= ASM_USING_READ;
 			break;
 		case ASM_POP_STATIC: /* mov static, PREFIX */
-			if (*(uint8_t *)(ip + 1) == sid)
+			if (*(uint8_t *)(pc + 1) == sid)
 				result |= ASM_USING_WRITE;
 			break;
 
 		case ASM_EXTENDED1:
-			switch (ip[1]) {
+			switch (pc[1]) {
 
 			case ASM16_PUSH_STATIC & 0xff: /* mov PREFIX, static */
 			case ASM16_PUSH_CONST & 0xff:  /* mov PREFIX, const */
-				if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == sid)
+				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == sid)
 					result |= ASM_USING_READ;
 				break;
 			case ASM16_POP_STATIC & 0xff: /* mov local, PREFIX */
-				if (UNALIGNED_GETLE16((uint16_t *)(ip + 2)) == sid)
+				if (UNALIGNED_GETLE16((uint16_t *)(pc + 2)) == sid)
 					result |= ASM_USING_WRITE;
 				break;
 

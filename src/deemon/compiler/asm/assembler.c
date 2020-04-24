@@ -707,7 +707,7 @@ common_adj16_delop:
 					break;
 				}
 			}
-			iter = asm_nextinstr(iter);
+			iter = DeeAsm_NextInstr(iter);
 		}
 	}
 #endif
@@ -745,7 +745,7 @@ common_adj16_delop:
 			 *       adjusted for them by updating symbol addresses. */
 			result = true;
 		} else {
-			iter = asm_nextinstr(iter);
+			iter = DeeAsm_NextInstr(iter);
 		}
 		sc_main.sec_iter = end;
 	}
@@ -786,7 +786,7 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_instruction_start(instruction_t *__restrict ptr) {
 	instruction_t *iter = sc_main.sec_begin;
 	while (iter < ptr)
-		iter = asm_nextinstr(iter);
+		iter = DeeAsm_NextInstr(iter);
 	return iter == ptr;
 }
 
@@ -1264,10 +1264,10 @@ INTERN WUNUSED int DCALL asm_linkstack(void) {
 			num_keep   = iter->ar_value - iter->ar_sym->as_hand;
 			num_delete = iter->ar_value - num_keep;
 			while (num_keep--)
-				target = asm_nextinstr(target);
+				target = DeeAsm_NextInstr(target);
 			target_end = target;
 			while (num_delete--)
-				target_end = asm_nextinstr(target_end);
+				target_end = DeeAsm_NextInstr(target_end);
 			/* Delete affected instructions. */
 			memset(target, ASM_DELOP, (size_t)(target_end - target));
 		}	break;
@@ -1386,10 +1386,10 @@ INTERN WUNUSED int DCALL asm_linktext(void) {
 			num_keep   = iter->ar_value - iter->ar_sym->as_hand;
 			num_delete = iter->ar_value - num_keep;
 			while (num_keep--)
-				target = asm_nextinstr(target);
+				target = DeeAsm_NextInstr(target);
 			target_end = target;
 			while (num_delete--)
-				target_end = asm_nextinstr(target_end);
+				target_end = DeeAsm_NextInstr(target_end);
 			/* Delete affected instructions. */
 			memset(target, ASM_DELOP, (size_t)(target_end - target));
 		}	break;
