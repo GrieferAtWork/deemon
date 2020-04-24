@@ -234,9 +234,9 @@ struct Dee_type_nii {
 #elif __SIZEOF_POINTER__ == 8
 	uint32_t                nii_class; /* Iterator class (One of `TYPE_ITERX_CLASS_*') */
 	uint32_t                nii_flags; /* Iterator class (Set of `TYPE_ITERX_F*') */
-#else
+#else /* __SIZEOF_POINTER__ == ... */
 #error "Unsupported __SIZEOF_POINTER__"
-#endif
+#endif /* __SIZEOF_POINTER__ != ... */
 	union {
 		void              *_nii_class_functions[10];
 		struct {
@@ -335,9 +335,9 @@ struct Dee_type_nsi {
 #elif __SIZEOF_POINTER__ == 8
 	uint32_t                nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
 	uint32_t                nsi_flags; /* Sequence class (Set of `TYPE_SEQX_F*') */
-#else
+#else /* __SIZEOF_POINTER__ == ... */
 #error "Unsupported __SIZEOF_POINTER__"
-#endif
+#endif /* __SIZEOF_POINTER__ != ... */
 	union {
 		void              *_nsi_class_functions[22];
 		struct {
@@ -379,7 +379,7 @@ struct Dee_type_nsi {
 			WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL *nsi_xch)(DeeObject *self, size_t index, DeeObject *value);
 			WUNUSED NONNULL((1, 3)) int             (DCALL *nsi_insert)(DeeObject *self, size_t index, DeeObject *value);
 			WUNUSED NONNULL((1, 3)) int             (DCALL *nsi_insertall)(DeeObject *self, size_t index, DeeObject *values);
-			WUNUSED NONNULL((1))    int             (DCALL *nsi_insertvec)(DeeObject *self, size_t index, size_t insertc, DeeObject **insertv);
+			WUNUSED NONNULL((1))    int             (DCALL *nsi_insertvec)(DeeObject *self, size_t index, size_t insertc, DeeObject *const *insertv);
 			/* NOTE: When `index' is lower than ZERO(0), the length of the sequence `self' must be added
 			 *       first, such that `nsi_pop(self,-1)' is equivalent to a `popback()' function call. */
 			WUNUSED NONNULL((1))    DREF DeeObject *(DCALL *nsi_pop)(DeeObject *__restrict self, Dee_ssize_t index);
@@ -453,14 +453,17 @@ struct Dee_type_nsi {
 
 
 
-/* Lookup the closes NSI descriptor for `tp', or return `NULL'
+/* Lookup the closest NSI descriptor for `tp', or return `NULL'
  * if the top-most type implementing any sequence operator doesn't
  * expose NSI functionality. */
-DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi *DCALL DeeType_NSI(DeeTypeObject *__restrict tp);
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_type_nsi *DCALL
+DeeType_NSI(DeeTypeObject *__restrict tp);
 
 /* Create new range sequence objects. */
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeRange_New(DeeObject *begin, DeeObject *end, DeeObject *step);
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeRange_New(DeeObject *begin, DeeObject *end, DeeObject *step);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeRange_NewInt(Dee_ssize_t begin, Dee_ssize_t end, Dee_ssize_t step);
 
 /* Functions used to implement special sequence expressions,
  * such as `x + ...' (as `DeeSeq_Sum'), etc. */
@@ -520,29 +523,31 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRangeN(DeeObject *__
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Eq(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Lo(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeIter_Le(DeeObject *self, DeeObject *other);
+
+/* Perform a generic sequence comparison. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Eq(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Lo(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Le(DeeObject *self, DeeObject *other);
 
-INTDEF WUNUSED              int DCALL DeeSeq_EqVV(DeeObject **lhsv, DeeObject **rhsv, size_t elemc);             /* VECTOR == VECTOR */
-INTDEF WUNUSED NONNULL((2)) int DCALL DeeSeq_EqVF(DeeObject **lhsv, DeeObject *rhs, size_t elemc);               /* VECTOR == DeeFastSeq */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVI(DeeObject **lhsv, size_t lhsc, DeeObject *rhs);                /* VECTOR == ITERATOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVS(DeeObject **lhsv, size_t lhsc, DeeObject *seq);                /* VECTOR == SEQUENCE */
-INTDEF WUNUSED              int DCALL DeeSeq_LoVV(DeeObject **lhsv, size_t lhsc, DeeObject **rhsv, size_t rhsc); /* VECTOR < VECTOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVF(DeeObject **lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);   /* VECTOR < DeeFastSeq */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVI(DeeObject **lhsv, size_t lhsc, DeeObject *rhs);                /* VECTOR < ITERATOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVS(DeeObject **lhsv, size_t lhsc, DeeObject *seq);                /* VECTOR < SEQUENCE */
-INTDEF WUNUSED              int DCALL DeeSeq_LeVV(DeeObject **lhsv, size_t lhsc, DeeObject **rhsv, size_t rhsc); /* VECTOR <= VECTOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVF(DeeObject **lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);   /* VECTOR <= DeeFastSeq */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVI(DeeObject **lhsv, size_t lhsc, DeeObject *rhs);                /* VECTOR <= ITERATOR */
-INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVS(DeeObject **lhsv, size_t lhsc, DeeObject *seq);                /* VECTOR <= SEQUENCE */
+INTDEF WUNUSED              int DCALL DeeSeq_EqVV(DeeObject *const *lhsv, DeeObject *const *rhsv, size_t elemc);             /* VECTOR == VECTOR */
+INTDEF WUNUSED NONNULL((2)) int DCALL DeeSeq_EqVF(DeeObject *const *lhsv, DeeObject *rhs, size_t elemc);                     /* VECTOR == DeeFastSeq */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR == ITERATOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *seq);                      /* VECTOR == SEQUENCE */
+INTDEF WUNUSED              int DCALL DeeSeq_LoVV(DeeObject *const *lhsv, size_t lhsc, DeeObject *const *rhsv, size_t rhsc); /* VECTOR < VECTOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVF(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);         /* VECTOR < DeeFastSeq */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR < ITERATOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LoVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *seq);                      /* VECTOR < SEQUENCE */
+INTDEF WUNUSED              int DCALL DeeSeq_LeVV(DeeObject *const *lhsv, size_t lhsc, DeeObject *const *rhsv, size_t rhsc); /* VECTOR <= VECTOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVF(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs, size_t rhsc);         /* VECTOR <= DeeFastSeq */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVI(DeeObject *const *lhsv, size_t lhsc, DeeObject *rhs);                      /* VECTOR <= ITERATOR */
+INTDEF WUNUSED NONNULL((3)) int DCALL DeeSeq_LeVS(DeeObject *const *lhsv, size_t lhsc, DeeObject *seq);                      /* VECTOR <= SEQUENCE */
 
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqIV(DeeObject *lhs, DeeObject **rhsv, size_t rhsc);  /* ITERATOR == VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);    /* ITERATOR == DeeFastSeq */
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LoIV(DeeObject *lhs, DeeObject **rhsv, size_t rhsc);  /* ITERATOR < VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LoIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);    /* ITERATOR < DeeFastSeq */
-INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LeIV(DeeObject *lhs, DeeObject **rhsv, size_t rhsc);  /* ITERATOR <= VECTOR */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LeIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);    /* ITERATOR <= DeeFastSeq */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_EqIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);  /* ITERATOR == VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_EqIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);          /* ITERATOR == DeeFastSeq */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LoIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);  /* ITERATOR < VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LoIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);          /* ITERATOR < DeeFastSeq */
+INTDEF WUNUSED NONNULL((1))    int DCALL DeeSeq_LeIV(DeeObject *lhs, DeeObject *const *rhsv, size_t rhsc);  /* ITERATOR <= VECTOR */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_LeIF(DeeObject *lhs, DeeObject *rhs, size_t rhsc);          /* ITERATOR <= DeeFastSeq */
 
 /* Construct new concat-proxy-sequence objects. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Concat(DeeObject *self, DeeObject *other);
@@ -891,7 +896,7 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                  /*in-out*/size_t *__restrict pallocated);
+                                  /*in-out*/ size_t *__restrict pallocated);
 
 /* Same as `DeeSeq_AsHeapVectorWithAllocReuse()', but assume
  * that `IN(*pallocated) >= offset', while also leaving the first
@@ -902,8 +907,8 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) size_t DCALL
 DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in-out,owned(Dee_Free)*/ DeeObject ***__restrict pvector,
-                                        /*in-out*/size_t *__restrict pallocated,
-                                        /*in*/size_t offset);
+                                        /*in-out*/ size_t *__restrict pallocated,
+                                        /*in*/ size_t offset);
 
 DECL_END
 

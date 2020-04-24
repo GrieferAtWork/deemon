@@ -3256,7 +3256,7 @@ PRIVATE struct type_member list_class_members[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeList_EqV(List *lhs, DeeObject **rhsv, size_t elemc) {
+DeeList_EqV(List *lhs, DeeObject *const *rhsv, size_t elemc) {
 	size_t i;
 	int temp;
 	DeeList_LockRead(lhs);
@@ -3372,7 +3372,7 @@ DeeList_EqS(List *lhs, DeeObject *seq) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeList_LoV(List *lhs, DeeObject **rhsv, size_t rhsc) {
+DeeList_LoV(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
 	size_t i;
 	DREF DeeObject *lhs_elem;
 	DeeList_LockRead(lhs);
@@ -3515,7 +3515,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-DeeList_LeV(List *lhs, DeeObject **rhsv, size_t rhsc) {
+DeeList_LeV(List *lhs, DeeObject *const *rhsv, size_t rhsc) {
 	size_t i;
 	DREF DeeObject *lhs_elem;
 	DeeList_LockRead(lhs);

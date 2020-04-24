@@ -60,22 +60,27 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 rosetiterator_ctor(SetIterator *__restrict self) {
 	self->si_set = (Set *)DeeRoSet_New();
 	if unlikely(!self->si_set)
-		return -1;
+		goto err;
 	self->si_next = self->si_set->rs_elem;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 rosetiterator_init(SetIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	Set *set;
-	if (DeeArg_Unpack(argc, argv, "o:_RoSetIterator", &set) ||
-	    DeeObject_AssertTypeExact((DeeObject *)set, &DeeRoSet_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_RoSetIterator", &set))
+		goto err;
+	if (DeeObject_AssertTypeExact((DeeObject *)set, &DeeRoSet_Type))
+		goto err;
 	self->si_set = set;
 	Dee_Incref(set);
 	self->si_next = set->rs_elem;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -152,9 +157,8 @@ iter_exhausted:
 
 INTDEF DeeTypeObject RoSetIterator_Type;
 #define DEFINE_ITERATOR_COMPARE(name, op)                                  \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                          \
-	name(SetIterator *__restrict self,                                     \
-	     SetIterator *__restrict other) {                                  \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
+	name(SetIterator *self, SetIterator *other) {                          \
 		if (DeeObject_AssertType((DeeObject *)other, &RoSetIterator_Type)) \
 			goto err;                                                      \
 		return_bool(READ_ITEM(self) op READ_ITEM(other));                  \
@@ -532,14 +536,14 @@ roset_repr(Set *__restrict self) {
 		if (!self->rs_elem[i].si_key)
 			continue;
 		if unlikely(unicode_printer_printf(&p, "%s%r",
-			                                is_first ? "" : ", ",
-			                                self->rs_elem[i].si_key) < 0)
-		goto err;
+		                                   is_first ? "" : ", ",
+		                                   self->rs_elem[i].si_key) < 0)
+			goto err;
 		is_first = false;
 	}
 	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-		                   : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-	goto err;
+	                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
+		goto err;
 	return unicode_printer_pack(&p);
 err:
 	unicode_printer_fini(&p);
@@ -632,8 +636,10 @@ PRIVATE WUNUSED DREF Set *DCALL
 roset_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoSet", &seq))
-		return NULL;
+		goto err;
 	return (DREF Set *)DeeRoSet_FromSequence(seq);
+err:
+	return NULL;
 }
 
 

@@ -54,6 +54,9 @@
 DECL_BEGIN
 
 
+/* Lookup the closest NSI descriptor for `tp', or return `NULL'
+ * if the top-most type implementing any sequence operator doesn't
+ * expose NSI functionality. */
 PUBLIC WUNUSED NONNULL((1)) struct type_nsi *DCALL
 DeeType_NSI(DeeTypeObject *__restrict tp) {
 	ASSERT_OBJECT_TYPE(tp, &DeeType_Type);
@@ -67,49 +70,57 @@ DeeType_NSI(DeeTypeObject *__restrict tp) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_size(DeeObject *__restrict self) {
-	size_t result = DeeSeq_Size(self);
-	return (unlikely(result == (size_t)-1))
-	       ? NULL
-	       : DeeInt_NewSize((size_t)result);
+	size_t result;
+	result = DeeSeq_Size(self);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize((size_t)result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_tpcontains(DeeObject *self, DeeObject *elem) {
-	int result = DeeSeq_Contains(self, elem, NULL);
-	return (unlikely(result < 0))
-	       ? NULL
-	       : DeeObject_NewRef(DeeBool_For(result));
+	int result;
+	result = DeeSeq_Contains(self, elem, NULL);
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_getitem(DeeObject *self, DeeObject *index) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
-		return NULL;
+		goto err;
 	return DeeSeq_GetItem(self, i);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 	dssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(start, &i_begin))
-		return NULL;
+		goto err;
 	if (DeeNone_Check(end)) {
 		if unlikely(i_begin < 0) {
 			size_t seq_len = DeeObject_Size(self);
 			if unlikely(seq_len == (size_t)-1)
-				return NULL;
+				goto err;
 			if (i_begin < 0)
 				i_begin += seq_len;
 		}
 		return DeeSeq_GetRangeN(self, (size_t)i_begin);
 	}
 	if (DeeObject_AsSSize(end, &i_end))
-		return NULL;
+		goto err;
 	if unlikely(i_begin < 0 || i_end < 0) {
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
-			return NULL;
+			goto err;
 		if (i_begin < 0)
 			i_begin += seq_len;
 		if (i_end < 0)
@@ -118,14 +129,17 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 	return DeeSeq_GetRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_nsi_getrange(DeeObject *__restrict self, dssize_t i_begin, dssize_t i_end) {
 	if unlikely(i_begin < 0 || i_end < 0) {
-		size_t seq_len = DeeObject_Size(self);
+		size_t seq_len;
+		seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
-			return NULL;
+			goto err;
 		if (i_begin < 0)
 			i_begin += seq_len;
 		if (i_end < 0)
@@ -134,18 +148,23 @@ seq_nsi_getrange(DeeObject *__restrict self, dssize_t i_begin, dssize_t i_end) {
 	return DeeSeq_GetRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_nsi_getrange_n(DeeObject *__restrict self, dssize_t i_begin) {
 	if unlikely(i_begin < 0) {
-		size_t seq_len = DeeObject_Size(self);
+		size_t seq_len;
+		seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
-			return NULL;
+			goto err;
 		if (i_begin < 0)
 			i_begin += seq_len;
 	}
 	return DeeSeq_GetRangeN(self, (size_t)i_begin);
+err:
+	return NULL;
 }
 
 typedef struct {
@@ -580,20 +599,23 @@ seq_nsi_setrange(DeeObject *self, dssize_t i_begin, dssize_t i_end,
 	if unlikely(i_begin < 0 || i_end < 0) {
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
-			return -1;
+			goto err;
 		if (i_begin < 0)
 			i_begin += seq_len;
 		if (i_end < 0)
 			i_end += seq_len;
 	}
-	if (DeeNone_Check(values))
+	if (DeeNone_Check(values)) {
 		return DeeSeq_DelRange(self,
 		                       (size_t)i_begin,
 		                       (size_t)i_end);
+	}
 	return DeeSeq_SetRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end,
 	                       values);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
@@ -602,12 +624,14 @@ seq_nsi_setrange_n(DeeObject *self, dssize_t i_begin,
 	if unlikely(i_begin < 0) {
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
-			return -1;
+			goto err;
 		i_begin += seq_len;
 	}
 	if (DeeNone_Check(values))
 		return DeeSeq_DelRangeN(self, (size_t)i_begin);
 	return DeeSeq_SetRangeN(self, (size_t)i_begin, values);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -660,7 +684,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_nsi_insert_vec(DeeObject *self, size_t index,
-                   size_t objc, DeeObject **objv) {
+                   size_t objc, DeeObject *const *objv) {
 	DeeObject *shared_vector;
 	int result;
 	shared_vector = DeeSharedVector_NewShared(objc, objv);
@@ -708,16 +732,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 seq_delitem(DeeObject *self, DeeObject *index) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
-		return -1;
+		goto err;
 	return DeeSeq_DelItem(self, i);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 seq_setitem(DeeObject *self, DeeObject *index, DeeObject *value) {
 	size_t i;
 	if (DeeObject_AsSize(index, &i))
-		return -1;
+		goto err;
 	return DeeSeq_SetItem(self, i, value);
+err:
+	return -1;
 }
 
 PRIVATE struct type_seq seq_seq = {
@@ -737,48 +765,60 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_eq(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Eq(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_ne(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Eq(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_lo(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Lo(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_le(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Le(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_gr(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Le(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_ge(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Lo(self, other);
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(!result);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp seq_cmp = {
@@ -795,8 +835,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_mul(DeeObject *self, DeeObject *countob) {
 	size_t count;
 	if (DeeObject_AsSize(countob, &count))
-		return NULL;
+		goto err;
 	return DeeSeq_Repeat(self, count);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_math seq_math = {
@@ -868,7 +910,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_repr(DeeObject *__restrict self) {
 	bool is_first;
 	DREF DeeObject *iterator, *elem;
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
+	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (sequence_should_use_getitem(Dee_TYPE(self))) {
 		size_t i, size;
 		size = DeeObject_Size(self);
@@ -876,74 +918,74 @@ seq_repr(DeeObject *__restrict self) {
 			/* If the size operator isn't actually implemented, try to use iterators instead! */
 			if (DeeError_Catch(&DeeError_NotImplemented))
 				goto do_try_iterators;
-			goto err;
+			goto err_printer;
 		}
 		if (!size) {
-			if unlikely(UNICODE_PRINTER_PRINT(&p, "{ }") < 0)
-				goto err;
+			if unlikely(UNICODE_PRINTER_PRINT(&printer, "{ }") < 0)
+				goto err_printer;
 		} else {
-			if unlikely(UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-				goto err;
+			if unlikely(UNICODE_PRINTER_PRINT(&printer, "{ ") < 0)
+				goto err_printer;
 			for (i = 0; i < size; ++i) {
-				if (i != 0 && unlikely(UNICODE_PRINTER_PRINT(&p, ", ") < 0))
-					goto err;
+				if (i != 0 && unlikely(UNICODE_PRINTER_PRINT(&printer, ", ") < 0))
+					goto err_printer;
 				elem = DeeObject_GetItemIndex(self, i);
 				if likely(elem) {
-					if (unicode_printer_printobjectrepr(&p, elem) < 0)
-						goto err_elem;
+					if (unicode_printer_printobjectrepr(&printer, elem) < 0)
+						goto err_printer_elem;
 					Dee_Decref(elem);
 				} else if (DeeError_Catch(&DeeError_UnboundItem)) {
-					if unlikely(UNICODE_PRINTER_PRINT(&p, "<unbound>") < 0)
-						goto err;
+					if unlikely(UNICODE_PRINTER_PRINT(&printer, "<unbound>") < 0)
+						goto err_printer;
 				} else if (DeeError_Catch(&DeeError_IndexError)) {
 					/* Assume that the Sequence got re-sized while we were iterating it. */
 					if unlikely(!i) {
-						if unlikely(unicode_printer_putascii(&p, '}'))
-							goto err;
+						if unlikely(unicode_printer_putascii(&printer, '}'))
+							goto err_printer;
 						goto done;
 					}
 					break;
 				} else {
-					goto err;
+					goto err_printer;
 				}
 			}
-			if unlikely(UNICODE_PRINTER_PRINT(&p, " }") < 0)
-				goto err;
+			if unlikely(UNICODE_PRINTER_PRINT(&printer, " }") < 0)
+				goto err_printer;
 		}
 	} else {
 do_try_iterators:
 		iterator = DeeObject_IterSelf(self);
 		if unlikely(!iterator)
-			goto err;
-		if unlikely(UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-			goto err1;
+			goto err_printer;
+		if unlikely(UNICODE_PRINTER_PRINT(&printer, "{ ") < 0)
+			goto err_printer_iterator;
 		is_first = true;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			if (unicode_printer_printf(&p, "%s%r", is_first ? "" : ", ", elem) < 0)
-				goto err2;
+			if (unicode_printer_printf(&printer, "%s%r", is_first ? "" : ", ", elem) < 0)
+				goto err_printer_iterator_elem;
 			is_first = false;
 			Dee_Decref(elem);
 			if (DeeThread_CheckInterrupt())
-				goto err1;
+				goto err_printer_iterator;
 		}
 		if unlikely(!elem)
-			goto err1;
-		if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-		                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-			goto err1;
+			goto err_printer_iterator;
+		if unlikely((is_first ? unicode_printer_putascii(&printer, '}')
+		                      : UNICODE_PRINTER_PRINT(&printer, " }")) < 0)
+			goto err_printer_iterator;
 		Dee_Decref(iterator);
 	}
 done:
-	return unicode_printer_pack(&p);
-err_elem:
+	return unicode_printer_pack(&printer);
+err_printer_elem:
 	Dee_Decref(elem);
-	goto err;
-err2:
+	goto err_printer;
+err_printer_iterator_elem:
 	Dee_Decref(elem);
-err1:
+err_printer_iterator:
 	Dee_Decref(iterator);
-err:
-	unicode_printer_fini(&p);
+err_printer:
+	unicode_printer_fini(&printer);
 	return NULL;
 }
 
@@ -1036,16 +1078,12 @@ err:
 
 PRIVATE struct type_getset seq_class_getsets[] = {
 	{ DeeString_STR(&str_Iterator),
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_iterator_get,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_iterator_get, NULL, NULL,
 	  DOC("->?DType\n"
 	      "Returns the Iterator class used by instances of @this Sequence type\n"
 	      "Should a sub-class implement its own Iterator, this attribute should be overwritten") },
 	{ "Frozen",
-	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_frozen_get,
-	  NULL,
-	  NULL,
+	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seq_frozen_get, NULL, NULL,
 	  DOC("->?DType\n"
 	      "Returns the type of Sequence returned by the #i:frozen property") },
 	{ NULL }
@@ -1101,71 +1139,87 @@ seq_nonempty_deprecated(DeeObject *self, size_t argc, DeeObject *const *argv) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_front(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":front"))
-		return NULL;
+		goto err;
 	return DeeObject_GetAttr(self, &str_first);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_back(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":back"))
-		return NULL;
+		goto err;
 	return DeeObject_GetAttr(self, &str_last);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_reduce(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *combine, *init = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:reduce", &combine, &init))
-		return NULL;
+		goto err;
 	return DeeSeq_Reduce(self, combine, init);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_filter(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *pred_keep;
 	if (DeeArg_Unpack(argc, argv, "o:filter", &pred_keep))
-		return NULL;
+		goto err;
 	return DeeSeq_Filter(self, pred_keep);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_sum(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sum"))
-		return NULL;
+		goto err;
 	return DeeSeq_Sum(self);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_any(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":any"))
-		return NULL;
+		goto err;
 	result = DeeSeq_Any(self);
-	return (unlikely(result < 0))
-	       ? NULL
-	       : DeeObject_NewRef(DeeBool_For(result));
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_all(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":all"))
-		return NULL;
+		goto err;
 	result = DeeSeq_All(self);
-	return (unlikely(result < 0))
-	       ? NULL
-	       : DeeObject_NewRef(DeeBool_For(result));
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_parity(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	if (DeeArg_Unpack(argc, argv, ":parity"))
-		return NULL;
+		goto err;
 	result = DeeSeq_Parity(self);
-	return (unlikely(result < 0))
-	       ? NULL
-	       : DeeObject_NewRef(DeeBool_For(result));
+	if unlikely(result < 0)
+		goto err;
+	return_bool_(result);
+err:
+	return NULL;
 }
 
 INTERN DEFINE_KWLIST(seq_sort_kwlist, { K(key), KEND });
@@ -1174,10 +1228,12 @@ seq_min(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:min", &key))
-		return NULL;
+		goto err;
 	if (DeeNone_Check(key))
 		key = NULL;
 	return DeeSeq_Min(self, key);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1185,10 +1241,12 @@ seq_max(DeeObject *self, size_t argc,
         DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *key = NULL;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_sort_kwlist, "|o:max", &key))
-		return NULL;
+		goto err;
 	if (DeeNone_Check(key))
 		key = NULL;
 	return DeeSeq_Max(self, key);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1809,7 +1867,8 @@ seq_removeif(DeeObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *should;
 	size_t result, start = 0, end = (size_t)-1;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist, "o|IdId:removeif", &should, &start, &end))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist,
+	                    "o|IdId:removeif", &should, &start, &end))
 		goto err;
 	result = DeeSeq_RemoveIf(self, should, start, end);
 	if unlikely(result == (size_t)-1)
@@ -1836,7 +1895,8 @@ seq_fill(DeeObject *self, size_t argc,
 	size_t start = 0, end = (size_t)-1, result;
 	DeeObject *filler = Dee_None;
 	PRIVATE DEFINE_KWLIST(kwlist, { K(start), K(end), K(filler), KEND });
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "|IdIdo:fill", &start, &end, &filler))
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist,
+	                    "|IdIdo:fill", &start, &end, &filler))
 		goto err;
 	result = DeeSeq_Fill(self, start, end, filler);
 	if unlikely(result == (size_t)-1)
@@ -1853,7 +1913,8 @@ seq_resize(DeeObject *self, size_t argc,
 	DREF DeeObject *result;
 	size_t newsize, oldsize;
 	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist, "Iu|o:resize", &newsize, &filler))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist,
+	                    "Iu|o:resize", &newsize, &filler))
 		goto err;
 	if (!newsize) {
 		result = DeeObject_CallAttr(self, &str_clear, 0, NULL);

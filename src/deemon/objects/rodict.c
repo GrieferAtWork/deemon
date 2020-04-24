@@ -60,22 +60,27 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 rodictiterator_ctor(DictIterator *__restrict self) {
 	self->di_dict = (Dict *)DeeRoDict_New();
 	if unlikely(!self->di_dict)
-		return -1;
+		goto err;
 	self->di_next = self->di_dict->rd_elem;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 rodictiterator_init(DictIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	Dict *Dict;
-	if (DeeArg_Unpack(argc, argv, "o:_RoDictIterator", &Dict) ||
-	    DeeObject_AssertTypeExact((DeeObject *)Dict, &DeeRoDict_Type))
-		return -1;
+	if (DeeArg_Unpack(argc, argv, "o:_RoDictIterator", &Dict))
+		goto err;
+	if (DeeObject_AssertTypeExact((DeeObject *)Dict, &DeeRoDict_Type))
+		goto err;
 	self->di_dict = Dict;
 	Dee_Incref(Dict);
 	self->di_next = Dict->rd_elem;
 	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -230,9 +235,8 @@ iter_exhausted:
 
 INTDEF DeeTypeObject RoDictIterator_Type;
 #define DEFINE_ITERATOR_COMPARE(name, op)                                   \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                           \
-	name(DictIterator *__restrict self,                                     \
-	     DictIterator *__restrict other) {                                  \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
+	name(DictIterator *self, DictIterator *other) {                         \
 		if (DeeObject_AssertType((DeeObject *)other, &RoDictIterator_Type)) \
 			goto err;                                                       \
 		return_bool(READ_ITEM(self) op READ_ITEM(other));                   \
@@ -326,13 +330,15 @@ DeeRoDict_FromSequence(DeeObject *__restrict self) {
 	/* Construct a read-only Dict from an iterator. */
 	self = DeeObject_IterSelf(self);
 	if unlikely(!self)
-		return NULL;
+		goto err;
 	length_hint = DeeFastSeq_GetSize(self);
 	result = (likely(length_hint != DEE_FASTSEQ_NOTFAST))
 	         ? DeeRoDict_FromIteratorWithHint(self, length_hint)
 	         : DeeRoDict_FromIterator(self);
 	Dee_Decref(self);
 	return result;
+err:
+	return NULL;
 }
 
 #define RODICT_ALLOC(mask)  ((DREF Dict *)DeeObject_Calloc(SIZEOF_RODICT(mask)))
@@ -979,8 +985,10 @@ PRIVATE WUNUSED DREF Dict *DCALL
 rodict_init(size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_RoDict", &seq))
-		return NULL;
+		goto err;
 	return (DREF Dict *)DeeRoDict_FromSequence(seq);
+err:
+	return NULL;
 }
 
 
@@ -989,7 +997,9 @@ rodict_init(size_t argc, DeeObject *const *argv) {
 PUBLIC DeeTypeObject DeeRoDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RoDict",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "\n"
+	                         "(seq:?S?T2?O?O)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

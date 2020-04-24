@@ -206,11 +206,12 @@ DeeClsMethod_GetName(DeeObject *__restrict self) {
 	ASSERT(DeeClsMethod_Check(self) || DeeKwClsMethod_Check(self));
 	func = DeeClsMethod_FUNC(self);
 	iter = DeeClsMethod_TYPE(self)->tp_methods;
-	if (iter)
+	if (iter) {
 		for (; iter->m_name; ++iter) {
 			if (iter->m_func == func)
 				return iter->m_name;
 		}
+	}
 	return NULL;
 }
 
@@ -222,11 +223,12 @@ DeeClsMethod_GetDoc(DeeObject *__restrict self) {
 	ASSERT(DeeClsMethod_Check(self) || DeeKwClsMethod_Check(self));
 	func = DeeClsMethod_FUNC(self);
 	iter = DeeClsMethod_TYPE(self)->tp_methods;
-	if (iter)
+	if (iter) {
 		for (; iter->m_name; ++iter) {
 			if (iter->m_func == func)
 				return iter->m_doc;
 		}
+	}
 	return NULL;
 }
 
@@ -257,20 +259,24 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 objmethod_eq(DeeObjMethodObject *self,
              DeeObjMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeObjMethod_Type))
-		return NULL;
+		goto err;
 	if (self->om_func != other->om_func)
 		return_false;
 	return DeeObject_CompareEqObject(self->om_this, other->om_this);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 objmethod_ne(DeeObjMethodObject *self,
              DeeObjMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeObjMethod_Type))
-		return NULL;
+		goto err;
 	if (self->om_func != other->om_func)
 		return_true;
 	return DeeObject_CompareNeObject(self->om_this, other->om_this);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp objmethod_cmp = {
@@ -281,8 +287,9 @@ PRIVATE struct type_cmp objmethod_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_func(DeeObjMethodObject *__restrict self) {
-	return DeeClsMethod_New(DeeObjMethod_GetType((DeeObject *)self),
-	                        self->om_func);
+	DeeTypeObject *typ;
+	typ = DeeObjMethod_GetType((DeeObject *)self);
+	return DeeClsMethod_New(typ, self->om_func);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -365,7 +372,7 @@ PRIVATE struct type_member objmethod_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(DeeObjMethodObject, om_this),
 	                      "The object to which @this object-method is bound"),
 #define OBJMETHOD_MEMBERS_INDEXOF_KWDS 1
-	TYPE_MEMBER_CONST_DOC("__kwds__", Dee_EmptySeq, objmethod_get_kwds_doc), /* NOTE: _MUST_ always code last! */
+	TYPE_MEMBER_CONST_DOC("__kwds__", Dee_EmptySeq, objmethod_get_kwds_doc), /* NOTE: _MUST_ always come last! */
 	TYPE_MEMBER_END
 };
 
@@ -707,9 +714,11 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 dockwds_ctor(DocKwds *__restrict self) {
 	self->dk_owner = DeeString_New("()");
 	if unlikely(!self->dk_owner)
-		return -1;
+		goto err;
 	self->dk_start = DeeString_STR(self->dk_owner);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -730,8 +739,9 @@ dockwds_init(DocKwds *__restrict self,
 	if (DeeObject_AssertTypeExact(text, &DeeString_Type))
 		goto err;
 	if (DeeString_STR(text)[0] != '(') {
-		return DeeError_Throwf(&DeeError_ValueError,
-		                       "The given string %r does not start with `('");
+		DeeError_Throwf(&DeeError_ValueError,
+		                "The given string %r does not start with `('");
+		goto err;
 	}
 	Dee_Incref(text);
 	self->dk_owner = text;
@@ -960,20 +970,28 @@ done:
 }
 
 
+PRIVATE ATTR_COLD int DCALL err_classmethod_argc_zero(void) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "ClassMethod objects must be called "
+	                       "with at least 1 argument");
+}
+
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_call(DeeClsMethodObject *self, size_t argc, DeeObject *const *argv) {
-	if (!argc) {
-		DeeError_Throwf(&DeeError_TypeError,
-		                "classmethod objects must be called with at least 1 argument");
-		return NULL;
-	}
+	if unlikely(!argc)
+		goto err_argc_zero;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
-	    DeeObject_AssertType(argv[0], self->cm_type))
-		return NULL;
+	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(argv[0], self->cm_type))
+			goto err;
+	}
 	/* Use the first argument as the this-argument. */
 	return (*self->cm_func)(argv[0], argc - 1, argv + 1);
+err_argc_zero:
+	err_classmethod_argc_zero();
+err:
+	return NULL;
 }
 
 
@@ -982,7 +1000,7 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject, cm_type) ==
               COMPILER_OFFSETOF(DeeObjMethodObject, om_this));
 STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject, cm_func) ==
               COMPILER_OFFSETOF(DeeObjMethodObject, om_func));
-#define clsmethod_fini objmethod_fini
+#define clsmethod_fini  objmethod_fini
 #define clsmethod_visit objmethod_visit
 #else
 PRIVATE NONNULL((1)) void DCALL
@@ -1024,48 +1042,60 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_eq(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
-		return NULL;
+		goto err;
 	return_bool_(self->cm_func == other->cm_func);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_ne(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
-		return NULL;
+		goto err;
 	return_bool_(self->cm_func != other->cm_func);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_lo(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
-		return NULL;
+		goto err;
 	return_bool_(self->cm_func < other->cm_func);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_le(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
-		return NULL;
+		goto err;
 	return_bool_(self->cm_func <= other->cm_func);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_gr(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
-		return NULL;
+		goto err;
 	return_bool_(self->cm_func > other->cm_func);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsmethod_ge(DeeClsMethodObject *self,
              DeeClsMethodObject *other) {
 	if (DeeObject_AssertType((DeeObject *)other, Dee_TYPE(self)))
-		return NULL;
+		goto err;
 	return_bool_(self->cm_func >= other->cm_func);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp clsmethod_cmp = {
@@ -1196,33 +1226,37 @@ STATIC_ASSERT(COMPILER_OFFSETOF(DeeClsMethodObject, cm_type) ==
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_call(DeeKwClsMethodObject *self, size_t argc, DeeObject *const *argv) {
-	if (!argc) {
-		DeeError_Throwf(&DeeError_TypeError,
-		                "classmethod objects must be called with at least 1 argument");
-		return NULL;
-	}
+	if unlikely(!argc)
+		goto err_argc_zero;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
-	    DeeObject_AssertType(argv[0], self->cm_type))
-		return NULL;
+	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(argv[0], self->cm_type))
+			goto err;
+	}
 	/* Use the first argument as the this-argument. */
 	return (*self->cm_func)(argv[0], argc - 1, argv + 1, NULL);
+err_argc_zero:
+	err_classmethod_argc_zero();
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_call_kw(DeeKwClsMethodObject *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	if (!argc) {
-		DeeError_Throwf(&DeeError_TypeError,
-		                "classmethod objects must be called with at least 1 argument");
-		return NULL;
-	}
+	if unlikely(!argc)
+		goto err_argc_zero;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
-	    DeeObject_AssertType(argv[0], self->cm_type))
-		return NULL;
+	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(argv[0], self->cm_type))
+			goto err;
+	}
 	/* Use the first argument as the this-argument. */
 	return (*self->cm_func)(argv[0], argc - 1, argv + 1, kw);
+err_argc_zero:
+	err_classmethod_argc_zero();
+err:
+	return NULL;
 }
 
 #define kwclsmethod_fini    clsmethod_fini
@@ -1286,13 +1320,14 @@ DeeClsProperty_GetName(DeeObject *__restrict self) {
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsProperty_Check(self));
 	iter = DeeClsProperty_TYPE(self)->tp_getsets;
-	if (iter)
+	if (iter) {
 		for (; iter->gs_name; ++iter) {
 			if (iter->gs_get == DeeClsProperty_GET(self) &&
 			    iter->gs_del == DeeClsProperty_DEL(self) &&
 			    iter->gs_set == DeeClsProperty_SET(self))
 				return iter->gs_name;
 		}
+	}
 	return NULL;
 }
 
@@ -1302,13 +1337,14 @@ DeeClsProperty_GetDoc(DeeObject *__restrict self) {
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsProperty_Check(self));
 	iter = DeeClsProperty_TYPE(self)->tp_getsets;
-	if (iter)
+	if (iter) {
 		for (; iter->gs_name; ++iter) {
 			if (iter->gs_get == DeeClsProperty_GET(self) &&
 			    iter->gs_del == DeeClsProperty_DEL(self) &&
 			    iter->gs_set == DeeClsProperty_SET(self))
 				return iter->gs_doc;
 		}
+	}
 	return NULL;
 }
 
@@ -1343,21 +1379,25 @@ clsproperty_hash(DeeClsPropertyObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsproperty_eq(DeeClsPropertyObject *self,
                DeeClsPropertyObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeClsProperty_Type))
-		return NULL;
+	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeClsProperty_Type))
+		goto err;
 	return_bool(self->cp_get == other->cp_get &&
 	            self->cp_del == other->cp_del &&
 	            self->cp_set == other->cp_set);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsproperty_ne(DeeClsPropertyObject *self,
                DeeClsPropertyObject *other) {
-	if (DeeObject_AssertType((DeeObject *)other, &DeeClsProperty_Type))
-		return NULL;
+	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeClsProperty_Type))
+		goto err;
 	return_bool(self->cp_get != other->cp_get ||
 	            self->cp_del != other->cp_del ||
 	            self->cp_set != other->cp_set);
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp clsproperty_cmp = {
@@ -1396,7 +1436,7 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
                 size_t argc, DREF DeeObject *const *argv,
                 DeeObject *kw) {
 	DeeObject *thisarg;
-	if (!self->cp_get) {
+	if unlikely(!self->cp_get) {
 		err_cant_access_attribute(&DeeClsProperty_Type,
 		                          DeeString_STR(&str_get),
 		                          ATTR_ACCESS_GET);
@@ -1404,12 +1444,11 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
 	}
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
-	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
-		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
-	    DeeObject_AssertType(thisarg, self->cp_type))
-		goto err;
+	if (!(self->cp_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, self->cp_type))
+			goto err;
+	}
 	return (*self->cp_get)(thisarg);
 err:
 	return NULL;
@@ -1420,18 +1459,22 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
                    size_t argc, DREF DeeObject *const *argv,
                    DeeObject *kw) {
 	DeeObject *thisarg;
-	if (!self->cp_del) {
+	if unlikely(!self->cp_del) {
 		err_cant_access_attribute(&DeeClsProperty_Type, "delete", ATTR_ACCESS_GET);
-		return NULL;
+		goto err;
 	}
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg) ||
-	    /* Allow non-instance objects for generic types. */
-	    (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
-	     DeeObject_AssertType(thisarg, self->cp_type)))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!(self->cp_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, self->cp_type))
+			goto err;
+	}
 	if unlikely((*self->cp_del)(thisarg))
-		return NULL;
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1439,20 +1482,24 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
                 size_t argc, DREF DeeObject *const *argv,
                 DeeObject *kw) {
 	DeeObject *thisarg, *value;
-	if (!self->cp_set) {
+	if unlikely(!self->cp_set) {
 		err_cant_access_attribute(&DeeClsProperty_Type,
 		                          DeeString_STR(&str_set),
 		                          ATTR_ACCESS_GET);
-		return NULL;
+		goto err;
 	}
-	if (DeeArg_UnpackKw(argc, argv, kw, setter_kwlist, "oo:set", &thisarg, &value) ||
-	    /* Allow non-instance objects for generic types. */
-	    (!(self->cp_type->tp_flags & TP_FABSTRACT) &&
-	     DeeObject_AssertType(thisarg, self->cp_type)))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, setter_kwlist, "oo:set", &thisarg, &value))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!(self->cp_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, self->cp_type))
+			goto err;
+	}
 	if unlikely((*self->cp_set)(thisarg, value))
-		return NULL;
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method clsproperty_methods[] = {
@@ -1471,12 +1518,12 @@ PRIVATE struct type_method clsproperty_methods[] = {
 	{ "getter",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
 	  DOC("(thisarg)->\n"
-	      "Alias for #get"),
+	      "Alias for ?#get"),
 	  TYPE_METHOD_FKWDS },
 	{ "setter",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_set,
 	  DOC("(thisarg,value)\n"
-	      "Alias for #set"),
+	      "Alias for ?#set"),
 	  TYPE_METHOD_FKWDS },
 	{ NULL }
 };
@@ -1675,38 +1722,52 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get(DeeClsMemberObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg) ||
-	    /* Allow non-instance objects for generic types. */
-	    (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
-	     DeeObject_AssertType(thisarg, self->cm_type)))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, self->cm_type))
+			goto err;
+	}
 	return type_member_get(&self->cm_memb, thisarg);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_delete(DeeClsMemberObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg) ||
-	    /* Allow non-instance objects for generic types. */
-	    (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
-	     DeeObject_AssertType(thisarg, self->cm_type)) ||
-	    type_member_del(&self->cm_memb, thisarg))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, self->cm_type))
+			goto err;
+	}
+	if (type_member_del(&self->cm_memb, thisarg))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_set(DeeClsMemberObject *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg, *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "oo:set", &thisarg, &value) ||
-	    /* Allow non-instance objects for generic types. */
-	    (!(self->cm_type->tp_flags & TP_FABSTRACT) &&
-	     DeeObject_AssertType(thisarg, self->cm_type)) ||
-	    type_member_set(&self->cm_memb, thisarg, value))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "oo:set", &thisarg, &value))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!(self->cm_type->tp_flags & TP_FABSTRACT)) {
+		if (DeeObject_AssertType(thisarg, self->cm_type))
+			goto err;
+	}
+	if (type_member_set(&self->cm_memb, thisarg, value))
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_method clsmember_methods[] = {
@@ -1740,8 +1801,10 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
 	name(DeeClsMemberObject *self, DeeClsMemberObject *other) {           \
 		if (DeeObject_AssertType((DeeObject *)other, &DeeClsMember_Type)) \
-			return NULL;                                                  \
+			goto err;                                                     \
 		return_bool(CLSMEMBER_CMP(self, other) op 0);                     \
+	err:                                                                  \
+		return NULL;                                                      \
 	}
 DEFINE_CLSMEMBER_CMP(clsmember_eq, ==)
 DEFINE_CLSMEMBER_CMP(clsmember_ne, !=)

@@ -1589,6 +1589,8 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 #undef ALWAYS_USE_OBJECT_RANGES
 /* #define ALWAYS_USE_OBJECT_RANGES 1 */
 
+
+/* Create new range sequence objects. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeRange_NewInt(dssize_t begin,
                 dssize_t end,
@@ -1630,6 +1632,7 @@ done:
 #endif /* !ALWAYS_USE_OBJECT_RANGES */
 }
 
+/* Create new range sequence objects. */
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeRange_New(DeeObject *begin,
              DeeObject *end,

@@ -66,15 +66,18 @@ property_deep(Property *__restrict self,
 	self->p_get = NULL;
 	self->p_del = NULL;
 	self->p_set = NULL;
-	if (other->p_get &&
-	    unlikely((self->p_get = DeeObject_DeepCopy(other->p_get)) == NULL))
-		goto err;
-	if (other->p_del &&
-	    unlikely((self->p_del = DeeObject_DeepCopy(other->p_del)) == NULL))
-		goto err_get;
-	if (other->p_set &&
-	    unlikely((self->p_set = DeeObject_DeepCopy(other->p_set)) == NULL))
-		goto err_del;
+	if (other->p_get) {
+		if unlikely((self->p_get = DeeObject_DeepCopy(other->p_get)) == NULL)
+			goto err;
+	}
+	if (other->p_del) {
+		if unlikely((self->p_del = DeeObject_DeepCopy(other->p_del)) == NULL)
+			goto err_get;
+	}
+	if (other->p_set) {
+		if unlikely((self->p_set = DeeObject_DeepCopy(other->p_set)) == NULL)
+			goto err_del;
+	}
 	return 0;
 err_del:
 	Dee_XDecref(self->p_del);
@@ -124,9 +127,14 @@ property_visit(Property *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 property_hash(Property *__restrict self) {
-	return ((self->p_get ? DeeObject_Hash(self->p_get) : 0) ^
-	        (self->p_del ? DeeObject_Hash(self->p_del) : 0) ^
-	        (self->p_set ? DeeObject_Hash(self->p_set) : 0));
+	dhash_t result = 0;
+	if (self->p_get)
+		result ^= DeeObject_Hash(self->p_get);
+	if (self->p_del)
+		result ^= DeeObject_Hash(self->p_del);
+	if (self->p_set)
+		result ^= DeeObject_Hash(self->p_set);
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -134,17 +142,20 @@ property_repr(Property *__restrict self) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if unlikely(UNICODE_PRINTER_PRINT(&printer, "Property(") < 0)
 		goto err;
-	if (self->p_get &&
-	    unlikely(unicode_printer_printf(&printer, "getter: %r%s", self->p_get,
-	                                    self->p_del || self->p_set ? ", " : "") < 0))
-		goto err;
-	if (self->p_del &&
-	    unlikely(unicode_printer_printf(&printer, "delete: %r%s", self->p_del,
-	                                    self->p_set ? ", " : "") < 0))
-		goto err;
-	if (self->p_set &&
-	    unlikely(unicode_printer_printf(&printer, "setter: %r", self->p_set) < 0))
-		goto err;
+	if (self->p_get) {
+		if unlikely(unicode_printer_printf(&printer, "getter: %r%s", self->p_get,
+		                                   self->p_del || self->p_set ? ", " : "") < 0)
+			goto err;
+	}
+	if (self->p_del) {
+		if unlikely(unicode_printer_printf(&printer, "delete: %r%s", self->p_del,
+		                                   self->p_set ? ", " : "") < 0)
+			goto err;
+	}
+	if (self->p_set) {
+		if unlikely(unicode_printer_printf(&printer, "setter: %r", self->p_set) < 0)
+			goto err;
+	}
 	if (unicode_printer_putascii(&printer, ')'))
 		goto err;
 	return unicode_printer_pack(&printer);
@@ -157,22 +168,35 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 property_eq(Property *self, Property *other) {
 	int temp;
 	if (DeeObject_AssertType((DeeObject *)other, &DeeProperty_Type))
-		return NULL;
+		goto err;
+	/* Make sure that the same callbacks are implemented. */
 	if (((self->p_get != NULL) != (other->p_get != NULL)) ||
 	    ((self->p_del != NULL) != (other->p_del != NULL)) ||
 	    ((self->p_set != NULL) != (other->p_set != NULL)))
 		return_false;
-	if (self->p_get && (temp = DeeObject_CompareEq(self->p_get, other->p_get)) <= 0)
-		goto handle_temp;
-	if (self->p_del && (temp = DeeObject_CompareEq(self->p_del, other->p_del)) <= 0)
-		goto handle_temp;
-	if (self->p_set && (temp = DeeObject_CompareEq(self->p_set, other->p_set)) <= 0)
-		goto handle_temp;
+	/* Compare individual callbacks. */
+	if (self->p_get) {
+		temp = DeeObject_CompareEq(self->p_get, other->p_get);
+		if (temp <= 0)
+			goto handle_temp;
+	}
+	if (self->p_del) {
+		temp = DeeObject_CompareEq(self->p_del, other->p_del);
+		if (temp <= 0)
+			goto handle_temp;
+	}
+	if (self->p_set) {
+		temp = DeeObject_CompareEq(self->p_set, other->p_set);
+		if (temp <= 0)
+			goto handle_temp;
+	}
 	return_true;
 handle_temp:
-	return (unlikely(temp < 0))
-	       ? NULL
-	       : (Dee_Incref(Dee_False), Dee_False);
+	if unlikely(temp < 0)
+		goto err;
+	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE struct type_cmp property_cmp = {
@@ -192,10 +216,10 @@ PRIVATE struct type_member property_members[] = {
 	                      "The setter callback"),
 	TYPE_MEMBER_FIELD_DOC("get", STRUCT_OBJECT, offsetof(Property, p_get),
 	                      "->?DCallable\n"
-	                      "Alias for #getter"),
+	                      "Alias for ?#getter"),
 	TYPE_MEMBER_FIELD_DOC("set", STRUCT_OBJECT, offsetof(Property, p_set),
 	                      "->?DCallable\n"
-	                      "Alias for #setter"),
+	                      "Alias for ?#setter"),
 	TYPE_MEMBER_END
 };
 
@@ -218,22 +242,28 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_info(Property *__restrict self,
               struct function_info *__restrict info) {
 	int result = 1;
-	if (self->p_get && DeeFunction_Check(self->p_get) &&
-	    (result = DeeFunction_GetInfo(self->p_get, info)) <= 0)
-		goto done;
-	if (self->p_del && DeeFunction_Check(self->p_del) &&
-	    (result = DeeFunction_GetInfo(self->p_del, info)) <= 0)
-		goto done;
-	if (self->p_set && DeeFunction_Check(self->p_set) &&
-	    (result = DeeFunction_GetInfo(self->p_set, info)) <= 0)
-		goto done;
+	if (self->p_get && DeeFunction_Check(self->p_get)) {
+		result = DeeFunction_GetInfo(self->p_get, info);
+		if (result <= 0)
+			goto done;
+	}
+	if (self->p_del && DeeFunction_Check(self->p_del)) {
+		result = DeeFunction_GetInfo(self->p_del, info);
+		if (result <= 0)
+			goto done;
+	}
+	if (self->p_set && DeeFunction_Check(self->p_set)) {
+		result = DeeFunction_GetInfo(self->p_set, info);
+		if (result <= 0)
+			goto done;
+	}
 done:
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-property_getattr(Property *self,
-                 DeeObject *name) {
+property_callback_getattr(Property *self,
+                          DeeObject *name) {
 	if (self->p_get)
 		return DeeObject_GetAttr(self->p_get, name);
 	if (self->p_del)
@@ -255,7 +285,7 @@ property_get_name(Property *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	if (info.fi_name)
 		return (DREF DeeObject *)info.fi_name;
-	result = property_getattr(self, &str___name__);
+	result = property_callback_getattr(self, &str___name__);
 	if (result != ITER_DONE)
 		return result;
 	return_none;
@@ -275,7 +305,7 @@ property_get_doc(Property *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	if (info.fi_doc)
 		return (DREF DeeObject *)info.fi_doc;
-	result = property_getattr(self, &str___doc__);
+	result = property_callback_getattr(self, &str___doc__);
 	if (result != ITER_DONE)
 		return result;
 	return_none;
@@ -295,7 +325,7 @@ property_get_type(Property *__restrict self) {
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_type)
 		return info.fi_type;
-	result = (DREF DeeTypeObject *)property_getattr(self, &str___type__);
+	result = (DREF DeeTypeObject *)property_callback_getattr(self, &str___type__);
 	if (result == (DREF DeeTypeObject *)ITER_DONE) {
 		result = (DREF DeeTypeObject *)Dee_None;
 		Dee_Incref(result);
@@ -306,20 +336,20 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-get_function_module(DeeObject *__restrict self) {
-	return_reference_((DeeObject *)(((DeeFunctionObject *)self)->fo_code->co_module));
+get_function_module(DeeFunctionObject *__restrict self) {
+	return_reference_((DeeObject *)self->fo_code->co_module);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_get_module(Property *__restrict self) {
 	DREF DeeObject *result;
 	if (self->p_get && DeeFunction_Check(self->p_get))
-		return get_function_module(self->p_get);
+		return get_function_module((DeeFunctionObject *)self->p_get);
 	if (self->p_del && DeeFunction_Check(self->p_del))
-		return get_function_module(self->p_get);
+		return get_function_module((DeeFunctionObject *)self->p_get);
 	if (self->p_set && DeeFunction_Check(self->p_set))
-		return get_function_module(self->p_get);
-	result = property_getattr(self, &str___module__);
+		return get_function_module((DeeFunctionObject *)self->p_get);
+	result = property_callback_getattr(self, &str___module__);
 	if (result != ITER_DONE)
 		return result;
 	return_none;

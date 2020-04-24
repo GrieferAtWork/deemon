@@ -71,14 +71,14 @@ typedef DeeTypeObject Type;
  * @return:  0: The object matches the required typing. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AssertType)(DeeObject *self, DeeTypeObject *required_type) {
-	if (DeeObject_InstanceOf(self, required_type))
+	if likely(DeeObject_InstanceOf(self, required_type))
 		return 0;
 	return DeeObject_TypeAssertFailed(self, required_type);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AssertTypeExact)(DeeObject *self, DeeTypeObject *required_type) {
-	if (DeeObject_InstanceOfExact(self, required_type))
+	if likely(DeeObject_InstanceOfExact(self, required_type))
 		return 0;
 	return DeeObject_TypeAssertFailed(self, required_type);
 }
@@ -1352,7 +1352,8 @@ err_noimp:
 #endif
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL object_repr(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+object_repr(DeeObject *__restrict self) {
 	if (self->ob_type != &DeeObject_Type)
 		goto err_noimp;
 	Dee_Incref(&str_Object);
@@ -2382,7 +2383,8 @@ type_ctor(DeeTypeObject *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_str(DeeTypeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_str(DeeTypeObject *__restrict self) {
 	if (self->tp_flags & TP_FNAMEOBJECT) {
 		DREF DeeStringObject *result;
 		result = COMPILER_CONTAINER_OF(self->tp_name,
@@ -2450,10 +2452,12 @@ type_baseof(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	PRIVATE struct keyword kwlist[] = { K(other), KEND };
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o:baseof", &other))
-		return NULL;
+		goto err;
 	if (!DeeType_Check((DeeObject *)other))
 		return_false;
 	return_bool(DeeType_IsInherited(other, self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2462,8 +2466,10 @@ type_derivedfrom(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	PRIVATE struct keyword kwlist[] = { K(other), KEND };
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o:derivedfrom", &other))
-		return NULL;
+		goto err;
 	return_bool(DeeType_IsInherited(self, other));
+err:
+	return NULL;
 }
 
 
@@ -2824,12 +2830,14 @@ unpack_init_info1(DeeObject *__restrict info) {
 	DREF DeeObject *init_argv;
 	DREF DeeObject *init_kw;
 	if unlikely(unpack_init_info(info, &init_fields, &init_argv, &init_kw))
-		return NULL;
+		goto err;
 	Dee_XDecref(init_kw);
 	Dee_Decref(init_argv);
 	if (!init_fields)
 		init_fields = ITER_DONE;
 	return init_fields;
+err:
+	return NULL;
 }
 
 INTDEF int DCALL
@@ -3069,29 +3077,34 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_getinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_getinstanceattr, &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_getinstanceattr, &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
 	return DeeType_GetInstanceAttrString(self,
 	                                     DeeString_STR(name),
 	                                     DeeString_Hash(name));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_callinstanceattr(DeeTypeObject *self, size_t argc,
                       DeeObject *const *argv, DeeObject *kw) {
-	if (!argc) {
+	if unlikely(!argc) {
 		err_invalid_argc_va(meth_callinstanceattr, argc, 1);
-		return NULL;
+		goto err;
 	}
 	if (DeeObject_AssertTypeExact(argv[0], &DeeString_Type))
-		return NULL;
+		goto err;
 	return DeeType_CallInstanceAttrStringKw(self,
 	                                        DeeString_STR(argv[0]),
 	                                        DeeString_Hash(argv[0]),
 	                                        argc - 1,
 	                                        argv + 1,
 	                                        kw);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3099,15 +3112,19 @@ type_hasinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	int result;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_hasinstanceattr, &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
-		return NULL;
+	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	                    meth_hasinstanceattr, &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
 	result = DeeType_HasInstanceAttrString(self,
 	                                       DeeString_STR(name),
 	                                       DeeString_Hash(name));
 	if unlikely(result < 0)
-		return NULL;
+		goto err;
 	return_bool_(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -3116,8 +3133,10 @@ type_boundinstanceattr(DeeTypeObject *self, size_t argc,
 	DeeObject *name;
 	bool allow_missing = true;
 	int result;
-	if (DeeArg_UnpackKw(argc, argv, kw, boundattr_kwdlist, meth_boundinstanceattr, &name, &allow_missing) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
+	if (DeeArg_UnpackKw(argc, argv, kw, boundattr_kwdlist,
+	                    meth_boundinstanceattr, &name, &allow_missing))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	/* Instance attributes of types are always bound (because they're all wrappers) */
 	result = DeeType_BoundInstanceAttrString(self, DeeString_STR(name), DeeString_Hash(name));
@@ -3136,27 +3155,36 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_delinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, meth_delinstanceattr, &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
-	    DeeType_DelInstanceAttrString(self,
+	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	                    meth_delinstanceattr, &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	if (DeeType_DelInstanceAttrString(self,
 	                                  DeeString_STR(name),
 	                                  DeeString_Hash(name)))
-		return NULL;
+		goto err;
 	return_none;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_setinstanceattr(DeeTypeObject *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name, *value;
-	if (DeeArg_UnpackKw(argc, argv, kw, setattr_kwdlist, meth_setattr, &name, &value) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type) ||
-	    DeeType_SetInstanceAttrString(self,
+	if (DeeArg_UnpackKw(argc, argv, kw, setattr_kwdlist, meth_setattr, &name, &value))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
+		goto err;
+	if (DeeType_SetInstanceAttrString(self,
 	                                  DeeString_STR(name),
 	                                  DeeString_Hash(name),
 	                                  value))
-		return NULL;
+		goto err;
 	return_reference_(value);
+err:
+	return NULL;
 }
 
 
@@ -3236,8 +3264,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasprivateattribute(DeeTypeObject *self, size_t argc,
                          DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasprivateattribute", &name) ||
-	    DeeObject_AssertTypeExact(name, &DeeString_Type))
+	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	                    "o:hasprivateattribute", &name))
+		goto err;
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 	return_bool(!self->tp_attr &&
 	            impl_type_hasprivateattribute(self,
@@ -3252,7 +3282,8 @@ type_hasoperator(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	uint16_t opid;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasoperator", &name))
+	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	                    "o:hasoperator", &name))
 		goto err;
 	if (DeeString_Check(name)) {
 		opid = Dee_OperatorFromName(self, DeeString_STR(name));
@@ -3275,7 +3306,8 @@ type_hasprivateoperator(DeeTypeObject *self, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
 	uint16_t opid;
-	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist, "o:hasprivateoperator", &name))
+	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
+	                    "o:hasprivateoperator", &name))
 		goto err;
 	if (DeeString_Check(name)) {
 		opid = Dee_OperatorFromName(self, DeeString_STR(name));
@@ -3299,64 +3331,80 @@ type_derivedfrom_not_same(DeeTypeObject *self, size_t argc,
                           DeeObject *const *argv) {
 	DeeTypeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:derived_from", &other))
-		return NULL;
+		goto err;
 	return_bool(self != other && DeeType_IsInherited(self, other));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_vartype(DeeTypeObject *self, size_t argc,
                 DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_vartype"))
-		return NULL;
+		goto err;
 	return_bool(DeeType_IsVariable(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_heaptype(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_heaptype"))
-		return NULL;
+		goto err;
 	return_bool(DeeType_IsCustom(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_gctype(DeeTypeObject *self, size_t argc,
                DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_gctype"))
-		return NULL;
+		goto err;
 	return_bool(DeeType_IsGC(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_final(DeeTypeObject *self, size_t argc,
               DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_final"))
-		return NULL;
+		goto err;
 	return_bool(DeeType_IsFinal(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_class(DeeTypeObject *self, size_t argc,
               DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_class"))
-		return NULL;
+		goto err;
 	return_bool(DeeType_IsClass(self));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_complete(DeeTypeObject *__restrict UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_complete"))
-		return NULL;
+		goto err;
 	return_true;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_classtype(DeeTypeObject *__restrict UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_class_type"))
-		return NULL;
+		goto err;
 	return_false;
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3391,59 +3439,75 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_pointer(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_pointer"))
-		return NULL;
+		goto err;
 	return type_is_ctypes_class(self, "ispointer");
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_lvalue(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_pointer"))
-		return NULL;
+		goto err;
 	return type_is_ctypes_class(self, "islvalue");
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_structured(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_structured"))
-		return NULL;
+		goto err;
 	return DeeObject_GetAttrString((DeeObject *)self, "isstructured");
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_struct(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_struct"))
-		return NULL;
+		goto err;
 	return type_is_ctypes_class(self, "isstruct");
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_array(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_array"))
-		return NULL;
+		goto err;
 	return type_is_ctypes_class(self, "isarray");
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_is_foreign_function(DeeTypeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_foreign_function"))
-		return NULL;
+		goto err;
 	return type_is_ctypes_class(self, "isfunction");
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_filetype(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_file"))
-		return NULL;
+		goto err;
 	return_bool(Dee_TYPE(self) == &DeeFileType_Type);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 type_is_superbase(DeeTypeObject *self, size_t argc,
                   DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":is_super_base"))
-		return NULL;
+		goto err;
 	return_bool(DeeType_Base(self) == NULL);
+err:
+	return NULL;
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
@@ -3475,18 +3539,18 @@ PRIVATE struct type_method type_methods[] = {
 	      "}"
 
 	      "\n"
-	      "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type,({(string,object)...},)...} */
-	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type,({(string,object)...},none)...} */
-	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type,({(string,object)...},tuple)...} */
-	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type,({(string,object)...},tuple,none)...} */
-	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type,({(string,object)...},tuple,mapping)...} */
-	      "(initializer:?S?T2?DType?T2?N?DTuple=!N)->\n"                       /* {(Type,(none,tuple)...} */
-	      "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type,(none,tuple,none)...} */
-	      "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type,(none,tuple,mapping)...} */
+	      "(initializer:?S?T2?DType?T1?S?T2?Dstring?O=!N)->\n"                 /* {(Type,({(string,Object)...},)...} */
+	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?N=!N)->\n"               /* {(Type,({(string,Object)...},none)...} */
+	      "(initializer:?S?T2?DType?T2?S?T2?Dstring?O?DTuple=!N)->\n"          /* {(Type,({(string,Object)...},Tuple)...} */
+	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?N=!N)->\n"        /* {(Type,({(string,Object)...},Tuple,none)...} */
+	      "(initializer:?S?T2?DType?T3?S?T2?Dstring?O?DTuple?DMapping=!N)->\n" /* {(Type,({(string,Object)...},Tuple,Mapping)...} */
+	      "(initializer:?S?T2?DType?T2?N?DTuple=!N)->\n"                       /* {(Type,(none,Tuple)...} */
+	      "(initializer:?S?T2?DType?T3?N?DTuple?N=!N)->\n"                     /* {(Type,(none,Tuple,none)...} */
+	      "(initializer:?S?T2?DType?T3?N?DTuple?DMapping=!N)->\n"              /* {(Type,(none,Tuple,Mapping)...} */
 	      "@throw TypeError No superargs tuple was provided for one of the Type's bases, when that base "
 	      /**/ "has a mandatory constructor that can't be invoked without any arguments. "
 	      /**/ "Note that a user-defined class never has a mandatory constructor, with this "
-	      /**/ "only affecting builtin types such as :InstanceMethod or :property\n"
+	      /**/ "only affecting builtin types such as :InstanceMethod or :Property\n"
 
 	      "A extended way of constructing and initializing a Type, that involves providing explicit "
 	      /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
@@ -3601,7 +3665,7 @@ PRIVATE struct type_method type_methods[] = {
 	      "$\"gr\"|$\">\"|${operator > (other): Object}&"
 	      "$\"ge\"|$\">=\"|${operator >= (other): Object}&"
 	      "$\"iter\"|$\"iter\"|${operator iter(): Object}&"
-	      "$\"size\"|$\"#\"|${operator # (): Object}&"
+	      "$\"size\"|$\"##\"|${operator ## (): Object}&"
 	      "$\"contains\"|$\"contains\"|${operator contains(item): Object}&"
 	      "$\"getitem\"|$\"[]\"|${operator [] (index): Object}&"
 	      "$\"delitem\"|$\"del[]\"|${operator del[] (index): none}&"

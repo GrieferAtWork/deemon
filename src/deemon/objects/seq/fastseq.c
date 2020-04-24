@@ -207,7 +207,7 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 	result = (DREF DeeObject **)Dee_TryMalloc(alloc_size * sizeof(DREF DeeObject *));
 	if unlikely(!result) {
 		alloc_size = 1;
-		result     = (DREF DeeObject **)Dee_Malloc(alloc_size * sizeof(DREF DeeObject *));
+		result = (DREF DeeObject **)Dee_Malloc(alloc_size * sizeof(DREF DeeObject *));
 		goto err_r_iter;
 	}
 	/* Iterate items. */
@@ -215,11 +215,16 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 		ASSERT(i <= alloc_size);
 		if unlikely(i >= alloc_size) {
 			/* Must allocate more memory. */
-			size_t new_alloc_size = alloc_size * 2;
-			new_result            = (DREF DeeObject **)Dee_TryRealloc(result, new_alloc_size * sizeof(DREF DeeObject *));
+			size_t new_alloc_size;
+			new_alloc_size = alloc_size * 2;
+			new_result = (DREF DeeObject **)Dee_TryRealloc(result,
+			                                               new_alloc_size *
+			                                               sizeof(DREF DeeObject *));
 			if unlikely(!new_result) {
 				new_alloc_size = i + 1;
-				new_result     = (DREF DeeObject **)Dee_Realloc(result, new_alloc_size * sizeof(DREF DeeObject *));
+				new_result = (DREF DeeObject **)Dee_Realloc(result,
+				                                            new_alloc_size *
+				                                            sizeof(DREF DeeObject *));
 				if unlikely(!new_result)
 					goto err_r_iter_elem;
 			}
@@ -236,7 +241,8 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 	ASSERT(i <= alloc_size);
 	/* Free unused memory. */
 	if (i != alloc_size) {
-		new_result = (DREF DeeObject **)Dee_TryRealloc(result, i * sizeof(DREF DeeObject *));
+		new_result = (DREF DeeObject **)Dee_TryRealloc(result,
+		                                               i * sizeof(DREF DeeObject *));
 		if likely(new_result)
 			result = new_result;
 	}

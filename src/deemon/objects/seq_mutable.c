@@ -4384,6 +4384,10 @@ PRIVATE DeeObject *mutable_sequence_attributes[] = {
 };
 
 
+/* Determine if a given sequence is mutable or resizable.
+ * @return: 1:  The sequence is mutable or resizable.
+ * @return: 0:  The sequence isn't mutable or resizable.
+ * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_IsMutable(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
@@ -4413,6 +4417,10 @@ DeeSeq_IsMutable(DeeObject *__restrict self) {
 	return 0;
 }
 
+/* Determine if a given sequence is mutable or resizable.
+ * @return: 1:  The sequence is mutable or resizable.
+ * @return: 0:  The sequence isn't mutable or resizable.
+ * @return: -1: An error occurred. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_IsResizable(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;

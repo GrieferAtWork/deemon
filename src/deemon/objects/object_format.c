@@ -119,7 +119,7 @@ object_format_generic(DeeObject *__restrict self,
 	/* Generate the string representation of `self' */
 	self_str = DeeObject_Str(self);
 	if unlikely(!self_str)
-		return -1;
+		goto err;
 
 	/* Do the alignment! */
 	result   = 0;
@@ -231,6 +231,8 @@ err_bad_format_str:
 	                       "Bad format string %$q",
 	                       format_len,
 	                       format_end - format_len);
+err:
+	return -1;
 }
 
 
@@ -262,7 +264,7 @@ check_attribute_error:
 				if (DeeError_Catch(&DeeError_AttributeError) ||
 				    DeeError_Catch(&DeeError_NotImplemented))
 					break; /* Stop searching for a sub-class's __format__ function. */
-				return -1;
+				goto err;
 			}
 			goto call_format_function;
 		}
@@ -287,7 +289,7 @@ call_format_function:
 			}
 			Dee_Decref(format_function);
 			if unlikely(!callback_result)
-				return -1;
+				goto err;
 			result = DeeObject_Print(callback_result, printer, arg);
 			Dee_Decref(callback_result);
 			return result;
@@ -295,6 +297,8 @@ call_format_function:
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 	/* Fallback: Format using `object.__format__' */
 	return object_format_generic(self, printer, arg, format_str, format_len);
+err:
+	return -1;
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
@@ -309,11 +313,14 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 DeeObject_PrintFormat(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
                       DeeObject *__restrict format_str) {
-	char *utf8_format = DeeString_AsUtf8(format_str);
+	char *utf8_format;
+	utf8_format = DeeString_AsUtf8(format_str);
 	if unlikely(!utf8_format)
-		return -1;
+		goto err;
 	return object_format_impl(self, printer, arg, utf8_format,
 	                          WSTR_LENGTH(utf8_format), format_str);
+err:
+	return -1;
 }
 
 
