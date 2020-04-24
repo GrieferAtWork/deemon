@@ -71,8 +71,12 @@ pipe_class_new(DeeObject *__restrict UNUSED(self),
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (!CreatePipe(&hReader, &hWriter, NULL, pipe_size)) {
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		nt_ThrowLastError();
+		DeeNTSystem_ThrowErrorf(NULL, dwError,
+		                        "Failed to create pipe (size: %I32u)",
+		                        pipe_size);
 		goto err;
 	}
 	DBG_ALIGNMENT_ENABLE();

@@ -134,10 +134,10 @@ INTERN DeeTypeObject DeeError_HostNotFound    = INIT_ERROR("HostNotFound", &DeeE
 INTERN DeeTypeObject DeeError_NoHostAddress   = INIT_ERROR("NoHostAddress", &DeeError_HostNotFound, NULL);
 
 
-INTERN NONNULL((2)) void DCALL
+INTERN NONNULL((2)) int DCALL
 err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self) {
-	DeeNet_ThrowErrorf(&DeeError_FileClosed, err,
-	                   "Socket %k has been closed", self);
+	return DeeNet_ThrowErrorf(&DeeError_FileClosed, err,
+	                          "Socket %k has been closed", self);
 }
 
 DECL_END

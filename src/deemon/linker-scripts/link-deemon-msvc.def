@@ -944,5 +944,3 @@ EXPORTS
 	_Dee_dprint@4=__Dee_dprint@4
 	_Dee_dprinter@12=__Dee_dprinter@12
 	_Dee_vdprintf@8=__Dee_vdprintf@8
-	nt_ThrowError@4=_nt_ThrowError@4
-	nt_ThrowLastError@0=_nt_ThrowLastError@0

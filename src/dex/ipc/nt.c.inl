@@ -198,10 +198,10 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS64 {
 } RTL_USER_PROCESS_PARAMETERS64, *PRTL_USER_PROCESS_PARAMETERS64;
 
 /* Assert known, good offsets. */
-STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS32,CurrentDirectory) == 36);
-STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS64,CurrentDirectory) == 56);
-STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS32,CommandLine)      == 64);
-STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS64,CommandLine)      == 112);
+STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS32, CurrentDirectory) == 36);
+STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS64, CurrentDirectory) == 56);
+STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS32, CommandLine)      == 64);
+STATIC_ASSERT(COMPILER_OFFSETOF(RTL_USER_PROCESS_PARAMETERS64, CommandLine)      == 112);
 
 
 #define PROCATTR_STANDARDINPUT         0 /* DREF DeeSystemFileObject * */
@@ -310,9 +310,10 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*func)(hProcess, dwFlags, buffer, &bufsize)) {
-		DWORD error = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
-		switch (error) {
+		switch (dwError) {
 
 		case ERROR_GEN_FAILURE:
 			/* Generated for Zombie Processes */
@@ -331,7 +332,8 @@ nt_QueryFullProcessImageName(HANDLE hProcess, DWORD dwFlags) {
 			break;
 
 		default:
-			nt_ThrowError(error);
+			DeeNTSystem_ThrowErrorf(NULL, dwError,
+			                        "Call to QueryFullProcessImageNameW failed");
 			goto err_r;
 		}
 		DBG_ALIGNMENT_DISABLE();

@@ -257,13 +257,6 @@ DFUNDEF NONNULL((3)) int DeeNTSystem_ThrowErrorf(DeeTypeObject *tp, DeeNT_DWORD 
 DFUNDEF NONNULL((2)) int DeeNTSystem_ThrowLastErrorf(DeeTypeObject *tp, char const *__restrict format, ...);
 DFUNDEF NONNULL((3)) int DCALL DeeNTSystem_VThrowErrorf(DeeTypeObject *tp, DeeNT_DWORD dwError, char const *__restrict format, va_list args);
 DFUNDEF NONNULL((2)) int DCALL DeeNTSystem_VThrowLastErrorf(DeeTypeObject *tp, char const *__restrict format, va_list args);
-
-/* Throw a given `dwError' or use the return value of `GetLastError()'
- * as the proper Error type derived from SystemError.
- * TODO: Remove these!
- * @return: -1: Always returned. */
-DFUNDEF int DCALL nt_ThrowLastError(void);
-DFUNDEF int DCALL nt_ThrowError(__ULONG32_TYPE__ dwError);
 #endif /* CONFIG_HOST_WINDOWS */
 
 

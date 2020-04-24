@@ -378,8 +378,9 @@ err_result:
 		}
 		/* The creation failed. - Check if this is due to a file-
 		 * not-found error, or because because of some other error. */
-		if (!DeeNTSystem_IsFileNotFoundError(error) && !DeeNTSystem_IsAccessDeniedError(error)) {
-			nt_ThrowError(error);
+		if (!DeeNTSystem_IsFileNotFoundError(error) &&
+		    !DeeNTSystem_IsAccessDeniedError(error)) {
+			DeeNTSystem_ThrowErrorf(NULL, error, "Failed to create process");
 			goto err_buffer;
 		}
 		while (*next && *next == ';')
@@ -449,7 +450,7 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 		/* The creation failed. - Check if this is due to a file-
 		 * not-found error, or because because of some other error. */
 		if (!DeeNTSystem_IsFileNotFoundError(error) && !DeeNTSystem_IsAccessDeniedError(error)) {
-			nt_ThrowError(error);
+			DeeNTSystem_ThrowErrorf(NULL, error, "Failed to create process");
 			goto err_buffer;
 		}
 		while (*next && *next == ';')
@@ -818,7 +819,8 @@ save_final_exe:
 			DBG_ALIGNMENT_ENABLE();
 			fixed_exe = final_exe;
 		}
-		if (DeeNTSystem_IsFileNotFoundError(error) || DeeNTSystem_IsAccessDeniedError(error)) {
+		if (DeeNTSystem_IsFileNotFoundError(error) ||
+		    DeeNTSystem_IsAccessDeniedError(error)) {
 			/* Append %PATHEXT% to the executable name, and try again. */
 			final_exe = nt_CreateProcessExt(wExe, WSTR_LENGTH(wExe),
 			                                wCmdLineCopy, NULL, NULL, TRUE,
@@ -838,7 +840,7 @@ save_final_exe:
 			                        exe);
 		} else {
 			Dee_XDecref(fixed_exe);
-			nt_ThrowError(error);
+			DeeNTSystem_ThrowErrorf(NULL, error, "Failed to create process");
 		}
 		goto done_cmdline_copy;
 	}
@@ -1166,7 +1168,8 @@ process_terminate(Process *self, size_t argc, DeeObject *const *argv) {
 			}
 			DBG_ALIGNMENT_ENABLE();
 		}
-		nt_ThrowError(error);
+		DeeNTSystem_ThrowErrorf(NULL, error,
+		                        "Failed to terminate process");
 		goto err;
 	}
 term_ok:
@@ -1314,7 +1317,13 @@ pt_iter(ProcessThreads *__restrict self) {
 	DBG_ALIGNMENT_ENABLE();
 	if (!result->pti_handle ||
 	    result->pti_handle == INVALID_HANDLE_VALUE) {
-		nt_ThrowLastError();
+		DWORD dwError;
+		DBG_ALIGNMENT_DISABLE();
+		dwError = GetLastError();
+		DBG_ALIGNMENT_ENABLE();
+		DeeNTSystem_ThrowErrorf(NULL, dwError,
+		                        "Failed to create a snapshot of the thread of process %I32u",
+		                        self->pt_id);
 		goto err_r;
 	}
 	result->pti_entry.dwSize = sizeof(result->pti_entry);

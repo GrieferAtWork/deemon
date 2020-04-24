@@ -1996,21 +1996,6 @@ err:
 	return NULL;
 }
 
-PUBLIC int DCALL nt_ThrowError(DWORD dwError) {
-	/* TODO: Remove this function */
-	return DeeNTSystem_ThrowLastErrorf(NULL, "System call failed (%lu)", (unsigned long)dwError);
-}
-
-PUBLIC int DCALL nt_ThrowLastError(void) {
-	/* TODO: Remove this function */
-	DWORD dwError;
-	DBG_ALIGNMENT_DISABLE();
-	dwError = GetLastError();
-	DBG_ALIGNMENT_ENABLE();
-	return nt_ThrowError(dwError);
-}
-
-
 /* Determine the filename from a handle, as returned by `DeeNTSystem_CreateFile()' */
 PUBLIC WUNUSED /*String*/ DREF DeeObject *DCALL
 DeeNTSystem_GetFilenameOfHandle(/*HANDLE*/ void *hFile) {

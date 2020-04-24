@@ -831,7 +831,8 @@ INTDEF DeeTypeObject     DeeError_HostNotFound; /* Host name does not exist. */
 INTDEF DeeTypeObject         DeeError_NoHostAddress; /* Host has no addresses associated with it. */
 
 /* Throws an `Error.SystemError.FSError.FileClosed' */
-INTDEF NONNULL((2)) void DCALL err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self);
+INTDEF NONNULL((2)) int DCALL
+err_socket_closed(neterrno_t err, DeeSocketObject *__restrict self);
 
 
 DECL_END

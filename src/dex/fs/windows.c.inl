@@ -2570,8 +2570,8 @@ diriter_copy(DirIterator *__restrict self,
 		                     0, TRUE, DUPLICATE_SAME_ACCESS)) {
 			DBG_ALIGNMENT_ENABLE();
 			rwlock_endread(&other->d_lock);
-			nt_ThrowLastError();
-			return -1;
+			return DeeNTSystem_ThrowErrorf(NULL, GetLastError(),
+			                               "Failed to duplicate Find-handle");
 		}
 		DBG_ALIGNMENT_ENABLE();
 		memcpy(&self->d_data, &other->d_data, sizeof(WIN32_FIND_DATAW));
