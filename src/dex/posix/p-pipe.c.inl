@@ -126,7 +126,8 @@ again:
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if (!CreatePipe(&hRead, &hWrite, NULL, 0)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError))
 			goto again;
@@ -318,7 +319,8 @@ err:
 again:
 	DBG_ALIGNMENT_DISABLE();
 	if (!CreatePipe(&hRead, &hWrite, NULL, 0)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())

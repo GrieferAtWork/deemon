@@ -22,8 +22,6 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 
 #include <deemon/api.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #ifdef _MSC_VER
@@ -41,19 +39,24 @@
 #endif /* _MSC_VER */
 #endif /* CONFIG_HOST_WINDOWS */
 
-#ifdef CONFIG_HOST_UNIX
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/time.h>
-#include <sys/types.h>
+#include <deemon/system-features.h>
+#include <deemon/system.h>
 
-#include <errno.h>
-#include <fcntl.h>
+#ifndef CONFIG_HOST_WINDOWS
+#ifdef CONFIG_HOST_UNIX
+#ifdef CONFIG_HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif /* CONFIG_HAVE_SYS_SELECT_H */
+
+#ifdef CONFIG_HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif /* CONFIG_HAVE_SYS_SOCKET_H */
+
+#ifdef CONFIG_HAVE_NETDB_H
 #include <netdb.h>
-#include <signal.h>
-#include <unistd.h>
+#endif /* CONFIG_HAVE_NETDB_H */
 #endif /* CONFIG_HOST_UNIX */
+#endif /* !CONFIG_HOST_WINDOWS */
 
 
 #ifdef _MSC_VER
@@ -485,6 +488,9 @@ typedef SocketHandleType sock_t;
 
 #ifdef CONFIG_HOST_WINDOWS
 /* Dunno why the windows headers didn't already do this... */
+#undef SHUT_RD
+#undef SHUT_WR
+#undef SHUT_RDWR
 #define SHUT_RD   SD_RECEIVE
 #define SHUT_WR   SD_SEND
 #define SHUT_RDWR SD_BOTH
@@ -515,9 +521,9 @@ struct sockaddr_un {
 #endif /* !SHUT_RDWR */
 
 #ifdef CONFIG_HOST_WINDOWS
-typedef DWORD            neterrno_t;
-#define GET_NET_ERROR()  (neterrno_t)WSAGetLastError()
-#define SET_NET_ERROR(x) WSASetLastError((int)(x))
+typedef DWORD              neterrno_t;
+#define GET_NET_ERROR()    (neterrno_t)WSAGetLastError()
+#define SET_NET_ERROR(x)   WSASetLastError((int)(x))
 #define DeeNet_ThrowErrorf DeeNTSystem_ThrowErrorf
 #endif /* CONFIG_HOST_WINDOWS */
 
@@ -787,10 +793,13 @@ sock_getmsgflagsnameorid(int flags);
  *   - "WRITEREAD": SHUT_RDWR
  * When the given mode is not recognized, an
  * `Error.ValueError' is thrown and -1 is returned. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL get_shutdown_mode(char const *__restrict mode, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+get_shutdown_mode(char const *__restrict mode, int *__restrict presult);
+
 /* Same as `get_shutdown_mode', but interpret strings
  * and convert everything else to an integer. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict presult);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+get_shutdown_modeof(DeeObject *__restrict mode, int *__restrict presult);
 
 
 

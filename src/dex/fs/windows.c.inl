@@ -741,7 +741,8 @@ nt_printhome_token(struct unicode_printer *__restrict printer, void *hToken, boo
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetUserProfileDirectoryW)((HANDLE)hToken, wBuffer, &dwBufsize)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
@@ -801,7 +802,8 @@ nt_print_GetProfilesDirectory(struct unicode_printer *__restrict printer, bool b
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetProfilesDirectoryW)(wBuffer, &dwBufsize)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
@@ -861,7 +863,8 @@ nt_print_GetDefaultUserProfileDirectory(struct unicode_printer *__restrict print
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetDefaultUserProfileDirectoryW)(wBuffer, &dwBufsize)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
@@ -920,7 +923,8 @@ nt_print_GetAllUsersProfileDirectory(struct unicode_printer *__restrict printer,
 		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	while (!(*my_GetAllUsersProfileDirectoryW)(wBuffer, &dwBufsize)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
@@ -1045,7 +1049,8 @@ fs_printuser(struct unicode_printer *__restrict printer, bool try_get) {
 	if unlikely(!wBuffer)
 		goto err;
 	while (!GetUserNameW(wBuffer, &dwBufsize)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		if (DeeNTSystem_IsBufferTooSmall(dwError)) {
 			LPWSTR wNewBuffer;
 			wNewBuffer = unicode_printer_resize_wchar(printer, wBuffer, dwBufsize - 1);

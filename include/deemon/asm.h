@@ -1609,7 +1609,7 @@ DeeAsm_NextInstr(instruction_t const *__restrict pc);
  * NOTE:    The affect of branch instructions is evaluated as the
  *          fall-through path (aka. when the branch isn't taken).
  * WARNING: This also goes for instructions that always take a branch! */
-DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
+DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) instruction_t *DCALL
 DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
                    /*in|out*/ uint16_t *__restrict pstacksz);
 
@@ -1624,7 +1624,7 @@ DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
  *     influence (e.g.: `ASM_POP_POP': `*psp_sub = (*psp_sub = *pstacksz)+2,*pstacksz -= 2;')
  *   - Before returning, `*pstacksz' will be adjusted to `(OLD(*pstacksz) - *psp_sub) + *psp_add' */
-DFUNDEF ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3, 4)) instruction_t *DCALL
+DFUNDEF ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
                    /*in|out*/ uint16_t *__restrict pstacksz,
                    /*out*/ uint16_t *__restrict psp_add,

@@ -997,7 +997,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = CloseHandle(hObject);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1151,7 +1152,8 @@ again:
 	                                 dwFlagsAndAttributes,
 	                                 hTemplateFile);
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1218,7 +1220,8 @@ again:
 	               (DWORD)buffer.bb_size,
 	               &dwNumberOfBytesWritten,
 	               NULL)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1282,7 +1285,8 @@ again:
 	              (DWORD)buffer.bb_size,
 	              &dwNumberOfBytesRead,
 	              NULL)) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1335,7 +1339,8 @@ again:
 	(void)lpSecurityAttributes; /* TODO */
 	bResult = CreateDirectoryW(lpPathName, NULL);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1384,7 +1389,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = RemoveDirectoryW(lpPathName);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1433,7 +1439,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = DeleteFileW(lpFileName);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1530,7 +1537,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileAttributesW(lpFileName, dwFileAttributes);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1586,7 +1594,8 @@ again:
 	                          &lDistanceToMoveHigh,
 	                          dwMoveMethod);
 	if unlikely(dwResult == INVALID_SET_FILE_POINTER) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (dwError != NO_ERROR) {
 			if (DeeNTSystem_IsIntr(dwError)) {
@@ -1648,7 +1657,8 @@ again:
 	                      &ftLastAccessTime.ft,
 	                      &ftLastWriteTime.ft);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1716,7 +1726,8 @@ again:
 	                      lpLastAccessTime ? &ftLastAccessTime.ft : NULL,
 	                      lpLastWriteTime ? &ftLastWriteTime.ft : NULL);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1765,7 +1776,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = SetFileValidData(hFile, ValidDataLength);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -1960,7 +1972,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = (*pSetDllDirectoryW)(lpPathName);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2017,7 +2030,8 @@ again:
 	                            &dwNumberOfFreeClusters,
 	                            &dwTotalNumberOfClusters);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2081,7 +2095,8 @@ again:
 	                              &uTotalNumberOfBytes,
 	                              &uTotalNumberOfFreeBytes);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2675,7 +2690,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwType = GetFileType(hFile);
 	if (dwType == FILE_TYPE_UNKNOWN) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2723,7 +2739,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwSizeLow = GetFileSize(hFile, &dwSizeHigh);
 	if (dwSizeLow == INVALID_FILE_SIZE) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2774,7 +2791,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwResult = GetFileAttributesW(lpFileName);
 	if (dwResult == INVALID_FILE_ATTRIBUTES) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2826,7 +2844,8 @@ again:
 	bResult = SetFileAttributesW(lpFileName,
 	                             dwFileAttributes);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2877,7 +2896,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwSizeLow = GetCompressedFileSizeW(lpFileName, &dwSizeHigh);
 	if (dwSizeLow == INVALID_FILE_SIZE) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -2926,7 +2946,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bResult = FlushFileBuffers(hFile);
 	if (!bResult) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -3219,7 +3240,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = UnmapViewOfFile((LPCVOID)lpBaseAddress);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -3448,7 +3470,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	hResult = GetStdHandle((DWORD)nStdHandle);
 	if unlikely(!hResult || hResult == INVALID_HANDLE_VALUE) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		SetLastError(NO_ERROR);
 		if (DeeNTSystem_IsIntr(dwError)) {
 			DBG_ALIGNMENT_ENABLE();
@@ -3510,7 +3533,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = SetStdHandle(nStdHandle, hHandle);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -3589,7 +3613,8 @@ again:
 	                           nDefaultTimeOut,
 	                           NULL);
 	if unlikely(hResult == INVALID_HANDLE_VALUE) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -3647,7 +3672,8 @@ again:
 	(void)lpOverlapped; /* TODO */
 	bOk = ConnectNamedPipe(hNamedPipe, NULL);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -3701,7 +3727,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = WaitNamedPipeW(lpNamedPipeName, nTimeOut);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -3788,7 +3815,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	hResult = OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 check_interrupt:
@@ -3854,7 +3882,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = GetExitCodeProcess(hProcess, &dwExitCode);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -4010,7 +4039,8 @@ again:
 	                              &cbNeededModules,
 	                              dwFilterFlag);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -4103,7 +4133,8 @@ again:
 	                       cbAllocProcesses * sizeof(DWORD),
 	                       &cbNeededProcesses);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -4407,7 +4438,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = TerminateProcess(hProcess, uExitCode);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -4458,7 +4490,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = TerminateThread(hThread, dwExitCode);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -4507,7 +4540,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwResult = SuspendThread(hThread);
 	if (dwResult == (DWORD)-1) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -4556,7 +4590,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	dwResult = ResumeThread(hThread);
 	if (dwResult == (DWORD)-1) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -4878,7 +4913,8 @@ again:
 	                        DeeBytes_DATA(result), nSize,
 	                        &szNumberOfBytesRead);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5021,7 +5057,8 @@ again:
 	                         buf.bb_base, buf.bb_size,
 	                         &szNumberOfBytesWritten);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5151,7 +5188,8 @@ again:
 	if (dwResult == WAIT_IO_COMPLETION)
 		goto check_interrupt;
 	if (dwResult == WAIT_FAILED) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 check_interrupt:
@@ -5227,7 +5265,8 @@ again:
 	if (dwResult == WAIT_IO_COMPLETION)
 		goto check_interrupt;
 	if (dwResult == WAIT_FAILED) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 check_interrupt:
@@ -5291,7 +5330,8 @@ again:
 	if (dwResult == WAIT_IO_COMPLETION)
 		goto check_interrupt;
 	if (dwResult == WAIT_FAILED) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 check_interrupt:
@@ -5392,7 +5432,8 @@ again:
 	(void)lpEventAttributes; /* TODO */
 	hResult = CreateEventW(NULL, bManualReset, bInitialState, lpName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5452,7 +5493,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	hResult = OpenMutexW(dwDesiredAccess, bInheritHandle, lpName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5505,7 +5547,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = ResetEvent(hEvent);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5555,7 +5598,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = SetEvent(hEvent);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5615,7 +5659,8 @@ again:
 	(void)lpMutexAttributes; /* TODO */
 	hResult = CreateMutexW(NULL, bInitialOwner, lpName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5675,7 +5720,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	hResult = OpenMutexW(dwDesiredAccess, bInheritHandle, lpName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5727,7 +5773,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = ReleaseMutex(hMutex);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5792,7 +5839,8 @@ again:
 	                           lMaximumCount,
 	                           lpName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5852,7 +5900,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	hResult = OpenSemaphoreW(dwDesiredAccess, bInheritHandle, lpName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5907,7 +5956,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = ReleaseSemaphore(hSemaphore, lReleaseCount, &lPreviousCount);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -5969,7 +6019,8 @@ again:
 	                               bManualReset,
 	                               lpTimerName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -6029,7 +6080,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	hResult = OpenWaitableTimerW(dwDesiredAccess, bInheritHandle, lpName);
 	if (hResult == NULL) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())
@@ -6083,7 +6135,8 @@ again:
 	DBG_ALIGNMENT_DISABLE();
 	bOk = CancelWaitableTimer(hTimer);
 	if (!bOk) {
-		DWORD dwError = GetLastError();
+		DWORD dwError;
+		dwError = GetLastError();
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(dwError)) {
 			if (DeeThread_CheckInterrupt())

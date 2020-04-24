@@ -713,7 +713,8 @@ done:
 PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeSystem_DlError(void) {
 #ifdef DeeSystem_DlOpen_USE_LOADLIBRARY
 	DREF /*String*/ DeeObject *result;
-	DWORD dwError = GetLastError();
+	DWORD dwError;
+	dwError = GetLastError();
 	if (dwError == 0)
 		return ITER_DONE;
 	result = DeeNTSystem_FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, dwError,

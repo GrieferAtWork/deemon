@@ -170,6 +170,7 @@ header("ioctl.h");
 header("unistd.h", unix);
 header("sys/unistd.h", cygwin);
 header("errno.h", addparen(msvc) + " || " + addparen(unix));
+header("sys/errno.h");
 header("stdio.h", stdc);
 header("stdlib.h", stdc);
 header("features.h", unix);
@@ -179,7 +180,6 @@ header("sys/signal.h", addparen(linux) + " || " + addparen(kos));
 header("sys/syscall.h", addparen(linux) + " || " + addparen(kos));
 header("pthread.h", unix);
 header("sys/types.h", addparen(linux) + " || " + addparen(kos));
-header("sys/select.h", addparen(linux) + " || " + addparen(kos));
 header("semaphore.h", addparen(linux) + " || " + addparen(kos));
 header("time.h", addparen(msvc) + " || " + addparen(unix));
 header("sys/time.h", addparen(linux) + " || " + addparen(kos));
@@ -206,6 +206,9 @@ header_nostdinc("bluetooth.h");
 header_nostdinc("linux/netlink.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("asm/types.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("sys/un.h", addparen(linux) + " || " + addparen(kos));
+header_nostdinc("sys/socket.h", unix);
+header_nostdinc("sys/select.h", addparen(linux) + " || " + addparen(kos));
+header_nostdinc("netdb.h", unix);
 
 include_known_headers();
 
@@ -913,6 +916,13 @@ functest("_alloca()", msvc);
 #define CONFIG_HAVE_ERRNO_H 1
 #endif
 
+#ifdef CONFIG_NO_SYS_ERRNO_H
+#undef CONFIG_HAVE_SYS_ERRNO_H
+#elif !defined(CONFIG_HAVE_SYS_ERRNO_H) && \
+      (__has_include(<sys/errno.h>))
+#define CONFIG_HAVE_SYS_ERRNO_H 1
+#endif
+
 #ifdef CONFIG_NO_STDIO_H
 #undef CONFIG_HAVE_STDIO_H
 #elif !defined(CONFIG_HAVE_STDIO_H) && \
@@ -985,14 +995,6 @@ functest("_alloca()", msvc);
       (__has_include(<sys/types.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
        defined(__linux) || defined(linux)) || defined(__KOS__))))
 #define CONFIG_HAVE_SYS_TYPES_H 1
-#endif
-
-#ifdef CONFIG_NO_SYS_SELECT_H
-#undef CONFIG_HAVE_SYS_SELECT_H
-#elif !defined(CONFIG_HAVE_SYS_SELECT_H) && \
-      (__has_include(<sys/select.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
-       defined(__linux) || defined(linux)) || defined(__KOS__))))
-#define CONFIG_HAVE_SYS_SELECT_H 1
 #endif
 
 #ifdef CONFIG_NO_SEMAPHORE_H
@@ -1185,6 +1187,32 @@ functest("_alloca()", msvc);
 #define CONFIG_HAVE_SYS_UN_H 1
 #endif
 
+#ifdef CONFIG_NO_SYS_SOCKET_H
+#undef CONFIG_HAVE_SYS_SOCKET_H
+#elif !defined(CONFIG_HAVE_SYS_SOCKET_H) && \
+      (__has_include(<sys/socket.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_SYS_SOCKET_H 1
+#endif
+
+#ifdef CONFIG_NO_SYS_SELECT_H
+#undef CONFIG_HAVE_SYS_SELECT_H
+#elif !defined(CONFIG_HAVE_SYS_SELECT_H) && \
+      (__has_include(<sys/select.h>) || (defined(__NO_has_include) && ((defined(__linux__) || \
+       defined(__linux) || defined(linux)) || defined(__KOS__))))
+#define CONFIG_HAVE_SYS_SELECT_H 1
+#endif
+
+#ifdef CONFIG_NO_NETDB_H
+#undef CONFIG_HAVE_NETDB_H
+#elif !defined(CONFIG_HAVE_NETDB_H) && \
+      (__has_include(<netdb.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_NETDB_H 1
+#endif
+
 #ifdef CONFIG_HAVE_IO_H
 #include <io.h>
 #endif /* CONFIG_HAVE_IO_H */
@@ -1237,6 +1265,10 @@ functest("_alloca()", msvc);
 #include <errno.h>
 #endif /* CONFIG_HAVE_ERRNO_H */
 
+#ifdef CONFIG_HAVE_SYS_ERRNO_H
+#include <sys/errno.h>
+#endif /* CONFIG_HAVE_SYS_ERRNO_H */
+
 #ifdef CONFIG_HAVE_STDIO_H
 #include <stdio.h>
 #endif /* CONFIG_HAVE_STDIO_H */
@@ -1272,10 +1304,6 @@ functest("_alloca()", msvc);
 #ifdef CONFIG_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif /* CONFIG_HAVE_SYS_TYPES_H */
-
-#ifdef CONFIG_HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif /* CONFIG_HAVE_SYS_SELECT_H */
 
 #ifdef CONFIG_HAVE_SEMAPHORE_H
 #include <semaphore.h>

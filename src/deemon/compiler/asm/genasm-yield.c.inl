@@ -132,7 +132,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 					goto err;
 				fastlen = DeeTuple_SIZE(seqexpr);
 				if (fastlen > 8 ||
-				    (current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) && fastlen > 1) {
+				    ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) && fastlen > 1)) {
 					Dee_Decref(seqexpr);
 					goto after_constexpr_expand;
 				}

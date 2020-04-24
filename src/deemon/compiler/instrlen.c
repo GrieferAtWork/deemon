@@ -1262,14 +1262,14 @@ DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	return result;
 }
 
-PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) instruction_t *DCALL
+PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) instruction_t *DCALL
 DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
-                 uint16_t *__restrict pstacksz) {
+                   uint16_t *__restrict pstacksz) {
 	uint16_t sp_add, sp_sub;
 	return DeeAsm_NextInstrEf(pc, pstacksz, &sp_add, &sp_sub);
 }
 
-PUBLIC ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3, 4)) instruction_t *DCALL
+PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
                    uint16_t *__restrict pstacksz,
                    uint16_t *__restrict psp_add,
