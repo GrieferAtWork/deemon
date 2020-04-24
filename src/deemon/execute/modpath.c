@@ -328,9 +328,9 @@ DeeModule_LoadSourceStreamEx(DeeModuleObject *__restrict self,
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		dots->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		dots->s_type  = SYMBOL_TYPE_ARG;
 		dots->s_symid = 0;
 		dots->s_flag |= SYMBOL_FALLOC;
@@ -2792,9 +2792,9 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		dots->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		dots->s_type  = SYMBOL_TYPE_ARG;
 		dots->s_symid = 0;
 		dots->s_flag |= SYMBOL_FALLOC;
@@ -3205,6 +3205,30 @@ PRIVATE DEFINE_RWLOCK(deemon_home_lock);
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE DREF DeeStringObject *deemon_home = NULL;
+
+/* Get/Set deemon's home path.
+ * The home path is used to locate builtin libraries, as well as extensions.
+ * Upon first access, `DeeExec_GetHome()' will pre-initialize the home-path as follows:
+ * >> deemon_home = fs.environ["DEEMON_HOME"];
+ * >> if (deemon_home !is none) {
+ * >>     deemon_home = fs.abspath(deemon_home);
+ * >> } else {
+ * >>#ifdef CONFIG_DEEMON_HOME
+ * >>     deemon_home = CONFIG_DEEMON_HOME;
+ * >>#else
+ * >>     deemon_home = fs.headof(fs.readlink("/proc/self/exe"));
+ * >>#endif
+ * >> }
+ * >> deemon_home = fs.inctrail(deemon_home);
+ * That is: Try to lookup an environment variable `DEEMON_HOME', which
+ *          if found is then converted into an absolute filename.
+ *          When this variable doesn't exist, behavior depends on how deemon was built.
+ *          If it was built with the `CONFIG_DEEMON_HOME' option enabled, that
+ *          option is interpreted as a string which is then used as the effective
+ *          home path, but if that option was disabled, the folder of deemon's
+ *          executable is used as home folder instead.
+ * @return: NULL: Failed to determine the home folder (an error was set).
+ * NOTE: The home path _MUST_ include a trailing slash! */
 PUBLIC WUNUSED DREF /*String*/ DeeObject *DCALL DeeExec_GetHome(void) {
 	DREF DeeStringObject *result;
 	rwlock_read(&deemon_home_lock);

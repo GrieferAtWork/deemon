@@ -42,7 +42,7 @@
 
 DECL_BEGIN
 
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 decl_ast_copy(struct decl_ast *__restrict self,
@@ -811,7 +811,7 @@ INTDEF int DCALL decl_ast_escapetext32(uint32_t const *__restrict text, size_t t
 #include "decl-escape-text-impl.c.inl"
 #endif /* !__INTELLISENSE__ */
 
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 /* Escape documentation text from "Encoded Documentation Text"
  * into "Fully Encoded Documentation Text" */
 INTERN int DCALL
@@ -854,7 +854,7 @@ err_r:
 err:
 	return -1;
 }
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
 /* Pack together the current documentation string. */
@@ -1530,7 +1530,7 @@ nope:
 	return false;
 }
 
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 DECL_END
 

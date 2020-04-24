@@ -3363,7 +3363,7 @@ err:
 	return NULL;
 }
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
                                     struct class_attribute *__restrict attr,
@@ -3477,7 +3477,7 @@ unbound:
 err:
 	return NULL;
 }
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
@@ -3926,7 +3926,7 @@ illegal:
 	return NULL;
 }
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct instance_desc *__restrict self,
@@ -4036,7 +4036,7 @@ illegal:
 	                            ATTR_ACCESS_GET);
 	return NULL;
 }
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL

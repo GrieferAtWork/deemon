@@ -672,71 +672,71 @@ INTDEF void FCALL loc_here(struct ast_loc *__restrict info);
 
 
 /* [AST_CONSTEXPR] */
-DEFINE_AST_GENERATOR(ast_constexpr,(DeeObject *__restrict constant_expression));
+DEFINE_AST_GENERATOR(ast_constexpr, (DeeObject * __restrict constant_expression));
 /* [AST_SYM] */
-DEFINE_AST_GENERATOR(ast_sym,(struct symbol *__restrict sym));
+DEFINE_AST_GENERATOR(ast_sym, (struct symbol * __restrict sym));
 /* [AST_UNBIND] */
-DEFINE_AST_GENERATOR(ast_unbind,(struct symbol *__restrict sym));
+DEFINE_AST_GENERATOR(ast_unbind, (struct symbol * __restrict sym));
 /* [AST_BOUND] */
-DEFINE_AST_GENERATOR(ast_bound,(struct symbol *__restrict sym));
+DEFINE_AST_GENERATOR(ast_bound, (struct symbol * __restrict sym));
 /* [AST_MULTIPLE] WARNING: Inherits a heap-allocated vector `exprv' upon success; @param: flags: Set of `AST_FMULTIPLE_*' */
-DEFINE_AST_GENERATOR(ast_multiple,(uint16_t flags, size_t exprc, /*inherit*/ DREF struct ast **__restrict exprv));
+DEFINE_AST_GENERATOR(ast_multiple, (uint16_t flags, size_t exprc, /*inherit*/ DREF struct ast **__restrict exprv));
 /* [AST_RETURN] NOTE: `return_expr' may be `NULL' */
-DEFINE_AST_GENERATOR(ast_return,(struct ast *return_expr));
+DEFINE_AST_GENERATOR(ast_return, (struct ast * return_expr));
 /* [AST_YIELD] */
-DEFINE_AST_GENERATOR(ast_yield,(struct ast *__restrict yield_expr));
+DEFINE_AST_GENERATOR(ast_yield, (struct ast * __restrict yield_expr));
 /* [AST_THROW] NOTE: `throw_expr' may be `NULL' */
-DEFINE_AST_GENERATOR(ast_throw,(struct ast *throw_expr));
+DEFINE_AST_GENERATOR(ast_throw, (struct ast * throw_expr));
 /* [AST_TRY] WARNING: Inherits a heap-allocated vector `catchv' upon success */
-DEFINE_AST_GENERATOR(ast_try,(struct ast *__restrict guarded_expression, size_t catchc,
-                              /*inherit*/ struct catch_expr *__restrict catchv));
+DEFINE_AST_GENERATOR(ast_try, (struct ast * __restrict guarded_expression, size_t catchc,
+                               /*inherit*/ struct catch_expr *__restrict catchv));
 /* [AST_TRY] Helper function to create a simple try-finally expression using `a_try' */
-DEFINE_AST_GENERATOR(ast_tryfinally,(struct ast *__restrict guarded_expression,
-                                     struct ast *__restrict finally_expression));
+DEFINE_AST_GENERATOR(ast_tryfinally, (struct ast * __restrict guarded_expression,
+                                      struct ast *__restrict finally_expression));
 /* [AST_LOOP] @parma: flags: Set of `AST_FLOOP_*' */
-DEFINE_AST_GENERATOR(ast_loop,(uint16_t flags, struct ast *elem_or_cond, struct ast *iter_or_next, struct ast *loop));
+DEFINE_AST_GENERATOR(ast_loop, (uint16_t flags, struct ast *elem_or_cond, struct ast *iter_or_next, struct ast *loop));
 /* [AST_LOOPCTL] @parma: flags: Set of `AST_FLOOPCTL_**' */
-DEFINE_AST_GENERATOR(ast_loopctl,(uint16_t flags));
+DEFINE_AST_GENERATOR(ast_loopctl, (uint16_t flags));
 /* [AST_CONDITIONAL] @parma: flags: Set of `AST_FCOND_**' */
-DEFINE_AST_GENERATOR(ast_conditional,(uint16_t flags, struct ast *cond,
-                                      struct ast *tt_expr, struct ast *ff_expr));
+DEFINE_AST_GENERATOR(ast_conditional, (uint16_t flags, struct ast *cond,
+                                       struct ast *tt_expr, struct ast *ff_expr));
 /* [AST_BOOL] @param: flags: Set of `AST_FBOOL_*' */
-DEFINE_AST_GENERATOR(ast_bool,(uint16_t flags, struct ast *__restrict expr));
+DEFINE_AST_GENERATOR(ast_bool, (uint16_t flags, struct ast *__restrict expr));
 /* [AST_EXPAND] */
-DEFINE_AST_GENERATOR(ast_expand,(struct ast *__restrict expr));
+DEFINE_AST_GENERATOR(ast_expand, (struct ast * __restrict expr));
 /* [AST_FUNCTION] */
-DEFINE_AST_GENERATOR(ast_function,(struct ast *__restrict function_code, DeeBaseScopeObject *__restrict scope));
+DEFINE_AST_GENERATOR(ast_function, (struct ast * __restrict function_code, DeeBaseScopeObject *__restrict scope));
 /* [AST_OPERATOR_FUNC] */
-DEFINE_AST_GENERATOR(ast_operator_func,(uint16_t operator_name, struct ast *binding));
+DEFINE_AST_GENERATOR(ast_operator_func, (uint16_t operator_name, struct ast *binding));
 /* [AST_OPERATOR] @param: operator_name: One of `OPERATOR_*'.
  *                @param: flags: Set of `AST_OPERATOR_F*' */
-DEFINE_AST_GENERATOR(ast_operator1,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa));
-DEFINE_AST_GENERATOR(ast_operator2,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb));
-DEFINE_AST_GENERATOR(ast_operator3,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc));
-DEFINE_AST_GENERATOR(ast_operator4,(uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc, struct ast *__restrict opd));
+DEFINE_AST_GENERATOR(ast_operator1, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa));
+DEFINE_AST_GENERATOR(ast_operator2, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb));
+DEFINE_AST_GENERATOR(ast_operator3, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc));
+DEFINE_AST_GENERATOR(ast_operator4, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc, struct ast *__restrict opd));
 /* [AST_ACTION]  @param: action_flags: One of `AST_FACTION_*' (see above). */
-DEFINE_AST_GENERATOR(ast_action0,(uint16_t action_flags));
-DEFINE_AST_GENERATOR(ast_action1,(uint16_t action_flags, struct ast *__restrict act0));
-DEFINE_AST_GENERATOR(ast_action2,(uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1));
-DEFINE_AST_GENERATOR(ast_action3,(uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1, struct ast *__restrict act2));
+DEFINE_AST_GENERATOR(ast_action0, (uint16_t action_flags));
+DEFINE_AST_GENERATOR(ast_action1, (uint16_t action_flags, struct ast *__restrict act0));
+DEFINE_AST_GENERATOR(ast_action2, (uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1));
+DEFINE_AST_GENERATOR(ast_action3, (uint16_t action_flags, struct ast *__restrict act0, struct ast *__restrict act1, struct ast *__restrict act2));
 /* [AST_CLASS]   @param: class_flags: Set of `TP_F* & 0xf'.
  * WARNING: Inherits a heap-allocated vector `memberv' upon success. */
-DEFINE_AST_GENERATOR(ast_class,(struct ast *base, struct ast *__restrict descriptor,
-                                struct symbol *class_symbol, struct symbol *super_symbol,
-                                size_t memberc, struct class_member *__restrict memberv));
+DEFINE_AST_GENERATOR(ast_class, (struct ast * base, struct ast *__restrict descriptor,
+                                 struct symbol *class_symbol, struct symbol *super_symbol,
+                                 size_t memberc, struct class_member *__restrict memberv));
 /* [AST_LABEL] @param: flags: Set of `AST_FLABEL_*'. */
-DEFINE_AST_GENERATOR(ast_label,(uint16_t flags, struct text_label *__restrict lbl, DeeBaseScopeObject *__restrict base_scope));
+DEFINE_AST_GENERATOR(ast_label, (uint16_t flags, struct text_label *__restrict lbl, DeeBaseScopeObject *__restrict base_scope));
 /* [AST_GOTO] */
-DEFINE_AST_GENERATOR(ast_goto,(struct text_label *__restrict lbl, DeeBaseScopeObject *__restrict base_scope));
+DEFINE_AST_GENERATOR(ast_goto, (struct text_label * __restrict lbl, DeeBaseScopeObject *__restrict base_scope));
 /* [AST_SWITCH] @param: flags: Set of `AST_FSWITCH_*'.
  * WARNING: Inherits both `cases' and `default_case' upon success. */
-DEFINE_AST_GENERATOR(ast_switch,(uint16_t flags, struct ast *__restrict expr, struct ast *__restrict block,
-                                 struct text_label *cases, struct text_label *default_case));
+DEFINE_AST_GENERATOR(ast_switch, (uint16_t flags, struct ast *__restrict expr, struct ast *__restrict block,
+                                  struct text_label *cases, struct text_label *default_case));
 /* [AST_ASSEMBLY] WARNING: Inherits a heap-allocated vector `opv' upon success; @param: flags: Set of `AST_FASSEMBLY_*' */
 #ifdef CONFIG_LANGUAGE_NO_ASM
-DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
+DEFINE_AST_GENERATOR(ast_assembly, (uint16_t flags, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
 #else /* !CONFIG_LANGUAGE_NO_ASM */
-DEFINE_AST_GENERATOR(ast_assembly,(uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
+DEFINE_AST_GENERATOR(ast_assembly, (uint16_t flags, struct TPPString *__restrict text, size_t num_o, size_t num_i, size_t num_l, /*inherit*/ struct asm_operand *__restrict opv));
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 
 #undef DEFINE_AST_GENERATOR

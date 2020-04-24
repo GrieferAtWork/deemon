@@ -1398,7 +1398,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Call,
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
                (DeeObject *self, DeeObject *args)) {
 	LOAD_TP_SELF;
@@ -1459,7 +1459,7 @@ err_no_keywords:
 	return NULL;
 }
 
-#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
                 (DeeObject *self, DeeObject *args)) {
 	return DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
@@ -1468,7 +1468,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
                 (DeeObject *self, DeeObject *args, DeeObject *kw)) {
 	return DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 }
-#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, CallKw,
@@ -1634,11 +1634,11 @@ err_no_keywords:
 #ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, ThisCallTuple,
                 (DeeObject *self, DeeObject *this_arg, DeeObject *args)) {
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* Check for special callback optimizations. */
 	if (GET_TP_SELF() == &DeeFunction_Type)
 		return DeeFunction_ThisCallTuple((DeeFunctionObject *)self, this_arg, args);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 	return DeeObject_ThisCall(self,
 	                          this_arg,
 	                          DeeTuple_SIZE(args),
@@ -1647,11 +1647,11 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallTuple,
 
 DEFINE_OPERATOR(DREF DeeObject *, ThisCallTupleKw,
                 (DeeObject *self, DeeObject *this_arg, DeeObject *args, DeeObject *kw)) {
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	/* Check for special callback optimizations. */
 	if (GET_TP_SELF() == &DeeFunction_Type)
 		return DeeFunction_ThisCallTupleKw((DeeFunctionObject *)self, this_arg, args, kw);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 	return DeeObject_ThisCallKw(self,
 	                            this_arg,
 	                            DeeTuple_SIZE(args),

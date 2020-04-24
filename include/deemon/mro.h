@@ -246,7 +246,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedClassAtt
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrKw)(DeeTypeObject *tp_self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrLenKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
@@ -262,7 +262,7 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeType_CallCachedClass
 //INTDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeType_CallCachedAttrLenTupleKw)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
 //INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedClassAttrLenTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
 //INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeType_CallCachedInstanceAttrLenTupleKw)(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
@@ -370,7 +370,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAt
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrLenKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrLenKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrLenKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAttrTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr_name, dhash_t hash, DeeObject *args);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, dhash_t hash, DeeObject *args);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrTuple)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, dhash_t hash, DeeObject *args);
@@ -387,7 +387,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeType_CallMethodAt
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallClassMethodAttrLenTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMethodAttrLenTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrLenTupleKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, DeeObject *args, DeeObject *kw);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 6)) DREF DeeObject *(DCALL DeeType_VCallMethodAttrf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, va_list args);
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallClassMethodAttrf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, va_list args);
 //INTDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeType_VCallInstanceMethodAttrf)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, dhash_t hash, char const *__restrict format, va_list args);
@@ -450,7 +450,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallInstanceMet
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMethodAttrLenKw)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self, char const *__restrict attr_name, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* CALL_METHOD_TUPLE */
 #define DeeType_CallMethodAttrTuple(tp_invoker, tp_self, self, attr_name, hash, args)                      DeeType_CallMethodAttr(tp_invoker, tp_self, self, attr_name, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeType_CallClassMethodAttrTuple(tp_invoker, tp_self, attr_name, hash, args)                       DeeType_CallClassMethodAttr(tp_invoker, tp_self, attr_name, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
@@ -468,7 +468,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeType_CallIInstanceMe
 #define DeeType_CallClassMethodAttrLenTupleKw(tp_invoker, tp_self, attr_name, attrlen, hash, args, kw)     DeeType_CallClassMethodAttrLenKw(tp_invoker, tp_self, attr_name, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #define DeeType_CallInstanceMethodAttrLenTupleKw(tp_invoker, tp_self, attr_name, attrlen, hash, args, kw)  DeeType_CallInstanceMethodAttrLenKw(tp_invoker, tp_self, attr_name, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #define DeeType_CallIInstanceMethodAttrLenTupleKw(tp_invoker, tp_self, attr_name, attrlen, hash, args, kw) DeeType_CallIInstanceMethodAttrLenKw(tp_invoker, tp_self, attr_name, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5, 7)) DREF DeeObject *DCALL /* CALL_METHOD */
 type_method_vcallattrf(struct membercache *cache, DeeTypeObject *decl,

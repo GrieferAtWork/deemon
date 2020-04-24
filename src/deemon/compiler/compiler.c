@@ -295,9 +295,9 @@ compiler_fini(DeeCompilerObject *__restrict self) {
 		self->cp_tags.at_anno.an_annoa = 0;
 		self->cp_tags.at_anno.an_annov = NULL;
 	}
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	unicode_printer_fini(&self->cp_tags.at_decl);
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	unicode_printer_fini(&self->cp_tags.at_doc);
 
 	/* Always set the error-flag to prevent TPP from attempting

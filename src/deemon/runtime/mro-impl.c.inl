@@ -1909,7 +1909,7 @@ err:
 }
 
 #ifndef MRO_LEN
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 /* @return: * :        The returned value.
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
@@ -2691,7 +2691,7 @@ err:
 	return NULL;
 }
 #endif
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* !MRO_LEN */
 
 

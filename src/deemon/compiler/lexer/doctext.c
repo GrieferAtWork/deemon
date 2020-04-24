@@ -24,7 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/compiler/doctext.h>
 
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <string.h>
@@ -2658,6 +2658,6 @@ err:
 
 DECL_END
 
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 #endif /* !GUARD_DEEMON_COMPILER_LEXER_DOCTEXT_C */

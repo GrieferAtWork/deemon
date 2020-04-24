@@ -125,7 +125,7 @@ struct asm_sym {
 
 #if __SIZEOF_POINTER__ == 4
 #define CONFIG_SIZEOF_ASM_EXC_MATCHES_SIZEOF_EXCEPT_HANDLER 1
-#endif
+#endif /* __SIZEOF_POINTER__ == 4 */
 
 struct asm_exc {
 	DREF DeeTypeObject *ex_mask;  /* [0..1] s.a.: `struct except_handler::eh_mask'. */

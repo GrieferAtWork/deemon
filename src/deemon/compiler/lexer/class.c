@@ -32,9 +32,9 @@
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #include <deemon/compiler/doctext.h>
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 #include "../../runtime/strings.h"
 
@@ -433,9 +433,9 @@ class_maker_addmember(struct class_maker *__restrict self,
                       uint16_t flags,
                       uint16_t **__restrict ppusage_counter,
                       struct ast_loc *loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
                       , struct decl_ast *decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
                       ) {
 	struct symbol *result;
 	DREF DeeStringObject *name_str;
@@ -457,13 +457,13 @@ class_maker_addmember(struct class_maker *__restrict self,
 		goto err;
 
 	/* Add a documentation string to the member. */
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (decl)
-#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	if (!UNICODE_PRINTER_ISEMPTY(&current_tags.at_doc))
-#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	{
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		/* TODO: The creation of doc strings must be prolonged
 		 *       until the entire class is being finalized.
 		 *    -> Only after FORWARD symbols have been resolved
@@ -476,9 +476,9 @@ class_maker_addmember(struct class_maker *__restrict self,
 		if unlikely(doctext_compile(&current_tags.at_doc))
 			goto err;
 		attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc(decl);
-#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		attr->ca_doc = (DREF DeeStringObject *)ast_tags_doc();
-#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		if unlikely(!attr->ca_doc)
 			goto err;
 	}
@@ -522,13 +522,13 @@ class_maker_addmember(struct class_maker *__restrict self,
 		if unlikely(!result)
 			goto err;
 	}
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	/* Steal declaration information. */
 	if (decl && result->s_decltype.da_type == DAST_NONE) {
 		decl_ast_move(&result->s_decltype, decl);
 		decl->da_type = DAST_NONE;
 	}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	/* Initialize that symbol to be a member symbol. */
 	result->s_type         = SYMBOL_TYPE_CATTR;
 	result->s_attr.a_class = self->cm_classsym;
@@ -883,12 +883,12 @@ class_maker_pack(struct class_maker *__restrict self) {
 	/* Create a new branch for the documentation string (if it exists). */
 	if (UNICODE_PRINTER_LENGTH(&self->cm_doc) != 0) {
 		DREF DeeStringObject *doc_str;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		if unlikely(doctext_compile(&self->cm_doc))
 			goto err;
 		if unlikely(doctext_escape(&self->cm_doc))
 			goto err;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		doc_str = (DREF DeeStringObject *)unicode_printer_pack(&self->cm_doc);
 		unicode_printer_init(&self->cm_doc);
 		if unlikely(!doc_str)
@@ -1149,9 +1149,9 @@ parse_property(DREF struct ast *callbacks[CLASS_PROPERTY_CALLBACK_COUNT],
 	struct ast_loc loc;
 	DREF struct ast *callback;
 	struct ast_annotations annotations;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast decl;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	bool has_name_prefix, need_semi;
 	for (callback_id = 0; callback_id < CLASS_PROPERTY_CALLBACK_COUNT; ++callback_id)
 		callbacks[callback_id] = NULL;
@@ -1263,29 +1263,29 @@ got_callback_id:
 	if (is_class_property) {
 		/* Parse a new function in the class scope. */
 		callback = ast_parse_function(NULL, &need_semi, false, &loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		                              ,
 		                              &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		                              );
 	} else {
 		if unlikely(class_maker_push_methscope(maker))
 			goto err;
 		/* Parse a new function in its own member-method scope. */
 		callback = ast_parse_function_noscope(NULL, &need_semi, false, &loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		                                      ,
 		                                      &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		                                      );
 		basescope_pop();
 	}
 	if unlikely(!ast_setddi(callback, &loc))
 		goto err_anno;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	/* TODO: Make use of declaration information! */
 	decl_ast_fini(&decl);
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	callback = ast_annotations_apply(&annotations, callback);
 	if unlikely(!callback)
 		goto err;
@@ -1316,9 +1316,9 @@ ast_parse_class_impl(uint16_t class_flags, struct TPPKeyword *name,
 	struct ast_annotations annotations;
 	uint16_t default_member_flags; /* Set of `CLASS_ATTRIBUTE_F*' */
 	uint32_t old_flags = TPPLexer_Current->l_flags;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast decl;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 	class_maker_init(&maker);
 	/* Inherit the documentation string printer. */
@@ -1680,10 +1680,10 @@ define_operator:
 				if unlikely(class_maker_push_methscope(&maker))
 					goto err_anno;
 				yield_function = ast_parse_function_noscope(NULL, &need_semi, false, &loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				                                            ,
 				                                            &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				                                            );
 				basescope_pop();
 				if unlikely(!yield_function) {
@@ -1695,9 +1695,9 @@ err_operator_ast_ddi:
 				if unlikely(!temp) {
 err_yield_function:
 					ast_decref(yield_function);
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					decl_ast_fini(&decl); /* TODO: Encode declaration information in operator docs! */
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					goto err_operator_ast_ddi;
 				}
 				argv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
@@ -1761,19 +1761,19 @@ err_yield_function_temp:
 				/* Parse a new function in its own member-method scope. */
 				current_basescope->bs_name = operator_name_kwd;
 				operator_ast = ast_parse_function_noscope(NULL, &need_semi, false, &loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				                                          ,
 				                                          &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				                                          );
 			}
 got_operator_ast:
 			basescope_pop();
 			if unlikely(!operator_ast)
 				goto err_anno;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			decl_ast_fini(&decl); /* TODO: Encode declaration information in operator docs! */
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			ASSERT(operator_ast->a_type == AST_FUNCTION);
 			ASSERT(operator_ast->a_function.f_scope);
 			if (operator_name >= AST_OPERATOR_MIN &&
@@ -2128,7 +2128,7 @@ err_ctor_expr:
 			 * >> }; */
 			if unlikely(yield() < 0)
 				goto err;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			decl.da_type = DAST_NONE;
 			if (tok == ':') {
 				if unlikely(yield() < 0)
@@ -2136,7 +2136,7 @@ err_ctor_expr:
 				if unlikely(decl_ast_parse(&decl))
 					goto err;
 			}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			if (is_semicollon()) {
 				if (member_class == MEMBER_CLASS_AUTO) {
 					if (WARNAT(&loc, W_IMPLICIT_MEMBER_DECLARATION, member_name))
@@ -2152,15 +2152,15 @@ err_ctor_expr:
 				                           member_flags,
 				                           &pusage_counter,
 				                           &loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				                           ,
 				                           &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				                           ))
 					goto err_decl;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				decl_ast_fini(&decl);
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				++*pusage_counter;
 				if unlikely(yield_semicollon() < 0)
 					goto err;
@@ -2191,14 +2191,14 @@ err_ctor_expr:
 					                                      member_flags,
 					                                      &pusage_counter,
 					                                      &loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					                                      ,
 					                                      &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					                                      );
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					decl_ast_fini(&decl);
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					if unlikely(!member_symbol)
 						goto err;
 					/* Parse the property declaration. */
@@ -2249,14 +2249,14 @@ err_property:
 				                                      member_flags,
 				                                      &pusage_counter,
 				                                      &loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				                                      ,
 				                                      &decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				                                      );
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				decl_ast_fini(&decl);
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(!member_symbol)
 					goto err;
 				/* Member assignment. (part of the initialization) */
@@ -2292,7 +2292,7 @@ err_property:
 			member_flags |= (CLASS_ATTRIBUTE_FCLASSMEM | CLASS_ATTRIBUTE_FREADONLY);
 			if (!is_class_member)
 				member_flags |= CLASS_ATTRIBUTE_FMETHOD;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			{
 				struct ast_tags_printers temp;
 				if (decl.da_type != DAST_NONE) {
@@ -2315,7 +2315,7 @@ err_property:
 				if (is_class_member) {
 					/* Parse a new function in the class scope. */
 					AST_TAGS_BACKUP_PRINTERS(temp);
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					if unlikely(basescope_push())
 						goto err_anno;
 					current_basescope->bs_flags |= current_tags.at_code_flags;
@@ -2325,9 +2325,9 @@ err_property:
 						init_ast = NULL;
 					}
 					basescope_pop();
-#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					init_ast = ast_parse_function(member_name, &need_semi, false, &loc, &decl);
-#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					AST_TAGS_RESTORE_PRINTERS(temp);
 				} else {
 					if unlikely(class_maker_push_methscope(&maker))
@@ -2336,12 +2336,12 @@ err_property:
 					AST_TAGS_BACKUP_PRINTERS(temp);
 					init_ast = ast_parse_function_noscope(member_name, &need_semi, false, &loc, &decl);
 					AST_TAGS_RESTORE_PRINTERS(temp);
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					if (init_ast && unlikely(doctext_compile(&current_tags.at_doc))) {
 						ast_decref(init_ast);
 						init_ast = NULL;
 					}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					basescope_pop();
 				}
 				if unlikely(!init_ast)
@@ -2359,7 +2359,7 @@ err_property:
 						goto err;
 				}
 			}
-#else /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			member_symbol = class_maker_addmember(&maker,
 			                                      member_name,
 			                                      is_class_member,
@@ -2381,7 +2381,7 @@ err_property:
 			}
 			if unlikely(!init_ast)
 				goto err_anno;
-#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			init_ast = ast_annotations_apply(&annotations, init_ast);
 			if unlikely(!init_ast)
 				goto err;
@@ -2409,16 +2409,16 @@ done_class_modal:
 	scope_pop();
 	class_maker_fini(&maker);
 	return result;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 err_decl:
 	decl_ast_fini(&decl);
 	goto err;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 err_anno:
 	ast_annotations_free(&annotations);
-#ifndef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifndef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 err_decl:
-#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 err:
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;

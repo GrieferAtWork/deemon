@@ -1943,7 +1943,7 @@ DECL_END
 #define CALL_KW 1
 #include "code-invoke.c.inl"
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define CALL_TUPLE 1
 #include "code-invoke.c.inl"
 #define CALL_TUPLE 1
@@ -1956,7 +1956,7 @@ DECL_END
 #define CALL_THIS 1
 #define CALL_KW 1
 #include "code-invoke.c.inl"
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_EXECUTE_CODE_C */

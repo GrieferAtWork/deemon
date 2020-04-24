@@ -654,11 +654,11 @@ instance_destructor(DeeObject *__restrict self) {
 }
 
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #define IF_NOBASE(x) x
-#else /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#else /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 #define IF_NOBASE(x) /* nothing */
-#endif /* !CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* !CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 #ifdef CLASS_TP_FAUTOINIT
 #define IF_AUTOINIT(x) x
 #else /* CLASS_TP_FAUTOINIT */
@@ -945,7 +945,7 @@ err_members:
 	instance_clear_members(instance, size);
 	return -1;
 }
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
                               DeeObject *__restrict self,
@@ -968,7 +968,7 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 	rwlock_endread(&other_instance->id_lock);
 	return 0;
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_tdeepload(DeeTypeObject *__restrict tp_self,
                            DeeObject *__restrict self) {
@@ -992,13 +992,13 @@ instance_builtin_copy(DeeObject *__restrict self,
                       DeeObject *__restrict other) {
 	return instance_builtin_tcopy(Dee_TYPE(self), self, other);
 }
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_copy(DeeObject *__restrict self,
                              DeeObject *__restrict other) {
 	return instance_builtin_nobase_tcopy(Dee_TYPE(self), self, other);
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 instance_builtin_deepload(DeeObject *__restrict self) {
@@ -1021,12 +1021,12 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
 instance_builtin_nobase_deepload(DeeObject *__restrict self) {
 	return instance_builtin_tdeepload(Dee_TYPE(self), self);
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 
 
@@ -2135,7 +2135,7 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_nobase_tctor(DeeTypeObject *__restrict tp_self,
@@ -2230,7 +2230,7 @@ err_super:
 err:
 	return -1;
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
  * NOTE: These functions always invoke the user-defined constructor without any arguments! */
@@ -2400,7 +2400,7 @@ err:
 	return -1;
 }
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* No predefined construction operators. (but the type doesn't have a base) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self,
@@ -2454,7 +2454,7 @@ instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self,
 err:
 	return -1;
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* No predefined construction operators, but `TP_FINHERITCTOR' is set. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -2620,7 +2620,7 @@ instance_initkw(DeeObject *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	return instance_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
 instance_nobase_ctor(DeeObject *__restrict self) {
 	return instance_nobase_tctor(Dee_TYPE(self), self);
@@ -2636,7 +2636,7 @@ instance_nobase_initkw(DeeObject *self, size_t argc,
                        DeeObject *const *argv, DeeObject *kw) {
 	return instance_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTERN WUNUSED NONNULL((1)) int DCALL
 instance_inherited_init(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	return instance_inherited_tinit(Dee_TYPE(self), self, argc, argv);
@@ -2664,7 +2664,7 @@ instance_builtin_initkw(DeeObject *self, size_t argc,
 	return instance_builtin_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
 instance_builtin_nobase_ctor(DeeObject *self) {
 	return instance_builtin_nobase_tctor(Dee_TYPE(self), self);
@@ -2680,7 +2680,7 @@ instance_builtin_nobase_initkw(DeeObject *self, size_t argc,
                                DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 instance_builtin_inherited_ctor(DeeObject *self) {
@@ -3139,7 +3139,7 @@ instance_builtin_auto_initkw(DeeObject *self, size_t argc, DeeObject *const *arg
 }
 
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* No predefined construction operators (with `CLASS_TP_FAUTOINIT'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
@@ -3282,7 +3282,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 instance_builtin_auto_nobase_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_auto_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 #endif /* CLASS_TP_FAUTOINIT */
 
 
@@ -4743,12 +4743,12 @@ err_custom_allocator:
 	result->tp_init.tp_dtor               = &instance_builtin_destructor;
 	result->tp_visit                      = &instance_visit;
 	result->tp_gc                         = &instance_gc;
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 	if (DeeNone_Check(base) || base == &DeeObject_Type) {
 		result->tp_init.tp_alloc.tp_copy_ctor = &instance_builtin_nobase_copy;
 		result->tp_init.tp_deepload           = &instance_builtin_nobase_deepload;
 	}
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 
 	{
@@ -4829,13 +4829,13 @@ err_custom_allocator:
 		case FEATURE_CONSTRUCTOR:
 #ifdef CLASS_TP_FAUTOINIT
 			if (desc->cd_flags & CLASS_TP_FAUTOINIT) {
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 				if (DeeNone_Check(base) || base == &DeeObject_Type) {
 					result->tp_init.tp_alloc.tp_ctor        = &instance_auto_nobase_ctor;
 					result->tp_init.tp_alloc.tp_any_ctor    = &instance_auto_nobase_init;
 					result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_auto_nobase_initkw;
 				} else
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 				{
 					result->tp_init.tp_alloc.tp_ctor        = &instance_auto_ctor;
 					result->tp_init.tp_alloc.tp_any_ctor    = &instance_auto_init;
@@ -4848,13 +4848,13 @@ err_custom_allocator:
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_inherited_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_inherited_initkw;
 			} else
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 			if (DeeNone_Check(base) || base == &DeeObject_Type) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_nobase_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_nobase_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_nobase_initkw;
 			} else
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 			{
 				result->tp_init.tp_alloc.tp_ctor        = &instance_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_init;
@@ -4878,13 +4878,13 @@ err_custom_allocator:
 		default:
 #ifdef CLASS_TP_FAUTOINIT
 			if (desc->cd_flags & CLASS_TP_FAUTOINIT) {
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 				if (DeeNone_Check(base) || base == &DeeObject_Type) {
 					result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_auto_nobase_ctor;
 					result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_auto_nobase_init;
 					result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_auto_nobase_initkw;
 				} else
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 				{
 					result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_auto_ctor;
 					result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_auto_init;
@@ -4898,13 +4898,13 @@ err_custom_allocator:
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_inherited_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_inherited_initkw;
 			} else
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 			if (DeeNone_Check(base) || base == &DeeObject_Type) {
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_nobase_ctor;
 				result->tp_init.tp_alloc.tp_any_ctor    = &instance_builtin_nobase_init;
 				result->tp_init.tp_alloc.tp_any_ctor_kw = &instance_builtin_nobase_initkw;
 			} else
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 			{
 				/* Undefined constructor... */
 				result->tp_init.tp_alloc.tp_ctor        = &instance_builtin_ctor;

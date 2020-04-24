@@ -64,6 +64,7 @@ del_feature() {
 		FEATURES="${FEATURES:1}"
 	fi
 }
+
 # del_feature_startswith(MACRO_NAME_START)
 del_feature_startswith() {
 	FEATURES="$(for feat in $FEATURES; do
@@ -75,11 +76,13 @@ del_feature_startswith() {
 		FEATURES="${FEATURES:1}"
 	fi
 }
+
 # add_feature(MACRO_NAME)
 add_feature() {
 	del_feature "$1"
 	FEATURES="$FEATURES $1"
 }
+
 # set_feature_pair(ON_MACRO_NAME, OFF_MACRO_NAME, STATE={0,1})
 set_feature_pair() {
 	if [[ "$3" == "1" ]]; then
@@ -102,11 +105,13 @@ add_dex_specific() {
 		WITHOUT_DEX_SPECIFIC="${WITHOUT_DEX_SPECIFIC:1}"
 	fi
 }
+
 # del_dex_specific(DEX_NAME)
 del_dex_specific() {
 	del_feature "$1"
 	WITHOUT_DEX_SPECIFIC="$WITHOUT_DEX_SPECIFIC $1"
 }
+
 # set_dex_specific(DEX_NAME, STATE={0,1})
 set_dex_specific() {
 	if [[ "$2" == "1" ]]; then
@@ -178,11 +183,138 @@ set_with_feature() {
 
 
 
+print_help_features() {
+	echo "Features:"
+	echo "    assembly-interpreter     Make use of hand-optimized assembly for running deemon bytecode (default:yes, if available for the target)"
+	echo "    dex                      Support native libraries as deemon extensions (default: yes)"
+	echo "    dex-ctypes               Provide the native deemon extension module: 'ctypes' (default: yes)"
+	echo "    dex-net                  Provide the native deemon extension module: 'net' (default: yes)"
+	echo "    dex-posix                Provide the native deemon extension module: 'posix' (default: yes)"
+	echo "    dex-math                 Provide the native deemon extension module: 'math' (default: yes)"
+	echo "    dex-ipc                  Provide the native deemon extension module: 'ipc' (default: yes)"
+	echo "    dex-fs                   Provide the native deemon extension module: 'fs' (default: yes)"
+	echo "    dex-threading            Provide the native deemon extension module: 'threading' (default: yes)"
+	echo "    dex-time                 Provide the native deemon extension module: 'time' (default: yes)"
+	echo "    dex-win32                Provide the native deemon extension module: 'win32' (default: yes)"
+	echo "    kos-system-headers       Use the deemon-provided copies of KOS's hybrid system headers (default: auto)"
+	echo "    debug                    Include debug informations (default: yes)"
+	echo "    optimize=*               Additional compiler options for optimization (default: '-O2')"
+	echo "    threads                  Multi-threading support (default: yes)"
+	echo "    libffi                   Use libffi to allow ctypes to perform native function calls"
+	echo ""
+	echo "Features controlling config options:"
+	echo "    trace-refchanges         [def:#if !0]"
+	echo "                               Trace the origins of all inc-/decref operations to aid in narrowing"
+	echo "                               down the origins of reference leaks (highly resource intensive)"
+	echo "                               When enabled, the refcnt-history of leaked objects is dumped during shutdown"
+	echo "                             with:    --conf=CONFIG_TRACE_REFCHANGES"
+	echo "                             without: --conf=CONFIG_NO_TRACE_REFCHANGES"
+	echo ""
+	echo "    badrefcnt-checks         [def:#if !NDEBUG]"
+	echo "                               Perform runtime checking to guard against bad use of reference counters"
+	echo "                             with:    --conf=CONFIG_BADREFCNT_CHECKS"
+	echo "                             without: --conf=CONFIG_NO_BADREFCNT_CHECKS"
+	echo ""
+	echo "    calltuple-optimizations  [def:#if !__OPTIMIZE_SIZE__]"
+	echo "                               Provide optimized code paths for function calls with packed arguments (e.g. 'foo(args...)')"
+	echo "                             with:    --conf=CONFIG_CALLTUPLE_OPTIMIZATIONS"
+	echo "                             without: --conf=CONFIG_NO_CALLTUPLE_OPTIMIZATIONS"
+	echo ""
+	echo "    object-slabs             [def:#if <available-for-target>]"
+	echo "                               Use custom slab allocators allocating heap memory for objects"
+	echo "                             with:    -"
+	echo "                             without: --conf=CONFIG_NO_OBJECT_SLABS"
+	echo ""
+	echo "    nobase-optimized-class-operators"
+	echo "                             [def:#if !__OPTIMIZE_SIZE__]"
+	echo "                               Define optimized operators for user-classes without bases"
+	echo "                             with:    --conf=CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS"
+	echo "                             without: --conf=CONFIG_NO_NOBASE_OPTIMIZED_CLASS_OPERATORS"
+	echo ""
+	echo "    deemon-home-environ      [def:#if 1]"
+	echo "                               Enable/disable recognition of an environment variable to"
+	echo "                               override the deemon ~home~ location at runtime"
+	echo "                             with:    -"
+	echo "                             without: --conf=CONFIG_NO_DEEMON_HOME_ENVIRON"
+	echo ""
+	echo "    deemon-home-environ=*    [def:DEEMON_HOME]"
+	echo "                               Set the name of the environment variable to check at runtime"
+	echo "                               in order to find library files (s.a. 'DeeExec_GetHome()')"
+	echo "                             with:    --config=CONFIG_DEEMON_HOME_ENVIRON=*"
+	echo "                             without: -"
+	echo ""
+	echo "    deemon-home=*           [def:<determine-at-runtime>]"
+	echo "                               Specify the path where deemon is ~home~. By default, this"
+	echo "                               path is determined at runtime, and is the directory in which"
+	echo "                               the deemon core executable is located:"
+	echo "                                 'fs.headof(fs.readlink(\"/proc/self/exe\"))'"
+	echo "                               Note that when building for cygwin, this must be a windows-style path!"
+	echo "                             with:    --config=CONFIG_DEEMON_HOME=*"
+	echo "                             without: -"
+	echo ""
+	echo "    deemon-path-environ      [def:#if 1]"
+	echo "                               Enable/disable recognition of an environment variable to"
+	echo "                               override the deemon library path location list at runtime"
+	echo "                             with:    -"
+	echo "                             without: --conf=CONFIG_NO_DEEMON_PATH_ENVIRON"
+	echo ""
+	echo "    deemon-path-environ=*    [def:DEEMON_PATH]"
+	echo "                               Set the name of the environment variable to check at runtime"
+	echo "                               for specifying deemon system library paths. When not specified,"
+	echo "                               either use the override provided by '--with-deemon-path=*', or"
+	echo "                               default to '[ \"<DEEMON_HOME>/lib\" ]'"
+	echo "                             with:    --config=CONFIG_DEEMON_PATH_ENVIRON=*"
+	echo "                             without: -"
+	echo ""
+	echo "    deemon-path=*            [def:<unset>]"
+	echo "                               Specify an override for recognized deemon system library locations"
+	echo "                               to be used when 'DEEMON_PATH' isn't set at runtime. This feature"
+	echo "                               takes a ;-seperated list of absolute paths that will be hard-coded"
+	echo "                               into the deemon core."
+	echo "                               Note that when building for cygwin, this must be a windows-style path!"
+	echo "                             with:    --config=CONFIG_DEEMON_PATH=..."
+	echo "                             without: -"
+}
+
 print_help() {
 	echo "Usage: ./configure [Options...]"
 	echo "NOTE: This configure script will setup the caller's PWD as build root, allowing for out-of-source builds"
-	echo ""
-	# TODO: Display more help
+	echo "Options (target):"
+	echo "    --cross-prefix=*           Compiler prefix when cross-compiling"
+	echo "    --target=*                 Specify the target name (e.g. 'i386-kos', 'x86_64-linux-gnu' or 'x86_64-pc-cygwin')"
+	echo "                               When not specified, the target will be automatically determined through 'cc -v'"
+	echo "    --libffi-target=*          The target name to use for libffi (defaults to the same as --target)"
+	echo "    --build-root=*             The root directory where build files should be generated ($BLD_ROOT)"
+	echo "    --source-root=*            The directory where deemon source files are found ($SRC_ROOT)"
+	echo "    --bin-path=*               The path where the deemon core and its lib file should be placed"
+	echo "    --build-path=*             The path where object files should be placed"
+	echo "Options (extended build options):"
+	echo "    --config-exe-extension=*   File extension for executable files"
+	echo "    --config-dll-extension=*   File extension for shared library files"
+	echo "    --config-cc=*              Name of the C compiler to use"
+	echo "    --config-cxx=*             Name of the C++ compiler to use"
+	echo "    --config-cflags=*          Additional flags to pass to the compiler during compilation"
+	echo "    --config-ldflags=*         Additional flags to pass to the compiler during linking"
+	echo "    --config-libs=*            Additional libraries to include during linking"
+	echo "    --config-libm=*            Additional libraries to include to get access to <math.h> functions"
+	echo "    --config-libdl=*           Additional libraries to include to get access to <dlfcn.h> functions"
+	echo "    --config-libsocket=*       Additional libraries to include to get access to <sys/socket.h> functions"
+	echo "    --config-dex-cc=*          The C/C++ compiler to use when building dex modules (defaults to --config-cxx)"
+	echo "    --config-dex-cflags=*      Additional flags to pass to the dex-compiler during compilation"
+	echo "    --config-dex-ldflags=*     Additional flags to pass to the dex-compiler during linking"
+	echo "    --config-dex-libs=*        Additional libraries to include during linking of dex modules"
+	echo "    --config-core-cflags=*     Additional flags to pass to the deemon-core-compiler during compilation"
+	echo "    --config-core-ldflags=*    Additional flags to pass to the deemon-core-compiler during linking"
+	echo "    --config-core-libs=*       Additional libraries to include during linking of the deemon-core"
+	echo "    --config-pthread=*         Additional C flags to pass when multi-threading support is enabled"
+	echo "    --conf=NAME=VALUE          Add a configuration override '#define NAME VALUE' to <deemon/config.h>"
+	echo "    --conf=NAME                Same as --conf=NAME=1"
+	echo "    --with-FEATURE             Enable the specified FEATURE (s.a. --help=features)"
+	echo "    --without-FEATURE          Disable the specified FEATURE (s.a. --help=features)"
+	echo "    --probe-system-features=(yes|no|auto)"
+	echo "                               Specify is system features (akin to autoconf) should be performed"
+	echo "    --help                     Display this help"
+	echo "    --help=features            Disable available options for --with-FEATURE and --without-FEATURE"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -222,7 +354,8 @@ while [[ $# -gt 0 ]]; do
 		--conf=*)                 FEATURES="$FEATURES $(echo "$1" | cut -d '=' -f 2)" ;;
 		--with-*)    set_with_feature "${1:7}" "1" ;;
 		--without-*) set_with_feature "${1:10}" "0" ;;
-		--help)      print_help; exit 1 ;;
+		--help)          print_help; exit 1 ;;
+		--help=features) print_help_features; exit 1 ;;
 		--probe-system-features=*) PROBE_SYSTEM_FEATURES="$(echo "$1" | cut -d '=' -f 2)" ;;
 		*)
 			echo "Invalid argument $1 (run './configure --help' for options)"

@@ -347,7 +347,7 @@ DEF_WARNING(W_CANNOT_TEST_EXPRESSION_BINDING, (WG_SYNTAX), WSTATE_ERROR, WARNF("
 DEF_WARNING(W_UNCLEAR_CAST_INTENT, (WG_QUALITY), WSTATE_DISABLED, WARNF("Intended code behavior of potential cast expression is ambiguous and not compiled as a cast. "
                                                                      "To suppress this warning, add a second pair of parenthesis to the previous expression"))
 DEF_WARNING(W_EXPECTED_COLLON_AFTER_KEYWORD_LABEL, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `:' after keyword label in argument list, but got " TOK_S, TOK_A))
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 DEF_WARNING(W_UNEXPECTED_TOKEN_IN_DECL_EXPRESSION, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unexpected token " TOK_S " encountered within declaration expression", TOK_A))
 DEF_WARNING(W_EXPECTED_DOTS_AFTER_SEQUENCE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `...' after sequence declaration, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_SEQUENCE, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `}' after sequence declaration, but got " TOK_S, TOK_A))
@@ -472,10 +472,10 @@ DEF_WARNING(W_COMPARE_SODO_NONBUILTIN_UNDEFINED, (WG_SYMBOL), WSTATE_WARN, WARNF
 
 DEF_WARNING(W_WRITE_TO_FINAL_VARIABLE, (WG_READONLY), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Cannot write to variable `%s' declared as final", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 DEF_WARNING(W_SYMBOL_TYPE_DECLARATION_CHANGED, (WG_SYNTAX), WSTATE_ERROR, { struct symbol *sym = ARG(struct symbol *); WARNF("Type declaration for symbol `%s' differs from previous definition", SYMBOL_NAME(sym)); PRINT_SYMBOL_DECLARATION(sym); })
 DEF_WARNING(W_DECL_EXPRESSION_UNKNOWN_ATTRIBUTE, (WG_SYNTAX), WSTATE_ERROR, { char *name = ARG(char *); WARNF("Unknown attribute `%s' of constant expressions `%r'", name, ARG(DeeObject *)); })
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
 

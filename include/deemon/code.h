@@ -957,7 +957,7 @@ DeeFunction_ThisCallKw(DeeFunctionObject *self,
                        size_t argc, DeeObject *const *argv,
                        DeeObject *kw);
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeFunction_CallTuple(DeeFunctionObject *self,
                       DeeObject *args);
@@ -974,7 +974,7 @@ DeeFunction_ThisCallTupleKw(DeeFunctionObject *self,
                             DeeObject *this_arg,
                             DeeObject *args,
                             DeeObject *kw);
-#else /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #define DeeFunction_CallTuple(self, args) \
 	DeeFunction_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeFunction_CallTupleKw(self, args, kw) \
@@ -983,7 +983,7 @@ DeeFunction_ThisCallTupleKw(DeeFunctionObject *self,
 	DeeFunction_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeFunction_ThisCallTupleKw(self, this_arg, args, kw) \
 	DeeFunction_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#endif /* !CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

@@ -645,7 +645,7 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             struct Dee_class_attribute *__restrict attr,
                             size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct Dee_instance_desc *__restrict self,
@@ -658,7 +658,7 @@ DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
                                  DeeObject *this_arg,
                                  struct Dee_class_attribute *__restrict attr,
                                  DeeObject *args, DeeObject *kw);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_DelAttribute(struct class_desc *__restrict desc,
@@ -699,10 +699,10 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetClassAttribute(
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args, DeeObject *kw);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *value);
 #else /* __INTELLISENSE__ */
@@ -710,10 +710,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeOb
 #define DeeClass_BoundClassAttribute(class_type, attr)                  DeeInstance_BoundAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
 #define DeeClass_CallClassAttribute(class_type, attr, argc, argv)       DeeInstance_CallAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, argc, argv)
 #define DeeClass_CallClassAttributeKw(class_type, attr, argc, argv, kw) DeeInstance_CallAttributeKw(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, argc, argv, kw)
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 #define DeeClass_CallClassAttributeTuple(class_type, attr, args)        DeeInstance_CallAttributeTuple(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, args)
 #define DeeClass_CallClassAttributeTupleKw(class_type, attr, args, kw)  DeeInstance_CallAttributeTupleKw(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, args, kw)
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #define DeeClass_DelClassAttribute(class_type, attr)                    DeeInstance_DelAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
 #define DeeClass_SetClassAttribute(class_type, attr, value)             DeeInstance_SetAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr, value)
 #endif /* !__INTELLISENSE__ */
@@ -739,10 +739,10 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeOb
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#ifdef CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args, DeeObject *kw);
-#endif /* CONFIG_HAVE_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *value);
@@ -828,7 +828,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_init(DeeObject *self, size_t argc
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* `OPERATOR_CONSTRUCTOR' (but the type doesn't have a base) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_ctor(DeeObject *__restrict self);
@@ -836,7 +836,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinit(DeeTypeObject *tp
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_init(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_nobase_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* `OPERATOR_CONSTRUCTOR', with the `TP_FINHERITCTOR' flag set.
  * NOTE: These functions always invoke the user-defined constructor without any arguments! */
@@ -855,7 +855,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_init(DeeObject *self, siz
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 /* No predefined construction operators. (but the type doesn't have a base) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_ctor(DeeObject *__restrict self);
@@ -863,7 +863,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinit(DeeTypeOb
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_init(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 /* No predefined construction operators, but the `TP_FINHERITCTOR' flag is set. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
@@ -878,11 +878,11 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tcopy(DeeTypeObject
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_copy(DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_tdeepload(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_deepload(DeeObject *__restrict self);
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_nobase_tcopy(DeeTypeObject *tp_self, DeeObject *__restrict self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_nobase_copy(DeeObject *__restrict self, DeeObject *__restrict other);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_nobase_deepload(DeeObject *__restrict self);
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTDEF NONNULL((1)) void DCALL instance_builtin_destructor(DeeObject *__restrict self); /* No t-variant, because types are unwound automatically during destruction. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_builtin_tassign(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_assign(DeeObject *self, DeeObject *other);
@@ -903,7 +903,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_tinit(DeeTypeObje
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_init(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#ifdef CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS
+#ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 #define instance_auto_nobase_tctor instance_nobase_tctor
 #define instance_auto_nobase_ctor  instance_nobase_ctor
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv);
@@ -916,7 +916,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinit(DeeT
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_init(DeeObject *self, size_t argc, DeeObject *const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1)) int DCALL instance_builtin_auto_nobase_initkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#endif /* CONFIG_HAVE_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+#endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_builtin_auto_trepr(DeeTypeObject *__restrict tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_builtin_auto_repr(DeeObject *__restrict self);
 #endif /* CLASS_TP_FAUTOINIT */

@@ -29,9 +29,9 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #include <deemon/compiler/doctext.h>
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 DECL_BEGIN
 
@@ -215,7 +215,7 @@ parse_varargs_suffix:
 					if unlikely(yield() < 0)
 						goto err;
 				}
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					/* Parse argument declaration information. */
 					if unlikely(yield() < 0)
@@ -223,7 +223,7 @@ parse_varargs_suffix:
 					if unlikely(decl_ast_parse_for_symbol(arg))
 						goto err;
 				}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(tok == '=') {
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_VARARGS_OR_VARKWDS, arg))
 						goto err;
@@ -310,14 +310,14 @@ set_argument_as_local:
 				arg->s_flag = symbol_flags;
 				if (tok == '?' && unlikely(yield() < 0))
 					goto err;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(arg))
 						goto err;
 				}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if (tok == '=')
 					goto skip_default_suffix;
 			} else if (tok == '?') { /* Optional argument */
@@ -335,14 +335,14 @@ set_argument_as_local:
 				current_basescope->bs_default[current_basescope->bs_argc_max -
 				                              current_basescope->bs_argc_min] = NULL;
 				++current_basescope->bs_argc_max;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 				if (tok == ':') {
 					if unlikely(yield() < 0)
 						goto err;
 					if unlikely(decl_ast_parse_for_symbol(arg))
 						goto err;
 				}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(tok == '=') {
 					DREF struct ast *default_expr;
 					if (WARN(W_UNEXPECTED_DEFAULT_AFTER_OPTIONAL, arg))
@@ -357,7 +357,7 @@ skip_default_suffix:
 					ast_decref(default_expr);
 					goto next_argument;
 				}
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 			} else if (tok == ':') { /* Declaration suffix. */
 				if unlikely(yield() < 0)
 					goto err;
@@ -366,13 +366,13 @@ skip_default_suffix:
 				if (tok == '=')
 					goto parse_default_suffix;
 				goto set_arg_as_normal;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 			} else if (tok == '=') { /* Default argument */
 				DREF DeeObject *default_value;
 				DREF struct ast *default_expr;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 parse_default_suffix:
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				if unlikely(yield() < 0)
 					goto err;
 				default_expr = ast_parse_expr(LOOKUP_SYM_NORMAL);
@@ -405,9 +405,9 @@ err_default_expr:
 				                              current_basescope->bs_argc_min] = default_value; /* Inherit reference. */
 				++current_basescope->bs_argc_max;
 			} else {
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 set_arg_as_normal:
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 				ASSERT(current_basescope->bs_argc_min <= current_basescope->bs_argc_max);
 				if (current_basescope->bs_argc_min < current_basescope->bs_argc_max) {
 					/* Positional-after-optional */
@@ -478,10 +478,10 @@ INTERN WUNUSED DREF struct ast *DCALL
 ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
                    bool allow_missing_params,
                    struct ast_loc *name_loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
                    ,
                    struct decl_ast *decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
                    ) {
 	DREF struct ast *result;
 	struct ast_annotations annotations;
@@ -490,10 +490,10 @@ ast_parse_function(struct TPPKeyword *name, bool *pneed_semi,
 		goto err_anno;
 	current_basescope->bs_flags |= current_tags.at_code_flags;
 	result = ast_parse_function_noscope(name, pneed_semi, allow_missing_params, name_loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	                                    ,
 	                                    decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	                                    );
 	basescope_pop();
 	if unlikely(!result)
@@ -509,22 +509,22 @@ ast_parse_function_noscope(struct TPPKeyword *name,
                            bool *pneed_semi,
                            bool allow_missing_params,
                            struct ast_loc *name_loc
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
                            ,
                            struct decl_ast *__restrict decl
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 ) {
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	struct decl_ast my_decl;
 	struct symbol *funcself_symbol = NULL;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	uint32_t old_flags;
 	DREF struct ast *result, *code;
 	/* Add information from tags. */
 	if (name) {
-#ifndef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifndef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		struct symbol *funcself_symbol;
-#endif /* !CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* !CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		/* Save the function name in the base scope. */
 		current_basescope->bs_name = name;
 		/* Create a new symbol to allow for function-self-referencing. */
@@ -533,10 +533,10 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 			goto err;
 		funcself_symbol->s_type = SYMBOL_TYPE_MYFUNC;
 	}
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	/* Declaration meta-information */
 	decl_ast_initfunc(&my_decl, NULL, current_basescope);
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	if (tok == '(') {
 		/* Argument list. */
 		old_flags = TPPLexer_Current->l_flags;
@@ -552,7 +552,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		if (WARN(W_DEPRECATED_NO_PARAMETER_LIST))
 			goto err_decl;
 	}
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	if (tok == ':') {
 		struct decl_ast *return_type;
 		if unlikely(yield() < 0)
@@ -584,7 +584,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 		}
 		my_decl.da_type = DAST_NONE;
 	}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	if (tok == TOK_ARROW) {
 		struct ast_loc arrow_loc;
 		loc_here(&arrow_loc);
@@ -655,7 +655,7 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	ASSERT(current_basescope->bs_scope.s_prev);
 	result->a_scope = current_basescope->bs_scope.s_prev;
 	Dee_Incref(result->a_scope);
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	ASSERT(!funcself_symbol || my_decl.da_type == DAST_NONE);
 	if (decl) {
 		/* Pass Declaration information to the caller. */
@@ -668,23 +668,23 @@ ast_parse_function_noscope(struct TPPKeyword *name,
 	} else {
 		decl_ast_fini(&my_decl);
 	}
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 	return ast_setddi(result, name_loc);
 err_flags_decl:
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 	decl_ast_fini(&my_decl);
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 /*err_flags:*/
 	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
 	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 	goto err;
 err_xcode_decl:
 	ast_xdecref(code);
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 err_decl:
 	decl_ast_fini(&my_decl);
 	goto err;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 err:
 	return NULL;
 }

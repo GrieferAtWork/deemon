@@ -1167,9 +1167,9 @@ imod_init(InteractiveModule *__restrict self,
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 		dots->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 		dots->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		dots->s_name        = &TPPKeyword_Empty;
 		dots->s_flag        = SYMBOL_FALLOC;
 		dots->s_nread       = 0;
@@ -1284,9 +1284,9 @@ err_compiler_basefile:
 					                                     1);
 					if unlikely(!sym->s_name)
 						goto err_compiler_basefile;
-#ifdef CONFIG_HAVE_DECLARATION_DOCUMENTATION
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 					sym->s_decltype.da_type = DAST_NONE;
-#endif /* CONFIG_HAVE_DECLARATION_DOCUMENTATION */
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 					sym->s_type         = SYMBOL_TYPE_GLOBAL;
 					sym->s_flag         = SYMBOL_FALLOC;
 					sym->s_symid        = modsym->ss_index;
