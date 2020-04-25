@@ -740,12 +740,12 @@ functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || 
 (func)("memcasemem", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
 (func)("memcasermem", "defined(__memcasermem_defined) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
 
-(func)("memmemw", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memmeml", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memmemq", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memrmemw", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memrmeml", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
-(func)("memrmemq", "defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL)", check_defined: false);
+(func)("memmemw", "0", check_defined: false);
+(func)("memmeml", "0", check_defined: false);
+(func)("memmemq", "0", check_defined: false);
+(func)("memrmemw", "0", check_defined: false);
+(func)("memrmeml", "0", check_defined: false);
+(func)("memrmemq", "0", check_defined: false);
 
 func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(a, b, 16) == a;");
 func("memmove", stdc, test: "extern void *a; extern void const *b; return memmove(a, b, 16) == a;");
@@ -5424,43 +5424,37 @@ sizeof("off_t");
 
 #ifdef CONFIG_NO_memmemw
 #undef CONFIG_HAVE_memmemw
-#elif !defined(CONFIG_HAVE_memmemw) && \
-      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#elif 0
 #define CONFIG_HAVE_memmemw 1
 #endif
 
 #ifdef CONFIG_NO_memmeml
 #undef CONFIG_HAVE_memmeml
-#elif !defined(CONFIG_HAVE_memmeml) && \
-      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#elif 0
 #define CONFIG_HAVE_memmeml 1
 #endif
 
 #ifdef CONFIG_NO_memmemq
 #undef CONFIG_HAVE_memmemq
-#elif !defined(CONFIG_HAVE_memmemq) && \
-      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#elif 0
 #define CONFIG_HAVE_memmemq 1
 #endif
 
 #ifdef CONFIG_NO_memrmemw
 #undef CONFIG_HAVE_memrmemw
-#elif !defined(CONFIG_HAVE_memrmemw) && \
-      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#elif 0
 #define CONFIG_HAVE_memrmemw 1
 #endif
 
 #ifdef CONFIG_NO_memrmeml
 #undef CONFIG_HAVE_memrmeml
-#elif !defined(CONFIG_HAVE_memrmeml) && \
-      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#elif 0
 #define CONFIG_HAVE_memrmeml 1
 #endif
 
 #ifdef CONFIG_NO_memrmemq
 #undef CONFIG_HAVE_memrmemq
-#elif !defined(CONFIG_HAVE_memrmemq) && \
-      (defined(__USE_KOS) && defined(__USE_MEMMEM_EMPTY_NEEDLE_NULL))
+#elif 0
 #define CONFIG_HAVE_memrmemq 1
 #endif
 
