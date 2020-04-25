@@ -106,7 +106,7 @@ INTERN struct mnemonic_db const asm_mnemonics = {
 #endif /* (ASM_MAX_INSTRUCTION_OPERANDS % 2) != 0 */
 #include "userdb.def"
 	/* Sentinel. */
-	{ { 0, }, 0 }
+	{ 0, }, 0
 };
 INTDEF size_t const asm_mnemonics_size;
 INTDEF size_t const asm_mnemonics_count;
