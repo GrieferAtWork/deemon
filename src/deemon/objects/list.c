@@ -893,22 +893,24 @@ PUBLIC WUNUSED NONNULL((1)) int
 	int result = 0;
 	DeeObject **newvec;
 	DeeListObject *me;
+	size_t oldlen;
 	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
 	me = (DeeListObject *)self;
 retry:
 	DeeList_LockWrite(me);
-	ASSERT(me->l_alloc >= me->l_size);
-	if (me->l_alloc < me->l_size + objc) {
+	oldlen = me->l_size;
+	ASSERT(me->l_alloc >= oldlen);
+	if (me->l_alloc < oldlen + objc) {
 		size_t newcap = me->l_alloc;
 		if (!newcap)
 			newcap = 1; /* Must increase the list's capacity. */
-		while (newcap < me->l_size + objc)
+		while (newcap < oldlen + objc)
 			newcap *= 2;
 		newvec = (DeeObject **)Dee_TryRealloc(me->l_elem,
 		                                      newcap * sizeof(DeeObject *));
 		if unlikely(!newvec) {
 			/* Try again, but only attempt to allocate what we need. */
-			newcap = me->l_size + objc;
+			newcap = oldlen + objc;
 			newvec = (DeeObject **)Dee_TryRealloc(me->l_elem,
 			                                      newcap * sizeof(DeeObject *));
 			if unlikely(!newvec) {
@@ -923,7 +925,8 @@ retry:
 		me->l_elem  = newvec;
 	}
 	/* Copy references */
-	Dee_Movrefv(me->l_elem + me->l_size, objv, objc);
+	Dee_Movrefv(me->l_elem + oldlen, objv, objc);
+	me->l_size = oldlen + objc;
 	DeeList_LockEndWrite(me);
 	return result;
 err:
@@ -3090,10 +3093,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF List *DCALL
 list_add(List *self, DeeObject *other) {
 	DREF List *result;
 	result = (DREF List *)DeeList_Copy((DeeObject *)self);
-	if (likely(result) &&
-	    unlikely(DeeList_AppendSequence((DeeObject *)result, other)))
-		Dee_Clear(result);
+	if unlikely(!result)
+		goto err;
+	if unlikely(DeeList_AppendSequence((DeeObject *)result, other))
+		goto err_r;
 	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3994,21 +4002,27 @@ again:
 	err:                                                                          \
 		return NULL;                                                              \
 	}
-DEFINE_LIST_ITERATOR_COMPARE(li_eq, self->li_list == other->li_list &&
-                                    LI_GETINDEX(self) == LI_GETINDEX(other))
-DEFINE_LIST_ITERATOR_COMPARE(li_ne, self->li_list != other->li_list ||
-                                    LI_GETINDEX(self) != LI_GETINDEX(other))
-DEFINE_LIST_ITERATOR_COMPARE(li_lo, self->li_list < other->li_list ||
-                                    (self->li_list == other->li_list &&
+DEFINE_LIST_ITERATOR_COMPARE(li_eq,
+                             self->li_list == other->li_list &&
+                             LI_GETINDEX(self) == LI_GETINDEX(other))
+DEFINE_LIST_ITERATOR_COMPARE(li_ne,
+                             self->li_list != other->li_list ||
+                             LI_GETINDEX(self) != LI_GETINDEX(other))
+DEFINE_LIST_ITERATOR_COMPARE(li_lo,
+                             self->li_list < other->li_list ||
+                             (self->li_list == other->li_list &&
                                      LI_GETINDEX(self) < LI_GETINDEX(other)))
-DEFINE_LIST_ITERATOR_COMPARE(li_le, self->li_list < other->li_list ||
-                                    (self->li_list == other->li_list &&
+DEFINE_LIST_ITERATOR_COMPARE(li_le,
+                             self->li_list < other->li_list ||
+                             (self->li_list == other->li_list &&
                                      LI_GETINDEX(self) <= LI_GETINDEX(other)))
-DEFINE_LIST_ITERATOR_COMPARE(li_gr, self->li_list > other->li_list ||
-                                    (self->li_list == other->li_list &&
+DEFINE_LIST_ITERATOR_COMPARE(li_gr,
+                             self->li_list > other->li_list ||
+                             (self->li_list == other->li_list &&
                                      LI_GETINDEX(self) > LI_GETINDEX(other)))
-DEFINE_LIST_ITERATOR_COMPARE(li_ge, self->li_list > other->li_list ||
-                                    (self->li_list == other->li_list &&
+DEFINE_LIST_ITERATOR_COMPARE(li_ge,
+                             self->li_list > other->li_list ||
+                             (self->li_list == other->li_list &&
                                      LI_GETINDEX(self) >= LI_GETINDEX(other)))
 #undef DEFINE_LIST_ITERATOR_COMPARE
 
