@@ -495,7 +495,7 @@ do_string:
 		result   = DeeTuple_NewUninitialized(num_args);
 		if unlikely(!result)
 			break;
-		for (i = 0; i < num_args--; ++i) {
+		for (i = 0; i < num_args; ++i) {
 			DREF DeeObject *elem;
 			elem = Dee_VPPackf(&format, pargs);
 			if unlikely(!elem) {
@@ -939,20 +939,21 @@ DeeTuple_VNewf(char const *__restrict format, va_list args) {
 	pargs  = (struct va_list_struct *)VALIST_ADDR(args);
 	result = DeeTuple_NewUninitialized(tuple_size);
 	if unlikely(!result)
-		return NULL;
-	for (i = 0; tuple_size--; ++i) {
+		goto err;
+	for (i = 0; i < tuple_size; ++i) {
 		DREF DeeObject *elem;
 		elem = Dee_VPPackf((char const **)&format, pargs);
 		if unlikely(!elem)
-			goto err;
+			goto err_r;
 		DeeTuple_SET(result, i, elem);
 	}
 	ASSERTF(!*format, "Invalid format: `%s'", format);
 	return result;
-err:
+err_r:
 	Dee_Decrefv(DeeTuple_ELEM(result), i);
 	DeeTuple_FreeUninitialized(result);
 	Dee_VPPackf_Cleanup(format, pargs->vl_ap);
+err:
 	return NULL;
 }
 
