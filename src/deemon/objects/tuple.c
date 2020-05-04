@@ -632,7 +632,6 @@ DeeTuple_VPack(size_t n, va_list args) {
 	result = DeeTuple_NewUninitialized(n);
 	if unlikely(!result)
 		goto done;
-	iter = DeeTuple_ELEM(result);
 	for (i = 0; i < n; ++i) {
 		DREF DeeObject *elem;
 		elem = va_arg(args, DeeObject *);
