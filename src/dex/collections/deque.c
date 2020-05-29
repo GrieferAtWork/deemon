@@ -999,6 +999,9 @@ deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
 						break;
 				}
 			}
+			if (!DequeIterator_HasNext(&iter, self))
+				break;
+			DequeIterator_Next(&iter, self);
 		}
 	}
 	Deque_LockEndWrite(self);

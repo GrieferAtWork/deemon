@@ -715,7 +715,7 @@ functest('memicmp("a", "A", 1)');
 functest('memcasecmp("a", "A", 1)', "defined(__USE_KOS)");
 
 functest('_stricmp("a", "A")', msvc);
-functest('stricmp("a", "A")');
+functest('stricmp("a", "A")'); // TODO: strcmpi / _strcmpi
 functest('strcasecmp("a", "A")', "defined(__USE_KOS)");
 
 func("memchr", stdc, test: "extern char *buf; void *p = memchr(buf, '!', 123); return p != NULL;");
@@ -842,8 +842,8 @@ constant("CTL_HW");
 constant("HW_AVAILCPU");
 constant("HW_NCPU");
 
-functest("alloca()", "defined(CONFIG_HAVE_ALLOCA_H)");
-functest("_alloca()", msvc);
+func("alloca", "defined(CONFIG_HAVE_ALLOCA_H)", test: "void *p = alloca(42); return p != 0;");
+func("_alloca", msvc, test: "void *p = _alloca(42); return p != 0;");
 
 sizeof("off_t");
 

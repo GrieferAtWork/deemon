@@ -1343,7 +1343,8 @@ done:
 		Dee_DumpReferenceLeaks();
 #endif /* CONFIG_TRACE_REFCHANGES */
 		DBG_ALIGNMENT_DISABLE();
-#ifdef _CRTDBG_MAP_ALLOC
+#if (defined(_CRTDBG_MAP_ALLOC) && \
+     defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
 #ifdef CONFIG_HOST_WINDOWS
 #ifndef CONFIG_ALWAYS_LOG_LEAKS
 		if (!IsDebuggerPresent())
@@ -1368,7 +1369,7 @@ done:
 		if ((_CrtDumpMemoryLeaks)())
 			_DeeAssert_Fail("!_CrtDumpMemoryLeaks()", __FILE__, __LINE__);
 		DEE_CHECKMEMORY();
-#endif /* _CRTDBG_MAP_ALLOC */
+#endif /* _CRTDBG_MAP_ALLOC && CONFIG_HAVE_CRTDBG_H && !NDEBUG */
 	}
 	return result;
 err_no_input:

@@ -3001,7 +3001,6 @@ PUBLIC DeeListObject DeeModule_Path = {
 #undef get_default_home_USE_CONFIG_DEEMON_HOME
 #undef get_default_home_USE_GETMODULEFILENAME
 #undef get_default_home_USE_READLINK_PROC_SELF_EXE
-#undef get_default_home_USE_CWD
 #ifdef CONFIG_DEEMON_HOME
 #define get_default_home_USE_CONFIG_DEEMON_HOME 1
 #elif defined(CONFIG_HAVE_dlmodulename) && defined(CONFIG_HAVE_dlopen)
@@ -3010,8 +3009,6 @@ PUBLIC DeeListObject DeeModule_Path = {
 #define get_default_home_USE_GETMODULEFILENAME 1
 #elif defined(CONFIG_HOST_UNIX)
 #define get_default_home_USE_READLINK_PROC_SELF_EXE 1
-#else
-#define get_default_home_USE_CWD 1
 #endif
 
 #ifdef get_default_home_USE_DLMODULENAME
@@ -3020,9 +3017,9 @@ PUBLIC DeeListObject DeeModule_Path = {
 #define DLOPEN_NULL_FLAGS RTLD_GLOBAL
 #elif defined(CONFIG_HAVE_RTLD_LOCAL)
 #define DLOPEN_NULL_FLAGS RTLD_LOCAL
-#else
+#else /* ... */
 #define DLOPEN_NULL_FLAGS 0
-#endif
+#endif /* !... */
 #endif /* !DLOPEN_NULL_FLAGS */
 #endif /* get_default_home_USE_DLMODULENAME */
 
@@ -3142,7 +3139,7 @@ do_increase_buffer:
 		/* dlmodulename() -> KOS extension that returns a module's absolute filename.
 		 *                   This one's really the perfect solution, since it doesn't
 		 *                   involve any additional system calls being made, or making
-		 *                   runtime assumptions such that /proc being mounted. */
+		 *                   runtime assumptions such as /proc being mounted. */
 		char const *filename = dlmodulename(hProc);
 		if unlikely(!filename)
 			goto fallback;
@@ -3152,6 +3149,11 @@ do_increase_buffer:
 		 * is likely to be something along the lines of `/bin/' or `/usr/bin/') */
 		while (length && filename[length - 1] != '/')
 			--length;
+		if (length && unlikely(filename[length - 1] == '/')) {
+			/* Strip additional slashes, such that only a single one remains */
+			while (length >= 2 && filename[length - 2] == '/')
+				--length;
+		}
 		return DeeString_NewUtf8(filename, length, STRING_ERROR_FIGNORE);
 	}
 #endif /* get_default_home_USE_DLMODULENAME */
