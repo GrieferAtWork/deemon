@@ -1376,7 +1376,7 @@ dict_setitem_ex(Dict *self,
                 DeeObject *key,
                 DeeObject *value,
                 unsigned int mode,
-                DeeObject **pold_value) {
+                DREF DeeObject **pold_value) {
 	size_t mask;
 	struct dict_item *vector;
 	int error;
@@ -1430,7 +1430,11 @@ again:
 				item->di_value = value;
 				DeeDict_LockEndWrite(self);
 				Dee_Decref(item_key);
-				Dee_Decref(item_value);
+				if (pold_value) {
+					*pold_value = item_value; /* Inherit reference */
+				} else {
+					Dee_Decref(item_value);
+				}
 			} else {
 				DeeDict_LockRead(self);
 				/* Check if the Dict was modified. */
