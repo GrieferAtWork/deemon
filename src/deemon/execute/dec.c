@@ -2436,6 +2436,7 @@ err_kwds_i:
 		} else {
 			for (i = 0; i < result->co_argc_max; ++i) {
 				uint32_t addr, size;
+				DREF DeeStringObject *kwd;
 				if unlikely(kwd_reader >= end)
 					goto corrupt_kwds_i;
 				size = Dec_DecodePointer((uint8_t **)&kwd_reader);
@@ -2446,11 +2447,15 @@ err_kwds_i:
 				}
 				addr = Dec_DecodePointer((uint8_t **)&kwd_reader);
 				if unlikely(addr >= string_size ||
-					         addr + size > addr ||
-					         addr + size >= string_size)
-				goto corrupt_kwds_i;
-				if ((kwds[i] = (DREF DeeStringObject *)DeeString_NewUtf8(strtab + addr, size, STRING_ERROR_FSTRICT)) == NULL)
+				            (uint32_t)(addr + size) < addr ||
+				            (uint32_t)(addr + size) > string_size)
+					goto corrupt_kwds_i;
+				kwd = (DREF DeeStringObject *)DeeString_NewUtf8(strtab + addr,
+				                                                size,
+				                                                STRING_ERROR_FSTRICT);
+				if unlikely(!kwd)
 					goto err_kwds_i;
+				kwds[i] = kwd;
 			}
 		}
 		result->co_keywords = kwds;
