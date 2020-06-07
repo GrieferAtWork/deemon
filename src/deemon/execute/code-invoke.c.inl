@@ -22,7 +22,7 @@
 #define CALL_THIS  1
 #define CALL_TUPLE 1
 #define CALL_KW    1
-#endif
+#endif /* __INTELLISENSE__ */
 
 #include "../objects/seq/varkwds.h"
 
@@ -411,6 +411,6 @@ err:
 #undef CALL_KW
 #undef CALL_THIS
 #undef CALL_TUPLE
-#endif
+#endif /* !__INTELLISENSE__ */
 
 DECL_END

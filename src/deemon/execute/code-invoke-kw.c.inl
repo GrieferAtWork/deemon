@@ -59,7 +59,7 @@
 DECL_BEGIN
 
 INTERN WUNUSED DREF DeeObject *DCALL
-PP_CAT2(MY_FUNCTION_NAME,IntellisenseInternal)
+PP_CAT2(MY_FUNCTION_NAME, IntellisenseInternal)
                 (DeeFunctionObject *__restrict self
 #ifdef CALL_THIS
                  , DeeObject *__restrict this_arg
@@ -81,17 +81,17 @@ PP_CAT2(MY_FUNCTION_NAME,IntellisenseInternal)
 #endif /* __INTELLISENSE__ */
 {
 #ifdef __INTELLISENSE__
- DREF DeeYieldFunctionObject *yf;
- DREF DeeObject *result;
- DeeCodeObject *code;
- struct code_frame frame;
- size_t i;
- size_t kw_argc;      /* # of keyword arguments passed (DeeKwds_SIZE(kw)). */
- size_t ex_argc;      /* # of objects in the keyword-overlay vector (code->co_argc_max - frame.cf_argc) */
- size_t kw_used;      /* # of keyword arguments that have been loaded from `kw'.
-                       * NOTE: Once all provided arguments have been loaded, this is used
-                       *       to check if _all_ keywords have actually been used, which
-                       *       is a requirement when `CODE_FVARKWDS' isn't set. */
+	DREF DeeYieldFunctionObject *yf;
+	DREF DeeObject *result;
+	DeeCodeObject *code;
+	struct code_frame frame;
+	size_t i;
+	size_t kw_argc;      /* # of keyword arguments passed (DeeKwds_SIZE(kw)). */
+	size_t ex_argc;      /* # of objects in the keyword-overlay vector (code->co_argc_max - frame.cf_argc) */
+	size_t kw_used;      /* # of keyword arguments that have been loaded from `kw'.
+	                      * NOTE: Once all provided arguments have been loaded, this is used
+	                      *       to check if _all_ keywords have actually been used, which
+	                      *       is a requirement when `CODE_FVARKWDS' isn't set. */
 #define err_ex_frame  err
 #endif /* __INTELLISENSE__ */
 #if CODE_FLAGS & CODE_FYIELDING
@@ -106,7 +106,7 @@ PP_CAT2(MY_FUNCTION_NAME,IntellisenseInternal)
 #endif /* !Dee_Alloca */
 #endif
 #ifdef KW_IS_MAPPING
- frame.cf_argc = GET_ARGC();
+	frame.cf_argc = GET_ARGC();
 #else /* KW_IS_MAPPING */
 	kw_argc = DeeKwds_SIZE(kw);
 	if unlikely(kw_argc > GET_ARGC()) {
@@ -337,10 +337,10 @@ UNIQUE(err_kargv):
 #endif /* !CALL_THIS */
 	/* Initialize references stored within the keyword argument extension. */
 #if CODE_FLAGS & CODE_FVARKWDS
-#elif __SIZEOF_POINTER__ == 4
-	frame.cf_kw->fk_varkwds = (DREF DeeObject *)0xccccccccul;
-#elif __SIZEOF_POINTER__ == 8
-	frame.cf_kw->fk_varkwds = (DREF DeeObject *)0xccccccccccccccccull;
+#elif __SIZEOF_POINTER__ == 4 && defined(UINT32_C)
+	frame.cf_kw->fk_varkwds = (DREF DeeObject *)UINT32_C(0xcccccccc);
+#elif __SIZEOF_POINTER__ == 8 && defined(UINT64_C)
+	frame.cf_kw->fk_varkwds = (DREF DeeObject *)UINT64_C(0xcccccccccccccccc);
 #else /* __SIZEOF_POINTER__... */
 	memset(&frame.cf_kw->fk_varkwds, 0xcc, sizeof(void *));
 #endif /* !__SIZEOF_POINTER__... */

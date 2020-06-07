@@ -99,7 +99,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 
 
 
-/* NOTE: Now all error types are present here.
+/* NOTE: Not all error types are present here.
  *       This selection only mirrors what can reasonably be expected to
  *       be arguably commonly used in user-defined exception handlers.
  *       Builtin exceptions that do not appear in this list cannot use
@@ -131,7 +131,7 @@ DeeSystem_DEFINE_memcasecmp(dee_memcasecmp)
 
 
 /* Builtin object set #0 (The original one)
- * NOTE: Just because most of these are types, doesn't mean they all must be! */
+ * NOTE: Just because most of these are types, doesn't mean they all have to be! */
 #define DEC_BUILTIN_SET0_Signal                0x10 /* DeeError_Signal         */
 #define DEC_BUILTIN_SET0_Interrupt             0x11 /* DeeError_Interrupt      */
 #define DEC_BUILTIN_SET0_StopIteration         0x12 /* DeeError_StopIteration  */
@@ -742,7 +742,7 @@ err_seek_failed:
 	 *       as well as allow code to assume that the file ends with a whole
 	 *       bunch of ZERO-bytes. */
 	memset((uint8_t *)hdr + total_size, 0, DECFILE_PADDING);
-#endif
+#endif /* DECFILE_PADDING != 0 */
 
 	/* All right! we've read the file.
 	 * Now to do a quick validation of the header. */
@@ -761,13 +761,13 @@ err_seek_failed:
 	if unlikely(hdr->e_builtinset > DBUILTINS_MAX)
 		goto end_not_a_dec_data;
 	/* Validate pointers from the header. */
-	if unlikely(LETOH32(hdr->e_impoff) > total_size)
+	if unlikely(LETOH32(hdr->e_impoff) >= total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_depoff) > total_size)
+	if unlikely(LETOH32(hdr->e_depoff) >= total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_globoff) > total_size)
+	if unlikely(LETOH32(hdr->e_globoff) >= total_size)
 		goto end_not_a_dec_data;
-	if unlikely(LETOH32(hdr->e_rootoff) > total_size)
+	if unlikely(LETOH32(hdr->e_rootoff) >= total_size)
 		goto end_not_a_dec_data;
 	if unlikely(LETOH32(hdr->e_stroff) < hdr->e_size)
 		goto end_not_a_dec_data; /* Missing string table. */
@@ -2466,7 +2466,7 @@ err_kwds_i:
 #if 0 /* Hide the fact that we've extended the text segment by a couple of `ret none' instructions. \
        * Without this, code would be able to determine that it was                                  \
        * loaded in untrusted mode by examining its own code object. */
- result->co_codebytes = header.co_textsiz+INSTRLEN_MAX;
+	result->co_codebytes = header.co_textsiz + INSTRLEN_MAX;
 #else
 	result->co_codebytes = header.co_textsiz;
 #endif

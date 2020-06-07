@@ -199,6 +199,7 @@ Dee_ddi_next_regs(uint8_t *__restrict ip,
 			case DDI_X_PUSHSTATE:
 				regs->dr_flags += DDI_REGS_FSECONE;
 				break;
+
 			case DDI_X_POPSTATE:
 				if (regs->dr_flags & DDI_REGS_FSECOND)
 					regs->dr_flags -= DDI_REGS_FSECONE;

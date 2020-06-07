@@ -71,10 +71,10 @@ typedef struct ATTR_PACKED {
 	                              * NOTE: Strings are encoded in relative-import format
 	                              *      (as accepted by `DeeModule_OpenRelative') */
 	uint32_t e_depoff;           /* When checking if a DEC file has become outdated, the obvious
-	                              * candidate that must be checked is the `*.dex' replaced with `*.dee'.
+	                              * candidate that must be checked is the `.*.dec' replaced with `*.dee'.
 	                              * However because deemon makes use of a C-compatible preprocessor,
 	                              * user-code can create additional dependencies that must also be
-	                              * able to trigger dismissal and re-generation of `*.dec' files.
+	                              * able to trigger dismissal and re-generation of `.*.dec' files.
 	                              * This field describes an absolute file-offset to a `Dec_Strmap'
 	                              * structure containing the relative pathnames (using `/' for slashes)
 	                              * of all additional dependencies who's timestamps must be checked
@@ -99,7 +99,7 @@ typedef struct ATTR_PACKED {
 typedef struct ATTR_PACKED {
 	uint16_t i_len;    /* Number of string pointers.
 	                    * NOTE: When (uint16_t)-1, a `uint32_t' follows with the actual size. */
-	uint8_t  i_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
+	uint8_t  i_map[1]; /* Offsets into the string table (`e_stroff') to nul-terminated string.
 	                    * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'. */
 } Dec_Strmap;
 
@@ -231,7 +231,7 @@ typedef struct ATTR_PACKED {
 } Dec_CodeKwds;
 
 typedef struct ATTR_PACKED {
-	uint8_t  ck_map[1]; /* Offsets into the string table (`e_stroff') to zero-terminated string.
+	uint8_t  ck_map[1]; /* Offsets into the string table (`e_stroff') to nul-terminated string.
 	                     * NOTE: Individual pointers are decoded using `Dec_DecodePointer()'.
 	                     * NOTE: The length of this vector is `co_argc_max' */
 } Dec_8BitCodeKwds;
@@ -251,7 +251,7 @@ typedef struct ATTR_PACKED {
 	uint32_t   co_defaultoff; /* Absolute file offset to an argument-default descriptor table (`Dec_Objects').
 	                           * NOTE: When ZERO(0), there are no default arguments, but if not,
 	                           *       `co_argc_max' can be calculated from `co_argc_min+os_len'
-	                           * NOTE: `DTYPE_NULL' is not allowed. */
+	                           * NOTE: `DTYPE_NULL' is allowed. */
 	uint32_t   co_ddioff;     /* Absolute file offset to optional code debug information (`Dec_CodeDDI').
 	                           * NOTE: When ZERO(0), there is no DDI information. */
 	uint32_t   co_kwdoff;     /* Absolute file offset to optional keyword argument information (`Dec_CodeKwds')
@@ -367,7 +367,7 @@ typedef struct ATTR_PACKED {
 typedef struct ATTR_PACKED {
 	uint16_t           ca_addr;          /* Address of the attribute (behavior depends on flags) */
 	uint16_t           ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
-	uint8_t            ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	uint8_t            ca_nam[1];        /* Name of the attribute (Pointer to a NUL-terminated string within the `e_stroff' string table)
 	                                      * NOTE: Decode using `Dec_DecodePointer()' */
 	uint8_t            ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
 	                                      * NOTE: Decode using `Dec_DecodePointer()' */
@@ -378,7 +378,7 @@ typedef struct ATTR_PACKED {
 
 typedef struct ATTR_PACKED {
 	uint16_t           cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
-	uint8_t            cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	uint8_t            cd_nam[1];        /* Name of the class (Pointer to a NUL-terminated string within the `e_stroff' string table)
 	                                      * NOTE: Decode using `Dec_DecodePointer()' */
 	uint8_t            cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
 	                                      * NOTE: Decode using `Dec_DecodePointer()' */
@@ -404,7 +404,7 @@ typedef struct ATTR_PACKED {
 typedef struct ATTR_PACKED {
 	uint8_t                ca_addr;          /* Address of the attribute (behavior depends on flags) */
 	uint8_t                ca_flags;         /* Attribute flags (Set of `CLASS_ATTRIBUTE_F*') */
-	uint8_t                ca_nam[1];        /* Name of the attribute (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	uint8_t                ca_nam[1];        /* Name of the attribute (Pointer to a NUL-terminated string within the `e_stroff' string table)
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
 	uint8_t                ca_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
@@ -415,7 +415,7 @@ typedef struct ATTR_PACKED {
 
 typedef struct ATTR_PACKED {
 	uint8_t                cd_flags;         /* Additional flags to set for the resulting type (set of `TP_F*'). */
-	uint8_t                cd_nam[1];        /* Name of the class (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	uint8_t                cd_nam[1];        /* Name of the class (Pointer to a NUL-terminated string within the `e_stroff' string table)
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
 	uint8_t                cd_doclen[1];     /* The length of the documentation string (when ZERO, there is doc-string)
 	                                          * NOTE: Decode using `Dec_DecodePointer()' */
@@ -434,7 +434,7 @@ typedef struct ATTR_PACKED {
 
 
 typedef struct ATTR_PACKED {
-	uint8_t       kwe_nam[1];    /* Name of the keyword (Pointer to a ZERO-terminated string within the `e_stroff' string table)
+	uint8_t       kwe_nam[1];    /* Name of the keyword (Pointer to a NUL-terminated string within the `e_stroff' string table)
 	                              * NOTE: Decode using `Dec_DecodePointer()' */
 } Dec_KwdsEntry;
 
@@ -569,10 +569,10 @@ INTDEF WUNUSED DeeObject *DCALL Dec_GetBuiltin(uint8_t set, uint8_t id);
  * builtin object, and will automatically prevent constant propagation if there
  * is no way of encoding the resulting object as a DEC constant expression. */
 INTDEF WUNUSED NONNULL((1)) uint16_t DCALL Dec_BuiltinID(DeeObject *__restrict obj);
-#define DEC_BUILTINID_UNKNOWN     0 /* The object is not recognized as a builtin. */
-#define DEC_BUILTINID_MAKE(setid,objid) ((setid) << 8 | (objid))
-#define DEC_BUILTINID_SETOF(x)          (((x)&0xff00) >> 8)
-#define DEC_BUILTINID_IDOF(x)            ((x)&0xff)
+#define DEC_BUILTINID_UNKNOWN            0 /* The object is not recognized as a builtin. */
+#define DEC_BUILTINID_MAKE(setid, objid) ((setid) << 8 | (objid))
+#define DEC_BUILTINID_SETOF(x)           (((x) & 0xff00) >> 8)
+#define DEC_BUILTINID_IDOF(x)            ((x) & 0xff)
 
 
 #define DECFILE_PADDING 32

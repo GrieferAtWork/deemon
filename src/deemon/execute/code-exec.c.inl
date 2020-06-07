@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #define EXEC_SAFE 1
-#endif
+#endif /* __INTELLISENSE__ */
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -77,8 +77,8 @@
 #pragma GCC diagnostic ignored "-Wsign-compare"
 #if __GNUC__ >= 7
 #pragma GCC diagnostic ignored "-Wint-in-bool-context" /* Produces some incorrect warnings. */
-#endif
-#endif
+#endif /* __GNUC__ >= 7 */
+#endif /* __GNUC__ */
 
 #ifdef _MSC_VER
 /* Make sure to enable optimizations for the interpreter, as MSVC will otherwise
@@ -90,14 +90,14 @@
 #pragma optimize("ts", on)
 #endif /* _MSC_VER */
 
-#if (defined(EXEC_SAFE) && defined(EXEC_FAST)) || \
-    (!defined(EXEC_SAFE) && !defined(EXEC_FAST))
+#if ((defined(EXEC_SAFE) && defined(EXEC_FAST)) || \
+     (!defined(EXEC_SAFE) && !defined(EXEC_FAST)))
 #error "Invalid configuration. - Must either define `EXEC_SAFE' or `EXEC_FAST'"
 #endif
 
 #ifndef CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
 #define USE_SWITCH
-#endif
+#endif /* !CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS */
 
 DECL_BEGIN
 
@@ -134,14 +134,14 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
 		/* Most common case: Must create a wrapper around the kwds/argv hybrid descriptor,
 		 *                   but exclude any keyword also found as part of our code's
 		 *                   keyword list.
-		 * >> function foo(x,y,**kw) {
+		 * >> function foo(x, y, **kw) {
 		 * >> 	print repr kw;
 		 * >> }
 		 * >> foo(x: 10, y: 20, z: 30); // { "z": 30 }
 		 * Semantically comparable to:
-		 * >> return rt.RoDict(for (local key,id: kw)
+		 * >> return rt.RoDict(for (local key, id: kw)
 		 * >> 	if (key !in __code__.__kwds__)
-		 * >> 		(key,__argv__[#__argv__ + id])
+		 * >> 		(key, __argv__[#__argv__ + id])
 		 * >> 	); */
 		result = BlackListVarkwds_New(code,
 		                              frame->cf_argc,
@@ -152,9 +152,9 @@ construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
 		 *               of all keys that are equal to one of the strings found
 		 *               within our keyword list.
 		 * Semantically comparable to:
-		 * >> return rt.RoDict(for (local key,item: kw)
+		 * >> return rt.RoDict(for (local key, item: kw)
 		 * >> 	if (key !in __code__.__kwds__)
-		 * >> 		(key,item)
+		 * >> 		(key, item)
 		 * >> 	);
 		 */
 		result = BlackListMapping_New(code, frame->cf_argc, kw);
@@ -174,13 +174,13 @@ PRIVATE WUNUSED DREF DeeObject **ATTR_FASTCALL
 get_prefix_object_ptr_fast(struct code_frame *__restrict frame,
                            DeeCodeObject *__restrict code,
                            DeeObject **__restrict sp)
-#else
+#else /* EXEC_FAST */
 #define get_prefix_object_ptr() get_prefix_object_ptr_safe(frame, code, sp)
 PRIVATE WUNUSED DREF DeeObject **ATTR_FASTCALL
 get_prefix_object_ptr_safe(struct code_frame *__restrict frame,
                            DeeCodeObject *__restrict code,
                            DeeObject **__restrict sp)
-#endif
+#endif /* !EXEC_FAST */
 {
 	DREF DeeObject **result;
 	instruction_t *ip = frame->cf_ip;
@@ -843,19 +843,19 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 	 * >> {
 	 * >>     int y = 5;
 	 * >>     printf("%p\n", &y); // Regardless of optimization level, MSVC refuses to have
-	 * >>                        // `y' share the same memory location with `x', even though
-	 * >>                        // The C standard 100% allows a compiler to do this.
+	 * >>                         // `y' share the same memory location with `x', even though
+	 * >>                         // The C standard 100% allows a compiler to do this.
 	 * >> }
 	 * From what I understand, Microsoft actually has to do this due to some
 	 * crappy, but expensive and powerful programs that get compiled using
-	 * their compiler (*cough* Windows Kernel *cough*), which actually need
-	 * this behavior, presumably due to code like this (which any C compiler
-	 * with proper optimization wouldn't allow you to do):
+	 * their compiler (*cough* NT Kernel *cough*), which actually need this
+	 * behavior, presumably due to code like this (which any C compiler with
+	 * proper optimization wouldn't allow you to do):
 	 * >> PCHAR pMessage;
 	 * >> pMessage = LookupErrorMessage(dwErrorCode);
 	 * >> if (pMessage == NULL) {
 	 * >>     CHAR cBuffer[1024];
-	 * >>     FormatErrorMessage(cBuffer,"Unknown Error %X",dwErrorCode);
+	 * >>     FormatErrorMessage(cBuffer, "Unknown Error %X", dwErrorCode);
 	 * >>     pMessage = cBuffer; // WRONG!!! WRONG!!! WRONG!!! If you do this, you're an idiot
 	 * >> }
 	 * >> LogSystemError(pMessage);
@@ -882,10 +882,10 @@ DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #ifdef CONFIG_HAVE_EXEC_ALTSTACK
 #if (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) == 0
 #define IS_ALTSTACK_PERIOD(x) (((x) & (DEE_EXEC_ALTSTACK_PERIOD - 1)) == (DEE_EXEC_ALTSTACK_PERIOD - 1))
-#else
+#else /* (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) == 0 */
 #define IS_ALTSTACK_PERIOD(x) (((x) % DEE_EXEC_ALTSTACK_PERIOD) == (DEE_EXEC_ALTSTACK_PERIOD - 1))
-#endif
-#endif
+#endif /* (DEE_EXEC_ALTSTACK_PERIOD & (DEE_EXEC_ALTSTACK_PERIOD - 1)) != 0 */
+#endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 
 	/* Limit `this_thread->t_execsz' and throw an
 	 * Error.RuntimeError.StackOverflow' if it exceeds that limit. */
@@ -984,7 +984,7 @@ inc_execsz_start:
 #define STATIC_LOCKENDREAD()    (void)0
 #define STATIC_LOCKWRITE()      (void)0
 #define STATIC_LOCKENDWRITE()   (void)0
-#else
+#else /* CONFIG_NO_THREADS */
 #define EXTERN_LOCKREAD()       rwlock_read(&code->co_module->mo_importv[imm_val]->mo_lock)
 #define EXTERN_LOCKENDREAD()    rwlock_endread(&code->co_module->mo_importv[imm_val]->mo_lock)
 #define EXTERN_LOCKWRITE()      rwlock_write(&code->co_module->mo_importv[imm_val]->mo_lock)
@@ -997,7 +997,7 @@ inc_execsz_start:
 #define STATIC_LOCKENDREAD()    rwlock_endread(&code->co_static_lock)
 #define STATIC_LOCKWRITE()      rwlock_write(&code->co_static_lock)
 #define STATIC_LOCKENDWRITE()   rwlock_endwrite(&code->co_static_lock)
-#endif
+#endif /* !CONFIG_NO_THREADS */
 #define THIS                 (frame->cf_this)
 #define TOP                  sp[-1]
 #define FIRST                sp[-1]
@@ -1138,9 +1138,9 @@ next_instr:
 	frame->cf_ip = ip.ptr;
 #ifdef USE_SWITCH
 	switch (*ip.ptr++)
-#else
+#else /* USE_SWITCH */
 	goto *basic_targets[*ip.ptr++];
-#endif
+#endif /* !USE_SWITCH */
 	{
 
 		TARGET(ASM_RET_NONE, -0, +0) {
