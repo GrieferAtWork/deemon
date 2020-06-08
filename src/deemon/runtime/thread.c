@@ -1608,7 +1608,9 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		state = ATOMIC_READ(me->t_state);
 		/* Check if the thread has already been started by testing
 		 * if either the started, or terminated flag has been set. */
-		if (state & (THREAD_STATE_STARTED | THREAD_STATE_TERMINATED))
+		if (state & (THREAD_STATE_STARTING |
+		             THREAD_STATE_STARTED |
+		             THREAD_STATE_TERMINATED))
 			return 1;
 	} while (!ATOMIC_CMPXCH_WEAK(me->t_state, state, state | THREAD_STATE_STARTING));
 	/* Create the reference that is passed to `thread_entry()'
@@ -1681,11 +1683,6 @@ DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 		}
 	}
 #endif
-	/* Wait for the thread to acknowledge having started,
-	 * just so we can guaranty that the thread is not longer
-	 * starting, but is either running, or has terminated. */
-	while (ATOMIC_READ(me->t_state) & THREAD_STATE_STARTING)
-		SCHED_YIELD();
 	/* Indicate success. */
 	return 0;
 }
@@ -1880,33 +1877,30 @@ DeeThread_Detach(/*Thread*/ DeeObject *__restrict self) {
 	uint16_t state;
 	DeeThreadObject *me = (DeeThreadObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeThread_Type);
-	while (ATOMIC_FETCHOR(me->t_state, THREAD_STATE_DETACHING) &
-	       THREAD_STATE_DETACHING)
-		SCHED_YIELD();
-	if (!(me->t_state & (THREAD_STATE_STARTED | THREAD_STATE_TERMINATED))) {
-		/* Thread was never started. */
-		ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
-		return DeeError_Throwf(&DeeError_ValueError,
-		                       "Cannot detach thread %k that hasn't been started",
-		                       self);
-	}
-	if (me->t_state & THREAD_STATE_EXTERNAL) {
-		ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
-		return DeeError_Throwf(&DeeError_ValueError,
-		                       "Cannot detach external thread %k",
-		                       self);
-	}
-	if (me->t_state & THREAD_STATE_DETACHED) {
-		/* Thread was already detached. */
-		ATOMIC_FETCHAND(me->t_state, ~THREAD_STATE_DETACHING);
-		return 1;
-	}
-
-	/* Set the detached-flag and unset the detaching-flag. */
-	do {
+	for (;;) {
 		state = ATOMIC_READ(me->t_state);
-	} while (!ATOMIC_CMPXCH_WEAK(me->t_state, state,
-	                             (state & ~THREAD_STATE_DETACHING) | THREAD_STATE_DETACHED));
+		if (state & (THREAD_STATE_STARTING | THREAD_STATE_DETACHING)) {
+			SCHED_YIELD();
+			continue;
+		}
+		if (!(state & (THREAD_STATE_STARTED | THREAD_STATE_TERMINATED))) {
+			/* Thread was never started. */
+			return DeeError_Throwf(&DeeError_ValueError,
+			                       "Cannot detach thread %k that hasn't been started",
+			                       self);
+		}
+		if (state & THREAD_STATE_EXTERNAL) {
+			return DeeError_Throwf(&DeeError_ValueError,
+			                       "Cannot detach external thread %k",
+			                       self);
+		}
+		if (state & THREAD_STATE_DETACHED)
+			return 1; /* Thread was already detached. */
+		/* Set the detached-flag and unset the detaching-flag. */
+		if likely(ATOMIC_CMPXCH_WEAK(me->t_state, state,
+		                             state | THREAD_STATE_DETACHED))
+			break;
+	}
 	return 0;
 }
 
