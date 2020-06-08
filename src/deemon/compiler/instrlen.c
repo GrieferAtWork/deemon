@@ -616,8 +616,8 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0xd3 */ 4, /* `ASM16_CALLATTR_C_TUPLE':      `callattr top, const <imm16>, pop' */
 	/* 0xd4 */ 5, /* `ASM16_CALLATTR_THIS_C':       `callattr this, const <imm16>, #<imm8>' */
 	/* 0xd5 */ 4, /* `ASM16_CALLATTR_THIS_C_TUPLE': `callattr this, const <imm16>, pop' */
-	/* 0xd6 */ 4, /* `ASM16_CALLATTR_C_SEQ':        `callattr top, const <imm16>, [#<imm8>]' */
-	/* 0xd7 */ 4, /* `ASM16_CALLATTR_C_MAP':        `callattr top, const <imm16>, {#<imm8>*2}' */
+	/* 0xd6 */ 5, /* `ASM16_CALLATTR_C_SEQ':        `callattr top, const <imm16>, [#<imm8>]' */
+	/* 0xd7 */ 5, /* `ASM16_CALLATTR_C_MAP':        `callattr top, const <imm16>, {#<imm8>*2}' */
 	/* 0xd8 */ 2, /* --- */
 	/* 0xd9 */ 6, /* `ASM16_GETMEMBER_THIS_R':      `push getmember this, ref <imm16>, $<imm16>' */
 	/* 0xda */ 6, /* `ASM16_DELMEMBER_THIS_R':      `delmember this, ref <imm16>, $<imm16>' */

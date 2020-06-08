@@ -1405,8 +1405,8 @@
 #define ASM16_CALLATTR_C_TUPLE 0xf0d3 /*[4][-2,+1]   `callattr top, const <imm16>, pop'   - Pop a Tuple and perform a fast attribute call on stack-top using a string in constant slot `<imm16>' (little-endian). */
 #define ASM16_CALLATTR_THIS_C 0xf0d4 /* [5][-n,+1]   `callattr this, const <imm16>, #<imm8>' - Pop #<imm8> arguments into a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
 #define ASM16_CALLATTR_THIS_C_TUPLE 0xf0d5 /* [4][-1,+1] `callattr this, const <imm16>, pop' - Pop a Tuple and lookup and call an attribute of `this', using a string in constant slot `<imm16>' (Only valid for code with the `CODE_FTHISCALL' flag set) */
-#define ASM16_CALLATTR_C_SEQ  0xf0d6 /* [4][-1-n,+1] `callattr top, const <imm16>, [#<imm8>]' - Call an attribute <imm16> with a single sequence-like argument packed from the top #<imm8> stack-items. */
-#define ASM16_CALLATTR_C_MAP  0xf0d7 /* [4][-1-n,+1] `callattr top, const <imm16>, {#<imm8>*2}' - Call an attribute <imm16> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
+#define ASM16_CALLATTR_C_SEQ  0xf0d6 /* [5][-1-n,+1] `callattr top, const <imm16>, [#<imm8>]' - Call an attribute <imm16> with a single sequence-like argument packed from the top #<imm8> stack-items. */
+#define ASM16_CALLATTR_C_MAP  0xf0d7 /* [5][-1-n,+1] `callattr top, const <imm16>, {#<imm8>*2}' - Call an attribute <imm16> with a single mapping-like argument packed from the top #<imm8>*2 stack-items. */
 /*      ASM_                  0xf0d8  *               --------                            - ------------------ */
 #define ASM16_GETMEMBER_THIS_R 0xf0d9/* [6][-0,+1]   `push getmember this, ref <imm16>, $<imm16>' - Same as `ASM16_GETMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
 #define ASM16_DELMEMBER_THIS_R 0xf0da/* [6][-0,+0]   `delmember this, ref <imm16>, $<imm16>' - Same as `ASM16_DELMEMBER_THIS', but use a referenced variable `<imm16>' as class type. */
