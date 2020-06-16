@@ -3829,7 +3829,7 @@ instance_enumattr(DeeTypeObject *__restrict tp_self,
 }
 
 #define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
-	INTERN WUNUSED DREF DeeObject *DCALL                                                \
+	INTERN WUNUSED DREF DeeObject *DCALL                                        \
 	instance_txxx(DeeTypeObject *__restrict tp_self,                            \
 	              DeeObject *__restrict self) {                                 \
 		DREF DeeObject *func, *result;                                          \
@@ -3842,7 +3842,7 @@ instance_enumattr(DeeTypeObject *__restrict tp_self,
 	err:                                                                        \
 		return NULL;                                                            \
 	}                                                                           \
-	INTERN WUNUSED DREF DeeObject *DCALL                                                \
+	INTERN WUNUSED DREF DeeObject *DCALL                                        \
 	instance_xxx(DeeObject *__restrict self) {                                  \
 		return instance_txxx(Dee_TYPE(self), self);                             \
 	}

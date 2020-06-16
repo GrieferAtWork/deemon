@@ -153,7 +153,7 @@ DeeCell_Xch(DeeObject *self,
 	/* Exchange the Cell's value. */
 	Dee_XIncref(value);
 	DeeCell_LockWrite(self);
-	result             = DeeCell_Item(self);
+	result = DeeCell_Item(self);
 	DeeCell_Item(self) = value;
 	DeeCell_LockEndWrite(self);
 	return result;
@@ -373,8 +373,10 @@ cell_xch(Cell *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (def) {
 		result = DeeCell_Xch((DeeObject *)self, value);
-		if (!result)
-			Dee_Incref(def), result = def;
+		if (!result) {
+			Dee_Incref(def);
+			result = def;
+		}
 	} else {
 		result = DeeCell_XchNonNull((DeeObject *)self, value);
 		if (!result)
@@ -462,12 +464,12 @@ PRIVATE struct type_method cell_methods[] = {
 
 	      "\n"
 	      "(def)->\n"
-	      "Pop and return the previously contained object, @def, or throw a ValueError") },
+	      "Pop and return the previously contained object, @def, or throw a :ValueError") },
 	{ DeeString_STR(&str_set),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_set,
 	  DOC("(value)->?Dbool\n"
 	      "Set (override) @this Cell's value, returning ?t if a previous value "
-	      "has been overwritten, or :falue if no value had been set before") },
+	      "has been overwritten, or ?f if no value had been set before") },
 	{ DeeString_STR(&str_xch),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_xch,
 	  DOC("(value)->\n"
@@ -481,7 +483,7 @@ PRIVATE struct type_method cell_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpdel,
 	  DOC("(old_value)->?Dbool\n"
 	      "Atomically check if the stored object's id matches @{old_value}. If this is "
-	      "the case, delete the stored object and return :{true}. Otherwise, return ?f") },
+	      "the case, delete the stored object and return ?t. Otherwise, return ?f") },
 	{ "cmpxch",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&cell_cmpxch,
 	  DOC("(old_value,new_value)->\n"
@@ -494,9 +496,9 @@ PRIVATE struct type_method cell_methods[] = {
 	      "stored object. In both cases, return the previously stored object, @def, or throw a :{ValueError}.\n"
 	      "This is equivalent to the atomic execution of the following:\n"
 	      "${"
-	      "local result = this.old_value;\n"
+	      "local result = this.value;\n"
 	      "if (this && result === old_value)\n"
-	      "    this.value = new_value;\n"
+	      "	this.value = new_value;\n"
 	      "return result;"
 	      "}\n"
 
