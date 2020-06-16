@@ -32,23 +32,25 @@
 DECL_BEGIN
 
 typedef struct {
-	DeeObject       *si_key;    /* [1..1][const] The key of this shared item. */
-	DeeObject       *si_value;  /* [1..1][const] The value of this shared item. */
+	DeeObject       *si_key;    /* [0..1][lock(WRITE_ONCE)] The key of this shared item. */
+	DeeObject       *si_value;  /* [?..1][valid_if(si_key)]
+	                             * [lock(WRITE_ONCE)] The value of this shared item. */
 	dhash_t          si_hash;   /* Hash of this key. */
 } SharedItemEx;
 
 typedef struct {
 	OBJECT_HEAD
 #ifndef CONFIG_NO_THREADS
-	rwlock_t         sm_lock;   /* Lock for this shared-vector. */
+	rwlock_t         sm_lock;    /* Lock for this shared-vector. */
 #endif /* !CONFIG_NO_THREADS */
-	size_t           sm_length; /* [lock(skv_lock)] The number of items in this vector. */
-	DeeSharedItem   *sm_vector; /* [1..1][const][0..sv_length][lock(skv_lock)][owned]
-	                             * The vector of objects that is being referenced.
-	                             * NOTE: Elements of this vector must not be changed. */
-	size_t           sm_mask;   /* [const][> sm_length][!0] Hash-vector mask for `skv_map'. */
-	SharedItemEx     sm_map[1]; /* [lock(WRITE_ONCE)] Hash-vector of cached keys.
-	                             * This hash-vector is populated lazily as objects are queried by key. */
+	size_t           sm_length;  /* [lock(sm_lock)] The number of items in this vector. */
+	DeeSharedItem   *sm_vector;  /* [1..1][const][0..sv_length][lock(sm_lock)][owned]
+	                              * The vector of objects that is being referenced.
+	                              * NOTE: Elements of this vector must not be changed. */
+	size_t           sm_loaded;  /* [lock(sm_lock)] Set to non-zero once `sm_vector' has been fully loaded. */
+	size_t           sm_mask;    /* [const][> sm_length][!0] Hash-vector mask for `skv_map'. */
+	SharedItemEx     sm_map[1];  /* [lock(WRITE_ONCE)] Hash-vector of cached keys.
+	                              * This hash-vector is populated lazily as objects are queried by key. */
 } SharedMap;
 
 #define SHAREDMAP_SIZEOF(mask) (offsetof(SharedMap, sm_map) + ((mask) + 1) * sizeof(SharedItemEx))
@@ -58,8 +60,7 @@ INTDEF DeeTypeObject SharedMap_Type;
 
 /* Hash-iteration control. */
 #define SMAP_HASHST(self, hash)  ((hash) & ((SharedMap *)(self))->sm_mask)
-#define SMAP_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define SMAP_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define SMAP_HASHNX(hs, perturb) (hs = (((hs) << 2) + (hs) + (perturb) + 1), (perturb) >>= 5) /* This `5' is tunable. */
 #define SMAP_HASHIT(self, i)     (((SharedMap *)(self))->sm_map + ((i) & ((SharedMap *)(self))->sm_mask))
 
 

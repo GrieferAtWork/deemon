@@ -290,18 +290,42 @@ smap_cache(SharedMap *__restrict self,
 	dhash_t i, perturb;
 	SharedItemEx *item;
 	perturb = i = SMAP_HASHST(self, hash);
-	for (;; i = SMAP_HASHNX(i, perturb), SMAP_HASHPT(perturb)) {
+	for (;; SMAP_HASHNX(i, perturb)) {
 		item = SMAP_HASHIT(self, i);
 		if (item->si_key == key)
 			return; /* Already cached. (possible due to race conditions) */
 		if (item->si_key)
 			continue;
+		/* Make sure that the given `key' isn't already cached.
+		 * NOTE: Because we can't be certain that `hash' is consistent
+		 *       for the object (since a malicious caller may intentionally
+		 *       cause different hash-values to be used), we have to manually
+		 *       check the entire cache for other instances. */
+		for (i = 0; i <= self->sm_mask; ++i) {
+			if (self->sm_map[i].si_key == key)
+				return; /* Already in cache! */
+		}
 		/* Setup this cache-entry as a slot for this key. */
 		item->si_key   = key;
 		item->si_value = value;
 		item->si_hash  = hash;
+#ifndef NDEBUG
+		for (i = 0; i <= self->sm_mask; ++i) {
+			if (!self->sm_map[i].si_key)
+				goto sentinal_does_exist;
+		}
+		_DeeAssert_Failf("self->sm_map[*].si_key == NULL", __FILE__, __LINE__,
+		                 "Shared map doesn't have a NULL-sentinel anymore");
+sentinal_does_exist:
+#endif /* !NDEBUG */
 		break;
 	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+smap_mark_loaded_and_endwrite(SharedMap *__restrict self) {
+	self->sm_loaded = 1;
+	rwlock_endwrite(&self->sm_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -309,10 +333,15 @@ smap_contains(SharedMap *self, DeeObject *key) {
 	dhash_t i, perturb, hash;
 	SharedItemEx *item;
 	int temp;
+	bool was_loaded;
+	was_loaded = self->sm_loaded != 0;
+	COMPILER_READ_BARRIER();
+
 	/* Search the hash-table. */
-	hash    = DeeObject_Hash(key);
+	hash = DeeObject_Hash(key);
+again_search:
 	perturb = i = SMAP_HASHST(self, hash);
-	for (;; i = SMAP_HASHNX(i, perturb), SMAP_HASHPT(perturb)) {
+	for (;; SMAP_HASHNX(i, perturb)) {
 		DREF DeeObject *item_key;
 		item = SMAP_HASHIT(self, i);
 		if (!item->si_key)
@@ -321,10 +350,8 @@ smap_contains(SharedMap *self, DeeObject *key) {
 			continue;
 		rwlock_read(&self->sm_lock);
 		item_key = item->si_key;
-		if (self->sm_length == 0) {
-			rwlock_endread(&self->sm_lock);
-			return_false;
-		}
+		if (self->sm_length == 0)
+			goto endread_and_not_found;
 		Dee_Incref(item_key);
 		rwlock_endread(&self->sm_lock);
 		temp = DeeObject_CompareEq(key, item->si_key);
@@ -337,34 +364,48 @@ smap_contains(SharedMap *self, DeeObject *key) {
 	}
 	/* Find the item in the key vector. */
 	rwlock_read(&self->sm_lock);
-	for (i = 0; i < self->sm_length; ++i) {
-		DREF DeeObject *item_key, *item_value;
-		dhash_t item_hash;
-		item_key   = self->sm_vector[i].si_key;
-		item_value = self->sm_vector[i].si_value;
-		Dee_Incref(item_key);
-		Dee_Incref(item_value);
-		rwlock_endread(&self->sm_lock);
-		item_hash = DeeObject_Hash(item_key);
-		/* Cache the key-value pair in the hash-vector */
-		rwlock_write(&self->sm_lock);
-		smap_cache(self, item_key, item_value, hash);
-		rwlock_endwrite(&self->sm_lock);
-		/* Check if this is the key we're looking for. */
-		Dee_Decref(item_value);
-		if (item_hash == hash) {
-			temp = DeeObject_CompareEq(key, item_key);
-			if (temp != 0) {
-				Dee_Decref(item_key);
-				if unlikely(temp < 0)
-					return NULL;
-				return_true; /* Found it! */
-			}
+	if (self->sm_loaded) {
+		if (!was_loaded) {
+			rwlock_endread(&self->sm_lock);
+			was_loaded = true;
+			goto again_search;
 		}
-		Dee_Decref(item_key);
-		rwlock_read(&self->sm_lock);
+	} else {
+		for (i = 0; i < self->sm_length; ++i) {
+			DREF DeeObject *item_key, *item_value;
+			dhash_t item_hash;
+			item_key   = self->sm_vector[i].si_key;
+			item_value = self->sm_vector[i].si_value;
+			Dee_Incref(item_key);
+			Dee_Incref(item_value);
+			rwlock_endread(&self->sm_lock);
+			item_hash = DeeObject_Hash(item_key);
+			/* Cache the key-value pair in the hash-vector */
+			rwlock_write(&self->sm_lock);
+			smap_cache(self, item_key, item_value, item_hash);
+			rwlock_endwrite(&self->sm_lock);
+			/* Check if this is the key we're looking for. */
+			Dee_Decref(item_value);
+			if (item_hash == hash) {
+				temp = DeeObject_CompareEq(key, item_key);
+				if (temp != 0) {
+					Dee_Decref(item_key);
+					if unlikely(temp < 0)
+						return NULL;
+					return_true; /* Found it! */
+				}
+			}
+			Dee_Decref(item_key);
+			rwlock_read(&self->sm_lock);
+		}
+		if (rwlock_tryupgrade(&self->sm_lock)) {
+			smap_mark_loaded_and_endwrite(self);
+			goto not_found;
+		}
 	}
+endread_and_not_found:
 	rwlock_endread(&self->sm_lock);
+not_found:
 	return_false;
 }
 
@@ -373,10 +414,15 @@ smap_getitem(SharedMap *self, DeeObject *key) {
 	dhash_t i, perturb, hash;
 	SharedItemEx *item;
 	int temp;
+	bool was_loaded;
+	was_loaded = self->sm_loaded != 0;
+	COMPILER_READ_BARRIER();
+
 	/* Search the hash-table. */
-	hash    = DeeObject_Hash(key);
+	hash = DeeObject_Hash(key);
+again_search:
 	perturb = i = SMAP_HASHST(self, hash);
-	for (;; i = SMAP_HASHNX(i, perturb), SMAP_HASHPT(perturb)) {
+	for (;; SMAP_HASHNX(i, perturb)) {
 		DREF DeeObject *item_key, *item_value;
 		item = SMAP_HASHIT(self, i);
 		if (!item->si_key)
@@ -406,34 +452,46 @@ smap_getitem(SharedMap *self, DeeObject *key) {
 	}
 	/* Find the item in the key vector. */
 	rwlock_read(&self->sm_lock);
-	for (i = 0; i < self->sm_length; ++i) {
-		DREF DeeObject *item_key, *item_value;
-		dhash_t item_hash;
-		item_key   = self->sm_vector[i].si_key;
-		item_value = self->sm_vector[i].si_value;
-		Dee_Incref(item_key);
-		Dee_Incref(item_value);
-		rwlock_endread(&self->sm_lock);
-		item_hash = DeeObject_Hash(item_key);
-		/* Cache the key-value pair in the hash-vector */
-		rwlock_write(&self->sm_lock);
-		smap_cache(self, item_key, item_value, hash);
-		rwlock_endwrite(&self->sm_lock);
-		/* Check if this is the key we're looking for. */
-		if (item_hash == hash) {
-			temp = DeeObject_CompareEq(key, item_key);
-			if (temp != 0) {
-				Dee_Decref(item_key);
-				if unlikely(temp < 0) {
-					Dee_Decref(item_value);
-					goto err;
-				}
-				return item_value;
-			}
+	if (self->sm_loaded) {
+		if (!was_loaded) {
+			rwlock_endread(&self->sm_lock);
+			was_loaded = true;
+			goto again_search;
 		}
-		Dee_Decref(item_value);
-		Dee_Decref(item_key);
-		rwlock_read(&self->sm_lock);
+	} else {
+		for (i = 0; i < self->sm_length; ++i) {
+			DREF DeeObject *item_key, *item_value;
+			dhash_t item_hash;
+			item_key   = self->sm_vector[i].si_key;
+			item_value = self->sm_vector[i].si_value;
+			Dee_Incref(item_key);
+			Dee_Incref(item_value);
+			rwlock_endread(&self->sm_lock);
+			item_hash = DeeObject_Hash(item_key);
+			/* Cache the key-value pair in the hash-vector */
+			rwlock_write(&self->sm_lock);
+			smap_cache(self, item_key, item_value, item_hash);
+			rwlock_endwrite(&self->sm_lock);
+			/* Check if this is the key we're looking for. */
+			if (item_hash == hash) {
+				temp = DeeObject_CompareEq(key, item_key);
+				if (temp != 0) {
+					Dee_Decref(item_key);
+					if unlikely(temp < 0) {
+						Dee_Decref(item_value);
+						goto err;
+					}
+					return item_value;
+				}
+			}
+			Dee_Decref(item_value);
+			Dee_Decref(item_key);
+			rwlock_read(&self->sm_lock);
+		}
+		if (rwlock_tryupgrade(&self->sm_lock)) {
+			smap_mark_loaded_and_endwrite(self);
+			goto not_found;
+		}
 	}
 	rwlock_endread(&self->sm_lock);
 not_found:
@@ -449,10 +507,15 @@ smap_nsi_getdefault(SharedMap *__restrict self,
 	dhash_t i, perturb, hash;
 	SharedItemEx *item;
 	int temp;
+	bool was_loaded;
+	was_loaded = self->sm_loaded != 0;
+	COMPILER_READ_BARRIER();
+
 	/* Search the hash-table. */
-	hash    = DeeObject_Hash(key);
+	hash = DeeObject_Hash(key);
+again_search:
 	perturb = i = SMAP_HASHST(self, hash);
-	for (;; i = SMAP_HASHNX(i, perturb), SMAP_HASHPT(perturb)) {
+	for (;; SMAP_HASHNX(i, perturb)) {
 		DREF DeeObject *item_key, *item_value;
 		item = SMAP_HASHIT(self, i);
 		if (!item->si_key)
@@ -469,7 +532,7 @@ smap_nsi_getdefault(SharedMap *__restrict self,
 		Dee_Incref(item_key);
 		Dee_Incref(item_value);
 		rwlock_endread(&self->sm_lock);
-		temp = DeeObject_CompareEq(key, item->si_key);
+		temp = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
 		if (temp != 0) {
 			if unlikely(temp < 0) {
@@ -482,34 +545,46 @@ smap_nsi_getdefault(SharedMap *__restrict self,
 	}
 	/* Find the item in the key vector. */
 	rwlock_read(&self->sm_lock);
-	for (i = 0; i < self->sm_length; ++i) {
-		DREF DeeObject *item_key, *item_value;
-		dhash_t item_hash;
-		item_key   = self->sm_vector[i].si_key;
-		item_value = self->sm_vector[i].si_value;
-		Dee_Incref(item_key);
-		Dee_Incref(item_value);
-		rwlock_endread(&self->sm_lock);
-		item_hash = DeeObject_Hash(item_key);
-		/* Cache the key-value pair in the hash-vector */
-		rwlock_write(&self->sm_lock);
-		smap_cache(self, item_key, item_value, hash);
-		rwlock_endwrite(&self->sm_lock);
-		/* Check if this is the key we're looking for. */
-		if (item_hash == hash) {
-			temp = DeeObject_CompareEq(key, item_key);
-			if (temp != 0) {
-				Dee_Decref(item_key);
-				if unlikely(temp < 0) {
-					Dee_Decref(item_value);
-					goto err;
-				}
-				return item_value;
-			}
+	if (self->sm_loaded) {
+		if (!was_loaded) {
+			rwlock_endread(&self->sm_lock);
+			was_loaded = true;
+			goto again_search;
 		}
-		Dee_Decref(item_value);
-		Dee_Decref(item_key);
-		rwlock_read(&self->sm_lock);
+	} else {
+		for (i = 0; i < self->sm_length; ++i) {
+			DREF DeeObject *item_key, *item_value;
+			dhash_t item_hash;
+			item_key   = self->sm_vector[i].si_key;
+			item_value = self->sm_vector[i].si_value;
+			Dee_Incref(item_key);
+			Dee_Incref(item_value);
+			rwlock_endread(&self->sm_lock);
+			item_hash = DeeObject_Hash(item_key);
+			/* Cache the key-value pair in the hash-vector */
+			rwlock_write(&self->sm_lock);
+			smap_cache(self, item_key, item_value, item_hash);
+			rwlock_endwrite(&self->sm_lock);
+			/* Check if this is the key we're looking for. */
+			if (item_hash == hash) {
+				temp = DeeObject_CompareEq(key, item_key);
+				if (temp != 0) {
+					Dee_Decref(item_key);
+					if unlikely(temp < 0) {
+						Dee_Decref(item_value);
+						goto err;
+					}
+					return item_value;
+				}
+			}
+			Dee_Decref(item_value);
+			Dee_Decref(item_key);
+			rwlock_read(&self->sm_lock);
+		}
+		if (rwlock_tryupgrade(&self->sm_lock)) {
+			smap_mark_loaded_and_endwrite(self);
+			goto not_found;
+		}
 	}
 	rwlock_endread(&self->sm_lock);
 not_found:
@@ -660,6 +735,7 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem *vector) {
 		goto done;
 	result->sm_length = length;
 	result->sm_vector = vector;
+	result->sm_loaded = 0;
 	result->sm_mask   = mask;
 	rwlock_cinit(&result->sm_lock);
 	DeeObject_Init(result, &SharedMap_Type);
@@ -702,16 +778,21 @@ done_decref_vector:
 	}
 	/* Difficult case: must duplicate the vector. */
 	rwlock_write(&me->sm_lock);
-	vector = (DREF DeeObject **)Dee_TryMalloc(me->sm_length * 2 *
-	                                          sizeof(DREF DeeObject *));
-	if unlikely(!vector)
-		goto err_cannot_inherit;
-	/* Simply copy all the elements, transferring
-	 * all the references that they represent. */
-	MEMCPY_PTR(vector, me->sm_vector, me->sm_length * 2);
-	/* Give the SharedMap its very own copy
-	 * which it will take to its grave. */
-	me->sm_vector = (DeeSharedItem *)vector;
+	if (!me->sm_length) {
+		me->sm_vector = NULL;
+	} else {
+		ASSERT(me->sm_length == me->sm_length);
+		vector = (DREF DeeObject **)Dee_TryMalloc(me->sm_length * 2 *
+		                                          sizeof(DREF DeeObject *));
+		if unlikely(!vector)
+			goto err_cannot_inherit;
+		/* Simply copy all the elements, transferring
+		 * all the references that they represent. */
+		MEMCPY_PTR(vector, me->sm_vector, me->sm_length * 2);
+		/* Give the SharedMap its very own copy
+		 * which it will take to its grave. */
+		me->sm_vector = (DeeSharedItem *)vector;
+	}
 	rwlock_endwrite(&me->sm_lock);
 	Dee_Decref(me);
 	return;
