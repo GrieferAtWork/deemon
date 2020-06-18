@@ -2285,8 +2285,9 @@ ok_got_ownds_linkfd:
 			if (GetFileInformationByHandle(hLink, &hfInfo) &&
 			    /* First check: Cygwin's symbolic links always have the SYSTEM flag set. */
 			    (hfInfo.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) != 0 &&
-			    /* Second check: Let's impose a limit on how long a symlink can be 64K should be good. */
-			    (hfInfo.nFileSizeHigh == 0 && hfInfo.nFileSizeLow <= 0xffff)) {
+			    /* Second check: Let's impose a limit on how long a symlink can be.
+			     * The `4 * 65536' used here can also be found within cygwin's source code. */
+			    (hfInfo.nFileSizeHigh == 0 && hfInfo.nFileSizeLow <= 4 * 65536)) {
 				/* Try to load the file into memory. */
 				void *pFileBuffer = buffer;
 				OVERLAPPED oOffsetInfo;
