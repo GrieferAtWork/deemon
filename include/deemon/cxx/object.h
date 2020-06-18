@@ -679,7 +679,7 @@ public:
 template<> class any_convertible</*utf-8*/ char const *>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(/*utf-8*/ char const *__restrict value) {
-		return DeeString_NewUtf8(value, strlen(value), STRING_ERROR_FSTRICT);
+		return DeeString_NewUtf8(value, strlen(value), Dee_STRING_ERROR_FSTRICT);
 	}
 };
 #ifdef __native_wchar_t_defined
@@ -694,7 +694,7 @@ DeeSystem_DEFINE_wcslen(_dee_wcslen)
 template<> class any_convertible</*wide*/ wchar_t const *>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(/*wide*/ wchar_t const *__restrict value) {
-		return DeeString_NewWide(value, _dee_wcslen(value), STRING_ERROR_FSTRICT);
+		return DeeString_NewWide(value, _dee_wcslen(value), Dee_STRING_ERROR_FSTRICT);
 	}
 };
 #endif /* __native_wchar_t_defined */
@@ -711,13 +711,13 @@ DeeSystem_DEFINE_XSTRLEN(_dee_c32len, uint32_t)
 template<> class any_convertible<char16_t const *>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(char16_t const *__restrict value) {
-		return DeeString_NewUtf16((uint16_t const *)value, _dee_c16len((uint16_t const *)value), STRING_ERROR_FSTRICT);
+		return DeeString_NewUtf16((uint16_t const *)value, _dee_c16len((uint16_t const *)value), Dee_STRING_ERROR_FSTRICT);
 	}
 };
 template<> class any_convertible<char32_t const *>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(char32_t const *__restrict value) {
-		return DeeString_NewUtf32((uint32_t const *)value, _dee_c32len((uint32_t const *)value), STRING_ERROR_FSTRICT);
+		return DeeString_NewUtf32((uint32_t const *)value, _dee_c32len((uint32_t const *)value), Dee_STRING_ERROR_FSTRICT);
 	}
 };
 #endif /* __native_char16_t_defined */
@@ -727,7 +727,7 @@ template<size_t sz>
 class any_convertible<char const[sz]>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(/*utf-8*/ char const (&value)[sz]) {
-		return DeeString_NewUtf8(value, sz - 1, STRING_ERROR_FSTRICT);
+		return DeeString_NewUtf8(value, sz - 1, Dee_STRING_ERROR_FSTRICT);
 	}
 };
 template<size_t sz> class any_convertible<char[sz]>: public any_convertible<char const[sz]> {};
@@ -736,7 +736,7 @@ template<size_t sz>
 class any_convertible<wchar_t const[sz]>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(/*utf-8*/ wchar_t const (&value)[sz]) {
-		return DeeString_NewWide(value, sz - 1, STRING_ERROR_FSTRICT);
+		return DeeString_NewWide(value, sz - 1, Dee_STRING_ERROR_FSTRICT);
 	}
 };
 template<size_t sz> class any_convertible<wchar_t[sz]>
@@ -747,7 +747,7 @@ template<size_t sz>
 class any_convertible<char16_t const[sz]>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(/*utf-8*/ char16_t const (&value)[sz]) {
-		return DeeString_NewUtf16(value, sz - 1, STRING_ERROR_FSTRICT);
+		return DeeString_NewUtf16(value, sz - 1, Dee_STRING_ERROR_FSTRICT);
 	}
 };
 template<size_t sz> class any_convertible<char16_t[sz]>
@@ -756,7 +756,7 @@ template<size_t sz>
 class any_convertible<char32_t const[sz]>: public any_convertible_base {
 public:
 	static DREF DeeObject *convert(/*utf-8*/ char32_t const (&value)[sz]) {
-		return DeeString_NewUtf32(value, sz - 1, STRING_ERROR_FSTRICT);
+		return DeeString_NewUtf32(value, sz - 1, Dee_STRING_ERROR_FSTRICT);
 	}
 };
 template<size_t sz> class any_convertible<char32_t[sz]>

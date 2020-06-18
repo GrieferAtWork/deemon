@@ -19,6 +19,7 @@
  */
 #ifndef GUARD_DEX_FS_OSFS_C
 #define GUARD_DEX_FS_OSFS_C 1
+#define DEE_SOURCE 1
 
 #include "libfs.h"
 /**/
@@ -2276,22 +2277,42 @@ again_createfile:
 	if (owns_linkfd)
 		CloseHandle(hLink);
 	DBG_ALIGNMENT_ENABLE();
+	if (buffer->ReparseDataLength > (USHORT)(buflen - offsetof(DEE_REPARSE_DATA_BUFFER, GenericReparseBuffer)))
+		buffer->ReparseDataLength = (USHORT)(buflen - offsetof(DEE_REPARSE_DATA_BUFFER, GenericReparseBuffer));
 	/* Interpret the read data. */
 	switch (buffer->ReparseTag) {
 
 	case IO_REPARSE_TAG_SYMLINK:
-		linkstr_end = (linkstr_begin = buffer->SymbolicLinkReparseBuffer.PathBuffer +
-		                               (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
+		linkstr_begin = buffer->SymbolicLinkReparseBuffer.PathBuffer;
+		linkstr_end = (linkstr_begin + (buffer->SymbolicLinkReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
 		              (buffer->SymbolicLinkReparseBuffer.SubstituteNameLength / sizeof(WCHAR));
 		break;
 
 	case IO_REPARSE_TAG_MOUNT_POINT:
-		linkstr_end = (linkstr_begin = buffer->MountPointReparseBuffer.PathBuffer +
-		                               (buffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
+		linkstr_begin = buffer->MountPointReparseBuffer.PathBuffer;
+		linkstr_end = (linkstr_begin + (buffer->MountPointReparseBuffer.SubstituteNameOffset / sizeof(WCHAR))) +
 		              (buffer->MountPointReparseBuffer.SubstituteNameLength / sizeof(WCHAR));
 		break;
 
+#ifndef IO_REPARSE_TAG_LX_SYMLINK
+#define IO_REPARSE_TAG_LX_SYMLINK 0xA000001D
+#endif /* !IO_REPARSE_TAG_LX_SYMLINK */
+
+	case IO_REPARSE_TAG_LX_SYMLINK: {
+		/* I couldn't find any official documentation on the actual format of this symlink type.
+		 * However, cygwin supports it as well, and with one of its newer versions, has also
+		 * started using it as its method of implementing symbolic links... */
+		if (buffer->ReparseDataLength <= 4)
+			goto bad_link_type;
+		result = DeeString_NewUtf8((char const *)(buffer->GenericReparseBuffer.DataBuffer + 4),
+		                           (buffer->ReparseDataLength - 4),
+		                           STRING_ERROR_FIGNORE);
+		Dee_Free(buffer);
+		return result;
+	}	break;
+
 	default:
+bad_link_type:
 		DeeError_Throwf(&DeeError_UnsupportedAPI,
 		                "Unsupported link type %lu in file %r",
 		                (unsigned long)buffer->ReparseTag, path);
