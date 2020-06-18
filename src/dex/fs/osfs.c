@@ -2161,6 +2161,10 @@ err:
 #endif
 
 #ifdef fs_readlink_USE_DEVICEIOCONTROL
+#ifndef IO_REPARSE_TAG_LX_SYMLINK
+#define IO_REPARSE_TAG_LX_SYMLINK 0xA000001D
+#endif /* !IO_REPARSE_TAG_LX_SYMLINK */
+
 typedef struct _DEE_REPARSE_DATA_BUFFER {
 	ULONG ReparseTag;
 	USHORT ReparseDataLength;
@@ -2173,14 +2177,30 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
 			USHORT PrintNameLength;
 			ULONG Flags;
 			WCHAR PathBuffer[1];
-		} SymbolicLinkReparseBuffer;
+		} SymbolicLinkReparseBuffer; /* IO_REPARSE_TAG_SYMLINK */
+
 		struct {
 			USHORT SubstituteNameOffset;
 			USHORT SubstituteNameLength;
 			USHORT PrintNameOffset;
 			USHORT PrintNameLength;
 			WCHAR PathBuffer[1];
-		} MountPointReparseBuffer;
+		} MountPointReparseBuffer; /* IO_REPARSE_TAG_MOUNT_POINT */
+
+		/* BEGIN: Taken from cygwin */
+		struct {
+			DWORD FileType;     /* Take member name with a grain of salt.  Value is
+			                     * apparently always 2 for symlinks. */
+			char PathBuffer[1]; /* POSIX path as given to symlink(2).
+			                     * Path is not \0 terminated.
+			                     * Length is ReparseDataLength - sizeof (FileType).
+			                     * Always UTF-8.
+			                     * Chars given in incompatible codesets, e. g. umlauts
+			                     * in ISO-8859-x, are converted to the Unicode
+			                     * REPLACEMENT CHARACTER 0xfffd == \xef\xbf\bd */
+		} LxSymlinkReparseBuffer; /* IO_REPARSE_TAG_LX_SYMLINK */
+		/* END: Taken from cygwin */
+
 		struct {
 			UCHAR DataBuffer[1];
 		} GenericReparseBuffer;
@@ -2208,7 +2228,7 @@ fs_readlink(DeeObject *__restrict path) {
 	if (DeeString_Check(path)) {
 again_createfile:
 		hLink = DeeNTSystem_CreateFile(path,
-		                               FILE_READ_ATTRIBUTES,
+		                               FILE_READ_DATA | FILE_READ_ATTRIBUTES,
 		                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		                               NULL,
 		                               OPEN_EXISTING,
@@ -2218,6 +2238,7 @@ again_createfile:
 			goto err;
 		if unlikely(hLink == INVALID_HANDLE_VALUE)
 			goto err_nt_createfile;
+ok_got_ownds_linkfd:
 		owns_linkfd = true;
 	} else {
 		hLink = (HANDLE)DeeNTSystem_GetHandle(path);
@@ -2259,6 +2280,61 @@ again_createfile:
 #define WANT_NT_ERRPATHNOACCESS 1
 			nt_ErrPathNoAccess(error, path);
 		} else if (DeeNTSystem_IsNoLink(error)) {
+			/* Special handling for cygwin's symbolic links. */
+			BY_HANDLE_FILE_INFORMATION hfInfo;
+			if (GetFileInformationByHandle(hLink, &hfInfo) &&
+			    /* First check: Cygwin's symbolic links always have the SYSTEM flag set. */
+			    (hfInfo.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) != 0 &&
+			    /* Second check: Let's impose a limit on how long a symlink can be 64K should be good. */
+			    (hfInfo.nFileSizeHigh == 0 && hfInfo.nFileSizeLow <= 0xffff)) {
+				/* Try to load the file into memory. */
+				void *pFileBuffer = buffer;
+				OVERLAPPED oOffsetInfo;
+				DWORD dwBytesRead;
+				static BYTE const cygSymlinkCookie[] = { '!', '<', 's', 'y', 'm', 'l', 'i', 'n', 'k', '>' };
+
+				if (hfInfo.nFileSizeLow > bufsiz) {
+					pFileBuffer = Dee_Realloc(buffer, hfInfo.nFileSizeLow);
+					if unlikely(!pFileBuffer)
+						goto err_buffer;
+					buffer = (DEE_PREPARSE_DATA_BUFFER)pFileBuffer; /* For cleanup... */
+				}
+				memset(&oOffsetInfo, 0, sizeof(oOffsetInfo));
+				if (ReadFile(hLink, pFileBuffer, hfInfo.nFileSizeLow, &dwBytesRead, &oOffsetInfo) &&
+				    dwBytesRead > sizeof(cygSymlinkCookie) &&
+				    memcmp(pFileBuffer, cygSymlinkCookie, sizeof(cygSymlinkCookie)) == 0) {
+					/* Yes! It is a cygwin symlink! -> Now to decode it. */
+					char const *symlink_text;
+					size_t symlink_size;
+					symlink_text = (char const *)((BYTE *)pFileBuffer + sizeof(cygSymlinkCookie));
+					symlink_size = dwBytesRead - sizeof(cygSymlinkCookie);
+					if (symlink_size > 2) {
+						BYTE b0, b1;
+						b0 = ((BYTE *)symlink_text)[0];
+						b1 = ((BYTE *)symlink_text)[1];
+						if (b0 == 0xff && b1 == 0xfe) {
+							/* Text is encoded as a little-endian wide-string */
+							result = DeeString_NewWideLe((Dee_wchar_t const *)(symlink_text + 2),
+							                             (symlink_size - 2) / 2,
+							                             STRING_ERROR_FIGNORE);
+						} else if (b0 == 0xfe && b1 == 0xff) {
+							/* Text is encoded as a big-endian wide-string */
+							result = DeeString_NewWideBe((Dee_wchar_t const *)(symlink_text + 2),
+							                             (symlink_size - 2) / 2,
+							                             STRING_ERROR_FIGNORE);
+						} else {
+							goto cygwin_symlink_utf8;
+						}
+					} else {
+cygwin_symlink_utf8:
+						/* Text is encoded as a utf-8 string */
+						result = DeeString_NewUtf8(symlink_text,
+						                           symlink_size,
+						                           STRING_ERROR_FIGNORE);
+					}
+					goto free_buffer_and_return_result;
+				}
+			}
 			DeeNTSystem_ThrowErrorf(&DeeError_NoLink, error,
 			                        "Path %r is not a symbolic link",
 			                        path);
@@ -2294,21 +2370,20 @@ again_createfile:
 		              (buffer->MountPointReparseBuffer.SubstituteNameLength / sizeof(WCHAR));
 		break;
 
-#ifndef IO_REPARSE_TAG_LX_SYMLINK
-#define IO_REPARSE_TAG_LX_SYMLINK 0xA000001D
-#endif /* !IO_REPARSE_TAG_LX_SYMLINK */
-
 	case IO_REPARSE_TAG_LX_SYMLINK: {
 		/* I couldn't find any official documentation on the actual format of this symlink type.
 		 * However, cygwin supports it as well, and with one of its newer versions, has also
 		 * started using it as its method of implementing symbolic links... */
-		if (buffer->ReparseDataLength <= 4)
+#define OFFSETOF_PATHBUFFER                                                 \
+	(offsetof(DEE_REPARSE_DATA_BUFFER, LxSymlinkReparseBuffer.PathBuffer) - \
+	 offsetof(DEE_REPARSE_DATA_BUFFER, LxSymlinkReparseBuffer))
+		if (buffer->ReparseDataLength <= OFFSETOF_PATHBUFFER)
 			goto bad_link_type;
-		result = DeeString_NewUtf8((char const *)(buffer->GenericReparseBuffer.DataBuffer + 4),
-		                           (buffer->ReparseDataLength - 4),
+		result = DeeString_NewUtf8(buffer->LxSymlinkReparseBuffer.PathBuffer,
+		                           buffer->ReparseDataLength - OFFSETOF_PATHBUFFER,
 		                           STRING_ERROR_FIGNORE);
-		Dee_Free(buffer);
-		return result;
+		goto free_buffer_and_return_result;
+#undef OFFSETOF_PATHBUFFER
 	}	break;
 
 	default:
@@ -2316,8 +2391,7 @@ bad_link_type:
 		DeeError_Throwf(&DeeError_UnsupportedAPI,
 		                "Unsupported link type %lu in file %r",
 		                (unsigned long)buffer->ReparseTag, path);
-		Dee_Free(buffer);
-		goto err;
+		goto err_buffer;
 	}
 	/* Get rid of that annoying '\??\' prefix */
 	if (linkstr_begin + 4 <= linkstr_end &&
@@ -2329,7 +2403,13 @@ bad_link_type:
 	                           (size_t)(linkstr_end - linkstr_begin),
 	                           Dee_STRING_ERROR_FREPLAC);
 	/* Free our buffer. */
+free_buffer_and_return_result:
 	Dee_Free(buffer);
+	if (owns_linkfd) {
+		DBG_ALIGNMENT_DISABLE();
+		CloseHandle(hLink);
+		DBG_ALIGNMENT_ENABLE();
+	}
 	return result;
 err_nt_createfile:
 	DBG_ALIGNMENT_DISABLE();
@@ -2342,6 +2422,19 @@ err_nt_createfile:
 #define WANT_NT_ERRPATHNOTDIR 1
 		nt_ErrPathNotDir((DWORD)error, path);
 	} else if (DeeNTSystem_IsAccessDeniedError((DWORD)error)) {
+		/* Try to open the file one more time, only this
+		 * time _only_ pass the READ_ATTRIBUTES capability. */
+		hLink = DeeNTSystem_CreateFile(path,
+		                               FILE_READ_ATTRIBUTES,
+		                               FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		                               NULL,
+		                               OPEN_EXISTING,
+		                               FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT,
+		                               NULL);
+		if unlikely(!hLink)
+			goto err;
+		if unlikely(hLink != INVALID_HANDLE_VALUE)
+			goto ok_got_ownds_linkfd;
 #define WANT_NT_ERRPATHNOACCESS 1
 		nt_ErrPathNoAccess((DWORD)error, path);
 	} else if (DeeNTSystem_IsFileNotFoundError((DWORD)error)) {
