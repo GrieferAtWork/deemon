@@ -2312,21 +2312,26 @@ ok_got_ownds_linkfd:
 						BYTE b0, b1;
 						b0 = ((BYTE *)symlink_text)[0];
 						b1 = ((BYTE *)symlink_text)[1];
-						if (b0 == 0xff && b1 == 0xfe) {
+						if ((b0 == 0xff && b1 == 0xfe) || (b0 == 0xfe && b1 == 0xff)) {
 							/* Text is encoded as a little-endian wide-string */
-							result = DeeString_NewWideLe((Dee_wchar_t const *)(symlink_text + 2),
-							                             (symlink_size - 2) / 2,
-							                             STRING_ERROR_FIGNORE);
-						} else if (b0 == 0xfe && b1 == 0xff) {
-							/* Text is encoded as a big-endian wide-string */
-							result = DeeString_NewWideBe((Dee_wchar_t const *)(symlink_text + 2),
-							                             (symlink_size - 2) / 2,
-							                             STRING_ERROR_FIGNORE);
+							Dee_wchar_t const *wcs_start;
+							size_t wcs_length;
+							wcs_start  = (Dee_wchar_t const *)(symlink_text + 2);
+							wcs_length = (symlink_size - 2) / 2;
+							/* Trim trailing NUL-characters */
+							while (wcs_length && !wcs_start[wcs_length - 1])
+								--wcs_length;
+							result = b0 == 0xff
+							         ? DeeString_NewWideLe(wcs_start, wcs_length, STRING_ERROR_FIGNORE)
+							         : DeeString_NewWideBe(wcs_start, wcs_length, STRING_ERROR_FIGNORE);
 						} else {
 							goto cygwin_symlink_utf8;
 						}
 					} else {
 cygwin_symlink_utf8:
+						/* Trim trailing NUL-characters */
+						while (symlink_size && !symlink_text[symlink_size - 1])
+							--symlink_size;
 						/* Text is encoded as a utf-8 string */
 						result = DeeString_NewUtf8(symlink_text,
 						                           symlink_size,
