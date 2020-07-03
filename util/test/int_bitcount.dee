@@ -1,0 +1,80 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2020 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+@@Return the number of needed bits to represent @i
+@@This is the (slow) verification function for @int.bitcount
+function countIntBits(i: int, signed: bool): int {
+	local result = 1;
+	if (i < 0) {
+		if (!signed)
+			throw Error("Negative integer, but no sign allowed");
+		do {
+			++result;
+			i >>= 1;
+		} while (i != -1);
+	} else if (!i) {
+		/* Already correct */
+	} else {
+		if (!signed)
+			result = 0;
+		do {
+			++result;
+			i >>= 1;
+		} while (i);
+	}
+	return result;
+}
+
+function testBitCount(intval: int) {
+	assert intval.bitcount(true) == countIntBits(intval, true),
+		"intval:" + repr(intval);
+	if (intval >= 0) {
+		assert intval.bitcount(false) == countIntBits(intval, false),
+			"intval:" + repr(intval);
+	}
+}
+
+
+assert (0).bitcount(true)  == 1;
+assert (0).bitcount(false) == 1;
+assert (1).bitcount(false) == 1;
+assert (1).bitcount(true)  == 2;
+assert (-1).bitcount(true) == 2;
+
+/* Go over a number of different integer limit locations
+ * to verify that integer bit counting functions properly. */
+for (local i: [:128]) {
+	local limit = (1 << i) - 1;
+	for (local a: [-limit - 2: -limit + 3])
+		testBitCount(a);
+	for (local a: [limit - 2: limit + 3])
+		testBitCount(a);
+}
+
+/* Also make sure that the exception is thrown when trying
+ * to count the unsigned bits of a negative integer. */
+assert try ({ (-1).bitcount(false); false; }) catch (...) true;
+
+
+
+

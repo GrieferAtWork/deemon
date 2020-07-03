@@ -232,7 +232,7 @@ struct Dee_ddi_regs {
 #if (__SIZEOF_POINTER__ - (14 % __SIZEOF_POINTER__)) != 0
 	uint16_t            _dr_pad[(__SIZEOF_POINTER__ - (14 % __SIZEOF_POINTER__))/2]; /* ... */
 #endif
-	int                  dr_col;    /* The current column number within the active line. */
+	int                  dr_col;    /* The current column number within the active line (0-based). */
 	int                  dr_lno;    /* Line number (0-based). */
 };
 

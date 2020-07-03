@@ -611,18 +611,18 @@ PRIVATE struct type_getset frame_getsets[] = {
 	{ "line",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getline, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "The line number within this Frame's source file, or ?N when indeterminate") },
+	      "The 0-based line number within this Frame's source file, or ?N when indeterminate") },
 	{ "col",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcol, NULL, NULL,
 	  DOC("->?X2?Dint?N\n"
-	      "The column offset within this Frame's source file, or ?N when indeterminate") },
+	      "The 0-based column offset within this Frame's source file, or ?N when indeterminate") },
 	{ "name",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getname, NULL, NULL,
 	  DOC("->?X2?Dstring?N\n"
 	      "The name of this Frame's function, or ?N when indeterminate") },
 	{ "func",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getfunc, NULL, NULL,
-	  DOC("->?X2?Dfunction?N\n"
+	  DOC("->?X2?DFunction?N\n"
 	      "Returns the function that is referenced by @this Frame, or ?N if not available") },
 	{ "__code__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&frame_getcode, NULL, NULL,
@@ -669,7 +669,7 @@ PRIVATE struct type_getset frame_getsets[] = {
 	 *                    names, as well as adding special cases for `this' and `return',
 	 *                    provide access to symbols visible within user-code via their
 	 *                    individual names.
-	 *                    Resolution name order here is:
+	 *                    Resolution name order here is (from most->least visible):
 	 *                    LOCALS/STACK (DDI) -> ARGUMENTS -> STATIC/CONST -> REF -> `return' + `this'
 	 */
 	{ NULL }
