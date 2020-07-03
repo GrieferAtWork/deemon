@@ -1,0 +1,47 @@
+
+import * from deemon;
+
+function convert(kind: string, what: int): int {
+	if (kind == "fgColor") {
+		if (!what)
+			return 0xffffff;
+		if (what == 0xffffff)
+			return 0;
+		return
+			(((what & 0xff) / 2) & 0xff) |
+			(((what & 0xff00) / 2) & 0xff00) |
+			(((what & 0xff0000) / 2) & 0xff0000);
+	}
+	return ~what;
+}
+
+local repl: {string: string} = {
+	"name=\"deemon\" ext=\"dee sources\"" : "name=\"deemon (light)\" ext=\".deel\""
+};
+
+for (local l: File.stdin) {
+	for (local a, b: repl) {
+		local newl = l.replace(a, b);
+		if (l != newl) {
+			l = newl;
+			goto dop;
+		}
+	}
+	for (local x: { 'fgColor="', 'bgColor="' }) {
+		for (local i: l.findall(x)) {
+			local a = i + #x;
+			local e = l.find('"', a);
+			if (e < 0)
+				continue;
+			local value = l[a:e];
+			value = try
+				(convert(x.partition("=")[0], int(value, 16)) & 0xffffff)
+					.hex()[2:].zfill(6).upper()
+			catch (...) value;
+			l = l[:a] + value + l[e:];
+		}
+	}
+dop:
+	print l,;
+}
+
