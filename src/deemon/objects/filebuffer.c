@@ -31,7 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* atexit() */
+#include <deemon/system-features.h> /* atexit(), memcpy(), ... */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

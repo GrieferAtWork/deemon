@@ -55,8 +55,9 @@ JITObjectTable_Copy(JITObjectTable *__restrict dst,
 	if (old_table == jit_empty_object_list) {
 		dst->ot_list = jit_empty_object_list;
 	} else {
-		size_t size = (dst->ot_mask + 1) * sizeof(struct jit_object_entry);
-		new_table   = (struct jit_object_entry *)Dee_Calloc(size);
+		size_t size;
+		size      = (dst->ot_mask + 1) * sizeof(struct jit_object_entry);
+		new_table = (struct jit_object_entry *)Dee_Calloc(size);
 		if unlikely(!new_table)
 			return -1;
 		dst->ot_list = new_table;

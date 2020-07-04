@@ -129,8 +129,9 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
 		{
 			char temp[512];
 			while (bufsize) {
-				size_t part = MIN(bufsize, sizeof(temp) - sizeof(char));
-				memcpy(temp, buffer, part);
+				size_t part;
+				part = MIN(bufsize, sizeof(temp) - sizeof(char));
+				memcpyc(temp, buffer, part, sizeof(char));
 				temp[part] = '\0';
 				DBG_ALIGNMENT_DISABLE();
 				OutputDebugStringA(temp);

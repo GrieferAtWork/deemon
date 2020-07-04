@@ -30,7 +30,7 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* strlen(), bzero(), ... */
+#include <deemon/system-features.h> /* strlen(), bzero(), memcpy(), ... */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>

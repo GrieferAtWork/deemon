@@ -33,6 +33,7 @@
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h> /* memcpy() */
 
 DECL_BEGIN
 

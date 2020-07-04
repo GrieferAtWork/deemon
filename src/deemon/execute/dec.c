@@ -868,8 +868,8 @@ DecFile_IsUpToDate(DecFile *__restrict self) {
 			filename = DeeString_NewBuffer(module_pathlen + name_len);
 			if unlikely(!filename)
 				goto err;
-			memcpy(DeeString_STR(filename), module_pathstr, module_pathlen * sizeof(char));
-			memcpy(DeeString_STR(filename) + module_pathlen, filename, name_len * sizeof(char));
+			memcpyc(DeeString_STR(filename), module_pathstr, module_pathlen, sizeof(char));
+			memcpyc(DeeString_STR(filename) + module_pathlen, filename, name_len, sizeof(char));
 			other = DecTime_Lookup(filename);
 			Dee_Decref(filename);
 			if unlikely(other == (uint64_t)-1)
@@ -2480,7 +2480,10 @@ err_kwds_i:
 #else
 	result->co_codebytes = header.co_textsiz;
 #endif
-	memcpy(result->co_code, self->df_base + header.co_textoff, header.co_textsiz);
+	memcpyc(result->co_code,
+	        self->df_base + header.co_textoff,
+	        header.co_textsiz,
+	        sizeof(instruction_t));
 #ifndef CONFIG_NO_THREADS
 	rwlock_init(&result->co_static_lock);
 #endif

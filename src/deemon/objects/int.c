@@ -1087,7 +1087,10 @@ handle_backslash_in_text:
 					Dee_DecrefDokill(result);
 					return NULL;
 				}
-				memcpy(tmp->ob_digit, result->ob_digit, size_z * sizeof(digit));
+				memcpyc(tmp->ob_digit,
+				        result->ob_digit,
+				        size_z,
+				        sizeof(digit));
 				Dee_DecrefDokill(result);
 				result                   = tmp;
 				result->ob_digit[size_z] = (digit)c;
@@ -3280,7 +3283,10 @@ int_forcecopy(DeeIntObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	result->ob_size = self->ob_size; /* Also copy the sign */
-	memcpy(result->ob_digit, self->ob_digit, int_size * sizeof(digit));
+	memcpyc(result->ob_digit,
+	        self->ob_digit,
+	        int_size,
+	        sizeof(digit));
 	return result;
 err:
 	return NULL;

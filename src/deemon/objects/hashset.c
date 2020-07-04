@@ -37,6 +37,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
@@ -189,8 +190,9 @@ set_init_sequence(Set *__restrict self,
 			                                                 sizeof(struct hashset_item));
 			if unlikely(!self->s_elem)
 				goto err;
-			memcpy(self->s_elem, src->rs_elem,
-			       (self->s_mask + 1) * sizeof(struct hashset_item));
+			memcpyc(self->s_elem, src->rs_elem,
+			        self->s_mask + 1,
+			        sizeof(struct hashset_item));
 			end = (iter = self->s_elem) + (self->s_mask + 1);
 			for (; iter != end; ++iter)
 				Dee_XIncref(iter->si_key);
@@ -275,10 +277,11 @@ again:
 			DeeHashSet_LockEndRead(other);
 			if (Dee_CollectMemory((other->s_mask + 1) * sizeof(struct hashset_item)))
 				goto again;
-			return -1;
+			goto err;
 		}
-		memcpy(self->s_elem, other->s_elem,
-		       (self->s_mask + 1) * sizeof(struct hashset_item));
+		memcpyc(self->s_elem, other->s_elem,
+		        self->s_mask + 1,
+		        sizeof(struct hashset_item));
 		end = (iter = self->s_elem) + (self->s_mask + 1);
 		for (; iter != end; ++iter) {
 			if (!iter->si_key)
@@ -289,6 +292,8 @@ again:
 	DeeHashSet_LockEndRead(other);
 	weakref_support_init(self);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -829,7 +834,7 @@ again:
 		result->s_data = NULL;
 		result->s_hash = hash;
 		result->s_len  = search_item_length;
-		memcpy(result->s_str, search_item, search_item_length * sizeof(char));
+		memcpyc(result->s_str, search_item, search_item_length, sizeof(char));
 		result->s_str[search_item_length] = '\0';
 	}
 #ifndef CONFIG_NO_THREADS
@@ -924,7 +929,7 @@ again:
 		new_item->s_data = NULL;
 		new_item->s_hash = hash;
 		new_item->s_len  = search_item_length;
-		memcpy(new_item->s_str, search_item, search_item_length * sizeof(char));
+		memcpyc(new_item->s_str, search_item, search_item_length, sizeof(char));
 		new_item->s_str[search_item_length] = '\0';
 	}
 #ifndef CONFIG_NO_THREADS

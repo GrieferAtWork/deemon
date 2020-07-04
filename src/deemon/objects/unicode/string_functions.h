@@ -740,7 +740,7 @@ LOCAL bool DCALL dee_asciicaseeq(char const *a, char const *b, size_t length) {
 					cost = temp;                                 \
 				v1[j + 1] = cost;                                \
 			}                                                    \
-			memcpy(v0, v1, blen * sizeof(size_t));               \
+			memcpyc(v0, v1, blen, sizeof(size_t));               \
 		}                                                        \
 		temp = v1[blen];                                         \
 		Dee_AFree(v0);                                           \
@@ -796,7 +796,7 @@ DEFINE_FUZZY_COMPARE_FUNCTION(fuzzy_asciicasecompareb, uint8_t, (uint8_t)tolower
 				v1[j + 1] = cost;                                                \
 			}                                                                    \
 			ASSERT(unicode_foldreader_empty(b_reader));                          \
-			memcpy(v0, v1, folded_blen * sizeof(size_t));                        \
+			memcpyc(v0, v1, folded_blen, sizeof(size_t));                        \
 		}                                                                        \
 		ASSERT(unicode_foldreader_empty(a_reader));                              \
 		temp = v1[folded_blen];                                                  \

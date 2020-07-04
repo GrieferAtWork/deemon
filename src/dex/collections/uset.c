@@ -25,13 +25,13 @@
 #include "libcollections.h"
 /**/
 
-#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
 #include <deemon/dict.h>
 #include <deemon/gc.h>
+#include <deemon/hashset.h>
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -39,6 +39,7 @@
 #include <deemon/roset.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
@@ -808,8 +809,9 @@ again:
 				goto again;
 			return -1;
 		}
-		memcpy(self->s_elem, other->s_elem,
-		       (self->s_mask + 1) * sizeof(struct uset_item));
+		memcpyc(self->s_elem, other->s_elem,
+		        self->s_mask + 1,
+		        sizeof(struct uset_item));
 		end = (iter = self->s_elem) + (self->s_mask + 1);
 		for (; iter != end; ++iter) {
 			if (!iter->si_key)

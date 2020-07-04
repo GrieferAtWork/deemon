@@ -31,7 +31,7 @@
 #include <deemon/exec.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* strend() */
+#include <deemon/system-features.h> /* strend(), memcpyc(), ... */
 #include <deemon/tuple.h>
 
 #include "_res.h"
@@ -85,7 +85,7 @@ DeeString_TryNewSized(char const *__restrict str, size_t len) {
 	result->s_data = NULL;
 	result->s_hash = (dhash_t)-1;
 	result->s_len  = len;
-	memcpy(result->s_str, str, len * sizeof(char));
+	memcpyc(result->s_str, str, len, sizeof(char));
 	result->s_str[len] = '\0';
 done:
 	return (DREF DeeObject *)result;
@@ -391,7 +391,7 @@ again:
 		goto again;
 	}
 	/* Copy the environment variable string. */
-	memcpy(buf, envval, envlen * sizeof(char));
+	memcpyc(buf, envval, envlen, sizeof(char));
 	rwlock_endread(&env_lock);
 	error = unicode_printer_confirm_utf8(printer, buf, envlen);
 	if unlikely(error < 0)

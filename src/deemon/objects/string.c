@@ -184,7 +184,8 @@ alloc_again:
 		}
 		me->ap_string = string;
 		string->s_len = alloc_size;
-		memcpy(string->s_str, data, datalen * sizeof(char));
+		memcpyc(string->s_str, data,
+		        datalen, sizeof(char));
 		me->ap_length = datalen;
 		goto done;
 	}
@@ -214,8 +215,8 @@ realloc_again:
 	}
 	/* Copy text into the dynamic string. */
 	/*DEE_DPRINTF("PRINT: %IX - `%.*s'\n",datalen,(int)datalen,data);*/
-	memcpy(string->s_str + me->ap_length,
-	       data, datalen * sizeof(char));
+	memcpyc(string->s_str + me->ap_length,
+	        data, datalen, sizeof(char));
 	me->ap_length += datalen;
 done:
 	return (dssize_t)datalen;
@@ -383,8 +384,10 @@ DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t lengt
 		break;
 	}
 	result = DeeString_NewBuffer(length);
-	if (result)
-		memcpy(DeeString_STR(result), str, length * sizeof(char));
+	if (result) {
+		memcpyc(DeeString_STR(result), str,
+		        length, sizeof(char));
+	}
 	return result;
 }
 

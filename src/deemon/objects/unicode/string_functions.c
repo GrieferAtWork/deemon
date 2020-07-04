@@ -11705,10 +11705,12 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 					goto err;
 				result->s_len = total_length;
 				/* Copy characters into the resulting string. */
-				memcpy(result->s_str, self->s_str, self->s_len * sizeof(char));
-				memcpy(result->s_str + self->s_len,
-				       DeeString_STR(other),
-				       DeeString_SIZE(other) * sizeof(char));
+				memcpyc(result->s_str, self->s_str,
+				        self->s_len, sizeof(char));
+				memcpyc(result->s_str + self->s_len,
+				        DeeString_STR(other),
+				        DeeString_SIZE(other),
+				        sizeof(char));
 				/* finalize the resulting string. */
 				result->s_str[total_length] = '\0';
 				result->s_hash              = DEE_STRING_HASH_UNSET;
@@ -11815,10 +11817,12 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			}
 			result->s_len = total_length;
 			/* Copy characters into the resulting string. */
-			memcpy(result->s_str, self->s_str, self->s_len * sizeof(char));
-			memcpy(result->s_str + self->s_len,
-			       DeeString_STR(other),
-			       DeeString_SIZE(other) * sizeof(char));
+			memcpyc(result->s_str, self->s_str,
+			        self->s_len, sizeof(char));
+			memcpyc(result->s_str + self->s_len,
+			        DeeString_STR(other),
+			        DeeString_SIZE(other),
+			        sizeof(char));
 			/* finalize the resulting string. */
 			result->s_str[total_length] = '\0';
 			result->s_hash              = DEE_STRING_HASH_UNSET;

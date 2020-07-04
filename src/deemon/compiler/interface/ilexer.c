@@ -38,6 +38,7 @@
 #include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
 
 #include "../../runtime/runtime_error.h"
@@ -2625,7 +2626,7 @@ lexer_syspaths_insert(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	copy = (char *)Dee_Malloc(WSTR_LENGTH(path) * sizeof(char));
 	if unlikely(!copy)
 		goto err;
-	memcpy(copy, path, WSTR_LENGTH(path) * sizeof(char));
+	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));
 	COMPILER_BEGIN(self->cw_compiler);
 	result = TPPLexer_AddIncludePath(copy, WSTR_LENGTH(path));
 	COMPILER_END();
@@ -2649,7 +2650,7 @@ lexer_syspaths_remove(DeeCompilerWrapperObject *self, size_t argc, DeeObject *co
 	copy = (char *)Dee_Malloc(WSTR_LENGTH(path) * sizeof(char));
 	if unlikely(!copy)
 		goto err;
-	memcpy(copy, path, WSTR_LENGTH(path) * sizeof(char));
+	memcpyc(copy, path, WSTR_LENGTH(path), sizeof(char));
 	COMPILER_BEGIN(self->cw_compiler);
 	result = TPPLexer_DelIncludePath(copy, WSTR_LENGTH(path));
 	COMPILER_END();

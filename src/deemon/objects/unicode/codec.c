@@ -29,6 +29,7 @@
 #include <deemon/format.h>
 #include <deemon/module.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
@@ -55,7 +56,10 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			result = DeeString_NewBuffer(length);
 			if unlikely(!result)
 				goto err;
-			memcpy(DeeString_STR(result), str, (size_t)(iter - str) * sizeof(char));
+			memcpyc(DeeString_STR(result),
+			        str,
+			        (size_t)(iter - str),
+			        sizeof(char));
 			dst = DeeString_STR(result) + (size_t)(iter - str);
 			for (; iter < end; ++iter) {
 				if (*iter == '_')
@@ -92,7 +96,10 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			goto err;
 		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE_INT16('i', 's'));
 		DeeString_STR(result)[3] = 'o';
-		memcpy(DeeString_STR(result) + 3, str + 4, (length - 4) * sizeof(char));
+		memcpyc(DeeString_STR(result) + 3,
+		        str + 4,
+		        length - 4,
+		        sizeof(char));
 		return result;
 	}
 	if (length >= 3 &&
@@ -101,7 +108,10 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 		if unlikely(!result)
 			goto err;
 		UNALIGNED_SET16((uint16_t *)DeeString_STR(result), ENCODE_INT16('c', 'p'));
-		memcpy(DeeString_STR(result) + 2, str + 3, (length - 3) * sizeof(char));
+		memcpyc(DeeString_STR(result) + 2,
+		        str + 3,
+		        length - 3,
+		        sizeof(char));
 		return result;
 	}
 	return_reference_(name);

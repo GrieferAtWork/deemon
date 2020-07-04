@@ -31,7 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memcpy() */
+#include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>

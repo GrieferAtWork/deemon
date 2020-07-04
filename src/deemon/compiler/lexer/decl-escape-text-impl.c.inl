@@ -19,9 +19,8 @@
  */
 #ifdef __INTELLISENSE__
 #include "decl.c"
-#define N   8
-#endif
-
+#define N 8
+#endif /* __INTELLISENSE__ */
 
 /* Print the given `text' as encoded documentation text.
  *  - Escape any line-feed immediately following after another

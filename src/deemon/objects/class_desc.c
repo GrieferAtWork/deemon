@@ -40,6 +40,7 @@
 #include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h> /* memcpy() */
 
 #include <hybrid/atomic.h>
 

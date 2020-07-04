@@ -19,7 +19,7 @@
  */
 #ifdef __INTELLISENSE__
 #include "parser-impl.c.inl"
-#endif
+#endif /* __INTELLISENSE__ */
 
 #include <deemon/util/objectlist.h>
 

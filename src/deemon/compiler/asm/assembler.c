@@ -36,7 +36,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -227,7 +227,9 @@ ddi_newfile(char const *__restrict filename,
 		Dee_Free(result);
 		goto err;
 	}
-	memcpy(result->f_name, filename, (filename_length + 1) * sizeof(char));
+	memcpyc(result->f_name, filename,
+	        filename_length + 1,
+	        sizeof(char));
 	result->f_namesize         = filename_length;
 	result->f_namehash         = TPP_Hashof(result->f_name, result->f_namesize);
 	result->f_text             = TPPString_NewEmpty();
@@ -1081,14 +1083,15 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 		                            current_assembler.a_sect[i].sec_begin);
 		size_t j, count;
 		struct asm_rel *dst;
-		memcpy(sc_main.sec_iter, current_assembler.a_sect[i].sec_begin,
-		       sect_size * sizeof(instruction_t));
+		memcpyc(sc_main.sec_iter,
+		        current_assembler.a_sect[i].sec_begin,
+		        sect_size, sizeof(instruction_t));
 		sc_main.sec_iter += sect_size;
 		/* Also copy relocations. */
 		dst   = sc_main.sec_relv + sc_main.sec_relc;
 		count = current_assembler.a_sect[i].sec_relc;
-		memcpy(dst, current_assembler.a_sect[i].sec_relv,
-		       count * sizeof(struct asm_rel));
+		memcpyc(dst, current_assembler.a_sect[i].sec_relv,
+		        count, sizeof(struct asm_rel));
 		/* Adjust relocation offsets. */
 		for (j = 0; j < count; ++j)
 			dst[j].ar_addr += code_offsets[i];

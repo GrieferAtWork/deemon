@@ -26,7 +26,7 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>
-#include <deemon/system-features.h> /* bzero() */
+#include <deemon/system-features.h> /* bzero(), memcpyc(), ... */
 
 #include "../../runtime/strings.h"
 
@@ -321,7 +321,7 @@ alloc_again:
 		}
 		self->sp_string = string;
 		string->s_size  = alloc_size;
-		memcpy(string->s_text, buf, bufsize * sizeof(char));
+		memcpyc(string->s_text, buf, bufsize, sizeof(char));
 		self->sp_length = bufsize;
 		goto done;
 	}
@@ -349,8 +349,8 @@ realloc_again:
 		string->s_size  = alloc_size;
 	}
 	/* Copy text into the dynamic string. */
-	memcpy(string->s_text + self->sp_length,
-	       buf, bufsize * sizeof(char));
+	memcpyc(string->s_text + self->sp_length,
+	        buf, bufsize, sizeof(char));
 	self->sp_length += bufsize;
 done:
 	return 0;

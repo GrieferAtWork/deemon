@@ -348,9 +348,9 @@ set_utf8_and_return_1byte:
 		*(size_t *)result = result_length;
 		result += sizeof(size_t);
 		/* Copy leading ASCII-only data. */
-		memcpy(result, DeeString_STR(self),
-		       (size_t)(iter - (uint8_t *)DeeString_STR(self)) *
-		       sizeof(uint8_t));
+		memcpyc(result, DeeString_STR(self),
+		        (size_t)(iter - (uint8_t *)DeeString_STR(self)),
+		        sizeof(uint8_t));
 		dst = result + (size_t)(iter - (uint8_t *)DeeString_STR(self));
 		for (; iter < end; ++iter) {
 			ch = *iter;
@@ -436,9 +436,9 @@ set_utf8_and_return_1byte:
 		*(size_t *)result = result_length;
 		result += sizeof(size_t);
 		/* Copy leading ASCII-only data. */
-		memcpy(result, DeeString_STR(self),
-		       (size_t)(iter - (uint8_t *)DeeString_STR(self)) *
-		       sizeof(uint8_t));
+		memcpyc(result, DeeString_STR(self),
+		        (size_t)(iter - (uint8_t *)DeeString_STR(self)),
+		        sizeof(uint8_t));
 		dst = result + (size_t)(iter - (uint8_t *)DeeString_STR(self));
 		for (; iter < end; ++iter) {
 			ch = *iter;
@@ -2272,7 +2272,7 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 	                                         (length + 1) * sizeof(char));
 	if unlikely(!result)
 		goto err;
-	memcpy(result->s_str, str, length * sizeof(char));
+	memcpyc(result->s_str, str, length, sizeof(char));
 	/* Search for multi-byte character sequences. */
 	end = (iter = (uint8_t *)result->s_str) + length;
 	while (iter < end) {
@@ -5172,7 +5172,8 @@ Dee_unicode_printer_confirm_utf8(struct unicode_printer *__restrict self,
 			if (utf8_length > count) {
 				/* Incomplete, trailing UTF-8 sequence */
 				self->up_flags |= (uint8_t)count << UNICODE_PRINTER_FPENDING_SHFT;
-				memcpy(self->up_pend, iter - 1, count * sizeof(uint8_t));
+				memcpyc(self->up_pend, iter - 1,
+				        count, sizeof(uint8_t));
 				confirm_length -= count;
 				break;
 			}
@@ -5213,7 +5214,10 @@ Dee_unicode_printer_confirm_utf8(struct unicode_printer *__restrict self,
 						if (i + utf8_length > utf8_convlength) {
 							/* Incomplete UTF-8 sequence. */
 							uint8_t pendsz = (uint8_t)(utf8_convlength - i);
-							memcpy(self->up_pend, &utf8_start[i], pendsz);
+							memcpyc(self->up_pend,
+							        &utf8_start[i],
+							        pendsz,
+							        sizeof(unsigned char));
 							self->up_flags |= pendsz << UNICODE_PRINTER_FPENDING_SHFT;
 							utf8_convlength = i;
 							break;

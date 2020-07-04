@@ -353,7 +353,8 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 	unsigned int i;
 	size_t sizes[Dee_SLAB_COUNT];
 	char *config;
-	memcpy(sizes, default_slab_sizes, sizeof(default_slab_sizes));
+	memcpy(sizes, default_slab_sizes,
+	       sizeof(default_slab_sizes));
 	config = getenv("DEEMON_SLABS");
 	if (config && *config) {
 		/* Load slab sizes from the configuration string, which is

@@ -1229,8 +1229,8 @@ code_copy(DeeCodeObject *__restrict self) {
 			                                                          sizeof(DREF DeeStringObject *));
 			if unlikely(!result->co_keywords)
 				goto err_r;
-			memcpy((void *)result->co_keywords, self->co_keywords,
-			       result->co_argc_max * sizeof(DREF DeeStringObject *));
+			memcpyc((void *)result->co_keywords, self->co_keywords,
+			        result->co_argc_max, sizeof(DREF DeeStringObject *));
 			for (i = 0; i < result->co_argc_max; ++i)
 				Dee_Incref(result->co_keywords[i]);
 		}
@@ -1243,8 +1243,8 @@ code_copy(DeeCodeObject *__restrict self) {
 		result->co_defaultv = (DREF DeeObject **)Dee_Malloc(n * sizeof(DREF DeeObject *));
 		if unlikely(!result->co_defaultv)
 			goto err_r_keywords;
-		memcpy((void *)result->co_defaultv, self->co_defaultv,
-		       n * sizeof(DREF DeeObject *));
+		memcpyc((void *)result->co_defaultv, self->co_defaultv,
+		        n, sizeof(DREF DeeObject *));
 		for (i = 0; i < n; ++i)
 			Dee_XIncref(result->co_defaultv[i]);
 	}
@@ -1256,8 +1256,8 @@ code_copy(DeeCodeObject *__restrict self) {
 		if unlikely(!result->co_staticv)
 			goto err_r_default;
 		rwlock_read(&self->co_static_lock);
-		memcpy((void *)result->co_staticv, self->co_staticv,
-		       result->co_staticc * sizeof(DREF DeeObject *));
+		memcpyc((void *)result->co_staticv, self->co_staticv,
+		        result->co_staticc, sizeof(DREF DeeObject *));
 		for (i = 0; i < result->co_staticc; ++i)
 			Dee_Incref(result->co_staticv[i]);
 		rwlock_endread(&self->co_static_lock);
@@ -1269,9 +1269,10 @@ code_copy(DeeCodeObject *__restrict self) {
 		                                                         sizeof(struct except_handler));
 		if unlikely(!result->co_exceptv)
 			goto err_r_static;
-		memcpy(result->co_exceptv, self->co_exceptv,
-		       result->co_exceptc *
-		       sizeof(struct except_handler));
+		memcpyc(result->co_exceptv,
+		        self->co_exceptv,
+		        result->co_exceptc,
+		        sizeof(struct except_handler));
 		for (i = 0; i < result->co_exceptc; ++i)
 			Dee_XIncref(result->co_exceptv[i].eh_mask);
 	}
@@ -1522,7 +1523,10 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err_buf;
 	/* Copy text bytes. */
 	result->co_codebytes = (code_size_t)text_buf.bb_size;
-	memcpy(result->co_code, text_buf.bb_base, text_buf.bb_size);
+	memcpyc(result->co_code,
+	        text_buf.bb_base,
+	        text_buf.bb_size,
+	        sizeof(instruction_t));
 #if ASM_RET_NONE == 0
 	bzero(result->co_code + text_buf.bb_size, INSTRLEN_MAX);
 #else /* ASM_RET_NONE == 0 */

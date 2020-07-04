@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/thread.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/unaligned.h>
@@ -109,8 +110,9 @@ jy_iter(JITYieldFunction *__restrict self) {
 	                                                               sizeof(struct jit_object_entry));
 	if unlikely(!result->ji_loc.ot_list)
 		goto err_r;
-	memcpy(result->ji_loc.ot_list, jf->jf_args.ot_list,
-	       (result->ji_loc.ot_mask + 1) * sizeof(struct jit_object_entry));
+	memcpyc(result->ji_loc.ot_list, jf->jf_args.ot_list,
+	        result->ji_loc.ot_mask + 1,
+	        sizeof(struct jit_object_entry));
 
 	/* Define the self-argument.
 	 * NOTE: Do this before loading arguments, in case one of the arguments

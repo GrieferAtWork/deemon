@@ -31,6 +31,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
+#include <deemon/system-features.h> /* memcpy() */
 #include <deemon/util/objectlist.h>
 
 #include <hybrid/unaligned.h>
@@ -534,7 +535,8 @@ JITLValueList_Append(JITLValueList *__restrict self,
 		self->ll_alloc = new_alloc;
 	}
 	/* Inherit all of the given data. */
-	memcpy(&self->ll_list[self->ll_size], value, sizeof(JITLValue));
+	memcpy(&self->ll_list[self->ll_size],
+	       value, sizeof(JITLValue));
 	++self->ll_size;
 	return 0;
 err:

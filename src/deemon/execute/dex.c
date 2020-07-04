@@ -32,7 +32,7 @@
 #include <deemon/file.h>
 #include <deemon/gc.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LOADLIBRARY */
+#include <deemon/system-features.h> /* DeeSystem_DlOpen_USE_LOADLIBRARY, memcpyc(), ... */
 #include <deemon/system.h>          /* DeeSystem_Dl* */
 #include <deemon/tuple.h>
 
@@ -269,7 +269,9 @@ DeeModule_GetNativeSymbol(DeeObject *__restrict self,
 				              *     this low, that's the last or the user's problems. */
 			}
 #endif /* !Dee_AMallocNoFail */
-			memcpy(temp_name + 1, name, (namelen + 1) * sizeof(char));
+			memcpyc(temp_name + 1, name,
+			        namelen + 1,
+			        sizeof(char));
 			temp_name[0] = '_';
 			DBG_ALIGNMENT_DISABLE();
 			result = DeeSystem_DlSym(me->d_handle, temp_name);

@@ -25,6 +25,7 @@
 #include <deemon/asm.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/file.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -1388,8 +1389,8 @@ do_switch_after_prefix_opcode:
 					temp[0] = ASM_STATIC;
 do_optimize_popmov_8bit:
 					temp[1] = next_instruction[1];
-					memcpy(temp + 2, iter, next_instruction - iter);
-					memcpy(iter, temp, 2 + (next_instruction - iter));
+					memcpyc(temp + 2, iter, next_instruction - iter, sizeof(instruction_t));
+					memcpyc(iter, temp, 2 + (next_instruction - iter), sizeof(instruction_t));
 					SET_RESULTF(iter, "Construct mov-instruction from push+pop");
 					goto continue_at_iter;
 
@@ -1397,8 +1398,8 @@ do_optimize_popmov_8bit:
 					temp[0] = ASM_EXTERN;
 					temp[1] = next_instruction[1];
 					temp[2] = next_instruction[2];
-					memcpy(temp + 3, iter, next_instruction - iter);
-					memcpy(iter, temp, 3 + (next_instruction - iter));
+					memcpyc(temp + 3, iter, next_instruction - iter, sizeof(instruction_t));
+					memcpyc(iter, temp, 3 + (next_instruction - iter), sizeof(instruction_t));
 					SET_RESULTF(iter, "Construct mov-instruction from push+pop extern");
 					goto continue_at_iter;
 
@@ -1408,8 +1409,8 @@ do_optimize_popmov_8bit:
 					if (abs_sp <= UINT8_MAX) {
 						temp[0] = ASM_STACK;
 						temp[1] = (uint8_t)abs_sp;
-						memcpy(temp + 2, iter, next_instruction - iter);
-						memcpy(iter, temp, 2 + (next_instruction - iter));
+						memcpyc(temp + 2, iter, next_instruction - iter, sizeof(instruction_t));
+						memcpyc(iter, temp, 2 + (next_instruction - iter), sizeof(instruction_t));
 						SET_RESULTF(iter, "Construct mov-instruction from push+pop stack");
 						goto continue_at_iter;
 					}
@@ -1432,8 +1433,8 @@ do_optimize_popmov_16bit:
 						temp[0] = (ASM16_STATIC & 0xff00) >> 8;
 						temp[2] = next_instruction[1];
 						temp[3] = next_instruction[2];
-						memcpy(temp + 4, iter, next_instruction - iter);
-						memcpy(iter, temp, 4 + (next_instruction - iter));
+						memcpyc(temp + 4, iter, next_instruction - iter, sizeof(instruction_t));
+						memcpyc(iter, temp, 4 + (next_instruction - iter), sizeof(instruction_t));
 						SET_RESULTF(iter, "Construct 16-bit mov-instruction from push+pop");
 						goto continue_at_iter;
 
@@ -1444,8 +1445,8 @@ do_optimize_popmov_16bit:
 						temp[3] = next_instruction[3];
 						temp[4] = next_instruction[4];
 						temp[5] = next_instruction[5];
-						memcpy(temp + 6, iter, next_instruction - iter);
-						memcpy(iter, temp, 6 + (next_instruction - iter));
+						memcpyc(temp + 6, iter, next_instruction - iter, sizeof(instruction_t));
+						memcpyc(iter, temp, 6 + (next_instruction - iter), sizeof(instruction_t));
 						SET_RESULTF(iter, "Construct 16-bit mov-instruction from push+pop extern");
 						goto continue_at_iter;
 
@@ -1456,8 +1457,8 @@ do_optimize_popmov_16bit:
 						temp[1] = ASM16_STACK && 0xff;
 						temp[2] = abs_sp & 0xff;
 						temp[3] = (abs_sp & 0xff00) >> 8;
-						memcpy(temp + 4, iter, next_instruction - iter);
-						memcpy(iter, temp, 4 + (next_instruction - iter));
+						memcpyc(temp + 4, iter, next_instruction - iter, sizeof(instruction_t));
+						memcpyc(iter, temp, 4 + (next_instruction - iter), sizeof(instruction_t));
 						SET_RESULTF(iter, "Construct 16-bit mov-instruction from push+pop stack");
 						goto continue_at_iter;
 					}	break;
@@ -1577,8 +1578,8 @@ do_check_dup_into:
 						temp[0] = ASM_STATIC;
 do_optimize_dupmov_8bit:
 						temp[1] = next_instruction[1];
-						memcpy(temp + 2, iter, next_instruction - iter);
-						memcpy(iter, temp, 2 + (next_instruction - iter));
+						memcpyc(temp + 2, iter, next_instruction - iter, sizeof(instruction_t));
+						memcpyc(iter, temp, 2 + (next_instruction - iter), sizeof(instruction_t));
 						SET_RESULTF(iter, "Construct mov-instruction from dup+pop");
 						goto continue_at_iter;
 
@@ -1586,8 +1587,8 @@ do_optimize_dupmov_8bit:
 						temp[0] = ASM_EXTERN;
 						temp[1] = next_instruction[1];
 						temp[2] = next_instruction[2];
-						memcpy(temp + 3, iter, next_instruction - iter);
-						memcpy(iter, temp, 3 + (next_instruction - iter));
+						memcpyc(temp + 3, iter, next_instruction - iter, sizeof(instruction_t));
+						memcpyc(iter, temp, 3 + (next_instruction - iter), sizeof(instruction_t));
 						SET_RESULTF(iter, "Construct mov-instruction from dup+pop extern");
 						goto continue_at_iter;
 
@@ -1602,8 +1603,8 @@ do_optimize_dupmov_8bit:
 						} else if (abs_sp <= UINT8_MAX) {
 							temp[0] = ASM_STACK;
 							temp[1] = (uint8_t)abs_sp;
-							memcpy(temp + 2, iter, next_instruction - iter);
-							memcpy(iter, temp, 2 + (next_instruction - iter));
+							memcpyc(temp + 2, iter, next_instruction - iter, sizeof(instruction_t));
+							memcpyc(iter, temp, 2 + (next_instruction - iter), sizeof(instruction_t));
 							SET_RESULTF(iter, "Construct mov-instruction from dup+pop stack");
 							goto continue_at_iter;
 						}
@@ -1624,8 +1625,8 @@ do_optimize_dupmov_16bit:
 							temp[0] = (ASM16_STATIC & 0xff00) >> 8;
 							temp[2] = next_instruction[2];
 							temp[3] = next_instruction[3];
-							memcpy(temp + 4, iter, next_instruction - iter);
-							memcpy(iter, temp, 4 + (next_instruction - iter));
+							memcpyc(temp + 4, iter, next_instruction - iter, sizeof(instruction_t));
+							memcpyc(iter, temp, 4 + (next_instruction - iter), sizeof(instruction_t));
 							SET_RESULTF(iter, "Construct 16-bit mov-instruction from dup+pop");
 							goto continue_at_iter;
 
@@ -1636,8 +1637,8 @@ do_optimize_dupmov_16bit:
 							temp[3] = next_instruction[3];
 							temp[4] = next_instruction[4];
 							temp[5] = next_instruction[5];
-							memcpy(temp + 6, iter, next_instruction - iter);
-							memcpy(iter, temp, 6 + (next_instruction - iter));
+							memcpyc(temp + 6, iter, next_instruction - iter, sizeof(instruction_t));
+							memcpyc(iter, temp, 6 + (next_instruction - iter), sizeof(instruction_t));
 							SET_RESULTF(iter, "Construct 16-bit mov-instruction from dup+pop extern");
 							goto continue_at_iter;
 
@@ -1653,8 +1654,8 @@ do_optimize_dupmov_16bit:
 								temp[1] = ASM16_STACK & 0xff;
 								temp[2] = abs_sp & 0xff;
 								temp[3] = (abs_sp & 0xff00) >> 8;
-								memcpy(temp + 4, iter, next_instruction - iter);
-								memcpy(iter, temp, 4 + (next_instruction - iter));
+								memcpyc(temp + 4, iter, next_instruction - iter, sizeof(instruction_t));
+								memcpyc(iter, temp, 4 + (next_instruction - iter), sizeof(instruction_t));
 								SET_RESULTF(iter, "Construct 16-bit mov-instruction from dup+pop stack");
 							}
 							goto continue_at_iter;

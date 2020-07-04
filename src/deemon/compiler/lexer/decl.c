@@ -36,6 +36,7 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/tuple.h>
 
 #include "../../runtime/builtin.h"

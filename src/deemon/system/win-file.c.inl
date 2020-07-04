@@ -103,8 +103,9 @@ debugfile_write(DeeFileObject *__restrict UNUSED(self),
 		{
 			char temp[512];
 			while (bufsize) {
-				size_t part = MIN(bufsize, sizeof(temp) - sizeof(char));
-				memcpy(temp, buffer, part);
+				size_t part;
+				part = MIN(bufsize, sizeof(temp) - sizeof(char));
+				memcpyc(temp, buffer, part, sizeof(char));
 				temp[part] = '\0';
 				DBG_ALIGNMENT_DISABLE();
 				OutputDebugStringA(temp);
@@ -753,8 +754,8 @@ again:
 		dssize_t temp;
 		unsigned char with_pending[COMPILER_LENOF(self->sf_pending) * 2];
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
-		memcpy(with_pending, self->sf_pending, pending_count);
-		memcpy(with_pending + pending_count, buffer, bufsize);
+		memcpyc(with_pending, self->sf_pending, pending_count, sizeof(unsigned char));
+		memcpyc(with_pending + pending_count, buffer, bufsize, sizeof(unsigned char));
 		if (!ATOMIC_CMPXCH(self->sf_pendingc, pending_count, 0))
 			goto again;
 		temp = write_utf8_to_console(self, with_pending, pending_count + bufsize);
@@ -769,7 +770,7 @@ again:
 		if unlikely(pending_count)
 			return append_pending_utf8(self, with_pending + (size_t)temp, pending_count);
 	} else {
-		memcpy(self->sf_pending, buffer, bufsize);
+		memcpyc(self->sf_pending, buffer, bufsize, sizeof(unsigned char));
 		if (!ATOMIC_CMPXCH(self->sf_pendingc, 0, bufsize))
 			goto again;
 	}
@@ -790,12 +791,12 @@ again:
 		unsigned char with_pending[64];
 		size_t total_length;
 		ASSERT(pending_count <= COMPILER_LENOF(self->sf_pending));
-		memcpy(with_pending, self->sf_pending, pending_count * sizeof(char));
+		memcpyc(with_pending, self->sf_pending, pending_count, sizeof(char));
 		total_length = pending_count + bufsize;
 		if (total_length > COMPILER_LENOF(with_pending))
 			total_length = COMPILER_LENOF(with_pending);
-		memcpy(with_pending + pending_count, buffer,
-		       (total_length - pending_count) * sizeof(char));
+		memcpyc(with_pending + pending_count, buffer,
+		        total_length - pending_count, sizeof(char));
 		if (!ATOMIC_CMPXCH(self->sf_pendingc, pending_count, 0))
 			goto again;
 		num_written = write_utf8_to_console(self,

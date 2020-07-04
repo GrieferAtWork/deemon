@@ -30,7 +30,7 @@
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memrchr() */
+#include <deemon/system-features.h> /* memrchr(), memcpy(), ... */
 
 #include "../../runtime/strings.h"
 

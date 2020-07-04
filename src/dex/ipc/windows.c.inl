@@ -308,11 +308,11 @@ nt_CreateProcessPathNoExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLeng
 		}
 		bufiter = buffer;
 		/* Create the path for the filename. */
-		memcpy(bufiter, iter, (size_t)(next - iter) * sizeof(WCHAR));
+		memcpyc(bufiter, iter, (size_t)(next - iter), sizeof(WCHAR));
 		bufiter += (size_t)(next - iter);
 		if (next[-1] != '/' && next[-1] != '\\')
 			*bufiter++ = '\\';
-		memcpy(bufiter, lpApplicationName, szApplicationNameLength * sizeof(WCHAR));
+		memcpyc(bufiter, lpApplicationName, szApplicationNameLength, sizeof(WCHAR));
 		bufiter[szApplicationNameLength] = 0; /* Ensure zero-termination */
 		ASSERT(bFixUnc ? bufiter + szApplicationNameLength == buffer + WSTR_LENGTH(buffer)
 		               : bufiter + szApplicationNameLength <= buffer + WSTR_LENGTH(buffer));
@@ -426,9 +426,9 @@ nt_CreateProcessPathWithExt(LPWSTR lpApplicationName, SIZE_T szApplicationNameLe
 		}
 		bufiter = buffer;
 		/* Create the path for the filename. */
-		memcpy(bufiter, lpApplicationName, szApplicationNameLength * sizeof(WCHAR));
+		memcpyc(bufiter, lpApplicationName, szApplicationNameLength, sizeof(WCHAR));
 		bufiter += szApplicationNameLength;
-		memcpy(bufiter, iter, (size_t)(next - iter) * sizeof(WCHAR));
+		memcpyc(bufiter, iter, (size_t)(next - iter), sizeof(WCHAR));
 		bufiter[(size_t)(next - iter)] = 0; /* Ensure zero-termination */
 		ASSERT(bufiter + (size_t)(next - iter) <= buffer + WSTR_LENGTH(buffer));
 		/* All right. Let's do this! */
@@ -525,7 +525,8 @@ again:
 			goto err_pathext;
 		}
 		/* Copy the appname itself into the buffer. */
-		memcpy(appnameBuffer, lpApplicationName, szApplicationNameLength * sizeof(WCHAR));
+		memcpyc(appnameBuffer, lpApplicationName,
+		        szApplicationNameLength, sizeof(WCHAR));
 		for (;;) {
 			SIZE_T appnameLength, extLength;
 			next = iter;
@@ -545,8 +546,8 @@ again:
 				appnameBufferSize = appnameLength;
 			}
 			/* Copy the extension. */
-			memcpy(appnameBuffer + szApplicationNameLength,
-			       iter, extLength * sizeof(WCHAR));
+			memcpyc(appnameBuffer + szApplicationNameLength,
+			        iter, extLength, sizeof(WCHAR));
 			appnameBuffer[appnameLength] = 0; /* Ensure ZERO-termination. */
 			/* Try to create a process with this application name. */
 			result = nt_CreateProcessPathNoExt(appnameBuffer, appnameLength, pathStr,

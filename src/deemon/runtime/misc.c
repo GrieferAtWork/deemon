@@ -30,7 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), ... */
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -1778,7 +1778,8 @@ debug_printer(void *UNUSED(closure),
 	{
 		char temp[512];
 		while (bufsize) {
-			size_t part = MIN(bufsize, sizeof(temp) - sizeof(char));
+			size_t part;
+			part = MIN(bufsize, sizeof(temp) - sizeof(char));
 			memcpy(temp, buffer, part);
 			temp[part] = '\0';
 			DBG_ALIGNMENT_DISABLE();

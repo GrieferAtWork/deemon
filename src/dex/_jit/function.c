@@ -34,6 +34,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h> /* memcpy() */
 
 DECL_BEGIN
 
@@ -645,8 +646,9 @@ jf_call_kw(JITFunction *self, size_t argc,
 	                                                            sizeof(struct jit_object_entry));
 	if unlikely(!base_locals.ot_list)
 		goto err;
-	memcpy(base_locals.ot_list, self->jf_args.ot_list,
-	       (base_locals.ot_mask + 1) * sizeof(struct jit_object_entry));
+	memcpyc(base_locals.ot_list, self->jf_args.ot_list,
+	        base_locals.ot_mask + 1,
+	        sizeof(struct jit_object_entry));
 
 	/* Define the self-argument.
 	 * NOTE: Do this before loading arguments, in case one of the arguments

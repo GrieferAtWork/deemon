@@ -38,6 +38,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
@@ -3958,7 +3959,7 @@ PRIVATE FARPROC DCALL libwin32_GetPsAPIProc(char const *__restrict name) {
 		namebuf[0] = 'K';
 		namebuf[1] = '3';
 		namebuf[2] = '2';
-		memcpy(namebuf + 3, name, namelen * sizeof(char));
+		memcpyc(namebuf + 3, name, namelen, sizeof(char));
 		namebuf[3 + namelen] = '\0';
 		DBG_ALIGNMENT_DISABLE();
 		pResult = GetProcAddress(hMod, namebuf);

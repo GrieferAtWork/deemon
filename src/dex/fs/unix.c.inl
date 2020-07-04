@@ -153,7 +153,7 @@ LOCAL DIR *(opendir)(char const *name) {
 	result = (DIR *)malloc(sizeof(DIR));
 	if unlikely(!result)
 		goto done;
-	memcpy(query, name, namelen * sizeof(char));
+	memcpyc(query, name, namelen, sizeof(char));
 	query[namelen]     = '\\';
 	query[namelen + 1] = '*';
 	query[namelen + 2] = '\0';
@@ -1463,7 +1463,7 @@ query_iter(Dir *__restrict self) {
 			temp_filename        = (char *)Dee_AMalloc((temp_filesize + 1) * sizeof(char));
 			if unlikely(!temp_filename)
 				goto err_r;
-			memcpy(temp_filename, query_str, temp_filesize * sizeof(char));
+			memcpyc(temp_filename, query_str, temp_filesize, sizeof(char));
 			temp_filename[temp_filesize] = '\0'; /* Override the '/' to terminate the string. */
 			DBG_ALIGNMENT_DISABLE();
 			result->q_iter.d_hnd = opendir(temp_filename);

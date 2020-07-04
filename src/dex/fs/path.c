@@ -30,7 +30,7 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system.h>
-#include <deemon/system-features.h> /* memrchr() */
+#include <deemon/system-features.h> /* memrchr(), memcpyc(), ... */
 
 #include <hybrid/minmax.h>
 
@@ -161,7 +161,7 @@ fs_pathdrive(DeeObject *__restrict path) {
 		result       = DeeString_NewBuffer(drive_length + 1);
 		if likely(result) {
 			char *dst = DeeString_STR(result);
-			memcpy(dst, DeeString_STR(path), drive_length * sizeof(char));
+			memcpyc(dst, DeeString_STR(path), drive_length, sizeof(char));
 			/* Alway follow up with a slash. */
 			dst[drive_length] = *drive_start == '/' ? '/' : '\\';
 		}
@@ -434,10 +434,10 @@ done_merge_paths:
 			if unlikely(!result)
 				goto err_pwd;
 			dst = DeeString_STR(result);
-			memcpy(dst, pwd_begin, pwd_length * sizeof(char));
+			memcpyc(dst, pwd_begin, pwd_length, sizeof(char));
 			dst += pwd_length;
 			*dst++ = SEP;
-			memcpy(dst, pth_begin, pth_length * sizeof(char));
+			memcpyc(dst, pth_begin, pth_length, sizeof(char));
 			result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
 		}
 	}
@@ -765,13 +765,14 @@ return_single_dot:
 	dst = DeeString_STR(result);
 	while (uprefs) {
 		size_t part = MIN(uprefs, (size_t)MAX_UPREF_COPY);
-		memcpy(dst, (void *)aligned_upref_buffer,
-		       part * COMPILER_LENOF(aligned_upref_buffer[0]) * sizeof(char));
+		memcpyc(dst, (void *)aligned_upref_buffer,
+		        part * COMPILER_LENOF(aligned_upref_buffer[0]),
+		        sizeof(char));
 		dst += part * COMPILER_LENOF(aligned_upref_buffer[0]);
 		uprefs -= part;
 	}
 	/* With upwards references out of the way, copy the remainder of the given path. */
-	memcpy(dst, pth_begin, pth_length * sizeof(char));
+	memcpyc(dst, pth_begin, pth_length, sizeof(char));
 	result = DeeString_SetUtf8(result, STRING_ERROR_FSTRICT);
 done:
 	Dee_Decref(pwd);
@@ -1006,7 +1007,7 @@ print_env:
 				char *temp    = (char *)Dee_Malloc((length + 1) * sizeof(char));
 				if unlikely(!temp)
 					goto err;
-				memcpy(temp, name_start, length * sizeof(char));
+				memcpyc(temp, name_start, length, sizeof(char));
 				temp[length] = '\0';
 				/* Now print the environment variable. */
 				error = fs_printenv(name_start, &printer, !!(options & FS_EXPAND_FNOFAIL));

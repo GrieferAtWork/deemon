@@ -75,7 +75,7 @@ int_copy(DeeIntObject const *__restrict self) {
 		       &self->ob_size,
 		       (offsetof(DeeIntObject, ob_digit) -
 		        offsetof(DeeIntObject, ob_size)) +
-		       num_digits * sizeof(digit));
+		       (num_digits * sizeof(digit)));
 	}
 	return result;
 }

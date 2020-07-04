@@ -42,7 +42,7 @@
 #include <deemon/rodict.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -1555,7 +1555,8 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 		return NULL;
 	/* Lazily alias arguments in the `full_args' tuple. */
 	DeeTuple_SET(full_args, 0, this_arg);
-	memcpy(&DeeTuple_ELEM(full_args)[1], argv, argc * sizeof(DeeObject *));
+	memcpyc(&DeeTuple_ELEM(full_args)[1],
+	        argv, argc, sizeof(DeeObject *));
 #ifdef DEFINE_TYPED_OPERATORS
 	result = DeeObject_TCall(tp_self, self,
 	                         DeeTuple_SIZE(full_args),
@@ -1617,7 +1618,8 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 		return NULL;
 	/* Lazily alias arguments in the `full_args' tuple. */
 	DeeTuple_SET(full_args, 0, this_arg);
-	memcpy(&DeeTuple_ELEM(full_args)[1], argv, argc * sizeof(DeeObject *));
+	memcpyc(&DeeTuple_ELEM(full_args)[1],
+	        argv, argc, sizeof(DeeObject *));
 #ifdef DEFINE_TYPED_OPERATORS
 	result = DeeObject_TCallKw(tp_self, self,
 	                           DeeTuple_SIZE(full_args),

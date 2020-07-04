@@ -385,7 +385,7 @@ lowercase_keyword(char const *__restrict name,
 	kwd_entry->k_id    = _KWD_BACK + (CURRENT.l_keywords.km_entryc++); /* Unique user-keyword ID. */
 	kwd_entry->k_size  = namelen;
 	kwd_entry->k_hash  = namehash;
-	memcpy(kwd_entry->k_name, name, namelen * sizeof(char));
+	memcpyc(kwd_entry->k_name, name, namelen, sizeof(char));
 	{
 		char *iter, *end;
 		end = (iter = kwd_entry->k_name) + namelen;
@@ -629,7 +629,7 @@ tpp_unknown_file(int mode, char *__restrict filename,
 			}
 		}
 #else /* ALTSEP */
-		memcpy(dst, DeeString_STR(path), DeeString_SIZE(path) * sizeof(char));
+		memcpyc(dst, DeeString_STR(path), DeeString_SIZE(path), sizeof(char));
 		dst += DeeString_SIZE(path);
 #endif /* !ALTSEP */
 		/* Drop our reference to the library path. */
@@ -638,10 +638,10 @@ tpp_unknown_file(int mode, char *__restrict filename,
 		if (dst != buffer->s_str && dst[-1] != SEP)
 			*dst++ = SEP;
 		/* Now copy the include prefix. */
-		memcpy(dst, include_prefix, COMPILER_STRLEN(include_prefix) * sizeof(char));
+		memcpyc(dst, include_prefix, COMPILER_STRLEN(include_prefix), sizeof(char));
 		dst += COMPILER_STRLEN(include_prefix);
 		/* Finally, copy the filename that's been given to us by TPP. */
-		memcpy(dst, filename, filename_size * sizeof(char));
+		memcpyc(dst, filename, filename_size, sizeof(char));
 		dst += filename_size;
 		/* Ensure ZERO-termination. */
 		*dst       = 0;

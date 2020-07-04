@@ -1749,7 +1749,7 @@ err_yield_function_temp:
 				if ((info = Dee_OperatorInfo(NULL, operator_name)) != NULL) {
 					char name[4 + COMPILER_LENOF(info->oi_sname)];
 					size_t namelen = strlen(info->oi_sname);
-					memcpy(name + 2, info->oi_sname, namelen * sizeof(char));
+					memcpyc(name + 2, info->oi_sname, namelen, sizeof(char));
 					name[0]           = '_';
 					name[1]           = '_';
 					name[namelen + 2] = '_';

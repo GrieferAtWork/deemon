@@ -32,7 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), ... */
 
 #include <hybrid/atomic.h>
 
@@ -1450,7 +1450,7 @@ again:
 						goto again;
 					goto err;
 				}
-				memcpy(buffer_copy, self->w_printer.up_buffer, length * 2);
+				memcpyw(buffer_copy, self->w_printer.up_buffer, length);
 				self->w_printer.up_buffer = buffer_copy; /* Inherit data */
 			} else {
 				uint32_t *buffer_copy;
@@ -1463,7 +1463,7 @@ again:
 						goto again;
 					goto err;
 				}
-				memcpy(buffer_copy, self->w_printer.up_buffer, length * 4);
+				memcpyl(buffer_copy, self->w_printer.up_buffer, length);
 				self->w_printer.up_buffer = buffer_copy; /* Inherit data */
 			}
 			/* Drop our reference to the pre-packed string. */
@@ -1517,8 +1517,8 @@ again:
 			buffer_copy->s_len  = buffer_length;
 			buffer_copy->s_data = NULL;
 			buffer_copy->s_hash = DEE_STRING_HASH_UNSET;
-			memcpy(buffer_copy->s_str, written_buffer->s_str,
-			       self->w_printer.up_length * sizeof(char));
+			memcpyc(buffer_copy->s_str, written_buffer->s_str,
+			        self->w_printer.up_length, sizeof(char));
 			self->w_printer.up_buffer = buffer_copy->s_str;
 			DeeFile_LockEndWrite(self);
 			Dee_Decref_unlikely(written_buffer);

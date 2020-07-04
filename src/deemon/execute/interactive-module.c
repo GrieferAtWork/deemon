@@ -630,10 +630,10 @@ gencode_failed:
 					                                                    sizeof(struct except_handler));
 					if unlikely(!full_exceptv)
 						goto gencode_failed;
-					memcpy(full_exceptv + old_co_exceptc,
-					       current_code->co_exceptv,
-					       current_code->co_exceptc *
-					       sizeof(struct except_handler));
+					memcpyc(full_exceptv + old_co_exceptc,
+					        current_code->co_exceptv,
+					        current_code->co_exceptc,
+					        sizeof(struct except_handler));
 					Dee_Free(current_code->co_exceptv);
 					current_code->co_exceptc += old_co_exceptc;
 					current_code->co_exceptv = full_exceptv;
@@ -647,7 +647,10 @@ gencode_failed:
 						goto gencode_failed;
 					memmove(full_exceptv + old_co_exceptc, full_exceptv,
 					        current_code->co_exceptc * sizeof(struct except_handler));
-					memcpy(full_exceptv, old_co_exceptv, old_co_exceptc * sizeof(struct except_handler));
+					memcpyc(full_exceptv,
+					        old_co_exceptv,
+					        old_co_exceptc,
+					        sizeof(struct except_handler));
 					for (i = 0; i < old_co_exceptc; ++i)
 						Dee_XIncref(full_exceptv[i].eh_mask);
 					current_code->co_exceptc += old_co_exceptc;
@@ -793,7 +796,7 @@ copy_options_chain(struct compiler_options_mapping **proot,
 	/* Create a copy of `source'. */
 	iter = (struct compiler_options_mapping *)Dee_Malloc(sizeof(struct compiler_options_mapping));
 	if unlikely(!iter)
-		return -1;
+		goto err;
 	memcpy(iter, source, sizeof(struct compiler_options));
 	iter->com_opt.co_inner = NULL;
 	iter->com_map          = source;
@@ -808,11 +811,13 @@ copy_options_chain(struct compiler_options_mapping **proot,
 			/* Undo the copy */
 			*presult = NULL;
 			Dee_Free(iter);
-			return -1;
+			goto err;
 		}
 	}
 	incref_options(&iter->com_opt);
 	return 0;
+err:
+	return -1;
 }
 
 

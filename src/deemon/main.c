@@ -907,18 +907,18 @@ display_help_single(dformatprinter printer, void *arg,
                     struct cmd_option *__restrict option,
                     char const *__restrict prefix) {
 	if (option->co_flags & CMD_FGROUP) {
-		size_t prefix_length = strlen(prefix);
+		size_t prefix_length;
 		char *buf, *dst;
 		int result;
-		buf = (char *)Dee_AMalloc(prefix_length +
-		                          COMPILER_LENOF(option->co_shortnam) +
-		                          3);
+		prefix_length = strlen(prefix);
+		buf = (char *)Dee_AMalloc((prefix_length + 3) * sizeof(char) +
+		                          sizeof(option->co_shortnam));
 		if unlikely(!buf)
 			return -1;
-		memcpy(buf, prefix, prefix_length);
+		memcpyc(buf, prefix, prefix_length, sizeof(char));
 		dst    = buf + prefix_length;
 		*dst++ = '-';
-		memcpy(dst, option->co_shortnam, COMPILER_LENOF(option->co_shortnam));
+		memcpy(dst, option->co_shortnam, sizeof(option->co_shortnam));
 		dst += strlen(option->co_shortnam);
 		*dst++ = ',';
 		*dst++ = '\0';
@@ -950,15 +950,14 @@ display_help_query(dformatprinter printer, void *arg,
 				char *buf, *dst;
 				size_t prefix_length = strlen(prefix);
 				int result;
-				buf = (char *)Dee_AMalloc(prefix_length +
-				                          COMPILER_LENOF(group->co_shortnam) +
-				                          3);
+				buf = (char *)Dee_AMalloc((prefix_length + 3) * sizeof(char) +
+				                          sizeof(group->co_shortnam));
 				if unlikely(!buf)
-					return -1;
-				memcpy(buf, prefix, prefix_length);
+					goto err;
+				memcpyc(buf, prefix, prefix_length, sizeof(char));
 				dst    = buf + prefix_length;
 				*dst++ = '-';
-				memcpy(dst, group->co_shortnam, COMPILER_LENOF(group->co_shortnam));
+				memcpy(dst, group->co_shortnam, sizeof(group->co_shortnam));
 				dst += strlen(group->co_shortnam);
 				*dst++ = ',';
 				*dst++ = '\0';

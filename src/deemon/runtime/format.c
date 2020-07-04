@@ -27,7 +27,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* strnlen() */
+#include <deemon/system-features.h> /* strnlen(), memcpyc(), ... */
 
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
@@ -1742,7 +1742,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 sprintf_callback(char **__restrict pbuffer,
                  char const *__restrict data, size_t datalen) {
-	memcpy(*pbuffer, data, datalen * sizeof(char));
+	memcpyc(*pbuffer, data, datalen, sizeof(char));
 	*pbuffer += datalen;
 	return (dssize_t)datalen;
 }
@@ -1758,7 +1758,7 @@ snprintf_callback(struct snprintf_data *__restrict arg,
 	if (arg->siz) {
 		size_t copy_size;
 		copy_size = arg->siz < datalen ? arg->siz : datalen;
-		memcpy(arg->buf, data, copy_size * sizeof(char));
+		memcpyc(arg->buf, data, copy_size, sizeof(char));
 		arg->siz -= copy_size;
 	}
 	arg->buf += datalen;

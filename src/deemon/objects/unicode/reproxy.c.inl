@@ -26,6 +26,7 @@
 
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpy() */
 
 #include <hybrid/atomic.h>
 

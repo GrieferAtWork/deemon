@@ -33,6 +33,7 @@
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h> /* memcpy(), ... */
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>

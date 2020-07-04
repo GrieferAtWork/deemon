@@ -721,10 +721,10 @@ INTERN int (DCALL dec_create)(DeeModuleObject *__restrict module) {
 			}
 			pathlen = (size_t)(dec_filestart - dec_filestr);
 			dst     = DeeString_STR(dec_filename);
-			memcpy(dst, dec_filestr, pathlen * sizeof(char));
+			memcpyc(dst, dec_filestr, pathlen, sizeof(char));
 			dst += pathlen, *dst++ = '.';
 			pathlen = (size_t)((dec_filestr + dec_filelen) - dec_filestart);
-			memcpy(dst, dec_filestart, pathlen * sizeof(char));
+			memcpyc(dst, dec_filestart, pathlen, sizeof(char));
 			dst += pathlen;
 			UNALIGNED_SET32((uint32_t *)dst, ENCODE_INT32('d', 'e', 'c', 0));
 		}

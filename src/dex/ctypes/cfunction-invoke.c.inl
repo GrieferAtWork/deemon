@@ -20,7 +20,7 @@
 #ifdef __INTELLISENSE__
 #include "cfunction.c"
 #define VARARGS
-#endif
+#endif /* __INTELLISENSE__ */
 
 #ifdef VARARGS
 INTERN WUNUSED DREF DeeObject *DCALL
@@ -209,8 +209,8 @@ cfunction_call(DeeCFunctionTypeObject *__restrict tp_self,
 	if (n_varargs) {
 		dee_va_ffi_types = va_argtypes_mem;
 		// Copy non-vararg types
-		memcpy(dee_va_ffi_types, tp_self->ft_ffi_arg_type_v,
-		       tp_self->ft_argc * sizeof(ffi_type *));
+		memcpyc(dee_va_ffi_types, tp_self->ft_ffi_arg_type_v,
+		        tp_self->ft_argc, sizeof(ffi_type *));
 		dee_va_ffi_types += tp_self->ft_argc;
 		dee_va_ffi_types_end = dee_va_ffi_types + n_varargs;
 		ASSERT(dee_va_ffi_types != dee_va_ffi_types_end);

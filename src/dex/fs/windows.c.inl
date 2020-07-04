@@ -2644,7 +2644,7 @@ read_filename:
 	}
 	/* Create an encoding string. */
 	*(*(size_t **)&result_string)++ = length;
-	memcpy(result_string, self->d_data.cFileName, length * 2);
+	memcpyw(result_string, self->d_data.cFileName, length);
 	result_string[length] = 0;
 	/* Advance the directory by one. */
 	DBG_ALIGNMENT_DISABLE();
@@ -3021,7 +3021,7 @@ read_filename:
 	}
 	/* Create an encoding string. */
 	*(*(size_t **)&result_string)++ = length;
-	memcpy(result_string, self->q_iter.d_data.cFileName, length * 2);
+	memcpyw(result_string, self->q_iter.d_data.cFileName, length);
 	result_string[length] = 0;
 	/* Advance the directory by one. */
 	DBG_ALIGNMENT_DISABLE();

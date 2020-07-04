@@ -1682,9 +1682,10 @@ load_module_after_dec_failure:
 		if (SHLEN >= 3 && SHEXT[3] != 'e')
 			dst[module_namesize + 3] = SHEXT[3];
 		__STATIC_IF (SHLEN > 4) {
-			memcpy(&dst[module_namesize + 4],
-			       SHEXT + 4,
-			       ((SHLEN - 4) + 1) * sizeof(char));
+			memcpyc(&dst[module_namesize + 4],
+			        SHEXT + 4,
+			        (SHLEN - 4) + 1,
+			        sizeof(char));
 		}
 		dex_handle = DeeSystem_DlOpenString(buf);
 		if (dex_handle == DEESYSTEM_DLOPEN_FAILED) {

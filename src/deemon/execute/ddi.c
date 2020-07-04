@@ -27,6 +27,7 @@
 #include <deemon/code.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 
 #include <hybrid/minmax.h>
 
@@ -405,8 +406,8 @@ next_ip:
 						if unlikely(!save->s_save.dx_lcnamv)
 							goto err_save;
 					}
-					memcpy(save->s_save.dx_lcnamv, self->rs_xregs.dx_lcnamv,
-					       self->rs_xregs.dx_lcnamc * sizeof(uint16_t));
+					memcpyc(save->s_save.dx_lcnamv, self->rs_xregs.dx_lcnamv,
+					        self->rs_xregs.dx_lcnamc, sizeof(uint16_t));
 				}
 				/* Copy bound stack-symbol names */
 				save->s_save.dx_spnama = self->rs_xregs.dx_spnama;
@@ -433,8 +434,8 @@ next_ip:
 						if unlikely(!save->s_save.dx_spnamv)
 							goto err_save_lc;
 					}
-					memcpy(save->s_save.dx_spnamv, self->rs_xregs.dx_spnamv,
-					       save->s_save.dx_spnama * sizeof(uint16_t));
+					memcpyc(save->s_save.dx_spnamv, self->rs_xregs.dx_spnamv,
+					        save->s_save.dx_spnama, sizeof(uint16_t));
 				}
 				/* Append the saved register state in the chain of states saved. */
 				save->s_prev  = self->rs_save;

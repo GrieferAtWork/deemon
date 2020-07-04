@@ -410,7 +410,8 @@ again:
 				goto again;
 			return NULL;
 		}
-		memcpy(result->s_str, name, (name_length + 1) * sizeof(char));
+		memcpyc(result->s_str, name,
+		        name_length + 1, sizeof(char));
 		rwlock_endwrite(&sysdb_lock);
 		result->s_hash = (dhash_t)-1;
 		result->s_data = NULL;
@@ -767,7 +768,8 @@ restart:
 			goto restart;
 		goto err;
 	}
-	memcpy(result->s_str, hp->h_name, (name_length + 1) * sizeof(char));
+	memcpyc(result->s_str, hp->h_name,
+	        name_length + 1, sizeof(char));
 	rwlock_endwrite(&sysdb_lock);
 	DeeObject_Init(result, &DeeString_Type);
 	result->s_data = NULL;
@@ -961,7 +963,7 @@ SockAddr_FromStringPort(SockAddr *__restrict self, int family, int protocol, int
 		host_buffer = (char *)Dee_AMalloc((host_length + 1) * sizeof(char));
 		if unlikely(!host_buffer)
 			goto err;
-		memcpy(host_buffer, host, host_length * sizeof(char));
+		memcpyc(host_buffer, host, host_length, sizeof(char));
 		host_buffer[host_length] = '\0';
 		host                     = host_buffer;
 	}
@@ -969,7 +971,7 @@ SockAddr_FromStringPort(SockAddr *__restrict self, int family, int protocol, int
 		port_buffer = (char *)Dee_AMalloc((port_length + 1) * sizeof(char));
 		if unlikely(!port_buffer)
 			goto err;
-		memcpy(port_buffer, port, port_length * sizeof(char));
+		memcpyc(port_buffer, port, port_length, sizeof(char));
 		port_buffer[port_length] = '\0';
 		port                     = port_buffer;
 	}
@@ -1498,9 +1500,10 @@ do_generic_string_2:
 			goto err;
 		}
 		/* NOTE: No need to copy the NUL-character. -  */
-		memcpy(self->sa_un.sun_path,
-		       DeeString_STR(arg0),
-		       DeeString_SIZE(arg0));
+		memcpyc(self->sa_un.sun_path,
+		        DeeString_STR(arg0),
+		        DeeString_SIZE(arg0),
+		        sizeof(char));
 		break;
 #endif /* AF_UNIX */
 

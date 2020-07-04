@@ -34,7 +34,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/rwlock.h>
 
@@ -828,9 +828,10 @@ blv_copy(BlackListVarkwds *__restrict self) {
 		Dee_Incref(result->vk_argv[i]);
 	}
 	result->vk_load = self->vk_load;
-	memcpy(result->vk_blck, self->vk_blck,
-	       (self->vk_mask + 1) *
-	       sizeof(BlackListVarkwdsEntry));
+	memcpyc(result->vk_blck,
+	        self->vk_blck,
+	        self->vk_mask + 1,
+	        sizeof(BlackListVarkwdsEntry));
 	rwlock_endread(&self->vk_lock);
 	rwlock_init(&result->vk_lock);
 	result->vk_code = self->vk_code;
@@ -868,9 +869,10 @@ blv_deep(BlackListVarkwds *__restrict self) {
 		Dee_Incref(result->vk_argv[i]);
 	}
 	result->vk_load = self->vk_load;
-	memcpy(result->vk_blck, self->vk_blck,
-	       (self->vk_mask + 1) *
-	       sizeof(BlackListVarkwdsEntry));
+	memcpyc(result->vk_blck,
+	        self->vk_blck,
+	        self->vk_mask + 1,
+	        sizeof(BlackListVarkwdsEntry));
 	rwlock_endread(&self->vk_lock);
 	/* Construct deep copies of all of the arguments. */
 	for (i = 0; i < count; ++i) {
@@ -1706,9 +1708,10 @@ blm_copy(BlackListMapping *__restrict self) {
 	result->bm_mask = self->bm_mask;
 	rwlock_read(&self->bm_lock);
 	result->bm_load = self->bm_load;
-	memcpy(result->bm_blck, self->bm_blck,
-	       (result->bm_mask + 1) *
-	       sizeof(BlackListVarkwdsEntry));
+	memcpyc(result->bm_blck,
+	        self->bm_blck,
+	        result->bm_mask + 1,
+	        sizeof(BlackListVarkwdsEntry));
 	rwlock_endread(&self->bm_lock);
 	DeeObject_Init(result, &BlackListMapping_Type);
 done:
@@ -1737,9 +1740,10 @@ blm_deep(BlackListMapping *__restrict self) {
 	result->bm_mask = self->bm_mask;
 	rwlock_read(&self->bm_lock);
 	result->bm_load = self->bm_load;
-	memcpy(result->bm_blck, self->bm_blck,
-	       (result->bm_mask + 1) *
-	       sizeof(BlackListVarkwdsEntry));
+	memcpyc(result->bm_blck,
+	        self->bm_blck,
+	        result->bm_mask + 1,
+	        sizeof(BlackListVarkwdsEntry));
 	rwlock_endread(&self->bm_lock);
 	DeeObject_Init(result, &BlackListMapping_Type);
 done:

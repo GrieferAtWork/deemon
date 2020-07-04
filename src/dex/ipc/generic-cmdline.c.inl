@@ -26,6 +26,8 @@
 #include <deemon/api.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpyc(), ... */
 #include <deemon/tuple.h>
 
 #include <hybrid/atomic.h>
@@ -682,7 +684,7 @@ process_cmdline_decode_full(char const *__restrict cmdline,
 	char *cmdline_copy = (char *)Dee_Malloc((cmdline_len + 1) * sizeof(char));
 	if unlikely(!cmdline_copy)
 		return NULL;
-	memcpy(cmdline_copy, cmdline, (cmdline_len + 1) * sizeof(char));
+	memcpyc(cmdline_copy, cmdline, cmdline_len + 1, sizeof(char));
 	result = process_cmdline_decode_full_inplace(cmdline_copy, pexe);
 	Dee_Free(cmdline_copy);
 	return result;
