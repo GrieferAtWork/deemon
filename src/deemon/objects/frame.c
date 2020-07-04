@@ -40,7 +40,6 @@
 
 #include <stdarg.h>
 #include <stddef.h>
-#include <string.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

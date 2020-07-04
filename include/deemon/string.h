@@ -37,6 +37,19 @@
 #include <stddef.h>
 #include <string.h>
 
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#elif !defined(CONFIG_HAVE_STRING_H) && \
+      (defined(__NO_has_include) || __has_include(<string.h>))
+#define CONFIG_HAVE_STRING_H 1
+#endif
+
+#ifdef CONFIG_NO_strlen
+#undef CONFIG_HAVE_strlen
+#else
+#define CONFIG_HAVE_strlen 1
+#endif
+
 #ifdef CONFIG_NO_UNICODE_H
 #undef CONFIG_HAVE_UNICODE_H
 #elif !defined(CONFIG_HAVE_UNICODE_H) && \
@@ -44,6 +57,10 @@
       (defined(__KOS__) && __KOS_VERSION__ >= 400)))
 #define CONFIG_HAVE_UNICODE_H 1
 #endif
+
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h>
+#endif /* CONFIG_HAVE_STRING_H */
 
 #ifdef CONFIG_HAVE_UNICODE_H
 #include <unicode.h>
@@ -58,8 +75,22 @@
 #endif /* CONFIG_HAVE_UNICODE_H */
 
 
-
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_strlen
+#define CONFIG_HAVE_strlen 1
+DECL_BEGIN
+#undef strlen
+#define strlen dee_strlen
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
+	size_t result;
+	for (result = 0; str[result]; ++result)
+		;
+	return result;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_strlen */
+
 
 /* Explanation of WIDTH-STRINGS vs. UTF-STRINGS:
  *

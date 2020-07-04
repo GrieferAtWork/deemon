@@ -21,12 +21,11 @@
 #define GUARD_DEEMON_COMPILER_ERROR_H 1
 
 #include "../api.h"
+/**/
 
 #define PARSE_FNORMAL 0x0000 /* Normal parser flags. */
 
 #ifdef CONFIG_BUILDING_DEEMON
-#include <string.h>
-
 #include "../thread.h"
 
 DECL_BEGIN

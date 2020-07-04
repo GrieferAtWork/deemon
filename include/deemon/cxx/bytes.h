@@ -21,13 +21,14 @@
 #define GUARD_DEEMON_CXX_BYTES_H 1
 
 #include "api.h"
+/**/
 
 #include <hybrid/typecore.h>
 
 #include <initializer_list>
-#include <string.h>
 
 #include "../bytes.h"
+#include "../system-features.h" /* strlen() */
 #include "int.h"
 #include "object.h"
 #include "sequence.h"

@@ -29,8 +29,6 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 
-#include <string.h>
-
 #include "../../runtime/runtime_error.h"
 
 DECL_BEGIN

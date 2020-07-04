@@ -32,10 +32,10 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* strlen() */
 
 #include <stdarg.h>
 #include <stdbool.h>
-#include <string.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <hybrid/atomic.h>

@@ -30,12 +30,12 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
+#include <hybrid/limitcore.h>
+#include <hybrid/typecore.h>
+
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/recursive-rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
-
-#include <limits.h>
-#include <string.h>
 
 #include "strings.h"
 
@@ -410,7 +410,7 @@ again:
 			if unlikely(temp)
 				return temp;
 #if __SIZEOF_POINTER__ > __SIZEOF_INT__
-			if likely(result != INT_MAX)
+			if likely(result != __INT_MAX__)
 				++result;
 #endif /* __SIZEOF_POINTER__ > __SIZEOF_INT__ */
 			rwlock_read(&notify_lock);

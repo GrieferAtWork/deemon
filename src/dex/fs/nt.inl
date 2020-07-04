@@ -41,9 +41,8 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h>
-
-#include <string.h>
 
 #include "../time/libtime.h"
 

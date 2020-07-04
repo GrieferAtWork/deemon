@@ -21,10 +21,10 @@
 #define GUARD_DEEMON_CXX_MODULE_H 1
 
 #include "api.h"
-
-#include <string.h>
+/**/
 
 #include "../module.h"
+#include "../system-features.h" /* strlen() */
 #include "object.h"
 
 DEE_CXX_BEGIN
@@ -44,11 +44,11 @@ public:
 public:
 	DEE_CXX_DEFINE_OBJECT_CONSTRUCTORS(module, Object)
 	module(obj_string name)
-	    : Object(inherit(DeeModule_New(name))) {}
+	    : Object(inherit(DeeModule_New(name))) { }
 	module(char const *__restrict name)
-	    : Object(inherit(DeeModule_NewString(name, strlen(name)))) {}
+	    : Object(inherit(DeeModule_NewString(name, strlen(name)))) { }
 	module(char const *__restrict name, size_t namelen)
-	    : Object(inherit(DeeModule_NewString(name, namelen))) {}
+	    : Object(inherit(DeeModule_NewString(name, namelen))) { }
 	struct Dee_module_symbol *symbol(char const *__restrict attr_name) const DEE_CXX_NOTHROW {
 		return DeeModule_GetSymbolString((DeeModuleObject *)this->ptr(), attr_name, Dee_HashStr(attr_name));
 	}

@@ -33,6 +33,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/util/cache.h>
 
 #include <hybrid/minmax.h>

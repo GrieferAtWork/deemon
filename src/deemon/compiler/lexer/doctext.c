@@ -27,7 +27,7 @@
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <string.h>
+#include <deemon/system-features.h>
 
 DECL_BEGIN
 

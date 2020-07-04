@@ -32,8 +32,6 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memmem() */
 
-#include <string.h>
-
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memmem

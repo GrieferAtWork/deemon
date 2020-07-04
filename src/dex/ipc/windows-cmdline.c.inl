@@ -29,9 +29,8 @@
 #include <deemon/list.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
-
-#include <string.h>
 
 DECL_BEGIN
 

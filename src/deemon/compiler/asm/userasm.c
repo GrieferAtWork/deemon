@@ -45,7 +45,6 @@
 #include <hybrid/unaligned.h>
 
 #include <stdint.h> /* UINT8_MAX, ... */
-#include <string.h>
 
 #include "../../runtime/strings.h"
 #endif /* !CONFIG_LANGUAGE_NO_ASM */

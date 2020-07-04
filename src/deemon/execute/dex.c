@@ -46,8 +46,6 @@
 
 #include <hybrid/host.h>
 
-#include <string.h>
-
 #include "../runtime/runtime_error.h"
 
 #ifdef CONFIG_HOST_WINDOWS

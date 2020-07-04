@@ -31,10 +31,9 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/rwlock.h>
-
-#include <string.h>
 
 #include "../runtime/strings.h"
 

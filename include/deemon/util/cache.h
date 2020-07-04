@@ -27,7 +27,6 @@
 #endif /* !CONFIG_NO_THREADS */
 
 #include <stddef.h>
-#include <string.h>
 
 DECL_BEGIN
 

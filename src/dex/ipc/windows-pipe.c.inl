@@ -35,8 +35,6 @@
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
-#include <string.h>
-
 #include "_res.h"
 
 DECL_BEGIN

@@ -33,13 +33,11 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* strend() */
+#include <deemon/system-features.h> /* memcmp(), strend() */
 
 /**/
 #include "libdisasm.h"
 /**/
-
-#include <string.h>
 
 DECL_BEGIN
 

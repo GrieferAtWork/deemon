@@ -47,7 +47,6 @@
 #include <deemon/tuple.h>
 
 #include <stdarg.h>
-#include <string.h>
 
 #include "../objects/int_logic.h"
 #include "../objects/seq/each.h"
@@ -61,8 +60,9 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memsetp
-#define memsetp dee_memsetp
-DeeSystem_DEFINE_memsetp(memsetp)
+#define memsetp(dst, pointer, num_pointers) \
+	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
+DeeSystem_DEFINE_memsetp(dee_memsetp)
 #endif /* !CONFIG_HAVE_memsetp */
 
 

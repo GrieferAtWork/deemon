@@ -40,8 +40,6 @@
 #include <hybrid/typecore.h>
 #include <hybrid/wordbits.h>
 
-#include <string.h>
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

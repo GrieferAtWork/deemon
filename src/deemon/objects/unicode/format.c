@@ -33,7 +33,6 @@
 #include <deemon/tuple.h>
 
 #include <stdbool.h>
-#include <string.h>
 
 #include "../../runtime/runtime_error.h"
 

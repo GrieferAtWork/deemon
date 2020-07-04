@@ -41,7 +41,6 @@
 #include <deemon/tuple.h>
 
 #include <stdint.h> /* UINT16_MAX, ... */
-#include <string.h>
 
 #include "../../runtime/strings.h"
 

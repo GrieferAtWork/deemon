@@ -30,6 +30,7 @@
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 

@@ -59,12 +59,6 @@
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
 
-#include <sys/stat.h>
-
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "../time/libtime.h"
 
 #ifdef _MSC_VER
@@ -217,11 +211,6 @@ DECL_END
 /* Pull in definitions for an stdlib-style environ. */
 #include "environ.c.inl"
 #endif /* !__INTELLISENSE__ */
-
-#ifdef _WDIRECT_DEFINED
-#include <wchar.h>
-#endif /* _WDIRECT_DEFINED */
-
 
 #ifndef PATH_MAX
 #ifdef PATHMAX

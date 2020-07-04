@@ -40,6 +40,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -47,9 +48,7 @@
 #include <hybrid/minmax.h>
 #include <hybrid/sched/yield.h>
 
-#include <string.h>
 #include <tlhelp32.h>
-#include <wchar.h>
 
 #include "_res.h"
 

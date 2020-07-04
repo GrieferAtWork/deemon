@@ -21,11 +21,11 @@
 #define GUARD_DEEMON_CXX_OBJECT_H 1
 
 #include "api.h"
+/**/
 
 #include <exception>
 #include <initializer_list>
 #include <stddef.h>
-#include <string.h>
 #include <type_traits>
 #include <hybrid/typecore.h>
 
@@ -38,9 +38,7 @@
 #include "../string.h"
 #include "../tuple.h"
 
-#ifdef __native_wchar_t_defined
-#include "../system-features.h"
-#endif /* __native_wchar_t_defined */
+#include "../system-features.h" /* strlen(), wcslen() */
 
 DEE_CXX_BEGIN
 

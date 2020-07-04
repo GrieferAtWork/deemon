@@ -32,15 +32,13 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/atomic.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
-
-#include <string.h>
-
-#include <hybrid/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

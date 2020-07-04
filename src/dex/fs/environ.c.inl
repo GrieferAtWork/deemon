@@ -42,9 +42,6 @@
 
 #include <hybrid/atomic.h>
 
-#include <stdlib.h>
-#include <string.h>
-
 DECL_BEGIN
 
 typedef struct {

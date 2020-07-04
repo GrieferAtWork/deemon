@@ -23,7 +23,6 @@
 #include "api.h"
 
 #include "object.h"
-#include "string.h"
 
 DECL_BEGIN
 

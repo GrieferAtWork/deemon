@@ -33,8 +33,6 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h> /* atexit() */
 
-#include <string.h>
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

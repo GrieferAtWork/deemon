@@ -35,6 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
@@ -44,8 +45,9 @@
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 
+#ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
-#include <string.h>
+#endif /* CONFIG_HAVE_LIMITS_H */
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -55,6 +57,11 @@
 #define __ARCH_PAGESIZE_MIN __ARCH_PAGESIZE
 #endif /* __ARCH_PAGESIZE */
 #endif /* !__ARCH_PAGESIZE_MIN */
+
+#ifndef UINT32_MAX
+#include <hybrid/limitcore.h>
+#define UINT32_MAX __UINT32_MAX__
+#endif /* !UINT32_MAX */
 
 DECL_BEGIN
 

@@ -40,7 +40,6 @@
 #include <deemon/tuple.h>
 
 #include <stdint.h> /* INT8_MAX, ... */
-#include <string.h>
 
 #include "../../runtime/strings.h"
 

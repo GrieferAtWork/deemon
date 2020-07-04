@@ -63,8 +63,6 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
-#include <string.h>
-
 #include "runtime_error.h"
 
 #ifndef NDEBUG

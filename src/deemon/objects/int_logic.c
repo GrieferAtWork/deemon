@@ -20,12 +20,11 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
-
-#include <string.h>
-
-#include "../runtime/runtime_error.h"
+#include <deemon/system-features.h>
 
 #include <hybrid/minmax.h>
+
+#include "../runtime/runtime_error.h"
 
 DECL_BEGIN
 
@@ -69,10 +68,11 @@ INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_copy(DeeIntObject const *__restrict self) {
 	DREF DeeIntObject *result;
 	size_t num_digits;
-	num_digits = (size_t)ABS(((DeeIntObject *)self)->ob_size);
+	num_digits = (size_t)ABS(self->ob_size);
 	result     = (DeeIntObject *)DeeInt_Alloc(num_digits);
 	if (result) {
-		memcpy(&result->ob_size, &((DeeIntObject *)self)->ob_size,
+		memcpy(&result->ob_size,
+		       &self->ob_size,
 		       (offsetof(DeeIntObject, ob_digit) -
 		        offsetof(DeeIntObject, ob_size)) +
 		       num_digits * sizeof(digit));
@@ -1068,8 +1068,8 @@ kmul_split(DeeIntObject *__restrict n, dssize_t size,
 		Dee_Decref(hi);
 		return -1;
 	}
-	memcpy(lo->ob_digit, n->ob_digit, size_lo * sizeof(digit));
-	memcpy(hi->ob_digit, n->ob_digit + size_lo, size_hi * sizeof(digit));
+	memcpyc(lo->ob_digit, n->ob_digit, size_lo, sizeof(digit));
+	memcpyc(hi->ob_digit, n->ob_digit + size_lo, size_hi, sizeof(digit));
 	*phigh = int_normalize(hi);
 	*plow  = int_normalize(lo);
 	return 0;
@@ -1120,20 +1120,30 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 		goto fail;
 	ASSERT(t1->ob_size >= 0);
 	ASSERT(2 * shift + t1->ob_size <= ret->ob_size);
-	memcpy(ret->ob_digit + 2 * shift, t1->ob_digit, t1->ob_size * sizeof(digit));
+	memcpyc(ret->ob_digit + 2 * shift,
+	        t1->ob_digit,
+	        t1->ob_size,
+	        sizeof(digit));
 	i = ret->ob_size - 2 * shift - t1->ob_size;
-	if (i)
-		memset(ret->ob_digit + 2 * shift + t1->ob_size, 0, i * sizeof(digit));
+	if (i) {
+		bzeroc(ret->ob_digit + 2 * shift + t1->ob_size,
+		       i, sizeof(digit));
+	}
 	if ((t2 = k_mul(al, bl)) == NULL) {
 		Dee_Decref(t1);
 		goto fail;
 	}
 	ASSERT(t2->ob_size >= 0);
 	ASSERT(t2->ob_size <= 2 * shift);
-	memcpy(ret->ob_digit, t2->ob_digit, t2->ob_size * sizeof(digit));
+	memcpyc(ret->ob_digit,
+	        t2->ob_digit,
+	        t2->ob_size,
+	        sizeof(digit));
 	i = 2 * shift - t2->ob_size;
-	if (i)
-		memset(ret->ob_digit + t2->ob_size, 0, i * sizeof(digit));
+	if (i) {
+		bzeroc(ret->ob_digit + t2->ob_size,
+		       i, sizeof(digit));
+	}
 	i = ret->ob_size - shift;
 	(void)v_isub(ret->ob_digit + shift, i, t2->ob_digit, t2->ob_size);
 	Dee_Decref(t2);
@@ -1191,7 +1201,9 @@ k_lopsided_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	while (bsize > 0) {
 		DeeIntObject *product;
 		dssize_t const nbtouse = MIN(bsize, asize);
-		memcpy(bslice->ob_digit, b->ob_digit + nbdone, nbtouse * sizeof(digit));
+		memcpyc(bslice->ob_digit,
+		        b->ob_digit + nbdone,
+		        nbtouse, sizeof(digit));
 		bslice->ob_size = nbtouse;
 		product         = k_mul(a, bslice);
 		if (product == NULL)
@@ -1599,9 +1611,15 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 		Dee_Incref(b);
 	}
 	if (size_a < size_b) {
-		z = a, a = b, b = z;
-		size_z = size_a, size_a = size_b, size_b = size_z;
-		negz = nega, nega = negb, negb = negz;
+		z      = a;
+		a      = b;
+		b      = z;
+		size_z = size_a;
+		size_a = size_b;
+		size_b = size_z;
+		negz   = nega;
+		nega   = negb;
+		negb   = negz;
 	}
 	switch (op) {
 
@@ -1647,7 +1665,10 @@ int_bitwise(DeeIntObject *__restrict a, char op,
 			z->ob_digit[i] = a->ob_digit[i] ^ DIGIT_MASK;
 		}
 	} else if (i < size_z) {
-		memcpy(&z->ob_digit[i], &a->ob_digit[i], (size_z - i) * sizeof(digit));
+		memcpyc(&z->ob_digit[i],
+		        &a->ob_digit[i],
+		        size_z - i,
+		        sizeof(digit));
 	}
 	if (negz) {
 		z->ob_size          = -(z->ob_size);

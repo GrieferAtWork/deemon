@@ -36,13 +36,12 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
-
-#include <string.h>
 
 #include "../../runtime/builtin.h"
 

@@ -43,8 +43,6 @@
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 
-#include <string.h>
-
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 

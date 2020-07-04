@@ -25,9 +25,7 @@
 #include <deemon/error.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h> /* memrchr() */
-
-#include <string.h>
+#include <deemon/system-features.h> /* memchr(), memrchr() */
 
 DECL_BEGIN
 

@@ -28,7 +28,6 @@
 #include "../object.h"
 #include "../seq.h"
 #include "../tuple.h"
-#include "string.h"
 
 DECL_BEGIN
 

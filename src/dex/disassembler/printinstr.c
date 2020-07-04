@@ -30,6 +30,7 @@
 #include <deemon/int.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* strlen(), ... */
 
 /**/
 #include "libdisasm.h"
@@ -39,8 +40,6 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
-
-#include <string.h>
 
 DECL_BEGIN
 

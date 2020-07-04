@@ -33,6 +33,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h> /* DeeSystem_GetWalltime() */
 
 #ifndef CONFIG_NO_DEC
@@ -41,8 +42,6 @@
 #endif /* !CONFIG_NO_DEC */
 
 #include <hybrid/atomic.h>
-
-#include <string.h>
 
 DECL_BEGIN
 
@@ -70,7 +69,7 @@ module_compile(DeeModuleObject *__restrict mod,
 
 	/* Start filling in members of the module. */
 	mod->mo_globalv = (DREF DeeObject **)Dee_Calloc(current_rootscope->rs_globalc *
-	                                                   sizeof(DREF DeeObject *));
+	                                                sizeof(DREF DeeObject *));
 	if unlikely(!mod->mo_globalv)
 		goto err;
 	mod->mo_globalc = current_rootscope->rs_globalc;

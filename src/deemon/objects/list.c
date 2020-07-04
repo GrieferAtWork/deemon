@@ -52,8 +52,9 @@
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memsetp
-#define memsetp dee_memsetp
-DeeSystem_DEFINE_memsetp(memsetp)
+#define memsetp(dst, pointer, num_pointers) \
+	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
+DeeSystem_DEFINE_memsetp(dee_memsetp)
 #endif /* !CONFIG_HAVE_memsetp */
 
 typedef DeeListObject List;

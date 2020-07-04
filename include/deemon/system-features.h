@@ -21,6 +21,7 @@
 #define GUARD_DEEMON_SYSTEM_FEATURES_H 1
 
 #include "api.h"
+/**/
 
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
@@ -214,6 +215,7 @@ header_nostdinc("sys/un.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("sys/socket.h", unix);
 header_nostdinc("sys/select.h", addparen(linux) + " || " + addparen(kos));
 header_nostdinc("netdb.h", unix);
+header_nostdinc("math.h", stdc);
 
 include_known_headers();
 
@@ -751,6 +753,7 @@ func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 
 (func)("memrmemq", "0", check_defined: false);
 
 func("memcpy", stdc, test: "extern void *a; extern void const *b; return memcpy(a, b, 16) == a;");
+func("memset", stdc, test: "extern void *a; return memset(a, 0, 42) == a;");
 func("memmove", stdc, test: "extern void *a; extern void const *b; return memmove(a, b, 16) == a;");
 func("memcmp", stdc, test: "extern void const *a, *b; return memcmp(a, b, 16) == 0;");
 
@@ -1273,6 +1276,13 @@ sizeof("off_t");
        defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
        defined(unix))))
 #define CONFIG_HAVE_NETDB_H 1
+#endif
+
+#ifdef CONFIG_NO_MATH_H
+#undef CONFIG_HAVE_MATH_H
+#elif !defined(CONFIG_HAVE_MATH_H) && \
+      (defined(__NO_has_include) || __has_include(<math.h>))
+#define CONFIG_HAVE_MATH_H 1
 #endif
 
 #ifdef CONFIG_HAVE_IO_H
@@ -5487,6 +5497,12 @@ sizeof("off_t");
 #define CONFIG_HAVE_memcpy 1
 #endif
 
+#ifdef CONFIG_NO_memset
+#undef CONFIG_HAVE_memset
+#else
+#define CONFIG_HAVE_memset 1
+#endif
+
 #ifdef CONFIG_NO_memmove
 #undef CONFIG_HAVE_memmove
 #else
@@ -7558,6 +7574,21 @@ dee_memcpy(void *__restrict dst, void const *__restrict src, size_t num_bytes) {
 DECL_END
 #endif /* !CONFIG_HAVE_memcpy */
 
+#ifndef CONFIG_HAVE_memset
+#define CONFIG_HAVE_memset 1
+DECL_BEGIN
+#undef memset
+#define memset dee_memset
+LOCAL WUNUSED NONNULL((1)) void *
+dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
+	uint8_t *pdst = (uint8_t *)dst;
+	while (num_bytes--)
+		*pdst++ = (uint8_t)(unsigned int)byte;
+	return dst;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_memset */
+
 #ifndef CONFIG_HAVE_memmove
 #define CONFIG_HAVE_memmove 1
 DECL_BEGIN
@@ -8475,7 +8506,7 @@ DECL_END
 	 : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
 #else /* ... */
 #define bzeroc(dst, elem_count, elem_size) \
-	bzero(dst, src, (size_t)(elem_count) * (size_t)(elem_size))
+	bzero(dst, (size_t)(elem_count) * (size_t)(elem_size))
 #endif /* !... */
 #endif /* !CONFIG_HAVE_bzeroc */
 
@@ -8516,8 +8547,9 @@ DECL_END
 
 /* NOTE: `memsetp' is enabled on a per-file basis by writing:
  * >> #ifndef CONFIG_HAVE_memsetp
- * >> #define memsetp dee_memsetp
- * >> DeeSystem_DEFINE_memsetp(memsetp)
+ * >> #define memsetp(dst, pointer, num_pointers) \
+ * >> 	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
+ * >> DeeSystem_DEFINE_memsetp(dee_memsetp)
  * >> #endif // !CONFIG_HAVE_memsetp
  */
 #undef memsetp
@@ -8525,28 +8557,32 @@ DECL_END
 #if __SIZEOF_POINTER__ == 4
 #ifdef CONFIG_HAVE_memsetl
 #define CONFIG_HAVE_memsetp 1
-#define memsetp memsetl
+#define memsetp(dst, pointer, num_pointers) \
+	memsetl(dst, (__UINT32_TYPE__)(pointer), num_pointers)
 #else /* CONFIG_HAVE_memsetl */
 #define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetl
 #endif /* !CONFIG_HAVE_memsetl */
 #elif __SIZEOF_POINTER__ == 8
 #ifdef CONFIG_HAVE_memsetq
 #define CONFIG_HAVE_memsetp 1
-#define memsetp memsetq
+#define memsetp(dst, pointer, num_pointers) \
+	memsetq(dst, (__UINT64_TYPE__)(pointer), num_pointers)
 #else /* CONFIG_HAVE_memsetq */
 #define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetq
 #endif /* !CONFIG_HAVE_memsetq */
 #elif __SIZEOF_POINTER__ == 2
 #ifdef CONFIG_HAVE_memsetw
 #define CONFIG_HAVE_memsetp 1
-#define memsetp memsetw
+#define memsetp(dst, pointer, num_pointers) \
+	memsetw(dst, (__UINT16_TYPE__)(pointer), num_pointers)
 #else /* CONFIG_HAVE_memsetw */
 #define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetw
 #endif /* !CONFIG_HAVE_memsetw */
 #elif __SIZEOF_POINTER__ == 1
 #define CONFIG_HAVE_memsetp 1
-#define memsetp memset
-#else
+#define memsetp(dst, pointer, num_pointers) \
+	memset(dst, (int)(unsigned int)(__UINT8_TYPE__)(pointer), num_pointers)
+#elif !defined(__DEEMON__)
 #error "Unsupported __SIZEOF_POINTER__"
 #endif
 

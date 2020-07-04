@@ -38,8 +38,6 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
-#include <string.h>
-
 DECL_BEGIN
 
 /* Use libc functions for case-insensitive UTF-8 string compare when available. */

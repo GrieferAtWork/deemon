@@ -21,14 +21,14 @@
 #define GUARD_DEEMON_CXX_STRING_H 1
 
 #include "api.h"
+/**/
 
 #include <initializer_list>
-#include <string.h>
 
 #include "../int.h"
 #include "../string.h"
 #include "../stringutils.h"
-#include "../system-features.h"
+#include "../system-features.h" /* strlen(), wcslen() */
 #include "object.h"
 #include "sequence.h"
 #include "tuple.h"

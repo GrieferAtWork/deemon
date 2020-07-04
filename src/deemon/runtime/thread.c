@@ -110,8 +110,6 @@
 #include <hybrid/sched/yield.h>
 
 #ifndef CONFIG_NO_THREADS
-#include <string.h>
-
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */

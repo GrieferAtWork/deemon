@@ -37,13 +37,23 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
+#ifdef CONFIG_HAVE_LIMITS_H
 #include <limits.h>
-#include <string.h>
-#include <time.h>
+#endif /* CONFIG_HAVE_LIMITS_H */
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
 #endif /* CONFIG_HOST_WINDOWS */
+
+#ifndef INT32_MIN
+#include <hybrid/limitcore.h>
+#define INT32_MIN __INT32_MIN__
+#endif /* !INT32_MIN */
+
+#ifndef INT32_MAX
+#include <hybrid/limitcore.h>
+#define INT32_MAX __INT32_MAX__
+#endif /* !INT32_MAX */
 
 DECL_BEGIN
 

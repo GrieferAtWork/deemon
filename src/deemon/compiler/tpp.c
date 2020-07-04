@@ -35,8 +35,7 @@
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/string.h>
-
-#include <string.h>
+#include <deemon/system-features.h>
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4005)

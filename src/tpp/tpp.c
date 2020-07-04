@@ -268,9 +268,9 @@ tpp_memrchr(void const *p, int c, size_t n) {
 }
 #endif /* !__USE_GNU */
 
-#if !defined(__USE_KOS)
-#define strend(s) ((s)+strlen(s))
-#endif /* !__USE_KOS */
+#if !defined(__USE_KOS) && !defined(strend)
+#define strend(s) ((s) + strlen(s))
+#endif /* !__USE_KOS && !strend */
 
 #ifdef _MSC_VER
 extern void __debugbreak(void);

@@ -33,6 +33,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -42,8 +43,6 @@
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
 #endif /* !CONFIG_NO_DEX */
-
-#include <string.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

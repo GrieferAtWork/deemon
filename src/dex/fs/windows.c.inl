@@ -48,8 +48,6 @@
 #include <hybrid/unaligned.h>
 
 #include <Windows.h>
-#include <string.h>
-#include <wchar.h>
 
 #include "../time/libtime.h"
 

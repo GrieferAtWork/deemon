@@ -56,7 +56,6 @@
 #include <deemon/tuple.h>
 
 #include <stdarg.h>
-#include <string.h>
 
 DECL_BEGIN
 

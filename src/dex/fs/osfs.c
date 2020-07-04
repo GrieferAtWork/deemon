@@ -49,8 +49,6 @@
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
-#include <string.h>
-#include <wchar.h>
 #endif /* CONFIG_HOST_WINDOWS */
 
 
@@ -2209,6 +2207,7 @@ typedef struct _DEE_REPARSE_DATA_BUFFER {
 	_dee_aunion
 #define SymbolicLinkReparseBuffer _dee_aunion.SymbolicLinkReparseBuffer
 #define MountPointReparseBuffer   _dee_aunion.MountPointReparseBuffer
+#define LxSymlinkReparseBuffer    _dee_aunion.LxSymlinkReparseBuffer
 #define GenericReparseBuffer      _dee_aunion.GenericReparseBuffer
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;

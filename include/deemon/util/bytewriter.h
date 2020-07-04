@@ -20,10 +20,10 @@
 #ifndef GUARD_DEEMON_UTIL_BYTEWRITER_H
 #define GUARD_DEEMON_UTIL_BYTEWRITER_H 1
 
-#include <string.h>
+#include "../api.h"
+/**/
 
 #include "../alloc.h"
-#include "../api.h"
 #include "../object.h"
 
 DECL_BEGIN
@@ -34,9 +34,15 @@ struct bytewriter {
 	size_t   bw_alloc; /* allocated size */
 };
 #define BYTEWRITER_INIT     { NULL, 0, 0 }
-#define bytewriter_init(x)  (void)((x)->bw_base = NULL, (x)->bw_size = (x)->bw_alloc = 0)
-#define bytewriter_cinit(x) (void)(Dee_ASSERT((x)->bw_base == NULL), Dee_ASSERT((x)->bw_size == 0), Dee_ASSERT((x)->bw_alloc == 0))
-#define bytewriter_fini(x)  Dee_Free((x)->bw_base)
+#define bytewriter_init(x)      \
+	(void)((x)->bw_base = NULL, \
+	       (x)->bw_size = (x)->bw_alloc = 0)
+#define bytewriter_cinit(x)                  \
+	(void)(Dee_ASSERT((x)->bw_base == NULL), \
+	       Dee_ASSERT((x)->bw_size == 0),    \
+	       Dee_ASSERT((x)->bw_alloc == 0))
+#define bytewriter_fini(x) \
+	Dee_Free((x)->bw_base)
 
 /* Reserve memory for at least `n_bytes'  */
 LOCAL uint8_t *DCALL

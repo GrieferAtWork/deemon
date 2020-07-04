@@ -30,8 +30,21 @@
 #include <stdint.h>
 #include <string.h>
 
-/* Figure out how to get alloca() (if it is even available) */
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#elif !defined(CONFIG_HAVE_STRING_H) && \
+      (defined(__NO_has_include) || __has_include(<string.h>))
+#define CONFIG_HAVE_STRING_H 1
+#endif
 
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#elif !defined(CONFIG_HAVE_STRING_H) && \
+      (defined(__NO_has_include) || __has_include(<string.h>))
+#define CONFIG_HAVE_STRING_H 1
+#endif
+
+/* Figure out how to get alloca() (if it is even available) */
 #ifdef CONFIG_NO_ALLOCA_H
 #undef CONFIG_HAVE_ALLOCA_H
 #elif !defined(CONFIG_HAVE_ALLOCA_H) && \
@@ -50,6 +63,14 @@
 #define CONFIG_HAVE_MALLOC_H 1
 #endif
 
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h>
+#endif /* CONFIG_HAVE_STRING_H */
+
+#ifdef CONFIG_HAVE_STRINGS_H
+#include <strings.h>
+#endif /* CONFIG_HAVE_STRINGS_H */
+
 #ifdef CONFIG_HAVE_ALLOCA_H
 #include <alloca.h>
 #endif /* CONFIG_HAVE_ALLOCA_H */
@@ -57,6 +78,19 @@
 #ifdef CONFIG_HAVE_MALLOC_H
 #include <malloc.h>
 #endif /* CONFIG_HAVE_MALLOC_H */
+
+#ifdef CONFIG_NO_memset
+#undef CONFIG_HAVE_memset
+#else
+#define CONFIG_HAVE_memset 1
+#endif
+
+#ifdef CONFIG_NO_bzero
+#undef CONFIG_HAVE_bzero
+#elif !defined(CONFIG_HAVE_bzero) && \
+      (defined(bzero) || defined(__bzero_defined) || defined(CONFIG_HAVE_STRINGS_H))
+#define CONFIG_HAVE_bzero 1
+#endif
 
 #ifdef CONFIG_NO_alloca
 #undef CONFIG_HAVE_alloca
@@ -737,6 +771,29 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 #endif /* !__SIZEOF_POINTER__ */
 #define DEE_AMALLOC_MAX      512
 
+#ifndef CONFIG_HAVE_memset
+#define CONFIG_HAVE_memset 1
+DECL_BEGIN
+#undef memset
+#define memset dee_memset
+LOCAL WUNUSED NONNULL((1)) void *
+dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
+	uint8_t *pdst = (uint8_t *)dst;
+	while (num_bytes--)
+		*pdst++ = (uint8_t)(unsigned int)byte;
+	return dst;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_memset */
+
+#ifndef CONFIG_HAVE_bzero
+#define CONFIG_HAVE_bzero 1
+#undef bzero
+#define bzero(dst, num_bytes) (void)memset(dst, 0, num_bytes)
+#endif /* !CONFIG_HAVE_bzero */
+
+
+
 #ifdef NDEBUG
 #define DEE_AMALLOC_KEY_ALLOCA        0
 #define DEE_AMALLOC_KEY_MALLOC        1
@@ -823,7 +880,7 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 		__BYTE_TYPE__ *_res_ = (__BYTE_TYPE__ *)Dee_Alloca(_s_); \
 		*_res_               = DEE_AMALLOC_KEY_ALLOCA;           \
 		_res_ += DEE_AMALLOC_ALIGN;                              \
-		memset(_res_, 0, _s_ - DEE_AMALLOC_ALIGN);               \
+		bzero(_res_, _s_ - DEE_AMALLOC_ALIGN);                   \
 		XRETURN((void *)_res_);                                  \
 	})
 #define Dee_ACallocHeap(s)                                       \
@@ -860,7 +917,7 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_); \
 			*_res_ = DEE_AMALLOC_KEY_ALLOCA;           \
 			_res_ += DEE_AMALLOC_ALIGN;                \
-			memset(_res_, 0, _s_ - DEE_AMALLOC_ALIGN); \
+			bzero(_res_, _s_ - DEE_AMALLOC_ALIGN);     \
 		}                                              \
 		XRETURN((void *)_res_);                        \
 	})
@@ -878,7 +935,7 @@ FORCELOCAL WUNUSED void *DCALL DeeDbg_AllocaCleanup(void *ptr) {
 			_res_  = (__BYTE_TYPE__ *)Dee_Alloca(_s_);   \
 			*_res_ = DEE_AMALLOC_KEY_ALLOCA;             \
 			_res_ += DEE_AMALLOC_ALIGN;                  \
-			memset(_res_, 0, _s_ - DEE_AMALLOC_ALIGN);   \
+			bzero(_res_, _s_ - DEE_AMALLOC_ALIGN);       \
 		}                                                \
 		XRETURN((void *)_res_);                          \
 	})
@@ -999,8 +1056,11 @@ LOCAL WUNUSED void *(DCALL Dee_AMallocStack_init)(void *p, size_t s) {
 #define Dee_ACalloc(s)      ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ACallocHeap(s) : Dee_ACallocStack(s))
 #define Dee_ATryCalloc(s)   ((s) > DEE_AMALLOC_MAX - DEE_AMALLOC_ALIGN ? Dee_ATryCallocHeap(s) : Dee_ACallocStack(s))
 LOCAL WUNUSED void *(DCALL Dee_ACallocStack_init)(void *p, size_t s) {
+	void *result;
 	*(__BYTE_TYPE__ *)p = DEE_AMALLOC_KEY_ALLOCA;
-	return memset((__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN, 0, s);
+	result = (__BYTE_TYPE__ *)p + DEE_AMALLOC_ALIGN;
+	bzero(result, s);
+	return result;
 }
 
 #define Dee_AFree(p)  Dee_AFree(p)
@@ -1027,7 +1087,7 @@ LOCAL void (DCALL Dee_XAFree)(void *p) {
 			*(void **)&(p)        = Dee_Alloca(_s_);           \
 			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_ALLOCA;    \
 			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;      \
-			memset((void *)(p), 0, _s_ - DEE_AMALLOC_ALIGN);   \
+			bzero((void *)(p), _s_ - DEE_AMALLOC_ALIGN);       \
 		}                                                      \
 	} __WHILE0
 #define Dee_ATryMallocNoFail(p, s)                                \
@@ -1041,7 +1101,7 @@ LOCAL void (DCALL Dee_XAFree)(void *p) {
 			*(void **)&(p)        = Dee_Alloca(_s_);              \
 			*(__BYTE_TYPE__ *)(p) = DEE_AMALLOC_KEY_ALLOCA;       \
 			*(__BYTE_TYPE__ **)&(p) += DEE_AMALLOC_ALIGN;         \
-			memset((void *)(p), 0, _s_ - DEE_AMALLOC_ALIGN);      \
+			bzero((void *)(p), _s_ - DEE_AMALLOC_ALIGN);          \
 		}                                                         \
 	} __WHILE0
 #define Dee_ACallocNoFail(p, s)                                                  \

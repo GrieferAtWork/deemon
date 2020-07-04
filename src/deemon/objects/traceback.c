@@ -31,6 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memcpy() */
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
@@ -39,7 +40,6 @@
 
 #include <stdarg.h>
 #include <stddef.h>
-#include <string.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -48,9 +48,9 @@ DECL_BEGIN
 
 #ifndef CONFIG_NO_THREADS
 INTDEF DeeThreadObject DeeThread_Main;
-#else
+#else /* CONFIG_NO_THREADS */
 DATDEF DeeThreadObject DeeThread_Main;
-#endif
+#endif /* !CONFIG_NO_THREADS */
 
 INTERN struct empty_traceback_object empty_traceback = {
 	OBJECT_HEAD_INIT(&DeeTraceback_Type),

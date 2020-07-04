@@ -32,8 +32,6 @@
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memrchr() */
 
-#include <string.h>
-
 #include "../../runtime/strings.h"
 
 DECL_BEGIN

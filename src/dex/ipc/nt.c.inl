@@ -25,13 +25,13 @@
 #include <deemon/api.h>
 #include <deemon/error.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h> /* DeeNTSystem_IsIntr() */
 #include <deemon/thread.h>
 
 #include <hybrid/atomic.h>
 
 #include <Windows.h>
-#include <string.h>
 
 #include "libipc.h"
 //#include <Winternl.h>

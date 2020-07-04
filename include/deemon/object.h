@@ -37,7 +37,38 @@
 #include "util/rwlock.h"
 #endif /* !CONFIG_NO_THREADS */
 
+#ifdef CONFIG_NO_STRING_H
+#undef CONFIG_HAVE_STRING_H
+#elif !defined(CONFIG_HAVE_STRING_H) && \
+      (defined(__NO_has_include) || __has_include(<string.h>))
+#define CONFIG_HAVE_STRING_H 1
+#endif
+
+#ifdef CONFIG_NO_strlen
+#undef CONFIG_HAVE_strlen
+#else
+#define CONFIG_HAVE_strlen 1
+#endif
+
+#ifdef CONFIG_HAVE_STRING_H
+#include <string.h>
+#endif /* CONFIG_HAVE_STRING_H */
+
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_strlen
+#define CONFIG_HAVE_strlen 1
+DECL_BEGIN
+#undef strlen
+#define strlen dee_strlen
+LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
+	size_t result;
+	for (result = 0; str[result]; ++result)
+		;
+	return result;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_strlen */
 
 #ifdef __INTELLISENSE__
 typedef __INTPTR_TYPE__  intptr_t;

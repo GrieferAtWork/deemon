@@ -32,10 +32,9 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/atomic.h>
-
-#include <string.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

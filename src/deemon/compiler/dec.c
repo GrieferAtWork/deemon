@@ -41,8 +41,6 @@
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
 
-#include <string.h>
-
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_memrchr

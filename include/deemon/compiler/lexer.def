@@ -89,27 +89,6 @@ DEF_K(goto)
 DEF_K(switch)
 DEF_K(case)
 DEF_K(default)
-/* Reserved for future use (intended for loading compiler extensions):
- * >> import extension C from compiler; // Enable support for C compatibility
- * >> // The C compiler extension makes heavy use of the `ctypes' module.
- * >> #include <string.h>
- * >> 
- * >> extern "libc.so": void *malloc(size_t num_bytes);
- * >> extern "libc.so": void free(void *ptr);
- * >> 
- * >> void *p = malloc(42);
- * >> print p;
- * >> free(p);
- * You might remember this stuff from the old deemon which had this
- * whole deal about C compatibility. This however, I chose to leave
- * in the past in favor of a cleaner core language.
- * Yet I still wish to remain backwards-compatible and believe that
- * the user should still be allowed access to foreign-functions and
- * so on, so long that anything not using them must be designed without
- * the possibility of some user-code randomly accessing memory without
- * prior inclusion of the `C' compiler extension (which would then
- * be restricted to deny access from code run by untrusted sources). */
-/* DEF_K(extension) */
 
 /* Class scope & related keywords. */
 DEF_K(private)

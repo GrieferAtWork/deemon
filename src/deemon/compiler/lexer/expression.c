@@ -39,10 +39,8 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memchr() */
 #include <deemon/tuple.h>
-
-#include <string.h> /* memchr */
 
 #include "../../runtime/strings.h"
 

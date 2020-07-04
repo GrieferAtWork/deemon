@@ -42,9 +42,6 @@
 
 #include <hybrid/atomic.h>
 
-#include <assert.h>
-#include <string.h>
-
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 

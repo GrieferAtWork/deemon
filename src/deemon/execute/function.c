@@ -42,8 +42,6 @@
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 
-#include <string.h>
-
 #include "../objects/seq/varkwds.h"
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"

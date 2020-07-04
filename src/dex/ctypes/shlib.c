@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h>
 
 #include <hybrid/atomic.h>
@@ -39,8 +40,6 @@
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
-
-#include <string.h>
 
 DECL_BEGIN
 

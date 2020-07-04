@@ -48,12 +48,11 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/objmethod.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/typecore.h>
-
-#include <string.h>
 
 DECL_BEGIN
 
