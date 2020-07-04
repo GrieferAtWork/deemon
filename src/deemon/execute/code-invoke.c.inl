@@ -158,9 +158,9 @@ MY_FUNCTION_NAME(DeeFunctionObject *self
 		if unlikely(!packed_args)
 			goto err;
 		DeeTuple_SET(packed_args, 0, this_arg);
-		MEMCPY_PTR(DeeTuple_ELEM(packed_args) + 1,
-		           GET_ARGV(),
-		           GET_ARGC());
+		memcpyc(DeeTuple_ELEM(packed_args) + 1,
+		        GET_ARGV(), GET_ARGC(),
+		        sizeof(DeeObject *));
 		/* Perform a regular callback. */
 #ifdef CALL_KW
 		result = DeeFunction_CallTupleKw(self,
@@ -307,7 +307,9 @@ err_ex_frame:
 				goto err;
 		}
 		/* Per-initialize local variable memory to ZERO. */
-		MEMSET_PTR(frame.cf_frame, 0, code->co_localc);
+		bzeroc(frame.cf_frame,
+		       code->co_localc,
+		       sizeof(DREF DeeObject *));
 #ifndef NDEBUG
 		frame.cf_prev = CODE_FRAME_NOT_EXECUTING;
 #endif /* !NDEBUG */

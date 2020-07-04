@@ -23,7 +23,6 @@
 #include "../api.h"
 #include "../code.h"
 #include "../object.h"
-#include "../util/string.h"
 
 #ifdef CONFIG_BUILDING_DEEMON
 #include "tpp.h"

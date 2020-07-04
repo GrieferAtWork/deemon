@@ -33,12 +33,12 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/system.h> /* DeeSystem_SEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
 #include <deemon/util/recursive-rwlock.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -582,8 +582,9 @@ done_assembler_fini:
 			                                            sizeof(DREF DeeObject *));
 			if unlikely(!new_localv)
 				goto err_result;
-			MEMSET_PTR(new_localv + old_co_localc, 0,
-			           req_localc - old_co_localc);
+			bzeroc(new_localv + old_co_localc,
+			       req_localc - old_co_localc,
+			       sizeof(DREF DeeObject *));
 			/* Install the new stack. */
 			self->im_frame.cf_frame = new_localv;
 		}

@@ -144,7 +144,6 @@
     <ClInclude Include="..\include\deemon\util\objectlist.h" />
     <ClInclude Include="..\include\deemon\util\recursive-rwlock.h" />
     <ClInclude Include="..\include\deemon\util\rwlock.h" />
-    <ClInclude Include="..\include\deemon\util\string.h" />
     <ClInclude Include="..\include\deemon\weakref.h" />
     <ClInclude Include="..\src\deemon\cmdline.h" />
     <ClInclude Include="..\src\deemon\objects\gc_inspect.h" />

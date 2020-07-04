@@ -26,7 +26,6 @@
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
 #include <deemon/system-features.h> /* memrchr(), memmem(), ... */
-#include <deemon/util/string.h>
 
 #include <hybrid/minmax.h>
 

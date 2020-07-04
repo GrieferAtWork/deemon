@@ -111,9 +111,6 @@
     <ClInclude Include="..\include\deemon\util\rwlock.h">
       <Filter>include\deemon\util</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\deemon\util\string.h">
-      <Filter>include\deemon\util</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\deemon\runtime\runtime_error.h">
       <Filter>src\deemon\runtime</Filter>
     </ClInclude>

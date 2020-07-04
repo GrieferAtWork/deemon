@@ -34,7 +34,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/util/string.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/atomic.h>
 
@@ -1111,7 +1111,8 @@ enumattr_start(EnumAttrIter *__restrict self) {
 		size_t count   = (size_t)(self->ei_bufpos - self->ei_buffer);
 		Attr **new_pos = COMPILER_ENDOF(self->ei_buffer) - count;
 		ASSERT(count < CONFIG_LONGJMP_ENUMATTR_CLUSTER);
-		MEMMOVE_PTR(new_pos, self->ei_buffer, count);
+		memmoveupc(new_pos, self->ei_buffer,
+		           count, sizeof(Attr *));
 		self->ei_bufpos = new_pos;
 		if (setjmp(self->ei_continue) == 0)
 			longjmp(self->ei_break, BRKSIG_YIELD);

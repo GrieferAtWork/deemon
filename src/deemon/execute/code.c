@@ -37,7 +37,6 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>

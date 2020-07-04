@@ -35,8 +35,8 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #include <deemon/compiler/doctext.h>
@@ -129,7 +129,9 @@ astlist_appendall(struct astlist *__restrict self,
 			return -1;
 	}
 	ASSERT(self->ast_c + other->ast_c <= self->ast_a);
-	MEMCPY_PTR(self->ast_v + self->ast_c, other->ast_v, other->ast_c);
+	memcpyc(self->ast_v + self->ast_c,
+	        other->ast_v, other->ast_c,
+	        sizeof(DREF struct ast *));
 	self->ast_c += other->ast_c;
 	other->ast_c = 0; /* Steal all of these references. */
 	return 0;

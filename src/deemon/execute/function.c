@@ -37,10 +37,10 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <string.h>
 
@@ -311,7 +311,8 @@ DeeFunction_NewInherited(DeeObject *code, size_t refc,
 	if unlikely(!result)
 		goto done;
 	result->fo_code = (DREF DeeCodeObject *)code;
-	MEMCPY_PTR(result->fo_refv, refv, refc);
+	memcpyc(result->fo_refv, refv, refc,
+	        sizeof(DREF DeeObject *));
 	Dee_Incref(code);
 	DeeObject_Init(result, &DeeFunction_Type);
 done:
@@ -795,7 +796,8 @@ yf_copy(YFunction *__restrict self,
 		if unlikely(!kw)
 			goto err;
 		self->yf_kw = kw;
-		MEMCPY_PTR(kw->fk_kargv, &other->yf_kw->fk_kargv, count);
+		memcpyc(kw->fk_kargv, &other->yf_kw->fk_kargv,
+		        count, sizeof(DREF DeeObject *));
 		if (other->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
 			self->yf_kw->fk_kw      = other->yf_kw->fk_kw;
 			self->yf_kw->fk_varkwds = NULL; /* Don't copy this one... */

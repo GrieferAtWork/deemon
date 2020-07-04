@@ -39,6 +39,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <hybrid/unaligned.h>
@@ -983,10 +984,11 @@ done_y1:
 							Dee_Decref(merge);
 							goto err_r;
 						}
-						DeeTuple_SET(tuple, 0, result); /* Inherit reference. */
-						MEMCPY_PTR(DeeTuple_ELEM(tuple) + 1,
-						           DeeTuple_ELEM(merge),
-						           DeeTuple_SIZE(merge)); /* Inherit references. */
+						DeeTuple_SET(tuple, 0, result);   /* Inherit reference. */
+						memcpyc(DeeTuple_ELEM(tuple) + 1, /* Inherit references. */
+						        DeeTuple_ELEM(merge),
+						        DeeTuple_SIZE(merge),
+						        sizeof(DREF DeeObject *));
 						DeeTuple_DecrefSymbolic(merge);
 						result = tuple; /* Inherit references. */
 					}

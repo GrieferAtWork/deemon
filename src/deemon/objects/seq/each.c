@@ -29,8 +29,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include "../../runtime/runtime_error.h"
 
@@ -647,7 +647,8 @@ seo_copy(SeqEachOperator *__restrict self,
 	self->se_seq    = other->se_seq;
 	self->so_opname = other->so_opname;
 	self->so_opargc = other->so_opargc;
-	MEMCPY_PTR(self->so_opargv, other->so_opargv, self->so_opargc);
+	memcpyc(self->so_opargv, other->so_opargv,
+	        self->so_opargc, sizeof(DREF DeeObject *));
 	for (i = 0; i < self->so_opargc; ++i)
 		Dee_Incref(self->so_opargv[i]);
 	Dee_Incref(self->se_seq);
@@ -708,7 +709,8 @@ seo_init(SeqEachOperator *__restrict self,
 			goto err;
 	}
 	self->so_opargc = (uint16_t)DeeTuple_SIZE(args);
-	MEMCPY_PTR(self->so_opargv, DeeTuple_ELEM(args), self->so_opargc);
+	memcpyc(self->so_opargv, DeeTuple_ELEM(args),
+	        self->so_opargc, sizeof(DREF DeeObject *));
 	for (i = 0; i < self->so_opargc; ++i)
 		Dee_Incref(self->so_opargv[i]);
 	Dee_Incref(self->se_seq);
@@ -1548,7 +1550,8 @@ DeeSeqEach_CallAttr(DeeObject *__restrict self,
 	result->se_seq  = self;
 	result->sg_attr = (DREF struct string_object *)attr;
 	result->sg_argc = argc;
-	MEMCPY_PTR(result->sg_argv, argv, argc);
+	memcpyc(result->sg_argv, argv,
+	        argc, sizeof(DREF DeeObject *));
 	for (i = 0; i < argc; ++i)
 		Dee_Incref(argv[i]);
 	Dee_Incref(self);
@@ -1576,7 +1579,8 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
 	result->sg_attr = (DREF struct string_object *)attr;
 	result->sg_kw   = kw;
 	result->sg_argc = argc;
-	MEMCPY_PTR(result->sg_argv, argv, argc);
+	memcpyc(result->sg_argv, argv,
+	        argc, sizeof(DREF DeeObject *));
 	for (i = 0; i < argc; ++i)
 		Dee_Incref(argv[i]);
 	Dee_Incref(self);

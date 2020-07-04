@@ -33,8 +33,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -788,7 +788,9 @@ done_decref_vector:
 			goto err_cannot_inherit;
 		/* Simply copy all the elements, transferring
 		 * all the references that they represent. */
-		MEMCPY_PTR(vector, me->sm_vector, me->sm_length * 2);
+		memcpyc(vector, me->sm_vector,
+		        me->sm_length * 2,
+		        sizeof(DREF DeeObject *));
 		/* Give the SharedMap its very own copy
 		 * which it will take to its grave. */
 		me->sm_vector = (DeeSharedItem *)vector;

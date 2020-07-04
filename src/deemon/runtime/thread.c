@@ -104,7 +104,6 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/overflow.h>
@@ -4023,7 +4022,8 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_vector)
 				goto err;
-			MEMCPY_PTR(new_vector, vector->cf_frame, code->co_localc);
+			memcpyc(new_vector, vector->cf_frame,
+			        code->co_localc, sizeof(DREF DeeObject *));
 			vector->cf_frame = new_vector;
 		}
 		if (!vector->cf_argc) {
@@ -4033,7 +4033,8 @@ copy_dynmem(size_t length, struct code_frame *__restrict vector) {
 			                                           sizeof(DREF DeeObject *));
 			if unlikely(!new_vector)
 				goto err;
-			MEMCPY_PTR(new_vector, vector->cf_argv, vector->cf_argc);
+			memcpyc(new_vector, vector->cf_argv,
+			        vector->cf_argc, sizeof(DREF DeeObject *));
 			vector->cf_argv = new_vector;
 		}
 	}

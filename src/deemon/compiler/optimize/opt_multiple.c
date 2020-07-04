@@ -32,8 +32,8 @@
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 DECL_BEGIN
 
@@ -79,7 +79,10 @@ multiple_continue_at_iter:
 			ast_decref(*iter);
 			--end;
 			--self->a_multiple.m_astc;
-			MEMMOVE_PTR(iter, iter + 1, (size_t)(end - iter));
+			memmovedownc(iter,
+			             iter + 1,
+			             (size_t)(end - iter),
+			             sizeof(DREF struct ast *));
 			++optimizer_count;
 			goto multiple_continue_at_iter;
 		} else if (temp > 0) {
@@ -298,7 +301,10 @@ continue_inline_at_iter:
 				if (!inner->a_multiple.m_astc) {
 					ast_decref(expand);
 					--end;
-					MEMMOVE_PTR(iter, iter + 1, (size_t)(end - iter));
+					memmovedownc(iter,
+					             iter + 1,
+					             (size_t)(end - iter),
+					             sizeof(DREF struct ast *));
 					--self->a_multiple.m_astc;
 					goto continue_inline_at_iter;
 				}
@@ -313,12 +319,13 @@ continue_inline_at_iter:
 				self->a_multiple.m_astv = new_astv;
 				self->a_multiple.m_astc += inner->a_multiple.m_astc - 1;
 				end = new_astv + self->a_multiple.m_astc;
-				MEMMOVE_PTR(iter + inner->a_multiple.m_astc,
-				            iter + 1,
-				            move_count);
-				MEMCPY_PTR(iter,
-				           inner->a_multiple.m_astv,
-				           inner->a_multiple.m_astc);
+				memmoveupc(iter + inner->a_multiple.m_astc,
+				           iter + 1, move_count,
+				           sizeof(struct ast *));
+				memcpyc(iter,
+				        inner->a_multiple.m_astv,
+				        inner->a_multiple.m_astc,
+				        sizeof(struct ast *));
 				Dee_Free(inner->a_multiple.m_astv);
 				inner->a_multiple.m_astc = 0;
 				inner->a_multiple.m_astv = NULL;
@@ -340,7 +347,10 @@ continue_inline_at_iter:
 				if (!len) {
 					ast_decref(expand);
 					--end;
-					MEMMOVE_PTR(iter, iter + 1, (size_t)(end - iter));
+					memmovedownc(iter,
+					             iter + 1,
+					             (size_t)(end - iter),
+					             sizeof(DREF struct ast *));
 					--self->a_multiple.m_astc;
 					goto continue_inline_at_iter;
 				}
@@ -359,18 +369,21 @@ err_expand_vec:
 				self->a_multiple.m_astv = new_astv;
 				self->a_multiple.m_astc += len - 1;
 				end = new_astv + self->a_multiple.m_astc;
-				MEMMOVE_PTR(iter + len,
-				            iter + 1,
-				            move_count);
+				/* NOTE: len >= 1 */
+				memmoveupc(iter + len,
+				           iter + 1,
+				           move_count,
+				           sizeof(DREF struct ast *));
 				/* Wrap all of the sequence elements of the
 				 * inner expression into constant-branches. */
 				for (i = 0; i < len; ++i) {
 					DREF struct ast *constant_ast;
 					constant_ast = ast_setddi(ast_constexpr(vec[i]), &inner->a_ddi);
 					if unlikely(!constant_ast) {
-						MEMMOVE_PTR(iter + i + len,
-						            iter + i + 1,
-						            move_count - i);
+						memmoveupc(iter + i + len,
+						           iter + i + 1,
+						           move_count - i,
+						           sizeof(DREF struct ast *));
 						self->a_multiple.m_astc -= len - i;
 						goto err_expand_vec;
 					}

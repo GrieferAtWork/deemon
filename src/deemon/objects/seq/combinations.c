@@ -30,9 +30,9 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -41,6 +41,11 @@
 #include "../../runtime/runtime_error.h"
 
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_memsetp
+#define memsetp dee_memsetp
+DeeSystem_DEFINE_memsetp(memsetp)
+#endif /* !CONFIG_HAVE_memsetp */
 
 INTDEF DeeTypeObject SeqCombinations_Type;
 INTDEF DeeTypeObject SeqCombinationsIterator_Type;
@@ -162,8 +167,10 @@ comiter_copy(CombinationsIterator *__restrict self,
 	if unlikely(!self->ci_indices)
 		goto err;
 	rwlock_read(&other->ci_lock);
-	memcpy(self->ci_indices, other->ci_indices,
-	       other->ci_combi->c_comlen * sizeof(size_t));
+	memcpyc(self->ci_indices,
+	        other->ci_indices,
+	        other->ci_combi->c_comlen,
+	        sizeof(size_t));
 	self->ci_first = other->ci_first;
 	rwlock_endread(&other->ci_lock);
 	rwlock_init(&self->ci_lock);
@@ -182,9 +189,10 @@ comiter_deep(CombinationsIterator *__restrict self,
 	if unlikely(!self->ci_indices)
 		goto err;
 	rwlock_read(&other->ci_lock);
-	memcpy(self->ci_indices, other->ci_indices,
-	       other->ci_combi->c_comlen *
-	       sizeof(size_t));
+	memcpyc(self->ci_indices,
+	        other->ci_indices,
+	        other->ci_combi->c_comlen,
+	        sizeof(size_t));
 	self->ci_first = other->ci_first;
 	rwlock_endread(&other->ci_lock);
 	rwlock_init(&self->ci_lock);
@@ -231,9 +239,10 @@ update_indices:
 	for (++i; i < comlen; ++i)
 		self->ci_indices[i] = self->ci_indices[i - 1] + 1;
 copy_indices:
-	memcpy(result_indices,
-	       self->ci_indices,
-	       comlen * sizeof(size_t));
+	memcpyc(result_indices,
+	        self->ci_indices,
+	        comlen,
+	        sizeof(size_t));
 	rwlock_endwrite(&self->ci_lock);
 	result = DeeTuple_NewUninitialized(comlen);
 	if unlikely(!result)
@@ -410,17 +419,15 @@ com_copy(Combinations *__restrict self,
 	self->c_elem = other->c_elem;
 	if (other->c_elem &&
 	    other->c_elem != DeeTuple_ELEM(other->c_seq)) {
-		size_t i;
 		DREF DeeObject **elem_copy;
 		ASSERT(other->c_seqlen != 0);
 		elem_copy = (DREF DeeObject **)Dee_Malloc(other->c_seqlen *
 		                                          sizeof(DREF DeeObject *));
 		if unlikely(!elem_copy)
 			goto err;
-		MEMFIL_PTR(elem_copy, other->c_elem, other->c_seqlen);
-		for (i = 0; i < other->c_seqlen; ++i)
-			Dee_Incref(elem_copy[i]);
-		self->c_elem = elem_copy;
+		self->c_elem = Dee_Movrefv(elem_copy,
+		                           other->c_elem,
+		                           other->c_seqlen);
 	}
 	self->c_seq        = other->c_seq;
 	self->c_seqlen     = other->c_seqlen;
@@ -627,7 +634,7 @@ rcomiter_next(CombinationsIterator *__restrict self) {
 				DeeTuple_FreeUninitialized(result);
 				goto err;
 			}
-			MEMFIL_PTR(DeeTuple_ELEM(result), elem, comlen);
+			memsetp(DeeTuple_ELEM(result), elem, comlen);
 			Dee_Incref_n(elem, comlen);
 			return result;
 		}
@@ -649,9 +656,10 @@ update_indices:
 	offset = self->ci_indices[i] + 1;
 	for (; i < comlen; ++i)
 		self->ci_indices[i] = offset;
-	memcpy(result_indices,
-	       self->ci_indices,
-	       comlen * sizeof(size_t));
+	memcpyc(result_indices,
+	        self->ci_indices,
+	        comlen,
+	        sizeof(size_t));
 	rwlock_endwrite(&self->ci_lock);
 	result = DeeTuple_NewUninitialized(comlen);
 	if unlikely(!result)
@@ -897,9 +905,10 @@ increment_i:
 		break;
 	}
 copy_indices:
-	memcpy(result_indices,
-	       self->ci_indices,
-	       comlen * sizeof(size_t));
+	memcpyc(result_indices,
+	        self->ci_indices,
+	        comlen,
+	        sizeof(size_t));
 	rwlock_endwrite(&self->ci_lock);
 	result = DeeTuple_NewUninitialized(comlen);
 	if unlikely(!result)

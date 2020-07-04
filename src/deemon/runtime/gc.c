@@ -32,6 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -41,8 +42,6 @@
 #include <deemon/util/recursive-rwlock.h>
 #include <deemon/util/rwlock.h>
 #endif /* !CONFIG_NO_THREADS */
-
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -399,10 +398,10 @@ gc_dep_partners_insertall_after_resize(struct gc_dep_partners *__restrict self,
 		obj = vec[src_index].dp_obj;
 		for (;;) {
 			if (dst_index >= nth_object) {
-				memcpy(&self->dp_pvec[nth_object],
-				       &vec[src_index],
-				       (count - src_index) *
-				       sizeof(struct gc_dep_partner));
+				memcpyc(&self->dp_pvec[nth_object],
+				        &vec[src_index],
+				        count - src_index,
+				        sizeof(struct gc_dep_partner));
 				return;
 			}
 			ASSERTF(obj != self->dp_pvec[dst_index].dp_obj,
@@ -425,7 +424,8 @@ gc_dep_partners_insertall_after_resize(struct gc_dep_partners *__restrict self,
 #else /* CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
 	ASSERT((nth_object + count) <= self->dp_pnum);
 	ASSERT(count != 0);
-	memcpy(&self->dp_pvec[nth_object], vec, count * sizeof(struct gc_dep_partner));
+	memcpyc(&self->dp_pvec[nth_object], vec,
+	        count, sizeof(struct gc_dep_partner));
 #endif /* !CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
 }
 

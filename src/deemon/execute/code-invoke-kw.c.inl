@@ -372,7 +372,9 @@ UNIQUE(err_kargv):
 		}
 	}
 	/* Per-initialize local variable memory to ZERO. */
-	MEMSET_PTR(frame.cf_frame, 0, code->co_localc);
+	bzeroc(frame.cf_frame,
+	       code->co_localc,
+	       sizeof(DREF DeeObject *));
 #ifndef NDEBUG
 	frame.cf_prev  = CODE_FRAME_NOT_EXECUTING;
 #endif /* !NDEBUG */

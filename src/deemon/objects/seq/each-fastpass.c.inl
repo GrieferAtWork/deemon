@@ -472,7 +472,8 @@ F(copy)(STRUCT_TYPE *__restrict other) {
 	result->se_seq  = other->se_seq;
 	result->sg_attr = other->sg_attr;
 	result->sg_argc = other->sg_argc;
-	MEMCPY_PTR(result->sg_argv, other->sg_argv, result->sg_argc);
+	memcpyc(result->sg_argv, other->sg_argv,
+	        result->sg_argc, sizeof(DREF DeeObject *));
 	for (i = 0; i < result->sg_argc; ++i)
 		Dee_Incref(result->sg_argv[i]);
 #ifdef DEFINE_CALLATTRKW
@@ -553,7 +554,8 @@ F(init)(size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	result->sg_argc = DeeTuple_SIZE(args);
-	MEMCPY_PTR(result->sg_argv, DeeTuple_ELEM(args), DeeTuple_SIZE(args));
+	memcpyc(result->sg_argv, DeeTuple_ELEM(args),
+	        DeeTuple_SIZE(args), sizeof(DREF DeeObject *));
 	for (i = 0; i < DeeTuple_SIZE(args); ++i)
 		Dee_Incref(result->sg_argv[i]);
 #ifdef DEFINE_CALLATTRKW

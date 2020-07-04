@@ -31,9 +31,9 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -830,7 +830,9 @@ instance_tcopy(DeeTypeObject *tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -870,7 +872,9 @@ instance_tdeepcopy(DeeTypeObject *tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -929,8 +933,9 @@ instance_builtin_tcopy(DeeTypeObject *tp_self,
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
 	rwlock_read(&other_instance->id_lock);
-	MEMCPY_PTR(instance->id_vtab,
-	           other_instance->id_vtab, size);
+	memcpyc(instance->id_vtab,
+	        other_instance->id_vtab,
+	        size, sizeof(DREF DeeObject *));
 	for (i = 0; i < size; ++i)
 		Dee_XIncref(instance->id_vtab[i]);
 	rwlock_endread(&other_instance->id_lock);
@@ -961,8 +966,9 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 	other_instance = DeeInstance_DESC(desc, other);
 	size           = desc->cd_desc->cd_imemb_size;
 	rwlock_read(&other_instance->id_lock);
-	MEMCPY_PTR(instance->id_vtab,
-	           other_instance->id_vtab, size);
+	memcpyc(instance->id_vtab,
+	        other_instance->id_vtab,
+	        size, sizeof(DREF DeeObject *));
 	for (i = 0; i < size; ++i)
 		Dee_XIncref(instance->id_vtab[i]);
 	rwlock_endread(&other_instance->id_lock);
@@ -1064,7 +1070,8 @@ instance_builtin_tassign(DeeTypeObject *tp_self,
 		goto err;
 	/* Load member values from `others' */
 	rwlock_read(&other_instance->id_lock);
-	MEMCPY_PTR(old_items, other_instance->id_vtab, size);
+	memcpyc(old_items, other_instance->id_vtab,
+	        size, sizeof(DREF DeeObject *));
 	for (i = 0; i < size; ++i)
 		Dee_XIncref(old_items[i]);
 	rwlock_endread(&other_instance->id_lock);
@@ -1110,8 +1117,11 @@ instance_builtin_tmoveassign(DeeTypeObject *tp_self,
 		goto err;
 	/* Load member values from `others', while also unbinding all members. */
 	rwlock_write(&other_instance->id_lock);
-	MEMCPY_PTR(old_items, other_instance->id_vtab, size);
-	MEMSET_PTR(other_instance->id_vtab, 0, size);
+	memcpyc(old_items, other_instance->id_vtab,
+	        size, sizeof(DREF DeeObject *));
+	bzeroc(other_instance->id_vtab,
+	       size,
+	       sizeof(DREF DeeObject *));
 	rwlock_endread(&other_instance->id_lock);
 	/* Exchange our own member values with those loaded from `other' */
 	rwlock_write(&instance->id_lock);
@@ -1280,7 +1290,9 @@ instance_super_tctor(DeeTypeObject *__restrict tp_self,
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1352,7 +1364,9 @@ instance_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1426,7 +1440,9 @@ instance_super_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1497,7 +1513,9 @@ instance_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1573,7 +1591,9 @@ instance_super_tinitkw(DeeTypeObject *tp_self,
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1645,7 +1665,9 @@ instance_kwsuper_tinitkw(DeeTypeObject *tp_self,
 		goto err_args_only;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1716,7 +1738,9 @@ instance_builtin_super_tctor(DeeTypeObject *__restrict tp_self,
 		goto err_args;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1766,7 +1790,9 @@ instance_builtin_kwsuper_tctor(DeeTypeObject *__restrict tp_self,
 		goto err_args;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1820,7 +1846,9 @@ instance_builtin_super_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err_args;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1870,7 +1898,9 @@ instance_builtin_kwsuper_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err_args;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1925,7 +1955,9 @@ instance_builtin_super_tinitkw(DeeTypeObject *tp_self,
 		goto err_args;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -1976,7 +2008,9 @@ instance_builtin_kwsuper_tinitkw(DeeTypeObject *tp_self,
 		goto err_args;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2024,7 +2058,9 @@ instance_tctor(DeeTypeObject *__restrict tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2065,7 +2101,9 @@ instance_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2107,7 +2145,9 @@ instance_tinitkw(DeeTypeObject *tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2149,7 +2189,9 @@ instance_nobase_tctor(DeeTypeObject *__restrict tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	if unlikely(!result)
@@ -2180,7 +2222,9 @@ instance_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, argc, argv);
 	if unlikely(!result)
@@ -2212,7 +2256,9 @@ instance_nobase_tinitkw(DeeTypeObject *tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCallKw(func, self, argc, argv, kw);
 	if unlikely(!result)
@@ -2247,7 +2293,9 @@ instance_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2288,7 +2336,9 @@ instance_inherited_tinitkw(DeeTypeObject *tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2324,7 +2374,9 @@ instance_builtin_tctor(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2349,7 +2401,9 @@ instance_builtin_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	}
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2386,7 +2440,9 @@ instance_builtin_tinitkw(DeeTypeObject *tp_self,
 	}
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2409,7 +2465,9 @@ instance_builtin_nobase_tctor(DeeTypeObject *__restrict tp_self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	return 0;
 }
 
@@ -2423,7 +2481,9 @@ instance_builtin_nobase_tinit(DeeTypeObject *tp_self,
 		return err_unimplemented_constructor(tp_self, argc, argv);
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	return 0;
 }
 
@@ -2449,7 +2509,9 @@ instance_builtin_nobase_tinitkw(DeeTypeObject *tp_self,
 	}
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	return 0;
 err:
 	return -1;
@@ -2465,7 +2527,9 @@ instance_builtin_inherited_tctor(DeeTypeObject *__restrict tp_self,
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2486,7 +2550,9 @@ instance_builtin_inherited_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2513,7 +2579,9 @@ instance_builtin_inherited_tinitkw(DeeTypeObject *tp_self,
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -2955,7 +3023,9 @@ instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -3007,7 +3077,9 @@ instance_auto_tinitkw(DeeTypeObject *tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -3052,7 +3124,9 @@ instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -3089,7 +3163,9 @@ instance_builtin_auto_tinitkw(DeeTypeObject *tp_self,
 	DeeTypeObject *tp_super;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Initialize the super-classes. */
 	tp_super = DeeType_Base(tp_self);
 	if (tp_super && tp_super != &DeeObject_Type) {
@@ -3153,7 +3229,9 @@ instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	if unlikely(!result)
@@ -3191,7 +3269,9 @@ instance_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 		goto err;
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Invoke the user-defined class constructor. */
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	if unlikely(!result)
@@ -3222,7 +3302,9 @@ instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Auto-initialize members. */
 	if unlikely(instance_autoload_members(tp_self,
 	                                      desc,
@@ -3246,7 +3328,9 @@ instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 	struct instance_desc *instance = DeeInstance_DESC(desc, self);
 	/* Default-initialize the members of this instance. */
 	rwlock_init(&instance->id_lock);
-	MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+	bzeroc(instance->id_vtab,
+	       desc->cd_desc->cd_imemb_size,
+	       sizeof(DREF DeeObject *));
 	/* Auto-initialize members. */
 	if unlikely(instance_autoload_members_kw(tp_self,
 		                                      desc,

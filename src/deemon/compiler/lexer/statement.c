@@ -26,8 +26,8 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 DECL_BEGIN
 
@@ -945,7 +945,10 @@ handle_post_label:
 					                                        sizeof(DREF struct ast *));
 					if unlikely(!elemv)
 						goto err_label_ast;
-					MEMMOVE_PTR(elemv + 1, elemv, result->a_multiple.m_astc);
+					memmoveupc(elemv + 1,
+					           elemv,
+					           result->a_multiple.m_astc,
+					           sizeof(DREF struct ast *));
 					result->a_multiple.m_astc += 1;
 					result->a_multiple.m_astv = elemv;
 					elemv[0]                  = label_ast; /* Inherit reference. */

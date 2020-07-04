@@ -36,9 +36,9 @@
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/sched/yield.h>
@@ -169,9 +169,11 @@ dict_init_iterator(Dict *self, DeeObject *iterator) {
 	weakref_support_init(self);
 	if unlikely(dict_insert_iterator(self, iterator)) {
 		dict_fini(self);
-		return -1;
+		goto err;
 	}
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
@@ -205,8 +207,9 @@ dict_init_sequence(Dict *__restrict self,
 			                                              sizeof(struct dict_item));
 			if unlikely(!self->d_elem)
 				goto err;
-			memcpy(self->d_elem, src->rd_elem,
-			       (self->d_mask + 1) * sizeof(struct dict_item));
+			memcpyc(self->d_elem, src->rd_elem,
+			        self->d_mask + 1,
+			        sizeof(struct dict_item));
 			end = (iter = self->d_elem) + (self->d_mask + 1);
 			for (; iter != end; ++iter) {
 				if (!iter->di_key)
@@ -293,15 +296,18 @@ again:
 	self->d_used = other->d_used;
 	self->d_size = other->d_size;
 	if ((self->d_elem = other->d_elem) != empty_dict_items) {
-		self->d_elem = (struct dict_item *)Dee_TryMalloc((other->d_mask + 1) * sizeof(struct dict_item));
+		self->d_elem = (struct dict_item *)Dee_TryMalloc((other->d_mask + 1) *
+		                                                 sizeof(struct dict_item));
 		if unlikely(!self->d_elem) {
 			DeeDict_LockEndRead(other);
-			if (Dee_CollectMemory((other->d_mask + 1) * sizeof(struct dict_item)))
+			if (Dee_CollectMemory((other->d_mask + 1) *
+			                      sizeof(struct dict_item)))
 				goto again;
-			return -1;
+			goto err;
 		}
-		memcpy(self->d_elem, other->d_elem,
-		       (self->d_mask + 1) * sizeof(struct dict_item));
+		memcpyc(self->d_elem, other->d_elem,
+		        self->d_mask + 1,
+		        sizeof(struct dict_item));
 		end = (iter = self->d_elem) + (self->d_mask + 1);
 		for (; iter != end; ++iter) {
 			if (!iter->di_key)
@@ -313,6 +319,8 @@ again:
 	DeeDict_LockEndRead(other);
 	weakref_support_init(self);
 	return 0;
+err:
+	return -1;
 }
 
 
@@ -913,7 +921,9 @@ again:
 		key_ob->s_data = NULL;
 		key_ob->s_hash = hash;
 		key_ob->s_len  = key_len;
-		memcpy(key_ob->s_str, key, (key_len + 1) * sizeof(char));
+		memcpyc(key_ob->s_str, key,
+		        key_len + 1,
+		        sizeof(char));
 		if (first_dummy->di_key)
 			Dee_DecrefNokill(first_dummy->di_key);
 		/* Fill in the target slot. */
@@ -1011,7 +1021,8 @@ again:
 		key_ob->s_data = NULL;
 		key_ob->s_hash = hash;
 		key_ob->s_len  = keylen;
-		memcpy(key_ob->s_str, key, keylen * sizeof(char));
+		memcpyc(key_ob->s_str, key,
+		        keylen, sizeof(char));
 		key_ob->s_str[keylen] = '\0';
 		if (first_dummy->di_key)
 			Dee_DecrefNokill(first_dummy->di_key);
@@ -1299,7 +1310,7 @@ again:
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
-			return -1; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		if (error > 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing item. */
@@ -1363,6 +1374,7 @@ again:
 	DeeDict_LockEndWrite(self);
 	if (Dee_CollectMemory(1))
 		goto again_lock;
+err:
 	return -1;
 }
 
@@ -1410,7 +1422,7 @@ again:
 		error = DeeObject_CompareEq(key, item_key);
 		Dee_Decref(item_key);
 		if unlikely(error < 0)
-			return -1; /* Error in compare operator. */
+			goto err; /* Error in compare operator. */
 		if (error > 0) {
 			DREF DeeObject *item_value;
 			/* Found an existing key. */
@@ -1497,6 +1509,7 @@ again:
 	DeeDict_LockEndWrite(self);
 	if (Dee_CollectMemory(1))
 		goto again_lock;
+err:
 	return -1;
 }
 
@@ -1540,8 +1553,10 @@ dict_nsi_insertnew(Dict *self, DeeObject *key,
 	int error;
 	error = dict_setitem_ex(self, key, value, SETITEM_SETNEW, poldvalue);
 	if unlikely(error < 0)
-		return -1;
+		goto err;
 	return !error;
+err:
+	return -1;
 }
 
 PRIVATE struct type_nsi dict_nsi = {

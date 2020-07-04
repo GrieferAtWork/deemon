@@ -31,8 +31,8 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -1244,7 +1244,8 @@ clear_argv:
 				Dee_Free(argv);
 				argv = NULL;
 			} else {
-				MEMCPY_PTR(argv, me->kmo_argv, argc);
+				memcpyc(argv, me->kmo_argv,
+				        argc, sizeof(DREF DeeObject *));
 				for (i = 0; i < argc; ++i)
 					Dee_Incref(argv[i]);
 			}

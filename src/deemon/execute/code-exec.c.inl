@@ -42,10 +42,10 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/byteorder.h>
@@ -1539,7 +1539,10 @@ do_del_local:
 			uint16_t shift = (uint16_t)(READ_imm8() + 3);
 			ASSERT_USAGE(-(int)shift, +(int)shift);
 			temp = *(sp - shift);
-			MEMMOVE_PTR(sp - shift, sp - (shift - 1), shift - 1);
+			memmovedownc(sp - shift,
+			             sp - (shift - 1),
+			             shift - 1,
+			             sizeof(DREF DeeObject *));
 			sp[-1] = temp;
 			DISPATCH();
 		}
@@ -1549,7 +1552,10 @@ do_del_local:
 			uint16_t shift = (uint16_t)(READ_imm8() + 3);
 			ASSERT_USAGE(-(int)shift, +(int)shift);
 			temp = sp[-1];
-			MEMMOVE_PTR(sp - (shift - 1), sp - shift, shift - 1);
+			memmoveupc(sp - (shift - 1),
+			           sp - shift,
+			           shift - 1,
+			           sizeof(DREF DeeObject *));
 			*(sp - shift) = temp;
 			DISPATCH();
 		}
@@ -4392,7 +4398,10 @@ do_setattr_this_c:
 					ASSERT_USAGE(-(int)shift, +(int)shift);
 					--sp;
 					temp = *(sp - shift);
-					MEMMOVE_PTR(sp - (shift + 1), sp - shift, shift + 1);
+					memmovedownc(sp - (shift + 1),
+					             sp - shift,
+					             shift + 1,
+					             sizeof(DREF DeeObject *));
 					*sp = temp;
 					++sp;
 					DISPATCH();
@@ -4405,7 +4414,10 @@ do_setattr_this_c:
 					ASSERT_USAGE(-(int)shift, +(int)shift);
 					--sp;
 					temp = *sp;
-					MEMMOVE_PTR(sp - shift, sp - (shift + 1), shift + 1);
+					memmoveupc(sp - shift,
+					           sp - (shift + 1),
+					           shift + 1,
+					           sizeof(DREF DeeObject *));
 					*(sp - shift) = temp;
 					++sp;
 					DISPATCH();
@@ -6239,7 +6251,10 @@ prefix_do_unpack:
 							*/
 							ASSERT_USAGE(-(int)shift, +(int)shift);
 							drop_object = *(sp - shift);
-							MEMMOVE_PTR(sp - shift, sp - (shift - 1), shift - 1);
+							memmovedownc(sp - shift,
+							             sp - (shift - 1),
+							             shift - 1,
+							             sizeof(DREF DeeObject *));
 							append_object = xch_prefix_object(drop_object);
 							if unlikely(!append_object) {
 								TOP = drop_object;
@@ -6265,7 +6280,10 @@ prefix_do_unpack:
 							 */
 							ASSERT_USAGE(-(int)shift, +(int)shift);
 							drop_object = TOP;
-							MEMMOVE_PTR(sp - (shift - 1), sp - shift, shift - 1);
+							memmoveupc(sp - (shift - 1),
+							           sp - shift,
+							           shift - 1,
+							           sizeof(DREF DeeObject *));
 							append_object = xch_prefix_object(drop_object);
 							if unlikely(!append_object) {
 								*(sp - shift) = drop_object;
@@ -6450,7 +6468,10 @@ prefix_do_unpack:
 					 */
 					ASSERT_USAGE(-(int)shift, +(int)shift);
 					drop_object = *(sp - shift);
-					MEMMOVE_PTR(sp - shift, sp - (shift - 1), shift - 1);
+					memmovedownc(sp - shift,
+					             sp - (shift - 1),
+					             shift - 1,
+					             sizeof(DREF DeeObject *));
 					append_object = xch_prefix_object(drop_object);
 					if unlikely(!append_object) {
 						TOP = drop_object;
@@ -6476,7 +6497,10 @@ prefix_do_unpack:
 					 */
 					ASSERT_USAGE(-(int)shift, +(int)shift);
 					drop_object = TOP;
-					MEMMOVE_PTR(sp - (shift - 1), sp - shift, shift - 1);
+					memmoveupc(sp - (shift - 1),
+					           sp - shift,
+					           shift - 1,
+					           sizeof(DREF DeeObject *));
 					append_object = xch_prefix_object(drop_object);
 					if unlikely(!append_object) {
 						*(sp - shift) = drop_object;
@@ -7116,7 +7140,10 @@ stack_fault:
 		/* Install the new stack. */
 		if (!frame->cf_stacksz) {
 			/* Copy the old contents of the stack onto the new one. */
-			MEMCPY_PTR(new_stack, frame->cf_stack, sp - frame->cf_stack);
+			memcpyc(new_stack,
+			        frame->cf_stack,
+			        sp - frame->cf_stack,
+			        sizeof(DeeObject *));
 		}
 		/* Hook the new stack. */
 		frame->cf_stacksz = new_size; /* A non-zero `cf_stacksz' value indicates a heap stack! */

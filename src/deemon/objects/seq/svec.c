@@ -31,7 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/util/string.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/atomic.h>
 
@@ -1614,9 +1614,10 @@ again:
 			goto again;
 		goto err;
 	}
-	MEMCPY_PTR((DREF DeeObject **)self->sv_vector,
-	           other->sv_vector,
-	           self->sv_length);
+	memcpyc((DREF DeeObject **)self->sv_vector,
+	        other->sv_vector,
+	        self->sv_length,
+	        sizeof(DREF DeeObject *));
 	for (i = 0; i < self->sv_length; ++i)
 		Dee_Incref(self->sv_vector[i]);
 	rwlock_endread(&other->sv_lock);
@@ -1757,7 +1758,10 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 		goto err_cannot_inherit;
 	/* Simply copy all the elements, transferring
 	 * all the references that they represent. */
-	MEMCPY_PTR(vector_copy, me->sv_vector, me->sv_length);
+	memcpyc(vector_copy,
+	        me->sv_vector,
+	        me->sv_length,
+	        sizeof(DREF DeeObject *));
 	/* Give the SharedVector its very own copy
 	 * which it will take to its grave. */
 	me->sv_vector = vector_copy;

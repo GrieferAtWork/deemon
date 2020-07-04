@@ -20,7 +20,6 @@
 #ifndef GUARD_DEEMON_RUNTIME_OPERATOR_C
 #define GUARD_DEEMON_RUNTIME_OPERATOR_C 1
 
-#include <deemon/hashset.h>
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -33,6 +32,7 @@
 #include <deemon/error_types.h>
 #include <deemon/float.h>
 #include <deemon/gc.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/mro.h>
@@ -42,9 +42,9 @@
 #include <deemon/rodict.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <stdarg.h>
 #include <string.h>
@@ -59,6 +59,12 @@
 /* Operator invocation. */
 
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_memsetp
+#define memsetp dee_memsetp
+DeeSystem_DEFINE_memsetp(memsetp)
+#endif /* !CONFIG_HAVE_memsetp */
+
 
 #ifndef DEFINE_OPERATOR
 #define DEFINE_OPERATOR(return, name, args) \
@@ -5082,7 +5088,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	}
 	if (DeeNone_Check(self)) {
 		/* Special case: `none' can be unpacked into anything. */
-		MEMFIL_PTR(objv, Dee_None, objc);
+		memsetp(objv, Dee_None, objc);
 		Dee_Incref_n(Dee_None, objc);
 		return 0;
 	}

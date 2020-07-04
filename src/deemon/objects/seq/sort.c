@@ -25,7 +25,7 @@
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
-#include <deemon/util/string.h>
+#include <deemon/system-features.h>
 
 DECL_BEGIN
 
@@ -89,9 +89,11 @@ mergesort_impl(DREF DeeObject **__restrict dst,
 		}
 		if (s1) {
 			ASSERT(!s2);
-			MEMCPY_PTR(dst, iter1, s1);
+			memcpyc(dst, iter1, s1,
+			        sizeof(DREF DeeObject *));
 		} else if (s2) {
-			MEMCPY_PTR(dst, iter2, s2);
+			memcpyc(dst, iter2, s2,
+			        sizeof(DREF DeeObject *));
 		}
 	}	break;
 	}
@@ -181,9 +183,11 @@ mergesort_impl_p(DREF DeeObject **__restrict dst,
 		}
 		if (s1) {
 			ASSERT(!s2);
-			MEMCPY_PTR(dst, iter1, s1);
+			memcpyc(dst, iter1, s1,
+			        sizeof(DREF DeeObject *));
 		} else if (s2) {
-			MEMCPY_PTR(dst, iter2, s2);
+			memcpyc(dst, iter2, s2,
+			        sizeof(DREF DeeObject *));
 		}
 	}	break;
 	}
@@ -212,7 +216,8 @@ insertsort_impl(DREF DeeObject **__restrict dst,
 			if (temp > 0)
 				break;
 		}
-		MEMMOVE_PTR(&dst[j + 1], &dst[j], i - j);
+		memmoveupc(&dst[j + 1], &dst[j],
+		           i - j, sizeof(DREF DeeObject *));
 		dst[j] = ob;
 	}
 	return 0;
@@ -238,7 +243,8 @@ insertsort_impl_p(DREF DeeObject **__restrict dst,
 			if (temp > 0)
 				break;
 		}
-		MEMMOVE_PTR(&dst[j + 1], &dst[j], i - j);
+		memmoveupc(&dst[j + 1], &dst[j],
+		           i - j, sizeof(DREF DeeObject *));
 		dst[j] = src_ob;
 	}
 	return 0;

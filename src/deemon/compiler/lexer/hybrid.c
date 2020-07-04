@@ -26,8 +26,8 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/none.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 DECL_BEGIN
 
@@ -528,7 +528,10 @@ parse_remainder_after_statement:
 				                                            sizeof(DREF struct ast *));
 				if unlikely(!new_elemv)
 					goto err_r_remainder;
-				MEMMOVE_PTR(new_elemv + 1, new_elemv, remainder->a_multiple.m_astc);
+				memmoveupc(new_elemv + 1,
+				           new_elemv,
+				           remainder->a_multiple.m_astc,
+				           sizeof(DREF struct ast *));
 				remainder->a_multiple.m_astv = new_elemv;
 				new_elemv[0]                 = result; /* Inherit reference. */
 				++remainder->a_multiple.m_astc;

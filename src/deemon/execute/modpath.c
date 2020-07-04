@@ -2920,8 +2920,9 @@ pack_code_in_return:
 				goto err_r_compiler;
 			result->mo_globalv = final_globalv;
 		}
-		MEMSET_PTR(result->mo_globalv + result->mo_globalc, 0,
-		           current_rootscope->rs_globalc - result->mo_globalc);
+		bzeroc(result->mo_globalv + result->mo_globalc,
+		       current_rootscope->rs_globalc - result->mo_globalc,
+		       sizeof(DREF DeeObject *));
 	}
 	result->mo_globalc = current_rootscope->rs_globalc;
 	result->mo_importc = current_rootscope->rs_importc;

@@ -24,7 +24,6 @@
 
 #include "object.h"
 #include "string.h"
-#include "util/string.h"
 
 DECL_BEGIN
 
@@ -65,7 +64,7 @@ NONNULL((1)) size_t (DCALL DeeUni_FoldedLength)(uint8_t const *__restrict text, 
 NONNULL((1)) size_t (DCALL DeeUni_FoldedLength)(uint16_t const *__restrict text, size_t length);
 NONNULL((1)) size_t (DCALL DeeUni_FoldedLength)(uint32_t const *__restrict text, size_t length);
 }
-#else
+#else /* __INTELLISENSE__ */
 #define DeeUni_FoldedLength(text, length)                                        \
 	(sizeof(*(text)) == 1 ? _DeeUni_FoldedLength_b((uint8_t *)(text), length) :  \
 	 sizeof(*(text)) == 2 ? _DeeUni_FoldedLength_w((uint16_t *)(text), length) : \
@@ -96,7 +95,7 @@ LOCAL size_t
 		result += DeeUni_ToFolded(text[i], buf);
 	return result;
 }
-#endif
+#endif /* !__INTELLISENSE__ */
 
 
 LOCAL WUNUSED NONNULL((1, 2)) char *
@@ -158,6 +157,7 @@ DFUNDEF NONNULL((1)) void
 			_len_ = (iend);                                   \
 		if ((ibegin) < _len_) {                               \
 			Dee_SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {  \
+			                                                  \
 			Dee_CASE_WIDTH_1BYTE: {                           \
 				char *iter, *end;                             \
 				iter = (char *)_str_;                         \
@@ -165,6 +165,7 @@ DFUNDEF NONNULL((1)) void
 				for (; iter != end; ++iter)                   \
 					do __VA_ARGS__ __WHILE0;                  \
 			}	break;                                        \
+			                                                  \
 			Dee_CASE_WIDTH_2BYTE: {                           \
 				uint16_t *iter, *end;                         \
 				iter = (uint16_t *)_str_;                     \
@@ -172,6 +173,7 @@ DFUNDEF NONNULL((1)) void
 				for (; iter != end; ++iter)                   \
 					do __VA_ARGS__ __WHILE0;                  \
 			}	break;                                        \
+			                                                  \
 			Dee_CASE_WIDTH_4BYTE: {                           \
 				uint32_t *iter, *end;                         \
 				iter = (uint32_t *)_str_;                     \
@@ -179,6 +181,7 @@ DFUNDEF NONNULL((1)) void
 				for (; iter != end; ++iter)                   \
 					do __VA_ARGS__ __WHILE0;                  \
 			}	break;                                        \
+			                                                  \
 			}                                                 \
 		}                                                     \
 	} __WHILE0

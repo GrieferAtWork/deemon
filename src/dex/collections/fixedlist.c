@@ -36,8 +36,8 @@
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h>
 #include <deemon/thread.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -90,6 +90,11 @@
 */
 
 DECL_BEGIN
+
+#ifndef CONFIG_HAVE_memsetp
+#define memsetp dee_memsetp
+DeeSystem_DEFINE_memsetp(memsetp)
+#endif /* !CONFIG_HAVE_memsetp */
 
 PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 	DREF FixedList *result;
@@ -266,7 +271,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 		rwlock_init(&result->fl_lock);
 		result->fl_size = size;
 		Dee_Incref_n(init, size);
-		MEMFIL_PTR(result->fl_elem, init, size);
+		memsetp(result->fl_elem, init, size);
 	} else if (DeeInt_Check(size_ob)) {
 		if (DeeObject_AsSize(size_ob, &size))
 			goto err;
@@ -412,9 +417,9 @@ write_self_again:
 	}
 #endif /* !CONFIG_NO_THREADS */
 	/* Transfer objects. */
-	MEMCPY_PTR(items, self->fl_elem, self->fl_size);          /* Backup old objects. */
-	MEMCPY_PTR(self->fl_elem, other->fl_elem, self->fl_size); /* Copy new objects. */
-	MEMSET_PTR(other->fl_elem, 0, self->fl_size);             /* Steal references. */
+	memcpyc(items, self->fl_elem, self->fl_size, sizeof(DREF DeeObject *));          /* Backup old objects. */
+	memcpyc(self->fl_elem, other->fl_elem, self->fl_size, sizeof(DREF DeeObject *)); /* Copy new objects. */
+	bzeroc(other->fl_elem, self->fl_size, sizeof(DREF DeeObject *));                 /* Steal references. */
 	rwlock_endwrite(&other->fl_lock);
 	rwlock_endwrite(&self->fl_lock);
 	/* Drop references to all of the old items. */

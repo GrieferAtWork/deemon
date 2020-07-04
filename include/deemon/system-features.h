@@ -193,6 +193,7 @@ header("wait.h", addparen(linux) + " || " + addparen(kos));
 header("sys/signalfd.h", addparen(linux) + " || " + addparen(kos));
 header("ctype.h", stdc);
 header("string.h", stdc);
+header("strings.h", unix);
 header("wchar.h", stdc);
 header("dlfcn.h", unix);
 
@@ -724,6 +725,8 @@ func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawme
 functest('strlen("foo")', stdc);
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
+func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 42); return 0;");
+
 // NOTE: The GNU-variant of memmem() returns the start of the haystack
 //       when `needle_length == 0', however for this case, deemon requires
 //       that `NULL' be returned, as deemon considers an empty string not
@@ -1119,6 +1122,15 @@ sizeof("off_t");
 #define CONFIG_HAVE_STRING_H 1
 #endif
 
+#ifdef CONFIG_NO_STRINGS_H
+#undef CONFIG_HAVE_STRINGS_H
+#elif !defined(CONFIG_HAVE_STRINGS_H) && \
+      (__has_include(<strings.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_STRINGS_H 1
+#endif
+
 #ifdef CONFIG_NO_WCHAR_H
 #undef CONFIG_HAVE_WCHAR_H
 #elif !defined(CONFIG_HAVE_WCHAR_H) && \
@@ -1390,6 +1402,10 @@ sizeof("off_t");
 #ifdef CONFIG_HAVE_STRING_H
 #include <string.h>
 #endif /* CONFIG_HAVE_STRING_H */
+
+#ifdef CONFIG_HAVE_STRINGS_H
+#include <strings.h>
+#endif /* CONFIG_HAVE_STRINGS_H */
 
 #ifdef CONFIG_HAVE_WCHAR_H
 #include <wchar.h>
@@ -5394,6 +5410,13 @@ sizeof("off_t");
 #define CONFIG_HAVE_strnlen 1
 #endif
 
+#ifdef CONFIG_NO_bzero
+#undef CONFIG_HAVE_bzero
+#elif !defined(CONFIG_HAVE_bzero) && \
+      (defined(bzero) || defined(__bzero_defined) || defined(CONFIG_HAVE_STRINGS_H))
+#define CONFIG_HAVE_bzero 1
+#endif
+
 #ifdef CONFIG_NO_memmem
 #undef CONFIG_HAVE_memmem
 #elif !defined(CONFIG_HAVE_memmem) && \
@@ -7969,14 +7992,14 @@ extern void __movsw(unsigned short *, unsigned short const *, unsigned __int64);
 	(__movsw((unsigned short *)(void *)(dst),             \
 	         (unsigned short const *)(void const *)(src), \
 	         (unsigned __int64)(n)),                      \
-	 (void *)(dst))
+	 (__UINT16_TYPE__ *)(void *)(dst))
 #else /* __x86_64__ */
 extern void __movsw(unsigned short *, unsigned short const *, unsigned int);
 #define memcpyw(dst, src, n)                              \
 	(__movsw((unsigned short *)(void *)(dst),             \
 	         (unsigned short const *)(void const *)(src), \
 	         (unsigned int)(n)),                          \
-	 (void *)(dst))
+	 (__UINT16_TYPE__ *)(void *)(dst))
 #endif /* !__x86_64__ */
 #pragma intrinsic(__movsw)
 DECL_END
@@ -7994,14 +8017,14 @@ extern void __movsd(unsigned long *, unsigned long const *, unsigned __int64);
 	(__movsd((unsigned long *)(void *)(dst),             \
 	         (unsigned long const *)(void const *)(src), \
 	         (unsigned __int64)(n)),                     \
-	 (void *)(dst))
+	 (__UINT32_TYPE__ *)(void *)(dst))
 #else /* __x86_64__ */
 extern void __movsd(unsigned long *, unsigned long const *, unsigned int);
 #define memcpyl(dst, src, n)                             \
 	(__movsd((unsigned long *)(void *)(dst),             \
 	         (unsigned long const *)(void const *)(src), \
 	         (unsigned int)(n)),                         \
-	 (void *)(dst))
+	 (__UINT32_TYPE__ *)(void *)(dst))
 #endif /* !__x86_64__ */
 #pragma intrinsic(__movsd)
 DECL_END
@@ -8018,7 +8041,7 @@ extern void __movsq(unsigned long long *, unsigned long long const *, unsigned _
 	(__movsq((unsigned long long *)(void *)(dst),             \
 	         (unsigned long long const *)(void const *)(src), \
 	         (unsigned __int64)(n)),                          \
-	 (void *)(dst))
+	 (__UINT64_TYPE__ *)(void *)(dst))
 #pragma intrinsic(__movsq)
 DECL_END
 #endif /* _MSC_VER && __x86_64__ */
@@ -8319,10 +8342,18 @@ DECL_BEGIN
 #undef memsetw
 #ifdef __x86_64__
 extern void __stosw(unsigned short *, unsigned short, unsigned __int64);
-#define memsetw(dst, c, n) __stosw((unsigned short *)(dst), (unsigned short)(c), (unsigned __int64)(n))
+#define memsetw(dst, c, n)                    \
+	(__stosw((unsigned short *)(void *)(dst), \
+	         (unsigned short)(c),             \
+	         (unsigned __int64)(n)),          \
+	 (__UINT16_TYPE__ *)(void *)(dst))
 #else /* __x86_64__ */
 extern void __stosw(unsigned short *, unsigned short, unsigned int);
-#define memsetw(dst, c, n) __stosw((unsigned short *)(dst), (unsigned short)(c), (unsigned int)(n))
+#define memsetw(dst, c, n)                    \
+	(__stosw((unsigned short *)(void *)(dst), \
+	         (unsigned short)(c),             \
+	         (unsigned int)(n)),              \
+	 (__UINT16_TYPE__ *)(void *)(dst))
 #endif /* !__x86_64__ */
 #pragma intrinsic(__stosw)
 DECL_END
@@ -8336,10 +8367,18 @@ DECL_BEGIN
 #undef memsetl
 #ifdef __x86_64__
 extern void __stosd(unsigned long *, unsigned long, unsigned __int64);
-#define memsetl(dst, c, n) __stosd((unsigned long *)(dst), (unsigned long)(c), (unsigned __int64)(n))
+#define memsetl(dst, c, n)                   \
+	(__stosd((unsigned long *)(void *)(dst), \
+	         (unsigned long)(c),             \
+	         (unsigned __int64)(n)),         \
+	 (__UINT32_TYPE__ *)(void *)(dst))
 #else /* __x86_64__ */
 extern void __stosd(unsigned long *, unsigned long, unsigned int);
-#define memsetl(dst, c, n) __stosd((unsigned long *)(dst), (unsigned long)(c), (unsigned int)(n))
+#define memsetl(dst, c, n)                   \
+	(__stosd((unsigned long *)(void *)(dst), \
+	         (unsigned long)(c),             \
+	         (unsigned int)(n)),             \
+	 (__UINT32_TYPE__ *)(void *)(dst))
 #endif /* !__x86_64__ */
 #pragma intrinsic(__stosd)
 DECL_END
@@ -8352,11 +8391,165 @@ DECL_END
 DECL_BEGIN
 extern void __stosq(unsigned long long *, unsigned long long, unsigned __int64);
 #undef memsetq
-#define memsetq(dst, c, n) __stosq((unsigned long long *)(dst), (unsigned long long)(c), (unsigned __int64)(n))
+#define memsetq(dst, c, n)                        \
+	(__stosq((unsigned long long *)(void *)(dst), \
+	         (unsigned long long)(c),             \
+	         (unsigned __int64)(n)),              \
+	 (__UINT64_TYPE__ *)(void *)(dst))
 #pragma intrinsic(__stosq)
 DECL_END
 #endif /* _MSC_VER && __x86_64__ */
 #endif /* !CONFIG_HAVE_memsetq */
+
+#if !defined(CONFIG_HAVE_bzeroq) && defined(CONFIG_HAVE_memsetq)
+#define CONFIG_HAVE_bzeroq 1
+#undef bzeroq
+#define bzeroq(dst, num_qwords) (void)memsetq(dst, 0, num_qwords)
+#endif /* !CONFIG_HAVE_bzeroq && CONFIG_HAVE_memsetq */
+
+#if !defined(CONFIG_HAVE_bzerol) && defined(CONFIG_HAVE_memsetl)
+#define CONFIG_HAVE_bzerol 1
+#undef bzerol
+#define bzerol(dst, num_dwords) (void)memsetl(dst, 0, num_dwords)
+#endif /* !CONFIG_HAVE_bzerol */
+
+#if !defined(CONFIG_HAVE_bzerow) && defined(CONFIG_HAVE_memsetw)
+#define CONFIG_HAVE_bzerow 1
+#undef bzerow
+#define bzerow(dst, num_words) (void)memsetw(dst, 0, num_words)
+#endif /* !CONFIG_HAVE_bzerow */
+
+#ifndef CONFIG_HAVE_bzero
+#define CONFIG_HAVE_bzero 1
+#undef bzero
+#define bzero(dst, num_bytes) (void)memset(dst, 0, num_bytes)
+#endif /* !CONFIG_HAVE_bzero */
+
+#ifndef CONFIG_HAVE_bzeroc
+#define CONFIG_HAVE_bzeroc 1
+#undef bzeroc
+#if defined(CONFIG_HAVE_bzerow) && defined(CONFIG_HAVE_bzerol) && defined(CONFIG_HAVE_bzeroq)
+#define bzeroc(dst, elem_count, elem_size) \
+	((elem_size) == 2                      \
+	 ? bzerow(dst, elem_count)             \
+	 : (elem_size) == 4                    \
+	   ? bzerol(dst, elem_count)           \
+	   : (elem_size) == 8                  \
+	     ? bzeroq(dst, elem_count)         \
+	     : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bzerow) && defined(CONFIG_HAVE_bzerol)
+#define bzeroc(dst, elem_count, elem_size) \
+	((elem_size) == 2                      \
+	 ? bzerow(dst, elem_count)             \
+	 : (elem_size) == 4                    \
+	   ? bzerol(dst, elem_count)           \
+	   : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bzerow) && defined(CONFIG_HAVE_bzeroq)
+#define bzeroc(dst, elem_count, elem_size) \
+	((elem_size) == 2                      \
+	 ? bzerow(dst, elem_count)             \
+	 : (elem_size) == 8                    \
+	   ? bzeroq(dst, elem_count)           \
+	   : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bzerol) && defined(CONFIG_HAVE_bzeroq)
+#define bzeroc(dst, elem_count, elem_size) \
+	((elem_size) == 4                      \
+	 ? bzerol(dst, elem_count)             \
+	 : (elem_size) == 8                    \
+	   ? bzeroq(dst, elem_count)           \
+	   : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bzeroq)
+#define bzeroc(dst, elem_count, elem_size) \
+	((elem_size) == 8                      \
+	 ? bzeroq(dst, elem_count)             \
+	 : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bzerol)
+#define bzeroc(dst, elem_count, elem_size) \
+	((elem_size) == 4                      \
+	 ? bzerol(dst, elem_count)             \
+	 : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
+#elif defined(CONFIG_HAVE_bzerow)
+#define bzeroc(dst, elem_count, elem_size) \
+	((elem_size) == 2                      \
+	 ? bzerow(dst, elem_count)             \
+	 : bzero(dst, (size_t)(elem_count) * (size_t)(elem_size)))
+#else /* ... */
+#define bzeroc(dst, elem_count, elem_size) \
+	bzero(dst, src, (size_t)(elem_count) * (size_t)(elem_size))
+#endif /* !... */
+#endif /* !CONFIG_HAVE_bzeroc */
+
+
+#ifndef CONFIG_HAVE_bzeroq
+#define CONFIG_HAVE_bzeroq 1
+#undef bzeroq
+#ifdef CONFIG_HAVE_bzerol
+#define bzeroq(dst, num_qwords) bzerol(dst, (num_qwords) * 2)
+#elif defined(CONFIG_HAVE_memsetl)
+#define bzeroq(dst, num_qwords) (void)memsetl(dst, 0, (num_qwords) * 2)
+#elif defined(CONFIG_HAVE_bzerow)
+#define bzeroq(dst, num_qwords) bzerow(dst, (num_qwords) * 4)
+#elif defined(CONFIG_HAVE_memsetw)
+#define bzeroq(dst, num_qwords) (void)memsetw(dst, 0, (num_qwords) * 4)
+#else /* ... */
+#define bzeroq(dst, num_qwords) bzero(dst, (num_qwords) * 8)
+#endif /* !... */
+#endif /* !CONFIG_HAVE_bzeroq */
+
+#ifndef CONFIG_HAVE_bzerol
+#define CONFIG_HAVE_bzerol 1
+#undef bzerol
+#ifdef CONFIG_HAVE_bzerow
+#define bzerol(dst, num_dwords) bzerow(dst, (num_dwords) * 2)
+#elif defined(CONFIG_HAVE_memsetw)
+#define bzerol(dst, num_dwords) (void)memsetw(dst, 0, (num_dwords) * 2)
+#else /* ... */
+#define bzerol(dst, num_dwords) bzero(dst, (num_dwords) * 4)
+#endif /* !... */
+#endif /* !CONFIG_HAVE_bzerol */
+
+#ifndef CONFIG_HAVE_bzerow
+#define CONFIG_HAVE_bzerow 1
+#undef bzerow
+#define bzerow(dst, num_words) bzero(dst, (num_words) * 2)
+#endif /* !CONFIG_HAVE_bzerow */
+
+/* NOTE: `memsetp' is enabled on a per-file basis by writing:
+ * >> #ifndef CONFIG_HAVE_memsetp
+ * >> #define memsetp dee_memsetp
+ * >> DeeSystem_DEFINE_memsetp(memsetp)
+ * >> #endif // !CONFIG_HAVE_memsetp
+ */
+#undef memsetp
+#undef CONFIG_HAVE_memsetp
+#if __SIZEOF_POINTER__ == 4
+#ifdef CONFIG_HAVE_memsetl
+#define CONFIG_HAVE_memsetp 1
+#define memsetp memsetl
+#else /* CONFIG_HAVE_memsetl */
+#define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetl
+#endif /* !CONFIG_HAVE_memsetl */
+#elif __SIZEOF_POINTER__ == 8
+#ifdef CONFIG_HAVE_memsetq
+#define CONFIG_HAVE_memsetp 1
+#define memsetp memsetq
+#else /* CONFIG_HAVE_memsetq */
+#define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetq
+#endif /* !CONFIG_HAVE_memsetq */
+#elif __SIZEOF_POINTER__ == 2
+#ifdef CONFIG_HAVE_memsetw
+#define CONFIG_HAVE_memsetp 1
+#define memsetp memsetw
+#else /* CONFIG_HAVE_memsetw */
+#define DeeSystem_DEFINE_memsetp DeeSystem_DEFINE_memsetw
+#endif /* !CONFIG_HAVE_memsetw */
+#elif __SIZEOF_POINTER__ == 1
+#define CONFIG_HAVE_memsetp 1
+#define memsetp memset
+#else
+#error "Unsupported __SIZEOF_POINTER__"
+#endif
+
 
 
 
@@ -8367,6 +8560,7 @@ DECL_END
 #undef memmovedownb
 #undef memsetb
 #undef memchrb
+#undef bzerob
 #define memcpyb(dst, src, n)      ((uint8_t *)memcpy(dst, src, n))
 #define memmoveb(dst, src, n)     ((uint8_t *)memmove(dst, src, n))
 #define memmoveupb(dst, src, n)   ((uint8_t *)memmoveup(dst, src, n))
@@ -8374,6 +8568,39 @@ DECL_END
 #define memsetb(p, c, n)          ((uint8_t *)memset(p, c, n))
 #define memchrb(p, c, n)          ((uint8_t *)memchr(p, c, n))
 #define memcmpb(s1, s2, n)        ((int8_t)memcmp(s1, s2, n))
+#define bzerob(dst, num_bytes)    bzero(dst, num_bytes)
+
+
+#undef memcpyp
+#undef memmovep
+#undef memmoveupp
+#undef memmovedownp
+#if __SIZEOF_POINTER__ == 4
+#define memcpyp      memcpyl
+#define memmovep     memmovel
+#define memmoveupp   memmoveupl
+#define memmovedownp memmovedownl
+#elif __SIZEOF_POINTER__ == 8
+#define memcpyp      memcpyq
+#define memmovep     memmoveq
+#define memmoveupp   memmoveupq
+#define memmovedownp memmovedownq
+#elif __SIZEOF_POINTER__ == 2
+#define memcpyp      memcpyw
+#define memmovep     memmovew
+#define memmoveupp   memmoveupw
+#define memmovedownp memmovedownw
+#elif __SIZEOF_POINTER__ == 1
+#define memcpyp      memcpyb
+#define memmovep     memmoveb
+#define memmoveupp   memmoveupb
+#define memmovedownp memmovedownb
+#else /* __SIZEOF_POINTER__ == ... */
+#define memcpyp(dst, src, num_pointers)      memcpyc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define memmovep(dst, src, num_pointers)     memmovec(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define memmoveupp(dst, src, num_pointers)   memmoveupc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#define memmovedownp(dst, src, num_pointers) memmovedownc(dst, src, num_pointers, __SIZEOF_POINTER__)
+#endif /* __SIZEOF_POINTER__ != ... */
 
 
 //func("memsetw", "defined(__USE_KOS)", test: "extern char *a; memsetw(a, 0xcc, 16); return 0;");

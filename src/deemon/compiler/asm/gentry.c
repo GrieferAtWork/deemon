@@ -25,8 +25,8 @@
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 DECL_BEGIN
 
@@ -799,9 +799,10 @@ do_multimask_rethrow:
 					if (catch_mask_v[mask_j] == my_mask) {
 						/* Get rid of this mask (which is already in use) */
 						--catch_mask_c;
-						MEMMOVE_PTR(catch_mask_v + mask_i,
-						            catch_mask_v + mask_i + 1,
-						            (catch_mask_c - mask_i));
+						memmovedownc(catch_mask_v + mask_i,
+						             catch_mask_v + mask_i + 1,
+						             (catch_mask_c - mask_i),
+						             sizeof(DREF DeeTypeObject *));
 						Dee_XDecref(my_mask);
 						continue;
 					}

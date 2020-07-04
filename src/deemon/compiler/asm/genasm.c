@@ -39,10 +39,8 @@
 #include <deemon/object.h>
 #include <deemon/roset.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
-
-#include <string.h>
 
 #include "../../runtime/builtin.h"
 

@@ -39,6 +39,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 
 #include <string.h> /* memchr */
@@ -1087,9 +1088,10 @@ do_create_class:
 						                                           sizeof(DREF struct ast *));
 						if unlikely(!tuple_branchv)
 							goto err_merge_r;
-						MEMMOVE_PTR(tuple_branchv + 1,
-						            tuple_branchv,
-						            merge->a_multiple.m_astc);
+						memmoveupc(tuple_branchv + 1,
+						           tuple_branchv,
+						           merge->a_multiple.m_astc,
+						           sizeof(DREF struct ast *));
 						++merge->a_multiple.m_astc;
 					}
 					tuple_branchv[0]         = result; /* Inherit reference. */

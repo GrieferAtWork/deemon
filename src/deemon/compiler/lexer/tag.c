@@ -30,8 +30,8 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 DECL_BEGIN
 
@@ -79,7 +79,10 @@ INTERN WUNUSED DREF struct ast *
 					                                         sizeof(DREF struct ast *));
 					if unlikely(!expr_v)
 						goto err_input;
-					MEMMOVE_PTR(expr_v + 1, expr_v, args->a_multiple.m_astc);
+					memmoveupc(expr_v + 1,
+					           expr_v,
+					           args->a_multiple.m_astc,
+					           sizeof(DREF struct ast *));
 					expr_v[0]               = input; /* inherit reference. */
 					args->a_multiple.m_astv = expr_v;
 					++args->a_multiple.m_astc;

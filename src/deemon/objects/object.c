@@ -40,8 +40,8 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/align.h>
 #include <hybrid/atomic.h>
@@ -2527,7 +2527,9 @@ type_new_raw(DeeTypeObject *__restrict self) {
 		struct class_desc *desc        = DeeClass_DESC(first_base);
 		struct instance_desc *instance = DeeInstance_DESC(desc, result);
 		rwlock_init(&instance->id_lock);
-		MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+		bzeroc(instance->id_vtab,
+		       desc->cd_desc->cd_imemb_size,
+		       sizeof(DREF DeeObject *));
 		first_base = DeeType_Base(first_base);
 		if (!first_base)
 			break;
@@ -2917,7 +2919,9 @@ type_new_extended(DeeTypeObject *self,
 		struct class_desc *desc        = DeeClass_DESC(first_base);
 		struct instance_desc *instance = DeeInstance_DESC(desc, result);
 		rwlock_init(&instance->id_lock);
-		MEMSET_PTR(instance->id_vtab, 0, desc->cd_desc->cd_imemb_size);
+		bzeroc(instance->id_vtab,
+		       desc->cd_desc->cd_imemb_size,
+		       sizeof(DREF DeeObject *));
 		first_base = DeeType_Base(first_base);
 		if (!first_base)
 			break;

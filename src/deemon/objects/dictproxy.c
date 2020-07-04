@@ -30,8 +30,8 @@
 #include <deemon/map.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -295,9 +295,8 @@ dictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
 
 INTDEF DeeTypeObject DictIterator_Type;
 #define DEFINE_ITERATOR_COMPARE(name, op)                                 \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                         \
-	name(DictIterator *__restrict self,                                   \
-	     DictIterator *__restrict other) {                                \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                 \
+	name(DictIterator *self, DictIterator *other) {                       \
 		if (DeeObject_AssertType((DeeObject *)other, &DictIterator_Type)) \
 			goto err;                                                     \
 		return_bool(READ_ITEM(self) op READ_ITEM(other));                 \
@@ -367,7 +366,7 @@ INTERN DeeTypeObject DictIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */dict_iterator_members,
+	/* .tp_members       = */ dict_iterator_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -470,7 +469,7 @@ PRIVATE DeeTypeObject DictProxyIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */proxy_iterator_members,
+	/* .tp_members       = */ proxy_iterator_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -675,9 +674,11 @@ proxy_visit(DictProxy *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->dp_dict);
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL dict_size(DeeDictObject *__restrict self);
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_size(DeeDictObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_contains(DeeDictObject *self, DeeObject *key);
+
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 proxy_size(DictProxy *__restrict self) {

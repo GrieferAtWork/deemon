@@ -34,7 +34,6 @@
 #include <deemon/system-features.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #ifndef CONFIG_NO_THREADS
 #include <deemon/util/rwlock.h>
@@ -177,7 +176,8 @@ got_result:
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 	DeeObject_Init(result, &DeeTuple_Type);
 #ifndef NDEBUG
-	MEMSET_PTR(result->t_elem, 0xcc, n);
+	memset(result->t_elem, 0xcc,
+	       n * sizeof(DREF DeeObject *));
 #endif /* !NDEBUG */
 done:
 	return (DREF DeeObject *)result;
@@ -221,7 +221,8 @@ got_result:
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
 	DeeObject_Init(result, &DeeTuple_Type);
 #ifndef NDEBUG
-	MEMSET_PTR(result->t_elem, 0xcc, n);
+	memset(result->t_elem, 0xcc,
+	       n * sizeof(DREF DeeObject *));
 #endif /* !NDEBUG */
 done:
 	return (DREF DeeObject *)result;
@@ -234,8 +235,10 @@ tuple_tp_free(void *__restrict ob) {
 	ASSERT(!DeeTuple_IsEmpty((DeeObject *)ob));
 	ASSERT(DeeTuple_SIZE((DeeObject *)ob) != 0);
 #ifndef NDEBUG
-	MEMSET_PTR(DeeTuple_ELEM((DeeObject *)ob), 0xcc,
-	           DeeTuple_SIZE((DeeObject *)ob));
+	memset(DeeTuple_ELEM((DeeObject *)ob),
+	       0xcc,
+	       DeeTuple_SIZE((DeeObject *)ob) *
+	       sizeof(DREF DeeObject *));
 #endif /* !NDEBUG */
 	if (DeeTuple_SIZE((DeeObject *)ob) < CONFIG_TUPLE_CACHE_MAXCOUNT) {
 		struct tuple_cache *c = &cache[DeeTuple_SIZE((DeeObject *)ob) - 1];
@@ -304,19 +307,24 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 			if (c->c_head)
 #endif /* !CONFIG_NO_THREADS */
 			{
+				STATIC_ASSERT((offsetof(DeeTupleObject, t_elem) %
+				               sizeof(DREF DeeObject *)) == 0);
 				ASSERT(c->c_head);
 				new_tuple = (DREF DeeTupleObject *)c->c_head;
 				c->c_head = ((struct cached_object *)new_tuple)->co_next;
 				--c->c_count;
 				UNLOCK(c->c_lock);
 				/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
-				MEMCPY_PTR(new_tuple, self,
-				           (offsetof(DeeTupleObject, t_elem) / sizeof(void *)) +
-				           MIN(DeeTuple_SIZE(self), new_size));
+				memcpyc(new_tuple, self,
+				        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
+				        MIN(DeeTuple_SIZE(self), new_size),
+				        sizeof(DREF DeeObject *));
 #ifndef NDEBUG
 				if (new_size > DeeTuple_SIZE(self)) {
-					MEMSET_PTR(&new_tuple->t_elem[DeeTuple_SIZE(self)], 0xcc,
-					           new_size - DeeTuple_SIZE(self));
+					memset(&new_tuple->t_elem[DeeTuple_SIZE(self)],
+					       0xcc,
+					       (new_size - DeeTuple_SIZE(self)) *
+					       sizeof(DREF DeeObject *));
 				}
 #endif /* !NDEBUG */
 				tuple_tp_free(self);
@@ -335,8 +343,10 @@ DeeTuple_ResizeUninitialized(DREF DeeObject *__restrict self,
 		return NULL;
 #ifndef NDEBUG
 	if (new_size > new_tuple->t_size) {
-		MEMSET_PTR(&new_tuple->t_elem[new_tuple->t_size],
-		           0xcc, new_size - new_tuple->t_size);
+		memset(&new_tuple->t_elem[new_tuple->t_size],
+		       0xcc,
+		       (new_size - new_tuple->t_size) *
+		       sizeof(DREF DeeObject *));
 	}
 #endif /* !NDEBUG */
 	new_tuple->t_size = new_size;
@@ -378,13 +388,16 @@ DeeTuple_TruncateUninitialized(DREF DeeObject *__restrict self,
 				--c->c_count;
 				UNLOCK(c->c_lock);
 				/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
-				MEMCPY_PTR(new_tuple, self,
-				           (offsetof(DeeTupleObject, t_elem) / sizeof(void *)) +
-				           MIN(DeeTuple_SIZE(self), new_size));
+				memcpyc(new_tuple, self,
+				        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
+				        MIN(DeeTuple_SIZE(self), new_size),
+				        sizeof(DREF DeeObject *));
 #ifndef NDEBUG
 				if (new_size > DeeTuple_SIZE(self)) {
-					MEMSET_PTR(&new_tuple->t_elem[DeeTuple_SIZE(self)], 0xcc,
-					           new_size - DeeTuple_SIZE(self));
+					memset(&new_tuple->t_elem[DeeTuple_SIZE(self)],
+					       0xcc,
+					       (new_size - DeeTuple_SIZE(self)) *
+					       sizeof(DREF DeeObject *));
 				}
 #endif /* !NDEBUG */
 				tuple_tp_free(self);
@@ -422,7 +435,8 @@ DeeTuple_NewVectorSymbolic(size_t objc, DeeObject *const *__restrict objv) {
 	result = DeeTuple_NewUninitialized(objc);
 	if unlikely(!result)
 		goto done;
-	MEMCPY_PTR(DeeTuple_ELEM(result), objv, objc);
+	memcpyc(DeeTuple_ELEM(result), objv,
+	        objc, sizeof(DREF DeeObject *));
 done:
 	return result;
 }
@@ -561,9 +575,10 @@ err_cleanup:
 					UNLOCK(c->c_lock);
 					/* Copy tuple data (And inherit the reference to `DeeTuple_Type') */
 					ASSERT(used_size < DeeTuple_SIZE(result));
-					MEMCPY_PTR(new_tuple, result,
-					           (offsetof(DeeTupleObject, t_elem) / sizeof(void *)) +
-					           used_size);
+					memcpyc(new_tuple, result,
+					        (offsetof(DeeTupleObject, t_elem) / sizeof(DREF DeeObject *)) +
+					        used_size,
+					        sizeof(DREF DeeObject *));
 					tuple_tp_free(result);
 					new_tuple->t_size = used_size;
 					ASSERT(new_tuple->ob_refcnt == 1);
@@ -751,7 +766,8 @@ DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t ar
 		result   = (DREF DeeTupleObject *)DeeTuple_ResizeUninitialized(self, old_size + argc);
 		if unlikely(!result)
 			goto err;
-		MEMCPY_PTR(result->t_elem + old_size, argv, argc);
+		memcpyc(result->t_elem + old_size, argv,
+		        argc, sizeof(DREF DeeObject *));
 	} else if unlikely(!argc) {
 		result = (DREF DeeTupleObject *)self;
 	} else {
@@ -761,7 +777,8 @@ DeeTuple_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t ar
 			goto err;
 		Dee_Movrefv(DeeTuple_ELEM(result), DeeTuple_ELEM(self), mylen);
 		Dee_Decref_unlikely(self);
-		MEMCPY_PTR(DeeTuple_ELEM(result) + mylen, argv, argc);
+		memcpyc(DeeTuple_ELEM(result) + mylen, argv,
+		        argc, sizeof(DREF DeeObject *));
 	}
 	return (DREF DeeObject *)result;
 err:
@@ -1838,7 +1855,8 @@ tuple_repeat(Tuple *self,
 	/* Fill in the resulting tuple with repetitions of ourself. */
 	dst = DeeTuple_ELEM(result);
 	while (count--) {
-		MEMCPY_PTR(dst, DeeTuple_ELEM(self), my_length);
+		memcpyc(dst, DeeTuple_ELEM(self),
+		        my_length, sizeof(DREF DeeObject *));
 		dst += my_length;
 	}
 	return result;

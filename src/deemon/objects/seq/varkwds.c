@@ -34,9 +34,9 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h>
 #include <deemon/tuple.h>
 #include <deemon/util/rwlock.h>
-#include <deemon/util/string.h>
 
 #include <hybrid/atomic.h>
 
@@ -1017,7 +1017,8 @@ BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 	if likely(argv) {
 		size_t i;
 		/* Initialize the argument vector copy. */
-		MEMCPY_PTR(argv, me->vk_argv, kwdc);
+		memcpyc(argv, me->vk_argv,
+		        kwdc, sizeof(DREF DeeObject *));
 		for (i = 0; i < kwdc; ++i)
 			Dee_Incref(argv[i]);
 	}

@@ -336,11 +336,15 @@ again:
 	/* Initialize the new page, and add it as a free one. */
 #if SLAB_LASTINUSEALWAYSUSED == 0
 #if SLAB_INUSE_BITSET_LENGTH > 1
-	MEMSET_PTR(page->sp_inuse + 1, 0, SLAB_INUSE_BITSET_LENGTH - 1);
+	bzeroc(page->sp_inuse + 1,
+	       SLAB_INUSE_BITSET_LENGTH - 1,
+	       sizeof(uintptr_t));
 #endif /* SLAB_INUSE_BITSET_LENGTH > 1 */
 #else /* SLAB_LASTINUSEALWAYSUSED == 0 */
 #if SLAB_INUSE_BITSET_LENGTH > 2
-	MEMSET_PTR(page->sp_inuse + 1, 0, SLAB_INUSE_BITSET_LENGTH - 2);
+	bzeroc(page->sp_inuse + 1,
+	       SLAB_INUSE_BITSET_LENGTH - 2,
+	       sizeof(uintptr_t));
 #endif /* SLAB_INUSE_BITSET_LENGTH > 1 */
 	/* Fill in the last in-use word such that trailing/control items cannot be allocated! */
 	page->sp_inuse[SLAB_INUSE_BITSET_LENGTH - 1] = (~(((uintptr_t)1 << ((__SIZEOF_POINTER__ * 8) -

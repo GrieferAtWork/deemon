@@ -54,7 +54,6 @@
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
-#include <deemon/util/string.h>
 
 #include <stdarg.h>
 #include <string.h>
