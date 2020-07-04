@@ -1130,8 +1130,8 @@ PRIVATE struct type_member appexit_members[] = {
 };
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-appexit_class_atexit(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+appexit_class_atexit(DeeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *callback, *args = Dee_EmptyTuple;
 	if (DeeArg_Unpack(argc, argv, "o|o:atexit", &callback, &args))
@@ -1178,8 +1178,8 @@ PUBLIC int DCALL Dee_Exit(int exitcode, bool run_atexit) {
 #endif /* !CONFIG_HAVE__Exit */
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-appexit_class_exit(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+appexit_class_exit(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	int exitcode = EXIT_FAILURE;
 	bool run_atexit = true;

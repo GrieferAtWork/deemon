@@ -88,12 +88,12 @@ none_i4(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 none_bool(DeeObject *__restrict UNUSED(a)) {
 	return 0;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 none_str(DeeObject *__restrict UNUSED(a)) {
 	return_reference_(&str_none);
 }
@@ -103,52 +103,49 @@ none_hash(DeeObject *__restrict UNUSED(self)) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 none_int32(DeeObject *__restrict UNUSED(self),
            int32_t *__restrict result) {
 	*result = 0;
 	return INT_UNSIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 none_int64(DeeObject *__restrict UNUSED(self),
            int64_t *__restrict result) {
 	*result = 0;
 	return INT_UNSIGNED;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 none_double(DeeObject *__restrict UNUSED(self),
             double *__restrict result) {
 	*result = 0;
 	return 0;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 none_iternext(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 none_int(DeeObject *__restrict UNUSED(self)) {
 	return_reference_(&DeeInt_Zero);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-none_eq(DeeObject *__restrict UNUSED(self),
-        DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+none_eq(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(DeeNone_Check(other));
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-none_ne(DeeObject *__restrict UNUSED(self),
-        DeeObject *__restrict other) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+none_ne(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(!DeeNone_Check(other));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-none_enumattr(DeeTypeObject *UNUSED(tp_self),
-              DeeObject *UNUSED(self),
+none_enumattr(DeeTypeObject *UNUSED(tp_self), DeeObject *UNUSED(self),
               denum_t UNUSED(proc), void *UNUSED(arg)) {
 	return 0;
 }
@@ -222,7 +219,7 @@ PRIVATE struct type_with none_with = {
 	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&none_i1
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 none_getbuf(DeeObject *__restrict UNUSED(self),
             DeeBuffer *__restrict info,
             unsigned int UNUSED(flags)) {

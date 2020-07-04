@@ -905,8 +905,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-stat_class_ishidden(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_ishidden(DeeObject *UNUSED(self),
                     size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	int error;

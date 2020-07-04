@@ -30,7 +30,7 @@
 #include <deemon/seq.h>
 #endif /* !__INTELLISENSE__ */
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 diriter_next(DeeObject *__restrict UNUSED(self)) {
 	fs_unsupported();
 	return NULL;
@@ -89,13 +89,13 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dir_copy(DeeObject *__restrict UNUSED(self),
          DeeObject *__restrict UNUSED(other)) {
 	return fs_unsupported();
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 dir_ctor(DeeObject *__restrict UNUSED(self),
          size_t UNUSED(argc),
          DeeObject *const *UNUSED(argv)) {

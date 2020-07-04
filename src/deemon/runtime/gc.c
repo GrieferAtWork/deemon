@@ -1433,7 +1433,7 @@ PRIVATE DeeTypeObject GCIter_Type = {
 };
 
 
-PRIVATE WUNUSED DREF GCIter *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF GCIter *DCALL
 gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 	DREF GCIter *result;
 	struct gc_head *first;
@@ -1457,7 +1457,7 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_size(DeeObject *__restrict UNUSED(self)) {
 	size_t result = 0;
 	struct gc_head *iter;
@@ -1470,7 +1470,7 @@ gcenum_size(DeeObject *__restrict UNUSED(self)) {
 	return DeeInt_NewSize(result);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_contains(DeeObject *__restrict UNUSED(self),
                 DeeObject *__restrict ob) {
 	if (!DeeGC_Check(ob))
@@ -1505,8 +1505,8 @@ PRIVATE struct type_member gcenum_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-gcenum_collect(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_collect(DeeObject *UNUSED(self),
                size_t argc, DeeObject *const *argv) {
 	size_t max = (size_t)-1, result;
 	if (DeeArg_Unpack(argc, argv, "|Iu:collect", &max))
@@ -1517,8 +1517,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-gcenum_referred(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_referred(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:referred", &start))
@@ -1528,8 +1528,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-gcenum_referredgc(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_referredgc(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:referredgc", &start))
@@ -1539,8 +1539,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-gcenum_reachable(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_reachable(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:reachable", &start))
@@ -1550,8 +1550,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-gcenum_reachablegc(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_reachablegc(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	DeeObject *start;
 	if (DeeArg_Unpack(argc, argv, "o:reachablegc", &start))
@@ -1561,8 +1561,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-gcenum_referring(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_referring(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *to;
 	if (DeeArg_Unpack(argc, argv, "o:referring", &to))
@@ -1572,8 +1572,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-gcenum_isreferring(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+gcenum_isreferring(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	DeeObject *from, *to;
 	if (DeeArg_Unpack(argc, argv, "oo:isreferring", &from, &to))

@@ -21,9 +21,9 @@
 import * from deemon;
 
 @@Convert an old-style compare predicate to a new-style key function
-@@Wehn called as @(cmp(lhs, rhs)), the given @cmp function should
+@@When called as @(cmp(lhs, rhs)), the given @cmp function should
 @@return @(return < 0) when @(lhs < rhs), return @(return == 0)
-@@when @(lhs == rhs) and return @{> 0} when @{lhs > rhs}
+@@when @(lhs == rhs) and return @(return > 0) when @(lhs > rhs)
 function predcmp2key(cmp: Callable): Callable {
 	class KeyClass {
 		private member m_self;
@@ -71,12 +71,12 @@ function predeq2key(pred_eq: Callable): Callable {
 }
 
 
-@@@return Always re-returns @key
-@@An identity key function that simply re-returns the given @key
+@@@return Always re-returns @ob
+@@An identity key function that simply re-returns the given @ob
 @@Since key functions are usually optional, this function may be used as a
 @@default binding by implementations not designed to be used without any key function
-function identity(key: Object): Object {
-	return key;
+final function identity(ob: Object): Object {
+	return ob;
 }
 
 @@@return A key function that is the combination of all given @keys

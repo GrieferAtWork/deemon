@@ -326,12 +326,12 @@ PRIVATE struct type_cmp bool_cmp = {
 	/* .tp_ge   = */ &bool_ge
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_gettrue(DeeObject *__restrict UNUSED(self)) {
 	return_true;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bool_getfalse(DeeObject *__restrict UNUSED(self)) {
 	return_false;
 }

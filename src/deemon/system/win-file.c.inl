@@ -116,7 +116,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL debugfile_get(void) {
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
 	/* Considering its purpose, always act as though _DebugFile
 	 * is a TTY device, just so automatic buffer interfaces will
@@ -1162,8 +1162,8 @@ sysfile_visit(SystemFile *__restrict self, dvisit_t proc, void *arg) {
 	Dee_XVisit(self->sf_filename);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-sysfile_class_sync(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;

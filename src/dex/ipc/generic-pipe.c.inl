@@ -45,8 +45,8 @@ PRIVATE ATTR_COLD int DCALL ipc_unimplemented(void) {
 
 typedef DeeSystemFileObject SystemFile;
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-pipe_class_new(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+pipe_class_new(DeeObject *UNUSED(self),
                size_t argc, DeeObject *const *argv) {
 	uint32_t pipe_size;
 	if (DeeArg_Unpack(argc, argv, "|I32u:" S_Pipe_function_new_name, &pipe_size))

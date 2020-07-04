@@ -1381,14 +1381,14 @@ PRIVATE struct type_getset module_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_class_getpath(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeModule_GetPath());
 }
 
-PRIVATE int DCALL
-module_class_setpath(DeeObject *__restrict UNUSED(self),
-                     DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_class_setpath(DeeObject *UNUSED(self),
+                     DeeObject *value) {
 	return DeeObject_Assign(DeeModule_GetPath(), value);
 }
 
@@ -1403,8 +1403,8 @@ PRIVATE struct type_getset module_class_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-module_class_open(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_class_open(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
 	/* This is pretty much the same as the builtin `import()' function.
 	 * The only reason it exist is to be a deprecated alias for backwards
@@ -1426,7 +1426,8 @@ PRIVATE struct type_method module_class_methods[] = {
 };
 
 
-INTDEF NONNULL((1)) void DCALL module_unbind(DeeModuleObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL
+module_unbind(DeeModuleObject *__restrict self);
 
 PRIVATE NONNULL((1)) void DCALL
 module_fini(DeeModuleObject *__restrict self) {

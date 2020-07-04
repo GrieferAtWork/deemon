@@ -613,8 +613,8 @@ DFUNDEF WUNUSED NONNULL((1)) bool (DCALL Dee_DecrefWasOk)(DeeObject *__restrict 
 #define Dee_DecrefWasOk_untraced(x)     (Dee_Decref(x), true)
 #else /* __INTELLISENSE__ */
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadIncref(DeeObject *__restrict ob, char const *file, int line);
-DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *__restrict ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadIncref(DeeObject *ob, char const *file, int line);
+DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *file, int line);
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 #ifdef CONFIG_NO_THREADS
 #define _DeeRefcnt_FetchInc(x)    ((x)++)

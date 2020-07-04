@@ -1012,8 +1012,7 @@ PRIVATE DEFINE_RWLOCK(bad_refcnt_lock);
 #endif /* !CONFIG_NO_THREADS */
 
 PUBLIC NONNULL((1)) void DCALL
-DeeFatal_BadIncref(DeeObject *__restrict ob,
-                   char const *file, int line) {
+DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	DeeTypeObject *type;
 	BADREFCNT_BEGIN();
 	DEE_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_INCREF(%p)\n",
@@ -1031,8 +1030,7 @@ DeeFatal_BadIncref(DeeObject *__restrict ob,
 }
 
 PUBLIC NONNULL((1)) void DCALL
-DeeFatal_BadDecref(DeeObject *__restrict ob,
-                   char const *file, int line) {
+DeeFatal_BadDecref(DeeObject *ob, char const *file, int line) {
 	DeeTypeObject *type;
 	BADREFCNT_BEGIN();
 	DEE_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_DECREF(%p)\n",
@@ -1050,14 +1048,16 @@ DeeFatal_BadDecref(DeeObject *__restrict ob,
 }
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
 PUBLIC void DCALL
-DeeFatal_BadIncref(DeeObject *__restrict UNUSED(ob),
-                   char const *UNUSED(file), int UNUSED(line)) {
+DeeFatal_BadIncref(DeeObject *UNUSED(ob),
+                   char const *UNUSED(file),
+                   int UNUSED(line)) {
 	abort();
 }
 #ifdef __NO_DEFINE_ALIAS
 PUBLIC void DCALL
-DeeFatal_BadDecref(DeeObject *__restrict UNUSED(ob),
-                   char const *UNUSED(file), int UNUSED(line)) {
+DeeFatal_BadDecref(DeeObject *UNUSED(ob),
+                   char const *UNUSED(file),
+                   int UNUSED(line)) {
 	abort();
 }
 #else /* __NO_DEFINE_ALIAS */
@@ -1319,24 +1319,25 @@ again:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 object_ctor(DeeObject *__restrict UNUSED(self)) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 object_copy_ctor(DeeObject *__restrict UNUSED(self),
                  DeeObject *__restrict UNUSED(other)) {
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 object_any_ctor(DeeObject *__restrict UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
 	return DeeArg_Unpack(argc, argv, ":Object");
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL object_str(DeeObject *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+object_str(DeeObject *__restrict self) {
 #if 1
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if (tp_self->tp_name) {

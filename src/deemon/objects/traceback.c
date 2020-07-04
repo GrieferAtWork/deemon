@@ -687,7 +687,7 @@ PRIVATE struct type_seq traceback_seq = {
 	/* .tp_range_set = */ NULL
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 traceback_current(DeeObject *__restrict UNUSED(self)) {
 	DREF DeeThreadObject *thread;
 	DREF DeeObject *result;

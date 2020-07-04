@@ -1846,19 +1846,19 @@ PRIVATE struct type_method set_methods[] = {
 
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_get_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
 	return DeeFloat_New(1.0);
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 set_del_maxloadfactor(DeeObject *__restrict UNUSED(self)) {
 	return 0;
 }
 
-INTERN int DCALL
-set_set_maxloadfactor(DeeObject *__restrict UNUSED(self),
-                      DeeObject *__restrict UNUSED(value)) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+set_set_maxloadfactor(DeeObject *UNUSED(self),
+                      DeeObject *UNUSED(value)) {
 	return 0;
 }
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

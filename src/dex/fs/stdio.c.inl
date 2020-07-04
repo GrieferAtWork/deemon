@@ -63,7 +63,7 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 	return fs_gethostname();
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_chdir(DeeObject *__restrict UNUSED(path)) {
 	return fs_unsupported();
 }
@@ -160,7 +160,7 @@ stat_fini(Stat *__restrict self) {
 	DBG_ALIGNMENT_ENABLE();
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 	return fs_gethostname();
 }
@@ -183,12 +183,12 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_return_true(DeeObject *__restrict UNUSED(self)) {
 	return_true;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_return_false(DeeObject *__restrict UNUSED(self)) {
 	return_false;
 }
@@ -215,8 +215,8 @@ PRIVATE struct type_getset stat_getsets[] = {
 	{ NULL }
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-stat_class_exists(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_exists(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	int error;
@@ -230,8 +230,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-stat_class_isreg(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isreg(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
 	int error;
@@ -372,7 +372,7 @@ INTERN DeeTypeObject DeeLStat_Type = {
 
 /* Filesystem write operations. */
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_rmdir(DeeObject *__restrict UNUSED(path)) {
 	return fs_unsupported();
 }
@@ -448,20 +448,20 @@ err:
 	return -1;
 }
 
-INTERN int DCALL
-fs_link(DeeObject *__restrict UNUSED(existing_path),
-        DeeObject *__restrict UNUSED(new_path)) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+fs_link(DeeObject *UNUSED(existing_path),
+        DeeObject *UNUSED(new_path)) {
 	return fs_unsupported();
 }
 
-INTERN int DCALL
-fs_symlink(DeeObject *__restrict UNUSED(target_text),
-           DeeObject *__restrict UNUSED(link_path),
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+fs_symlink(DeeObject *UNUSED(target_text),
+           DeeObject *UNUSED(link_path),
            bool UNUSED(format_target)) {
 	return fs_unsupported();
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_readlink(DeeObject *__restrict UNUSED(path)) {
 	return fs_gethostname();
 }

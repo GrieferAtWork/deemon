@@ -1475,8 +1475,8 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_nsi       = */ &tuple_nsi
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-tuple_unpack(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_unpack(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	size_t num_items;
 	DeeObject *init;

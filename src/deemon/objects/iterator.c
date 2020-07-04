@@ -129,7 +129,7 @@ err1:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_iternext(DeeObject *__restrict UNUSED(self)) {
 	/* A default-constructed, raw iterator object behaves as empty. */
 	return ITER_DONE;
@@ -2333,7 +2333,7 @@ PRIVATE struct type_math iterator_math = {
  * >>     import mutex from threading;
  * >>     if (n < 0) throw Error.IntegerOverflow();
  * >>     if (n == 0) return { };
- * >>     if (n == 1) return iter.pending;
+ * >>     if (n == 1) return { iter.pending };
  * >>     local pending = deque();
  * >>     local offsets = [0] * n;
  * >>     local lock = mutex();

@@ -150,8 +150,8 @@ sysfile_putc(DeeFileObject *__restrict UNUSED(self), int UNUSED(ch),
 	return GETC_ERR;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-sysfile_class_sync(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+sysfile_class_sync(DeeObject *UNUSED(self),
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sync"))
 		return NULL;

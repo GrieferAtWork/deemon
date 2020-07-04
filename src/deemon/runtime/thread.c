@@ -2658,25 +2658,26 @@ PRIVATE ATTR_COLD int DCALL err_no_thread_api(void) {
 	                       "Threading support has been disabled");
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Start(/*Thread*/ DeeObject *__restrict UNUSED(self)) {
 	return err_no_thread_api();
 }
 
-PUBLIC int DCALL
-DeeThread_Interrupt(/*Thread*/ DeeObject *__restrict UNUSED(self),
-                    DeeObject *__restrict UNUSED(interrupt_ob)) {
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeThread_Interrupt(/*Thread*/ DeeObject *UNUSED(self),
+                    DeeObject *UNUSED(interrupt_main),
+                    DeeObject *UNUSED(interrupt_args)) {
 	return err_no_thread_api();
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Detach(/*Thread*/ DeeObject *__restrict UNUSED(self)) {
 	return err_no_thread_api();
 }
 
-PUBLIC int DCALL
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeThread_Join(/*Thread*/ DeeObject *__restrict UNUSED(self),
-               DeeObject **__restrict UNUSED(pthread_result),
+               DREF DeeObject **__restrict UNUSED(pthread_result),
                uint64_t UNUSED(timeout_microseconds)) {
 	return err_no_thread_api();
 }
@@ -2991,21 +2992,21 @@ PRIVATE struct type_method thread_methods[] = {
 	{ NULL }
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-thread_self(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_self(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":self"))
 		return NULL;
 	return_reference(DeeThread_Self());
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 thread_current_get(DeeObject *__restrict UNUSED(self)) {
 	return_reference(DeeThread_Self());
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-thread_selfid(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_selfid(DeeObject *UNUSED(self),
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":selfid"))
 		return NULL;
@@ -3029,8 +3030,8 @@ thread_selfid(DeeObject *__restrict UNUSED(self),
 #endif /* !CONFIG_NO_THREADID_INTERNAL */
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-thread_yield(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_yield(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":yield"))
 		return NULL;
@@ -3038,8 +3039,8 @@ thread_yield(DeeObject *__restrict UNUSED(self),
 	return_none;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-thread_check_interrupt(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_check_interrupt(DeeObject *UNUSED(self),
                        size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":check_interrupt") ||
 	    DeeThread_CheckInterrupt())
@@ -3047,8 +3048,8 @@ thread_check_interrupt(DeeObject *__restrict UNUSED(self),
 	return_none;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-thread_sleep(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_sleep(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	uint64_t timeout;
 	if (DeeArg_Unpack(argc, argv, "I64u:sleep", &timeout) ||
@@ -3057,8 +3058,8 @@ thread_sleep(DeeObject *__restrict UNUSED(self),
 	return_none;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-thread_exit(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+thread_exit(DeeObject *UNUSED(self),
             size_t argc, DeeObject *const *argv) {
 	DeeObject *result = Dee_None;
 	DREF struct threadexit_object *error;

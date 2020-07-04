@@ -42,27 +42,27 @@ PRIVATE ATTR_NOINLINE int DCALL fs_unsupported(void) {
 	                       fs_unsupported_message);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 env_init(DeeObject *__restrict UNUSED(self)) {
 	return fs_unsupported();
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 env_bool(DeeObject *__restrict UNUSED(self)) {
 	return fs_unsupported();
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 env_next(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_key(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 enviterator_next_value(DeeObject *__restrict UNUSED(self)) {
 	return ITER_DONE;
 }
@@ -117,19 +117,19 @@ INTERN DeeTypeObject DeeEnvIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN bool DCALL
+INTERN WUNUSED NONNULL((1)) bool DCALL
 fs_hasenv(/*String*/ DeeObject *__restrict UNUSED(name)) {
 	return false;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 fs_getenv(DeeObject *__restrict UNUSED(name), bool try_get) {
 	if (!try_get)
 		fs_unsupported();
 	return NULL;
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 fs_printenv(char const *__restrict UNUSED(name),
             struct unicode_printer *__restrict UNUSED(printer),
             bool try_get) {
@@ -138,14 +138,14 @@ fs_printenv(char const *__restrict UNUSED(name),
 	return fs_unsupported();
 }
 
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 fs_delenv(DeeObject *__restrict UNUSED(name)) {
 	return -1;
 }
 
-INTERN int DCALL
-fs_setenv(DeeObject *__restrict UNUSED(name),
-          DeeObject *__restrict UNUSED(value)) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+fs_setenv(DeeObject *UNUSED(name),
+          DeeObject *UNUSED(value)) {
 	return fs_unsupported();
 }
 
@@ -163,14 +163,14 @@ INTERN WUNUSED DREF DeeObject *DCALL fs_gettmp(void) {
 #include "generic-user.c.inl"
 #endif /* !__INTELLISENSE__ */
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 stat_ctor(DeeObject *__restrict UNUSED(self),
           size_t UNUSED(argc),
           DeeObject *const *UNUSED(argv)) {
 	return fs_unsupported();
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stat_getxxx(DeeObject *__restrict UNUSED(self)) {
 	return fs_gethostname();
 }

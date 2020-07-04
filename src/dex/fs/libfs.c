@@ -172,43 +172,48 @@ PRIVATE WUNUSED DREF DeeObject *DCALL env_ctor(void) {
 	return_reference_(&DeeEnv_Singleton);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 env_iter(DeeObject *__restrict UNUSED(self)) {
 	return DeeObject_NewDefault(&DeeEnvIterator_Type);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-env_getitem(DeeObject *__restrict UNUSED(self),
-            DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+env_getitem(DeeObject *UNUSED(self), DeeObject *key) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
-		return NULL;
+		goto err;
 	return fs_getenv(key, false);
+err:
+	return NULL;
 }
 
-PRIVATE int DCALL
-env_delitem(DeeObject *__restrict UNUSED(self),
-            DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+env_delitem(DeeObject *UNUSED(self), DeeObject *key) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
-		return -1;
+		goto err;
 	return fs_delenv(key);
+err:
+	return -1;
 }
 
-PRIVATE int DCALL
-env_setitem(DeeObject *__restrict UNUSED(self),
-            DeeObject *__restrict key,
-            DeeObject *__restrict value) {
-	if (DeeObject_AssertTypeExact(key, &DeeString_Type) ||
-	    DeeObject_AssertTypeExact(value, &DeeString_Type))
-		return -1;
-	return fs_setenv(key, value);
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-env_contains(DeeObject *__restrict UNUSED(self),
-             DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+env_setitem(DeeObject *UNUSED(self),
+            DeeObject *key, DeeObject *value) {
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
-		return NULL;
+		goto err;
+	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
+		goto err;
+	return fs_setenv(key, value);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+env_contains(DeeObject *UNUSED(self), DeeObject *key) {
+	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
 	return_bool(fs_hasenv(key));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -216,10 +221,10 @@ env_nsi_getsize(DeeObject *__restrict self) {
 	return (*DeeSeq_Type.tp_seq->tp_nsi->nsi_seqlike.nsi_getsize)(self);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-env_nsi_getdefault(DeeObject *__restrict UNUSED(self),
-                   DeeObject *__restrict key,
-                   DeeObject *__restrict defl) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+env_nsi_getdefault(DeeObject *UNUSED(self),
+                   DeeObject *key,
+                   DeeObject *defl) {
 	DREF DeeObject *result;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;

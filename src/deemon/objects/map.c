@@ -723,10 +723,10 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-map_getrange(DeeObject *__restrict self,
-             DeeObject *__restrict UNUSED(begin),
-             DeeObject *__restrict UNUSED(end)) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+map_getrange(DeeObject *self,
+             DeeObject *UNUSED(begin),
+             DeeObject *UNUSED(end)) {
 	/* Override the getrange operator of `sequence' as not-implemented. */
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETRANGE);
 	return NULL;

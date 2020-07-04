@@ -56,13 +56,13 @@ DECL_BEGIN
  * Example usage:
  * >> // function my_function(int a, int b, int c = 5) -> int;
  * >> // @return: * : The sum of `a', `b' and `c'
- * >> DREF DeeObject *DCALL
- * >> my_function(DeeObject *__restrict UNUSED(self),
+ * >> PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ * >> my_function(DeeObject *UNUSED(self),
  * >>             size_t argc, DeeObject *const *argv) {
- * >>     int a,b,c = 5;
+ * >>     int a, b, c = 5;
  * >>     if (DeeArg_Unpack(argc, argv,"dd|d:my_function", &a, &b, &c))
  * >>         return NULL;
- * >>     return DeeInt_NewInt(a+b+c);
+ * >>     return DeeInt_NewInt(a + b + c);
  * >> }
  */
 DFUNDEF WUNUSED NONNULL((3)) int DeeArg_Unpack(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv, char const *__restrict format, ...);

@@ -957,6 +957,26 @@ err:
 	return NULL;
 }
 
+/* An extension to `Dee_Unpackf', explicitly for unpacking elements from function arguments.
+ * Format language syntax:
+ *     using Dee_Unpackf::object;
+ *     __main__   ::= [(object  // Process regular objects, writing values to pointers passed through varargs.
+ *                    | '|'     // Marker: The remainder of the format is optional.
+ *                      )...]
+ *                    [':' <function_name>] // Optional, trailing function name (Used in error messages)
+ *     ;
+ * Example usage:
+ * >> // function my_function(int a, int b, int c = 5) -> int;
+ * >> // @return: * : The sum of `a', `b' and `c'
+ * >> PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ * >> my_function(DeeObject *UNUSED(self),
+ * >>             size_t argc, DeeObject *const *argv) {
+ * >>     int a, b, c = 5;
+ * >>     if (DeeArg_Unpack(argc, argv,"dd|d:my_function", &a, &b, &c))
+ * >>         return NULL;
+ * >>     return DeeInt_NewInt(a + b + c);
+ * >> }
+ */
 PUBLIC WUNUSED NONNULL((3)) int
 (DCALL DeeArg_VUnpack)(size_t argc, /*nonnull_if(argc != 0)*/ DeeObject *const *argv,
                        char const *__restrict format, va_list args) {

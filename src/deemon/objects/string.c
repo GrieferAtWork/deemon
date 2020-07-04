@@ -1384,8 +1384,8 @@ PRIVATE struct type_member string_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-string_class_chr(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_class_chr(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	uint32_t ch;
 	if (DeeArg_Unpack(argc, argv, "I32u:chr", &ch))
@@ -1395,8 +1395,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-string_class_fromseq(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_class_fromseq(DeeObject *UNUSED(self),
                      size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
 	if (DeeArg_Unpack(argc, argv, "o:fromseq", &seq))

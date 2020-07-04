@@ -175,7 +175,7 @@ typedef struct {
 	DREF DeeObject *si_size;  /* [1..1][const] The size of the Sequence. */
 	DREF DeeObject *si_index; /* [1..1][lock(si_lock)] The current index (`int' object). */
 #ifndef CONFIG_NO_THREADS
-	rwlock_t si_lock; /* Lock for accessing `si_index' */
+	rwlock_t        si_lock;  /* Lock for accessing `si_index' */
 #endif /* !CONFIG_NO_THREADS */
 } SeqIterator;
 
@@ -3757,8 +3757,8 @@ PRIVATE struct type_getset seq_getsets[] = {
 };
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-seq_class_range(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_class_range(DeeObject *UNUSED(self),
                 size_t argc, DeeObject *const *argv) {
 	/*  Offering the same functionality as the legacy `util::range()',
 	 * `Sequence.range()' is the new builtin way of getting this
@@ -3780,8 +3780,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-seq_class_repeat(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_class_repeat(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *obj;
 	size_t count;
@@ -3806,8 +3806,8 @@ err:
 
 INTDEF DeeTypeObject SeqConcat_Type;
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-seq_class_concat(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_class_concat(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	if (!argc)

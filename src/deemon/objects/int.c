@@ -3027,10 +3027,9 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-int_frombytes(DeeObject *__restrict UNUSED(self),
-              size_t argc, DeeObject *const *argv,
-              DeeObject *kw) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_frombytes(DeeObject *UNUSED(self), size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
 	struct keyword kwlist[] = { K(bytes), K(byteorder), K(signed), KEND };
 	DeeObject *bytes;
 	DeeObject *byteorder = Dee_None;
@@ -3079,7 +3078,7 @@ PRIVATE struct type_method int_class_methods[] = {
 	  DOC("(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?Dint\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	      "or $none (for host-endian)\n"
+	      "or ?N (for host-endian)\n"
 	      "@throw ValueError The given @byteorder string isn't recognized\n"
 	      "The inverse of ?#tobytes, decoding a given bytes buffer @bytes to construct an integer"),
 	  TYPE_METHOD_FKWDS },
@@ -3152,8 +3151,8 @@ PRIVATE struct type_method int_methods[] = {
 	  DOC("(length?:?Dint,byteorder:?Dstring=!N,signed=!f)->?DBytes\n"
 	      "@param byteorder The byteorder encoding used by the returned bytes. "
 	      "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	      "or $none (for host-endian)\n"
-	      "@throw IntegerOverflow @signed is false and @this integer is negative\n"
+	      "or ?N (for host-endian)\n"
+	      "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
 	      "@throw ValueError The given @byteorder string isn't recognized\n"
 	      "Returns the data of @this integer as a @length bytes long "
 	      "writable Bytes object that is disjunct from @this integer.\n"
@@ -3164,7 +3163,7 @@ PRIVATE struct type_method int_methods[] = {
 	{ "bitcount",
 	  (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&int_bitcount,
 	  DOC("(signed=!f)->?Dint\n"
-	      "@throw IntegerOverflow @signed is false and @this integer is negative\n"
+	      "@throw IntegerOverflow @signed is ?f and @this integer is negative\n"
 	      "Return the number of bits needed to represent @this integer in base-2"),
 	  TYPE_METHOD_FKWDS },
 	{ "__sizeof__",

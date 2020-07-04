@@ -59,8 +59,8 @@ done:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-pipe_class_new(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+pipe_class_new(DeeObject *UNUSED(self),
                size_t argc, DeeObject *const *argv) {
 	int fds[2];
 	uint32_t pipe_size;

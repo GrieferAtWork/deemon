@@ -1129,22 +1129,22 @@ err:
 }
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default_user_get_home(DeeObject *__restrict UNUSED(self)) {
 	return fs_gethome(false);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default_user_get_domain(DeeObject *__restrict UNUSED(self)) {
 	return fs_gethostname();
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 default_user_get_name(DeeObject *__restrict UNUSED(self)) {
 	return fs_getuser(false);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 user_get_profiles_dir(DeeObject *__restrict UNUSED(self)) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (nt_print_GetProfilesDirectory(&printer, false))
@@ -1155,7 +1155,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 user_get_defaulthome(DeeObject *__restrict UNUSED(self)) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (nt_print_GetDefaultUserProfileDirectory(&printer, false))
@@ -1166,7 +1166,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 user_get_allusershome(DeeObject *__restrict UNUSED(self)) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	if (nt_print_GetAllUsersProfileDirectory(&printer, false))
@@ -2188,8 +2188,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-stat_class_islnk(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_islnk(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	int error;
@@ -2328,8 +2328,8 @@ is_exe_filename(DeeObject *__restrict path) {
 	return result;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-stat_class_isexe(DeeObject *__restrict UNUSED(self),
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+stat_class_isexe(DeeObject *UNUSED(self),
                  size_t argc, DeeObject *const *argv) {
 	DeeObject *path, *arg2 = NULL;
 	bool result;
