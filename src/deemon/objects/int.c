@@ -41,15 +41,13 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h>
 
 #include <hybrid/atomic.h>
 #include <hybrid/bit.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
-
-#include <math.h> /* FIXME: This needs a feature check! */
-#include <string.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -63,6 +61,34 @@
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
 #include <deemon/util/rwlock.h>
 #endif /* CONFIG_INT_CACHE_MAXCOUNT != 0 */
+
+#ifndef CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
+#if defined(__OPTIMIZE_SIZE__) && defined(CONFIG_HAVE_MATH_H)
+#define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 0
+#else /* __OPTIMIZE_SIZE__ && CONFIG_HAVE_MATH_H */
+#define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 1
+#endif /* !__OPTIMIZE_SIZE__ || !CONFIG_HAVE_MATH_H */
+#elif (CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS + 0) == 0
+#undef CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
+#define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 0
+#endif /* ... */
+
+
+/* In order to calculate constants at runtime, we need `log()' from <math.h> */
+#if !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
+#ifdef CONFIG_HAVE_MATH_H
+#include <math.h>
+#else /* CONFIG_HAVE_MATH_H */
+#ifdef __PREPROCESSOR_HAVE_WARNING
+#warning "Unsupported feature: `CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
+#else /* __PREPROCESSOR_HAVE_WARNING */
+#error "Unsupported feature: `CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
+#endif /* !__PREPROCESSOR_HAVE_WARNING */
+#undef CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
+#define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 0
+#endif /* !CONFIG_HAVE_MATH_H */
+#endif /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
+
 
 DECL_BEGIN
 
@@ -837,17 +863,95 @@ DeeInt_NewS128(dint128_t val) {
 #endif /* DIGIT_BITS != 30 */
 
 
-PRIVATE double log_base_BASE[37] = {
-	0.0e0,
+
+#define log_base_BASE    (log_base_BASE_ - 2)
+#define convwidth_base   (convwidth_base_ - 2)
+#define convmultmax_base (convmultmax_base_ - 2)
+#if !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
+PRIVATE double log_base_BASE_[35] = { 0.0e0 };
+PRIVATE int convwidth_base_[35] = { 0 };
+PRIVATE twodigits convmultmax_base_[35] = { 0 };
+#else /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
+PRIVATE double const log_base_BASE_[35] = {
+#if DIGIT_BITS == 30
+	0.033333333333333333, 0.052832083357371877,
+	0.066666666666666666, 0.077397603162912082,
+	0.086165416690705210, 0.093578497401920133,
+	0.099999999999999992, 0.10566416671474375,
+	0.11073093649624542, 0.11531438728790992,
+	0.11949875002403855, 0.12334799060470308,
+	0.12691183073525347, 0.13022968652028397,
+	0.13333333333333333, 0.13624876137501132,
+	0.13899750004807707, 0.14159758378145285,
+	0.14406426982957873, 0.14641058075929203,
+	0.14864772062124326, 0.15078539853523376,
+	0.15283208335737189, 0.15479520632582416,
+	0.15668132393803641, 0.15849625007211562,
+	0.16024516406858680, 0.16193269983758574,
+	0.16356301985361729, 0.16513987701289584,
+	0.16666666666666669, 0.16814647064528179,
+	0.16958209470834465, 0.17097610056483223,
+	0.17233083338141042,
+#elif DIGIT_BITS == 15
+	0.066666666666666666, 0.10566416671474375,
+	0.13333333333333333, 0.15479520632582416,
+	0.17233083338141042, 0.18715699480384027,
+	0.19999999999999998, 0.21132833342948751,
+	0.22146187299249084, 0.23062877457581984,
+	0.23899750004807710, 0.24669598120940617,
+	0.25382366147050694, 0.26045937304056793,
+	0.26666666666666666, 0.27249752275002265,
+	0.27799500009615413, 0.28319516756290569,
+	0.28812853965915747, 0.29282116151858406,
+	0.29729544124248652, 0.30157079707046752,
+	0.30566416671474378, 0.30959041265164833,
+	0.31336264787607282, 0.31699250014423125,
+	0.32049032813717360, 0.32386539967517147,
+	0.32712603970723458, 0.33027975402579168,
+	0.33333333333333337, 0.33629294129056359,
+	0.33916418941668930, 0.34195220112966446,
+	0.34466166676282084
+#else
+#error "Unsupported `DIGIT_BITS'"
+#endif
 };
 
-PRIVATE int convwidth_base[37] = {
-	0,
+PRIVATE int const convwidth_base_[35] = {
+#if DIGIT_BITS == 30
+	30, 18, 15, 12, 11, 10, 10, 9, 9, 8, 8, 8,
+	7, 7, 7, 7, 7, 7, 6, 6, 6, 6, 6, 6, 6, 6,
+	6, 6, 6, 6, 6, 5, 5, 5, 5
+#elif DIGIT_BITS == 15
+	15, 9, 7, 6, 5, 5, 5, 4, 4, 4, 4, 4, 3, 3,
+	3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+	3, 3, 3, 2, 2, 2, 2
+#else
+#error "Unsupported `DIGIT_BITS'"
+#endif
 };
 
-PRIVATE twodigits convmultmax_base[37] = {
-	0,
+PRIVATE digit const convmultmax_base_[35] = {
+#if DIGIT_BITS == 30
+	0x40000000, 0x17179149, 0x40000000, 0x0e8d4a51, 0x159fd800,
+	0x10d63af1, 0x40000000, 0x17179149, 0x3b9aca00, 0x0cc6db61,
+	0x19a10000, 0x309f1021, 0x06487b80, 0x0a2f1b6f, 0x10000000,
+	0x18754571, 0x247dbc80, 0x3547667b, 0x03d09000, 0x051cafe9,
+	0x06c20a40, 0x08d2d931, 0x0b640000, 0x0e8d4a51, 0x1269ae40,
+	0x17179149, 0x1cb91000, 0x23744899, 0x2b73a840, 0x34e63b41,
+	0x40000000, 0x025528a1, 0x02b54a20, 0x03216b93, 0x039aa400
+#elif DIGIT_BITS == 15
+	0x8000, 0x4ce3, 0x4000, 0x3d09, 0x1e60,
+	0x41a7, 0x8000, 0x19a1, 0x2710, 0x3931,
+	0x5100, 0x6f91, 0x0ab8, 0x0d2f, 0x1000,
+	0x1331, 0x16c8, 0x1acb, 0x1f40, 0x242d,
+	0x2998, 0x2f87, 0x3600, 0x3d09, 0x44a8,
+	0x4ce3, 0x55c0, 0x5f45, 0x6978, 0x745f,
+	0x8000, 0x0441, 0x0484, 0x04c9, 0x0510
+#else
+#error "Unsupported `DIGIT_BITS'"
+#endif
 };
+#endif /* CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 
 LOCAL WUNUSED DREF DeeIntObject *DCALL
 int_from_nonbinary_string(char *__restrict begin,
@@ -861,6 +965,9 @@ int_from_nonbinary_string(char *__restrict begin,
 	size_t size_z;
 	digit *pz, *pzstop;
 	int i, convwidth;
+	ASSERT(radix >= 2);
+	ASSERT(radix <= 36);
+#if !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
 	if (convwidth_base[radix] == 0) {
 		twodigits convmax    = radix;
 		log_base_BASE[radix] = (log((double)radix) /
@@ -876,17 +983,18 @@ int_from_nonbinary_string(char *__restrict begin,
 		ASSERT(i > 0);
 		convwidth_base[radix] = i;
 	}
+#endif /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 	size_z = (size_t)((end - begin) * log_base_BASE[radix]) + 1;
 	result = DeeInt_Alloc(size_z);
 	if (result == NULL)
 		return NULL;
 	result->ob_size = 0;
-	convwidth       = convwidth_base[radix];
-	convmultmax     = convmultmax_base[radix];
+	convwidth   = convwidth_base[radix];
+	convmultmax = convmultmax_base[radix];
 	while (begin < end) {
 #if 1
 		c = 0;
-		for (i = 0; i < convwidth && begin != end; ++i, ++begin) {
+		for (i = 0; i < convwidth && begin < end; ++i, ++begin) {
 			digit dig;
 			char ch;
 parse_ch:
@@ -897,15 +1005,37 @@ parse_ch:
 				dig = 10 + (ch - 'a');
 			else if (ch >= 'A' && ch <= 'Z')
 				dig = 10 + (ch - 'A');
-#if 0
-			else if (DeeUni_IsDigit(ch))
-				dig = DeeUni_AsDigit(ch);
-#endif
-			else if (ch != '\\' || !(radix_and_flags & DEEINT_STRING_FESCAPED))
+			else if ((unsigned char)ch >= 0x80) {
+				/* Unicode character? */
+				uint32_t uni;
+				struct unitraits *traits;
+				uni    = utf8_readchar((char const **)&begin, end);
+				traits = DeeUni_Descriptor(uni);
+				/* All any kind of digit/decimal character. - If the caller doesn't
+				 * want to support any kind of digit, have `int("²")' evaluate to 2,
+				 * then they have to verify that the string only contains ~conventional~
+				 * decimals by using `string.isdecimal()'. As far as this check is
+				 * concerned, we accept anything that applies to `string.isnumeric()' */
+				if (traits->ut_flags & (Dee_UNICODE_FDIGIT | Dee_UNICODE_FDECIMAL))
+					dig = traits->ut_digit;
+				else if (uni >= 'a' && uni <= 'z')
+					dig = 10 + ((uint8_t)uni - (uint8_t)'a');
+				else if (uni >= 'A' && uni <= 'Z')
+					dig = 10 + ((uint8_t)uni - (uint8_t)'A');
+				else {
+					if (uni != '\\')
+						goto invalid_r;
+					goto handle_backslash_in_text;
+				}
+				--begin; /* Account for the additional `++begin' inside of for-advance */
+			} else if (ch != '\\') {
 				goto invalid_r;
-			else if (begin >= end - 2)
-				goto invalid_r;
-			else {
+			} else {
+handle_backslash_in_text:
+				if (!(radix_and_flags & DEEINT_STRING_FESCAPED))
+					goto invalid_r;
+				if (begin >= end - 2)
+					goto invalid_r;
 				if (begin[1] == '\n') {
 					begin += 2;
 					goto parse_ch;
@@ -1227,8 +1357,35 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 				dig = 10 + (digit)(ch - 'a');
 			else if (ch >= 'A' && ch <= 'Z')
 				dig = 10 + (digit)(ch - 'A');
-			else if (DeeUni_IsLF(ch) &&
-			         (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			else if ((unsigned char)ch >= 0x80) {
+				/* Unicode character? */
+				uint32_t uni;
+				struct unitraits *traits;
+				++iter;
+				uni    = utf8_readchar_rev((char const **)&iter, end);
+				traits = DeeUni_Descriptor(uni);
+				/* All any kind of digit/decimal character. - If the caller doesn't
+				 * want to support any kind of digit, have `int("²")' evaluate to 2,
+				 * then they have to verify that the string only contains ~conventional~
+				 * decimals by using `string.isdecimal()'. As far as this check is
+				 * concerned, we accept anything that applies to `string.isnumeric()' */
+				if (traits->ut_flags & (Dee_UNICODE_FDIGIT | Dee_UNICODE_FDECIMAL))
+					dig = traits->ut_digit;
+				else if (uni >= 'a' && uni <= 'z')
+					dig = 10 + ((uint8_t)uni - (uint8_t)'a');
+				else if (uni >= 'A' && uni <= 'Z')
+					dig = 10 + ((uint8_t)uni - (uint8_t)'A');
+				else if (traits->ut_flags & Dee_UNICODE_FLF)
+					goto handle_linefeed_in_text;
+				else {
+					goto invalid_r;
+				}
+			} else {
+				if (!DeeUni_IsLF(ch))
+					goto invalid_r;
+handle_linefeed_in_text:
+				if (!(radix_and_flags & DEEINT_STRING_FESCAPED))
+					goto invalid_r;
 				if (iter == begin)
 					goto invalid_r;
 				if (iter[-1] == '\\') {
@@ -1240,8 +1397,6 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 					iter -= 2;
 					continue;
 				}
-				goto invalid_r;
-			} else {
 				goto invalid_r;
 			}
 			/* Got the digit. */
@@ -1692,8 +1847,11 @@ do_print_prefix:
 		return result;
 	}	break;
 
-	default: break;
+	default:
+		break;
 	}
+	/* TODO: support for arbitrary values for radix! (in the range 2..36 inclusively)
+	 *       After all: the fromstring() function also supports arbitrary values... */
 	DeeError_Throwf(&DeeError_NotImplemented,
 	                "Unsupported integer radix %u",
 	                (unsigned)(radix_and_flags >> DEEINT_PRINT_RSHIFT));

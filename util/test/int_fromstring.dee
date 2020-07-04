@@ -1,0 +1,60 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2020 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+/* Verify unicode support within the string decoder.
+ * Do this by asserting the superscript decimal characters. */
+assert int("\u2070") == 0; /* SUPERSCRIPT ZERO:  ⁰ */
+assert int("\u00B9") == 1; /* SUPERSCRIPT ONE:   ¹ */
+assert int("\u00B2") == 2; /* SUPERSCRIPT TWO:   ² */
+assert int("\u00B3") == 3; /* SUPERSCRIPT THREE: ³ */
+assert int("\u2074") == 4; /* SUPERSCRIPT FOUR:  ⁴ */
+assert int("\u2075") == 5; /* SUPERSCRIPT FIVE:  ⁵ */
+assert int("\u2076") == 6; /* SUPERSCRIPT SIX:   ⁶ */
+assert int("\u2077") == 7; /* SUPERSCRIPT SEVEN: ⁷ */
+assert int("\u2078") == 8; /* SUPERSCRIPT EIGHT: ⁸ */
+assert int("\u2079") == 9; /* SUPERSCRIPT NINE:  ⁹ */
+
+
+function testStringConvert(x: int) {
+	/* TODO: Enable this if/when/once int.tostr()
+	 *       supports arbitrary values for the radix! */
+//	for (local radix: [2:37]) {
+//		assert x == int(x.tostr(radix), radix);
+//	}
+	/* Also test automatic radix detection */
+	assert x == int(str(x));
+	assert x == int(x.hex());
+	assert x == int(x.bin());
+	assert x == int(x.oct());
+}
+
+
+/* Make sure that we can convert back-and-forth between integers and strings. */
+for (local i: [:128]) {
+	local limit = (1 << i) - 1;
+	for (local a: [-limit - 2: -limit + 3])
+		testStringConvert(a);
+	for (local a: [limit - 2: limit + 3])
+		testStringConvert(a);
+}
+
