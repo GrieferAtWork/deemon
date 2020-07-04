@@ -91,11 +91,11 @@ INTDEF void ctypes_kos_guard(void);
 #endif /* E_SEGFAULT */
 #endif /* TRY && EXCEPT */
 
-#else
+#else /* ... */
 
 //#define CONFIG_HAVE_CTYPES_FAULTPROTECT 1
 /* TODO: handle #PF (PAGEFAULT) interrupts within `expr'
- * This could highly efficiently be done using a signal handler
+ * This could be done (highly efficiently) using a signal handler
  * alongside storing the begin/end addresses of all protected
  * ranges in a special section that we search when a SEGFAULT
  * occurs.
@@ -107,7 +107,7 @@ INTDEF void ctypes_kos_guard(void);
  *       as -fnon-call-exceptions. */
 #define CTYPES_FAULTPROTECT(expr, error) expr
 
-#endif
+#endif /* !... */
 #endif /* 1 */
 
 #ifndef CTYPES_FAULTPROTECT
@@ -594,20 +594,20 @@ INTDEF DeeSTypeObject  DeeCLDouble_Type;
 
 
 
-#if CONFIG_CTYPES_SIZEOF_CHAR == 1 && \
-    CONFIG_CTYPES_ALIGNOF_CHAR == 1
+#if (CONFIG_CTYPES_SIZEOF_CHAR == 1 && \
+     CONFIG_CTYPES_ALIGNOF_CHAR == 1)
 #define DeeCSChar_Type  DeeCInt8_Type
 #define DeeCUChar_Type  DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 2 && \
-      CONFIG_CTYPES_ALIGNOF_CHAR == 2
+#elif (CONFIG_CTYPES_SIZEOF_CHAR == 2 && \
+       CONFIG_CTYPES_ALIGNOF_CHAR == 2)
 #define DeeCSChar_Type  DeeCInt16_Type
 #define DeeCUChar_Type  DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 4 && \
-      CONFIG_CTYPES_ALIGNOF_CHAR == 4
+#elif (CONFIG_CTYPES_SIZEOF_CHAR == 4 && \
+       CONFIG_CTYPES_ALIGNOF_CHAR == 4)
 #define DeeCSChar_Type  DeeCInt32_Type
 #define DeeCUChar_Type  DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_CHAR == 8 && \
-      CONFIG_CTYPES_ALIGNOF_CHAR == 8
+#elif (CONFIG_CTYPES_SIZEOF_CHAR == 8 && \
+       CONFIG_CTYPES_ALIGNOF_CHAR == 8)
 #define DeeCSChar_Type  DeeCInt64_Type
 #define DeeCUChar_Type  DeeCUInt64_Type
 #else
@@ -616,20 +616,20 @@ INTDEF DeeSTypeObject   DeeCSChar_Type;
 INTDEF DeeSTypeObject   DeeCUChar_Type;
 #endif
 
-#if CONFIG_CTYPES_SIZEOF_SHORT == 1 && \
-    CONFIG_CTYPES_ALIGNOF_SHORT == 1
+#if (CONFIG_CTYPES_SIZEOF_SHORT == 1 && \
+     CONFIG_CTYPES_ALIGNOF_SHORT == 1)
 #define DeeCShort_Type  DeeCInt8_Type
 #define DeeCUShort_Type DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 2 && \
-      CONFIG_CTYPES_ALIGNOF_SHORT == 2
+#elif (CONFIG_CTYPES_SIZEOF_SHORT == 2 && \
+       CONFIG_CTYPES_ALIGNOF_SHORT == 2)
 #define DeeCShort_Type  DeeCInt16_Type
 #define DeeCUShort_Type DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 4 && \
-      CONFIG_CTYPES_ALIGNOF_SHORT == 4
+#elif (CONFIG_CTYPES_SIZEOF_SHORT == 4 && \
+       CONFIG_CTYPES_ALIGNOF_SHORT == 4)
 #define DeeCShort_Type  DeeCInt32_Type
 #define DeeCUShort_Type DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_SHORT == 8 && \
-      CONFIG_CTYPES_ALIGNOF_SHORT == 8
+#elif (CONFIG_CTYPES_SIZEOF_SHORT == 8 && \
+       CONFIG_CTYPES_ALIGNOF_SHORT == 8)
 #define DeeCShort_Type  DeeCInt64_Type
 #define DeeCUShort_Type DeeCUInt64_Type
 #else
@@ -638,20 +638,20 @@ INTDEF DeeSTypeObject   DeeCShort_Type;
 INTDEF DeeSTypeObject   DeeCUShort_Type;
 #endif
 
-#if CONFIG_CTYPES_SIZEOF_INT == 1 && \
-    CONFIG_CTYPES_ALIGNOF_INT == 1
+#if (CONFIG_CTYPES_SIZEOF_INT == 1 && \
+     CONFIG_CTYPES_ALIGNOF_INT == 1)
 #define DeeCInt_Type    DeeCInt8_Type
 #define DeeCUInt_Type   DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_INT == 2 && \
-      CONFIG_CTYPES_ALIGNOF_INT == 2
+#elif (CONFIG_CTYPES_SIZEOF_INT == 2 && \
+       CONFIG_CTYPES_ALIGNOF_INT == 2)
 #define DeeCInt_Type    DeeCInt16_Type
 #define DeeCUInt_Type   DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_INT == 4 && \
-      CONFIG_CTYPES_ALIGNOF_INT == 4
+#elif (CONFIG_CTYPES_SIZEOF_INT == 4 && \
+       CONFIG_CTYPES_ALIGNOF_INT == 4)
 #define DeeCInt_Type    DeeCInt32_Type
 #define DeeCUInt_Type   DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_INT == 8 && \
-      CONFIG_CTYPES_ALIGNOF_INT == 8
+#elif (CONFIG_CTYPES_SIZEOF_INT == 8 && \
+       CONFIG_CTYPES_ALIGNOF_INT == 8)
 #define DeeCInt_Type    DeeCInt64_Type
 #define DeeCUInt_Type   DeeCUInt64_Type
 #else
@@ -660,20 +660,20 @@ INTDEF DeeSTypeObject   DeeCInt_Type;
 INTDEF DeeSTypeObject   DeeCUInt_Type;
 #endif
 
-#if CONFIG_CTYPES_SIZEOF_LONG == 1 && \
-    CONFIG_CTYPES_ALIGNOF_LONG == 1
+#if (CONFIG_CTYPES_SIZEOF_LONG == 1 && \
+     CONFIG_CTYPES_ALIGNOF_LONG == 1)
 #define DeeCLong_Type   DeeCInt8_Type
 #define DeeCULong_Type  DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_LONG == 2 && \
-      CONFIG_CTYPES_ALIGNOF_LONG == 2
+#elif (CONFIG_CTYPES_SIZEOF_LONG == 2 && \
+       CONFIG_CTYPES_ALIGNOF_LONG == 2)
 #define DeeCLong_Type   DeeCInt16_Type
 #define DeeCULong_Type  DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_LONG == 4 && \
-      CONFIG_CTYPES_ALIGNOF_LONG == 4
+#elif (CONFIG_CTYPES_SIZEOF_LONG == 4 && \
+       CONFIG_CTYPES_ALIGNOF_LONG == 4)
 #define DeeCLong_Type   DeeCInt32_Type
 #define DeeCULong_Type  DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_LONG == 8 && \
-      CONFIG_CTYPES_ALIGNOF_LONG == 8
+#elif (CONFIG_CTYPES_SIZEOF_LONG == 8 && \
+       CONFIG_CTYPES_ALIGNOF_LONG == 8)
 #define DeeCLong_Type   DeeCInt64_Type
 #define DeeCULong_Type  DeeCUInt64_Type
 #else
@@ -682,20 +682,20 @@ INTDEF DeeSTypeObject   DeeCLong_Type;
 INTDEF DeeSTypeObject   DeeCULong_Type;
 #endif
 
-#if CONFIG_CTYPES_SIZEOF_LLONG == 1 && \
-    CONFIG_CTYPES_ALIGNOF_LLONG == 1
+#if (CONFIG_CTYPES_SIZEOF_LLONG == 1 && \
+     CONFIG_CTYPES_ALIGNOF_LLONG == 1)
 #define DeeCLLong_Type  DeeCInt8_Type
 #define DeeCULLong_Type DeeCUInt8_Type
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 2 && \
-      CONFIG_CTYPES_ALIGNOF_LLONG == 2
+#elif (CONFIG_CTYPES_SIZEOF_LLONG == 2 && \
+       CONFIG_CTYPES_ALIGNOF_LLONG == 2)
 #define DeeCLLong_Type  DeeCInt16_Type
 #define DeeCULLong_Type DeeCUInt16_Type
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 4 && \
-      CONFIG_CTYPES_ALIGNOF_LLONG == 4
+#elif (CONFIG_CTYPES_SIZEOF_LLONG == 4 && \
+       CONFIG_CTYPES_ALIGNOF_LLONG == 4)
 #define DeeCLLong_Type  DeeCInt32_Type
 #define DeeCULLong_Type DeeCUInt32_Type
-#elif CONFIG_CTYPES_SIZEOF_LLONG == 8 && \
-      CONFIG_CTYPES_ALIGNOF_LLONG == 8
+#elif (CONFIG_CTYPES_SIZEOF_LLONG == 8 && \
+       CONFIG_CTYPES_ALIGNOF_LLONG == 8)
 #define DeeCLLong_Type  DeeCInt64_Type
 #define DeeCULLong_Type DeeCUInt64_Type
 #else
@@ -704,9 +704,9 @@ INTDEF DeeSTypeObject   DeeCLLong_Type;
 INTDEF DeeSTypeObject   DeeCULLong_Type;
 #endif
 
-#if !defined(CONFIG_LONG_NEEDS_OWN_TYPE) && \
-    (CONFIG_CTYPES_SIZEOF_LONG == CONFIG_CTYPES_SIZEOF_INT && \
-     CONFIG_CTYPES_ALIGNOF_LONG == CONFIG_CTYPES_ALIGNOF_INT)
+#if (!defined(CONFIG_LONG_NEEDS_OWN_TYPE) &&                   \
+     (CONFIG_CTYPES_SIZEOF_LONG == CONFIG_CTYPES_SIZEOF_INT && \
+      CONFIG_CTYPES_ALIGNOF_LONG == CONFIG_CTYPES_ALIGNOF_INT))
 /* Make `long' its own distinct type. */
 #define CONFIG_LONG_NEEDS_OWN_TYPE 1
 #undef DeeCLong_Type
@@ -728,10 +728,10 @@ INTDEF DeeSTypeObject   DeeCULong_Type;
 #elif CONFIG_CTYPES_SIZEOF_INT == 8
 #define CTYPES_INT  int64_t
 #define CTYPES_UINT uint64_t
-#else
+#else /* CONFIG_CTYPES_SIZEOF_INT == ... */
 #define CTYPES_INT  int
 #define CTYPES_UINT unsigned int
-#endif
+#endif /* CONFIG_CTYPES_SIZEOF_INT != ... */
 
 
 /* Array types, and foreign-function types. */
@@ -786,14 +786,14 @@ INTDEF WUNUSED char const *DCALL cc_getname(ctypes_cc_t cc);
 
 
 struct cfunction_type_object {
-	DeeSTypeObject                     ft_base;    /* The underlying structured type descriptor. */
+	DeeSTypeObject                     ft_base;            /* The underlying structured type descriptor. */
 #ifndef CONFIG_NO_CFUNCTION
-	DREF DeeSTypeObject               *ft_orig;    /* [1..1][const] The function's return type. */
-	LLIST_NODE(DeeCFunctionTypeObject) ft_chain;   /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
-	dhash_t                            ft_hash;    /* [const] A pre-calculated hash used by `struct stype_cfunction' */
-	size_t                             ft_argc;    /* [const] Amount of function argument types. */
-	DREF DeeSTypeObject              **ft_argv;    /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
-	ctypes_cc_t                               ft_cc;      /* [const] The calling convention used by this function. */
+	DREF DeeSTypeObject               *ft_orig;            /* [1..1][const] The function's return type. */
+	LLIST_NODE(DeeCFunctionTypeObject) ft_chain;           /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
+	dhash_t                            ft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
+	size_t                             ft_argc;            /* [const] Amount of function argument types. */
+	DREF DeeSTypeObject              **ft_argv;            /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */
+	ctypes_cc_t                        ft_cc;              /* [const] The calling convention used by this function. */
 	ffi_type                          *ft_ffi_return_type; /* [1..1] Raw return type. */
 	ffi_type                         **ft_ffi_arg_type_v;  /* [1..1][0..ob_argc][owned] Raw argument types. */
 	ffi_cif                            ft_ffi_cif;         /* cif object to call the function. */
@@ -817,7 +817,7 @@ struct cfunction_type_object {
 
 INTDEF DeeTypeObject DeeCFunctionType_Type;
 #define DeeCFunctionType_Check(ob) \
-	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeCFunctionType_Type) /* `array_type' is final */
+	DeeObject_InstanceOfExact((DeeObject *)(ob), &DeeCFunctionType_Type) /* `CFunctionType' is final */
 
 INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
 
@@ -831,7 +831,7 @@ INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
  * an instance of `return_type' while taking `argc' arguments,
  * each of type `argv' when called using `calling_convention'
  * @param: calling_convention: One of `FFI_*' (Defaults to `CC_DEFAULT')
- * @param: inherit_argv: When `true', _always_ inherit the `argv' vecotr (even upon error)
+ * @param: inherit_argv: When `true', _always_ inherit the `argv' vector (even upon error)
  *                       Note however, that vector elements are not
  *                       inherited (as denoted by the lack of a DREF tag).
  * When `ctypes' has been built with `CONFIG_NO_CFUNCTION',
@@ -934,14 +934,14 @@ INTDEF DeeTypeObject DeeShlib_Type;
 
 /* Helper functions for constructing new integer objects. */
 #if CONFIG_CTYPES_SIZEOF_INT == 1
-#define int_news8     int_newint
+#define int_news8 int_newint
 #elif CONFIG_CTYPES_SIZEOF_INT == 2
-#define int_news16    int_newint
+#define int_news16 int_newint
 #elif CONFIG_CTYPES_SIZEOF_INT == 4
-#define int_news32    int_newint
+#define int_news32 int_newint
 #elif CONFIG_CTYPES_SIZEOF_INT == 8
-#define int_news64    int_newint
-#endif
+#define int_news64 int_newint
+#endif /* CONFIG_CTYPES_SIZEOF_INT == ... */
 INTDEF WUNUSED DREF DeeObject *DCALL int_news8(int8_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_news16(int16_t val);
 INTDEF WUNUSED DREF DeeObject *DCALL int_news32(int32_t val);

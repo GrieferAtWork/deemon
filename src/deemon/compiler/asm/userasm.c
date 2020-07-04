@@ -28,6 +28,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/error.h>
+#include <deemon/system-features.h> /* memmoveupc(), ... */
 
 #ifndef CONFIG_LANGUAGE_NO_ASM
 #include <deemon/bool.h>
@@ -2215,9 +2216,16 @@ done_special:
 #else /* CONFIG_OBJECT_HEAP_ISNT_MALLOC */
 	/* Convert the string printer into a TPP-style string. */
 	result = (struct TPPString *)self->af_printer.ap_string;
-	memmove((void *)((uintptr_t)result + offsetof(struct TPPString, s_text)),
-	        (void *)((uintptr_t)result + offsetof(DeeStringObject, s_str)),
-	        (self->af_printer.ap_length + 1) * sizeof(char));
+	__STATIC_IF(offsetof(struct TPPString, s_text) > offsetof(DeeStringObject, s_str)) {
+		memmoveupc((void *)((uintptr_t)result + offsetof(struct TPPString, s_text)),
+		           (void *)((uintptr_t)result + offsetof(DeeStringObject, s_str)),
+		           self->af_printer.ap_length + 1, sizeof(char));
+	}
+	__STATIC_IF(offsetof(struct TPPString, s_text) < offsetof(DeeStringObject, s_str)) {
+		memmovedownc((void *)((uintptr_t)result + offsetof(struct TPPString, s_text)),
+		             (void *)((uintptr_t)result + offsetof(DeeStringObject, s_str)),
+		             self->af_printer.ap_length + 1, sizeof(char));
+	}
 	result->s_refcnt = 1;
 	result->s_size = self->af_printer.ap_length;
 	result = (struct TPPString *)Dee_TryRealloc(result, offsetof(struct TPPString, s_text) +

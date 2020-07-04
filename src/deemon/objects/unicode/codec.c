@@ -74,17 +74,19 @@ DeeCodec_NormalizeName(DeeObject *__restrict name) {
 			if (length >= 4 &&
 			    UNALIGNED_GET32((uint32_t *)DeeString_STR(result)) == ENCODE_INT32('i', 's', 'o', '-')) {
 				--DeeString_SIZE(result);
-				memmove(DeeString_STR(result) + 3,
-				        DeeString_STR(result) + 4,
-				        (length - 4) * sizeof(char));
+				memmovedownc(DeeString_STR(result) + 3,
+				             DeeString_STR(result) + 4,
+				             length - 4,
+				             sizeof(char));
 				DeeString_STR(result)[length - 2] = '\0';
 			} else if (length >= 3 &&
 			           UNALIGNED_GET16((uint16_t *)DeeString_STR(result)) == ENCODE_INT16('c', 'p') &&
 			           DeeString_STR(result)[2] == '-') {
 				--DeeString_SIZE(result);
-				memmove(DeeString_STR(result) + 2,
-				        DeeString_STR(result) + 3,
-				        (length - 3) * sizeof(char));
+				memmovedownc(DeeString_STR(result) + 2,
+				             DeeString_STR(result) + 3,
+				             length - 3,
+				             sizeof(char));
 				DeeString_STR(result)[length - 2] = '\0';
 			}
 			return result;

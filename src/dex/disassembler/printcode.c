@@ -141,9 +141,10 @@ textjumps_add(struct textjumps *__restrict self,
 	while (index && MIN(self->tj_vec[index - 1].tj_origin,
 	                    self->tj_vec[index - 1].tj_target) > min_addr)
 		--index;
-	memmove(self->tj_vec + index + 1,
-	        self->tj_vec + index,
-	        (self->tj_cnt - index) * sizeof(struct textjump));
+	memmoveupc(self->tj_vec + index + 1,
+	           self->tj_vec + index,
+	           self->tj_cnt - index,
+	           sizeof(struct textjump));
 	self->tj_vec[index].tj_origin = origin;
 	self->tj_vec[index].tj_target = target;
 	self->tj_vec[index].tj_level  = 0;

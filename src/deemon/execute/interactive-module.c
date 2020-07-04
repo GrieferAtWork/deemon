@@ -645,8 +645,10 @@ gencode_failed:
 					                                                    sizeof(struct except_handler));
 					if unlikely(!full_exceptv)
 						goto gencode_failed;
-					memmove(full_exceptv + old_co_exceptc, full_exceptv,
-					        current_code->co_exceptc * sizeof(struct except_handler));
+					memmoveupc(full_exceptv + old_co_exceptc,
+					           full_exceptv,
+					           current_code->co_exceptc,
+					           sizeof(struct except_handler));
 					memcpyc(full_exceptv,
 					        old_co_exceptv,
 					        old_co_exceptc,

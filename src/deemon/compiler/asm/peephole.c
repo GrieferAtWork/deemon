@@ -2234,7 +2234,7 @@ do_switch_next_after_prefix_opcode:
 					case ASM16_POP_GLOBAL: /* ... */
 					case ASM_POP_LOCAL:    /* `mov local, PREFIX' can be translated to `pop local' */
 					case ASM16_POP_LOCAL:  /* ... */
-						memmove(iter + prefix_size, iter, pop_size);
+						memmoveupc(iter + prefix_size, iter, pop_size, sizeof(instruction_t));
 						memset(iter, ASM_DELOP, prefix_size - 1);
 						iter[prefix_size - 1] = ASM_DUP;
 						SET_RESULTF(iter, "Optimize `pop FOO; j%c FOO, ...' into `dup; pop FOO; j%c pop, ...'",

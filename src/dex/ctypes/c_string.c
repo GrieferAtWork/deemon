@@ -239,9 +239,11 @@ capi_memccpy(size_t argc, DeeObject *const *argv) {
 	union pointer dst, src;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oodIu:memccpy", &ob_dst, &ob_src, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst) ||
-	    DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeArg_Unpack(argc, argv, "oodIu:memccpy", &ob_dst, &ob_src, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+		goto err;
+	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -273,8 +275,9 @@ capi_memset(size_t argc, DeeObject *const *argv) {
 	int byte;
 	union pointer dst;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memset", &ob_dst, &byte, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memset", &ob_dst, &byte, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -302,8 +305,9 @@ capi_mempset(size_t argc, DeeObject *const *argv) {
 	int byte;
 	union pointer dst;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:mempset", &ob_dst, &byte, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:mempset", &ob_dst, &byte, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -330,9 +334,11 @@ capi_memmove(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "ooIu:memmove", &ob_dst, &ob_src, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst) ||
-	    DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeArg_Unpack(argc, argv, "ooIu:memmove", &ob_dst, &ob_src, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+		goto err;
+	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -368,9 +374,11 @@ capi_mempmove(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst, *ob_src;
 	union pointer dst, src;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "ooIu:mempmove", &ob_dst, &ob_src, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst) ||
-	    DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
+	if (DeeArg_Unpack(argc, argv, "ooIu:mempmove", &ob_dst, &ob_src, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+		goto err;
+	if (DeeObject_AsPointer(ob_src, &DeeCVoid_Type, &src))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -412,8 +420,9 @@ capi_memchr(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memchr", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memchr", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -446,8 +455,9 @@ capi_memrchr(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memrchr", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memrchr", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -481,8 +491,9 @@ capi_memend(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memend", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memend", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -513,8 +524,9 @@ capi_memrend(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memrend", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memrend", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -546,8 +558,9 @@ capi_memlen(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memlen", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memlen", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -579,8 +592,9 @@ capi_memrlen(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memrlen", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memrlen", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -612,8 +626,9 @@ capi_rawmemchr(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemchr", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemchr", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -643,8 +658,9 @@ capi_rawmemrchr(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrchr", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrchr", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -674,8 +690,9 @@ capi_rawmemlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemlen", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemlen", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -706,8 +723,9 @@ capi_rawmemrlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemrlen", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemrlen", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -740,8 +758,9 @@ capi_memxchr(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxchr", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxchr", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -774,8 +793,9 @@ capi_memxrchr(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxrchr", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxrchr", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -809,8 +829,9 @@ capi_memxend(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxend", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxend", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -841,8 +862,9 @@ capi_memxrend(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxrend", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxrend", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -874,8 +896,9 @@ capi_memxlen(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxlen", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxlen", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -907,8 +930,9 @@ capi_memxrlen(size_t argc, DeeObject *const *argv) {
 	union pointer dst;
 	int val;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "odIu:memxrlen", &ob_dst, &val, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "odIu:memxrlen", &ob_dst, &val, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -940,8 +964,9 @@ capi_rawmemxchr(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxchr", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxchr", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
@@ -971,8 +996,9 @@ capi_rawmemxrchr(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrchr", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxrchr", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	CTYPES_PROTECTED(
 	result = rawmemxrchr(dst.ptr, val), {
@@ -994,8 +1020,9 @@ capi_rawmemxlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxlen", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxlen", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	CTYPES_PROTECTED(
 	result = rawmemxlen(dst.ptr, val), {
@@ -1018,8 +1045,9 @@ capi_rawmemxrlen(size_t argc, DeeObject *const *argv) {
 	size_t result;
 	union pointer dst;
 	int val;
-	if (DeeArg_Unpack(argc, argv, "od:rawmemxrlen", &ob_dst, &val) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "od:rawmemxrlen", &ob_dst, &val))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	CTYPES_PROTECTED(
 	result = rawmemxrlen(dst.ptr, val), {
@@ -1044,9 +1072,11 @@ capi_memcmp(size_t argc, DeeObject *const *argv) {
 	int result;
 	union pointer a, b;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "ooIu:memcmp", &ob_a, &ob_b, &num_bytes) ||
-	    DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a) ||
-	    DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeArg_Unpack(argc, argv, "ooIu:memcmp", &ob_a, &ob_b, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+		goto err;
+	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
 	result = memcmp(a.ptr, b.ptr, num_bytes), {
@@ -1069,9 +1099,11 @@ capi_memcasecmp(size_t argc, DeeObject *const *argv) {
 	int result;
 	union pointer a, b;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "ooIu:memcasecmp", &ob_a, &ob_b, &num_bytes) ||
-	    DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a) ||
-	    DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeArg_Unpack(argc, argv, "ooIu:memcasecmp", &ob_a, &ob_b, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+		goto err;
+	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
 	result = memcasecmp(a.ptr, b.ptr, num_bytes), {
@@ -1097,9 +1129,11 @@ capi_memmem(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "oIuoIu:memmem", &ob_a, &haystack_len, &ob_b, &needle_len) ||
-	    DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a) ||
-	    DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeArg_Unpack(argc, argv, "oIuoIu:memmem", &ob_a, &haystack_len, &ob_b, &needle_len))
+		goto err;
+	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+		goto err;
+	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
 	result = memmem(a.ptr, haystack_len, b.ptr, needle_len), {
@@ -1156,9 +1190,11 @@ capi_memcasemem(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "oIuoIu:memcasemem", &ob_a, &haystack_len, &ob_b, &needle_len) ||
-	    DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a) ||
-	    DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeArg_Unpack(argc, argv, "oIuoIu:memcasemem", &ob_a, &haystack_len, &ob_b, &needle_len))
+		goto err;
+	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+		goto err;
+	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
 	result = memcasemem(a.ptr, haystack_len, b.ptr, needle_len), {
@@ -1221,9 +1257,11 @@ capi_memrmem(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "oIuoIu:memrmem", &ob_a, &haystack_len, &ob_b, &needle_len) ||
-	    DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a) ||
-	    DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeArg_Unpack(argc, argv, "oIuoIu:memrmem", &ob_a, &haystack_len, &ob_b, &needle_len))
+		goto err;
+	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+		goto err;
+	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
 	result = memrmem(a.ptr, haystack_len, b.ptr, needle_len), {
@@ -1280,9 +1318,11 @@ capi_memcasermem(size_t argc, DeeObject *const *argv) {
 	void *result;
 	union pointer a, b;
 	size_t haystack_len, needle_len;
-	if (DeeArg_Unpack(argc, argv, "oIuoIu:memcasermem", &ob_a, &haystack_len, &ob_b, &needle_len) ||
-	    DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a) ||
-	    DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
+	if (DeeArg_Unpack(argc, argv, "oIuoIu:memcasermem", &ob_a, &haystack_len, &ob_b, &needle_len))
+		goto err;
+	if (DeeObject_AsPointer(ob_a, &DeeCVoid_Type, &a))
+		goto err;
+	if (DeeObject_AsPointer(ob_b, &DeeCVoid_Type, &b))
 		goto err;
 	CTYPES_PROTECTED(
 	result = memcasermem(a.ptr, haystack_len, b.ptr, needle_len), {
@@ -1344,8 +1384,9 @@ capi_memrev(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *ob_dst;
 	union pointer dst;
 	size_t num_bytes;
-	if (DeeArg_Unpack(argc, argv, "oIu:memrev", &ob_dst, &num_bytes) ||
-	    DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
+	if (DeeArg_Unpack(argc, argv, "oIu:memrev", &ob_dst, &num_bytes))
+		goto err;
+	if (DeeObject_AsPointer(ob_dst, &DeeCVoid_Type, &dst))
 		goto err;
 	CTYPES_PROTECTED(
 	memrev(dst.ptr, num_bytes), {

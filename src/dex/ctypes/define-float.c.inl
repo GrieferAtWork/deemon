@@ -421,7 +421,7 @@ INTERN DeeSTypeObject TYPE_NAME = {
 		/* .tp_name     = */PP_STR(T),
 #endif /* !NAME */
 		/* .tp_doc      = */ NULL,
-		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE|TP_FINHERITCTOR,
+		/* .tp_flags    = */ TP_FNORMAL | TP_FTRUNCATE | TP_FINHERITCTOR,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,

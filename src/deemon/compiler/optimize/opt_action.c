@@ -30,6 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/super.h>
+#include <deemon/system-features.h> /* memmovedownc() */
 #include <deemon/tuple.h>
 
 DECL_BEGIN
@@ -113,10 +114,10 @@ INTERN int
 							Dee_Decref(a->a_constexpr);
 							ast_decref(b);
 							a->a_constexpr = concat;
-							memmove(&self->a_multiple.m_astv[i + 1],
-							        &self->a_multiple.m_astv[i + 2],
-							        ((self->a_multiple.m_astc - i) - 2) *
-							        sizeof(struct ast *));
+							memmovedownc(&self->a_multiple.m_astv[i + 1],
+							             &self->a_multiple.m_astv[i + 2],
+							             (self->a_multiple.m_astc - i) - 2,
+							             sizeof(struct ast *));
 							--self->a_multiple.m_astc;
 							continue;
 						}

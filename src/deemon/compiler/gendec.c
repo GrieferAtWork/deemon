@@ -23,7 +23,6 @@
 #include <deemon/api.h>
 
 #ifndef CONFIG_NO_DEC
-#include <deemon/hashset.h>
 #include <deemon/arg.h>
 #include <deemon/cell.h>
 #include <deemon/class.h>
@@ -34,6 +33,7 @@
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
@@ -42,6 +42,7 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* memmovedownc(), ... */
 #include <deemon/tuple.h>
 
 #include <hybrid/byteorder.h>
@@ -209,8 +210,9 @@ import_module_by_name:
 					dec_curr->ds_iter -= 1 + (size_t)(other_pathend - other_pathstr);
 					goto import_module_by_name;
 				}
-				memmove(last_dot, last_dot + 1,
-				        (size_t)((char *)buffer - last_dot) * sizeof(char));
+				memmovedownc(last_dot, last_dot + 1,
+				             (size_t)((char *)buffer - last_dot),
+				             sizeof(char));
 				/* Release one character from the buffer. */
 				--buffer, --other_pathend;
 				--dec_curr->ds_iter;
@@ -1482,9 +1484,9 @@ defl_xdat:
 		} else {
 			if (dec_putl(0))
 				goto err;
-			memmove(xsect->ds_begin + 6,
-			        xsect->ds_begin + 2,
-			        size);
+			memmoveup(xsect->ds_begin + 6,
+			          xsect->ds_begin + 2,
+			          size);
 			UNALIGNED_SET16((uint16_t *)(xsect->ds_begin + 0), 0xffff);
 			UNALIGNED_SETLE32((uint32_t *)(xsect->ds_begin + 2), (uint32_t)size);
 		}

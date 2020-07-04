@@ -2476,22 +2476,21 @@ target_lrot:
 	decl    %eax
 	pushl   %eax /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
-#else
+#else /* __KOS__ */
 	subl    $4, %ecx
 	pushl   %ecx /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
-#endif
+#endif /* !__KOS__ */
 	pushl   %edx /* memmove.arg(1): SP - (SHIFT - 1); */
 	ADJUST_CFA_OFFSET(4)
 	addl    $4, (%esp)
 	pushl   %edx /* memmove.arg(0): SP - SHIFT; */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
-	call    SYM(memmovel)
-#else
-	/* XXX: Assumes that libc's `memmove()' uses cdecl. (Can we assume this?) */
+	call    SYM(memmovedownl)
+#else /* __KOS__ */
 	call    SYM(memmove)
-#endif
+#endif /* !__KOS__ */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	popl    TOP /* SAVE --> TOP */
@@ -2516,22 +2515,21 @@ target_rrot:
 	decl    %eax
 	pushl   %eax /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
-#else
+#else /* __KOS__ */
 	addl    $4, %ecx
 	pushl   %ecx /* memmove.arg(2): SHIFT - 1; */
 	ADJUST_CFA_OFFSET(4)
-#endif
+#endif /* !__KOS__ */
 	pushl   %edx /* memmove.arg(1): SP - SHIFT; */
 	ADJUST_CFA_OFFSET(4)
 	addl    $4, %edx
 	pushl   %edx /* memmove.arg(0): SP - (SHIFT - 1); */
 	ADJUST_CFA_OFFSET(4)
 #ifdef __KOS__
-	call    SYM(memmovel)
-#else
-	/* XXX: Assumes that libc's `memmove()' uses cdecl. (Can we assume this?) */
+	call    SYM(memmoveupl)
+#else /* __KOS__ */
 	call    SYM(memmove)
-#endif
+#endif /* !__KOS__ */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	pop     %edx /* SP - SHIFT; */
@@ -6947,7 +6945,7 @@ prefix_target_lrot:
 	subl    $4, %ecx
 	pushl   %ecx /* memmove.dst = SP - shift */
 	ADJUST_CFA_OFFSET(4)
-	call    SYM(memmove)
+	call    SYM(memmove) /* TODO: KOS-specific: memmoveupl */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	popl    %edx /* drop_object */
@@ -6981,7 +6979,7 @@ prefix_target_rrot:
 	addl    $4, %ecx
 	pushl   %ecx /* memmove.dst = SP - (shift - 1) */
 	ADJUST_CFA_OFFSET(4)
-	call    SYM(memmove)
+	call    SYM(memmove) /* TODO: KOS-specific: memmovedownl */
 	addl    $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	popl    %edx /* drop_object */

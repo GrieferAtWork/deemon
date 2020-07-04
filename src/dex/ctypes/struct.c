@@ -34,8 +34,8 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/thread.h>
 #include <deemon/system-features.h> /* bzero(), ... */
+#include <deemon/thread.h>
 
 DECL_BEGIN
 
@@ -64,6 +64,7 @@ struct_type_rehash(DeeStructTypeObject *__restrict self) {
 			break;
 		}
 	}
+	return result;
 err:
 	return NULL;
 }

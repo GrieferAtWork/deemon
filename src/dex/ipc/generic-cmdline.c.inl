@@ -496,8 +496,9 @@ parse_next_ch:
 		if (cmdline_isbslsh(ch)) {
 			if (next_ch >= cmdline_end)
 				goto done_cmdline;
-			memmove(cmdline, next_ch,
-			        (size_t)(cmdline_end - next_ch) * sizeof(char));
+			memmovedownc(cmdline, next_ch,
+			             (size_t)(cmdline_end - next_ch),
+			             sizeof(char));
 			cmdline_end -= (size_t)(next_ch - cmdline);
 			next_ch = cmdline;
 			ch      = utf8_readchar_u((char const **)&next_ch); /* Skip the next character */
@@ -509,8 +510,9 @@ parse_next_ch:
 			uint32_t end_ch = ch;
 			if (next_ch >= cmdline_end)
 				goto done_cmdline;
-			memmove(cmdline, next_ch,
-			        (size_t)(cmdline_end - next_ch) * sizeof(char));
+			memmovedownc(cmdline, next_ch,
+			             (size_t)(cmdline_end - next_ch),
+			             sizeof(char));
 			cmdline_end -= (size_t)(next_ch - cmdline);
 			next_ch = cmdline;
 			for (;;) {
@@ -521,8 +523,9 @@ parse_next_ch:
 				if (cmdline_isbslsh(ch)) {
 					if (next_ch >= cmdline_end)
 						goto done_cmdline;
-					memmove(cmdline, next_ch,
-					        (size_t)(cmdline_end - next_ch) * sizeof(char));
+					memmovedownc(cmdline, next_ch,
+					             (size_t)(cmdline_end - next_ch),
+					             sizeof(char));
 					cmdline_end -= (size_t)(next_ch - cmdline);
 					next_ch = cmdline;
 					ch      = utf8_readchar_u((char const **)&next_ch); /* Skip the next character */
@@ -536,8 +539,9 @@ parse_next_ch:
 				if (ch == end_ch) {
 					if (next_ch >= cmdline_end)
 						goto done_cmdline;
-					memmove(cmdline, next_ch,
-					        (size_t)(cmdline_end - next_ch) * sizeof(char));
+					memmovedownc(cmdline, next_ch,
+					             (size_t)(cmdline_end - next_ch),
+					             sizeof(char));
 					cmdline_end -= (size_t)(next_ch - cmdline);
 					next_ch = cmdline;
 					if (next_ch >= cmdline_end) {
@@ -557,8 +561,9 @@ parse_next_ch:
 						/* To keep all strings apart of the given cmdline, reclaim 1 character
 						 * which we can then set to \0. - Note that we are guarantied to have at
 						 * least 2 bytes available, due to the 2 " or '-characters */
-						memmove(arg_start + 1, arg_start,
-						        (size_t)(cmdline_end - arg_start) * sizeof(char));
+						memmoveupc(arg_start + 1, arg_start,
+						           (size_t)(cmdline_end - arg_start),
+						           sizeof(char));
 						arg_start[0] = '\0';
 						temp         = (*arg_printer)(arg_printer_arg, arg_start, 0);
 						if unlikely(temp < 0)

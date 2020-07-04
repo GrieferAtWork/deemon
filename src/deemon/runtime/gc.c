@@ -371,10 +371,10 @@ gc_dep_partners_insert_after_resize(struct gc_dep_partners *__restrict self,
 		}
 	}
 	ASSERT(lo == hi);
-	memmove(&self->dp_pvec[lo] + 1,
-	        &self->dp_pvec[lo],
-	        (nth_object - lo) *
-	        sizeof(struct gc_dep_partner));
+	memmoveupc(&self->dp_pvec[lo] + 1,
+	           &self->dp_pvec[lo],
+	           nth_object - lo,
+	           sizeof(struct gc_dep_partner));
 	self->dp_pvec[lo].dp_obj = obj;
 	self->dp_pvec[lo].dp_num = num;
 #else /* CONFIG_GC_DEP_PARTNERS_USE_BSEARCH */
@@ -412,10 +412,10 @@ gc_dep_partners_insertall_after_resize(struct gc_dep_partners *__restrict self,
 			++dst_index;
 		}
 		/* Insert the object here. */
-		memmove(&self->dp_pvec[dst_index] + 1,
-		        &self->dp_pvec[dst_index],
-		        (nth_object - dst_index) *
-		        sizeof(struct gc_dep_partner));
+		memmoveupc(&self->dp_pvec[dst_index] + 1,
+		           &self->dp_pvec[dst_index],
+		           nth_object - dst_index,
+		           sizeof(struct gc_dep_partner));
 		self->dp_pvec[dst_index].dp_obj = obj;
 		self->dp_pvec[dst_index].dp_num = vec[src_index].dp_num;
 		++dst_index;
@@ -886,27 +886,28 @@ gc_trydestroy(struct gc_head *__restrict head,
 	/* Recursively visit our initial dependency. */
 	DeeObject_Visit(&head->gc_object, (dvisit_t)&visit_object, &visit);
 
-#define OPTIMIZE_DEPS_SET()                                  \
-	{                                                        \
-		size_t last_used = 0;                                \
-		for (i = 0; i <= visit.vd_deps.gd_msk; ++i) {        \
-			size_t end_used;                                 \
-			if (!visit.vd_deps.gd_vec[i].gd_object)          \
-				continue;                                    \
-			end_used = i;                                    \
-			for (end_used = i + 1;                           \
-			     end_used <= visit.vd_deps.gd_msk &&         \
-			     visit.vd_deps.gd_vec[end_used].gd_object;   \
-			     ++end_used)                                 \
-				;                                            \
-			memmove(&visit.vd_deps.gd_vec[last_used],        \
-			        &visit.vd_deps.gd_vec[i],                \
-			        (end_used - i) * sizeof(struct gc_dep)); \
-			last_used += end_used - i;                       \
-			i = end_used;                                    \
-		}                                                    \
-		ASSERT(last_used == visit.vd_deps.gd_cnt);           \
-	}
+#define OPTIMIZE_DEPS_SET()                                \
+	do {                                                   \
+		size_t last_used = 0;                              \
+		for (i = 0; i <= visit.vd_deps.gd_msk; ++i) {      \
+			size_t end_used;                               \
+			if (!visit.vd_deps.gd_vec[i].gd_object)        \
+				continue;                                  \
+			end_used = i;                                  \
+			for (end_used = i + 1;                         \
+			     end_used <= visit.vd_deps.gd_msk &&       \
+			     visit.vd_deps.gd_vec[end_used].gd_object; \
+			     ++end_used)                               \
+				;                                          \
+			memmovedownc(&visit.vd_deps.gd_vec[last_used], \
+			             &visit.vd_deps.gd_vec[i],         \
+			             end_used - i,                     \
+			             sizeof(struct gc_dep));           \
+			last_used += end_used - i;                     \
+			i = end_used;                                  \
+		}                                                  \
+		ASSERT(last_used == visit.vd_deps.gd_cnt);         \
+	} __WHILE0
 
 #ifdef NDEBUG
 	/* Check if something went wrong... */

@@ -1513,7 +1513,10 @@ again_find_existing_global_module:
 		 * we allow the user to override extensions with user-code scripts by
 		 * simply generating a dec file using `deemon -c', without having to
 		 * actually delete the dex library. */
-		memmove(dst + 1, dst, (module_namesize + 5) * sizeof(char));
+		memmoveupc(dst + 1,
+		           dst,
+		           module_namesize + 5,
+		           sizeof(char));
 		dst[0] = '.';
 		ASSERT(dst[module_namesize + 1] == '.');
 		ASSERT(dst[module_namesize + 2] == 'd');
@@ -1523,7 +1526,10 @@ again_find_existing_global_module:
 		{
 			DREF DeeObject *dec_stream;
 			dec_stream = DeeFile_OpenString(buf, OPEN_FRDONLY, 0);
-			memmove(dst, dst + 1, (module_namesize + 5) * sizeof(char));
+			memmovedownc(dst,
+			             dst + 1,
+			             module_namesize + 5,
+			             sizeof(char));
 			ASSERT(dst[module_namesize + 0] == '.');
 			ASSERT(dst[module_namesize + 1] == 'd');
 			ASSERT(dst[module_namesize + 2] == 'e');

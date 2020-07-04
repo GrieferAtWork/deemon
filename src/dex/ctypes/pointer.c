@@ -68,12 +68,13 @@ pointer_bool(DeePointerTypeObject *UNUSED(tp_self),
 #define DEFINE_POINTER_COMPARE(name, op)                          \
 	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL         \
 	name(DeePointerTypeObject *tp_self,                           \
-	     union pointer *self,                                     \
-	     DeeObject *other) {                                      \
+	     union pointer *self, DeeObject *other) {                 \
 		union pointer value;                                      \
 		if (DeeObject_AsPointer(other, tp_self->pt_orig, &value)) \
-			return NULL;                                          \
+			goto err;                                             \
 		return_bool_(self->ptr op value.ptr);                     \
+	err:                                                          \
+		return NULL;                                              \
 	}
 DEFINE_POINTER_COMPARE(pointer_eq, ==)
 DEFINE_POINTER_COMPARE(pointer_ne, !=)
@@ -99,7 +100,7 @@ pointer_init(DeePointerTypeObject *tp_self,
              size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
 	union pointer value;
-	if (DeeArg_Unpack(argc, argv, "o:pointer", &arg))
+	if (DeeArg_Unpack(argc, argv, "o:Pointer", &arg))
 		goto err;
 	if (DeeNone_Check(arg)) {
 		/* none is the NULL pointer. */
@@ -315,9 +316,9 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 		/* .st_init     = */ (int (DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&pointer_init,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&pointer_assign,
 		/* .st_cast     = */ {
-			/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&pointer_str,
-			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&pointer_repr,
-			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&pointer_bool
+			/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&pointer_str,
+			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&pointer_repr,
+			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *, void *))&pointer_bool
 		},
 		/* .st_call     = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&pointer_call,
 		/* .st_math     = */ &pointer_math0,
@@ -330,28 +331,25 @@ INTERN DeePointerTypeObject DeePointer_Type = {
 };
 
 
-PRIVATE int DCALL
-lvalue_int32(DeeLValueTypeObject *__restrict tp_self,
-             union pointer *self,
-             int32_t *__restrict result) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+lvalue_int32(DeeLValueTypeObject *tp_self,
+             union pointer *self, int32_t *result) {
 	union pointer ptr;
 	CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return -1);
 	return DeeStruct_Int32(tp_self->lt_orig, ptr.ptr, result);
 }
 
-PRIVATE int DCALL
-lvalue_int64(DeeLValueTypeObject *__restrict tp_self,
-             union pointer *self,
-             int64_t *__restrict result) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+lvalue_int64(DeeLValueTypeObject *tp_self,
+             union pointer *self, int64_t *result) {
 	union pointer ptr;
 	CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return -1);
 	return DeeStruct_Int64(tp_self->lt_orig, ptr.ptr, result);
 }
 
-PRIVATE int DCALL
-lvalue_double(DeeLValueTypeObject *__restrict tp_self,
-              union pointer *self,
-              double *__restrict result) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+lvalue_double(DeeLValueTypeObject *tp_self,
+              union pointer *self, double *result) {
 	union pointer ptr;
 	CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return -1);
 	return DeeStruct_Double(tp_self->lt_orig, ptr.ptr, result);
@@ -359,8 +357,7 @@ lvalue_double(DeeLValueTypeObject *__restrict tp_self,
 
 #define DEFINE_UNARY_LVALUE_OPERATOR(Treturn, error_return, lvalue_xxx, DeeStruct_Xxx) \
 	PRIVATE Treturn DCALL                                                              \
-	lvalue_xxx(DeeLValueTypeObject *__restrict tp_self,                                \
-	           union pointer *self) {                                                  \
+	lvalue_xxx(DeeLValueTypeObject *tp_self, union pointer *self) {                    \
 		union pointer ptr;                                                             \
 		CTYPES_FAULTPROTECT(ptr.ptr = self->ptr, return error_return);                 \
 		return DeeStruct_Xxx(tp_self->lt_orig, ptr.ptr);                               \
@@ -457,13 +454,13 @@ lvalue_enumattr(DeeLValueTypeObject *__restrict tp_self,
 
 
 PRIVATE struct stype_math lvalue_math = {
-	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&lvalue_int32,
-	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&lvalue_int64,
-	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&lvalue_double,
-	/* .st_int         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_int,
-	/* .st_inv         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_inv,
-	/* .st_pos         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_pos,
-	/* .st_neg         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_neg,
+	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *, void *, int32_t *))&lvalue_int32,
+	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *, void *, int64_t *))&lvalue_int64,
+	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *, void *, double *))&lvalue_double,
+	/* .st_int         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_int,
+	/* .st_inv         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_inv,
+	/* .st_pos         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_pos,
+	/* .st_neg         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_neg,
 	/* .st_add         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_add,
 	/* .st_sub         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_sub,
 	/* .st_mul         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_mul,
@@ -475,8 +472,8 @@ PRIVATE struct stype_math lvalue_math = {
 	/* .st_or          = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_or,
 	/* .st_xor         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_xor,
 	/* .st_pow         = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_pow,
-	/* .st_inc         = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_inc,
-	/* .st_dec         = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_dec,
+	/* .st_inc         = */ (int (DCALL *)(DeeSTypeObject *, void *))&lvalue_inc,
+	/* .st_dec         = */ (int (DCALL *)(DeeSTypeObject *, void *))&lvalue_dec,
 	/* .st_inplace_add = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_inplace_add,
 	/* .st_inplace_sub = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_inplace_sub,
 	/* .st_inplace_mul = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_inplace_mul,
@@ -491,8 +488,8 @@ PRIVATE struct stype_math lvalue_math = {
 };
 
 PRIVATE struct stype_seq lvalue_seq = {
-	/* .stp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_iter,
-	/* .stp_size      = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_size,
+	/* .stp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_iter,
+	/* .stp_size      = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_size,
 	/* .stp_contains  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_contains,
 	/* .stp_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_getitem,
 	/* .stp_del       = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_delitem,
@@ -512,9 +509,9 @@ PRIVATE struct stype_cmp lvalue_cmp = {
 };
 
 PRIVATE struct stype_attr lvalue_attr = {
-	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict))&lvalue_getattr,
-	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict))&lvalue_delattr,
-	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *self, DeeObject *__restrict, DeeObject *__restrict))&lvalue_setattr,
+	/* .st_getattr  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *self, DeeObject *))&lvalue_getattr,
+	/* .st_delattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *))&lvalue_delattr,
+	/* .st_setattr  = */ (int (DCALL *)(DeeSTypeObject *, void *self, DeeObject *, DeeObject *))&lvalue_setattr,
 	/* .st_enumattr = */ (dssize_t (DCALL *)(DeeSTypeObject *__restrict, denum_t, void *))&lvalue_enumattr
 };
 
@@ -641,8 +638,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-lvalue_tp_assign(struct lvalue_object *__restrict self,
-                 DeeObject *__restrict other) {
+lvalue_tp_assign(struct lvalue_object *self, DeeObject *other) {
 	return DeeStruct_Assign(((DeeLValueTypeObject *)Dee_TYPE(self))->lt_orig,
 	                        self->l_ptr.ptr, other);
 }
@@ -669,7 +665,7 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 			OBJECT_HEAD_INIT((DeeTypeObject *)&DeeLValueType_Type),
 			/* .tp_name     = */ "LValue",
 			/* .tp_doc      = */ NULL,
-			/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE|TP_FMOVEANY|TP_FTRUNCATE,
+			/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FMOVEANY | TP_FTRUNCATE,
 			/* .tp_weakrefs = */ 0,
 			/* .tp_features = */ TF_NONE,
 			/* .tp_base     = */ (DeeTypeObject *)&DeeStructured_Type,
@@ -724,9 +720,9 @@ INTERN DeeLValueTypeObject DeeLValue_Type = {
 		/* .st_init     = */ NULL,
 		/* .st_assign   = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_assign,
 		/* .st_cast     = */ {
-			/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_str,
-			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_repr,
-			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *))&lvalue_bool
+			/* .st_str  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_str,
+			/* .st_repr = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_repr,
+			/* .st_bool = */ (int (DCALL *)(DeeSTypeObject *, void *))&lvalue_bool
 		},
 		/* .st_call     = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, size_t, DeeObject *const *))&lvalue_call,
 		/* .st_math     = */ &lvalue_math,

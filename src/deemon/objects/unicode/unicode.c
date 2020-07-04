@@ -1647,7 +1647,10 @@ read_text_i:
 					text[i - 1] = '?';
 					--length;
 					((size_t *)text)[-1] = length;
-					memmove(&text[i], &text[i + 1], (length - i) * sizeof(uint16_t));
+					memmovedownc(&text[i],
+					             &text[i + 1],
+					             length - i,
+					             sizeof(uint16_t));
 					goto read_text_i;
 				}
 				if (error_mode & STRING_ERROR_FIGNORE) {
@@ -1655,7 +1658,10 @@ read_text_i:
 					length -= 2;
 					ASSERT(length >= i);
 					((size_t *)text)[-1] = length;
-					memmove(&text[i], &text[i + 2], (length - i) * sizeof(uint16_t));
+					memmovedownc(&text[i],
+					             &text[i + 2],
+					             length - i,
+					             sizeof(uint16_t));
 					goto continue_at_i;
 				}
 				DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -1815,7 +1821,10 @@ continue_at_i:
 				length -= 2;
 				((size_t *)text)[-1] = length;
 				ASSERT(length >= i);
-				memmove(&text[i], &text[i + 2], (length - i) * sizeof(uint16_t));
+				memmovedownc(&text[i],
+				             &text[i + 2],
+				             length - i,
+				             sizeof(uint16_t));
 				goto continue_at_i;
 			}
 			ch |= low_value - UTF16_LOW_SURROGATE_MIN;
@@ -2205,7 +2214,10 @@ continue_ascii_fast:
 		if (encoding & STRING_ERROR_FIGNORE) {
 			--DeeString_SIZE(self);
 			--length;
-			memmove(&str[i], &str[i + 1], (length - i) * sizeof(char));
+			memmovedownc(&str[i],
+			             &str[i + 1],
+			             length - i,
+			             sizeof(char));
 			str[length] = '\0';
 			goto continue_ascii_fast;
 		}
@@ -2293,7 +2305,10 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 			if (error_mode == STRING_ERROR_FIGNORE) {
 				--end;
 				--length;
-				memmove(iter, iter + 1, (end - iter) * sizeof(char));
+				memmovedownc(iter,
+				             iter + 1,
+				             end - iter,
+				             sizeof(char));
 				continue;
 			}
 			DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -2304,10 +2319,10 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 		ch32 = utf8_getchar(iter, seqlen);
 		if unlikely(ch32 <= 0x7f) {
 			*iter = (uint8_t)ch32;
-			memmove(iter + 1,
-			        iter + seqlen,
-			        (end - (iter + seqlen)) *
-			        sizeof(char));
+			memmovedownc(iter + 1,
+			             iter + seqlen,
+			             end - (iter + seqlen),
+			             sizeof(char));
 			++iter;
 			continue;
 		}
@@ -2340,7 +2355,10 @@ use_buffer32:
 					}
 					if (error_mode == STRING_ERROR_FIGNORE) {
 						--end;
-						memmove(iter, iter + 1, (end - iter) * sizeof(char));
+						memmovedownc(iter,
+						             iter + 1,
+						             end - iter,
+						             sizeof(char));
 						continue;
 					}
 					DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -2399,7 +2417,10 @@ err_buffer32:
 					}
 					if (error_mode == STRING_ERROR_FIGNORE) {
 						--end;
-						memmove(iter, iter + 1, (end - iter) * sizeof(char));
+						memmovedownc(iter,
+						             iter + 1,
+						             end - iter,
+						             sizeof(char));
 						continue;
 					}
 					DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -2491,7 +2512,10 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
 			}
 			if (error_mode == STRING_ERROR_FIGNORE) {
 				--end;
-				memmove(iter, iter + 1, (end - iter) * sizeof(char));
+				memmovedownc(iter,
+				             iter + 1,
+				             end - iter,
+				             sizeof(char));
 				continue;
 			}
 			DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -2502,10 +2526,10 @@ DeeString_SetUtf8(/*inherit(always)*/ DREF DeeObject *__restrict self,
 		ch32 = utf8_getchar(iter, seqlen);
 		if unlikely(ch32 <= 0x7f) {
 			*iter = (uint8_t)ch32;
-			memmove(iter + 1,
-			        iter + seqlen,
-			        (end - (iter + seqlen)) *
-			        sizeof(char));
+			memmovedownc(iter + 1,
+			             iter + seqlen,
+			             end - (iter + seqlen),
+			             sizeof(char));
 			++iter;
 			continue;
 		}
@@ -2538,7 +2562,10 @@ use_buffer32:
 					}
 					if (error_mode == STRING_ERROR_FIGNORE) {
 						--end;
-						memmove(iter, iter + 1, (end - iter) * sizeof(char));
+						memmovedownc(iter,
+						             iter + 1,
+						             end - iter,
+						             sizeof(char));
 						continue;
 					}
 					DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -2597,7 +2624,10 @@ err_buffer32:
 					}
 					if (error_mode == STRING_ERROR_FIGNORE) {
 						--end;
-						memmove(iter, iter + 1, (end - iter) * sizeof(char));
+						memmovedownc(iter,
+						             iter + 1,
+						             end - iter,
+						             sizeof(char));
 						continue;
 					}
 					DeeError_Throwf(&DeeError_UnicodeDecodeError,
@@ -2681,16 +2711,19 @@ DeeString_TrySetUtf8(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
 		if unlikely(!seqlen || iter + seqlen > end) {
 			/* Invalid UTF-8 character */
 			--end;
-			memmove(iter, iter + 1, (end - iter) * sizeof(char));
+			memmovedownc(iter,
+			             iter + 1,
+			             end - iter,
+			             sizeof(char));
 			continue;
 		}
 		ch32 = utf8_getchar(iter, seqlen);
 		if unlikely(ch32 <= 0x7f) {
 			*iter = (uint8_t)ch32;
-			memmove(iter + 1,
-			        iter + seqlen,
-			        (end - (iter + seqlen)) *
-			        sizeof(char));
+			memmovedownc(iter + 1,
+			             iter + seqlen,
+			             end - (iter + seqlen),
+			             sizeof(char));
 			++iter;
 			continue;
 		}
@@ -2717,7 +2750,10 @@ use_buffer32:
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
-					memmove(iter, iter + 1, (end - iter) * sizeof(char));
+					memmovedownc(iter,
+					             iter + 1,
+					             (size_t)(end - iter),
+					             sizeof(char));
 					continue;
 				}
 				ch32     = utf8_getchar(iter, seqlen);
@@ -2765,7 +2801,10 @@ use_buffer32:
 				if unlikely(!seqlen || iter + seqlen > end) {
 					/* Invalid UTF-8 character */
 					--end;
-					memmove(iter, iter + 1, (end - iter) * sizeof(char));
+					memmovedownc(iter,
+					             iter + 1,
+					             end - iter,
+					             sizeof(char));
 					continue;
 				}
 				ch32 = utf8_getchar(iter, seqlen);
@@ -5185,9 +5224,8 @@ Dee_unicode_printer_confirm_utf8(struct unicode_printer *__restrict self,
 				uint8_t *new_iter;
 				iter[-1] = (uint8_t)ch32;
 				new_iter = iter + utf8_length - 1;
-				memmove(iter, new_iter,
-				        (size_t)(((uint8_t *)buf + confirm_length) - new_iter) *
-				        sizeof(uint8_t));
+				memmovedown(iter, new_iter,
+				            (size_t)(((uint8_t *)buf + confirm_length) - new_iter));
 				--count;
 				--confirm_length;
 				iter = new_iter;
@@ -5547,7 +5585,7 @@ check_low_surrogate:
 					    ch > UTF16_LOW_SURROGATE_MAX) {
 						/* Invalid surrogate pair! */
 						iter[-2] = '?';
-						memmove(iter - 1, iter, count * sizeof(uint16_t));
+						memmovedownw(iter - 1, iter, count);
 						continue;
 					}
 				}
@@ -6380,23 +6418,23 @@ PUBLIC NONNULL((1)) void
 		SWITCH_SIZEOF_WIDTH(utf->u_width) {
 
 		CASE_WIDTH_1BYTE:
-			memmove(str.cp8 + dst, str.cp8 + src, num_chars * 1);
+			memmoveb(str.cp8 + dst, str.cp8 + src, num_chars);
 			if (utf->u_data[STRING_WIDTH_2BYTE]) {
 				str.ptr = utf->u_data[STRING_WIDTH_2BYTE];
-				memmove(str.cp16 + dst, str.cp16 + src, num_chars * 2);
+				memmovew(str.cp16 + dst, str.cp16 + src, num_chars);
 			}
 			if (utf->u_data[STRING_WIDTH_4BYTE]) {
 				str.ptr = utf->u_data[STRING_WIDTH_4BYTE];
-				memmove(str.cp32 + dst, str.cp32 + src, num_chars * 4);
+				memmovel(str.cp32 + dst, str.cp32 + src, num_chars);
 			}
 			break;
 
 		CASE_WIDTH_2BYTE:
 			ASSERT(!utf->u_data[STRING_WIDTH_1BYTE]);
-			memmove(str.cp16 + dst, str.cp16 + src, num_chars * 1);
+			memmovew(str.cp16 + dst, str.cp16 + src, num_chars);
 			if (utf->u_data[STRING_WIDTH_4BYTE]) {
 				str.ptr = utf->u_data[STRING_WIDTH_4BYTE];
-				memmove(str.cp32 + dst, str.cp32 + src, num_chars * 4);
+				memmovel(str.cp32 + dst, str.cp32 + src, num_chars);
 			}
 			goto check_1byte;
 
@@ -6412,14 +6450,15 @@ PUBLIC NONNULL((1)) void
 				Dee_Free((size_t *)utf->u_utf16 - 1);
 				utf->u_utf16 = NULL;
 			}
-			memmove(str.cp32 + dst, str.cp32 + src, num_chars * 1);
+			memmovel(str.cp32 + dst, str.cp32 + src, num_chars);
 check_1byte:
 			if (utf->u_data[STRING_WIDTH_1BYTE]) {
 				/* String bytes data. */
 				if (utf->u_data[STRING_WIDTH_1BYTE] == (size_t *)DeeString_STR(self)) {
 					ASSERT(DeeString_SIZE(self) == WSTR_LENGTH(str.ptr));
-					memmove(DeeString_STR(self) + dst,
-					        DeeString_STR(self) + src, num_chars * sizeof(char));
+					memmovec(DeeString_STR(self) + dst,
+					         DeeString_STR(self) + src,
+					         num_chars, sizeof(char));
 					return;
 				}
 				if (utf->u_utf8 == (char *)utf->u_data[STRING_WIDTH_1BYTE])
@@ -6432,8 +6471,9 @@ check_1byte:
 					/* Must update the utf-8 representation. */
 					if (DeeString_SIZE(self) == WSTR_LENGTH(str.ptr)) {
 						/* No unicode character. -> We can simply memmove the UTF-8 variable to update it. */
-						memmove(DeeString_STR(self) + dst,
-						        DeeString_STR(self) + src, num_chars * sizeof(char));
+						memmovec(DeeString_STR(self) + dst,
+						         DeeString_STR(self) + src,
+						         num_chars, sizeof(char));
 					} else {
 						/* The difficult case. */
 						char *utf8_src, *utf8_dst, *end;
@@ -6475,7 +6515,10 @@ check_1byte:
 								ASSERT(end != NULL);
 							}
 						}
-						memmove(utf8_dst, utf8_src, (size_t)(end - utf8_src));
+						memmovec(utf8_dst,
+						         utf8_src,
+						         (size_t)(end - utf8_src),
+						         sizeof(char));
 					}
 				} else {
 					ASSERT(utf->u_utf8 != (char *)utf->u_data[STRING_WIDTH_1BYTE]);

@@ -596,9 +596,10 @@ INTERN WUNUSED struct asm_exc *(DCALL asm_newexc_at)(uint16_t priority) {
 	ASSERT(current_assembler.a_exceptc < current_assembler.a_excepta);
 	result = current_assembler.a_exceptv;
 	/* Shift all handlers with a greater priority. */
-	memmove(result + priority + 1, result + priority,
-	        (current_assembler.a_exceptc - priority) *
-	        sizeof(struct asm_exc));
+	memmoveupc(result + priority + 1,
+	           result + priority,
+	           current_assembler.a_exceptc - priority,
+	           sizeof(struct asm_exc));
 	++current_assembler.a_exceptc;
 	/* Return the exception entry at the given priority (index). */
 	result += priority;
@@ -722,7 +723,11 @@ common_adj16_delop:
 			struct asm_sym *sym_iter;
 			code_addr_t deladdr = (code_addr_t)(iter - sc_main.sec_begin);
 			/* Modify code to get rid of the unused instruction. */
-			memmove(iter, iter + 1, (size_t)(--end - iter));
+			--end;
+			memmovedownc(iter,
+			             iter + 1,
+			             (size_t)(end - iter),
+			             sizeof(instruction_t));
 			/* Adjust the addresses of all relocations above. */
 			while (rel_begin != rel_end &&
 			       rel_begin->ar_addr <= deladdr)

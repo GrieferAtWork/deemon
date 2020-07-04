@@ -154,7 +154,7 @@ INTERN void ctypes_kos_guard(void) {
 	switch (data->e_class) {
 
 #ifdef E_SEGFAULT
-	case ERROR_CLASS(E_SEGFAULT):
+	case ERROR_CLASS(ERROR_CODEOF(E_SEGFAULT)):
 		DeeError_Throwf(&DeeError_SegFault, "Segmentation fault when %s %p",
 		                data->e_subclass == ERROR_SUBCLASS(E_SEGFAULT_NOTEXECUTABLE)
 		                ? "executing"
@@ -166,19 +166,19 @@ INTERN void ctypes_kos_guard(void) {
 #endif /* E_SEGFAULT */
 
 #ifdef E_DIVIDE_BY_ZERO
-	case ERROR_CLASS(E_DIVIDE_BY_ZERO):
+	case ERROR_CLASS(ERROR_CODEOF(E_DIVIDE_BY_ZERO)):
 		DeeError_Throwf(&DeeError_DivideByZero, "Integer divide by zero");
 		break;
 #endif /* E_DIVIDE_BY_ZERO */
 
 #ifdef E_OVERFLOW
-	case ERROR_CLASS(E_OVERFLOW):
+	case ERROR_CLASS(ERROR_CODEOF(E_OVERFLOW)):
 		DeeError_Throwf(&DeeError_IntegerOverflow, "Integer overflow");
 		break;
 #endif /* E_OVERFLOW */
 
 #ifdef E_ILLEGAL_INSTRUCTION
-	case ERROR_CLASS(E_ILLEGAL_INSTRUCTION):
+	case ERROR_CLASS(ERROR_CODEOF(E_ILLEGAL_INSTRUCTION)):
 #ifdef E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE
 		if (data->e_subclass == ERROR_SUBCLASS(E_ILLEGAL_INSTRUCTION_PRIVILEGED_OPCODE)) {
 			DeeError_Throwf(&DeeError_IllegalInstruction, "Privileged instruction");
@@ -190,19 +190,19 @@ INTERN void ctypes_kos_guard(void) {
 #endif /* E_ILLEGAL_INSTRUCTION */
 
 #ifdef E_STACK_OVERFLOW
-	case ERROR_CLASS(E_STACK_OVERFLOW):
+	case ERROR_CLASS(ERROR_CODEOF(E_STACK_OVERFLOW)):
 		DeeError_Throwf(&DeeError_StackOverflow, "Stack overflow");
 		break;
 #endif /* E_STACK_OVERFLOW */
 
 #ifdef E_INDEX_ERROR
-	case ERROR_CLASS(E_INDEX_ERROR):
+	case ERROR_CLASS(ERROR_CODEOF(E_INDEX_ERROR)):
 		DeeError_Throwf(&DeeError_IndexError, "Array bounds exceeded");
 		break;
 #endif /* E_INDEX_ERROR */
 
 #ifdef E_INVALID_ALIGNMENT
-	case ERROR_CLASS(E_INVALID_ALIGNMENT):
+	case ERROR_CLASS(ERROR_CODEOF(E_INVALID_ALIGNMENT)):
 		DeeError_Throwf(&DeeError_SegFault, "Data misalignment");
 		break;
 #endif /* E_INVALID_ALIGNMENT */
@@ -299,33 +299,43 @@ f_ctypes_intfor(size_t argc, DeeObject *const *argv) {
 
 #ifdef CONFIG_SUCHAR_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_CHAR:
-		result = return_signed ? &DeeCSChar_Type : &DeeCUChar_Type;
+		result = return_signed
+		         ? &DeeCSChar_Type
+		         : &DeeCUChar_Type;
 		break;
 #endif /* CONFIG_SUCHAR_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_SHORT_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_SHORT:
-		result = return_signed ? &DeeCShort_Type : &DeeCUShort_Type;
+		result = return_signed
+		         ? &DeeCShort_Type
+		         : &DeeCUShort_Type;
 		break;
 #endif /* CONFIG_SHORT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_INT_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_INT:
-		result = return_signed ? &DeeCInt_Type : &DeeCUInt_Type;
+		result = return_signed
+		         ? &DeeCInt_Type
+		         : &DeeCUInt_Type;
 		break;
 #endif /* CONFIG_INT_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LONG_NEEDS_OWN_TYPE
 #if CONFIG_CTYPES_SIZEOF_LONG != CONFIG_CTYPES_SIZEOF_INT
 	case CONFIG_CTYPES_SIZEOF_LONG:
-		result = return_signed ? &DeeCLong_Type : &DeeCULong_Type;
+		result = return_signed
+		         ? &DeeCLong_Type
+		         : &DeeCULong_Type;
 		break;
 #endif /* CONFIG_CTYPES_SIZEOF_LONG != CONFIG_CTYPES_SIZEOF_INT */
 #endif /* CONFIG_LONG_NEEDS_OWN_TYPE */
 
 #ifdef CONFIG_LLONG_NEEDS_OWN_TYPE
 	case CONFIG_CTYPES_SIZEOF_LLONG:
-		result = return_signed ? &DeeCLLong_Type : &DeeCULLong_Type;
+		result = return_signed
+		         ? &DeeCLLong_Type
+		         : &DeeCULLong_Type;
 		break;
 #endif /* CONFIG_LLONG_NEEDS_OWN_TYPE */
 
@@ -344,120 +354,150 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:bswap16", &i))
-		return NULL;
+		goto err;
 	return int_newu16(BSWAP16(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:bswap32", &i))
-		return NULL;
+		goto err;
 	return int_newu32(BSWAP32(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_bswap64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:bswap64", &i))
-		return NULL;
+		goto err;
 	return int_newu64(BSWAP64(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htole16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:htole16", &i))
-		return NULL;
+		goto err;
 	return int_newu16(HTOLE16(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_letoh16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:letoh16", &i))
-		return NULL;
+		goto err;
 	return int_newu16(LETOH16(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htole32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:htole32", &i))
-		return NULL;
+		goto err;
 	return int_newu32(HTOLE32(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_letoh32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:letoh32", &i))
-		return NULL;
+		goto err;
 	return int_newu32(LETOH32(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htole64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:htole64", &i))
-		return NULL;
+		goto err;
 	return int_newu64(HTOLE64(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_letoh64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:letoh64", &i))
-		return NULL;
+		goto err;
 	return int_newu64(LETOH64(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htobe16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:htobe16", &i))
-		return NULL;
+		goto err;
 	return int_newu16(HTOBE16(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_betoh16(size_t argc, DeeObject *const *argv) {
 	uint16_t i;
 	if (DeeArg_Unpack(argc, argv, "I16u:betoh16", &i))
-		return NULL;
+		goto err;
 	return int_newu16(BETOH16(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htobe32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:htobe32", &i))
-		return NULL;
+		goto err;
 	return int_newu32(HTOBE32(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_betoh32(size_t argc, DeeObject *const *argv) {
 	uint32_t i;
 	if (DeeArg_Unpack(argc, argv, "I32u:betoh32", &i))
-		return NULL;
+		goto err;
 	return int_newu32(BETOH32(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_htobe64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:htobe64", &i))
-		return NULL;
+		goto err;
 	return int_newu64(HTOBE64(i));
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_ctypes_betoh64(size_t argc, DeeObject *const *argv) {
 	uint64_t i;
 	if (DeeArg_Unpack(argc, argv, "I64u:betoh64", &i))
-		return NULL;
+		goto err;
 	return int_newu64(BETOH64(i));
+err:
+	return NULL;
 }
 
 
@@ -574,8 +614,8 @@ PRIVATE DEFINE_CMETHOD(ctypes_strupr, capi_strupr);
 PRIVATE DEFINE_CMETHOD(ctypes_strset, capi_strset);
 PRIVATE DEFINE_CMETHOD(ctypes_strnset, capi_strnset);
 PRIVATE DEFINE_CMETHOD(ctypes_strfry, capi_strfry);
-//PRIVATE DEFINE_CMETHOD(ctypes_strsep,capi_strsep);
-//PRIVATE DEFINE_CMETHOD(ctypes_strtok_r,capi_strtok_r);
+//PRIVATE DEFINE_CMETHOD(ctypes_strsep, capi_strsep);
+//PRIVATE DEFINE_CMETHOD(ctypes_strtok_r, capi_strtok_r);
 
 
 
@@ -664,7 +704,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@throw TypeError The given @tp or @ob are not recognized c-types, nor aliases\n"
 	      "Returns the alignment of a given structured type or object in bytes") },
 	{ "intfor", (DeeObject *)&ctypes_intfor, MODSYM_FNORMAL,
-	  DOC("(size:?Dint,signed=!t)->structured_type\n"
+	  DOC("(size:?Dint,signed=!t)->?GStructuredType\n"
 	      "@throw ValueError No integer matching the requirements of @size is supported") },
 
 	{ "bswap16", (DeeObject *)&ctypes_bswap16, MODSYM_FNORMAL,
@@ -796,8 +836,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "	}\n"
 	      "	return res;\n"
 	      "}}") },
-
-
 
 	{ "memcpy", (DeeObject *)&ctypes_memcpy, MODSYM_FNORMAL,
 	  DOC("(dst:?Aptr?Gvoid,src:?Aptr?Gvoid,size:?Dint)->?Aptr?Gvoid\n"

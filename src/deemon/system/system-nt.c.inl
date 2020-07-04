@@ -305,9 +305,10 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 			result = DeeString_ResizeBuffer(filename, 4 + filename_size);
 			if unlikely(!result)
 				goto err_filename;
-			memmove(DeeString_STR(result) + 4,
-			        DeeString_STR(filename),
-			        filename_size * sizeof(char));
+			memmoveupc(DeeString_STR(result) + 4,
+			           DeeString_STR(result),
+			           filename_size,
+			           sizeof(char));
 			/* Set the prefix. */
 			UNALIGNED_SET32((uint32_t *)DeeString_STR(result),
 			                ENCODE_INT32('\\', '\\', '.', '\\'));

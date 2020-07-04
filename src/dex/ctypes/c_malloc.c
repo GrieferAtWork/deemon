@@ -47,8 +47,9 @@ INTERN WUNUSED DREF DeeObject *DCALL
 capi_free(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *uptr;
 	union pointer ptr;
-	if (DeeArg_Unpack(argc, argv, "o:free", &uptr) ||
-	    DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
+	if (DeeArg_Unpack(argc, argv, "o:free", &uptr))
+		goto err;
+	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
 	CTYPES_RECURSIVE_FAULTPROTECT(Dee_Free(ptr.ptr), goto err);
 	return_none;
@@ -81,8 +82,9 @@ capi_realloc(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	union pointer ptr;
 	size_t new_size;
-	if (DeeArg_Unpack(argc, argv, "oIu:realloc", &uptr, &new_size) ||
-	    DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
+	if (DeeArg_Unpack(argc, argv, "oIu:realloc", &uptr, &new_size))
+		goto err;
+	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
 	/* Allocate the resulting pointer _before_ doing the realloc().
 	 * This way, we don't run the chance to cause an exception
@@ -156,8 +158,9 @@ capi_tryrealloc(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	union pointer ptr;
 	size_t new_size;
-	if (DeeArg_Unpack(argc, argv, "oIu:tryrealloc", &uptr, &new_size) ||
-	    DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
+	if (DeeArg_Unpack(argc, argv, "oIu:tryrealloc", &uptr, &new_size))
+		goto err;
+	if (DeeObject_AsPointer(uptr, &DeeCVoid_Type, &ptr))
 		goto err;
 	/* Allocate the resulting pointer _before_ doing the realloc().
 	 * This way, we don't run the chance to cause an exception
@@ -189,8 +192,7 @@ capi_trycalloc(size_t argc, DeeObject *const *argv) {
 	total = count * num_bytes;
 	/* Check for allocation overflow. */
 	if unlikely((total < count || total < num_bytes) &&
-		         count && num_bytes)
-	{
+	            count && num_bytes) {
 		ptr = NULL;
 	} else {
 		ptr = Dee_TryCalloc(total);
@@ -224,7 +226,7 @@ capi_strdup(size_t argc, DeeObject *const *argv) {
 		goto err;
 	CTYPES_PROTECTED_MEMCPY(resptr, str.pchar, len * sizeof(char), goto err_r);
 	((char *)resptr)[len] = '\0';
-	result                = DeePointer_NewChar(resptr);
+	result = DeePointer_NewChar(resptr);
 	if unlikely(!result)
 		goto err_r;
 	return result;

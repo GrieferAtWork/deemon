@@ -57,8 +57,9 @@ PRIVATE int DCALL
 shlib_init(Shlib *__restrict self, size_t argc,
            DREF DeeObject *const *argv) {
 	DeeStringObject *name, *cc_name = NULL;
-	if (DeeArg_Unpack(argc, argv, "o|o:shlib", &name, &cc_name) ||
-	    DeeObject_AssertTypeExact((DeeObject *)name, &DeeString_Type))
+	if (DeeArg_Unpack(argc, argv, "o|o:shlib", &name, &cc_name))
+		goto err;
+	if (DeeObject_AssertTypeExact((DeeObject *)name, &DeeString_Type))
 		goto err;
 		/* Parse the given default calling convention. */
 #ifndef CONFIG_NO_CFUNCTION
@@ -93,14 +94,14 @@ shlib_init(Shlib *__restrict self, size_t argc,
 			goto err;
 		if (message == (DREF DeeStringObject *)ITER_DONE) {
 			DeeError_Throwf(DLOPEN_ERROR_TYPE,
-			                "Failed to open shared library %r (%r)",
-			                name, message);
-		} else {
-			DeeError_Throwf(DLOPEN_ERROR_TYPE,
 			                "Failed to open shared library %r",
 			                name);
+		} else {
+			DeeError_Throwf(DLOPEN_ERROR_TYPE,
+			                "Failed to open shared library %r (%r)",
+			                name, message);
+			Dee_Decref(message);
 		}
-		Dee_Decref(message);
 		goto err;
 	}
 	return 0;
@@ -155,7 +156,7 @@ LOCAL WUNUSED DREF DeeSTypeObject *DCALL get_void_pointer(void) {
 	if unlikely(!result)
 		goto done;
 	rwlock_write(&static_type_lock);
-	if (!void_ptr) {
+	if likely(!void_ptr) {
 		Dee_Incref((DeeObject *)result);
 		void_ptr = result;
 	} else {
@@ -259,7 +260,7 @@ shlib_getattr(Shlib *self,
 		DREF DeeSTypeObject *new_type;
 		result_type = (DREF DeeSTypeObject *)DeeSType_CFunction(&DeeCInt_Type,
 		                                                        (ctypes_cc_t)((unsigned int)self->sh_defcc |
-		                                                               (unsigned int)CC_FVARARGS),
+		                                                                      (unsigned int)CC_FVARARGS),
 		                                                        0, NULL, true);
 		if unlikely(!result_type)
 			goto err;
@@ -348,7 +349,7 @@ INTERN DeeTypeObject DeeShlib_Type = {
 				/* .tp_any_ctor  = */ (void *)&shlib_init,
 				/* .tp_free      = */ NULL,
 				{
-					/* ..tp_alloc.tp_instance_size = */sizeof(Shlib)
+					/* ..tp_alloc.tp_instance_size = */ sizeof(Shlib)
 				}
 			}
 		},

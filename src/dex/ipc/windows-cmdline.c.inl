@@ -107,7 +107,8 @@ cmdline_add_arg(struct ascii_printer *__restrict printer,
 			goto err;
 		start = printer->ap_string->s_str + start_length;
 		/* Shift the argument text. */
-		memmove(start + 1, start, length * sizeof(char));
+		memmoveupc(start + 1, start,
+		           length, sizeof(char));
 		/* Add surrounding quotes. */
 		start[0]          = '\"';
 		start[length + 1] = '\"';
