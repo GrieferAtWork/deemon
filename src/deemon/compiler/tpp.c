@@ -37,6 +37,9 @@
 #include <deemon/string.h>
 #include <deemon/system-features.h>
 
+#include <hybrid/byteorder.h>
+#include <hybrid/byteswap.h>
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4005)
 #endif /* _MSC_VER */
@@ -114,12 +117,31 @@ DECL_END
 #define calloc(c, s)  Dee_TryCalloc((c) * (s))
 #define realloc(p, s) Dee_TryRealloc(p, s)
 #define free(p)       Dee_Free(p)
+#ifndef alloca
+#define alloca        Dee_Alloca
+#endif /* !alloca */
+
+#define bswap_16      BSWAP16
+#define bswap_32      BSWAP32
+#define bswap_64      BSWAP64
 
 #define TPP_CONFIG_CALLBACK_ON_DESTROY_FILE(self) \
 	DeeCompiler_DelItem(self)
 
 #undef PRIVATE
 #define PRIVATE      INTERN
+
+/* Prevent tpp from unconditionally including these headers. If they do
+ * exist, then they've already been included by <deemon/system-features.h> */
+#define NO_INCLUDE_ENDIAN_H   1
+#define NO_INCLUDE_FCNTL_H    1
+#define NO_INCLUDE_UNISTD_H   1
+#define NO_INCLUDE_SYS_STAT_H 1
+#define NO_INCLUDE_TIME_H     1
+#define NO_INCLUDE_ERRNO_H    1
+#define NO_INCLUDE_STRING_H   1
+#define NO_INCLUDE_STDLIB_H   1
+#define NO_INCLUDE_STDIO_H    1
 
 #ifndef __INTELLISENSE__
 #undef SKIP_WRAPLF

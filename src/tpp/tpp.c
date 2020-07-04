@@ -19,13 +19,12 @@
 #ifndef GUARD_TPP_C
 #define GUARD_TPP_C 1
 
-#define _DOS_SOURCE 1 /* Enable `isascii' / `toascii' */
 #define _GNU_SOURCE 1 /* Enable `memrchr' */
 #define _KOS_SOURCE 1 /* Enable `strend' */
 
 /* Source configuration. */
 #ifndef TPP_CONFIG_EXPORT
-#define TPP_CONFIG_EXPORT  0 /* Export all `extern' functions from the header, for use by shared libraries. */
+#define TPP_CONFIG_EXPORT 0 /* Export all `extern' functions from the header, for use by shared libraries. */
 #endif /* !TPP_CONFIG_EXPORT */
 
 #define TPP(x) x /* Global namespace. */
@@ -51,17 +50,18 @@
 
 #ifndef likely
 #if defined(__GNUC__) || __has_attribute(__builtin_expect)
-#   define likely(x)   (__builtin_expect(!!(x),1))
-#   define unlikely(x) (__builtin_expect(!!(x),0))
-#else
-#   define likely   /* nothing */
-#   define unlikely /* nothing */
-#endif
+#define likely(x)   (__builtin_expect(!!(x),1))
+#define unlikely(x) (__builtin_expect(!!(x),0))
+#else /* __GNUC__ || __has_attribute(__builtin_expect) */
+#define likely   /* nothing */
+#define unlikely /* nothing */
+#endif /* !__GNUC__ && !__has_attribute(__builtin_expect) */
 #endif /* !likely */
 
 #ifndef LOCAL
 #define LOCAL TPP_LOCAL
 #endif /* !LOCAL */
+
 #if TPP_CONFIG_EXPORT
 #if defined(_MSC_VER)
 #   define PUBLIC   __declspec(dllexport)
@@ -71,6 +71,7 @@
 #   define PUBLIC   __attribute__((__dllexport__))
 #endif
 #endif /* TPP_CONFIG_EXPORT */
+
 #ifndef PRIVATE
 #ifdef __ELF__
 #   define PRIVDEF  __attribute__((__visibility__("private")))
@@ -79,14 +80,14 @@
 #ifdef _MSC_VER
 #   define PRIVDEF  extern
 #   define PRIVATE  extern
-#else
+#else /* _MSC_VER */
 #   define PRIVDEF  extern
 #   define PRIVATE  /* nothing */
-#endif
-#else
+#endif /* !_MSC_VER */
+#else /* ... */
 #   define PRIVDEF  static
 #   define PRIVATE  static
-#endif
+#endif /* !... */
 #endif /* !PRIVATE */
 
 #ifndef TPPFUN
@@ -109,14 +110,25 @@
 #pragma warning(disable: 4002)
 #endif /* _MSC_VER */
 
-#include <string.h>
 #include <stddef.h>
-#include <stdlib.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdint.h>
+
+#ifndef NO_INCLUDE_STRING_H
+#include <string.h>
+#endif /* !NO_INCLUDE_STRING_H */
+#ifndef NO_INCLUDE_STDLIB_H
+#include <stdlib.h>
+#endif /* !NO_INCLUDE_STDLIB_H */
+#ifndef NO_INCLUDE_STDIO_H
+#include <stdio.h>
+#endif /* !NO_INCLUDE_STDIO_H */
+#ifndef NO_INCLUDE_ERRNO_H
 #include <errno.h>
+#endif /* !NO_INCLUDE_ERRNO_H */
+#ifndef NO_INCLUDE_TIME_H
 #include <time.h>
+#endif /* !NO_INCLUDE_TIME_H */
 
 #if defined(_WIN32)
 #ifndef NO_INCLUDE_WINDOWS_H
@@ -128,10 +140,16 @@
 #ifndef NO_INCLUDE_WINDOWS_H
 #include <Windows.h>
 #endif /* !NO_INCLUDE_WINDOWS_H */
-#endif
+#endif /* __CYGWIN__ || __MINGW32__ */
+#ifndef NO_INCLUDE_ENDIAN_H
 #include <endian.h>
+#endif /* !NO_INCLUDE_ENDIAN_H */
+#ifndef NO_INCLUDE_FCNTL_H
 #include <fcntl.h>
+#endif /* !NO_INCLUDE_FCNTL_H */
+#ifndef NO_INCLUDE_UNISTD_H
 #include <unistd.h>
+#endif /* !NO_INCLUDE_UNISTD_H */
 #ifndef NO_INCLUDE_SYS_STAT_H
 #include <sys/stat.h>
 #endif /* !NO_INCLUDE_SYS_STAT_H */
@@ -148,26 +166,27 @@
 #include <malloc.h>
 #elif defined(__GNUC__)
 #define alloca(x) __builtin_alloca(x)
-#else
+#else /* ... */
 #include <alloca.h>
-#endif
+#endif /* !... */
 #endif /* !alloca */
 
+#if !defined(bswap_16) || !defined(bswap_32) || !defined(bswap_64)
 #if defined(__KOS_SYSTEM_HEADERS__) || defined(__unix__)
-#   include <byteswap.h>
+#include <byteswap.h>
 #elif defined(_MSC_VER)
-#   include <intrin.h>
-#   define bswap_16   _byteswap_ushort
-#   define bswap_32   _byteswap_ulong
-#   define bswap_64   _byteswap_uint64
-#   define strcasecmp  stricmp
-#   define strncasecmp strnicmp
-#else
-#   define bswap_16(x)  ((((x)&0xffu) << 8)|(((x) >> 8)&0xffu))
-#   define bswap_32(x)  ((bswap_16(x) << 16)|bswap_16((x) >> 16))
-#   define bswap_64(x)  ((bswap_32(x) << 32)|bswap_32((x) >> 32))
-#endif
+#include <intrin.h>
+#define bswap_16   _byteswap_ushort
+#define bswap_32   _byteswap_ulong
+#define bswap_64   _byteswap_uint64
+#else /* ... */
+#define bswap_16(x)  ((((x)&0xffu) << 8)|(((x) >> 8)&0xffu))
+#define bswap_32(x)  ((bswap_16(x) << 16)|bswap_16((x) >> 16))
+#define bswap_64(x)  ((bswap_32(x) << 32)|bswap_32((x) >> 32))
+#endif /* !... */
+#endif /* !bswap_16 || !bswap_32 || !bswap_64 */
 
+#ifndef TPP_BYTEORDER
 #if defined(__BYTE_ORDER__)
 #   define TPP_BYTEORDER   __BYTE_ORDER__
 #elif defined(__BYTE_ORDER)
@@ -188,13 +207,14 @@
 #else /* Fallback: Assume little-endian. */
 #   define TPP_BYTEORDER  1234
 #endif
+#endif /* !TPP_BYTEORDER */
 
 
 #if defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) || \
     defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) || \
     defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \
     defined(_WIN32_WCE) || defined(WIN32_WCE)
-/* An alternate path-separator that is replaced with `SEP' during sanitization.  */
+/* An alternate path-separator that is replaced with `SEP' during sanitization. */
 #define HAVE_INSENSITIVE_PATHS
 #define SEP       '/'  /* The path-separator used in sanitized pathnames. */
 #define ALTSEP    '\\'
@@ -238,24 +258,14 @@
 #define DBG_ALIGNMENT_ENABLE()  (void)0
 #endif /* !DBG_ALIGNMENT_DISABLE */
 
-
-#ifndef __KOS_SYSTEM_HEADERS__
-#ifndef isascii
-#define	isascii(c) (!((c)&0x80)) /* If C is a 7 bit value. */
-#endif /* !isascii */
-#ifndef toascii
-#define	toascii(c)   ((c)&0x7f)  /* Mask off high bits. */
-#endif /* !toascii */
-#endif /* !__KOS_SYSTEM_HEADERS__ */
-
 #undef FALSE
-#define FALSE    TPP_MACRO_FALSE
+#define FALSE TPP_MACRO_FALSE
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-#if !defined(__USE_GNU)
+#if !defined(__USE_GNU) && !defined(memrchr)
 #define memrchr  tpp_memrchr
 LOCAL void *
 tpp_memrchr(void const *p, int c, size_t n) {
@@ -266,12 +276,13 @@ tpp_memrchr(void const *p, int c, size_t n) {
 	}
 	return NULL;
 }
-#endif /* !__USE_GNU */
+#endif /* !__USE_GNU && !memrchr */
 
 #if !defined(__USE_KOS) && !defined(strend)
 #define strend(s) ((s) + strlen(s))
 #endif /* !__USE_KOS && !strend */
 
+#ifndef TPP_BREAKPOINT
 #ifdef _MSC_VER
 extern void __debugbreak(void);
 #define TPP_BREAKPOINT  __debugbreak
@@ -281,10 +292,11 @@ extern void __debugbreak(void);
        defined(__x86_64__)) && (defined(__GNUC__) || defined(__DCC_VERSION__))
 #ifdef __XBLOCK
 #define TPP_BREAKPOINT() __XBLOCK({ __asm__ __volatile__("int {$}3\n" : ); (void)0; })
-#else
+#else /* __XBLOCK */
 #define TPP_BREAKPOINT()         ({ __asm__ __volatile__("int {$}3\n" : ); (void)0; })
-#endif
-#endif
+#endif /* !__XBLOCK */
+#endif /* ... */
+#endif /* !TPP_BREAKPOINT */
 
 #undef assert
 #undef assertf
@@ -331,18 +343,18 @@ static int in_assertion = 0;
 
 PRIVATE
 #ifdef ATTR_COLD
-ATTR_COLD
+	ATTR_COLD
 #endif /* ATTR_COLD */
 #ifndef TPP_BREAKPOINT
 #if defined(ATTR_NORETURN)
-ATTR_NORETURN
+	ATTR_NORETURN
 #elif defined(__ATTR_NORETURN)
-__ATTR_NORETURN
+	__ATTR_NORETURN
 #elif defined(__GNUC__) || __has_attribute(__noreturn__)
-__attribute__((__noreturn__))
+	__attribute__((__noreturn__))
 #elif defined(_MSC_VER)
-__declspec(noreturn)
-#endif
+	__declspec(noreturn)
+#endif /* ... */
 #endif /* !TPP_BREAKPOINT */
 void TPPCALL
 tpp_assertion_failed(char const *expr, char const *file, int line,
@@ -351,9 +363,9 @@ tpp_assertion_failed(char const *expr, char const *file, int line,
 #define USE_MSVC_FORMAT (TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT)
 #elif defined(_MSC_VER)
 #define USE_MSVC_FORMAT (!TPPLexer_Current || (TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT))
-#else
+#else /* ... */
 #define USE_MSVC_FORMAT (TPPLexer_Current && (TPPLexer_Current->l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT))
-#endif
+#endif /* !... */
 	tpp_logerrf("\n");
 	tpp_logerrf(USE_MSVC_FORMAT ? "%s(%d) : " : "%s:%d: ", file, line);
 	tpp_logerrf("Assertion failed : %s\n", expr);
@@ -391,16 +403,16 @@ tpp_assertion_failed(char const *expr, char const *file, int line,
 #define assert(expr)     ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), TPP_BREAKPOINT(), 0))
 #ifdef TPP_EXPAND_FORMAT
 #define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, TPP_EXPAND_FORMAT f), TPP_BREAKPOINT(), 0))
-#else
+#else /* TPP_EXPAND_FORMAT */
 #define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), TPP_BREAKPOINT(), 0))
-#endif
+#endif /* !TPP_EXPAND_FORMAT */
 #else /* TPP_BREAKPOINT */
 #define assert(expr)     ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), 0))
 #ifdef TPP_EXPAND_FORMAT
 #define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, TPP_EXPAND_FORMAT f), 0))
-#else
+#else /* TPP_EXPAND_FORMAT */
 #define assertf(expr, f) ((expr) || (tpp_assertion_failed(#expr, __FILE__, __LINE__, NULL), 0))
-#endif
+#endif /* !TPP_EXPAND_FORMAT */
 #endif /* !TPP_BREAKPOINT */
 
 #elif defined(_MSC_VER)
