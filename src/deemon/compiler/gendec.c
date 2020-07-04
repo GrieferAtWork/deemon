@@ -1209,8 +1209,7 @@ INTERN int (DCALL dec_putobj)(DeeObject *self) {
 		goto err_unsupported;
 	/* Encode a builtin object ID. */
 	if likely(DEC_BUILTINID_SETOF(builtin_id) ==
-		       current_dec.dw_objset)
-	{
+	          current_dec.dw_objset) {
 		/* The object is part of the main object set
 		 * >> We can encode it as a single-byte DTYPE. */
 		if (dec_putb(DEC_BUILTINID_IDOF(builtin_id)))

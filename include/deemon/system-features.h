@@ -7965,10 +7965,18 @@ DECL_BEGIN
 #undef memcpyw
 #ifdef __x86_64__
 extern void __movsw(unsigned short *, unsigned short const *, unsigned __int64);
-#define memcpyw(dst, src, n) (__movsw((unsigned short *)(dst), (unsigned short const *)(src), (unsigned __int64)(n)), (void *)(dst))
+#define memcpyw(dst, src, n)                              \
+	(__movsw((unsigned short *)(void *)(dst),             \
+	         (unsigned short const *)(void const *)(src), \
+	         (unsigned __int64)(n)),                      \
+	 (void *)(dst))
 #else /* __x86_64__ */
 extern void __movsw(unsigned short *, unsigned short const *, unsigned int);
-#define memcpyw(dst, src, n) (__movsw((unsigned short *)(dst), (unsigned short const *)(src), (unsigned int)(n)), (void *)(dst))
+#define memcpyw(dst, src, n)                              \
+	(__movsw((unsigned short *)(void *)(dst),             \
+	         (unsigned short const *)(void const *)(src), \
+	         (unsigned int)(n)),                          \
+	 (void *)(dst))
 #endif /* !__x86_64__ */
 #pragma intrinsic(__movsw)
 DECL_END
@@ -7982,10 +7990,18 @@ DECL_BEGIN
 #undef memcpyl
 #ifdef __x86_64__
 extern void __movsd(unsigned long *, unsigned long const *, unsigned __int64);
-#define memcpyl(dst, src, n) (__movsd((unsigned long *)(dst), (unsigned long const *)(src), (unsigned __int64)(n)), (void *)(dst))
+#define memcpyl(dst, src, n)                             \
+	(__movsd((unsigned long *)(void *)(dst),             \
+	         (unsigned long const *)(void const *)(src), \
+	         (unsigned __int64)(n)),                     \
+	 (void *)(dst))
 #else /* __x86_64__ */
 extern void __movsd(unsigned long *, unsigned long const *, unsigned int);
-#define memcpyl(dst, src, n) (__movsd((unsigned long *)(dst), (unsigned long const *)(src), (unsigned int)(n)), (void *)(dst))
+#define memcpyl(dst, src, n)                             \
+	(__movsd((unsigned long *)(void *)(dst),             \
+	         (unsigned long const *)(void const *)(src), \
+	         (unsigned int)(n)),                         \
+	 (void *)(dst))
 #endif /* !__x86_64__ */
 #pragma intrinsic(__movsd)
 DECL_END
@@ -7998,7 +8014,11 @@ DECL_END
 DECL_BEGIN
 extern void __movsq(unsigned long long *, unsigned long long const *, unsigned __int64);
 #undef memcpyq
-#define memcpyq(dst, src, n) (__movsq((unsigned long *)(dst), (unsigned long const *)(src), (unsigned __int64)(n)), (void *)(dst))
+#define memcpyq(dst, src, n)                                  \
+	(__movsq((unsigned long long *)(void *)(dst),             \
+	         (unsigned long long const *)(void const *)(src), \
+	         (unsigned __int64)(n)),                          \
+	 (void *)(dst))
 #pragma intrinsic(__movsq)
 DECL_END
 #endif /* _MSC_VER && __x86_64__ */
