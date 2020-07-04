@@ -34,7 +34,7 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcasecmp(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -944,7 +944,7 @@ SockAddr_FromStringPort(SockAddr *__restrict self, int family, int protocol, int
 #ifdef AF_INET6
 		case AF_INET6:
 #endif /* AF_INET6 */
-			memset(self, 0, sizeof(SockAddr));
+			bzero(self, sizeof(SockAddr));
 			if (get_port_name(port, port_length, &self->sa_inet.sin_port))
 				goto err;
 			/* Convert network endian. */
@@ -987,7 +987,7 @@ SockAddr_FromStringPort(SockAddr *__restrict self, int family, int protocol, int
 		struct addrinfo hints;
 retry_addrinfo:
 		if (family != AF_AUTO) {
-			memset(&hints, 0, sizeof(hints));
+			bzero(&hints, sizeof(hints));
 			hints.ai_family   = (sa_family_t)family;
 			hints.ai_protocol = protocol;
 			hints.ai_socktype = type;
@@ -1110,7 +1110,7 @@ retry_addrinfo:
 			                host, port, info_len, sizeof(SockAddr));
 			error = -1;
 		} else {
-			memset(self, 0, sizeof(SockAddr));
+			bzero(self, sizeof(SockAddr));
 			memcpy(self, info->ai_addr, info->ai_addrlen);
 			DBG_ALIGNMENT_DISABLE();
 			freeaddrinfo(info);
@@ -1135,7 +1135,7 @@ err:
 		int attempt_counter;
 #endif /* TRY_AGAIN */
 do_gethostbyname:
-		memset(self, 0, sizeof(SockAddr));
+		bzero(self, sizeof(SockAddr));
 		/* Quick check: If the host starts with a digit, or with `:',
 		 * then it isn't a special name, but an absolute address. */
 		if (host_length && (!DeeUni_IsDecimal(*host) && *host != ':')) {
@@ -1354,7 +1354,7 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 		memcpy(self, &((DeeSockAddrObject *)arg0)->sa_addr, sizeof(SockAddr));
 		goto done;
 	}
-	memset(self, 0, sizeof(SockAddr));
+	bzero(self, sizeof(SockAddr));
 	self->sa.sa_family = (sa_family_t)family;
 	switch (family) {
 
@@ -1512,7 +1512,7 @@ do_generic_string_2:
 			goto do_generic_string;
 
 		case 2:
-			memset(&self->sa_nl, 0, sizeof(struct sockaddr_nl));
+			bzero(&self->sa_nl, sizeof(struct sockaddr_nl));
 			self->sa_nl.nl_family = AF_NETLINK;
 			if (DeeObject_AsUINT(argv[0], &self->sa_nl.nl_pid) ||
 			    DeeObject_AsUINT(argv[1], &self->sa_nl.nl_groups))

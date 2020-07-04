@@ -35,6 +35,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* bzero(), ... */
 
 DECL_BEGIN
 
@@ -145,7 +146,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 stype_init(DeeSTypeObject *__restrict self) {
 	/* Clear all new fields added by structured types. */
-	memset((&self->st_base) + 1, 0, sizeof(DeeSTypeObject) - COMPILER_OFFSETAFTER(DeeSTypeObject, st_base));
+	bzero((&self->st_base) + 1,
+	      sizeof(DeeSTypeObject) -
+	      COMPILER_OFFSETAFTER(DeeSTypeObject, st_base));
 	return (*DeeType_Type.tp_init.tp_alloc.tp_ctor)((DeeObject *)&self->st_base);
 }
 
@@ -711,7 +714,7 @@ struct_ctor(DeeObject *__restrict self) {
 	while (!DeeSType_Check((DeeObject *)tp_self))
 		tp_self = (DeeSTypeObject *)DeeType_Base((DeeTypeObject *)tp_self);
 	/* ZERO-initialize by default. */
-	memset(DeeStruct_Data(self), 0, DeeSType_Sizeof(tp_self));
+	bzero(DeeStruct_Data(self), DeeSType_Sizeof(tp_self));
 	return 0;
 }
 
@@ -1252,7 +1255,7 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 		size = DeeSType_Sizeof(orig_type);
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-		CTYPES_FAULTPROTECT(memset(dst, 0, size), return -1);
+		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 #else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 		CTYPES_FAULTPROTECT({
 			while (size--)
@@ -1261,7 +1264,7 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 		return -1);
 #endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 #else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		memset(dst, 0, size);
+		bzero(dst, size);
 #endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}

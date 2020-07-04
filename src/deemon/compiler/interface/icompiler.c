@@ -82,8 +82,8 @@ compiler_init(DeeCompilerObject *__restrict self,
 	if unlikely(!self->cp_scope)
 		goto err;
 	weakref_support_init(self);
-	memset(&self->cp_tags, 0, sizeof(self->cp_tags));
-	memset(&self->cp_items, 0, sizeof(self->cp_items));
+	bzero(&self->cp_tags, sizeof(self->cp_tags));
+	bzero(&self->cp_items, sizeof(self->cp_items));
 	self->cp_flags           = COMPILER_FNORMAL;
 	self->cp_prev            = NULL;
 	self->cp_recursion       = 0;

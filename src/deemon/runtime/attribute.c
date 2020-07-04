@@ -30,6 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/super.h>
 #include <deemon/tuple.h>
 
@@ -128,9 +129,9 @@ struct tiny_set {
 	DREF DeeObject  *ts_smap[16]; /* Statically allocated map. */
 };
 
-#define tiny_set_init(x)                            \
-	((x)->ts_map = (x)->ts_smap, (x)->ts_size = 0,  \
-	 memset((x)->ts_smap, 0, sizeof((x)->ts_smap)), \
+#define tiny_set_init(x)                           \
+	((x)->ts_map = (x)->ts_smap, (x)->ts_size = 0, \
+	 bzero((x)->ts_smap, sizeof((x)->ts_smap)),    \
 	 (x)->ts_mask = COMPILER_LENOF((x)->ts_smap) - 1)
 #define tiny_set_fini(x) \
 	((x)->ts_map == (x)->ts_smap ? (void)0 : (void)Dee_Free((x)->ts_map))

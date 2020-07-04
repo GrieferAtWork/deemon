@@ -516,7 +516,7 @@ struct ast_tags {
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #define AST_TAGS_BACKUP_PRINTERS(buf)                                   \
 	(memcpy(&(buf), &current_tags, 2 * sizeof(struct unicode_printer)), \
-	 memset(&current_tags, 0, 2 * sizeof(struct unicode_printer)))
+	 bzero(&current_tags, 2 * sizeof(struct unicode_printer)))
 #define AST_TAGS_RESTORE_PRINTERS(buf)            \
 	(unicode_printer_fini(&current_tags.at_decl), \
 	 unicode_printer_fini(&current_tags.at_doc),  \
@@ -524,7 +524,7 @@ struct ast_tags {
 #else /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 #define AST_TAGS_BACKUP_PRINTERS(buf)                               \
 	(memcpy(&(buf), &current_tags, sizeof(struct unicode_printer)), \
-	 memset(&current_tags, 0, sizeof(struct unicode_printer)))
+	 bzero(&current_tags, sizeof(struct unicode_printer)))
 #define AST_TAGS_RESTORE_PRINTERS(buf)           \
 	(unicode_printer_fini(&current_tags.at_doc), \
 	 memcpy(&current_tags, &(buf), sizeof(struct unicode_printer)))

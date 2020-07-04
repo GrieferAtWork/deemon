@@ -32,7 +32,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/system.h>
 #include <deemon/tuple.h>
 
@@ -160,7 +160,7 @@ error_try_init(DeeErrorObject *__restrict self,
 	return false;
 done_ok:
 	/* Clear our any additional fields. */
-	memset(self + 1, 0, instance_size - sizeof(DeeErrorObject));
+	bzero(self + 1, instance_size - sizeof(DeeErrorObject));
 	return true;
 }
 
@@ -187,7 +187,9 @@ error_ctor(DeeErrorObject *__restrict self) {
 	ASSERT(!(Dee_TYPE(self)->tp_flags & TP_FVARIABLE));
 	instance_size = GET_INSTANCE_SIZE(self);
 	ASSERT(instance_size >= sizeof(DeeErrorObject));
-	memset(&self->e_message, 0, instance_size - offsetof(DeeErrorObject, e_message));
+	bzero(&self->e_message,
+	      instance_size -
+	      offsetof(DeeErrorObject, e_message));
 	ASSERT(!self->e_inner);
 	ASSERT(!self->e_message);
 	return 0;
@@ -204,7 +206,9 @@ error_copy(DeeErrorObject *__restrict self,
 	self->e_message = other->e_message;
 	Dee_XIncref(self->e_inner);
 	Dee_XIncref(self->e_message);
-	memset(self + 1, 0, instance_size - sizeof(DeeErrorObject));
+	bzero(self + 1,
+	      instance_size -
+	      sizeof(DeeErrorObject));
 	return 0;
 }
 
@@ -223,7 +227,9 @@ error_deep(DeeErrorObject *__restrict self,
 	}
 	self->e_message = other->e_message;
 	Dee_XIncref(self->e_message);
-	memset(self + 1, 0, instance_size - sizeof(DeeErrorObject));
+	bzero(self + 1,
+	      instance_size -
+	      sizeof(DeeErrorObject));
 	return 0;
 }
 
@@ -250,7 +256,9 @@ error_init(DeeErrorObject *__restrict self,
 		goto err;
 	Dee_XIncref(self->e_message);
 	Dee_XIncref(self->e_inner);
-	memset(self + 1, 0, instance_size - sizeof(DeeErrorObject));
+	bzero(self + 1,
+	      instance_size -
+	      sizeof(DeeErrorObject));
 	return 0;
 err:
 	return -1;
@@ -272,7 +280,9 @@ error_init_kw(DeeErrorObject *__restrict self, size_t argc,
 		goto err;
 	Dee_XIncref(self->e_message);
 	Dee_XIncref(self->e_inner);
-	memset(self + 1, 0, instance_size - sizeof(DeeErrorObject));
+	bzero(self + 1,
+	      instance_size -
+	      sizeof(DeeErrorObject));
 	return 0;
 err:
 	return -1;

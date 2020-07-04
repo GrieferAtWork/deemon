@@ -34,7 +34,7 @@
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -1523,7 +1523,11 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	/* Copy text bytes. */
 	result->co_codebytes = (code_size_t)text_buf.bb_size;
 	memcpy(result->co_code, text_buf.bb_base, text_buf.bb_size);
+#if ASM_RET_NONE == 0
+	bzero(result->co_code + text_buf.bb_size, INSTRLEN_MAX);
+#else /* ASM_RET_NONE == 0 */
 	memset(result->co_code + text_buf.bb_size, ASM_RET_NONE, INSTRLEN_MAX);
+#endif /* ASM_RET_NONE != 0 */
 	DeeObject_PutBuf(text, &text_buf, Dee_BUFFER_FREADONLY);
 	/* Load keyword arguments */
 	result->co_keywords = NULL;

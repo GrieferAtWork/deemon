@@ -1801,7 +1801,7 @@ uasm_parse_instruction(void) {
 		goto done_continue;
 	}
 	/* Clear out the invocation. */
-	memset(&invoc, 0, sizeof(struct asm_invocation));
+	bzero(&invoc, sizeof(struct asm_invocation));
 
 read_mnemonic_name:
 	/* Parse the name of the instruction. */

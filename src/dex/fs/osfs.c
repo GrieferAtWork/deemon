@@ -2299,7 +2299,7 @@ ok_got_ownds_linkfd:
 						goto err_buffer;
 					buffer = (DEE_PREPARSE_DATA_BUFFER)pFileBuffer; /* For cleanup... */
 				}
-				memset(&oOffsetInfo, 0, sizeof(oOffsetInfo));
+				bzero(&oOffsetInfo, sizeof(oOffsetInfo));
 				if (ReadFile(hLink, pFileBuffer, hfInfo.nFileSizeLow, &dwBytesRead, &oOffsetInfo) &&
 				    dwBytesRead > sizeof(cygSymlinkCookie) &&
 				    memcmp(pFileBuffer, cygSymlinkCookie, sizeof(cygSymlinkCookie)) == 0) {

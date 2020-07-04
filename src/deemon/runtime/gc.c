@@ -32,7 +32,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 
 #ifndef CONFIG_NO_DEX
 #include <deemon/dex.h>
@@ -858,15 +858,15 @@ gc_trydestroy(struct gc_head *__restrict head,
 	visit.vd_deps.gd_msk  = *pdep_mask;
 	visit.vd_deps.gd_err  = false;
 	visit.vd_chain        = NULL;
-	memset(visit.vd_deps.gd_vec, 0,
-	       (visit.vd_deps.gd_msk + 1) *
+	bzeroc(visit.vd_deps.gd_vec,
+	       visit.vd_deps.gd_msk + 1,
 	       sizeof(struct gc_dep));
 #ifdef CONFIG_GC_TRACK_LEAFS
 	visit.vd_leafs.gl_cnt = 0;
 	visit.vd_leafs.gl_vec = *pleaf_buffer;
 	visit.vd_leafs.gl_msk = *pleaf_mask;
-	memset(visit.vd_leafs.gl_vec, 0,
-	       (visit.vd_leafs.gl_msk + 1) *
+	bzeroc(visit.vd_leafs.gl_vec,
+	       visit.vd_leafs.gl_msk + 1,
 	       sizeof(struct gc_leaf));
 #endif /* CONFIG_GC_TRACK_LEAFS */
 

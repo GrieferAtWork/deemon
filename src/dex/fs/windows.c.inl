@@ -1604,7 +1604,7 @@ done:
 #endif
 
 		/* CreateFile() failed. - Try a more direct approach. */
-		memset(&self->s_info, 0, sizeof(BY_HANDLE_FILE_INFORMATION));
+		bzero(&self->s_info, sizeof(BY_HANDLE_FILE_INFORMATION));
 		DBG_ALIGNMENT_DISABLE();
 		error = nt_GetFileAttributesEx(path, GetFileExInfoStandard, &attrib);
 		DBG_ALIGNMENT_ENABLE();

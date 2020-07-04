@@ -33,7 +33,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memrchr(), memmem() */
+#include <deemon/system-features.h> /* memrchr(), memmem(), bzero(), ... */
 #include <deemon/system.h>          /* DeeSystem_Unlink() */
 
 #include <hybrid/byteorder.h>
@@ -64,7 +64,7 @@ INTERN struct dec_writer current_dec;
 INTERN void DCALL dec_writer_init(void) {
 	unsigned int i;
 	/* ZERO-initialize everything. */
-	memset(&current_dec, 0, sizeof(struct dec_writer));
+	bzero(&current_dec, sizeof(struct dec_writer));
 	for (i = 0; i < DEC_SECTION_COUNT; ++i) {
 		current_dec.dw_sec_defl[i].ds_start.ds_sect = &current_dec.dw_sec_defl[i];
 	}

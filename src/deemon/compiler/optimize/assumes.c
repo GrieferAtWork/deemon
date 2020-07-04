@@ -26,6 +26,7 @@
 #include <deemon/compiler/optimize.h>
 #include <deemon/error.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 
 DECL_BEGIN
 
@@ -423,7 +424,7 @@ INTERN int
 	if (!child->aa_syms.sa_size) {
 		Dee_Free(child->aa_syms.sa_elem);
 		memcpy(&child->aa_syms, &sibling->aa_syms, sizeof(struct ast_symbol_assumes));
-		memset(&sibling->aa_syms, 0, sizeof(struct ast_symbol_assumes));
+		bzero(&sibling->aa_syms, sizeof(struct ast_symbol_assumes));
 		return ast_assumes_undefined(child);
 	}
 	/* Find all assumptions made by both branches. */
@@ -479,7 +480,7 @@ INTERN int
 			Dee_Free(self->aa_syms.sa_elem);
 			/* Steal all the assumptions. */
 			memcpy(&self->aa_syms, &follower->aa_syms, sizeof(struct ast_symbol_assumes));
-			memset(&follower->aa_syms, 0, sizeof(struct ast_symbol_assumes));
+			bzero(&follower->aa_syms, sizeof(struct ast_symbol_assumes));
 			return 0;
 		}
 		/* Override existing assumptions with those from `follower' */

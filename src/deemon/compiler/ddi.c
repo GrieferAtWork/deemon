@@ -26,7 +26,7 @@
 #include <deemon/error.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* memrchr(), qsort() */
+#include <deemon/system-features.h> /* memrchr(), qsort(), bzero(), ... */
 #include <deemon/util/bytewriter.h>
 
 #include <hybrid/byteorder.h>
@@ -351,7 +351,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 		size_t text_size;
 		struct ddi_gen_state old_state, new_state;
 		bool did_last, is_first;
-		memset(&old_state, 0, sizeof(struct ddi_gen_state));
+		bzero(&old_state, sizeof(struct ddi_gen_state));
 		end      = (iter = ddi.da_checkv) + ddi.da_checkc;
 		did_last = false, is_first = true;
 		for (; iter != end; ++iter) {

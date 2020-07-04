@@ -51,7 +51,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/system.h>
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
@@ -741,7 +741,7 @@ err_seek_failed:
 	 * NOTE: The padding is used to reduce the number of out-of-bound checks,
 	 *       as well as allow code to assume that the file ends with a whole
 	 *       bunch of ZERO-bytes. */
-	memset((uint8_t *)hdr + total_size, 0, DECFILE_PADDING);
+	bzero((uint8_t *)hdr + total_size, DECFILE_PADDING);
 #endif /* DECFILE_PADDING != 0 */
 
 	/* All right! we've read the file.
@@ -786,7 +786,9 @@ err_seek_failed:
 	self->df_options = options;
 
 	/* ZERO-initialize everything we've not initializing explicitly. */
-	memset(&self->df_strtab, 0, sizeof(DecFile) - offsetof(DecFile, df_strtab));
+	bzero(&self->df_strtab,
+	      sizeof(DecFile) -
+	      offsetof(DecFile, df_strtab));
 
 	/* Save the module and filename of the DEC input file. */
 	self->df_module = module;
@@ -1373,7 +1375,9 @@ err_function_code:
 			                                                  sizeof(struct class_operator));
 			if unlikely(!opbind_list)
 				goto err_r;
-			memset(opbind_list, 0xff, (opbind_mask + 1) * sizeof(struct class_operator));
+			memset(opbind_list, 0xff,
+			       (opbind_mask + 1) *
+			       sizeof(struct class_operator));
 			descriptor->cd_clsop_mask = opbind_mask;
 			descriptor->cd_clsop_list = opbind_list;
 			for (i = 0; i < op_count; ++i) {
@@ -1737,7 +1741,9 @@ err_function_code:
 				                                                  sizeof(struct class_operator));
 				if unlikely(!opbind_list)
 					goto err_r;
-				memset(opbind_list, 0xff, (opbind_mask + 1) * sizeof(struct class_operator));
+				memset(opbind_list, 0xff,
+				       (opbind_mask + 1) *
+				       sizeof(struct class_operator));
 				descriptor->cd_clsop_mask = opbind_mask;
 				descriptor->cd_clsop_list = opbind_list;
 				for (i = 0; i < op_count; ++i) {
@@ -2091,7 +2097,8 @@ DecFile_LoadDDI(DecFile *__restrict self,
 	/* Copy DDI text. */
 	memcpy(result->d_ddi, ddi_text, ddi_ddisize);
 #if DDI_STOP != 0
-	memset(result->d_ddi + ddi_ddisize, DDI_STOP, DDI_INSTRLEN_MAX);
+	memset(result->d_ddi + ddi_ddisize,
+	       DDI_STOP, DDI_INSTRLEN_MAX);
 #endif /* DDI_STOP != 0 */
 	result->d_ddiinit = ddi_ddiinit;
 	result->d_ddisize = ddi_ddisize;
@@ -2130,7 +2137,7 @@ DecFile_LoadDDI(DecFile *__restrict self,
 			xres->dx_size = xsiz;
 			/* Initialize X-data information. */
 			memcpy(xres->dx_data, xdat, xsiz);
-			memset(xres->dx_data + xsiz, 0, DDI_EXDAT_MAXSIZE);
+			bzero(xres->dx_data + xsiz, DDI_EXDAT_MAXSIZE);
 			result->d_exdat = xres;
 		}
 	}
@@ -2238,8 +2245,11 @@ DecFile_LoadCode(DecFile *__restrict self,
 		                                                  header.co_textsiz + INSTRLEN_MAX);
 		if likely(result) {
 			/* Initialize trailing bytes as `ret none' instructions. */
-			memset(result->co_code + header.co_textsiz,
-			       ASM_RET_NONE, INSTRLEN_MAX);
+#if ASM_RET_NONE == 0
+			bzero(result->co_code + header.co_textsiz, INSTRLEN_MAX);
+#else /* ASM_RET_NONE == 0 */
+			memset(result->co_code + header.co_textsiz, ASM_RET_NONE, INSTRLEN_MAX);
+#endif /* ASM_RET_NONE != 0 */
 		}
 	} else {
 		/* Allocate the resulting code object. */

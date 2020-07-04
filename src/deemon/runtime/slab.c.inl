@@ -24,7 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/gc.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h> /* sscanf() */
+#include <deemon/system-features.h> /* sscanf(), bzero(), ... */
 
 #include <hybrid/host.h>
 #include <hybrid/typecore.h> /* __SIZEOF_POINTER__ */
@@ -360,7 +360,7 @@ INTERN void DCALL DeeSlab_Initialize(void) {
 		 * a comma-separated list of the slab sizes that should be
 		 * used. */
 #if Dee_SLAB_COUNT == 5
-		memset(sizes, 0, sizeof(sizes));
+		bzero(sizes, sizeof(sizes));
 		/* FIXME: We're not checking if sscanf() really exists!
 		 *        There needs to be a fallback for when it doesn't exist! */
 		sscanf(config,

@@ -30,6 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/thread.h>
+#include <deemon/system-features.h> /* bzeroc(), ... */
 
 #include "libthreading.h"
 
@@ -57,7 +58,9 @@ thread_tls_get(size_t index) {
 		/* Save the new descriptor length. */
 		desc->td_size = index + 1;
 		/* ZERO-initialize all newly allocated indices. */
-		memset(desc->td_elem + old_size, 0, ((index + 1) - old_size) * sizeof(DREF DeeObject *));
+		bzeroc(desc->td_elem + old_size,
+		       (index + 1) - old_size,
+		       sizeof(DREF DeeObject *));
 		/* Save the new descriptor. */
 		caller->t_tlsdata = (void *)desc;
 	}

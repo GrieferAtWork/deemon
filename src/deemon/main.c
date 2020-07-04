@@ -2073,7 +2073,7 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		TPPLexer_Current->l_token.t_begin = TPPFile_Empty.f_begin;
 		TPPLexer_Current->l_token.t_end   = TPPFile_Empty.f_end;
 		memcpy(&old_ifdef, &TPPLexer_Current->l_ifdef, sizeof(struct TPPIfdefStack));
-		memset(&TPPLexer_Current->l_ifdef, 0, sizeof(struct TPPIfdefStack));
+		bzero(&TPPLexer_Current->l_ifdef, sizeof(struct TPPIfdefStack));
 		old_l_noerror                 = TPPLexer_Current->l_noerror;
 		TPPLexer_Current->l_noerror   = TOK_EOF;
 		old_l_eof_paren               = TPPLexer_Current->l_eof_paren;

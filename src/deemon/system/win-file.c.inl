@@ -35,7 +35,7 @@
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/system.h>
 #include <deemon/thread.h>
 
@@ -916,7 +916,7 @@ sysfile_pread(SystemFile *__restrict self,
 		bufsize = UINT32_MAX;
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 again:
-	memset(&overlapped, 0, sizeof(overlapped));
+	bzero(&overlapped, sizeof(overlapped));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = pos;
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
@@ -953,7 +953,7 @@ sysfile_pwrite(SystemFile *__restrict self,
 		bufsize = UINT32_MAX;
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 again:
-	memset(&overlapped, 0, sizeof(overlapped));
+	bzero(&overlapped, sizeof(overlapped));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = pos;
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */

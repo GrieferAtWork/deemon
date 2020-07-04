@@ -30,7 +30,7 @@
 #include <deemon/format.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* strlen(), ... */
+#include <deemon/system-features.h> /* strlen(), bzero(), ... */
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -675,7 +675,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 			sp_width = 2;
 		}
 	} else {
-		memset(&ddi, 0, sizeof(ddi));
+		bzero(&ddi, sizeof(ddi));
 	}
 
 	if ((code_flags & CODEFLAG_NAMEDMASK) &&

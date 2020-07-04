@@ -179,7 +179,8 @@ gen_guard:
 		guard_end[i] = asm_secip(i);
 
 	/* Figure out what has changed and generate appropriate symbols. */
-	memset(guard, 0, sizeof(guard)), is_guarding = false;
+	bzero(guard, sizeof(guard));
+	is_guarding = false;
 	for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
 		if (guard_begin[i] != guard_end[i]) {
 			guard[i].b = asm_newsym();
@@ -651,7 +652,7 @@ do_multimask_rethrow:
 			if (!(iter->ce_mode & CATCH_EXPR_FSECOND)) {
 				/* Must generate cleanup code to use always make use of the primary exception. */
 				/* Check which sections need to be protected by cleanup code. */
-				memset(cleanup, 0, sizeof(cleanup));
+				bzero(cleanup, sizeof(cleanup));
 				for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
 					if (cleanup_begin[i] == cleanup_end[i])
 						continue;

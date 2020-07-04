@@ -1716,7 +1716,9 @@ cd_add_operator(ClassDescriptor *__restrict self,
 		                                          sizeof(struct class_operator));
 		if unlikely(!map)
 			goto err;
-		memset(map, 0xff, (mask + 1) * sizeof(struct class_operator));
+		memset(map, 0xff,
+		       (mask + 1) *
+		       sizeof(struct class_operator));
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		}
 		if (self->cd_clsop_list != empty_class_operators)

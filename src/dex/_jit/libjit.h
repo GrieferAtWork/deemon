@@ -24,6 +24,7 @@
 #include <deemon/api.h>
 #include <deemon/dex.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h> /* bzero() */
 
 #include <hybrid/typecore.h>
 
@@ -672,7 +673,7 @@ struct jit_context {
 	uint16_t         jc_flags;    /* Context flags (Set of `JITCONTEXT_F*') */
 };
 #define JITCONTEXT_INIT    { NULL, { NULL, 0 }, NULL, NULL, 0, JITCONTEXT_FNORMAL }
-#define JITContext_Init(x) memset(x, 0, sizeof(JITContext))
+#define JITContext_Init(x) bzero(x, sizeof(JITContext))
 #define JITContext_Fini(x) (void)0
 
 

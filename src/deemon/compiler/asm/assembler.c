@@ -395,7 +395,7 @@ err:
 
 
 INTERN int DCALL assembler_init(void) {
-	memset(&current_assembler, 0, sizeof(struct assembler));
+	bzero(&current_assembler, sizeof(struct assembler));
 	current_assembler.a_curr = &current_assembler.a_sect[SECTION_TEXT];
 	/* Allocate an initial buffer for the text section. */
 	current_assembler.a_sect[SECTION_TEXT].sec_code = (DeeCodeObject *)
@@ -414,7 +414,7 @@ INTERN int DCALL assembler_init(void) {
 INTERN NONNULL((1, 2)) int DCALL
 assembler_init_reuse(DeeCodeObject *__restrict code_obj,
                      instruction_t *__restrict text_end) {
-	memset(&current_assembler, 0, sizeof(struct assembler));
+	bzero(&current_assembler, sizeof(struct assembler));
 	current_assembler.a_curr = &current_assembler.a_sect[SECTION_TEXT];
 	/* Allocate an initial buffer for the text section. */
 	current_assembler.a_sect[SECTION_TEXT].sec_code  = code_obj;

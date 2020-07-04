@@ -34,6 +34,7 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/seq.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 
 #include <hybrid/atomic.h>
 #include <hybrid/typecore.h>
@@ -907,8 +908,8 @@ deq_moveassign(Deque *__restrict self,
 	       DEQUE_BUFFER_FOR_NOLOCK(other),
 	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
 	/* Clear out the state of the other deque, thus stealing all of its references. */
-	memset(DEQUE_BUFFER_FOR_NOLOCK(other), 0,
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	bzero(DEQUE_BUFFER_FOR_NOLOCK(other),
+	      DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
 	++other->d_version;
 	Deque_LockEndWrite(other);
 	/* Override the state of our own deque. */
@@ -966,8 +967,8 @@ deq_clear(Deque *__restrict self) {
 	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
 	/* Clear out the state of the other deque,
 	 * thus stealing all of its references. */
-	memset(DEQUE_BUFFER_FOR_NOLOCK(self), 0,
-	       DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
+	bzero(DEQUE_BUFFER_FOR_NOLOCK(self),
+	      DEQUE_BUFFER_SIZE_NOLOCK_NOVERSION);
 	++self->d_version;
 	Deque_LockEndWrite(self);
 	weakref_support_init(DEQUE_BUFFER_GET(bData));

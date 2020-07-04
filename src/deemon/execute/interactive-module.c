@@ -33,8 +33,8 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
-#include <deemon/system.h> /* DeeSystem_SEP */
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
+#include <deemon/system.h>          /* DeeSystem_SEP */
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
 #include <deemon/util/cache.h>
@@ -1018,7 +1018,7 @@ imod_init(InteractiveModule *__restrict self,
 				goto err;
 		}
 	} else {
-		memset(&self->im_options, 0, sizeof(struct compiler_options));
+		bzero(&self->im_options, sizeof(struct compiler_options));
 		/* Enable the LFSTMT option by default. */
 		self->im_options.co_parser |= PARSE_FLFSTMT;
 	}
@@ -1805,7 +1805,7 @@ imod_clear(InteractiveModule *__restrict self) {
 	old_compiler      = self->im_compiler;
 	self->im_compiler = NULL;
 	memcpy(&old_options, &self->im_options, sizeof(struct compiler_options));
-	memset(&self->im_options, 0, sizeof(struct compiler_options));
+	bzero(&self->im_options, sizeof(struct compiler_options));
 	self->im_options.co_assembler |= ASM_FNODEC;
 	recursive_rwlock_endwrite(&self->im_lock);
 	memcpy(&old_frame, &self->im_frame, sizeof(struct code_frame));

@@ -25,6 +25,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 
 DECL_BEGIN
 
@@ -210,7 +211,7 @@ do_xcopy_3:
 	default:
 		/* XXX: Couldn't we must always do a move-construction like this? */
 		memcpy(buffer, &other->a_type, sizeof(buffer));
-		memset(&other->a_type, 0, sizeof(buffer));
+		bzero(&other->a_type, sizeof(buffer));
 		other->a_type = AST_RETURN;
 		break;
 	}

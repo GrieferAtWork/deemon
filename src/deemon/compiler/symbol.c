@@ -33,7 +33,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/util/cache.h>
 
 #include <hybrid/minmax.h>
@@ -809,8 +809,8 @@ root_scope_ctor(DeeRootScopeObject *__restrict self,
 		goto err;
 	if (DeeObject_AssertType((DeeObject *)module, &DeeModule_Type))
 		goto err;
-	memset((uint8_t *)self + offsetof(DeeScopeObject, s_prev), 0,
-	       sizeof(DeeRootScopeObject) - offsetof(DeeScopeObject, s_prev));
+	bzero((uint8_t *)self + offsetof(DeeScopeObject, s_prev),
+	      sizeof(DeeRootScopeObject) - offsetof(DeeScopeObject, s_prev));
 	weakref_support_init((DeeScopeObject *)self);
 	Dee_Incref(module);
 	self->rs_scope.bs_scope.s_base = &self->rs_scope;
@@ -951,7 +951,7 @@ INTERN int (DCALL classscope_push)(void) {
 	if unlikely(!this_sym)
 		goto err_new_scope;
 	DeeObject_Init((DeeObject *)new_scope, &DeeClassScope_Type);
-	memset(this_sym, 0, sizeof(*this_sym));
+	bzero(this_sym, sizeof(*this_sym));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	this_sym->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
@@ -1393,7 +1393,7 @@ seach_single:
 			 * be linked to other declarations that may be visible outside of the class. */
 			if unlikely((result = sym_alloc()) == NULL)
 				goto err;
-			memset(result, 0, sizeof(*result));
+			bzero(result, sizeof(*result));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 			result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */
@@ -1424,7 +1424,7 @@ create_variable:
 	/* Create a new symbol. */
 	if unlikely((result = sym_alloc()) == NULL)
 		goto err;
-	memset(result, 0, sizeof(*result));
+	bzero(result, sizeof(*result));
 #ifdef CONFIG_SYMBOL_HAS_REFCNT
 	result->s_refcnt = 1;
 #endif /* CONFIG_SYMBOL_HAS_REFCNT */

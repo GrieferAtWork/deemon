@@ -533,8 +533,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeSlab_Calloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	return (likely(result)) ? memset(result, 0, ITEMSIZE)
-	                        : (Dee_Calloc)(ITEMSIZE);
+	return likely(result) ? (bzero(result, ITEMSIZE), result)
+	                      : (Dee_Calloc)(ITEMSIZE);
 }
 
 #undef DeeSlab_TryCalloc
@@ -542,8 +542,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeSlab_TryCalloc))(void) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	return (likely(result)) ? memset(result, 0, ITEMSIZE)
-	                        : (Dee_TryCalloc)(ITEMSIZE);
+	return likely(result) ? (bzero(result, ITEMSIZE), result)
+	                      : (Dee_TryCalloc)(ITEMSIZE);
 }
 
 #undef DeeDbgSlab_Calloc
@@ -551,8 +551,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeDbgSlab_Calloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	return (likely(result)) ? memset(result, 0, ITEMSIZE)
-	                        : (DeeDbg_Calloc)(ITEMSIZE, file, line);
+	return likely(result) ? (bzero(result, ITEMSIZE), result)
+	                      : (DeeDbg_Calloc)(ITEMSIZE, file, line);
 }
 
 #undef DeeDbgSlab_TryCalloc
@@ -560,8 +560,8 @@ PUBLIC WUNUSED ATTR_MALLOC void *
 (DCALL FUNC(DeeDbgSlab_TryCalloc))(char const *file, int line) {
 	void *result;
 	result = FUNC(DeeSlab_DoAlloc)();
-	return (likely(result)) ? memset(result, 0, ITEMSIZE)
-	                        : (DeeDbg_TryCalloc)(ITEMSIZE, file, line);
+	return likely(result) ? (bzero(result, ITEMSIZE), result)
+	                      : (DeeDbg_TryCalloc)(ITEMSIZE, file, line);
 }
 
 #undef DeeSlab_Free

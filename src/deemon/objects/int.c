@@ -1190,7 +1190,9 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 			result            = DeeInt_Alloc(num_digits);
 			if unlikely(!result)
 				goto done;
-			memset(result->ob_digit, 0, num_digits * sizeof(digit));
+			bzeroc(result->ob_digit,
+			       num_digits,
+			       sizeof(digit));
 		}
 		dst    = result->ob_digit;
 		number = 0, num_bits = 0;
@@ -1342,7 +1344,9 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			result            = DeeInt_Alloc(num_digits);
 			if unlikely(!result)
 				goto done;
-			memset(result->ob_digit, 0, num_digits * sizeof(digit));
+			bzeroc(result->ob_digit,
+			       num_digits,
+			       sizeof(digit));
 		}
 		dst    = result->ob_digit;
 		number = 0, num_bits = 0;
@@ -2391,7 +2395,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	count = (size_t)DeeInt_SIZE(self);
 	if unlikely(!count) {
 		/* Special case: zero. */
-		memset(dst, 0, length);
+		bzero(dst, length);
 		return 0;
 	}
 	leading_byte = 0;
@@ -2465,7 +2469,11 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		goto err_overflow;
 	}
 	/* Fill in all remaining bytes with the leading byte. */
-	memset(little_endian ? (void *)writer : dst, leading_byte, remaining);
+	memset(little_endian
+	       ? (void *)writer
+	       : dst,
+	       leading_byte,
+	       remaining);
 #if 1
 	if (DeeInt_SIZE(self) < 0) {
 		/* The integer is negative. -> We must decrement +

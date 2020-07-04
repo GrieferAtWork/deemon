@@ -1319,7 +1319,8 @@ struct cleanup_mode {
 
 
 #ifndef NDEBUG
-#define DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym) memset(sym, 0xcc, sizeof(struct symbol))
+#define DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym) \
+	memset(sym, 0xcc, sizeof(struct symbol))
 #else /* NDEBUG */
 #define DBG_INITIALIZE_FAKE_LOCAL_SYMBOL(sym) (void)0
 #endif /* !NDEBUG */

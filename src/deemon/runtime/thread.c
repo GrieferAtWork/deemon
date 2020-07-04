@@ -4078,7 +4078,9 @@ DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 
 suspend_me:
 			/* zero-initialize all the frames to make our job easier below. */
-			memset(result->tb_frames, 0, traceback_size * sizeof(struct code_frame));
+			bzeroc(result->tb_frames,
+			       traceback_size,
+			       sizeof(struct code_frame));
 			/* This is where it gets dangerous: Suspend the thread and collect information! */
 			COMPILER_BARRIER();
 			DeeThread_Suspend(me);

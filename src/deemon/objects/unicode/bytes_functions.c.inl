@@ -31,6 +31,7 @@
 #include <deemon/seq.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h> /* memcpy(), memset(), ... */
 
 #include "string_functions.h"
 

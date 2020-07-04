@@ -20,7 +20,7 @@
 #include <deemon/error.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 
 #include <hybrid/minmax.h>
 
@@ -649,7 +649,9 @@ int_inc(DREF DeeIntObject **__restrict pself) {
 			z = DeeInt_Alloc(a->ob_size + 1);
 			if unlikely(!z)
 				goto err;
-			memset(z->ob_digit, 0, (size_t)a->ob_size * sizeof(digit));
+			bzeroc(z->ob_digit,
+			       (size_t)a->ob_size,
+			       sizeof(digit));
 			z->ob_digit[(size_t)a->ob_size] = 1;
 		} else {
 			for (i = 0;; ++i) {
@@ -737,7 +739,7 @@ int_dec(DREF DeeIntObject **__restrict pself) {
 			if unlikely(!z)
 				goto err;
 			z->ob_size = -z->ob_size;
-			memset(z->ob_digit, 0, a_digits * sizeof(digit));
+			bzeroc(z->ob_digit, a_digits, sizeof(digit));
 			z->ob_digit[a_digits] = 1;
 		}
 		*pself = z; /* Inherit reference. */
@@ -1004,7 +1006,7 @@ x_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	dssize_t size_b = ABS(b->ob_size);
 	if unlikely((z = DeeInt_Alloc(size_a + size_b)) == NULL)
 		return NULL;
-	memset(z->ob_digit, 0, z->ob_size * sizeof(digit));
+	bzeroc(z->ob_digit, z->ob_size, sizeof(digit));
 	if (a == b) {
 		for (i = 0; i < size_a; ++i) {
 			twodigits carry, f = a->ob_digit[i];
@@ -1115,7 +1117,7 @@ k_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 		goto fail;
 #ifndef NDEBUG
 	memset(ret->ob_digit, 0xdf, ret->ob_size * sizeof(digit));
-#endif
+#endif /* !NDEBUG */
 	if ((t1 = k_mul(ah, bh)) == NULL)
 		goto fail;
 	ASSERT(t1->ob_size >= 0);
@@ -1193,7 +1195,7 @@ k_lopsided_mul(DeeIntObject *__restrict a, DeeIntObject *__restrict b) {
 	ret = DeeInt_Alloc(asize + bsize);
 	if (ret == NULL)
 		return NULL;
-	memset(ret->ob_digit, 0, ret->ob_size * sizeof(digit));
+	bzeroc(ret->ob_digit, ret->ob_size, sizeof(digit));
 	bslice = DeeInt_Alloc(asize);
 	if (bslice == NULL)
 		goto fail;

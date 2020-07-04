@@ -31,6 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/stringutils.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -11735,7 +11736,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 			result_utf = Dee_string_utf_alloc();
 			if unlikely(!result_utf)
 				goto err_r_2_4;
-			memset(result_utf, 0, sizeof(struct string_utf));
+			bzero(result_utf, sizeof(struct string_utf));
 
 			/* Determine the common width of the left and right string,
 			 * then construct a 16-bit, or 32-bit character string. */

@@ -31,6 +31,7 @@
 #include <deemon/none.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
+#include <deemon/system-features.h> /* memset(), bzero(), ... */
 
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #include <deemon/compiler/doctext.h>
@@ -208,7 +209,9 @@ rehash_operator_bindings(DeeClassDescriptorObject *__restrict self) {
 	if unlikely(!new_table)
 		goto err;
 	/* Fill the new table with all unused entries. */
-	memset(new_table, 0xff, (new_mask + 1) * sizeof(struct class_operator));
+	memset(new_table, 0xff,
+	       (new_mask + 1) *
+	       sizeof(struct class_operator));
 	/* Rehash all pre-existing bindings. */
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		struct class_operator *op, *new_op;
@@ -734,7 +737,7 @@ class_maker_deloperator(struct class_maker *__restrict self,
 
 
 #define class_maker_init(self) \
-	memset(self, 0, sizeof(struct class_maker))
+	bzero(self, sizeof(struct class_maker))
 
 /* Finalize everything concerning the given class maker. */
 PRIVATE void DCALL

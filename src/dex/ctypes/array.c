@@ -33,6 +33,7 @@
 #include <deemon/none.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/system-features.h> /* bzero() */
 #include <hybrid/overflow.h>
 
 #include <hybrid/atomic.h>
@@ -380,7 +381,7 @@ array_delrange(DeeArrayTypeObject *tp_self, void *base,
 		del_begin = (uint8_t *)((uintptr_t)base + (size_t)begin * item_size);
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-		CTYPES_FAULTPROTECT(memset(del_begin, 0, del_size), goto err);
+		CTYPES_FAULTPROTECT(bzero(del_begin, del_size), goto err);
 #else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 		/* Use inline code so that fault-protect can guard against it. */
 		CTYPES_FAULTPROTECT({
@@ -390,7 +391,7 @@ array_delrange(DeeArrayTypeObject *tp_self, void *base,
 		goto err);
 #endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 #else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		memset(del_begin, 0, del_size);
+		bzero(del_begin, del_size);
 #endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 	}
 	return 0;

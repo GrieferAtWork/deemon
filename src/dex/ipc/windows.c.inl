@@ -40,7 +40,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -724,7 +724,7 @@ again:
 			goto done_cmdline_copy;
 	}
 
-	memset(&startupInfo, 0, sizeof(STARTUPINFOW));
+	bzero(&startupInfo, sizeof(STARTUPINFOW));
 	startupInfo.cb      = sizeof(STARTUPINFOA);
 	startupInfo.dwFlags = STARTF_USESTDHANDLES;
 

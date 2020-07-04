@@ -40,7 +40,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/tuple.h>
 
 #include <hybrid/align.h>
@@ -2388,9 +2388,9 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 INTERN WUNUSED NONNULL((1)) int DCALL
 type_ctor(DeeTypeObject *__restrict self) {
 	/* Simply re-initialize everything to ZERO and set the HEAP flag. */
-	memset(&self->tp_name, 0,
-	       sizeof(DeeTypeObject) -
-	       offsetof(DeeTypeObject, tp_name));
+	bzero(&self->tp_name,
+	      sizeof(DeeTypeObject) -
+	      offsetof(DeeTypeObject, tp_name));
 	self->tp_flags |= TP_FHEAP;
 	return 0;
 }

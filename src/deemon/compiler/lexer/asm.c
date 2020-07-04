@@ -26,6 +26,7 @@
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
 #include <deemon/format.h>
+#include <deemon/system-features.h> /* bzero() */
 
 #include "../../runtime/strings.h"
 
@@ -526,7 +527,7 @@ INTERN WUNUSED DREF struct ast *DCALL ast_parse_asm(void) {
 	DREF struct ast *result;
 	uint32_t old_flags;
 	bool has_paren;
-	memset(&operands, 0, sizeof(struct operand_list));
+	bzero(&operands, sizeof(struct operand_list));
 	/*ASSERT(tok == KWD___asm__);*/
 	if unlikely(yield() < 0)
 		goto err;

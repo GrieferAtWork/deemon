@@ -32,7 +32,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -203,7 +203,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	DREF DeeObject *iter, *elem;
 	if (DeeNone_Check(seq)) {
 		/* Special case: `none' */
-		memset(dst, 0, num_bytes);
+		bzero(dst, num_bytes);
 		return 0;
 	}
 	if (DeeString_Check(seq)) {

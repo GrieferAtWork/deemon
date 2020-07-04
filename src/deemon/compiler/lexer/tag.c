@@ -30,7 +30,7 @@
 #include <deemon/error.h>
 #include <deemon/none.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/tuple.h>
 
 DECL_BEGIN
@@ -129,7 +129,7 @@ err:
 
 INTERN void (DCALL ast_annotations_get)(struct ast_annotations *__restrict result) {
 	memcpy(result, &current_tags.at_anno, sizeof(struct ast_annotations));
-	memset(&current_tags.at_anno, 0, sizeof(struct ast_annotations));
+	bzero(&current_tags.at_anno, sizeof(struct ast_annotations));
 }
 
 INTERN void (DCALL ast_annotations_free)(struct ast_annotations *__restrict self) {

@@ -35,6 +35,7 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/thread.h>
+#include <deemon/system-features.h> /* bzero(), ... */
 
 DECL_BEGIN
 
@@ -558,7 +559,7 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 		size = DeeSType_Sizeof(field->sf_type->lt_orig);
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-		CTYPES_FAULTPROTECT(memset(dst, 0, size), return -1);
+		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 #else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 		CTYPES_FAULTPROTECT({
 			while (size--)
@@ -567,7 +568,7 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 		                    return -1);
 #endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 #else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		memset(dst, 0, size);
+		bzero(dst, size);
 #endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}
@@ -683,7 +684,7 @@ struct_assign(DeeStructTypeObject *__restrict tp_self,
 		size = DeeSType_Sizeof(tp_self);
 #ifdef CONFIG_HAVE_CTYPES_FAULTPROTECT
 #ifdef CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT
-		CTYPES_FAULTPROTECT(memset(dst, 0, size), return -1);
+		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 #else /* CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 		CTYPES_FAULTPROTECT({
 			while (size--)
@@ -692,7 +693,7 @@ struct_assign(DeeStructTypeObject *__restrict tp_self,
 		return -1);
 #endif /* !CONFIG_HAVE_CTYPES_RECURSIVE_PROTECT */
 #else /* CONFIG_HAVE_CTYPES_FAULTPROTECT */
-		memset(dst, 0, size);
+		bzero(dst, size);
 #endif /* !CONFIG_HAVE_CTYPES_FAULTPROTECT */
 		return 0;
 	}

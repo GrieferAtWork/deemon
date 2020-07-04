@@ -487,7 +487,7 @@ err:
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 again_ReadFile:
 	DBG_ALIGNMENT_DISABLE();
-	memset(&overlapped, 0, sizeof(overlapped));
+	bzero(&overlapped, sizeof(overlapped));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = (uint64_t)offset;
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
@@ -791,7 +791,7 @@ err:
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 again_WriteFile:
 	DBG_ALIGNMENT_DISABLE();
-	memset(&overlapped, 0, sizeof(overlapped));
+	bzero(&overlapped, sizeof(overlapped));
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 	overlapped.me.Offset = (uint64_t)offset;
 #else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */

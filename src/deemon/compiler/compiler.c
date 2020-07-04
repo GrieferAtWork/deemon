@@ -31,7 +31,7 @@
 #include <deemon/module.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h>
+#include <deemon/system-features.h> /* memcpy(), ... */
 #include <deemon/tuple.h>
 #include <deemon/util/rwlock.h>
 
@@ -242,8 +242,8 @@ DeeCompiler_New(DeeObject *__restrict module, uint16_t flags) {
 	if unlikely(!result->cp_scope)
 		goto err_r;
 	weakref_support_init(result);
-	memset(&result->cp_tags, 0, sizeof(result->cp_tags));
-	memset(&result->cp_items, 0, sizeof(result->cp_items));
+	bzero(&result->cp_tags, sizeof(result->cp_tags));
+	bzero(&result->cp_items, sizeof(result->cp_items));
 	result->cp_flags           = flags;
 	result->cp_prev            = NULL;
 	result->cp_recursion       = 0;
