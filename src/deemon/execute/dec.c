@@ -1091,7 +1091,7 @@ DecFile_LoadGlobals(DecFile *__restrict self) {
 		/* Figure out the proper hash for the name. */
 		name_hash = Dee_HashStr(name);
 		perturb = hash_i = name_hash & bucket_mask;
-		for (;; hash_i = MODULE_HASHNX(hash_i, perturb), MODULE_HASHPT(perturb)) {
+		for (;; MODULE_HASHNX(hash_i, perturb)) {
 			DREF DeeStringObject *temp;
 			struct module_symbol *target = &bucketv[hash_i & bucket_mask];
 			if (target->ss_name)
@@ -2723,10 +2723,9 @@ struct mtime_cache {
 #endif /* !CONFIG_NO_THREADS */
 };
 
-#define MCACHE_HASHST(hash)        ((hash)&mtime_cache.mc_mask)
-#define MCACHE_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define MCACHE_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
-#define MCACHE_HASHIT(i)           (mtime_cache.mc_list + ((i)&mtime_cache.mc_mask))
+#define MCACHE_HASHST(hash)        ((hash) & mtime_cache.mc_mask)
+#define MCACHE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define MCACHE_HASHIT(i)           (mtime_cache.mc_list + ((i) & mtime_cache.mc_mask))
 
 PRIVATE struct mtime_entry empty_mtime_items[1] = { { NULL, 0 } };
 
@@ -2780,7 +2779,7 @@ mtime_cache_lookup(DeeObject *__restrict path,
 	dhash_t hash = fs_hashobj(path);
 	rwlock_read(&mtime_cache.mc_lock);
 	perturb = i = MCACHE_HASHST(hash);
-	for (;; i = MCACHE_HASHNX(i, perturb), MCACHE_HASHPT(perturb)) {
+	for (;; MCACHE_HASHNX(i, perturb)) {
 		struct mtime_entry *item = MCACHE_HASHIT(i);
 		if (!item->me_file)
 			break; /* Entry not found. */
@@ -2827,7 +2826,7 @@ mtime_cache_rehash(void) {
 			if (!iter->me_file)
 				continue;
 			perturb = i = MTIME_ENTRY_HASH(iter) & new_mask;
-			for (;; i = MCACHE_HASHNX(i, perturb), MCACHE_HASHPT(perturb)) {
+			for (;; MCACHE_HASHNX(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (!item->me_file)
 					break; /* Empty slot found. */
@@ -2853,7 +2852,7 @@ mtime_cache_insert(DeeObject *__restrict path,
 again:
 	mask    = mtime_cache.mc_mask;
 	perturb = i = hash & mask;
-	for (;; i = MCACHE_HASHNX(i, perturb), MCACHE_HASHPT(perturb)) {
+	for (;; MCACHE_HASHNX(i, perturb)) {
 		struct mtime_entry *item = &mtime_cache.mc_list[i & mask];
 		if (!item->me_file) {
 			if (mtime_cache.mc_size + 1 >= mtime_cache.mc_mask)

@@ -19,6 +19,7 @@
  */
 #ifndef GUARD_DEEMON_RUNTIME_MRO_C
 #define GUARD_DEEMON_RUNTIME_MRO_C 1
+#define DEE_SOURCE 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
@@ -153,7 +154,7 @@ membercache_rehash(struct membercache *__restrict self) {
 			if (iter->mcs_type == MEMBERCACHE_UNUSED)
 				continue;
 			perturb = i = iter->mcs_hash & new_mask;
-			for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+			for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (item->mcs_type == MEMBERCACHE_UNUSED)
 					break; /* Empty slot found. */
@@ -196,7 +197,7 @@ membercache_rehash(struct membercache *__restrict self) {
 			goto rehash_initial;                                                              \
 		/* Re-check that the named attribute isn't already in-cache. */                       \
 		perturb = i = MEMBERCACHE_HASHST(self, hash);                                         \
-		for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {            \
+		for (;; MEMBERCACHE_HASHNX(i, perturb)) {                                             \
 			item = MEMBERCACHE_HASHIT(self, i);                                               \
 			if (item->mcs_type == MEMBERCACHE_UNUSED)                                         \
 				break;                                                                        \

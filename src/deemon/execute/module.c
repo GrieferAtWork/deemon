@@ -191,7 +191,7 @@ DeeModule_GetSymbolString(DeeModuleObject *__restrict self,
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	ASSERT(!DeeInteractiveModule_Check(self));
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -211,7 +211,7 @@ DeeModule_GetSymbolStringLen(DeeModuleObject *__restrict self,
 	dhash_t i, perturb;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -313,7 +313,7 @@ module_getattr_impl(DeeModuleObject *__restrict self,
 	dhash_t i, perturb;
 	DREF DeeObject *result;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -337,7 +337,7 @@ module_getattr_len_impl(DeeModuleObject *__restrict self,
 	dhash_t i, perturb;
 	DREF DeeObject *result;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -367,7 +367,7 @@ module_boundattr_impl(DeeModuleObject *__restrict self,
                       char const *__restrict attr_name, dhash_t hash) {
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -386,7 +386,7 @@ module_boundattr_len_impl(DeeModuleObject *__restrict self,
                           size_t attrlen, dhash_t hash) {
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -409,7 +409,7 @@ module_hasattr_impl(DeeModuleObject *__restrict self,
                     char const *__restrict attr_name, dhash_t hash) {
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -428,7 +428,7 @@ module_hasattr_len_impl(DeeModuleObject *__restrict self,
                         size_t attrlen, dhash_t hash) {
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -497,7 +497,7 @@ module_delattr_impl(DeeModuleObject *__restrict self,
 	int error;
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -520,7 +520,7 @@ module_delattr_len_impl(DeeModuleObject *__restrict self,
 	int error;
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -607,7 +607,7 @@ module_setattr_impl(DeeModuleObject *__restrict self,
 	int error;
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */
@@ -631,7 +631,7 @@ module_setattr_len_impl(DeeModuleObject *__restrict self,
 	int error;
 	dhash_t i, perturb;
 	perturb = i = MODULE_HASHST(self, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(self, i);
 		if (!item->ss_name)
 			break; /* Not found */

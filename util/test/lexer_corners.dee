@@ -21,7 +21,7 @@
 
 import * from deemon;
 
-/* Assert the valid compilation of syntax constants with
+/* Assert the valid compilation of syntax constructs with
  * which the compiler has had troubles in the past. */
 function identical(a, b) {
 	return type a === type b && a == b;

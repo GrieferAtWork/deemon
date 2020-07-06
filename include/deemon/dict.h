@@ -157,8 +157,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems,
  *       does for its dictionary lookup.
  */
 #define DeeDict_HashSt(self, hash)  ((hash) & ((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_mask)
-#define DeeDict_HashNx(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define DeeDict_HashPt(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define DeeDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define DeeDict_HashIt(self, i)     (((DeeDictObject *)Dee_REQUIRES_OBJECT(self))->d_elem + ((i) & ((DeeDictObject *)(self))->d_mask))
 
 

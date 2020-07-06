@@ -508,7 +508,7 @@ get_module_symbol(DeeModuleObject *__restrict module,
 	dhash_t i, perturb;
 	dhash_t hash = DeeString_Hash((DeeObject *)name);
 	perturb = i = MODULE_HASHST(module, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(module, i);
 		if (!item->ss_name)
 			break; /* Not found */

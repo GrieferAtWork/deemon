@@ -133,7 +133,7 @@ PRIVATE ATTR_NOINLINE void DCALL init_builtins(void) {
 		hash = Dee_HashPtr(name->s_str, name->s_len * sizeof(char));
 		iter->ss_hash = name->s_hash = hash;
 		perturb = i = hash & builtins_hashmask;
-		for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+		for (;; MODULE_HASHNX(i, perturb)) {
 			struct module_symbol *item = &deemon_symbols[i & builtins_hashmask];
 			if (item->ss_name)
 				continue;

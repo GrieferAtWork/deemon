@@ -871,8 +871,7 @@ struct struct_type_object {
 };
 
 #define STRUCT_TYPE_HASHST(self, hash)  ((hash) & ((DeeStructTypeObject *)(self))->st_fmsk)
-#define STRUCT_TYPE_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define STRUCT_TYPE_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define STRUCT_TYPE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define STRUCT_TYPE_HASHIT(self, i)     (((DeeStructTypeObject *)(self))->st_fvec + ((i) & ((DeeStructTypeObject *)(self))->st_fmsk))
 
 

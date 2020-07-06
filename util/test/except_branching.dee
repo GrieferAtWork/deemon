@@ -31,9 +31,9 @@ function get_except_val(err) -> ({
 		try {
 			if (err !is none)
 				throw err;
-			inner_stack+1;
+			inner_stack + 1;
 		} catch (string from deemon) {
-			inner_stack+2;
+			inner_stack + 2;
 		}
 	} catch (...) {
 		3;

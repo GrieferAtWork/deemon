@@ -66,8 +66,7 @@ PRIVATE int
 			if (!iter->sa_sym)
 				continue;
 			perturb = i = AST_SYMBOL_ASSUME_HASH(iter) & new_mask;
-			for (;; i = AST_SYMBOL_ASSUMES_HASHNX(i, perturb),
-			        AST_SYMBOL_ASSUMES_HASHPT(perturb)) {
+			for (;; AST_SYMBOL_ASSUMES_HASHNX(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (!item->sa_sym)
 					break; /* Empty slot found. */
@@ -91,8 +90,7 @@ ast_assumes_getsymbol(struct ast_assumes *__restrict self,
 	if (!self->aa_syms.sa_elem)
 		return NULL;
 	i = perturb = hash & self->aa_syms.sa_mask;
-	for (;; i = AST_SYMBOL_ASSUMES_HASHNX(i, perturb),
-	        AST_SYMBOL_ASSUMES_HASHPT(perturb)) {
+	for (;; AST_SYMBOL_ASSUMES_HASHNX(i, perturb)) {
 		struct ast_symbol_assume *item;
 		item = AST_SYMBOL_ASSUMES_HASHIT(&self->aa_syms, i);
 		if (!item->sa_sym)
@@ -115,8 +113,7 @@ ast_assumes_newsymbol(struct ast_assumes *__restrict self,
 	}
 again:
 	i = perturb = hash & self->aa_syms.sa_mask;
-	for (;; i = AST_SYMBOL_ASSUMES_HASHNX(i, perturb),
-	        AST_SYMBOL_ASSUMES_HASHPT(perturb)) {
+	for (;; AST_SYMBOL_ASSUMES_HASHNX(i, perturb)) {
 		struct ast_symbol_assume *item;
 		item = AST_SYMBOL_ASSUMES_HASHIT(&self->aa_syms, i);
 		if (!item->sa_sym) {

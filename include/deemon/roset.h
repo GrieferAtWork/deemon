@@ -39,7 +39,6 @@ DECL_BEGIN
 #define Dee_roset_object roset_object
 #define ROSET_HASHST     Dee_ROSET_HASHST
 #define ROSET_HASHNX     Dee_ROSET_HASHNX
-#define ROSET_HASHPT     Dee_ROSET_HASHPT
 #define ROSET_HASHIT     Dee_ROSET_HASHIT
 #endif /* DEE_SOURCE */
 
@@ -99,10 +98,11 @@ DeeRoSet_Insert(DeeObject **__restrict pself,
                 DeeObject *__restrict key);
 
 /* Hash-iteration control. */
-#define Dee_ROSET_HASHST(self, ro)     ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
-#define Dee_ROSET_HASHNX(hs, perturb)  (((hs) << 2) + (hs) + (perturb) + 1)
-#define Dee_ROSET_HASHPT(perturb)      ((perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_ROSET_HASHIT(self, i)      (((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_elem+((i) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask))
+#define Dee_ROSET_HASHST(self, ro)    ((ro) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask)
+#define Dee_ROSET_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_ROSET_HASHIT(self, i)                             \
+	(((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_elem + \
+	 ((i) & ((DeeRoSetObject *)Dee_REQUIRES_OBJECT(self))->rs_mask))
 
 DECL_END
 

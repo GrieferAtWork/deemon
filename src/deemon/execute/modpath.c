@@ -2495,7 +2495,7 @@ PRIVATE WUNUSED int DCALL module_rehash_globals(void) {
 		if (!item->ss_name)
 			continue;
 		perturb = j = item->ss_hash & new_mask;
-		for (;; j = MODULE_HASHNX(j, perturb), MODULE_HASHPT(perturb)) {
+		for (;; MODULE_HASHNX(j, perturb)) {
 			struct module_symbol *new_item = &new_vec[j & new_mask];
 			if (new_item->ss_name)
 				continue;
@@ -2583,7 +2583,7 @@ module_import_symbol(DeeModuleObject *__restrict self,
 		/* Insert the new object into the symbol table. */
 		hash    = DeeString_Hash((DeeObject *)name);
 		perturb = i = MODULE_HASHST(self, hash);
-		for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+		for (;; MODULE_HASHNX(i, perturb)) {
 			struct module_symbol *item = MODULE_HASHIT(self, i);
 			if (item->ss_name)
 				continue;

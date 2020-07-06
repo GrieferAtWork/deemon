@@ -714,11 +714,13 @@ constant("RTLD_LAZY");
 constant("RTLD_NOW");
 
 functest('_memicmp("a", "A", 1)', msvc);
-functest('memicmp("a", "A", 1)');
+functest('memicmp("a", "A", 1)', msvc);
 functest('memcasecmp("a", "A", 1)', "defined(__USE_KOS)");
 
 functest('_stricmp("a", "A")', msvc);
-functest('stricmp("a", "A")'); // TODO: strcmpi / _strcmpi
+functest('_strcmpi("a", "A")', msvc);
+functest('stricmp("a", "A")', msvc);
+functest('strcmpi("a", "A")', msvc);
 functest('strcasecmp("a", "A")', "defined(__USE_KOS)");
 
 func("memchr", stdc, test: "extern char *buf; void *p = memchr(buf, '!', 123); return p != NULL;");
@@ -5372,11 +5374,25 @@ sizeof("off_t");
 #define CONFIG_HAVE__stricmp 1
 #endif
 
+#ifdef CONFIG_NO__strcmpi
+#undef CONFIG_HAVE__strcmpi
+#elif !defined(CONFIG_HAVE__strcmpi) && \
+      (defined(_strcmpi) || defined(___strcmpi_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE__strcmpi 1
+#endif
+
 #ifdef CONFIG_NO_stricmp
 #undef CONFIG_HAVE_stricmp
 #elif !defined(CONFIG_HAVE_stricmp) && \
-      (defined(stricmp) || defined(__stricmp_defined))
+      (defined(stricmp) || defined(__stricmp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE_stricmp 1
+#endif
+
+#ifdef CONFIG_NO_strcmpi
+#undef CONFIG_HAVE_strcmpi
+#elif !defined(CONFIG_HAVE_strcmpi) && \
+      (defined(strcmpi) || defined(__strcmpi_defined) || defined(_MSC_VER))
+#define CONFIG_HAVE_strcmpi 1
 #endif
 
 #ifdef CONFIG_NO_strcasecmp
@@ -7475,30 +7491,33 @@ sizeof("off_t");
 #define DeeSystem_SetErrno(v) (void)0
 #endif /* !CONFIG_HAVE_errno */
 
-
-#if !defined(CONFIG_HAVE_memcasecmp) && defined(CONFIG_HAVE__memicmp)
-#define CONFIG_HAVE_memcasecmp 1
+#ifndef CONFIG_HAVE_memcasecmp
 #undef memcasecmp
+#ifdef CONFIG_HAVE__memicmp
+#define CONFIG_HAVE_memcasecmp 1
 #define memcasecmp _memicmp
-#endif /* memcasecmp = _memicmp */
-
-#if !defined(CONFIG_HAVE_memcasecmp) && defined(CONFIG_HAVE_memicmp)
+#elif defined(CONFIG_HAVE_memicmp)
 #define CONFIG_HAVE_memcasecmp 1
-#undef memcasecmp
 #define memcasecmp memicmp
-#endif /* memcasecmp = memicmp */
+#endif /* ... */
+#endif /* !CONFIG_HAVE_memcasecmp */
 
-#if !defined(CONFIG_HAVE_strcasecmp) && defined(CONFIG_HAVE__stricmp)
-#define CONFIG_HAVE_strcasecmp 1
+#ifndef CONFIG_HAVE_strcasecmp
 #undef strcasecmp
+#ifdef CONFIG_HAVE__stricmp
+#define CONFIG_HAVE_strcasecmp 1
 #define strcasecmp _stricmp
-#endif /* strcasecmp = _stricmp */
-
-#if !defined(CONFIG_HAVE_strcasecmp) && defined(CONFIG_HAVE_stricmp)
+#elif defined(CONFIG_HAVE__strcmpi)
 #define CONFIG_HAVE_strcasecmp 1
-#undef strcasecmp
+#define strcasecmp _strcmpi
+#elif defined(CONFIG_HAVE_stricmp)
+#define CONFIG_HAVE_strcasecmp 1
 #define strcasecmp stricmp
-#endif /* strcasecmp = stricmp */
+#elif defined(CONFIG_HAVE_strcmpi)
+#define CONFIG_HAVE_strcasecmp 1
+#define strcasecmp strcmpi
+#endif /* ... */
+#endif /* !CONFIG_HAVE_strcasecmp */
 
 #ifndef CONFIG_HAVE_tolower
 #define CONFIG_HAVE_tolower 1

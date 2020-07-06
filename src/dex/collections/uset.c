@@ -308,7 +308,7 @@ USet_DoInsertUnlocked(USet *__restrict self,
                       DREF DeeObject *__restrict ob) {
 	dhash_t i, perturb;
 	perturb = i = UHASH(ob) & self->s_mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		struct uset_item *item = &self->s_elem[i & self->s_mask];
 		if (item->si_key) { /* Already in use */
 			if likely(!USAME(item->si_key, ob))
@@ -381,7 +381,7 @@ uset_rehash(USet *__restrict self, int sizedir) {
 			if (iter->si_key == dummy)
 				continue;
 			perturb = i = UHASH(iter->si_key) & new_mask;
-			for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+			for (;; DeeHashSet_HashNx(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (!item->si_key)
 					break; /* Empty slot found. */
@@ -411,7 +411,7 @@ restart:
 	vector  = self->s_elem;
 	mask    = self->s_mask;
 	perturb = i = UHASH(ob) & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		DREF DeeObject *item_key;
 		struct uset_item *item = &vector[i & mask];
 		item_key               = item->si_key;
@@ -450,7 +450,7 @@ USet_Contains(USet *__restrict self,
 	DeeHashSet_LockRead(self);
 	mask    = self->s_mask;
 	perturb = i = UHASH(ob) & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		struct uset_item *item = &self->s_elem[i & mask];
 		if (!item->si_key)
 			break; /* Not found */
@@ -477,7 +477,7 @@ again:
 	first_dummy = NULL;
 	mask        = self->s_mask;
 	perturb = i = UHASH(ob) & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		struct uset_item *item = &self->s_elem[i & mask];
 		if (!item->si_key) {
 			if (!first_dummy)
@@ -538,7 +538,7 @@ again:
 	first_dummy = NULL;
 	mask        = self->s_mask;
 	perturb = i = UHASH(ob) & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		struct uset_item *item = &self->s_elem[i & mask];
 		if (!item->si_key) {
 			if (!first_dummy)
@@ -875,7 +875,7 @@ uset_deepload(USet *__restrict self) {
 	for (i = 0; i < item_count; ++i) {
 		dhash_t j, perturb;
 		perturb = j = UHASH(items[i]) & new_mask;
-		for (;; j = DeeHashSet_HashNx(j, perturb), DeeHashSet_HashPt(perturb)) {
+		for (;; DeeHashSet_HashNx(j, perturb)) {
 			struct uset_item *item = &new_map[j & new_mask];
 			if (item->si_key) {
 				if likely(!USAME(item->si_key, items[i]))

@@ -55,7 +55,7 @@ struct_type_rehash(DeeStructTypeObject *__restrict self) {
 			continue;
 		j = perturb = self->st_fvec[i].sf_hash;
 		/* Re-insert this item in the hash-vector of the new struct-type. */
-		for (;; j = STRUCT_TYPE_HASHNX(j, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+		for (;; STRUCT_TYPE_HASHNX(j, perturb)) {
 			if (result->st_fvec[j].sf_name)
 				continue;
 			memcpy(&result->st_fvec[j],
@@ -108,7 +108,7 @@ struct_type_alloc_iterator(DeeObject *__restrict iter,
 		}
 		hash = DeeString_Hash(field_name_and_type[0]);
 		i = perturb = STRUCT_TYPE_HASHST(result, hash);
-		for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+		for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 			struct struct_field *field;
 			size_t align;
 			field = STRUCT_TYPE_HASHIT(result, i);
@@ -203,7 +203,7 @@ DeeStructType_FromSequence(DeeObject *name,
 			}
 			hash = DeeString_Hash(field_name_and_type[0]);
 			j = perturb = STRUCT_TYPE_HASHST(result, hash);
-			for (;; j = STRUCT_TYPE_HASHNX(j, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+			for (;; STRUCT_TYPE_HASHNX(j, perturb)) {
 				struct struct_field *field;
 				size_t align;
 				field = STRUCT_TYPE_HASHIT(result, j);
@@ -329,7 +329,7 @@ struct_type_offsetof(DeeStructTypeObject *self, size_t argc, DeeObject *const *a
 		goto err;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(self, hash);
-	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(self, i);
 		if unlikely(!field->sf_name)
@@ -362,7 +362,7 @@ struct_type_offsetafter(DeeStructTypeObject *self, size_t argc, DeeObject *const
 		goto err;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(self, hash);
-	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(self, i);
 		if unlikely(!field->sf_name)
@@ -395,7 +395,7 @@ struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *arg
 		return NULL;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(self, hash);
-	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(self, i);
 		if unlikely(!field->sf_name)
@@ -508,7 +508,7 @@ struct_getattr(DeeStructTypeObject *__restrict tp_self,
 	dhash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
-	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(tp_self, i);
 		if (!field->sf_name)
@@ -540,7 +540,7 @@ struct_delattr(DeeStructTypeObject *__restrict tp_self,
 	dhash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
-	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
 		uint8_t *dst;
 		size_t size;
@@ -583,7 +583,7 @@ struct_setattr(DeeStructTypeObject *__restrict tp_self,
 	dhash_t i, perturb, hash;
 	hash = DeeString_Hash(name);
 	i = perturb = STRUCT_TYPE_HASHST(tp_self, hash);
-	for (;; i = STRUCT_TYPE_HASHNX(i, perturb), STRUCT_TYPE_HASHPT(perturb)) {
+	for (;; STRUCT_TYPE_HASHNX(i, perturb)) {
 		struct struct_field *field;
 		field = STRUCT_TYPE_HASHIT(tp_self, i);
 		if (!field->sf_name)

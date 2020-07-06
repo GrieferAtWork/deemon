@@ -92,7 +92,7 @@ next_key:
 			DREF DeeObject *key = *items++;
 			dhash_t i, perturb, hash = DeeObject_Hash(key);
 			perturb = i = hash & mask;
-			for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+			for (;; DeeHashSet_HashNx(i, perturb)) {
 				struct hashset_item *item = &result->s_elem[i & mask];
 				if (item->si_key) { /* Already in use */
 					int temp;
@@ -348,7 +348,7 @@ set_deepload(Set *__restrict self) {
 		dhash_t j, perturb, hash;
 		hash    = DeeObject_Hash(items[i]);
 		perturb = j = hash & new_mask;
-		for (;; j = DeeHashSet_HashNx(j, perturb), DeeHashSet_HashPt(perturb)) {
+		for (;; DeeHashSet_HashNx(j, perturb)) {
 			struct hashset_item *item = &new_map[j & new_mask];
 			if (item->si_key)
 				continue; /* Already in use */
@@ -505,7 +505,7 @@ set_rehash(Set *__restrict self, int sizedir) {
 			if (iter->si_key == dummy)
 				continue;
 			perturb = i = iter->si_hash & new_mask;
-			for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+			for (;; DeeHashSet_HashNx(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (!item->si_key)
 					break; /* Empty slot found. */
@@ -546,7 +546,7 @@ again:
 	vector      = me->s_elem;
 	mask        = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->si_key) {
@@ -641,7 +641,7 @@ again:
 	vector      = me->s_elem;
 	mask        = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->si_key) {
@@ -724,7 +724,7 @@ restart:
 	vector  = me->s_elem;
 	mask    = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->si_key)
@@ -794,7 +794,7 @@ again:
 	vector      = me->s_elem;
 	mask        = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		DREF DeeObject *existing_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->si_key) {
@@ -892,7 +892,7 @@ again:
 	vector      = me->s_elem;
 	mask        = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->si_key) {
 			if (!first_dummy)
@@ -985,7 +985,7 @@ again_lock:
 	vector  = me->s_elem;
 	mask    = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		struct hashset_item *item = &vector[i & mask];
 		if ((old_item = item->si_key) == NULL)
 			break; /* Not found */
@@ -1039,7 +1039,7 @@ restart:
 	vector  = me->s_elem;
 	mask    = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		DREF DeeObject *item_key;
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->si_key)
@@ -1081,7 +1081,7 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 	vector  = me->s_elem;
 	mask    = me->s_mask;
 	perturb = i = hash & mask;
-	for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
+	for (;; DeeHashSet_HashNx(i, perturb)) {
 		struct hashset_item *item = &vector[i & mask];
 		if (!item->si_key)
 			break; /* Not found */

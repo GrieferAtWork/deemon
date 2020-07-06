@@ -358,7 +358,7 @@ rehash(DREF Dict *__restrict self, size_t old_mask, size_t new_mask) {
 		if (!self->rd_elem[i].di_key)
 			continue;
 		perturb = j = self->rd_elem[i].di_hash & new_mask;
-		for (;; j = RODICT_HASHNX(j, perturb), RODICT_HASHPT(perturb)) {
+		for (;; RODICT_HASHNX(j, perturb)) {
 			item = &result->rd_elem[j & new_mask];
 			if (!item->di_key)
 				break;
@@ -381,7 +381,7 @@ insert(DREF Dict *__restrict self, size_t mask,
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
+	for (;; RODICT_HASHNX(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & mask];
 		if (!item->di_key)
@@ -563,7 +563,7 @@ rodict_contains(Dict *self,
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & self->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
+	for (;; RODICT_HASHNX(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->di_key)
@@ -590,7 +590,7 @@ rodict_getitem(Dict *self,
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & self->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
+	for (;; RODICT_HASHNX(i, perturb)) {
 		int error;
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->di_key)
@@ -616,10 +616,10 @@ DeeRoDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
 	hash     = DeeObject_Hash(key);
-	perturb = i = hash & me->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
+	perturb = i = RODICT_HASHST(me, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
 		int error;
-		item = &me->rd_elem[i & me->rd_mask];
+		item = RODICT_HASHIT(me, i);
 		if (!item->di_key)
 			break;
 		if (item->di_hash != hash)
@@ -646,9 +646,9 @@ DeeRoDict_GetItemString(DeeObject *__restrict self,
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
-	perturb = i = hash & me->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
-		item = &me->rd_elem[i & me->rd_mask];
+	perturb = i = RODICT_HASHST(me, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
+		item = RODICT_HASHIT(me, i);
 		if (!item->di_key)
 			break;
 		if (item->di_hash != hash)
@@ -672,9 +672,9 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
-	perturb = i = hash & me->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
-		item = &me->rd_elem[i & me->rd_mask];
+	perturb = i = RODICT_HASHST(me, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
+		item = RODICT_HASHIT(me, i);
 		if (!item->di_key)
 			break;
 		if (item->di_hash != hash)
@@ -700,9 +700,9 @@ DeeRoDict_GetItemStringDef(DeeObject *self,
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
-	perturb = i = hash & me->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
-		item = &me->rd_elem[i & me->rd_mask];
+	perturb = i = RODICT_HASHST(me, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
+		item = RODICT_HASHIT(me, i);
 		if (!item->di_key)
 			break;
 		if (item->di_hash != hash)
@@ -726,9 +726,9 @@ DeeRoDict_GetItemStringLenDef(DeeObject *self,
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
-	perturb = i = hash & me->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
-		item = &me->rd_elem[i & me->rd_mask];
+	perturb = i = RODICT_HASHST(me, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
+		item = RODICT_HASHIT(me, i);
 		if (!item->di_key)
 			break;
 		if (item->di_hash != hash)
@@ -752,9 +752,9 @@ DeeRoDict_HasItemString(DeeObject *__restrict self,
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
-	perturb = i = hash & me->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
-		item = &me->rd_elem[i & me->rd_mask];
+	perturb = i = RODICT_HASHST(me, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
+		item = RODICT_HASHIT(me, i);
 		if (!item->di_key)
 			break;
 		if (item->di_hash != hash)
@@ -777,9 +777,9 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 	size_t i, perturb;
 	struct rodict_item *item;
 	Dict *me = (Dict *)self;
-	perturb = i = hash & me->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
-		item = &me->rd_elem[i & me->rd_mask];
+	perturb = i = RODICT_HASHST(me, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
+		item = RODICT_HASHIT(me, i);
 		if (!item->di_key)
 			break;
 		if (item->di_hash != hash)

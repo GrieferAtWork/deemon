@@ -75,7 +75,6 @@ DECL_BEGIN
 #define Dee_deep_assoc            deep_assoc
 #define DEEPASSOC_HASHST          Dee_DEEPASSOC_HASHST
 #define DEEPASSOC_HASHNX          Dee_DEEPASSOC_HASHNX
-#define DEEPASSOC_HASHPT          Dee_DEEPASSOC_HASHPT
 #define DEEPASSOC_HASHIT          Dee_DEEPASSOC_HASHIT
 #define Dee_thread_interrupt      thread_interrupt
 #define Dee_string_object         string_object
@@ -227,8 +226,7 @@ struct Dee_deep_assoc {
 	                                            * When this counter is decremented down to ZERO(0), the association map is cleared. */
 };
 #define Dee_DEEPASSOC_HASHST(self, hash)  ((hash) & (self)->da_mask)
-#define Dee_DEEPASSOC_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define Dee_DEEPASSOC_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_DEEPASSOC_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_DEEPASSOC_HASHIT(self, i)     ((self)->da_list + ((i) & (self)->da_mask))
 
 

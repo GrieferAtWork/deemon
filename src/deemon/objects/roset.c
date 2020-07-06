@@ -279,7 +279,7 @@ rehash(DREF Set *__restrict self, size_t old_mask, size_t new_mask) {
 		if (!self->rs_elem[i].si_key)
 			continue;
 		perturb = j = self->rs_elem[i].si_hash & new_mask;
-		for (;; j = ROSET_HASHNX(j, perturb), ROSET_HASHPT(perturb)) {
+		for (;; ROSET_HASHNX(j, perturb)) {
 			item = &result->rs_elem[j & new_mask];
 			if (!item->si_key)
 				break;
@@ -300,7 +300,7 @@ insert(DREF Set *__restrict self, size_t mask,
 	struct roset_item *item;
 	hash    = DeeObject_Hash(key);
 	perturb = i = hash & mask;
-	for (;; i = ROSET_HASHNX(i, perturb), ROSET_HASHPT(perturb)) {
+	for (;; ROSET_HASHNX(i, perturb)) {
 		int error;
 		item = &self->rs_elem[i & mask];
 		if (!item->si_key)
@@ -478,10 +478,10 @@ roset_contains(Set *self,
 	size_t i, perturb, hash;
 	struct roset_item *item;
 	hash    = DeeObject_Hash(key);
-	perturb = i = hash & self->rs_mask;
-	for (;; i = ROSET_HASHNX(i, perturb), ROSET_HASHPT(perturb)) {
+	perturb = i = ROSET_HASHST(self, hash);
+	for (;; ROSET_HASHNX(i, perturb)) {
 		int error;
-		item = &self->rs_elem[i & self->rs_mask];
+		item = ROSET_HASHIT(self, i);
 		if (!item->si_key)
 			break;
 		if (item->si_hash != hash)

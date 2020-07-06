@@ -76,10 +76,9 @@ struct ast_symbol_assumes {
 	size_t                    sa_mask; /* Allocated hash-vector mask. */
 	struct ast_symbol_assume *sa_elem; /* [0..sa_mask + 1][owned] Hash-vector of symbol assumes. */
 };
-#define AST_SYMBOL_ASSUMES_HASHST(self,hash)  ((hash) & (self)->sa_mask)
-#define AST_SYMBOL_ASSUMES_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define AST_SYMBOL_ASSUMES_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define AST_SYMBOL_ASSUMES_HASHIT(self,i)     ((self)->sa_elem+((i) & (self)->sa_mask))
+#define AST_SYMBOL_ASSUMES_HASHST(self,hash)   ((hash) & (self)->sa_mask)
+#define AST_SYMBOL_ASSUMES_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define AST_SYMBOL_ASSUMES_HASHIT(self, i)     ((self)->sa_elem+((i) & (self)->sa_mask))
 
 struct ast_assumes {
 	struct ast_assumes const *aa_prev; /* [0..1] When inside of a conditional branch, this points

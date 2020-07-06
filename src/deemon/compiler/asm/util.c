@@ -188,8 +188,8 @@ rodict_insert_nocheck(DeeRoDictObject *__restrict self,
                       DREF DeeObject *__restrict value) {
 	size_t i, perturb;
 	struct rodict_item *item;
-	perturb = i = hash & self->rd_mask;
-	for (;; i = RODICT_HASHNX(i, perturb), RODICT_HASHPT(perturb)) {
+	perturb = i = RODICT_HASHST(self, hash);
+	for (;; RODICT_HASHNX(i, perturb)) {
 		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->di_key)
 			break;
@@ -208,9 +208,9 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self,
                      DREF DeeObject *__restrict key) {
 	size_t i, perturb;
 	struct roset_item *item;
-	perturb = i = hash & self->rs_mask;
-	for (;; i = ROSET_HASHNX(i, perturb), ROSET_HASHPT(perturb)) {
-		item = &self->rs_elem[i & self->rs_mask];
+	perturb = i = ROSET_HASHST(self, hash);
+	for (;; ROSET_HASHNX(i, perturb)) {
+		item = ROSET_HASHIT(self, i);
 		if (!item->si_key)
 			break;
 	}

@@ -123,7 +123,7 @@ import_module_symbol(DeeModuleObject *__restrict mod,
 	dhash_t i, perturb;
 	dhash_t hash = Dee_HashUtf8(name->k_name, name->k_size);
 	perturb = i = MODULE_HASHST(mod, hash);
-	for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+	for (;; MODULE_HASHNX(i, perturb)) {
 		struct module_symbol *item = MODULE_HASHIT(mod, i);
 		if (!item->ss_name)
 			break; /* Not found */

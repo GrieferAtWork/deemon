@@ -37,7 +37,12 @@ function identical(a, b) {
 
 /* Make sure that trying to execute an empty piece of
  * code causes a SyntaxError exception to be thrown. */
-assert (try ({ exec(r''); none; }) catch (e...) e) is SyntaxError;
+assert (try ({ exec(''); none; }) catch (e...) e) is SyntaxError;
+assert (try ({ exec(' '); none; }) catch (e...) e) is SyntaxError;
+assert (try ({ exec('\n'); none; }) catch (e...) e) is SyntaxError;
+assert (try ({ exec('/* empty */'); none; }) catch (e...) e) is SyntaxError;
+assert (try ({ exec('// empty'); none; }) catch (e...) e) is SyntaxError;
+assert (try ({ exec('// empty\n'); none; }) catch (e...) e) is SyntaxError;
 
 /* Basic literal / constant parsing. */
 assert identical(exec(r'1'),          1);
@@ -269,7 +274,7 @@ assert identical(exec(r'[](x) { return x * 2; };')(7), 14);
 	/* Execute a piece of code to define some globals,
 	 * as well as create and return a JIT function. */
 	local x = exec(r'
-		bar = "foobar";
+		bar = "foobar"; // Implicitly declared as a global
 		function foo(x?, y = 3) {
 			if (x !is bound)
 				return bar;
@@ -283,15 +288,22 @@ assert identical(exec(r'[](x) { return x * 2; };')(7), 14);
 
 	/* Ensure that invocations of the function behave properly */
 	assert x() === glob["bar"];
-	assert x(10) == 13;
-	assert x(10, 20) == 30;
+	assert identical(x(10), 13);
+	assert identical(x(10, 20), 30);
 
 	/* Ensure that the correct meta-data is available for the function */
-	assert x.__name__ == "foo";
+	assert identical(x.__name__, "foo");
 	assert x.__kwds__ == { "x", "y" };
-	assert x.__argc_min__ == 0;
-	assert x.__argc_max__ == 2;
+	assert identical(x.__argc_min__, 0);
+	assert identical(x.__argc_max__, 2);
 	assert x.__globals__ === glob;
+
+	/* Modifying globals will affect the jit function,
+	 * because `bar' was linked as a global variable. */
+	assert identical(x(), "foobar");
+	glob["bar"] = 1234;
+	assert identical(x(), 1234);
+
 }
 
 /* C-style cast expressions */
@@ -310,6 +322,8 @@ for (local typ: { Tuple, List, Dict, HashSet }) {
 		r'import("deemon").{typ}();',
 //		r'local x = import("deemon").{typ}; x()', /* Not allowed! */
 		r'local x = import("deemon").{typ}; x();',
+		r'global x = import("deemon").{typ}; x();',
+		r'x = import("deemon").{typ}; x();',
 		/* NOTE: Double-`{{' and `}}' is only here because that's how
 		 *       `{' and `}' characters are escaped in string.format() */
 		r'({{ local x = import("deemon").{typ}; x(); }})',
@@ -371,8 +385,10 @@ assert identical(try ({ exec(r'try { throw "1"; } catch (...) { throw "2"; }'); 
 			in_finally = false;
 		}", globals: glob)
 	catch (e...) e;
-	/* Ensure that the finally-block */
+	/* Ensure that the finally-block was executed correctly */
 	assert identical(glob["in_finally"], true);
+	/* Ensure that the outer catch() overwrote the `return "OK"' */
+	assert identical(res, "Error");
 }
 
 /* Make sure that return-in-catch causes the exception to be handled */
@@ -397,8 +413,8 @@ assert exec(r';') is none;
 assert exec(r'{}') == [];
 assert exec(r';{}') is none;
 
-/* Make sure that both the deemon core compiler, as well as the JIT compiler
- * get the whole cast-vs-in/is/as  */
+/* Make sure that both the deemon core compiler, as well
+ * as the JIT compiler get the whole cast-vs-in/is/as */
 assert 10 is int;
 assert 10 in [10];
 assert 10 !is none;
@@ -476,12 +492,12 @@ assert exec(r'(10) !!!in [11]');
  *                                     locl: { "x" },
  *                                     body: Foreach(iter: Variable("x"),
  *                                                   seq:  Variable("bar"),
- *                                                   body: Yield(expr: Variable("x")))),
+ *                                                   body: Yield(expr: Sequence({})))),
  *                      args: Constant(Tuple {})),
  *             ff: Sequence({ Variable("baz") }))
  *       })
  *   Or in other words:
- *       { foo ? []{ for (local x: bar) yield x; }() : { baz } }
+ *       { foo ? []{ for (local x: bar) yield {}; }() : { baz } }
  *
  *   Line #2 should be parsed as:
  *       { if (foo) { for (local x: bar); } else { baz; }; }
@@ -502,6 +518,8 @@ assert exec(r'(10) !!!in [11]');
  *   The JIT compiler could fairly easily fix this problem by pre-scanning every
  *   hybrid construct ahead of time in order to determine if it's a statement, or
  *   if it's an expression, before actually committing to evaluating only after.
+ *   Though this would still introduce a lot of (usually completely unnecessary)
+ *   overhead.
  */
 {
 	local a = ({ if (true) { } else { 42; } });

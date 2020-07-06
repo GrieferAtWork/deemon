@@ -39,7 +39,6 @@ DECL_BEGIN
 #define Dee_rodict_object rodict_object
 #define RODICT_HASHST     Dee_RODICT_HASHST
 #define RODICT_HASHNX     Dee_RODICT_HASHNX
-#define RODICT_HASHPT     Dee_RODICT_HASHPT
 #define RODICT_HASHIT     Dee_RODICT_HASHIT
 #endif /* DEE_SOURCE */
 
@@ -101,8 +100,7 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringLen(DeeObject *
 
 /* Hash-iteration control. */
 #define Dee_RODICT_HASHST(self, hash)  ((hash) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask)
-#define Dee_RODICT_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define Dee_RODICT_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_RODICT_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_RODICT_HASHIT(self, i)     (((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask))
 
 

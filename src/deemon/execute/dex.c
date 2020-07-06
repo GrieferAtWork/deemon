@@ -173,7 +173,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 		        sym->ds_obj, sym->ds_name, DeeString_STR(input_file));
 		hash    = Dee_HashStr(sym->ds_name);
 		perturb = i = hash & bucket_mask;
-		for (;; i = MODULE_HASHNX(i, perturb), MODULE_HASHPT(perturb)) {
+		for (;; MODULE_HASHNX(i, perturb)) {
 			struct module_symbol *target = &modsym[i & bucket_mask];
 			if (target->ss_name)
 				continue;

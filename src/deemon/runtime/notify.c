@@ -161,8 +161,7 @@ PRIVATE size_t               notify_mask = 0;
 PRIVATE struct notify_entry *notify_list = (struct notify_entry *)empty_notifications;
 
 #define NOTIFY_HASHST(hash)        ((hash) & notify_mask)
-#define NOTIFY_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define NOTIFY_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define NOTIFY_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define NOTIFY_HASHIT(i)           (notify_list + ((i) & notify_mask))
 
 
@@ -209,7 +208,7 @@ notify_rehash(int sizedir) {
 			if (!iter->nh_name || iter->nh_func == &dummy_notify)
 				continue;
 			perturb = i = iter->nh_hash & new_mask;
-			for (;; i = NOTIFY_HASHNX(i, perturb), NOTIFY_HASHPT(perturb)) {
+			for (;; NOTIFY_HASHNX(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (!item->nh_name)
 					break; /* Empty slot found. */
@@ -258,7 +257,7 @@ again_lock:
 again:
 	first_dummy = NULL;
 	perturb = i = NOTIFY_HASHST(hash);
-	for (;; i = NOTIFY_HASHNX(i, perturb), NOTIFY_HASHPT(perturb)) {
+	for (;; NOTIFY_HASHNX(i, perturb)) {
 		struct notify_entry *entry = NOTIFY_HASHIT(i);
 		if (!entry->nh_name) {
 			if (!first_dummy)
@@ -326,7 +325,7 @@ DeeNotify_EndListen(uint16_t cls, DeeObject *__restrict name,
 	if unlikely(!notify_used)
 		goto not_found;
 	perturb = i = hash & notify_mask;
-	for (;; i = NOTIFY_HASHNX(i, perturb), NOTIFY_HASHPT(perturb)) {
+	for (;; NOTIFY_HASHNX(i, perturb)) {
 		struct notify_entry *entry = NOTIFY_HASHIT(i);
 		if (!entry->nh_name)
 			goto not_found; /* Never registered. */
@@ -380,7 +379,7 @@ again:
 	mask    = notify_mask;
 	list    = notify_list;
 	perturb = i = name_hash & mask;
-	for (;; i = NOTIFY_HASHNX(i, perturb), NOTIFY_HASHPT(perturb)) {
+	for (;; NOTIFY_HASHNX(i, perturb)) {
 		struct notify_entry *entry = NOTIFY_HASHIT(i);
 		if (!entry->nh_name)
 			break;

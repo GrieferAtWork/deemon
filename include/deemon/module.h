@@ -139,7 +139,6 @@ DECL_BEGIN
 #define MODULE_FDIDINIT           Dee_MODULE_FDIDINIT
 #define MODULE_HASHST             Dee_MODULE_HASHST
 #define MODULE_HASHNX             Dee_MODULE_HASHNX
-#define MODULE_HASHPT             Dee_MODULE_HASHPT
 #define MODULE_HASHIT             Dee_MODULE_HASHIT
 #define DEC_FNORMAL               Dee_DEC_FNORMAL
 #define DEC_FDISABLE              Dee_DEC_FDISABLE
@@ -303,8 +302,7 @@ struct Dee_module_object {
 	                                            * This is where module symbol names are stored and also used to
 	                                            * implement symbol access by name at runtime. */
 #define Dee_MODULE_HASHST(self, hash)  ((hash) & ((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketm)
-#define Dee_MODULE_HASHNX(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define Dee_MODULE_HASHPT(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_MODULE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define Dee_MODULE_HASHIT(self, i)     (((DeeModuleObject *)Dee_REQUIRES_OBJECT(self))->mo_bucketv + ((i) & ((DeeModuleObject *)(self))->mo_bucketm))
 	DREF DeeModuleObject *const *mo_importv;   /* [1..1][const_if(MODULE_FDIDLOAD)][0..rs_importc][lock(MODULE_FLOADING)][const_if(MODULE_FDIDLOAD)][owned] Vector of other modules imported by this one. */
 	DREF DeeObject             **mo_globalv;   /* [0..1][lock(mo_lock)][0..mo_globalc][valid_if(MODULE_FDIDLOAD)][owned] Vector of module-private global variables. */

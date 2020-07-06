@@ -59,7 +59,7 @@ NLen(DeeType_GetCachedAttr)(DeeTypeObject *tp_self, DeeObject *self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -132,7 +132,7 @@ NLen(DeeType_GetCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -247,7 +247,7 @@ NLen(DeeType_GetCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -323,7 +323,7 @@ NLen(DeeType_BoundCachedAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -394,7 +394,7 @@ NLen(DeeType_BoundCachedClassAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -475,7 +475,7 @@ NLen(DeeType_BoundCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -519,7 +519,7 @@ NLen(DeeType_HasCachedAttr)(DeeTypeObject *__restrict tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -543,7 +543,7 @@ NLen(DeeType_HasCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -571,7 +571,7 @@ NLen(DeeType_DelCachedAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -640,7 +640,7 @@ NLen(DeeType_DelCachedClassAttr)(DeeTypeObject *__restrict tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -719,7 +719,7 @@ NLen(DeeType_DelCachedInstanceAttr)(DeeTypeObject *__restrict tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -768,7 +768,7 @@ NLen(DeeType_SetCachedAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -838,7 +838,7 @@ NLen(DeeType_SetCachedClassAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -918,7 +918,7 @@ NLen(DeeType_SetCachedInstanceAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -968,7 +968,7 @@ NLen(DeeType_SetBasicCachedAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1017,7 +1017,7 @@ NLen(DeeType_SetBasicCachedClassAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1074,7 +1074,7 @@ NLen(DeeType_SetBasicCachedInstanceAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1118,7 +1118,7 @@ NLen(DeeType_CallCachedAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1231,7 +1231,7 @@ NLen(DeeType_CallCachedClassAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1389,7 +1389,7 @@ NLen(DeeType_CallCachedInstanceAttr)(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1503,7 +1503,7 @@ S(DeeType_CallCachedAttrKw,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1603,7 +1603,7 @@ S(DeeType_CallCachedClassAttrKw,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1792,7 +1792,7 @@ S(DeeType_CallCachedInstanceAttrKw,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -1925,7 +1925,7 @@ S(DeeType_CallCachedAttrTuple,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -2008,7 +2008,7 @@ S(DeeType_CallCachedClassAttrTuple,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -2168,7 +2168,7 @@ S(DeeType_CallCachedInstanceAttrTuple,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -2278,7 +2278,7 @@ S(DeeType_CallCachedAttrTupleKw,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -2375,7 +2375,7 @@ S(DeeType_CallCachedClassAttrTupleKw,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -2570,7 +2570,7 @@ S(DeeType_CallCachedInstanceAttrTupleKw,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -2750,7 +2750,7 @@ S(DeeType_VCallCachedAttrf,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -2833,7 +2833,7 @@ S(DeeType_VCallCachedClassAttrf,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -3026,7 +3026,7 @@ S(DeeType_VCallCachedInstanceAttrf,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		if (item->mcs_type == MEMBERCACHE_UNUSED)
 			break;
@@ -3176,7 +3176,7 @@ DeeType_FindCachedAttr(DeeTypeObject *tp_self, DeeObject *instance,
 	if unlikely(!tp_self->tp_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_cache, rules->alr_hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_cache, i);
 		char const *doc;
 		uint16_t perm;
@@ -3313,7 +3313,7 @@ DeeType_FindCachedClassAttr(DeeTypeObject *tp_self,
 	if unlikely(!tp_self->tp_class_cache.mc_table)
 		goto done;
 	perturb = i = MEMBERCACHE_HASHST(&tp_self->tp_class_cache, rules->alr_hash);
-	for (;; i = MEMBERCACHE_HASHNX(i, perturb), MEMBERCACHE_HASHPT(perturb)) {
+	for (;; MEMBERCACHE_HASHNX(i, perturb)) {
 		struct membercache_slot *item = MEMBERCACHE_HASHIT(&tp_self->tp_class_cache, i);
 		char const *doc;
 		uint16_t perm;

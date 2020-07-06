@@ -138,8 +138,7 @@ DeeHashSet_NewItemsInherited(size_t num_items,
  *       does for its dictionary lookup.
  */
 #define DeeHashSet_HashSt(self, hash)  ((hash) & ((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->s_mask)
-#define DeeHashSet_HashNx(hs, perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define DeeHashSet_HashPt(perturb)     ((perturb) >>= 5) /* This `5' is tunable. */
+#define DeeHashSet_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
 #define DeeHashSet_HashIt(self, i)     (((DeeHashSetObject *)Dee_REQUIRES_OBJECT(self))->s_elem + ((i) & ((DeeHashSetObject *)(self))->s_mask))
 
 

@@ -102,10 +102,9 @@ struct Dee_membercache_slot {
 #define MEMBERCACHE_ENDREAD(self)  (void)0
 #define MEMBERCACHE_ENDWRITE(self) (void)0
 #endif /* CONFIG_NO_THREADS */
-#define MEMBERCACHE_HASHST(self,hash)  ((hash) & (self)->mc_mask)
-#define MEMBERCACHE_HASHNX(hs,perturb) (((hs) << 2) + (hs) + (perturb) + 1)
-#define MEMBERCACHE_HASHPT(perturb)    ((perturb) >>= 5) /* This `5' is tunable. */
-#define MEMBERCACHE_HASHIT(self,i)     ((self)->mc_table+((i) & (self)->mc_mask))
+#define MEMBERCACHE_HASHST(self, hash)  ((hash) & (self)->mc_mask)
+#define MEMBERCACHE_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define MEMBERCACHE_HASHIT(self, i)     ((self)->mc_table+((i) & (self)->mc_mask))
 #endif /* DEE_SOURCE */
 
 

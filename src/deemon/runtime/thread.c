@@ -277,7 +277,7 @@ deepassoc_rehash(DeeThreadObject *__restrict self) {
 			perturb = i = (Dee_HashPointer(iter->de_old) ^
 			               Dee_HashPointer(Dee_TYPE(iter->de_new))) &
 			              new_mask;
-			for (;; i = DEEPASSOC_HASHNX(i, perturb), DEEPASSOC_HASHPT(perturb)) {
+			for (;; DEEPASSOC_HASHNX(i, perturb)) {
 				item = &new_vector[i & new_mask];
 				if (!item->de_old)
 					break; /* Empty slot found. */
@@ -316,7 +316,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 again:
 	mask    = self->t_deepassoc.da_mask;
 	perturb = i = hash & mask;
-	for (;; i = DEEPASSOC_HASHNX(i, perturb), DEEPASSOC_HASHPT(perturb)) {
+	for (;; DEEPASSOC_HASHNX(i, perturb)) {
 		struct deep_assoc_entry *item = &self->t_deepassoc.da_list[i & mask];
 		if (!item->de_old) {
 			if (self->t_deepassoc.da_used + 1 >= self->t_deepassoc.da_mask)
@@ -356,7 +356,7 @@ deepcopy_lookup(DeeThreadObject *thread_self, DeeObject *old_object,
 	uintptr_t hash = (Dee_HashPointer(old_object) ^
 	                  Dee_HashPointer(new_type));
 	perturb = i = DEEPASSOC_HASHST(&thread_self->t_deepassoc, hash);
-	for (;; i = DEEPASSOC_HASHNX(i, perturb), DEEPASSOC_HASHPT(perturb)) {
+	for (;; DEEPASSOC_HASHNX(i, perturb)) {
 		struct deep_assoc_entry *item;
 		item = DEEPASSOC_HASHIT(&thread_self->t_deepassoc, i);
 		if (item->de_old != old_object) {
