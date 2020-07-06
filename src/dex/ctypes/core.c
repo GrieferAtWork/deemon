@@ -627,8 +627,7 @@ DeeSType_Pointer(DeeSTypeObject *__restrict self) {
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_pointer &&
-				         Dee_IncrefIfNotZero((DeeObject *)self->st_pointer))
-			{
+			            Dee_IncrefIfNotZero((DeeObject *)self->st_pointer)) {
 				DREF DeePointerTypeObject *new_result;
 				new_result = self->st_pointer;
 				rwlock_endwrite(&self->st_cachelock);
@@ -658,8 +657,7 @@ DeeSType_LValue(DeeSTypeObject *__restrict self) {
 			rwlock_write(&self->st_cachelock);
 			/* Check if the type was created due to race conditions. */
 			if unlikely(self->st_lvalue &&
-				         Dee_IncrefIfNotZero((DeeObject *)self->st_lvalue))
-			{
+			            Dee_IncrefIfNotZero((DeeObject *)self->st_lvalue)) {
 				DREF DeeLValueTypeObject *new_result;
 				new_result = self->st_lvalue;
 				rwlock_endwrite(&self->st_cachelock);

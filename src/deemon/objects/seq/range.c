@@ -225,8 +225,7 @@ again:
 	/* Save the new index object. */
 	rwlock_write(&self->ri_lock);
 	if unlikely(self->ri_index != old_index ||
-		         self->ri_first != is_first)
-	{
+	            self->ri_first != is_first) {
 		rwlock_endwrite(&self->ri_lock);
 		Dee_Decref(new_index);
 		goto again;

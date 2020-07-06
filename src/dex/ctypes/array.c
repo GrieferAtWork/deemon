@@ -366,8 +366,7 @@ array_delrange(DeeArrayTypeObject *tp_self, void *base,
 	if unlikely(end < 0)
 		end += tp_self->at_count;
 	if unlikely((size_t)begin >= tp_self->at_count ||
-		         (size_t)begin >= (size_t)end)
-	{
+	            (size_t)begin >= (size_t)end) {
 		/* Empty range . */
 	} else {
 		size_t item_size;
@@ -418,8 +417,7 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 	if unlikely(!iter)
 		goto err;
 	if unlikely((size_t)begin >= tp_self->at_count ||
-		         (size_t)begin >= (size_t)end)
-	{
+	            (size_t)begin >= (size_t)end) {
 		/* Empty range. */
 	} else {
 		size_t item_size;

@@ -3478,8 +3478,7 @@ code_compile_argrefs(struct ast *__restrict code_ast, uint16_t flags,
 	ASSERT(prefv);
 	/* Check if the function even qualifies for argrefs. */
 	if unlikely(current_basescope->bs_argc_min < current_basescope->bs_argc_max ||
-		         (current_basescope->bs_flags & CODE_FVARARGS))
-	{
+	            (current_basescope->bs_flags & CODE_FVARARGS)) {
 		*pargc = 0;
 		*pargv = NULL;
 		return code_compile(code_ast, flags, false, prefc, prefv);

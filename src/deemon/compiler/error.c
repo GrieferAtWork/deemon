@@ -664,8 +664,7 @@ handle_compiler_warning(struct ast_loc *loc,
 		       file->f_prev)
 			file = file->f_prev;
 		if unlikely(file->f_kind == TPPFILE_KIND_EXPLICIT ||
-			         file == &TPPFile_Empty)
-		{
+		            file == &TPPFile_Empty) {
 			/* Special case: The input file is an explicit file. */
 			error->ce_locs.cl_col  = 0;
 			error->ce_locs.cl_line = 0;

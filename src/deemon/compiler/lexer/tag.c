@@ -443,8 +443,7 @@ again_compiler_subtag:
 							goto do_next_compiler_tag;
 					}
 					if likely(tok == TOK_STRING ||
-						       (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS)))
-					{
+					          (tok == TOK_CHAR && !HAS(EXT_CHARACTER_LITERALS))) {
 						if unlikely(append_decl_string())
 							goto err;
 					} else {

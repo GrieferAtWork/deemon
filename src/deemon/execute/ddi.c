@@ -37,11 +37,12 @@ DECL_BEGIN
 PRIVATE NONNULL((1)) int DCALL
 get_sleb(uint8_t **__restrict pip) {
 	int result, is_neg;
-	uint8_t *ip      = *pip;
-	uint8_t byte     = *ip++;
-	uint8_t num_bits = 6;
-	is_neg           = (byte & 0x40);
-	result           = byte & 0x3f;
+	uint8_t *ip, byte, num_bits;
+	ip       = *pip;
+	byte     = *ip++;
+	num_bits = 6;
+	is_neg   = (byte & 0x40);
+	result   = byte & 0x3f;
 	while (byte & 0x80) {
 		byte = *ip++;
 		result |= (byte & 0x7f) << num_bits;
@@ -55,9 +56,11 @@ get_sleb(uint8_t **__restrict pip) {
 
 PRIVATE NONNULL((1)) unsigned int DCALL
 get_uleb(uint8_t **__restrict pip) {
-	unsigned int result = 0;
-	uint8_t *ip         = *pip;
-	uint8_t byte, num_bits = 0;
+	unsigned int result;
+	uint8_t *ip, byte, num_bits;
+	result   = 0;
+	ip       = *pip;
+	num_bits = 0;
 	do {
 		byte = *ip++;
 		result |= (byte & 0x7f) << num_bits;

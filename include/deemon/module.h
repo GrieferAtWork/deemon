@@ -222,7 +222,7 @@ typedef struct Dee_module_path_object DeeModulePathObject;
 struct Dee_module_symbol {
 	/* For the sake of DEX modules, `ss_doc' should be allowed to be a `char const *', with
 	 * one of the symbol flags being used to indicate if it's actually an object, which must
-	 * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc,DeeStringObject,s_str))' */
+	 * be cleaned by `Dee_Decref(COMPILER_CONTAINER_OF(ss_doc, DeeStringObject, s_str))' */
 	char const                *ss_name;   /* [0..1] Name of this symbol (NULL marks the sentinel) */
 	char const                *ss_doc;    /* [0..1] An optional documentation string. */
 	Dee_hash_t                 ss_hash;   /* [== Dee_HashStr(ss_name)] Hash-value of this symbol. */
@@ -250,15 +250,15 @@ struct Dee_module_symbol {
 	(memcmp((x)->ss_name, name, (size) * sizeof(char)) == 0 && \
 	 (x)->ss_name[size] == 0)
 #define Dee_MODULE_SYMBOL_GETNAMESTR(x) ((x)->ss_name)
-#define Dee_MODULE_SYMBOL_GETNAMELEN(x) (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name,DeeStringObject,s_str)) : strlen((x)->ss_name))
+#define Dee_MODULE_SYMBOL_GETNAMELEN(x) (((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : strlen((x)->ss_name))
 #define Dee_MODULE_SYMBOL_GETDOCSTR(x)  ((x)->ss_doc)
-#define Dee_MODULE_SYMBOL_GETDOCLEN(x)  (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : strlen((x)->ss_doc))
+#define Dee_MODULE_SYMBOL_GETDOCLEN(x)  (((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeString_SIZE(COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str)) : strlen((x)->ss_doc))
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getnameobj(struct Dee_module_symbol *__restrict self);
 INTDEF WUNUSED DREF struct Dee_string_object *DCALL module_symbol_getdocobj(struct Dee_module_symbol *__restrict self);
 #else /* CONFIG_BUILDING_DEEMON */
-#define Dee_module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_name,DeeStringObject,s_str)) : DeeString_NewWithHash((x)->ss_name,(x)->ss_hash)))
-#define Dee_module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_doc,DeeStringObject,s_str)) : DeeString_NewUtf8((x)->ss_doc,strlen((x)->ss_doc),STRING_ERROR_FIGNORE)))
+#define Dee_module_symbol_getnameobj(x)   ((DeeStringObject *)(((x)->ss_flags & MODSYM_FNAMEOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_name, DeeStringObject, s_str)) : DeeString_NewWithHash((x)->ss_name, (x)->ss_hash)))
+#define Dee_module_symbol_getdocobj(x)    ((DeeStringObject *)(((x)->ss_flags & MODSYM_FDOCOBJ) ? DeeObject_NewRef((DeeObject *)COMPILER_CONTAINER_OF((x)->ss_doc, DeeStringObject, s_str)) : DeeString_NewUtf8((x)->ss_doc, strlen((x)->ss_doc), Dee_STRING_ERROR_FIGNORE)))
 #ifdef DEE_SOURCE
 #define module_symbol_getnameobj   Dee_module_symbol_getnameobj
 #define module_symbol_getdocobj    Dee_module_symbol_getdocobj
@@ -1017,8 +1017,8 @@ DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_
  * >> char const *name = "util";
  * >> // Opens:
  * >> //   - /usr/lib/deemon/lib/
- * >> DeeModule_OpenInPath(path,strlen(path),
- * >>                      name,strlen(name),
+ * >> DeeModule_OpenInPath(path, strlen(path),
+ * >>                      name, strlen(name),
  * >>                      NULL,NULL,
  * >>                      Dee_MODULE_OPENINPATH_FTHROWERROR);
  * @return: * :        The module that was imported.

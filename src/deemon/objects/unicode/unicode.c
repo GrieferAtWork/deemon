@@ -1640,8 +1640,7 @@ read_text_i:
 			++i;
 			low_value = text[i];
 			if unlikely(low_value < UTF16_LOW_SURROGATE_MIN ||
-				         low_value > UTF16_LOW_SURROGATE_MAX)
-			{
+			            low_value > UTF16_LOW_SURROGATE_MAX) {
 				/* Invalid low surrogate. */
 				if (error_mode & STRING_ERROR_FREPLAC) {
 					text[i - 1] = '?';
@@ -1814,8 +1813,7 @@ continue_at_i:
 			++i;
 			low_value = text[i];
 			if unlikely(low_value < UTF16_LOW_SURROGATE_MIN ||
-				         low_value > UTF16_LOW_SURROGATE_MAX)
-			{
+			            low_value > UTF16_LOW_SURROGATE_MAX) {
 				/* Invalid low surrogate. */
 				--i;
 				length -= 2;
@@ -4020,9 +4018,9 @@ again_flush:
 	/* Print ASCII text. */
 	if (flush_start != text) {
 		if unlikely(unicode_printer_print8(me,
-			                                (uint8_t *)flush_start,
-			                                (size_t)(text - flush_start)) < 0)
-		goto err;
+		                                   (uint8_t *)flush_start,
+		                                   (size_t)(text - flush_start)) < 0)
+			goto err;
 	}
 	if (textlen) {
 		uint8_t seqlen;
@@ -4078,9 +4076,9 @@ again_flush:
 	/* Print pure UTF-16 text. */
 	if (flush_start != text) {
 		if unlikely(unicode_printer_print16(self,
-			                                 (uint16_t *)flush_start,
-			                                 (size_t)(text - flush_start)) < 0)
-		goto err;
+		                                    (uint16_t *)flush_start,
+		                                    (size_t)(text - flush_start)) < 0)
+			goto err;
 	}
 	if (textlen) {
 		uint32_t ch32;
@@ -5842,8 +5840,8 @@ DeeString_DecodeBackslashEscaped(struct unicode_printer *__restrict printer,
 			++iter;
 			continue;
 		}
-		if (unicode_printer_print(printer, flush_start,
-		                          (size_t)(iter - flush_start)) < 0)
+		if unlikely(unicode_printer_print(printer, flush_start,
+		                                  (size_t)(iter - flush_start)) < 0)
 			goto err;
 		++iter;
 		ch = *iter++;
@@ -6005,8 +6003,8 @@ continue_or_replace:
 		flush_start = iter;
 	}
 	/* Flush the remainder. */
-	if (unicode_printer_print(printer, flush_start,
-	                          (size_t)(end - flush_start)) < 0)
+	if unlikely(unicode_printer_print(printer, flush_start,
+	                                  (size_t)(end - flush_start)) < 0)
 		goto err;
 	return 0;
 err:
@@ -6097,7 +6095,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	if likely((uint8_t)ch < 0x80)
 		return bytes_printer_putb(self, (uint8_t)ch);
 	/* Print the character as a UTF-8 string. */
-	return bytes_printer_print(self, &ch, 1) < 0 ? -1 : 0;
+	return unlikely(bytes_printer_print(self, &ch, 1) < 0) ? -1 : 0;
 }
 
 PUBLIC WUNUSED NONNULL((1, 3)) dssize_t DCALL

@@ -1440,7 +1440,7 @@
 
 /* A second, smaller bytecode interpreter exists who's sole purpose is
  * to translate text addresses to source file/line/col/etc. information.
- * During assembly, this information is generated similarly to code found in
+ * During assembling, this information is generated similarly to code found in
  * text sections, though it actually uses its own instructions and interpreter.
  * This subsystem is referred to as DDI (DeemonDebugInformation)
  * Since the main purpose of DDI instrumentation is to add constants to its
@@ -1452,9 +1452,8 @@
  * >> goto continue_interpretation;
  * The interpreter has the following registers (`int' referring to any arbitrarily precise integer):
  *   - unsigned int      uip;        // The current user instruction. (`code_addr_t')
- *   - unsigned int      path;       // The current path number. (NOTE: ZERO indicates no path and all other values
- *                                   //                                 are used as index-1 in the `d_path_names'
- *                                   //                                 vector of the associated `DeeDDIObject')
+ *   - unsigned int      path;       // The current path number. (NOTE: ZERO indicates no path and all other values are
+ *                                   //                                 used as index - 1 with `DeeCode_GetDDIString()')
  *   - unsigned int      file;       // The current file number.
  *   - unsigned int      name;       // The current name number. (function name)
  *   - unsigned int      usp;        // The current stack alignment/depth at `uip'.
@@ -1475,6 +1474,7 @@
  * >> for (;;) {
  * >>     uint8_t op = *code++;
  * >>     switch (op) {
+ * >>
  * >>     case DDI_STOP:
  * >>         return is_enumerating_code_points ? enumeration_done() : ip_no_found();
  * >>
@@ -1514,14 +1514,14 @@
  *                        must be negated: `final_result = -result';
  *                        This bit can only appear in the first byte.
  *    BYTE[0]     & 0x3f: Set the result value: `result = BYTE[0] & 0x3f'
- *    BYTE[x > 0] & 0x7f: Or' this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << (x * 7) - 1)'
+ *    BYTE[x > 0] & 0x7f: Or' this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << ((x * 7) - 1))'
  *    BYTE[x]     & 0x80: If this bit is set, also parse `BYTE[x+1]'
  *                        If this bit is not set, stop parsing.
  * READ_ULEB():
  *    A function for reading an unsigned, arbitrary-precision integer from
  *    the input stream. (NOTE: `result' must be pre-initialized to `0')
  *    The integer is encoded as follows:
- *    BYTE[x] & 0x7f: Or this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << x * 7)'
+ *    BYTE[x] & 0x7f: Or this mask to the result value: `result = result | ((BYTE[x] & 0x7f) << (x * 7))'
  *    BYTE[x] & 0x80: If this bit is set, also parse `BYTE[x+1]'
  *                    If this bit is not set, stop parsing.
  * HINT: When analyzing DDI information, you should realize that there is
@@ -1542,7 +1542,7 @@
 #define DDI_SETNAME       0x06 /* `cur_state.name = READ_ULEB();' */
 #define DDI_INCUSP        0x07 /* `++usp;' */
 #define DDI_DECUSP        0x08 /* `sp_names[usp] = UNBOUND; --usp;' */
-#define DDI_ADDUSP        0x09 /* `usp += READ_SLEB();' NOTE: When the read offset is negative, also unbind the SP-names of all affected slots. */
+#define DDI_ADDUSP        0x09 /* `usp += READ_SLEB();' NOTE: When the read offset is negative, also unbind the sp_names[...] of all affected slots. */
 /*      DDI_              0x0a  *               --------                            - ------------------ */
 /*      DDI_              0x0b  *               --------                            - ------------------ */
 #define DDI_DEFSPNAME     0x0c /* sp_names[usp-1] = READ_ULEB(); */
@@ -1572,8 +1572,8 @@
 #define DDI_GENERIC(ip, ln) (((ip) << 4)|(ln))
 
 #define DDI_INSTRLEN_MAX  3 /* Technically, instructions can be larger than this,
-                             * however this is used for the size of padding-data
-                             * that is appended at the end of DEC-based DDI text
+                             * however this is used for the size of padding 0-bytes
+                             * that are appended at the end of DEC-based DDI text
                              * in order to ensure proper text termination.
                              * And 2 consecutive zero-bytes can always terminate
                              * any SLEB/ULEB, while also defining the `DDI_STOP'

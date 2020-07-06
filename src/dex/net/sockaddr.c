@@ -1345,8 +1345,7 @@ SockAddr_FromArgv(SockAddr *__restrict self,
 	if (argc == 1 && DeeObject_InstanceOf(argv[0], &DeeSockAddr_Type)) {
 		arg0 = argv[0];
 		if unlikely(family != AF_AUTO &&
-			         family != ((DeeSockAddrObject *)arg0)->sa_addr.sa.sa_family)
-		{
+		            family != ((DeeSockAddrObject *)arg0)->sa_addr.sa.sa_family) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unexpected Address Family %K (wanted %K, but got %k)",
 			                sock_getafnameorid(((DeeSockAddrObject *)arg0)->sa_addr.sa.sa_family),

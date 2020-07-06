@@ -70,8 +70,7 @@ decl_ast_copy(struct decl_ast *__restrict self,
 			goto err;
 		for (i = 0; i < self->da_alt.a_altc; ++i) {
 			if unlikely(decl_ast_copy(&new_vec[i],
-				                       &self->da_alt.a_altv[i]))
-			{
+			                          &self->da_alt.a_altv[i])) {
 				while (i--)
 					decl_ast_fini(&new_vec[i]);
 				Dee_Free(new_vec);
@@ -1427,8 +1426,7 @@ decl_ast_parse_for_symbol(struct symbol *__restrict self) {
 		if unlikely(decl_ast_parse(&decl))
 			goto err;
 		if unlikely(!decl_ast_equal(&self->s_decltype, &decl) &&
-			         WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, self))
-		{
+		            WARN(W_SYMBOL_TYPE_DECLARATION_CHANGED, self)) {
 			decl_ast_fini(&decl);
 			goto err;
 		}

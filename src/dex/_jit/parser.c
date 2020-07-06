@@ -549,8 +549,7 @@ err_rbrck_after_lbrck:
 					JITLexer_Yield(self);
 					result = OPERATOR_MOVEASSIGN;
 					if unlikely(self->jl_tok != '=' &&
-						         self->jl_tok != TOK_COLLON_EQUAL)
-					{
+					            self->jl_tok != TOK_COLLON_EQUAL) {
 						DeeError_Throwf(&DeeError_SyntaxError,
 						                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
 						                JITLexer_TokLen(self),

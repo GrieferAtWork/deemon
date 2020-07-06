@@ -60,7 +60,7 @@
 
 /* The number of attributes enumerated at once before execution will switch
  * back to user-code, yielding the new attributes until that buffer is exhausted.
- * This is done to mitigate any overhead that doing setjmp/longjmp may have. */
+ * This is done to mitigate any overhead that calls to setjmp/longjmp may cause. */
 #define CONFIG_LONGJMP_ENUMATTR_CLUSTER 16
 
 #if defined(__x86_64__) && defined(_MSC_VER)
@@ -120,7 +120,7 @@ struct Dee_attribute_info {
 struct Dee_attribute_object {
 	/* Wrapper object for attribute information provided to `denum_t' */
 	Dee_OBJECT_HEAD
-	char const               *a_name; /* [1..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(.,DeeStringObject,s_str)))]
+	char const               *a_name; /* [1..1][if(a_perm & ATTR_DOCOBJ,DREF(COMPILER_CONTAINER_OF(., DeeStringObject, s_str)))]
 	                                   * The name of the attribute. */
 	struct Dee_attribute_info a_info; /* [const] Attribute information. */
 };

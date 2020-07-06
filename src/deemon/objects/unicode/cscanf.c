@@ -492,8 +492,7 @@ done:
 	rwlock_write(&self->si_lock);
 	/* Check if another thread extracted a value in the mean time. */
 	if unlikely(self->si_datiter != orig_data ||
-		         self->si_fmtiter != orig_format)
-	{
+	            self->si_fmtiter != orig_format) {
 		/* Race condition! -> Loop back and try to read a value once again. */
 		rwlock_endwrite(&self->si_lock);
 		if (ITER_ISOK(result))

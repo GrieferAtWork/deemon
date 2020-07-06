@@ -273,8 +273,7 @@ do_iter:
 		ASSERT(pnext > DeeTuple_ELEM(self->c_cat));
 		ASSERT(pnext <= DeeTuple_ELEM(self->c_cat) + DeeTuple_SIZE(self->c_cat));
 		if unlikely(pnext == (DeeTuple_ELEM(self->c_cat) +
-			                   DeeTuple_SIZE(self->c_cat)))
-		{
+		                      DeeTuple_SIZE(self->c_cat))) {
 			/* Fully exhausted. */
 			rwlock_endwrite(&self->c_lock);
 			return ITER_DONE;

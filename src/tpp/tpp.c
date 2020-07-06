@@ -9530,9 +9530,9 @@ create_int_file:
 			goto create_int_file;
 #endif /* !NO_EXTENSION_COUNTER */
 
-#if !defined(NO_EXTENSION_CLANG_FEATURES) || \
-    !defined(NO_EXTENSION_TPP_UNIQUE) ||     \
-    !defined(NO_EXTENSION_TPP_COUNTER)
+#if (!defined(NO_EXTENSION_CLANG_FEATURES) || \
+     !defined(NO_EXTENSION_TPP_UNIQUE) ||     \
+     !defined(NO_EXTENSION_TPP_COUNTER))
 		{ /* Check various attributes of keyword. */
 			char *keyword_begin, *keyword_end, *file_end, *file_pos;
 			size_t keyword_rawsize, keyword_realsize;
@@ -9792,8 +9792,8 @@ create_int_file:
 		}	goto create_int_file;
 #endif /* !NO_EXTENSION_CLANG_FEATURES || !NO_EXTENSION_TPP_UNIQUE || !NO_EXTENSION_TPP_COUNTER */
 
-#if !defined(NO_EXTENSION_HAS_INCLUDE) || \
-    !defined(NO_EXTENSION_TPP_LOAD_FILE)
+#if (!defined(NO_EXTENSION_HAS_INCLUDE) || \
+     !defined(NO_EXTENSION_TPP_LOAD_FILE))
 		{ /* Check various attributes of include files. */
 			tok_t function;
 			int mode;
@@ -9896,8 +9896,8 @@ create_int_file:
 		}	break;
 #endif /* !NO_EXTENSION_HAS_INCLUDE || !NO_EXTENSION_TPP_LOAD_FILE */
 
-#if !defined(NO_EXTENSION_DATEUTILS) || \
-    !defined(NO_EXTENSION_TIMEUTILS)
+#if (!defined(NO_EXTENSION_DATEUTILS) || \
+     !defined(NO_EXTENSION_TIMEUTILS))
 		{
 			tok_t mode;
 			time_t timenow;

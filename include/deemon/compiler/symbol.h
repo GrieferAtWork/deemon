@@ -838,7 +838,7 @@ FORCELOCAL void DCALL _priv_symbol_subbound(struct symbol *__restrict x, uint32_
 /* Clear the linkage of a given symbol `x', leaving `x->s_type',
  * as well as all type-specific fields undefined. */
 #define SYMBOL_CLEAR_WEAK(x) \
-       (symbol_fini(x),(x)->s_flag &= ~SYMBOL_FWEAK)
+       (symbol_fini(x), (x)->s_flag &= ~SYMBOL_FWEAK)
 
 /* Check if a given symbol `x' must be addressed as a reference */
 #define SYMBOL_MUST_REFERENCE(x)          \

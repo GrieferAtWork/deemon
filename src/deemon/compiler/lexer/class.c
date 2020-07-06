@@ -838,9 +838,8 @@ class_maker_pack(struct class_maker *__restrict self) {
 		}
 		/* Add the constructor as an operator to the class initializer list. */
 		if unlikely(class_maker_addoperator(self,
-			                                 OPERATOR_CONSTRUCTOR,
-			                                 constructor_function))
-		{
+		                                    OPERATOR_CONSTRUCTOR,
+		                                    constructor_function)) {
 			ast_decref(constructor_function);
 			goto err;
 		}
