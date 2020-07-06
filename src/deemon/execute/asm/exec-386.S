@@ -1718,7 +1718,7 @@ prefix_target_jt16:
 	movswl %ax, %eax
 	addl   %eax, PC /* ip += Simm16 */
 #ifndef NDEBUG
-	jno   .disp_checkip
+	jnc   .disp_checkip
 	int3   /* ASSERTION_FAILED: `ip += Simm16' did overflow. */
 #endif
 	jmp   .disp
@@ -1764,7 +1764,7 @@ prefix_target_jt:
 	movsbl %al, %eax
 	addl   %eax, PC /* ip += Simm8 */
 #ifndef NDEBUG
-	jno   .disp_checkip
+	jnc   .disp_checkip
 	int3   /* ASSERTION_FAILED: `ip += Simm8' did overflow. */
 #endif
 	jmp   .disp
@@ -1798,7 +1798,7 @@ target32_jmp:
 #endif
 	addl   %eax, PC /* ip += Simm32 */
 #ifndef NDEBUG
-	jno   .disp_checkip
+	jnc   .disp_checkip
 	int3   /* ASSERTION_FAILED: `ip += Simm32' did overflow. */
 #endif
 	jmp   .disp
@@ -7140,8 +7140,7 @@ prefix_target_push_imm16:
 
 prefix_target_push_none:
 	leal    SYM(DeeNone_Singleton), %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target_push_except:
 	movl    L_THIS_THREAD, %eax
@@ -7150,8 +7149,7 @@ prefix_target_push_except:
 	jz     .except_no_active_exception /* Check if an exception has been set. */
 	movl    ef_error(%eax), %edx
 	ASSERT_NONZERO(%edx)
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target16_push_module:
 	lodsw
@@ -7164,8 +7162,7 @@ prefix_target_push_module:
 	movl    mo_importv(%ecx), %edx
 	movl    (%edx,%eax,4), %edx
 	ASSERT_NONZERO(%edx)
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target_push_this:
 #ifndef NDEBUG
@@ -7173,19 +7170,16 @@ prefix_target_push_this:
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
 #endif
 	movl    FRAME_THIS, %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target_push_this_module:
 	LOAD_CODE(%eax)
 	movl    co_module(CODE_OR_EAX), %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target_push_this_function:
 	movl    FRAME_FUNC, %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target16_push_ref:
 	lodsw
@@ -7194,8 +7188,7 @@ prefix_target_push_ref:
 	lodsb
 1:	movl    FRAME_FUNC, %ecx
 	movl    fo_refv(%ecx,%eax,4), %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target16_push_arg:
 	lodsw
@@ -7398,8 +7391,7 @@ prefix_target_push_const:
 	movl    co_staticv(CODE_OR_ECX), %edx
 	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 #endif
 
 
@@ -7471,8 +7463,7 @@ prefix_target_push_local:
 	movl   (%ecx,%eax,4), %edx
 	testl   %edx, %edx
 	jz      99f /* Check for unbound locals. */
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 99:	pushl   %eax        /* LID */
 	ADJUST_CFA_OFFSET(4)
 	pushl   FRAME_PC /* PC */
@@ -7486,8 +7477,7 @@ prefix_target_push_local:
 
 prefix_target_dup:
 	movl    TOP, %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 prefix_target16_dup_n:
 	lodsw
 	jmp     1f
@@ -7510,8 +7500,7 @@ prefix_target_dup_n:
 	ASSERT_ABOVE_EQUAL(%edx,FRAME_STACK) /* ERROR: Stack underflow. */
 	ASSERT_BELOW(%edx,L_STACK_END) /* ERROR: Stack overflow. */
 	movl   (%edx), %edx /* Dereference the requested stack object. */
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 prefix_target_pop:
 	call    get_prefix_object
@@ -7588,12 +7577,10 @@ prefix_target_throw:
 
 prefix_target_push_true:
 	leal    SYM(Dee_FalseTrue)+8, %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 prefix_target_push_false:
 	leal    SYM(Dee_FalseTrue)+0, %edx
-	incref  %edx
-	jmp     set_prefix_object
+	jmp     set_prefix_object_incref
 
 
 
@@ -7762,20 +7749,20 @@ impl_set_prefix_table:
 	.long  invop                    /* 0xf7 : ASM_RESERVED7 */
 	.long  invop                    /* 0xf8 : ??? */
 	.long  invop                    /* 0xf9 : ??? */
-	.long  invop                    /* 0xfa : ??? */
-	.long  impl_set_prefix_stack    /* 0xfb : ASM_STACK */
-	.long  impl_set_prefix_static   /* 0xfc : ASM_STATIC */
-	.long  impl_set_prefix_extern   /* 0xfd : ASM_EXTERN */
+	.long  impl_set_prefix_stack    /* 0xfa : ASM_STACK */
+	.long  impl_set_prefix_static   /* 0xfb : ASM_STATIC */
+	.long  impl_set_prefix_extern   /* 0xfc : ASM_EXTERN */
+	.long  invop                    /* 0xfd : ??? */
 	.long  impl_set_prefix_global   /* 0xfe : ASM_GLOBAL */
 	.long  impl_set_prefix_local    /* 0xff : ASM_LOCAL */
 END(impl_set_prefix_table)
 impl_set_prefix_table_f0:
 	.long  invop                    /* 0xf0f8 : ??? */
 	.long  invop                    /* 0xf0f9 : ??? */
-	.long  invop                    /* 0xf0fa : ??? */
-	.long  impl_set_prefix16_stack  /* 0xf0fb : ASM16_STACK */
-	.long  impl_set_prefix16_static /* 0xf0fc : ASM16_STATIC */
-	.long  impl_set_prefix16_extern /* 0xf0fd : ASM16_EXTERN */
+	.long  impl_set_prefix16_stack  /* 0xf0fa : ASM16_STACK */
+	.long  impl_set_prefix16_static /* 0xf0fb : ASM16_STATIC */
+	.long  impl_set_prefix16_extern /* 0xf0fc : ASM16_EXTERN */
+	.long  invop                    /* 0xf0fd : ??? */
 	.long  impl_set_prefix16_global /* 0xf0fe : ASM16_GLOBAL */
 	.long  impl_set_prefix16_local  /* 0xf0ff : ASM16_LOCAL */
 END(impl_set_prefix_table_f0)
