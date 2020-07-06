@@ -19,23 +19,21 @@
  */
 import fs;
 final local w32 = try import("win32") catch (...) none;
+#define W32_IMPORT(name) (try w32.name catch (...) none)
 
 final global hardlink = fs.link;
-final global modulename = w32.GetModuleFileName;
-final global wmodulename = w32.GetModuleFileName;
-final global _dlldirectory = w32.GetDllDirectory;
-final global _wdlldirectory = w32.GetDllDirectory;
-final global _systemdirectory = w32.GetSystemDirectory;
-final global _wsystemdirectory = w32.GetSystemDirectory;
-final global _windowsdirectory = w32.GetWindowsDirectory;
-final global _wwindowsdirectory = w32.GetWindowsDirectory;
-final global _systemwindowsdirectory = w32.GetSystemWindowsDirectory;
-final global _wsystemwindowsdirectory = w32.GetSystemWindowsDirectory;
-final global _syswow64directory = w32.GetSystemWow64Directory;
-final global _wsyswow64directory = w32.GetSystemWow64Directory;
-final global function drives() -> w32.GetLogicalDriveStrings().rstrip("\0").split("\0");
+final global modulename = W32_IMPORT(GetModuleFileName);
+final global wmodulename = W32_IMPORT(GetModuleFileName);
+final global _dlldirectory = W32_IMPORT(GetDllDirectory);
+final global _wdlldirectory = W32_IMPORT(GetDllDirectory);
+final global _systemdirectory = W32_IMPORT(GetSystemDirectory);
+final global _wsystemdirectory = W32_IMPORT(GetSystemDirectory);
+final global _windowsdirectory = W32_IMPORT(GetWindowsDirectory);
+final global _wwindowsdirectory = W32_IMPORT(GetWindowsDirectory);
+final global _systemwindowsdirectory = W32_IMPORT(GetSystemWindowsDirectory);
+final global _wsystemwindowsdirectory = W32_IMPORT(GetSystemWindowsDirectory);
+final global _syswow64directory = W32_IMPORT(GetSystemWow64Directory);
+final global _wsyswow64directory = W32_IMPORT(GetSystemWow64Directory);
+final global function drives() -> W32_IMPORT(GetLogicalDriveStrings)().rstrip("\0").split("\0");
 final global wdrives = drives;
-
-
-
 

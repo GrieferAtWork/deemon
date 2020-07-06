@@ -76,6 +76,11 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define END(x)   /* nothing */
 #endif /* !__ELF__ */
 
+#define SYM3(x, y) x##y
+#define SYM2(x, y) SYM3(x, y)
+#define SYM(x)     SYM2(__USER_LABEL_PREFIX__, x)
+#define fSYM(x, s) ASSEMBLY_NAME(x, s)
+
 #ifdef CONFIG_NO_THREADS
 #define LOCK_PREFIX  /* nothing */
 #else /* CONFIG_NO_THREADS */
@@ -103,7 +108,6 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #ifdef __ELF__
 #define CONFIG_USE_CFI 1
 #endif /* __ELF__ */
-
 
 #ifdef CONFIG_USE_CFI
 #define IF_USE_CFI(...)             __VA_ARGS__
@@ -139,27 +143,47 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #define WASSERT_EQUAL(w,a,b)       /* nothing */
 #define WASSERT_NOT_EQUAL(w,a,b)   /* nothing */
 #else /* NDEBUG */
-#define ASSERT_LOWER(x,y)          cmp y, x; assert l;
-#define ASSERT_LOWER_EQUAL(x,y)    cmp y, x; assert le;
-#define ASSERT_BELOW(x,y)          cmp y, x; assert b;
-#define ASSERT_BELOW_EQUAL(x,y)    cmp y, x; assert be;
-#define ASSERT_ABOVE(x,y)          cmp y, x; assert a;
-#define ASSERT_ABOVE_EQUAL(x,y)    cmp y, x; assert ae;
-#define ASSERT_EQUAL(x,y)          cmp y, x; assert e;
-#define ASSERT_NOT_EQUAL(x,y)      cmp y, x; assert ne;
-#define WASSERT_LOWER(w,x,y)       cmp##w y, x; assert l;
-#define WASSERT_LOWER_EQUAL(w,x,y) cmp##w y, x; assert le;
-#define WASSERT_BELOW(w,x,y)       cmp##w y, x; assert b;
-#define WASSERT_BELOW_EQUAL(w,x,y) cmp##w y, x; assert be;
-#define WASSERT_ABOVE(w,x,y)       cmp##w y, x; assert a;
-#define WASSERT_ABOVE_EQUAL(w,x,y) cmp##w y, x; assert ae;
-#define WASSERT_EQUAL(w,x,y)       cmp##w y, x; assert e;
-#define WASSERT_NOT_EQUAL(w,x,y)   cmp##w y, x; assert ne;
-#define ASSERT_BIT(w,flag,flagset) test##w flag, flagset; assert nz;
-#define ASSERT(...) __VA_ARGS__; assert
-.macro assert test=nz
+#define ASSERT_LOWER(x,y)          cmp y, x; assert __LINE__, l;
+#define ASSERT_LOWER_EQUAL(x,y)    cmp y, x; assert __LINE__, le;
+#define ASSERT_BELOW(x,y)          cmp y, x; assert __LINE__, b;
+#define ASSERT_BELOW_EQUAL(x,y)    cmp y, x; assert __LINE__, be;
+#define ASSERT_ABOVE(x,y)          cmp y, x; assert __LINE__, a;
+#define ASSERT_ABOVE_EQUAL(x,y)    cmp y, x; assert __LINE__, ae;
+#define ASSERT_EQUAL(x,y)          cmp y, x; assert __LINE__, e;
+#define ASSERT_NOT_EQUAL(x,y)      cmp y, x; assert __LINE__, ne;
+#define WASSERT_LOWER(w,x,y)       cmp##w y, x; assert __LINE__, l;
+#define WASSERT_LOWER_EQUAL(w,x,y) cmp##w y, x; assert __LINE__, le;
+#define WASSERT_BELOW(w,x,y)       cmp##w y, x; assert __LINE__, b;
+#define WASSERT_BELOW_EQUAL(w,x,y) cmp##w y, x; assert __LINE__, be;
+#define WASSERT_ABOVE(w,x,y)       cmp##w y, x; assert __LINE__, a;
+#define WASSERT_ABOVE_EQUAL(w,x,y) cmp##w y, x; assert __LINE__, ae;
+#define WASSERT_EQUAL(w,x,y)       cmp##w y, x; assert __LINE__, e;
+#define WASSERT_NOT_EQUAL(w,x,y)   cmp##w y, x; assert __LINE__, ne;
+#define ASSERT_BIT(w,flag,flagset) test##w flag, flagset; assert __LINE__, nz;
+#define ASSERT(...) __VA_ARGS__; assert __LINE__
+.section .rodata
+1:	.string __FILE__
+.text
+_impl_assert_failed:
+	IF_USE_CFI(.cfi_startproc)
+	pushl  %eax
+	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	pushl  $1b
+	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	pushl  $0
+	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	call   fSYM(_DeeAssert_Fail,12)
+	IF_USE_CFI(.cfi_endproc)
+END(_impl_assert_failed)
+
+#define _assert_failed(line) \
+	movl   $(line), %eax;    \
+	call   _impl_assert_failed;
+
+#define assert_failed()      _assert_failed(__LINE__)
+.macro assert line:req, test=nz
 	j\test 991f
-	int $3
+	_assert_failed(\line)
 991:
 .endm
 #endif /* !NDEBUG */
@@ -443,11 +467,6 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 #endif
 
 
-#define SYM3(x, y) x##y
-#define SYM2(x, y) SYM3(x, y)
-#define SYM(x)     SYM2(__USER_LABEL_PREFIX__, x)
-#define fSYM(x, s) ASSEMBLY_NAME(x, s)
-
 .text
 
 
@@ -598,8 +617,8 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 #if !defined(CODE_IS_REGISTER) && !defined(NDEBUG)
 	/* Assert that the host's stack is correctly aligned. */
 	leal   LMEM(%esp), %edx
-	ASSERT_EQUAL(%edx,%ebp)
-#endif /* !CODE_IS_REGISTER */
+	ASSERT_EQUAL(%edx, %ebp)
+#endif /* !CODE_IS_REGISTER && !NDEBUG */
 
 	movl   PC, FRAME_PC
 	xorl   %eax, %eax
@@ -650,8 +669,8 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 #endif
 
 	/* Assert stack bounds  */
-	ASSERT_ABOVE_EQUAL(SP,FRAME_STACK) /* ERROR: Stack underflow. */
-	ASSERT_BELOW_EQUAL(SP,L_STACK_END) /* ERROR: Stack overflow. */
+	ASSERT_ABOVE_EQUAL(SP, FRAME_STACK) /* ERROR: Stack underflow. */
+	ASSERT_BELOW_EQUAL(SP, L_STACK_END) /* ERROR: Stack overflow. */
 
 	/* Execute this instruction.
 	 * WARNING: Some code assumes that all but the lowest byte of EAX is clear upon entry!
@@ -733,7 +752,7 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 	 * Non-debug code assumes that no such problems exist,
 	 * allowing it to make use of EBP as another GP register. */
 	leal   LMEM(%esp), %edx
-	ASSERT_EQUAL(%edx,%ebp)
+	ASSERT_EQUAL(%edx, %ebp)
 	movl   %edx, %esp
 	IF_USE_CFI(.cfi_def_cfa %esp, 24)
 	leave
@@ -775,7 +794,7 @@ IF_USE_CFI(.cfi_remember_state)
 	IF_USE_CFI(.cfi_restore %ebp)
 #elif !defined(NDEBUG)
 	leal   LMEM(%esp), %edx
-	ASSERT_EQUAL(%edx,%ebp)
+	ASSERT_EQUAL(%edx, %ebp)
 	movl   %edx, %esp
 	IF_USE_CFI(.cfi_def_cfa %esp, 24)
 	leave
@@ -1305,9 +1324,9 @@ exec_on_altstack:
 	/* Redirect to `DeeCode_ExecFrameSafeAltStack()' */
 #ifdef CONFIG_HOST_WINDOWS
 	jmp    @DeeCode_ExecFrameSafeAltStack@4
-#else
+#else /* CONFIG_HOST_WINDOWS */
 	jmp    SYM(DeeCode_ExecFrameSafeAltStack)
-#endif
+#endif /* !CONFIG_HOST_WINDOWS */
 	IF_USE_CFI(.cfi_restore_state)
 #endif /* CONFIG_HAVE_EXEC_ALTSTACK */
 
@@ -1315,6 +1334,11 @@ exec_on_altstack:
 
 
 invop:
+#if !defined(CODE_IS_REGISTER) && !defined(NDEBUG)
+	/* Assert that the host's stack is correctly aligned. */
+	leal   LMEM(%esp), %edx
+	ASSERT_EQUAL(%edx, %ebp)
+#endif /* !CODE_IS_REGISTER && !NDEBUG */
 	pushl  FRAME_PC
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC
@@ -1426,7 +1450,7 @@ target_endcatch:
 	cmpw   %ax, L_EXCEPT_RECURSION
 #ifndef NDEBUG
 	jbe    1f
-	int    $3 /* ASSERT_FAIL: `except_recursion <= this_thread->t_exceptsz' */
+	assert_failed() /* ASSERT_FAIL: `except_recursion <= this_thread->t_exceptsz' */
 1:
 #endif
 	je    .disp /* nothing left to handle. */
@@ -1628,11 +1652,11 @@ target_jf:
 	leal   co_code(CODE_OR_EAX), %edx
 	cmpl   %edx, PC
 	jae    1f
-	int    $3 /* ASSERT_FAIL: `ip >= code->co_code' */
+	assert_failed() /* ASSERT_FAIL: `ip >= code->co_code' */
 1:	addl   co_codebytes(CODE_OR_EAX), %edx
 	cmpl   %edx, PC
 	jb     1f
-	int    $3 /* ASSERT_FAIL: `ip < code->co_code + code->co_codebytes' */
+	assert_failed() /* ASSERT_FAIL: `ip < code->co_code + code->co_codebytes' */
 1:
 #else
 .disp_checkip = .disp
@@ -1718,8 +1742,8 @@ prefix_target_jt16:
 	movswl %ax, %eax
 	addl   %eax, PC /* ip += Simm16 */
 #ifndef NDEBUG
-	jnc   .disp_checkip
-	int3   /* ASSERTION_FAILED: `ip += Simm16' did overflow. */
+	jno   .disp_checkip
+	assert_failed() /* ASSERTION_FAILED: `ip += Simm16' did overflow. */
 #endif
 	jmp   .disp
 	ADJUST_CFA_OFFSET(4)
@@ -1764,8 +1788,8 @@ prefix_target_jt:
 	movsbl %al, %eax
 	addl   %eax, PC /* ip += Simm8 */
 #ifndef NDEBUG
-	jnc   .disp_checkip
-	int3   /* ASSERTION_FAILED: `ip += Simm8' did overflow. */
+	jno   .disp_checkip
+	assert_failed() /* ASSERTION_FAILED: `ip += Simm8' did overflow. */
 #endif
 	jmp   .disp
 	ADJUST_CFA_OFFSET(4)
@@ -1798,8 +1822,8 @@ target32_jmp:
 #endif
 	addl   %eax, PC /* ip += Simm32 */
 #ifndef NDEBUG
-	jnc   .disp_checkip
-	int3   /* ASSERTION_FAILED: `ip += Simm32' did overflow. */
+	jno   .disp_checkip
+	assert_failed() /* ASSERTION_FAILED: `ip += Simm32' did overflow. */
 #endif
 	jmp   .disp
 target_jmp16:
@@ -7970,10 +7994,10 @@ impl_xch_prefix_table:
 	.long  invop                    /* 0xf7 : ASM_RESERVED7 */
 	.long  invop                    /* 0xf8 : ??? */
 	.long  invop                    /* 0xf9 : ??? */
-	.long  invop                    /* 0xfa : ??? */
-	.long  impl_xch_prefix_stack    /* 0xfb : ASM_STACK */
-	.long  impl_xch_prefix_static   /* 0xfc : ASM_STATIC */
-	.long  impl_xch_prefix_extern   /* 0xfd : ASM_EXTERN */
+	.long  impl_xch_prefix_stack    /* 0xfa : ASM_STACK */
+	.long  impl_xch_prefix_static   /* 0xfb : ASM_STATIC */
+	.long  impl_xch_prefix_extern   /* 0xfc : ASM_EXTERN */
+	.long  invop                    /* 0xfd : ??? */
 	.long  impl_xch_prefix_global   /* 0xfe : ASM_GLOBAL */
 	.long  impl_xch_prefix_local    /* 0xff : ASM_LOCAL */
 END(impl_xch_prefix_table)
@@ -8157,10 +8181,10 @@ impl_get_prefix_table:
 	.long  invop                    /* 0xf7 : ASM_RESERVED7 */
 	.long  invop                    /* 0xf8 : ??? */
 	.long  invop                    /* 0xf9 : ??? */
-	.long  invop                    /* 0xfa : ??? */
-	.long  impl_get_prefix_stack    /* 0xfb : ASM_STACK */
-	.long  impl_get_prefix_static   /* 0xfc : ASM_STATIC */
-	.long  impl_get_prefix_extern   /* 0xfd : ASM_EXTERN */
+	.long  impl_get_prefix_stack    /* 0xfa : ASM_STACK */
+	.long  impl_get_prefix_static   /* 0xfb : ASM_STATIC */
+	.long  impl_get_prefix_extern   /* 0xfc : ASM_EXTERN */
+	.long  invop                    /* 0xfd : ??? */
 	.long  impl_get_prefix_global   /* 0xfe : ASM_GLOBAL */
 	.long  impl_get_prefix_local    /* 0xff : ASM_LOCAL */
 END(impl_get_prefix_table)
@@ -8193,71 +8217,82 @@ local longest_name = 0;
 
 for (local l: file.open("../../../../include/deemon/asm.h")) {
 	local name,code,misc;
-	try name,code,none,misc = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* [ %[^ \\]] ] %[^]")...;
-	catch (...) {
-		try name,code,misc = l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* %[^]")...;
-		catch (...) {
+	try {
+		name, code, none, misc =
+			l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* [ %[^ \\]] ] %[^]")...;
+	} catch (...) {
+		try {
+			name, code, misc =
+				l.scanf(" # define ASM%[^ ] 0x%[0-9a-fA-F] /" "* %[^]")...;
+		} catch (...) {
 			continue;
 		}
 	}
 	local desc;
-	try none,desc = misc.scanf(" [ %[^\\]] ] ` %[^\'] '")...;
+	try none, desc = misc.scanf(" [ %[^\\]] ] ` %[^\'] '")...;
 	catch (...) {
-		try desc = misc.scanf(" ` %[^\'] '")...;
-		catch (...) desc = "-";
+		try {
+			desc = misc.scanf(" ` %[^\'] '")...;
+		} catch (...) {
+			desc = "-";
+		}
 	}
 	code = (int)("0x"+code);
-	local data = pack(name,desc);
+	local data = pack(name, desc);
 	if (code < 256) {
 		if (codes[code] is none)
 			codes[code] = data;
 	} else if (code >= 0xf000 && code <= 0xf0ff) {
-		if (codes_f0[code-0xf000] is none)
-			codes_f0[code-0xf000] = data;
+		if (codes_f0[code - 0xf000] is none)
+			codes_f0[code - 0xf000] = data;
 	}
 	if (longest_name < #name)
 		longest_name = #name;
 }
-function print_targets(prefix,codes) {
-	for (local id,data: util::enumerate(codes)) {
+
+function print_targets(prefix, codes) {
+	for (local id, data: util::enumerate(codes)) {
 			if (data is none) {
-				print "\t.long "+prefix+"invop";
+				print "\t.long " + prefix + "invop";
 			} else {
 				local name,desc = data...;
-				print "\t.long "+prefix+"target"+name.lower()+(" "*(longest_name-#name))+" /" "* `"+desc+"' *" "/";
+				print "\t.long " + prefix + "target" + name.lower() +
+					(" " * (longest_name - #name)) + " /" "* 0x" +
+					id.hex()[2:].zfill(2) + " : `" + desc + "' *" "/";
 			}
 	}
 }
-function print_ifndef(prefix,codes) {
-	for (local id,data: util::enumerate(codes)) {
+
+function print_ifndef(prefix, codes) {
+	for (local id, data: util::enumerate(codes)) {
 		if (data !is none) {
-			local name,desc = data...;
-			print ".ifndef "+prefix+"target"+name.lower()+"";
-			print prefix+"target"+name.lower()+" = "+prefix+"invop";
+			local name, desc = data...;
+			print ".ifndef " + prefix + "target" + name.lower() + "";
+			print prefix + "target" + name.lower() + " = " + prefix + "invop";
 			print ".endif";
 		}
 	}
 }
 
-//print_ifndef("",codes);
-//print_ifndef("",codes_f0);
-print_ifndef("prefix_",codes);
-print_ifndef("prefix_",codes_f0);
+//print_ifndef("", codes);
+//print_ifndef("", codes_f0);
+print_ifndef("prefix_", codes);
+print_ifndef("prefix_", codes_f0);
 
 print "inst_table:";
-print_targets("",codes);
+print_targets("", codes);
 print "END(inst_table)";
 
 print "inst_table_f0:";
-print_targets("",codes_f0);
+print_targets("", codes_f0);
 print "END(inst_table_f0)";
 
 print "prefix_inst_table:";
-print_targets("prefix_",codes);
+print_targets("prefix_", codes);
 print "END(prefix_inst_table)";
 
 print "prefix_inst_table_f0:";
-print_targets("prefix_",codes_f0);
+print_targets("prefix_", codes_f0);
 print "END(prefix_inst_table_f0)";
 
 ]]]*/
@@ -9327,232 +9362,230 @@ prefix_target16_global = prefix_invop
 prefix_target16_local = prefix_invop
 .endif
 inst_table:
-	.long target_ret_none                /* `ret' */
-	.long target_ret                     /* `ret pop' */
-	.long target_yieldall                /* `yield foreach, pop' */
-	.long target_throw                   /* `throw pop' */
-	.long target_rethrow                 /* `throw except' */
-	.long target_setret                  /* `setret pop' */
-	.long target_endcatch                /* `end catch' */
-	.long target_endfinally              /* `end finally' */
-	.long target_call_kw                 /* `call top, #<imm8>, const <imm8>' */
-	.long target_call_tuple_kw           /* `call top, pop..., const <imm8>' */
+	.long target_ret_none                /* 0x00 : `ret' */
+	.long target_ret                     /* 0x01 : `ret pop' */
+	.long target_yieldall                /* 0x02 : `yield foreach, pop' */
+	.long target_throw                   /* 0x03 : `throw pop' */
+	.long target_rethrow                 /* 0x04 : `throw except' */
+	.long target_setret                  /* 0x05 : `setret pop' */
+	.long target_endcatch                /* 0x06 : `end catch' */
+	.long target_endfinally              /* 0x07 : `end finally' */
+	.long target_call_kw                 /* 0x08 : `call top, #<imm8>, const <imm8>' */
+	.long target_call_tuple_kw           /* 0x09 : `call top, pop..., const <imm8>' */
 	.long invop
-	.long target_push_bnd_arg            /* `push bound arg <imm8>' */
-	.long target_push_bnd_extern         /* `push bound extern <imm8>:<imm8>' */
+	.long target_push_bnd_arg            /* 0x0b : `push bound arg <imm8>' */
+	.long target_push_bnd_extern         /* 0x0c : `push bound extern <imm8>:<imm8>' */
 	.long invop
-	.long target_push_bnd_global         /* `push bound global <imm8>' */
-	.long target_push_bnd_local          /* `push bound local <imm8>' */
-	.long target_jf                      /* `jf pop, <Sdisp8>' */
-	.long target_jf16                    /* `jf pop, <Sdisp16>' */
-	.long target_jt                      /* `jt pop, <Sdisp8>' */
-	.long target_jt16                    /* `jt pop, <Sdisp16>' */
-	.long target_jmp                     /* `jmp <Sdisp8>' */
-	.long target_jmp16                   /* `jmp <Sdisp16>' */
-	.long target_foreach                 /* `foreach top, <Sdisp8>' */
-	.long target_foreach16               /* `foreach top, <Sdisp16>' */
-	.long target_jmp_pop                 /* `jmp pop' */
-	.long target_operator                /* `op top, $<imm8>, #<imm8>' */
-	.long target_operator_tuple          /* `op top, $<imm8>, pop...' */
-	.long target_call                    /* `call top, #<imm8>' */
-	.long target_call_tuple              /* `call top, pop...' */
+	.long target_push_bnd_global         /* 0x0e : `push bound global <imm8>' */
+	.long target_push_bnd_local          /* 0x0f : `push bound local <imm8>' */
+	.long target_jf                      /* 0x10 : `jf pop, <Sdisp8>' */
+	.long target_jf16                    /* 0x11 : `jf pop, <Sdisp16>' */
+	.long target_jt                      /* 0x12 : `jt pop, <Sdisp8>' */
+	.long target_jt16                    /* 0x13 : `jt pop, <Sdisp16>' */
+	.long target_jmp                     /* 0x14 : `jmp <Sdisp8>' */
+	.long target_jmp16                   /* 0x15 : `jmp <Sdisp16>' */
+	.long target_foreach                 /* 0x16 : `foreach top, <Sdisp8>' */
+	.long target_foreach16               /* 0x17 : `foreach top, <Sdisp16>' */
+	.long target_jmp_pop                 /* 0x18 : `jmp pop' */
+	.long target_operator                /* 0x19 : `op top, $<imm8>, #<imm8>' */
+	.long target_operator_tuple          /* 0x1a : `op top, $<imm8>, pop...' */
+	.long target_call                    /* 0x1b : `call top, #<imm8>' */
+	.long target_call_tuple              /* 0x1c : `call top, pop...' */
 	.long invop
-	.long target_del_global              /* `del global <imm8>' */
-	.long target_del_local               /* `del local <imm8>' */
-	.long target_swap                    /* `swap' */
-	.long target_lrot                    /* `lrot #<imm8>+3' */
-	.long target_rrot                    /* `rrot #<imm8>+3' */
-	.long target_dup                     /* `dup' */
-	.long target_dup_n                   /* `dup #SP - <imm8> - 2' */
-	.long target_pop                     /* `pop' */
-	.long target_pop_n                   /* `pop #SP - <imm8> - 2' */
-	.long target_adjstack                /* `adjstack #SP +/- <Simm8>' */
-	.long target_super                   /* `super top, pop' */
-	.long target_super_this_r            /* `push super this, ref <imm8>' */
+	.long target_del_global              /* 0x1e : `del global <imm8>' */
+	.long target_del_local               /* 0x1f : `del local <imm8>' */
+	.long target_swap                    /* 0x20 : `swap' */
+	.long target_lrot                    /* 0x21 : `lrot #<imm8>+3' */
+	.long target_rrot                    /* 0x22 : `rrot #<imm8>+3' */
+	.long target_dup                     /* 0x23 : `dup' */
+	.long target_dup_n                   /* 0x24 : `dup #SP - <imm8> - 2' */
+	.long target_pop                     /* 0x25 : `pop' */
+	.long target_pop_n                   /* 0x26 : `pop #SP - <imm8> - 2' */
+	.long target_adjstack                /* 0x27 : `adjstack #SP +/- <Simm8>' */
+	.long target_super                   /* 0x28 : `super top, pop' */
+	.long target_super_this_r            /* 0x29 : `push super this, ref <imm8>' */
 	.long invop
-	.long target_pop_static              /* `pop static <imm8>' */
-	.long target_pop_extern              /* `pop extern <imm8>:<imm8>' */
+	.long target_pop_static              /* 0x2b : `pop static <imm8>' */
+	.long target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
 	.long invop
-	.long target_pop_global              /* `pop global <imm8>' */
-	.long target_pop_local               /* `pop local <imm8>' */
-	.long invop
-	.long invop
-	.long invop
-	.long target_push_none               /* `push none' */
-	.long target_push_varargs            /* `push varargs' */
-	.long target_push_varkwds            /* `push varkwds' */
-	.long target_push_module             /* `push module <imm8>' */
-	.long target_push_arg                /* `push arg <imm8>' */
-	.long target_push_const              /* `push const <imm8>' */
-	.long target_push_ref                /* `push ref <imm8>' */
-	.long invop
-	.long target_push_static             /* `push static <imm8>' */
-	.long target_push_extern             /* `push extern <imm8>:<imm8>' */
-	.long invop
-	.long target_push_global             /* `push global <imm8>' */
-	.long target_push_local              /* `push local <imm8>' */
-	.long target_cast_tuple              /* `cast top, Tuple' */
-	.long target_cast_list               /* `cast top, List' */
-	.long target_pack_tuple              /* `push pack Tuple, #<imm8>' */
-	.long target_pack_list               /* `push pack List, #<imm8>' */
+	.long target_pop_global              /* 0x2e : `pop global <imm8>' */
+	.long target_pop_local               /* 0x2f : `pop local <imm8>' */
 	.long invop
 	.long invop
-	.long target_unpack                  /* `unpack pop, #<imm8>' */
-	.long target_concat                  /* `concat top, pop' */
-	.long target_extend                  /* `extend top, #<imm8>' */
-	.long target_typeof                  /* `typeof top' */
-	.long target_classof                 /* `classof top' */
-	.long target_superof                 /* `superof top' */
-	.long target_instanceof              /* `instanceof top, pop' */
-	.long target_str                     /* `str top' */
-	.long target_repr                    /* `repr top' */
 	.long invop
-	.long target_bool                    /* `bool top' */
-	.long target_not                     /* `not top' */
-	.long target_assign                  /* `assign pop, pop' */
-	.long target_move_assign             /* `assign move, pop, pop' */
-	.long target_copy                    /* `copy top' */
-	.long target_deepcopy                /* `deepcopy top' */
-	.long target_getattr                 /* `getattr top, pop' */
-	.long target_delattr                 /* `delattr pop, pop' */
-	.long target_setattr                 /* `setattr pop, pop, pop' */
-	.long target_boundattr               /* `boundattr top, pop' */
-	.long target_getattr_c               /* `getattr top, const <imm8>' */
-	.long target_delattr_c               /* `delattr pop, const <imm8>' */
-	.long target_setattr_c               /* `setattr pop, const <imm8>, pop' */
-	.long target_getattr_this_c          /* `push getattr this, const <imm8>' */
-	.long target_delattr_this_c          /* `delattr this, const <imm8>' */
-	.long target_setattr_this_c          /* `setattr this, const <imm8>, pop' */
-	.long target_cmp_eq                  /* `cmp eq, top, pop' */
-	.long target_cmp_ne                  /* `cmp ne, top, pop' */
-	.long target_cmp_ge                  /* `cmp ge, top, pop' */
-	.long target_cmp_lo                  /* `cmp lo, top, pop' */
-	.long target_cmp_le                  /* `cmp le, top, pop' */
-	.long target_cmp_gr                  /* `cmp gr, top, pop' */
-	.long target_class_c                 /* `class top, const <imm8>' */
-	.long target_class_gc                /* `push class global <imm8>, const <imm8>' */
-	.long target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
-	.long target_defcmember              /* `defcmember top, $<imm8>, pop' */
-	.long target_getcmember_r            /* `push getcmember ref <imm8>, $<imm8>' */
-	.long target_callcmember_this_r      /* `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
+	.long target_push_none               /* 0x33 : `push none' */
+	.long target_push_varargs            /* 0x34 : `push varargs' */
+	.long target_push_varkwds            /* 0x35 : `push varkwds' */
+	.long target_push_module             /* 0x36 : `push module <imm8>' */
+	.long target_push_arg                /* 0x37 : `push arg <imm8>' */
+	.long target_push_const              /* 0x38 : `push const <imm8>' */
+	.long target_push_ref                /* 0x39 : `push ref <imm8>' */
+	.long invop
+	.long target_push_static             /* 0x3b : `push static <imm8>' */
+	.long target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
+	.long invop
+	.long target_push_global             /* 0x3e : `push global <imm8>' */
+	.long target_push_local              /* 0x3f : `push local <imm8>' */
+	.long target_cast_tuple              /* 0x40 : `cast top, Tuple' */
+	.long target_cast_list               /* 0x41 : `cast top, List' */
+	.long target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
+	.long target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
 	.long invop
 	.long invop
-	.long target_function_c              /* `push function const <imm8>, #<imm8>+1' */
-	.long target_function_c_16           /* `push function const <imm8>, #<imm16>+1' */
-	.long target_cast_int                /* `cast top, int' */
-	.long target_inv                     /* `inv top' */
-	.long target_pos                     /* `pos top' */
-	.long target_neg                     /* `neg top' */
-	.long target_add                     /* `add top, pop' */
-	.long target_sub                     /* `sub top, pop' */
-	.long target_mul                     /* `mul top, pop' */
-	.long target_div                     /* `div top, pop' */
-	.long target_mod                     /* `mod top, pop' */
-	.long target_shl                     /* `shl top, pop' */
-	.long target_shr                     /* `shr top, pop' */
-	.long target_and                     /* `and top, pop' */
-	.long target_or                      /* `or top, pop' */
-	.long target_xor                     /* `xor top, pop' */
-	.long target_pow                     /* `pow top, pop' */
-	.long target_inc                     /* `inc' */
-	.long target_dec                     /* `dec' */
-	.long target_add_simm8               /* `add top, $<Simm8>' */
-	.long target_add_imm32               /* `add top, $<imm32>' */
-	.long target_sub_simm8               /* `sub top, $<Simm8>' */
-	.long target_sub_imm32               /* `sub top, $<imm32>' */
-	.long target_mul_simm8               /* `mul top, $<Simm8>' */
-	.long target_div_simm8               /* `div top, $<Simm8>' */
-	.long target_mod_simm8               /* `mod top, $<Simm8>' */
-	.long target_shl_imm8                /* `shl top, $<imm8>' */
-	.long target_shr_imm8                /* `shr top, $<imm8>' */
-	.long target_and_imm32               /* `and top, $<imm32>' */
-	.long target_or_imm32                /* `or top, $<imm32>' */
-	.long target_xor_imm32               /* `xor top, $<imm32>' */
-	.long target_isnone                  /* `instanceof top, none' */
+	.long target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
+	.long target_concat                  /* 0x47 : `concat top, pop' */
+	.long target_extend                  /* 0x48 : `extend top, #<imm8>' */
+	.long target_typeof                  /* 0x49 : `typeof top' */
+	.long target_classof                 /* 0x4a : `classof top' */
+	.long target_superof                 /* 0x4b : `superof top' */
+	.long target_instanceof              /* 0x4c : `instanceof top, pop' */
+	.long target_str                     /* 0x4d : `str top' */
+	.long target_repr                    /* 0x4e : `repr top' */
 	.long invop
-	.long target_delop                   /* `-' */
-	.long target_nop                     /* `nop' */
-	.long target_print                   /* `print pop' */
-	.long target_print_sp                /* `print pop, sp' */
-	.long target_print_nl                /* `print pop, nl' */
-	.long target_printnl                 /* `print nl' */
-	.long target_printall                /* `print pop...' */
-	.long target_printall_sp             /* `print pop..., sp' */
-	.long target_printall_nl             /* `print pop..., nl' */
-	.long invop
-	.long target_fprint                  /* `print top, pop' */
-	.long target_fprint_sp               /* `print top, pop, sp' */
-	.long target_fprint_nl               /* `print top, pop, nl' */
-	.long target_fprintnl                /* `print top, nl' */
-	.long target_fprintall               /* `print top, pop...' */
-	.long target_fprintall_sp            /* `print top, pop..., sp' */
-	.long target_fprintall_nl            /* `print top, pop..., nl' */
-	.long invop
-	.long target_print_c                 /* `print const <imm8>' */
-	.long target_print_c_sp              /* `print const <imm8>, sp' */
-	.long target_print_c_nl              /* `print const <imm8>, nl' */
-	.long target_range_0_i16             /* `push range $0, $<imm16>' */
-	.long invop
-	.long target_enter                   /* `enter top' */
-	.long target_leave                   /* `leave pop' */
-	.long invop
-	.long target_fprint_c                /* `print top, const <imm8>' */
-	.long target_fprint_c_sp             /* `print top, const <imm8>, sp' */
-	.long target_fprint_c_nl             /* `print top, const <imm8>, nl' */
-	.long target_range                   /* `range top, pop' */
-	.long target_range_def               /* `push range default, pop' */
-	.long target_range_step              /* `range top, pop, pop' */
-	.long target_range_step_def          /* `push range default, pop, pop' */
-	.long target_contains                /* `contains top, pop' */
-	.long target_contains_c              /* `push contains const <imm8>, pop' */
-	.long target_getitem                 /* `getitem top, pop' */
-	.long target_getitem_i               /* `getitem top, $<Simm16>' */
-	.long target_getitem_c               /* `getitem top, const <imm8>' */
-	.long target_getsize                 /* `getsize top' */
-	.long target_setitem                 /* `setitem pop, pop, pop' */
-	.long target_setitem_i               /* `setitem pop, $<Simm16>, pop' */
-	.long target_setitem_c               /* `setitem pop, const <imm8>, pop' */
-	.long target_iterself                /* `iterself top' */
-	.long target_delitem                 /* `delitem pop, pop' */
-	.long target_getrange                /* `getrange top, pop, pop' */
-	.long target_getrange_pn             /* `getrange top, pop, none' */
-	.long target_getrange_np             /* `getrange top, none, pop' */
-	.long target_getrange_pi             /* `getrange top, pop, $<Simm16>' */
-	.long target_getrange_ip             /* `getrange top, $<Simm16>, pop' */
-	.long target_getrange_ni             /* `getrange top, none, $<Simm16>' */
-	.long target_getrange_in             /* `getrange top, $<Simm16>, none' */
-	.long target_getrange_ii             /* `getrange top, $<Simm16>, $<Simm16>' */
-	.long target_delrange                /* `delrange pop, pop, pop' */
-	.long target_setrange                /* `setrange pop, pop, pop, pop' */
-	.long target_setrange_pn             /* `setrange pop, pop, none, pop' */
-	.long target_setrange_np             /* `setrange pop, none, pop, pop' */
-	.long target_setrange_pi             /* `setrange pop, pop, $<Simm16>, pop' */
-	.long target_setrange_ip             /* `setrange pop, $<Simm16>, pop, pop' */
-	.long target_setrange_ni             /* `setrange pop, none, $<Simm16>, pop' */
-	.long target_setrange_in             /* `setrange pop, $<Simm16>, none, pop' */
-	.long target_setrange_ii             /* `setrange pop, $<Simm16>, $<Simm16>, pop' */
-	.long target_breakpoint              /* `debug break' */
-	.long target_ud                      /* `ud' */
-	.long target_callattr_c_kw           /* `callattr top, const <imm8>, #<imm8>, const <imm8>' */
-	.long target_callattr_c_tuple_kw     /* `callattr top, const <imm8>, pop..., const <imm8>' */
-	.long target_callattr                /* `callattr top, pop, #<imm8>' */
-	.long target_callattr_tuple          /* `callattr top, pop, pop...' */
-	.long target_callattr_c              /* `callattr top, const <imm8>, #<imm8>' */
-	.long target_callattr_c_tuple        /* `callattr top, const <imm8>, pop...' */
-	.long target_callattr_this_c         /* `push callattr this, const <imm8>, #<imm8>' */
-	.long target_callattr_this_c_tuple   /* `push callattr this, const <imm8>, pop...' */
-	.long target_callattr_c_seq          /* `callattr top, const <imm8>, [#<imm8>]' */
-	.long target_callattr_c_map          /* `callattr top, const <imm8>, {#<imm8>*2}' */
-	.long invop
-	.long target_getmember_this_r        /* `push getmember this, ref <imm8>, $<imm8>' */
-	.long target_delmember_this_r        /* `delmember this, ref <imm8>, $<imm8>' */
-	.long target_setmember_this_r        /* `setmember this, ref <imm8>, $<imm8>, pop' */
-	.long target_boundmember_this_r      /* `push boundmember this, ref <imm8>, $<imm8>' */
-	.long target_call_extern             /* `push call extern <imm8>:<imm8>, #<imm8>' */
-	.long target_call_global             /* `push call global <imm8>, #<imm8>' */
-	.long target_call_local              /* `push call local <imm8>, #<imm8>' */
+	.long target_bool                    /* 0x50 : `bool top' */
+	.long target_not                     /* 0x51 : `not top' */
+	.long target_assign                  /* 0x52 : `assign pop, pop' */
+	.long target_move_assign             /* 0x53 : `assign move, pop, pop' */
+	.long target_copy                    /* 0x54 : `copy top' */
+	.long target_deepcopy                /* 0x55 : `deepcopy top' */
+	.long target_getattr                 /* 0x56 : `getattr top, pop' */
+	.long target_delattr                 /* 0x57 : `delattr pop, pop' */
+	.long target_setattr                 /* 0x58 : `setattr pop, pop, pop' */
+	.long target_boundattr               /* 0x59 : `boundattr top, pop' */
+	.long target_getattr_c               /* 0x5a : `getattr top, const <imm8>' */
+	.long target_delattr_c               /* 0x5b : `delattr pop, const <imm8>' */
+	.long target_setattr_c               /* 0x5c : `setattr pop, const <imm8>, pop' */
+	.long target_getattr_this_c          /* 0x5d : `push getattr this, const <imm8>' */
+	.long target_delattr_this_c          /* 0x5e : `delattr this, const <imm8>' */
+	.long target_setattr_this_c          /* 0x5f : `setattr this, const <imm8>, pop' */
+	.long target_cmp_eq                  /* 0x60 : `cmp eq, top, pop' */
+	.long target_cmp_ne                  /* 0x61 : `cmp ne, top, pop' */
+	.long target_cmp_ge                  /* 0x62 : `cmp ge, top, pop' */
+	.long target_cmp_lo                  /* 0x63 : `cmp lo, top, pop' */
+	.long target_cmp_le                  /* 0x64 : `cmp le, top, pop' */
+	.long target_cmp_gr                  /* 0x65 : `cmp gr, top, pop' */
+	.long target_class_c                 /* 0x66 : `class top, const <imm8>' */
+	.long target_class_gc                /* 0x67 : `push class global <imm8>, const <imm8>' */
+	.long target_class_ec                /* 0x68 : `push class extern <imm8>:<imm8>, const <imm8>' */
+	.long target_defcmember              /* 0x69 : `defcmember top, $<imm8>, pop' */
+	.long target_getcmember_r            /* 0x6a : `push getcmember ref <imm8>, $<imm8>' */
+	.long target_callcmember_this_r      /* 0x6b : `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	.long invop
 	.long invop
+	.long target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>+1' */
+	.long target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>+1' */
+	.long target_cast_int                /* 0x70 : `cast top, int' */
+	.long target_inv                     /* 0x71 : `inv top' */
+	.long target_pos                     /* 0x72 : `pos top' */
+	.long target_neg                     /* 0x73 : `neg top' */
+	.long target_add                     /* 0x74 : `add top, pop' */
+	.long target_sub                     /* 0x75 : `sub top, pop' */
+	.long target_mul                     /* 0x76 : `mul top, pop' */
+	.long target_div                     /* 0x77 : `div top, pop' */
+	.long target_mod                     /* 0x78 : `mod top, pop' */
+	.long target_shl                     /* 0x79 : `shl top, pop' */
+	.long target_shr                     /* 0x7a : `shr top, pop' */
+	.long target_and                     /* 0x7b : `and top, pop' */
+	.long target_or                      /* 0x7c : `or top, pop' */
+	.long target_xor                     /* 0x7d : `xor top, pop' */
+	.long target_pow                     /* 0x7e : `pow top, pop' */
+	.long target_inc                     /* 0x7f : `inc' */
+	.long target_dec                     /* 0x80 : `dec' */
+	.long target_add_simm8               /* 0x81 : `add top, $<Simm8>' */
+	.long target_add_imm32               /* 0x82 : `add top, $<imm32>' */
+	.long target_sub_simm8               /* 0x83 : `sub top, $<Simm8>' */
+	.long target_sub_imm32               /* 0x84 : `sub top, $<imm32>' */
+	.long target_mul_simm8               /* 0x85 : `mul top, $<Simm8>' */
+	.long target_div_simm8               /* 0x86 : `div top, $<Simm8>' */
+	.long target_mod_simm8               /* 0x87 : `mod top, $<Simm8>' */
+	.long target_shl_imm8                /* 0x88 : `shl top, $<imm8>' */
+	.long target_shr_imm8                /* 0x89 : `shr top, $<imm8>' */
+	.long target_and_imm32               /* 0x8a : `and top, $<imm32>' */
+	.long target_or_imm32                /* 0x8b : `or top, $<imm32>' */
+	.long target_xor_imm32               /* 0x8c : `xor top, $<imm32>' */
+	.long target_isnone                  /* 0x8d : `instanceof top, none' */
+	.long invop
+	.long target_delop                   /* 0x8f : `-' */
+	.long target_nop                     /* 0x90 : `nop' */
+	.long target_print                   /* 0x91 : `print pop' */
+	.long target_print_sp                /* 0x92 : `print pop, sp' */
+	.long target_print_nl                /* 0x93 : `print pop, nl' */
+	.long target_printnl                 /* 0x94 : `print nl' */
+	.long target_printall                /* 0x95 : `print pop...' */
+	.long target_printall_sp             /* 0x96 : `print pop..., sp' */
+	.long target_printall_nl             /* 0x97 : `print pop..., nl' */
+	.long invop
+	.long target_fprint                  /* 0x99 : `print top, pop' */
+	.long target_fprint_sp               /* 0x9a : `print top, pop, sp' */
+	.long target_fprint_nl               /* 0x9b : `print top, pop, nl' */
+	.long target_fprintnl                /* 0x9c : `print top, nl' */
+	.long target_fprintall               /* 0x9d : `print top, pop...' */
+	.long target_fprintall_sp            /* 0x9e : `print top, pop..., sp' */
+	.long target_fprintall_nl            /* 0x9f : `print top, pop..., nl' */
+	.long invop
+	.long target_print_c                 /* 0xa1 : `print const <imm8>' */
+	.long target_print_c_sp              /* 0xa2 : `print const <imm8>, sp' */
+	.long target_print_c_nl              /* 0xa3 : `print const <imm8>, nl' */
+	.long target_range_0_i16             /* 0xa4 : `push range $0, $<imm16>' */
+	.long invop
+	.long target_enter                   /* 0xa6 : `enter top' */
+	.long target_leave                   /* 0xa7 : `leave pop' */
+	.long invop
+	.long target_fprint_c                /* 0xa9 : `print top, const <imm8>' */
+	.long target_fprint_c_sp             /* 0xaa : `print top, const <imm8>, sp' */
+	.long target_fprint_c_nl             /* 0xab : `print top, const <imm8>, nl' */
+	.long target_range                   /* 0xac : `range top, pop' */
+	.long target_range_def               /* 0xad : `push range default, pop' */
+	.long target_range_step              /* 0xae : `range top, pop, pop' */
+	.long target_range_step_def          /* 0xaf : `push range default, pop, pop' */
+	.long target_contains                /* 0xb0 : `contains top, pop' */
+	.long target_contains_c              /* 0xb1 : `push contains const <imm8>, pop' */
+	.long target_getitem                 /* 0xb2 : `getitem top, pop' */
+	.long target_getitem_i               /* 0xb3 : `getitem top, $<Simm16>' */
+	.long target_getitem_c               /* 0xb4 : `getitem top, const <imm8>' */
+	.long target_getsize                 /* 0xb5 : `getsize top' */
+	.long target_setitem                 /* 0xb6 : `setitem pop, pop, pop' */
+	.long target_setitem_i               /* 0xb7 : `setitem pop, $<Simm16>, pop' */
+	.long target_setitem_c               /* 0xb8 : `setitem pop, const <imm8>, pop' */
+	.long target_iterself                /* 0xb9 : `iterself top' */
+	.long target_delitem                 /* 0xba : `delitem pop, pop' */
+	.long target_getrange                /* 0xbb : `getrange top, pop, pop' */
+	.long target_getrange_pn             /* 0xbc : `getrange top, pop, none' */
+	.long target_getrange_np             /* 0xbd : `getrange top, none, pop' */
+	.long target_getrange_pi             /* 0xbe : `getrange top, pop, $<Simm16>' */
+	.long target_getrange_ip             /* 0xbf : `getrange top, $<Simm16>, pop' */
+	.long target_getrange_ni             /* 0xc0 : `getrange top, none, $<Simm16>' */
+	.long target_getrange_in             /* 0xc1 : `getrange top, $<Simm16>, none' */
+	.long target_getrange_ii             /* 0xc2 : `getrange top, $<Simm16>, $<Simm16>' */
+	.long target_delrange                /* 0xc3 : `delrange pop, pop, pop' */
+	.long target_setrange                /* 0xc4 : `setrange pop, pop, pop, pop' */
+	.long target_setrange_pn             /* 0xc5 : `setrange pop, pop, none, pop' */
+	.long target_setrange_np             /* 0xc6 : `setrange pop, none, pop, pop' */
+	.long target_setrange_pi             /* 0xc7 : `setrange pop, pop, $<Simm16>, pop' */
+	.long target_setrange_ip             /* 0xc8 : `setrange pop, $<Simm16>, pop, pop' */
+	.long target_setrange_ni             /* 0xc9 : `setrange pop, none, $<Simm16>, pop' */
+	.long target_setrange_in             /* 0xca : `setrange pop, $<Simm16>, none, pop' */
+	.long target_setrange_ii             /* 0xcb : `setrange pop, $<Simm16>, $<Simm16>, pop' */
+	.long target_breakpoint              /* 0xcc : `debug break' */
+	.long target_ud                      /* 0xcd : `ud' */
+	.long target_callattr_c_kw           /* 0xce : `callattr top, const <imm8>, #<imm8>, const <imm8>' */
+	.long target_callattr_c_tuple_kw     /* 0xcf : `callattr top, const <imm8>, pop..., const <imm8>' */
+	.long target_callattr                /* 0xd0 : `callattr top, pop, #<imm8>' */
+	.long target_callattr_tuple          /* 0xd1 : `callattr top, pop, pop...' */
+	.long target_callattr_c              /* 0xd2 : `callattr top, const <imm8>, #<imm8>' */
+	.long target_callattr_c_tuple        /* 0xd3 : `callattr top, const <imm8>, pop...' */
+	.long target_callattr_this_c         /* 0xd4 : `push callattr this, const <imm8>, #<imm8>' */
+	.long target_callattr_this_c_tuple   /* 0xd5 : `push callattr this, const <imm8>, pop...' */
+	.long target_callattr_c_seq          /* 0xd6 : `callattr top, const <imm8>, [#<imm8>]' */
+	.long target_callattr_c_map          /* 0xd7 : `callattr top, const <imm8>, {#<imm8>*2}' */
+	.long invop
+	.long target_getmember_this_r        /* 0xd9 : `push getmember this, ref <imm8>, $<imm8>' */
+	.long target_delmember_this_r        /* 0xda : `delmember this, ref <imm8>, $<imm8>' */
+	.long target_setmember_this_r        /* 0xdb : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long target_boundmember_this_r      /* 0xdc : `push boundmember this, ref <imm8>, $<imm8>' */
+	.long target_call_extern             /* 0xdd : `push call extern <imm8>:<imm8>, #<imm8>' */
+	.long target_call_global             /* 0xde : `push call global <imm8>, #<imm8>' */
+	.long target_call_local              /* 0xdf : `push call local <imm8>, #<imm8>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9567,22 +9600,24 @@ inst_table:
 	.long invop
 	.long invop
 	.long invop
-	.long target_extended1               /* `-' */
-	.long target_reserved1               /* `-' */
-	.long target_reserved2               /* `-' */
-	.long target_reserved3               /* `-' */
-	.long target_reserved4               /* `-' */
-	.long target_reserved5               /* `-' */
-	.long target_reserved6               /* `-' */
-	.long target_reserved7               /* `-' */
 	.long invop
 	.long invop
-	.long target_stack                   /* `stack #<imm8>' */
-	.long target_static                  /* `static <imm8>' */
-	.long target_extern                  /* `extern <imm8>:<imm8>' */
+	.long target_extended1               /* 0xf0 : `-' */
+	.long target_reserved1               /* 0xf1 : `-' */
+	.long target_reserved2               /* 0xf2 : `-' */
+	.long target_reserved3               /* 0xf3 : `-' */
+	.long target_reserved4               /* 0xf4 : `-' */
+	.long target_reserved5               /* 0xf5 : `-' */
+	.long target_reserved6               /* 0xf6 : `-' */
+	.long target_reserved7               /* 0xf7 : `-' */
 	.long invop
-	.long target_global                  /* `global <imm8>' */
-	.long target_local                   /* `local <imm8>' */
+	.long invop
+	.long target_stack                   /* 0xfa : `stack #<imm8>' */
+	.long target_static                  /* 0xfb : `static <imm8>' */
+	.long target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
+	.long invop
+	.long target_global                  /* 0xfe : `global <imm8>' */
+	.long target_local                   /* 0xff : `local <imm8>' */
 END(inst_table)
 inst_table_f0:
 	.long invop
@@ -9591,71 +9626,71 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long target_endcatch_n              /* `end catch, #<imm8>+1' */
-	.long target_endfinally_n            /* `end finally, #<imm8>+1' */
-	.long target16_call_kw               /* `call top, #<imm8>, const <imm16>' */
-	.long target16_call_tuple_kw         /* `call top, pop..., const <imm16>' */
+	.long target_endcatch_n              /* 0x06 : `end catch, #<imm8>+1' */
+	.long target_endfinally_n            /* 0x07 : `end finally, #<imm8>+1' */
+	.long target16_call_kw               /* 0x08 : `call top, #<imm8>, const <imm16>' */
+	.long target16_call_tuple_kw         /* 0x09 : `call top, pop..., const <imm16>' */
 	.long invop
-	.long target16_push_bnd_arg          /* `push bound arg <imm8>' */
-	.long target16_push_bnd_extern       /* `push bound extern <imm16>:<imm16>' */
+	.long target16_push_bnd_arg          /* 0x0b : `push bound arg <imm8>' */
+	.long target16_push_bnd_extern       /* 0x0c : `push bound extern <imm16>:<imm16>' */
 	.long invop
-	.long target16_push_bnd_global       /* `push bound global <imm16>' */
-	.long target16_push_bnd_local        /* `push bound local <imm16>' */
+	.long target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
+	.long target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
 	.long invop
 	.long invop
 	.long invop
 	.long invop
-	.long target32_jmp                   /* `jmp <Sdisp32>' */
+	.long target32_jmp                   /* 0x14 : `jmp <Sdisp32>' */
 	.long invop
 	.long invop
 	.long invop
-	.long target_jmp_pop_pop             /* `jmp pop, #pop' */
-	.long target16_operator              /* `op top, $<imm16>, #<imm8>' */
-	.long target16_operator_tuple        /* `op top, $<imm16>, pop' */
-	.long target_call_seq                /* `call top, [#<imm8>]' */
-	.long target_call_map                /* `call top, {#<imm8>*2}' */
-	.long target_thiscall_tuple          /* `call top, pop, pop...' */
-	.long target16_del_global            /* `del global <imm16>' */
-	.long target16_del_local             /* `del local <imm16>' */
-	.long target_call_tuple_kwds         /* `call top, pop..., pop' */
-	.long target16_lrot                  /* `lrot #<imm16>+3' */
-	.long target16_rrot                  /* `rrot #<imm16>+3' */
+	.long target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
+	.long target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
+	.long target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop' */
+	.long target_call_seq                /* 0x1b : `call top, [#<imm8>]' */
+	.long target_call_map                /* 0x1c : `call top, {#<imm8>*2}' */
+	.long target_thiscall_tuple          /* 0x1d : `call top, pop, pop...' */
+	.long target16_del_global            /* 0x1e : `del global <imm16>' */
+	.long target16_del_local             /* 0x1f : `del local <imm16>' */
+	.long target_call_tuple_kwds         /* 0x20 : `call top, pop..., pop' */
+	.long target16_lrot                  /* 0x21 : `lrot #<imm16>+3' */
+	.long target16_rrot                  /* 0x22 : `rrot #<imm16>+3' */
 	.long invop
-	.long target16_dup_n                 /* `dup #SP - <imm16> - 2' */
+	.long target16_dup_n                 /* 0x24 : `dup #SP - <imm16> - 2' */
 	.long invop
-	.long target16_pop_n                 /* `pop #SP - <imm16> - 2' */
-	.long target16_adjstack              /* `adjstack #SP +/- <Simm16>' */
+	.long target16_pop_n                 /* 0x26 : `pop #SP - <imm16> - 2' */
+	.long target16_adjstack              /* 0x27 : `adjstack #SP +/- <Simm16>' */
 	.long invop
-	.long target16_super_this_r          /* `push super this, ref <imm16>' */
+	.long target16_super_this_r          /* 0x29 : `push super this, ref <imm16>' */
 	.long invop
-	.long target16_pop_static            /* `pop static <imm16>' */
-	.long target16_pop_extern            /* `pop extern <imm16>:<imm16>' */
+	.long target16_pop_static            /* 0x2b : `pop static <imm16>' */
+	.long target16_pop_extern            /* 0x2c : `pop extern <imm16>:<imm16>' */
 	.long invop
-	.long target16_pop_global            /* `pop global <imm16>' */
-	.long target16_pop_local             /* `pop local <imm16>' */
+	.long target16_pop_global            /* 0x2e : `pop global <imm16>' */
+	.long target16_pop_local             /* 0x2f : `pop local <imm16>' */
 	.long invop
 	.long invop
-	.long target_push_except             /* `push except' */
-	.long target_push_this               /* `push this' */
-	.long target_push_this_module        /* `push this_module' */
-	.long target_push_this_function      /* `push this_function' */
-	.long target16_push_module           /* `push module <imm16>' */
-	.long target16_push_arg              /* `push arg <imm16>' */
-	.long target16_push_const            /* `push const <imm16>' */
-	.long target16_push_ref              /* `push ref <imm16>' */
+	.long target_push_except             /* 0x32 : `push except' */
+	.long target_push_this               /* 0x33 : `push this' */
+	.long target_push_this_module        /* 0x34 : `push this_module' */
+	.long target_push_this_function      /* 0x35 : `push this_function' */
+	.long target16_push_module           /* 0x36 : `push module <imm16>' */
+	.long target16_push_arg              /* 0x37 : `push arg <imm16>' */
+	.long target16_push_const            /* 0x38 : `push const <imm16>' */
+	.long target16_push_ref              /* 0x39 : `push ref <imm16>' */
 	.long invop
-	.long target16_push_static           /* `push static <imm16>' */
-	.long target16_push_extern           /* `push extern <imm16>:<imm16>' */
+	.long target16_push_static           /* 0x3b : `push static <imm16>' */
+	.long target16_push_extern           /* 0x3c : `push extern <imm16>:<imm16>' */
 	.long invop
-	.long target16_push_global           /* `push global <imm16>' */
-	.long target16_push_local            /* `push local <imm16>' */
-	.long target_cast_hashset            /* `cast top, HashSet' */
-	.long target_cast_dict               /* `cast top, Dict' */
-	.long target16_pack_tuple            /* `push pack Tuple, #<imm16>' */
-	.long target16_pack_list             /* `push pack List, #<imm16>' */
+	.long target16_push_global           /* 0x3e : `push global <imm16>' */
+	.long target16_push_local            /* 0x3f : `push local <imm16>' */
+	.long target_cast_hashset            /* 0x40 : `cast top, HashSet' */
+	.long target_cast_dict               /* 0x41 : `cast top, Dict' */
+	.long target16_pack_tuple            /* 0x42 : `push pack Tuple, #<imm16>' */
+	.long target16_pack_list             /* 0x43 : `push pack List, #<imm16>' */
 	.long invop
 	.long invop
-	.long target16_unpack                /* `unpack pop, #<imm16>' */
+	.long target16_unpack                /* 0x46 : `unpack pop, #<imm16>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9665,42 +9700,42 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long target_push_true               /* `push true' */
-	.long target_push_false              /* `push false' */
-	.long target_pack_hashset            /* `push pack HashSet, #<imm8>' */
-	.long target_pack_dict               /* `push pack Dict, #<imm8>*2' */
+	.long target_push_true               /* 0x50 : `push true' */
+	.long target_push_false              /* 0x51 : `push false' */
+	.long target_pack_hashset            /* 0x52 : `push pack HashSet, #<imm8>' */
+	.long target_pack_dict               /* 0x53 : `push pack Dict, #<imm8>*2' */
 	.long invop
 	.long invop
 	.long invop
 	.long invop
 	.long invop
-	.long target_bounditem               /* `bounditem top, pop' */
-	.long target16_getattr_c             /* `getattr top, const <imm16>' */
-	.long target16_delattr_c             /* `delattr pop, const <imm16>' */
-	.long target16_setattr_c             /* `setattr pop, const <imm16>, pop' */
-	.long target16_getattr_this_c        /* `push getattr this, const <imm16>' */
-	.long target16_delattr_this_c        /* `delattr this, const <imm16>' */
-	.long target16_setattr_this_c        /* `setattr this, const <imm16>, pop' */
-	.long target_cmp_so                  /* `cmp so, top, pop' */
-	.long target_cmp_do                  /* `cmp do, top, pop' */
-	.long target16_pack_hashset          /* `push pack HashSet, #<imm16>' */
-	.long target16_pack_dict             /* `push pack Dict, #<imm16>*2' */
-	.long target16_getcmember            /* `getcmember top, $<imm16>' */
-	.long target_class                   /* `class top, pop' */
-	.long target16_class_c               /* `class top, const <imm16>' */
-	.long target16_class_gc              /* `push class global <imm16>, const <imm16>' */
-	.long target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
-	.long target16_defcmember            /* `defcmember top, $<imm16>, pop' */
-	.long target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm16>' */
-	.long target16_callcmember_this_r    /* `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
+	.long target_bounditem               /* 0x59 : `bounditem top, pop' */
+	.long target16_getattr_c             /* 0x5a : `getattr top, const <imm16>' */
+	.long target16_delattr_c             /* 0x5b : `delattr pop, const <imm16>' */
+	.long target16_setattr_c             /* 0x5c : `setattr pop, const <imm16>, pop' */
+	.long target16_getattr_this_c        /* 0x5d : `push getattr this, const <imm16>' */
+	.long target16_delattr_this_c        /* 0x5e : `delattr this, const <imm16>' */
+	.long target16_setattr_this_c        /* 0x5f : `setattr this, const <imm16>, pop' */
+	.long target_cmp_so                  /* 0x60 : `cmp so, top, pop' */
+	.long target_cmp_do                  /* 0x61 : `cmp do, top, pop' */
+	.long target16_pack_hashset          /* 0x62 : `push pack HashSet, #<imm16>' */
+	.long target16_pack_dict             /* 0x63 : `push pack Dict, #<imm16>*2' */
+	.long target16_getcmember            /* 0x64 : `getcmember top, $<imm16>' */
+	.long target_class                   /* 0x65 : `class top, pop' */
+	.long target16_class_c               /* 0x66 : `class top, const <imm16>' */
+	.long target16_class_gc              /* 0x67 : `push class global <imm16>, const <imm16>' */
+	.long target16_class_ec              /* 0x68 : `push class extern <imm16>:<imm16>, const <imm16>' */
+	.long target16_defcmember            /* 0x69 : `defcmember top, $<imm16>, pop' */
+	.long target16_getcmember_r          /* 0x6a : `push getcmember ref <imm16>, $<imm16>' */
+	.long target16_callcmember_this_r    /* 0x6b : `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	.long invop
 	.long invop
-	.long target16_function_c            /* `push function const <imm16>, #<imm8>+1' */
-	.long target16_function_c_16         /* `push function const <imm16>, #<imm16>+1' */
-	.long target_supergetattr_this_rc    /* `push getattr this, ref <imm8>, const <imm8>' */
-	.long target16_supergetattr_this_rc  /* `push getattr this, ref <imm16>, const <imm16>' */
-	.long target_supercallattr_this_rc   /* `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
-	.long target16_supercallattr_this_rc /* `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
+	.long target16_function_c            /* 0x6e : `push function const <imm16>, #<imm8>+1' */
+	.long target16_function_c_16         /* 0x6f : `push function const <imm16>, #<imm16>+1' */
+	.long target_supergetattr_this_rc    /* 0x70 : `push getattr this, ref <imm8>, const <imm8>' */
+	.long target16_supergetattr_this_rc  /* 0x71 : `push getattr this, ref <imm16>, const <imm16>' */
+	.long target_supercallattr_this_rc   /* 0x72 : `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
+	.long target16_supercallattr_this_rc /* 0x73 : `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9712,8 +9747,8 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long target_incpost                 /* `push inc' */
-	.long target_decpost                 /* `push dec' */
+	.long target_incpost                 /* 0x7f : `push inc' */
+	.long target_decpost                 /* 0x80 : `push dec' */
 	.long invop
 	.long invop
 	.long invop
@@ -9728,13 +9763,13 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long target16_delop                 /* `-' */
-	.long target16_nop                   /* `nop16' */
-	.long target_reduce_min              /* `reduce top, min' */
-	.long target_reduce_max              /* `reduce top, max' */
-	.long target_reduce_sum              /* `reduce top, sum' */
-	.long target_reduce_any              /* `reduce top, any' */
-	.long target_reduce_all              /* `reduce top, all' */
+	.long target16_delop                 /* 0x8f : `-' */
+	.long target16_nop                   /* 0x90 : `nop16' */
+	.long target_reduce_min              /* 0x91 : `reduce top, min' */
+	.long target_reduce_max              /* 0x92 : `reduce top, max' */
+	.long target_reduce_sum              /* 0x93 : `reduce top, sum' */
+	.long target_reduce_any              /* 0x94 : `reduce top, any' */
+	.long target_reduce_all              /* 0x95 : `reduce top, all' */
 	.long invop
 	.long invop
 	.long invop
@@ -9746,69 +9781,69 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long target16_print_c               /* `print const <imm16>' */
-	.long target16_print_c_sp            /* `print const <imm16>, sp' */
-	.long target16_print_c_nl            /* `print const <imm16>, nl' */
-	.long target_range_0_i32             /* `push range $0, $<imm32>' */
+	.long target16_print_c               /* 0xa1 : `print const <imm16>' */
+	.long target16_print_c_sp            /* 0xa2 : `print const <imm16>, sp' */
+	.long target16_print_c_nl            /* 0xa3 : `print const <imm16>, nl' */
+	.long target_range_0_i32             /* 0xa4 : `push range $0, $<imm32>' */
 	.long invop
-	.long target_varargs_unpack          /* `unpack varargs, #<imm8>' */
-	.long target_push_varkwds_ne         /* `push bool varkwds' */
+	.long target_varargs_unpack          /* 0xa6 : `unpack varargs, #<imm8>' */
+	.long target_push_varkwds_ne         /* 0xa7 : `push bool varkwds' */
 	.long invop
-	.long target16_fprint_c              /* `print top, const <imm16>' */
-	.long target16_fprint_c_sp           /* `print top, const <imm16>, sp' */
-	.long target16_fprint_c_nl           /* `print top, const <imm16>, nl' */
-	.long target_varargs_cmp_eq_sz       /* `push cmp eq, #varargs, $<imm8>' */
-	.long target_varargs_cmp_gr_sz       /* `push cmp gr, #varargs, $<imm8>' */
+	.long target16_fprint_c              /* 0xa9 : `print top, const <imm16>' */
+	.long target16_fprint_c_sp           /* 0xaa : `print top, const <imm16>, sp' */
+	.long target16_fprint_c_nl           /* 0xab : `print top, const <imm16>, nl' */
+	.long target_varargs_cmp_eq_sz       /* 0xac : `push cmp eq, #varargs, $<imm8>' */
+	.long target_varargs_cmp_gr_sz       /* 0xad : `push cmp gr, #varargs, $<imm8>' */
 	.long invop
 	.long invop
 	.long invop
-	.long target16_contains_c            /* `push contains const <imm16>, pop' */
-	.long target_varargs_getitem         /* `getitem varargs, top' */
-	.long target_varargs_getitem_i       /* `push getitem varargs, $<imm8>' */
-	.long target16_getitem_c             /* `getitem top, const <imm16>' */
-	.long target_varargs_getsize         /* `push getsize varargs' */
+	.long target16_contains_c            /* 0xb1 : `push contains const <imm16>, pop' */
+	.long target_varargs_getitem         /* 0xb2 : `getitem varargs, top' */
+	.long target_varargs_getitem_i       /* 0xb3 : `push getitem varargs, $<imm8>' */
+	.long target16_getitem_c             /* 0xb4 : `getitem top, const <imm16>' */
+	.long target_varargs_getsize         /* 0xb5 : `push getsize varargs' */
 	.long invop
 	.long invop
-	.long target16_setitem_c             /* `setitem pop, const <imm16>, pop' */
-	.long target_iternext                /* `iternext top' */
+	.long target16_setitem_c             /* 0xb8 : `setitem pop, const <imm16>, pop' */
+	.long target_iternext                /* 0xb9 : `iternext top' */
 	.long invop
 	.long invop
 	.long invop
 	.long invop
-	.long target_getmember               /* `getmember top, pop, $<imm8>' */
-	.long target16_getmember             /* `getmember top, pop, $<imm16>' */
-	.long target_delmember               /* `delmember pop, pop, $<imm8>' */
-	.long target16_delmember             /* `delmember pop, pop, $<imm16>' */
-	.long target_setmember               /* `setmember pop, pop, $<imm8>, pop' */
-	.long target16_setmember             /* `setmember pop, pop, $<imm16>, pop' */
-	.long target_boundmember             /* `boundmember top, pop, $<imm8>' */
-	.long target16_boundmember           /* `boundmember top, pop, $<imm16>' */
-	.long target_getmember_this          /* `push getmember this, pop, $<imm8>' */
-	.long target16_getmember_this        /* `push getmember this, pop, $<imm16>' */
-	.long target_delmember_this          /* `delmember this, pop, $<imm8>' */
-	.long target16_delmember_this        /* `delmember this, pop, $<imm16>' */
-	.long target_setmember_this          /* `setmember this, pop, $<imm8>, pop' */
-	.long target16_setmember_this        /* `setmember this, pop, $<imm16>, pop' */
-	.long target_boundmember_this        /* `push boundmember this, pop, $<imm8>' */
-	.long target16_boundmember_this      /* `push boundmember this, pop, $<imm16>' */
-	.long target16_callattr_c_kw         /* `callattr top, const <imm16>, #<imm8>, const <imm16>' */
-	.long target16_callattr_c_tuple_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
-	.long target_callattr_kwds           /* `callattr top, pop, #<imm8>, pop' */
-	.long target_callattr_tuple_kwds     /* `callattr top, pop, pop..., pop' */
-	.long target16_callattr_c            /* `callattr top, const <imm16>, #<imm8>' */
-	.long target16_callattr_c_tuple      /* `callattr top, const <imm16>, pop' */
-	.long target16_callattr_this_c       /* `callattr this, const <imm16>, #<imm8>' */
-	.long target16_callattr_this_c_tuple /* `callattr this, const <imm16>, pop' */
-	.long target16_callattr_c_seq        /* `callattr top, const <imm16>, [#<imm8>]' */
-	.long target16_callattr_c_map        /* `callattr top, const <imm16>, {#<imm8>*2}' */
+	.long target_getmember               /* 0xbe : `getmember top, pop, $<imm8>' */
+	.long target16_getmember             /* 0xbf : `getmember top, pop, $<imm16>' */
+	.long target_delmember               /* 0xc0 : `delmember pop, pop, $<imm8>' */
+	.long target16_delmember             /* 0xc1 : `delmember pop, pop, $<imm16>' */
+	.long target_setmember               /* 0xc2 : `setmember pop, pop, $<imm8>, pop' */
+	.long target16_setmember             /* 0xc3 : `setmember pop, pop, $<imm16>, pop' */
+	.long target_boundmember             /* 0xc4 : `boundmember top, pop, $<imm8>' */
+	.long target16_boundmember           /* 0xc5 : `boundmember top, pop, $<imm16>' */
+	.long target_getmember_this          /* 0xc6 : `push getmember this, pop, $<imm8>' */
+	.long target16_getmember_this        /* 0xc7 : `push getmember this, pop, $<imm16>' */
+	.long target_delmember_this          /* 0xc8 : `delmember this, pop, $<imm8>' */
+	.long target16_delmember_this        /* 0xc9 : `delmember this, pop, $<imm16>' */
+	.long target_setmember_this          /* 0xca : `setmember this, pop, $<imm8>, pop' */
+	.long target16_setmember_this        /* 0xcb : `setmember this, pop, $<imm16>, pop' */
+	.long target_boundmember_this        /* 0xcc : `push boundmember this, pop, $<imm8>' */
+	.long target16_boundmember_this      /* 0xcd : `push boundmember this, pop, $<imm16>' */
+	.long target16_callattr_c_kw         /* 0xce : `callattr top, const <imm16>, #<imm8>, const <imm16>' */
+	.long target16_callattr_c_tuple_kw   /* 0xcf : `callattr top, const <imm16>, pop..., const <imm16>' */
+	.long target_callattr_kwds           /* 0xd0 : `callattr top, pop, #<imm8>, pop' */
+	.long target_callattr_tuple_kwds     /* 0xd1 : `callattr top, pop, pop..., pop' */
+	.long target16_callattr_c            /* 0xd2 : `callattr top, const <imm16>, #<imm8>' */
+	.long target16_callattr_c_tuple      /* 0xd3 : `callattr top, const <imm16>, pop' */
+	.long target16_callattr_this_c       /* 0xd4 : `callattr this, const <imm16>, #<imm8>' */
+	.long target16_callattr_this_c_tuple /* 0xd5 : `callattr this, const <imm16>, pop' */
+	.long target16_callattr_c_seq        /* 0xd6 : `callattr top, const <imm16>, [#<imm8>]' */
+	.long target16_callattr_c_map        /* 0xd7 : `callattr top, const <imm16>, {#<imm8>*2}' */
 	.long invop
-	.long target16_getmember_this_r      /* `push getmember this, ref <imm16>, $<imm16>' */
-	.long target16_delmember_this_r      /* `delmember this, ref <imm16>, $<imm16>' */
-	.long target16_setmember_this_r      /* `setmember this, ref <imm16>, $<imm16>, pop' */
-	.long target16_boundmember_this_r    /* `push boundmember this, ref <imm16>, $<imm16>' */
-	.long target16_call_extern           /* `push call extern <imm16>:<imm16>, #<imm8>' */
-	.long target16_call_global           /* `push call global <imm16>, #<imm8>' */
-	.long target16_call_local            /* `push call local <imm16>, #<imm8>' */
+	.long target16_getmember_this_r      /* 0xd9 : `push getmember this, ref <imm16>, $<imm16>' */
+	.long target16_delmember_this_r      /* 0xda : `delmember this, ref <imm16>, $<imm16>' */
+	.long target16_setmember_this_r      /* 0xdb : `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long target16_boundmember_this_r    /* 0xdc : `push boundmember this, ref <imm16>, $<imm16>' */
+	.long target16_call_extern           /* 0xdd : `push call extern <imm16>:<imm16>, #<imm8>' */
+	.long target16_call_global           /* 0xde : `push call global <imm16>, #<imm8>' */
+	.long target16_call_local            /* 0xdf : `push call local <imm16>, #<imm8>' */
 	.long invop
 	.long invop
 	.long invop
@@ -9835,240 +9870,238 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long target16_stack                 /* `stack #<imm16>' */
-	.long target16_static                /* `static <imm16>' */
-	.long target16_extern                /* `extern <imm16>:<imm16>' */
+	.long target16_stack                 /* 0xfa : `stack #<imm16>' */
+	.long target16_static                /* 0xfb : `static <imm16>' */
+	.long target16_extern                /* 0xfc : `extern <imm16>:<imm16>' */
 	.long invop
-	.long target16_global                /* `global <imm16>' */
-	.long target16_local                 /* `local  <imm16>' */
+	.long target16_global                /* 0xfe : `global <imm16>' */
+	.long target16_local                 /* 0xff : `local  <imm16>' */
 END(inst_table_f0)
 prefix_inst_table:
-	.long prefix_target_ret_none                /* `ret' */
-	.long prefix_target_ret                     /* `ret pop' */
-	.long prefix_target_yieldall                /* `yield foreach, pop' */
-	.long prefix_target_throw                   /* `throw pop' */
-	.long prefix_target_rethrow                 /* `throw except' */
-	.long prefix_target_setret                  /* `setret pop' */
-	.long prefix_target_endcatch                /* `end catch' */
-	.long prefix_target_endfinally              /* `end finally' */
-	.long prefix_target_call_kw                 /* `call top, #<imm8>, const <imm8>' */
-	.long prefix_target_call_tuple_kw           /* `call top, pop..., const <imm8>' */
+	.long prefix_target_ret_none                /* 0x00 : `ret' */
+	.long prefix_target_ret                     /* 0x01 : `ret pop' */
+	.long prefix_target_yieldall                /* 0x02 : `yield foreach, pop' */
+	.long prefix_target_throw                   /* 0x03 : `throw pop' */
+	.long prefix_target_rethrow                 /* 0x04 : `throw except' */
+	.long prefix_target_setret                  /* 0x05 : `setret pop' */
+	.long prefix_target_endcatch                /* 0x06 : `end catch' */
+	.long prefix_target_endfinally              /* 0x07 : `end finally' */
+	.long prefix_target_call_kw                 /* 0x08 : `call top, #<imm8>, const <imm8>' */
+	.long prefix_target_call_tuple_kw           /* 0x09 : `call top, pop..., const <imm8>' */
 	.long prefix_invop
-	.long prefix_target_push_bnd_arg            /* `push bound arg <imm8>' */
-	.long prefix_target_push_bnd_extern         /* `push bound extern <imm8>:<imm8>' */
+	.long prefix_target_push_bnd_arg            /* 0x0b : `push bound arg <imm8>' */
+	.long prefix_target_push_bnd_extern         /* 0x0c : `push bound extern <imm8>:<imm8>' */
 	.long prefix_invop
-	.long prefix_target_push_bnd_global         /* `push bound global <imm8>' */
-	.long prefix_target_push_bnd_local          /* `push bound local <imm8>' */
-	.long prefix_target_jf                      /* `jf pop, <Sdisp8>' */
-	.long prefix_target_jf16                    /* `jf pop, <Sdisp16>' */
-	.long prefix_target_jt                      /* `jt pop, <Sdisp8>' */
-	.long prefix_target_jt16                    /* `jt pop, <Sdisp16>' */
-	.long prefix_target_jmp                     /* `jmp <Sdisp8>' */
-	.long prefix_target_jmp16                   /* `jmp <Sdisp16>' */
-	.long prefix_target_foreach                 /* `foreach top, <Sdisp8>' */
-	.long prefix_target_foreach16               /* `foreach top, <Sdisp16>' */
-	.long prefix_target_jmp_pop                 /* `jmp pop' */
-	.long prefix_target_operator                /* `op top, $<imm8>, #<imm8>' */
-	.long prefix_target_operator_tuple          /* `op top, $<imm8>, pop...' */
-	.long prefix_target_call                    /* `call top, #<imm8>' */
-	.long prefix_target_call_tuple              /* `call top, pop...' */
+	.long prefix_target_push_bnd_global         /* 0x0e : `push bound global <imm8>' */
+	.long prefix_target_push_bnd_local          /* 0x0f : `push bound local <imm8>' */
+	.long prefix_target_jf                      /* 0x10 : `jf pop, <Sdisp8>' */
+	.long prefix_target_jf16                    /* 0x11 : `jf pop, <Sdisp16>' */
+	.long prefix_target_jt                      /* 0x12 : `jt pop, <Sdisp8>' */
+	.long prefix_target_jt16                    /* 0x13 : `jt pop, <Sdisp16>' */
+	.long prefix_target_jmp                     /* 0x14 : `jmp <Sdisp8>' */
+	.long prefix_target_jmp16                   /* 0x15 : `jmp <Sdisp16>' */
+	.long prefix_target_foreach                 /* 0x16 : `foreach top, <Sdisp8>' */
+	.long prefix_target_foreach16               /* 0x17 : `foreach top, <Sdisp16>' */
+	.long prefix_target_jmp_pop                 /* 0x18 : `jmp pop' */
+	.long prefix_target_operator                /* 0x19 : `op top, $<imm8>, #<imm8>' */
+	.long prefix_target_operator_tuple          /* 0x1a : `op top, $<imm8>, pop...' */
+	.long prefix_target_call                    /* 0x1b : `call top, #<imm8>' */
+	.long prefix_target_call_tuple              /* 0x1c : `call top, pop...' */
 	.long prefix_invop
-	.long prefix_target_del_global              /* `del global <imm8>' */
-	.long prefix_target_del_local               /* `del local <imm8>' */
-	.long prefix_target_swap                    /* `swap' */
-	.long prefix_target_lrot                    /* `lrot #<imm8>+3' */
-	.long prefix_target_rrot                    /* `rrot #<imm8>+3' */
-	.long prefix_target_dup                     /* `dup' */
-	.long prefix_target_dup_n                   /* `dup #SP - <imm8> - 2' */
-	.long prefix_target_pop                     /* `pop' */
-	.long prefix_target_pop_n                   /* `pop #SP - <imm8> - 2' */
-	.long prefix_target_adjstack                /* `adjstack #SP +/- <Simm8>' */
-	.long prefix_target_super                   /* `super top, pop' */
-	.long prefix_target_super_this_r            /* `push super this, ref <imm8>' */
+	.long prefix_target_del_global              /* 0x1e : `del global <imm8>' */
+	.long prefix_target_del_local               /* 0x1f : `del local <imm8>' */
+	.long prefix_target_swap                    /* 0x20 : `swap' */
+	.long prefix_target_lrot                    /* 0x21 : `lrot #<imm8>+3' */
+	.long prefix_target_rrot                    /* 0x22 : `rrot #<imm8>+3' */
+	.long prefix_target_dup                     /* 0x23 : `dup' */
+	.long prefix_target_dup_n                   /* 0x24 : `dup #SP - <imm8> - 2' */
+	.long prefix_target_pop                     /* 0x25 : `pop' */
+	.long prefix_target_pop_n                   /* 0x26 : `pop #SP - <imm8> - 2' */
+	.long prefix_target_adjstack                /* 0x27 : `adjstack #SP +/- <Simm8>' */
+	.long prefix_target_super                   /* 0x28 : `super top, pop' */
+	.long prefix_target_super_this_r            /* 0x29 : `push super this, ref <imm8>' */
 	.long prefix_invop
-	.long prefix_target_pop_static              /* `pop static <imm8>' */
-	.long prefix_target_pop_extern              /* `pop extern <imm8>:<imm8>' */
+	.long prefix_target_pop_static              /* 0x2b : `pop static <imm8>' */
+	.long prefix_target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
 	.long prefix_invop
-	.long prefix_target_pop_global              /* `pop global <imm8>' */
-	.long prefix_target_pop_local               /* `pop local <imm8>' */
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_target_push_none               /* `push none' */
-	.long prefix_target_push_varargs            /* `push varargs' */
-	.long prefix_target_push_varkwds            /* `push varkwds' */
-	.long prefix_target_push_module             /* `push module <imm8>' */
-	.long prefix_target_push_arg                /* `push arg <imm8>' */
-	.long prefix_target_push_const              /* `push const <imm8>' */
-	.long prefix_target_push_ref                /* `push ref <imm8>' */
-	.long prefix_invop
-	.long prefix_target_push_static             /* `push static <imm8>' */
-	.long prefix_target_push_extern             /* `push extern <imm8>:<imm8>' */
-	.long prefix_invop
-	.long prefix_target_push_global             /* `push global <imm8>' */
-	.long prefix_target_push_local              /* `push local <imm8>' */
-	.long prefix_target_cast_tuple              /* `cast top, Tuple' */
-	.long prefix_target_cast_list               /* `cast top, List' */
-	.long prefix_target_pack_tuple              /* `push pack Tuple, #<imm8>' */
-	.long prefix_target_pack_list               /* `push pack List, #<imm8>' */
+	.long prefix_target_pop_global              /* 0x2e : `pop global <imm8>' */
+	.long prefix_target_pop_local               /* 0x2f : `pop local <imm8>' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_unpack                  /* `unpack pop, #<imm8>' */
-	.long prefix_target_concat                  /* `concat top, pop' */
-	.long prefix_target_extend                  /* `extend top, #<imm8>' */
-	.long prefix_target_typeof                  /* `typeof top' */
-	.long prefix_target_classof                 /* `classof top' */
-	.long prefix_target_superof                 /* `superof top' */
-	.long prefix_target_instanceof              /* `instanceof top, pop' */
-	.long prefix_target_str                     /* `str top' */
-	.long prefix_target_repr                    /* `repr top' */
 	.long prefix_invop
-	.long prefix_target_bool                    /* `bool top' */
-	.long prefix_target_not                     /* `not top' */
-	.long prefix_target_assign                  /* `assign pop, pop' */
-	.long prefix_target_move_assign             /* `assign move, pop, pop' */
-	.long prefix_target_copy                    /* `copy top' */
-	.long prefix_target_deepcopy                /* `deepcopy top' */
-	.long prefix_target_getattr                 /* `getattr top, pop' */
-	.long prefix_target_delattr                 /* `delattr pop, pop' */
-	.long prefix_target_setattr                 /* `setattr pop, pop, pop' */
-	.long prefix_target_boundattr               /* `boundattr top, pop' */
-	.long prefix_target_getattr_c               /* `getattr top, const <imm8>' */
-	.long prefix_target_delattr_c               /* `delattr pop, const <imm8>' */
-	.long prefix_target_setattr_c               /* `setattr pop, const <imm8>, pop' */
-	.long prefix_target_getattr_this_c          /* `push getattr this, const <imm8>' */
-	.long prefix_target_delattr_this_c          /* `delattr this, const <imm8>' */
-	.long prefix_target_setattr_this_c          /* `setattr this, const <imm8>, pop' */
-	.long prefix_target_cmp_eq                  /* `cmp eq, top, pop' */
-	.long prefix_target_cmp_ne                  /* `cmp ne, top, pop' */
-	.long prefix_target_cmp_ge                  /* `cmp ge, top, pop' */
-	.long prefix_target_cmp_lo                  /* `cmp lo, top, pop' */
-	.long prefix_target_cmp_le                  /* `cmp le, top, pop' */
-	.long prefix_target_cmp_gr                  /* `cmp gr, top, pop' */
-	.long prefix_target_class_c                 /* `class top, const <imm8>' */
-	.long prefix_target_class_gc                /* `push class global <imm8>, const <imm8>' */
-	.long prefix_target_class_ec                /* `push class extern <imm8>:<imm8>, const <imm8>' */
-	.long prefix_target_defcmember              /* `defcmember top, $<imm8>, pop' */
-	.long prefix_target_getcmember_r            /* `push getcmember ref <imm8>, $<imm8>' */
-	.long prefix_target_callcmember_this_r      /* `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
+	.long prefix_target_push_none               /* 0x33 : `push none' */
+	.long prefix_target_push_varargs            /* 0x34 : `push varargs' */
+	.long prefix_target_push_varkwds            /* 0x35 : `push varkwds' */
+	.long prefix_target_push_module             /* 0x36 : `push module <imm8>' */
+	.long prefix_target_push_arg                /* 0x37 : `push arg <imm8>' */
+	.long prefix_target_push_const              /* 0x38 : `push const <imm8>' */
+	.long prefix_target_push_ref                /* 0x39 : `push ref <imm8>' */
+	.long prefix_invop
+	.long prefix_target_push_static             /* 0x3b : `push static <imm8>' */
+	.long prefix_target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
+	.long prefix_invop
+	.long prefix_target_push_global             /* 0x3e : `push global <imm8>' */
+	.long prefix_target_push_local              /* 0x3f : `push local <imm8>' */
+	.long prefix_target_cast_tuple              /* 0x40 : `cast top, Tuple' */
+	.long prefix_target_cast_list               /* 0x41 : `cast top, List' */
+	.long prefix_target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
+	.long prefix_target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_function_c              /* `push function const <imm8>, #<imm8>+1' */
-	.long prefix_target_function_c_16           /* `push function const <imm8>, #<imm16>+1' */
-	.long prefix_target_cast_int                /* `cast top, int' */
-	.long prefix_target_inv                     /* `inv top' */
-	.long prefix_target_pos                     /* `pos top' */
-	.long prefix_target_neg                     /* `neg top' */
-	.long prefix_target_add                     /* `add top, pop' */
-	.long prefix_target_sub                     /* `sub top, pop' */
-	.long prefix_target_mul                     /* `mul top, pop' */
-	.long prefix_target_div                     /* `div top, pop' */
-	.long prefix_target_mod                     /* `mod top, pop' */
-	.long prefix_target_shl                     /* `shl top, pop' */
-	.long prefix_target_shr                     /* `shr top, pop' */
-	.long prefix_target_and                     /* `and top, pop' */
-	.long prefix_target_or                      /* `or top, pop' */
-	.long prefix_target_xor                     /* `xor top, pop' */
-	.long prefix_target_pow                     /* `pow top, pop' */
-	.long prefix_target_inc                     /* `inc' */
-	.long prefix_target_dec                     /* `dec' */
-	.long prefix_target_add_simm8               /* `add top, $<Simm8>' */
-	.long prefix_target_add_imm32               /* `add top, $<imm32>' */
-	.long prefix_target_sub_simm8               /* `sub top, $<Simm8>' */
-	.long prefix_target_sub_imm32               /* `sub top, $<imm32>' */
-	.long prefix_target_mul_simm8               /* `mul top, $<Simm8>' */
-	.long prefix_target_div_simm8               /* `div top, $<Simm8>' */
-	.long prefix_target_mod_simm8               /* `mod top, $<Simm8>' */
-	.long prefix_target_shl_imm8                /* `shl top, $<imm8>' */
-	.long prefix_target_shr_imm8                /* `shr top, $<imm8>' */
-	.long prefix_target_and_imm32               /* `and top, $<imm32>' */
-	.long prefix_target_or_imm32                /* `or top, $<imm32>' */
-	.long prefix_target_xor_imm32               /* `xor top, $<imm32>' */
-	.long prefix_target_isnone                  /* `instanceof top, none' */
+	.long prefix_target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
+	.long prefix_target_concat                  /* 0x47 : `concat top, pop' */
+	.long prefix_target_extend                  /* 0x48 : `extend top, #<imm8>' */
+	.long prefix_target_typeof                  /* 0x49 : `typeof top' */
+	.long prefix_target_classof                 /* 0x4a : `classof top' */
+	.long prefix_target_superof                 /* 0x4b : `superof top' */
+	.long prefix_target_instanceof              /* 0x4c : `instanceof top, pop' */
+	.long prefix_target_str                     /* 0x4d : `str top' */
+	.long prefix_target_repr                    /* 0x4e : `repr top' */
 	.long prefix_invop
-	.long prefix_target_delop                   /* `-' */
-	.long prefix_target_nop                     /* `nop' */
-	.long prefix_target_print                   /* `print pop' */
-	.long prefix_target_print_sp                /* `print pop, sp' */
-	.long prefix_target_print_nl                /* `print pop, nl' */
-	.long prefix_target_printnl                 /* `print nl' */
-	.long prefix_target_printall                /* `print pop...' */
-	.long prefix_target_printall_sp             /* `print pop..., sp' */
-	.long prefix_target_printall_nl             /* `print pop..., nl' */
-	.long prefix_invop
-	.long prefix_target_fprint                  /* `print top, pop' */
-	.long prefix_target_fprint_sp               /* `print top, pop, sp' */
-	.long prefix_target_fprint_nl               /* `print top, pop, nl' */
-	.long prefix_target_fprintnl                /* `print top, nl' */
-	.long prefix_target_fprintall               /* `print top, pop...' */
-	.long prefix_target_fprintall_sp            /* `print top, pop..., sp' */
-	.long prefix_target_fprintall_nl            /* `print top, pop..., nl' */
-	.long prefix_invop
-	.long prefix_target_print_c                 /* `print const <imm8>' */
-	.long prefix_target_print_c_sp              /* `print const <imm8>, sp' */
-	.long prefix_target_print_c_nl              /* `print const <imm8>, nl' */
-	.long prefix_target_range_0_i16             /* `push range $0, $<imm16>' */
-	.long prefix_invop
-	.long prefix_target_enter                   /* `enter top' */
-	.long prefix_target_leave                   /* `leave pop' */
-	.long prefix_invop
-	.long prefix_target_fprint_c                /* `print top, const <imm8>' */
-	.long prefix_target_fprint_c_sp             /* `print top, const <imm8>, sp' */
-	.long prefix_target_fprint_c_nl             /* `print top, const <imm8>, nl' */
-	.long prefix_target_range                   /* `range top, pop' */
-	.long prefix_target_range_def               /* `push range default, pop' */
-	.long prefix_target_range_step              /* `range top, pop, pop' */
-	.long prefix_target_range_step_def          /* `push range default, pop, pop' */
-	.long prefix_target_contains                /* `contains top, pop' */
-	.long prefix_target_contains_c              /* `push contains const <imm8>, pop' */
-	.long prefix_target_getitem                 /* `getitem top, pop' */
-	.long prefix_target_getitem_i               /* `getitem top, $<Simm16>' */
-	.long prefix_target_getitem_c               /* `getitem top, const <imm8>' */
-	.long prefix_target_getsize                 /* `getsize top' */
-	.long prefix_target_setitem                 /* `setitem pop, pop, pop' */
-	.long prefix_target_setitem_i               /* `setitem pop, $<Simm16>, pop' */
-	.long prefix_target_setitem_c               /* `setitem pop, const <imm8>, pop' */
-	.long prefix_target_iterself                /* `iterself top' */
-	.long prefix_target_delitem                 /* `delitem pop, pop' */
-	.long prefix_target_getrange                /* `getrange top, pop, pop' */
-	.long prefix_target_getrange_pn             /* `getrange top, pop, none' */
-	.long prefix_target_getrange_np             /* `getrange top, none, pop' */
-	.long prefix_target_getrange_pi             /* `getrange top, pop, $<Simm16>' */
-	.long prefix_target_getrange_ip             /* `getrange top, $<Simm16>, pop' */
-	.long prefix_target_getrange_ni             /* `getrange top, none, $<Simm16>' */
-	.long prefix_target_getrange_in             /* `getrange top, $<Simm16>, none' */
-	.long prefix_target_getrange_ii             /* `getrange top, $<Simm16>, $<Simm16>' */
-	.long prefix_target_delrange                /* `delrange pop, pop, pop' */
-	.long prefix_target_setrange                /* `setrange pop, pop, pop, pop' */
-	.long prefix_target_setrange_pn             /* `setrange pop, pop, none, pop' */
-	.long prefix_target_setrange_np             /* `setrange pop, none, pop, pop' */
-	.long prefix_target_setrange_pi             /* `setrange pop, pop, $<Simm16>, pop' */
-	.long prefix_target_setrange_ip             /* `setrange pop, $<Simm16>, pop, pop' */
-	.long prefix_target_setrange_ni             /* `setrange pop, none, $<Simm16>, pop' */
-	.long prefix_target_setrange_in             /* `setrange pop, $<Simm16>, none, pop' */
-	.long prefix_target_setrange_ii             /* `setrange pop, $<Simm16>, $<Simm16>, pop' */
-	.long prefix_target_breakpoint              /* `debug break' */
-	.long prefix_target_ud                      /* `ud' */
-	.long prefix_target_callattr_c_kw           /* `callattr top, const <imm8>, #<imm8>, const <imm8>' */
-	.long prefix_target_callattr_c_tuple_kw     /* `callattr top, const <imm8>, pop..., const <imm8>' */
-	.long prefix_target_callattr                /* `callattr top, pop, #<imm8>' */
-	.long prefix_target_callattr_tuple          /* `callattr top, pop, pop...' */
-	.long prefix_target_callattr_c              /* `callattr top, const <imm8>, #<imm8>' */
-	.long prefix_target_callattr_c_tuple        /* `callattr top, const <imm8>, pop...' */
-	.long prefix_target_callattr_this_c         /* `push callattr this, const <imm8>, #<imm8>' */
-	.long prefix_target_callattr_this_c_tuple   /* `push callattr this, const <imm8>, pop...' */
-	.long prefix_target_callattr_c_seq          /* `callattr top, const <imm8>, [#<imm8>]' */
-	.long prefix_target_callattr_c_map          /* `callattr top, const <imm8>, {#<imm8>*2}' */
-	.long prefix_invop
-	.long prefix_target_getmember_this_r        /* `push getmember this, ref <imm8>, $<imm8>' */
-	.long prefix_target_delmember_this_r        /* `delmember this, ref <imm8>, $<imm8>' */
-	.long prefix_target_setmember_this_r        /* `setmember this, ref <imm8>, $<imm8>, pop' */
-	.long prefix_target_boundmember_this_r      /* `push boundmember this, ref <imm8>, $<imm8>' */
-	.long prefix_target_call_extern             /* `push call extern <imm8>:<imm8>, #<imm8>' */
-	.long prefix_target_call_global             /* `push call global <imm8>, #<imm8>' */
-	.long prefix_target_call_local              /* `push call local <imm8>, #<imm8>' */
+	.long prefix_target_bool                    /* 0x50 : `bool top' */
+	.long prefix_target_not                     /* 0x51 : `not top' */
+	.long prefix_target_assign                  /* 0x52 : `assign pop, pop' */
+	.long prefix_target_move_assign             /* 0x53 : `assign move, pop, pop' */
+	.long prefix_target_copy                    /* 0x54 : `copy top' */
+	.long prefix_target_deepcopy                /* 0x55 : `deepcopy top' */
+	.long prefix_target_getattr                 /* 0x56 : `getattr top, pop' */
+	.long prefix_target_delattr                 /* 0x57 : `delattr pop, pop' */
+	.long prefix_target_setattr                 /* 0x58 : `setattr pop, pop, pop' */
+	.long prefix_target_boundattr               /* 0x59 : `boundattr top, pop' */
+	.long prefix_target_getattr_c               /* 0x5a : `getattr top, const <imm8>' */
+	.long prefix_target_delattr_c               /* 0x5b : `delattr pop, const <imm8>' */
+	.long prefix_target_setattr_c               /* 0x5c : `setattr pop, const <imm8>, pop' */
+	.long prefix_target_getattr_this_c          /* 0x5d : `push getattr this, const <imm8>' */
+	.long prefix_target_delattr_this_c          /* 0x5e : `delattr this, const <imm8>' */
+	.long prefix_target_setattr_this_c          /* 0x5f : `setattr this, const <imm8>, pop' */
+	.long prefix_target_cmp_eq                  /* 0x60 : `cmp eq, top, pop' */
+	.long prefix_target_cmp_ne                  /* 0x61 : `cmp ne, top, pop' */
+	.long prefix_target_cmp_ge                  /* 0x62 : `cmp ge, top, pop' */
+	.long prefix_target_cmp_lo                  /* 0x63 : `cmp lo, top, pop' */
+	.long prefix_target_cmp_le                  /* 0x64 : `cmp le, top, pop' */
+	.long prefix_target_cmp_gr                  /* 0x65 : `cmp gr, top, pop' */
+	.long prefix_target_class_c                 /* 0x66 : `class top, const <imm8>' */
+	.long prefix_target_class_gc                /* 0x67 : `push class global <imm8>, const <imm8>' */
+	.long prefix_target_class_ec                /* 0x68 : `push class extern <imm8>:<imm8>, const <imm8>' */
+	.long prefix_target_defcmember              /* 0x69 : `defcmember top, $<imm8>, pop' */
+	.long prefix_target_getcmember_r            /* 0x6a : `push getcmember ref <imm8>, $<imm8>' */
+	.long prefix_target_callcmember_this_r      /* 0x6b : `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
+	.long prefix_target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>+1' */
+	.long prefix_target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>+1' */
+	.long prefix_target_cast_int                /* 0x70 : `cast top, int' */
+	.long prefix_target_inv                     /* 0x71 : `inv top' */
+	.long prefix_target_pos                     /* 0x72 : `pos top' */
+	.long prefix_target_neg                     /* 0x73 : `neg top' */
+	.long prefix_target_add                     /* 0x74 : `add top, pop' */
+	.long prefix_target_sub                     /* 0x75 : `sub top, pop' */
+	.long prefix_target_mul                     /* 0x76 : `mul top, pop' */
+	.long prefix_target_div                     /* 0x77 : `div top, pop' */
+	.long prefix_target_mod                     /* 0x78 : `mod top, pop' */
+	.long prefix_target_shl                     /* 0x79 : `shl top, pop' */
+	.long prefix_target_shr                     /* 0x7a : `shr top, pop' */
+	.long prefix_target_and                     /* 0x7b : `and top, pop' */
+	.long prefix_target_or                      /* 0x7c : `or top, pop' */
+	.long prefix_target_xor                     /* 0x7d : `xor top, pop' */
+	.long prefix_target_pow                     /* 0x7e : `pow top, pop' */
+	.long prefix_target_inc                     /* 0x7f : `inc' */
+	.long prefix_target_dec                     /* 0x80 : `dec' */
+	.long prefix_target_add_simm8               /* 0x81 : `add top, $<Simm8>' */
+	.long prefix_target_add_imm32               /* 0x82 : `add top, $<imm32>' */
+	.long prefix_target_sub_simm8               /* 0x83 : `sub top, $<Simm8>' */
+	.long prefix_target_sub_imm32               /* 0x84 : `sub top, $<imm32>' */
+	.long prefix_target_mul_simm8               /* 0x85 : `mul top, $<Simm8>' */
+	.long prefix_target_div_simm8               /* 0x86 : `div top, $<Simm8>' */
+	.long prefix_target_mod_simm8               /* 0x87 : `mod top, $<Simm8>' */
+	.long prefix_target_shl_imm8                /* 0x88 : `shl top, $<imm8>' */
+	.long prefix_target_shr_imm8                /* 0x89 : `shr top, $<imm8>' */
+	.long prefix_target_and_imm32               /* 0x8a : `and top, $<imm32>' */
+	.long prefix_target_or_imm32                /* 0x8b : `or top, $<imm32>' */
+	.long prefix_target_xor_imm32               /* 0x8c : `xor top, $<imm32>' */
+	.long prefix_target_isnone                  /* 0x8d : `instanceof top, none' */
+	.long prefix_invop
+	.long prefix_target_delop                   /* 0x8f : `-' */
+	.long prefix_target_nop                     /* 0x90 : `nop' */
+	.long prefix_target_print                   /* 0x91 : `print pop' */
+	.long prefix_target_print_sp                /* 0x92 : `print pop, sp' */
+	.long prefix_target_print_nl                /* 0x93 : `print pop, nl' */
+	.long prefix_target_printnl                 /* 0x94 : `print nl' */
+	.long prefix_target_printall                /* 0x95 : `print pop...' */
+	.long prefix_target_printall_sp             /* 0x96 : `print pop..., sp' */
+	.long prefix_target_printall_nl             /* 0x97 : `print pop..., nl' */
+	.long prefix_invop
+	.long prefix_target_fprint                  /* 0x99 : `print top, pop' */
+	.long prefix_target_fprint_sp               /* 0x9a : `print top, pop, sp' */
+	.long prefix_target_fprint_nl               /* 0x9b : `print top, pop, nl' */
+	.long prefix_target_fprintnl                /* 0x9c : `print top, nl' */
+	.long prefix_target_fprintall               /* 0x9d : `print top, pop...' */
+	.long prefix_target_fprintall_sp            /* 0x9e : `print top, pop..., sp' */
+	.long prefix_target_fprintall_nl            /* 0x9f : `print top, pop..., nl' */
+	.long prefix_invop
+	.long prefix_target_print_c                 /* 0xa1 : `print const <imm8>' */
+	.long prefix_target_print_c_sp              /* 0xa2 : `print const <imm8>, sp' */
+	.long prefix_target_print_c_nl              /* 0xa3 : `print const <imm8>, nl' */
+	.long prefix_target_range_0_i16             /* 0xa4 : `push range $0, $<imm16>' */
+	.long prefix_invop
+	.long prefix_target_enter                   /* 0xa6 : `enter top' */
+	.long prefix_target_leave                   /* 0xa7 : `leave pop' */
+	.long prefix_invop
+	.long prefix_target_fprint_c                /* 0xa9 : `print top, const <imm8>' */
+	.long prefix_target_fprint_c_sp             /* 0xaa : `print top, const <imm8>, sp' */
+	.long prefix_target_fprint_c_nl             /* 0xab : `print top, const <imm8>, nl' */
+	.long prefix_target_range                   /* 0xac : `range top, pop' */
+	.long prefix_target_range_def               /* 0xad : `push range default, pop' */
+	.long prefix_target_range_step              /* 0xae : `range top, pop, pop' */
+	.long prefix_target_range_step_def          /* 0xaf : `push range default, pop, pop' */
+	.long prefix_target_contains                /* 0xb0 : `contains top, pop' */
+	.long prefix_target_contains_c              /* 0xb1 : `push contains const <imm8>, pop' */
+	.long prefix_target_getitem                 /* 0xb2 : `getitem top, pop' */
+	.long prefix_target_getitem_i               /* 0xb3 : `getitem top, $<Simm16>' */
+	.long prefix_target_getitem_c               /* 0xb4 : `getitem top, const <imm8>' */
+	.long prefix_target_getsize                 /* 0xb5 : `getsize top' */
+	.long prefix_target_setitem                 /* 0xb6 : `setitem pop, pop, pop' */
+	.long prefix_target_setitem_i               /* 0xb7 : `setitem pop, $<Simm16>, pop' */
+	.long prefix_target_setitem_c               /* 0xb8 : `setitem pop, const <imm8>, pop' */
+	.long prefix_target_iterself                /* 0xb9 : `iterself top' */
+	.long prefix_target_delitem                 /* 0xba : `delitem pop, pop' */
+	.long prefix_target_getrange                /* 0xbb : `getrange top, pop, pop' */
+	.long prefix_target_getrange_pn             /* 0xbc : `getrange top, pop, none' */
+	.long prefix_target_getrange_np             /* 0xbd : `getrange top, none, pop' */
+	.long prefix_target_getrange_pi             /* 0xbe : `getrange top, pop, $<Simm16>' */
+	.long prefix_target_getrange_ip             /* 0xbf : `getrange top, $<Simm16>, pop' */
+	.long prefix_target_getrange_ni             /* 0xc0 : `getrange top, none, $<Simm16>' */
+	.long prefix_target_getrange_in             /* 0xc1 : `getrange top, $<Simm16>, none' */
+	.long prefix_target_getrange_ii             /* 0xc2 : `getrange top, $<Simm16>, $<Simm16>' */
+	.long prefix_target_delrange                /* 0xc3 : `delrange pop, pop, pop' */
+	.long prefix_target_setrange                /* 0xc4 : `setrange pop, pop, pop, pop' */
+	.long prefix_target_setrange_pn             /* 0xc5 : `setrange pop, pop, none, pop' */
+	.long prefix_target_setrange_np             /* 0xc6 : `setrange pop, none, pop, pop' */
+	.long prefix_target_setrange_pi             /* 0xc7 : `setrange pop, pop, $<Simm16>, pop' */
+	.long prefix_target_setrange_ip             /* 0xc8 : `setrange pop, $<Simm16>, pop, pop' */
+	.long prefix_target_setrange_ni             /* 0xc9 : `setrange pop, none, $<Simm16>, pop' */
+	.long prefix_target_setrange_in             /* 0xca : `setrange pop, $<Simm16>, none, pop' */
+	.long prefix_target_setrange_ii             /* 0xcb : `setrange pop, $<Simm16>, $<Simm16>, pop' */
+	.long prefix_target_breakpoint              /* 0xcc : `debug break' */
+	.long prefix_target_ud                      /* 0xcd : `ud' */
+	.long prefix_target_callattr_c_kw           /* 0xce : `callattr top, const <imm8>, #<imm8>, const <imm8>' */
+	.long prefix_target_callattr_c_tuple_kw     /* 0xcf : `callattr top, const <imm8>, pop..., const <imm8>' */
+	.long prefix_target_callattr                /* 0xd0 : `callattr top, pop, #<imm8>' */
+	.long prefix_target_callattr_tuple          /* 0xd1 : `callattr top, pop, pop...' */
+	.long prefix_target_callattr_c              /* 0xd2 : `callattr top, const <imm8>, #<imm8>' */
+	.long prefix_target_callattr_c_tuple        /* 0xd3 : `callattr top, const <imm8>, pop...' */
+	.long prefix_target_callattr_this_c         /* 0xd4 : `push callattr this, const <imm8>, #<imm8>' */
+	.long prefix_target_callattr_this_c_tuple   /* 0xd5 : `push callattr this, const <imm8>, pop...' */
+	.long prefix_target_callattr_c_seq          /* 0xd6 : `callattr top, const <imm8>, [#<imm8>]' */
+	.long prefix_target_callattr_c_map          /* 0xd7 : `callattr top, const <imm8>, {#<imm8>*2}' */
+	.long prefix_invop
+	.long prefix_target_getmember_this_r        /* 0xd9 : `push getmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_delmember_this_r        /* 0xda : `delmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_setmember_this_r        /* 0xdb : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long prefix_target_boundmember_this_r      /* 0xdc : `push boundmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_call_extern             /* 0xdd : `push call extern <imm8>:<imm8>, #<imm8>' */
+	.long prefix_target_call_global             /* 0xde : `push call global <imm8>, #<imm8>' */
+	.long prefix_target_call_local              /* 0xdf : `push call local <imm8>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -10083,22 +10116,24 @@ prefix_inst_table:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_extended1               /* `-' */
-	.long prefix_target_reserved1               /* `-' */
-	.long prefix_target_reserved2               /* `-' */
-	.long prefix_target_reserved3               /* `-' */
-	.long prefix_target_reserved4               /* `-' */
-	.long prefix_target_reserved5               /* `-' */
-	.long prefix_target_reserved6               /* `-' */
-	.long prefix_target_reserved7               /* `-' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_stack                   /* `stack #<imm8>' */
-	.long prefix_target_static                  /* `static <imm8>' */
-	.long prefix_target_extern                  /* `extern <imm8>:<imm8>' */
+	.long prefix_target_extended1               /* 0xf0 : `-' */
+	.long prefix_target_reserved1               /* 0xf1 : `-' */
+	.long prefix_target_reserved2               /* 0xf2 : `-' */
+	.long prefix_target_reserved3               /* 0xf3 : `-' */
+	.long prefix_target_reserved4               /* 0xf4 : `-' */
+	.long prefix_target_reserved5               /* 0xf5 : `-' */
+	.long prefix_target_reserved6               /* 0xf6 : `-' */
+	.long prefix_target_reserved7               /* 0xf7 : `-' */
 	.long prefix_invop
-	.long prefix_target_global                  /* `global <imm8>' */
-	.long prefix_target_local                   /* `local <imm8>' */
+	.long prefix_invop
+	.long prefix_target_stack                   /* 0xfa : `stack #<imm8>' */
+	.long prefix_target_static                  /* 0xfb : `static <imm8>' */
+	.long prefix_target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
+	.long prefix_invop
+	.long prefix_target_global                  /* 0xfe : `global <imm8>' */
+	.long prefix_target_local                   /* 0xff : `local <imm8>' */
 END(prefix_inst_table)
 prefix_inst_table_f0:
 	.long prefix_invop
@@ -10107,71 +10142,71 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_endcatch_n              /* `end catch, #<imm8>+1' */
-	.long prefix_target_endfinally_n            /* `end finally, #<imm8>+1' */
-	.long prefix_target16_call_kw               /* `call top, #<imm8>, const <imm16>' */
-	.long prefix_target16_call_tuple_kw         /* `call top, pop..., const <imm16>' */
+	.long prefix_target_endcatch_n              /* 0x06 : `end catch, #<imm8>+1' */
+	.long prefix_target_endfinally_n            /* 0x07 : `end finally, #<imm8>+1' */
+	.long prefix_target16_call_kw               /* 0x08 : `call top, #<imm8>, const <imm16>' */
+	.long prefix_target16_call_tuple_kw         /* 0x09 : `call top, pop..., const <imm16>' */
 	.long prefix_invop
-	.long prefix_target16_push_bnd_arg          /* `push bound arg <imm8>' */
-	.long prefix_target16_push_bnd_extern       /* `push bound extern <imm16>:<imm16>' */
+	.long prefix_target16_push_bnd_arg          /* 0x0b : `push bound arg <imm8>' */
+	.long prefix_target16_push_bnd_extern       /* 0x0c : `push bound extern <imm16>:<imm16>' */
 	.long prefix_invop
-	.long prefix_target16_push_bnd_global       /* `push bound global <imm16>' */
-	.long prefix_target16_push_bnd_local        /* `push bound local <imm16>' */
+	.long prefix_target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
+	.long prefix_target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target32_jmp                   /* `jmp <Sdisp32>' */
+	.long prefix_target32_jmp                   /* 0x14 : `jmp <Sdisp32>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_jmp_pop_pop             /* `jmp pop, #pop' */
-	.long prefix_target16_operator              /* `op top, $<imm16>, #<imm8>' */
-	.long prefix_target16_operator_tuple        /* `op top, $<imm16>, pop' */
-	.long prefix_target_call_seq                /* `call top, [#<imm8>]' */
-	.long prefix_target_call_map                /* `call top, {#<imm8>*2}' */
-	.long prefix_target_thiscall_tuple          /* `call top, pop, pop...' */
-	.long prefix_target16_del_global            /* `del global <imm16>' */
-	.long prefix_target16_del_local             /* `del local <imm16>' */
-	.long prefix_target_call_tuple_kwds         /* `call top, pop..., pop' */
-	.long prefix_target16_lrot                  /* `lrot #<imm16>+3' */
-	.long prefix_target16_rrot                  /* `rrot #<imm16>+3' */
+	.long prefix_target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
+	.long prefix_target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
+	.long prefix_target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop' */
+	.long prefix_target_call_seq                /* 0x1b : `call top, [#<imm8>]' */
+	.long prefix_target_call_map                /* 0x1c : `call top, {#<imm8>*2}' */
+	.long prefix_target_thiscall_tuple          /* 0x1d : `call top, pop, pop...' */
+	.long prefix_target16_del_global            /* 0x1e : `del global <imm16>' */
+	.long prefix_target16_del_local             /* 0x1f : `del local <imm16>' */
+	.long prefix_target_call_tuple_kwds         /* 0x20 : `call top, pop..., pop' */
+	.long prefix_target16_lrot                  /* 0x21 : `lrot #<imm16>+3' */
+	.long prefix_target16_rrot                  /* 0x22 : `rrot #<imm16>+3' */
 	.long prefix_invop
-	.long prefix_target16_dup_n                 /* `dup #SP - <imm16> - 2' */
+	.long prefix_target16_dup_n                 /* 0x24 : `dup #SP - <imm16> - 2' */
 	.long prefix_invop
-	.long prefix_target16_pop_n                 /* `pop #SP - <imm16> - 2' */
-	.long prefix_target16_adjstack              /* `adjstack #SP +/- <Simm16>' */
+	.long prefix_target16_pop_n                 /* 0x26 : `pop #SP - <imm16> - 2' */
+	.long prefix_target16_adjstack              /* 0x27 : `adjstack #SP +/- <Simm16>' */
 	.long prefix_invop
-	.long prefix_target16_super_this_r          /* `push super this, ref <imm16>' */
+	.long prefix_target16_super_this_r          /* 0x29 : `push super this, ref <imm16>' */
 	.long prefix_invop
-	.long prefix_target16_pop_static            /* `pop static <imm16>' */
-	.long prefix_target16_pop_extern            /* `pop extern <imm16>:<imm16>' */
+	.long prefix_target16_pop_static            /* 0x2b : `pop static <imm16>' */
+	.long prefix_target16_pop_extern            /* 0x2c : `pop extern <imm16>:<imm16>' */
 	.long prefix_invop
-	.long prefix_target16_pop_global            /* `pop global <imm16>' */
-	.long prefix_target16_pop_local             /* `pop local <imm16>' */
+	.long prefix_target16_pop_global            /* 0x2e : `pop global <imm16>' */
+	.long prefix_target16_pop_local             /* 0x2f : `pop local <imm16>' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_push_except             /* `push except' */
-	.long prefix_target_push_this               /* `push this' */
-	.long prefix_target_push_this_module        /* `push this_module' */
-	.long prefix_target_push_this_function      /* `push this_function' */
-	.long prefix_target16_push_module           /* `push module <imm16>' */
-	.long prefix_target16_push_arg              /* `push arg <imm16>' */
-	.long prefix_target16_push_const            /* `push const <imm16>' */
-	.long prefix_target16_push_ref              /* `push ref <imm16>' */
+	.long prefix_target_push_except             /* 0x32 : `push except' */
+	.long prefix_target_push_this               /* 0x33 : `push this' */
+	.long prefix_target_push_this_module        /* 0x34 : `push this_module' */
+	.long prefix_target_push_this_function      /* 0x35 : `push this_function' */
+	.long prefix_target16_push_module           /* 0x36 : `push module <imm16>' */
+	.long prefix_target16_push_arg              /* 0x37 : `push arg <imm16>' */
+	.long prefix_target16_push_const            /* 0x38 : `push const <imm16>' */
+	.long prefix_target16_push_ref              /* 0x39 : `push ref <imm16>' */
 	.long prefix_invop
-	.long prefix_target16_push_static           /* `push static <imm16>' */
-	.long prefix_target16_push_extern           /* `push extern <imm16>:<imm16>' */
+	.long prefix_target16_push_static           /* 0x3b : `push static <imm16>' */
+	.long prefix_target16_push_extern           /* 0x3c : `push extern <imm16>:<imm16>' */
 	.long prefix_invop
-	.long prefix_target16_push_global           /* `push global <imm16>' */
-	.long prefix_target16_push_local            /* `push local <imm16>' */
-	.long prefix_target_cast_hashset            /* `cast top, HashSet' */
-	.long prefix_target_cast_dict               /* `cast top, Dict' */
-	.long prefix_target16_pack_tuple            /* `push pack Tuple, #<imm16>' */
-	.long prefix_target16_pack_list             /* `push pack List, #<imm16>' */
+	.long prefix_target16_push_global           /* 0x3e : `push global <imm16>' */
+	.long prefix_target16_push_local            /* 0x3f : `push local <imm16>' */
+	.long prefix_target_cast_hashset            /* 0x40 : `cast top, HashSet' */
+	.long prefix_target_cast_dict               /* 0x41 : `cast top, Dict' */
+	.long prefix_target16_pack_tuple            /* 0x42 : `push pack Tuple, #<imm16>' */
+	.long prefix_target16_pack_list             /* 0x43 : `push pack List, #<imm16>' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_unpack                /* `unpack pop, #<imm16>' */
+	.long prefix_target16_unpack                /* 0x46 : `unpack pop, #<imm16>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -10181,42 +10216,42 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_push_true               /* `push true' */
-	.long prefix_target_push_false              /* `push false' */
-	.long prefix_target_pack_hashset            /* `push pack HashSet, #<imm8>' */
-	.long prefix_target_pack_dict               /* `push pack Dict, #<imm8>*2' */
+	.long prefix_target_push_true               /* 0x50 : `push true' */
+	.long prefix_target_push_false              /* 0x51 : `push false' */
+	.long prefix_target_pack_hashset            /* 0x52 : `push pack HashSet, #<imm8>' */
+	.long prefix_target_pack_dict               /* 0x53 : `push pack Dict, #<imm8>*2' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_bounditem               /* `bounditem top, pop' */
-	.long prefix_target16_getattr_c             /* `getattr top, const <imm16>' */
-	.long prefix_target16_delattr_c             /* `delattr pop, const <imm16>' */
-	.long prefix_target16_setattr_c             /* `setattr pop, const <imm16>, pop' */
-	.long prefix_target16_getattr_this_c        /* `push getattr this, const <imm16>' */
-	.long prefix_target16_delattr_this_c        /* `delattr this, const <imm16>' */
-	.long prefix_target16_setattr_this_c        /* `setattr this, const <imm16>, pop' */
-	.long prefix_target_cmp_so                  /* `cmp so, top, pop' */
-	.long prefix_target_cmp_do                  /* `cmp do, top, pop' */
-	.long prefix_target16_pack_hashset          /* `push pack HashSet, #<imm16>' */
-	.long prefix_target16_pack_dict             /* `push pack Dict, #<imm16>*2' */
-	.long prefix_target16_getcmember            /* `getcmember top, $<imm16>' */
-	.long prefix_target_class                   /* `class top, pop' */
-	.long prefix_target16_class_c               /* `class top, const <imm16>' */
-	.long prefix_target16_class_gc              /* `push class global <imm16>, const <imm16>' */
-	.long prefix_target16_class_ec              /* `push class extern <imm16>:<imm16>, const <imm16>' */
-	.long prefix_target16_defcmember            /* `defcmember top, $<imm16>, pop' */
-	.long prefix_target16_getcmember_r          /* `push getcmember ref <imm16>, $<imm16>' */
-	.long prefix_target16_callcmember_this_r    /* `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
+	.long prefix_target_bounditem               /* 0x59 : `bounditem top, pop' */
+	.long prefix_target16_getattr_c             /* 0x5a : `getattr top, const <imm16>' */
+	.long prefix_target16_delattr_c             /* 0x5b : `delattr pop, const <imm16>' */
+	.long prefix_target16_setattr_c             /* 0x5c : `setattr pop, const <imm16>, pop' */
+	.long prefix_target16_getattr_this_c        /* 0x5d : `push getattr this, const <imm16>' */
+	.long prefix_target16_delattr_this_c        /* 0x5e : `delattr this, const <imm16>' */
+	.long prefix_target16_setattr_this_c        /* 0x5f : `setattr this, const <imm16>, pop' */
+	.long prefix_target_cmp_so                  /* 0x60 : `cmp so, top, pop' */
+	.long prefix_target_cmp_do                  /* 0x61 : `cmp do, top, pop' */
+	.long prefix_target16_pack_hashset          /* 0x62 : `push pack HashSet, #<imm16>' */
+	.long prefix_target16_pack_dict             /* 0x63 : `push pack Dict, #<imm16>*2' */
+	.long prefix_target16_getcmember            /* 0x64 : `getcmember top, $<imm16>' */
+	.long prefix_target_class                   /* 0x65 : `class top, pop' */
+	.long prefix_target16_class_c               /* 0x66 : `class top, const <imm16>' */
+	.long prefix_target16_class_gc              /* 0x67 : `push class global <imm16>, const <imm16>' */
+	.long prefix_target16_class_ec              /* 0x68 : `push class extern <imm16>:<imm16>, const <imm16>' */
+	.long prefix_target16_defcmember            /* 0x69 : `defcmember top, $<imm16>, pop' */
+	.long prefix_target16_getcmember_r          /* 0x6a : `push getcmember ref <imm16>, $<imm16>' */
+	.long prefix_target16_callcmember_this_r    /* 0x6b : `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_function_c            /* `push function const <imm16>, #<imm8>+1' */
-	.long prefix_target16_function_c_16         /* `push function const <imm16>, #<imm16>+1' */
-	.long prefix_target_supergetattr_this_rc    /* `push getattr this, ref <imm8>, const <imm8>' */
-	.long prefix_target16_supergetattr_this_rc  /* `push getattr this, ref <imm16>, const <imm16>' */
-	.long prefix_target_supercallattr_this_rc   /* `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
-	.long prefix_target16_supercallattr_this_rc /* `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
+	.long prefix_target16_function_c            /* 0x6e : `push function const <imm16>, #<imm8>+1' */
+	.long prefix_target16_function_c_16         /* 0x6f : `push function const <imm16>, #<imm16>+1' */
+	.long prefix_target_supergetattr_this_rc    /* 0x70 : `push getattr this, ref <imm8>, const <imm8>' */
+	.long prefix_target16_supergetattr_this_rc  /* 0x71 : `push getattr this, ref <imm16>, const <imm16>' */
+	.long prefix_target_supercallattr_this_rc   /* 0x72 : `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
+	.long prefix_target16_supercallattr_this_rc /* 0x73 : `push callattr this, ref <imm16>, const <imm16>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -10228,8 +10263,8 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_incpost                 /* `push inc' */
-	.long prefix_target_decpost                 /* `push dec' */
+	.long prefix_target_incpost                 /* 0x7f : `push inc' */
+	.long prefix_target_decpost                 /* 0x80 : `push dec' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -10244,13 +10279,13 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_delop                 /* `-' */
-	.long prefix_target16_nop                   /* `nop16' */
-	.long prefix_target_reduce_min              /* `reduce top, min' */
-	.long prefix_target_reduce_max              /* `reduce top, max' */
-	.long prefix_target_reduce_sum              /* `reduce top, sum' */
-	.long prefix_target_reduce_any              /* `reduce top, any' */
-	.long prefix_target_reduce_all              /* `reduce top, all' */
+	.long prefix_target16_delop                 /* 0x8f : `-' */
+	.long prefix_target16_nop                   /* 0x90 : `nop16' */
+	.long prefix_target_reduce_min              /* 0x91 : `reduce top, min' */
+	.long prefix_target_reduce_max              /* 0x92 : `reduce top, max' */
+	.long prefix_target_reduce_sum              /* 0x93 : `reduce top, sum' */
+	.long prefix_target_reduce_any              /* 0x94 : `reduce top, any' */
+	.long prefix_target_reduce_all              /* 0x95 : `reduce top, all' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -10262,69 +10297,69 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_print_c               /* `print const <imm16>' */
-	.long prefix_target16_print_c_sp            /* `print const <imm16>, sp' */
-	.long prefix_target16_print_c_nl            /* `print const <imm16>, nl' */
-	.long prefix_target_range_0_i32             /* `push range $0, $<imm32>' */
+	.long prefix_target16_print_c               /* 0xa1 : `print const <imm16>' */
+	.long prefix_target16_print_c_sp            /* 0xa2 : `print const <imm16>, sp' */
+	.long prefix_target16_print_c_nl            /* 0xa3 : `print const <imm16>, nl' */
+	.long prefix_target_range_0_i32             /* 0xa4 : `push range $0, $<imm32>' */
 	.long prefix_invop
-	.long prefix_target_varargs_unpack          /* `unpack varargs, #<imm8>' */
-	.long prefix_target_push_varkwds_ne         /* `push bool varkwds' */
+	.long prefix_target_varargs_unpack          /* 0xa6 : `unpack varargs, #<imm8>' */
+	.long prefix_target_push_varkwds_ne         /* 0xa7 : `push bool varkwds' */
 	.long prefix_invop
-	.long prefix_target16_fprint_c              /* `print top, const <imm16>' */
-	.long prefix_target16_fprint_c_sp           /* `print top, const <imm16>, sp' */
-	.long prefix_target16_fprint_c_nl           /* `print top, const <imm16>, nl' */
-	.long prefix_target_varargs_cmp_eq_sz       /* `push cmp eq, #varargs, $<imm8>' */
-	.long prefix_target_varargs_cmp_gr_sz       /* `push cmp gr, #varargs, $<imm8>' */
+	.long prefix_target16_fprint_c              /* 0xa9 : `print top, const <imm16>' */
+	.long prefix_target16_fprint_c_sp           /* 0xaa : `print top, const <imm16>, sp' */
+	.long prefix_target16_fprint_c_nl           /* 0xab : `print top, const <imm16>, nl' */
+	.long prefix_target_varargs_cmp_eq_sz       /* 0xac : `push cmp eq, #varargs, $<imm8>' */
+	.long prefix_target_varargs_cmp_gr_sz       /* 0xad : `push cmp gr, #varargs, $<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_contains_c            /* `push contains const <imm16>, pop' */
-	.long prefix_target_varargs_getitem         /* `getitem varargs, top' */
-	.long prefix_target_varargs_getitem_i       /* `push getitem varargs, $<imm8>' */
-	.long prefix_target16_getitem_c             /* `getitem top, const <imm16>' */
-	.long prefix_target_varargs_getsize         /* `push getsize varargs' */
+	.long prefix_target16_contains_c            /* 0xb1 : `push contains const <imm16>, pop' */
+	.long prefix_target_varargs_getitem         /* 0xb2 : `getitem varargs, top' */
+	.long prefix_target_varargs_getitem_i       /* 0xb3 : `push getitem varargs, $<imm8>' */
+	.long prefix_target16_getitem_c             /* 0xb4 : `getitem top, const <imm16>' */
+	.long prefix_target_varargs_getsize         /* 0xb5 : `push getsize varargs' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_setitem_c             /* `setitem pop, const <imm16>, pop' */
-	.long prefix_target_iternext                /* `iternext top' */
+	.long prefix_target16_setitem_c             /* 0xb8 : `setitem pop, const <imm16>, pop' */
+	.long prefix_target_iternext                /* 0xb9 : `iternext top' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_getmember               /* `getmember top, pop, $<imm8>' */
-	.long prefix_target16_getmember             /* `getmember top, pop, $<imm16>' */
-	.long prefix_target_delmember               /* `delmember pop, pop, $<imm8>' */
-	.long prefix_target16_delmember             /* `delmember pop, pop, $<imm16>' */
-	.long prefix_target_setmember               /* `setmember pop, pop, $<imm8>, pop' */
-	.long prefix_target16_setmember             /* `setmember pop, pop, $<imm16>, pop' */
-	.long prefix_target_boundmember             /* `boundmember top, pop, $<imm8>' */
-	.long prefix_target16_boundmember           /* `boundmember top, pop, $<imm16>' */
-	.long prefix_target_getmember_this          /* `push getmember this, pop, $<imm8>' */
-	.long prefix_target16_getmember_this        /* `push getmember this, pop, $<imm16>' */
-	.long prefix_target_delmember_this          /* `delmember this, pop, $<imm8>' */
-	.long prefix_target16_delmember_this        /* `delmember this, pop, $<imm16>' */
-	.long prefix_target_setmember_this          /* `setmember this, pop, $<imm8>, pop' */
-	.long prefix_target16_setmember_this        /* `setmember this, pop, $<imm16>, pop' */
-	.long prefix_target_boundmember_this        /* `push boundmember this, pop, $<imm8>' */
-	.long prefix_target16_boundmember_this      /* `push boundmember this, pop, $<imm16>' */
-	.long prefix_target16_callattr_c_kw         /* `callattr top, const <imm16>, #<imm8>, const <imm16>' */
-	.long prefix_target16_callattr_c_tuple_kw   /* `callattr top, const <imm16>, pop..., const <imm16>' */
-	.long prefix_target_callattr_kwds           /* `callattr top, pop, #<imm8>, pop' */
-	.long prefix_target_callattr_tuple_kwds     /* `callattr top, pop, pop..., pop' */
-	.long prefix_target16_callattr_c            /* `callattr top, const <imm16>, #<imm8>' */
-	.long prefix_target16_callattr_c_tuple      /* `callattr top, const <imm16>, pop' */
-	.long prefix_target16_callattr_this_c       /* `callattr this, const <imm16>, #<imm8>' */
-	.long prefix_target16_callattr_this_c_tuple /* `callattr this, const <imm16>, pop' */
-	.long prefix_target16_callattr_c_seq        /* `callattr top, const <imm16>, [#<imm8>]' */
-	.long prefix_target16_callattr_c_map        /* `callattr top, const <imm16>, {#<imm8>*2}' */
+	.long prefix_target_getmember               /* 0xbe : `getmember top, pop, $<imm8>' */
+	.long prefix_target16_getmember             /* 0xbf : `getmember top, pop, $<imm16>' */
+	.long prefix_target_delmember               /* 0xc0 : `delmember pop, pop, $<imm8>' */
+	.long prefix_target16_delmember             /* 0xc1 : `delmember pop, pop, $<imm16>' */
+	.long prefix_target_setmember               /* 0xc2 : `setmember pop, pop, $<imm8>, pop' */
+	.long prefix_target16_setmember             /* 0xc3 : `setmember pop, pop, $<imm16>, pop' */
+	.long prefix_target_boundmember             /* 0xc4 : `boundmember top, pop, $<imm8>' */
+	.long prefix_target16_boundmember           /* 0xc5 : `boundmember top, pop, $<imm16>' */
+	.long prefix_target_getmember_this          /* 0xc6 : `push getmember this, pop, $<imm8>' */
+	.long prefix_target16_getmember_this        /* 0xc7 : `push getmember this, pop, $<imm16>' */
+	.long prefix_target_delmember_this          /* 0xc8 : `delmember this, pop, $<imm8>' */
+	.long prefix_target16_delmember_this        /* 0xc9 : `delmember this, pop, $<imm16>' */
+	.long prefix_target_setmember_this          /* 0xca : `setmember this, pop, $<imm8>, pop' */
+	.long prefix_target16_setmember_this        /* 0xcb : `setmember this, pop, $<imm16>, pop' */
+	.long prefix_target_boundmember_this        /* 0xcc : `push boundmember this, pop, $<imm8>' */
+	.long prefix_target16_boundmember_this      /* 0xcd : `push boundmember this, pop, $<imm16>' */
+	.long prefix_target16_callattr_c_kw         /* 0xce : `callattr top, const <imm16>, #<imm8>, const <imm16>' */
+	.long prefix_target16_callattr_c_tuple_kw   /* 0xcf : `callattr top, const <imm16>, pop..., const <imm16>' */
+	.long prefix_target_callattr_kwds           /* 0xd0 : `callattr top, pop, #<imm8>, pop' */
+	.long prefix_target_callattr_tuple_kwds     /* 0xd1 : `callattr top, pop, pop..., pop' */
+	.long prefix_target16_callattr_c            /* 0xd2 : `callattr top, const <imm16>, #<imm8>' */
+	.long prefix_target16_callattr_c_tuple      /* 0xd3 : `callattr top, const <imm16>, pop' */
+	.long prefix_target16_callattr_this_c       /* 0xd4 : `callattr this, const <imm16>, #<imm8>' */
+	.long prefix_target16_callattr_this_c_tuple /* 0xd5 : `callattr this, const <imm16>, pop' */
+	.long prefix_target16_callattr_c_seq        /* 0xd6 : `callattr top, const <imm16>, [#<imm8>]' */
+	.long prefix_target16_callattr_c_map        /* 0xd7 : `callattr top, const <imm16>, {#<imm8>*2}' */
 	.long prefix_invop
-	.long prefix_target16_getmember_this_r      /* `push getmember this, ref <imm16>, $<imm16>' */
-	.long prefix_target16_delmember_this_r      /* `delmember this, ref <imm16>, $<imm16>' */
-	.long prefix_target16_setmember_this_r      /* `setmember this, ref <imm16>, $<imm16>, pop' */
-	.long prefix_target16_boundmember_this_r    /* `push boundmember this, ref <imm16>, $<imm16>' */
-	.long prefix_target16_call_extern           /* `push call extern <imm16>:<imm16>, #<imm8>' */
-	.long prefix_target16_call_global           /* `push call global <imm16>, #<imm8>' */
-	.long prefix_target16_call_local            /* `push call local <imm16>, #<imm8>' */
+	.long prefix_target16_getmember_this_r      /* 0xd9 : `push getmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_delmember_this_r      /* 0xda : `delmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_setmember_this_r      /* 0xdb : `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long prefix_target16_boundmember_this_r    /* 0xdc : `push boundmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_call_extern           /* 0xdd : `push call extern <imm16>:<imm16>, #<imm8>' */
+	.long prefix_target16_call_global           /* 0xde : `push call global <imm16>, #<imm8>' */
+	.long prefix_target16_call_local            /* 0xdf : `push call local <imm16>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
@@ -10351,12 +10386,12 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_stack                 /* `stack #<imm16>' */
-	.long prefix_target16_static                /* `static <imm16>' */
-	.long prefix_target16_extern                /* `extern <imm16>:<imm16>' */
+	.long prefix_target16_stack                 /* 0xfa : `stack #<imm16>' */
+	.long prefix_target16_static                /* 0xfb : `static <imm16>' */
+	.long prefix_target16_extern                /* 0xfc : `extern <imm16>:<imm16>' */
 	.long prefix_invop
-	.long prefix_target16_global                /* `global <imm16>' */
-	.long prefix_target16_local                 /* `local  <imm16>' */
+	.long prefix_target16_global                /* 0xfe : `global <imm16>' */
+	.long prefix_target16_local                 /* 0xff : `local  <imm16>' */
 END(prefix_inst_table_f0)
 //[[[end]]]
 
