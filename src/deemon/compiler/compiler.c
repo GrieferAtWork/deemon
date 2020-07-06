@@ -258,10 +258,10 @@ DeeCompiler_New(DeeObject *__restrict module, uint16_t flags) {
 	if (!(flags & COMPILER_FKEEPLEXER)) {
 		if (!TPPLexer_Init(&result->cp_lexer))
 			goto err_scope;
-#ifdef _MSC_VER
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 		/* Mirror MSVC's file-and-line syntax. */
 		result->cp_lexer.l_flags |= TPPLEXER_FLAG_MSVC_MESSAGEFORMAT;
-#endif /* _MSC_VER */
+#endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 		result->cp_lexer.l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
 	}
 	if (!(flags & COMPILER_FKEEPERROR))

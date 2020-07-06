@@ -410,7 +410,7 @@ DeeObject *DCALL DeeFile_DefaultStd(unsigned int id) {
 			/* NOTE: I know for a fact that the following C libraries don't do this: */
 #if !defined(_MSC_VER) && !defined(__linux__) && !defined(__KOS__)
 			if (!result->sf_handle)
-#endif
+#endif /* !... */
 #endif /* !CONFIG_NO_THREADS */
 			{
 				result->sf_handle    = new_file;

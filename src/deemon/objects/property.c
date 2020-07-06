@@ -170,10 +170,12 @@ property_eq(Property *self, Property *other) {
 	if (DeeObject_AssertType((DeeObject *)other, &DeeProperty_Type))
 		goto err;
 	/* Make sure that the same callbacks are implemented. */
-	if (((self->p_get != NULL) != (other->p_get != NULL)) ||
-	    ((self->p_del != NULL) != (other->p_del != NULL)) ||
-	    ((self->p_set != NULL) != (other->p_set != NULL)))
-		return_false;
+	if ((self->p_get != NULL) != (other->p_get != NULL))
+		goto nope;
+	if ((self->p_del != NULL) != (other->p_del != NULL))
+		goto nope;
+	if ((self->p_set != NULL) != (other->p_set != NULL))
+		goto nope;
 	/* Compare individual callbacks. */
 	if (self->p_get) {
 		temp = DeeObject_CompareEq(self->p_get, other->p_get);
@@ -194,6 +196,7 @@ property_eq(Property *self, Property *other) {
 handle_temp:
 	if unlikely(temp < 0)
 		goto err;
+nope:
 	return_false;
 err:
 	return NULL;
@@ -346,9 +349,9 @@ property_get_module(Property *__restrict self) {
 	if (self->p_get && DeeFunction_Check(self->p_get))
 		return get_function_module((DeeFunctionObject *)self->p_get);
 	if (self->p_del && DeeFunction_Check(self->p_del))
-		return get_function_module((DeeFunctionObject *)self->p_get);
+		return get_function_module((DeeFunctionObject *)self->p_del);
 	if (self->p_set && DeeFunction_Check(self->p_set))
-		return get_function_module((DeeFunctionObject *)self->p_get);
+		return get_function_module((DeeFunctionObject *)self->p_set);
 	result = property_callback_getattr(self, &str___module__);
 	if (result != ITER_DONE)
 		return result;

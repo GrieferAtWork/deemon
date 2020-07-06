@@ -225,6 +225,45 @@ DECL_BEGIN
 #endif /* !CONFIG_[NO_]NOBASE_OPTIMIZED_CLASS_OPERATORS */
 
 
+/* Configure option:
+ *     CONFIG_DEFAULT_MESSAGE_FORMAT_(MSVC|GCC)
+ * Select the default format for file+line encoding in messages:
+ *     MSVC:  file(line) : Message    file(line, column) : Message
+ *     GCC:   file:line: Message      file:line:column: Message
+ * When not pre-defined via ./configure, default to using the same
+ * convention as the hosting compiler (i.e.: MSVC for _MSC_VER, and
+ * GCC for everything else) */
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
+#if (CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC + 0) == 0
+#undef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
+#if (CONFIG_DEFAULT_MESSAGE_FORMAT_GCC + 0) == 0
+#undef CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
+#ifdef _MSC_VER
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC 1
+#else /* _MSC_VER */
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC 1
+#endif /* !_MSC_VER */
+#endif /* !CONFIG_DEFAULT_MESSAGE_FORMAT_GCC */
+#else /* CONFIG_DEFAULT_MESSAGE_FORMAT_GCC */
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC 1
+#endif /* !CONFIG_DEFAULT_MESSAGE_FORMAT_GCC */
+#else /* !CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
+#undef CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
+#endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
+#elif defined(CONFIG_DEFAULT_MESSAGE_FORMAT_GCC)
+#if (CONFIG_DEFAULT_MESSAGE_FORMAT_GCC + 0) == 0
+#undef CONFIG_DEFAULT_MESSAGE_FORMAT_GCC
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC 1
+#endif
+#elif defined(_MSC_VER)
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC 1
+#else /* ... */
+#define CONFIG_DEFAULT_MESSAGE_FORMAT_GCC 1
+#endif /* !... */
+
+
+
 #if (defined(__CYGWIN__) || defined(__CYGWIN32__) || defined(__WINDOWS__) ||            \
      defined(_WIN16) || defined(WIN16) || defined(_WIN32) || defined(WIN32) ||          \
      defined(_WIN64) || defined(WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || \

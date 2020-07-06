@@ -4,7 +4,7 @@
 
 #ifndef _MSC_VER
 #error "Only meant for MSVC version"
-#endif
+#endif /* !_MSC_VER */
 
 PUBLIC  DeeCode_ExecFrameSafeAltStack
 PUBLIC  DeeCode_ExecFrameFastAltStack

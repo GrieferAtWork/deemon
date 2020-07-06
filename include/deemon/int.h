@@ -705,7 +705,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
                  size_t len, uint32_t radix_and_flags);
-#define DEEINT_STRING(radix,flags) ((radix) << DEEINT_STRING_RSHIFT | (flags))
+#define DEEINT_STRING(radix, flags) ((radix) << DEEINT_STRING_RSHIFT | (flags))
 #define DEEINT_STRING_RSHIFT   16
 #define DEEINT_STRING_FNORMAL  0x0000
 #define DEEINT_STRING_FESCAPED 0x0001 /* Decode escaped linefeeds in the given input string. */
@@ -743,7 +743,7 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL Dee_Atou64)(/*utf-8*/ char const *__r
 #ifdef __NO_builtin_choose_expr
 #define DEE_PRIVATE_ATOI_FLAGS(T, flags) \
 	(((T)-1) < (T)0 ? (flags) | DEEATOI_STRING_FSIGNED : (flags))
-#define Dee_TAtoi(T,str,len,radix_and_flags,value)                                                           \
+#define Dee_TAtoi(T, str, len, radix_and_flags, value)                                                       \
 	(sizeof(T) <= 1 ? Dee_Atoi8(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int8_t *)(value)) :   \
 	 sizeof(T) <= 2 ? Dee_Atoi16(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int16_t *)(value)) : \
 	 sizeof(T) <= 4 ? Dee_Atoi32(str, len, DEE_PRIVATE_ATOI_FLAGS(T, radix_and_flags), (int32_t *)(value)) : \

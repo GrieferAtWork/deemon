@@ -313,7 +313,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#ifndef TPP_NO_INCLUDE_STDLIB_H
 #include <stdlib.h>
+#endif /* !TPP_NO_INCLUDE_STDLIB_H */
 
 #ifdef _MSC_VER
 #ifndef TPP_SYMARRAY_SIZE
@@ -430,16 +432,19 @@
 #endif
 
 #ifndef __SIZEOF_POINTER__
-#if defined(_WIN64) || defined(__LP64__) || \
-    defined(_LP64) || defined(__x86_64__)
-#   define __SIZEOF_POINTER__ 8
-#elif defined(_WIN32) || defined(__i386__) || \
-      defined(__i386) || defined(i386)
-#   define __SIZEOF_POINTER__ 4
+#if (defined(_WIN64) || defined(__LP64__) || \
+     defined(_LP64) || defined(__x86_64__))
+#define __SIZEOF_POINTER__ 8
+#elif (defined(_WIN32) || defined(__i386__) || \
+       defined(__i386) || defined(i386))
+#define __SIZEOF_POINTER__ 4
 #elif defined(_WIN16)
-#   define __SIZEOF_POINTER__ 2
+#define __SIZEOF_POINTER__ 2
 #else
-#   error FIXME
+#include <hybrid/typecore.h>
+#ifndef __SIZEOF_POINTER__
+#error FIXME
+#endif /* !__SIZEOF_POINTER__ */
 #endif
 #endif /* !__SIZEOF_POINTER__ */
 
@@ -448,11 +453,11 @@
 #endif /* !__SIZEOF_SIZE_T__ */
 
 #ifndef __SIZEOF_INT__
-#define __SIZEOF_INT__    4
+#define __SIZEOF_INT__ 4
 #endif /* !__SIZEOF_INT__ */
 
 #ifndef TPP_assert
-#define TPP_assert        assert
+#define TPP_assert assert
 #endif /* !TPP_assert */
 
 #ifdef __cplusplus
@@ -637,8 +642,13 @@ struct TPP(arginfo_t) {
 
 struct TPPLCInfo {
 	/* TPP Line/Column information. */
+#ifdef __INTELLISENSE__
+	    line_t  lc_line; /* zero-based line index in the associated file. */
+	    col_t   lc_col;  /* zero-based column index in the associated file (NOTE: Tabs are already expanded in this). */
+#else /* __INTELLISENSE__ */
 	TPP(line_t) lc_line; /* zero-based line index in the associated file. */
 	TPP(col_t)  lc_col;  /* zero-based column index in the associated file (NOTE: Tabs are already expanded in this). */
+#endif /* !__INTELLISENSE__ */
 };
 
 

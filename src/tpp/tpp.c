@@ -159,15 +159,19 @@
 #ifdef TPP_CONFIG_USERSTREAMS
 #undef stream_close
 #define stream_close(fd) TPP_USERSTREAM_FCLOSE(fd)
-#endif
+#endif /* TPP_CONFIG_USERSTREAMS */
 
 #ifndef alloca
 #if defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__)
+#ifndef NO_INCLUDE_MALLOC_H
 #include <malloc.h>
+#endif /* !NO_INCLUDE_MALLOC_H */
 #elif defined(__GNUC__)
 #define alloca(x) __builtin_alloca(x)
 #else /* ... */
+#ifndef NO_INCLUDE_ALLOCA_H
 #include <alloca.h>
+#endif /* !NO_INCLUDE_ALLOCA_H */
 #endif /* !... */
 #endif /* !alloca */
 
@@ -219,10 +223,10 @@
 #define SEP       '/'  /* The path-separator used in sanitized pathnames. */
 #define ALTSEP    '\\'
 #define ISABS(x) ((x)[0] && (x)[1] == ':')
-#else
+#else /* Windows... */
 #define SEP       '/'  /* The path-separator used in sanitized pathnames. */
 #define ISABS(x) ((x)[0] == '/')
-#endif
+#endif /* !Windows... */
 
 #ifdef HAVE_INSENSITIVE_PATHS
 #ifndef NO_INCLUDE_WINDOWS_H
@@ -533,36 +537,36 @@ PUBLIC struct TPPLexer *TPPLexer_Current = NULL;
 struct TPPToken token;
 tok_t tok;
 tok_t yield(void);
-#else
+#else /* __INTELLISENSE__ */
 #define token CURRENT.l_token
 #define tok   token.t_id
 #define yield TPPLexer_Yield
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #ifdef TPP_CONFIG_CALLBACK_WARNING
-#define WARN  TPP_CONFIG_CALLBACK_WARNING
+#define WARN TPP_CONFIG_CALLBACK_WARNING
 #else /* TPP_CONFIG_CALLBACK_WARNING */
-#define WARN  TPPLexer_Warn
+#define WARN TPPLexer_Warn
 #endif /* !TPP_CONFIG_CALLBACK_WARNING */
-#define HAS   TPPLexer_HasExtension
+#define HAS  TPPLexer_HasExtension
 
-#define pushfile_inherited  TPPLexer_PushFileInherited
-#define pushfile            TPPLexer_PushFile
+#define pushfile_inherited TPPLexer_PushFileInherited
+#define pushfile           TPPLexer_PushFile
 
 #define pushf() \
 	do {        \
 		uint32_t const _oldflags = CURRENT.l_flags
 #define breakf() \
-	(void)(CURRENT.l_flags = _oldflags | (CURRENT.l_flags & TPPLEXER_FLAG_MERGEMASK))
+		(void)(CURRENT.l_flags = _oldflags | (CURRENT.l_flags & TPPLEXER_FLAG_MERGEMASK))
 #define popf()                                                                     \
 		/* NOTE: Don't override the error-flag! */                                 \
 		CURRENT.l_flags = _oldflags | (CURRENT.l_flags & TPPLEXER_FLAG_MERGEMASK); \
 	} while (FALSE)
 
 /* Similar to `popf', but flags part of `mask' are not restored. */
-#define breakff(mask) \
+#define breakff(mask)                                \
 	(void)(CURRENT.l_flags = (_oldflags & ~(mask)) | \
-(CURRENT.l_flags & (TPPLEXER_FLAG_MERGEMASK | (mask))))
+	                         (CURRENT.l_flags & (TPPLEXER_FLAG_MERGEMASK | (mask))))
 #define popff(mask)                                                                                       \
 		CURRENT.l_flags = (_oldflags & ~(mask)) | (CURRENT.l_flags & (TPPLEXER_FLAG_MERGEMASK | (mask))); \
 	} while (FALSE)
@@ -835,16 +839,16 @@ PRIVDEF void TPPCALL on_popfile(struct TPPFile *file);
 
 /* Configuration-dependent code options. */
 #if !defined(TPP_CONFIG_FEATURE_TRIGRAPHS) || TPP_CONFIG_FEATURE_TRIGRAPHS
-#define IF_CONFIG_FEATURE_TRIGRAPHS(x,y) x
+#define IF_CONFIG_FEATURE_TRIGRAPHS(x, y) x
 #else /* TPP_CONFIG_FEATURE_TRIGRAPHS */
 #define NO_FEATURE_TRIGRAPHS 1
-#define IF_CONFIG_FEATURE_TRIGRAPHS(x,y) y
+#define IF_CONFIG_FEATURE_TRIGRAPHS(x, y) y
 #endif /* !TPP_CONFIG_FEATURE_TRIGRAPHS */
 #if !defined(TPP_CONFIG_FEATURE_DIGRAPHS) || TPP_CONFIG_FEATURE_DIGRAPHS
-#define IF_CONFIG_FEATURE_DIGRAPHS(x,y) x
+#define IF_CONFIG_FEATURE_DIGRAPHS(x, y) x
 #else /* TPP_CONFIG_FEATURE_DIGRAPHS */
 #define NO_FEATURE_DIGRAPHS 1
-#define IF_CONFIG_FEATURE_DIGRAPHS(x,y) y
+#define IF_CONFIG_FEATURE_DIGRAPHS(x, y) y
 #endif /* !TPP_CONFIG_FEATURE_DIGRAPHS */
 #if !defined(TPP_CONFIG_EXTENSION_GCC_VA_ARGS) || TPP_CONFIG_EXTENSION_GCC_VA_ARGS
 #define IF_CONFIG_EXTENSION_GCC_VA_ARGS(x, y) x
@@ -1547,11 +1551,7 @@ LOCAL void *tpp_api_realloc(void *p, size_t n_bytes) {
 #define LOG_MC_OPGEN    0x00000010
 //#define LOG_LEVEL     0x00000000 /* Change this to select active logs. */
 #ifndef LOG_LEVEL
-#if defined(__DCC_VERSION__) && 0
-#define LOG_LEVEL    0x7fffffff
-#else
-#define LOG_LEVEL    0x00000000
-#endif
+#define LOG_LEVEL       0x00000000
 #endif /* !LOG_LEVEL */
 #define LOG_RAW         0x80000000
 #if TPP_CONFIG_DEBUG && (LOG_LEVEL != 0)
@@ -1596,16 +1596,16 @@ LOCAL void tpp_log_raw(char const *fmt, ...) {
 
 struct TPPExplicitFile {
 	/* NOTE: Keep in sync with `TPPFile'! */
-	refcnt_t                 f_refcnt;
-	unsigned int             f_kind;
-	/*C:ref*/struct TPPFile *f_prev;
-	char                    *f_name;
-	size_t                   f_namesize;
-	size_t                   f_namehash;
-	/*ref*/struct TPPString *f_text;
-	char                    *f_begin;
-	char                    *f_end;
-	char                    *f_pos;
+	refcnt_t                  f_refcnt;
+	unsigned int              f_kind;
+	/*C:ref*/ struct TPPFile *f_prev;
+	char                     *f_name;
+	size_t                    f_namesize;
+	size_t                    f_namehash;
+	/*ref*/ struct TPPString *f_text;
+	char                     *f_begin;
+	char                     *f_end;
+	char                     *f_pos;
 };
 
 
@@ -1716,8 +1716,9 @@ skip_whitespace_and_comments(char *iter, char *end) {
 						if (*++iter == '\r' && *iter == '\n' && iter + 1 != end)
 							++iter;
 						++iter;
-					} else if (tpp_islf(*iter))
+					} else if (tpp_islf(*iter)) {
 						break;
+					}
 					++iter;
 				}
 			}
@@ -1850,7 +1851,9 @@ TPPString_Cat(/*ref*/ struct TPPString *__restrict lhs,
               /*ref*/ struct TPPString *__restrict rhs) {
 	struct TPPString *result;
 	size_t total_size, alloc_size, lhs_size;
-	assert(lhs), assert(rhs), assert(lhs != rhs);
+	assert(lhs);
+	assert(rhs);
+	assert(lhs != rhs);
 	if ((total_size = rhs->s_size) == 0) {
 		TPPString_Decref(rhs);
 		return lhs;
@@ -2447,7 +2450,7 @@ fallback_cl:
 		for (; iter != begin && !tpp_islforzero(iter[-1]); --iter)
 			column_num += iter[-1] == '\t' ? (col_t)CURRENT.l_tabsize : 1;
 		info->lc_col = column_num;
-	} break;
+	}	break;
 
 	case TPPFILE_KIND_MACRO:
 		*info = self->f_macro.m_defloc;
@@ -2586,10 +2589,8 @@ TPPFile_Open(char const *__restrict filename) {
 	assert(filename);
 #ifdef TPP_CONFIG_USERSTREAMS
 	stream = TPP_USERSTREAM_FOPEN(filename);
-	if (stream == TPP_STREAM_INVALID) {
-		errno = ENOENT;
+	if (stream == TPP_STREAM_INVALID)
 		return NULL;
-	}
 #elif defined(_WIN32)
 	DBG_ALIGNMENT_DISABLE();
 	stream = CreateFileA(filename, GENERIC_READ,
@@ -2597,7 +2598,9 @@ TPPFile_Open(char const *__restrict filename) {
 	                     NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	DBG_ALIGNMENT_ENABLE();
 	if (stream == INVALID_HANDLE_VALUE) {
+#if defined(errno) && defined(ENOENT)
 		errno = ENOENT;
+#endif /* errno && ENOENT */
 		return NULL;
 	}
 #else
@@ -2605,14 +2608,18 @@ TPPFile_Open(char const *__restrict filename) {
 	stream = open(filename, O_RDONLY);
 	DBG_ALIGNMENT_ENABLE();
 	if (stream == -1) {
+#if defined(errno) && defined(ENOENT)
 		errno = ENOENT;
+#endif /* errno && ENOENT */
 		return NULL;
 	}
 #endif
 	result = TPPFile_OpenStream(stream, filename);
 	if unlikely(!result) {
 		stream_close(stream);
+#if defined(errno) && defined(ENOMEM)
 		errno = ENOMEM;
+#endif /* errno && ENOMEM */
 	} else {
 		result->f_textfile.f_ownedstream = stream;
 	}
@@ -3567,7 +3574,7 @@ abort_hex:
 					++iter;
 				}
 				goto put_val;
-			} break;
+			}	break;
 
 			case 'e':
 				if (HAVE_EXTENSION_STR_E) {
@@ -3740,7 +3747,7 @@ abort_hex:
 					--result;
 				}
 				--result;
-			} break;
+			}	break;
 
 			default:
 				if (ch >= '0' && ch <= '7') {
@@ -5168,10 +5175,12 @@ keyword_addassert(struct TPPKeyword *__restrict self,
                   struct TPPKeyword *__restrict assertion) {
 	struct TPPRareKeyword *rare;
 	struct TPPAssertion **bucket, *slot;
-	assert(self), assert(assertion);
+	assert(self);
+	assert(assertion);
 	if unlikely(!TPPKeyword_API_MAKERARE(self))
 		return 0;
-	rare = self->k_rare, assert(rare);
+	rare = self->k_rare;
+	assert(rare);
 	if (rare->kr_asserts.as_assa) {
 		slot = rare->kr_asserts.as_assv[assertion->k_hash % rare->kr_asserts.as_assa];
 		while (slot) {
@@ -5208,7 +5217,8 @@ keyword_delassert(struct TPPKeyword *__restrict self,
                   struct TPPKeyword *__restrict assertion) {
 	struct TPPRareKeyword *rare;
 	struct TPPAssertion **pelem, *elem;
-	assert(self), assert(assertion);
+	assert(self);
+	assert(assertion);
 	if unlikely((rare = self->k_rare) == NULL ||
 	            !rare->kr_asserts.as_assa ||
 	            !rare->kr_asserts.as_assc)
@@ -5231,12 +5241,14 @@ keyword_hasassert(struct TPPKeyword *__restrict self,
                   struct TPPKeyword *__restrict assertion) {
 	struct TPPRareKeyword *rare;
 	struct TPPAssertion *elem;
-	assert(self), assert(assertion);
+	assert(self);
+	assert(assertion);
 	if unlikely((rare = self->k_rare) == NULL ||
 	            !rare->kr_asserts.as_assa ||
 	            !rare->kr_asserts.as_assc)
 		return 0;
-	elem = rare->kr_asserts.as_assv[assertion->k_hash % rare->kr_asserts.as_assa];
+	elem = rare->kr_asserts.as_assv[assertion->k_hash %
+	                                rare->kr_asserts.as_assa];
 	while (elem) {
 		if (elem->as_kwd == assertion)
 			return 1;
@@ -6429,27 +6441,44 @@ PRIVATE size_t TPPCALL
 fuzzy_match(char const *__restrict a, size_t alen,
             char const *__restrict b, size_t blen) {
 	size_t *v0, *v1, i, j, cost, temp;
+#ifdef alloca
 	int isheap;
+#endif /* alloca */
 	if unlikely(!alen)
 		return blen;
 	if unlikely(!blen)
 		return alen;
-	if (blen > (128 + 1) * sizeof(size_t)) {
+#ifdef alloca
+	if (blen > (128 + 1) * sizeof(size_t))
+#endif /* alloca */
+	{
 		v0 = (size_t *)malloc((blen + 1) * sizeof(size_t));
-		if unlikely(!v0)
+		if unlikely(!v0) {
+#ifdef alloca
 			goto allocate_stack;
+#else /* alloca */
+			return (size_t)-1;
+#endif /* !alloca */
+		}
 		v1 = (size_t *)malloc((blen + 1) * sizeof(size_t));
 		if unlikely(!v1) {
 			free(v0);
+#ifdef alloca
 			goto allocate_stack;
+#else /* alloca */
+			return (size_t)-1;
+#endif /* !alloca */
 		}
 		isheap = 1;
-	} else {
+	}
+#ifdef alloca
+	else {
 allocate_stack:
 		v0     = (size_t *)alloca((blen + 1) * sizeof(size_t));
 		v1     = (size_t *)alloca((blen + 1) * sizeof(size_t));
 		isheap = 0;
 	}
+#endif /* alloca */
 	for (i = 0; i < blen; ++i)
 		v0[i] = i;
 	for (i = 0; i < alen; ++i) {
@@ -6764,7 +6793,7 @@ do_fix_filename(char *filename, size_t *pfilename_size) {
 					memmove(text_iter, slash + 1, /* NOTE: This also moves the `\0'-terminator. */
 					        (size_t)(text_end - slash) * sizeof(char));
 				}
-			} break;
+			}	break;
 
 			default: break;
 			}
@@ -7144,7 +7173,7 @@ TPPLexer_OpenFile(int mode, char *__restrict filename, size_t filename_size,
 	if (HAVE_EXTENSION_CANONICAL_HEADERS) {
 		if (mode & TPPLEXER_OPENFILE_FLAG_CONSTNAME) {
 			/* Create a copy that will be modified below. */
-			mfilename = (char *)malloc((filename_size + 1) * sizeof(char));
+			mfilename = (char *)API_MALLOC((filename_size + 1) * sizeof(char));
 			if unlikely(!mfilename)
 				return NULL;
 			memcpy(mfilename, filename, (filename_size + 1) * sizeof(char));
@@ -7255,8 +7284,8 @@ err_r:
 				 */
 				if (!(mode & TPPLEXER_OPENFILE_FLAG_NOCASEWARN) &&
 				    !check_path_spelling(filename, filename_size)) {
-				err_buffer_r:
-					free(buffer);
+err_buffer_r:
+					API_FREE(buffer);
 					goto err_r;
 				}
 #endif /* HAVE_INSENSITIVE_PATHS */
@@ -7344,9 +7373,9 @@ check_unknown_file:
 	}
 #endif /* HAVE_CALLBACK_UNKNOWN_FILE */
 end_buffer:
-	free(buffer);
+	API_FREE(buffer);
 end:
-	free(mfilename);
+	API_FREE(mfilename);
 	return result;
 err_buffer:
 	result = NULL;
@@ -7768,7 +7797,7 @@ startover_iter:
 				}
 			}
 			goto settok;
-		} break;
+		}	break;
 
 		default: goto settok;
 		}
@@ -7940,7 +7969,7 @@ startover_iter:
 					 * don't emit a warning about line-comment continuation, since we can be fairly
 					 * certain that the user actually intended this line to be a comment as well.
 					 * This prevents warnings if all the user did, was to comment out a macro:
-					 * >> //#define add(x,y) \  <Text to prevent warnings if the host preprocessor isn't as smart as we are>
+					 * >> //#define add(x, y) \  <Text to prevent warnings if the host preprocessor isn't as smart as we are>
 					 * >> //    ((x) + (y))
 					 */
 					if (forward[0] == '/') {
@@ -8271,7 +8300,7 @@ PUBLIC int TPPCALL TPPLexer_AtStartOfLine(void) {
 
 PRIVATE void TPPCALL on_popfile(struct TPPFile *file) {
 	struct TPPIfdefStackSlot *slot;
-	if (file->f_kind == TPPFILE_KIND_TEXT &&                       /* Is this a textfile. */
+	if (file->f_kind == TPPFILE_KIND_TEXT &&                       /* Is this a textfile? */
 	    !file->f_textfile.f_cacheentry &&                          /* Make sure isn't not a cache-reference. */
 	    file->f_textfile.f_newguard &&                             /* Make sure there is a possibility for a guard. */
 	    !file->f_textfile.f_guard &&                               /* Make sure the file doesn't already have a guard. */
@@ -8322,9 +8351,13 @@ PRIVATE struct TPPIfdefStackSlot *TPPCALL alloc_ifdef(int mode) {
 	struct TPPIfdefStackSlot *result;
 	result = CURRENT.l_ifdef.is_slotv;
 	if (CURRENT.l_ifdef.is_slota == CURRENT.l_ifdef.is_slotc) {
-		size_t newalloc = CURRENT.l_ifdef.is_slota ? CURRENT.l_ifdef.is_slota * 2 : 2;
+		size_t newalloc;
+		newalloc = CURRENT.l_ifdef.is_slota
+		           ? CURRENT.l_ifdef.is_slota * 2
+		           : 2;
 		result = (struct TPPIfdefStackSlot *)API_REALLOC(result,
-		                                                 newalloc * sizeof(struct TPPIfdefStackSlot));
+		                                                 newalloc *
+		                                                 sizeof(struct TPPIfdefStackSlot));
 		if unlikely(!result)
 			return NULL;
 		CURRENT.l_ifdef.is_slota = newalloc;
@@ -8470,7 +8503,7 @@ again:
 parse_result_directive:
 		switch (result) {
 		case '\n': { /* NULL-directive. */
-		} break;
+		}	break;
 
 		case '!': {
 			/* Ignore shebang-style script markers (e.g.: `#!/bin/bash') */
@@ -8480,7 +8513,7 @@ def_skip_until_lf:
 			CURRENT.l_flags |= TPPLEXER_FLAG_WANTLF;
 			while (tok > 0 && tok != '\n')
 				TPPLexer_YieldRaw();
-		} break;
+		}	break;
 
 		case KWD_define: {
 			/* Define a new macro. */
@@ -8494,7 +8527,7 @@ def_skip_until_lf:
 				if unlikely(!TPPFile_NewDefine())
 					goto err;
 			}
-		} break;
+		}	break;
 
 		case KWD_pragma: {
 			/* Compiler/Preprocessor-specific pragma. */
@@ -8562,7 +8595,7 @@ def_skip_until_lf:
 			breakf();
 #endif /* !TPPLEXER_FLAG_PRAGMA_KEEPMASK */
 			return TPPLexer_YieldRaw();
-		} break;
+		}	break;
 
 		case KWD_undef: {
 			/* Undefine a previously defined user-macro. */
@@ -8845,7 +8878,7 @@ skip_block_and_parse:
 				goto parse_result_directive;
 			}
 			goto def_skip_until_lf;
-		} break;
+		}	break;
 
 		case KWD_else: {
 			struct TPPIfdefStackSlot *else_slot;
@@ -8863,7 +8896,7 @@ skip_block_and_parse:
 				goto skip_block_and_parse;
 			}
 			goto def_skip_until_lf;
-		} break;
+		}	break;
 
 		case KWD_endif: {
 			/* End an enabled preprocessor block. */
@@ -12563,13 +12596,21 @@ eval_call_builtin(struct TPPConst *__restrict result) {
 	else {
 		yield();
 	}
+#ifdef alloca
 	argv = (struct TPPConst *)alloca(argc * sizeof(struct TPPConst));
+#else /* alloca */
+	argv = (struct TPPConst *)API_MALLOC(argc * sizeof(struct TPPConst));
+	if unlikely(!argv) {
+		TPPLexer_SetErr();
+		return 0;
+	}
+#endif /* !alloca */
 	end  = (iter = argv) + argc;
-	if (iter != end)
+	if (iter < end)
 		for (;;) {
 			if unlikely(!TPPLexer_Eval(iter))
 				goto err_iter;
-			if (++iter == end)
+			if (++iter >= end)
 				break;
 			if (tok != ',')
 				WARN(W_EXPECTED_COMMA);
@@ -12586,12 +12627,12 @@ eval_call_builtin(struct TPPConst *__restrict result) {
 	switch (function) {
 #ifndef __INTELLISENSE__
 #define GOTO_SETERR() goto seterr_argv
-#define GOTO_ERR() goto err_argv
-#define A(i) (argv + (i))
-#define INT(i) TPPConst_AsInt(A(i))
-#define FLOAT(i) TPPConst_AsFloat(A(i))
-#define STRING(i) (A(i)->c_data.c_string)
-#define IS_STRING(i) (A(i)->c_kind == TPP_CONST_STRING)
+#define GOTO_ERR()    goto err_argv
+#define A(i)          (argv + (i))
+#define INT(i)        TPPConst_AsInt(A(i))
+#define FLOAT(i)      TPPConst_AsFloat(A(i))
+#define STRING(i)     (A(i)->c_data.c_string)
+#define IS_STRING(i)  (A(i)->c_kind == TPP_CONST_STRING)
 #define RETURN_INHERIT(val) \
 	{                       \
 		*(result) = *(val); \
@@ -12634,12 +12675,12 @@ eval_call_builtin(struct TPPConst *__restrict result) {
 	default:
 #ifdef _MSC_VER
 		__assume(0);
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) || __has_builtin(__builtin_unreachable)
 		__builtin_unreachable();
-#else
+#else /* ... */
 		TPPConst_ZERO(result);
 		break;
-#endif
+#endif /* !... */
 
 set_int_common:
 		UNUSED_LABEL;
@@ -12666,6 +12707,9 @@ err_iter:
 		TPPConst_Quit(iter);
 ret:
 	UNUSED_LABEL;
+#ifndef alloca
+	free(argv);
+#endif /* !alloca */
 	return retval;
 seterr_argv:
 	UNUSED_LABEL;
@@ -12698,7 +12742,7 @@ again_unary:
 			TPP_Atoi(&result->c_data.c_int);
 		}
 		yield();
-	} break;
+	}	break;
 
 	case TOK_FLOAT: {
 		/* Parse a floating point value. */
@@ -12707,7 +12751,7 @@ again_unary:
 			TPP_Atof(&result->c_data.c_float);
 		}
 		yield();
-	} break;
+	}	break;
 
 	case TOK_STRING: {
 		/* Concat any number of consecutive strings. */
@@ -12719,7 +12763,7 @@ again_unary:
 		}
 		result->c_kind          = TPP_CONST_STRING;
 		result->c_data.c_string = TPPLexer_ParseString();
-	} break;
+	}	break;
 
 	case '!':
 		yield();
@@ -12960,7 +13004,7 @@ res_zero:
 				WARN(W_EXPECTED_RPAREN_AFTER_DEFINED);
 			}
 		}
-	} break;
+	}	break;
 
 #if (!defined(TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR) || TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR)
 	case KWD_if: { /* Statement-style if expressions. */
@@ -13024,7 +13068,7 @@ res_zero:
 			assert(result);
 			TPPConst_ZERO(result);
 		}
-	} break;
+	}	break;
 #endif /* TPP_CONFIG_EXTENSION_IFELSE_IN_EXPR */
 
 #if TPP_CONFIG_GCCFUNC
@@ -13096,7 +13140,7 @@ restore_warnings:
 		else {
 			yield();
 		}
-	} break;
+	}	break;
 
 	case KWD___builtin_choose_expr: {
 		int is_true;
@@ -13132,7 +13176,7 @@ restore_warnings:
 		else {
 			yield();
 		}
-	} break;
+	}	break;
 #endif /* TPP_CONFIG_GCCFUNC */
 
 	default:
@@ -13877,6 +13921,49 @@ err:
 	return 0;
 }
 
+
+/* Figure out how to output text from `#pragma message' */
+#if !defined(TPP_PRAGMA_MESSAGE_PRINTF) && !defined(TPP_PRAGMA_MESSAGE_WRITE)
+#define TPP_PRAGMA_MESSAGE_WRITE(err_label, str, length)  \
+	fwrite((str), sizeof(char), (length), stdout)
+#define TPP_PRAGMA_MESSAGE_PRINTF(err_label, printf_args) \
+	printf printf_args
+#elif !defined(TPP_PRAGMA_MESSAGE_PRINTF)
+/* Implement `TPP_PRAGMA_MESSAGE_PRINTF()' via `TPP_PRAGMA_MESSAGE_WRITE()' */
+#define TPP_PRAGMA_MESSAGE_PRINTF(err_label, printf_args) \
+	do {                                                  \
+		if (!tpp_pragma_message_printf_impl printf_args)  \
+			goto err_label;                               \
+	} while (FALSE)
+PRIVATE int TPPCALL
+tpp_pragma_message_printf_impl(char const *format, ...) {
+	char buf[1024];
+	va_list args;
+#ifdef __STDC_INT_AS_SIZE_T
+	__STDC_INT_AS_SIZE_T length;
+#else /* __STDC_INT_AS_SIZE_T */
+	int length;
+#endif /* !__STDC_INT_AS_SIZE_T */
+	if (!format)
+		goto err; /* Prevent warnings... */
+	va_start(args, format);
+	length = vsprintf(buf, format, args);
+	va_end(args);
+	TPP_PRAGMA_MESSAGE_WRITE(err, buf,
+	                         (size_t)(unsigned int)length);
+	return 1;
+err:
+	return 0;
+}
+#elif !defined(TPP_PRAGMA_MESSAGE_WRITE)
+/* Implement `TPP_PRAGMA_MESSAGE_WRITE()' via `TPP_PRAGMA_MESSAGE_PRINTF()' */
+#define TPP_PRAGMA_MESSAGE_WRITE(err_label, str, length)           \
+	TPP_PRAGMA_MESSAGE_PRINTF(err_label, "%.*s",                   \
+	                          (int)(unsigned int)(size_t)(length), \
+	                          (char const *)(str))
+#endif /* ... */
+
+
 PRIVATE int TPPCALL parse_pragma_message(void) {
 	/* Emit a custom message to stderr. */
 	int with_paren;
@@ -13892,28 +13979,36 @@ PRIVATE int TPPCALL parse_pragma_message(void) {
 	if (message.c_kind != TPP_CONST_STRING) {
 		WARN(W_EXPECTED_STRING_AFTER_MESSAGE, &message);
 	} else {
+#ifdef TPP_PRAGMA_MESSAGE_BEGIN
+		TPP_PRAGMA_MESSAGE_BEGIN(err);
+#endif /* TPP_PRAGMA_MESSAGE_BEGIN */
 		if (CURRENT.l_flags & TPPLEXER_FLAG_MESSAGE_LOCATION) {
 			struct TPPLCInfo lc_info;
 			TPPLexer_LC(&lc_info);
-			fprintf(stderr, CURRENT.l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT ? "%s(%d,%d) : " : "%s:%d:%d: ",
-			        TPPLexer_FILE(NULL),
-			        (int)(lc_info.lc_line + 1),
-			        (int)(lc_info.lc_col + 1));
-			fprintf(stderr, "#pragma message: ");
-			fflush(stderr);
+			TPP_PRAGMA_MESSAGE_PRINTF(err, (CURRENT.l_flags & TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
+			                                ? "%s(%d,%d) : #pragma message: "
+			                                : "%s:%d:%d: #pragma message: ",
+			                                TPPLexer_FILE(NULL),
+			                                (int)(lc_info.lc_line + 1),
+			                                (int)(lc_info.lc_col + 1)));
 		}
 		if (!(CURRENT.l_flags & TPPLEXER_FLAG_MESSAGE_NOLINEFEED)) {
 			register char oldch, *poldch;
 			oldch = *(poldch = message.c_data.c_string->s_text +
 			                   message.c_data.c_string->s_size);
 			*poldch = '\n';
-			fwrite(message.c_data.c_string->s_text, sizeof(char),
-			       message.c_data.c_string->s_size + 1, stderr);
+			TPP_PRAGMA_MESSAGE_WRITE(err,
+			                         message.c_data.c_string->s_text,
+			                         message.c_data.c_string->s_size + 1);
 			*poldch = oldch;
 		} else {
-			fwrite(message.c_data.c_string->s_text, sizeof(char),
-			       message.c_data.c_string->s_size, stderr);
+			TPP_PRAGMA_MESSAGE_WRITE(err,
+			                         message.c_data.c_string->s_text,
+			                         message.c_data.c_string->s_size);
 		}
+#ifdef TPP_PRAGMA_MESSAGE_END
+		TPP_PRAGMA_MESSAGE_END(err);
+#endif /* TPP_PRAGMA_MESSAGE_END */
 	}
 	TPPConst_Quit(&message);
 	if (with_paren && unlikely(tok != ')'))
@@ -14825,7 +14920,7 @@ PUBLIC int TPPVCALL TPPLexer_Warn(int wnum, ...) {
 			      (int)(lc_info.lc_line + 1),
 			      (int)(lc_info.lc_col + 1));
 		}
-	} break;
+	}	break;
 
 	}
 	if (macro_name)

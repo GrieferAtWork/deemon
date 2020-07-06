@@ -726,7 +726,10 @@ functest('strcasecmp("a", "A")', "defined(__USE_KOS)");
 func("memchr", stdc, test: "extern char *buf; void *p = memchr(buf, '!', 123); return p != NULL;");
 func("memrchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = memrchr(buf, '!', 123); return p != NULL;");
 func("rawmemchr", "defined(__USE_GNU)", test: "extern char *buf; void *p = rawmemchr(buf, '!'); return p == buf;");
+functest('atoi("42")', stdc);
 functest('strlen("foo")', stdc);
+functest('strchr("foo", \'f\')', stdc);
+functest('strrchr("foo", \'f\')', stdc);
 functest('strnlen("foo", 3)', "defined(__USE_XOPEN2K8) || defined(__USE_DOS) || (defined(_MSC_VER) && !defined(__KOS_SYSTEM_HEADERS__))");
 
 func("bzero", "defined(CONFIG_HAVE_STRINGS_H)", test: "extern void *a; bzero(a, 42); return 0;");
@@ -5487,10 +5490,28 @@ sizeof("off_t");
 #define CONFIG_HAVE_rawmemchr 1
 #endif
 
+#ifdef CONFIG_NO_atoi
+#undef CONFIG_HAVE_atoi
+#else
+#define CONFIG_HAVE_atoi 1
+#endif
+
 #ifdef CONFIG_NO_strlen
 #undef CONFIG_HAVE_strlen
 #else
 #define CONFIG_HAVE_strlen 1
+#endif
+
+#ifdef CONFIG_NO_strchr
+#undef CONFIG_HAVE_strchr
+#else
+#define CONFIG_HAVE_strchr 1
+#endif
+
+#ifdef CONFIG_NO_strrchr
+#undef CONFIG_HAVE_strrchr
+#else
+#define CONFIG_HAVE_strrchr 1
 #endif
 
 #ifdef CONFIG_NO_strnlen
@@ -8069,6 +8090,25 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 }
 DECL_END
 #endif /* !CONFIG_HAVE_strlen */
+
+#ifndef CONFIG_HAVE_strchr
+#define CONFIG_HAVE_strchr 1
+DECL_BEGIN
+#undef strchr
+#define strchr dee_strchr
+LOCAL WUNUSED NONNULL((1)) char *
+dee_strchr(char const *haystack, char needle) {
+	for (;; ++haystack) {
+		char ch = *haystack;
+		if (ch == needle)
+			return (char *)haystack;
+		if (!ch)
+			break;
+	}
+	return NULL;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_strchr */
 
 #ifndef CONFIG_HAVE_memcpy
 #define CONFIG_HAVE_memcpy 1

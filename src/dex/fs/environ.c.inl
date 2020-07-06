@@ -44,6 +44,27 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_strrchr
+#define CONFIG_HAVE_strrchr 1
+#undef strrchr
+#define strrchr dee_strrchr
+LOCAL WUNUSED NONNULL((1)) char *
+dee_strrchr(char const *haystack, char needle) {
+	char *result = NULL;
+	for (;; ++haystack) {
+		char ch = *haystack;
+		if (ch == needle)
+			result = (char *)haystack;
+		if (!ch)
+			break;
+	}
+	return result;
+}
+#endif /* !CONFIG_HAVE_strrchr */
+
+
+
+
 typedef struct {
 	OBJECT_HEAD
 	char       **e_iter;    /* [0..1][1..1] Next environment string. */

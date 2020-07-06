@@ -996,11 +996,11 @@ restart_clear_weakrefs:
 }
 
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-#ifdef _MSC_VER
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 #define FILE_AND_LINE_FORMAT "%s(%d) : "
-#else /* _MSC_VER */
+#elif defined(CONFIG_DEFAULT_MESSAGE_FORMAT_GCC)
 #define FILE_AND_LINE_FORMAT "%s:%d: "
-#endif /* !_MSC_VER */
+#endif /* ... */
 
 #ifdef CONFIG_NO_THREADS
 #define BADREFCNT_BEGIN() (void)0

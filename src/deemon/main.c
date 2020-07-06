@@ -55,6 +55,21 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_HAVE_atoi
+#define CONFIG_HAVE_atoi 1
+#undef atoi
+#define atoi dee_atoi
+PRIVATE int DCALL dee_atoi(char const *s) {
+	int result;
+	if (Dee_TAtoi(int, s, strlen(s),
+	              DEEINT_STRING(10, DEEINT_STRING_FTRY),
+	              &result) != 0)
+		result = 0;
+	return result;
+}
+#endif /* !CONFIG_HAVE_atoi */
+
+
 
 #if defined(_MSC_FULL_VER)
 /* >> http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008 */
@@ -449,14 +464,16 @@ PRIVATE int DCALL cmd_W(char *arg) {
 		unsigned int i;
 		for (i = 0; i < W_COUNT; ++i) {
 			if (!TPPLexer_SetWarning(i, state))
-				return -1;
+				goto err;
 		}
 	} else {
-		if (arg[0] == 'n' && arg[1] == 'o' && arg[2] == '-')
-			state = WSTATE_DISABLED, arg += 3;
+		if (arg[0] == 'n' && arg[1] == 'o' && arg[2] == '-') {
+			state = WSTATE_DISABLED;
+			arg += 3;
+		}
 		error = TPPLexer_SetWarnings(arg, state);
 		if (!error)
-			return -1;
+			goto err;
 		if (error == 2) {
 			return DeeError_Throwf(&DeeError_ValueError,
 			                       "Unknown warning `%#q'",
@@ -464,6 +481,8 @@ PRIVATE int DCALL cmd_W(char *arg) {
 		}
 	}
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL cmd_D(char *arg) {
@@ -479,8 +498,10 @@ PRIVATE int DCALL cmd_D(char *arg) {
 	if (!TPPLexer_Define(arg, name_length,
 	                     macro_value, strlen(macro_value),
 	                     TPPLEXER_DEFINE_FLAG_NONE))
-		return -1;
+		goto err;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL cmd_U(char *arg) {
@@ -492,8 +513,10 @@ PRIVATE int DCALL cmd_U(char *arg) {
 PRIVATE int DCALL cmd_I(char *arg) {
 	ASSERT(arg);
 	if (!TPPLexer_AddIncludePath(arg, strlen(arg)))
-		return -1;
+		goto err;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL cmd_A(char *arg) {
@@ -508,13 +531,15 @@ PRIVATE int DCALL cmd_A(char *arg) {
 		DeeError_Throwf(&DeeError_ValueError,
 		                "No assertion value given by `%#q'",
 		                arg);
-		return -1;
+		goto err;
 	}
 	if (add && !TPPLexer_AddAssert(arg, strlen(arg), val, strlen(val)))
-		return -1;
+		goto err;
 	TPPLexer_DelAssert(arg, strlen(arg),
 	                   val, val ? strlen(val) : 0);
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE int DCALL cmd_message_format(char *arg) {
@@ -628,11 +653,11 @@ PRIVATE char const doc_cmdtok[]  = "Outline all tokens using the [...] notation 
 PRIVATE char const doc_cmdpp[]   = "Enable preprocess-mode, which emits all tokens separated by `\\0'-bytes\n"
                                    "Enabling this option also disabled SPACE and LF tokens, though\n"
                                    "they can be re-enabled using the `-fspc' and `-flf' switches";
-#ifdef _MSC_VER
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 PRIVATE char const doc_cmdmessage_format[] = "={msvc|gcc}\tSet the format for error message (Default: msvc)";
-#else /* _MSC_VER */
+#elif defined(CONFIG_DEFAULT_MESSAGE_FORMAT_GCC)
 PRIVATE char const doc_cmdmessage_format[] = "={msvc|gcc}\tSet the format for error message (Default: gcc)";
-#endif /* !_MSC_VER */
+#endif /* ... */
 PRIVATE char const doc_cmd_ftabstop[]    = "=width\tSet the width of tab characters used by `__COLUMN__' and in warning/error messages (Default: " PP_STR(TPPLEXER_DEFAULT_TABSIZE) ")";
 PRIVATE char const doc_cmd_undef[]       = "Disable all builtin macros";
 PRIVATE char const doc_cmd_trigraphs[]   = "Enable recognition of trigraph character sequences";
@@ -752,7 +777,8 @@ PRIVATE int DCALL cmd_version(char *UNUSED(arg)) {
 	fp = DeeFile_GetStd(DEE_STDERR);
 	if unlikely(!fp)
 		goto err_nofp;
-	if (DeeFile_WriteAll(fp, str_version, COMPILER_STRLEN(str_version)) < 0)
+	if (DeeFile_WriteAll(fp, str_version,
+	                     COMPILER_STRLEN(str_version)) < 0)
 		goto err;
 	Dee_Decref(fp);
 	return exit_ok();
@@ -914,7 +940,7 @@ display_help_single(dformatprinter printer, void *arg,
 		buf = (char *)Dee_AMalloc((prefix_length + 3) * sizeof(char) +
 		                          sizeof(option->co_shortnam));
 		if unlikely(!buf)
-			return -1;
+			goto err;
 		memcpyc(buf, prefix, prefix_length, sizeof(char));
 		dst    = buf + prefix_length;
 		*dst++ = '-';
@@ -929,6 +955,8 @@ display_help_single(dformatprinter printer, void *arg,
 	return display_help(printer, arg, option,
 	                    display_help_namewidth(option, prefix) + 1,
 	                    prefix);
+err:
+	return -1;
 }
 
 PRIVATE int DCALL
@@ -967,8 +995,11 @@ display_help_query(dformatprinter printer, void *arg,
 			}
 		}
 	}
-	if (DeeFormat_Printf(printer, arg, "Unknown option %$q%s%s\n",
-	                     query_length, query, *prefix ? " in group " : "",
+	if (DeeFormat_Printf(printer, arg,
+	                     "Unknown option %$q%s%s\n",
+	                     query_length,
+	                     query,
+	                     *prefix ? " in group " : "",
 	                     prefix) < 0)
 		goto err;
 	return 0;
@@ -980,23 +1011,23 @@ PRIVATE int DCALL cmd_help(char *arg) {
 	DREF DeeObject *fp;
 	fp = DeeFile_GetStd(DEE_STDERR);
 	if unlikely(!fp)
-		goto err_nofp;
+		goto err;
 	if (!arg) {
 		/* Display help on all options from `cmdline_options' */
 		if (DeeFile_WriteAll(fp, str_usage, COMPILER_STRLEN(str_usage)) < 0)
-			goto err;
+			goto err_fp;
 		if (display_help_group((dformatprinter)&DeeFile_WriteAll, fp, cmdline_options, ""))
-			goto err;
+			goto err_fp;
 	} else if (arg[0] != '/') {
 		if (display_help_query((dformatprinter)&DeeFile_WriteAll, fp, cmdline_options, arg, ""))
-			goto err;
+			goto err_fp;
 	} else {
 		/* `print Doc from doc(arg)' */
 		DREF DeeObject *doc_module, *doc_node;
 		dssize_t error;
 		doc_module = DeeModule_OpenGlobalString("doc", 3, NULL, true);
 		if unlikely(!doc_module)
-			goto err;
+			goto err_fp;
 		if unlikely(DeeModule_RunInit(doc_module)) {
 			doc_node = NULL;
 		} else {
@@ -1004,17 +1035,17 @@ PRIVATE int DCALL cmd_help(char *arg) {
 		}
 		Dee_Decref(doc_module);
 		if unlikely(!doc_node)
-			goto err;
+			goto err_fp;
 		error = DeeObject_Print(doc_node, (dformatprinter)&DeeFile_WriteAll, fp);
 		Dee_Decref(doc_node);
 		if unlikely(error < 0)
-			goto err;
+			goto err_fp;
 	}
 	Dee_Decref(fp);
 	return exit_ok();
-err:
+err_fp:
 	Dee_Decref(fp);
-err_nofp:
+err:
 	return -1;
 }
 
@@ -1027,13 +1058,15 @@ PRIVATE int DCALL compiler_setup(void *arg) {
 	 * meaning that it's OK if it does something different when used
 	 * in this manner. */
 	if (!TPPLexer_Define("__MAIN__", 8, "1", 1, TPPLEXER_DEFINE_FLAG_NONE))
-		return -1;
+		goto err;
 
 	/* - Add additional #include paths passed through `-I' */
 	/* - Add pre-defined macros passed through `-D' */
 	/* - Add pre-defined assertions passed through `-A' */
 	/* - Set misc. lexer context/flags based on the commandline. */
 	return cmd_runlate(arg == NULL);
+err:
+	return -1;
 }
 
 PRIVATE int DCALL
@@ -1192,16 +1225,18 @@ int main(int argc, char *argv[]) {
 				goto err;
 			}
 			for (;;) {
-				int error = 0;
+				Dee_ssize_t error;
 				/* Pull items from the interactive module. */
 				value = DeeObject_IterNext(interactive_iterator);
 				if (!ITER_ISOK(value))
 					break;
-				if (DeeObject_PrintRepr(value, (dformatprinter)&DeeFile_WriteAll, interactive_output) < 0 ||
-				    DeeFile_WriteAll(interactive_output, "\n", 1 * sizeof(char)) < 0)
-					error = -1;
+				error = DeeObject_PrintRepr(value,
+				                            (dformatprinter)&DeeFile_WriteAll,
+				                            interactive_output);
+				if likely(error >= 0)
+					error = DeeFile_WriteAll(interactive_output, "\n", 1 * sizeof(char));
 				Dee_Decref(value);
-				if unlikely(error) {
+				if unlikely(error < 0) {
 					value = NULL;
 					break;
 				}
@@ -1228,16 +1263,16 @@ int main(int argc, char *argv[]) {
 			goto err;
 		if (operation_mode == OPERATION_MODE_PRINTASM) {
 			/* Print a full disassembly of the user-module. */
-			dssize_t temp;
+			int error = -1;
 			if (!script_options.co_decoutput &&
 			    (script_options.co_decoutput = DeeFile_GetStd(DEE_STDOUT)) == NULL)
-				temp = -1;
+				;
 			else {
 				PRIVATE DEFINE_STRING(str_disassembler, "disassembler");
 				DREF DeeObject *disassembler_module;
 				disassembler_module = DeeModule_OpenGlobal((DeeObject *)&str_disassembler, NULL, true);
 				if unlikely(!disassembler_module)
-					temp = -1;
+					;
 				else {
 					DREF DeeObject *disasm_error;
 					disasm_error = DeeObject_CallAttrStringf(disassembler_module,
@@ -1248,11 +1283,11 @@ int main(int argc, char *argv[]) {
 					                                         emitasm_flags);
 					Dee_Decref(disassembler_module);
 					Dee_XDecref(disasm_error);
-					temp = disasm_error ? 0 : -1;
+					error = 0;
 				}
 			}
 			Dee_Decref(user_module);
-			if unlikely(temp < 0)
+			if unlikely(error)
 				goto err;
 		} else if (operation_mode == OPERATION_MODE_BUILDONLY) {
 			/* ... */
@@ -1261,7 +1296,6 @@ int main(int argc, char *argv[]) {
 			DREF DeeObject *user_module_main;
 			DREF DeeObject *user_module_result;
 			DREF DeeObject *user_module_args;
-			int temp;
 			/* The user's module has been loaded. - Now load dependencies and open it's root. */
 			user_module_main = DeeModule_GetRoot((DeeObject *)user_module, true);
 			Dee_Decref(user_module);
@@ -1286,10 +1320,11 @@ int main(int argc, char *argv[]) {
 			} else
 #endif /* EXIT_SUCCESS != 0 */
 			{
+				int error;
 				/* Interpret the module-result as an integer and use that as exit-code. */
-				temp = DeeObject_AsInt(user_module_result, &result);
+				error = DeeObject_AsInt(user_module_result, &result);
 				Dee_Decref(user_module_result);
-				if unlikely(temp)
+				if unlikely(error)
 					goto err;
 			}
 		}
@@ -1451,13 +1486,13 @@ INTERN struct compiler_options script_options = {
 	/* .co_decoutput     = */ NULL
 };
 
-#if defined(__GNUC__) && !defined(NDEBUG)
-INTERN uintptr_t __stack_chk_guard = 0x1246Ab1f;
+#if defined(__SSP_FORTIFY_LEVEL) && (__SSP_FORTIFY_LEVEL + 0) > 0
+INTERN uintptr_t __stack_chk_guard = 0x1246ab1f;
 INTERN ATTR_NORETURN void __stack_chk_fail(void) {
 	ASSERT(0);
 	_Exit(1);
 }
-#endif /* __GNUC__ && !NDEBUG */
+#endif /* __SSP_FORTIFY_LEVEL > 0 */
 
 
 PRIVATE NONNULL((1)) void DCALL
@@ -1528,7 +1563,10 @@ LOCAL void DCALL emitpp_putline(void) {
 	} else {
 		emitpp_writeout("# ", 2 * sizeof(char));
 	}
-	emitpp_writeout(buffer, (TPP_Itos(buffer, (TPP(tint_t))(line + 1)) - buffer) * sizeof(char));
+	emitpp_writeout(buffer,
+	                (TPP_Itos(buffer, (TPP(tint_t))(line + 1)) -
+	                 buffer) *
+	                sizeof(char));
 	if (emitpp_lastfilename != filename_text) {
 		char *quote_buffer;
 		size_t quote_size;
@@ -1683,9 +1721,9 @@ operation_mode_printpp(int argc, char **argv) {
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTSPACE |
 	                              TPPLEXER_FLAG_WANTLF |
 	                              TPPLEXER_FLAG_REEMIT_UNKNOWN_PRAGMA |
-#ifdef _MSC_VER
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 	                              TPPLEXER_FLAG_MSVC_MESSAGEFORMAT |
-#endif /* _MSC_VER */
+#endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 	                              TPPLEXER_FLAG_TERMINATE_STRING_LF);
 
 	if (!script_options.co_decoutput &&
@@ -2078,12 +2116,11 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		old_l_eof_paren               = TPPLexer_Current->l_eof_paren;
 		TPPLexer_Current->l_eof_paren = 0;
 		old_l_flags                   = TPPLexer_Current->l_flags;
-		TPPLexer_Current->l_flags     = (TPPLEXER_FLAG_DEFAULT
-#ifdef _MSC_VER
-		                             |
-		                             TPPLEXER_FLAG_MSVC_MESSAGEFORMAT
-#endif /* _MSC_VER */
-		                             );
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
+		TPPLexer_Current->l_flags     = (TPPLEXER_FLAG_DEFAULT | TPPLEXER_FLAG_MSVC_MESSAGEFORMAT);
+#else /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
+		TPPLexer_Current->l_flags     = (TPPLEXER_FLAG_DEFAULT);
+#endif /* !CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 		old_l_extokens               = TPPLexer_Current->l_extokens;
 		TPPLexer_Current->l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
 		old_l_eob_file               = TPPLexer_Current->l_eob_file;
@@ -2096,8 +2133,8 @@ try_exec_format_impl(DeeObject *__restrict stream,
 		 * within script code, when those headers had already been included once before. */
 		TPPLexer_Reset(TPPLexer_Current, TPPLEXER_RESET_FONCE);
 
-		/* During Execution of script code, define another macro `__FORMAT_SCRIPT__'
-		 * that the execution-context of format scripts to be detected in user-code. */
+		/* During Execution of script code, define another macro `__FORMAT_SCRIPT__',
+		 * allowing the execution-context of a format script to be detected in user-code. */
 		if (!TPPLexer_Define("__FORMAT_SCRIPT__", 17, "1", 1, TPPLEXER_DEFINE_FLAG_NONE))
 			script_module = NULL;
 		else {
@@ -2225,7 +2262,7 @@ try_exec_format(DeeObject *__restrict stream,
 }
 
 
-PRIVATE int const format_disabled_warnings[] = {
+PRIVATE uint8_t const format_disabled_warnings[] = {
 	W_REDEFINING_BUILTIN_KEYWORD,
 	W_UNKNOWN_PREPROCESSOR_DIRECTIVE,
 	W_STARSLASH_OUTSIDE_OF_COMMENT,
@@ -2255,9 +2292,9 @@ dformat_source_files(char *filename,
 		goto err_nofin;
 	/* Configure the lexer for what we have in mind. */
 	TPPLexer_Current->l_flags |= (TPPLEXER_FLAG_WANTCOMMENTS |
-#ifdef _MSC_VER
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 	                              TPPLEXER_FLAG_MSVC_MESSAGEFORMAT |
-#endif /* _MSC_VER */
+#endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 	                              TPPLEXER_FLAG_ASM_COMMENTS |
 	                              TPPLEXER_FLAG_TERMINATE_STRING_LF);
 

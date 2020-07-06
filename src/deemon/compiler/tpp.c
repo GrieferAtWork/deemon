@@ -49,8 +49,8 @@
 #undef TPPFUN
 #define PUBLIC  INTERN
 #define TPPFUN  INTDEF
-#define TPP_USERDEFS  <deemon/compiler/lexer.def>
-#define TPP_USERSTREAM_FCLOSE(stream)        Dee_Decref(stream)
+#define TPP_USERDEFS                  <deemon/compiler/lexer.def>
+#define TPP_USERSTREAM_FCLOSE(stream) Dee_Decref(stream)
 
 DECL_BEGIN
 #define TPP_USERSTREAM_FOPEN(filename) \
@@ -117,9 +117,9 @@ DECL_END
 #define calloc(c, s)  Dee_TryCalloc((c) * (s))
 #define realloc(p, s) Dee_TryRealloc(p, s)
 #define free(p)       Dee_Free(p)
-#ifndef alloca
+#if !defined(alloca) && defined(Dee_Alloca)
 #define alloca        Dee_Alloca
-#endif /* !alloca */
+#endif /* !alloca && Dee_Alloca */
 
 #define bswap_16      BSWAP16
 #define bswap_32      BSWAP32
@@ -130,6 +130,53 @@ DECL_END
 
 #undef PRIVATE
 #define PRIVATE      INTERN
+
+/* Force tpp to use our own version of [v]sprintf, thus preventing a potential libc
+ * dependency for which we'd need to add another system-features test. And given the
+ * fact that deemon _needs_ its own format-printer (due to extensions such as %r for
+ * printing the representation of some DeeObject), we can simply have this one point
+ * back to ourselves. */
+#undef sprintf
+#undef vsprintf
+#define sprintf(buf, ...) \
+	(int)(unsigned int)(size_t)(Dee_sprintf(buf, __VA_ARGS__) - (buf))
+#define vsprintf(buf, format, args) \
+	(int)(unsigned int)(size_t)(Dee_vsprintf(buf, format, args) - (buf))
+
+/* TODO: TPP has a non-redundant dependency on `char *strcpy(char *dst, char const *src))' */
+/* TODO: TPP has a non-redundant dependency on `time_t time(time_t *ptr)' */
+/* TODO: TPP has a non-redundant dependency on `struct tm *localtime(time_t const *tmr)' */
+/* TODO: TPP has a non-redundant dependency on `void srand(unsigned int seed)' */
+/* TODO: TPP has a non-redundant dependency on `int rand(void)' */
+
+
+
+/* Configure #pragma message to output text via deemon's stdout file. */
+PRIVATE Dee_ssize_t DCALL
+tpp_pragma_message_printf(char const *format, ...) {
+	Dee_ssize_t result;
+	DREF DeeObject *stdout_file;
+	va_list args;
+	stdout_file = DeeFile_GetStd(DEE_STDOUT);
+	if unlikely(!stdout_file)
+		goto err;
+	va_start(args, format);
+	result = DeeFile_VPrintf(stdout_file, format, args);
+	va_end(args);
+	Dee_Decref(stdout_file);
+	return result;
+err:
+	return -1;
+}
+
+#define TPP_PRAGMA_MESSAGE_PRINTF(err_label, printf_args)      \
+	do {                                                       \
+		if unlikely(tpp_pragma_message_printf printf_args < 0) \
+			goto err_label;                                    \
+	} __WHILE0
+#define TPP_PRAGMA_MESSAGE_WRITE(err_label, str, length) \
+	TPP_PRAGMA_MESSAGE_PRINTF(err_label, ("%$s", (size_t)(length), str))
+
 
 /* Prevent tpp from unconditionally including these headers. If they do
  * exist, then they've already been included by <deemon/system-features.h> */
@@ -142,6 +189,8 @@ DECL_END
 #define NO_INCLUDE_STRING_H   1
 #define NO_INCLUDE_STDLIB_H   1
 #define NO_INCLUDE_STDIO_H    1
+#define NO_INCLUDE_MALLOC_H   1
+#define NO_INCLUDE_ALLOCA_H   1
 
 #ifndef __INTELLISENSE__
 #undef SKIP_WRAPLF
@@ -158,10 +207,10 @@ INTERN struct TPPKeyword TPPKeyword_Empty = {
 	/* .k_id    = */ TOK_KEYWORD_BEGIN,
 #if __SIZEOF_POINTER__ > __SIZEOF_INT__
 	/* .k_pad   = */ { 0 },
-#endif
+#endif /* __SIZEOF_POINTER__ > __SIZEOF_INT__ */
 	/* .k_size  = */ 0,
 	/* .k_hash  = */ 1,
-	/* .k_zero  = */ {0},
+	/* .k_zero  = */ { 0 }
 };
 
 

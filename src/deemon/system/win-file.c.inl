@@ -516,7 +516,7 @@ again:
 #endif /* __SIZEOF_SIZE_T__ > 4 */
 		file_type = nt_sysfile_gettype(self);
 		if (file_type == FILE_TYPE_UNKNOWN)
-			return -1;
+			goto err;
 		if (file_type == FILE_TYPE_PIPE) {
 			BYTE temp_buffer[1];
 			/* `WaitForSingleObject()' doesn't work on pipes (for some reason...) */
@@ -547,7 +547,7 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
-				return -1;
+				goto err;
 			goto again;
 		}
 		if (error != ERROR_BROKEN_PIPE)
@@ -558,7 +558,9 @@ again:
 	DBG_ALIGNMENT_ENABLE();
 	return (dssize_t)result;
 err_io:
-	return error_file_io(self);
+	error_file_io(self);
+err:
+	return -1;
 }
 
 
@@ -688,7 +690,7 @@ fallback:
 	if (DeeNTSystem_IsIntr(GetLastError())) {
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeThread_CheckInterrupt())
-			return -1;
+			goto err;
 		goto again;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -698,7 +700,7 @@ fallback:
 		if (DeeNTSystem_IsIntr(GetLastError())) {
 			DBG_ALIGNMENT_ENABLE();
 			if (DeeThread_CheckInterrupt())
-				return -1;
+				goto err;
 			goto again;
 		}
 		DBG_ALIGNMENT_ENABLE();
@@ -761,7 +763,7 @@ again:
 		temp = write_utf8_to_console(self, with_pending, pending_count + bufsize);
 		if unlikely(temp == (dssize_t)-1) {
 			ATOMIC_CMPXCH(self->sf_pendingc, 0, pending_count);
-			return -1;
+			goto err;
 		}
 		pending_count += bufsize;
 		ASSERT((size_t)temp <= pending_count);
@@ -775,6 +777,8 @@ again:
 			goto again;
 	}
 	return 0;
+err:
+	return -1;
 }
 
 FORCELOCAL int DCALL
@@ -829,7 +833,7 @@ again:
 		if (append_pending_utf8(self,
 		                        (uint8_t *)buffer + (size_t)num_written,
 		                        bufsize - (size_t)num_written))
-			return -1;
+			goto err;
 	}
 	return 0;
 err:
@@ -865,7 +869,7 @@ sysfile_write(SystemFile *__restrict self,
 		 * full unicode support enabled)
 		 * XXX: What about console input? Shouldn't that have the same problem? */
 		if unlikely(write_to_console(self, buffer, bufsize))
-			return -1;
+			goto err;
 		/* TODO: Support for-, and emulation of `ENABLE_VIRTUAL_TERMINAL_PROCESSING' */
 		return (dssize_t)bufsize;
 	}
@@ -878,13 +882,15 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
-				return -1;
+				goto err;
 			goto again;
 		}
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (dssize_t)bytes_written;
+err:
+	return -1;
 }
 
 
@@ -933,13 +939,15 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
-				return -1;
+				goto err;
 			goto again;
 		}
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (dssize_t)bytes_written;
+err:
+	return -1;
 }
 
 PRIVATE dssize_t DCALL
@@ -970,13 +978,15 @@ again:
 		DBG_ALIGNMENT_ENABLE();
 		if (DeeNTSystem_IsIntr(error)) {
 			if (DeeThread_CheckInterrupt())
-				return -1;
+				goto err;
 			goto again;
 		}
 		return error_file_io(self);
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (dssize_t)bytes_written;
+err:
+	return -1;
 }
 
 PRIVATE doff_t DCALL
@@ -993,7 +1003,7 @@ again:
 		if (error != NO_ERROR) {
 			if (DeeNTSystem_IsIntr(error)) {
 				if (DeeThread_CheckInterrupt())
-					return -1;
+					goto err;
 				goto again;
 			}
 			return error_file_io(self);
@@ -1001,6 +1011,8 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	return (doff_t)result | ((doff_t)high << 32);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL sysfile_sync(SystemFile *__restrict self) {
@@ -1039,9 +1051,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	doff_t old_pos = sysfile_seek(self, 0, SEEK_CUR);
 	if unlikely(old_pos < 0)
-		return -1;
+		goto err;
 	if unlikely((dpos_t)old_pos != size && sysfile_seek(self, (doff_t)size, SEEK_SET) < 0)
-		return -1;
+		goto err;
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!SetEndOfFile(self->sf_handle)) {
 		DBG_ALIGNMENT_ENABLE();
@@ -1049,8 +1061,10 @@ sysfile_trunc(SystemFile *__restrict self, dpos_t size) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	if unlikely((dpos_t)old_pos != size && sysfile_seek(self, old_pos, SEEK_SET) < 0)
-		return -1;
+		goto err;
 	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

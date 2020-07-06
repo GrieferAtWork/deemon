@@ -97,10 +97,10 @@ compiler_init(DeeCompilerObject *__restrict self,
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	if unlikely(!TPPLexer_Init(&self->cp_lexer))
 		goto err_scope;
-#ifdef _MSC_VER
+#ifdef CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC
 	/* Mirror MSVC's file-and-line syntax. */
 	self->cp_lexer.l_flags |= TPPLEXER_FLAG_MSVC_MESSAGEFORMAT;
-#endif /* _MSC_VER */
+#endif /* CONFIG_DEFAULT_MESSAGE_FORMAT_MSVC */
 	self->cp_lexer.l_extokens = TPPLEXER_TOKEN_LANG_DEEMON;
 	parser_errors_init(&self->cp_errors);
 	return 0;
