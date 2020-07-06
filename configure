@@ -964,14 +964,14 @@ EOF
 					line="${line#*\"}"
 					t="${line%%\"*}"
 					n="${t%%\(*}"
-					t="return (int)$t;"
+					t="return (int)!$t;"
 					check_generic "$n" "$t"
 					;;
 				*( )functest*( )\(\'*)
 					line="${line#*\'}"
 					t="${line%%\'*}"
 					n="${t%%\(*}"
-					t="return (int)$t;"
+					t="return (int)!$t;"
 					check_generic "$n" "$t"
 					;;
 				*( )typ*( )\(\'*)

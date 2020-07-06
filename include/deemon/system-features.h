@@ -853,6 +853,70 @@ constant("HW_NCPU");
 func("alloca", "defined(CONFIG_HAVE_ALLOCA_H)", test: "void *p = alloca(42); return p != 0;");
 func("_alloca", msvc, test: "void *p = _alloca(42); return p != 0;");
 
+// Math functions
+functest("fabs(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("sin(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("cos(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("tan(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("asin(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("acos(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("atan(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("sinh(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("cosh(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("tanh(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("asinh(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("acosh(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("atanh(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("copysign(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("atan2(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("exp(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("exp2(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("expm1(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("erf(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("erfc(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("fabs(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("sqrt(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("log(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("log2(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("logb(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("log1p(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("log10(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("cbrt(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("tgamma(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("lgamma(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("pow(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("ceil(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("floor(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("round(1.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("fmod(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("hypot(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("remainder(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("nextafter(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+functest("fdim(1.0, 2.0)", "defined(CONFIG_HAVE_MATH_H)");
+func("isnan", "defined(CONFIG_HAVE_MATH_H)", test: "return isnan(1.0) != 0;");
+func("isinf", "defined(CONFIG_HAVE_MATH_H)", test: "return isinf(1.0) != 0;");
+func("isfinite", "defined(CONFIG_HAVE_MATH_H)", test: "return isfinite(1.0) != 0;");
+func("isnormal", "defined(CONFIG_HAVE_MATH_H)", test: "return isnormal(1.0) != 0;");
+func("signbit", "defined(CONFIG_HAVE_MATH_H)", test: "return signbit(1.0) != 0;");
+func("isgreater", "defined(CONFIG_HAVE_MATH_H)", test: "return isgreater(1.0, 2.0) != 0;");
+func("isgreaterequal", "defined(CONFIG_HAVE_MATH_H)", test: "return isgreaterequal(1.0, 2.0) != 0;");
+func("isless", "defined(CONFIG_HAVE_MATH_H)", test: "return isless(1.0, 2.0) != 0;");
+func("islessequal", "defined(CONFIG_HAVE_MATH_H)", test: "return islessequal(1.0, 2.0) != 0;");
+func("islessgreater", "defined(CONFIG_HAVE_MATH_H)", test: "return islessgreater(1.0, 2.0) != 0;");
+func("isunordered", "defined(CONFIG_HAVE_MATH_H)", test: "return isunordered(1.0, 2.0) != 0;");
+func("ilogb", "defined(CONFIG_HAVE_MATH_H)", test: "return ilogb(1.0) != 0;");
+func("frexp", "defined(CONFIG_HAVE_MATH_H)", test: "extern int ex; return frexp(1.0, &ex) != 0.0;");
+func("modf", "defined(CONFIG_HAVE_MATH_H)", test: "extern double y; return modf(1.0, &y) != 0.0;");
+func("ldexp", "defined(CONFIG_HAVE_MATH_H)", test: "return ldexp(1.0, 1) != 0.0;");
+func("sincos", "defined(CONFIG_HAVE_MATH_H) && defined(__USE_GNU)", test: "extern double x, y, z; sincos(x, &y, &z); return 0;");
+func("asincos", "", test: "extern double x, y, z; asincos(x, &y, &z); return 0;");
+func("sincosh", "", test: "extern double x, y, z; sincosh(x, &y, &z); return 0;");
+func("asincosh", "", test: "extern double x, y, z; asincosh(x, &y, &z); return 0;");
+func("scalbn", "defined(CONFIG_HAVE_MATH_H)", test: "return scalbn(1.0, 1) != 0.0;");
+func("scalbln", "defined(CONFIG_HAVE_MATH_H)", test: "return scalbln(1.0, 1L) != 0.0;");
+func("remquo", "defined(CONFIG_HAVE_MATH_H)", test: "extern double x, y; extern int z; return remquo(x, y, &z) != 0.0;");
+
+
 sizeof("off_t");
 
 //END:FEATURES
@@ -6122,6 +6186,434 @@ sizeof("off_t");
 #elif !defined(CONFIG_HAVE__alloca) && \
       (defined(_alloca) || defined(___alloca_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE__alloca 1
+#endif
+
+#ifdef CONFIG_NO_fabs
+#undef CONFIG_HAVE_fabs
+#elif !defined(CONFIG_HAVE_fabs) && \
+      (defined(fabs) || defined(__fabs_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_fabs 1
+#endif
+
+#ifdef CONFIG_NO_sin
+#undef CONFIG_HAVE_sin
+#elif !defined(CONFIG_HAVE_sin) && \
+      (defined(sin) || defined(__sin_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_sin 1
+#endif
+
+#ifdef CONFIG_NO_cos
+#undef CONFIG_HAVE_cos
+#elif !defined(CONFIG_HAVE_cos) && \
+      (defined(cos) || defined(__cos_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_cos 1
+#endif
+
+#ifdef CONFIG_NO_tan
+#undef CONFIG_HAVE_tan
+#elif !defined(CONFIG_HAVE_tan) && \
+      (defined(tan) || defined(__tan_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_tan 1
+#endif
+
+#ifdef CONFIG_NO_asin
+#undef CONFIG_HAVE_asin
+#elif !defined(CONFIG_HAVE_asin) && \
+      (defined(asin) || defined(__asin_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_asin 1
+#endif
+
+#ifdef CONFIG_NO_acos
+#undef CONFIG_HAVE_acos
+#elif !defined(CONFIG_HAVE_acos) && \
+      (defined(acos) || defined(__acos_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_acos 1
+#endif
+
+#ifdef CONFIG_NO_atan
+#undef CONFIG_HAVE_atan
+#elif !defined(CONFIG_HAVE_atan) && \
+      (defined(atan) || defined(__atan_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_atan 1
+#endif
+
+#ifdef CONFIG_NO_sinh
+#undef CONFIG_HAVE_sinh
+#elif !defined(CONFIG_HAVE_sinh) && \
+      (defined(sinh) || defined(__sinh_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_sinh 1
+#endif
+
+#ifdef CONFIG_NO_cosh
+#undef CONFIG_HAVE_cosh
+#elif !defined(CONFIG_HAVE_cosh) && \
+      (defined(cosh) || defined(__cosh_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_cosh 1
+#endif
+
+#ifdef CONFIG_NO_tanh
+#undef CONFIG_HAVE_tanh
+#elif !defined(CONFIG_HAVE_tanh) && \
+      (defined(tanh) || defined(__tanh_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_tanh 1
+#endif
+
+#ifdef CONFIG_NO_asinh
+#undef CONFIG_HAVE_asinh
+#elif !defined(CONFIG_HAVE_asinh) && \
+      (defined(asinh) || defined(__asinh_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_asinh 1
+#endif
+
+#ifdef CONFIG_NO_acosh
+#undef CONFIG_HAVE_acosh
+#elif !defined(CONFIG_HAVE_acosh) && \
+      (defined(acosh) || defined(__acosh_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_acosh 1
+#endif
+
+#ifdef CONFIG_NO_atanh
+#undef CONFIG_HAVE_atanh
+#elif !defined(CONFIG_HAVE_atanh) && \
+      (defined(atanh) || defined(__atanh_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_atanh 1
+#endif
+
+#ifdef CONFIG_NO_copysign
+#undef CONFIG_HAVE_copysign
+#elif !defined(CONFIG_HAVE_copysign) && \
+      (defined(copysign) || defined(__copysign_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_copysign 1
+#endif
+
+#ifdef CONFIG_NO_atan2
+#undef CONFIG_HAVE_atan2
+#elif !defined(CONFIG_HAVE_atan2) && \
+      (defined(atan2) || defined(__atan2_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_atan2 1
+#endif
+
+#ifdef CONFIG_NO_exp
+#undef CONFIG_HAVE_exp
+#elif !defined(CONFIG_HAVE_exp) && \
+      (defined(exp) || defined(__exp_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_exp 1
+#endif
+
+#ifdef CONFIG_NO_exp2
+#undef CONFIG_HAVE_exp2
+#elif !defined(CONFIG_HAVE_exp2) && \
+      (defined(exp2) || defined(__exp2_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_exp2 1
+#endif
+
+#ifdef CONFIG_NO_expm1
+#undef CONFIG_HAVE_expm1
+#elif !defined(CONFIG_HAVE_expm1) && \
+      (defined(expm1) || defined(__expm1_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_expm1 1
+#endif
+
+#ifdef CONFIG_NO_erf
+#undef CONFIG_HAVE_erf
+#elif !defined(CONFIG_HAVE_erf) && \
+      (defined(erf) || defined(__erf_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_erf 1
+#endif
+
+#ifdef CONFIG_NO_erfc
+#undef CONFIG_HAVE_erfc
+#elif !defined(CONFIG_HAVE_erfc) && \
+      (defined(erfc) || defined(__erfc_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_erfc 1
+#endif
+
+#ifdef CONFIG_NO_fabs
+#undef CONFIG_HAVE_fabs
+#elif !defined(CONFIG_HAVE_fabs) && \
+      (defined(fabs) || defined(__fabs_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_fabs 1
+#endif
+
+#ifdef CONFIG_NO_sqrt
+#undef CONFIG_HAVE_sqrt
+#elif !defined(CONFIG_HAVE_sqrt) && \
+      (defined(sqrt) || defined(__sqrt_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_sqrt 1
+#endif
+
+#ifdef CONFIG_NO_log
+#undef CONFIG_HAVE_log
+#elif !defined(CONFIG_HAVE_log) && \
+      (defined(log) || defined(__log_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_log 1
+#endif
+
+#ifdef CONFIG_NO_log2
+#undef CONFIG_HAVE_log2
+#elif !defined(CONFIG_HAVE_log2) && \
+      (defined(log2) || defined(__log2_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_log2 1
+#endif
+
+#ifdef CONFIG_NO_logb
+#undef CONFIG_HAVE_logb
+#elif !defined(CONFIG_HAVE_logb) && \
+      (defined(logb) || defined(__logb_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_logb 1
+#endif
+
+#ifdef CONFIG_NO_log1p
+#undef CONFIG_HAVE_log1p
+#elif !defined(CONFIG_HAVE_log1p) && \
+      (defined(log1p) || defined(__log1p_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_log1p 1
+#endif
+
+#ifdef CONFIG_NO_log10
+#undef CONFIG_HAVE_log10
+#elif !defined(CONFIG_HAVE_log10) && \
+      (defined(log10) || defined(__log10_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_log10 1
+#endif
+
+#ifdef CONFIG_NO_cbrt
+#undef CONFIG_HAVE_cbrt
+#elif !defined(CONFIG_HAVE_cbrt) && \
+      (defined(cbrt) || defined(__cbrt_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_cbrt 1
+#endif
+
+#ifdef CONFIG_NO_tgamma
+#undef CONFIG_HAVE_tgamma
+#elif !defined(CONFIG_HAVE_tgamma) && \
+      (defined(tgamma) || defined(__tgamma_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_tgamma 1
+#endif
+
+#ifdef CONFIG_NO_lgamma
+#undef CONFIG_HAVE_lgamma
+#elif !defined(CONFIG_HAVE_lgamma) && \
+      (defined(lgamma) || defined(__lgamma_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_lgamma 1
+#endif
+
+#ifdef CONFIG_NO_pow
+#undef CONFIG_HAVE_pow
+#elif !defined(CONFIG_HAVE_pow) && \
+      (defined(pow) || defined(__pow_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_pow 1
+#endif
+
+#ifdef CONFIG_NO_ceil
+#undef CONFIG_HAVE_ceil
+#elif !defined(CONFIG_HAVE_ceil) && \
+      (defined(ceil) || defined(__ceil_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_ceil 1
+#endif
+
+#ifdef CONFIG_NO_floor
+#undef CONFIG_HAVE_floor
+#elif !defined(CONFIG_HAVE_floor) && \
+      (defined(floor) || defined(__floor_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_floor 1
+#endif
+
+#ifdef CONFIG_NO_round
+#undef CONFIG_HAVE_round
+#elif !defined(CONFIG_HAVE_round) && \
+      (defined(round) || defined(__round_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_round 1
+#endif
+
+#ifdef CONFIG_NO_fmod
+#undef CONFIG_HAVE_fmod
+#elif !defined(CONFIG_HAVE_fmod) && \
+      (defined(fmod) || defined(__fmod_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_fmod 1
+#endif
+
+#ifdef CONFIG_NO_hypot
+#undef CONFIG_HAVE_hypot
+#elif !defined(CONFIG_HAVE_hypot) && \
+      (defined(hypot) || defined(__hypot_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_hypot 1
+#endif
+
+#ifdef CONFIG_NO_remainder
+#undef CONFIG_HAVE_remainder
+#elif !defined(CONFIG_HAVE_remainder) && \
+      (defined(remainder) || defined(__remainder_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_remainder 1
+#endif
+
+#ifdef CONFIG_NO_nextafter
+#undef CONFIG_HAVE_nextafter
+#elif !defined(CONFIG_HAVE_nextafter) && \
+      (defined(nextafter) || defined(__nextafter_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_nextafter 1
+#endif
+
+#ifdef CONFIG_NO_fdim
+#undef CONFIG_HAVE_fdim
+#elif !defined(CONFIG_HAVE_fdim) && \
+      (defined(fdim) || defined(__fdim_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_fdim 1
+#endif
+
+#ifdef CONFIG_NO_isnan
+#undef CONFIG_HAVE_isnan
+#elif !defined(CONFIG_HAVE_isnan) && \
+      (defined(isnan) || defined(__isnan_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isnan 1
+#endif
+
+#ifdef CONFIG_NO_isinf
+#undef CONFIG_HAVE_isinf
+#elif !defined(CONFIG_HAVE_isinf) && \
+      (defined(isinf) || defined(__isinf_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isinf 1
+#endif
+
+#ifdef CONFIG_NO_isfinite
+#undef CONFIG_HAVE_isfinite
+#elif !defined(CONFIG_HAVE_isfinite) && \
+      (defined(isfinite) || defined(__isfinite_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isfinite 1
+#endif
+
+#ifdef CONFIG_NO_isnormal
+#undef CONFIG_HAVE_isnormal
+#elif !defined(CONFIG_HAVE_isnormal) && \
+      (defined(isnormal) || defined(__isnormal_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isnormal 1
+#endif
+
+#ifdef CONFIG_NO_signbit
+#undef CONFIG_HAVE_signbit
+#elif !defined(CONFIG_HAVE_signbit) && \
+      (defined(signbit) || defined(__signbit_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_signbit 1
+#endif
+
+#ifdef CONFIG_NO_isgreater
+#undef CONFIG_HAVE_isgreater
+#elif !defined(CONFIG_HAVE_isgreater) && \
+      (defined(isgreater) || defined(__isgreater_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isgreater 1
+#endif
+
+#ifdef CONFIG_NO_isgreaterequal
+#undef CONFIG_HAVE_isgreaterequal
+#elif !defined(CONFIG_HAVE_isgreaterequal) && \
+      (defined(isgreaterequal) || defined(__isgreaterequal_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isgreaterequal 1
+#endif
+
+#ifdef CONFIG_NO_isless
+#undef CONFIG_HAVE_isless
+#elif !defined(CONFIG_HAVE_isless) && \
+      (defined(isless) || defined(__isless_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isless 1
+#endif
+
+#ifdef CONFIG_NO_islessequal
+#undef CONFIG_HAVE_islessequal
+#elif !defined(CONFIG_HAVE_islessequal) && \
+      (defined(islessequal) || defined(__islessequal_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_islessequal 1
+#endif
+
+#ifdef CONFIG_NO_islessgreater
+#undef CONFIG_HAVE_islessgreater
+#elif !defined(CONFIG_HAVE_islessgreater) && \
+      (defined(islessgreater) || defined(__islessgreater_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_islessgreater 1
+#endif
+
+#ifdef CONFIG_NO_isunordered
+#undef CONFIG_HAVE_isunordered
+#elif !defined(CONFIG_HAVE_isunordered) && \
+      (defined(isunordered) || defined(__isunordered_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_isunordered 1
+#endif
+
+#ifdef CONFIG_NO_ilogb
+#undef CONFIG_HAVE_ilogb
+#elif !defined(CONFIG_HAVE_ilogb) && \
+      (defined(ilogb) || defined(__ilogb_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_ilogb 1
+#endif
+
+#ifdef CONFIG_NO_frexp
+#undef CONFIG_HAVE_frexp
+#elif !defined(CONFIG_HAVE_frexp) && \
+      (defined(frexp) || defined(__frexp_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_frexp 1
+#endif
+
+#ifdef CONFIG_NO_modf
+#undef CONFIG_HAVE_modf
+#elif !defined(CONFIG_HAVE_modf) && \
+      (defined(modf) || defined(__modf_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_modf 1
+#endif
+
+#ifdef CONFIG_NO_ldexp
+#undef CONFIG_HAVE_ldexp
+#elif !defined(CONFIG_HAVE_ldexp) && \
+      (defined(ldexp) || defined(__ldexp_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_ldexp 1
+#endif
+
+#ifdef CONFIG_NO_sincos
+#undef CONFIG_HAVE_sincos
+#elif !defined(CONFIG_HAVE_sincos) && \
+      (defined(sincos) || defined(__sincos_defined) || (defined(CONFIG_HAVE_MATH_H) && \
+       defined(__USE_GNU)))
+#define CONFIG_HAVE_sincos 1
+#endif
+
+#ifdef CONFIG_NO_asincos
+#undef CONFIG_HAVE_asincos
+#elif !defined(CONFIG_HAVE_asincos) && \
+      (defined(asincos) || defined(__asincos_defined))
+#define CONFIG_HAVE_asincos 1
+#endif
+
+#ifdef CONFIG_NO_sincosh
+#undef CONFIG_HAVE_sincosh
+#elif !defined(CONFIG_HAVE_sincosh) && \
+      (defined(sincosh) || defined(__sincosh_defined))
+#define CONFIG_HAVE_sincosh 1
+#endif
+
+#ifdef CONFIG_NO_asincosh
+#undef CONFIG_HAVE_asincosh
+#elif !defined(CONFIG_HAVE_asincosh) && \
+      (defined(asincosh) || defined(__asincosh_defined))
+#define CONFIG_HAVE_asincosh 1
+#endif
+
+#ifdef CONFIG_NO_scalbn
+#undef CONFIG_HAVE_scalbn
+#elif !defined(CONFIG_HAVE_scalbn) && \
+      (defined(scalbn) || defined(__scalbn_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_scalbn 1
+#endif
+
+#ifdef CONFIG_NO_scalbln
+#undef CONFIG_HAVE_scalbln
+#elif !defined(CONFIG_HAVE_scalbln) && \
+      (defined(scalbln) || defined(__scalbln_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_scalbln 1
+#endif
+
+#ifdef CONFIG_NO_remquo
+#undef CONFIG_HAVE_remquo
+#elif !defined(CONFIG_HAVE_remquo) && \
+      (defined(remquo) || defined(__remquo_defined) || defined(CONFIG_HAVE_MATH_H))
+#define CONFIG_HAVE_remquo 1
 #endif
 //[[[end]]]
 
