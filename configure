@@ -384,11 +384,21 @@ if [ -z "$WITH_LIBFFI" ]; then WITH_LIBFFI="1"; fi
 CONFIG_LOG="$BLD_PATH/config.log"
 cmd() {
 	echo "exec: $*" >> "$CONFIG_LOG"
-	$* | tee -a "$CONFIG_LOG" || {
-		local error=$?
+	$* | tee -a "$CONFIG_LOG"
+	local error=${PIPESTATUS[0]}
+	if ! test $error -eq 0; then
 		echo "ERROR: Command failed '$*' -> '$error'" | tee -a "$CONFIG_LOG"
 		exit $error
-	}
+	fi
+}
+trycmd() {
+	echo "exec: $*" >> "$CONFIG_LOG"
+	$* | tee -a "$CONFIG_LOG"
+	local error=${PIPESTATUS[0]}
+	if ! test $error -eq 0; then
+		echo "ERROR: Command failed '$*' -> '$error'" | tee -a "$CONFIG_LOG"
+	fi
+	return $error
 }
 mkdir -p "$BLD_PATH"
 unlink "$CONFIG_LOG" > /dev/null 2>&1
@@ -602,12 +612,37 @@ else
 					--target="$LIBFFI_TARGET" \
 					--enable-static \
 					--prefix "$BLD_PATH/libffi"
-			)
+			) || exit $?
 		fi
 		if ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
 			echo "Building libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
 			cd "$BLD_PATH/libffi"
-			cmd make -j $(grep -c ^processor /proc/cpuinfo)
+			trycmd make -j $(grep -c ^processor /proc/cpuinfo) || {
+				local error=$?
+				# libffi relies on libtool, which in turn contains some bashism,
+				# though rather than being called by /bin/bash, it's called by
+				# /bin/sh instead. So if you've just seen errors like this:
+				# >> ./libtool: 1578: ./libtool: preserve_args+= --tag CC: not found
+				# then the problem is that '[$(readlink /bin/sh) != "bash"]'
+				# s.a. https://github.com/JuliaPackaging/BinaryBuilder.jl/issues/77
+				#      Though for libffi the problem isn't a miss-configured kernel,
+				#      but it unconditionally assuming that the /bin/sh-shell has
+				#      support for all of the bashism it wants to throw at it...
+				if [ "$(readlink "/bin/sh")" != "bash" ]; then
+					echo "" | tee -a "$CONFIG_LOG"
+					echo "" | tee -a "$CONFIG_LOG"
+					echo "" | tee -a "$CONFIG_LOG"
+					echo "Building libffi likely failed because you're using a custom shell in '/bin/sh'" | tee -a "$CONFIG_LOG"
+					echo "Libffi relies on libtool, which in turn contains some bashism that may not be" | tee -a "$CONFIG_LOG"
+					echo "supported by other shells. If you're seeing errors like:" | tee -a "$CONFIG_LOG"
+					echo ">> ./libtool: 1578: ./libtool: preserve_args+= --tag CC: not found" | tee -a "$CONFIG_LOG"
+					echo "then consider fixing this problem by install bash and running:" | tee -a "$CONFIG_LOG"
+					echo "    'unlink /bin/sh; ln -s \"bash\" /bin/sh'" | tee -a "$CONFIG_LOG"
+					echo "as root" | tee -a "$CONFIG_LOG"
+					echo "" | tee -a "$CONFIG_LOG"
+				fi
+				exit $error
+			}
 		fi
 		cd "$BLD_PATH"
 		CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
@@ -685,7 +720,10 @@ fi
 if [[ "$WITH_DEBUG" == "1" ]]; then CONFIG_CFLAGS="$CONFIG_CFLAGS -g"; fi
 if [[ "$WITH_THREADS" == "0" ]]; then add_feature "CONFIG_NO_THREADS"; fi
 if ! [ -z "$WITH_OPTIMIZE" ]; then CONFIG_CFLAGS="$CONFIG_CFLAGS $WITH_OPTIMIZE"; fi
-if ! [ -z "$CONFIG_PTHREAD" ]; then CONFIG_CFLAGS="$CONFIG_CFLAGS $CONFIG_PTHREAD"; fi
+if ! [ -z "$CONFIG_PTHREAD" ]; then
+	CONFIG_CFLAGS="$CONFIG_CFLAGS $CONFIG_PTHREAD";
+	CONFIG_LDFLAGS="$CONFIG_LDFLAGS $CONFIG_PTHREAD";
+fi
 case "$TARGET" in
 	*CYGWIN* | *Cygwin* | *cygwin*)
 		CONFIG_EXE=".exe"
@@ -884,7 +922,7 @@ EOF
 					line="${line%%\"*}"
 					check_header "$line"
 					;;
-				*( )func*( )\(\"* | *( )var*( )\(\"*)
+				*( )func*( )\(\"* | *( )var*( )\(\"* | *( )feature*( )\(\"*)
 					line="${line#*\"}"
 					n="${line%%\"*}"
 					line="${line#*\"}"
@@ -903,7 +941,7 @@ EOF
 					esac
 					check_generic "$n" "$t"
 					;;
-				*( )func*( )\(\'* | *( )var*( )\(\'*)
+				*( )func*( )\(\'* | *( )var*( )\(\'* | *( )feature*( )\(\'*)
 					line="${line#*\'}"
 					n="${line%%\'*}"
 					line="${line#*\'}"

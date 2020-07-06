@@ -925,14 +925,14 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 	}
 	DBG_ALIGNMENT_ENABLE();
 	result = (uint64_t)st.st_mtime * MICROSECONDS_PER_SECOND;
-	/* Check if we can get more precision out of this */
+	/* Try to get more precision out of this */
 #ifdef CONFIG_HAVE_STAT_ST_NSEC
 	result += st.st_mtimensec / 1000;
 #elif defined(CONFIG_HAVE_STAT_ST_TIM)
 	result += st.st_mtim.tv_nsec / 1000;
 #elif defined(CONFIG_HAVE_STAT_ST_TIMESPEC)
 	result += st.st_mtimespec.tv_nsec / 1000;
-#endif
+#endif /* ... */
 
 	return result;
 #endif /* DeeSystem_GetLastModified_USE_STAT */

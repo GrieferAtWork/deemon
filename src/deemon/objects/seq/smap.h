@@ -31,6 +31,10 @@
 
 DECL_BEGIN
 
+#undef si_key
+#undef si_value
+#undef si_hash
+
 typedef struct {
 	DeeObject       *si_key;    /* [0..1][lock(WRITE_ONCE)] The key of this shared item. */
 	DeeObject       *si_value;  /* [?..1][valid_if(si_key)]

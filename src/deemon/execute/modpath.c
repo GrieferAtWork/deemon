@@ -3162,12 +3162,14 @@ do_increase_buffer:
 			while (length >= 2 && filename[length - 2] == '/')
 				--length;
 		}
-		return DeeString_NewUtf8(filename, length, STRING_ERROR_FIGNORE);
+		return (DREF DeeStringObject *)DeeString_NewUtf8(filename,
+		                                                 length,
+		                                                 STRING_ERROR_FIGNORE);
 	}
 #endif /* get_default_home_USE_DLMODULENAME */
 
 #ifdef get_default_home_USE_READLINK_PROC_SELF_EXE
-	size_t bufsize;
+	size_t length;
 	int error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	error = DeeUnixSystem_PrintlinkString(&printer, "/proc/self/exe");
@@ -3179,17 +3181,17 @@ bad_path:
 		unicode_printer_fini(&printer);
 		goto fallback;
 	}
-	bufsize = UNICODE_PRINTER_LENGTH(&printer);
-	if unlikely(!bufsize)
+	length = UNICODE_PRINTER_LENGTH(&printer);
+	if unlikely(!length)
 		goto bad_path;
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) != '/')
-		--bufsize;
+	while (length && UNICODE_PRINTER_GETCHAR(&printer, length - 1) != '/')
+		--length;
 	if unlikely(!length)
 		goto fallback;
-	while (bufsize && UNICODE_PRINTER_GETCHAR(&printer, bufsize - 1) == '/')
-		--bufsize;
-	unicode_printer_truncate(&printer, bufsize + 1);
-	return unicode_printer_pack(&printer);
+	while (length && UNICODE_PRINTER_GETCHAR(&printer, length - 1) == '/')
+		--length;
+	unicode_printer_truncate(&printer, length + 1);
+	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
 err_printer:
 	unicode_printer_fini(&printer);
 	return NULL;

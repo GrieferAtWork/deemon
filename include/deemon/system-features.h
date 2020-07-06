@@ -95,7 +95,7 @@ function header_nostdinc(name, default_requirements = "") {
 		default_requirements = "defined(__NO_has_include) || __has_include(<{}>)".format({ name });
 	}
 	local featnam = header_featnam(name);
-	feature(featnam, default_requirements);
+	(none)feature(featnam, default_requirements);
 }
 function header(name, default_requirements = "") {
 	known_headers.append(name);
@@ -136,7 +136,7 @@ function func(name, default_requirements = "", check_defined = 2, test = none) {
 		//		.format({ name, default_requirements });
 		}
 	}
-	feature(name, default_requirements);
+	(none)feature(name, default_requirements);
 }
 function isenabled(name) {
 	return "(defined({}) && {}+0 != 0)".format({ name, name });
@@ -485,9 +485,9 @@ func("wlstat", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return
 func("_wlstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wlstat64(c, &st);");
 func("wlstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wlstat64(c, &st);");
 // syscall_ulong_t st_[acm]timensec
-feature("STAT_ST_NSEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC)", test: "struct stat st; st.st_atimensec = st.st_ctimensec = st.st_mtimensec = 0; return 0;");
+feature("STAT_ST_NSEC", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8))", test: "struct stat st; st.st_atimensec = st.st_ctimensec = st.st_mtimensec = 0; return 0;");
 // struct timespec st_[acm]tim
-feature("STAT_ST_TIM", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIM)", test: "struct stat st; st.st_atim.tv_sec = st.st_ctim.tv_sec = st.st_mtim.tv_sec = 0; st.st_atim.tv_nsec = st.st_ctim.tv_nsec = st.st_mtim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_ctim.tv_sec + st.st_mtim.tv_sec + st.st_atim.tv_nsec + st.st_ctim.tv_nsec + st.st_mtim.tv_nsec;");
+feature("STAT_ST_TIM", "defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && defined(__USE_XOPEN2K8)))", test: "struct stat st; st.st_atim.tv_sec = st.st_ctim.tv_sec = st.st_mtim.tv_sec = 0; st.st_atim.tv_nsec = st.st_ctim.tv_nsec = st.st_mtim.tv_nsec = 0; return st.st_atim.tv_sec + st.st_ctim.tv_sec + st.st_mtim.tv_sec + st.st_atim.tv_nsec + st.st_ctim.tv_nsec + st.st_mtim.tv_nsec;");
 // struct timespec st_[acm]timespec
 feature("STAT_ST_TIMESPEC", "defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIMESPEC)", test: "struct stat st; st.st_atimespec.tv_sec = st.st_ctimespec.tv_sec = st.st_mtimespec.tv_sec = 0; st.st_atimespec.tv_nsec = st.st_ctimespec.tv_nsec = st.st_mtimespec.tv_nsec = 0; return st.st_atimespec.tv_sec + st.st_ctimespec.tv_sec + st.st_mtimespec.tv_sec + st.st_atimespec.tv_nsec + st.st_ctimespec.tv_nsec + st.st_mtimespec.tv_nsec;");
 
@@ -3926,14 +3926,15 @@ sizeof("off_t");
 #ifdef CONFIG_NO_STAT_ST_NSEC
 #undef CONFIG_HAVE_STAT_ST_NSEC
 #elif !defined(CONFIG_HAVE_STAT_ST_NSEC) && \
-      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_NSEC))
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_NSEC) && !defined(__USE_XOPEN2K8)))
 #define CONFIG_HAVE_STAT_ST_NSEC 1
 #endif
 
 #ifdef CONFIG_NO_STAT_ST_TIM
 #undef CONFIG_HAVE_STAT_ST_TIM
 #elif !defined(CONFIG_HAVE_STAT_ST_TIM) && \
-      (defined(CONFIG_HAVE_stat) && defined(_STATBUF_ST_TIM))
+      (defined(CONFIG_HAVE_stat) && (defined(_STATBUF_ST_TIM) || (defined(_STATBUF_ST_NSEC) && \
+       defined(__USE_XOPEN2K8))))
 #define CONFIG_HAVE_STAT_ST_TIM 1
 #endif
 
@@ -5356,7 +5357,7 @@ sizeof("off_t");
 #ifdef CONFIG_NO_memicmp
 #undef CONFIG_HAVE_memicmp
 #elif !defined(CONFIG_HAVE_memicmp) && \
-      (defined(memicmp) || defined(__memicmp_defined))
+      (defined(memicmp) || defined(__memicmp_defined) || defined(_MSC_VER))
 #define CONFIG_HAVE_memicmp 1
 #endif
 

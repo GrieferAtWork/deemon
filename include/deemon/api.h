@@ -87,7 +87,11 @@
 #define _CRT_SECURE_NO_WARNINGS 1
 #define _CRT_NONSTDC_NO_WARNINGS 1
 
+#include <__stdinc.h> /* __CC__ */
+
+#ifdef __CC__
 #include <stddef.h>
+#endif /* __CC__ */
 
 #ifndef __has_include
 #define __NO_has_include 1

@@ -42,6 +42,10 @@
 #include "../../runtime/strings.h"
 #include "svec.h"
 
+#undef si_key
+#undef si_value
+#undef si_hash
+
 DECL_BEGIN
 
 STATIC_ASSERT(sizeof(DeeSharedItem) == 2 * sizeof(DeeObject *));
