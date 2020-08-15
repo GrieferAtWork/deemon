@@ -1940,19 +1940,19 @@ INTERN struct type_getset dict_getsets[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys,
 	  NULL,
 	  NULL,
-	  DOC("->?Akeys?.\n"
+	  DOC("->?AKeys?.\n"
 	      "@return A proxy sequence for viewing the keys of @this :Dict") },
 	{ "values",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_values,
 	  NULL,
 	  NULL,
-	  DOC("->?Akeys?.\n"
+	  DOC("->?AValues?.\n"
 	      "@return A proxy sequence for viewing the values of @this :Dict") },
 	{ "items",
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items,
 	  NULL,
 	  NULL,
-	  DOC("->?Akeys?.\n"
+	  DOC("->?AItems?.\n"
 	      "@return A proxy sequence for viewing the key-value pairs of @this :Dict") },
 	{ "frozen",
 	  &DeeRoDict_FromSequence,

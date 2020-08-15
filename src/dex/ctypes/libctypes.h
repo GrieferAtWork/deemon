@@ -236,9 +236,9 @@ struct stype_object {
 	struct stype_array      st_array;     /* [lock(st_cachelock)] Derived array sub-types. */
 #ifndef CONFIG_NO_CFUNCTION
 	struct stype_cfunction  st_cfunction; /* [lock(st_cachelock)] Derived function sub-types. */
-	ffi_type               *st_ffitype;   /* [0..1][owned][lock(WRITE_ONCE)] The type used by FFI to represent this type. */
+	ffi_type               *st_ffitype;   /* [0..1][lock(WRITE_ONCE)] The type used by FFI to represent this type. */
 #endif /* !CONFIG_NO_CFUNCTION */
-	size_t                  st_sizeof;    /* [const] Bytes required by instances of this type. */
+	size_t                  st_sizeof;    /* [const] # of bytes required by instances of this type. */
 	size_t                  st_align;     /* [const] Alignment required by this type. */
 	WUNUSED NONNULL((1))
 	int             (DCALL *st_init)(DeeSTypeObject *tp_self, void *self,
@@ -270,8 +270,8 @@ struct lvalue_type_object {
  * (such as C-integer types, or C-style struct/union-declarations). */
 INTDEF DeeTypeObject DeeSType_Type;
 #define DeeSType_Check(ob)  DeeObject_InstanceOf((DeeObject *)(ob), &DeeSType_Type)
-#define DeeSType_Sizeof(x)  (((DeeSTypeObject *)(x))->st_sizeof)
-#define DeeSType_Alignof(x) (((DeeSTypeObject *)(x))->st_align)
+#define DeeSType_Sizeof(x)  ((DeeSTypeObject *)(x))->st_sizeof
+#define DeeSType_Alignof(x) ((DeeSTypeObject *)(x))->st_align
 
 /* The types for all pointer/l-value types (aka. `DeePointerTypeObject' / `DeeLValueTypeObject' objects)
  * NOTE: These types are derived from `DeeSType_Type' */
@@ -835,8 +835,7 @@ INTDEF DeeCFunctionTypeObject DeeCFunction_Type;
  *                       Note however, that vector elements are not
  *                       inherited (as denoted by the lack of a DREF tag).
  * When `ctypes' has been built with `CONFIG_NO_CFUNCTION',
- * this function throws a NotImplemented error.
- */
+ * this function throws a NotImplemented error. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeCFunctionTypeObject *DCALL
 DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
                    ctypes_cc_t calling_convention, size_t argc,

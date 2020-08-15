@@ -485,6 +485,15 @@ nope:
 #endif /* !CONFIG_NO_CFUNCTION */
 
 
+/* Construct a C-function structured type that returns
+ * an instance of `return_type' while taking `argc' arguments,
+ * each of type `argv' when called using `calling_convention'
+ * @param: calling_convention: One of `FFI_*' (Defaults to `CC_DEFAULT')
+ * @param: inherit_argv: When `true', _always_ inherit the `argv' vector (even upon error)
+ *                       Note however, that vector elements are not
+ *                       inherited (as denoted by the lack of a DREF tag).
+ * When `ctypes' has been built with `CONFIG_NO_CFUNCTION',
+ * this function throws a NotImplemented error. */
 INTERN WUNUSED NONNULL((1)) DREF DeeCFunctionTypeObject *DCALL
 DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
                    ctypes_cc_t calling_convention, size_t argc,
