@@ -27,17 +27,21 @@
 #include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/int.h>
 #include <deemon/map.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/rodict.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "seq/each.h"
+#include "seq/hashfilter.h"
 
 DECL_BEGIN
 
@@ -63,19 +67,26 @@ map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
 }
 
 
+
+
+DOC_DEF(map_get_doc,
+        "(key,def=!N)->\n"
+        "@return The value associated with @key or @def when @key has no value associated");
+
+DOC_DEF(map_byhash_doc,
+        "(template:?O)->?S?T2?O?O\n"
+        "@param template The object who's hash should be used to search for collisions\n"
+        "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
+        "key-value pairs, search for pairs where the key matches the hash of @template");
+
 INTERN struct type_method map_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_get,
-	  DOC("(key,def:?O=!N)->\n"
-	      "@return The value associated with @key or @def when @key has no value associated") },
+	  DOC_GET(map_get_doc) },
 
-#define proxyitems_methods (map_methods + 1)
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_byhash,
-	  DOC("(template:?O)->?S?T2?O?O\n"
-	      "@param template The object who's hash should be used to search for collisions\n"
-	      "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
-	      "key-value pairs, search for pairs where the key matches the hash of @template"),
+	  DOC_GET(map_byhash_doc),
 	  TYPE_METHOD_FKWDS },
 
 	{ NULL }
@@ -508,6 +519,121 @@ PRIVATE struct type_member proxy_class_members[] = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+proxyitems_byhash(MapProxy *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *template_;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+		goto err;
+	/* Invoke byhash() on the underlying mapping. */
+	return DeeObject_CallAttrStringf(self->mp_map, "byhash", "Iu",
+	                                 DeeObject_Hash(template_));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+proxykeys_byhash(MapProxy *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	result = proxyitems_byhash(self, argc, argv, kw);
+	if likely(result) {
+		if (DeeTuple_Check(result)) {
+			if (DeeTuple_SIZE(result) == 0)
+				goto done;
+			if (DeeTuple_SIZE(result) == 1) {
+				DREF DeeObject *key_and_value[2];
+				/* Unpack the pointed-to pair */
+				if (DeeObject_Unpack(DeeTuple_GET(result, 0), 2, key_and_value))
+					goto err_r;
+				Dee_Decref(result);
+				Dee_Decref(key_and_value[1]);
+				/* Return the pair's first element (which is the key) */
+				result = DeeTuple_NewUninitialized(1);
+				if unlikely(!result) {
+					Dee_Decref(key_and_value[0]);
+					goto err;
+				}
+				DeeTuple_SET(result, 0, key_and_value[0]);
+				goto done;
+			}
+		}
+#ifndef __OPTIMIZE_SIZE__
+		else if (Dee_TYPE(result) == &MapHashFilter_Type &&
+		         ((HashFilter *)result)->f_seq == self->mp_map) {
+			/* The mapping doesn't implement a proper byhash() function.
+			 * In this case, we might as well just return a regular, old
+			 * sequence hash filter object for ourself (the mapping's key
+			 * view), rather than going through the each-wrapper below. */
+			HashFilter *filter;
+			filter = (HashFilter *)result;
+			if unlikely(DeeObject_IsShared(filter)) {
+				/* The filter is being shared, so we must create a new filter. */
+				Dee_hash_t hash;
+				hash = filter->f_hash;
+				Dee_Decref_unlikely(filter);
+				result = DeeSeq_HashFilter((DeeObject *)self, hash);
+			} else {
+				/* The filter isn't being shared. -> Can modify in-place */
+				Dee_DecrefNokill(&MapHashFilter_Type);
+				Dee_DecrefNokill(filter->f_seq);
+				Dee_Incref(&SeqHashFilter_Type);
+				Dee_Incref(self);
+				filter->f_seq = (DREF DeeObject *)self;
+				filter->ob_type = &SeqHashFilter_Type;
+			}
+			goto done;
+		}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+		/* Fallback: byhash() didn't return a tuple, or that tuple's length is >= 2
+		 * In this case, we return the equivalent of `return byhash(template).each[0] as Sequence' */
+		{
+			DREF SeqEachOperator *each;
+			each = SeqEachOperator_MALLOC(1);
+			if unlikely(!each)
+				goto err_r;
+			each->so_opname    = OPERATOR_GETITEM;
+			each->so_opargc    = 1;
+			each->se_seq       = result; /* inherit reference */
+			each->so_opargv[0] = &DeeInt_Zero;
+			Dee_Incref(&DeeInt_Zero);
+			DeeObject_Init(each, &SeqEachOperator_Type);
+			/* Wrap the each-operator in a super-view for sequences, thus preventing
+			 * the caller from accidentally extending the each-expression any further. */
+			result = DeeSuper_New(&DeeSeq_Type, (DeeObject *)each);
+			Dee_Decref_unlikely(each);
+		}
+	}
+done:
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
+
+DOC_REF(seq_byhash_doc);
+
+INTERN struct type_method proxykeys_methods[] = {
+	{ "byhash",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxykeys_byhash,
+	  DOC_GET(seq_byhash_doc),
+	  TYPE_METHOD_FKWDS },
+	{ NULL }
+};
+
+INTERN struct type_method proxyitems_methods[] = {
+	{ "byhash",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&proxyitems_byhash,
+	  DOC_GET(map_byhash_doc),
+	  TYPE_METHOD_FKWDS },
+
+	{ NULL }
+};
+
+
 
 /* Base class for proxy views for mapping sequences. */
 PRIVATE DeeTypeObject DeeMappingProxy_Type = {
@@ -592,7 +718,7 @@ PRIVATE DeeTypeObject DeeMappingKeys_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ proxykeys_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,

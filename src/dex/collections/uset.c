@@ -1148,15 +1148,15 @@ err:
 	return NULL;
 }
 
-#if __SIZEOF_INT__ >= __SIZEOF_POINTER__ || \
-(defined(__i386__) || defined(__x86_64__))
+#if (__SIZEOF_INT__ >= __SIZEOF_POINTER__ || \
+     (defined(__i386__) || defined(__x86_64__)))
 #define insert_callback USet_Insert
-#else
+#else /* ... */
 PRIVATE dssize_t DCALL
 insert_callback(USet *__restrict self, DeeObject *item) {
 	return USet_Insert(self, item);
 }
-#endif
+#endif /* !... */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 uset_update(USet *self, size_t argc, DeeObject *const *argv) {

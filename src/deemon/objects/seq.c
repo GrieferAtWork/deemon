@@ -1987,6 +1987,28 @@ err:
 }
 
 
+DOC_DEF(seq_byhash_doc,
+        "(template:?O)->?DSequence\n"
+        "@param template The object who's hash should be used to search for collisions\n"
+        "Find all objects apart of @this sequence who's hash matches that of @template\n"
+        "Note that when hashing ?Dint objects, integers who's value lies within the range "
+        "of valid hash values get hashed to their original value, meaning that the following "
+        "two uses of this function are identical:\n"
+        "${"
+        "local a = seq.byhash(\"foo\");\n"
+        "local b = seq.byhash(\"foo\".operator hash());\n"
+        "}\n"
+        "Because ${x.operator hash() == x} when $x is an integer that contains a valid "
+        "hash value\n"
+        "The intended use-case is to query contained elements of mappings/sets by-hash, "
+        "rather than by-key, thus allowing user-code more control in regards to is-contained/"
+        "lookup-element, specifically in scenarios where objects are used as keys that are "
+        "expensive to construct, such that "
+        "${return Dict[ConstructNewCopyOfKey(values...)]} "
+        "can be written more efficiently as "
+        "${for (local e: Dict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}");
+
+
 INTERN struct type_method seq_methods[] = {
 	{ "empty",
 	  &seq_empty,
@@ -3489,25 +3511,7 @@ INTERN struct type_method seq_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&seq_byhash,
-	  DOC("(template:?O)->?DSequence\n"
-	      "@param template The object who's hash should be used to search for collisions\n"
-	      "Find all objects apart of @this sequence who's hash matches that of @template\n"
-	      "Note that when hashing ?Dint objects, integers who's value lies within the range "
-	      "of valid hash values get hashed to their original value, meaning that the following "
-	      "two uses of this function are identical:\n"
-	      "${"
-	      "local a = seq.byhash(\"foo\");\n"
-	      "local b = seq.byhash(\"foo\".operator hash());\n"
-	      "}\n"
-	      "Because ${x.operator hash() == x} when $x is an integer that contains a valid "
-	      "hash value\n"
-	      "The intended use-case is to query contained elements of mappings/sets by-hash, "
-	      "rather than by-key, thus allowing user-code more control in regards to is-contained/"
-	      "lookup-element, specifically in scenarios where objects are used as keys that are "
-	      "expensive to construct, such that "
-	      "${return Dict[ConstructNewCopyOfKey(values...)]} "
-	      "can be written more efficiently as "
-	      "${for (local e: Dict.byhash(hashOfKeyFromValues(values...))) if (e.equals(values...)) return e;}"),
+	  DOC_GET(seq_byhash_doc),
 	  TYPE_METHOD_FKWDS },
 
 

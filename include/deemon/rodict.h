@@ -37,9 +37,9 @@ DECL_BEGIN
 #ifdef DEE_SOURCE
 #define Dee_rodict_item   rodict_item
 #define Dee_rodict_object rodict_object
-#define RODICT_HASHST     Dee_RODICT_HASHST
-#define RODICT_HASHNX     Dee_RODICT_HASHNX
-#define RODICT_HASHIT     Dee_RODICT_HASHIT
+#define RODICT_HASHST     DeeRoDict_HashSt
+#define RODICT_HASHNX     DeeRoDict_HashNx
+#define RODICT_HASHIT     DeeRoDict_HashIt
 #endif /* DEE_SOURCE */
 
 /* A read-only variant of a Dict object, who's main purpose is to be used
@@ -99,9 +99,9 @@ INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringLen(DeeObject *
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Hash-iteration control. */
-#define Dee_RODICT_HASHST(self, hash)  ((hash) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask)
-#define Dee_RODICT_HASHNX(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
-#define Dee_RODICT_HASHIT(self, i)     (((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask))
+#define DeeRoDict_HashSt(self, hash)  ((hash) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask)
+#define DeeRoDict_HashNx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define DeeRoDict_HashIt(self, i)     (((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_elem+((i) & ((DeeRoDictObject *)Dee_REQUIRES_OBJECT(self))->rd_mask))
 
 
 DECL_END

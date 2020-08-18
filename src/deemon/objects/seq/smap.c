@@ -667,11 +667,12 @@ PRIVATE struct type_member smap_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+DOC_REF(map_get_doc);
+
 PRIVATE struct type_method smap_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&smap_get,
-	  DOC("(key,def=!N)\n"
-	      "@return The value associated with @key or @def when @key has no value associated") },
+	  DOC_GET(map_get_doc) },
 	/* TODO: _SharedMap.byhash(template:?O)->?DSequence */
 	{ NULL }
 };

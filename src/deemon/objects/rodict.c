@@ -797,6 +797,48 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 }
 
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash) {
+	DREF DeeObject *result;
+	DREF DeeObject *match;
+	dhash_t i, perturb;
+	match = NULL;
+	perturb = i = DeeRoDict_HashSt(self, hash);
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		struct rodict_item *item;
+		item = DeeRoDict_HashIt(self, i);
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if unlikely(match) {
+			/* There are multiple matches for `hash'. */
+			Dee_Decref(match);
+			/* XXX: RoDict-specific optimizations? */
+			return DeeMap_HashFilter(self, hash);
+		}
+		match = DeeTuple_NewUninitialized(2);
+		if unlikely(!match)
+			goto err;
+		DeeTuple_SET(match, 0, item->di_key);
+		DeeTuple_SET(match, 1, item->di_value);
+		Dee_Incref(item->di_key);
+		Dee_Incref(item->di_value);
+	}
+	if (!match)
+		return_empty_tuple;
+	result = DeeTuple_NewUninitialized(1);
+	if unlikely(!result)
+		goto err_match;
+	DeeTuple_SET(result, 0, match); /* Inherit reference */
+	return result;
+err_match:
+	Dee_Decref(match);
+err:
+	return NULL;
+}
+
+
 PRIVATE NONNULL((1)) void DCALL
 rodict_fini(Dict *__restrict self) {
 	size_t i;
@@ -905,14 +947,33 @@ err:
 	return NULL;
 }
 
+INTDEF struct keyword seq_byhash_kwlist[];
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+rodict_byhash(Dict *self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *template_;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+		goto err;
+	return DeeRoDict_ByHash((DeeObject *)self,
+	                        DeeObject_Hash(template_));
+err:
+	return NULL;
+}
+
+
+DOC_REF(map_get_doc);
+DOC_REF(map_byhash_doc);
+
 PRIVATE struct type_method rodict_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_get,
-	  DOC("(key,def=!N)\n"
-	      "@return The value associated with @key or @def when @key has no value associated") },
-	/* TODO: Dict.Frozen.byhash(template:?O)->?S?T2?O?O */
+	  DOC_GET(map_get_doc) },
+	{ "byhash",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_byhash,
+	  DOC_GET(map_byhash_doc),
+	  TYPE_METHOD_FKWDS },
 	/* TODO: Dict.Frozen.Keys.byhash(template:?O)->?DSequence */
-	/* TODO: Dict.Frozen.Values.byhash(template:?O)->?DSequence */
 	/* TODO: Dict.Frozen.Items.byhash(template:?O)->?S?T2?O?O */
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_sizeof,

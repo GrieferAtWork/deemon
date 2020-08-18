@@ -1200,6 +1200,79 @@ restart:
 	return def;
 }
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash, bool key_only) {
+	DREF DeeObject *result;
+	DREF DeeObject *match;
+	size_t mask;
+	struct dict_item *vector;
+	dhash_t i, perturb;
+	Dict *me = (Dict *)self;
+again:
+	match = NULL;
+	DeeDict_LockRead(me);
+	vector  = me->d_elem;
+	mask    = me->d_mask;
+	perturb = i = hash & mask;
+	for (;; DeeDict_HashNx(i, perturb)) {
+		struct dict_item *item;
+		item = &vector[i & mask];
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (item->di_key == dummy)
+			continue; /* Dummy key. */
+		if unlikely(match) {
+			/* There are multiple matches for `hash'. */
+			DeeDict_LockEndRead(me);
+			Dee_Decref(match);
+			/* XXX: Dict-specific optimizations? */
+			return DeeMap_HashFilter(self, hash);
+		}
+		if (key_only) {
+			match = item->di_key;
+			Dee_Incref(match);
+		} else {
+			DREF DeeObject *key, *value;
+			key   = item->di_key;
+			value = item->di_value;
+			Dee_Incref(key);
+			Dee_Incref(value);
+			DeeDict_LockEndRead(me);
+			match = DeeTuple_NewUninitialized(2);
+			if unlikely(!match) {
+				Dee_Decref(key);
+				Dee_Decref(value);
+				goto err;
+			}
+			DeeTuple_SET(match, 0, key);   /* Inherit reference */
+			DeeTuple_SET(match, 1, value); /* Inherit reference */
+			DeeDict_LockRead(me);
+			/* Check if the Dict was modified. */
+			if (me->d_elem != vector || me->d_mask != mask ||
+			    item->di_key != key || item->di_value != value) {
+				DeeDict_LockEndRead(me);
+				Dee_DecrefDokill(match);
+				goto again;
+			}
+		}
+	}
+	DeeDict_LockEndRead(me);
+	if (!match)
+		return_empty_tuple;
+	result = DeeTuple_NewUninitialized(1);
+	if unlikely(!result)
+		goto err_match;
+	DeeTuple_SET(result, 0, match); /* Inherit reference */
+	return result;
+err_match:
+	Dee_Decref(match);
+err:
+	return NULL;
+}
+
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_popitem(Dict *self, DeeObject *key, DeeObject *def) {
 	size_t mask;
@@ -1859,6 +1932,21 @@ err:
 	return NULL;
 }
 
+INTDEF struct keyword seq_byhash_kwlist[];
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_byhash(Dict *self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *template_;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+		goto err;
+	return DeeDict_ByHash((DeeObject *)self,
+	                      DeeObject_Hash(template_),
+	                      false);
+err:
+	return NULL;
+}
+
 
 /* TODO: Introduce a function `__missing__(key)->object' that is called
  *       when a key can't be found (won't be called by GetItemDef()).
@@ -1868,11 +1956,13 @@ err:
  *       some custom behavior for dealing with missing keys.
  */
 
+DOC_REF(map_get_doc);
+DOC_REF(map_byhash_doc);
+
 PRIVATE struct type_method dict_methods[] = {
 	{ DeeString_STR(&str_get),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_get,
-	  DOC("(key,def=!N)->\n"
-	      "@return The value associated with @key or @def when @key has no value associated") },
+	  DOC_GET(map_get_doc) },
 	{ DeeString_STR(&str_pop),
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_pop,
 	  DOC("(key)->\n"
@@ -1916,11 +2006,12 @@ PRIVATE struct type_method dict_methods[] = {
 	{ "update",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
 	  DOC("(items:?S?T2?O?O)\n"
-	      "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this Dict") },
-	/* TODO: Dict.byhash(template:?O)->?S?T2?O?O */
-	/* TODO: Dict.Keys.byhash(template:?O)->?DSequence */
-	/* TODO: Dict.Values.byhash(template:?O)->?DSequence */
-	/* TODO: Dict.Items.byhash(template:?O)->?S?T2?O?O */
+	      "Iterate @items and unpack each element into 2 others, using them as "
+	      "key and value to insert into @this Dict") },
+	{ "byhash",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_byhash,
+	  DOC_GET(map_byhash_doc),
+	  TYPE_METHOD_FKWDS },
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_sizeof,
 	  DOC("->?Dint") },

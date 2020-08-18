@@ -779,6 +779,55 @@ PRIVATE struct type_seq dict_values_seq = {
 };
 
 
+INTDEF struct keyword seq_byhash_kwlist[];
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_keys_byhash(DictProxy *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *template_;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+		goto err;
+	return DeeDict_ByHash((DeeObject *)self->dp_dict,
+	                      DeeObject_Hash(template_),
+	                      true);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+dict_items_byhash(DictProxy *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *template_;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+		goto err;
+	return DeeDict_ByHash((DeeObject *)self->dp_dict,
+	                      DeeObject_Hash(template_),
+	                      false);
+err:
+	return NULL;
+}
+
+
+DOC_REF(map_byhash_doc);
+
+PRIVATE struct type_method dict_keys_methods[] = {
+	{ "byhash",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_keys_byhash,
+	  DOC_GET(map_byhash_doc),
+	  TYPE_METHOD_FKWDS },
+	{ NULL }
+};
+
+PRIVATE struct type_method dict_items_methods[] = {
+	{ "byhash",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_items_byhash,
+	  DOC_GET(map_byhash_doc),
+	  TYPE_METHOD_FKWDS },
+	{ NULL }
+};
+
+
+
 PUBLIC DeeTypeObject DeeDictProxy_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_DictProxy",
@@ -861,7 +910,7 @@ PUBLIC DeeTypeObject DeeDictKeys_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ dict_keys_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
@@ -906,7 +955,7 @@ PUBLIC DeeTypeObject DeeDictItems_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ dict_items_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,

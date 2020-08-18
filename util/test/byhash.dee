@@ -1,0 +1,68 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2020 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+/* Sanity check */
+assert "foo".operator hash() != "bar".operator hash();
+
+function testByHashSequence(seq) {
+	assert seq == { "foo" };
+	assert seq.byhash("foo") == { "foo" };
+	assert seq.byhash("foo".operator hash()) == { "foo" };
+	assert seq.byhash("bar") == { };
+	assert seq.byhash("bar".operator hash()) == { };
+}
+
+testByHashSequence({ "foo" });
+testByHashSequence(List { "foo" });
+testByHashSequence(Tuple { "foo" });
+testByHashSequence(HashSet { "foo" });
+
+
+function testByHashMapping(map) {
+	assert map == { "foo" : "bar" };
+	assert map.byhash("foo") == { ("foo", "bar") };
+	assert map.byhash("foo".operator hash()) == { ("foo", "bar") };
+	assert map.byhash("bar") == { };
+	assert map.byhash("bar".operator hash()) == { };
+	assert map.keys.byhash("foo") == { "foo" };
+	assert map.keys.byhash("foo".operator hash()) == { "foo" };
+	assert map.keys.byhash("bar") == { };
+	assert map.keys.byhash("bar".operator hash()) == { };
+	assert map.values.byhash("foo") == { };
+	assert map.values.byhash("foo".operator hash()) == { };
+	assert map.values.byhash("bar") == { "bar" };
+	assert map.values.byhash("bar".operator hash()) == { "bar" };
+	assert map.items.byhash("foo") == { ("foo", "bar") };
+	assert map.items.byhash("foo".operator hash()) == { ("foo", "bar") };
+	assert map.items.byhash("bar") == { };
+	assert map.items.byhash("bar".operator hash()) == { };
+}
+
+testByHashMapping({ "foo" : "bar" });
+testByHashMapping(Dict { "foo" : "bar" });
+testByHashMapping(Dict.Frozen { "foo" : "bar" });
+
+testByHashMapping(({ "foo" : "bar" }) as Mapping);
+testByHashMapping((Dict { "foo" : "bar" }) as Mapping);
+testByHashMapping((Dict.Frozen { "foo" : "bar" }) as Mapping);
+

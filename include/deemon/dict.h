@@ -109,6 +109,7 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeDict_SetItemString(DeeObject *sel
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeDict_SetItemStringLen(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash, bool key_only);
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeDict_GetItemDef(self, key, def)                        DeeObject_GetItemDef(self, key, def)
 #define DeeDict_GetItemString(self, key, hash)                    DeeObject_GetItemString(self, key, hash)

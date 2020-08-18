@@ -739,13 +739,15 @@ DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, ch
 
 /* NOTE: This config option only affects internal documentation strings. */
 #ifndef CONFIG_NO_DOC
-#   define DOC(x)           x
-#   define DOC_DEF(name, x) PRIVATE char const name[] = x
-#   define DOC_GET(name)    name
+#define DOC(x)           x
+#define DOC_DEF(name, x) INTERN_CONST char const name[] = x
+#define DOC_REF(name)    INTDEF char const name[]
+#define DOC_GET(name)    name
 #else /* !CONFIG_NO_DOC */
-#   define DOC(x)           ((char *)NULL)
-#   define DOC_DEF(name, x) /* nothing */
-#   define DOC_GET(name)    ((char *)NULL)
+#define DOC(x)           ((char *)NULL)
+#define DOC_DEF(name, x) /* nothing */
+#define DOC_REF(name)    /* nothing */
+#define DOC_GET(name)    ((char *)NULL)
 #endif /* CONFIG_NO_DOC */
 
 DECL_END
