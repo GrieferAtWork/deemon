@@ -672,7 +672,7 @@ PRIVATE struct type_method smap_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&smap_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
-	/* TODO: _SharedMap.byhash(template:?O)->?DSet */
+	/* TODO: _SharedMap.byhash(template:?O)->?DSequence */
 	{ NULL }
 };
 

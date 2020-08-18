@@ -1827,6 +1827,7 @@ PRIVATE struct type_method set_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_remove,
 	  DOC("(ob)->?Dbool\n"
 	      "Returns ?t if the object was removed from the set") },
+	/* TODO: HashSet.byhash(template:?O)->?DSequence */
 	/* Alternative function names. */
 	{ "add",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&set_insert,

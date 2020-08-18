@@ -3489,7 +3489,7 @@ INTERN struct type_method seq_methods[] = {
 	  TYPE_METHOD_FKWDS },
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&seq_byhash,
-	  DOC("(template:?O)->?DSet\n"
+	  DOC("(template:?O)->?DSequence\n"
 	      "@param template The object who's hash should be used to search for collisions\n"
 	      "Find all objects apart of @this sequence who's hash matches that of @template\n"
 	      "Note that when hashing ?Dint objects, integers who's value lies within the range "

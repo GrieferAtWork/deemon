@@ -568,7 +568,7 @@ err:
 }
 
 PRIVATE struct type_method roset_methods[] = {
-	/* TODO: HashSet.Frozen.byhash(template:?O)->?DSet */
+	/* TODO: HashSet.Frozen.byhash(template:?O)->?DSequence */
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&roset_sizeof,
 	  DOC("->?Dint") },

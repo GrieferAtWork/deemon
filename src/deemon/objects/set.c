@@ -563,7 +563,6 @@ INTERN struct type_method set_methods[] = {
 	{ "issuperset", &set_issuperset,
 	  DOC("(of:?.)->?Dbool\n"
 	      "Same as ${this.operator >= (of)}") },
-	/* TODO: HashSet.byhash(template:?O)->?DSet */
 	{ NULL }
 };
 

@@ -72,7 +72,7 @@ INTERN struct type_method map_methods[] = {
 #define proxyitems_methods (map_methods + 1)
 	{ "byhash",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_byhash,
-	  DOC("(template:?O)->?C?DSet?T2?O?O\n"
+	  DOC("(template:?O)->?S?T2?O?O\n"
 	      "@param template The object who's hash should be used to search for collisions\n"
 	      "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
 	      "key-value pairs, search for pairs where the key matches the hash of @template"),
