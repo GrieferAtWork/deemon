@@ -140,6 +140,11 @@ err_r:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+filteriterator_hash(FilterIterator *__restrict self) {
+	return DeeObject_Hash(self->fi_iter) ^
+	       DeeObject_Hash(self->fi_func);
+}
 
 #define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                         \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
@@ -159,7 +164,7 @@ DEFINE_FILTERITERATOR_COMPARE(filteriterator_ge, DeeObject_CompareGeObject)
 #undef DEFINE_FILTERITERATOR_COMPARE
 
 PRIVATE struct type_cmp filteriterator_cmp = {
-	/* .tp_hash = */ NULL,
+	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_lo,

@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_H
-#define GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_H 1
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_H
+#define GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_H 1
 
 #include <deemon/api.h>
 #include <deemon/object.h>
@@ -27,27 +27,22 @@ DECL_BEGIN
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *sp_seq;  /* [1..1][const] The underlying sequence. */
-} SeqSimpleProxy;
+	DREF DeeObject *fi_iter; /* [1..1][const] The iterator who's elements are being filtered. */
+	dhash_t         fi_hash; /* [const] The hash for which we're filtering. */
+} HashFilterIterator;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *si_iter; /* [1..1][const] The underlying iterator. */
-} SeqSimpleProxyIterator;
+	DREF DeeObject *f_seq;  /* [1..1][const] The sequence being filtered. */
+	dhash_t         f_hash; /* [const] The hash for which we're filtering. */
+} HashFilter;
 
+INTDEF DeeTypeObject SeqHashFilter_Type;
+INTDEF DeeTypeObject SeqHashFilterIterator_Type;
 
-INTDEF DeeTypeObject SeqIds_Type;             /* sequence.ids */
-INTDEF DeeTypeObject SeqTypes_Type;           /* sequence.types */
-INTDEF DeeTypeObject SeqClasses_Type;         /* sequence.classes */
-INTDEF DeeTypeObject SeqIdsIterator_Type;     /* sequence.ids.Iterator */
-INTDEF DeeTypeObject SeqTypesIterator_Type;   /* sequence.types.Iterator */
-INTDEF DeeTypeObject SeqClassesIterator_Type; /* sequence.classes.Iterator */
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqIds_New(DeeObject *__restrict seq);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqTypes_New(DeeObject *__restrict seq);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL SeqClasses_New(DeeObject *__restrict seq);
-
+INTDEF DeeTypeObject MapHashFilter_Type;
+INTDEF DeeTypeObject MapHashFilterIterator_Type;
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_SIMPLEPROXY_H */
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_HASHFILTER_H */

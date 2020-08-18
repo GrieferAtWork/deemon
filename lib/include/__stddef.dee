@@ -323,7 +323,7 @@ from ctypes import
 	import __fs = "fs";
 	__stack local __rel = __fs.headof(__BASE_FILE__);
 	if (__fs.isrel(__rel))
-		__fs.chdir("../" * __rel.replace("\\","/").count("/"));
+		__fs.chdir("../" * __rel.replace("\\", "/").count("/"));
 }
 
 #endif /* __FORMAT__ && __FORMAT_SCRIPT__ */

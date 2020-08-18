@@ -128,7 +128,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenDef(BlackL
  * Otherwise, the caller must decref the returned object using `BlackListVarkwds_Decref()'
  * -> This function is used to filter keyword arguments from varkwds when 
  *    kwargs argument protocol is used:
- *    >> function foo(x,y?,**kwds) {
+ *    >> function foo(x, y?, **kwds) {
  *    >>     print type kwds, repr kwds;
  *    >> }
  *    >> // Prints `_BlackListVarkwds { "something_else" : "foobar" }'
@@ -219,7 +219,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL BlackListMapping_GetItemStringLenDef(BlackL
  *    would produce the semantically equivalent of `BlackListVarkwds_New(code,kwds,argv)'
  * -> This function is used to filter keyword arguments from varkwds when the general
  *    purpose keyword argument protocol is used:
- *    >> function foo(x,y?,**kwds) {
+ *    >> function foo(x, y?, **kwds) {
  *    >>     print type kwds, repr kwds;
  *    >> }
  *    >> // Prints `_BlackListMapping { "something_else" : "foobar" }'

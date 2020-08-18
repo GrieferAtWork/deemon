@@ -563,6 +563,7 @@ INTERN struct type_method set_methods[] = {
 	{ "issuperset", &set_issuperset,
 	  DOC("(of:?.)->?Dbool\n"
 	      "Same as ${this.operator >= (of)}") },
+	/* TODO: HashSet.byhash(template:?O)->?DSet */
 	{ NULL }
 };
 
@@ -723,14 +724,6 @@ set_iterself(DeeObject *self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-set_tpcontains(DeeObject *self, DeeObject *UNUSED(key)) {
-	if unlikely(Dee_TYPE(self) == &DeeSet_Type)
-		return_false;
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CONTAINS);
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 set_getitem(DeeObject *self, DeeObject *UNUSED(index)) {
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_GETITEM);
 	return NULL;
@@ -746,7 +739,7 @@ set_getrange(DeeObject *self, DeeObject *UNUSED(start), DeeObject *UNUSED(end)) 
 PRIVATE struct type_seq set_seq = {
 	/* .tp_iter_self = */ &set_iterself,
 	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ &set_tpcontains,
+	/* .tp_contains  = */ NULL,
 	/* .tp_get       = */ &set_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,

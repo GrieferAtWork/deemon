@@ -1917,6 +1917,10 @@ PRIVATE struct type_method dict_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_update,
 	  DOC("(items:?S?T2?O?O)\n"
 	      "Iterate @items and unpack each element into 2 others, using them as key and value to insert into @this Dict") },
+	/* TODO: Dict.byhash(template:?O)->?C?DSet?T2?O?O */
+	/* TODO: Dict.Keys.byhash(template:?O)->?DSet */
+	/* TODO: Dict.Values.byhash(template:?O)->?DSet */
+	/* TODO: Dict.Items.byhash(template:?O)->?C?DSet?T2?O?O */
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&dict_sizeof,
 	  DOC("->?Dint") },

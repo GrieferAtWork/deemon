@@ -41,6 +41,48 @@
 
 DECL_BEGIN
 
+INTDEF struct keyword seq_byhash_kwlist[];
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_byhash(DeeObject *self, size_t argc,
+           DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *template_;
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_byhash_kwlist, "o:byhash", &template_))
+		goto err;
+	return DeeMap_HashFilter(self, DeeObject_Hash(template_));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DeeObject *key, *def = Dee_None;
+	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
+		return NULL;
+	return DeeObject_GetItemDef(self, key, def);
+}
+
+
+INTERN struct type_method map_methods[] = {
+	{ DeeString_STR(&str_get),
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_get,
+	  DOC("(key,def:?O=!N)->\n"
+	      "@return The value associated with @key or @def when @key has no value associated") },
+
+#define proxyitems_methods (map_methods + 1)
+	{ "byhash",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_byhash,
+	  DOC("(template:?O)->?C?DSet?T2?O?O\n"
+	      "@param template The object who's hash should be used to search for collisions\n"
+	      "Same as ?Abyhash?DSequence, but rather than comparing the hashes of the "
+	      "key-value pairs, search for pairs where the key matches the hash of @template"),
+	  TYPE_METHOD_FKWDS },
+
+	{ NULL }
+};
+
+
+
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject  *mpi_iter; /* [1..1][const] The iterator for enumerating `mpi_map'. */
@@ -429,7 +471,6 @@ proxy_iterself_items(MapProxy *__restrict self) {
 }
 
 
-
 PRIVATE struct type_seq proxykeys_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
@@ -641,7 +682,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ proxyitems_methods,
 	/* .tp_getsets       = */ NULL,
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
@@ -963,23 +1004,6 @@ map_iteritems(DeeObject *__restrict self) {
 	return map_new_proxyiter(self, &DeeMappingItemsIterator_Type);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *key, *def = Dee_None;
-	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		return NULL;
-	return DeeObject_GetItemDef(self, key, def);
-}
-
-
-INTERN struct type_method map_methods[] = {
-	{ DeeString_STR(&str_get),
-	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&map_get,
-	  DOC("(key,def:?O=!N)->\n"
-	      "@return The value associated with @key or @def when @key has no value associated") },
-	{ NULL }
-};
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 mapiter_next_key(DeeObject *self,
@@ -1224,7 +1248,7 @@ map_frozen_get(DeeTypeObject *__restrict self) {
 		Dee_Incref(&DeeRoDict_Type);
 	} else {
 		if (info.a_doc) {
-			/* TODO: Use doc meta-information to determine the return type! */
+			/* TODO: Use doc meta-data to determine the return type! */
 		}
 		/* Fallback: just tell the caller what they already know: a Mapping will be returned... */
 		result = &DeeMapping_Type;

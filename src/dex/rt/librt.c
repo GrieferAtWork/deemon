@@ -507,6 +507,12 @@ librt_get_MappingItems_impl_f(void) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MappingHashFilter_impl_f(void) {
+	DeeObject *argv[] = { &DeeInt_Zero };
+	return get_type_of(DeeObject_CallAttrString(Dee_EmptyMapping, "byhash", 1, argv));
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingProxy_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_MappingProxy_impl_f();
 }
@@ -544,6 +550,16 @@ librt_get_MappingValuesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingItemsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_MappingItems_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MappingHashFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_MappingHashFilter_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_MappingHashFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_MappingHashFilter_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -664,6 +680,12 @@ librt_get_SeqFilter_impl_f(void) {
 	return get_type_of(DeeObject_CallAttrString(Dee_EmptySeq, "filter", 1, argv));
 }
 
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_SeqHashFilter_impl_f(void) {
+	DeeObject *argv[] = { &DeeInt_Zero };
+	return get_type_of(DeeObject_CallAttrString(Dee_EmptySeq, "byhash", 1, argv));
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_SeqFilter_impl_f();
@@ -672,6 +694,16 @@ librt_get_SeqFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_SeqFilter_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqHashFilter_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_SeqHashFilter_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_SeqHashFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_SeqHashFilter_impl_f());
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -1450,6 +1482,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqConcat, librt_get_SeqConcat_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqConcatIterator, librt_get_SeqConcatIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqFilter, librt_get_SeqFilter_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqFilterIterator, librt_get_SeqFilterIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilter, librt_get_SeqHashFilter_f);
+PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilterIterator, librt_get_SeqHashFilterIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqLocator, librt_get_SeqLocator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqLocatorIterator, librt_get_SeqLocatorIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSubRange, librt_get_SeqSubRange_f);
@@ -1530,6 +1564,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_MappingValues, librt_get_MappingValues_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingValuesIterator, librt_get_MappingValuesIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingItems, librt_get_MappingItems_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingItemsIterator, librt_get_MappingItemsIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilter, librt_get_MappingHashFilter_f);
+PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilterIterator, librt_get_MappingHashFilterIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedVector, librt_get_SharedVector_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedVectorIterator, librt_get_SharedVectorIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedMap, librt_get_SharedMap_f);
@@ -1684,6 +1720,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqConcatIterator", (DeeObject *)&librt_get_SeqConcatIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqConcatIterator_Type */
 	{ "SeqFilter", (DeeObject *)&librt_get_SeqFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                         /* SeqFilter_Type */
 	{ "SeqFilterIterator", (DeeObject *)&librt_get_SeqFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqFilterIterator_Type */
+	{ "SeqHashFilter", (DeeObject *)&librt_get_SeqHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* SeqHashFilter_Type */
+	{ "SeqHashFilterIterator", (DeeObject *)&librt_get_SeqHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqHashFilterIterator_Type */
 	{ "SeqLocator", (DeeObject *)&librt_get_SeqLocator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* SeqLocator_Type */
 	{ "SeqLocatorIterator", (DeeObject *)&librt_get_SeqLocatorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqLocatorIterator_Type */
 	{ "SeqSubRange", (DeeObject *)&librt_get_SeqSubRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SeqSubRange_Type */
@@ -1715,7 +1753,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqEachCallAttrIterator", (DeeObject *)&librt_get_SeqEachCallAttrIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* SeqEachCallAttrIterator_Type */
 	{ "SeqEachCallAttrKw", (DeeObject *)&librt_get_SeqEachCallAttrKw, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqEachCallAttrKw_Type */
 	{ "SeqEachCallAttrKwIterator", (DeeObject *)&librt_get_SeqEachCallAttrKwIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqEachCallAttrKwIterator_Type */
-	                                                                                                                                                     /* TODO: SeqRemoveIfAllWrapper_Type */
+	/* TODO: SeqRemoveIfAllWrapper_Type */
 
 
 	/* Internal types used to drive set proxies */
@@ -1751,6 +1789,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "by :Mapping.items") }, /* DeeMappingItems_Type */
 	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Iterator type for ?#MappingItems") }, /* DeeMappingProxyIterator_Type */
+	{ "MappingHashFilter", (DeeObject *)&librt_get_MappingHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilter_Type */
+	{ "MappingHashFilterIterator", (DeeObject *)&librt_get_MappingHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
 
 	/* Internal types used for safe & fast passing of temporary sequences */
 	{ "SharedVector", (DeeObject *)&librt_get_SharedVector, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SharedVector_Type */

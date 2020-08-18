@@ -231,6 +231,9 @@
     <ClInclude Include="..\src\deemon\objects\seq\filter.h">
       <Filter>src\deemon\objects\seq</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\deemon\objects\seq\hashfilter.h">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\deemon\objects\seq\smap.h">
       <Filter>src\deemon\objects\seq</Filter>
     </ClInclude>
@@ -666,6 +669,9 @@
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\seq\filter.c">
+      <Filter>src\deemon\objects\seq</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\deemon\objects\seq\hashfilter.c">
       <Filter>src\deemon\objects\seq</Filter>
     </ClCompile>
     <ClCompile Include="..\src\deemon\objects\seq\sort.c">

@@ -579,6 +579,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RStrip(DeeObject *se
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Split(DeeObject *self, DeeObject *sep, DeeObject *key);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Reversed(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_Filter(DeeObject *self, DeeObject *pred_keep);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_HashFilter(DeeObject *self, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeMap_HashFilter(DeeObject *self, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Sorted(DeeObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Segments(DeeObject *__restrict self, size_t segsize);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Combinations(DeeObject *__restrict self, size_t r);

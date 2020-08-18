@@ -910,6 +910,10 @@ PRIVATE struct type_method rodict_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_get,
 	  DOC("(key,def=!N)\n"
 	      "@return The value associated with @key or @def when @key has no value associated") },
+	/* TODO: Dict.Frozen.byhash(template:?O)->?C?DSet?T2?O?O */
+	/* TODO: Dict.Frozen.Keys.byhash(template:?O)->?DSet */
+	/* TODO: Dict.Frozen.Values.byhash(template:?O)->?DSet */
+	/* TODO: Dict.Frozen.Items.byhash(template:?O)->?C?DSet?T2?O?O */
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_sizeof,
 	  DOC("->?Dint") },
