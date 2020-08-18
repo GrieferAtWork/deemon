@@ -734,11 +734,18 @@ set_getrange(DeeObject *self, DeeObject *UNUSED(start), DeeObject *UNUSED(end)) 
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+set_tpcontains(DeeObject *self, DeeObject *UNUSED(key)) {
+	if unlikely(Dee_TYPE(self) == &DeeSet_Type)
+		return_false;
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_CONTAINS);
+	return NULL;
+}
 
 PRIVATE struct type_seq set_seq = {
 	/* .tp_iter_self = */ &set_iterself,
 	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
+	/* .tp_contains  = */ &set_tpcontains,
 	/* .tp_get       = */ &set_getitem,
 	/* .tp_del       = */ NULL,
 	/* .tp_set       = */ NULL,

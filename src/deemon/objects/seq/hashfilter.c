@@ -458,7 +458,7 @@ INTERN DeeTypeObject SeqHashFilter_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSet_Type,
+	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -504,7 +504,7 @@ INTERN DeeTypeObject MapHashFilter_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeSet_Type,
+	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
