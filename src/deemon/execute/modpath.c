@@ -1319,7 +1319,7 @@ DeeModule_GetString(/*utf-8*/ char const *__restrict module_name,
 #define SHLEN COMPILER_STRLEN(DeeSystem_SHEXT)
 
 
-LOCAL WUNUSED DREF DeeModuleObject *DCALL
+PRIVATE WUNUSED DREF DeeModuleObject *DCALL
 DeeModule_OpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
                         /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
                         DeeObject *module_global_name,
@@ -1404,6 +1404,7 @@ err_bad_module_name:
 	dst[module_namesize + 4] = '\0';
 	len  = (size_t)(dst - buf) + module_namesize + 4;
 	hash = fs_hashutf8(buf, len);
+	("check: '%.*s'\n", (int)len, buf);
 again_search_fs_modules:
 
 	/* Search for modules that have already been cached. */
@@ -1945,6 +1946,55 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeModuleObject *DCALL
+DeeModule_SubOpenInPathAbs(/*utf-8*/ char const *__restrict module_path, size_t module_pathsize,
+                           /*utf-8*/ char const *__restrict module_name, size_t module_namesize,
+                           DeeObject *module_global_name,
+                           struct compiler_options *options,
+                           unsigned int mode) {
+	size_t additional_count;
+	/* Walk up the directory path for upwards references in the relative path. */
+	additional_count = 0;
+	for (;;) {
+		while (module_pathsize && ISSEP(module_path[module_pathsize - 1]))
+			--module_pathsize;
+		if (module_pathsize >= 1 &&
+		    module_path[module_pathsize - 1] == '.') {
+			if (module_pathsize == 1 || ISSEP(module_path[module_pathsize - 2])) {
+				/* Current-directory reference. */
+				module_pathsize -= 2;
+				continue;
+			}
+			if (module_pathsize >= 2 &&
+			    module_path[module_pathsize - 2] == '.' &&
+			    (module_pathsize == 2 || ISSEP(module_path[module_pathsize - 3]))) {
+				/* Parent-directory reference. */
+				++additional_count;
+				module_pathsize -= 3;
+				continue;
+			}
+		}
+		if (additional_count) {
+			--additional_count;
+		} else {
+			if (!(mode & Dee_MODULE_OPENINPATH_FRELMODULE))
+				break;
+			++module_name;
+			--module_namesize;
+			if (!module_namesize || *module_name != '.')
+				break;
+		}
+		while (module_pathsize && !ISSEP(module_path[module_pathsize - 1]))
+			--module_pathsize;
+	}
+	return DeeModule_OpenInPathAbs(module_path, module_pathsize,
+	                               module_name, module_namesize,
+	                               module_global_name,
+	                               options,
+	                               mode);
+}
+
+
 /* Low-level module import processing function, used for importing modules
  * relative to some given base-path, while also able to process relative module
  * names, as well as support all of the various form in which modules can appear.
@@ -1994,41 +2044,6 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
                      DeeObject *module_global_name,
                      struct compiler_options *options,
                      unsigned int mode) {
-	size_t additional_count;
-	/* Walk up the directory path for upwards references in the relative path. */
-	additional_count = 0;
-	for (;;) {
-		while (module_pathsize && ISSEP(module_path[module_pathsize - 1]))
-			--module_pathsize;
-		if (module_pathsize >= 1 &&
-		    module_path[module_pathsize - 1] == '.') {
-			if (module_pathsize == 1 || ISSEP(module_path[module_pathsize - 2])) {
-				/* Current-directory reference. */
-				module_pathsize -= 2;
-				continue;
-			}
-			if (module_pathsize >= 2 &&
-			    module_path[module_pathsize - 2] == '.' &&
-			    (module_pathsize == 2 || ISSEP(module_path[module_pathsize - 3]))) {
-				/* Parent-directory reference. */
-				++additional_count;
-				module_pathsize -= 3;
-				continue;
-			}
-		}
-		if (additional_count) {
-			--additional_count;
-		} else {
-			if (!(mode & Dee_MODULE_OPENINPATH_FRELMODULE))
-				break;
-			++module_name;
-			--module_namesize;
-			if (!module_namesize || *module_name != '.')
-				break;
-		}
-		while (module_pathsize && !ISSEP(module_path[module_pathsize - 1]))
-			--module_pathsize;
-	}
 #ifdef CONFIG_HOST_WINDOWS
 	if unlikely(module_pathsize < 2 || module_path[1] != ':')
 #else /* CONFIG_HOST_WINDOWS */
@@ -2050,12 +2065,12 @@ DeeModule_OpenInPath(/*utf-8*/ char const *__restrict module_path, size_t module
 		abs_utf8 = DeeString_AsUtf8((DeeObject *)abs_path);
 		if unlikely(!abs_utf8)
 			goto err_abs_path;
-		result = DeeModule_OpenInPathAbs(abs_utf8,
-		                                 WSTR_LENGTH(abs_utf8),
-		                                 module_name, module_namesize,
-		                                 module_global_name,
-		                                 options,
-		                                 mode);
+		result = DeeModule_SubOpenInPathAbs(abs_utf8,
+		                                    WSTR_LENGTH(abs_utf8),
+		                                    module_name, module_namesize,
+		                                    module_global_name,
+		                                    options,
+		                                    mode);
 		Dee_Decref(abs_path);
 		return (DREF DeeObject *)result;
 err_abs_path:
@@ -2065,11 +2080,11 @@ err_printer:
 		unicode_printer_fini(&printer);
 		goto err;
 	}
-	return (DREF DeeObject *)DeeModule_OpenInPathAbs(module_path, module_pathsize,
-	                                                 module_name, module_namesize,
-	                                                 module_global_name,
-	                                                 options,
-	                                                 mode);
+	return (DREF DeeObject *)DeeModule_SubOpenInPathAbs(module_path, module_pathsize,
+	                                                    module_name, module_namesize,
+	                                                    module_global_name,
+	                                                    options,
+	                                                    mode);
 err:
 	return NULL;
 }
@@ -2345,7 +2360,7 @@ DeeModule_OpenRelative(DeeObject *__restrict module_name,
 	module_name_str = DeeString_AsUtf8(module_name);
 	if unlikely(!module_name_str)
 		goto err;
-	if (*module_name_str != '.')
+	if (module_name_str[0] != '.')
 		return DeeModule_OpenGlobal(module_name, options, throw_error);
 	return DeeModule_OpenInPath(module_pathname,
 	                            module_pathsize,

@@ -64,7 +64,7 @@ import_module_by_name(DeeStringObject *__restrict module_name,
 			/* Special case: Import your own module. */
 			return_reference_(current_rootscope->rs_module);
 		}
-		filename = TPPFile_Filename(token.t_file, &filename_length);
+		filename = TPPFile_RealFilename(token.t_file, &filename_length);
 		if likely(filename) {
 			char *path_start; /* Relative module import. */
 			path_start = (char *)memrchr(filename, '/', filename_length);
