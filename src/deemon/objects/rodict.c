@@ -797,7 +797,7 @@ DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRoDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DREF DeeObject *match;
@@ -973,8 +973,6 @@ PRIVATE struct type_method rodict_methods[] = {
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_byhash,
 	  DOC_GET(map_byhash_doc),
 	  TYPE_METHOD_FKWDS },
-	/* TODO: Dict.Frozen.Keys.byhash(template:?O)->?DSequence */
-	/* TODO: Dict.Frozen.Items.byhash(template:?O)->?S?T2?O?O */
 	{ "__sizeof__",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&rodict_sizeof,
 	  DOC("->?Dint") },

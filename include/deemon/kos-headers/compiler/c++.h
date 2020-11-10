@@ -39,6 +39,12 @@
 #define __DECL_BEGIN extern "C" {
 #define __DECL_END   }
 
+#define __CXX11_EXPLICIT_OPERATOR explicit
+
+// #define __COMPILER_HAVE_HAS_UNIQUE_OBJECT_REPRESENTATIONS 1 /* `bool __has_unique_object_representations(typename T)' */
+// #define __COMPILER_HAVE_IS_AGGREGATE 1 /* `bool __is_aggregate(typename T)' */
+
+
 #if (__has_feature(cxx_constexpr) ||                                                                      \
      (defined(__cpp_constexpr) && __cpp_constexpr >= 200704) ||                                           \
      (defined(__IBMCPP__) && defined(__IBMCPP_CONSTEXPR) && (__IBMCPP_CONSTEXPR + 0)) ||                  \
@@ -50,92 +56,124 @@
  * we already differenciate with C++14 constexpr. */
 #pragma warning(disable: 4814)
 #endif /* _MSC_VER */
-#define __COMPILER_HAVE_CXX11_CONSTEXPR 1
+#define __COMPILER_HAVE_CXX11_CONSTEXPR
 #define __CXX11_CONSTEXPR          constexpr
 #define __CXX11_CONSTEXPR_OR_CONST constexpr
-#else
+#else /* ... */
 #define __CXX11_CONSTEXPR          /* Nothing */
 #define __CXX11_CONSTEXPR_OR_CONST const
-#endif
+#endif /* !... */
 
 #if ((defined(__clang__) && !(!__has_feature(cxx_generic_lambdas) ||         \
                               !(__has_feature(cxx_relaxed_constexpr) ||      \
                                 __has_extension(cxx_relaxed_constexpr)))) || \
      (defined(__cpp_constexpr) && __cpp_constexpr >= 201304 && !defined(__clang__)))
-#define __COMPILER_HAVE_CXX14_CONSTEXPR 1
+#define __COMPILER_HAVE_CXX14_CONSTEXPR
 #define __CXX14_CONSTEXPR          constexpr
 #define __CXX14_CONSTEXPR_OR_CONST constexpr
-#else
+#else /* ... */
 #define __CXX14_CONSTEXPR          /* Nothing */
 #define __CXX14_CONSTEXPR_OR_CONST const
-#endif
+#endif /* !... */
 
 
 #if 0
-#define __COMPILER_HAVE_CXX17_CONSTEXPR 1
+#define __COMPILER_HAVE_CXX17_CONSTEXPR
 #define __CXX17_CONSTEXPR          constexpr
 #define __CXX17_CONSTEXPR_OR_CONST constexpr
-#else
+#else /* ... */
 #define __CXX17_CONSTEXPR          /* Nothing */
 #define __CXX17_CONSTEXPR_OR_CONST const
-#endif
+#endif /* !... */
 
 #if (__has_feature(cxx_noexcept) ||                                                                       \
      (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GCC_VERSION_NUM >= 40600 && !defined(__INTELLISENSE__)) || \
      (defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190021730))
-#define __COMPILER_HAVE_CXX11_NOEXCEPT 1
+#define __COMPILER_HAVE_CXX11_NOEXCEPT
 #define __CXX_NOEXCEPT            noexcept
 #define __CXX_NOEXCEPT_IF(expr)   noexcept(expr)
 #define __CXX_NOEXCEPT_IS(expr)   noexcept(expr)
 #define __CXX_NOEXCEPT_IFNX(expr) noexcept(noexcept(expr))
-#else
+#else /* ... */
 #define __CXX_NOEXCEPT            throw()
 #define __CXX_NOEXCEPT_IF(expr)   /* nothing */
 #define __CXX_NOEXCEPT_IS(expr)   0
 #define __CXX_NOEXCEPT_IFNX(expr) /* nothing */
-#endif
+#endif /* !... */
 
 #if !defined(__KOS__) || !defined(__KERNEL__)
-#define __COMPILER_PREFERR_ENUMS 1
+#define __COMPILER_PREFERR_ENUMS
 #endif /* !__KOS__ || !__KERNEL__ */
 
 #ifndef __ELF__
 #define __CXX_CLASSMEMBER inline
 #elif defined(__NO_ATTR_VISIBILITY)
 #define __CXX_CLASSMEMBER __ATTR_FORCEINLINE
-#else
+#else /* ... */
 #define __CXX_CLASSMEMBER inline __ATTR_VISIBILITY("hidden")
-#endif
+#endif /* !... */
+
+
+#ifndef __COMPILER_HAVE_BUG_BLOATY_CXX_USING
+#if defined(__GNUC__) && !defined(__clang__) && !defined(__INTELLISENSE__)
+/* Enable work-arounds for c++'s `using' causing debug information bloat:
+ * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96417 */
+#define __COMPILER_HAVE_BUG_BLOATY_CXX_USING 1
+#else /* __GNUC__ && !__clang__ && !__INTELLISENSE__ */
+#undef __COMPILER_HAVE_BUG_BLOATY_CXX_USING
+#endif /* !__GNUC__ || __clang__ || __INTELLISENSE__ */
+#elif (__COMPILER_HAVE_BUG_BLOATY_CXX_USING + 0) == 0
+#undef __COMPILER_HAVE_BUG_BLOATY_CXX_USING
+#endif /* __COMPILER_HAVE_BUG_BLOATY_CXX_USING */
+
+#ifdef __COMPILER_HAVE_BUG_BLOATY_CXX_USING
+#define __CXX_USING_TYPE(ns, x) typedef ns x x;
+#else /* __COMPILER_HAVE_BUG_BLOATY_CXX_USING */
+#define __CXX_USING_TYPE(ns, x) using ns x;
+#endif /* !__COMPILER_HAVE_BUG_BLOATY_CXX_USING */
 
 #ifdef __NO_NAMESPACE_STD
-#define __NAMESPACE_STD_BEGIN    /* nothing */
-#define __NAMESPACE_STD_END      /* nothing */
-#define __NAMESPACE_STD_SYM      /* nothing */
-#define __NAMESPACE_STD_USING(x) /* nothing */
-#define __NAMESPACE_GLB_USING(x) /* nothing */
+#define __NAMESPACE_STD_BEGIN               /* nothing */
+#define __NAMESPACE_STD_END                 /* nothing */
+#define __NAMESPACE_STD_SYM                 /* nothing */
+#define __NAMESPACE_STD_USING(x)            /* nothing */
+#define __NAMESPACE_GLB_USING(x)            /* nothing */
+#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) /* nothing */
+#define __NAMESPACE_GLB_USING_TYPE(x)       /* nothing */
 #else /* __NO_NAMESPACE_STD */
-#define __NAMESPACE_STD_BEGIN    namespace std {
-#define __NAMESPACE_STD_END      }
-#define __NAMESPACE_STD_SYM      ::std::
-#define __NAMESPACE_STD_USING(x) using ::std::x;
-#define __NAMESPACE_GLB_USING(x) using ::x;
+#define __NAMESPACE_STD_BEGIN               namespace std {
+#define __NAMESPACE_STD_END                 }
+#define __NAMESPACE_STD_SYM                 ::std::
+#ifdef __COMPILER_HAVE_BUG_BLOATY_CXX_USING
+namespace std { }
+using namespace std; /* Overlay */
+#define __NAMESPACE_STD_USING(x)            /* nothing (already done by the overlay) */
+#define __NAMESPACE_GLB_USING(x)            using ::x;
+#define __NAMESPACE_GLB_USING_TYPE(x)       __CXX_USING_TYPE(::, x)
+#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) extern "C" { i }
+#else /* __COMPILER_HAVE_BUG_BLOATY_CXX_USING */
+#define __NAMESPACE_STD_USING(x)            using ::std::x;
+#define __NAMESPACE_GLB_USING(x)            using ::x;
+#define __NAMESPACE_GLB_USING_TYPE(x)       using ::x;
+#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) using ::x;
+#endif /* !__COMPILER_HAVE_BUG_BLOATY_CXX_USING */
 #endif /* !__NO_NAMESPACE_STD */
 
-#define __NAMESPACE_INT_BEGIN    namespace __intern {
-#define __NAMESPACE_INT_END      }
-#define __NAMESPACE_INT_SYM      ::__intern::
-#define __NAMESPACE_INT_LSYM       __intern::
-#define __NAMESPACE_INT_USING(x) using ::__intern::x;
-#define __BOOL                   bool
-#define __DFL(expr)              = expr
+
+#define __NAMESPACE_INT_BEGIN namespace __intern {
+#define __NAMESPACE_INT_END   }
+#define __NAMESPACE_INT_SYM   ::__intern::
+#define __NAMESPACE_INT_LSYM  __intern::
+#define __BOOL                bool
+#define __DFL(expr)           = expr
 
 #ifdef __INTELLISENSE__
-#define __register               /* nothing */
+#define __register /* nothing */
 #elif 1
-#define __register               register
-#else
-#define __register               /* nothing */
-#endif
+#define __register register
+#else /* ... */
+#define __register /* nothing */
+#endif /* !... */
 
 #ifdef __INTELLISENSE__
 __NAMESPACE_INT_BEGIN

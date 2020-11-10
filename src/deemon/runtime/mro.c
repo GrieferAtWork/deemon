@@ -42,7 +42,7 @@
 DECL_BEGIN
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(membercache_list_lock);
+PRIVATE rwlock_t membercache_list_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 /* [0..1][lock(membercache_list_lock)]

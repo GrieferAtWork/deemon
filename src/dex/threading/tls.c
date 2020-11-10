@@ -107,7 +107,7 @@ thread_tls_visit(struct tls_descriptor *__restrict data,
 
 
 /* Lock for registering TLS objects. */
-PRIVATE DEFINE_RWLOCK(tls_reglock);
+PRIVATE rwlock_t tls_reglock = RWLOCK_INIT;
 PRIVATE uint8_t *tls_inuse = NULL; /* [lock(tls_reglock)][0..(tls_nexti+7)/8][owned] Bitset of all TLS indices currently in use. */
 PRIVATE size_t tls_nexti   = 0;    /* [lock(tls_reglock)] The next TLS index used when all others are already in use. */
 PRIVATE size_t tls_count   = 0;    /* [lock(tls_reglock)] The total number of TLS indices currently assigned. */

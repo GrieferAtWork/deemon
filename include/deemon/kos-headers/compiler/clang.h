@@ -17,10 +17,6 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef __option
-#define __option(x) 0
-#endif /* !__option */
-
 #ifndef __has_builtin
 #define __NO_has_builtin
 #define __has_builtin(x) 0
@@ -35,7 +31,7 @@
 #ifndef __NO_has_feature
 #define __NO_has_extension
 #endif /* !__NO_has_feature */
-#define __has_extension __has_feature
+#define __has_extension  __has_feature
 #endif /* !__has_extension */
 
 #ifndef __has_attribute
@@ -64,8 +60,7 @@
 #endif /* !__has_include */
 
 
-#if (__has_builtin(__builtin_expect) || \
-     (defined(__INTEL_VERSION__) && __INTEL_VERSION__ >= 800))
+#if __has_builtin(__builtin_expect)
 #define __likely(x)   (__builtin_expect(!!(x), 1))
 #define __unlikely(x) (__builtin_expect(!!(x), 0))
 #else /* ... */
@@ -75,11 +70,9 @@
 #define __unlikely /* Nothing */
 #endif /* !... */
 
-#if (defined(__STDC_VERSION__) && (__STDC_VERSION__ + 0) >= 201112L || \
-     __has_feature(c_generic_selections) ||                            \
-     __has_extension(c_generic_selections))
+#if (__has_feature(c_generic_selections) || __has_extension(c_generic_selections))
 #define __COMPILER_HAVE_C11_GENERIC
-#endif /* __STDC_VERSION__ >= 201112L */
+#endif /* ... */
 
 #if __has_builtin(__builtin_choose_expr)
 /* Already a builtin. */
@@ -92,11 +85,6 @@
 #define __builtin_choose_expr(c, tt, ff) ((c) ? (tt) : (ff))
 #endif /* !... */
 
-#if !__has_builtin(__builtin_types_compatible_p)
-#define __NO_builtin_types_compatible_p
-#define __builtin_types_compatible_p(...) 1
-#endif /* !__has_builtin(__builtin_types_compatible_p) */
-
 #ifdef __STDC__
 #define __P(x) x
 #else /* __STDC__ */
@@ -104,73 +92,36 @@
 #define __P(x) ()
 #endif /* !__STDC__ */
 
-#if (!defined(__NO_LONG_LONG) && !defined(__DARWIN_NO_LONG_LONG) &&               \
-     ((defined(__BORLANDC__) && __BORLANDC__ >= 0x561) || defined(__SUNPRO_CC) || \
-      defined(__TINYC__) || defined(__DCC_VERSION__) ||                           \
-      defined(__CODEGEARC__) || defined(__DMC__) ||                               \
-      (defined(__HP_aCC) && __HP_aCC + 0 >= 33900) ||                             \
-      (defined(__PGIC__) && __PGIC__ + 0 >= 10)))
 #define __COMPILER_HAVE_LONGLONG
-#endif /* long long... */
 #define __COMPILER_HAVE_LONGDOUBLE
 #ifndef __LONGDOUBLE
 #define __LONGDOUBLE long double
 #endif /* !__LONGDOUBLE */
 #define __COMPILER_HAVE_TRANSPARENT_STRUCT
 #define __COMPILER_HAVE_TRANSPARENT_UNION
-
-#if defined(__DCC_VERSION__) || defined(__TINYC__)
 #define __COMPILER_HAVE_GCC_ASM
 #define __COMPILER_HAVE_PRAGMA_PACK /* XXX: So many more compilers support this... */
-#elif defined(_PUSHPOP_SUPPORTED)
-#define __COMPILER_HAVE_PRAGMA_PACK
-#endif /* ... */
-
-#if __has_feature(__tpp_pragma_push_macro__) || \
-    (defined(__TPP_VERSION__) && __TPP_VERSION__ == 103)
 #define __COMPILER_HAVE_PRAGMA_PUSHMACRO
-#endif /* #pragma push_macro(...) */
-
-#if __has_feature(__tpp_pragma_deprecated__)
-#define __COMPILER_HAVE_PRAGMA_DEPRECATED
-#endif /* #pragma deprecated(...) */
-
-#if defined(__DCC_VERSION__)
-#define __COMPILER_HAVE_AUTOTYPE
-#elif __has_feature(cxx_auto_type)
+//#define __COMPILER_HAVE_PRAGMA_DEPRECATED
+#if __has_feature(cxx_auto_type) || __has_extension(cxx_auto_type)
 #define __auto_type auto
 #define __COMPILER_HAVE_AUTOTYPE
 #endif /* ... */
-
-#if defined(__DCC_VERSION__) || defined(__TINYC__)
 #define __COMPILER_HAVE_TYPEOF
-#endif /* __DCC_VERSION__ || __TINYC__ */
-
-#if defined(__BORLANDC__) && __BORLANDC__ >= 0x599
-#pragma defineonoption __CODEGEAR_0X_SUPPORT__ -Ax
-#endif /* __BORLANDC__ >= 0x599 */
-
-#if (__has_feature(cxx_static_assert) ||                                                           \
-     (defined(__cpp_static_assert) && __cpp_static_assert + 0 != 0) ||                             \
-     (defined(__IBMCPP_STATIC_ASSERT) && __IBMCPP_STATIC_ASSERT + 0) ||                            \
-     (defined(__cplusplus) &&                                                                      \
-      ((defined(__BORLANDC__) && defined(__CODEGEAR_0X_SUPPORT__) && __BORLANDC__ + 0 >= 0x610) || \
-       (defined(__CODEGEARC__) && __CODEGEARC__ + 0 > 0x620))))
-#define __STATIC_ASSERT_IS_STATIC_ASSERT
+#if (__has_feature(cxx_static_assert) || __has_extension(cxx_static_assert) || \
+     (defined(__cpp_static_assert) && __cpp_static_assert + 0 != 0))
+#define __STATIC_ASSERT_IS_STATIC_ASSERT 1
 #if defined(__cpp_static_assert) && __cpp_static_assert + 0 >= 201411
 #define __STATIC_ASSERT static_assert
 #else /* __cpp_static_assert >= 201411 */
 #define __STATIC_ASSERT(expr) static_assert(expr, #expr)
 #endif /* __cpp_static_assert < 201411 */
-#define __STATIC_ASSERT_MSG static_assert
-#elif (defined(_Static_assert) || __has_feature(c_static_assert) || \
+#define __STATIC_ASSERT_MSG   static_assert
+#elif (defined(_Static_assert) || __has_feature(c_static_assert) || __has_extension(c_static_assert) || \
        (!defined(__cplusplus) && ((defined(__STDC_VERSION__) && __STDC_VERSION__ + 0 >= 201112L))))
-#define __STATIC_ASSERT_IS__STATIC_ASSERT
+#define __STATIC_ASSERT_IS__STATIC_ASSERT 1
 #define __STATIC_ASSERT(expr) _Static_assert(expr, #expr)
 #define __STATIC_ASSERT_MSG   _Static_assert
-#elif defined(__TPP_COUNTER)
-#define __STATIC_ASSERT(expr)          typedef int __PP_CAT2(__static_assert_, __TPP_COUNTER(__static_assert))[(expr) ? 1 : -1]
-#define __STATIC_ASSERT_MSG(expr, msg) typedef int __PP_CAT2(__static_assert_, __TPP_COUNTER(__static_assert))[(expr) ? 1 : -1]
 #elif defined(__COUNTER__)
 #define __STATIC_ASSERT(expr)          typedef int __PP_CAT2(__static_assert_, __COUNTER__)[(expr) ? 1 : -1]
 #define __STATIC_ASSERT_MSG(expr, msg) typedef int __PP_CAT2(__static_assert_, __COUNTER__)[(expr) ? 1 : -1]
@@ -179,41 +130,7 @@
 #define __STATIC_ASSERT_MSG(expr, msg) typedef int __PP_CAT2(__static_assert_, __LINE__)[(expr) ? 1 : -1]
 #endif /* !... */
 
-#if defined(__DCC_VERSION__) || defined(__TINYC__)
 #define __ASMNAME(x) __asm__(x)
-#else /* __DCC_VERSION__ || __TINYC__ */
-#define __NO_ASMNAME
-#define __ASMNAME(x) /* Nothing */
-#endif /* !__DCC_VERSION__ && !__TINYC__ */
-
-#ifndef __DCC_VERSION__
-#define __extension__
-#endif /* !__DCC_VERSION__ */
-
-#if __has_builtin(__builtin_va_list)
-#define __builtin_va_list __builtin_va_list
-#endif /* __has_builtin(__builtin_va_list) */
-
-#if !__has_builtin(__builtin_LINE)
-#define __builtin_LINE() __LINE__
-#endif /* !__has_builtin(__builtin_LINE) */
-
-#if !__has_builtin(__builtin_FILE)
-#define __builtin_FILE() __FILE__
-#endif /* !__has_builtin(__builtin_FILE) */
-
-#if !__has_builtin(__builtin_FUNCTION)
-#if defined(__DCC_VERSION__) || defined(__FUNCTION__)
-#define __builtin_FUNCTION() __FUNCTION__
-#elif defined(__TINYC__) || 1
-#define __FUNCTION__ __func__
-#define __builtin_FUNCTION() __func__
-#else /* ... */
-#define __NO_builtin_FUNCTION
-#define __builtin_FUNCTION() (char *)0
-#define __FUNCTION__ ""
-#endif /* !... */
-#endif /* !__has_builtin(__builtin_FUNCTION) */
 
 #if __has_attribute(__noinline__)
 #define __ATTR_NOINLINE __attribute__((__noinline__))
@@ -224,13 +141,11 @@
 #define __ATTR_NOINLINE /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__noreturn__) || defined(__TINYC__)
+#if __has_attribute(__noreturn__)
 #define __ATTR_NORETURN __attribute__((__noreturn__))
 #elif __has_declspec_attribute(noreturn)
 #define __ATTR_NORETURN __declspec(noreturn)
-#elif (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x590))
-#define __ATTR_NORETURN __attribute__((noreturn))
-#elif defined(_Noreturn) || (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112)
+#elif !defined(__cplusplus)
 #define __ATTR_NORETURN_IS__NORETURN
 #define __ATTR_NORETURN _Noreturn
 #elif __has_cpp_attribute(noreturn)
@@ -261,7 +176,9 @@
 #define __NO_ATTR_W64
 #define __ATTR_W64 /* Nothing */
 
-#if __has_attribute(__fastcall__) || defined(__TINYC__)
+#ifdef __clang_tidy__
+#define __ATTR_FASTCALL /* nothing */
+#elif __has_attribute(__fastcall__)
 #define __ATTR_FASTCALL __attribute__((__fastcall__))
 #elif defined(__fastcall)
 #define __ATTR_FASTCALL_IS___FASTCALL
@@ -271,7 +188,9 @@
 #define __ATTR_FASTCALL /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__stdcall__) || defined(__TINYC__)
+#ifdef __clang_tidy__
+#define __ATTR_STDCALL /* nothing */
+#elif __has_attribute(__stdcall__)
 #define __ATTR_STDCALL __attribute__((__stdcall__))
 #elif defined(__stdcall)
 #define __ATTR_STDCALL_IS___STDCALL
@@ -281,7 +200,9 @@
 #define __ATTR_STDCALL /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__cdecl__) || defined(__TINYC__)
+#ifdef __clang_tidy__
+#define __ATTR_CDECL /* nothing */
+#elif __has_attribute(__cdecl__)
 #define __ATTR_CDECL __attribute__((__cdecl__))
 #elif defined(__cdecl)
 #define __ATTR_CDECL_IS___CDECL
@@ -291,7 +212,9 @@
 #define __ATTR_CDECL /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__clrcall__)
+#ifdef __clang_tidy__
+#define __ATTR_CLRCALL /* nothing */
+#elif __has_attribute(__clrcall__)
 #define __ATTR_CLRCALL __attribute__((__clrcall__))
 #elif defined(__clrcall)
 #define __ATTR_CLRCALL_IS___CLRCALL
@@ -301,7 +224,9 @@
 #define __ATTR_CLRCALL /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__thiscall__)
+#ifdef __clang_tidy__
+#define __ATTR_THISCALL /* nothing */
+#elif __has_attribute(__thiscall__)
 #define __ATTR_THISCALL __attribute__((__thiscall__))
 #elif defined(__thiscall)
 #define __ATTR_THISCALL_IS___THISCALL
@@ -311,7 +236,9 @@
 #define __ATTR_THISCALL /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__ms_abi__) || defined(__TINYC__)
+#ifdef __clang_tidy__
+#define __ATTR_MSABI /* nothing */
+#elif __has_attribute(__ms_abi__)
 #define __ATTR_MSABI __attribute__((__ms_abi__))
 #elif defined(__ms_abi)
 #define __ATTR_MSABI_IS___MS_ABI
@@ -321,7 +248,9 @@
 #define __ATTR_MSABI /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__sysv_abi__) || defined(__TINYC__)
+#ifdef __clang_tidy__
+#define __ATTR_SYSVABI /* nothing */
+#elif __has_attribute(__sysv_abi__)
 #define __ATTR_SYSVABI __attribute__((__sysv_abi__))
 #elif defined(__sysv_abi)
 #define __ATTR_SYSVABI_IS___SYSV_ABI
@@ -381,7 +310,7 @@
 #define __ATTR_HOT /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__cold__) || (defined(__ICC) && (__ICC+0) > 1110)
+#if __has_attribute(__cold__)
 #define __ATTR_COLD __attribute__((__cold__))
 #else /* ... */
 #define __NO_ATTR_COLD
@@ -436,7 +365,7 @@
 #define __ATTR_SENTINEL_O(x) __attribute__((__sentinel__))
 #else /* __INTELLISENSE__ */
 #define __ATTR_SENTINEL_O(x) __attribute__((__sentinel__(x)))
-#endif /* __INTELLISENSE__ */
+#endif /* !__INTELLISENSE__ */
 #else /* ... */
 #define __NO_ATTR_SENTINEL
 #define __NO_ATTR_SENTINEL_O
@@ -444,24 +373,14 @@
 #define __ATTR_SENTINEL_O(x) /* Nothing */
 #endif /* !... */
 
-#if (__has_feature(cxx_thread_local) ||                                     \
-     (defined(__cplusplus) && (defined(__SUNPRO_CC) || defined(__IBMC__) || \
-                               defined(__IBMCPP__))))
+#if __has_feature(cxx_thread_local)
 #define __ATTR_THREAD_IS_THREAD_LOCAL
 #define __ATTR_THREAD thread_local
-#elif (__has_feature(c_thread_local) || \
-       (!defined(__cplusplus) && defined(__STDC_VERSION__) && (__STDC_VERSION__+0) > 201000L))
+#elif __has_feature(c_thread_local)
 #define __ATTR_THREAD_IS__THREAD_LOCAL
 #define __ATTR_THREAD _Thread_local
-#elif __has_declspec_attribute(thread) || defined(__BORLANDC__) || defined(__DMC__)
+#elif __has_declspec_attribute(thread)
 #define __ATTR_THREAD __declspec(thread)
-#elif (defined(__INTEL_COMPILER) || defined(__ICC) || defined(__ICL) || defined(__ECC))
-#if defined(_WIN32) || defined(WIN32)
-#define __ATTR_THREAD_IS___THREAD
-#define __ATTR_THREAD __thread
-#else /* _WIN32 || WIN32 */
-#define __ATTR_THREAD __declspec(thread)
-#endif /* !_WIN32 && !WIN32 */
 #else /* ... */
 #define __NO_ATTR_THREAD
 #define __ATTR_THREAD /* Nothing */
@@ -476,9 +395,6 @@
 #elif __has_cpp_attribute(deprecated) >= 201309
 #define __ATTR_DEPRECATED_      [[deprecated]]
 #define __ATTR_DEPRECATED(text) [[deprecated(text)]]
-#elif defined(__SUNPRO_C) && __SUNPRO_C >= 0x5130
-#define __ATTR_DEPRECATED_      __attribute__((deprecated))
-#define __ATTR_DEPRECATED(text) __attribute__((deprecated))
 #else /* ... */
 #define __NO_ATTR_DEPRECATED
 #define __ATTR_DEPRECATED_      /* Nothing */
@@ -499,7 +415,7 @@
 #define __ATTR_ERROR(text) /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__section__) || defined(__TINYC__)
+#if __has_attribute(__section__)
 #define __ATTR_SECTION(name) __attribute__((__section__(name)))
 #else /* ... */
 #define __NO_ATTR_SECTION
@@ -527,30 +443,27 @@
 #define __ATTR_RETNONNULL /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__packed__) || defined(__TINYC__)
+#if __has_attribute(__packed__)
 #define __ATTR_PACKED __attribute__((__packed__))
 #else /* ... */
 #define __NO_ATTR_PACKED
 #define __ATTR_PACKED /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__alias__) || defined(__TINYC__)
+#if __has_attribute(__alias__)
 #define __ATTR_ALIAS(name) __attribute__((__alias__(name)))
 #else /* ... */
 #define __NO_ATTR_ALIAS
 #define __ATTR_ALIAS(name) /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__aligned__) || defined(__TINYC__)
+#if __has_attribute(__aligned__)
 #define __ATTR_ALIGNED(n) __attribute__((__aligned__(n)))
 #elif __has_declspec_attribute(align)
 #define __ATTR_ALIGNED(n) __declspec(align(n))
 #elif __has_feature(cxx_alignas) || __has_extension(cxx_alignas)
 #define __ATTR_ALIGNED_IS_ALIGNAS
 #define __ATTR_ALIGNED(n) alignas(n)
-#elif 0
-#define __ATTR_ALIGNED_IS__ALIGNAS
-#define __ATTR_ALIGNED(n) _Alignas(n)
 #else /* ... */
 #define __NO_ATTR_ALIGNED
 #define __ATTR_ALIGNED(n) /* Nothing */
@@ -565,12 +478,12 @@
 #define __ATTR_SELECTANY /* Nothing */
 #endif /* !... */
 
-#if (__has_attribute(__weak__) || \
-     (defined(__ELF__) || defined(__TINYC__)))
+#if __has_attribute(__weak__) || \
+   (defined(__ELF__))
 #define __ATTR_WEAK __attribute__((__weak__))
 #elif !defined(__NO_ATTR_SELECTANY)
-#define __ATTR_WEAK_IS_SELECTANY
 #define __ATTR_WEAK __ATTR_SELECTANY
+#define __ATTR_WEAK_IS_SELECTANY
 #else /* ... */
 #define __NO_ATTR_WEAK
 #define __ATTR_WEAK /* Nothing */
@@ -590,7 +503,7 @@
 #define __ATTR_EXTERNALLY_VISIBLE /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__visibility__) || (defined(__ELF__) || defined(__TINYC__))
+#if __has_attribute(__visibility__)
 #define __ATTR_VISIBILITY(vis) __attribute__((__visibility__(vis)))
 #else /* ... */
 #define __NO_ATTR_VISIBILITY
@@ -603,7 +516,7 @@
 #define __ATTR_FORMAT_SCANF(fmt, args)    __attribute__((__format__(__scanf__, fmt, args)))
 #define __ATTR_FORMAT_STRFMON(fmt, args)  __attribute__((__format__(__strfmon__, fmt, args)))
 #define __ATTR_FORMAT_STRFTIME(fmt, args) __attribute__((__format__(__strftime__, fmt, args)))
-#endif
+#endif /* ... */
 #else /* ... */
 #define __NO_ATTR_FORMAT_PRINTF
 #define __ATTR_FORMAT_PRINTF(fmt, args) /* Nothing */
@@ -627,10 +540,7 @@
 #if __has_attribute(__dllimport__)
 #define __ATTR_DLLIMPORT __attribute__((__dllimport__))
 #define __ATTR_DLLEXPORT __attribute__((__dllexport__))
-#elif defined(__TINYC__)
-#define __ATTR_DLLIMPORT __attribute__((dllimport))
-#define __ATTR_DLLEXPORT __attribute__((dllexport))
-#elif __has_declspec_attribute(dllimport) || defined(__PE__) || defined(_WIN32)
+#elif __has_declspec_attribute(dllimport)
 #define __ATTR_DLLIMPORT __declspec(dllimport)
 #define __ATTR_DLLEXPORT __declspec(dllexport)
 #else /* ... */
@@ -640,16 +550,52 @@
 #define __ATTR_DLLEXPORT /* Nothing */
 #endif /* !... */
 
+#ifdef __ELF__
+#ifdef __PE__
+#error "Cannot #define both __ELF__ and __PE__ at once"
+#endif /* __PE__ */
+#undef __NO_ATTR_DLLIMPORT
+#undef __ATTR_DLLIMPORT
+#undef __NO_ATTR_DLLEXPORT
+#undef __ATTR_DLLEXPORT
+#define __NO_ATTR_DLLIMPORT
+#define __ATTR_DLLIMPORT /* Nothing */
+#define __NO_ATTR_DLLEXPORT
+#define __ATTR_DLLEXPORT /* Nothing */
+#undef __NO_ATTR_VISIBILITY
+#define __ATTR_VISIBILITY(vis) __attribute__((__visibility__(vis)))
+#elif defined(__PE__)
+#undef __NO_ATTR_VISIBILITY
+#define __NO_ATTR_VISIBILITY
+#define __ATTR_VISIBILITY(vis) /* Nothing */
+#undef __NO_ATTR_DLLIMPORT
+#undef __NO_ATTR_DLLEXPORT
+#if __has_attribute(__dllimport__)
+#define __ATTR_DLLIMPORT __attribute__((__dllimport__))
+#define __ATTR_DLLEXPORT __attribute__((__dllexport__))
+#else /* __has_attribute(__dllimport__) */
+#define __ATTR_DLLIMPORT __declspec(dllimport)
+#define __ATTR_DLLEXPORT __declspec(dllexport)
+#endif /* !__has_attribute(__dllimport__) */
+#else /* ... */
+#if !defined(__NO_ATTR_DLLIMPORT)
+#define __PE__ 1
+#elif !defined(__NO_ATTR_VISIBILITY)
+#define __ELF__ 1
+#endif /* ... */
+#endif /* !... */
+
 #if __has_attribute(__noplt__)
 #define __ATTR_NOPLT __attribute__((__noplt__))
 #else /* ... */
-#define __ATTR_NOPLT /* nothing */
+#define __ATTR_NOPLT /* Nothing */
 #define __NO_ATTR_NOPLT
 #endif /* !... */
 
 #if __has_attribute(__nonnull__)
-#define __ATTR_NONNULL(ppars)     __attribute__((__nonnull__ ppars))
-#define __ATTR_NONNULL_CXX(ppars) __attribute__((__nonnull__ ppars))
+#define __ATTR_NONNULL(ppars) __attribute__((__nonnull__ ppars))
+/* clang is dumb: "error: '__nonnull__' attribute is invalid for the implicit this argument" */
+#define __ATTR_NONNULL_CXX(ppars) /* Nothing */
 #else /* ... */
 #define __NO_ATTR_NONNULL
 #define __ATTR_NONNULL(ppars)     /* Nothing */
@@ -663,47 +609,43 @@
 #define __ATTR_WUNUSED /* Nothing */
 #endif /* !... */
 
-#if __has_attribute(__transparent_union__)
+#if __has_attribute(__transparent_union__) && 0 /* This one doesn't seem to actually work??? */
 #define __ATTR_TRANSPARENT_UNION __attribute__((__transparent_union__))
 #else /* ... */
 #define __NO_ATTR_TRANSPARENT_UNION
 #define __ATTR_TRANSPARENT_UNION /* Nothing */
 #endif /* !... */
 
-#if defined(__DCC_VERSION__) || defined(__TINYC__)
 #define __XBLOCK  __extension__
 #define __XRETURN /* Nothing */
-#else /* ... */
-#define __NO_XBLOCK
-#define __XBLOCK(...) do __VA_ARGS__ while(0)
-#define __XRETURN /* Nothing */
-#endif /* !... */
-
-#define __DEFINE_PRIVATE_ALIAS(new, old)      /* Nothing */
-#define __DEFINE_PUBLIC_ALIAS(new, old)       /* Nothing */
-#define __DEFINE_INTERN_ALIAS(new, old)       /* Nothing */
-#define __DEFINE_PRIVATE_WEAK_ALIAS(new, old) /* Nothing */
-#define __DEFINE_PUBLIC_WEAK_ALIAS(new, old)  /* Nothing */
-#define __DEFINE_INTERN_WEAK_ALIAS(new, old)  /* Nothing */
-#define __NO_DEFINE_ALIAS
-
-#if defined(__INTELLISENSE__)
-#elif defined(__TPP_VERSION__) || defined(__STDC__)
 #define __pragma(...) _Pragma(#__VA_ARGS__)
-#else /* ... */
-#define __NO_pragma
-#define __pragma(...) /* Nothing */
-#endif /* !... */
+
+#if !__has_builtin(__builtin_LINE)
+#define __builtin_LINE() __LINE__
+#endif /* !__has_builtin(__builtin_LINE) */
+
+#if !__has_builtin(__builtin_FILE)
+#define __builtin_FILE() __FILE__
+#endif /* !__has_builtin(__builtin_FILE) */
+
+#if !__has_builtin(__builtin_FUNCTION)
+#ifdef __FUNCTION__
+#define __builtin_FUNCTION() __FUNCTION__
+#else /* __FUNCTION__ */
+#define __FUNCTION__ __func__
+#define __builtin_FUNCTION() __func__
+#endif /* !__FUNCTION__ */
+#endif /* !__has_builtin(__builtin_FUNCTION) */
 
 #if !__has_builtin(__builtin_assume)
 #if 0
 #define __builtin_assume_has_sideeffects
-#define __builtin_assume(x) (!(x) ? __builtin_unreachable() : (void)0)
-#else
+#define __builtin_assume(x)  (!(x) ? __builtin_unreachable() : (void)0)
+#else /* ... */
 #undef __builtin_assume_has_sideeffects
 #define __NO_builtin_assume
 #define __builtin_assume(x) (void)0
-#endif
+#endif /* !... */
 #endif /* ... */
 
 #if !__has_builtin(__builtin_unreachable) && !defined(__TINYC__)
@@ -716,21 +658,9 @@
 #define __builtin_constant_p(x) 0
 #endif /* ... */
 
-#if (__has_feature(cxx_alignof) || \
-     (defined(__cplusplus) &&      \
-      (defined(__CODEGEARC__) ||   \
-       (defined(__BORLANDC__) &&   \
-        defined(__CODEGEAR_0X_SUPPORT__) && __BORLANDC__ >= 0x610))))
+#if __has_feature(cxx_alignof)
 #define __COMPILER_ALIGNOF_IS_ALIGNOF
 #define __COMPILER_ALIGNOF alignof
-#elif ((defined(__ghs__) && (__GHS_VERSION_NUMBER >= 600)) || \
-       (defined(__SUNPRO_CC) && __SUNPRO_CC >= 0x5130) ||     \
-       defined(__DCC_VERSION__) || defined(__TINYC__))
-#define __COMPILER_ALIGNOF_IS___ALIGNOF__
-#define __COMPILER_ALIGNOF __alignof__
-#elif 0
-#define __COMPILER_ALIGNOF_IS__ALIGNOF
-#define __COMPILER_ALIGNOF _Alignof
 #elif defined(__cplusplus)
 namespace __intern { template<class T> struct __compiler_alignof { char __x; T __y; }; }
 #define __COMPILER_ALIGNOF(T) (sizeof(::__intern::__compiler_alignof< T >) - sizeof(T))
@@ -738,24 +668,13 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __COMPILER_ALIGNOF(T) ((__SIZE_TYPE__)&((struct{ char __x; T __y; } *)0)->__y)
 #endif /* !... */
 
-#if !__has_builtin(__builtin_offsetof)
-#define __builtin_offsetof(s,m) ((__SIZE_TYPE__)&((s *)0)->m)
-#endif /* ... */
 
-#if (defined(inline) || defined(__cplusplus) ||        \
-     (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)) || \
-     (defined(__STDC_VERSION__) && (__STDC_VERSION__ - 0 >= 199901L)))
+#if defined(inline) || defined(__cplusplus)
 #define __ATTR_INLINE inline
-#elif (defined(__BORLANDC__) || defined(__DMC__) || \
-       defined(__SC__) || defined(__WATCOMC__) ||   \
-       defined(__LCC__) || defined(__DECC))
-#define __ATTR_INLINE __inline
-#elif (__has_attribute(__always_inline__) || \
-       defined(__DCC_VERSION__) || defined(__TINYC__))
+#elif __has_attribute(__always_inline__)
 #define __ATTR_INLINE __inline__
 #else /* ... */
-#define __NO_ATTR_INLINE
-#define __ATTR_INLINE /* Nothing */
+#define __ATTR_INLINE __inline
 #endif /* !... */
 
 #if __has_attribute(__always_inline__)
@@ -794,30 +713,13 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __EXTERN_FORCEINLINE __FORCELOCAL
 #endif /* !... */
 
-#ifdef __COMPILER_HAVE_LONGLONG
 #define __LONGLONG  signed long long
 #define __ULONGLONG unsigned long long
-#else /* __COMPILER_HAVE_LONGLONG */
-/* XXX: What if the compiler doesn't support __int64 either? */
-#define __LONGLONG  signed __int64
-#define __ULONGLONG unsigned __int64
-#endif /* !__COMPILER_HAVE_LONGLONG */
 
 #if !__has_builtin(__builtin_prefetch)
 #define __NO_builtin_prefetch   1
 #define __builtin_prefetch(...) (void)0
 #endif /* !__builtin_prefetch */
-
-#ifndef __INTELLISENSE__
-#ifndef __restrict
-#if (defined(restrict) || \
-     (defined(__STDC_VERSION__) && (__STDC_VERSION__ + 0) >= 199901L))
-#define __restrict  restrict
-#else /* ... */
-#define __restrict  /* Nothing */
-#endif /* !... */
-#endif /* !__restrict */
-#endif /* !__INTELLISENSE__ */
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__+0) >= 199901L
 #define __restrict_arr restrict
@@ -825,36 +727,40 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 #define __restrict_arr /* Not supported.  */
 #endif /* __STDC_VERSION__ < 199901L */
 
-#if 0 /* TODO: Depend on __STDC_VERSION__ for this! */
-#define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS 1
-#endif
-#define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[1024]
+#define __COMPILER_HAVE_VARIABLE_LENGTH_ARRAYS
+#define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[]
 
-#ifdef __cplusplus
-#if __cplusplus >= 201703L /* C++17 */
-#define __STATIC_IF(x)   if constexpr(x)
-#define __STATIC_ELSE(x) if constexpr(!(x))
-#else /* __cplusplus >= 201703L */
-#define __STATIC_IF(x)   if(x)
-#define __STATIC_ELSE(x) if(!(x))
-#endif /* __cplusplus < 201703L */
-#define __IF0     if(false)
-#define __IF1     if(true)
-#define __WHILE0  while(false)
-#define __WHILE1  while(true)
-#else /* __cplusplus */
+#ifdef __clang_tidy__
+/* I don't know if the proper clang really supports this, but clang-tidy keeps on
+ * being a d1ck, telling me "initialization of flexible array member is not allowed"
+ * WHEN GCC FULLY ALLOWS ME TO DO THIS, AND IT PROBABLY ALSO HAVING SOME OPTION TO
+ * ALLOW THIS TO BE DONE!!!! */
+#undef __COMPILER_FLEXIBLE_ARRAY
+#define __COMPILER_FLEXIBLE_ARRAY(T, x) T x[1024]
+#undef __UNUSED
+#define __UNUSED(x) x __attribute__((__unused__))
+/* Disable this, so clang-tidy doesn't think that function like memcpy() cannot
+ * be made to be noexcept. - We only want warnings when calling functions marked
+ * as THROWS() being called by those marked as NOTHROW(). */
+#undef __NO_NON_CALL_EXCEPTIONS
+#define __NO_NON_CALL_EXCEPTIONS
+/* clang-tidy causes problems with extern-inline, so just disable it for now... */
+#undef __NO_EXTERN_INLINE
+#define __NO_EXTERN_INLINE
+#endif /* __clang_tidy__ */
+
 #define __STATIC_IF(x)   if(x)
 #define __STATIC_ELSE(x) if(!(x))
 #define __IF0     if(0)
 #define __IF1     if(1)
 #define __WHILE0  while(0)
 #define __WHILE1  while(1)
-#endif /* !__cplusplus */
 #define __COMPILER_BARRIERS_ALL_IDENTICAL 1
-#define __COMPILER_BARRIER()       (void)0 /* ??? */
-#define __COMPILER_READ_BARRIER()  (void)0 /* ??? */
-#define __COMPILER_WRITE_BARRIER() (void)0 /* ??? */
-#define __COMPILER_IMPURE()        (void)0
+#define __COMPILER_BARRIERS_ALL_IDENTICAL 1
+#define __COMPILER_BARRIER()       __XBLOCK({ __asm__ __volatile__("" : : : "memory"); (void)0; })
+#define __COMPILER_READ_BARRIER()  __XBLOCK({ __asm__ __volatile__("" : : : "memory"); (void)0; })
+#define __COMPILER_WRITE_BARRIER() __XBLOCK({ __asm__ __volatile__("" : : : "memory"); (void)0; })
+#define __COMPILER_IMPURE() __asm__("")
 
 #ifdef __cplusplus
 #ifdef __INTELLISENSE__
@@ -868,69 +774,66 @@ namespace __intern { template<class T> struct __compiler_alignof { char __x; T _
 
 /* Mark the wchar_t type as already being defined when pre-defined by the compiler */
 #ifdef __cplusplus
-#if !defined(__MWERKS__) || __option(wchar_type)
 #define __native_wchar_t_defined 1
 #define __wchar_t_defined 1
-#endif /* !__MWERKS__ || __option(wchar_type) */
 #endif /* __cplusplus */
 
-#if defined(c_plusplus) && !defined(__cplusplus)
-#if (c_plusplus+0) != 0
-#define __cplusplus (c_plusplus + 0)
-#else /* (c_plusplus+0) != 0 */
-#define __cplusplus 0
-#endif /* (c_plusplus+0) == 0 */
-#endif /* c_plusplus && !__cplusplus */
-
-
-#ifndef __COMPILER_IGNORE_UNINITIALIZED
-#define __COMPILER_IGNORE_UNINITIALIZED(var) var
-#endif /* !__COMPILER_IGNORE_UNINITIALIZED */
-
-/* Define varargs macros expected by system headers. */
-#if __has_builtin(__builtin_va_list) || __has_builtin(__builtin_va_start)
+#ifndef __builtin_va_list
 #define __builtin_va_list __builtin_va_list
-#elif defined(__TINYC__)
-#ifdef __x86_64__
-#ifndef _WIN64
-#define __builtin_va_list            void *
-#define __builtin_va_start(ap, last) (void)((ap) = __va_start(__builtin_frame_address(0)))
-#define __builtin_va_arg(ap, type)   (*(type *)__va_arg(ap, __builtin_va_arg_types(type), sizeof(type)))
-#define __builtin_va_copy(dest, src) (void)((dest) = __va_copy(src))
-#define __builtin_va_end(ap)         __va_end(ap)
-extern __builtin_va_list (__va_start)(void *fp);
-extern __builtin_va_list (__va_copy)(__builtin_va_list src);
-extern void *(__va_arg)(__builtin_va_list ap, int arg_type, int size);
-extern void (__va_end)(__builtin_va_list ap);
-#else /* _WIN64 */
-#define __builtin_va_list            char *
-#define __builtin_va_start(ap, last) (void)((ap) = ((char *)&(last)) + ((sizeof(last) + 7) & ~7))
-#define __builtin_va_arg(ap, type)   ((ap) += (sizeof(type) + 7) & ~7, *(type *)((ap) - ((sizeof(type) + 7) & ~7)))
-#define __builtin_va_copy(dest, src) (void)((dest) = (src))
-#define __builtin_va_end(ap)         (void)0
-#endif /* !_WIN64 */
-#else
-#define __builtin_va_list            char *
-#define __builtin_va_start(ap, last) (void)((ap) = ((char *)&(last)) + ((sizeof(last) + 3) & ~3))
-#define __builtin_va_arg(ap, type)   ((ap) += (sizeof(type) + 3) & ~3, *(type *)((ap) - ((sizeof(type) + 3) & ~3)))
-#define __builtin_va_copy(dest, src) (void)((dest) = (src))
-#define __builtin_va_end(ap)         (void)0
+#endif /* !__builtin_va_list */
+
+
+/* clang has a broken prototype for `__builtin_bcopy()' */
+#if __has_builtin(__builtin_bcopy) && __has_builtin(__builtin_memcpy)
+#undef __builtin_bcopy
+#define __builtin_bcopy(src, dst, num_bytes) __builtin_memcpy(dst, src, num_bytes)
+#endif /* __builtin_bcopy && __builtin_memcpy */
+
+
+#if (defined(_WIN32) && !defined(__PE__) && \
+     defined(__ELF__) && defined(__KOS__))
+/* This can happen when using the standard clang-tidy redistributable to scan KOS.
+ * Re-configure stuff to prevent false warnings! */
+#ifndef __NO_ATTR_MSABI
+#undef __ATTR_MSABI
+#define __ATTR_MSABI /* nothing */
+#endif /* !__NO_ATTR_MSABI */
+#ifndef __NO_ATTR_SYSVABI
+#undef __ATTR_SYSVABI
+#define __ATTR_SYSVABI /* nothing */
+#endif /* !__NO_ATTR_SYSVABI */
+#undef WIN32
+#undef WIN64
+#undef _WIN32
+#undef _WIN64
+#endif /* _WIN32 && !__PE__ && __ELF__ && __KOS__ */
+
+
+#if 0 /* Always available? (even when __has_builtin() doesn't say so?) */
+#undef __builtin_offsetof
+#define __builtin_offsetof(s, m) ((__SIZE_TYPE__)&((s *)0)->m)
 #endif
-#elif (defined(__NO_KOS_SYSTEM_HEADERS__) && \
-       (defined(__NO_has_include) || __has_include(<stdarg.h>)))
-/* Without KOS's system headers around, we can
- * try to make use of someone else's work :) */
-#include <stdarg.h>
-#define __builtin_va_list         va_list
-#define __builtin_va_start(ap, v) va_start(ap, v)
-#define __builtin_va_arg(ap, T)   va_arg(ap, T)
-#define __builtin_va_end(ap)      va_end(ap)
-#else /* ... */
-/* Just guess some generic implementation... */
-#define __builtin_va_list         char *
-#define __VA_ADDROF(v)            &(v)
-#define __VA_SIZEOF(n)            ((sizeof(n) + (sizeof(int) - 1)) & ~(sizeof(int) - 1))
-#define __builtin_va_start(ap, v) (ap = (__builtin_va_list)__VA_ADDROF(v) + __VA_SIZEOF(v))
-#define __builtin_va_arg(ap, T)   (*(T *)((ap += __VA_SIZEOF(T)) - __VA_SIZEOF(T)))
-#define __builtin_va_end(ap)      (void)0
-#endif /* !... */
+
+#define __COMPILER_IGNORE_UNINITIALIZED(var) var
+
+#if !__has_builtin(__builtin_types_compatible_p)
+/* Emulate: __builtin_types_compatible_p() */
+#ifdef __cplusplus
+namespace __intern {
+template<class __T> struct ____INTELLISENSE_remcv { typedef __T __type; };
+template<class __T> struct ____INTELLISENSE_remcv<__T const> { typedef __T __type; };
+template<class __T> struct ____INTELLISENSE_remcv<__T volatile> { typedef __T __type; };
+template<class __T> struct ____INTELLISENSE_remcv<__T const volatile> { typedef __T __type; };
+template<class T1, class T2> struct ____INTELLISENSE_sametype_impl { enum { __val = false }; };
+template<class T1> struct ____INTELLISENSE_sametype_impl<T1, T1> { enum { __val = true }; };
+template<class T1, class T2> struct ____INTELLISENSE_sametype:
+	____INTELLISENSE_sametype_impl<typename ____INTELLISENSE_remcv<T1>::__type,
+	typename ____INTELLISENSE_remcv<T2>::__type> { };
+#define __builtin_types_compatible_p(...) (::__intern::____INTELLISENSE_sametype< __VA_ARGS__ >::__val)
+}
+#else /* __cplusplus */
+#define __NO_builtin_types_compatible_p
+#define __builtin_types_compatible_p(...) 1
+#endif /* !__cplusplus */
+#endif /* !__has_builtin(__builtin_types_compatible_p) */
+

@@ -1415,6 +1415,22 @@
 #define ASM16_CALL_EXTERN     0xf0dd /* [7][-n,+1]   `push call extern <imm16>:<imm16>, #<imm8>' - Pop #<imm8> values from the stack, pack then into a Tuple, then call an external function referenced by <imm16>:<imm16>. */
 #define ASM16_CALL_GLOBAL     0xf0de /* [5][-n,+1]   `push call global <imm16>, #<imm8>'  - Pop #<imm8> values from the stack, pack then into a Tuple, then call a function in global slot <imm16>. */
 #define ASM16_CALL_LOCAL      0xf0df /* [5][-n,+1]   `push call local <imm16>, #<imm8>'   - Pop #<imm8> values from the stack, pack then into a Tuple, then call a function in local slot <imm16>. */
+/*      ASM_                  0xf0e0  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e1  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e2  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e3  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e4  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e5  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e6  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e7  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e8  *               --------                            - ------------------ */
+/*      ASM_                  0xf0e9  *               --------                            - ------------------ */
+/*      ASM_                  0xf0ea  *               --------                            - ------------------ */
+/*      ASM_                  0xf0eb  *               --------                            - ------------------ */
+/*      ASM_                  0xf0ec  *               --------                            - ------------------ */
+/*      ASM_                  0xf0ed  *               --------                            - ------------------ */
+/*      ASM_                  0xf0ee  *               --------                            - ------------------ */
+/*      ASM_                  0xf0ef  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f0  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f1  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f2  *               --------                            - ------------------ */

@@ -4493,8 +4493,8 @@ strop_normal:
 				}
 			}
 			/* Special variadic keywords. */
-#if !defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS) || \
-!defined(NO_EXTENSION_VA_ARGS) || !defined(NO_EXTENSION_VA_OPT)
+#if (!defined(NO_EXTENSION_VA_COMMA) || !defined(NO_EXTENSION_VA_NARGS) || \
+     !defined(NO_EXTENSION_VA_ARGS) || !defined(NO_EXTENSION_VA_OPT))
 			if (IF_CONFIG_EXTENSION_VA_COMMA((tok == KWD___VA_ARGS__ && HAVE_EXTENSION_VA_ARGS), 0) ||
 			    IF_CONFIG_EXTENSION_VA_COMMA((tok == KWD___VA_COMMA__ && HAVE_EXTENSION_VA_COMMA), 0) ||
 			    IF_CONFIG_EXTENSION_VA_NARGS((tok == KWD___VA_NARGS__ && HAVE_EXTENSION_VA_NARGS), 0) ||
@@ -4609,7 +4609,7 @@ after_adjusted_va_opt:
 				 *    >> I still implemented this as an extension though,
 				 *       simply because it feels like a good idea, that may
 				 *       potentially further confuse people not understanding
-				 *       the difference between this (huehuehue...):
+				 *       the difference between these (huehuehue...):
 				 *    >> #define STR1(x) #x
 				 *    >> #define STR2(x) STR1(x)
 				 *    >> #define STR3(x) STR1(#!x)
@@ -4815,8 +4815,8 @@ common_call_extension:
 			while (tok > 0) {
 				if (TPP_ISKEYWORD(tok)) { /* Argument name. */
 					argument_name = tok;
-#if !defined(NO_EXTENSION_VA_ARGS) || !defined(NO_EXTENSION_VA_COMMA) || \
-    !defined(NO_EXTENSION_VA_NARGS) || !defined(NO_EXTENSION_VA_OPT)
+#if (!defined(NO_EXTENSION_VA_ARGS) || !defined(NO_EXTENSION_VA_COMMA) || \
+     !defined(NO_EXTENSION_VA_NARGS) || !defined(NO_EXTENSION_VA_OPT))
 					if unlikely(IF_CONFIG_EXTENSION_VA_ARGS((argument_name == KWD___VA_ARGS__), 0) ||
 					            IF_CONFIG_EXTENSION_VA_COMMA((argument_name == KWD___VA_COMMA__ && HAVE_EXTENSION_VA_COMMA), 0) ||
 					            IF_CONFIG_EXTENSION_VA_NARGS((argument_name == KWD___VA_NARGS__ && HAVE_EXTENSION_VA_NARGS), 0) ||
@@ -5002,7 +5002,7 @@ skip_argument_name:
 
 	/* Check for special case: Empty text block.
 	 * >> We can optimize this case to remove a dependency on the current file chunk,
-	 *    thus meaning that the file's chunk may be easier to deallocate when its
+	 *    thus meaning that the file's chunk may be easier to deallocate when it's
 	 *    no longer being used. */
 	if (result->f_begin == result->f_end) {
 		TPPString_Incref(empty_string);

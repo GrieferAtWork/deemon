@@ -26,7 +26,6 @@ typedef int Dee_rwlock_t;
 #define Dee_RWLOCK_INIT                   0
 #define Dee_rwlock_cinit(self)      (void)0
 #define Dee_rwlock_init(self)       (void)0
-#define Dee_DEFINE_RWLOCK(name)      Dee_rwlock_t name = 0
 #define Dee_rwlock_reading(x)             1
 #define Dee_rwlock_writing(x)             1
 #define Dee_rwlock_tryread(self)          1
@@ -46,7 +45,6 @@ typedef struct atomic_rwlock Dee_rwlock_t;
 #define Dee_RWLOCK_INIT             ATOMIC_RWLOCK_INIT
 #define Dee_rwlock_cinit(self)      atomic_rwlock_cinit(self)
 #define Dee_rwlock_init(self)       atomic_rwlock_init(self)
-#define Dee_DEFINE_RWLOCK(name)     DEFINE_ATOMIC_RWLOCK(name)
 #define Dee_rwlock_reading(x)       atomic_rwlock_reading(x)
 #define Dee_rwlock_writing(x)       atomic_rwlock_writing(x)
 #define Dee_rwlock_tryread(self)    atomic_rwlock_tryread(self)
@@ -66,7 +64,6 @@ typedef Dee_rwlock_t rwlock_t;
 #define RWLOCK_INIT       Dee_RWLOCK_INIT
 #define rwlock_cinit      Dee_rwlock_cinit
 #define rwlock_init       Dee_rwlock_init
-#define DEFINE_RWLOCK     Dee_DEFINE_RWLOCK
 #define rwlock_reading    Dee_rwlock_reading
 #define rwlock_writing    Dee_rwlock_writing
 #define rwlock_tryread    Dee_rwlock_tryread

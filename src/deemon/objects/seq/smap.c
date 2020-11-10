@@ -187,17 +187,24 @@ smapiter_ctor(SharedVectorIterator *__restrict self,
 	self->si_index = 0;
 	return 0;
 }
-INTDEF NONNULL((1)) void DCALL sveciter_fini(SharedVectorIterator *__restrict self);
+
+INTDEF NONNULL((1)) void DCALL
+sveciter_fini(SharedVectorIterator *__restrict self);
 #define smapiter_fini sveciter_fini
-INTDEF NONNULL((1, 2)) void DCALL sveciter_visit(SharedVectorIterator *__restrict self, dvisit_t proc, void *arg);
+
+INTDEF NONNULL((1, 2)) void DCALL
+sveciter_visit(SharedVectorIterator *__restrict self, dvisit_t proc, void *arg);
 #define smapiter_visit sveciter_visit
+
 INTDEF WUNUSED NONNULL((1)) int DCALL
 sveciter_bool(SharedVectorIterator *__restrict self);
 #define smapiter_bool sveciter_bool
+
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 sveciter_copy(SharedVectorIterator *__restrict self,
               SharedVectorIterator *__restrict other);
 #define smapiter_copy sveciter_copy
+
 INTDEF struct type_cmp sveciter_cmp;
 #define smapiter_cmp sveciter_cmp
 
@@ -505,9 +512,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-smap_nsi_getdefault(SharedMap *__restrict self,
-                    DeeObject *__restrict key,
-                    DeeObject *__restrict defl) {
+smap_nsi_getdefault(SharedMap *self, DeeObject *key, DeeObject *defl) {
 	dhash_t i, perturb, hash;
 	SharedItemEx *item;
 	int temp;
@@ -603,8 +608,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 smap_get(SharedMap *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
-		return NULL;
+		goto err;
 	return smap_nsi_getdefault(self, key, def);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

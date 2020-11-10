@@ -341,8 +341,9 @@ template<> struct ____INTELLISENSE_promote<unsigned long long> { typedef unsigne
  * >> Again: Only meant to highlight usage errors in visual studio. */
 template<int endian,class __T> class ____intellisense_endianint {
 	__T __v;
+
 public:
-/*	bool operator ! () const; */
+	/*	bool operator ! () const; */
 	explicit operator bool() const throw();
 	explicit operator char() const throw();
 	explicit operator short() const throw();
@@ -356,13 +357,19 @@ public:
 	explicit operator unsigned long() const throw();
 	explicit operator unsigned long long() const throw();
 	//____intellisense_endianint &operator = (__T) throw();
-	____intellisense_endianint &operator = (____intellisense_endianint const &) throw() = default;
-	template<class __S> bool operator <  (____intellisense_endianint<endian,__S> const &) const throw();
-	template<class __S> bool operator <= (____intellisense_endianint<endian,__S> const &) const throw();
-	template<class __S> bool operator == (____intellisense_endianint<endian,__S> const &) const throw();
-	template<class __S> bool operator != (____intellisense_endianint<endian,__S> const &) const throw();
-	template<class __S> bool operator >  (____intellisense_endianint<endian,__S> const &) const throw();
-	template<class __S> bool operator >= (____intellisense_endianint<endian,__S> const &) const throw();
+	____intellisense_endianint &operator=(____intellisense_endianint const &) throw() = default;
+	template<class __S> bool operator<(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> bool operator<=(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> bool operator==(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> bool operator!=(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> bool operator>(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> bool operator>=(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> ____intellisense_endianint operator|(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> ____intellisense_endianint operator&(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> ____intellisense_endianint operator^(____intellisense_endianint<endian, __S> const &) const throw();
+	template<class __S> ____intellisense_endianint &operator|=(____intellisense_endianint<endian, __S> const &) throw();
+	template<class __S> ____intellisense_endianint &operator&=(____intellisense_endianint<endian, __S> const &) throw();
+	template<class __S> ____intellisense_endianint &operator^=(____intellisense_endianint<endian, __S> const &) throw();
 	____intellisense_endianint() = default;
 	____intellisense_endianint(____intellisense_endianint const &) = default;
 	explicit ____intellisense_endianint(char) throw();
@@ -380,66 +387,66 @@ public:
 
 #pragma pack(pop)
 
-__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned short> __intellisense_htole16(unsigned short);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short> __intellisense_htobe16(unsigned short);
-__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned int> __intellisense_htole32(int);
-__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned int> __intellisense_htole32(unsigned int);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int> __intellisense_htobe32(int);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int> __intellisense_htobe32(unsigned int);
-__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long> __intellisense_htole32(long);
-__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long> __intellisense_htole32(unsigned long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long> __intellisense_htobe32(long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long> __intellisense_htobe32(unsigned long);
-__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long long> __intellisense_htole64(unsigned long long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long> __intellisense_htobe64(unsigned long long);
+__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned short> __intellisense_htole16(unsigned short);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned short> __intellisense_htobe16(unsigned short);
+__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned int> __intellisense_htole32(int);
+__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned int> __intellisense_htole32(unsigned int);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned int> __intellisense_htobe32(int);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned int> __intellisense_htobe32(unsigned int);
+__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned long> __intellisense_htole32(long);
+__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned long> __intellisense_htole32(unsigned long);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long> __intellisense_htobe32(long);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long> __intellisense_htobe32(unsigned long);
+__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned long long> __intellisense_htole64(unsigned long long);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long long> __intellisense_htobe64(unsigned long long);
 unsigned short __intellisense_letoh16(unsigned short);
-unsigned short __intellisense_letoh16(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned short>);
+unsigned short __intellisense_letoh16(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned short>);
 unsigned short __intellisense_betoh16(unsigned short);
-unsigned short __intellisense_betoh16(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short>);
+unsigned short __intellisense_betoh16(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned short>);
 unsigned int __intellisense_letoh32(int);
 unsigned int __intellisense_letoh32(unsigned int);
-unsigned int __intellisense_letoh32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned int>);
+unsigned int __intellisense_letoh32(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned int>);
 unsigned int __intellisense_betoh32(int);
 unsigned int __intellisense_betoh32(unsigned int);
-unsigned int __intellisense_betoh32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int>);
+unsigned int __intellisense_betoh32(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned int>);
 unsigned long __intellisense_letoh32(long);
 unsigned long __intellisense_letoh32(unsigned long);
-unsigned long __intellisense_letoh32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long>);
+unsigned long __intellisense_letoh32(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned long>);
 unsigned long __intellisense_betoh32(long);
 unsigned long __intellisense_betoh32(unsigned long);
-unsigned long __intellisense_betoh32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long>);
+unsigned long __intellisense_betoh32(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long>);
 unsigned long long __intellisense_letoh64(unsigned long long);
-unsigned long long __intellisense_letoh64(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long long>);
+unsigned long long __intellisense_letoh64(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned long long>);
 unsigned long long __intellisense_betoh64(unsigned long long);
-unsigned long long __intellisense_betoh64(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long>);
+unsigned long long __intellisense_betoh64(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long long>);
 
-unsigned short __intellisense_leswap16(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned short>);
-unsigned short __intellisense_beswap16(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short>);
-unsigned int __intellisense_leswap32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned int>);
-unsigned int __intellisense_beswap32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int>);
-unsigned long __intellisense_leswap32(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long>);
-unsigned long __intellisense_beswap32(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long>);
-unsigned long long __intellisense_leswap64(__intern::____intellisense_endianint<__ORDER_LITTLE_ENDIAN__, unsigned long long>);
-unsigned long long __intellisense_beswap64(__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long>);
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+unsigned short __intellisense_leswap16(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned short>);
+unsigned short __intellisense_beswap16(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned short>);
+unsigned int __intellisense_leswap32(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned int>);
+unsigned int __intellisense_beswap32(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned int>);
+unsigned long __intellisense_leswap32(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned long>);
+unsigned long __intellisense_beswap32(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long>);
+unsigned long long __intellisense_leswap64(__intern::____intellisense_endianint</*__ORDER_LITTLE_ENDIAN__*/ 1234, unsigned long long>);
+unsigned long long __intellisense_beswap64(__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long long>);
+#if __BYTE_ORDER__ == /*__ORDER_LITTLE_ENDIAN__*/ 1234
 unsigned short __intellisense_leswap16(unsigned short);
 unsigned int __intellisense_leswap32(unsigned int);
 unsigned long __intellisense_leswap32(unsigned long);
 unsigned long long __intellisense_leswap64(unsigned long long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short> __intellisense_beswap16(unsigned short);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int> __intellisense_beswap32(unsigned int);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long> __intellisense_beswap32(unsigned long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long> __intellisense_beswap64(unsigned long long);
-#else /* __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ */
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned short> __intellisense_leswap16(unsigned short);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned int> __intellisense_leswap32(unsigned int);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long> __intellisense_leswap32(unsigned long);
-__intern::____intellisense_endianint<__ORDER_BIG_ENDIAN__, unsigned long long> __intellisense_leswap64(unsigned long long);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned short> __intellisense_beswap16(unsigned short);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned int> __intellisense_beswap32(unsigned int);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long> __intellisense_beswap32(unsigned long);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long long> __intellisense_beswap64(unsigned long long);
+#else /* __BYTE_ORDER__ == /*__ORDER_LITTLE_ENDIAN__*/ 1234 */
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned short> __intellisense_leswap16(unsigned short);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned int> __intellisense_leswap32(unsigned int);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long> __intellisense_leswap32(unsigned long);
+__intern::____intellisense_endianint</*__ORDER_BIG_ENDIAN__*/ 4321, unsigned long long> __intellisense_leswap64(unsigned long long);
 unsigned short __intellisense_beswap16(unsigned short);
 unsigned int __intellisense_beswap32(unsigned int);
 unsigned long __intellisense_beswap32(unsigned long);
 unsigned long long __intellisense_beswap64(unsigned long long);
-#endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
+#endif /* __BYTE_ORDER__ != /*__ORDER_LITTLE_ENDIAN__*/ 1234 */
 
 }
 
@@ -483,6 +490,28 @@ typename __intern::____INTELLISENSE_enableif<
 bool>::__type __builtin_mul_overflow(__TA __lhs, __TB __rhs, __TR *__res);
 
 
+template<class __TA, class __TB, class __TR>
+typename __intern::____INTELLISENSE_enableif<
+	__intern::____INTELLISENSE_isarith<__TA>::__value &&
+	__intern::____INTELLISENSE_isarith<__TB>::__value &&
+	__intern::____INTELLISENSE_isarith<__TR>::__value,
+bool>::__type __builtin_add_overflow_p(__TA __lhs, __TB __rhs, __TR __res_type);
+
+template<class __TA, class __TB, class __TR>
+typename __intern::____INTELLISENSE_enableif<
+	__intern::____INTELLISENSE_isarith<__TA>::__value &&
+	__intern::____INTELLISENSE_isarith<__TB>::__value &&
+	__intern::____INTELLISENSE_isarith<__TR>::__value,
+bool>::__type __builtin_sub_overflow_p(__TA __lhs, __TB __rhs, __TR __res_type);
+
+template<class __TA, class __TB, class __TR>
+typename __intern::____INTELLISENSE_enableif<
+	__intern::____INTELLISENSE_isarith<__TA>::__value &&
+	__intern::____INTELLISENSE_isarith<__TB>::__value &&
+	__intern::____INTELLISENSE_isarith<__TR>::__value,
+bool>::__type __builtin_mul_overflow_p(__TA __lhs, __TB __rhs, __TR __res_type);
+
+
 bool __builtin_sadd_overflow(int __a, int __b, int *__res);
 bool __builtin_saddl_overflow(long __a, long __b, long *__res);
 bool __builtin_saddll_overflow(long long __a, long long __b, long long *__res);
@@ -503,6 +532,13 @@ bool __builtin_umull_overflow(unsigned long __a, unsigned long __b, unsigned lon
 bool __builtin_umulll_overflow(unsigned long long __a, unsigned long long __b, unsigned long long *__res);
 
 
+/* Fix some broken c++ feature macros */
+#ifdef __cplusplus
+#if __cplusplus >= 201406L
+#undef __cpp_static_assert
+#define __cpp_static_assert 201411
+#endif
+#endif /* __cplusplus */
 
 
 #endif /* !____INTELLISENSE_STDINC_COMMON_H */

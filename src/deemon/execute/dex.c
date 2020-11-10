@@ -301,7 +301,7 @@ done:
 }
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(dex_lock);
+PRIVATE rwlock_t dex_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 /* [0..1][lock(dex_lock)] Global chain of loaded dex extensions. */

@@ -209,7 +209,7 @@ PRIVATE DREF DeeObject *jit_module = NULL; /* import("_jit") */
 PRIVATE DREF DeeObject *jit_exec = NULL;   /* _jit.exec */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(jit_access_lock);
+PRIVATE rwlock_t jit_access_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 INTERN bool DCALL clear_jit_cache(void) {

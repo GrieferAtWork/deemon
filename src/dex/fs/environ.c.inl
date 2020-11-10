@@ -71,7 +71,7 @@ typedef struct {
 	unsigned int e_version; /* The environment version when iteration started. */
 } Env;
 
-PRIVATE DEFINE_RWLOCK(env_lock);
+PRIVATE rwlock_t env_lock = RWLOCK_INIT;
 PRIVATE unsigned int env_version = 0;
 
 PRIVATE char *empty_env[] = { NULL };

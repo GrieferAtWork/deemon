@@ -26,7 +26,7 @@ __NAMESPACE_INT_BEGIN
 
 #ifndef __POINTER_CXX_CV_QUAL
 #define __POINTER_CXX_CV_QUAL /* nothing */
-#endif
+#endif /* !__POINTER_CXX_CV_QUAL */
 
 
 template<
@@ -39,8 +39,8 @@ class __hybrid_ptr
 #ifdef __POINTER_CXX_IS_VOID
 #define __PTR_T void
 	<void __POINTER_CXX_CV_QUAL, __I>
-#elif defined(__POINTER_CXX_CV_QUAL_IS_CONST) || \
-    defined(__POINTER_CXX_CV_QUAL_IS_VOLATILE)
+#elif (defined(__POINTER_CXX_CV_QUAL_IS_CONST) || \
+       defined(__POINTER_CXX_CV_QUAL_IS_VOLATILE))
 	<__PTR_T __POINTER_CXX_CV_QUAL, __I>
 #endif
 {
@@ -51,21 +51,21 @@ public:
 	__CXX_CLASSMEMBER __CXX_DEFAULT_CTOR_NOEXCEPT(__hybrid_ptr);
 
 	/* Default copy/move constructor/assign */
-#ifdef __CXX_HAVE_DEFAULT_FUNCTIONS
+#ifdef __COMPILER_HAVE_CXX_DEFAULT_FUNCTIONS
 	__CXX_CLASSMEMBER __hybrid_ptr(__hybrid_ptr const &__val) __CXX_NOEXCEPT = default;
 	__CXX_CLASSMEMBER __hybrid_ptr &operator=(__hybrid_ptr const &__val) __CXX_NOEXCEPT = default;
 #ifdef __COMPILER_HAVE_CXX_RVALUE_REFERENCE
 	__CXX_CLASSMEMBER __hybrid_ptr(__hybrid_ptr &&__val) __CXX_NOEXCEPT = default;
 	__CXX_CLASSMEMBER __hybrid_ptr &operator=(__hybrid_ptr &&__val) __CXX_NOEXCEPT = default;
 #endif /* __COMPILER_HAVE_CXX_RVALUE_REFERENCE */
-#else /* __CXX_HAVE_DEFAULT_FUNCTIONS */
+#else /* __COMPILER_HAVE_CXX_DEFAULT_FUNCTIONS */
 	__CXX_CLASSMEMBER __hybrid_ptr(__hybrid_ptr const &__val) __CXX_NOEXCEPT: __m_ptr(__val.__m_ptr) {}
 	__CXX_CLASSMEMBER __hybrid_ptr &operator=(__hybrid_ptr const &__val) __CXX_NOEXCEPT { __m_ptr = __val.__m_ptr; return *this; }
 #ifdef __COMPILER_HAVE_CXX_RVALUE_REFERENCE
 	__CXX_CLASSMEMBER __hybrid_ptr(__hybrid_ptr &&__val) __CXX_NOEXCEPT: __m_ptr(__val.__m_ptr) {}
 	__CXX_CLASSMEMBER __hybrid_ptr &operator=(__hybrid_ptr &&__val) __CXX_NOEXCEPT { __m_ptr = __val.__m_ptr; return *this; }
 #endif /* __COMPILER_HAVE_CXX_RVALUE_REFERENCE */
-#endif /* !__CXX_HAVE_DEFAULT_FUNCTIONS */
+#endif /* !__COMPILER_HAVE_CXX_DEFAULT_FUNCTIONS */
 
 	/* Construct from integer (explicit) */
 	__CXX_CLASSMEMBER explicit __hybrid_ptr(signed char __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
@@ -80,6 +80,22 @@ public:
 	__CXX_CLASSMEMBER explicit __hybrid_ptr(long long __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
 	__CXX_CLASSMEMBER explicit __hybrid_ptr(unsigned long long __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
 #endif /* __COMPILER_HAVE_LONGLONG */
+#ifdef __COMPILER_INT8_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(__int8 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(unsigned __int8 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+#endif /* __COMPILER_INT8_IS_UNIQUE_TYPE */
+#ifdef __COMPILER_INT16_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(__int16 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(unsigned __int16 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+#endif /* __COMPILER_INT16_IS_UNIQUE_TYPE */
+#ifdef __COMPILER_INT32_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(__int32 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(unsigned __int32 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+#endif /* __COMPILER_INT32_IS_UNIQUE_TYPE */
+#ifdef __COMPILER_INT64_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(__int64 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+	__CXX_CLASSMEMBER explicit __hybrid_ptr(unsigned __int64 __val) __CXX_NOEXCEPT: __m_ptr((__I)__val) {}
+#endif /* __COMPILER_INT64_IS_UNIQUE_TYPE */
 
 	/* Convert to integer (explicit) */
 	__CXX_CLASSMEMBER explicit operator signed char() const __CXX_NOEXCEPT { return (signed char)__m_ptr; }
@@ -94,6 +110,22 @@ public:
 	__CXX_CLASSMEMBER explicit operator long long() const __CXX_NOEXCEPT { return (long long)__m_ptr; }
 	__CXX_CLASSMEMBER explicit operator unsigned long long() const __CXX_NOEXCEPT { return (unsigned long long)__m_ptr; }
 #endif /* __COMPILER_HAVE_LONGLONG */
+#ifdef __COMPILER_INT8_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit operator __int8() const __CXX_NOEXCEPT { return (__int8)__m_ptr; }
+	__CXX_CLASSMEMBER explicit operator unsigned __int8() const __CXX_NOEXCEPT { return (unsigned __int8)__m_ptr; }
+#endif /* __COMPILER_INT8_IS_UNIQUE_TYPE */
+#ifdef __COMPILER_INT16_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit operator __int16() const __CXX_NOEXCEPT { return (__int16)__m_ptr; }
+	__CXX_CLASSMEMBER explicit operator unsigned __int16() const __CXX_NOEXCEPT { return (unsigned __int16)__m_ptr; }
+#endif /* __COMPILER_INT16_IS_UNIQUE_TYPE */
+#ifdef __COMPILER_INT32_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit operator __int32() const __CXX_NOEXCEPT { return (__int32)__m_ptr; }
+	__CXX_CLASSMEMBER explicit operator unsigned __int32() const __CXX_NOEXCEPT { return (unsigned __int32)__m_ptr; }
+#endif /* __COMPILER_INT32_IS_UNIQUE_TYPE */
+#ifdef __COMPILER_INT64_IS_UNIQUE_TYPE
+	__CXX_CLASSMEMBER explicit operator __int64() const __CXX_NOEXCEPT { return (__int64)__m_ptr; }
+	__CXX_CLASSMEMBER explicit operator unsigned __int64() const __CXX_NOEXCEPT { return (unsigned __int64)__m_ptr; }
+#endif /* __COMPILER_INT64_IS_UNIQUE_TYPE */
 
 	/* Convert to normal pointer (explicit when casting away const/volatile) */
 	__CXX_CLASSMEMBER operator __PTR_T __POINTER_CXX_CV_QUAL *() const __CXX_NOEXCEPT { return (__PTR_T __POINTER_CXX_CV_QUAL *)(__UINTPTR_TYPE__)__m_ptr; }
@@ -108,7 +140,7 @@ public:
 #elif defined(__POINTER_CXX_CV_QUAL_IS_CONST) || defined(__POINTER_CXX_CV_QUAL_IS_VOLATILE)
 	__CXX_CLASSMEMBER explicit operator __PTR_T *() const __CXX_NOEXCEPT { return (__PTR_T *)(__UINTPTR_TYPE__)__m_ptr; }
 	__CXX_CLASSMEMBER explicit operator __PTR_T *() const volatile __CXX_NOEXCEPT { return (__PTR_T *)(__UINTPTR_TYPE__)__m_ptr; }
-#endif
+#endif /* ... */
 
 #ifdef __POINTER_CXX_IS_VOID
 #ifdef __COMPILER_HAVE_VOID_ARITHMETIC
@@ -236,7 +268,7 @@ public:
 	template<class __I2> __CXX_CLASSMEMBER __hybrid_ptr volatile &operator=(__hybrid_ptr<__PTR_T, __I2> const volatile &__val) volatile __CXX_NOEXCEPT { __m_ptr = (__I)(__UINTPTR_TYPE__)(__PTR_T *)__val; return *this; }
 	template<class __I2> __CXX_CLASSMEMBER __hybrid_ptr volatile &operator=(__hybrid_ptr<__PTR_T volatile, __I2> const &__val) volatile __CXX_NOEXCEPT { __m_ptr = (__I)(__UINTPTR_TYPE__)(__PTR_T *)__val; return *this; }
 	template<class __I2> __CXX_CLASSMEMBER __hybrid_ptr volatile &operator=(__hybrid_ptr<__PTR_T volatile, __I2> const volatile &__val) volatile __CXX_NOEXCEPT { __m_ptr = (__I)(__UINTPTR_TYPE__)(__PTR_T *)__val; return *this; }
-#else
+#else /* ... */
 	__CXX_CLASSMEMBER __hybrid_ptr(__PTR_T *__val) __CXX_NOEXCEPT: __m_ptr((__I)(__UINTPTR_TYPE__)__val) {}
 	explicit __CXX_CLASSMEMBER __hybrid_ptr(__PTR_T const *__val) __CXX_NOEXCEPT: __m_ptr((__I)(__UINTPTR_TYPE__)__val) {}
 	explicit __CXX_CLASSMEMBER __hybrid_ptr(__PTR_T volatile *__val) __CXX_NOEXCEPT: __m_ptr((__I)(__UINTPTR_TYPE__)__val) {}
@@ -255,7 +287,7 @@ public:
 	template<class __I2> __CXX_CLASSMEMBER __hybrid_ptr &operator=(__hybrid_ptr<__PTR_T, __I2> const volatile &__val) __CXX_NOEXCEPT { __m_ptr = (__I)(__UINTPTR_TYPE__)(__PTR_T *)__val; return *this; }
 	template<class __I2> __CXX_CLASSMEMBER __hybrid_ptr volatile &operator=(__hybrid_ptr<__PTR_T, __I2> const &__val) volatile __CXX_NOEXCEPT { __m_ptr = (__I)(__UINTPTR_TYPE__)(__PTR_T *)__val; return *this; }
 	template<class __I2> __CXX_CLASSMEMBER __hybrid_ptr volatile &operator=(__hybrid_ptr<__PTR_T, __I2> const volatile &__val) volatile __CXX_NOEXCEPT { __m_ptr = (__I)(__UINTPTR_TYPE__)(__PTR_T *)__val; return *this; }
-#endif
+#endif /* !... */
 
 	/* Pointer difference operators */
 #ifdef __POINTER_CXX_IS_VOID
@@ -280,10 +312,10 @@ public:
 	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile, __I2> const volatile &__rhs) const __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
 	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile, __I2> const &__rhs) const volatile __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
 	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile, __I2> const volatile &__rhs) const volatile __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const &__rhs) const __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const volatile &__rhs) const __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const &__rhs) const volatile __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const volatile &__rhs) const volatile __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const &__rhs) const __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const volatile &__rhs) const __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const &__rhs) const volatile __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const volatile &__rhs) const volatile __CXX_NOEXCEPT { return (__PTRDIFF_TYPE__)((__UINTPTR_TYPE__)__m_ptr - (__UINTPTR_TYPE__)(__PTR_T *)__rhs); }
 #endif /* __COMPILER_HAVE_VOID_ARITHMETIC */
 #else /* __POINTER_CXX_IS_VOID */
 	__CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__PTR_T *__rhs) const __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - __rhs; }
@@ -306,10 +338,10 @@ public:
 	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile, __I2> const volatile &__rhs) const __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
 	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile, __I2> const &__rhs) const volatile __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
 	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile, __I2> const volatile &__rhs) const volatile __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const &__rhs) const __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const volatile &__rhs) const __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const &__rhs) const volatile __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
-	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T volatile const, __I2> const volatile &__rhs) const volatile __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const &__rhs) const __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const volatile &__rhs) const __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const &__rhs) const volatile __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
+	template<class __I2> __CXX_CLASSMEMBER __PTRDIFF_TYPE__ operator-(__hybrid_ptr<__PTR_T const volatile, __I2> const volatile &__rhs) const volatile __CXX_NOEXCEPT { return ((__PTR_T *)(__UINTPTR_TYPE__)__m_ptr) - (__PTR_T *)__rhs; }
 #endif /* !__POINTER_CXX_IS_VOID */
 
 #if defined(__COMPILER_HAVE_CXX_NULLPTR) && defined(__COMPILER_HAVE_CXX_DECLTYPE)

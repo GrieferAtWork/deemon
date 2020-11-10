@@ -443,7 +443,7 @@ err:
 #ifndef CONFIG_NO_STDLIB
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(atexit_lock);
+PRIVATE rwlock_t atexit_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 struct atexit_entry {

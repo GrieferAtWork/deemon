@@ -61,7 +61,7 @@ typedef DeeFileBufferObject Buffer;
 /* [0..1][lock(buffer_ttys_lock)] Chain of tty-buffers. */
 PRIVATE Buffer *buffer_ttys = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(buffer_ttys_lock);
+PRIVATE rwlock_t buffer_ttys_lock = RWLOCK_INIT;
 #define buffer_ttys_lock_enter() rwlock_write(&buffer_ttys_lock)
 #define buffer_ttys_lock_leave() rwlock_endwrite(&buffer_ttys_lock)
 #else /* CONFIG_NO_THREADS */

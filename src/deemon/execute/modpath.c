@@ -468,7 +468,7 @@ PRIVATE size_t                modules_c = 0;    /* [lock(modules_lock)] Amount o
 PRIVATE size_t                modules_a = 0;    /* [lock(modules_lock)] Allocated hash-map size. */
 PRIVATE struct module_bucket *modules_v = NULL; /* [lock(modules_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(modules_lock);
+PRIVATE rwlock_t modules_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 /* Name-based, global module hash table. */
@@ -476,7 +476,7 @@ PRIVATE size_t                modules_glob_c = 0;    /* [lock(modules_glob_lock)
 PRIVATE size_t                modules_glob_a = 0;    /* [lock(modules_glob_lock)] Allocated hash-map size. */
 PRIVATE struct module_bucket *modules_glob_v = NULL; /* [lock(modules_glob_lock)][0..modules_a][owned] Hash-map of modules, sorted by their filenames. */
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(modules_glob_lock);
+PRIVATE rwlock_t modules_glob_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DeeModuleObject *DCALL
@@ -3228,7 +3228,7 @@ err:
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(deemon_home_lock);
+PRIVATE rwlock_t deemon_home_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE DREF DeeStringObject *deemon_home = NULL;

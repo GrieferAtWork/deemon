@@ -46,7 +46,7 @@ DECL_BEGIN
 /* [0..1][lock(WRITE_ONCE)] The `fs' module. */
 PRIVATE DREF DeeObject *fs_module = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(fs_module_lock);
+PRIVATE rwlock_t fs_module_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -151,8 +151,8 @@ PRIVATE struct notify_entry const empty_notifications[1] = {
 };
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(notify_lock);
-#endif
+PRIVATE rwlock_t notify_lock = RWLOCK_INIT;
+#endif /* !CONFIG_NO_THREADS */
 
 /* The usual deal: it's a hash-vector (s.a.: Dict, member_table, etc. etc.) */
 PRIVATE size_t               notify_used = 0;

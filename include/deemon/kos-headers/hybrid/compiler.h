@@ -31,11 +31,11 @@
  * ATTR_PURE:
  *    - Doesn't depend on any global state
  *    - (may) dereference pointers
- *    - Only visible side-effect is return value (therefor musn't return `void')
+ *    - Only visible side-effect is return value (therefor mustn't return `void')
  *    - Example: `memcmp()'
  * ATTR_CONST:
  *    - Doesn't depend on any global state
- *    - Only visible side-effect is return value (therefor musn't return `void')
+ *    - Only visible side-effect is return value (therefor mustn't return `void')
  *    - Example: `abs()'
  *
  * Implications:
@@ -88,13 +88,13 @@
 #define ATTR_PACKED             __ATTR_PACKED
 #define ATTR_RETURNS_TWICE      __ATTR_RETURNS_TWICE
 #define ATTR_EXTERNALLY_VISIBLE __ATTR_EXTERNALLY_VISIBLE
+#define ATTR_ARTIFICIAL         __ATTR_ARTIFICIAL
 
 #define COMPILER_LENOF                __COMPILER_LENOF
 #define COMPILER_ENDOF                __COMPILER_ENDOF
 #define COMPILER_STRLEN               __COMPILER_STRLEN
 #define COMPILER_STREND               __COMPILER_STREND
 #define COMPILER_UNUSED               __COMPILER_UNUSED
-#define COMPILER_UNIPOINTER           __COMPILER_UNIPOINTER
 #define COMPILER_ALIGNOF              __COMPILER_ALIGNOF
 #define COMPILER_OFFSETOF             __builtin_offsetof
 #define COMPILER_OFFSETAFTER          __COMPILER_OFFSETAFTER
@@ -150,14 +150,14 @@
 
 #ifdef __REDIRECT_WSUPPRESS_BEGIN
 /* If defined by the compiler, suppress specific warnings within redirections. */
-#define REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       __COMPILER_REDIRECT_WSUPPRESS_BEGIN __REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args) __REDIRECT_WSUPPRESS_END
-#define REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                          __COMPILER_REDIRECT_WSUPPRESS_BEGIN __REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args) __REDIRECT_WSUPPRESS_END
-#define VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)    __COMPILER_REDIRECT_WSUPPRESS_BEGIN __VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes) __REDIRECT_WSUPPRESS_END
-#define VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)       __COMPILER_REDIRECT_WSUPPRESS_BEGIN __VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes) __REDIRECT_WSUPPRESS_END
-#define VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) __COMPILER_REDIRECT_WSUPPRESS_BEGIN __VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) __REDIRECT_WSUPPRESS_END
-#define VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)    __COMPILER_REDIRECT_WSUPPRESS_BEGIN __VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) __REDIRECT_WSUPPRESS_END
-#define XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      __COMPILER_REDIRECT_WSUPPRESS_BEGIN __XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code) __REDIRECT_WSUPPRESS_END
-#define XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                         __COMPILER_REDIRECT_WSUPPRESS_BEGIN __XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code) __REDIRECT_WSUPPRESS_END
+#define REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args) __REDIRECT_WSUPPRESS_END
+#define REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                          __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args) __REDIRECT_WSUPPRESS_END
+#define VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)    __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_VREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes) __REDIRECT_WSUPPRESS_END
+#define VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes)       __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_VREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args,before_va_start,varcount,vartypes) __REDIRECT_WSUPPRESS_END
+#define VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_VFREDIRECT(decl,attr,Treturn,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) __REDIRECT_WSUPPRESS_END
+#define VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start)    __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_VFREDIRECT_VOID(decl,attr,nothrow,cc,name,paramf,asmnamef,vparamf,vasmnamef,args,before_va_start) __REDIRECT_WSUPPRESS_END
+#define XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code) __REDIRECT_WSUPPRESS_END
+#define XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                         __COMPILER_REDIRECT_WSUPPRESS_BEGIN __COMPILER_XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code) __REDIRECT_WSUPPRESS_END
 #else /* __REDIRECT_WSUPPRESS_BEGIN */
 #define REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)                                       __COMPILER_REDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,args)
 #define REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)                                          __COMPILER_REDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,args)
@@ -168,36 +168,52 @@
 #define XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)                                      __COMPILER_XREDIRECT(decl,attr,Treturn,nothrow,cc,name,param,asmname,code)
 #define XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)                                         __COMPILER_XREDIRECT_VOID(decl,attr,nothrow,cc,name,param,asmname,code)
 #endif /* !__REDIRECT_WSUPPRESS_BEGIN */
+#define EIDECLARE(attr,Treturn,nothrow,cc,name,param,...)          __COMPILER_EIDECLARE(attr,Treturn,nothrow,cc,name,param,__VA_ARGS__)
+#define EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...) __COMPILER_EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,__VA_ARGS__)
 
-#define PP_PRIVATE_STR      __PP_PRIVATE_STR
-#define PP_STR              __PP_STR
-#define PP_PRIVATE_CAT2     __PP_PRIVATE_CAT2
-#define PP_PRIVATE_CAT3     __PP_PRIVATE_CAT3
-#define PP_PRIVATE_CAT4     __PP_PRIVATE_CAT4
-#define PP_CAT2             __PP_CAT2
-#define PP_CAT3             __PP_CAT3
-#define PP_CAT4             __PP_CAT4
-#define PP_PRIVATE_MUL8     __PP_PRIVATE_MUL8
-#define PP_MUL8             __PP_MUL8
-#define STATIC_ASSERT       __STATIC_ASSERT
-#define STATIC_ASSERT_MSG   __STATIC_ASSERT_MSG
-#define NONNULL             __ATTR_NONNULL
-#define WUNUSED             __ATTR_WUNUSED
-#define UNUSED              __UNUSED
-#define IMPDAT              __IMPDAT
-#define IMPDEF              __IMPDEF
-#define EXPDEF              __EXPDEF
-#define FUNDEF              __PUBDEF
-#define DATDEF              __PUBDEF
-#define PUBLIC              __PUBLIC
-#define INTERN              __INTERN
-#define PUBLIC_CONST        __PUBLIC_CONST
-#define INTERN_CONST        __INTERN_CONST
-#define INTDEF              __INTDEF
-#define PRIVATE             __PRIVATE
-#define FORCELOCAL          __FORCELOCAL
-#define LOCAL               __LOCAL
-#define DFL                 __DFL
+/* Preprocessor macros */
+#define PP_PRIVATE_STR  __PP_PRIVATE_STR
+#define PP_STR          __PP_STR
+#define PP_PRIVATE_CAT2 __PP_PRIVATE_CAT2
+#define PP_PRIVATE_CAT3 __PP_PRIVATE_CAT3
+#define PP_PRIVATE_CAT4 __PP_PRIVATE_CAT4
+#define PP_CAT2         __PP_CAT2
+#define PP_CAT3         __PP_CAT3
+#define PP_CAT4         __PP_CAT4
+#define PP_PRIVATE_MUL8 __PP_PRIVATE_MUL8
+#define PP_MUL8         __PP_MUL8
+
+/* Static assertion */
+#define STATIC_ASSERT     __STATIC_ASSERT
+#define STATIC_ASSERT_MSG __STATIC_ASSERT_MSG
+
+/* Attributes without ATTR_* prefix */
+#define NONNULL     __ATTR_NONNULL
+#define NONNULL_CXX __ATTR_NONNULL_CXX
+#define WUNUSED     __ATTR_WUNUSED
+#define UNUSED      __UNUSED
+
+/* C++ default arguments */
+#define DFL __DFL
+
+/* Linkage macros */
+#define IMPDAT             __IMPDAT
+#define IMPDEF             __IMPDEF
+#define EXPDEF             __EXPDEF
+#define FUNDEF             __PUBDEF
+#define DATDEF             __PUBDEF
+#define PUBLIC             __PUBLIC
+#define INTDEF             __INTDEF
+#define INTERN             __INTERN
+#define PUBLIC_CONST       __PUBLIC_CONST
+#define INTERN_CONST       __INTERN_CONST
+#define INTERN_COMDAT      __INTERN_COMDAT
+#define PUBLIC_COMDAT      __PUBLIC_COMDAT
+#define PRIVATE            __PRIVATE
+#define LOCAL              __LOCAL
+#define FORCELOCAL         __FORCELOCAL
+#define EXTERN_INLINE      __EXTERN_INLINE
+#define EXTERN_FORCEINLINE __EXTERN_FORCEINLINE
 
 #ifdef __ASSEMBLER__
 #include "__assembly.h"

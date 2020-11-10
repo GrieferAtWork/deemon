@@ -20,6 +20,9 @@
 #ifndef GUARD_MAIN_C
 #define GUARD_MAIN_C 1
 
+/* TODO: Many places that use `struct atomic_rwlock' could instead use
+ *       `struct atomic_lock' (which can generate more efficient code) */
+
 #include <deemon/compiler/compiler.h>
 
 #include <deemon/alloc.h>
@@ -70,6 +73,11 @@ PRIVATE int DCALL dee_atoi(char const *s) {
 #endif /* !CONFIG_HAVE_atoi */
 
 
+#ifdef __cplusplus
+#define DEE_COMPILER_CXX "++"
+#else /* __cplusplus */
+#define DEE_COMPILER_CXX ""
+#endif /* !__cplusplus */
 
 #if defined(_MSC_FULL_VER)
 /* >> http://stackoverflow.com/questions/70013/how-to-detect-if-im-compiling-code-with-visual-studio-2008 */
@@ -97,11 +105,6 @@ PRIVATE int DCALL dee_atoi(char const *s) {
 #   define DEE_VC_VERSION " 14.16 (VS 2017)"
 #else
 #   define DEE_VC_VERSION ""
-#endif
-#ifdef __cplusplus
-#   define DEE_COMPILER_CXX "++"
-#else
-#   define DEE_COMPILER_CXX ""
 #endif
 #   define DEE_COMPILER "VC" DEE_COMPILER_CXX DEE_VC_VERSION " (" PP_STR(_MSC_FULL_VER) ")"
 #elif defined(__clang__)
@@ -1360,12 +1363,13 @@ done:
 	Dee_Shutdown();
 
 #undef CONFIG_ALWAYS_LOG_LEAKS
-#if !defined(NDEBUG) && 1
+#if !defined(NDEBUG) && 0
 #define CONFIG_ALWAYS_LOG_LEAKS 1
 #endif
 
 #ifndef NDEBUG
 #ifndef CONFIG_ALWAYS_LOG_LEAKS
+	_Dee_dprint("");
 	if (_Dee_dprint_enabled != 0)
 #endif /* !CONFIG_ALWAYS_LOG_LEAKS */
 #endif /* !NDEBUG */
@@ -1380,25 +1384,15 @@ done:
 #if (defined(_CRTDBG_MAP_ALLOC) && \
      defined(CONFIG_HAVE_CRTDBG_H) && !defined(NDEBUG))
 #ifdef CONFIG_HOST_WINDOWS
-#ifndef CONFIG_ALWAYS_LOG_LEAKS
 		if (!IsDebuggerPresent())
-#endif /* !CONFIG_ALWAYS_LOG_LEAKS */
 #endif /* CONFIG_HOST_WINDOWS */
 		{
-#ifndef CONFIG_ALWAYS_LOG_LEAKS
-			_Dee_dprint("");
-			if (_Dee_dprint_enabled)
-#elif defined(CONFIG_HOST_WINDOWS)
-		if (!IsDebuggerPresent())
-#endif /* ... */
-			{
-				_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-				_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
-				_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-				_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
-				_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-				_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
-			}
+			_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
+			_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDERR);
+			_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
+			_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
+			_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+			_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
 		}
 		if ((_CrtDumpMemoryLeaks)())
 			_DeeAssert_Fail("!_CrtDumpMemoryLeaks()", __FILE__, __LINE__);
@@ -2276,6 +2270,9 @@ PRIVATE uint8_t const format_disabled_warnings[] = {
 	W_LINE_COMMENT_CONTINUED,
 	W_CHARACTER_TOO_LONG,
 	W_MULTICHAR_NOT_ALLOWED,
+	W_STRING_TERMINATED_BY_LINEFEED,
+	W_STRING_TERMINATED_BY_EOF,
+	W_COMMENT_TERMINATED_BY_EOF,
 	W_ENCOUNTERED_TRIGRAPH,
 	W_INTEGRAL_OVERFLOW,
 	W_INTEGRAL_CLAMPED,

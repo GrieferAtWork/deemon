@@ -126,7 +126,7 @@ shlib_visit(Shlib *__restrict self, dvisit_t proc, void *arg) {
 
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(static_type_lock);
+PRIVATE rwlock_t static_type_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE DREF DeeSTypeObject *void_ptr = NULL; /* `void.ptr' */

@@ -1374,7 +1374,7 @@ PRIVATE DREF DeeObject *dee_std[DEE_STDCNT] = { ITER_DONE, ITER_DONE, ITER_DONE 
 #endif /* !DEE_STDDBG_IS_UNIQUE */
 
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(dee_std_lock);
+PRIVATE rwlock_t dee_std_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE uint16_t const std_buffer_modes[DEE_STDCNT] = {
@@ -1487,7 +1487,7 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 /* [0..1][lock(WRITE_ONCE)] The `files' module. */
 PRIVATE DREF DeeObject *files_module = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(files_module_lock);
+PRIVATE rwlock_t files_module_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

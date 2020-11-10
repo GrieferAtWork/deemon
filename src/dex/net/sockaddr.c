@@ -386,7 +386,7 @@ sock_gettypevalue(char const *__restrict name, int *__restrict presult) {
 
 
 /* Lock used to access the system's database functions. */
-PRIVATE DEFINE_RWLOCK(sysdb_lock);
+PRIVATE rwlock_t sysdb_lock = RWLOCK_INIT;
 
 INTERN WUNUSED DREF DeeObject *DCALL
 sock_getprotoname(int value) {

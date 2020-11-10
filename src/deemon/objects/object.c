@@ -1006,7 +1006,7 @@ restart_clear_weakrefs:
 #define BADREFCNT_BEGIN() (void)0
 #define BADREFCNT_END()   (void)0
 #else /* CONFIG_NO_THREADS */
-PRIVATE DEFINE_RWLOCK(bad_refcnt_lock);
+PRIVATE rwlock_t bad_refcnt_lock = RWLOCK_INIT;
 #define BADREFCNT_BEGIN() rwlock_write(&bad_refcnt_lock)
 #define BADREFCNT_END()   rwlock_endwrite(&bad_refcnt_lock)
 #endif /* !CONFIG_NO_THREADS */
@@ -4239,7 +4239,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 
 #ifdef CONFIG_TRACE_REFCHANGES
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(reftracker_lock);
+PRIVATE rwlock_t reftracker_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 PRIVATE struct Dee_reftracker *reftracker_list = NULL;
 

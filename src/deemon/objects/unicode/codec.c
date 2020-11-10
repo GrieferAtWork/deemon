@@ -721,7 +721,7 @@ err:
 
 PRIVATE DREF DeeObject *libcodecs = NULL;
 #ifndef CONFIG_NO_THREADS
-PRIVATE DEFINE_RWLOCK(libcodecs_lock);
+PRIVATE rwlock_t libcodecs_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
 
 INTERN bool DCALL libcodecs_shutdown(void) {
