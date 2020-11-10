@@ -43,7 +43,7 @@ struct late_cmd_options {
 PRIVATE struct late_cmd_options late_options = { 0, 0, NULL };
 
 /* Execute all late-options and free the `lco_optv' of the internal late-options list. */
-INTERN int DCALL cmd_runlate(bool last_invocation) {
+INTERN int DCALL cmd_runlate(void) {
 	struct late_cmd_option *iter, *end;
 	int result = 0;
 	end = (iter = late_options.lco_optv) + late_options.lco_optc;
@@ -52,12 +52,9 @@ INTERN int DCALL cmd_runlate(bool last_invocation) {
 		if unlikely(result != 0)
 			break;
 	}
-	if (last_invocation) {
-		/* Always free the runlate buffer. */
-		Dee_Free(late_options.lco_optv);
-	}
 	return result;
 }
+
 
 PRIVATE int DCALL
 cmd_addlater(int (DCALL *func)(char *arg), char *arg) {
@@ -69,9 +66,9 @@ cmd_addlater(int (DCALL *func)(char *arg), char *arg) {
 		if (!new_alloc)
 			new_alloc = 2;
 do_realloc:
-		entry = (struct late_cmd_option *)Dee_TryRealloc(late_options.lco_optv,
-		                                                 new_alloc *
-		                                                 sizeof(struct late_cmd_option));
+		entry = (struct late_cmd_option *)Dee_UntrackAlloc(Dee_TryRealloc(late_options.lco_optv,
+		                                                                  new_alloc *
+		                                                                  sizeof(struct late_cmd_option)));
 		if unlikely(!entry) {
 			if (new_alloc != late_options.lco_optc + 1) {
 				new_alloc = late_options.lco_optc + 1;

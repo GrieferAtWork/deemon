@@ -1067,7 +1067,7 @@ PRIVATE int DCALL compiler_setup(void *arg) {
 	/* - Add pre-defined macros passed through `-D' */
 	/* - Add pre-defined assertions passed through `-A' */
 	/* - Set misc. lexer context/flags based on the commandline. */
-	return cmd_runlate(arg == NULL);
+	return cmd_runlate();
 err:
 	return -1;
 }
@@ -2614,17 +2614,10 @@ operation_mode_format(int argc, char **argv) {
 	 * tinker with the compiler while the main thread is trying to
 	 * format the original source file. */
 	recursive_rwlock_write(&DeeCompiler_Lock);
-	/* Keep `co_setup_arg' non-NULL until the last file.
-	 * This is required to keep `cmd_runlate()' from freeing
-	 * up `late_options.lco_optv' when it would still be used
-	 * afterwards. */
-	script_options.co_setup_arg = (void *)(uintptr_t)1;
 	/* Go over all input files and format them individually. */
 	for (i = 0; i < argc; ++i) {
 		char *filename;
 		filename = argv[i];
-		if (i == argc - 1)
-			script_options.co_setup_arg = NULL;
 		if (argc > 1) {
 			DREF DeeObject *fp;
 			dssize_t temp;

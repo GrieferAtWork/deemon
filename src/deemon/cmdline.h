@@ -117,7 +117,7 @@ cmd_parse(int    *__restrict pargc,
           bool exec_all);
 
 /* Execute all encountered commands with the `CMD_FRUNLATER' flag set. */
-INTDEF int DCALL cmd_runlate(bool last_invocation);
+INTDEF int DCALL cmd_runlate(void);
 
 
 DECL_END
