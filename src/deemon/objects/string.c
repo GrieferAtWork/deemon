@@ -823,8 +823,8 @@ string_lo(String *self, DeeObject *some_object) {
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
 			return NULL;
+		result = compare_strings(self, (String *)some_object);
 	}
-	result = compare_strings(self, (String *)some_object);
 	return_bool_(result < 0);
 }
 
@@ -836,8 +836,8 @@ string_le(String *self, DeeObject *some_object) {
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
 			return NULL;
+		result = compare_strings(self, (String *)some_object);
 	}
-	result = compare_strings(self, (String *)some_object);
 	return_bool_(result <= 0);
 }
 
@@ -849,8 +849,8 @@ string_gr(String *self, DeeObject *some_object) {
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
 			return NULL;
+		result = compare_strings(self, (String *)some_object);
 	}
-	result = compare_strings(self, (String *)some_object);
 	return_bool_(result > 0);
 }
 
@@ -862,8 +862,8 @@ string_ge(String *self, DeeObject *some_object) {
 	else {
 		if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
 			return NULL;
+		result = compare_strings(self, (String *)some_object);
 	}
-	result = compare_strings(self, (String *)some_object);
 	return_bool_(result >= 0);
 }
 
