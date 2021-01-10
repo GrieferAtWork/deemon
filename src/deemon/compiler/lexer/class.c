@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -967,14 +967,11 @@ parse_constructor_initializers(struct class_maker *__restrict self) {
 				if unlikely(yield() < 0)
 					goto err_flags;
 				has_paren = false;
-				{
-					int temp;
-					temp = maybe_expression_begin();
-					if (temp <= 0) {
-						if unlikely(temp < 0)
-							goto err_flags;
-						goto done_superargs;
-					}
+				temp = maybe_expression_begin();
+				if (temp <= 0) {
+					if unlikely(temp < 0)
+						goto err_flags;
+					goto done_superargs;
 				}
 			} else {
 				if (skip('(', W_EXPECTED_LPAREN_AFTER_SUPER_INIT))
@@ -1601,7 +1598,6 @@ set_visibility:
 
 		case KWD_operator: {
 			uint16_t operator_name;
-			struct opinfo *info;
 			bool need_semi;
 			int error;
 			struct TPPKeyword *operator_name_kwd;
@@ -1645,7 +1641,7 @@ define_operator:
 			}
 			if (operator_name == AST_OPERATOR_FOR) {
 				/* Special case: `operator for()' is a wrapper around `operator iter()' */
-				DREF struct ast *yield_function, *temp, **argv;
+				DREF struct ast *yield_function, *tempast, **argv;
 				/* Not actually an operator (shares a slot with `OPERATOR_ITERSELF')
 				 * This operator can be used by `DeeClass_SetOperator()' to wrap the
 				 * given callback using an internal wrapper type that behaves as follows:
@@ -1693,8 +1689,8 @@ err_operator_ast_ddi:
 					operator_ast = NULL;
 					goto got_operator_ast;
 				}
-				temp = ast_setddi(ast_sym(maker.cm_thissym), &loc);
-				if unlikely(!temp) {
+				tempast = ast_setddi(ast_sym(maker.cm_thissym), &loc);
+				if unlikely(!tempast) {
 err_yield_function:
 					ast_decref(yield_function);
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
@@ -1705,38 +1701,38 @@ err_yield_function:
 				argv = (DREF struct ast **)Dee_Malloc(1 * sizeof(DREF struct ast *));
 				if unlikely(!argv) {
 err_yield_function_temp:
-					ast_decref(temp);
+					ast_decref(tempast);
 					goto err_yield_function;
 				}
-				argv[0]      = temp; /* Inherit reference */
+				argv[0]      = tempast; /* Inherit reference */
 				operator_ast = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, argv), &loc);
 				if unlikely(!operator_ast) {
 					Dee_Free(argv);
 					goto err_yield_function_temp;
 				}
-				temp = ast_setddi(ast_operator2(OPERATOR_CALL,
-				                                AST_OPERATOR_FNORMAL,
-				                                yield_function,
-				                                operator_ast),
-				                  &loc);
+				tempast = ast_setddi(ast_operator2(OPERATOR_CALL,
+				                                   AST_OPERATOR_FNORMAL,
+				                                   yield_function,
+				                                   operator_ast),
+				                     &loc);
 				ast_decref(operator_ast);
 				ast_decref(yield_function);
-				if unlikely(!temp)
+				if unlikely(!tempast)
 					goto err_operator_ast_ddi;
 				operator_ast = ast_setddi(ast_operator1(OPERATOR_ITERSELF,
 				                                        AST_OPERATOR_FNORMAL,
-				                                        temp),
+				                                        tempast),
 				                          &loc);
-				ast_decref(temp);
+				ast_decref(tempast);
 				if unlikely(!operator_ast)
 					goto err_operator_ast_ddi;
-				temp = ast_setddi(ast_return(operator_ast), &loc);
+				tempast = ast_setddi(ast_return(operator_ast), &loc);
 				ast_decref(operator_ast);
-				if unlikely(!temp)
+				if unlikely(!tempast)
 					goto err_operator_ast_ddi;
 				/* And finally: the surrounding function. */
-				operator_ast = ast_setddi(ast_function(temp, current_basescope), &loc);
-				ast_decref(temp);
+				operator_ast = ast_setddi(ast_function(tempast, current_basescope), &loc);
+				ast_decref(tempast);
 				if unlikely(!operator_ast)
 					goto err_operator_ast_ddi;
 				ASSERT(operator_ast->a_scope == current_scope);
@@ -1744,17 +1740,18 @@ err_yield_function_temp:
 				Dee_Decref(operator_ast->a_scope);
 				operator_ast->a_scope = current_scope->s_prev;
 			} else {
+				struct opinfo *info;
 				operator_name_kwd = NULL;
 				if ((info = Dee_OperatorInfo(NULL, operator_name)) != NULL) {
-					char name[4 + COMPILER_LENOF(info->oi_sname)];
-					size_t namelen = strlen(info->oi_sname);
-					memcpyc(name + 2, info->oi_sname, namelen, sizeof(char));
-					name[0]           = '_';
-					name[1]           = '_';
-					name[namelen + 2] = '_';
-					name[namelen + 3] = '_';
-					name[namelen + 4] = '\0';
-					operator_name_kwd = TPPLexer_LookupKeyword(name, namelen + 4, 1);
+					char opname[4 + COMPILER_LENOF(info->oi_sname)];
+					size_t opnamelen = strlen(info->oi_sname);
+					memcpyc(opname + 2, info->oi_sname, opnamelen, sizeof(char));
+					opname[0]           = '_';
+					opname[1]           = '_';
+					opname[opnamelen + 2] = '_';
+					opname[opnamelen + 3] = '_';
+					opname[opnamelen + 4] = '\0';
+					operator_name_kwd = TPPLexer_LookupKeyword(opname, opnamelen + 4, 1);
 					if unlikely(!operator_name_kwd)
 						goto err_anno;
 				}

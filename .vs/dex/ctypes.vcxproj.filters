@@ -46,6 +46,7 @@
       <Filter>ffi</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\dex\ctypes\c_api.h" />
+    <ClInclude Include="..\..\src\dex\ctypes\_res.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\dex\ctypes\define-float.c.inl" />

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -491,7 +491,6 @@ PUBLIC WUNUSED uint64_t (DCALL DeeThread_GetTimeMicroSeconds)(void) {
 #endif
 	DBG_ALIGNMENT_DISABLE();
 	if unlikely(!QueryPerformanceCounter((LARGE_INTEGER *)&result)) {
-		uint64_t result;
 do_tickcount:
 		if (!lp_GetTickCount64) {
 			*(void **)&lp_GetTickCount64 = GetProcAddress(GetModuleHandleW(kernel32), "GetTickCount64");
@@ -2372,7 +2371,7 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->t_threadargs);
 	Dee_XVisit(self->t_threadres);
 	if (self->t_state & THREAD_STATE_TERMINATED) {
-		struct except_frame *iter;
+		struct except_frame *except_iter;
 		/* Once terminated, the thread object inherits
 		 * ownership of exceptions and TLS data.
 		 * Without this addition, we'd get an unresolvable reference loop
@@ -2396,11 +2395,11 @@ thread_visit(DeeThreadObject *__restrict self, dvisit_t proc, void *arg) {
 		 * be illegal for the GC to cleanup exceptions that haven't
 		 * even been handled, yet, but it wouldn't make sense either)
 		 */
-		for (iter = self->t_except; iter;
-		     iter = iter->ef_prev) {
-			Dee_Visit(iter->ef_error);
-			if (ITER_ISOK(iter->ef_trace))
-				Dee_Visit(iter->ef_trace);
+		for (except_iter = self->t_except; except_iter;
+		     except_iter = except_iter->ef_prev) {
+			Dee_Visit(except_iter->ef_error);
+			if (ITER_ISOK(except_iter->ef_trace))
+				Dee_Visit(except_iter->ef_trace);
 		}
 		/* Same deal with TLS data as with exceptions: Only
 		 * visit them if the thread has already terminated. */

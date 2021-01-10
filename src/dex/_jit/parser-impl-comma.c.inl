@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -227,16 +227,16 @@ err_var_symbol:
 			/* Lambda function. */
 			unsigned char *source_start;
 			unsigned char *source_end;
-			unsigned int recursion = 1;
+			unsigned int brace_recursion = 1;
 			JITLexer_Yield(self);
 			source_end = source_start = self->jl_tokstart;
 			/* Scan the body of the function. */
 			while (self->jl_tok) {
 				if (self->jl_tok == '{') {
-					++recursion;
+					++brace_recursion;
 				} else if (self->jl_tok == '}') {
-					--recursion;
-					if (!recursion) {
+					--brace_recursion;
+					if (!brace_recursion) {
 						JITLexer_Yield(self);
 						break;
 					}

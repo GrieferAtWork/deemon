@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -758,11 +758,12 @@ err_r:
 INTERN NONNULL((1)) bool DCALL
 stype_array_rehash(DeeSTypeObject *__restrict self,
                    size_t new_mask) {
-	DeeArrayTypeObject **new_map, **dst;
-	DeeArrayTypeObject **biter, **bend, *iter, *next;
+	struct array_type_list *new_map, *dst;
+	struct array_type_list *biter, *bend;
+	DeeArrayTypeObject *iter, *next;
 again:
-	new_map = (DeeArrayTypeObject **)Dee_TryCalloc((new_mask + 1) *
-	                                               sizeof(DeeArrayTypeObject *));
+	new_map = (struct array_type_list *)Dee_TryCalloc((new_mask + 1) *
+	                                                  sizeof(struct array_type_list));
 	if unlikely(!new_map) {
 		/* Try again with a 1-element mask. */
 		if (!self->st_array.sa_list && new_mask != 0) {
@@ -776,12 +777,12 @@ again:
 		ASSERT(self->st_array.sa_list);
 		bend = (biter = self->st_array.sa_list) + (self->st_array.sa_mask + 1);
 		for (; biter != bend; ++biter) {
-			iter = *biter;
+			iter = LIST_FIRST(biter);
 			while (iter) {
-				next = LLIST_NEXT(iter, at_chain);
+				next = LIST_NEXT(iter, at_chain);
 				dst  = &new_map[iter->at_count & new_mask];
 				/* Insert the entry into the new hash-map. */
-				LLIST_INSERT(*dst, iter, at_chain);
+				LIST_INSERT_HEAD(dst, iter, at_chain);
 				iter = next;
 			}
 		}
@@ -798,15 +799,16 @@ again:
 INTDEF WUNUSED NONNULL((1)) DREF DeeArrayTypeObject *DCALL
 DeeSType_Array(DeeSTypeObject *__restrict self,
                size_t num_items) {
-	DREF DeeArrayTypeObject *result, *new_result, **pbucket;
+	DREF DeeArrayTypeObject *result, *new_result;
+	DREF struct array_type_list *pbucket;
 	ASSERT_OBJECT_TYPE((DeeObject *)self, &DeeSType_Type);
 	rwlock_read(&self->st_cachelock);
 	ASSERT(!self->st_array.sa_size ||
 	       self->st_array.sa_mask);
 	if (self->st_array.sa_size) {
-		result = self->st_array.sa_list[num_items & self->st_array.sa_mask];
+		result = LIST_FIRST(&self->st_array.sa_list[num_items & self->st_array.sa_mask]);
 		while (result && result->at_count != num_items)
-			result = LLIST_NEXT(result, at_chain);
+			result = LIST_NEXT(result, at_chain);
 		/* Check if we can re-use an existing type. */
 		if (result && Dee_IncrefIfNotZero((DeeObject *)result)) {
 			rwlock_endread(&self->st_cachelock);
@@ -824,9 +826,9 @@ register_type:
 	ASSERT(!self->st_array.sa_size ||
 	       self->st_array.sa_mask);
 	if (self->st_array.sa_size) {
-		new_result = self->st_array.sa_list[num_items & self->st_array.sa_mask];
+		new_result = LIST_FIRST(&self->st_array.sa_list[num_items & self->st_array.sa_mask]);
 		while (new_result && new_result->at_count != num_items)
-			new_result = LLIST_NEXT(new_result, at_chain);
+			new_result = LIST_NEXT(new_result, at_chain);
 		/* Check if we can re-use an existing type. */
 		if (new_result && Dee_IncrefIfNotZero((DeeObject *)new_result)) {
 			rwlock_endread(&self->st_cachelock);
@@ -850,7 +852,7 @@ register_type:
 	}
 	/* Insert the new array type into the hash-map. */
 	pbucket = &self->st_array.sa_list[num_items & self->st_array.sa_mask];
-	LLIST_INSERT(*pbucket, result, at_chain); /* Weak reference. */
+	LIST_INSERT_HEAD(pbucket, result, at_chain); /* Weak reference. */
 	rwlock_endwrite(&self->st_cachelock);
 done:
 	return result;

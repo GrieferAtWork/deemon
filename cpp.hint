@@ -113,8 +113,8 @@
 #define DEFINE_PUBLIC_WEAK_ALIAS(new,old) int new() {}
 #define DEFINE_INTERN_WEAK_ALIAS(new,old) int new() {}
 
-#define LLIST(T)                  T *
-#define LLIST_NODE(T)             struct { T *ln_next, **ln_pself;  }
+#define LIST_HEAD(T)                  T *
+#define LIST_ENTRY(T)             struct { T *ln_next, **ln_pself;  }
 #define DLIST(T)                  struct { T *dl_head, *dl_tail; }
 #define DLIST_NODE(T)             struct { T **dn_pnext, **dn_pprev, *dn_next, *dn_prev; }
 #define SLIST(T)                  T *

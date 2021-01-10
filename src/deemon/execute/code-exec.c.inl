@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -4096,25 +4096,25 @@ do_setattr_this_c:
 				TARGET(ASM_ENDCATCH_N, -0, +0) {
 					uint8_t nth_except = READ_imm8();
 					if (this_thread->t_exceptsz > except_recursion + nth_except + 1) {
-						struct except_frame **pframe, *frame;
+						struct except_frame **pexcept_frame, *except_frame;
 						/* We're allowed to handle the `nth_except' exception. */
-						pframe = &this_thread->t_except;
+						pexcept_frame = &this_thread->t_except;
 						do {
-							frame = *pframe;
-							ASSERT(frame);
-							pframe = &frame->ef_prev;
+							except_frame = *pexcept_frame;
+							ASSERT(except_frame);
+							pexcept_frame = &except_frame->ef_prev;
 						} while (nth_except--);
-						/* Load the frame that we're supposed to get rid of. */
-						frame = *pframe;
-						ASSERT(frame);
+						/* Load the except_frame that we're supposed to get rid of. */
+						except_frame = *pexcept_frame;
+						ASSERT(except_frame);
 						/* Remove the exception frame from its chain. */
-						*pframe = frame->ef_prev;
+						*pexcept_frame = except_frame->ef_prev;
 						--this_thread->t_exceptsz;
-						/* Destroy the frame in question. */
-						if (ITER_ISOK(frame->ef_trace))
-							Dee_Decref(frame->ef_trace);
-						Dee_Decref(frame->ef_error);
-						except_frame_free(frame);
+						/* Destroy the except_frame in question. */
+						if (ITER_ISOK(except_frame->ef_trace))
+							Dee_Decref(except_frame->ef_trace);
+						Dee_Decref(except_frame->ef_error);
+						except_frame_free(except_frame);
 					}
 					DISPATCH();
 				}
@@ -5482,7 +5482,7 @@ do_prefix_instr:
 
 				PREFIX_TARGET(ASM_JF) {
 					/* Conditionally jump if true. */
-					DREF DeeObject *prefix_ob;
+					USING_PREFIX_OBJECT
 					int temp;
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
 prefix_jf_16:
@@ -5517,7 +5517,7 @@ prefix_jf_16:
 
 				PREFIX_TARGET(ASM_JT) {
 					/* Conditionally jump if true. */
-					DREF DeeObject *prefix_ob;
+					USING_PREFIX_OBJECT
 					int temp;
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
 prefix_jt_16:
@@ -5551,7 +5551,8 @@ prefix_jt_16:
 				}
 
 				PREFIX_TARGET(ASM_FOREACH) {
-					DREF DeeObject *elem, *prefix_ob;
+					DREF DeeObject *elem;
+					USING_PREFIX_OBJECT
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
 prefix_foreach_16:
 					ASSERT_USAGE(-0, +1);

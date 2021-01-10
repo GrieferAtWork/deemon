@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -575,7 +575,6 @@ err:
 
 PUBLIC uint16_t *DCALL
 DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode) {
-	uint16_t *result;
 	struct string_utf *utf;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeString_Type);
 	utf = ((String *)self)->s_data;
@@ -583,6 +582,7 @@ DeeString_AsUtf16(DeeObject *__restrict self, unsigned int error_mode) {
 		if (utf->u_utf16)
 			return (uint16_t *)utf->u_utf16;
 		if (utf->u_width == STRING_WIDTH_1BYTE) {
+			uint16_t *result;
 			/* A single-byte string has no characters within the surrogate-range,
 			 * meaning we can simply request the string's 2-byte variant, and we'll
 			 * automatically be given a valid utf-16 string! */
@@ -1699,7 +1699,7 @@ read_text_i:
 	bzero(utf, sizeof(struct string_utf));
 	*(uint16_t **)&utf->u_utf16 = (uint16_t *)text; /* Inherit data */
 	if (utf8_length == length) {
-		size_t i;
+		size_t j;
 		/* Pure UTF-16 in ASCII range. */
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
 		utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
@@ -1708,8 +1708,8 @@ read_text_i:
 		ASSERT(character_count == utf8_length);
 		ASSERT(character_count == length);
 		ASSERT(character_count == WSTR_LENGTH(text));
-		for (i = 0; i < length; ++i)
-			result->s_str[i] = (char)(uint8_t)text[i];
+		for (j = 0; j < length; ++j)
+			result->s_str[j] = (char)(uint8_t)text[j];
 	} else {
 		switch (kind) {
 
@@ -1856,7 +1856,7 @@ continue_at_i:
 	bzero(utf, sizeof(struct string_utf));
 	*(uint16_t **)&utf->u_utf16 = (uint16_t *)text; /* Inherit data */
 	if (utf8_length == length) {
-		size_t i;
+		size_t j;
 		/* Pure UTF-16 in ASCII range. */
 		utf->u_data[STRING_WIDTH_1BYTE] = (size_t *)result->s_str;
 		utf->u_data[STRING_WIDTH_2BYTE] = (size_t *)text;
@@ -1865,8 +1865,8 @@ continue_at_i:
 		ASSERT(character_count == utf8_length);
 		ASSERT(character_count == length);
 		ASSERT(character_count == WSTR_LENGTH(text));
-		for (i = 0; i < length; ++i)
-			result->s_str[i] = (char)(uint8_t)text[i];
+		for (j = 0; j < length; ++j)
+			result->s_str[j] = (char)(uint8_t)text[j];
 	} else {
 		switch (kind) {
 

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -154,15 +154,18 @@ allowed:
  * operations on/with a constant instance `self'.
  * @return: * : One of `CONSTEXPR_*' */
 INTERN WUNUSED NONNULL((1)) int DCALL allow_constexpr(DeeObject *__restrict self) {
-	size_t i;
 	DeeTypeObject *type;
 again0:
 	type = Dee_TYPE(self);
 	/* Whitelist! */
 	/* Allow some basic types. */
-	for (i = 0; i < COMPILER_LENOF(constant_types); ++i)
-		if (type == constant_types[i])
-			goto allowed;
+	{
+		size_t i;
+		for (i = 0; i < COMPILER_LENOF(constant_types); ++i) {
+			if (type == constant_types[i])
+				goto allowed;
+		}
+	}
 	/* Check for special wrapper objects. */
 	if (type == &DeeObjMethod_Type) {
 		/* ObjMethod objects cannot be encoded in in DEC files. */
@@ -246,6 +249,7 @@ again0:
 		if (constexpr_onstack(self))
 			goto usecopy;
 		CONSTEXPR_FRAME_BEGIN(self) {
+			size_t i;
 			DeeList_LockRead(self);
 			for (i = 0; i < DeeList_SIZE(self); ++i) {
 				int temp = allow_constexpr(DeeList_GET(self, i));
@@ -265,6 +269,7 @@ again0:
 		if (constexpr_onstack(self))
 			goto usecopy;
 		CONSTEXPR_FRAME_BEGIN(self) {
+			size_t i;
 			DeeHashSetObject *me = (DeeHashSetObject *)self;
 			DeeHashSet_LockRead(self);
 			for (i = 0; i <= me->s_mask; ++i) {
@@ -289,6 +294,7 @@ again0:
 		if (constexpr_onstack(self))
 			goto usecopy;
 		CONSTEXPR_FRAME_BEGIN(self) {
+			size_t i;
 			DeeDictObject *me = (DeeDictObject *)self;
 			DeeDict_LockRead(self);
 			for (i = 0; i <= me->d_mask; ++i) {

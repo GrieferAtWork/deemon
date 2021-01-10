@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -180,11 +180,12 @@ do_integer_scan:
 				is_bytes = DeeBytes_Check(self->si_scanner->ss_data);
 
 			if (radix == 0 && data < data_end && width) {
-				uint32_t ch32;
+				uint32_t radix_ch32;
 				char *prev_data;
-				prev_data = data;
-				ch32      = is_bytes ? (uint32_t)(uint8_t)*data++ : utf8_readchar((char const **)&data, data_end);
-				if (DeeUni_IsDecimalX(ch32, 0)) {
+				prev_data  = data;
+				radix_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
+				                      : utf8_readchar((char const **)&data, data_end);
+				if (DeeUni_IsDecimalX(radix_ch32, 0)) {
 					--width;
 					if (width && (*data == 'x' || *data == 'X')) {
 						scan_radix = 16;
@@ -203,7 +204,7 @@ do_integer_scan:
 				}
 			}
 			while (data < data_end && width) {
-				uint32_t ch32;
+				uint32_t data_ch32;
 				char *prev_data;
 				struct unitraits *traits;
 				if (scan_radix > 10) {
@@ -216,8 +217,9 @@ do_integer_scan:
 					}
 				}
 				prev_data = data;
-				ch32      = is_bytes ? (uint32_t)(uint8_t)*data++ : utf8_readchar((char const **)&data, data_end);
-				traits    = DeeUni_Descriptor(ch32);
+				data_ch32 = is_bytes ? (uint32_t)(uint8_t)*data++
+				                     : utf8_readchar((char const **)&data, data_end);
+				traits = DeeUni_Descriptor(data_ch32);
 				if (!(traits->ut_flags & UNICODE_FDECIMAL) ||
 				    traits->ut_digit >= scan_radix) {
 					data = prev_data;

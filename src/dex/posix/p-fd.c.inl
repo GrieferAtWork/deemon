@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -603,7 +603,7 @@ EINTR_LABEL(again)
 	error = close(fd);
 	DBG_ALIGNMENT_ENABLE();
 	if (error < 0) {
-		int error = DeeSystem_GetErrno();
+		error = DeeSystem_GetErrno();
 		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOSYS(error, err, "close")
 		HANDLE_EBADF(error, err, "Invalid handle %d", fd)

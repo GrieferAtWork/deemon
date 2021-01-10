@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -52,7 +52,11 @@ __NAMESPACE_INT_END
 #endif /* __assertion_failedf */
 #endif /* !NDEBUG */
 #ifndef __hybrid_assertf
+#ifdef __PREPROCESSOR_HAVE_VA_ARGS
 #define __hybrid_assertf(expr, ...) __hybrid_assert(expr)
+#elif defined(__PREPROCESSOR_HAVE_NAMED_VA_ARGS)
+#define __hybrid_assertf(expr, format...) __hybrid_assert(expr)
+#endif /* ... */
 #endif /* !__hybrid_assertf */
 #endif /* !__hybrid_assert */
 
@@ -60,7 +64,11 @@ __NAMESPACE_INT_END
 #define __hybrid_assertion_failed(message) __hybrid_assert(!message)
 #endif /* !__hybrid_assertion_failed */
 #ifndef __hybrid_assertion_failedf
+#ifdef __PREPROCESSOR_HAVE_VA_ARGS
 #define __hybrid_assertion_failedf(message, ...) __hybrid_assertf(!message, __VA_ARGS__)
+#elif defined(__PREPROCESSOR_HAVE_NAMED_VA_ARGS)
+#define __hybrid_assertion_failedf(message, format...) __hybrid_assertf(!message, format)
+#endif /* ... */
 #endif /* !__hybrid_assertion_failedf */
 
 

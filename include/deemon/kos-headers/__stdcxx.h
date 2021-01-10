@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -102,7 +102,7 @@
 #if (__has_feature(defaulted_functions) ||                     \
      (defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 180020827) || \
      (__GCC_VERSION_NUM >= 40400 && (defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L)))
-#define __COMPILER_HAVE_CXX_DEFAULT_FUNCTIONS 1
+#define __COMPILER_HAVE_CXX_DEFAULT_FUNCTIONS
 #define __CXX_DEFAULT_CTOR(T)                    T() = default
 #define __CXX_DEFAULT_DTOR(T)                    ~T() = default
 #define __CXX_DEFAULT_COPY(T, other, ...)        T(T const &) = default

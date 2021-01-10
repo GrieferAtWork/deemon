@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -614,26 +614,25 @@ jf_call_kw(JITFunction *self, size_t argc,
 	JITContext context;
 	JITObjectTable base_locals;
 	DeeThreadObject *ts;
-	size_t i;
-	if ((self->jf_flags & (JIT_FUNCTION_FYIELDING | JIT_FUNCTION_FRETEXPR)) ==
-	    JIT_FUNCTION_FYIELDING) {
-		DREF JITYieldFunctionObject *result;
+	if ((self->jf_flags & (JIT_FUNCTION_FYIELDING | JIT_FUNCTION_FRETEXPR)) == JIT_FUNCTION_FYIELDING) {
+		size_t i;
+		DREF JITYieldFunctionObject *yfo;
 		/* Yield function support */
-		result = (DREF JITYieldFunctionObject *)DeeObject_Malloc(offsetof(JITYieldFunctionObject, jy_argv) +
-		                                                         (argc * sizeof(DREF DeeObject *)));
-		if unlikely(!result)
+		yfo = (DREF JITYieldFunctionObject *)DeeObject_Malloc(offsetof(JITYieldFunctionObject, jy_argv) +
+		                                                      (argc * sizeof(DREF DeeObject *)));
+		if unlikely(!yfo)
 			goto err;
-		result->jy_func = self;
-		result->jy_kw   = kw;
-		result->jy_argc = argc;
+		yfo->jy_func = self;
+		yfo->jy_kw   = kw;
+		yfo->jy_argc = argc;
 		Dee_Incref(self);
 		Dee_XIncref(kw);
 		for (i = 0; i < argc; ++i) {
-			result->jy_argv[i] = argv[i];
+			yfo->jy_argv[i] = argv[i];
 			Dee_Incref(argv[i]);
 		}
-		DeeObject_Init(result, &JITYieldFunction_Type);
-		return (DREF DeeObject *)result;
+		DeeObject_Init(yfo, &JITYieldFunction_Type);
+		return (DREF DeeObject *)yfo;
 	}
 	ts = DeeThread_Self();
 	if (DeeThread_CheckInterrupt())
@@ -660,6 +659,7 @@ jf_call_kw(JITFunction *self, size_t argc,
 	}
 
 	if (kw) {
+		size_t i;
 		/* TODO: Load arguments! */
 		(void)argc;
 		(void)argv;

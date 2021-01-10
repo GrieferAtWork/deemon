@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -231,16 +231,16 @@ again:
 		/* Existing entry! */
 		if (override_existing) {
 #if 1
-			DREF DeeObject *value;
-			value = entry->oe_value;
+			DREF DeeObject *oldval;
+			oldval = entry->oe_value;
 			Dee_XIncref(value);
 			entry->oe_value = value;
 			COMPILER_BARRIER();
-			Dee_XDecref(value);
+			Dee_XDecref(oldval);
 #else
-			DREF DeeObject *name, *value;
-			name  = entry->oe_nameobj;
-			value = entry->oe_value;
+			DREF DeeObject *name, *oldval;
+			name   = entry->oe_nameobj;
+			oldval = entry->oe_value;
 			Dee_Incref(nameobj);
 			Dee_XIncref(value);
 			entry->oe_nameobj = nameobj;
@@ -249,7 +249,7 @@ again:
 			COMPILER_BARRIER();
 			/* Cleanup the old values. */
 			Dee_Decref_unlikely(name);
-			Dee_XDecref(value);
+			Dee_XDecref(oldval);
 #endif
 		}
 		return 1;

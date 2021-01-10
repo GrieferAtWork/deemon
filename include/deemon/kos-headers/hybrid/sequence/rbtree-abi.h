@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -114,14 +114,14 @@ __DECL_BEGIN
 
 /* Locate the node for the given key.
  * @return: RBTREE_NULL: No node exists for the given key. */
-RBTREE_DECL __ATTR_WUNUSED RBTREE_T *
+RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(locate))(/*nullable*/ RBTREE_T *root,
                                          RBTREE_Tkey key);
 
 #if !defined(RBTREE_MINKEY_EQ_MAXKEY) && defined(RBTREE_WANT_RLOCATE)
 /* Locate the first node overlapping with the given range.
  * @return: RBTREE_NULL: No node exists within the given range. */
-RBTREE_DECL __ATTR_WUNUSED RBTREE_T *
+RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(rlocate))(/*nullable*/ RBTREE_T *root,
                                           RBTREE_Tkey minkey,
                                           RBTREE_Tkey maxkey);
@@ -163,13 +163,15 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict proot,
 
 #ifdef RBTREE_WANT_PREV_NEXT_NODE
 /* Return the next node with a key-range located below `node'
- * If no such node exists, return `RBTREE_NULL' instead. */
-RBTREE_DECL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+ * If no such node exists, return `RBTREE_NULL' instead.
+ * NOTE: This function takes O(log(N)) to execute. */
+RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T const *__restrict node);
 
 /* Return the next node with a key-range located above `node'
- * If no such node exists, return `RBTREE_NULL' instead. */
-RBTREE_DECL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+ * If no such node exists, return `RBTREE_NULL' instead.
+ * NOTE: This function takes O(log(N)) to execute. */
+RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T const *__restrict node);
 #endif /* RBTREE_WANT_PREV_NEXT_NODE */
 
@@ -430,7 +432,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_intern_assert_tree))(RBTREE_T const *root) {
 
 #ifndef RBTREE_LEFT_LEANING
 #define _RBTREE_GETSIBLING(self) (RBTREE(_getsibling)(self))
-__LOCAL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+__LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(_getsibling))(RBTREE_T *__restrict self) {
 	RBTREE_T *parent = RBTREE_GETPAR(self);
 	RBTREE_T *sibling;
@@ -449,7 +451,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_getsibling))(RBTREE_T *__restrict self) {
 
 /* Locate the node for the given key.
  * @return: RBTREE_NULL: No node exists for the given key. */
-RBTREE_IMPL __ATTR_WUNUSED RBTREE_T *
+RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(locate))(/*nullable*/ RBTREE_T *root,
                                          RBTREE_Tkey key) {
 	_RBTREE_VALIDATE(root);
@@ -471,9 +473,9 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(locate))(/*nullable*/ RBTREE_T *root,
 /* Locate the first node overlapping with the given range.
  * @return: RBTREE_NULL: No node exists within the given range. */
 #ifdef RBTREE_WANT_RLOCATE
-RBTREE_IMPL __ATTR_WUNUSED RBTREE_T *
+RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
 #else /* RBTREE_WANT_RLOCATE */
-__PRIVATE __ATTR_WUNUSED RBTREE_T *
+__PRIVATE __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
 #endif /* !RBTREE_WANT_RLOCATE */
 RBTREE_NOTHROW(RBTREE_CC RBTREE(rlocate))(/*nullable*/ RBTREE_T *root,
                                           RBTREE_Tkey minkey,
@@ -1332,15 +1334,11 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(rremove))(RBTREE_T **__restrict proot,
 
 #ifdef RBTREE_WANT_PREV_NEXT_NODE
 /* Return the next node with a key-range located below `node'
- * If no such node exists, return `RBTREE_NULL' instead. */
-RBTREE_IMPL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+ * If no such node exists, return `RBTREE_NULL' instead.
+ * NOTE: This function takes O(log(N)) to execute. */
+RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T const *__restrict node) {
 	RBTREE_T *result;
-	/* NOTE: Because RBTREEs are self-balancing, we should be able to
-	 *       reach the neighboring node in at most 3 steps (when the
-	 *       given `node' is a red leaf-node, meaning we might have to
-	 *       walk up 2 parent, and down 1 child), making this function
-	 *       an O(1) operation. */
 	result = RBTREE_GETLHS(node);
 	if (result == RBTREE_NULL) {
 		/* Keep going up until we reach the ROOT (NULL),
@@ -1362,15 +1360,11 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T const *__restrict node) {
 }
 
 /* Return the next node with a key-range located above `node'
- * If no such node exists, return `RBTREE_NULL' instead. */
-RBTREE_IMPL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+ * If no such node exists, return `RBTREE_NULL' instead.
+ * NOTE: This function takes O(log(N)) to execute. */
+RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T const *__restrict node) {
 	RBTREE_T *result;
-	/* NOTE: Because RBTREEs are self-balancing, we should be able to
-	 *       reach the neighboring node in at most 3 steps (when the
-	 *       given `node' is a red leaf-node, meaning we might have to
-	 *       walk up 2 parent, and down 1 child), making this function
-	 *       an O(1) operation. */
 	result = RBTREE_GETRHS(node);
 	if (result == RBTREE_NULL) {
 		/* Keep going up until we reach the ROOT (NULL),
@@ -1496,6 +1490,8 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(minmaxlocate))(RBTREE_T *root,
 			}
 			break;
 		}
+		result->mm_min = min_node;
+		result->mm_max = max_node;
 		return;
 	}
 	/* There aren't any node that are in-bounds. */

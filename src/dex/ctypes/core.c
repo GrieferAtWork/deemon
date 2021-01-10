@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -1703,8 +1703,8 @@ atype_fini(DeeArrayTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->at_orig;
 	/* Delete the weak-link to the original type. */
 	rwlock_write(&orig->st_cachelock);
-	ASSERT(LLIST_ISBOUND(self, at_chain));
-	LLIST_REMOVE(self, at_chain);
+	ASSERT(LIST_ISBOUND(self, at_chain));
+	LIST_REMOVE(self, at_chain);
 	rwlock_endwrite(&orig->st_cachelock);
 	Dee_Decref((DeeObject *)orig);
 }
@@ -1759,7 +1759,7 @@ INTERN DeeTypeObject DeeArrayType_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */atype_members,
+	/* .tp_members       = */ atype_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -1782,8 +1782,8 @@ ftype_fini(DeeCFunctionTypeObject *__restrict self) {
 	DeeSTypeObject *orig = self->ft_orig;
 	/* Delete the weak-link to the original type. */
 	rwlock_write(&orig->st_cachelock);
-	ASSERT(LLIST_ISBOUND(self, ft_chain));
-	LLIST_REMOVE(self, ft_chain);
+	ASSERT(LIST_ISBOUND(self, ft_chain));
+	LIST_REMOVE(self, ft_chain);
 	rwlock_endwrite(&orig->st_cachelock);
 	Dee_Decref((DeeObject *)orig);
 	for (i = 0; i < self->ft_argc; ++i)

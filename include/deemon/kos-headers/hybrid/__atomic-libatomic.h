@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -461,10 +461,10 @@ template<class __T, class __TN> __ATTR_FORCEINLINE __ATTR_LEAF __ATTR_NONNULL((1
 	})
 #endif /* !__NO_XBLOCK */
 
-}
-#define __hybrid_atomic_load(x, order)     (__NAMESPACE_INT_SYM __hybrid_atomic_load)(&(x), order)
-#define __hybrid_atomic_store(x, v, order) (__NAMESPACE_INT_SYM __hybrid_atomic_store)(&(x), v, order)
-#define __hybrid_atomic_xch(x, v, order)   (__NAMESPACE_INT_SYM __hybrid_atomic_exchange)(&(x), v, order)
+} /* extern "C++" */
+#define __hybrid_atomic_load(x, order)         (__NAMESPACE_INT_SYM __hybrid_atomic_load)(&(x), order)
+#define __hybrid_atomic_store(x, v, order)     (__NAMESPACE_INT_SYM __hybrid_atomic_store)(&(x), v, order)
+#define __hybrid_atomic_xch(x, v, order)       (__NAMESPACE_INT_SYM __hybrid_atomic_exchange)(&(x), v, order)
 #define __hybrid_atomic_addfetch(x, v, order)  (__NAMESPACE_INT_SYM __hybrid_atomic_add_fetch)(&(x), v, order)
 #define __hybrid_atomic_subfetch(x, v, order)  (__NAMESPACE_INT_SYM __hybrid_atomic_sub_fetch)(&(x), v, order)
 #define __hybrid_atomic_andfetch(x, v, order)  (__NAMESPACE_INT_SYM __hybrid_atomic_and_fetch)(&(x), v, order)

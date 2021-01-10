@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -206,20 +206,22 @@ struct stype_attr {
 };
 
 
+LIST_HEAD(array_type_list, array_type_object);
 struct stype_array {
-	size_t               sa_size; /* Amount of cached array types. */
-	size_t               sa_mask; /* Allocated map mask. */
-	DeeArrayTypeObject **sa_list; /* [0..1][0..sa_mask+1][owned] Hash-map of array types.
-	                               * As hash for indexing this map, use `at_count'. */
+	size_t                  sa_size; /* Amount of cached array types. */
+	size_t                  sa_mask; /* Allocated map mask. */
+	struct array_type_list *sa_list; /* [0..1][0..sa_mask+1][owned] Hash-map of array types.
+	                                  * As hash for indexing this map, use `at_count'. */
 };
 #define STYPE_ARRAY_INIT { 0, 0, NULL }
 
 #ifndef CONFIG_NO_CFUNCTION
+LIST_HEAD(cfunction_type_list, cfunction_type_object);
 struct stype_cfunction {
-	size_t                   sf_size; /* Amount of cached function types. */
-	size_t                   sf_mask; /* Allocated map mask. */
-	DeeCFunctionTypeObject **sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
-	                                   * As hash for indexing this map, use `ft_hash'. */
+	size_t                      sf_size; /* Amount of cached function types. */
+	size_t                      sf_mask; /* Allocated map mask. */
+	struct cfunction_type_list *sf_list; /* [0..1][0..sf_mask+1][owned] Hash-map of array types.
+	                                      * As hash for indexing this map, use `ft_hash'. */
 };
 #define STYPE_CFUNCTION_INIT       {0,0,NULL}
 #endif /* !CONFIG_NO_CFUNCTION */
@@ -738,7 +740,7 @@ INTDEF DeeSTypeObject   DeeCULong_Type;
 struct array_type_object {
 	DeeSTypeObject                 at_base;  /* The underlying structured type descriptor. */
 	DREF DeeSTypeObject           *at_orig;  /* [1..1][const] The array's element type. */
-	LLIST_NODE(DeeArrayTypeObject) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
+	LIST_ENTRY(DeeArrayTypeObject) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
 	size_t                         at_count; /* The total number of items. */
 };
 
@@ -789,7 +791,7 @@ struct cfunction_type_object {
 	DeeSTypeObject                     ft_base;            /* The underlying structured type descriptor. */
 #ifndef CONFIG_NO_CFUNCTION
 	DREF DeeSTypeObject               *ft_orig;            /* [1..1][const] The function's return type. */
-	LLIST_NODE(DeeCFunctionTypeObject) ft_chain;           /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
+	LIST_ENTRY(DeeCFunctionTypeObject) ft_chain;           /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
 	dhash_t                            ft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
 	size_t                             ft_argc;            /* [const] Amount of function argument types. */
 	DREF DeeSTypeObject              **ft_argv;            /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */

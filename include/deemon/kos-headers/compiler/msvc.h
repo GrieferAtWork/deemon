@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -254,6 +254,8 @@
 #define __ATTR_TRANSPARENT_UNION /* Nothing */
 #define __NO_ATTR_ARTIFICIAL
 #define __ATTR_ARTIFICIAL /* nothing */
+#define __NO_ATTR_FORMAT_ARG
+#define __ATTR_FORMAT_ARG(x) /* nothing */
 
 #define __IF0    __pragma(warning(suppress: 4127)) if(0)
 #define __IF1    __pragma(warning(suppress: 4127)) if(1)
@@ -300,7 +302,9 @@ template<> struct __msvc_static_if<true> { bool __is_true__(); };
 #define __COMPILER_ALIGNOF_IS___ALIGNOF
 #define __COMPILER_ALIGNOF __alignof
 #define __builtin_offsetof(s, m) ((__SIZE_TYPE__) & ((s *)0)->m)
+#define __ATTR_INLINE_IS___INLINE
 #define __ATTR_INLINE      __inline
+#define __ATTR_FORCEINLINE_IS___FORCEINLINE
 #define __ATTR_FORCEINLINE __forceinline
 #define __LOCAL            static __inline
 #define __FORCELOCAL       static __forceinline

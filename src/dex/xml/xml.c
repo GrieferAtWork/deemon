@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -47,11 +47,11 @@ XMLNode_Destroy(XMLNode *__restrict self) {
 #ifndef NDEBUG
 	ASSERT(self->xn_sib_prev == NULL);
 	ASSERT(self->xn_sib_next == NULL);
-	ASSERT(!LLIST_ISBOUND(self, xn_changed));
+	ASSERT(!LIST_ISBOUND(self, xn_changed));
 #endif /* !NDEBUG */
-	iter = self->xn_changes;
+	iter = LIST_FIRST(&self->xn_changes);
 	while (iter) {
-		next = LLIST_NEXT(iter, xn_changed);
+		next = LIST_NEXT(iter, xn_changed);
 		XMLNode_Decref(iter);
 		iter = next;
 	}
@@ -225,8 +225,8 @@ find_block_start:
 	}
 	result->xn_refcnt = 1;
 	rwlock_init(&result->xn_lock);
-	result->xn_changes = NULL;
-	LLIST_UNBIND(result, xn_changed);
+	LIST_INIT(&result->xn_changes);
+	LIST_ENTRY_UNBOUND_INIT(result, xn_changed);
 	if ((result->xn_sib_prev = self) != NULL) {
 		self->xn_sib_next = result;
 	} else {
@@ -236,10 +236,10 @@ find_block_start:
 	result->xn_sib_next          = NULL;
 #define SKIP_SPACE()                                     \
 	while (iter < end) {                                 \
-		uint32_t ch;                                     \
+		uint32_t _ch;                                    \
 		temp = iter;                                     \
-		ch   = utf8_readchar((char const **)&temp, end); \
-		if (!DeeUni_IsSpace(ch))                         \
+		_ch  = utf8_readchar((char const **)&temp, end); \
+		if (!DeeUni_IsSpace(_ch))                        \
 			break;                                       \
 		iter = temp;                                     \
 	}

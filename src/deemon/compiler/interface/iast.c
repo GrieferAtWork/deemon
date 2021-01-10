@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -3021,13 +3021,14 @@ err:
 	return -1;
 }
 
-#define ENTER_SCOPE(caller_scope, child_scope, is_expression) \
-	do {                                                      \
-		bool is_scope = false;                                \
-		DO(print_enter_scope(caller_scope, child_scope,       \
-		                     printer, arg, is_expression,     \
+
+#define ENTER_SCOPE(is_scope, caller_scope, child_scope, is_expression) \
+	do {                                                                \
+		bool is_scope = false;                                          \
+		DO(print_enter_scope(caller_scope, child_scope,                 \
+		                     printer, arg, is_expression,               \
 		                     &indent, &is_scope))
-#define LEAVE_SCOPE(is_expression, need_semicolon)                                        \
+#define LEAVE_SCOPE(is_scope, is_expression, need_semicolon)                                  \
 		DO(print_leave_scope(printer, arg, is_expression, need_semicolon, indent, is_scope)); \
 	} __WHILE0
 
@@ -3114,15 +3115,15 @@ print_function_atargs(struct ast *__restrict self,
 		DO(print_code_tags(function_scope, printer, arg));
 	PRINT("(");
 	for (i = 0; i < function_scope->bs_argc; ++i) {
-		struct symbol *arg = function_scope->bs_argv[i];
+		struct symbol *argsym = function_scope->bs_argv[i];
 		if (i != 0)
 			PRINT(", ");
-		if (arg == function_scope->bs_varkwds)
+		if (argsym == function_scope->bs_varkwds)
 			PRINT("**");
-		print(arg->s_name->k_name, arg->s_name->k_size);
-		if (arg == function_scope->bs_varargs) {
+		print(argsym->s_name->k_name, argsym->s_name->k_size);
+		if (argsym == function_scope->bs_varargs) {
 			PRINT("...");
-		} else if (arg == function_scope->bs_varkwds) {
+		} else if (argsym == function_scope->bs_varkwds) {
 		} else if (i >= function_scope->bs_argc_min && i < function_scope->bs_argc_max) {
 			DeeObject *defl = function_scope->bs_default[i - function_scope->bs_argc_min];
 			if (defl)
@@ -3193,7 +3194,7 @@ print_ast_code(struct ast *__restrict self,
                dformatprinter printer, void *arg, bool is_expression,
                DeeScopeObject *caller_scope, size_t indent) {
 	bool need_semicolon = true;
-	ENTER_SCOPE(caller_scope, self->a_scope, is_expression);
+	ENTER_SCOPE(is_scope, caller_scope, self->a_scope, is_expression);
 	__IF0 {
 force_scope:
 		if (is_expression)
@@ -3366,11 +3367,11 @@ force_scope:
 				}
 			} else {
 				struct symbol *except_symbol = NULL;
-				size_t i;
+				size_t j;
 				DeeScopeObject *handler_scope = handler->ce_code->a_scope;
 				if (handler_scope->s_mapc) {
-					for (i = 0; i < handler_scope->s_mapa; ++i) {
-						except_symbol = handler_scope->s_map[i];
+					for (j = 0; j < handler_scope->s_mapa; ++j) {
+						except_symbol = handler_scope->s_map[j];
 						for (; except_symbol; except_symbol = except_symbol->s_next) {
 							if (except_symbol->s_type == SYMBOL_TYPE_EXCEPT)
 								goto got_except_symbol;
@@ -3411,7 +3412,7 @@ got_except_symbol:
 			PRINT("foreach (");
 			need_semicolon = false;
 			if (self->a_loop.l_elem) {
-				ENTER_SCOPE(self->a_scope, self->a_loop.l_elem->a_scope, false);
+				ENTER_SCOPE(inner_is_scope, self->a_scope, self->a_loop.l_elem->a_scope, false);
 				DO(print_ast_code(self->a_loop.l_elem, printer, arg, true, self->a_loop.l_elem->a_scope, indent));
 				PRINT(": ");
 				DO(print_ast_code(self->a_loop.l_iter, printer, arg, true, self->a_loop.l_elem->a_scope, indent));
@@ -3421,7 +3422,7 @@ got_except_symbol:
 				} else {
 					PRINT("none;");
 				}
-				LEAVE_SCOPE(false, false);
+				LEAVE_SCOPE(inner_is_scope, false, false);
 			} else {
 				PRINT("none: ");
 				DO(print_ast_code(self->a_loop.l_iter, printer, arg, true, self->a_scope, indent));
@@ -4248,7 +4249,7 @@ operator_fallback:
 				printf("member %k;\n", attr->ca_name);
 			} else if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 				struct class_member *functions[3];
-				size_t i;
+				size_t j;
 				/* Instance-property (with its callbacks saved as part of the class) */
 				functions[1] = functions[2] = NULL;
 				functions[0]                = find_class_member(self, attr->ca_addr + CLASS_GETSET_GET);
@@ -4258,17 +4259,17 @@ operator_fallback:
 				}
 				printf("property %k = {\n", attr->ca_name);
 				++indent;
-				for (i = 0; i < 3; ++i) {
-					if (!functions[i])
+				for (j = 0; j < 3; ++j) {
+					if (!functions[j])
 						continue;
 					DO(DeeFormat_Repeat(printer, arg, '\t', indent));
-					print(property_names[i], 3);
-					if (functions[i]->cm_ast->a_type == AST_FUNCTION &&
-					    is_instance_method(functions[i]->cm_ast->a_function.f_scope)) {
-						DO(print_function_atargs(functions[i]->cm_ast, printer, arg, indent, false));
+					print(property_names[j], 3);
+					if (functions[j]->cm_ast->a_type == AST_FUNCTION &&
+					    is_instance_method(functions[j]->cm_ast->a_function.f_scope)) {
+						DO(print_function_atargs(functions[j]->cm_ast, printer, arg, indent, false));
 					} else {
 						PRINT(" = ");
-						DO(print_ast_code(functions[i]->cm_ast, printer, arg, true, self->a_scope, indent));
+						DO(print_ast_code(functions[j]->cm_ast, printer, arg, true, self->a_scope, indent));
 						PRINT(";");
 					}
 					PRINT("\n");
@@ -4323,7 +4324,7 @@ instance_member_in_class:
 				PRINT("private ");
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
 				struct class_member *functions[3];
-				size_t i;
+				size_t j;
 				/* Instance-property (with its callbacks saved as part of the class) */
 				functions[1] = functions[2] = NULL;
 				functions[0]                = find_class_member(self, attr->ca_addr + CLASS_GETSET_GET);
@@ -4333,16 +4334,16 @@ instance_member_in_class:
 				}
 				printf("class property %k = {\n", attr->ca_name);
 				++indent;
-				for (i = 0; i < 3; ++i) {
-					if (!functions[i])
+				for (j = 0; j < 3; ++j) {
+					if (!functions[j])
 						continue;
 					DO(DeeFormat_Repeat(printer, arg, '\t', indent));
-					print(property_names[i], 3);
-					if (functions[i]->cm_ast->a_type == AST_FUNCTION) {
-						DO(print_function_atargs(functions[i]->cm_ast, printer, arg, indent, true));
+					print(property_names[j], 3);
+					if (functions[j]->cm_ast->a_type == AST_FUNCTION) {
+						DO(print_function_atargs(functions[j]->cm_ast, printer, arg, indent, true));
 					} else {
 						PRINT(" = ");
-						DO(print_ast_code(functions[i]->cm_ast, printer, arg, true, self->a_scope, indent));
+						DO(print_ast_code(functions[j]->cm_ast, printer, arg, true, self->a_scope, indent));
 						PRINT(";");
 					}
 					PRINT("\n");
@@ -4564,7 +4565,7 @@ class_member_in_class:
 		break;
 	}
 done:
-	LEAVE_SCOPE(is_expression, need_semicolon);
+	LEAVE_SCOPE(is_scope, is_expression, need_semicolon);
 	return 0;
 err:
 	return -1;

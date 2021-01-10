@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -544,6 +544,12 @@ err:
 #define table_casevert   case '|'
 
 
+/* Disable warnings that are just _wrong_ */
+#ifdef _MSC_VER
+#pragma warning(disable : 4701) /* potentially uninitialized local variable 'body_end' used */
+#pragma warning(disable : 4703) /* potentially uninitialized local variable 'body_end' used */
+#endif /* _MSC_VER */
+
 
 PRIVATE NONNULL((1, 2, 3)) int DCALL
 do_compile(/*utf-8*/ char const *text,
@@ -593,8 +599,6 @@ do_compile(/*utf-8*/ char const *text,
 	 * skip all leading lines that are empty, or contain only
 	 * white-space characters. */
 	for (;;) {
-		uint32_t ch;
-		char const *ch_start;
 		ch_start = iter;
 		ch = utf8_readchar((char const **)&iter, end);
 		if (DeeUni_IsLF(ch)) {
@@ -1710,10 +1714,10 @@ list_continue_current_line:
 										goto err_item_printer;
 									/* Deal with windows-style line-feeds */
 									if (ch == '\r') {
-										char const *temp = iter;
+										char const *temp3 = iter;
 										ch = utf8_readchar((char const **)&iter, end);
 										if (ch != '\n')
-											iter = temp;
+											iter = temp3;
 									}
 									iter = skip_tpp_comment_line_prefix_after_escaped_linefeed(iter, end);
 									ch_start = iter;
@@ -2299,10 +2303,10 @@ not_a_link:
 						start_of_second_line = end_of_first_line;
 						ch = utf8_readchar((char const **)&start_of_second_line, before_right_backtick);
 						if (ch == '\r') {
-							char const *temp = start_of_second_line;
+							char const *temp2 = start_of_second_line;
 							ch = utf8_readchar((char const **)&start_of_second_line, before_right_backtick);
 							if (ch != '\n')
-								start_of_second_line = temp;
+								start_of_second_line = temp2;
 						}
 						/* Find the smallest indentation between:
 						 *    start_of_second_line ... before_right_backtick
@@ -2368,10 +2372,10 @@ not_a_link:
 						if (DeeUni_IsLF(ch)) {
 do_handle_autoescaped_linefeed:
 							if (ch == '\r') {
-								char const *temp = iter;
+								char const *temp2 = iter;
 								ch = utf8_readchar((char const **)&iter, end);
 								if (ch != '\n')
-									iter = temp;
+									iter = temp2;
 							}
 							strip_trailing_whitespace_until(result_printer,
 							                                result_printer_origlen);
@@ -2383,7 +2387,7 @@ do_handle_autoescaped_linefeed:
 							goto scan_newline_with_first_ch_and_explicit_linefeed;
 						} else if (DeeUni_IsSpace(ch)) {
 							/* Allow for trailing space before an eventual line-feed */
-							char const *temp = ch_start;
+							char const *temp2 = ch_start;
 							for (;;) {
 								ch = utf8_readchar((char const **)&iter, end);
 								if (DeeUni_IsLF(ch))
@@ -2392,8 +2396,8 @@ do_handle_autoescaped_linefeed:
 									continue;
 								break;
 							}
-							ch_start = temp;
-							iter     = temp;
+							ch_start = temp2;
+							iter     = temp2;
 							ch = utf8_readchar((char const **)&iter, end);
 						}
 						goto do_switch_ch;
@@ -2523,34 +2527,34 @@ done_dontflush:
 		if (should_strip_leading_space)
 			unicode_printer_erase_whitespace(result_printer, i, min_line_leading_spaces);
 		while (i < UNICODE_PRINTER_LENGTH(result_printer)) {
-			uint32_t ch;
-			ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+			uint32_t ch2;
+			ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
 			++i;
-			if (!DeeUni_IsLF(ch)) {
-				if (ch == '{') {
+			if (!DeeUni_IsLF(ch2)) {
+				if (ch2 == '{') {
 					/* Skip non-escaped {}-pairs here! - Those belong to inner constructs,
 					 * and may contain line-feed characters which we must ignore! */
 					size_t recursion = 0;
 					for (;;) {
 						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now;
-						ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+						ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
 						++i;
-						if (ch == '#')
+						if (ch2 == '#')
 							++i;
-						else if (ch == '{')
+						else if (ch2 == '{')
 							++recursion;
-						else if (ch == '}') {
+						else if (ch2 == '}') {
 							if (!recursion)
 								break;
 							--recursion;
 						}
 					}
-				} else if (ch == '#' && i < UNICODE_PRINTER_LENGTH(result_printer)) {
-					ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
-					if (ch == '{' || ch == '#')
+				} else if (ch2 == '#' && i < UNICODE_PRINTER_LENGTH(result_printer)) {
+					ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+					if (ch2 == '{' || ch2 == '#')
 						++i; /* Escaped brace/pound (ignore) */
-					else if (ch == 'T' || ch == 'L') {
+					else if (ch2 == 'T' || ch2 == 'L') {
 						size_t recursion;
 						/* Tables and Lists are followed by implicit line-feeds.
 						 * As such, we must also strip common whitespace following
@@ -2558,7 +2562,7 @@ done_dontflush:
 						++i;
 						if (i >= UNICODE_PRINTER_LENGTH(result_printer))
 							goto done_return_now; /* Shouldn't happen... */
-						if (ch == 'L' && UNICODE_PRINTER_GETCHAR(result_printer, i) != '{') {
+						if (ch2 == 'L' && UNICODE_PRINTER_GETCHAR(result_printer, i) != '{') {
 							++i;
 							if (i >= UNICODE_PRINTER_LENGTH(result_printer))
 								goto done_return_now; /* Shouldn't happen... */
@@ -2571,13 +2575,13 @@ done_dontflush:
 						for (;;) {
 							if (i >= UNICODE_PRINTER_LENGTH(result_printer))
 								goto done_return_now;
-							ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
+							ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
 							++i;
-							if (ch == '#')
+							if (ch2 == '#')
 								++i;
-							else if (ch == '{')
+							else if (ch2 == '{')
 								++recursion;
-							else if (ch == '}') {
+							else if (ch2 == '}') {
 								if (!recursion)
 									break;
 								--recursion;
@@ -2590,10 +2594,10 @@ done_dontflush:
 				}
 				continue;
 			}
-			if (ch == '\r') {
+			if (ch2 == '\r') {
 				/* Check if the next character is a \n, in which case: erase after that one */
-				ch = UNICODE_PRINTER_GETCHAR(result_printer, i);
-				if (ch == '\n')
+				ch2 = UNICODE_PRINTER_GETCHAR(result_printer, i);
+				if (ch2 == '\n')
 					++i;
 			}
 do_erase_after_linefeed:

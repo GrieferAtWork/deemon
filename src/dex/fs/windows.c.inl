@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -1548,7 +1548,6 @@ again:
 		return error;
 	}
 	if (DeeString_Check(path)) {
-		int error;
 		WIN32_FILE_ATTRIBUTE_DATA attrib;
 		fd = DeeNTSystem_CreateFile(path, FILE_READ_ATTRIBUTES | READ_CONTROL,
 		                            FILE_SHARE_READ | FILE_SHARE_WRITE |
@@ -1581,10 +1580,10 @@ again:
 		if (fd == NULL)
 			goto err;
 		if (fd != INVALID_HANDLE_VALUE) {
-			BOOL error;
+			BOOL bOk;
 			DBG_ALIGNMENT_DISABLE();
-			error = GetFileInformationByHandle(fd, &self->s_info);
-			if (!error) {
+			bOk = GetFileInformationByHandle(fd, &self->s_info);
+			if (!bOk) {
 				CloseHandle(fd);
 				DBG_ALIGNMENT_ENABLE();
 				goto err_nt;

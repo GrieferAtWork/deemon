@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -1816,17 +1816,16 @@ DeeNTSystem_VThrowErrorf(DeeTypeObject *tp,
 			else if (DeeNTSystem_IsNoLink(dwError))
 				fs_error_name = "NoLink";
 			if (fs_error_name) {
-				int result;
 				DREF DeeTypeObject *fs_error_type;
 				fs_error_type = (DREF DeeTypeObject *)DeeModule_GetExtern("fs", fs_error_name);
 				if unlikely(!fs_error_type)
-					return -1;
+					goto err;
 				result = DeeNTSystem_VThrowErrorf(fs_error_type,
 				                                  dwError,
 				                                  format,
 				                                  args);
 				Dee_Decref(fs_error_type);
-				return result;
+				goto done;
 			}
 			/* Fallback: Just use a SystemError */
 			tp = &DeeError_SystemError;
@@ -1861,6 +1860,9 @@ DeeNTSystem_VThrowErrorf(DeeTypeObject *tp,
 	}
 done:
 	return result;
+err:
+	result = -1;
+	goto done;
 }
 
 PUBLIC NONNULL((2)) int DCALL
@@ -2042,8 +2044,19 @@ err:
 typedef DWORD (WINAPI *LPGETFINALPATHNAMEBYHANDLEW)(HANDLE hFile, LPWSTR lpszFilePath,
                                                     DWORD cchFilePath, DWORD dwFlags);
 PRIVATE LPGETFINALPATHNAMEBYHANDLEW pdyn_GetFinalPathNameByHandleW = NULL;
+
+#ifndef DEFINED_GET_KERNEL32_HANDLE
+#define DEFINED_GET_KERNEL32_HANDLE 1
 PRIVATE WCHAR const wKernel32[]    = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
 PRIVATE WCHAR const wKernel32Dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
+PRIVATE HMODULE DCALL GetKernel32Handle(void) {
+	HMODULE hKernel32;
+	hKernel32 = GetModuleHandleW(wKernel32);
+	if (!hKernel32)
+		hKernel32 = LoadLibraryW(wKernel32Dll);
+	return hKernel32;
+}
+#endif /* !DEFINED_GET_KERNEL32_HANDLE */
 
 /* Wrapper for the `GetFinalPathNameByHandle()' system call.
  * @return: 2:  Unsupported.
@@ -2058,10 +2071,7 @@ DeeNTSystem_PrintFinalPathNameByHandle(struct unicode_printer *__restrict printe
 	DWORD dwNewBufSize, dwBufSize;
 	if (!pdyn_GetFinalPathNameByHandleW) {
 		/* Try to load `GetFinalPathNameByHandleW()' */
-		HMODULE hKernel32;
-		hKernel32 = GetModuleHandleW(wKernel32);
-		if (!hKernel32)
-			hKernel32 = LoadLibraryW(wKernel32Dll);
+		HMODULE hKernel32 = GetKernel32Handle();
 		if (!hKernel32)
 			ATOMIC_WRITE(*(void **)&pdyn_GetFinalPathNameByHandleW, (void *)(uintptr_t)-1);
 		else {

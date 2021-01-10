@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -30,6 +30,8 @@
 #include <deemon/system-features.h>
 #include <deemon/system.h>
 #include <deemon/thread.h>
+
+#include <hybrid/atomic.h>
 
 #ifdef CONFIG_HOST_WINDOWS
 #include <Windows.h>
@@ -943,6 +945,24 @@ DeeSystem_GetLastModified(/*String*/ DeeObject *__restrict filename) {
 #endif /* DeeSystem_GetLastModified_USE_STUB */
 }
 
+#ifdef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
+typedef void (WINAPI *LPGETSYSTEMTIMEPRECISEASFILETIME)(LPFILETIME lpSystemTimeAsFileTime);
+static LPGETSYSTEMTIMEPRECISEASFILETIME pdyn_GetSystemTimePreciseAsFileTime = NULL;
+#define GetSystemTimePreciseAsFileTime (*pdyn_GetSystemTimePreciseAsFileTime)
+
+#ifndef DEFINED_GET_KERNEL32_HANDLE
+#define DEFINED_GET_KERNEL32_HANDLE 1
+PRIVATE WCHAR const wKernel32[]    = { 'K', 'E', 'R', 'N', 'E', 'L', '3', '2', 0 };
+PRIVATE WCHAR const wKernel32Dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
+PRIVATE HMODULE DCALL GetKernel32Handle(void) {
+	HMODULE hKernel32;
+	hKernel32 = GetModuleHandleW(wKernel32);
+	if (!hKernel32)
+		hKernel32 = LoadLibraryW(wKernel32Dll);
+	return hKernel32;
+}
+#endif /* !DEFINED_GET_KERNEL32_HANDLE */
+#endif /* DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */
 
 
 /* Return the current UTC realtime in microseconds since 01.01.1970T00:00:00+00:00 */
@@ -950,7 +970,23 @@ PUBLIC WUNUSED uint64_t DCALL DeeSystem_GetWalltime(void) {
 #ifdef DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME
 	uint64_t filetime;
 	DBG_ALIGNMENT_DISABLE();
-	GetSystemTimePreciseAsFileTime((LPFILETIME)&filetime);
+	if (pdyn_GetSystemTimePreciseAsFileTime == NULL) {
+		HMODULE hKernel32 = GetKernel32Handle();
+		if (!hKernel32)
+			ATOMIC_WRITE(*(void **)&pdyn_GetSystemTimePreciseAsFileTime, (void *)(uintptr_t)-1);
+		else {
+			LPGETSYSTEMTIMEPRECISEASFILETIME func;
+			func = (LPGETSYSTEMTIMEPRECISEASFILETIME)GetProcAddress(hKernel32, "GetSystemTimePreciseAsFileTime");
+			if (!func)
+				*(void **)&func = (void *)(uintptr_t)-1;
+			ATOMIC_WRITE(pdyn_GetSystemTimePreciseAsFileTime, func);
+		}
+	}
+	if (pdyn_GetSystemTimePreciseAsFileTime != (LPGETSYSTEMTIMEPRECISEASFILETIME)-1) {
+		GetSystemTimePreciseAsFileTime((LPFILETIME)&filetime);
+	} else {
+		GetSystemTimeAsFileTime((LPFILETIME)&filetime);
+	}
 	DBG_ALIGNMENT_ENABLE();
 	return nt_getunixfiletime(filetime);
 #endif /* DeeSystem_GetWalltime_USE_GETSYSTEMTIMEPRECISEASFILETIME */

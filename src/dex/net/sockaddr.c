@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -1134,7 +1134,7 @@ err:
 	{
 		struct hostent *hp;
 #ifdef TRY_AGAIN
-		int attempt_counter;
+		int gethostbyname_attempt_counter;
 #endif /* TRY_AGAIN */
 do_gethostbyname:
 		bzero(self, sizeof(SockAddr));
@@ -1207,7 +1207,7 @@ do_gethostbyname:
 		}
 no_special_hostname:
 #ifdef TRY_AGAIN
-		attempt_counter = 0;
+		gethostbyname_attempt_counter = 0;
 do_gethostbyname_again:
 #endif /* TRY_AGAIN */
 		rwlock_read(&sysdb_lock);
@@ -1228,10 +1228,10 @@ do_gethostbyname_again:
 			) {
 				err_no_host_data(host, NULL, family, error);
 #ifdef TRY_AGAIN
-			} else if (error == TRY_AGAIN && attempt_counter < 3) {
+			} else if (error == TRY_AGAIN && gethostbyname_attempt_counter < 3) {
 				if (DeeThread_Sleep(10000))
 					goto err;
-				++attempt_counter;
+				++gethostbyname_attempt_counter;
 				goto do_gethostbyname_again;
 #endif /* TRY_AGAIN */
 			} else {

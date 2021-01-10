@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -2215,8 +2215,7 @@ print_imm_pop:
 	case ASM16_PUSH_BND_EXTERN:
 	case ASM16_POP_EXTERN:
 	case ASM16_PUSH_EXTERN:
-	case ASM16_CALL_EXTERN: {
-		uint16_t imm2;
+	case ASM16_CALL_EXTERN:
 		imm  = READ_imm16(iter);
 		imm2 = READ_imm16(iter);
 		goto print_extern;
@@ -2230,7 +2229,7 @@ print_extern:
 		INVOKE(libdisasm_printextern(printer, arg, imm, imm2, code, flags));
 		if (opcode == ASM_CALL_EXTERN || opcode == ASM16_CALL_EXTERN)
 			printf(", " PREFIX_STACKEFFECT "%I8u", READ_imm8(iter));
-	}	break;
+		break;
 
 	case ASM16_PUSH_MODULE:
 		imm = READ_imm16(iter);

@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -54,7 +54,7 @@ extern unsigned __int64 (_byteswap_uint64)(unsigned __int64 x);
 #else /* __GNUC__ || __has_builtin(__builtin_bswap16) */
 __LOCAL __ATTR_CONST __ATTR_ARTIFICIAL __UINT16_TYPE__
 __NOTHROW(__impl_hybrid_bswap16)(__UINT16_TYPE__ __x) {
-	return __hybrid_bswap16_c(__x);
+	return (__UINT16_TYPE__)__hybrid_bswap16_c(__x);
 }
 #endif /* !__GNUC__ && !__has_builtin(__builtin_bswap16) */
 #if __has_builtin(__builtin_bswap32)

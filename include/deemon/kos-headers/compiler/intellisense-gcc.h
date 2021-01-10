@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -130,7 +130,7 @@
 static_assert(sizeof(wchar_t) == __SIZEOF_WCHAR_T__, "WTF Intellisense?");
 #else
 /* This isn't really correct, either. wchar_t on linux is 4 bytes, however we
- * can't really change sizeof(xxx) using preprocessor directives, to the best
+ * can't really change sizeof(xxx) using preprocessor directives, so the best
  * we _can_ do is change intellisense to at least be consistent with itself... */
 #undef __SIZEOF_WCHAR_T__
 #define __SIZEOF_WCHAR_T__ 2

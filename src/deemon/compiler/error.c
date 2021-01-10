@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -326,7 +326,7 @@ handle_master:
 			ASSERT((master->ce_errorc != 1) ||
 			       (master->ce_errorv[0] == master));
 			if (master->ce_errorc > 1) {
-				DREF DeeCompilerErrorObject **dst, **iter, **end;
+				DREF DeeCompilerErrorObject **err_dst, **err_iter, **err_end;
 				size_t new_count = count + master->ce_errorc - 1;
 				if (new_count > current_parser_errors.pe_errora) {
 					/* Must allocate more vector space. */
@@ -339,14 +339,14 @@ handle_master:
 					current_parser_errors.pe_errora = new_count;
 					current_parser_errors.pe_errorv = new_vector;
 				}
-				dst = current_parser_errors.pe_errorv + count;
-				end = (iter = master->ce_errorv) + master->ce_errorc;
-				for (; iter != end; ++iter) {
-					if (*iter == master)
+				err_dst = current_parser_errors.pe_errorv + count;
+				err_end = (err_iter = master->ce_errorv) + master->ce_errorc;
+				for (; err_iter != err_end; ++err_iter) {
+					if (*err_iter == master)
 						continue;   /* Skip the master error. (that one's already been added) */
-					*dst++ = *iter; /* Inherit reference. */
+					*err_dst++ = *err_iter; /* Inherit reference. */
 				}
-				ASSERT(dst == current_parser_errors.pe_errorv + new_count);
+				ASSERT(err_dst == current_parser_errors.pe_errorv + new_count);
 				current_parser_errors.pe_errorc = count = new_count;
 			}
 			Dee_Free(master->ce_errorv);

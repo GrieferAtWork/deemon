@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-2020 Griefer@Work                                       *
+/* Copyright (c) 2019-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,11 +12,14 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2019-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2019-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
+#ifndef __PP_STR
+#include "pp-generic.h"
+#endif /* !__PP_STR */
 
 #ifdef __ASSEMBLY__
 #if __ASSEMBLY__+0 == 0
@@ -259,12 +262,18 @@
 #define __ATTR_FORCEINLINE /* nothing */
 #define __NO_ATTR_ARTIFICIAL
 #define __ATTR_ARTIFICIAL /* nothing */
+#define __NO_ATTR_FORMAT_ARG
+#define __ATTR_FORMAT_ARG(x) /* nothing */
 
 #define __NO_XBLOCK
 #define __builtin_choose_expr(c, tt, ff) ((c) ? (tt) : (ff))
 #define __NO_builtin_choose_expr
 #define __NO_builtin_types_compatible_p
+#ifdef __PREPROCESSOR_HAVE_VA_ARGS
 #define __builtin_types_compatible_p(...)
+#else /* __PREPROCESSOR_HAVE_VA_ARGS */
+#define __builtin_types_compatible_p(T1,T2)
+#endif /* !__PREPROCESSOR_HAVE_VA_ARGS */
 #undef __builtin_assume_has_sideeffects
 #define __builtin_assume(x)     /* nothing */
 #define __builtin_unreachable() /* nothing */

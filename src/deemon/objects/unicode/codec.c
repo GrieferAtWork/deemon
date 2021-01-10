@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -719,7 +719,7 @@ err:
 #define encode_utf32_be  encode_utf32
 #endif /* __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__ */
 
-PRIVATE DREF DeeObject *libcodecs = NULL;
+PRIVATE DREF DeeObject *g_libcodecs = NULL;
 #ifndef CONFIG_NO_THREADS
 PRIVATE rwlock_t libcodecs_lock = RWLOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
@@ -727,8 +727,8 @@ PRIVATE rwlock_t libcodecs_lock = RWLOCK_INIT;
 INTERN bool DCALL libcodecs_shutdown(void) {
 	DREF DeeObject *old_lib;
 	rwlock_write(&libcodecs_lock);
-	old_lib   = libcodecs;
-	libcodecs = NULL;
+	old_lib   = g_libcodecs;
+	g_libcodecs = NULL;
 	rwlock_endwrite(&libcodecs_lock);
 	if (!old_lib)
 		return false;
@@ -740,7 +740,7 @@ INTERN bool DCALL libcodecs_shutdown(void) {
 PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 	DREF DeeObject *result;
 	rwlock_read(&libcodecs_lock);
-	result = libcodecs;
+	result = g_libcodecs;
 	if (result) {
 		Dee_Incref(result);
 		rwlock_endread(&libcodecs_lock);
@@ -750,10 +750,10 @@ PRIVATE WUNUSED DREF DeeObject *DCALL libcodecs_get(void) {
 	result = DeeModule_OpenGlobal(&str_codecs, NULL, true);
 	if likely(result) {
 		rwlock_write(&libcodecs_lock);
-		ASSERT(!libcodecs || libcodecs == result);
-		if (!libcodecs) {
+		ASSERT(!g_libcodecs || g_libcodecs == result);
+		if (!g_libcodecs) {
 			Dee_Incref(result);
-			libcodecs = result;
+			g_libcodecs = result;
 		}
 		rwlock_endwrite(&libcodecs_lock);
 		if unlikely(DeeModule_RunInit(result) < 0)

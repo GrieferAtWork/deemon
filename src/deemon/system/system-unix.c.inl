@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -75,18 +75,17 @@ DeeUnixSystem_VThrowErrorf(DeeTypeObject *tp, /*errno_t*/ int errno_value,
 			DeeSystem_IF_E1(errno_value, EXDEV,     { fs_error_name = "CrossDevice"; goto got_fs_error_name; });
 			DeeSystem_IF_E1(errno_value, ENOLINK,   { fs_error_name = "NoLink"; goto got_fs_error_name; });
 			__IF0 {
-				int result;
 				DREF DeeTypeObject *fs_error_type;
 got_fs_error_name:
 				fs_error_type = (DREF DeeTypeObject *)DeeModule_GetExtern("fs", fs_error_name);
 				if unlikely(!fs_error_type)
-					return -1;
+					goto err;
 				result = DeeUnixSystem_VThrowErrorf(fs_error_type,
 				                                    errno_value,
 				                                    format,
 				                                    args);
 				Dee_Decref(fs_error_type);
-				return result;
+				goto done;
 			}
 		}
 		/* Fallback: Just use a SystemError */
@@ -100,15 +99,12 @@ got_tp:
 		DREF DeeSystemErrorObject *error;
 		DREF DeeStringObject *message;
 		error = (DREF DeeSystemErrorObject *)DeeObject_MALLOC(DeeSystemErrorObject);
-		if unlikely(!error) {
-			result = -1;
-			goto done;
-		}
+		if unlikely(!error)
+			goto err;
 		message = (DREF DeeStringObject *)DeeString_VNewf(format, args);
 		if unlikely(!message) {
 			DeeObject_FREE(error);
-			result = -1;
-			goto done;
+			goto err;
 		}
 		error->e_message = message; /* Inherit reference */
 		error->e_inner   = NULL;
@@ -125,6 +121,9 @@ got_tp:
 	}
 done:
 	return result;
+err:
+	result = -1;
+	goto done;
 }
 
 PUBLIC NONNULL((3)) int

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -425,7 +425,6 @@ again:
 		WEAKREF_LOCK(other);
 		COMPILER_READ_BARRIER();
 		if likely(other->wr_obj) {
-			struct weakref *next;
 			if (!TRYLOCK_POINTER(*other->wr_pself)) {
 				WEAKREF_UNLOCK(other);
 				SCHED_YIELD();
@@ -484,22 +483,25 @@ again:
 				}
 				ATOMIC_WRITE(*self->wr_pself, next);
 			}
-			next           = (struct weakref *)GET_POINTER(other->wr_next);
-			self->wr_pself = other->wr_pself;
-			self->wr_next  = next;
-			if (next) {
-				if unlikely(!WEAKREF_TRYLOCK(next)) {
-					/* Prevent a deadlock. */
-					WEAKREF_UNLOCK(*other->wr_pself);
-					WEAKREF_UNLOCK(other);
-					SCHED_YIELD();
-					goto again;
+			{
+				struct weakref *next;
+				next           = (struct weakref *)GET_POINTER(other->wr_next);
+				self->wr_pself = other->wr_pself;
+				self->wr_next  = next;
+				if (next) {
+					if unlikely(!WEAKREF_TRYLOCK(next)) {
+						/* Prevent a deadlock. */
+						WEAKREF_UNLOCK(*other->wr_pself);
+						WEAKREF_UNLOCK(other);
+						SCHED_YIELD();
+						goto again;
+					}
+					next->wr_pself = &self->wr_next;
+					ATOMIC_WRITE(*self->wr_pself, self);
+					WEAKREF_UNLOCK(next);
+				} else {
+					ATOMIC_WRITE(*self->wr_pself, self);
 				}
-				next->wr_pself = &self->wr_next;
-				ATOMIC_WRITE(*self->wr_pself, self);
-				WEAKREF_UNLOCK(next);
-			} else {
-				ATOMIC_WRITE(*self->wr_pself, self);
 			}
 			/*WEAKREF_UNLOCK(other);*/
 		} else {

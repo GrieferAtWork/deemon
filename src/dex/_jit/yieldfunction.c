@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -97,7 +97,6 @@ PRIVATE WUNUSED NONNULL((1)) DREF JITYieldFunctionIterator *DCALL
 jy_iter(JITYieldFunction *__restrict self) {
 	DREF JITYieldFunctionIterator *result;
 	JITFunction *jf = self->jy_func;
-	size_t i;
 	result = DeeGCObject_MALLOC(JITYieldFunctionIterator);
 	if unlikely(!result)
 		goto done;
@@ -124,6 +123,7 @@ jy_iter(JITYieldFunction *__restrict self) {
 	}
 
 	if (self->jy_kw) {
+		size_t i;
 		/* TODO: Load arguments! */
 		(void)self->jy_argc;
 		(void)self->jy_argv;
@@ -1038,12 +1038,12 @@ parse_again_same_statement:
 					goto err_scope;
 				if (self->ji_lex.jl_tok == JIT_KEYWORD &&
 				    self->ji_lex.jl_tokend == self->ji_lex.jl_tokstart + 4) {
-					uint32_t name;
-					name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
-					if (name == ENCODE_INT32('e', 'l', 's', 'e')) {
+					uint32_t next_name;
+					next_name = UNALIGNED_GET32((uint32_t *)self->ji_lex.jl_tokstart);
+					if (next_name == ENCODE_INT32('e', 'l', 's', 'e')) {
 						JITLexer_Yield(&self->ji_lex);
 						goto parse_else_after_if;
-					} else if (name == ENCODE_INT32('e', 'l', 'i', 'f')) {
+					} else if (next_name == ENCODE_INT32('e', 'l', 'i', 'f')) {
 						self->ji_lex.jl_tokstart += 2; /* Transform into an `if' */
 parse_else_after_if:
 #if 1 /* Optimization: No need to push a scope if no declaration was made \

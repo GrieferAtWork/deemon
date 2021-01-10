@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -413,11 +413,12 @@ err:
 INTERN NONNULL((1)) bool DCALL
 stype_cfunction_rehash(DeeSTypeObject *__restrict self,
                        size_t new_mask) {
-	DeeCFunctionTypeObject **new_map, **dst;
-	DeeCFunctionTypeObject **biter, **bend, *iter, *next;
+	struct cfunction_type_list *new_map, *dst;
+	struct cfunction_type_list *biter, *bend;
+	DeeCFunctionTypeObject *iter, *next;
 again:
-	new_map = (DeeCFunctionTypeObject **)Dee_TryCalloc((new_mask + 1) *
-	                                                   sizeof(DeeCFunctionTypeObject *));
+	new_map = (struct cfunction_type_list *)Dee_TryCalloc((new_mask + 1) *
+	                                                      sizeof(struct cfunction_type_list));
 	if unlikely(!new_map) {
 		/* Try again with a 1-element mask. */
 		if (!self->st_cfunction.sf_list && new_mask != 0) {
@@ -431,12 +432,12 @@ again:
 		ASSERT(self->st_cfunction.sf_list);
 		bend = (biter = self->st_cfunction.sf_list) + (self->st_cfunction.sf_mask + 1);
 		for (; biter != bend; ++biter) {
-			iter = *biter;
+			iter = LIST_FIRST(biter);
 			while (iter) {
-				next = LLIST_NEXT(iter, ft_chain);
+				next = LIST_NEXT(iter, ft_chain);
 				dst  = &new_map[iter->ft_hash & new_mask];
 				/* Insert the entry into the new hash-map. */
-				LLIST_INSERT(*dst, iter, ft_chain);
+				LIST_INSERT_HEAD(dst, iter, ft_chain);
 				iter = next;
 			}
 		}
@@ -509,18 +510,19 @@ DeeSType_CFunction(DeeSTypeObject *__restrict return_type,
 	return NULL;
 #else /* CONFIG_NO_CFUNCTION */
 	dhash_t hash;
-	DREF DeeCFunctionTypeObject *result, *new_result, **pbucket;
+	DREF DeeCFunctionTypeObject *result, *new_result;
+	DREF struct cfunction_type_list *pbucket;
 	ASSERT_OBJECT_TYPE((DeeObject *)return_type, &DeeSType_Type);
 	rwlock_read(&return_type->st_cachelock);
 	ASSERT(!return_type->st_cfunction.sf_size ||
 	       return_type->st_cfunction.sf_mask);
 	hash = cfunction_hashof(return_type, calling_convention, argc, argv);
 	if (return_type->st_cfunction.sf_size) {
-		result = return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
+		result = LIST_FIRST(&return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask]);
 		while (result &&
 		       (result->ft_hash != hash ||
 		        !cfunction_equals(result, return_type, calling_convention, argc, argv)))
-			result = LLIST_NEXT(result, ft_chain);
+			result = LIST_NEXT(result, ft_chain);
 		/* Check if we can re-use an existing type. */
 		if (result && Dee_IncrefIfNotZero((DeeObject *)result)) {
 			rwlock_endread(&return_type->st_cachelock);
@@ -541,11 +543,11 @@ register_type:
 	ASSERT(!return_type->st_cfunction.sf_size ||
 	       return_type->st_cfunction.sf_mask);
 	if (return_type->st_cfunction.sf_size) {
-		new_result = return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
+		new_result = LIST_FIRST(&return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask]);
 		while (new_result &&
 		       (new_result->ft_hash != hash ||
 		        !cfunction_equals(new_result, return_type, calling_convention, argc, argv)))
-			new_result = LLIST_NEXT(new_result, ft_chain);
+			new_result = LIST_NEXT(new_result, ft_chain);
 		/* Check if we can re-use an existing type. */
 		if (new_result && Dee_IncrefIfNotZero((DeeObject *)new_result)) {
 			rwlock_endread(&return_type->st_cachelock);
@@ -569,7 +571,7 @@ register_type:
 	}
 	/* Insert the new cfunction type into the hash-map. */
 	pbucket = &return_type->st_cfunction.sf_list[hash & return_type->st_cfunction.sf_mask];
-	LLIST_INSERT(*pbucket, result, ft_chain); /* Weak reference. */
+	LIST_INSERT_HEAD(pbucket, result, ft_chain); /* Weak reference. */
 	rwlock_endwrite(&return_type->st_cachelock);
 done:
 	return result;

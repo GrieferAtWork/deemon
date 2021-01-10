@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -432,7 +432,7 @@ assembler_init_reuse(DeeCodeObject *__restrict code_obj,
 }
 
 INTERN void DCALL assembler_fini(void) {
-	struct asm_sym *iter, *next;
+	struct asm_sym *iter;
 	uint16_t i;
 	struct asm_exc *xiter, *xend;
 #ifndef CONFIG_LANGUAGE_NO_ASM
@@ -449,6 +449,7 @@ INTERN void DCALL assembler_fini(void) {
 	/* Free up symbols. */
 	iter = current_assembler.a_syms;
 	while (iter) {
+		struct asm_sym *next;
 		next = iter->as_next;
 		DeeSlab_FREE(iter);
 		iter = next;
@@ -478,7 +479,7 @@ INTERN void DCALL assembler_fini(void) {
 	Dee_Free(current_assembler.a_ddi.da_bndv);
 	while (current_assembler.a_ddi.da_files) {
 		struct TPPFile *next;
-		next                                     = current_assembler.a_ddi.da_files->f_prev;
+		next = current_assembler.a_ddi.da_files->f_prev;
 		current_assembler.a_ddi.da_files->f_prev = NULL;
 		TPPFile_Decref(current_assembler.a_ddi.da_files);
 		current_assembler.a_ddi.da_files = next;
@@ -3200,10 +3201,11 @@ done:
 
 
 INTERN WUNUSED int DCALL asm_check_user_labels_defined(void) {
-	struct text_label **biter, **bend, *iter;
+	struct text_label **biter, **bend;
 	bend = (biter = current_basescope->bs_lbl) +
 	       current_basescope->bs_lbla;
 	for (; biter != bend; ++biter) {
+		struct text_label *iter;
 		for (iter = *biter; iter; iter = iter->tl_next) {
 			struct asm_sym *sym = iter->tl_asym;
 			if (!sym)

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -575,19 +575,19 @@ do_handle_for:
 		default: break;
 		}
 		{
-			char *name;
-			size_t size;
-			name = JITLexer_TokPtr(self);
-			size = JITLexer_TokLen(self);
+			char *sname;
+			size_t ssize;
+			sname = JITLexer_TokPtr(self);
+			ssize = JITLexer_TokLen(self);
 			JITLexer_Yield(self);
-			if (size == 4 &&
-			    UNALIGNED_GET32((uint32_t *)name) ==
+			if (ssize == 4 &&
+			    UNALIGNED_GET32((uint32_t *)sname) ==
 			    ENCODE_INT32('f', 'r', 'o', 'm')) {
 				/* `foo from bar' */
 				JITLexer_Yield(self);
 				JITLexer_QuickSkipModuleName(self);
 			} else {
-				JITLexer_ReferenceKeyword(self, name, size);
+				JITLexer_ReferenceKeyword(self, sname, ssize);
 			}
 		}
 	}	break;

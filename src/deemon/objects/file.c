@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2020 Griefer@Work                                       *
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2020 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -1095,14 +1095,14 @@ file_init(DeeFileObject *__restrict UNUSED(self)) {
 
 
 struct open_option {
-	char     name[11]; /* Name. */
+	char         name[11]; /* Name. */
 #define OPEN_EXFLAG_FNORMAL 0x00
 #define OPEN_EXFLAG_FTEXT   0x01 /* Wrap the file in a text-file wrapper that
 	                              * automatically converts its encoding to UTF-8. */
 #define OPEN_EXFLAG_FNOBUF  0x02 /* Open the file without wrapping it inside a buffer. */
-	uint8_t  exflg;   /* Extended flags (Set of `OPEN_EXFLAG_F*'). */
-	int      mask;    /* Mask of flags which, when already set, causes the format to become invalid. */
-	int      flag;    /* Flags. (or-ed with the flags after `mask' is checked) */
+	uint8_t      exflg;   /* Extended flags (Set of `OPEN_EXFLAG_F*'). */
+	unsigned int mask;    /* Mask of flags which, when already set, causes the format to become invalid. */
+	unsigned int flag;    /* Flags. (or-ed with the flags after `mask' is checked) */
 };
 
 /* Open options are parsed from a comma-separated
