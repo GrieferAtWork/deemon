@@ -161,7 +161,7 @@ INTERN void ctypes_kos_guard(void) {
 		                : data->e_subclass == ERROR_SUBCLASS(E_SEGFAULT_READONLY)
 		                  ? "writing to"
 		                  : "reading from",
-		                data->e_pointers[0]);
+		                data->e_args.e_segfault.s_addr);
 		break;
 #endif /* E_SEGFAULT */
 
