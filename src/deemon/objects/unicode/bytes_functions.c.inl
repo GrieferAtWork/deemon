@@ -322,6 +322,610 @@ bytes_caserindex(Bytes *self, size_t argc,
 	                     result + needle.n_size);
 }
 
+
+LOCAL NONNULL((1, 2, 5)) int DCALL
+bytes_find_specific_needle(Bytes *self, DeeObject *find_ob,
+                           size_t start, size_t mylen,
+                           size_t *__restrict p_end) {
+	Needle needle;
+	size_t end;
+	uint8_t *result;
+	if (get_needle(&needle, find_ob))
+		goto err;
+	end = *p_end + needle.n_size;
+	if (end > mylen)
+		end = mylen;
+	result = (uint8_t *)memmemb(DeeBytes_DATA(self) + start,
+	                            end - start,
+	                            needle.n_data,
+	                            needle.n_size);
+	if (result != NULL)
+		*p_end = (size_t)(result - DeeBytes_DATA(self));
+	return 0;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1, 2, 3, 5)) int DCALL
+bytes_rfind_specific_needle(Bytes *self, DeeObject *find_ob,
+                            size_t *__restrict p_start, size_t end,
+                            bool *__restrict p_did_find_any) {
+	Needle needle;
+	size_t start;
+	uint8_t *result;
+	if (get_needle(&needle, find_ob))
+		goto err;
+	start = *p_start;
+	result = (uint8_t *)memmemb(DeeBytes_DATA(self) + start,
+	                            end - start,
+	                            needle.n_data,
+	                            needle.n_size);
+	if (result != NULL) {
+		*p_start        = (size_t)(result - DeeBytes_DATA(self));
+		*p_did_find_any = true;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1, 2, 5, 6)) int DCALL
+bytes_casefind_specific_needle(Bytes *self, DeeObject *find_ob,
+                               size_t start, size_t mylen,
+                               size_t *__restrict p_end,
+                               size_t *__restrict p_match_length) {
+	Needle needle;
+	size_t end;
+	uint8_t *result;
+	if (get_needle(&needle, find_ob))
+		goto err;
+	end = *p_end + needle.n_size;
+	if (end > mylen)
+		end = mylen;
+	result = (uint8_t *)dee_memasciicasemem(DeeBytes_DATA(self) + start,
+	                                        end - start,
+	                                        needle.n_data,
+	                                        needle.n_size);
+	if (result != NULL) {
+		*p_end = (size_t)(result - DeeBytes_DATA(self));
+		*p_match_length = needle.n_size;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+LOCAL NONNULL((1, 2, 3, 5, 6)) int DCALL
+bytes_caserfind_specific_needle(Bytes *self, DeeObject *find_ob,
+                                size_t *__restrict p_start, size_t end,
+                                bool *__restrict p_did_find_any,
+                                size_t *__restrict p_match_length) {
+	Needle needle;
+	size_t start;
+	uint8_t *result;
+	if (get_needle(&needle, find_ob))
+		goto err;
+	start = *p_start;
+	result = (uint8_t *)dee_memasciicasermem(DeeBytes_DATA(self) + start,
+	                                         end - start,
+	                                         needle.n_data,
+	                                         needle.n_size);
+	if (result != NULL) {
+		*p_start        = (size_t)(result - DeeBytes_DATA(self));
+		*p_did_find_any = true;
+		*p_match_length = needle.n_size;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_findany(Bytes *self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end;
+	DeeObject *needles;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:findany", &needles, &start, &end))
+		goto err;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end = end;
+	fastsize = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_find_specific_needle(self, elem, start, mylen, &end))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_find_specific_needle(self, elem, start, mylen, &end))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (end < orig_end)
+		return DeeInt_NewSize(end);
+not_found:
+	return_none;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casefindany(Bytes *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end, match_length;
+	DeeObject *needles;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:casefindany", &needles, &start, &end))
+		goto err;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end     = end;
+	match_length = 0; /* Prevent compiler warnings... */
+	fastsize     = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_casefind_specific_needle(self, elem, start, mylen, &end, &match_length))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_casefind_specific_needle(self, elem, start, mylen, &end, &match_length))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (end < orig_end) {
+		return DeeTuple_Newf(DEE_FMT_SIZE_T
+		                     DEE_FMT_SIZE_T,
+		                     end,
+		                     end + match_length);
+	}
+not_found:
+	return_none;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rfindany(Bytes *self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *needles;
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end;
+	size_t start = 0, end = (size_t)-1;
+	bool did_find_any;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rfindany", &needles, &start, &end))
+		goto err;
+	did_find_any = false;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end = end;
+	fastsize = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (did_find_any)
+		return DeeInt_NewSize(start);
+not_found:
+	return_none;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserfindany(Bytes *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *needles;
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end, match_length;
+	size_t start = 0, end = (size_t)-1;
+	bool did_find_any;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserfindany", &needles, &start, &end))
+		goto err;
+	did_find_any = false;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end     = end;
+	match_length = 0; /* Prevent compiler warnings... */
+	fastsize     = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (did_find_any) {
+		return DeeTuple_Newf(DEE_FMT_SIZE_T
+		                     DEE_FMT_SIZE_T,
+		                     start,
+		                     start + match_length);
+	}
+not_found:
+	return_none;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_indexany(Bytes *self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end;
+	DeeObject *needles;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:indexany", &needles, &start, &end))
+		goto err;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end = end;
+	fastsize = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_find_specific_needle(self, elem, start, mylen, &end))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_find_specific_needle(self, elem, start, mylen, &end))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (end < orig_end)
+		return DeeInt_NewSize(end);
+not_found:
+	err_index_not_found((DeeObject *)self, needles);
+	goto err;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caseindexany(Bytes *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end, match_length;
+	DeeObject *needles;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caseindexany", &needles, &start, &end))
+		goto err;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end     = end;
+	match_length = 0; /* Prevent compiler warnings... */
+	fastsize     = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_casefind_specific_needle(self, elem, start, mylen, &end, &match_length))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_casefind_specific_needle(self, elem, start, mylen, &end, &match_length))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (end < orig_end) {
+		return DeeTuple_Newf(DEE_FMT_SIZE_T
+		                     DEE_FMT_SIZE_T,
+		                     end,
+		                     end + match_length);
+	}
+not_found:
+	err_index_not_found((DeeObject *)self, needles);
+	goto err;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rindexany(Bytes *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *needles;
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end;
+	size_t start = 0, end = (size_t)-1;
+	bool did_find_any;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rindexany", &needles, &start, &end))
+		goto err;
+	did_find_any = false;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end = end;
+	fastsize = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (did_find_any)
+		return DeeInt_NewSize(start);
+not_found:
+	err_index_not_found((DeeObject *)self, needles);
+	goto err;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserindexany(Bytes *self, size_t argc,
+                    DeeObject *const *argv, DeeObject *kw) {
+	DeeObject *needles;
+	DREF DeeObject *iter, *elem;
+	size_t fastsize, mylen, orig_end, match_length;
+	size_t start = 0, end = (size_t)-1;
+	bool did_find_any;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserindexany", &needles, &start, &end))
+		goto err;
+	did_find_any = false;
+	mylen = DeeBytes_SIZE(self);
+	if unlikely(start > mylen)
+		start = mylen;
+	if likely(end > mylen)
+		end = mylen;
+	if unlikely(end <= start)
+		goto not_found;
+	orig_end     = end;
+	match_length = 0; /* Prevent compiler warnings... */
+	fastsize     = DeeFastSeq_GetSize(needles);
+	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
+		for (i = 0; i < fastsize; ++i) {
+			elem = DeeFastSeq_GetItem(needles, i);
+			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
+				goto err_elem;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+	} else {
+		/* Must use an iterator. */
+		iter = DeeObject_IterSelf(needles);
+		if unlikely(!iter)
+			goto err;
+		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
+				goto err_elem_iter;
+			Dee_Decref(elem);
+			if unlikely(end <= start)
+				break;
+		}
+		if unlikely(!elem)
+			goto err_iter;
+		Dee_Decref(iter);
+	}
+	if (did_find_any) {
+		return DeeTuple_Newf(DEE_FMT_SIZE_T
+		                     DEE_FMT_SIZE_T,
+		                     start,
+		                     start + match_length);
+	}
+not_found:
+	err_index_not_found((DeeObject *)self, needles);
+	goto err;
+err_elem_iter:
+	Dee_Decref(elem);
+err_iter:
+	Dee_Decref(iter);
+	goto err;
+err_elem:
+	Dee_Decref(elem);
+err:
+	return NULL;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_count(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
@@ -4185,6 +4789,36 @@ INTERN struct type_method bytes_methods[] = {
 	      "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
 	      "and return its starting index"),
 	  TYPE_METHOD_FKWDS },
+	{ "findany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	      "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
+	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	      "and return its starting index, or ${-1} if no such position exists"),
+	  TYPE_METHOD_FKWDS },
+	{ "rfindany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rfindany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	      "@throw ValueError One of the given @needles is a string containing characters ${> 0xff}\n"
+	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	      "and return its starting index, or ${-1} if no such position exists"),
+	  TYPE_METHOD_FKWDS },
+	{ "indexany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_indexany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Find the first instance of @needle that exists within ${this.substr(start, end)}, "
+	      "and return its starting index"),
+	  TYPE_METHOD_FKWDS },
+	{ "rindexany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_rindexany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?Dint?N\n"
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Find the last instance of @needle that exists within ${this.substr(start, end)}, "
+	      "and return its starting index"),
+	  TYPE_METHOD_FKWDS },
 	{ "findall",
 	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_findall,
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?S?Dint\n"
@@ -4375,6 +5009,38 @@ INTERN struct type_method bytes_methods[] = {
 	  DOC("(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
 	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
 	      "Same as ?#rindex, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
+	  TYPE_METHOD_FKWDS },
+	{ "casefindany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_casefindany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	      "Same as ?#findany, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
+	      "If no match if found, ?N is returned"),
+	  TYPE_METHOD_FKWDS },
+	{ "caserfindany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserfindany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?X2?T2?Dint?Dint?N\n"
+	      "@throw ValueError The given @needle is a string containing characters ${> 0xff}\n"
+	      "@throw IntegerOverflow The given @needle is an integer lower than $0, or greater than $0xff\n"
+	      "Same as ?#rfindany, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}\n"
+	      "If no match if found, ?N is returned"),
+	  TYPE_METHOD_FKWDS },
+	{ "caseindexany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caseindexany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Same as ?#indexany, however ascii-casing is ignored during character comparisons\n"
+	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
+	  TYPE_METHOD_FKWDS },
+	{ "caserindexany",
+	  (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&bytes_caserindexany,
+	  DOC("(needles:?S?X3?.?Dstring?Dint,start=!0,end=!-1)->?T2?Dint?Dint\n"
+	      "@throw IndexError No instance of @needle can be found within ${this.substr(start, end)}\n"
+	      "Same as ?#rindexany, however ascii-casing is ignored during character comparisons\n"
 	      "Upon success, the second returned integer is equal to ${return[0] + ##needle}"),
 	  TYPE_METHOD_FKWDS },
 	{ "casefindall",

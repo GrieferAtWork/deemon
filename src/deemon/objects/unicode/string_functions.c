@@ -3284,8 +3284,7 @@ string_indexany(String *self, size_t argc,
 	if (end < orig_end)
 		return DeeInt_NewSize(end);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needles);
+	err_index_not_found((DeeObject *)self, needles);
 	goto err;
 err_elem_iter:
 	Dee_Decref(elem);
@@ -3410,8 +3409,7 @@ string_rindexany(String *self, size_t argc,
 	if (did_find_any)
 		return DeeInt_NewSize(start);
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needles);
+	err_index_not_found((DeeObject *)self, needles);
 	goto err;
 err_elem_iter:
 	Dee_Decref(elem);
@@ -4062,8 +4060,7 @@ string_caseindexany(String *self, size_t argc,
 		                     end + match_length);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needles);
+	err_index_not_found((DeeObject *)self, needles);
 	goto err;
 err_elem_iter:
 	Dee_Decref(elem);
@@ -4198,8 +4195,7 @@ string_caserindexany(String *self, size_t argc,
 		                     start + match_length);
 	}
 not_found:
-	err_index_not_found((DeeObject *)self,
-	                    (DeeObject *)needles);
+	err_index_not_found((DeeObject *)self, needles);
 	goto err;
 err_elem_iter:
 	Dee_Decref(elem);
