@@ -39,11 +39,12 @@ function callFindAnyFunctions(name: string, needles: {string...}) {
 		local ic = bytes.operator . (indexName)(for (local s: needles) s.bytes());
 		assert a == ic;
 	} else {
-		local ia = try ({ text.operator . (indexName)(needles); false; }) catch (...) none;
+		import IndexError from errors;
+		local ia = try ({ text.operator . (indexName)(needles); false; }) catch (IndexError) none;
 		assert ia is none;
-		local ib = try ({ bytes.operator . (indexName)(needles); false; }) catch (...) none;
+		local ib = try ({ bytes.operator . (indexName)(needles); false; }) catch (IndexError) none;
 		assert ib is none;
-		local ic = try ({ bytes.operator . (indexName)(for (local s: needles) s.bytes()); false; }) catch (...) none;
+		local ic = try ({ bytes.operator . (indexName)(for (local s: needles) s.bytes()); false; }) catch (IndexError) none;
 		assert ic is none;
 	}
 	return a;
