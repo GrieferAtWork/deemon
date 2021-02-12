@@ -21,7 +21,7 @@
 /* NOTE: This implementation is derived from information found on Wikipedia:
  *       https://en.wikipedia.org/wiki/Red%E2%80%93black_tree
  * The implementation used when `RBTREE_LEFT_LEANING' is defined is based
- * on that same article, as well as the following sources:
+ * on   that   same  article,   as   well  as   the   following  sources:
  *  - https://en.wikipedia.org/wiki/Left-leaning_red%E2%80%93black_tree
  *  - https://github.com/sebastiencs/red-black-tree/blob/master/rbtree.c
  */
@@ -91,9 +91,10 @@ struct my_node {
 /* #define RBTREE_MINKEY_EQ_MAXKEY        (Indicate that nodes don't take up key-ranges, but only a single key) */
 /* #define RBTREE_WANT_MINMAXLOCATE       (Declare `RBTREE(minmaxlocate)') */
 /* #define RBTREE_WANT_PREV_NEXT_NODE     (Declare `RBTREE(prevnode)' and `RBTREE(nextnode)') */
-/* #define RBTREE_WANT_RREMOVE            (Declare `RBTREE(rremove)', requires !RBTREE_MINKEY_EQ_MAXKEY) */
-/* #define RBTREE_WANT_RLOCATE            (Declare `RBTREE(rlocate)', requires !RBTREE_MINKEY_EQ_MAXKEY) */
+/* #define RBTREE_WANT_RREMOVE            (Declare `RBTREE(rremove)') */
+/* #define RBTREE_WANT_RLOCATE            (Declare `RBTREE(rlocate)') */
 /* #define RBTREE_WANT_TRYINSERT          (Declare `RBTREE(tryinsert)') */
+/* #define RBTREE_OMIT_REMOVE             (Omit    `RBTREE(remove)') */
 /* #define RBTREE_DEBUG                   (Enable internal debug assertions and verification) */
 /* #define RBTREE_NDEBUG                  (Disable internal debug assertions and verification) */
 /* #define RBTREE_LEFT_LEANING            (Define ABI for a left-leaning tree, which doesn't require a parent
@@ -118,43 +119,45 @@ RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(locate))(/*nullable*/ RBTREE_T *root,
                                          RBTREE_Tkey key);
 
-#if !defined(RBTREE_MINKEY_EQ_MAXKEY) && defined(RBTREE_WANT_RLOCATE)
+#ifdef RBTREE_WANT_RLOCATE
 /* Locate the first node overlapping with the given range.
  * @return: RBTREE_NULL: No node exists within the given range. */
 RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(rlocate))(/*nullable*/ RBTREE_T *root,
                                           RBTREE_Tkey minkey,
                                           RBTREE_Tkey maxkey);
-#endif /* !RBTREE_MINKEY_EQ_MAXKEY && RBTREE_WANT_RLOCATE */
+#endif /* RBTREE_WANT_RLOCATE */
 
 /* Insert the given node into the given tree. The caller must ensure
- * that no already-existing node overlaps with the given `node' */
+ * that no  already-existing node  overlaps  with the  given  `node' */
 RBTREE_DECL __ATTR_NONNULL((1, 2)) void
 RBTREE_NOTHROW(RBTREE_CC RBTREE(insert))(RBTREE_T **__restrict proot,
                                          RBTREE_T *__restrict node);
 
 #ifdef RBTREE_WANT_TRYINSERT
 /* Same as `RBTREE(insert)', but gracefully fail (by returning `false')
- * when some other node already exists that is overlapping with `node' */
+ * when  some other node already exists that is overlapping with `node' */
 RBTREE_DECL __ATTR_WUNUSED __ATTR_NONNULL((1, 2)) __BOOL
 RBTREE_NOTHROW(RBTREE_CC RBTREE(tryinsert))(RBTREE_T **__restrict proot,
                                             RBTREE_T *__restrict node);
 #endif /* RBTREE_WANT_TRYINSERT */
 
+#ifndef RBTREE_OMIT_REMOVE
 /* Remove and return the node node for `key'.
  * @return: RBTREE_NULL: No node exists for the given key. */
 RBTREE_DECL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(remove))(RBTREE_T **__restrict proot,
                                          RBTREE_Tkey key);
+#endif /* !RBTREE_OMIT_REMOVE */
 
-#if !defined(RBTREE_MINKEY_EQ_MAXKEY) && defined(RBTREE_WANT_RREMOVE)
+#ifdef RBTREE_WANT_RREMOVE
 /* Remove and return the node node for `minkey...maxkey'.
  * @return: RBTREE_NULL: No node exists within the given range. */
 RBTREE_DECL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(rremove))(RBTREE_T **__restrict proot,
                                           RBTREE_Tkey minkey,
                                           RBTREE_Tkey maxkey);
-#endif /* !RBTREE_MINKEY_EQ_MAXKEY && RBTREE_WANT_RREMOVE */
+#endif /* RBTREE_WANT_RREMOVE */
 
 /* Remove the given node from the given tree. */
 RBTREE_DECL __ATTR_NONNULL((1, 2)) void
@@ -163,13 +166,13 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict proot,
 
 #ifdef RBTREE_WANT_PREV_NEXT_NODE
 /* Return the next node with a key-range located below `node'
- * If no such node exists, return `RBTREE_NULL' instead.
+ * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
 RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T const *__restrict node);
 
 /* Return the next node with a key-range located above `node'
- * If no such node exists, return `RBTREE_NULL' instead.
+ * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
 RBTREE_DECL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
 RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T const *__restrict node);
@@ -177,10 +180,14 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T const *__restrict node);
 
 
 #ifdef RBTREE_WANT_MINMAXLOCATE
+#ifndef RBTREE_MINMAX_T_DEFINED
 typedef struct {
 	RBTREE_T *mm_min; /* [0..1] Lowest branch. */
 	RBTREE_T *mm_max; /* [0..1] Greatest branch. */
 } RBTREE(minmax_t);
+#else /* !RBTREE_MINMAX_T_DEFINED */
+#undef RBTREE_MINMAX_T_DEFINED
+#endif /* RBTREE_MINMAX_T_DEFINED */
 
 /* Find the lowest and greatest nodes that are overlapping with the given key-range. */
 RBTREE_DECL __ATTR_NONNULL((4)) void
@@ -331,7 +338,7 @@ __DECL_END
 #elif defined(RBTREE_ASSERT_IS_NOOP)
 #define RBTREE_NDEBUG
 #elif 1 /* Default RB-tree internal debug checks enabled:
-         *   0: Perform debug checks by default (very slot, and add O(N) to pretty much every operation)
+         *   0:  Perform debug checks by default (very slot, and add O(N) to pretty much every operation)
          *   1: Disable internal debug checks by default (operations take their promised lengths of time)
          */
 #define RBTREE_NDEBUG
@@ -368,7 +375,7 @@ __DECL_BEGIN
 
 #ifndef RBTREE_NDEBUG
 /* @param: cur_black_nodes: The # of black nodes already encountered (excluding self)
- * @param: exp_black_nodes: The # of black nodes expected when NIL is reached.
+ * @param: exp_black_nodes: The # of black nodes expected when NIL is  reached.
  *                          For this purpose, the NIL-nodes themself (which are
  *                          technically also black) are also counted. */
 __PRIVATE __ATTR_NONNULL((1)) void
@@ -469,7 +476,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(locate))(/*nullable*/ RBTREE_T *root,
 	return root;
 }
 
-#if !defined(RBTREE_MINKEY_EQ_MAXKEY) && (defined(RBTREE_WANT_RLOCATE) || defined(RBTREE_WANT_RREMOVE))
+#if defined(RBTREE_WANT_RLOCATE) || defined(RBTREE_WANT_RREMOVE)
 /* Locate the first node overlapping with the given range.
  * @return: RBTREE_NULL: No node exists within the given range. */
 #ifdef RBTREE_WANT_RLOCATE
@@ -494,7 +501,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(rlocate))(/*nullable*/ RBTREE_T *root,
 	}
 	return root;
 }
-#endif /* !RBTREE_MINKEY_EQ_MAXKEY && (RBTREE_WANT_RLOCATE || RBTREE_WANT_RREMOVE) */
+#endif /* RBTREE_WANT_RLOCATE || RBTREE_WANT_RREMOVE */
 
 
 #ifdef RBTREE_LEFT_LEANING
@@ -564,7 +571,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_insert_impl))(RBTREE_T *root,
 }
 
 /* Insert the given node into the given tree. The caller must ensure
- * that no already-existing node overlaps with the given `node' */
+ * that no  already-existing node  overlaps  with the  given  `node' */
 RBTREE_IMPL __ATTR_NONNULL((1, 2)) void
 RBTREE_NOTHROW(RBTREE_CC RBTREE(insert))(RBTREE_T **__restrict proot,
                                          RBTREE_T *__restrict node) {
@@ -624,7 +631,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_tryinsert_impl))(RBTREE_T *root,
 
 
 /* Same as `RBTREE(insert)', but gracefully fail (by returning `false')
- * when some other node already exists that is overlapping with `node' */
+ * when  some other node already exists that is overlapping with `node' */
 RBTREE_IMPL __ATTR_WUNUSED __ATTR_NONNULL((1, 2)) __BOOL
 RBTREE_NOTHROW(RBTREE_CC RBTREE(tryinsert))(RBTREE_T **__restrict proot,
                                             RBTREE_T *__restrict node) {
@@ -819,7 +826,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict proot,
 }
 
 /* TODO: RBTREE(remove) and RBTREE(rremove) can be implemented more efficiently
- *       for left-leaning RBTREEs by merging the node lookup with building the
+ *       for  left-leaning RBTREEs by merging the node lookup with building the
  *       parent-path to that same node. */
 
 #else /* RBTREE_LEFT_LEANING */
@@ -827,7 +834,23 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict proot,
 /* NORMAL                                                               */
 /************************************************************************/
 
-/* Have `self' swap positions with its max-child. */
+#ifndef RBTREE_REPPAR
+#define RBTREE_REPPAR(self, oldv, newv) RBTREE_SETPAR(self, newv)
+#endif /* !RBTREE_REPPAR */
+
+
+/* Have `self' swap positions with its rhs-child.
+ *
+ *          parent         >>        parent
+ *             |           >>           |
+ *           self          >>          rhs
+ *          /    \         >>         /   \
+ *        BBB     rhs      >>      self    AAA
+ *               /   \     >>     /   \
+ *           newrhs   AAA  >>   BBB    newrhs
+ *
+ * Modified nodes:                     parent, self, rhs
+ * Modified nodes (parent-field only): newrhs */
 __LOCAL __ATTR_NONNULL((1)) void
 RBTREE_NOTHROW(RBTREE_CC RBTREE(_rotl))(RBTREE_T *__restrict self) {
 	RBTREE_T *rhs, *parent, *newrhs;
@@ -839,7 +862,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_rotl))(RBTREE_T *__restrict self) {
 	RBTREE_SETLHS(rhs, self);
 	RBTREE_SETPAR(self, rhs);
 	if (newrhs != RBTREE_NULL)
-		RBTREE_SETPAR(newrhs, self);
+		RBTREE_REPPAR(newrhs, rhs, self);
 	if (parent != RBTREE_NULL) {
 		if (self == RBTREE_GETLHS(parent)) {
 			RBTREE_SETLHS(parent, rhs);
@@ -851,7 +874,18 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_rotl))(RBTREE_T *__restrict self) {
 	RBTREE_SETPAR(rhs, parent);
 }
 
-/* Have `self' swap positions with its min-child. */
+/* Have `self' swap positions with its lhs-child.
+ *
+ *          parent         >>        parent
+ *             |           >>           |
+ *           self          >>          lhs
+ *          /    \         >>         /   \
+ *        lhs     BBB      >>      AAA    self
+ *       /   \             >>            /    \
+ *     AAA    newlhs       >>         newlhs   BBB
+ *
+ * Modified nodes:                     parent, self, lhs
+ * Modified nodes (parent-field only): newlhs */
 __LOCAL __ATTR_NONNULL((1)) void
 RBTREE_NOTHROW(RBTREE_CC RBTREE(_rotr))(RBTREE_T *__restrict self) {
 	RBTREE_T *lhs, *parent, *newlhs;
@@ -863,7 +897,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_rotr))(RBTREE_T *__restrict self) {
 	RBTREE_SETRHS(lhs, self);
 	RBTREE_SETPAR(self, lhs);
 	if (newlhs != RBTREE_NULL)
-		RBTREE_SETPAR(newlhs, self);
+		RBTREE_REPPAR(newlhs, lhs, self);
 	if (parent != RBTREE_NULL) {
 		if (self == RBTREE_GETLHS(parent)) {
 			RBTREE_SETLHS(parent, lhs);
@@ -936,7 +970,7 @@ again:
 			 *       node:RED
 			 *
 			 * ... and fix-up the parent of `grandparent', which now
-			 *     takes the place of `node', of the potentially
+			 *     takes  the  place of  `node', of  the potentially
 			 *     out-of-place RED node having to be fixed.
 			 */
 			RBTREE_SETBLACK(parent);
@@ -965,7 +999,7 @@ again:
 				if (parent == RBTREE_GETLHS(grandparent)) {
 					(RBTREE(_rotl)(parent));
 					parent      = node;
-					node        = RBTREE_GETLHS(node);
+					node        = RBTREE_GETLHS(parent);
 					grandparent = RBTREE_GETPAR(parent);
 				}
 			} else {
@@ -973,7 +1007,7 @@ again:
 				if (parent == RBTREE_GETRHS(grandparent)) {
 					(RBTREE(_rotr)(parent));
 					parent      = node;
-					node        = RBTREE_GETRHS(node);
+					node        = RBTREE_GETRHS(parent);
 					grandparent = RBTREE_GETPAR(parent);
 				}
 			}
@@ -998,7 +1032,7 @@ again:
 }
 
 /* Insert the given node into the given tree. The caller must ensure
- * that no already-existing node overlaps with the given `node' */
+ * that no  already-existing node  overlaps  with the  given  `node' */
 RBTREE_IMPL __ATTR_NONNULL((1, 2)) void
 RBTREE_NOTHROW(RBTREE_CC RBTREE(insert))(RBTREE_T **__restrict proot,
                                          RBTREE_T *__restrict node) {
@@ -1024,7 +1058,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(insert))(RBTREE_T **__restrict proot,
 
 #ifdef RBTREE_WANT_TRYINSERT
 /* Same as `RBTREE(insert)', but gracefully fail (by returning `false')
- * when some other node already exists that is overlapping with `node' */
+ * when  some other node already exists that is overlapping with `node' */
 RBTREE_IMPL __ATTR_WUNUSED __ATTR_NONNULL((1, 2)) __BOOL
 RBTREE_NOTHROW(RBTREE_CC RBTREE(tryinsert))(RBTREE_T **__restrict proot,
                                             RBTREE_T *__restrict node) {
@@ -1043,8 +1077,10 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(tryinsert))(RBTREE_T **__restrict proot,
 	}
 again:
 	/* Gracefully fail if the given range is already mapped. */
-	if (_RBTREE_OVERLAPPING(root, node))
+	if (_RBTREE_OVERLAPPING(root, node)) {
+		_RBTREE_VALIDATE(*proot);
 		return 0;
+	}
 	if (RBTREE_KEY_LO(RBTREE_GETMAXKEY(node), RBTREE_GETMINKEY(root))) {
 		RBTREE_T *nextnode;
 		nextnode = RBTREE_GETLHS(root);
@@ -1097,14 +1133,22 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(_replace))(RBTREE_T **__restrict proot,
 	temp = RBTREE_GETLHS(node);
 	RBTREE_SETLHS(repl, temp);
 	if (temp != RBTREE_NULL) {
+#ifdef RBTREE_HASPAR
+		RBTREE_ASSERT(RBTREE_HASPAR(temp, node));
+#else /* RBTREE_HASPAR */
 		RBTREE_ASSERT(RBTREE_GETPAR(temp) == node);
-		RBTREE_SETPAR(temp, repl);
+#endif /* !RBTREE_HASPAR */
+		RBTREE_REPPAR(temp, node, repl);
 	}
 	temp = RBTREE_GETRHS(node);
 	RBTREE_SETRHS(repl, temp);
 	if (temp != RBTREE_NULL) {
+#ifdef RBTREE_HASPAR
+		RBTREE_ASSERT(RBTREE_HASPAR(temp, node));
+#else /* RBTREE_HASPAR */
 		RBTREE_ASSERT(RBTREE_GETPAR(temp) == node);
-		RBTREE_SETPAR(temp, repl);
+#endif /* !RBTREE_HASPAR */
+		RBTREE_REPPAR(temp, node, repl);
 	}
 }
 
@@ -1120,9 +1164,9 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict proot,
 	lhs = RBTREE_GETLHS(node);
 	rhs = RBTREE_GETRHS(node);
 	RBTREE_ASSERT((RBTREE_GETPAR(node) == RBTREE_NULL) == (*proot == node));
-	/* Find the node with which to replace the given `node'.
+	/* Find the  node with  which to  replace the  given  `node'.
 	 * This this purpose, when our node what 2 non-NULL children,
-	 * then we must replace `node' with either the MAX-node from
+	 * then we must replace `node' with either the MAX-node  from
 	 * `lhs', or the MIN-node from `rhs' */
 	if (lhs != RBTREE_NULL && rhs != RBTREE_NULL) {
 		RBTREE_T *replacement;
@@ -1136,7 +1180,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict proot,
 			replacement = RBTREE_GETLHS(replacement);
 #endif
 		/* At this point we know that `node_to_remove' has <= 2
-		 * child nodes, so when we call ourselves recursively,
+		 * child  nodes, so when we call ourselves recursively,
 		 * we know that we won't get here again. */
 		(RBTREE(removenode)(proot, replacement));
 
@@ -1172,7 +1216,11 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(removenode))(RBTREE_T **__restrict proot,
 		lhs = rhs;
 	/* Replace `node' with `lhs' */
 	parent = RBTREE_GETPAR(node);
+#ifdef RBTREE_REPPAR_MAYBE_NULL
+	RBTREE_REPPAR_MAYBE_NULL(lhs, node, parent, proot);
+#else /* RBTREE_REPPAR_MAYBE_NULL */
 	RBTREE_SETPAR(lhs, parent);
+#endif /* !RBTREE_REPPAR_MAYBE_NULL */
 	if (parent == RBTREE_NULL) {
 		/* Special case: Remove the root node. */
 		*proot = lhs;
@@ -1305,6 +1353,7 @@ done:;
 #endif /* !RBTREE_LEFT_LEANING */
 
 
+#ifndef RBTREE_OMIT_REMOVE
 /* Remove and return the node node for `key'.
  * @return: RBTREE_NULL: No node exists for the given key. */
 RBTREE_IMPL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
@@ -1316,8 +1365,10 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(remove))(RBTREE_T **__restrict proot,
 		(RBTREE(removenode)(proot, node));
 	return node;
 }
+#endif /* !RBTREE_OMIT_REMOVE */
 
-#if !defined(RBTREE_MINKEY_EQ_MAXKEY) && defined(RBTREE_WANT_RREMOVE)
+
+#ifdef RBTREE_WANT_RREMOVE
 /* Remove and return the node node for `minkey...maxkey'.
  * @return: RBTREE_NULL: No node exists within the given range. */
 RBTREE_IMPL __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
@@ -1330,19 +1381,23 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(rremove))(RBTREE_T **__restrict proot,
 		(RBTREE(removenode)(proot, node));
 	return node;
 }
-#endif /* !RBTREE_MINKEY_EQ_MAXKEY && RBTREE_WANT_RREMOVE */
+#endif /* RBTREE_WANT_RREMOVE */
 
-#ifdef RBTREE_WANT_PREV_NEXT_NODE
+#if defined(RBTREE_WANT_PREV_NEXT_NODE) || defined(RBTREE_WANT_MINMAXLOCATE)
 /* Return the next node with a key-range located below `node'
- * If no such node exists, return `RBTREE_NULL' instead.
+ * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
+#ifdef RBTREE_WANT_PREV_NEXT_NODE
 RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+#else /* RBTREE_WANT_PREV_NEXT_NODE */
+__PRIVATE __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+#endif /* !RBTREE_WANT_PREV_NEXT_NODE */
 RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T const *__restrict node) {
 	RBTREE_T *result;
 	result = RBTREE_GETLHS(node);
 	if (result == RBTREE_NULL) {
 		/* Keep going up until we reach the ROOT (NULL),
-		 * or reach a parent via its RHS-child-branch. */
+		 * or reach a  parent via its  RHS-child-branch. */
 		for (;;) {
 			result = RBTREE_GETPAR(node);
 			if (result == RBTREE_NULL)
@@ -1360,15 +1415,19 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(prevnode))(RBTREE_T const *__restrict node) {
 }
 
 /* Return the next node with a key-range located above `node'
- * If no such node exists, return `RBTREE_NULL' instead.
+ * If  no  such  node exists,  return  `RBTREE_NULL' instead.
  * NOTE: This function takes O(log(N)) to execute. */
+#ifdef RBTREE_WANT_PREV_NEXT_NODE
 RBTREE_IMPL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+#else /* RBTREE_WANT_PREV_NEXT_NODE */
+__PRIVATE __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) RBTREE_T *
+#endif /* !RBTREE_WANT_PREV_NEXT_NODE */
 RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T const *__restrict node) {
 	RBTREE_T *result;
 	result = RBTREE_GETRHS(node);
 	if (result == RBTREE_NULL) {
 		/* Keep going up until we reach the ROOT (NULL),
-		 * or reach a parent via its LHS-child-branch. */
+		 * or reach a  parent via its  LHS-child-branch. */
 		for (;;) {
 			result = RBTREE_GETPAR(node);
 			if (result == RBTREE_NULL)
@@ -1384,7 +1443,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(nextnode))(RBTREE_T const *__restrict node) {
 	}
 	return result;
 }
-#endif /* RBTREE_WANT_PREV_NEXT_NODE */
+#endif /* RBTREE_WANT_PREV_NEXT_NODE || RBTREE_WANT_MINMAXLOCATE */
 
 
 #ifdef RBTREE_WANT_MINMAXLOCATE
@@ -1425,7 +1484,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(minmaxlocate))(RBTREE_T *root,
 		 * Imagine minkey=9, maxkey=25
 		 * - Right now, `root' is `13'
 		 * - The expected min-node is `11', and
-		 *   the expected max-node is `25'
+		 *   the  expected  max-node  is   `25'
 		 *
 		 * As such, we can find the min-node:
 		 *   >> MIN_NODE = root;
@@ -1448,7 +1507,7 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(minmaxlocate))(RBTREE_T *root,
 		 *   >>     }
 		 *   >>     break;
 		 *   >> }
-		 * To find the max-node, we do the same,
+		 * To  find the max-node, we do the same,
 		 * but with mirrored LHS/RHS and MIN/MAX. */
 		min_node = root;
 		for (;;) {
@@ -1490,6 +1549,26 @@ RBTREE_NOTHROW(RBTREE_CC RBTREE(minmaxlocate))(RBTREE_T *root,
 			}
 			break;
 		}
+		/* Because the min/max-range may be spread across different sub-trees,
+		 * we must still  check for the  case where the  predecessor/successor
+		 * the min/max node continues to be in-bounds! */
+		for (;;) {
+			iter = RBTREE(prevnode)(min_node);
+			if (!iter)
+				break;
+			if (RBTREE_KEY_LO(RBTREE_GETMAXKEY(iter), minkey))
+				break;
+			min_node = iter;
+		}
+		for (;;) {
+			iter = RBTREE(nextnode)(max_node);
+			if (!iter)
+				break;
+			if (RBTREE_KEY_GR(RBTREE_GETMINKEY(iter), maxkey))
+				break;
+			max_node = iter;
+		}
+		/* Write-back our results. */
 		result->mm_min = min_node;
 		result->mm_max = max_node;
 		return;
@@ -1560,3 +1639,4 @@ __DECL_END
 #undef RBTREE_WANT_RREMOVE
 #undef RBTREE_WANT_RLOCATE
 #undef RBTREE_WANT_TRYINSERT
+#undef RBTREE_OMIT_REMOVE
