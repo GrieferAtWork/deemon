@@ -226,7 +226,7 @@ find_block_start:
 	result->xn_refcnt = 1;
 	rwlock_init(&result->xn_lock);
 	LIST_INIT(&result->xn_changes);
-	LIST_ENTRY_UNBOUND_INIT(result, xn_changed);
+	LIST_ENTRY_UNBOUND_INIT(&result->xn_changed);
 	if ((result->xn_sib_prev = self) != NULL) {
 		self->xn_sib_next = result;
 	} else {
