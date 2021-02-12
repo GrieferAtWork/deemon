@@ -88,7 +88,7 @@ mei_init(ModuleExportsIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	ModuleExports *exports_map;
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleExportsIterator", &exports_map) ||
-	    DeeObject_AssertTypeExact((DeeObject *)exports_map, &ModuleExports_Type))
+	    DeeObject_AssertTypeExact(exports_map, &ModuleExports_Type))
 		return -1;
 	self->mei_index  = 0;
 	self->mei_module = exports_map->me_module;
@@ -111,7 +111,7 @@ mei_visit(ModuleExportsIterator *__restrict self, dvisit_t proc, void *arg) {
 #define DEFINE_MEI_COMPARE(name, op)                                       \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(ModuleExportsIterator *self, ModuleExportsIterator *other) {      \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			return NULL;                                                   \
 		return_bool_(READ_INDEX(self) op READ_INDEX(other));               \
 	}
@@ -628,7 +628,7 @@ mgi_init(ModuleGlobalsIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	ModuleGlobals *globals;
 	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobalsIterator", &globals) ||
-	    DeeObject_AssertTypeExact((DeeObject *)globals, &ModuleGlobals_Type))
+	    DeeObject_AssertTypeExact(globals, &ModuleGlobals_Type))
 		return -1;
 	self->mgi_index  = 0;
 	self->mgi_module = globals->mg_module;

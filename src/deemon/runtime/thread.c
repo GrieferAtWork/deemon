@@ -2603,7 +2603,7 @@ thread_ctor(DeeThreadObject *__restrict self,
 			self->t_threadargs = (DREF struct tuple_object *)Dee_EmptyTuple;
 		else {
 			/* Make sure that the callback arguments are a tuple. */
-			if (DeeObject_AssertTypeExact((DeeObject *)self->t_threadargs,
+			if (DeeObject_AssertTypeExact(self->t_threadargs,
 			                              &DeeTuple_Type))
 				goto err_main;
 		}

@@ -869,7 +869,7 @@ enumattr_hash(EnumAttr *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 enumattr_eq(EnumAttr *self,
             EnumAttr *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeEnumAttr_Type))
+	if (DeeObject_AssertTypeExact(other, &DeeEnumAttr_Type))
 		return NULL;
 	if (self->ea_type != other->ea_type)
 		return_false;
@@ -879,7 +879,7 @@ enumattr_eq(EnumAttr *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 enumattr_ne(EnumAttr *self,
             EnumAttr *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeEnumAttr_Type))
+	if (DeeObject_AssertTypeExact(other, &DeeEnumAttr_Type))
 		return NULL;
 	if (self->ea_type != other->ea_type)
 		return_true;

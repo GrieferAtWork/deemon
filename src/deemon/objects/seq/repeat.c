@@ -111,7 +111,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatiter_init(RepeatIterator *__restrict self,
                 size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqRepeatIterator", &self->ri_rep) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->ri_rep, &SeqRepeat_Type))
+	    DeeObject_AssertTypeExact(self->ri_rep, &SeqRepeat_Type))
 		return -1;
 	self->ri_iter = DeeObject_IterSelf(self->ri_rep->r_seq);
 	if unlikely(!self->ri_iter)
@@ -140,7 +140,7 @@ repeatiter_visit(RepeatIterator *__restrict self, dvisit_t proc, void *arg) {
 	name(RepeatIterator *self, RepeatIterator *other) {                             \
 		DREF DeeObject *my_iter, *ot_iter;                                          \
 		DREF DeeObject *result;                                                     \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqRepeatIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqRepeatIterator_Type)) \
 			return NULL;                                                            \
 		check_diffnum;                                                              \
 		rwlock_read(&self->ri_lock);                                                \
@@ -723,7 +723,7 @@ repeatitemiter_init(RepeatItemIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqItemRepeatIterator", &self->rii_rep))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)self->rii_rep, &SeqItemRepeat_Type))
+	if (DeeObject_AssertTypeExact(self->rii_rep, &SeqItemRepeat_Type))
 		goto err;
 	self->rii_obj = self->rii_rep->ri_obj;
 	self->rii_num = self->rii_rep->ri_num;
@@ -746,7 +746,7 @@ repeatitemiter_visit(RepeatItemIterator *__restrict self, dvisit_t proc, void *a
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitemiter_eq(RepeatItemIterator *self,
                   RepeatItemIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
 		goto err;
 	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
 		return_false;
@@ -758,7 +758,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitemiter_ne(RepeatItemIterator *self,
                   RepeatItemIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
 		goto err;
 	if (REPEATITEMPITER_READ_NUM(self) != REPEATITEMPITER_READ_NUM(other))
 		return_true;
@@ -771,7 +771,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitemiter_lo(RepeatItemIterator *self,
                   RepeatItemIterator *other) {
 	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
 		goto err;
 	my_num = REPEATITEMPITER_READ_NUM(self);
 	ot_num = REPEATITEMPITER_READ_NUM(other);
@@ -786,7 +786,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitemiter_le(RepeatItemIterator *self,
                   RepeatItemIterator *other) {
 	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
 		goto err;
 	my_num = REPEATITEMPITER_READ_NUM(self);
 	ot_num = REPEATITEMPITER_READ_NUM(other);
@@ -801,7 +801,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitemiter_gr(RepeatItemIterator *self,
                   RepeatItemIterator *other) {
 	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
 		goto err;
 	my_num = REPEATITEMPITER_READ_NUM(self);
 	ot_num = REPEATITEMPITER_READ_NUM(other);
@@ -816,7 +816,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitemiter_ge(RepeatItemIterator *self,
                   RepeatItemIterator *other) {
 	size_t my_num, ot_num;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqItemRepeatIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SeqItemRepeatIterator_Type))
 		goto err;
 	my_num = REPEATITEMPITER_READ_NUM(self);
 	ot_num = REPEATITEMPITER_READ_NUM(other);

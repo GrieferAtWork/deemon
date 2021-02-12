@@ -73,7 +73,7 @@ rosetiterator_init(SetIterator *__restrict self,
 	Set *set;
 	if (DeeArg_Unpack(argc, argv, "o:_RoSetIterator", &set))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)set, &DeeRoSet_Type))
+	if (DeeObject_AssertTypeExact(set, &DeeRoSet_Type))
 		goto err;
 	self->si_set = set;
 	Dee_Incref(set);

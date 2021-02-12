@@ -55,7 +55,7 @@ PRIVATE struct keyword lookupmode_kwlist[] = { K(lookupmode), KEND };
 		COMPILER_BEGIN(self->cw_compiler);                                      \
 		if (DeeArg_UnpackKw(argc, argv, kw, suffix_kwlist, "o:" #name, &head))  \
 			goto done;                                                          \
-		if (DeeObject_AssertTypeExact((DeeObject *)head, &DeeCompilerAst_Type)) \
+		if (DeeObject_AssertTypeExact(head, &DeeCompilerAst_Type)) \
 			goto done;                                                          \
 		if unlikely(head->ci_compiler != self->cw_compiler) {                   \
 			err_invalid_ast_compiler(head);                                     \

@@ -4069,7 +4069,7 @@ again:
 #define DEFINE_LIST_ITERATOR_COMPARE(name, expr)                                  \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                         \
 	name(ListIterator *self, ListIterator *other) {                               \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeListIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &DeeListIterator_Type)) \
 			goto err;                                                             \
 		return_bool(expr);                                                        \
 	err:                                                                          \

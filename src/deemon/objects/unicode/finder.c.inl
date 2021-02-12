@@ -184,7 +184,7 @@ sfi_init(StringFindIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	StringFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_StringFindIterator", &find) ||
-	    DeeObject_AssertTypeExact((DeeObject *)find, &StringFind_Type))
+	    DeeObject_AssertTypeExact(find, &StringFind_Type))
 		goto err;
 	return sfi_setup(self, find);
 err:
@@ -196,7 +196,7 @@ scfi_init(StringFindIterator *__restrict self,
           size_t argc, DeeObject *const *argv) {
 	StringFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_StringCaseFindIterator", &find) ||
-	    DeeObject_AssertTypeExact((DeeObject *)find, &StringCaseFind_Type))
+	    DeeObject_AssertTypeExact(find, &StringCaseFind_Type))
 		goto err;
 	return sfi_setup(self, find);
 err:
@@ -380,7 +380,7 @@ PRIVATE struct type_member scfi_members[] = {
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(StringFindIterator *self, StringFindIterator *other) {            \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			return NULL;                                                   \
 		return_bool(READ_PTR(self) op READ_PTR(other));                    \
 	}
@@ -517,8 +517,8 @@ sf_init(StringFind *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "oo|IdId:_StringFind",
 	                  &self->sf_str, &self->sf_needle,
 	                  &self->sf_start, &self->sf_end) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->sf_str, &DeeString_Type) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->sf_needle, &DeeString_Type))
+	    DeeObject_AssertTypeExact(self->sf_str, &DeeString_Type) ||
+	    DeeObject_AssertTypeExact(self->sf_needle, &DeeString_Type))
 		goto err;
 	Dee_Incref(self->sf_str);
 	Dee_Incref(self->sf_needle);

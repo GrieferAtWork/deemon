@@ -73,7 +73,7 @@ rodictiterator_init(DictIterator *__restrict self,
 	Dict *Dict;
 	if (DeeArg_Unpack(argc, argv, "o:_RoDictIterator", &Dict))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)Dict, &DeeRoDict_Type))
+	if (DeeObject_AssertTypeExact(Dict, &DeeRoDict_Type))
 		goto err;
 	self->di_dict = Dict;
 	Dee_Incref(Dict);

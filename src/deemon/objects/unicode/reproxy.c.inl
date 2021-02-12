@@ -114,7 +114,7 @@ refaiter_init(ReSequenceIterator *__restrict self,
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReFindAllIterator", &reseq))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)reseq, &ReFindAll_Type))
+	if (DeeObject_AssertTypeExact(reseq, &ReFindAll_Type))
 		goto err;
 	memcpy(&self->re_data, &reseq->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
@@ -230,7 +230,7 @@ refaiter_getseq(ReSequenceIterator *__restrict self) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(ReSequenceIterator *self, ReSequenceIterator *other) {            \
 		char *x, *y;                                                       \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			goto err;                                                      \
 		x = REITER_GETDATAPTR(self);                                       \
 		y = REITER_GETDATAPTR(other);                                      \
@@ -336,7 +336,7 @@ relaiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReLocateAllIterator", &reseq) ||
-	    DeeObject_AssertTypeExact((DeeObject *)reseq, &ReLocateAll_Type))
+	    DeeObject_AssertTypeExact(reseq, &ReLocateAll_Type))
 		goto err;
 	memcpy(&self->re_data, &reseq->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
@@ -474,7 +474,7 @@ respiter_init(ReSequenceIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	ReSequence *reseq;
 	if (DeeArg_Unpack(argc, argv, "o:_ReSplitIterator", &reseq) ||
-	    DeeObject_AssertTypeExact((DeeObject *)reseq, &ReSplit_Type))
+	    DeeObject_AssertTypeExact(reseq, &ReSplit_Type))
 		goto err;
 	memcpy(&self->re_data, &reseq->re_data,
 	       sizeof(ReSequence) - offsetof(ReSequence, re_data));
@@ -632,12 +632,12 @@ refa_init(ReSequence *__restrict self,
 	String *rules = NULL;
 	if (DeeArg_Unpack(argc, argv, "oo|o" /*":_ReFindAll"*/,
 	                  &self->re_data, &self->re_pattern, &rules) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->re_data, &DeeString_Type) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->re_pattern, &DeeString_Type))
+	    DeeObject_AssertTypeExact(self->re_data, &DeeString_Type) ||
+	    DeeObject_AssertTypeExact(self->re_pattern, &DeeString_Type))
 		goto err;
 	self->re_args.re_flags = Dee_REGEX_FNORMAL;
 	if (rules) {
-		if (DeeObject_AssertTypeExact((DeeObject *)rules, &DeeString_Type))
+		if (DeeObject_AssertTypeExact(rules, &DeeString_Type))
 			goto err;
 		if (regex_get_rules(DeeString_STR(rules), &self->re_args.re_flags))
 			goto err;

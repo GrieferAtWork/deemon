@@ -649,7 +649,7 @@ super_typeof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	Super *super_object;
 	if (DeeArg_Unpack(argc, argv, "o:typeof", &super_object) ||
-	    DeeObject_AssertTypeExact((DeeObject *)super_object, &DeeSuper_Type))
+	    DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
 		return NULL;
 	return_reference_((DeeObject *)super_object->s_type);
 }
@@ -659,7 +659,7 @@ super_selfof(DeeObject *UNUSED(self),
              size_t argc, DeeObject *const *argv) {
 	Super *super_object;
 	if (DeeArg_Unpack(argc, argv, "o:selfof", &super_object) ||
-	    DeeObject_AssertTypeExact((DeeObject *)super_object, &DeeSuper_Type))
+	    DeeObject_AssertTypeExact(super_object, &DeeSuper_Type))
 		return NULL;
 	return_reference_((DeeObject *)super_object->s_self);
 }

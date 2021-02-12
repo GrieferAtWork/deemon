@@ -811,7 +811,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 writer_init(Writer *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeStringObject *init_string;
 	if (DeeArg_Unpack(argc, argv, "o:_FileWriter", &init_string) ||
-	    DeeObject_AssertTypeExact((DeeObject *)init_string, &DeeString_Type))
+	    DeeObject_AssertTypeExact(init_string, &DeeString_Type))
 		goto err;
 	rwlock_init(&self->fo_lock);
 	self->w_printer.up_flags = (uint8_t)DeeString_WIDTH(init_string);
@@ -978,7 +978,7 @@ writer_setstring(Writer *__restrict self,
 	struct unicode_printer old_printer;
 	if (DeeNone_Check(value))
 		goto do_del_string;
-	if (DeeObject_AssertTypeExact((DeeObject *)value, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(value, &DeeString_Type))
 		return -1;
 	if (DeeString_IsEmpty(value))
 		goto do_del_string;

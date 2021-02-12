@@ -1487,7 +1487,7 @@ toi_copy(TypeOperatorsIterator *__restrict self,
 #define DEFINE_TOI_COMPARE(name, op)                                                    \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                               \
 	name(TypeOperatorsIterator *self, TypeOperatorsIterator *other) {                   \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &TypeOperatorsIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &TypeOperatorsIterator_Type)) \
 			goto err;                                                                   \
 		return_bool(TOI_GETOPID(self) op TOI_GETOPID(other));                           \
 	err:                                                                                \

@@ -63,7 +63,7 @@ seq_filteriterator_init(HashFilterIterator *__restrict self,
 	HashFilter *filter;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqHashFilterIterator", &filter))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)filter, &SeqHashFilter_Type))
+	if (DeeObject_AssertTypeExact(filter, &SeqHashFilter_Type))
 		goto err;
 	self->fi_iter = DeeObject_IterSelf(filter->f_seq);
 	if unlikely(!self->fi_iter)
@@ -80,7 +80,7 @@ map_filteriterator_init(HashFilterIterator *__restrict self,
 	HashFilter *filter;
 	if (DeeArg_Unpack(argc, argv, "o:_MappingHashFilterIterator", &filter))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)filter, &MapHashFilter_Type))
+	if (DeeObject_AssertTypeExact(filter, &MapHashFilter_Type))
 		goto err;
 	self->fi_iter = DeeObject_IterSelf(filter->f_seq);
 	if unlikely(!self->fi_iter)
@@ -171,7 +171,7 @@ filteriterator_hash(HashFilterIterator *__restrict self) {
 #define DEFINE_FILTERITERATOR_COMPARE(name, compare_object, more)          \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(HashFilterIterator *self, HashFilterIterator *other) {            \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			goto err;                                                      \
 		more                                                               \
 		return compare_object(self->fi_iter, other->fi_iter);              \

@@ -2492,7 +2492,10 @@ DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObje
 #ifndef __OPTIMIZE_SIZE__
 #define DeeObject_AssertTypeExact(self, required_type) \
 	(unlikely(Dee_TYPE(self) == required_type ? 0 : DeeObject_TypeAssertFailed((DeeObject *)(self), required_type)))
-#endif /* !__OPTIMIZE_SIZE__ */
+#else /* !__OPTIMIZE_SIZE__ */
+#define DeeObject_AssertTypeExact(self, required_type) \
+	unlikely((DeeObject_AssertTypeExact)(Dee_REQUIRES_OBJECT(self), required_type))
+#endif /* __OPTIMIZE_SIZE__ */
 
 
 /* Object typeof(). */
@@ -3057,9 +3060,6 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #define DeeObject_AssertType(self, required_type)                      __builtin_expect(DeeObject_AssertType(self, required_type), 0)
-#ifndef DeeObject_AssertTypeExact
-#define DeeObject_AssertTypeExact(self, required_type)                 __builtin_expect(DeeObject_AssertTypeExact(self, required_type), 0)
-#endif /* !DeeObject_AssertTypeExact */
 #define DeeObject_InplaceDeepCopy(pself)                               __builtin_expect(DeeObject_InplaceDeepCopy(pself), 0)
 #define DeeObject_Assign(self, some_object)                            __builtin_expect(DeeObject_Assign(self, some_object), 0)
 #define DeeObject_MoveAssign(self, other)                              __builtin_expect(DeeObject_MoveAssign(self, other), 0)

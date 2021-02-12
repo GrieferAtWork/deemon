@@ -358,7 +358,7 @@ PRIVATE struct type_member ri_members[] = {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                          \
 	name(RangeIterator *self, RangeIterator *other) {                              \
 		DREF DeeObject *my_index, *ot_index, *result;                              \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqRangeIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type)) \
 			goto err;                                                              \
 		my_index = ri_get_next_index(self);                                        \
 		if unlikely(!my_index)                                                     \
@@ -379,7 +379,7 @@ PRIVATE struct type_member ri_members[] = {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                          \
 	name(RangeIterator *self, RangeIterator *other) {                              \
 		DREF DeeObject *my_index, *ot_index, *result;                              \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqRangeIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqRangeIterator_Type)) \
 			goto err;                                                              \
 		my_index = ri_get_next_index(self);                                        \
 		if unlikely(!my_index)                                                     \

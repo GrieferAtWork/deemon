@@ -579,7 +579,7 @@ dockwdsiter_visit(DocKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
 #define DEFINE_DOCKWDSITER_COMPARE(name, op)                                      \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                         \
 	name(DocKwdsIterator *self, DocKwdsIterator *other) {                         \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &DocKwdsIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &DocKwdsIterator_Type)) \
 			goto err;                                                             \
 		return_bool(DOCKWDSITER_RDITER(self) op DOCKWDSITER_RDITER(other));       \
 	err:                                                                          \
@@ -1379,7 +1379,7 @@ clsproperty_hash(DeeClsPropertyObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsproperty_eq(DeeClsPropertyObject *self,
                DeeClsPropertyObject *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeClsProperty_Type))
+	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
 		goto err;
 	return_bool(self->cp_get == other->cp_get &&
 	            self->cp_del == other->cp_del &&
@@ -1391,7 +1391,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 clsproperty_ne(DeeClsPropertyObject *self,
                DeeClsPropertyObject *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeClsProperty_Type))
+	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
 		goto err;
 	return_bool(self->cp_get != other->cp_get ||
 	            self->cp_del != other->cp_del ||

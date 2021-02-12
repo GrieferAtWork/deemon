@@ -1910,7 +1910,7 @@ relint_fini(DeeRelIntObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 relint_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeRelInt_Type))
+	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
 		return NULL;
 	return_bool(self->ri_sym == other->ri_sym &&
 	            self->ri_add == other->ri_add &&
@@ -1919,7 +1919,7 @@ relint_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 relint_ne(DeeRelIntObject *self, DeeRelIntObject *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeRelInt_Type))
+	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
 		return NULL;
 	return_bool(self->ri_sym != other->ri_sym ||
 	            self->ri_add != other->ri_add ||

@@ -108,7 +108,7 @@ stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
                         size_t argc, DeeObject *const *argv) {
 	StringOrdinals *ords;
 	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinalsIterator", &ords) ||
-	    DeeObject_AssertTypeExact((DeeObject *)ords, &StringOrdinals_Type))
+	    DeeObject_AssertTypeExact(ords, &StringOrdinals_Type))
 		return -1;
 	self->soi_str     = ords->so_str;
 	self->soi_width   = ords->so_width;

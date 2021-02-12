@@ -64,7 +64,7 @@ filteriterator_init(FilterIterator *__restrict self,
 	Filter *filter;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqFilterIterator", &filter))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)filter, &SeqFilter_Type))
+	if (DeeObject_AssertTypeExact(filter, &SeqFilter_Type))
 		goto err;
 	self->fi_iter = DeeObject_IterSelf(filter->f_seq);
 	if unlikely(!self->fi_iter)
@@ -149,7 +149,7 @@ filteriterator_hash(FilterIterator *__restrict self) {
 #define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                         \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
 	name(FilterIterator *self, FilterIterator *other) {                             \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqFilterIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqFilterIterator_Type)) \
 			goto err;                                                               \
 		return compare_object(self->fi_iter, other->fi_iter);                       \
 	err:                                                                            \

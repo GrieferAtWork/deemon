@@ -1001,7 +1001,7 @@ stringiter_init(StringIterator *__restrict self,
 	String *str;
 	if (DeeArg_Unpack(argc, argv, "o:string.Iterator", &str))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)str, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(str, &DeeString_Type))
 		goto err;
 	self->si_string = str;
 	Dee_Incref(str);
@@ -1027,7 +1027,7 @@ INTDEF DeeTypeObject StringIterator_Type;
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                                \
 	name(StringIterator *__restrict self,                                        \
 	     StringIterator *__restrict other) {                                     \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &StringIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &StringIterator_Type)) \
 			goto err;                                                            \
 		return_bool(READ_ITER_PTR(self) op READ_ITER_PTR(other));                \
 	err:                                                                         \

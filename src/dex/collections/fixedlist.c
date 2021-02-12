@@ -950,7 +950,7 @@ fli_visit(FixedListIterator *__restrict self, dvisit_t proc, void *arg) {
 #define DEFINE_FLI_COMPARE(name, op)                                                \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
 	name(FixedListIterator *self, FixedListIterator *other) {                       \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &FixedListIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &FixedListIterator_Type)) \
 			return NULL;                                                            \
 		return_bool(FLI_GETITER(self) op FLI_GETITER(other));                       \
 	}

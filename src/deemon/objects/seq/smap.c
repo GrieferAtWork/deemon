@@ -181,7 +181,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 smapiter_ctor(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->si_seq, &SharedMap_Type))
+	    DeeObject_AssertTypeExact(self->si_seq, &SharedMap_Type))
 		return -1;
 	Dee_Incref(self->si_seq);
 	self->si_index = 0;

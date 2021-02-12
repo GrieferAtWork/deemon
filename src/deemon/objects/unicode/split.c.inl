@@ -22,7 +22,7 @@
 
 #ifdef __INTELLISENSE__
 #include "string_functions.c"
-#endif
+#endif /* __INTELLISENSE__ */
 
 #include <deemon/alloc.h>
 #include <deemon/seq.h>
@@ -194,7 +194,7 @@ splititer_bool(StringSplitIterator *__restrict self) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(StringSplitIterator *self, StringSplitIterator *other) {          \
 		uint8_t *x, *y;                                                    \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			goto err;                                                      \
 		x = GET_SPLIT_NEXT(self);                                          \
 		y = GET_SPLIT_NEXT(other);                                         \

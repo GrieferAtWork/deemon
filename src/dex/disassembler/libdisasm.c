@@ -128,7 +128,7 @@ libdisasm_public_printcode_f(size_t argc,
 	if (DeeFunction_Check(code))
 		code = DeeFunction_CODE(code);
 	else {
-		if (DeeObject_AssertTypeExact((DeeObject *)code, &DeeCode_Type))
+		if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
 			goto err;
 	}
 	if (fp && DeeString_Check(fp)) {

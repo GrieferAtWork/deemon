@@ -388,7 +388,7 @@ err:
 #endif
 			for (i = 0; i < new_astc; ++i) {
 				struct ast *branch_ast;
-				if (DeeObject_AssertTypeExact((DeeObject *)new_astv[i], &DeeCompilerAst_Type)) {
+				if (DeeObject_AssertTypeExact(new_astv[i], &DeeCompilerAst_Type)) {
 err_branch_v:
 					for (i = 0; i < new_astc; ++i)
 						Dee_Decref(new_astv[i]);

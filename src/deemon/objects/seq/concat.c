@@ -131,7 +131,7 @@ catiterator_init(CatIterator *__restrict self,
                  size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SeqConcatIterator", &self->c_cat))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)self->c_cat, &SeqConcat_Type))
+	if (DeeObject_AssertTypeExact(self->c_cat, &SeqConcat_Type))
 		goto err;
 	self->c_pseq = DeeTuple_ELEM(self->c_cat);
 	self->c_curr = DeeObject_IterSelf(self->c_pseq[0]);
@@ -194,7 +194,7 @@ done:
 		DREF DeeObject *result;                                                     \
 		DREF DeeObject *my_curr, *ot_curr;                                          \
 		DREF DeeObject **my_pseq, **ot_pseq;                                        \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqConcatIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type)) \
 			return NULL;                                                            \
 		if (self == other)                                                          \
 			if_equal;                                                               \

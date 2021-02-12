@@ -59,7 +59,7 @@ shlib_init(Shlib *__restrict self, size_t argc,
 	DeeStringObject *name, *cc_name = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:shlib", &name, &cc_name))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)name, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(name, &DeeString_Type))
 		goto err;
 		/* Parse the given default calling convention. */
 #ifndef CONFIG_NO_CFUNCTION
@@ -71,7 +71,7 @@ shlib_init(Shlib *__restrict self, size_t argc,
 		err_no_cfunction();
 		goto err;
 #else /* CONFIG_NO_CFUNCTION */
-		if (DeeObject_AssertTypeExact((DeeObject *)cc_name, &DeeString_Type))
+		if (DeeObject_AssertTypeExact(cc_name, &DeeString_Type))
 			goto err;
 		self->sh_defcc = cc_lookup(DeeString_STR(cc_name));
 		if unlikely(self->sh_defcc == CC_INVALID)

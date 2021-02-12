@@ -200,7 +200,7 @@ done:
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                    \
 	name(ClassOperatorTableIterator *self,                                                   \
 	     ClassOperatorTableIterator *other) {                                                \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &ClassOperatorTableIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &ClassOperatorTableIterator_Type)) \
 			goto err;                                                                        \
 		return_bool(COTI_GETITER(self) op COTI_GETITER(other));                              \
 	err:                                                                                     \

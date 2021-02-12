@@ -119,7 +119,7 @@ locatoriter_init(LocatorIterator *__restrict self,
 	Locator *loc;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqLocatorIterator", &loc))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)loc, &SeqLocator_Type))
+	if (DeeObject_AssertTypeExact(loc, &SeqLocator_Type))
 		goto err;
 	self->li_iter = DeeObject_IterSelf(loc->l_seq);
 	if unlikely(!self->li_iter)
@@ -177,7 +177,7 @@ err:
 #define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)                          \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                            \
 	name(LocatorIterator *self, LocatorIterator *other) {                            \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqLocatorIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type)) \
 			goto err;                                                                \
 		return compare_object(self->li_iter, other->li_iter);                        \
 	err:                                                                             \

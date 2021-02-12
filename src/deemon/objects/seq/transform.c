@@ -104,7 +104,7 @@ PRIVATE struct type_member transiter_members[] = {
 #define DEFINE_COMPARE(name, base, opname)                                                  \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                   \
 	name(TransformationIterator *self, TransformationIterator *other) {                     \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &SeqTransformationIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type)) \
 			goto err;                                                                       \
 		if (self->ti_func != other->ti_func) {                                              \
 			int temp = DeeObject_CompareEq(self->ti_func, other->ti_func);                  \
@@ -183,7 +183,7 @@ transiter_init(TransformationIterator *__restrict self,
 	Transformation *trans;
 	if (DeeArg_Unpack(argc, argv, "o:_SeqTransformationIterator", &trans))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)trans, &SeqTransformation_Type))
+	if (DeeObject_AssertTypeExact(trans, &SeqTransformation_Type))
 		goto err;
 	self->ti_iter = DeeObject_IterSelf(trans->t_seq);
 	if unlikely(!self->ti_iter)

@@ -374,7 +374,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	DEFINE_LIBFS_ALIAS(opendir, "dir", "(path:?Dstring)\n")
+	/* TODO: opendir() shouldn't be a shallow alias for fs.dir!
+	 *       Instead, opendir() should be an alias for the constructor of a type `DIR'
+	 *       that can be used to enumerate elements of type `dirent', which in turn
+	 *       contain (among others) a member `d_name: string' */
+//	DEFINE_LIBFS_ALIAS(opendir, "dir", "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(environ, "->?S?T2?Dstring?Dstring\n")
 	DEFINE_LIBFS_ALIAS_S(stat, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(lstat, "(path:?Dstring)\n")

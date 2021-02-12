@@ -332,7 +332,7 @@ ast_makesym(DeeCompilerObject *self, size_t argc,
 	COMPILER_BEGIN(self);
 	if (DeeArg_UnpackKw(argc, argv, kw, makesym_kwlist, "o|oo:makesym", &sym, &scope, &loc))
 		goto done;
-	if (DeeObject_AssertTypeExact((DeeObject *)sym, &DeeCompilerSymbol_Type))
+	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
 		goto done;
 	if unlikely(sym->ci_compiler != self) {
 		err_invalid_symbol_compiler(sym);
@@ -374,7 +374,7 @@ ast_makeunbind(DeeCompilerObject *self, size_t argc,
 	COMPILER_BEGIN(self);
 	if (DeeArg_UnpackKw(argc, argv, kw, makesym_kwlist, "o|oo:makeunbind", &sym, &scope, &loc))
 		goto done;
-	if (DeeObject_AssertTypeExact((DeeObject *)sym, &DeeCompilerSymbol_Type))
+	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
 		goto done;
 	if unlikely(sym->ci_compiler != self) {
 		err_invalid_symbol_compiler(sym);
@@ -415,7 +415,7 @@ ast_makebound(DeeCompilerObject *self, size_t argc,
 	COMPILER_BEGIN(self);
 	if (DeeArg_UnpackKw(argc, argv, kw, makesym_kwlist, "o|oo:makebound", &sym, &scope, &loc))
 		goto done;
-	if (DeeObject_AssertTypeExact((DeeObject *)sym, &DeeCompilerSymbol_Type))
+	if (DeeObject_AssertTypeExact(sym, &DeeCompilerSymbol_Type))
 		goto done;
 	if unlikely(sym->ci_compiler != self) {
 		err_invalid_symbol_compiler(sym);
@@ -501,7 +501,7 @@ ast_makemultiple(DeeCompilerObject *self, size_t argc,
 	for (i = 0; i < branch_c; ++i) {
 		struct ast *branch_ast;
 		/* Load the ast objects from each of the branches. */
-		if (DeeObject_AssertTypeExact((DeeObject *)branch_v[i], &DeeCompilerAst_Type))
+		if (DeeObject_AssertTypeExact(branch_v[i], &DeeCompilerAst_Type))
 			goto err_branch_v;
 		if unlikely(branch_v[i]->ci_compiler != self) {
 			err_invalid_ast_compiler(branch_v[i]);
@@ -554,7 +554,7 @@ ast_makereturn(DeeCompilerObject *self, size_t argc,
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
 	if (!DeeNone_Check(expr)) {
-		if (DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerSymbol_Type))
+		if (DeeObject_AssertTypeExact(expr, &DeeCompilerSymbol_Type))
 			goto done;
 		if unlikely(expr->ci_compiler != self) {
 			err_invalid_ast_compiler(expr);
@@ -593,7 +593,7 @@ ast_makeyield(DeeCompilerObject *self, size_t argc,
 	COMPILER_BEGIN(self);
 	if (DeeArg_UnpackKw(argc, argv, kw, makeexpr_kwlist, "o|oo:makeyield", &expr, &scope, &loc))
 		goto done;
-	if (DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerSymbol_Type))
+	if (DeeObject_AssertTypeExact(expr, &DeeCompilerSymbol_Type))
 		goto done;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
@@ -633,7 +633,7 @@ ast_makethrow(DeeCompilerObject *self, size_t argc,
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
 	if (!DeeNone_Check(expr)) {
-		if (DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerSymbol_Type))
+		if (DeeObject_AssertTypeExact(expr, &DeeCompilerSymbol_Type))
 			goto done;
 		if unlikely(expr->ci_compiler != self) {
 			err_invalid_ast_compiler(expr);
@@ -704,7 +704,7 @@ unpack_catch_expression(DeeObject *__restrict triple,
 	if (DeeObject_Unpack(triple, 3, (DeeObject **)args))
 		goto err;
 	if (!DeeNone_Check(args[1])) {
-		if (DeeObject_AssertTypeExact((DeeObject *)args[1], &DeeCompilerAst_Type))
+		if (DeeObject_AssertTypeExact(args[1], &DeeCompilerAst_Type))
 			goto err;
 		if unlikely(args[1]->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(args[1]);
@@ -715,7 +715,7 @@ unpack_catch_expression(DeeObject *__restrict triple,
 			goto err;
 		}
 	}
-	if (DeeObject_AssertTypeExact((DeeObject *)args[2], &DeeCompilerAst_Type))
+	if (DeeObject_AssertTypeExact(args[2], &DeeCompilerAst_Type))
 		goto err;
 	if unlikely(args[2]->ci_compiler != DeeCompiler_Current) {
 		err_invalid_ast_compiler(args[2]);
@@ -851,7 +851,7 @@ ast_maketry(DeeCompilerObject *self, size_t argc,
 		goto done;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if (DeeObject_AssertTypeExact((DeeObject *)guard, &DeeCompilerSymbol_Type))
+	if (DeeObject_AssertTypeExact(guard, &DeeCompilerSymbol_Type))
 		goto done;
 	if unlikely(guard->ci_compiler != self) {
 		err_invalid_ast_compiler(guard);
@@ -959,7 +959,7 @@ ast_makeloop(DeeCompilerObject *self, size_t argc,
 			goto done;
 check_next:
 		/* The next (iter) operand is mandatory in foreach loop branches. */
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)next, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(next, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(next->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(next);
@@ -979,7 +979,7 @@ check_next:
 			goto check_next;
 	}
 	if (!DeeNone_Check(cond)) {
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)cond, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(cond, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(cond->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(cond);
@@ -991,7 +991,7 @@ check_next:
 		}
 	}
 	if (!DeeNone_Check(loop)) {
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)loop, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(loop, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(loop->ci_compiler != DeeCompiler_Current) {
 			err_invalid_ast_compiler(loop);
@@ -1124,7 +1124,7 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 				goto done;
 		}
 	}
-	if unlikely(DeeObject_AssertTypeExact((DeeObject *)cond, &DeeCompilerAst_Type))
+	if unlikely(DeeObject_AssertTypeExact(cond, &DeeCompilerAst_Type))
 		goto done;
 	if unlikely(cond->ci_compiler != self) {
 		err_invalid_ast_compiler(cond);
@@ -1135,7 +1135,7 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 		goto done;
 	}
 	if (!DeeNone_Check(tt)) {
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)tt, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(tt, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(tt->ci_compiler != self) {
 			err_invalid_ast_compiler(tt);
@@ -1151,7 +1151,7 @@ ast_makeconditional(DeeCompilerObject *self, size_t argc,
 		goto done;
 	}
 	if (!DeeNone_Check(ff)) {
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)ff, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(ff, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(ff->ci_compiler != self) {
 			err_invalid_ast_compiler(ff);
@@ -1203,7 +1203,7 @@ ast_makebool(DeeCompilerObject *self, size_t argc,
 		goto done;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if unlikely(DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerAst_Type))
+	if unlikely(DeeObject_AssertTypeExact(expr, &DeeCompilerAst_Type))
 		goto done;
 	if unlikely(expr->ci_compiler != self) {
 		err_invalid_ast_compiler(expr);
@@ -1241,7 +1241,7 @@ ast_makeexpand(DeeCompilerObject *self, size_t argc,
 		goto done;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if unlikely(DeeObject_AssertTypeExact((DeeObject *)expr, &DeeCompilerAst_Type))
+	if unlikely(DeeObject_AssertTypeExact(expr, &DeeCompilerAst_Type))
 		goto done;
 	if unlikely(expr->ci_compiler != self) {
 		err_invalid_ast_compiler(expr);
@@ -1304,7 +1304,7 @@ ast_makefunction(DeeCompilerObject *self, size_t argc,
 		goto done;
 	if unlikely((ast_scope = get_scope(scope)) == NULL)
 		goto done;
-	if unlikely(DeeObject_AssertTypeExact((DeeObject *)code, &DeeCompilerAst_Type))
+	if unlikely(DeeObject_AssertTypeExact(code, &DeeCompilerAst_Type))
 		goto done;
 	if unlikely(code->ci_compiler != self) {
 		err_invalid_ast_compiler(code);
@@ -1402,7 +1402,7 @@ ast_makeoperatorfunc(DeeCompilerObject *self, size_t argc,
 	if unlikely(get_operator_id(name, &id))
 		goto done;
 	if (!DeeNone_Check(binding)) {
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)binding, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(binding, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(binding->ci_compiler != self) {
 			err_invalid_ast_compiler(binding);
@@ -1500,7 +1500,7 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 				goto done;
 		}
 	}
-	if unlikely(DeeObject_AssertTypeExact((DeeObject *)a, &DeeCompilerAst_Type))
+	if unlikely(DeeObject_AssertTypeExact(a, &DeeCompilerAst_Type))
 		goto done;
 	if unlikely(a->ci_compiler != self) {
 		err_invalid_ast_compiler(a);
@@ -1511,7 +1511,7 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 		goto done;
 	}
 	if (!DeeNone_Check(b)) {
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)b, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(b, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(b->ci_compiler != self) {
 			err_invalid_ast_compiler(b);
@@ -1522,7 +1522,7 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 			goto done;
 		}
 		if (!DeeNone_Check(c)) {
-			if unlikely(DeeObject_AssertTypeExact((DeeObject *)c, &DeeCompilerAst_Type))
+			if unlikely(DeeObject_AssertTypeExact(c, &DeeCompilerAst_Type))
 				goto done;
 			if unlikely(c->ci_compiler != self) {
 				err_invalid_ast_compiler(c);
@@ -1533,7 +1533,7 @@ ast_makeoperator(DeeCompilerObject *self, size_t argc,
 				goto done;
 			}
 			if (!DeeNone_Check(d)) {
-				if unlikely(DeeObject_AssertTypeExact((DeeObject *)d, &DeeCompilerAst_Type))
+				if unlikely(DeeObject_AssertTypeExact(d, &DeeCompilerAst_Type))
 					goto done;
 				if unlikely(d->ci_compiler != self) {
 					err_invalid_ast_compiler(d);
@@ -1823,7 +1823,7 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
 	opc = 0;
 	if (!DeeNone_Check(a)) {
 		opc = 1;
-		if unlikely(DeeObject_AssertTypeExact((DeeObject *)a, &DeeCompilerAst_Type))
+		if unlikely(DeeObject_AssertTypeExact(a, &DeeCompilerAst_Type))
 			goto done;
 		if unlikely(a->ci_compiler != self) {
 			err_invalid_ast_compiler(a);
@@ -1835,7 +1835,7 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
 		}
 		if (!DeeNone_Check(b)) {
 			opc = 2;
-			if unlikely(DeeObject_AssertTypeExact((DeeObject *)b, &DeeCompilerAst_Type))
+			if unlikely(DeeObject_AssertTypeExact(b, &DeeCompilerAst_Type))
 				goto done;
 			if unlikely(b->ci_compiler != self) {
 				err_invalid_ast_compiler(b);
@@ -1847,7 +1847,7 @@ ast_makeaction(DeeCompilerObject *self, size_t argc,
 			}
 			if (!DeeNone_Check(c)) {
 				opc = 3;
-				if unlikely(DeeObject_AssertTypeExact((DeeObject *)c, &DeeCompilerAst_Type))
+				if unlikely(DeeObject_AssertTypeExact(c, &DeeCompilerAst_Type))
 					goto done;
 				if unlikely(c->ci_compiler != self) {
 					err_invalid_ast_compiler(c);

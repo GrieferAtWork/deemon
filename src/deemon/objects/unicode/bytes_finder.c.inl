@@ -130,7 +130,7 @@ bfi_init(BytesFindIterator *__restrict self,
 	BytesFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesFindIterator", &find))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)find, &BytesFind_Type))
+	if (DeeObject_AssertTypeExact(find, &BytesFind_Type))
 		goto err;
 	return bfi_setup(self, find);
 err:
@@ -143,7 +143,7 @@ bcfi_init(BytesFindIterator *__restrict self,
 	BytesFind *find;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesCaseFindIterator", &find))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)find, &BytesCaseFind_Type))
+	if (DeeObject_AssertTypeExact(find, &BytesCaseFind_Type))
 		goto err;
 	return bfi_setup(self, find);
 err:
@@ -235,7 +235,7 @@ PRIVATE struct type_member bcfi_members[] = {
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(BytesFindIterator *self, BytesFindIterator *other) {              \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			return NULL;                                                   \
 		return_bool(READ_PTR(self) op READ_PTR(other));                    \
 	}
@@ -373,7 +373,7 @@ bf_init(BytesFind *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "oo|IdId:_BytesFind",
 	                  &self->bf_bytes, &self->bf_other,
 	                  &start, &end) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->bf_bytes, &DeeBytes_Type) ||
+	    DeeObject_AssertTypeExact(self->bf_bytes, &DeeBytes_Type) ||
 	    get_needle(&self->bf_needle, self->bf_other))
 		goto err;
 	if (end > DeeBytes_SIZE(self->bf_bytes))

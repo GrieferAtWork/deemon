@@ -237,7 +237,7 @@ ob_weakref_hash(WeakRef *__restrict self) {
 	name(WeakRef *self, WeakRef *other) {                                    \
 		if (DeeNone_Check(other))                                            \
 			return_bool((void *)LAZY_GETOBJ(self) op(void *) NULL);          \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeWeakRef_Type)) \
+		if (DeeObject_AssertTypeExact(other, &DeeWeakRef_Type)) \
 			return NULL;                                                     \
 		return_bool(LAZY_GETOBJ(self) op LAZY_GETOBJ(other));                \
 	}

@@ -346,7 +346,7 @@ function_init(size_t argc, DeeObject *const *argv) {
 	DeeCodeObject *code = &empty_code;
 	DeeObject *refs     = Dee_EmptyTuple;
 	if (DeeArg_Unpack(argc, argv, "|oo:Function", &code, &refs) ||
-	    DeeObject_AssertTypeExact((DeeObject *)code, &DeeCode_Type))
+	    DeeObject_AssertTypeExact(code, &DeeCode_Type))
 		goto err;
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (code->co_refc * sizeof(DREF DeeObject *)));

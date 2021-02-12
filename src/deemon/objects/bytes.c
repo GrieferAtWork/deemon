@@ -107,7 +107,7 @@ bytesiter_init(BytesIterator *__restrict self,
                size_t argc, DeeObject *const *argv) {
 	Bytes *bytes;
 	if (DeeArg_Unpack(argc, argv, "o:_BytesIterator", &bytes) ||
-	    DeeObject_AssertTypeExact((DeeObject *)bytes, &DeeBytes_Type))
+	    DeeObject_AssertTypeExact(bytes, &DeeBytes_Type))
 		return -1;
 	self->bi_bytes = bytes;
 	Dee_Incref(bytes);
@@ -119,7 +119,7 @@ bytesiter_init(BytesIterator *__restrict self,
 #define DEFINE_BYTESITER_COMPARE(name, expr)                                    \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                       \
 	name(BytesIterator *self, BytesIterator *other) {                           \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &BytesIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &BytesIterator_Type)) \
 			return NULL;                                                        \
 		return_bool(expr);                                                      \
 	}

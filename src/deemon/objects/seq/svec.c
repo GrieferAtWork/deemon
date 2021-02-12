@@ -57,7 +57,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rveciter_ctor(RefVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_RefVectorIterator", &self->rvi_vector) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->rvi_vector, &RefVector_Type))
+	    DeeObject_AssertTypeExact(self->rvi_vector, &RefVector_Type))
 		return -1;
 	Dee_Incref(self->rvi_vector);
 	self->rvi_pos = self->rvi_vector->rv_vector;
@@ -119,7 +119,7 @@ rveciter_bool(RefVectorIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_eq(RefVectorIterator *self,
             RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector &&
 	             RVI_GETPOS(self) == RVI_GETPOS(other));
@@ -128,7 +128,7 @@ rveciter_eq(RefVectorIterator *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_ne(RefVectorIterator *self,
             RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector != other->rvi_vector ||
 	             RVI_GETPOS(self) != RVI_GETPOS(other));
@@ -137,7 +137,7 @@ rveciter_ne(RefVectorIterator *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_lo(RefVectorIterator *self,
             RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
 	             ? RVI_GETPOS(self) < RVI_GETPOS(other)
@@ -147,7 +147,7 @@ rveciter_lo(RefVectorIterator *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_le(RefVectorIterator *self,
             RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
 	             ? RVI_GETPOS(self) <= RVI_GETPOS(other)
@@ -157,7 +157,7 @@ rveciter_le(RefVectorIterator *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_gr(RefVectorIterator *self,
             RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
 	             ? RVI_GETPOS(self) > RVI_GETPOS(other)
@@ -167,7 +167,7 @@ rveciter_gr(RefVectorIterator *self,
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rveciter_ge(RefVectorIterator *self,
             RefVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &RefVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &RefVectorIterator_Type))
 		return NULL;
 	return_bool_(self->rvi_vector == other->rvi_vector
 	             ? RVI_GETPOS(self) >= RVI_GETPOS(other)
@@ -1124,7 +1124,7 @@ sveciter_init(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedVectorIterator", &self->si_seq))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)self->si_seq, &SharedVector_Type))
+	if (DeeObject_AssertTypeExact(self->si_seq, &SharedVector_Type))
 		goto err;
 	Dee_Incref(self->si_seq);
 	self->si_index = 0;
@@ -1228,7 +1228,7 @@ PRIVATE struct type_member sveciter_members[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sveciter_eq(SharedVectorIterator *self,
             SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool_(self->si_seq == other->si_seq &&
 	             READ_INDEX(self) == READ_INDEX(other));
@@ -1239,7 +1239,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sveciter_ne(SharedVectorIterator *self,
             SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq != other->si_seq ||
 	            READ_INDEX(self) != READ_INDEX(other));
@@ -1250,7 +1250,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sveciter_lo(SharedVectorIterator *self,
             SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
 	            ? READ_INDEX(self) < READ_INDEX(other)
@@ -1262,7 +1262,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sveciter_le(SharedVectorIterator *self,
             SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
 	            ? READ_INDEX(self) <= READ_INDEX(other)
@@ -1274,7 +1274,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sveciter_gr(SharedVectorIterator *self,
             SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
 	            ? READ_INDEX(self) > READ_INDEX(other)
@@ -1286,7 +1286,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 sveciter_ge(SharedVectorIterator *self,
             SharedVectorIterator *other) {
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &SharedVectorIterator_Type))
+	if (DeeObject_AssertTypeExact(other, &SharedVectorIterator_Type))
 		goto err;
 	return_bool(self->si_seq == other->si_seq
 	            ? READ_INDEX(self) >= READ_INDEX(other)

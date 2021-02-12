@@ -533,7 +533,7 @@ ssi_visit(StringScanIterator *__restrict self, dvisit_t proc, void *arg) {
 	PRIVATE WUNUSED DREF DeeObject *DCALL                                                    \
 	name(StringScanIterator *__restrict self,                                        \
 	     StringScanIterator *__restrict other) {                                     \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, &StringScanIterator_Type)) \
+		if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type)) \
 			return NULL;                                                             \
 		return_bool(GET_FORMAT_POINTER(self) op GET_FORMAT_POINTER(other));          \
 	}

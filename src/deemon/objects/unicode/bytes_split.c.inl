@@ -73,10 +73,10 @@ bsi_init(BytesSplitIterator *__restrict self,
 	                  &self->bsi_split))
 		goto err;
 	if (Dee_TYPE(self) == &BytesSplitIterator_Type) {
-		if (DeeObject_AssertTypeExact((DeeObject *)self->bsi_split, &BytesSplit_Type))
+		if (DeeObject_AssertTypeExact(self->bsi_split, &BytesSplit_Type))
 			goto err;
 	} else {
-		if (DeeObject_AssertTypeExact((DeeObject *)self->bsi_split, &BytesCaseSplit_Type))
+		if (DeeObject_AssertTypeExact(self->bsi_split, &BytesCaseSplit_Type))
 			goto err;
 	}
 	self->bsi_bytes = self->bsi_split->bs_bytes;
@@ -124,7 +124,7 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(BytesSplitIterator *self, BytesSplitIterator *other) {            \
 		uint8_t *x, *y;                                                    \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			goto err;                                                      \
 		x = READ_BSI_ITER(self);                                           \
 		y = READ_BSI_ITER(other);                                          \
@@ -364,7 +364,7 @@ bs_init(BytesSplit *__restrict self, size_t argc,
         DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "oo:_BytesSplit", &self->bs_bytes, &self->bs_sep_owner))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)self->bs_bytes, &DeeBytes_Type))
+	if (DeeObject_AssertTypeExact(self->bs_bytes, &DeeBytes_Type))
 		goto err;
 	if (DeeBytes_Check(self->bs_sep_owner)) {
 		self->bs_sep_ptr = DeeBytes_DATA(self->bs_sep_owner);
@@ -723,7 +723,7 @@ blsi_init(BytesLineSplitIterator *__restrict self,
 	BytesLineSplit *ls;
 	self->blsi_keepends = false;
 	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplitIterator", &ls, &self->blsi_keepends) ||
-	    DeeObject_AssertTypeExact((DeeObject *)ls, &BytesLineSplit_Type))
+	    DeeObject_AssertTypeExact(ls, &BytesLineSplit_Type))
 		goto err;
 	self->blsi_bytes = ls->bls_bytes;
 	self->blsi_iter  = DeeBytes_DATA(self->blsi_bytes);
@@ -908,7 +908,7 @@ bls_init(BytesLineSplit *__restrict self, size_t argc,
          DeeObject *const *argv) {
 	self->bls_keepends = false;
 	if (DeeArg_Unpack(argc, argv, "o|b:_BytesLineSplit", &self->bls_bytes, &self->bls_keepends) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->bls_bytes, &DeeBytes_Type))
+	    DeeObject_AssertTypeExact(self->bls_bytes, &DeeBytes_Type))
 		goto err;
 	Dee_Incref(self->bls_bytes);
 	return 0;

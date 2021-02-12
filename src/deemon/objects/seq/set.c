@@ -212,7 +212,7 @@ suiter_init(SetUnionIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetUnionIterator", &self->sui_union))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)self->sui_union, &SetUnion_Type))
+	if (DeeObject_AssertTypeExact(self->sui_union, &SetUnion_Type))
 		goto err;
 	if ((self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a)) == NULL)
 		goto err;
@@ -302,7 +302,7 @@ suiter_eq(SetUnionIterator *self,
           SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	rwlock_read(&self->sui_lock);
 	my_iter = self->sui_iter;
@@ -330,7 +330,7 @@ suiter_ne(SetUnionIterator *self,
           SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	rwlock_read(&self->sui_lock);
 	my_iter = self->sui_iter;
@@ -358,7 +358,7 @@ suiter_lo(SetUnionIterator *self,
           SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	rwlock_read(&self->sui_lock);
 	my_iter = self->sui_iter;
@@ -386,7 +386,7 @@ suiter_le(SetUnionIterator *self,
           SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	rwlock_read(&self->sui_lock);
 	my_iter = self->sui_iter;
@@ -414,7 +414,7 @@ suiter_gr(SetUnionIterator *self,
           SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	rwlock_read(&self->sui_lock);
 	my_iter = self->sui_iter;
@@ -442,7 +442,7 @@ suiter_ge(SetUnionIterator *self,
           SetUnionIterator *other) {
 	DREF DeeObject *my_iter, *ot_iter, *result;
 	bool my_2nd, ot_2nd;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self)))
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	rwlock_read(&self->sui_lock);
 	my_iter = self->sui_iter;
@@ -1010,7 +1010,7 @@ siiter_init(SetIntersectionIterator *__restrict self,
             size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SetIntersectionIterator", &self->sii_intersect))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)self->sii_intersect, &SetIntersection_Type))
+	if (DeeObject_AssertTypeExact(self->sii_intersect, &SetIntersection_Type))
 		goto err;
 	self->sii_iter = DeeObject_IterSelf(self->sii_intersect->si_a);
 	if unlikely(!self)
@@ -1055,7 +1055,7 @@ done:
 #define DEFINE_SIITER_COMPARE(name, func)                                  \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(SetIntersectionIterator *self, SetIntersectionIterator *other) {  \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			goto err;                                                      \
 		return func(self->sii_iter, other->sii_iter);                      \
 	err:                                                                   \

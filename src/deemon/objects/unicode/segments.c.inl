@@ -93,7 +93,7 @@ ssegiter_init(StringSegmentsIterator *__restrict self,
 	StringSegments *seg;
 	if (DeeArg_Unpack(argc, argv, "o:_StringSegmentsIterator", &seg))
 		goto err;
-	if (DeeObject_AssertTypeExact((DeeObject *)seg, &StringSegments_Type))
+	if (DeeObject_AssertTypeExact(seg, &StringSegments_Type))
 		goto err;
 	self->s_str   = seg->s_str;
 	self->s_siz   = seg->s_siz;
@@ -166,7 +166,7 @@ PRIVATE struct type_getset ssegiter_getsets[] = {
 #define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(StringSegmentsIterator *self, StringSegmentsIterator *other) {    \
-		if (DeeObject_AssertTypeExact((DeeObject *)other, Dee_TYPE(self))) \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			return NULL;                                                   \
 		return_bool(READ_PTR(self) op READ_PTR(other));                    \
 	}
@@ -251,8 +251,9 @@ sseg_ctor(StringSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sseg_init(StringSegments *__restrict self,
           size_t argc, DeeObject *const *argv) {
-	if (DeeArg_Unpack(argc, argv, "oIu:_StringSegments", &self->s_str, &self->s_siz) ||
-	    DeeObject_AssertTypeExact((DeeObject *)self->s_str, &DeeString_Type))
+	if (DeeArg_Unpack(argc, argv, "oIu:_StringSegments", &self->s_str, &self->s_siz))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->s_str, &DeeString_Type))
 		goto err;
 	if (!self->s_siz) {
 		err_invalid_segment_size(self->s_siz);
@@ -310,7 +311,7 @@ sseg_contains(StringSegments *self,
               DeeStringObject *other) {
 	DeeStringObject *str;
 	union dcharptr my_str, my_end, ot_str;
-	if (DeeObject_AssertTypeExact((DeeObject *)other, &DeeString_Type))
+	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
 		goto err;
 	str = self->s_str;
 	if (DeeString_WLEN(other) != self->s_siz) {
