@@ -942,7 +942,7 @@ constant("DT_WHT", "defined(CONFIG_HAVE_DIRENT_H)");
 func("IFTODT", "defined(CONFIG_HAVE_DIRENT_H)", test: "IFTODT(42)");
 func("DTTOIF", "defined(CONFIG_HAVE_DIRENT_H)", test: "DTTOIF(42)");
 func("opendir", "defined(CONFIG_HAVE_DIRENT_H)", test: 'DIR *d = opendir("/"); return d != 0;');
-func("fopendir", "", test: 'DIR *d = fopendir(1); return d != 0;');
+func("fdopendir", "", test: 'DIR *d = fdopendir(1); return d != 0;');
 func("closedir", "", test: 'extern DIR *d; return closedir(d);');
 func("readdir", "", test: 'extern DIR *d; struct dirent *e = readdir(d); return e != 0;');
 func("readdir64", "", test: 'extern DIR *d; struct dirent64 *e = readdir64(d); return e != 0;');
@@ -6814,11 +6814,11 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #define CONFIG_HAVE_opendir 1
 #endif
 
-#ifdef CONFIG_NO_fopendir
-#undef CONFIG_HAVE_fopendir
-#elif !defined(CONFIG_HAVE_fopendir) && \
-      (defined(fopendir) || defined(__fopendir_defined))
-#define CONFIG_HAVE_fopendir 1
+#ifdef CONFIG_NO_fdopendir
+#undef CONFIG_HAVE_fdopendir
+#elif !defined(CONFIG_HAVE_fdopendir) && \
+      (defined(fdopendir) || defined(__fdopendir_defined))
+#define CONFIG_HAVE_fdopendir 1
 #endif
 
 #ifdef CONFIG_NO_closedir

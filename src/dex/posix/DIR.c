@@ -141,8 +141,14 @@ struct dir_iterator_object {
 
 struct dir_object {
 	OBJECT_HEAD
-	DREF DeeObject *d_path;    /* [1..1][const] String, File, or int */
-	bool            d_skipdots; /* [const] When true, skip '.' and '..' entires. */
+	DREF DeeObject *d_path;      /* [1..1][const] String, File, or int */
+	bool            d_skipdots;  /* [const] When true, skip '.' and '..' entires. */
+	bool            d_inheritfd; /* [const] When true, creating an iterator when `d_path' is
+	                              * something other than a string (i.e. a HANDLE or fd_t),
+	                              * then the iterator inherits that handle (iow: closes it
+	                              * at some point during its lifetime).
+	                              * When this dir_object was created by `fdopendir()', then
+	                              * this option is enabled by default. */
 };
 
 
@@ -351,7 +357,7 @@ INTERN DEFINE_CMETHOD(posix_IFTODT, &posix_IFTODT_f);
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 directory_open(DeeDirIteratorObject *__restrict self,
                DeeObject *__restrict path,
-               bool skipdots) {
+               bool skipdots, bool inheritfd) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 #define NEED_err
 	LPWSTR wname, wpattern;
@@ -366,8 +372,10 @@ directory_open(DeeDirIteratorObject *__restrict self,
 		sPath = DeeNTSystem_GetFilenameOfHandle(hPath);
 		if unlikely(!sPath)
 			goto err;
-		result = directory_open(self, sPath, skipdots);
+		result = directory_open(self, sPath, skipdots, inheritfd);
 		Dee_Decref(sPath);
+		if (likely(result == 0) && inheritfd)
+			CloseHandle(hPath); /* Inherited! */
 		return result;
 	}
 	wname = (LPWSTR)DeeString_AsWide(path);
@@ -472,22 +480,47 @@ again_skipdots:
 #define NEED_err
 EINTR_LABEL(again)
 	if (!DeeString_Check(path)) {
-		int result, fd;
-		DREF DeeObject *sPath;
+		int fd;
 		fd = DeeUnixSystem_GetFD(path);
 		if (fd == -1)
 			goto err;
-#ifdef CONFIG_HAVE_fopendir
-		DBG_ALIGNMENT_DISABLE();
-		dir = fopendir(fd);
-#else /* CONFIG_HAVE_fopendir */
-		sPath = DeeSystem_GetFilenameOfFD(fd);
-		if unlikely(!sPath)
-			goto err;
-		result = directory_open(self, sPath, skipdots);
-		Dee_Decref(sPath);
-		return result;
-#endif /* !CONFIG_HAVE_fopendir */
+#if defined(CONFIG_HAVE_dup) && defined(CONFIG_HAVE_fdopendir)
+		if (inheritfd) {
+			dir = fdopendir(fd);
+		} else {
+			DBG_ALIGNMENT_DISABLE();
+			fd = dup(fd);
+			if (fd == -1)
+				dir = NULL;
+			else {
+				dir = fdopendir(fd);
+#ifdef CONFIG_HAVE_close
+				if unlikely(!dir) {
+					int saved_errno;
+					saved_errno = DeeSystem_GetErrno();
+					close(fd);
+					DeeSystem_SetErrno(saved_errno);
+				}
+			}
+#endif /* CONFIG_HAVE_close */
+		}
+#else /* CONFIG_HAVE_dup && CONFIG_HAVE_fdopendir */
+#ifdef CONFIG_HAVE_fdopendir
+		if (inheritfd) {
+			dir = fdopendir(fd);
+		} else
+#endif /* CONFIG_HAVE_fdopendir */
+		{
+			int result;
+			DREF DeeObject *sPath;
+			sPath = DeeSystem_GetFilenameOfFD(fd);
+			if unlikely(!sPath)
+				goto err;
+			result = directory_open(self, sPath, skipdots, inheritfd);
+			Dee_Decref(sPath);
+			return result;
+		}
+#endif /* !CONFIG_HAVE_dup || !CONFIG_HAVE_fdopendir */
 	} else {
 		char const *utf8;
 		utf8 = DeeString_AsUtf8(path);
@@ -517,8 +550,8 @@ EINTR_LABEL(again)
 	rwlock_init(&self->di_lock);
 #endif /* ... */
 	self->di_skipdots = skipdots;
-	self->di_path    = path;
-	self->di_pathstr = NULL;
+	self->di_path     = path;
+	self->di_pathstr  = NULL;
 	Dee_Incref(path);
 	return 0;
 #ifdef NEED_err
@@ -843,6 +876,7 @@ diriter_get_d_type(DeeDirIteratorObject *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 diriter_visit(DeeDirIteratorObject *__restrict self, dvisit_t proc, void *arg) {
+	/* Not needed (and mustn't be enabled; `diriter_visit' is re-used as `dir_visit'!) */
 	/*Dee_XVisit(self->di_pathstr);*/
 	Dee_Visit(self->di_path);
 }
@@ -852,14 +886,18 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 diriter_init(DeeDirIteratorObject *__restrict self,
              size_t argc, DeeObject *const *argv) {
 	DeeObject *path;
-	bool skipdots = true;
-	if (DeeArg_Unpack(argc, argv, "o|b:_DirIterator", &path, &skipdots))
+	bool skipdots  = true;
+	bool inheritfd = false;
+	if (DeeArg_Unpack(argc, argv, "o|bb:_DirIterator", &path, &skipdots, &inheritfd))
 		goto err;
 	if (Dee_TYPE(path) == &DeeDir_Type) {
-		skipdots = ((DeeDirObject *)path)->d_skipdots;
-		path    = ((DeeDirObject *)path)->d_path;
+		DeeDirObject *dir;
+		dir       = (DeeDirObject *)path;
+		skipdots  = dir->d_skipdots;
+		inheritfd = dir->d_inheritfd;
+		path      = dir->d_path;
 	}
-	return directory_open(self, path, skipdots);
+	return directory_open(self, path, skipdots, inheritfd);
 err:
 	return -1;
 }
@@ -870,7 +908,9 @@ diriter_getseq(DeeDirIteratorObject *__restrict self) {
 	result = DeeObject_MALLOC(DeeDirObject);
 	if likely(result) {
 		DeeObject_Init(result, &DeeDir_Type);
-		result->d_path = self->di_path;
+		result->d_path      = self->di_path;
+		result->d_skipdots  = self->di_skipdots;
+		result->d_inheritfd = false;
 		Dee_Incref(result->d_path);
 	}
 	return result;
@@ -959,7 +999,9 @@ INTERN DeeTypeObject DeeDirIterator_Type = {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dir_copy(DeeDirObject *__restrict self,
          DeeDirObject *__restrict other) {
-	self->d_path = other->d_path;
+	self->d_path      = other->d_path;
+	self->d_skipdots  = other->d_skipdots;
+	self->d_inheritfd = false;
 	Dee_Incref(self->d_path);
 	return 0;
 }
@@ -974,19 +1016,46 @@ STATIC_ASSERT(offsetof(DeeDirIteratorObject, di_path) ==
 #define dir_visit   diriter_visit
 #define dir_members diriter_members
 
+PRIVATE struct keyword opendir_kwlist[] = { K(path), K(skipdots), K(inheritfd), KEND };
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dir_init_kw(DeeDirObject *__restrict self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(path), K(skipdots), KEND };
-	self->d_skipdots = true;
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|b:opendir",
-	                    &self->d_path, &self->d_skipdots))
+	self->d_skipdots  = true;
+	self->d_inheritfd = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, opendir_kwlist, "o|bb:opendir",
+	                    &self->d_path, &self->d_skipdots, &self->d_inheritfd))
 		goto err;
 	Dee_Incref(self->d_path);
 	return 0;
 err:
 	return -1;
 }
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+posix_fdopendir_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeDirObject *result;
+	DeeObject *path;
+	bool skipdots  = true;
+	bool inheritfd = true;
+	if (DeeArg_UnpackKw(argc, argv, kw, opendir_kwlist, "o|bb:fdopendir",
+	                    &path, &skipdots, &inheritfd))
+		goto err;
+	result = DeeObject_MALLOC(DeeDirObject);
+	if unlikely(!result)
+		goto err;
+	DeeObject_Init(result, &DeeDir_Type);
+	Dee_Incref(path);
+	result->d_path      = path;
+	result->d_skipdots  = skipdots;
+	result->d_inheritfd = inheritfd;
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+INTERN DEFINE_KWCMETHOD(posix_fdopendir, &posix_fdopendir_f);
+
 
 INTERN WUNUSED NONNULL((1)) DREF DeeDirIteratorObject *DCALL
 dir_iter(DeeDirObject *__restrict self) {
@@ -996,7 +1065,8 @@ dir_iter(DeeDirObject *__restrict self) {
 		goto done;
 	if unlikely(directory_open(result,
 	                           self->d_path,
-	                           self->d_skipdots)) {
+	                           self->d_skipdots,
+	                           self->d_inheritfd)) {
 		DeeObject_FREE(result);
 		result = NULL;
 		goto done;
@@ -1028,7 +1098,7 @@ PRIVATE struct type_member dir_class_members[] = {
 INTERN DeeTypeObject DeeDir_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_Dir",
-	/* .tp_doc      = */ DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t)"),
+	/* .tp_doc      = */ DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

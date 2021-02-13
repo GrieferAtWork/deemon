@@ -23,18 +23,30 @@ import fs;
 import * from deemon;
 import * from posix;
 
-local fd = open(fs.headof(__FILE__), O_RDONLY);
-local d  = fdopendir(fd, skipdots: false);
-local did_find_posix_DIR = false;
-for (local e: d) {
-	if (e.d_name.endswith(".dee")) {
-		assert e.d_type == DT_REG;
-		if (e.d_name == "posix_DIR.dee")
-			did_find_posix_DIR = true;
+function testdir(fd: int) {
+	local d = fdopendir(fd, skipdots: false);
+	local did_find_dot = false;
+	local did_find_dotdot = false;
+	local did_find_posix_DIR = false;
+	for (local e: d) {
+		if (e.d_name.endswith(".dee")) {
+			assert e.d_type == DT_REG;
+			if (e.d_name == "posix_DIR.dee")
+				did_find_posix_DIR = true;
+		} else if (e.d_name == ".") {
+			did_find_dot = true;
+		} else if (e.d_name == "..") {
+			did_find_dotdot = true;
+		}
 	}
+	assert did_find_dot;
+	assert did_find_dotdot;
+	assert did_find_posix_DIR;
 }
-assert did_find_posix_DIR;
-close(fd);
+local fd = open(fs.headof(__FILE__), O_RDONLY);
+testdir(fd);
+assert (try ({ close(fd); false; }) catch (...) none) is none,
+	"The file should have been closed after being inherited by `fdopendir'";
 
 
 

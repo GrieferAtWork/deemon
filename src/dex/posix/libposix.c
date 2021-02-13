@@ -186,6 +186,7 @@ INTDEF DeeObject posix_DT_SOCK;
 INTDEF DeeObject posix_DT_WHT;
 INTDEF DeeObject posix_DTTOIF;
 INTDEF DeeObject posix_IFTODT;
+INTDEF DeeObject posix_fdopendir;
 
 PRIVATE struct dex_symbol symbols[] = {
 
@@ -384,14 +385,15 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FNORMAL },
 	{ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL },
 	{ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL,
-	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t)->?GDIR\n"
+	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)->?GDIR\n"
 	      "Read the contents of a given directory. The returned "
 	      "object may be iterated to yield ?Gdirent objects.\n"
 	      "Additionally, you may specify @skipdots as !f if you "
 	      "wish to include the special $'.' and $'..' entires.") },
-	{ "fdopendir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL,
-	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t)->?GDIR\n"
-	      "Alias for ?Gopendir") },
+	{ "fdopendir", &posix_fdopendir, MODSYM_FNORMAL,
+	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
+	      "Same as ?Gopendir, but the default value of @inheritfd is !t, "
+	      "mimicking the behavior of the native $fdopendir function") },
 
 	/* File type constants. */
 	{ "DT_UNKNOWN", &posix_DT_UNKNOWN, MODSYM_FNORMAL },
