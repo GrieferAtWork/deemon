@@ -386,23 +386,24 @@ struct Dee_string_object {
 	                                     * within the unicode range U+0000 - U+00FF */
 };
 
-#define Dee_DEFINE_STRING(name, str)                                              \
-	struct {                                                                      \
-		Dee_OBJECT_HEAD struct Dee_string_utf *s_data;                            \
-		Dee_hash_t                             s_hash;                            \
-		size_t                                 s_len;                             \
-		char                                   s_str[sizeof(str) / sizeof(char)]; \
-		struct Dee_string_utf                  s_utf;                             \
-	} name = {                                                                    \
-		Dee_OBJECT_HEAD_INIT(&DeeString_Type),                                    \
-		&name.s_utf,                                                              \
-		DEE_STRING_HASH_UNSET,                                                    \
-		(sizeof(str) / sizeof(char)) - 1,                                         \
-		str,                                                                      \
-		{ Dee_STRING_WIDTH_1BYTE,                                                 \
-		  Dee_STRING_UTF_FASCII,                                                  \
-		  { (size_t *)name.s_str },                                               \
-		  name.s_str }                                                            \
+#define Dee_DEFINE_STRING(name, str)                              \
+	struct {                                                      \
+		Dee_OBJECT_HEAD                                           \
+		struct Dee_string_utf *s_data;                            \
+		Dee_hash_t             s_hash;                            \
+		size_t                 s_len;                             \
+		char                   s_str[sizeof(str) / sizeof(char)]; \
+		struct Dee_string_utf  s_utf;                             \
+	} name = {                                                    \
+		Dee_OBJECT_HEAD_INIT(&DeeString_Type),                    \
+		&name.s_utf,                                              \
+		DEE_STRING_HASH_UNSET,                                    \
+		(sizeof(str) / sizeof(char)) - 1,                         \
+		str,                                                      \
+		{ Dee_STRING_WIDTH_1BYTE,                                 \
+		  Dee_STRING_UTF_FASCII,                                  \
+		  { (size_t *)name.s_str },                               \
+		  name.s_str }                                            \
 	}
 
 #ifdef GUARD_DEEMON_OBJECTS_STRING_C

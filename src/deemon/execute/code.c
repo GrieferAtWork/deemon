@@ -1844,7 +1844,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         "@param ddi The debug information descriptor that should be used for providing assembly meta-information\n"
 	                         "Construct a new code object from the given arguments\n"
 	                         "Note that the returned code object always has the assembly tag enabled"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL|TP_FGC | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeObject_Type,

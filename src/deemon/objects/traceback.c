@@ -754,7 +754,7 @@ PUBLIC DeeTypeObject DeeTraceback_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Traceback),
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE|TP_FGC,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,

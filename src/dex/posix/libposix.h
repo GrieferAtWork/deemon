@@ -154,6 +154,20 @@ INTDEF DeeTypeObject DeeDirIterator_Type;
 INTDEF DeeTypeObject DeeDir_Type;
 
 
+/* Figure out how we want to implement the DIR-system */
+#undef posix_opendir_USE_FindFirstFileExW
+#undef posix_opendir_USE_opendir
+#undef posix_opendir_USE_STUB
+#if defined(CONFIG_HOST_WINDOWS)
+#define posix_opendir_USE_FindFirstFileExW
+/* TODO: Add another option to implement using `_findfirst()' */
+#elif defined(CONFIG_HAVE_opendir) && (defined(CONFIG_HAVE_readdir) || defined(CONFIG_HAVE_readdir64))
+#define posix_opendir_USE_opendir
+#else
+#define posix_opendir_USE_STUB
+#endif
+
+
 DECL_END
 
 #endif /* !GUARD_DEX_POSIX_LIBPOSIX_H */

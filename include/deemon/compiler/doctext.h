@@ -325,7 +325,7 @@ DECL_BEGIN
  *     >> @@ - I'm a list item
  *     >> @@   >> print "Just to show it as part of a list";
  *     Formating rules:
- *       - `foo`-like is the easiest, in that it behaves must like **foo** and __foo__,
+ *       - `foo`-like is the easiest, in that it behaves just like **foo** and __foo__,
  *         meaning that the contained text may contain space characters, but must terminate
  *         on the same line.
  *       - START_OF_LINE + OPTIONAL_WHITESPACE + `>' (optionally repeated) is also pretty simple:
@@ -368,7 +368,7 @@ DECL_BEGIN
  *     >> @@|              |               |
  *     >> @@| Left 3.1     | Right 3.1     |
  *     >> @@+--------------+---------------+
- *     Produced list (approximation)
+ *     Produced table (approximation)
  *          +==============+===============+
  *          | First Column | Second Column |
  *          +==============+===============+
