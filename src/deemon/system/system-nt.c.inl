@@ -325,6 +325,7 @@ DeeNTSystem_FixUncPath(/*String*/ DeeObject *__restrict filename) {
 			return result;
 err_printer:
 			unicode_printer_fini(&printer);
+			Dee_Decref(filename);
 			return NULL;
 		}
 	}
