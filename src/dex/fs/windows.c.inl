@@ -2540,9 +2540,11 @@ typedef struct {
 
 PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DirIterator *__restrict self) {
-	DBG_ALIGNMENT_DISABLE();
-	FindClose(self->d_hnd);
-	DBG_ALIGNMENT_ENABLE();
+	if (self->d_hnd != INVALID_HANDLE_VALUE) {
+		DBG_ALIGNMENT_DISABLE();
+		FindClose(self->d_hnd);
+		DBG_ALIGNMENT_ENABLE();
+	}
 	Dee_Decref(self->d_dir);
 }
 
@@ -2685,6 +2687,8 @@ err_handle_opendir(DWORD error, DeeObject *__restrict path) {
 		return err_path_not_found(error, path);
 	if (DeeNTSystem_IsNotDir(error))
 		return err_path_no_dir(error, path);
+	if (DeeNTSystem_IsAccessDeniedError(error))
+		return err_path_no_access(error, path);
 	return DeeNTSystem_ThrowErrorf(&DeeError_FSError, error,
 	                               "Failed to open directory %r",
 	                               path);
@@ -3254,6 +3258,6 @@ DECL_END
 
 #ifndef __INTELLISENSE__
 #include "nt.inl"
-#endif
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEX_FS_WINDOWS_C_INL */

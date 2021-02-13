@@ -1128,6 +1128,8 @@ err_handle_opendir(DeeObject *__restrict path) {
 		return err_path_not_found(error, path);
 	if (error == ENOTDIR)
 		return err_path_no_dir(error, path);
+	if (error == EACCES)
+		return err_path_no_access(error, path);
 	return DeeUnixSystem_ThrowErrorf(&DeeError_FSError, error,
 	                                 "Failed to open directory %r",
 	                                 path);

@@ -193,7 +193,8 @@ function gi(
 	if (value is none)
 		value = name;
 	function define_with_bits(sign, n_bits) {
-		print "DEFINE_{}INT{}({}{}, {});".format({
+		print "{} DEFINE_{}INT{}({}{}, {});".format({
+			visi,
 			sign ? "" : "U",
 			n_bits,
 			libname,

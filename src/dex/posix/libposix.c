@@ -173,6 +173,19 @@ PRIVATE char const *import_table[] = {
 #endif /* !__INTELLISENSE__ */
 
 
+/* DT_* constants. */
+INTDEF DeeObject posix_DT_UNKNOWN;
+INTDEF DeeObject posix_DT_FIFO;
+INTDEF DeeObject posix_DT_CHR;
+INTDEF DeeObject posix_DT_DIR;
+INTDEF DeeObject posix_DT_BLK;
+INTDEF DeeObject posix_DT_REG;
+INTDEF DeeObject posix_DT_LNK;
+INTDEF DeeObject posix_DT_SOCK;
+INTDEF DeeObject posix_DT_WHT;
+INTDEF DeeObject posix_DTTOIF;
+INTDEF DeeObject posix_IFTODT;
+
 PRIVATE struct dex_symbol symbols[] = {
 
 	/* File control */
@@ -362,6 +375,38 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: popen() */
 	/* TODO: fdopen() (Basically just a wrapper around `DeeFile_OpenFd') */
 
+
+	/* Directory access */
+	{ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FNORMAL },
+	{ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL },
+	{ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL,
+	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t)->?GDIR\n"
+	      "Read the contents of a given directory. The returned "
+	      "object may be iterated to yield ?Gdirent objects.\n"
+	      "Additionally, you may specify @skipdots as !f if you "
+	      "wish to include the special $'.' and $'..' entires.") },
+	{ "fdopendir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL,
+	  DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t)->?GDIR\n"
+	      "Alias for ?Gopendir") },
+
+	/* File type constants. */
+	{ "DT_UNKNOWN", &posix_DT_UNKNOWN, MODSYM_FNORMAL },
+	{ "DT_FIFO", &posix_DT_FIFO, MODSYM_FNORMAL },
+	{ "DT_CHR", &posix_DT_CHR, MODSYM_FNORMAL },
+	{ "DT_DIR", &posix_DT_DIR, MODSYM_FNORMAL },
+	{ "DT_BLK", &posix_DT_BLK, MODSYM_FNORMAL },
+	{ "DT_REG", &posix_DT_REG, MODSYM_FNORMAL },
+	{ "DT_LNK", &posix_DT_LNK, MODSYM_FNORMAL },
+	{ "DT_SOCK", &posix_DT_SOCK, MODSYM_FNORMAL },
+	{ "DT_WHT", &posix_DT_WHT, MODSYM_FNORMAL },
+	{ "DTTOIF", &posix_DTTOIF, MODSYM_FNORMAL,
+	  DOC("(dt:?Dint)->?Dint\n"
+	      "Convert a ${DT_*} constant to ${S_IF*}") },
+	{ "IFTODT", &posix_IFTODT, MODSYM_FNORMAL,
+	  DOC("(if:?Dint)->?Dint\n"
+	      "Convert an ${S_IF*} constant to ${DT_*}") },
+
+
 /* Forward-aliases to `libfs' */
 #define DEFINE_LIBFS_ALIAS_ALT(altname, name, libfs_name, proto)                           \
 	D({ altname, (DeeObject *)&libposix_getfs_##name, MODSYM_FPROPERTY | MODSYM_FREADONLY, \
@@ -374,11 +419,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_ALT(#name, name, libfs_name, proto)
 #define DEFINE_LIBFS_ALIAS_S(name, proto) \
 	DEFINE_LIBFS_ALIAS_S_ALT(DeeString_STR(&libposix_libfs_name_##name), name, proto)
-	/* TODO: opendir() shouldn't be a shallow alias for fs.dir!
-	 *       Instead, opendir() should be an alias for the constructor of a type `DIR'
-	 *       that can be used to enumerate elements of type `dirent', which in turn
-	 *       contain (among others) a member `d_name: string' */
-//	DEFINE_LIBFS_ALIAS(opendir, "dir", "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(environ, "->?S?T2?Dstring?Dstring\n")
 	DEFINE_LIBFS_ALIAS_S(stat, "(path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(lstat, "(path:?Dstring)\n")
@@ -397,7 +437,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_LIBFS_ALIAS_S(link, "(existing_path:?X3?Dstring?DFile?Dint,new_path:?Dstring)\n")
 	DEFINE_LIBFS_ALIAS_S(symlink, "(target_text:?Dstring,link_path:?Dstring,format_target=!t)\n")
 	DEFINE_LIBFS_ALIAS_S(readlink, "(path:?Dstring)->?Dstring\n(fp:?DFile)->?Dstring\n(fd:?Dint)->?Dstring\n")
-	DEFINE_LIBFS_ALIAS_ALT("fopendir", opendir, "dir", "(fp:?DFile)\n(fd:?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fstat", stat, "(fp:?DFile)\n(fd:?Dint)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fstatat", stat, "(dfd:?Dint,path:?Dstring,atflags=!0)\n")
 	DEFINE_LIBFS_ALIAS_S_ALT("fchdir", chdir, "(fp:?DFile)\n(fd:?Dint)\n")
@@ -496,4 +535,4 @@ PUBLIC struct dex DEX = {
 
 DECL_END
 
-#endif /* !GUARD_DEX_WIN32_LIBWIN32_C */
+#endif /* !GUARD_DEX_POSIX_LIBPOSIX_C */

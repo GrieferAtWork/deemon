@@ -81,6 +81,7 @@
     <None Include="..\..\src\dex\posix\p-truncate.c.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\dex\posix\DIR.c" />
     <ClCompile Include="..\..\src\dex\posix\libposix.c" />
   </ItemGroup>
   <ItemGroup>

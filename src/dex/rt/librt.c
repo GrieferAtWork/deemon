@@ -1889,7 +1889,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "BlackListMapping",
 	  (DeeObject *)&librt_get_BlackListMapping,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR, /* DeeBlackListMapping_Type */
-	  DOC("A {(string,object)...}-like mapping that is similar to ?#BlackListVarkwds, "
+	  DOC("A ${{(string, Object)...}}-like mapping that is similar to ?#BlackListVarkwds, "
 	      "however gets used when the function is invoked using a custom keyword "
 	      "protocol, rather than conventional keyword arguments that store their "
 	      "values as part of the argument vector:\n"

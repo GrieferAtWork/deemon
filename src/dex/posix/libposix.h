@@ -66,6 +66,21 @@ DECL_BEGIN
 #define HANDLE_EINTR(error, again, err_label) /* nothing */
 #endif
 
+#define HANDLE_ENOENT(error, err_label, ...)                                   \
+	DeeSystem_IF_E1(error, ENOENT, {                                           \
+		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
+		goto err_label;                                                        \
+	});
+#define HANDLE_ENOTDIR(error, err_label, ...)                                         \
+	DeeSystem_IF_E1(error, ENOTDIR, {                                                 \
+		DREF DeeTypeObject *tp;                                                       \
+		tp = (DREF DeeTypeObject *)DeeObject_GetAttrString(FS_MODULE, "NoDirectory"); \
+		if (tp) {                                                                     \
+			DeeUnixSystem_ThrowErrorf(tp, error, __VA_ARGS__);                        \
+			Dee_Decref(tp);                                                           \
+		}                                                                             \
+		goto err_label;                                                               \
+	});
 #define HANDLE_ENOENT_ENOTDIR(error, err_label, ...)                           \
 	DeeSystem_IF_E2(error, ENOENT, ENOTDIR, {                                  \
 		DeeUnixSystem_ThrowErrorf(&DeeError_FileNotFound, error, __VA_ARGS__); \
@@ -131,6 +146,13 @@ libposix_get_dfd_filename(int dfd, /*utf-8*/ char const *filename, int atflags);
 #if defined(ENOSYS) || defined(ENOTSUP) || defined(EOPNOTSUPP)
 #define NEED_ERR_UNSUPPORTED 1
 #endif /* ENOSYS || ENOTSUP || EOPNOTSUPP */
+
+/* High-level wrappers around `struct dirent' and `DIR'
+ * Note that `DIR' has a constructor that behaves just like `opendir(3)',
+ * which is also why `posix.opendir' is exported as an alias for `posix.DIR' */
+INTDEF DeeTypeObject DeeDirIterator_Type;
+INTDEF DeeTypeObject DeeDir_Type;
+
 
 DECL_END
 

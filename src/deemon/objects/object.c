@@ -2931,8 +2931,8 @@ type_new_extended(DeeTypeObject *self,
 	/* Instantiate non-base types. */
 	if (!first_base || first_base == &DeeObject_Type)
 		goto done_fields;
-	/* {(Type,({(string,object)...},tuple))...} */
-	/* {(Type,({(string,object)...},tuple,mapping))...} */
+	/* {(Type, ({(string, Object)...}, Tuple))...} */
+	/* {(Type, ({(string, Object)...}, Tuple, Mapping))...} */
 	init_info = DeeObject_GetItemDef(initializer, (DeeObject *)first_base, Dee_None);
 	if unlikely(!init_info)
 		goto err_r;

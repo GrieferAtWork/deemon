@@ -1195,7 +1195,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 
 /* Construct a keywords-mapping object from a given `kwds' object,
  * as well as an argument vector that will be shared with the mapping.
- * The returned object then a mapping {(string,object)...} for the
+ * The returned object then a mapping {(string, Object)...} for the
  * actual argument values passed to the function.
  * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
  *       to clean up the returned object. */
@@ -1424,7 +1424,7 @@ no_such_key:
 
 
 /* Construct/access keyword arguments passed to a function as a
- * high-level {(string,object)...}-like mapping that is bound to
+ * high-level {(string, Object)...}-like mapping that is bound to
  * the actually mapped arguments. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict pargc,

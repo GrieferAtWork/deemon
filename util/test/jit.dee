@@ -625,6 +625,44 @@ assert identical(exec(r'(20, "foobar"..., 10)'), Tuple({ 20, "f", "o", "o", "b",
 }
 
 
+/* Ensure that sequence sum/min/max  */
+assert ([10, 20, 30] + ...) == 60;
+assert ([10, 20, 30] < ...) == 10;
+assert ([10, 20, 30] > ...) == 30;
+assert exec("[10, 20, 30] + ...") == 60;
+assert exec("[10, 20, 30] < ...") == 10;
+assert exec("[10, 20, 30] > ...") == 30;
+assert exec("([10, 20, 30] + ...)") == 60;
+assert exec("([10, 20, 30] < ...)") == 10;
+assert exec("([10, 20, 30] > ...)") == 30;
+assert exec("([10, 20, 30] + ...) == 60");
+assert exec("([10, 20, 30] < ...) == 10");
+assert exec("([10, 20, 30] > ...) == 30");
+/* Not really recommended you do this, but operator
+ * priorities put `==' above +, < and >, so just to
+ * make sure that's also working, also test without
+ * the parens. */
+assert [10, 20, 30] + ... == 60;
+assert [10, 20, 30] < ... == 10;
+assert [10, 20, 30] > ... == 30;
+assert 60 == [10, 20, 30] + ...;
+assert 10 == [10, 20, 30] < ...;
+assert 30 == [10, 20, 30] > ...;
+assert exec("[10, 20, 30] + ... == 60");
+assert exec("[10, 20, 30] < ... == 10");
+assert exec("[10, 20, 30] > ... == 30");
+assert exec("60 == [10, 20, 30] + ...");
+assert exec("10 == [10, 20, 30] < ...");
+assert exec("30 == [10, 20, 30] > ...");
+
+/* TODO: The following breaks both the real, and the _jit compiler!
+ * Probably related to hybrid statement parsing... */
+//assert ({10, 20, 30} + ...) == 60;
+//assert exec("({10, 20, 30} + ...) == 60");
+assert exec("{10, 20, 30} + ...") == 60;
+
+
+
 
 
 

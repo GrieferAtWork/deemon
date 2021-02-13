@@ -102,14 +102,18 @@ struct dee_kwds_object {
 	 * >> push  $20
 	 * >> push  extern @operators:@__pooad
 	 * >> call  extern @...:@foo, #3, const @{ func: 0 }
+	 * foo (in Usercode):
+	 * >> function foo(x, y, func = none) -> func(x, y);
 	 * foo (in C):
 	 * >> PRIVATE WUNUSED DREF DeeObject *DCALL
 	 * >> foo(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	 * >>     DeeObject *x, *y, *func = Dee_None;
 	 * >>     PRIVATE struct dee_keyword kwlist[] = { K(x), K(y), K(func), KEND };
-	 * >>     if (DeeArg_UnpackKw(argc, argv, kw, kwlist,"oo|o:foo", &x, &y, &func))
-	 * >>         return -1;
+	 * >>     if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo|o:foo", &x, &y, &func))
+	 * >>         goto err;
 	 * >>     return DeeObject_CallPack(func, 2, x, y);
+	 * >> err:
+	 * >>     return -1;
 	 * >> }
 	 * With that in mind, indices of a Kwds object refer to the
 	 * last `kw_size' arguments of the associated argument list,
@@ -121,7 +125,7 @@ struct dee_kwds_object {
 	 *          isn't actually a mapping for the objects bound to keywords,
 	 *          but rather for the non-positional argument indices used by
 	 *          those keywords. - It's actually {(string, int)...}-like
-	 *          However, you can easily construct a {(string,object)...}-like
+	 *          However, you can easily construct a {(string, Object)...}-like
 	 *          mapping by calling `DeeKwdsMapping_New()' (see below) */
 	Dee_OBJECT_HEAD
 	size_t                kw_size;      /* [const] The number of valid entries in `kw_map'. */
@@ -244,7 +248,7 @@ DDATDEF DeeTypeObject DeeKwdsMapping_Type;
 
 /* Construct a keywords-mapping object from a given `kwds' object,
  * as well as an argument vector that will be shared with the mapping.
- * The returned object then a mapping {(string,object)...} for the
+ * The returned object then a mapping {(string, Object)...} for the
  * actual argument values passed to the function.
  * NOTE: The caller must later invoke `DeeKwdsMapping_Decref()' in order
  *       to clean up the returned object. */
@@ -268,7 +272,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemSt
 
 
 /* Construct/access keyword arguments passed to a function as a
- * high-level {(string,object)...}-like mapping that is bound to
+ * high-level {(string, Object)...}-like mapping that is bound to
  * the actually mapped arguments. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict pargc, DeeObject *const *argv, DeeObject *kw);

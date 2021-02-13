@@ -807,7 +807,7 @@ DeeModule_OpenSourceStreamString(/*File*/ DeeObject *source_stream,
  *                          Set of `MODULE_INTERACTIVE_MODE_F*'
  * @param: argv:            An optional tuple object (when NULL, `Dee_EmptyTuple' is used),
  *                          that is passed to module code as arguments (i.e. `[...]').
- * @param: default_symbols: A mapping-like object of type `{(string,object)...}', that
+ * @param: default_symbols: A mapping-like object of type `{(string, Object)...}', that
  *                          contains a set of pre-defined variables that should be made
  *                          available to the interactive source code by use of global
  *                          variables.
@@ -821,13 +821,13 @@ DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenInteractive(/*File*/ DeeObject *source_stream, unsigned int mode,
                           int start_line, int start_col, struct Dee_compiler_options *options,
                           /*String*/ DeeObject *source_pathname, /*String*/ DeeObject *module_name,
-                          /*Tuple*/ DeeObject *argv, /*Mapping{(string,object)...}*/ DeeObject *default_symbols);
+                          /*Tuple*/ DeeObject *argv, /*Mapping{(string, Object)...}*/ DeeObject *default_symbols);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_OpenInteractiveString(/*File*/ DeeObject *source_stream, unsigned int mode,
                                 int start_line, int start_col, struct Dee_compiler_options *options,
                                 /*utf-8*/ char const *source_pathname, size_t source_pathsize,
                                 /*utf-8*/ char const *module_name, size_t module_namesize,
-                                /*Tuple*/ DeeObject *argv, /*Mapping{(string,object)...}*/ DeeObject *default_symbols);
+                                /*Tuple*/ DeeObject *argv, /*Mapping{(string, Object)...}*/ DeeObject *default_symbols);
 
 /* No special syntactical changes are made. - The root scope is a yield-like
  * function, and streamed source code must include `yield'-statements in

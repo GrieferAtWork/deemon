@@ -1081,6 +1081,16 @@ error_handler(struct compiler_error_object *__restrict error,
 PRIVATE int DCALL operation_mode_printpp(int argc, char **argv);
 PRIVATE int DCALL operation_mode_format(int argc, char **argv);
 
+#ifdef _MSC_VER
+PRIVATE void
+noop_invalid_parameter_handler(void *UNUSED(a), void *UNUSED(b),
+                               void *UNUSED(c), unsigned int UNUSED(d),
+                               uintptr_t UNUSED(e)) {
+	COMPILER_IMPURE();
+	(void)0;
+}
+#endif /* _MSC_VER */
+
 /* ==================================================================== *
  * --- MAIN()                                                           *
  * ==================================================================== */
@@ -1103,6 +1113,11 @@ int main(int argc, char *argv[]) {
 	 * for why this needs to be done in order to get proper UTF-8 support. */
 	SetConsoleOutputCP(GetOEMCP());
 #endif /* CONFIG_HOST_WINDOWS */
+#ifdef _MSC_VER
+	_set_invalid_parameter_handler((_invalid_parameter_handler)&noop_invalid_parameter_handler);
+	_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE | _CRTDBG_MODE_DEBUG);
+	_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_HFILE_ERROR);
+#endif /* _MSC_VER */
 	DBG_ALIGNMENT_ENABLE();
 
 	/*_CrtSetBreakAlloc(280);*/

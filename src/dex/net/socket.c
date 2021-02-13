@@ -59,7 +59,7 @@ socket_ctor(Socket *__restrict self,
             DeeObject *kw) {
 	int af, type, proto;
 	DeeObject *arg_af, *arg_type = Dee_None, *arg_proto = Dee_None;
-	struct keyword kwlist[] = { K(af), K(type), K(proto), KEND };
+	PRIVATE struct keyword kwlist[] = { K(af), K(type), K(proto), KEND };
 	/* Parse and translate arguments. */
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|oo:socket", &arg_af, &arg_type, &arg_proto) ||
 	    sock_getafof(arg_af, &af) ||

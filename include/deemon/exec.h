@@ -172,7 +172,7 @@ struct Dee_compiler_options;
  *                          as the fact that peephole and other optimizations are
  *                          forced to be disabled, or DEC files are never generated,
  *                          all for reasons that should be quite obvious.
- * @param: default_symbols: A mapping-like object of type `{(string,object)...}', that
+ * @param: default_symbols: A mapping-like object of type `{(string, Object)...}', that
  *                          contains a set of pre-defined variables that should be made
  *                          available to the interactive source code by use of global
  *                          variables.

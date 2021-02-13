@@ -412,7 +412,7 @@ decl_ast_print_const_type(DeeObject const *__restrict ob,
 			if (UNICODE_PRINTER_PRINT(printer, "?S?O") < 0)
 				goto err;
 		} else if (i == id_Mapping) {
-			if (UNICODE_PRINTER_PRINT(printer, "?S?T2?O?O") < 0) /* {(object,object)...} */
+			if (UNICODE_PRINTER_PRINT(printer, "?S?T2?O?O") < 0) /* {(Object, Object)...} */
 				goto err;
 		} else
 #endif

@@ -172,6 +172,7 @@ header("sys/ioctl.h", unix);
 header("alloca.h", addparen(cygwin) + " || " + addparen(linux) + " || " + addparen(kos));
 header("malloc.h", addparen(msvc) + " || " + addparen(cygwin) + " || " + addparen(linux) + " || " + addparen(kos));
 header("ioctl.h");
+header("dirent.h", unix);
 header("unistd.h", unix);
 header("sys/unistd.h", cygwin);
 header("errno.h", addparen(msvc) + " || " + addparen(unix));
@@ -919,8 +920,37 @@ func("scalbn", "defined(CONFIG_HAVE_MATH_H)", test: "return scalbn(1.0, 1) != 0.
 func("scalbln", "defined(CONFIG_HAVE_MATH_H)", test: "return scalbln(1.0, 1L) != 0.0;");
 func("remquo", "defined(CONFIG_HAVE_MATH_H)", test: "extern double x, y; extern int z; return remquo(x, y, &z) != 0.0;");
 
-
 sizeof("off_t");
+
+// dirent.h
+constant("DT_UNKNOWN", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_FIFO", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_CHR", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_DIR", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_BLK", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_REG", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_LNK", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_SOCK", "defined(CONFIG_HAVE_DIRENT_H)");
+constant("DT_WHT", "defined(CONFIG_HAVE_DIRENT_H)");
+func("IFTODT", "defined(CONFIG_HAVE_DIRENT_H)", test: "IFTODT(42)");
+func("DTTOIF", "defined(CONFIG_HAVE_DIRENT_H)", test: "DTTOIF(42)");
+func("opendir", "defined(CONFIG_HAVE_DIRENT_H)", test: 'DIR *d = opendir("/"); return d != 0;');
+func("fopendir", "", test: 'DIR *d = fopendir(1); return d != 0;');
+func("closedir", "", test: 'extern DIR *d; return closedir(d);');
+func("readdir", "", test: 'extern DIR *d; struct dirent *e = readdir(d); return e != 0;');
+func("readdir64", "", test: 'extern DIR *d; struct dirent64 *e = readdir64(d); return e != 0;');
+func("dirfd", "", test: 'extern DIR *d; return dirfd(d);');
+feature("DIRENT_D_INO", "defined(CONFIG_HAVE_readdir) && (defined(__linux__) || defined(__KOS__) || defined(_DIRENT_HAVE_D_INO))", test: "extern struct dirent *e; return e->d_ino != 0;");
+feature("DIRENT_D_FILENO", "defined(CONFIG_HAVE_readdir) && (defined(d_fileno) || defined(_DIRENT_HAVE_D_FILENO))", test: "extern struct dirent *e; return e->d_fileno != 0;");
+feature("DIRENT_D_OFF", "defined(CONFIG_HAVE_readdir) && (defined(d_off) || defined(_DIRENT_HAVE_D_OFF))", test: "extern struct dirent *e; return e->d_off != 0;");
+feature("DIRENT_D_NAMLEN", "defined(CONFIG_HAVE_readdir) && (defined(d_namlen) || defined(_DIRENT_HAVE_D_NAMLEN))", test: "extern struct dirent *e; return e->d_namlen != 0;");
+feature("DIRENT_D_RECLEN", "defined(CONFIG_HAVE_readdir) && (defined(d_reclen) || defined(_DIRENT_HAVE_D_RECLEN))", test: "extern struct dirent *e; return e->d_reclen != 0;");
+feature("DIRENT_D_TYPE", "defined(CONFIG_HAVE_readdir) && (defined(d_type) || defined(_DIRENT_HAVE_D_TYPE))", test: "extern struct dirent *e; return e->d_type != 0;");
+feature("DIRENT_D_TYPE_SZ_1", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 1 ? 1 : -1]; return x[0];");
+feature("DIRENT_D_TYPE_SZ_2", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 2 ? 1 : -1]; return x[0];");
+feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[sizeof(e->d_type) == 4 ? 1 : -1]; return x[0];");
+
+
 
 //END:FEATURES
 
@@ -1013,6 +1043,15 @@ sizeof("off_t");
 #elif !defined(CONFIG_HAVE_IOCTL_H) && \
       (__has_include(<ioctl.h>))
 #define CONFIG_HAVE_IOCTL_H 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_H
+#undef CONFIG_HAVE_DIRENT_H
+#elif !defined(CONFIG_HAVE_DIRENT_H) && \
+      (__has_include(<dirent.h>) || (defined(__NO_has_include) && (defined(__linux__) || \
+       defined(__linux) || defined(linux) || defined(__unix__) || defined(__unix) || \
+       defined(unix))))
+#define CONFIG_HAVE_DIRENT_H 1
 #endif
 
 #ifdef CONFIG_NO_UNISTD_H
@@ -1393,6 +1432,10 @@ sizeof("off_t");
 #ifdef CONFIG_HAVE_IOCTL_H
 #include <ioctl.h>
 #endif /* CONFIG_HAVE_IOCTL_H */
+
+#ifdef CONFIG_HAVE_DIRENT_H
+#include <dirent.h>
+#endif /* CONFIG_HAVE_DIRENT_H */
 
 #ifdef CONFIG_HAVE_UNISTD_H
 #include <unistd.h>
@@ -6636,7 +6679,193 @@ sizeof("off_t");
       (defined(remquo) || defined(__remquo_defined) || defined(CONFIG_HAVE_MATH_H))
 #define CONFIG_HAVE_remquo 1
 #endif
+
+#ifdef CONFIG_NO_DT_UNKNOWN
+#undef CONFIG_HAVE_DT_UNKNOWN
+#elif !defined(CONFIG_HAVE_DT_UNKNOWN) && \
+      (defined(DT_UNKNOWN) || defined(__DT_UNKNOWN_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_UNKNOWN 1
+#endif
+
+#ifdef CONFIG_NO_DT_FIFO
+#undef CONFIG_HAVE_DT_FIFO
+#elif !defined(CONFIG_HAVE_DT_FIFO) && \
+      (defined(DT_FIFO) || defined(__DT_FIFO_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_FIFO 1
+#endif
+
+#ifdef CONFIG_NO_DT_CHR
+#undef CONFIG_HAVE_DT_CHR
+#elif !defined(CONFIG_HAVE_DT_CHR) && \
+      (defined(DT_CHR) || defined(__DT_CHR_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_CHR 1
+#endif
+
+#ifdef CONFIG_NO_DT_DIR
+#undef CONFIG_HAVE_DT_DIR
+#elif !defined(CONFIG_HAVE_DT_DIR) && \
+      (defined(DT_DIR) || defined(__DT_DIR_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_DIR 1
+#endif
+
+#ifdef CONFIG_NO_DT_BLK
+#undef CONFIG_HAVE_DT_BLK
+#elif !defined(CONFIG_HAVE_DT_BLK) && \
+      (defined(DT_BLK) || defined(__DT_BLK_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_BLK 1
+#endif
+
+#ifdef CONFIG_NO_DT_REG
+#undef CONFIG_HAVE_DT_REG
+#elif !defined(CONFIG_HAVE_DT_REG) && \
+      (defined(DT_REG) || defined(__DT_REG_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_REG 1
+#endif
+
+#ifdef CONFIG_NO_DT_LNK
+#undef CONFIG_HAVE_DT_LNK
+#elif !defined(CONFIG_HAVE_DT_LNK) && \
+      (defined(DT_LNK) || defined(__DT_LNK_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_LNK 1
+#endif
+
+#ifdef CONFIG_NO_DT_SOCK
+#undef CONFIG_HAVE_DT_SOCK
+#elif !defined(CONFIG_HAVE_DT_SOCK) && \
+      (defined(DT_SOCK) || defined(__DT_SOCK_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_SOCK 1
+#endif
+
+#ifdef CONFIG_NO_DT_WHT
+#undef CONFIG_HAVE_DT_WHT
+#elif !defined(CONFIG_HAVE_DT_WHT) && \
+      (defined(DT_WHT) || defined(__DT_WHT_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DT_WHT 1
+#endif
+
+#ifdef CONFIG_NO_IFTODT
+#undef CONFIG_HAVE_IFTODT
+#elif !defined(CONFIG_HAVE_IFTODT) && \
+      (defined(IFTODT) || defined(__IFTODT_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_IFTODT 1
+#endif
+
+#ifdef CONFIG_NO_DTTOIF
+#undef CONFIG_HAVE_DTTOIF
+#elif !defined(CONFIG_HAVE_DTTOIF) && \
+      (defined(DTTOIF) || defined(__DTTOIF_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_DTTOIF 1
+#endif
+
+#ifdef CONFIG_NO_opendir
+#undef CONFIG_HAVE_opendir
+#elif !defined(CONFIG_HAVE_opendir) && \
+      (defined(opendir) || defined(__opendir_defined) || defined(CONFIG_HAVE_DIRENT_H))
+#define CONFIG_HAVE_opendir 1
+#endif
+
+#ifdef CONFIG_NO_fopendir
+#undef CONFIG_HAVE_fopendir
+#elif !defined(CONFIG_HAVE_fopendir) && \
+      (defined(fopendir) || defined(__fopendir_defined))
+#define CONFIG_HAVE_fopendir 1
+#endif
+
+#ifdef CONFIG_NO_closedir
+#undef CONFIG_HAVE_closedir
+#elif !defined(CONFIG_HAVE_closedir) && \
+      (defined(closedir) || defined(__closedir_defined))
+#define CONFIG_HAVE_closedir 1
+#endif
+
+#ifdef CONFIG_NO_readdir
+#undef CONFIG_HAVE_readdir
+#elif !defined(CONFIG_HAVE_readdir) && \
+      (defined(readdir) || defined(__readdir_defined))
+#define CONFIG_HAVE_readdir 1
+#endif
+
+#ifdef CONFIG_NO_readdir64
+#undef CONFIG_HAVE_readdir64
+#elif !defined(CONFIG_HAVE_readdir64) && \
+      (defined(readdir64) || defined(__readdir64_defined))
+#define CONFIG_HAVE_readdir64 1
+#endif
+
+#ifdef CONFIG_NO_dirfd
+#undef CONFIG_HAVE_dirfd
+#elif !defined(CONFIG_HAVE_dirfd) && \
+      (defined(dirfd) || defined(__dirfd_defined))
+#define CONFIG_HAVE_dirfd 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_INO
+#undef CONFIG_HAVE_DIRENT_D_INO
+#elif !defined(CONFIG_HAVE_DIRENT_D_INO) && \
+      (defined(CONFIG_HAVE_readdir) && (defined(__linux__) || defined(__KOS__) || \
+       defined(_DIRENT_HAVE_D_INO)))
+#define CONFIG_HAVE_DIRENT_D_INO 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_FILENO
+#undef CONFIG_HAVE_DIRENT_D_FILENO
+#elif !defined(CONFIG_HAVE_DIRENT_D_FILENO) && \
+      (defined(CONFIG_HAVE_readdir) && (defined(d_fileno) || defined(_DIRENT_HAVE_D_FILENO)))
+#define CONFIG_HAVE_DIRENT_D_FILENO 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_OFF
+#undef CONFIG_HAVE_DIRENT_D_OFF
+#elif !defined(CONFIG_HAVE_DIRENT_D_OFF) && \
+      (defined(CONFIG_HAVE_readdir) && (defined(d_off) || defined(_DIRENT_HAVE_D_OFF)))
+#define CONFIG_HAVE_DIRENT_D_OFF 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_NAMLEN
+#undef CONFIG_HAVE_DIRENT_D_NAMLEN
+#elif !defined(CONFIG_HAVE_DIRENT_D_NAMLEN) && \
+      (defined(CONFIG_HAVE_readdir) && (defined(d_namlen) || defined(_DIRENT_HAVE_D_NAMLEN)))
+#define CONFIG_HAVE_DIRENT_D_NAMLEN 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_RECLEN
+#undef CONFIG_HAVE_DIRENT_D_RECLEN
+#elif !defined(CONFIG_HAVE_DIRENT_D_RECLEN) && \
+      (defined(CONFIG_HAVE_readdir) && (defined(d_reclen) || defined(_DIRENT_HAVE_D_RECLEN)))
+#define CONFIG_HAVE_DIRENT_D_RECLEN 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_TYPE
+#undef CONFIG_HAVE_DIRENT_D_TYPE
+#elif !defined(CONFIG_HAVE_DIRENT_D_TYPE) && \
+      (defined(CONFIG_HAVE_readdir) && (defined(d_type) || defined(_DIRENT_HAVE_D_TYPE)))
+#define CONFIG_HAVE_DIRENT_D_TYPE 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_TYPE_SZ_1
+#undef CONFIG_HAVE_DIRENT_D_TYPE_SZ_1
+#elif 0
+#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_1 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_TYPE_SZ_2
+#undef CONFIG_HAVE_DIRENT_D_TYPE_SZ_2
+#elif 0
+#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_2 1
+#endif
+
+#ifdef CONFIG_NO_DIRENT_D_TYPE_SZ_4
+#undef CONFIG_HAVE_DIRENT_D_TYPE_SZ_4
+#elif 0
+#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_4 1
+#endif
 //[[[end]]]
+
+#if (!defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_1) && \
+     !defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_2) && \
+     !defined(CONFIG_HAVE_DIRENT_D_TYPE_SZ_4))
+#define CONFIG_HAVE_DIRENT_D_TYPE_SZ_1
+#endif /* !CONFIG_HAVE_DIRENT_D_TYPE_SZ_... */
 
 
 /* Figure out of the host has a /proc filesystem.
