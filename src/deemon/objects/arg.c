@@ -252,7 +252,10 @@ PRIVATE struct type_member kwdsiter_members[] = {
 INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(map:?Ert:Kwds)\n"
+	                         "\n"
+	                         "next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -289,7 +292,7 @@ INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */kwdsiter_members,
+	/* .tp_members       = */ kwdsiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL
@@ -833,7 +836,10 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMappingIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(map:?Ert:KwdsMapping)\n"
+	                         "\n"
+	                         "next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -870,7 +876,7 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ NULL,
-	/* .tp_members       = */kmapiter_members,
+	/* .tp_members       = */ kmapiter_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

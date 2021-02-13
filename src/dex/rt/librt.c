@@ -1775,21 +1775,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	  DOC("General purpose, sequence proxy type for viewing the keys of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
 	      "by :Mapping.keys") }, /* DeeMappingKeys_Type */
-	{ "MappingKeysIterator", (DeeObject *)&librt_get_MappingKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator type for ?GMappingKeys") }, /* DeeMappingProxyIterator_Type */
+	{ "MappingKeysIterator", (DeeObject *)&librt_get_MappingKeysIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeMappingKeysIterator_Type */
 	{ "MappingValues", (DeeObject *)&librt_get_MappingValues, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the values of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
 	      "by :Mapping.values") }, /* DeeMappingValues_Type */
-	{ "MappingValuesIterator", (DeeObject *)&librt_get_MappingValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator type for ?GMappingValues") }, /* DeeMappingProxyIterator_Type */
+	{ "MappingValuesIterator", (DeeObject *)&librt_get_MappingValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeMappingValuesIterator_Type */
 	{ "MappingItems", (DeeObject *)&librt_get_MappingItems, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("General purpose, sequence proxy type for viewing the items (key-value pairs) of an abstract mapping object\n"
 	      "When not overwritten by the mapping type itself, this is the type of sequence that's returned "
 	      "by :Mapping.items") }, /* DeeMappingItems_Type */
-	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator type for ?GMappingItems") }, /* DeeMappingProxyIterator_Type */
-	{ "MappingHashFilter", (DeeObject *)&librt_get_MappingHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilter_Type */
+	{ "MappingItemsIterator", (DeeObject *)&librt_get_MappingItemsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* DeeMappingProxyIterator_Type */
+	{ "MappingHashFilter", (DeeObject *)&librt_get_MappingHashFilter, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* MapHashFilter_Type */
 	{ "MappingHashFilterIterator", (DeeObject *)&librt_get_MappingHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* MapHashFilterIterator_Type */
 
 	/* Internal types used for safe & fast passing of temporary sequences */
@@ -1858,20 +1855,18 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "TypeOperators", (DeeObject *)&librt_get_TypeOperators, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Sequence type used to enumerate operators that have been overwritten by a given type\n"
 	      "A sequence of this type is returned by :Type.__operators__ and :Type.__operatorids__") }, /* TypeOperators_Type */
-	{ "TypeOperatorsIterator", (DeeObject *)&librt_get_TypeOperatorsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator type for ?GTypeOperators") }, /* TypeOperatorsIterator_Type */
+	{ "TypeOperatorsIterator", (DeeObject *)&librt_get_TypeOperatorsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* TypeOperatorsIterator_Type */
 
 	/* Internal types used to drive the garbage collector */
 	{ "GCSet", (DeeObject *)&librt_get_GCSet, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR, /* DeeGCSet_Type */
 	  DOC("The set-like type returned by :gc.referred, :gc.referredgc, "
 	      ":gc.reachable, :gc.reachablegc and :gc.referring") },
-	{ "GCSetIterator", (DeeObject *)&librt_get_GCSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator for ?GGCSet") }, /* DeeGCSetIterator_Type */
+	{ "GCSetIterator", (DeeObject *)&librt_get_GCSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeGCSetIterator_Type */
 
 	/* Internal types used to drive variable keyword arguments */
-	{ "BlackListVarkwds",
+	{ "BlackListVarkwds", /* BlackListVarkwds_Type */
 	  (DeeObject *)&librt_get_BlackListVarkwds,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR, /* DeeBlackListVarkwds_Type */
+	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("A ${{(string, Object)...}}-like mapping that is used to exclude positional "
 	      "keyword arguments for a variable-keywords user-code function, then that "
 	      "function is invoked with regular keywords being passed:\n"
@@ -1882,13 +1877,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "foo(10, b: 20);\n"
 	      "foo(a: 10, b: 20);"
 	      "}") },
-	{ "BlackListVarkwdsIterator",
+	{ "BlackListVarkwdsIterator", /* BlackListVarkwdsIterator_Type */
 	  (DeeObject *)&librt_get_BlackListVarkwdsIterator,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator for ?GBlackListVarkwds") }, /* DeeBlackListVarkwdsIterator_Type */
-	{ "BlackListMapping",
+	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
+	{ "BlackListMapping", /* BlackListMapping_Type */
 	  (DeeObject *)&librt_get_BlackListMapping,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR, /* DeeBlackListMapping_Type */
+	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("A ${{(string, Object)...}}-like mapping that is similar to ?GBlackListVarkwds, "
 	      "however gets used when the function is invoked using a custom keyword "
 	      "protocol, rather than conventional keyword arguments that store their "
@@ -1899,20 +1893,22 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "}\n"
 	      "foo(**{ \"a\": 10, \"b\": 20});"
 	      "}") },
-	{ "BlackListMappingIterator",
+	{ "BlackListMappingIterator", /* BlackListMappingIterator_Type */
 	  (DeeObject *)&librt_get_BlackListMappingIterator,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator for ?GBlackListMapping") }, /* DeeBlackListMappingIterator_Type */
+	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 
 	/* Internal types used to drive keyword argument support */
-	{ "DocKwds", (DeeObject *)&librt_get_DocKwds, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
+	{ "DocKwds", /* DocKwds_Type */
+	  (DeeObject *)&librt_get_DocKwds,
+	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("Internal type for enumerating the keywords of functions implemented in C\n"
 	      "This is done via the associated doc string, with this sequence type being "
 	      "used to implement the string processing. This type is then returned by "
 	      "the $__kwds__ attributes of ?GKwCMethod, ?GKwObjMethod and ?GKwClassMethod "
-	      "when the associated documentation string was found to be non-empty") }, /* DocKwds_Type */
-	{ "DocKwdsIterator", (DeeObject *)&librt_get_DocKwdsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("Iterator type for ?GDocKwds") }, /* DocKwdsIterator_Type */
+	      "when the associated documentation string was found to be non-empty") },
+	{ "DocKwdsIterator", /* DocKwdsIterator_Type */
+	  (DeeObject *)&librt_get_DocKwdsIterator,
+	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 
 	/* Special types exposed by the C API, but not normally visible to user-code. */
 	{ "InteractiveModule", (DeeObject *)&DeeInteractiveModule_Type, MODSYM_FREADONLY }, /* The type used to implement an interactive module, as available by `deemon -i' */

@@ -197,7 +197,7 @@ PRIVATE struct type_member blvi_members[] = {
 INTERN DeeTypeObject BlackListVarkwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BlackListVarkwdsIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1208,7 +1208,7 @@ PRIVATE struct type_member blmi_members[] = {
 INTERN DeeTypeObject BlackListMappingIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BlackListMappingIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

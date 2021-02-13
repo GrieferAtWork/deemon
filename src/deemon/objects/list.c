@@ -3893,12 +3893,12 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "If following this, either is greater than ${##this}, it is clampled to that value\n"
 
 	                         "\n"
-	                         "del[](start:?Dint,end:?Dint)->\n"
+	                         "del[:](start:?Dint,end:?Dint)->\n"
 	                         "@throw IntegerOverflow @start or @end are too large\n"
 	                         "Using the same index-rules as for ?#{op:getrange}, delete all items from that range\n"
 
 	                         "\n"
-	                         "[]=(start:?Dint,end:?Dint,items:?S?O)->\n"
+	                         "[:]=(start:?Dint,end:?Dint,items:?S?O)->\n"
 	                         "@throw NotImplemented The given @items cannot be iterated\n"
 	                         "@throw IntegerOverflow @start or @end are too large\n"
 	                         "Using the same index-rules as for ?#{op:getrange}, delete all items from that range "

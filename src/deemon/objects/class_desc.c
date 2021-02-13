@@ -241,7 +241,7 @@ PRIVATE struct type_member coti_members[] = {
 INTERN DeeTypeObject ClassOperatorTableIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassOperatorTableIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?X2?Dstring?Dint?Dint"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -690,7 +690,7 @@ done:
 PRIVATE struct type_getset cati_getsets[] = {
 	{ DeeString_STR(&str_seq),
 	  (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cati_getseq, NULL, NULL,
-	  DOC("->?Aattributes?Ert:ClassDescriptor") },
+	  DOC("->?AAttributeTable?Ert:ClassDescriptor") },
 	{ NULL }
 };
 
@@ -962,7 +962,7 @@ INTERN DeeTypeObject ClassAttribute_Type = {
 INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassAttributeTableIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?Dstring?AAttribute?Ert:ClassDescriptor"),
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,

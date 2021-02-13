@@ -302,7 +302,7 @@ PRIVATE DeeTypeObject DeeMappingKeysIterator_Type = {
 PRIVATE DeeTypeObject DeeMappingValuesIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_MappingValuesIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?O?O"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

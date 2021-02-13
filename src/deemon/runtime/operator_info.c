@@ -1573,7 +1573,7 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 INTERN DeeTypeObject TypeOperatorsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_TypeOperatorsIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?X2?Dstring?Dint"),
 	/* .tp_flags    = */ TP_FNORMAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

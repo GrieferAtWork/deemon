@@ -460,6 +460,11 @@ PRIVATE struct type_member bf_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_member bcf_class_members[] = {
+	TYPE_MEMBER_CONST("Iterator", &BytesCaseFindIterator_Type),
+	TYPE_MEMBER_END
+};
+
 INTERN DeeTypeObject BytesFind_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_BytesFind",
@@ -547,7 +552,7 @@ INTERN DeeTypeObject BytesCaseFind_Type = {
 	/* .tp_members       = */ bf_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ bf_class_members
+	/* .tp_class_members = */ bcf_class_members
 };
 
 
