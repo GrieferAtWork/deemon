@@ -1,0 +1,369 @@
+/* Copyright (c) 2018-2021 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2021 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import posix;
+
+#ifdef __WINDOWS__
+global final SEP        = "\\";
+global final ALTSEP     = "/";
+global final DELIM      = ";";
+global final DEV_NULL   = "NUL";
+global final DEV_TTY    = "CON";
+global final DEV_STDIN  = "stdIN$";
+global final DEV_STDOUT = "stdOUT$";
+global final DEV_STDERR = "stdERR$";
+#else /* __WINDOWS__ */
+global final SEP        = "/";
+global final ALTSEP     = "/";
+global final DELIM      = ":";
+global final DEV_NULL   = "/dev/null";
+global final DEV_TTY    = "/dev/tty";
+global final DEV_STDIN  = "/dev/stdin";
+global final DEV_STDOUT = "/dev/stdout";
+global final DEV_STDERR = "/dev/stderr";
+#endif /* !__WINDOWS__ */
+
+/* Exceptions. */
+global final NoDirectory = posix.NoDirectory;
+global final IsDirectory = posix.IsDirectory;
+global final CrossDevice = posix.CrossDevice;
+global final NotEmpty = posix.NotEmpty;
+global final BusyFile = posix.BusyFile;
+global final NoLink = posix.NoLink;
+
+/* Functions from posix. */
+global final stat = posix.stat;
+global final lstat = posix.lstat;
+//global final User = posix.User; ???
+//global final Group = posix.Group; ???
+global final environ = posix.environ;
+global final gettmp = posix.gettmp;
+global final getcwd = posix.getcwd;
+global final gethostname = posix.gethostname;
+global final chdir = posix.chdir;
+global final chtime = posix.chtime;
+global final chmod = posix.chmod;
+global final lchmod = posix.lchmod;
+global final chown = posix.chown;
+global final lchown = posix.lchown;
+global final mkdir = posix.mkdir;
+global final rmdir = posix.rmdir;
+global final unlink = posix.unlink;
+global final remove = posix.remove;
+global final rename = posix.rename;
+global final copyfile = posix.copyfile;
+global final link = posix.link;
+global final symlink = posix.symlink;
+global final readlink = posix.readlink;
+global final S_IFMT = posix.S_IFMT;
+global final S_IFDIR = posix.S_IFDIR;
+global final S_IFCHR = posix.S_IFCHR;
+global final S_IFBLK = posix.S_IFBLK;
+global final S_IFREG = posix.S_IFREG;
+global final S_IFIFO = posix.S_IFIFO;
+global final S_IFLNK = posix.S_IFLNK;
+global final S_IFSOCK = posix.S_IFSOCK;
+global final S_ISUID = posix.S_ISUID;
+global final S_ISGID = posix.S_ISGID;
+global final S_ISVTX = posix.S_ISVTX;
+global final S_IRUSR = posix.S_IRUSR;
+global final S_IWUSR = posix.S_IWUSR;
+global final S_IXUSR = posix.S_IXUSR;
+global final S_IRGRP = posix.S_IRGRP;
+global final S_IWGRP = posix.S_IWGRP;
+global final S_IXGRP = posix.S_IXGRP;
+global final S_IROTH = posix.S_IROTH;
+global final S_IWOTH = posix.S_IWOTH;
+global final S_IXOTH = posix.S_IXOTH;
+global final S_ISDIR = posix.S_ISDIR;
+global final S_ISCHR = posix.S_ISCHR;
+global final S_ISBLK = posix.S_ISBLK;
+global final S_ISREG = posix.S_ISREG;
+global final S_ISFIFO = posix.S_ISFIFO;
+global final S_ISLNK = posix.S_ISLNK;
+global final S_ISSOCK = posix.S_ISSOCK;
+#ifdef __WINDOWS__
+global final fixunc_np = posix.fixunc_np;
+global final chattr_np = posix.chattr_np;
+#endif /* __WINDOWS__ */
+
+#ifdef __WINDOWS__
+#define _PREFERRED_SLASH(path) ("\\/"["/" in (path)])
+#else /* __WINDOWS__ */
+#define _PREFERRED_SLASH(path) "/"
+#endif /* !__WINDOWS__ */
+
+
+@@@return: The head of a path, that is the directory without the filename
+@@>> import headof from fs;
+@@>> print headof("bar.txt");        /* "" */
+@@>> print headof("/foo/bar.txt");   /* "/foo/" */
+@@>> print headof("C:/foo/bar.txt"); /* "C:/foo/" */
+final function headof(path: string): string {
+#ifdef __WINDOWS__
+	local pos = path.rfindany("/\\");
+	if (pos is none)
+		return "";
+#else /* __WINDOWS__ */
+	local pos = path.rfind("/");
+#endif /* !__WINDOWS__ */
+	return path[:pos+1];
+}
+
+
+@@@return: The tail of a path, that is the filename + extension
+@@>> import tailof from fs;
+@@>> print tailof("bar.txt");        /* "bar.txt" */
+@@>> print tailof("/foo/bar.txt");   /* "bar.txt" */
+@@>> print tailof("C:/foo/bar.txt"); /* "bar.txt" */
+final function tailof(path: string): string {
+#ifdef __WINDOWS__
+	local pos = path.rfindany("/\\");
+	if (pos is none)
+		return path;
+#else /* __WINDOWS__ */
+	local pos = path.rfind("/");
+#endif /* !__WINDOWS__ */
+	return path[pos+1:];
+}
+
+@@@return: The file portion of a path, excluding the file extension
+@@>> import fileof from fs;
+@@>> print fileof("bar");            /* "bar" */
+@@>> print fileof("bar.txt");        /* "bar" */
+@@>> print fileof("/foo/bar.txt");   /* "bar" */
+@@>> print fileof("C:/foo/bar.txt"); /* "bar" */
+final function fileof(path: string): string {
+	local tail = tailof(path);
+	local pos = tail.rfind(".");
+	if (pos == -1)
+		return tail;
+	return tail[:pos];
+}
+
+@@@return: The extension of a path, including the leading @"." character
+@@>> import extof from fs;
+@@>> print extof("bar");            /* "" */
+@@>> print extof("bar.txt");        /* ".txt" */
+@@>> print extof("/foo/bar.txt");   /* ".txt" */
+@@>> print extof("C:/foo/bar.txt"); /* ".txt" */
+final function extof(path: string): string {
+	local pos = path.rfind(".");
+	if (pos == -1)
+		return "";
+	local result = path[pos:];
+	if ("/" in result)
+		return "";
+#ifdef __WINDOWS__
+	if ("\\" in result)
+		return "";
+#endif /* __WINDOWS__ */
+	return result;
+}
+
+@@@return The drive portion of an absolute path on windows, or @"/" on other platforms
+@@>> import driveof from fs;
+@@>> print driveof(\"bar.txt\");        /* "\\" or "/" */
+@@>> print driveof(\"/foo/bar.txt\");   /* "\\" or "/" */
+@@>> print driveof(\"C:/foo/bar.txt\"); /* "C:/" or "/" */
+final function driveof(path: string): string {
+#ifdef __WINDOWS__
+	local pos = path.find(":");
+	if (pos == -1)
+		return "\\";
+	++pos;
+	local result = path[:pos];
+	if ("/" in result || "\\" in result)
+		return "\\";
+	/* Include a trailing slash */
+	return result + _PREFERRED_SLASH(path);
+#else /* __WINDOWS__ */
+	return "/";
+#endif /* !__WINDOWS__ */
+}
+
+@@@return The path with a trailing slash included
+@@import inctrail from fs;
+@@print inctrail("");          /* "/"  or "\\" */
+@@print inctrail("/foo/bar/"); /* "/foo/bar/" */
+@@print inctrail("/foo/bar");  /* "/foo/bar/" */
+final function inctrail(path: string): string {
+#ifdef __WINDOWS__
+	if (!path)
+		return "\\";
+	if (path.last in "/\\")
+		return path;
+	return path + _PREFERRED_SLASH(path);
+#else /* __WINDOWS__ */
+	if (path.endswith("/"))
+		return path;
+	return path + "/";
+#endif /* !__WINDOWS__ */
+}
+
+
+@@@return The path with a trailing slash excluded
+@@>> import exctrail from fs;
+@@>> print exctrail("/foo/bar/"); /* "/foo/bar" */
+@@>> print exctrail("/foo/bar");  /* "/foo/bar" */
+final function exctrail(path: string): string {
+#ifdef __WINDOWS__
+	if (!path || path.last !in "/\\")
+		return path;
+	return path[:-1];
+#else /* __WINDOWS__ */
+	if (path.endswith("/"))
+		return path[:-1];
+	return path;
+#endif /* !__WINDOWS__ */
+}
+
+#ifdef __WINDOWS__
+#define _ISABS(path) (#(path) >= 2 && (path)[1] == ":")
+#define _ISREL(path) (#(path) < 2 || (path)[1] != ":")
+#define _ISSEP(ch)   ((ch) in "\\/")
+#define _SEP         "\\"
+#define _SEPS        "\\/"
+#else /* __WINDOWS__ */
+#define _ISABS(path) (path).startswith("/")
+#define _ISREL(path) (!(path).startswith("/"))
+#define _ISSEP(ch)   ((ch) == "/")
+#define _SEP         "/"
+#define _SEPS        "/"
+#endif /* !__WINDOWS__ */
+
+
+@@Returns @true if the given @path is considered to be absolute
+final function isabs(path: string): bool {
+	return _ISABS(path);
+}
+
+@@Returns the inverse of @isabs
+final function isrel(path: string): bool {
+	return _ISREL(path);
+}
+
+@@Returns @true if the given @s is recognized as a path separator (Usually @"/" and/or @"\\")
+@@The host's primary and secondary separator values can be read from @SEP and @ALTSEP
+final function issep(s: string): bool {
+	return _ISSEP(s);
+}
+
+
+//TODO:@@@interrupt
+//TODO:@@Creates a relative path leading to @path and originating from @cwd
+//TODO:@@
+//TODO:@@If @path was already relative to begin with, it is forced to become absolute
+//TODO:@@as the result of calling @abspath with it and the return value of @getcwd
+//TODO:@@
+//TODO:@@If @cwd is relative, if will be forced into an absolute path as the
+//TODO:@@result of calling @abspath with it and the return value of @getcwd
+//TODO:@@
+//TODO:@@When running on a windows host, in the event that @path is located
+//TODO:@@on a different @driveof than @cwd, @path will be re-returned as is.
+//TODO:final function relpath(path: string, pwd: string = "."): string {
+//TODO:	/* Quick check: Is the given path already relative? */
+//TODO:	if (_ISREL(path)) {
+//TODO:		if (pwd == ".")
+//TODO:			return path;
+//TODO:		path = abspath(path);
+//TODO:	}
+//TODO:	/* If the given `pwd' isn't absolute, make it using the real PWD. */
+//TODO:	if (pwd == ".") {
+//TODO:		pwd = posix.getcwd();
+//TODO:	} else if (_ISREL(pwd)) {
+//TODO:		pwd = abspath(pwd);
+//TODO:	}
+//TODO:	/* TODO */
+//TODO:}
+
+//TODO: abspath
+//TODO: expand
+
+function joinpath(paths...: string): string {
+	File.Writer result;
+	local isFirst = true;
+#ifdef __WINDOWS__
+	local anyContainsFwdSlash = false;
+#endif /* __WINDOWS__ */
+	for (local path: paths) {
+#ifdef __WINDOWS__
+		if (!anyContainsFwdSlash)
+			anyContainsFwdSlash = "/" in path;
+#endif /* __WINDOWS__ */
+		if (isFirst) {
+			path = path.rstrip(_SEPS);
+			if (!path)
+				continue;
+		} else {
+			path = path.strip(_SEPS);
+			if (!path)
+				continue;
+			result << _SEP;
+		}
+		isFirst = false;
+		result << path;
+	}
+	result = result.string;
+	if (!result)
+		result = ".";
+#ifdef __WINDOWS__
+	if (anyContainsFwdSlash)
+		result = result.replace("\\", "/");
+#endif /* __WINDOWS__ */
+	return result;
+}
+
+
+
+class dir: Sequence {
+	@@The internal posix-DIR object.
+	private member m_dir: posix.DIR;
+
+	@@@interrupt
+	@@Construct a sequence for enumerating the contents of a directory
+	this(path: string): m_dir(posix.DIR(path)) {}
+
+	@@Enumerate the names of the files within the given directory
+	public operator for(): {string...} {
+		for (local ent: m_dir)
+			yield ent.d_name;
+	}
+}
+
+class query: dir {
+	@@The wildcard-enabled pattern with which to filter files
+	private member m_pattern: posix.DIR;
+
+	@@@interrupt
+	@@Construct a directory query that yields the names of all filesystem
+	@@objects addressed by the given wildcard-enabled @pattern string
+	this(pattern: string): super(headof(pattern)), m_pattern(tailof(pattern)) {}
+
+	@@Enumerate the names of the files within the given directory
+	public operator for(): {string...} {
+		for (local filename: this as dir) {
+			if (filename.wmatch(m_pattern))
+				yield filename;
+		}
+	}
+}
+

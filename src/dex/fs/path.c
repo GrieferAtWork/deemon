@@ -551,8 +551,8 @@ fs_pathrel(DeeObject *__restrict path, DeeObject *pwd) {
 					pwd_begin = pwd_end;
 					for (;;) {
 						next = pth_iter;
-						b    = utf8_readchar((char const **)&next, pth_end);
-						if (!ISSEP(b) && !DeeUni_IsSpace(b))
+						a    = utf8_readchar((char const **)&next, pth_end);
+						if (!ISSEP(a) && !DeeUni_IsSpace(a))
 							break;
 						pth_iter = next;
 					}
@@ -692,7 +692,7 @@ continue_uprefs_normal:
 				if (uprefs)
 					--uprefs;
 				else {
-					/* relpath("E:/c/dexmon/deemon","E:/c/dexmon/../../d/unrelated");
+					/* relpath("E:/c/dexmon/deemon", "E:/c/dexmon/../../d/unrelated");
 					 * RESULT: "../../c/dexmon/deemon"
 					 *                [][-----]
 					 * To implement this, we must retroactively search for the last

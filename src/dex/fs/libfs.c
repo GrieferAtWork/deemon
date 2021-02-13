@@ -1344,6 +1344,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@return The file portion of a path, excluding the file extension\n"
 	      "${"
 	      "import fileof from fs;\n"
+	      "print fileof(\"bar\");            /* \"bar\" */\n"
 	      "print fileof(\"bar.txt\");        /* \"bar\" */\n"
 	      "print fileof(\"/foo/bar.txt\");   /* \"bar\" */\n"
 	      "print fileof(\"C:/foo/bar.txt\"); /* \"bar\" */"
@@ -1353,6 +1354,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@return The extension of a path, including the leading $\".\" character\n"
 	      "${"
 	      "import extof from fs;\n"
+	      "print extof(\"bar\");            /* \"\" */\n"
 	      "print extof(\"bar.txt\");        /* \".txt\" */\n"
 	      "print extof(\"/foo/bar.txt\");   /* \".txt\" */\n"
 	      "print extof(\"C:/foo/bar.txt\"); /* \".txt\" */"
@@ -1371,6 +1373,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "@return The path with a trailing slash included\n"
 	      "${"
 	      "import inctrail from fs;\n"
+	      "print inctrail(\"/\");         /* \"/\" or \"\\\" */\n"
 	      "print inctrail(\"/foo/bar/\"); /* \"/foo/bar/\" */\n"
 	      "print inctrail(\"/foo/bar\");  /* \"/foo/bar/\" */"
 	      "}") },
@@ -1457,7 +1460,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "$\"\\\" while on most other hosts it is $\"/\"\n"
 	      "If supported by the host, an alternative separator can be read from ?GALTSEP\n"
 	      "Additionally, a string can be testing for being a separator by calling ?Gissep") },
-	{ "ALTSEP", (DeeObject *)&libfs_sep, MODSYM_FNORMAL,
+	{ "ALTSEP", (DeeObject *)&libfs_altsep, MODSYM_FNORMAL,
 	  DOC("->?Dstring\n"
 	      "The alternative path separator or an alias for ?GSEP "
 	      "if the host only supports a single type of separator") },

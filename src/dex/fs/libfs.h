@@ -22,6 +22,11 @@
 
 #include <deemon/api.h>
 
+/* TODO: The `fs' module as a native library should go away, and should
+ *       instead be implemented by user-code. For this purpose, the user-
+ *       code variant of the fs-module should make use of the functions
+ *       exported by the `posix' library! */
+
 #ifdef CONFIG_HOST_WINDOWS
 #define CONFIG_LIBFS_GROUPTYPE_IS_USERTYPE 1
 #else /* CONFIG_HOST_WINDOWS */
