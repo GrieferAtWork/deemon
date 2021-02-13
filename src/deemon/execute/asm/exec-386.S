@@ -2287,10 +2287,8 @@ target16_operator:
 	jmp    1f
 target_operator:
 	lodsb
-1:	subl   $12, %esp /* pending... */
-	ADJUST_CFA_OFFSET(12)
-	pushl  %ecx /* n_args */
-	ADJUST_CFA_OFFSET(4)
+1:	subl   $16, %esp /* pending... */
+	ADJUST_CFA_OFFSET(16)
 	pushl  %eax /* operator_name. */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -2303,6 +2301,7 @@ target_operator:
 	movl   %eax, 20(%esp) /* BACKUP(n_args). */
 	movl   %edx, 16(%esp) /* BACKUP(SP - n_args). */
 	movl   %edx, 12(%esp) /* SP - n_args. */
+	movl   %eax,  8(%esp) /* n_args. */
 	call   fSYM(DeeObject_InvokeOperator,16)
 	ADJUST_CFA_OFFSET(-16)
 	testl  %eax, %eax
@@ -2351,12 +2350,10 @@ prefix_target16_operator:
 prefix_target_operator:
 	call   get_prefix_object
 	lodsb
-1:	subl   $16, %esp /* pending... (SP - n_args, backup(SP - n_args), backup(n_args), prefix_object) */
-	ADJUST_CFA_OFFSET(16)
-	movl   %edx, 12(%esp) /* prefix_object */
-	leal   12(%esp), %edx /* EDX = &prefix_object */
-	pushl  %ecx /* n_args */
-	ADJUST_CFA_OFFSET(4)
+1:	subl   $20, %esp /* pending... (SP - n_args, backup(SP - n_args), backup(n_args), prefix_object) */
+	ADJUST_CFA_OFFSET(20)
+	movl   %edx, 16(%esp) /* prefix_object */
+	leal   16(%esp), %edx /* EDX = &prefix_object */
 	pushl  %eax /* operator_name. */
 	ADJUST_CFA_OFFSET(4)
 	pushl  %edx /* &prefix_object */
@@ -2369,6 +2366,7 @@ prefix_target_operator:
 	movl   %eax, 20(%esp) /* BACKUP(n_args). */
 	movl   %edx, 16(%esp) /* BACKUP(SP - n_args). */
 	movl   %edx, 12(%esp) /* SP - n_args. */
+	movl   %eax,  8(%esp) /* n_args. */
 	call   fSYM(DeeObject_PInvokeOperator,16)
 	ADJUST_CFA_OFFSET(-16)
 	testl  %eax, %eax
