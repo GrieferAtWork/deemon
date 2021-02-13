@@ -738,10 +738,10 @@ INTDEF DeeSTypeObject   DeeCULong_Type;
 
 /* Array types, and foreign-function types. */
 struct array_type_object {
-	DeeSTypeObject                 at_base;  /* The underlying structured type descriptor. */
-	DREF DeeSTypeObject           *at_orig;  /* [1..1][const] The array's element type. */
-	LIST_ENTRY(DeeArrayTypeObject) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
-	size_t                         at_count; /* The total number of items. */
+	DeeSTypeObject                at_base;  /* The underlying structured type descriptor. */
+	DREF DeeSTypeObject          *at_orig;  /* [1..1][const] The array's element type. */
+	LIST_ENTRY(array_type_object) at_chain; /* [lock(ft_return->st_cachelock)] Hash-map entry of this array. */
+	size_t                        at_count; /* The total number of items. */
 };
 
 
@@ -791,7 +791,7 @@ struct cfunction_type_object {
 	DeeSTypeObject                     ft_base;            /* The underlying structured type descriptor. */
 #ifndef CONFIG_NO_CFUNCTION
 	DREF DeeSTypeObject               *ft_orig;            /* [1..1][const] The function's return type. */
-	LIST_ENTRY(DeeCFunctionTypeObject) ft_chain;           /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
+	LIST_ENTRY(cfunction_type_object)  ft_chain;           /* [lock(ft_return->st_cachelock)] Hash-map entry of this c-function. */
 	dhash_t                            ft_hash;            /* [const] A pre-calculated hash used by `struct stype_cfunction' */
 	size_t                             ft_argc;            /* [const] Amount of function argument types. */
 	DREF DeeSTypeObject              **ft_argv;            /* [1..1][0..ft_argc][owned][const] Vector of function argument types. */

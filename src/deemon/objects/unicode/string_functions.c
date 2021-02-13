@@ -3303,7 +3303,7 @@ string_rfindany(String *self, size_t argc,
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
-	size_t fastsize, mylen, orig_end;
+	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rfindany", &needles, &start, &end))
@@ -3316,7 +3316,6 @@ string_rfindany(String *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end = end;
 	fastsize = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
 		size_t i;
@@ -3365,7 +3364,7 @@ string_rindexany(String *self, size_t argc,
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
-	size_t fastsize, mylen, orig_end;
+	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rindexany", &needles, &start, &end))
@@ -3378,7 +3377,6 @@ string_rindexany(String *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end = end;
 	fastsize = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
 		size_t i;
@@ -4079,7 +4077,7 @@ string_caserfindany(String *self, size_t argc,
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
-	size_t fastsize, mylen, orig_end, match_length;
+	size_t fastsize, mylen, match_length;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserfindany", &needles, &start, &end))
@@ -4092,7 +4090,6 @@ string_caserfindany(String *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end     = end;
 	match_length = 0; /* Prevent compiler warnings... */
 	fastsize     = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
@@ -4146,7 +4143,7 @@ string_caserindexany(String *self, size_t argc,
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
-	size_t fastsize, mylen, orig_end, match_length;
+	size_t fastsize, mylen, match_length;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserindexany", &needles, &start, &end))
@@ -4159,7 +4156,6 @@ string_caserindexany(String *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end     = end;
 	match_length = 0; /* Prevent compiler warnings... */
 	fastsize     = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {

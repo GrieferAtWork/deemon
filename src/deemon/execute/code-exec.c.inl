@@ -57,10 +57,9 @@
 #include "../objects/seq/varkwds.h"
 #include "../runtime/runtime_error.h"
 
-#ifndef SSIZE_MAX
+#undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-#endif /* !SSIZE_MAX */
 
 #ifdef _MSC_VER
 #pragma warning(disable: 4102) /* Unused label. */

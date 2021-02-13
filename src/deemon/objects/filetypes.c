@@ -40,15 +40,11 @@
 #include "../runtime/strings.h"
 #include "gc_inspect.h"
 
-#ifndef SSIZE_MIN
+#undef SSIZE_MIN
+#undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MIN __SSIZE_MIN__
-#endif /* !SSIZE_MIN */
-
-#ifndef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-#endif /* !SSIZE_MAX */
 
 DECL_BEGIN
 

@@ -548,7 +548,7 @@ bytes_rfindany(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *needles;
 	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen, orig_end;
+	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rfindany", &needles, &start, &end))
@@ -561,7 +561,6 @@ bytes_rfindany(Bytes *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end = end;
 	fastsize = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
 		size_t i;
@@ -609,7 +608,7 @@ bytes_caserfindany(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *needles;
 	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen, orig_end, match_length;
+	size_t fastsize, mylen, match_length;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserfindany", &needles, &start, &end))
@@ -622,7 +621,6 @@ bytes_caserfindany(Bytes *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end     = end;
 	match_length = 0; /* Prevent compiler warnings... */
 	fastsize     = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
@@ -801,7 +799,7 @@ bytes_rindexany(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *needles;
 	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen, orig_end;
+	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:rindexany", &needles, &start, &end))
@@ -814,7 +812,6 @@ bytes_rindexany(Bytes *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end = end;
 	fastsize = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {
 		size_t i;
@@ -863,7 +860,7 @@ bytes_caserindexany(Bytes *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *needles;
 	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen, orig_end, match_length;
+	size_t fastsize, mylen, match_length;
 	size_t start = 0, end = (size_t)-1;
 	bool did_find_any;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist, "o|IdId:caserindexany", &needles, &start, &end))
@@ -876,7 +873,6 @@ bytes_caserindexany(Bytes *self, size_t argc,
 		end = mylen;
 	if unlikely(end <= start)
 		goto not_found;
-	orig_end     = end;
 	match_length = 0; /* Prevent compiler warnings... */
 	fastsize     = DeeFastSeq_GetSize(needles);
 	if (fastsize != DEE_FASTSEQ_NOTFAST) {

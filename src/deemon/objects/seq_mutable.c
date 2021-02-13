@@ -41,10 +41,9 @@
 #include "seq/svec.h"
 #include "seq_functions.h"
 
-#ifndef SSIZE_MAX
+#undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-#endif /* !SSIZE_MAX */
 
 DECL_BEGIN
 

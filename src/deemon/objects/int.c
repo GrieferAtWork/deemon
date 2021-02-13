@@ -53,10 +53,9 @@
 #include "../runtime/strings.h"
 #include "int_logic.h"
 
-#ifndef SSIZE_MAX
+#undef SSIZE_MAX
 #include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-#endif /* !SSIZE_MAX */
 
 #if CONFIG_INT_CACHE_MAXCOUNT != 0
 #include <deemon/util/rwlock.h>

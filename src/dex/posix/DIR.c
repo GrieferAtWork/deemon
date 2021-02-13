@@ -509,7 +509,9 @@ again_skipdots:
 	DBG_ALIGNMENT_ENABLE();
 	self->di_dir     = dir;
 	self->di_ent     = NULL;
+#ifdef posix_opendir_NEED_STAT_EXTENSION
 	self->di_stvalid = false;
+#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	rwlock_init(&self->di_lock);
 #endif /* ... */
 	self->di_skipdots = skipdots;
@@ -591,11 +593,13 @@ again:
 	}
 	DBG_ALIGNMENT_ENABLE();
 	if (self->di_skipdots) {
-		char *name = di_ent->d_name;
+		char *name = self->di_ent->d_name;
 		if (name[0] == '.' && (name[1] == 0 || (name[1] == '.' && name[2] == 0)))
 			goto again; /* Skip this one... */
 	}
+#ifdef posix_opendir_NEED_STAT_EXTENSION
 	self->di_stvalid = false;
+#endif /* posix_opendir_NEED_STAT_EXTENSION */
 	rwlock_endwrite(&self->di_lock);
 	Dee_Incref(self);
 	return self;
@@ -605,7 +609,7 @@ again:
 #endif /* !... */
 }
 
-PRIVATE WUNUSED NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 diriter_fini(DeeDirIteratorObject *__restrict self) {
 #ifdef posix_opendir_USE_FindFirstFileExW
 	if (self->di_hnd != INVALID_HANDLE_VALUE) {
@@ -954,7 +958,7 @@ dir_copy(DeeDirObject *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) void DCALL
+PRIVATE NONNULL((1)) void DCALL
 dir_fini(DeeDirObject *__restrict self) {
 	Dee_Decref(self->d_path);
 }
