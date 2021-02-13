@@ -767,6 +767,7 @@ function resolveCollonReferenceShortcut(name: string): string | none {
 		candidates = resolveGetattrForAll(candidates, a);
 	candidates = Tuple(candidates);
 	if (#candidates == 1) {
+use_first_candy:
 		return "{}/{}".format({
 			candidates[0][0],
 			name.replace(".", "/")
@@ -790,7 +791,7 @@ function resolveCollonReferenceShortcut(name: string): string | none {
 				isFirst = false;
 			}
 		}
-		return candidates[0][0];
+		goto use_first_candy;
 	}
 different_objects:
 	/* Ambiguous, or undeterminable */
@@ -1463,7 +1464,7 @@ again_parse_character_after_question:
 				} else {
 					if (!ch2.issymstrt())
 						goto continue_after_questionStart;
-					while (i < end && (docstring.issymcont(i) || docstring[i] in ".:"))
+					while (i < end && (docstring.issymcont(i) || docstring[i] in "."))
 						++i;
 					nameEnd = i;
 				}
@@ -1601,7 +1602,7 @@ again_parse_character_after_question:
 					} else {
 						if (!ch2.issymstrt())
 							goto continue_after_questionStart;
-						while (i < end && (docstring.issymcont(i) || docstring[i] in ".:"))
+						while (i < end && (docstring.issymcont(i) || docstring[i] in "."))
 							++i;
 						nameEnd = i;
 					}

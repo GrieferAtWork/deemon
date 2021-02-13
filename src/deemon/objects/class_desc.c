@@ -1342,11 +1342,11 @@ PRIVATE struct type_member cd_members[] = {
 	TYPE_MEMBER_BITFIELD("isfinal", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FFINAL),
 	TYPE_MEMBER_BITFIELD_DOC("isinterrupt", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FINTERRUPT,
 	                         "Evaluates to ?t if @this class behaves as an interrupt exception when thrown\n"
-	                         "An interrupt exception (such as :Signal.Interrupt) is not caught by ${catch(...)} "
+	                         "An interrupt exception (such as :Interrupt) is not caught by ${catch(...)} "
 	                         "statements, but only by statements marked as ${@[interrupt] catch(...)}\n"
 	                         "Certain types exceptions require this in order to prevent catch-all blocks surrounding "
 	                         "optional function calls such as invocations of :fs:unlink from accidentally handling "
-	                         "unwanted types of exceptions such as :Signal.Interrupt.KeyboardInterrupt, as caused "
+	                         "unwanted types of exceptions such as :KeyboardInterrupt, as caused "
 	                         "by the user pressing CTRL+C to terminate the running script, and (normally) not "
 	                         "expecting it to continue running because the error was silently swallowed by an "
 	                         "unrelated catch-all block"),
