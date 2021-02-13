@@ -33,6 +33,7 @@
 #include "p-open.c.inl"
 #include "p-pipe.c.inl"
 #include "p-readwrite.c.inl"
+#include "p-realpath.c.inl"
 #include "p-sched.c.inl"
 #include "p-sync.c.inl"
 #include "p-truncate.c.inl"
@@ -258,6 +259,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	/* TODO: listxattr() */
 	/* TODO: llistxattr() */
 	/* TODO: flistxattr() */
+
+	/* Path normalization */
+	D(POSIX_REALPATH_DEF)
 
 	/* System information */
 	/* TODO: uname() */

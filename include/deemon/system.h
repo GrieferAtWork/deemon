@@ -173,7 +173,7 @@ DeeNTSystem_TranslateErrno(/*DWORD*/ DeeNT_DWORD dwError);
 DFUNDEF WUNUSED /*DWORD*/ DeeNT_DWORD DCALL
 DeeNTSystem_TranslateNtError(/*errno_t*/ int errno_value);
 
-/* Work around a problem with long path names.
+/* Work around a problem with long path names. (Note: also handles interrupts)
  * @return: * :                   The new handle.
  * @return: NULL:                 A deemon callback failed and an error was thrown.
  * @return: INVALID_HANDLE_VALUE: The system call failed (See GetLastError()) */

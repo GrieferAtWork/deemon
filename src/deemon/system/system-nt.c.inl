@@ -1903,7 +1903,7 @@ DeeNTSystem_ThrowLastErrorf(DeeTypeObject *tp,
 }
 
 
-/* Work around a problem with long path names.
+/* Work around a problem with long path names. (Note: also handles interrupts)
  * @return: * :                   The new handle.
  * @return: NULL:                 A deemon callback failed and an error was thrown.
  * @return: INVALID_HANDLE_VALUE: The system call failed (See GetLastError()) */
@@ -1959,6 +1959,7 @@ do_copy_and_return_hResult:
 	lpwName = (LPWSTR)DeeString_AsWide(lpFileName);
 	if unlikely(!lpwName)
 		goto err;
+again_createfile:
 	DBG_ALIGNMENT_DISABLE();
 	hResult = CreateFileW(lpwName,
 	                      (DWORD)dwDesiredAccess,
@@ -1968,7 +1969,8 @@ do_copy_and_return_hResult:
 	                      (DWORD)dwFlagsAndAttributes,
 	                      (HANDLE)hTemplateFile);
 	if (hResult == INVALID_HANDLE_VALUE) {
-		if (DeeNTSystem_IsUncError(GetLastError())) {
+		DWORD dwError = GetLastError();
+		if (DeeNTSystem_IsUncError(dwError)) {
 			/* Fix the filename and try again. */
 			DBG_ALIGNMENT_ENABLE();
 			lpFileName = DeeNTSystem_FixUncPath(lpFileName);
@@ -1989,6 +1991,11 @@ do_copy_and_return_hResult:
 			                     (HANDLE)hTemplateFile);
 			DBG_ALIGNMENT_ENABLE();
 			Dee_Decref(lpFileName);
+		} else if (DeeNTSystem_IsIntr(dwError)) {
+			DBG_ALIGNMENT_ENABLE();
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again_createfile;
 		}
 	}
 	DBG_ALIGNMENT_ENABLE();

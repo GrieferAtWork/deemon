@@ -470,6 +470,7 @@ again_skipdots:
 #elif defined(posix_opendir_USE_opendir)
 	DIR *dir;
 #define NEED_err
+EINTR_LABEL(again)
 	if (!DeeString_Check(path)) {
 		int result, fd;
 		DREF DeeObject *sPath;
@@ -498,6 +499,7 @@ again_skipdots:
 	if unlikely(dir == NULL) {
 		int error = DeeSystem_GetErrno();
 		DBG_ALIGNMENT_ENABLE();
+		HANDLE_EINTR(error, again, err)
 		HANDLE_ENOENT(error, err, "Path %r could not be found", path)
 		HANDLE_ENOTDIR(error, err, "Path %r could not be found", path)
 		HANDLE_EACCES(error, err, "Some part of the path %r is not a directory", path)
@@ -586,9 +588,11 @@ again:
 		rwlock_endwrite(&self->di_lock);
 		if (error == 0)
 			return (DREF DeeDirIteratorObject *)ITER_DONE; /* End of directory. */
+		HANDLE_EINTR(error, again, err)
 		DeeUnixSystem_ThrowErrorf(NULL, error,
 		                          "Failed to read entires from directory %r",
 		                          self->di_path);
+err:
 		return NULL;
 	}
 	DBG_ALIGNMENT_ENABLE();
@@ -767,6 +771,7 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 	int error;
 	if (self->di_stvalid)
 		return 0;
+again:
 #if defined(lstatat) && defined(CONFIG_HAVE_dirfd)
 	if (lstatat(dirfd(self->di_dir), self->di_ent->d_name, &self->di_st) == 0) {
 		self->di_stvalid = true;
@@ -792,6 +797,7 @@ diriter_loadstat(DeeDirIteratorObject *__restrict self) {
 	error = DeeSystem_GetErrno();
 	Dee_Decref(fullname);
 #endif /* !lstatat || !CONFIG_HAVE_dirfd */
+	HANDLE_EINTR(error, again, err)
 	return DeeUnixSystem_ThrowErrorf(NULL, error,
 	                                 "Failed to stat %q in %k",
 	                                 self->di_ent->d_name, self);

@@ -251,16 +251,9 @@ handle_error:
 		buffer  = new_buffer;
 		bufsize = new_size;
 	}
-	/* Release unused data. */
+	/* Commit buffer data at the end of the printer. */
 	if (unicode_printer_confirm_utf8(printer, buffer, (size_t)req_size) < 0)
 		goto err_buf;
-	bufsize = UNICODE_PRINTER_LENGTH(printer);
-	while (bufsize && UNICODE_PRINTER_GETCHAR(printer, bufsize - 1) != '/')
-		--bufsize;
-	while (bufsize && UNICODE_PRINTER_GETCHAR(printer, bufsize - 1) == '/')
-		--bufsize;
-	UNICODE_PRINTER_SETCHAR(printer, bufsize, '/');
-	unicode_printer_truncate(printer, bufsize + 1);
 	return 0;
 err_buf:
 	unicode_printer_free_utf8(printer, buffer);
@@ -306,10 +299,16 @@ DeeUnixSystem_ReadlinkString(/*utf-8*/ char const *filename) {
 
 /* Figure out how to implement `DeeSystem_GetFilenameOfFD()' */
 #undef DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE
+#undef DeeSystem_PrintFilenameOfFD_USE_FREALPATH
 #undef DeeSystem_PrintFilenameOfFD_USE_PROCFS
 #undef DeeSystem_PrintFilenameOfFD_USE_STUB
 #if defined(CONFIG_HOST_WINDOWS) && defined(CONFIG_HAVE_get_osfhandle)
 #define DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE 1
+#elif defined(CONFIG_HAVE_frealpath)
+#define DeeSystem_PrintFilenameOfFD_USE_FREALPATH 1
+#elif defined(CONFIG_HAVE_frealpath4)
+#define frealpath(fd, resolved, buflen) frealpath4(fd, resolved, buflen, 0)
+#define DeeSystem_PrintFilenameOfFD_USE_FREALPATH 1
 #elif !defined(DeeUnixSystem_Readlink_USE_STUB)
 #define DeeSystem_PrintFilenameOfFD_USE_PROCFS 1
 #else
@@ -338,6 +337,13 @@ err_PrintFilenameOfFD_BADF(int fd) {
 }
 #endif /* DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE */
 
+#ifdef DeeSystem_PrintFilenameOfFD_USE_FREALPATH
+#ifndef CONFIG_HAVE_strnlen
+#define strnlen dee_strnlen
+DeeSystem_DEFINE_strnlen(strnlen)
+#endif /* !CONFIG_HAVE_strnlen */
+#endif /* DeeSystem_PrintFilenameOfFD_USE_FREALPATH */
+
 /* @return: 0:  Success.
  * @return: -1: Error. */
 PUBLIC WUNUSED int DCALL
@@ -355,10 +361,78 @@ DeeSystem_PrintFilenameOfFD(struct unicode_printer *__restrict printer, int fd) 
 	return result;
 #endif /* DeeSystem_PrintFilenameOfFD_USE_NT_HANDLE */
 
+#ifdef DeeSystem_PrintFilenameOfFD_USE_FREALPATH
+	char *buf;
+	size_t buflen = PATH_MAX;
+	buf = unicode_printer_alloc_utf8(printer, PATH_MAX);
+	if unlikely(!buf) {
+err:
+		return -1;
+	}
+again:
+	DBG_ALIGNMENT_DISABLE();
+	if (frealpath(fd, buf, buflen) != NULL) {
+		size_t final_len;
+		DBG_ALIGNMENT_ENABLE();
+		final_len = strnlen(buf, buflen);
+		if (final_len == buflen) {
+			/* The entire buffer was filled, but there may be more data... */
+			size_t new_buflen;
+			char *newbuf;
+#ifdef ERANGE
+increase_buffer_size:
+#endif /* ERANGE */
+			new_buflen = buflen * 2;
+			newbuf     = unicode_printer_tryresize_utf8(printer, buf, new_buflen);
+			if unlikely(!newbuf) {
+				new_buflen = buflen + 1;
+				newbuf     = unicode_printer_resize_utf8(printer, buf, new_buflen);
+				if unlikely(!newbuf) {
+					unicode_printer_free_utf8(printer, buf);
+					goto err;
+				}
+			}
+			buf    = newbuf;
+			buflen = new_buflen;
+			goto again;
+		}
+		if unlikely(unicode_printer_confirm_utf8(printer, buf, final_len) < 0)
+			goto err;
+		return 0;
+	} else {
+		int error = DeeSystem_GetErrno();
+		DBG_ALIGNMENT_ENABLE();
+#ifdef EINTR
+		if (error == EINTR) {
+			if (DeeThread_CheckInterrupt())
+				goto err;
+			goto again;
+		}
+#endif /* EINTR */
+#ifdef ERANGE
+		if (error == ERANGE)
+			goto increase_buffer_size;
+#endif /* ERANGE */
+#ifdef ENAMETOOLONG
+#ifndef DeeUnixSystem_Readlink_USE_STUB
+		if (error != ENAMETOOLONG)
+#define DeeSystem_PrintFilenameOfFD_USE_PROCFS
+#endif /* !DeeUnixSystem_Readlink_USE_STUB */
+#endif /* ENAMETOOLONG */
+		{
+			return DeeUnixSystem_ThrowErrorf(NULL, error,
+			                                 "Failed to determine filename of fd %d",
+			                                 fd);
+		}
+	}
+#endif /* DeeSystem_PrintFilenameOfFD_USE_FREALPATH */
+
 #ifdef DeeSystem_PrintFilenameOfFD_USE_PROCFS
-	char buf[64];
-	Dee_sprintf(buf, "/proc/self/fd/%d", fd);
-	return DeeUnixSystem_PrintlinkString(printer, buf);
+	{
+		char buf[64];
+		Dee_sprintf(buf, "/proc/self/fd/%d", fd);
+		return DeeUnixSystem_PrintlinkString(printer, buf);
+	}
 #endif /* DeeSystem_PrintFilenameOfFD_USE_PROCFS */
 
 #ifdef DeeSystem_PrintFilenameOfFD_USE_STUB

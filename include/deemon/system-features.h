@@ -277,11 +277,11 @@ func("_wsystem", msvc, test: "wchar_t c[] = { 'e', 'c', 'h', 'o', ' ', 'h', 'i',
 
 functest('creat("foo.txt", 0644)', unix);
 functest('_creat("foo.txt", 0644)', msvc);
-func("_wcreat", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'a', 0 }; return _wcreat(s, 0644);");
+func("_wcreat", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'a', 0 }; return _wcreat(s, 0644);");
 
 functest('open("foo.txt", O_RDONLY)', unix);
 functest('_open("foo.txt", O_RDONLY)', msvc);
-func("_wopen", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'a', 0 }; return _wopen(s, O_RDONLY);");
+func("_wopen", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'a', 0 }; return _wopen(s, O_RDONLY);");
 functest('open64("foo.txt", O_RDONLY)', "defined(__USE_LARGEFILE64)");
 functest("fcntl(42, 7) && fcntl(42, 7, 21)", "(defined(CONFIG_HAVE_FCNTL_H) || defined(CONFIG_HAVE_SYS_FCNTL_H)) && " + addparen(unix));
 
@@ -477,7 +477,7 @@ func("fstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64)",
 func("lstat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && (defined(__USE_XOPEN_EXTENDED) || defined(__USE_XOPEN2K))", test: 'struct stat64 st; return lstat64("foo", &st);');
 func("fstatat", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)", test: 'struct stat st; return fstatat(AT_FDCWD, "foo", &st, 0);');
 func("fstatat64", "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_LARGEFILE64) && defined(__USE_ATFILE)", test: 'struct stat64 st; return fstatat64(AT_FDCWD, "foo", &st, 0);');
-func("_wstat", "defined(_WIO_DEFINED)", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wstat(c, &st);");
+func("_wstat", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wstat(c, &st);");
 func("wstat", test: "struct stat st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wstat(c, &st);");
 func("_wstat64", "defined(_WIO_DEFINED) && defined(__USE_LARGEFILE64)", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wstat64(c, &st);");
 func("wstat64", test: "struct stat64 st; wchar_t c[] = { 'f', 'o', 'o', 0 }; return wstat64(c, &st);");
@@ -498,7 +498,7 @@ func("wmkdir", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return wmkdir(c, 0755)
 func("_wmkdir", msvc, test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wmkdir(c);");
 functest('chmod("foo", 0777)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 functest('_chmod("foo", 0777)', msvc);
-func("_wchmod", "defined(_WIO_DEFINED)", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchmod(c, 0777);");
+func("_wchmod", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _wchmod(c, 0777);");
 functest('mkfifo("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && " + addparen(unix));
 functest('lchmod("foo", 0666)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_MISC)");
 functest('fchmodat(AT_FDCWD, "foo", 0666, 0)', "defined(CONFIG_HAVE_SYS_STAT_H) && defined(__USE_ATFILE)");
@@ -541,7 +541,7 @@ functest('eaccess("foo", F_OK)', "defined(F_OK) && defined(X_OK) && defined(W_OK
 functest('faccessat(AT_FDCWD, "foo", F_OK, 0)', "defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK) && defined(__USE_ATFILE)");
 functest('access("foo", F_OK)', "(defined(CONFIG_HAVE_UNISTD_H) || !" + addparen(msvc) + ") && defined(F_OK) && defined(X_OK) && defined(W_OK) && defined(R_OK)");
 functest('_access("foo", F_OK)', msvc);
-func("_waccess", "defined(_WIO_DEFINED)", test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _waccess(c, F_OK);");
+func("_waccess", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t c[] = { 'f', 'o', 'o', 0 }; return _waccess(c, F_OK);");
 
 functest('fchownat(AT_FDCWD, "foo", 0, 0, 0)', "defined(__USE_ATFILE)");
 
@@ -588,13 +588,13 @@ functest('unlinkat(AT_FDCWD, "foo", AT_REMOVEDIR)', "defined(CONFIG_HAVE_UNISTD_
 functest('remove("foo.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
 functest('rename("foo.txt", "bar.txt")', "defined(CONFIG_HAVE_STDIO_H) && " + addparen(stdc));
 func("wunlink", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
-func("_wunlink", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
+func("_wunlink", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wunlink(s);");
 func('wrmdir', test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return wrmdir(s);");
-func('_wrmdir', "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wrmdir(s);");
+func('_wrmdir', "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wrmdir(s);");
 func("wremove", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wremove(s);");
 func("_wremove", "defined(_WSTDIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; return _wremove(s);");
 func("wrename", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return wrename(s, t);");
-func("_wrename", "defined(_WIO_DEFINED)", test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return _wrename(s, t);");
+func("_wrename", "defined(_WIO_DEFINED) || " + addparen(msvc), test: "wchar_t s[] = { 'f', 'o', 'o', '.', 't', 'x', 't', 0 }; wchar_t t[] = { 'b', 'a', 'r', '.', 't', 'x', 't', 0 }; return _wrename(s, t);");
 
 func("getenv", "defined(CONFIG_HAVE_STDLIB_H) && " + addparen(stdc), test: 'return getenv("PATH") ? 0 : 1;');
 
@@ -921,6 +921,13 @@ func("scalbln", "defined(CONFIG_HAVE_MATH_H)", test: "return scalbln(1.0, 1L) !=
 func("remquo", "defined(CONFIG_HAVE_MATH_H)", test: "extern double x, y; extern int z; return remquo(x, y, &z) != 0.0;");
 
 sizeof("off_t");
+
+// unistd.h and stdlib.h
+func("realpath", "", test: 'extern char const path[]; extern char buf[]; char c = *realpath(path, buf); return c != 0;');
+func("frealpath", "", test: 'extern char buf[]; char c = *frealpath(2, buf, 42); return c != 0;');
+func("frealpath4", "", test: 'extern char buf[]; char c = *frealpath4(2, buf, 42, 0); return c != 0;');
+func("frealpathat", "", test: 'extern char buf[]; char c = *frealpathat(2, "foobar", buf, 42, 0); return c != 0;');
+func("resolvepath", "", test: 'extern char buf[]; return frealpathat("/foobar", buf, 42);');
 
 // dirent.h
 constant("DT_UNKNOWN", "defined(CONFIG_HAVE_DIRENT_H)");
@@ -1905,7 +1912,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__wcreat
 #undef CONFIG_HAVE__wcreat
 #elif !defined(CONFIG_HAVE__wcreat) && \
-      (defined(_wcreat) || defined(___wcreat_defined) || defined(_WIO_DEFINED))
+      (defined(_wcreat) || defined(___wcreat_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wcreat 1
 #endif
 
@@ -1927,7 +1935,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__wopen
 #undef CONFIG_HAVE__wopen
 #elif !defined(CONFIG_HAVE__wopen) && \
-      (defined(_wopen) || defined(___wopen_defined) || defined(_WIO_DEFINED))
+      (defined(_wopen) || defined(___wopen_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wopen 1
 #endif
 
@@ -3979,7 +3988,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__wstat
 #undef CONFIG_HAVE__wstat
 #elif !defined(CONFIG_HAVE__wstat) && \
-      (defined(_wstat) || defined(___wstat_defined) || defined(_WIO_DEFINED))
+      (defined(_wstat) || defined(___wstat_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wstat 1
 #endif
 
@@ -4104,7 +4114,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__wchmod
 #undef CONFIG_HAVE__wchmod
 #elif !defined(CONFIG_HAVE__wchmod) && \
-      (defined(_wchmod) || defined(___wchmod_defined) || defined(_WIO_DEFINED))
+      (defined(_wchmod) || defined(___wchmod_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wchmod 1
 #endif
 
@@ -4364,7 +4375,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__waccess
 #undef CONFIG_HAVE__waccess
 #elif !defined(CONFIG_HAVE__waccess) && \
-      (defined(_waccess) || defined(___waccess_defined) || defined(_WIO_DEFINED))
+      (defined(_waccess) || defined(___waccess_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__waccess 1
 #endif
 
@@ -4631,7 +4643,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__wunlink
 #undef CONFIG_HAVE__wunlink
 #elif !defined(CONFIG_HAVE__wunlink) && \
-      (defined(_wunlink) || defined(___wunlink_defined) || defined(_WIO_DEFINED))
+      (defined(_wunlink) || defined(___wunlink_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wunlink 1
 #endif
 
@@ -4645,7 +4658,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__wrmdir
 #undef CONFIG_HAVE__wrmdir
 #elif !defined(CONFIG_HAVE__wrmdir) && \
-      (defined(_wrmdir) || defined(___wrmdir_defined) || defined(_WIO_DEFINED))
+      (defined(_wrmdir) || defined(___wrmdir_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wrmdir 1
 #endif
 
@@ -4673,7 +4687,8 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #ifdef CONFIG_NO__wrename
 #undef CONFIG_HAVE__wrename
 #elif !defined(CONFIG_HAVE__wrename) && \
-      (defined(_wrename) || defined(___wrename_defined) || defined(_WIO_DEFINED))
+      (defined(_wrename) || defined(___wrename_defined) || (defined(_WIO_DEFINED) || \
+       defined(_MSC_VER)))
 #define CONFIG_HAVE__wrename 1
 #endif
 
@@ -6678,6 +6693,41 @@ feature("DIRENT_D_TYPE_SZ_4", "", test: "extern struct dirent *e; extern int x[s
 #elif !defined(CONFIG_HAVE_remquo) && \
       (defined(remquo) || defined(__remquo_defined) || defined(CONFIG_HAVE_MATH_H))
 #define CONFIG_HAVE_remquo 1
+#endif
+
+#ifdef CONFIG_NO_realpath
+#undef CONFIG_HAVE_realpath
+#elif !defined(CONFIG_HAVE_realpath) && \
+      (defined(realpath) || defined(__realpath_defined))
+#define CONFIG_HAVE_realpath 1
+#endif
+
+#ifdef CONFIG_NO_frealpath
+#undef CONFIG_HAVE_frealpath
+#elif !defined(CONFIG_HAVE_frealpath) && \
+      (defined(frealpath) || defined(__frealpath_defined))
+#define CONFIG_HAVE_frealpath 1
+#endif
+
+#ifdef CONFIG_NO_frealpath4
+#undef CONFIG_HAVE_frealpath4
+#elif !defined(CONFIG_HAVE_frealpath4) && \
+      (defined(frealpath4) || defined(__frealpath4_defined))
+#define CONFIG_HAVE_frealpath4 1
+#endif
+
+#ifdef CONFIG_NO_frealpathat
+#undef CONFIG_HAVE_frealpathat
+#elif !defined(CONFIG_HAVE_frealpathat) && \
+      (defined(frealpathat) || defined(__frealpathat_defined))
+#define CONFIG_HAVE_frealpathat 1
+#endif
+
+#ifdef CONFIG_NO_resolvepath
+#undef CONFIG_HAVE_resolvepath
+#elif !defined(CONFIG_HAVE_resolvepath) && \
+      (defined(resolvepath) || defined(__resolvepath_defined))
+#define CONFIG_HAVE_resolvepath 1
 #endif
 
 #ifdef CONFIG_NO_DT_UNKNOWN
